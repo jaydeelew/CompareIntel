@@ -328,7 +328,7 @@ def get_user_usage_stats(user: User) -> FullUsageStatsDict:
 
     # Get reset time
     reset_at = user.credits_reset_at
-    reset_date = reset_at.date() if reset_at else user.usage_reset_date if user.usage_reset_date else date.today()
+    reset_date = reset_at.date() if reset_at else date.today()
 
     # Legacy fields (for backward compatibility during transition)
     daily_limit = get_daily_limit(tier)

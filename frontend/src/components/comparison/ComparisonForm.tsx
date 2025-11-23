@@ -19,7 +19,6 @@ interface ComparisonFormProps {
   // User state
   isAuthenticated: boolean;
   user: User | null;
-  usageCount: number;
 
   // Conversations
   conversations: ModelConversation[];
@@ -69,7 +68,6 @@ export const ComparisonForm = memo<ComparisonFormProps>(({
   isAnimatingTextarea,
   isAuthenticated,
   user,
-  usageCount,
   conversations,
   showHistoryDropdown,
   setShowHistoryDropdown,

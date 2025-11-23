@@ -56,85 +56,10 @@
   margin-top: 0; /* Remove any default margin */
 }
 
-/* Usage tracking banner */
-.usage-tracking-banner {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: calc(var(--z-banner) - 1);
-  width: 100%;
-  animation: slideDown var(--transition-slow) ease-out;
-  min-height: 4.5rem; /* Ensure consistent height for navbar positioning */
-}
-
-/* Position usage banner below mock mode banner when both are visible */
-.app:has(.mock-mode-banner) .usage-tracking-banner {
-  top: 3.5rem;
-}
-
-/* Adjust app header when usage tracking banner is visible */
-.app:has(.usage-tracking-banner) .app-header {
-  top: 4.5rem; /* Position navbar below banner (banner height ~4.5rem) */
-}
-
-/* Adjust app header when both mock mode and usage banners are visible */
-.app:has(.mock-mode-banner):has(.usage-tracking-banner) .app-header {
-  top: 8rem; /* Position navbar below both banners */
-}
-
-/* Ensure hero section starts immediately below navbar when usage banner is visible */
-/* Use padding-top instead of margin-top so hero background covers the gap */
-/* Banner (4.5rem) + navbar (3.75rem) = 8.25rem */
-.app:has(.usage-tracking-banner) .hero-section {
-  margin-top: 0;
-  padding-top: 8.25rem; /* Push content down, background covers gap */
-}
-
 /* Ensure hero section starts immediately below navbar when mock mode banner is visible */
 /* Mock banner (3.5rem) + navbar (3.75rem) = 7.25rem */
 .app:has(.mock-mode-banner) .hero-section {
   margin-top: 0;
   padding-top: 7.25rem; /* Push content down, background covers gap */
-}
-
-/* Ensure hero section starts immediately below navbar when both banners are visible */
-/* Mock banner (3.5rem) + usage banner (4.5rem) + navbar (3.75rem) = 11.75rem */
-.app:has(.mock-mode-banner):has(.usage-tracking-banner) .hero-section {
-  margin-top: 0;
-  padding-top: 11.75rem; /* Push content down, background covers gap */
-}
-
-.usage-banner-content {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.usage-banner-text-desktop {
-  display: block;
-}
-
-.usage-banner-text-mobile {
-  display: none;
-}
-
-.usage-banner-text-mobile div {
-  text-align: center;
-  margin-bottom: var(--spacing-xs);
-}
-
-.usage-banner-text-mobile div:last-child {
-  margin-bottom: 0;
-}
-
-@media (max-width: 768px) {
-  .usage-banner-text-desktop {
-    display: none;
-  }
-
-  .usage-banner-text-mobile {
-    display: block;
-  }
 }
 

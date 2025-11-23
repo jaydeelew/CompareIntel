@@ -13,9 +13,6 @@
 // ============================================================================
 // Limits for unregistered (anonymous) users
 
-/** Model responses per day for anonymous (unregistered) users */
-export const ANONYMOUS_DAILY_LIMIT = 10
-
 /** Maximum models per comparison for anonymous users */
 export const ANONYMOUS_MODEL_LIMIT = 3
 

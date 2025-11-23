@@ -52,7 +52,6 @@ button:visited {
 }
 
 /* When banners are visible, ensure no white gap appears */
-.app:has(.usage-tracking-banner) .hero-section,
 .app:has(.mock-mode-banner) .hero-section {
   /* Hero section background will cover any gap */
 }

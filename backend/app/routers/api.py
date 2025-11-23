@@ -33,7 +33,7 @@ from ..models import (
     Conversation,
     ConversationMessage as ConversationMessageModel,
 )
-from ..credit_manager import ensure_credits_allocated, get_user_credits
+from ..credit_manager import ensure_credits_allocated, get_user_credits, get_credit_usage_stats
 from decimal import Decimal
 from ..database import get_db
 from ..dependencies import get_current_user

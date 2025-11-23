@@ -24,7 +24,7 @@ import { LowCreditWarningBanner } from './components/credits'
 import { Navigation, Hero, MockModeBanner } from './components/layout'
 import { DoneSelectingCard, ErrorBoundary, LoadingSpinner } from './components/shared'
 import { TermsOfService } from './components/TermsOfService'
-import { ANONYMOUS_DAILY_LIMIT, getDailyLimit, getCreditAllocation, getDailyCreditLimit } from './config/constants'
+import { getDailyLimit, getCreditAllocation, getDailyCreditLimit } from './config/constants'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
 import {
   useConversationHistory,
@@ -168,26 +168,9 @@ function AppContent() {
   const [isModelsHidden, setIsModelsHidden] = useState(false)
   const [isMetadataCollapsed, setIsMetadataCollapsed] = useState(false)
   const [modelErrors, setModelErrors] = useState<{ [key: string]: boolean }>({})
-  const [showUsageBanner, setShowUsageBanner] = useState(false)
-  const usageBannerTimeoutRef = useRef<number | null>(null)
   const [anonymousCreditsRemaining, setAnonymousCreditsRemaining] = useState<number | null>(null)
   const [creditBalance, setCreditBalance] = useState<CreditBalance | null>(null)
   const [showLowCreditWarning, setShowLowCreditWarning] = useState(false)
-  const [submissionCount, setSubmissionCount] = useState<number>(() => {
-    // Load submission count from localStorage
-    if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem('compareintel_submission_count')
-      if (stored) {
-        const data = JSON.parse(stored)
-        const today = new Date().toDateString()
-        // Reset if it's a new day
-        if (data.date === today) {
-          return data.count || 0
-        }
-      }
-    }
-    return 0
-  })
 
   // Callback for when the active conversation is deleted
   const handleDeleteActiveConversation = useCallback(() => {
@@ -1130,16 +1113,8 @@ function AppContent() {
           await refreshUser()
         } else {
           // Anonymous user: clear localStorage and reset UI state
-          // Reset usage counts and submission count
-          setSubmissionCount(0)
-          localStorage.removeItem('compareintel_submission_count')
+          // Reset usage counts
           setUsageCount(0)
-          setShowUsageBanner(false)
-          // Clear any existing timeout
-          if (usageBannerTimeoutRef.current !== null) {
-            window.clearTimeout(usageBannerTimeoutRef.current)
-            usageBannerTimeoutRef.current = null
-          }
           localStorage.removeItem('compareintel_usage')
 
           // Clear all conversation history from localStorage
@@ -1837,22 +1812,6 @@ function AppContent() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // Cleanup usage banner timeout on unmount
-  useEffect(() => {
-    return () => {
-      if (usageBannerTimeoutRef.current !== null) {
-        window.clearTimeout(usageBannerTimeoutRef.current)
-        usageBannerTimeoutRef.current = null
-      }
-    }
-  }, [])
-
-  // Check if limit is reached on mount and show banner permanently for anonymous users
-  useEffect(() => {
-    if (!authLoading && !isAuthenticated && usageCount >= ANONYMOUS_DAILY_LIMIT) {
-      setShowUsageBanner(true)
-    }
-  }, [authLoading, isAuthenticated, usageCount])
 
   // Align "You" sections across all model cards after each round completes
   useEffect(() => {
@@ -2936,81 +2895,77 @@ function AppContent() {
       }
     }
 
-    // Check daily usage limit (model-based)
-    // First, sync with backend to ensure we have the latest usage count
-    let currentUsageCount = usageCount
-
-    // For authenticated users, use credits instead of daily_usage_count
-    if (isAuthenticated && user) {
-      currentUsageCount = user.credits_used_this_period || 0
-    } else if (browserFingerprint) {
-      // For anonymous users, sync from backend
-      try {
-        const data = await getRateLimitStatus(browserFingerprint)
-        // Backend returns 'daily_usage' for authenticated, 'fingerprint_usage' or 'ip_usage' for anonymous
-        const latestCount = data.daily_usage || data.fingerprint_usage || data.ip_usage || 0
-        currentUsageCount = latestCount
-        // Always update state to keep it in sync - this ensures purple banner and renderUsagePreview show correct values
-        setUsageCount(latestCount)
-        // Also update localStorage immediately so it's in sync
-        const today = new Date().toDateString()
-        localStorage.setItem(
-          'compareintel_usage',
-          JSON.stringify({
-            count: latestCount,
-            date: today,
-          })
-        )
-      } catch (error) {
-        // Silently handle cancellation errors (expected when component unmounts)
-        if (error instanceof Error && error.name === 'CancellationError') {
-          // Continue with current state silently
-        } else {
-          console.error('Failed to sync usage count before check:', error)
-        }
-        // Continue with current state if fetch fails
-      }
+    // Check credit balance before submitting
+    // Use the same calculation logic as renderUsagePreview for consistency
+    const creditsAllocated = creditBalance?.credits_allocated ?? (isAuthenticated && user 
+      ? (user.monthly_credits_allocated || getCreditAllocation(userTier))
+      : getDailyCreditLimit(userTier) || getCreditAllocation(userTier))
+    
+    // Calculate credits remaining using the same logic as renderUsagePreview
+    let creditsRemaining: number
+    if (!isAuthenticated && anonymousCreditsRemaining !== null) {
+      // Use anonymousCreditsRemaining state if available (most up-to-date for anonymous users)
+      creditsRemaining = anonymousCreditsRemaining
+    } else if (creditBalance?.credits_remaining !== undefined) {
+      // Use creditBalance if available
+      creditsRemaining = creditBalance.credits_remaining
+    } else {
+      // Fallback: calculate from allocated and used
+      const creditsUsed = creditBalance?.credits_used_this_period ?? creditBalance?.credits_used_today ?? (isAuthenticated && user 
+        ? (user.credits_used_this_period || 0)
+        : 0)
+      creditsRemaining = Math.max(0, creditsAllocated - creditsUsed)
     }
 
+    // Calculate estimated credits for this request using the same logic as renderUsagePreview
     const modelsNeeded = selectedModels.length
-
-    // Determine user tier and their regular limit (userTier already declared above)
-    const regularLimit = getDailyLimit(userTier)
+    const inputTokens = Math.ceil(input.length / 4) // Rough estimate: 4 chars per token
+    // Build conversation history from conversations prop (not from hook's conversationHistory)
+    const conversationHistoryMessages = isFollowUpMode && conversations.length > 0
+      ? (() => {
+          // Get the first conversation that has messages and is for a selected model
+          const selectedConversations = conversations.filter(
+            conv => selectedModels.includes(conv.modelId) && conv.messages.length > 0
+          )
+          if (selectedConversations.length === 0) return []
+          // Use the first selected conversation's messages
+          return selectedConversations[0].messages
+        })()
+      : []
+    const conversationHistoryTokens = conversationHistoryMessages.length > 0
+      ? conversationHistoryMessages.reduce((sum, msg) => {
+          // Safely handle messages that might not have content
+          const content = msg.content || ''
+          return sum + Math.ceil(content.length / 4)
+        }, 0)
+      : 0
+    const totalInputTokens = inputTokens + conversationHistoryTokens
+    
+    // Estimate output tokens: ~500-1500 tokens per model response (use 1000 as average)
+    // Effective tokens = input_tokens + (output_tokens × 2.5)
+    // Credits = effective_tokens / 1000
+    const outputTokensPerModel = 1000
+    const effectiveTokensPerModel = totalInputTokens + (outputTokensPerModel * 2.5)
+    const creditsPerModel = effectiveTokensPerModel / 1000
+    
+    // Total estimated credits
+    const estimatedCredits = Math.ceil(creditsPerModel * modelsNeeded)
 
     // Note: Credit checking is now handled by the backend (returns 402 if insufficient)
     // This frontend check is kept as a fallback/early warning
     // The backend will return proper credit error messages
     
-    if (currentUsageCount >= regularLimit) {
-      // Use the synced count for the error message to match what we just set in state
-      // Updated to mention credits as primary, model responses as legacy
-      const creditsAllocated = isAuthenticated && user 
-        ? (user.monthly_credits_allocated || getCreditAllocation(userTier))
-        : getDailyCreditLimit(userTier) || getCreditAllocation(userTier)
-      const creditsUsed = isAuthenticated && user 
-        ? (user.credits_used_this_period || 0)
-        : 0
-      const creditsRemaining = Math.max(0, creditsAllocated - creditsUsed)
-      
+    // Check if user has run out of credits
+    if (creditsRemaining <= 0) {
       setError(
-        `You've reached your limit. ${creditsRemaining > 0 ? `You have ${Math.round(creditsRemaining)} credits remaining. ` : ''}${userTier === 'anonymous' ? ' Sign up for a free account to get 100 credits per day!' : ' Upgrade to a paid tier for more credits!'}`
+        `You've run out of credits.${userTier === 'anonymous' ? ' Sign up for a free account to get 100 credits per day!' : ' Upgrade to a paid tier for more credits!'}`
       )
       window.scrollTo({ top: 0, behavior: 'smooth' })
       return
     }
 
-    // Check if this comparison would exceed the limit
-    if (currentUsageCount + modelsNeeded > regularLimit) {
-      const creditsAllocated = isAuthenticated && user 
-        ? (user.monthly_credits_allocated || getCreditAllocation(userTier))
-        : getDailyCreditLimit(userTier) || getCreditAllocation(userTier)
-      const creditsUsed = isAuthenticated && user 
-        ? (user.credits_used_this_period || 0)
-        : 0
-      const creditsRemaining = Math.max(0, creditsAllocated - creditsUsed)
-      const estimatedCredits = modelsNeeded * 5 // Rough estimate
-      
-      // State and localStorage are already updated above, so UI components will show correct values
+    // Check if this request would exceed available credits
+    if (estimatedCredits > creditsRemaining) {
       setError(
         `This request requires approximately ${estimatedCredits} credits, but you have ${Math.round(creditsRemaining)} credits remaining.${userTier === 'anonymous' ? ' Sign up for a free account to get 100 credits per day!' : ' Upgrade to a paid tier for more credits!'}`
       )
@@ -3927,47 +3882,6 @@ function AppContent() {
           const newCount = data.fingerprint_usage || data.daily_usage || 0
           setUsageCount(newCount)
 
-          // Track submission count and show banner for anonymous users
-          if (!isAuthenticated) {
-            // Increment submission count
-            const newSubmissionCount = submissionCount + 1
-            setSubmissionCount(newSubmissionCount)
-
-            // Save to localStorage
-            const today = new Date().toDateString()
-            localStorage.setItem(
-              'compareintel_submission_count',
-              JSON.stringify({
-                count: newSubmissionCount,
-                date: today,
-              })
-            )
-
-            // Show banner on 5th, 7th, or 9th submission, or when limit is reached
-            // If limit is reached, keep it visible permanently
-            if (newCount >= ANONYMOUS_DAILY_LIMIT) {
-              setShowUsageBanner(true)
-              // Don't set timeout - keep it visible permanently when limit reached
-            } else if (
-              newSubmissionCount === 5 ||
-              newSubmissionCount === 7 ||
-              newSubmissionCount === 9
-            ) {
-              // Clear any existing timeout
-              if (usageBannerTimeoutRef.current !== null) {
-                window.clearTimeout(usageBannerTimeoutRef.current)
-              }
-              // Show the banner
-              setShowUsageBanner(true)
-              // Hide it after 10 seconds (only if not at limit)
-              usageBannerTimeoutRef.current = window.setTimeout(() => {
-                setShowUsageBanner(false)
-                usageBannerTimeoutRef.current = null
-              }, 10000)
-            }
-          }
-
-
           // Update localStorage to match backend
           const today = new Date().toDateString()
           localStorage.setItem(
@@ -3988,46 +3902,6 @@ function AppContent() {
           }
           const newUsageCount = usageCount + selectedModels.length
           setUsageCount(newUsageCount)
-
-          // Track submission count and show banner for anonymous users
-          if (!isAuthenticated) {
-            // Increment submission count
-            const newSubmissionCount = submissionCount + 1
-            setSubmissionCount(newSubmissionCount)
-
-            // Save to localStorage
-            const today = new Date().toDateString()
-            localStorage.setItem(
-              'compareintel_submission_count',
-              JSON.stringify({
-                count: newSubmissionCount,
-                date: today,
-              })
-            )
-
-            // Show banner on 5th, 7th, or 9th submission, or when limit is reached
-            // If limit is reached, keep it visible permanently
-            if (newUsageCount >= ANONYMOUS_DAILY_LIMIT) {
-              setShowUsageBanner(true)
-              // Don't set timeout - keep it visible permanently when limit reached
-            } else if (
-              newSubmissionCount === 5 ||
-              newSubmissionCount === 7 ||
-              newSubmissionCount === 9
-            ) {
-              // Clear any existing timeout
-              if (usageBannerTimeoutRef.current !== null) {
-                window.clearTimeout(usageBannerTimeoutRef.current)
-              }
-              // Show the banner
-              setShowUsageBanner(true)
-              // Hide it after 10 seconds (only if not at limit)
-              usageBannerTimeoutRef.current = window.setTimeout(() => {
-                setShowUsageBanner(false)
-                usageBannerTimeoutRef.current = null
-              }, 10000)
-            }
-          }
 
           const today = new Date().toDateString()
           localStorage.setItem(
@@ -4257,49 +4131,6 @@ function AppContent() {
         <MockModeBanner isAnonymous={true} isDev={true} />
       )}
 
-      {/* Usage tracking banner - Fixed at top, show on 5th/7th/9th submission or when limit reached */}
-      {!authLoading &&
-        !isAuthenticated &&
-        currentView === 'main' &&
-        (usageCount >= ANONYMOUS_DAILY_LIMIT ||
-          ((submissionCount === 5 || submissionCount === 7 || submissionCount === 9) &&
-            showUsageBanner &&
-            usageCount < ANONYMOUS_DAILY_LIMIT)) && (
-          <div
-            className="usage-tracking-banner"
-            style={{
-              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-              color: 'white',
-              padding: '1rem',
-              textAlign: 'center',
-              boxShadow: '0 4px 15px rgba(102, 126, 234, 0.3)',
-            }}
-          >
-            <div className="usage-banner-content">
-              {usageCount < ANONYMOUS_DAILY_LIMIT ? (
-                <>
-                  <div
-                    className="usage-banner-text-desktop"
-                    style={{ fontSize: '1.1rem', fontWeight: '600', marginBottom: '0.5rem' }}
-                  >
-                    {`${anonymousCreditsRemaining !== null ? Math.round(anonymousCreditsRemaining) : getDailyCreditLimit('anonymous') - (usageCount * 5)} of ${getDailyCreditLimit('anonymous')} credits remaining today • Sign up for 100 free per day`}
-                  </div>
-                  <div
-                    className="usage-banner-text-mobile"
-                    style={{ fontSize: '1.1rem', fontWeight: '600', marginBottom: '0.5rem' }}
-                  >
-                    <div>{`${anonymousCreditsRemaining !== null ? Math.round(anonymousCreditsRemaining) : getDailyCreditLimit('anonymous') - (usageCount * 5)} of ${getDailyCreditLimit('anonymous')} credits remaining today`}</div>
-                    <div>Sign up for 100 free per day</div>
-                  </div>
-                </>
-              ) : (
-                <div style={{ fontSize: '1.1rem', fontWeight: '600', marginBottom: '0.5rem' }}>
-                  Daily limit reached! Sign up for a free account to get 100 credits per day.
-                </div>
-              )}
-            </div>
-          </div>
-        )}
 
       {/* Admin Panel - Show if user is admin and in admin view */}
       {currentView === 'admin' && user?.is_admin ? (
@@ -4357,7 +4188,6 @@ function AppContent() {
                   isAnimatingTextarea={isAnimatingTextarea}
                   isAuthenticated={isAuthenticated}
                   user={user}
-                  usageCount={usageCount}
                   conversations={conversations}
                   showHistoryDropdown={showHistoryDropdown}
                   setShowHistoryDropdown={setShowHistoryDropdown}
