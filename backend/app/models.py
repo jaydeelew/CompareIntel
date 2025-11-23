@@ -51,15 +51,9 @@ class User(Base):
     # Payment integration
     stripe_customer_id = Column(String(255), index=True)
 
-    # Usage tracking (MODEL-BASED: counts individual model responses, not comparisons)
-    daily_usage_count = Column(Integer, default=0)  # Number of model responses used today
-    usage_reset_date = Column(Date, default=func.current_date())
+    # Usage tracking
     monthly_overage_count = Column(Integer, default=0)  # Track overage model responses for billing
     overage_reset_date = Column(Date, default=func.current_date())  # Reset monthly
-
-    # Extended tier usage tracking
-    daily_extended_usage = Column(Integer, default=0)  # Number of Extended tier responses used today
-    extended_usage_reset_date = Column(Date, default=func.current_date())
 
     # Credit-based system tracking
     monthly_credits_allocated = Column(Integer, default=0)  # Credits allocated for current billing period

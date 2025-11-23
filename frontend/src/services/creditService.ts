@@ -117,9 +117,12 @@ export interface CreditEstimate {
 
 /**
  * Get current credit balance
+ * 
+ * @param fingerprint - Optional browser fingerprint for anonymous users
  */
-export async function getCreditBalance(): Promise<CreditBalance> {
-  const response = await apiClient.get<CreditBalance>('/credits/balance')
+export async function getCreditBalance(fingerprint?: string): Promise<CreditBalance> {
+  const params = fingerprint ? `?fingerprint=${encodeURIComponent(fingerprint)}` : ''
+  const response = await apiClient.get<CreditBalance>(`/credits/balance${params}`)
   return response.data
 }
 

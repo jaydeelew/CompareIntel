@@ -10,7 +10,7 @@ from fastapi.responses import JSONResponse, StreamingResponse
 from sqlalchemy.orm import Session
 from sqlalchemy import func, desc, and_
 from typing import List, Optional, Dict, Any
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import json
 import httpx
 
@@ -29,6 +29,8 @@ from ..dependencies import get_current_admin_user, require_admin_role
 from ..auth import get_password_hash
 from ..rate_limiting import anonymous_rate_limit_storage
 from datetime import date
+from ..credit_manager import allocate_monthly_credits, reset_daily_credits
+from ..config.constants import DAILY_CREDIT_LIMITS, MONTHLY_CREDIT_ALLOCATIONS
 
 from ..email_service import send_verification_email
 
@@ -47,17 +49,9 @@ def ensure_usage_reset(user: User, db: Session) -> None:
     """
     today = date.today()
 
-    # Reset daily usage if it's a new day
-    if user.usage_reset_date != today:
-        user.daily_usage_count = 0
-        user.usage_reset_date = today
-        db.commit()
-
-    # Reset extended usage if it's a new day
-    if user.extended_usage_reset_date != today:
-        user.daily_extended_usage = 0
-        user.extended_usage_reset_date = today
-        db.commit()
+    # Legacy: usage_reset_date kept for compatibility but daily_usage_count removed
+    # Credits system handles resets automatically via credits_reset_at
+    # Extended tier usage tracking removed - no longer needed
 
 
 def log_admin_action(
@@ -129,9 +123,12 @@ async def get_admin_stats(
 
     # Usage stats for today
     today = datetime.utcnow().date()
+    # Legacy: daily_usage_count removed - use credits instead
+    # Calculate total credits used today (approximate usage metric)
     total_usage_today = (
-        db.query(func.sum(User.daily_usage_count)).filter(User.usage_reset_date == today).scalar()
-        or 0
+        db.query(func.sum(User.credits_used_this_period)).filter(
+            User.credits_reset_at.isnot(None)
+        ).scalar() or 0
     )
 
     # Admin actions today
@@ -418,7 +415,7 @@ async def update_user(
         "subscription_period": user.subscription_period,
         "is_active": user.is_active,
         "is_verified": user.is_verified,
-        "daily_usage_count": user.daily_usage_count,
+        # Legacy: daily_usage_count removed - use credits_used_this_period instead
         "monthly_overage_count": user.monthly_overage_count,
     }
 
@@ -717,15 +714,20 @@ async def reset_user_usage(
     current_user: User = Depends(get_current_admin_user),
     db: Session = Depends(get_db),
 ):
-    """Reset user's daily usage count and extended usage to zero and remove all model comparison history."""
+    """Reset user's daily usage count, extended usage, and credits to zero and remove all model comparison history.
+    
+    This restores full credits based on the user's subscription tier:
+    - Paid tiers: Restores monthly credit allocation
+    - Free tier: Restores daily credit allocation
+    """
 
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
     # Store previous usage counts for logging
-    previous_usage = user.daily_usage_count
-    previous_extended_usage = user.daily_extended_usage
+    previous_credits_used = user.credits_used_this_period or 0
+    previous_credits_allocated = user.monthly_credits_allocated or 0
 
     # Get count of conversations to be deleted for logging
     conversations_count = db.query(Conversation).filter(Conversation.user_id == user_id).count()
@@ -734,28 +736,44 @@ async def reset_user_usage(
     # This will cascade delete all related ConversationMessage records due to the cascade setting
     db.query(Conversation).filter(Conversation.user_id == user_id).delete()
 
-    # Reset daily usage counts to 0 and update reset dates to today
-    today = date.today()
-    user.daily_usage_count = 0
-    user.usage_reset_date = today
-    user.daily_extended_usage = 0
-    user.extended_usage_reset_date = today
-    db.commit()
-    db.refresh(user)
+    # Extended tier usage tracking removed - no longer needed
+
+    # Restore full credits based on subscription tier
+    tier = user.subscription_tier or "free"
+    if tier in MONTHLY_CREDIT_ALLOCATIONS:
+        # Paid tier: allocate monthly credits
+        # Note: allocate_monthly_credits commits the db, so we commit daily usage changes first
+        db.commit()
+        db.refresh(user)
+        allocate_monthly_credits(user_id, tier, db)
+        db.refresh(user)
+    elif tier in DAILY_CREDIT_LIMITS:
+        # Free tier: reset daily credits
+        # Note: reset_daily_credits commits the db, so we commit daily usage changes first
+        db.commit()
+        db.refresh(user)
+        reset_daily_credits(user_id, tier, db)
+        db.refresh(user)
+    else:
+        # Unknown tier: just reset credits used to 0
+        user.credits_used_this_period = 0
+        db.commit()
+        db.refresh(user)
 
     # Log admin action
     log_admin_action(
         db=db,
         admin_user=current_user,
         action_type="reset_usage",
-        action_description=f"Reset daily usage, extended usage, and removed all model comparison history for user {user.email}",
+        action_description=f"Reset credits and removed all model comparison history for user {user.email}",
         target_user_id=user.id,
         details={
-            "previous_usage": previous_usage,
-            "new_usage": 0,
-            "previous_extended_usage": previous_extended_usage,
-            "new_extended_usage": 0,
+            "previous_credits_used": previous_credits_used,
+            "previous_credits_allocated": previous_credits_allocated,
+            "new_credits_allocated": user.monthly_credits_allocated or 0,
+            "new_credits_used": 0,
             "conversations_deleted": conversations_count,
+            "subscription_tier": tier,
         },
         request=request,
     )
@@ -998,9 +1016,13 @@ async def zero_anonymous_usage(
     Zero out all anonymous user usage data and clear comparison history.
 
     This clears:
-    - Daily interaction usage for all anonymous users
-    - Extended interaction usage for all anonymous users
-    - Comparison history stored locally (client-side)
+    - Daily interaction usage for all anonymous users (in-memory storage)
+    - Extended interaction usage for all anonymous users (in-memory storage)
+    - UsageLog database entries for anonymous users created today
+    - Comparison history stored locally (client-side, handled by frontend)
+
+    In development mode only, this restores full credits for all anonymous users
+    by clearing both memory and database tracking.
 
     Only available in development environment.
     """
@@ -1024,19 +1046,36 @@ async def zero_anonymous_usage(
         if key.startswith("ip:") or key.startswith("fp:"):
             keys_to_remove.append(key)
 
-    # Clear all anonymous usage entries
+    # Clear all anonymous usage entries from memory
     for key in keys_to_remove:
         del anonymous_rate_limit_storage[key]
+
+    # Delete all UsageLog entries for anonymous users created today
+    # This ensures that when memory storage syncs with database, it finds 0 credits used
+    today_start = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
+    today_end = datetime.now(timezone.utc).replace(hour=23, minute=59, second=59, microsecond=999999)
+    
+    usage_logs_deleted = (
+        db.query(UsageLog)
+        .filter(
+            UsageLog.user_id.is_(None),  # Anonymous users only
+            UsageLog.created_at >= today_start,
+            UsageLog.created_at <= today_end
+        )
+        .delete()
+    )
+    db.commit()
 
     # Log admin action
     log_admin_action(
         db=db,
         admin_user=current_user,
         action_type="zero_anonymous_usage",
-        action_description=f"Zeroed out anonymous user usage data (cleared {len(keys_to_remove)} entries)",
+        action_description=f"Zeroed out anonymous user usage data (cleared {len(keys_to_remove)} memory entries, deleted {usage_logs_deleted} database entries)",
         target_user_id=None,
         details={
-            "entries_cleared": len(keys_to_remove),
+            "memory_entries_cleared": len(keys_to_remove),
+            "database_entries_deleted": usage_logs_deleted,
             "keys_removed": keys_to_remove,
             "development_mode": is_development,
         },
@@ -1044,15 +1083,23 @@ async def zero_anonymous_usage(
     )
 
     return {
-        "message": f"Anonymous usage data cleared ({len(keys_to_remove)} entries removed). Client-side history should be cleared separately.",
+        "message": f"Anonymous usage data cleared ({len(keys_to_remove)} memory entries removed, {usage_logs_deleted} database entries deleted). Full credits restored. Client-side history should be cleared separately.",
         "entries_cleared": len(keys_to_remove),
+        "database_entries_deleted": usage_logs_deleted,
     }
 
 
 # Model Management Endpoints
 
 from pydantic import BaseModel
-from ..model_runner import MODELS_BY_PROVIDER, OPENROUTER_MODELS, client, ANONYMOUS_TIER_MODELS, FREE_TIER_MODELS
+from ..model_runner import (
+    MODELS_BY_PROVIDER,
+    OPENROUTER_MODELS,
+    client,
+    ANONYMOUS_TIER_MODELS,
+    FREE_TIER_MODELS,
+    refresh_model_token_limits,
+)
 from .. import model_runner
 from ..config import settings
 import subprocess
@@ -1527,6 +1574,9 @@ async def add_model(
         # Update the imported references in this module's namespace
         sys.modules[__name__].MODELS_BY_PROVIDER = model_runner.MODELS_BY_PROVIDER
         sys.modules[__name__].OPENROUTER_MODELS = model_runner.OPENROUTER_MODELS
+        
+        # Refresh token limits for the newly added model
+        refresh_model_token_limits(model_id)
         
         # Run setup script to generate renderer config
         # Path from backend/app/routers/admin.py to backend/scripts/setup_model_renderer.py
@@ -2024,6 +2074,9 @@ async def delete_model(
         # Update the imported references in this module's namespace
         sys.modules[__name__].MODELS_BY_PROVIDER = model_runner.MODELS_BY_PROVIDER
         sys.modules[__name__].OPENROUTER_MODELS = model_runner.OPENROUTER_MODELS
+        
+        # Refresh token limits for the newly added model
+        refresh_model_token_limits(model_id)
         
         # Remove renderer config from frontend config file
         project_root = Path(__file__).parent.parent.parent.parent

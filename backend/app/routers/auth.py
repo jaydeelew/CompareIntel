@@ -237,7 +237,7 @@ async def register(user_data: UserRegister, background_tasks: BackgroundTasks, d
             "subscription_tier": new_user.subscription_tier,
             "subscription_status": new_user.subscription_status,
             "subscription_period": new_user.subscription_period,
-            "daily_usage_count": new_user.daily_usage_count,
+            # Legacy: daily_usage_count removed - use credits_used_this_period instead
             "monthly_overage_count": new_user.monthly_overage_count,
             "created_at": new_user.created_at.isoformat() if new_user.created_at else None,
         }
@@ -562,7 +562,7 @@ async def get_current_user_info(current_user: User = Depends(get_current_user_re
     # Refresh the user object from the database to get the latest data
     # This is important after usage increments in /compare endpoint
     db.refresh(current_user)
-    print(f"[/auth/me] Returning user data for {current_user.email}: daily_usage={current_user.daily_usage_count}, extended_usage={current_user.daily_extended_usage}")
+    print(f"[/auth/me] Returning user data for {current_user.email}: credits_used={current_user.credits_used_this_period}")
     return current_user
 
 

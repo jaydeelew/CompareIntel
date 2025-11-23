@@ -1206,8 +1206,9 @@ function AppContent() {
     const regularLimit = getDailyLimit(userTier)
     const extendedLimit = getExtendedLimit(userTier)
 
-    // Calculate current usage
-    const currentRegularUsage = isAuthenticated && user ? user.daily_usage_count : usageCount
+    // Calculate current usage (legacy: use credits instead of daily_usage_count)
+    // For authenticated users, use credits; for anonymous, use usageCount (localStorage)
+    const currentRegularUsage = isAuthenticated && user ? (user.credits_used_this_period || 0) : usageCount
     const currentExtendedUsage =
       isAuthenticated && user ? user.daily_extended_usage : extendedUsageCount
 
@@ -1530,6 +1531,25 @@ function AppContent() {
     }
   }, [showHistoryDropdown, isAuthenticated, loadHistoryFromAPI, loadHistoryFromLocalStorage])
 
+  // Listen for anonymous usage cleared event from AdminPanel and refresh history
+  useEffect(() => {
+    const handleAnonymousUsageCleared = () => {
+      // Clear conversation history state for anonymous users
+      if (!isAuthenticated) {
+        const history = loadHistoryFromLocalStorage()
+        setConversationHistory(history)
+        // Also clear any currently displayed conversations if they exist
+        setConversations([])
+        setCurrentVisibleComparisonId(null)
+      }
+    }
+
+    window.addEventListener('anonymousUsageCleared', handleAnonymousUsageCleared)
+    return () => {
+      window.removeEventListener('anonymousUsageCleared', handleAnonymousUsageCleared)
+    }
+  }, [isAuthenticated, loadHistoryFromLocalStorage])
+
   // Track currently visible comparison ID for authenticated users after history loads
   // This ensures the visible comparison is highlighted in the history dropdown
   // Always try to match and set the ID when history or conversations change
@@ -1793,7 +1813,7 @@ function AppContent() {
           // For anonymous users, refresh rate limit status (which updates usageCount)
           fetchRateLimitStatus()
         } else if (isAuthenticated) {
-          // For authenticated users, refresh user data (which updates user.daily_usage_count)
+          // For authenticated users, refresh user data (which updates credits)
           refreshUser()
         }
       }, 300) // Wait 300ms after last model selection change
@@ -2261,8 +2281,8 @@ function AppContent() {
       // Sync usage count with backend (only for anonymous users)
       try {
         if (isAuthenticated && user) {
-          // For authenticated users, use the user object directly
-          setUsageCount(user.daily_usage_count)
+          // For authenticated users, use credits instead of daily_usage_count
+          setUsageCount(user.credits_used_this_period || 0)
         } else {
           try {
             const data = await getRateLimitStatus(fingerprint)
@@ -2299,8 +2319,11 @@ function AppContent() {
 
             // Fetch anonymous credit balance
             try {
-              const creditBalance = await getCreditBalance()
+              console.log('[DEBUG] Fetching credit balance on page load with fingerprint:', fingerprint?.substring(0, 20))
+              const creditBalance = await getCreditBalance(fingerprint)
+              console.log('[DEBUG] Received credit balance:', creditBalance.credits_remaining)
               setAnonymousCreditsRemaining(creditBalance.credits_remaining)
+              setCreditBalance(creditBalance)
             } catch (error) {
               // Silently handle credit balance fetch errors
               console.error('Failed to fetch anonymous credit balance:', error)
@@ -2396,6 +2419,29 @@ function AppContent() {
 
     fetchModels()
   }, []) // eslint-disable-line react-hooks/exhaustive-deps -- Initializes on mount; auth changes handled separately
+
+  // Refetch credit balance when browserFingerprint becomes available (backup for timing issues)
+  useEffect(() => {
+    if (!isAuthenticated && browserFingerprint && !user) {
+      // Only refetch if we don't already have a credit balance set, or if it's the default 50
+      const shouldRefetch = anonymousCreditsRemaining === null || anonymousCreditsRemaining === 50
+      if (shouldRefetch) {
+        console.log('[DEBUG] Refetching credit balance when fingerprint becomes available:', browserFingerprint.substring(0, 20))
+        getCreditBalance(browserFingerprint)
+          .then(balance => {
+            console.log('[DEBUG] Refetched credit balance:', balance.credits_remaining)
+            // Only update if we got a different (lower) value, indicating credits were actually used
+            if (balance.credits_remaining < 50) {
+              setAnonymousCreditsRemaining(balance.credits_remaining)
+              setCreditBalance(balance)
+            }
+          })
+          .catch(error => {
+            console.error('Failed to refetch anonymous credit balance:', error)
+          })
+      }
+    }
+  }, [browserFingerprint, isAuthenticated, user, anonymousCreditsRemaining])
 
   // Setup scroll chaining for selected models grid
   useEffect(() => {
@@ -2565,8 +2611,33 @@ function AppContent() {
 
   const toggleAllForProvider = async (provider: string) => {
     const providerModels = modelsByProvider[provider] || []
-    // Filter out unavailable models (where available === false)
-    const availableProviderModels = providerModels.filter(model => model.available !== false)
+    
+    // Determine user tier and filter out restricted models
+    const userTier = isAuthenticated ? user?.subscription_tier || 'free' : 'anonymous'
+    const isPaidTier = ['starter', 'starter_plus', 'pro', 'pro_plus'].includes(userTier)
+    
+    // Filter out unavailable models (where available === false) and restricted models based on tier
+    const availableProviderModels = providerModels.filter(model => {
+      // Filter out unavailable models
+      if (model.available === false) {
+        return false
+      }
+      
+      // Filter out restricted models based on tier access
+      if (isPaidTier) {
+        // Paid tiers have access to all models
+        return true
+      } else if (userTier === 'anonymous') {
+        // Anonymous tier only has access to anonymous-tier models
+        return model.tier_access === 'anonymous'
+      } else if (userTier === 'free') {
+        // Free tier has access to anonymous and free-tier models
+        return model.tier_access !== 'paid'
+      }
+      
+      return true
+    })
+    
     const providerModelIds = availableProviderModels.map(model => model.id)
 
     // Check if all provider models are currently selected
@@ -3018,6 +3089,34 @@ function AppContent() {
       return
     }
 
+    // Check input length against selected models' limits
+    if (selectedModels.length > 0) {
+      // Find the minimum max input length across all selected models
+      const modelLimits = selectedModels
+        .map(modelId => {
+          // Find model in modelsByProvider
+          for (const providerModels of Object.values(modelsByProvider)) {
+            const model = providerModels.find(m => m.id === modelId)
+            if (model && model.max_input_chars) {
+              return model.max_input_chars
+            }
+          }
+          return null
+        })
+        .filter((limit): limit is number => limit !== null)
+
+      if (modelLimits.length > 0) {
+        const minMaxInput = Math.min(...modelLimits)
+        if (input.length > minMaxInput) {
+          setError(
+            `Your input is too long for one or more of the selected models. The maximum input length is approximately ${formatNumber(minMaxInput)} characters, but your input is ${formatNumber(input.length)} characters. Please shorten your input or select different models that support longer inputs.`
+          )
+          window.scrollTo({ top: 0, behavior: 'smooth' })
+          return
+        }
+      }
+    }
+
     // Hard limit: Prevent submissions with conversations that are too long
     // Industry best practice 2025: Enforce maximum context window to protect costs and maintain quality
     if (isFollowUpMode && conversations.length > 0) {
@@ -3034,9 +3133,9 @@ function AppContent() {
     // First, sync with backend to ensure we have the latest usage count
     let currentUsageCount = usageCount
 
-    // For authenticated users, use the user object's daily_usage_count
+    // For authenticated users, use credits instead of daily_usage_count
     if (isAuthenticated && user) {
-      currentUsageCount = user.daily_usage_count
+      currentUsageCount = user.credits_used_this_period || 0
     } else if (browserFingerprint) {
       // For anonymous users, sync from backend
       try {
@@ -3518,12 +3617,47 @@ function AppContent() {
                   setProcessingTime(endTime - startTime)
                   shouldUpdate = true
 
-                  // Refresh credit balance if credits were used
-                  if (streamingMetadata?.credits_used !== undefined) {
+                  // Debug: Log metadata for anonymous users
+                  if (!isAuthenticated && streamingMetadata) {
+                    console.log('[DEBUG] Received streaming metadata:', {
+                      credits_used: streamingMetadata.credits_used,
+                      credits_remaining: streamingMetadata.credits_remaining,
+                      metadata: streamingMetadata
+                    })
+                  }
+
+                  // Refresh credit balance if credits were used OR if credits_remaining is provided
+                  // Check for credits_remaining first (more reliable indicator)
+                  if (streamingMetadata?.credits_remaining !== undefined || streamingMetadata?.credits_used !== undefined) {
                     if (isAuthenticated) {
+                      // Use credits_remaining from metadata for immediate update (like anonymous users)
+                      if (streamingMetadata.credits_remaining !== undefined) {
+                        // Update creditBalance immediately with metadata value
+                        if (creditBalance) {
+                          setCreditBalance({
+                            ...creditBalance,
+                            credits_remaining: streamingMetadata.credits_remaining,
+                            credits_used_this_period: creditBalance.credits_allocated - streamingMetadata.credits_remaining,
+                          })
+                        } else if (user) {
+                          // If creditBalance is not yet loaded, create a temporary one from user data
+                          const allocated = user.monthly_credits_allocated || getCreditAllocation(user.subscription_tier || 'free')
+                          setCreditBalance({
+                            credits_allocated: allocated,
+                            credits_used_this_period: allocated - streamingMetadata.credits_remaining,
+                            credits_remaining: streamingMetadata.credits_remaining,
+                            period_type: user.billing_period_start ? 'monthly' : 'daily',
+                            subscription_tier: user.subscription_tier || 'free',
+                            credits_reset_at: user.credits_reset_at,
+                            billing_period_start: user.billing_period_start,
+                            billing_period_end: user.billing_period_end,
+                            total_credits_used: user.total_credits_used,
+                          })
+                        }
+                      }
                       // Refresh user data to get updated credit balance
                       refreshUser()
-                        .then(() => getCreditBalance())
+                        .then(() => getCreditBalance()) // Authenticated users don't need fingerprint
                         .then(balance => {
                           setCreditBalance(balance)
                           const remainingPercent = balance.credits_allocated > 0
@@ -3534,23 +3668,58 @@ function AppContent() {
                         .catch(error => console.error('Failed to refresh user credit balance:', error))
                     } else {
                       // For anonymous users, refresh credit balance from API
-                      const updateBalance = (balance: CreditBalance) => {
-                        setAnonymousCreditsRemaining(balance.credits_remaining)
-                        setCreditBalance(balance)
-                        const remainingPercent = balance.credits_allocated > 0
-                          ? (balance.credits_remaining / balance.credits_allocated) * 100
+                      // Use credits_remaining from metadata for immediate update (most accurate - calculated right after deduction)
+                      if (streamingMetadata.credits_remaining !== undefined) {
+                        console.log('[DEBUG] Updating anonymous credits from metadata:', streamingMetadata.credits_remaining)
+                        const metadataCreditsRemaining = streamingMetadata.credits_remaining
+                        setAnonymousCreditsRemaining(metadataCreditsRemaining)
+                        
+                        // Update creditBalance immediately with metadata value
+                        const allocated = creditBalance?.credits_allocated ?? getDailyCreditLimit('anonymous')
+                        setCreditBalance({
+                          credits_allocated: allocated,
+                          credits_used_today: allocated - metadataCreditsRemaining,
+                          credits_remaining: metadataCreditsRemaining,
+                          period_type: 'daily',
+                          subscription_tier: 'anonymous',
+                        })
+                        
+                        const remainingPercent = allocated > 0
+                          ? (metadataCreditsRemaining / allocated) * 100
                           : 100
                         setShowLowCreditWarning(remainingPercent < 20 && remainingPercent > 0)
-                      }
-                      
-                      if (streamingMetadata.credits_remaining !== undefined) {
-                        setAnonymousCreditsRemaining(streamingMetadata.credits_remaining)
-                        getCreditBalance()
-                          .then(updateBalance)
+                        
+                        // Optionally refresh from API, but don't overwrite if metadata value is more recent
+                        // Now API has fingerprint info, so it should match metadata
+                        getCreditBalance(browserFingerprint)
+                          .then(balance => {
+                            // Only update if API value matches metadata (to sync other fields)
+                            // But keep the metadata credits_remaining value as it's more accurate
+                            if (Math.abs(balance.credits_remaining - metadataCreditsRemaining) <= 1) {
+                              setCreditBalance({
+                                ...balance,
+                                credits_remaining: metadataCreditsRemaining, // Keep metadata value
+                              })
+                            } else {
+                              console.log('[DEBUG] API credits_remaining differs from metadata, keeping metadata value:', {
+                                api: balance.credits_remaining,
+                                metadata: metadataCreditsRemaining
+                              })
+                            }
+                          })
                           .catch(error => console.error('Failed to refresh anonymous credit balance:', error))
                       } else {
-                        getCreditBalance()
-                          .then(updateBalance)
+                        console.warn('[DEBUG] streamingMetadata.credits_remaining is undefined!', streamingMetadata)
+                        // Fallback: get from API if metadata not available
+                        getCreditBalance(browserFingerprint)
+                          .then(balance => {
+                            setAnonymousCreditsRemaining(balance.credits_remaining)
+                            setCreditBalance(balance)
+                            const remainingPercent = balance.credits_allocated > 0
+                              ? (balance.credits_remaining / balance.credits_allocated) * 100
+                              : 100
+                            setShowLowCreditWarning(remainingPercent < 20 && remainingPercent > 0)
+                          })
                           .catch(error => console.error('Failed to refresh anonymous credit balance:', error))
                       }
                     }
@@ -4297,18 +4466,31 @@ function AppContent() {
     const extendedLimit = getExtendedLimit(userTier)
 
     // Calculate current usage (legacy - model responses)
-    const currentRegularUsage = isAuthenticated && user ? user.daily_usage_count : usageCount
+    const currentRegularUsage = isAuthenticated && user ? (user.credits_used_this_period || 0) : usageCount
     const currentExtendedUsage =
       isAuthenticated && user ? user.daily_extended_usage : extendedUsageCount
 
     // Get credit information (if available)
-    const creditsAllocated = isAuthenticated && user 
+    // Prefer creditBalance if available (more up-to-date after model calls)
+    const creditsAllocated = creditBalance?.credits_allocated ?? (isAuthenticated && user 
       ? (user.monthly_credits_allocated || getCreditAllocation(userTier))
-      : getDailyCreditLimit(userTier) || getCreditAllocation(userTier)
-    const creditsUsed = isAuthenticated && user 
-      ? (user.credits_used_this_period || 0)
-      : 0
-    const creditsRemaining = Math.max(0, creditsAllocated - creditsUsed)
+      : getDailyCreditLimit(userTier) || getCreditAllocation(userTier))
+    
+    // For anonymous users, prefer anonymousCreditsRemaining if available, then creditBalance
+    let creditsRemaining: number
+    if (!isAuthenticated && anonymousCreditsRemaining !== null) {
+      // Use anonymousCreditsRemaining state if available (most up-to-date for anonymous users)
+      creditsRemaining = anonymousCreditsRemaining
+    } else if (creditBalance?.credits_remaining !== undefined) {
+      // Use creditBalance if available
+      creditsRemaining = creditBalance.credits_remaining
+    } else {
+      // Fallback: calculate from allocated and used
+      const creditsUsed = creditBalance?.credits_used_this_period ?? creditBalance?.credits_used_today ?? (isAuthenticated && user 
+        ? (user.credits_used_this_period || 0)
+        : 0)
+      creditsRemaining = Math.max(0, creditsAllocated - creditsUsed)
+    }
 
     // Extended mode is based on isExtendedMode flag
     const isExtendedInteraction = isExtendedMode
@@ -4326,8 +4508,24 @@ function AppContent() {
     // Extended mode uses ~2x credits due to larger context
     // Conversation history adds to input tokens
     const inputTokens = Math.ceil(input.length / 4) // Rough estimate: 4 chars per token
-    const conversationHistoryTokens = isFollowUpMode && conversationHistory.length > 0
-      ? conversationHistory.reduce((sum, msg) => sum + Math.ceil(msg.content.length / 4), 0)
+    // Build conversation history from conversations prop (not from hook's conversationHistory)
+    const conversationHistoryMessages = isFollowUpMode && conversations.length > 0
+      ? (() => {
+          // Get the first conversation that has messages and is for a selected model
+          const selectedConversations = conversations.filter(
+            conv => selectedModels.includes(conv.modelId) && conv.messages.length > 0
+          )
+          if (selectedConversations.length === 0) return []
+          // Use the first selected conversation's messages
+          return selectedConversations[0].messages
+        })()
+      : []
+    const conversationHistoryTokens = conversationHistoryMessages.length > 0
+      ? conversationHistoryMessages.reduce((sum, msg) => {
+          // Safely handle messages that might not have content
+          const content = msg.content || ''
+          return sum + Math.ceil(content.length / 4)
+        }, 0)
       : 0
     const totalInputTokens = inputTokens + conversationHistoryTokens
     
@@ -4818,7 +5016,23 @@ function AppContent() {
                                       // Check if model is restricted for current user tier
                                       const userTier = isAuthenticated ? user?.subscription_tier || 'free' : 'anonymous'
                                       const isPaidTier = ['starter', 'starter_plus', 'pro', 'pro_plus'].includes(userTier)
-                                      const isRestricted = model.tier_access === 'paid' && !isPaidTier
+                                      
+                                      // Determine if model is restricted based on user tier
+                                      // Anonymous tier: only models with tier_access === 'anonymous' are available
+                                      // Free tier: models with tier_access === 'anonymous' or 'free' are available
+                                      // Paid tiers: all models are available
+                                      let isRestricted = false
+                                      if (isPaidTier) {
+                                        // Paid tiers have access to all models
+                                        isRestricted = false
+                                      } else if (userTier === 'anonymous') {
+                                        // Anonymous tier only has access to anonymous-tier models
+                                        isRestricted = model.tier_access !== 'anonymous'
+                                      } else if (userTier === 'free') {
+                                        // Free tier has access to anonymous and free-tier models
+                                        isRestricted = model.tier_access === 'paid'
+                                      }
+                                      
                                       const requiresUpgrade = isRestricted && (userTier === 'anonymous' || userTier === 'free')
                                       
                                       const isDisabled =
@@ -4857,7 +5071,21 @@ function AppContent() {
                                               {model.name}
                                               {isRestricted && (
                                                 <span className="model-badge premium" title="Premium model - upgrade required">
-                                                  🔒 Premium
+                                                  <svg
+                                                    width="12"
+                                                    height="12"
+                                                    viewBox="0 0 24 24"
+                                                    fill="none"
+                                                    stroke="currentColor"
+                                                    strokeWidth="2"
+                                                    strokeLinecap="round"
+                                                    strokeLinejoin="round"
+                                                    style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '0.25rem' }}
+                                                  >
+                                                    <rect x="5" y="11" width="14" height="10" rx="2" ry="2" />
+                                                    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                                                  </svg>
+                                                  Premium
                                                 </span>
                                               )}
                                               {isFollowUpMode &&

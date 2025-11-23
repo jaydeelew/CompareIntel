@@ -1,9 +1,9 @@
 /**
  * Centralized configuration constants for CompareIntel frontend.
- * 
+ *
  * This module consolidates all configuration constants to avoid duplication
  * and provides a single source of truth for frontend settings.
- * 
+ *
  * Should match backend configuration for consistency.
  * See: backend/app/config.py
  */
@@ -14,25 +14,12 @@
 // Limits for unregistered (anonymous) users
 
 /** Model responses per day for anonymous (unregistered) users */
-export const ANONYMOUS_DAILY_LIMIT = 10;
+export const ANONYMOUS_DAILY_LIMIT = 10
 
 /** Maximum models per comparison for anonymous users */
-export const ANONYMOUS_MODEL_LIMIT = 3;
+export const ANONYMOUS_MODEL_LIMIT = 3
 
-// ============================================================================
-// Extended Tier Daily Limits
-// ============================================================================
-// Maximum number of times Extended mode can be used per day per subscription tier
-// Extended mode is only triggered when the user explicitly clicks the Extended mode button
-
-export const EXTENDED_TIER_LIMITS = {
-  anonymous: 2,
-  free: 5,
-  starter: 10,
-  starter_plus: 20,
-  pro: 40,
-  pro_plus: 80,
-} as const;
+// Extended tier usage tracking removed - extended mode is now unlimited (only limited by credits)
 
 // ============================================================================
 // Model Limits per Subscription Tier
@@ -46,7 +33,7 @@ export const MODEL_LIMITS = {
   starter_plus: 6,
   pro: 9,
   pro_plus: 12,
-} as const;
+} as const
 
 // ============================================================================
 // Daily Limits per Subscription Tier
@@ -60,7 +47,7 @@ export const DAILY_LIMITS = {
   starter_plus: 100,
   pro: 200,
   pro_plus: 400,
-} as const;
+} as const
 
 // ============================================================================
 // Tier Limits for Input/Output
@@ -70,7 +57,7 @@ export const DAILY_LIMITS = {
 export const TIER_LIMITS = {
   standard: { input_chars: 5000, output_tokens: 4000 },
   extended: { input_chars: 15000, output_tokens: 8192 },
-} as const;
+} as const
 
 // ============================================================================
 // Conversation History Limits
@@ -85,7 +72,7 @@ export const CONVERSATION_LIMITS = {
   starter_plus: 20,
   pro: 40,
   pro_plus: 80,
-} as const;
+} as const
 
 // ============================================================================
 // Credit-Based System Configuration
@@ -96,17 +83,17 @@ export const CONVERSATION_LIMITS = {
 
 // Daily credit limits for free tiers (resets daily)
 export const DAILY_CREDIT_LIMITS = {
-  anonymous: 50,   // 50 credits/day (~10 exchanges/day)
-  free: 100,       // 100 credits/day (~20 exchanges/day)
-} as const;
+  anonymous: 50, // 50 credits/day (~10 exchanges/day)
+  free: 100, // 100 credits/day (~20 exchanges/day)
+} as const
 
 // Monthly credit allocations for paid tiers
 export const MONTHLY_CREDIT_ALLOCATIONS = {
-  starter: 1_200,      // $9.95/month - ~240 exchanges/month (~8/day)
-  starter_plus: 2_500,  // $19.95/month - ~500 exchanges/month (~17/day)
-  pro: 5_000,          // $39.95/month - ~1,000 exchanges/month (~33/day)
-  pro_plus: 10_000,    // $79.95/month - ~2,000 exchanges/month (~67/day)
-} as const;
+  starter: 1_200, // $9.95/month - ~240 exchanges/month (~8/day)
+  starter_plus: 2_500, // $19.95/month - ~500 exchanges/month (~17/day)
+  pro: 5_000, // $39.95/month - ~1,000 exchanges/month (~33/day)
+  pro_plus: 10_000, // $79.95/month - ~2,000 exchanges/month (~67/day)
+} as const
 
 // Subscription pricing (monthly)
 export const TIER_PRICING = {
@@ -116,18 +103,18 @@ export const TIER_PRICING = {
   starter_plus: 19.95,
   pro: 39.95,
   pro_plus: 79.95,
-} as const;
+} as const
 
 // Overage pricing (per 1,000 credits)
-export const OVERAGE_PRICE_PER_1000_CREDITS = 12.0; // $12 per 1,000 credits ($0.012 per credit)
+export const OVERAGE_PRICE_PER_1000_CREDITS = 12.0 // $12 per 1,000 credits ($0.012 per credit)
 
 // ============================================================================
 // Type Exports
 // ============================================================================
 // TypeScript types derived from constants for type safety
 
-export type SubscriptionTier = keyof typeof MODEL_LIMITS;
-export type ResponseTier = keyof typeof TIER_LIMITS;
+export type SubscriptionTier = keyof typeof MODEL_LIMITS
+export type ResponseTier = keyof typeof TIER_LIMITS
 
 // ============================================================================
 // Helper Functions
@@ -135,101 +122,103 @@ export type ResponseTier = keyof typeof TIER_LIMITS;
 
 /**
  * Get maximum models per comparison for a given subscription tier.
- * 
+ *
  * @param tier - Subscription tier name
  * @returns Maximum number of models allowed per comparison
  */
 export function getModelLimit(tier: SubscriptionTier | string): number {
-  return MODEL_LIMITS[tier as SubscriptionTier] ?? MODEL_LIMITS.anonymous;
+  return MODEL_LIMITS[tier as SubscriptionTier] ?? MODEL_LIMITS.anonymous
 }
 
 /**
  * Get daily model response limit for a given subscription tier.
- * 
+ *
  * @param tier - Subscription tier name
  * @returns Daily limit for model responses
  */
 export function getDailyLimit(tier: SubscriptionTier | string): number {
-  return DAILY_LIMITS[tier as SubscriptionTier] ?? DAILY_LIMITS.anonymous;
+  return DAILY_LIMITS[tier as SubscriptionTier] ?? DAILY_LIMITS.anonymous
 }
 
 /**
- * Get Extended tier daily limit for a given subscription tier.
- * 
- * @param tier - Subscription tier name
- * @returns Daily Extended tier limit
+ * LEGACY FUNCTION - DEPRECATED: Extended tier usage tracking removed.
+ * Extended mode is now unlimited (only limited by credits).
+ * Returns 0 to indicate no limit.
  */
 export function getExtendedLimit(tier: SubscriptionTier | string): number {
-  return EXTENDED_TIER_LIMITS[tier as SubscriptionTier] ?? EXTENDED_TIER_LIMITS.anonymous;
+  return 0  // Unlimited - extended mode is only limited by credits
 }
 
 /**
  * Validate input length against tier limits.
- * 
+ *
  * @param inputData - Input text to validate
  * @param tier - Response tier (standard, extended)
  * @returns True if input is within limits, False otherwise
  */
 export function validateTierLimits(inputData: string, tier: ResponseTier | string): boolean {
-  if (!(tier in TIER_LIMITS)) {
-    return false;
+  if (tier === "extended") {
+    return inputData.length <= 15000  // Extended: 15K chars
+  } else if (tier === "standard") {
+    return inputData.length <= 5000  // Standard: 5K chars
   }
-  const limit = TIER_LIMITS[tier as ResponseTier];
-  return inputData.length <= limit.input_chars;
+  return false
 }
 
 /**
  * Get maximum output tokens for a given response tier.
- * 
+ *
  * @param tier - Response tier (standard, extended)
  * @returns Maximum output tokens for the tier
  */
 export function getTierMaxTokens(tier: ResponseTier | string): number {
-  return TIER_LIMITS[tier as ResponseTier]?.output_tokens ?? TIER_LIMITS.standard.output_tokens;
+  if (tier === "extended") {
+    return 8192  // Extended: 8K tokens
+  }
+  return 4000  // Standard: 4K tokens
 }
 
 /**
  * Get conversation history limit for a given subscription tier.
- * 
+ *
  * @param tier - Subscription tier name
  * @returns Maximum number of conversations stored (each conversation counts as 1)
  */
 export function getConversationLimit(tier: SubscriptionTier | string): number {
-  return CONVERSATION_LIMITS[tier as SubscriptionTier] ?? CONVERSATION_LIMITS.anonymous;
+  return CONVERSATION_LIMITS[tier as SubscriptionTier] ?? CONVERSATION_LIMITS.anonymous
 }
 
 /**
  * Get daily credit limit for a given subscription tier (for free/anonymous tiers).
- * 
+ *
  * @param tier - Subscription tier name
  * @returns Daily credit limit (0 if not a daily-reset tier)
  */
 export function getDailyCreditLimit(tier: SubscriptionTier | string): number {
-  return DAILY_CREDIT_LIMITS[tier as keyof typeof DAILY_CREDIT_LIMITS] ?? 0;
+  return DAILY_CREDIT_LIMITS[tier as keyof typeof DAILY_CREDIT_LIMITS] ?? 0
 }
 
 /**
  * Get monthly credit allocation for a given subscription tier (for paid tiers).
- * 
+ *
  * @param tier - Subscription tier name
  * @returns Monthly credit allocation (0 if not a paid tier)
  */
 export function getMonthlyCreditAllocation(tier: SubscriptionTier | string): number {
-  return MONTHLY_CREDIT_ALLOCATIONS[tier as keyof typeof MONTHLY_CREDIT_ALLOCATIONS] ?? 0;
+  return MONTHLY_CREDIT_ALLOCATIONS[tier as keyof typeof MONTHLY_CREDIT_ALLOCATIONS] ?? 0
 }
 
 /**
  * Get credit allocation for a given subscription tier.
  * Returns daily limit for free/anonymous, monthly allocation for paid tiers.
- * 
+ *
  * @param tier - Subscription tier name
  * @returns Credit allocation for the tier
  */
 export function getCreditAllocation(tier: SubscriptionTier | string): number {
-  const dailyLimit = getDailyCreditLimit(tier);
+  const dailyLimit = getDailyCreditLimit(tier)
   if (dailyLimit > 0) {
-    return dailyLimit;
+    return dailyLimit
   }
-  return getMonthlyCreditAllocation(tier);
+  return getMonthlyCreditAllocation(tier)
 }
-

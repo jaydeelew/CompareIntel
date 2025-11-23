@@ -23,11 +23,16 @@ import time
 import re
 import tiktoken
 from decimal import Decimal
+import httpx
+import logging
 from .mock_responses import stream_mock_response, get_mock_response
 from .types import ConnectionQualityDict
+from .cache import cache
 
 # Import configuration
-from .config import settings, TIER_LIMITS, get_tier_max_tokens
+from .config import settings, get_tier_max_tokens
+
+logger = logging.getLogger(__name__)
 
 OPENROUTER_API_KEY = settings.openrouter_api_key
 
@@ -139,41 +144,39 @@ def is_model_available_for_tier(model_id: str, tier: str) -> bool:
 
 def filter_models_by_tier(models: List[Dict[str, Any]], tier: str) -> List[Dict[str, Any]]:
     """
-    Filter models based on subscription tier.
+    Return all models with tier_access field indicating availability for the tier.
+
+    This function now returns ALL models from model_runner.py, marking them with
+    tier_access to indicate which tier they're available for. The frontend will
+    display locked models as disabled/restricted for anonymous and free tiers.
 
     Args:
         models: List of model dictionaries
         tier: Subscription tier
 
     Returns:
-        Filtered list of models available for the tier
+        List of all models with tier_access field set appropriately
     """
-    filtered = []
+    result = []
     for model in models:
         model_id = model.get("id")
-        if model_id and is_model_available_for_tier(model_id, tier):
-            # Add tier_access field for frontend display
-            model_with_access = model.copy()
-            if model_id in ANONYMOUS_TIER_MODELS:
-                model_with_access["tier_access"] = "anonymous"
-            elif model_id in FREE_TIER_MODELS:
-                model_with_access["tier_access"] = "free"
-            else:
-                model_with_access["tier_access"] = "paid"
-            filtered.append(model_with_access)
-        elif tier in ["starter", "starter_plus", "pro", "pro_plus"]:
-            # Paid tiers get all models
-            model_with_access = model.copy()
-            # Set tier_access based on model classification
-            if model_id in ANONYMOUS_TIER_MODELS:
-                model_with_access["tier_access"] = "anonymous"
-            elif model_id in FREE_TIER_MODELS:
-                model_with_access["tier_access"] = "free"
-            else:
-                model_with_access["tier_access"] = "paid"
-            filtered.append(model_with_access)
+        if not model_id:
+            continue
 
-    return filtered
+        # Create a copy of the model with tier_access field
+        model_with_access = model.copy()
+
+        # Set tier_access based on model classification
+        if model_id in ANONYMOUS_TIER_MODELS:
+            model_with_access["tier_access"] = "anonymous"
+        elif model_id in FREE_TIER_MODELS:
+            model_with_access["tier_access"] = "free"
+        else:
+            model_with_access["tier_access"] = "paid"
+
+        result.append(model_with_access)
+
+    return result
 
 
 # List of available models organized by providers
@@ -541,13 +544,6 @@ MODELS_BY_PROVIDER = {
     ],
     "xAI": [
         {
-            "id": "x-ai/grok-code-fast-1",
-            "name": "Grok Code Fast 1",
-            "description": "Grok Code Fast 1 is a speedy and economical reasoning model that excels at agentic coding.",
-            "category": "Language",
-            "provider": "xAI",
-        },
-        {
             "id": "x-ai/grok-5",
             "name": "Grok 5 (Coming Soon)",
             "description": "xAI's upcoming Grok 5 model expected by end of 2025. This model is not yet available for selection.",
@@ -576,6 +572,13 @@ MODELS_BY_PROVIDER = {
             "category": "Language",
             "provider": "xAI",
         },
+        {
+            "id": "x-ai/grok-code-fast-1",
+            "name": "Grok Code Fast 1",
+            "description": "Grok Code Fast 1 is a speedy and economical reasoning model that excels at agentic coding.",
+            "category": "Language",
+            "provider": "xAI",
+        },
     ],
 }
 
@@ -585,6 +588,233 @@ for provider, models in MODELS_BY_PROVIDER.items():
     OPENROUTER_MODELS.extend(models)
 
 client = OpenAI(api_key=OPENROUTER_API_KEY, base_url="https://openrouter.ai/api/v1")
+
+# In-memory cache for model token limits
+# These limits are relatively static and only change when models are added/updated
+# Cache is populated on application startup and when models are added via admin panel
+_model_token_limits_cache: Dict[str, Dict[str, int]] = {}
+
+
+def preload_model_token_limits() -> None:
+    """
+    Preload model token limits from OpenRouter on application startup.
+    This ensures limits are available immediately without waiting for first request.
+    """
+    logger.info("Preloading model token limits from OpenRouter...")
+    try:
+        all_models = fetch_all_models_from_openrouter()
+        if all_models:
+            # Extract and cache token limits for all models
+            limits_dict = {}
+            for mid, model_data in all_models.items():
+                limits = _extract_token_limits(model_data)
+                limits_dict[mid] = limits
+
+            _model_token_limits_cache.update(limits_dict)
+            logger.info(f"Preloaded token limits for {len(limits_dict)} models")
+        else:
+            logger.warning("Failed to preload model token limits from OpenRouter")
+    except Exception as e:
+        logger.warning(f"Error preloading model token limits: {e}")
+
+
+def _extract_token_limits(model_data: Dict[str, Any]) -> Dict[str, int]:
+    """
+    Extract token limits from OpenRouter model data.
+
+    Args:
+        model_data: Model data dictionary from OpenRouter API
+
+    Returns:
+        Dictionary with 'max_input' and 'max_output' keys
+    """
+    limits = {}
+
+    # Get context_length (total context window)
+    context_length = model_data.get("context_length")
+
+    # Get max_completion_tokens from top_provider
+    top_provider = model_data.get("top_provider", {})
+    max_completion_tokens = top_provider.get("max_completion_tokens")
+
+    # If we have context_length but no max_completion_tokens, estimate
+    # Most models use ~80% of context for input, 20% for output
+    if context_length:
+        limits["max_input"] = context_length
+        if max_completion_tokens:
+            limits["max_output"] = max_completion_tokens
+        else:
+            # Estimate: assume output can be up to 20% of context window
+            limits["max_output"] = int(context_length * 0.2)
+    elif max_completion_tokens:
+        # If we only have max_completion_tokens, estimate input as 4x output
+        limits["max_output"] = max_completion_tokens
+        limits["max_input"] = max_completion_tokens * 4
+    else:
+        # No data available, use defaults
+        limits["max_input"] = 8192  # Default context window
+        limits["max_output"] = 8192  # Default output
+
+    return limits
+
+
+def refresh_model_token_limits(model_id: Optional[str] = None) -> bool:
+    """
+    Refresh token limits for a specific model or all models.
+    Called when a model is added via admin panel.
+
+    Args:
+        model_id: Optional specific model ID to refresh, or None to refresh all
+
+    Returns:
+        True if successful, False otherwise
+    """
+    try:
+        all_models = fetch_all_models_from_openrouter()
+        if not all_models:
+            return False
+
+        if model_id:
+            # Refresh specific model
+            if model_id in all_models:
+                limits = _extract_token_limits(all_models[model_id])
+                _model_token_limits_cache[model_id] = limits
+                logger.info(f"Refreshed token limits for model: {model_id}")
+                return True
+            else:
+                logger.warning(f"Model {model_id} not found in OpenRouter data")
+                return False
+        else:
+            # Refresh all models
+            limits_dict = {}
+            for mid, model_data in all_models.items():
+                limits = _extract_token_limits(model_data)
+                limits_dict[mid] = limits
+
+            _model_token_limits_cache.update(limits_dict)
+            logger.info(f"Refreshed token limits for {len(limits_dict)} models")
+            return True
+    except Exception as e:
+        logger.error(f"Error refreshing model token limits: {e}")
+        return False
+
+
+def fetch_all_models_from_openrouter() -> Optional[Dict[str, Dict[str, Any]]]:
+    """
+    Fetch all models from OpenRouter API and extract token limits.
+
+    Returns:
+        Dictionary mapping model_id to model data, or None if fetch fails
+    """
+    try:
+        # Use synchronous httpx client to avoid async complexity
+        with httpx.Client(timeout=30.0) as http_client:
+            response = http_client.get(
+                "https://openrouter.ai/api/v1/models",
+                headers={
+                    "Authorization": f"Bearer {OPENROUTER_API_KEY}",
+                    "HTTP-Referer": "https://compareintel.com",
+                },
+            )
+            if response.status_code == 200:
+                data = response.json()
+                models = data.get("data", [])
+                result = {}
+                for model in models:
+                    model_id = model.get("id")
+                    if model_id:
+                        result[model_id] = model
+                return result
+        return None
+    except Exception as e:
+        logger.warning(f"Failed to fetch models from OpenRouter: {e}")
+        return None
+
+
+def get_model_token_limits_from_openrouter(model_id: str) -> Optional[Dict[str, int]]:
+    """
+    Get token limits for a specific model from cached OpenRouter data.
+
+    Args:
+        model_id: Model identifier (e.g., "openai/gpt-4")
+
+    Returns:
+        Dictionary with 'max_input' and 'max_output' keys, or None if not found
+    """
+    # Check in-memory cache first
+    if model_id in _model_token_limits_cache:
+        return _model_token_limits_cache[model_id]
+
+    # If cache is empty, try to preload (shouldn't happen after startup, but handle gracefully)
+    if not _model_token_limits_cache:
+        logger.warning("Model token limits cache is empty, attempting to preload...")
+        preload_model_token_limits()
+        if model_id in _model_token_limits_cache:
+            return _model_token_limits_cache[model_id]
+
+    # Not found in cache
+    return None
+
+
+def get_model_max_input_tokens(model_id: str) -> int:
+    """
+    Get maximum input tokens (context window) for a model.
+
+    Args:
+        model_id: Model identifier
+
+    Returns:
+        Maximum input tokens, defaults to 8192 if not available
+    """
+    limits = get_model_token_limits_from_openrouter(model_id)
+    if limits:
+        return limits.get("max_input", 8192)
+    return 8192  # Default fallback
+
+
+def get_model_max_output_tokens(model_id: str) -> int:
+    """
+    Get maximum output tokens for a model.
+
+    This is an alias for get_model_max_tokens() for consistency.
+    """
+    return get_model_max_tokens(model_id)
+
+
+def get_min_max_input_tokens(model_ids: List[str]) -> int:
+    """
+    Get the minimum maximum input tokens across all selected models.
+    This is used to validate that user input doesn't exceed any model's limit.
+
+    Args:
+        model_ids: List of model identifiers
+
+    Returns:
+        Minimum max input tokens across all models
+    """
+    if not model_ids:
+        return 8192  # Default
+
+    max_inputs = [get_model_max_input_tokens(model_id) for model_id in model_ids]
+    return min(max_inputs) if max_inputs else 8192
+
+
+def get_min_max_output_tokens(model_ids: List[str]) -> int:
+    """
+    Get the minimum maximum output tokens across all selected models.
+    This is used to cap response length to avoid truncation.
+
+    Args:
+        model_ids: List of model identifiers
+
+    Returns:
+        Minimum max output tokens across all models
+    """
+    if not model_ids:
+        return 8192  # Default
+
+    max_outputs = [get_model_max_tokens(model_id) for model_id in model_ids]
+    return min(max_outputs) if max_outputs else 8192
 
 
 def clean_model_response(text: str) -> str:
@@ -621,17 +851,20 @@ def get_model_max_tokens(model_id: str) -> int:
     Get the appropriate max_tokens limit for each model based on their capabilities.
     This prevents setting max_tokens higher than the model's maximum output capacity.
 
-    All current models support 8192 tokens. If a model needs a different limit in the future,
-    you can add it to the model_limits dictionary below.
+    Now uses OpenRouter API data to get actual model limits, with fallback to defaults.
     """
-    # Model-specific token limits for exceptions
-    # Currently all models use 8192, but this dict allows for future customization
+    # Try to get from OpenRouter data
+    limits = get_model_token_limits_from_openrouter(model_id)
+    if limits:
+        return limits.get("max_output", 8192)
+
+    # Fallback: Model-specific token limits for exceptions (manual overrides)
     model_limits = {
-        # Add any models with non-standard limits here
+        # Add any models with non-standard limits here if OpenRouter data is unavailable
         # Example: "some-provider/model-id": 4096,
     }
 
-    # Return model-specific limit or default to 8192 for all models
+    # Return model-specific limit or default to 8192
     return model_limits.get(model_id, 8192)
 
 
@@ -802,6 +1035,7 @@ def call_openrouter_streaming(
     tier: str = "standard",
     conversation_history: Optional[List[Any]] = None,
     use_mock: bool = False,
+    max_tokens_override: Optional[int] = None,
 ) -> Generator[Any, None, Optional[TokenUsage]]:
     """
     Stream OpenRouter responses token-by-token for faster perceived response time.
@@ -871,12 +1105,17 @@ def call_openrouter_streaming(
         # Add the current prompt as user message
         messages.append({"role": "user", "content": prompt})
 
-        # Get tier-based max_tokens limit from configuration
-        tier_max_tokens = get_tier_max_tokens(tier)
+        # Use override if provided (for multi-model comparisons to avoid truncation)
+        # Otherwise, calculate based on tier and model limits
+        if max_tokens_override is not None:
+            max_tokens = max_tokens_override
+        else:
+            # Get tier-based max_tokens limit from configuration
+            tier_max_tokens = get_tier_max_tokens(tier)
 
-        # Don't exceed model's maximum capability
-        model_max_tokens = get_model_max_tokens(model_id)
-        max_tokens = min(tier_max_tokens, model_max_tokens)
+            # Don't exceed model's maximum capability
+            model_max_tokens = get_model_max_tokens(model_id)
+            max_tokens = min(tier_max_tokens, model_max_tokens)
 
         # Enable streaming
         response = client.chat.completions.create(
@@ -952,6 +1191,7 @@ def call_openrouter(
     tier: str = "standard",
     conversation_history: Optional[List[Any]] = None,
     use_mock: bool = False,
+    max_tokens_override: Optional[int] = None,
 ) -> Tuple[str, Optional[TokenUsage]]:
     """
     Non-streaming version of OpenRouter call (kept for backward compatibility).
@@ -1010,18 +1250,23 @@ def call_openrouter(
         # Add the current prompt as user message
         messages.append({"role": "user", "content": prompt})
 
-        # Get tier-based max_tokens limit from configuration
-        tier_max_tokens = get_tier_max_tokens(tier)
+        # Use override if provided (for multi-model comparisons to avoid truncation)
+        # Otherwise, calculate based on tier and model limits
+        if max_tokens_override is not None:
+            max_tokens = max_tokens_override
+        else:
+            # Get tier-based max_tokens limit from configuration
+            tier_max_tokens = get_tier_max_tokens(tier)
 
-        # Don't exceed model's maximum capability
-        model_max_tokens = get_model_max_tokens(model_id)
-        max_tokens = min(tier_max_tokens, model_max_tokens)
+            # Don't exceed model's maximum capability
+            model_max_tokens = get_model_max_tokens(model_id)
+            max_tokens = min(tier_max_tokens, model_max_tokens)
 
         response = client.chat.completions.create(
             model=model_id,
             messages=messages,
             timeout=settings.individual_model_timeout,
-            max_tokens=max_tokens,  # Use tier-based limit
+            max_tokens=max_tokens,
         )
         content = response.choices[0].message.content
         finish_reason = response.choices[0].finish_reason
@@ -1115,9 +1360,15 @@ def run_models(
     results = {}
     usage_data = {}
 
+    # Calculate minimum max output tokens across all models to avoid truncation
+    min_max_output_tokens = get_min_max_output_tokens(model_list)
+    # Also respect tier limit
+    tier_max_tokens = get_tier_max_tokens(tier)
+    effective_max_tokens = min(min_max_output_tokens, tier_max_tokens)
+
     def call(model_id):
         try:
-            content, usage = call_openrouter(prompt, model_id, tier, conversation_history)
+            content, usage = call_openrouter(prompt, model_id, tier, conversation_history, max_tokens_override=effective_max_tokens)
             return model_id, content, usage
         except Exception as e:
             return model_id, f"Error: {str(e)}", None

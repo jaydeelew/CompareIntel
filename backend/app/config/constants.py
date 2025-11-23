@@ -71,31 +71,12 @@ MODEL_LIMITS: Dict[str, int] = {
 }
 
 
-# ============================================================================
-# Extended Tier Daily Limits
-# ============================================================================
-# Maximum number of times Extended mode can be used per day per subscription tier
-# Extended mode is only triggered when the user explicitly clicks the Extended mode button
-
-EXTENDED_TIER_LIMITS: Dict[str, int] = {
-    "anonymous": 2,
-    "free": 5,
-    "starter": 10,
-    "starter_plus": 20,
-    "pro": 40,
-    "pro_plus": 80,
-}
+# Extended tier usage tracking removed - extended mode is now unlimited (only limited by credits)
 
 
-# ============================================================================
-# Tier Limits for Input/Output
-# ============================================================================
-# Input/output character and token limits for each response tier
-
-TIER_LIMITS: Dict[str, TierLimitsDict] = {
-    "standard": {"input_chars": 5000, "output_tokens": 4000},
-    "extended": {"input_chars": 15000, "output_tokens": 8192},
-}
+# Tier limits removed - hardcoded in code where needed
+# Standard: 5000 chars input, 4000 tokens output
+# Extended: 15000 chars input, 8192 tokens output
 
 
 # ============================================================================
@@ -103,9 +84,8 @@ TIER_LIMITS: Dict[str, TierLimitsDict] = {
 # ============================================================================
 # Limits for unregistered (anonymous) users
 
-ANONYMOUS_DAILY_LIMIT: int = 10  # Model responses per day for anonymous users
+ANONYMOUS_DAILY_LIMIT: int = 10  # Model responses per day for anonymous users (legacy, use credits instead)
 ANONYMOUS_MODEL_LIMIT: int = 3  # Maximum models per comparison for anonymous users
-ANONYMOUS_EXTENDED_LIMIT: int = EXTENDED_TIER_LIMITS["anonymous"]  # Extended tier limit (2)
 
 
 # ============================================================================

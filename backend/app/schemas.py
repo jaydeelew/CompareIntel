@@ -76,14 +76,17 @@ class UserResponse(BaseModel):
     subscription_tier: str
     subscription_status: str
     subscription_period: str
-    daily_usage_count: int
     monthly_overage_count: int
     mock_mode_enabled: Optional[bool] = False  # Testing feature for admins
     created_at: datetime
     updated_at: Optional[datetime] = None
-    usage_reset_date: Optional[date] = None
-    extended_usage_reset_date: Optional[date] = None
-    daily_extended_usage: int = 0
+    # Credit-based system fields
+    monthly_credits_allocated: Optional[int] = None
+    credits_used_this_period: Optional[int] = None
+    total_credits_used: Optional[int] = None
+    billing_period_start: Optional[datetime] = None
+    billing_period_end: Optional[datetime] = None
+    credits_reset_at: Optional[datetime] = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -343,9 +346,7 @@ class AdminUserResponse(BaseModel):
     subscription_tier: str
     subscription_status: str
     subscription_period: str
-    daily_usage_count: int
     monthly_overage_count: int
-    daily_extended_usage: int = 0  # Extended tier usage tracking
     mock_mode_enabled: Optional[bool] = False  # Testing feature for admins
     created_at: datetime
     updated_at: Optional[datetime] = None
@@ -391,7 +392,6 @@ class AdminUserUpdate(BaseModel):
     subscription_period: Optional[str] = Field(None, pattern="^(monthly|yearly)$")
     is_active: Optional[bool] = None
     is_verified: Optional[bool] = None
-    daily_usage_count: Optional[int] = Field(None, ge=0)
     monthly_overage_count: Optional[int] = Field(None, ge=0)
 
 

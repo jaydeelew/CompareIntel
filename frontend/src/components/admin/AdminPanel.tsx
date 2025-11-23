@@ -17,7 +17,6 @@ interface AdminUser {
     subscription_tier: string;
     subscription_status: string;
     subscription_period: string;
-    daily_usage_count: number;
     monthly_overage_count: number;
     mock_mode_enabled: boolean;
     created_at: string;
@@ -864,22 +863,25 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
             const localStorageKeys: string[] = [];
 
             // Clear usage data
-            localStorage.removeItem('compareai_usage');
-            localStorageKeys.push('compareai_usage');
+            localStorage.removeItem('compareintel_usage');
+            localStorageKeys.push('compareintel_usage');
 
-            localStorage.removeItem('compareai_extended_usage');
-            localStorageKeys.push('compareai_extended_usage');
+            localStorage.removeItem('compareintel_extended_usage');
+            localStorageKeys.push('compareintel_extended_usage');
+
+            localStorage.removeItem('compareintel_submission_count');
+            localStorageKeys.push('compareintel_submission_count');
 
             // Clear conversation history
-            localStorage.removeItem('compareai_conversation_history');
-            localStorageKeys.push('compareai_conversation_history');
+            localStorage.removeItem('compareintel_conversation_history');
+            localStorageKeys.push('compareintel_conversation_history');
 
             // Clear all individual conversation data
             // Iterate through all localStorage keys and remove conversation entries
             const keysToRemove: string[] = [];
             for (let i = 0; i < localStorage.length; i++) {
                 const key = localStorage.key(i);
-                if (key && key.startsWith('compareai_conversation_')) {
+                if (key && key.startsWith('compareintel_conversation_')) {
                     keysToRemove.push(key);
                 }
             }
@@ -890,6 +892,9 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
 
             await response.json();
             setHistoryCleared(true);
+
+            // Dispatch custom event to notify App component to refresh conversation history
+            window.dispatchEvent(new CustomEvent('anonymousUsageCleared'));
         } catch (err) {
             console.error('Error zeroing anonymous usage:', err);
             setError(err instanceof Error ? err.message : 'Failed to zero anonymous usage');
@@ -2068,7 +2073,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                                             </td>
                                             <td>
                                                 <div className="usage-info">
-                                                    <span className="usage-count">{userRow.daily_usage_count} today</span>
+                                                    <span className="usage-count">Credits: {userRow.credits_used_this_period || 0}/{userRow.monthly_credits_allocated || 0}</span>
                                                     {userRow.monthly_overage_count > 0 && (
                                                         <span className="overage-count">
                                                             {userRow.monthly_overage_count} overages
@@ -2103,7 +2108,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                                                             Send Verification
                                                         </button>
                                                     )}
-                                                    {userRow.daily_usage_count > 0 && (
+                                                    {(userRow.credits_used_this_period || 0) > 0 && (
                                                         <button
                                                             onClick={() => resetUsage(userRow.id)}
                                                             className="reset-usage-btn"

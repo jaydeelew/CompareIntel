@@ -9,9 +9,7 @@ from typing import Dict
 from .constants import (
     MODEL_LIMITS,
     SUBSCRIPTION_LIMITS,
-    EXTENDED_TIER_LIMITS,
     CONVERSATION_LIMITS,
-    TIER_LIMITS,
     ANONYMOUS_DAILY_LIMIT,
 )
 
@@ -60,15 +58,12 @@ def get_daily_limit(tier: str) -> int:
 
 def get_extended_limit(tier: str) -> int:
     """
-    Get Extended tier daily limit for a given subscription tier.
+    LEGACY FUNCTION - DEPRECATED: Extended tier usage tracking removed.
+    Extended mode is now unlimited (only limited by credits).
     
-    Args:
-        tier: Subscription tier name
-        
-    Returns:
-        Daily Extended tier limit
+    Returns 0 to indicate no limit (unlimited).
     """
-    return EXTENDED_TIER_LIMITS.get(tier, EXTENDED_TIER_LIMITS["anonymous"])
+    return 0  # Unlimited - extended mode is only limited by credits
 
 
 def get_conversation_limit(tier: str) -> int:
@@ -94,5 +89,7 @@ def get_tier_max_tokens(tier: str) -> int:
     Returns:
         Maximum output tokens for the tier
     """
-    return TIER_LIMITS.get(tier, TIER_LIMITS["standard"])["output_tokens"]
+    if tier == "extended":
+        return 8192  # Extended mode: 8K tokens
+    return 4000  # Standard mode: 4K tokens
 

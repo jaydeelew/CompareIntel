@@ -314,7 +314,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(({
               const extendedLimit = getExtendedLimit(userTier);
 
               const currentRegularUsage = isAuthenticated && user
-                ? user.daily_usage_count
+                ? (user.credits_used_this_period || 0)
                 : usageCount;
               const currentExtendedUsage = isAuthenticated && user
                 ? user.daily_extended_usage

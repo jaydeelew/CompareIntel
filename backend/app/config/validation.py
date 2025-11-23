@@ -11,9 +11,7 @@ from .settings import settings
 from .constants import (
     MODEL_LIMITS,
     ANONYMOUS_MODEL_LIMIT,
-    EXTENDED_TIER_LIMITS,
     SUBSCRIPTION_CONFIG,
-    TIER_LIMITS,
     CONVERSATION_LIMITS,
 )
 
@@ -113,9 +111,7 @@ def validate_config() -> None:
             f"ANONYMOUS_MODEL_LIMIT ({ANONYMOUS_MODEL_LIMIT}) must match a value in MODEL_LIMITS"
         )
     
-    # Validate extended limits
-    if "anonymous" not in EXTENDED_TIER_LIMITS:
-        errors.append("EXTENDED_TIER_LIMITS must include 'anonymous' tier")
+    # Extended tier usage tracking removed - no validation needed
     
     # Validate all subscription tiers have required fields
     for tier, config in SUBSCRIPTION_CONFIG.items():
@@ -123,17 +119,6 @@ def validate_config() -> None:
         for field in required_fields:
             if field not in config:
                 errors.append(f"SUBSCRIPTION_CONFIG['{tier}'] missing required field: {field}")
-    
-    # Validate tier limits are consistent
-    for tier in ["standard", "extended"]:
-        if tier not in TIER_LIMITS:
-            errors.append(f"TIER_LIMITS missing tier: {tier}")
-        else:
-            tier_config = TIER_LIMITS[tier]
-            if "input_chars" not in tier_config or "output_tokens" not in tier_config:
-                errors.append(f"TIER_LIMITS['{tier}'] missing required fields")
-            elif tier_config["input_chars"] < 1 or tier_config["output_tokens"] < 1:
-                errors.append(f"TIER_LIMITS['{tier}'] has invalid values (must be > 0)")
     
     # Validate conversation limits include all tiers
     for tier in SUBSCRIPTION_CONFIG.keys():
@@ -268,18 +253,12 @@ def log_configuration() -> None:
             f"overage: {config['overage_allowed']}"
         )
     
-    # Tier Limits Summary
+    # Tier Limits Summary (hardcoded)
     logger.info("Response Tier Limits:")
-    for tier, limits in TIER_LIMITS.items():
-        logger.info(
-            f"  {tier}: {limits['input_chars']} chars input, "
-            f"{limits['output_tokens']} tokens output"
-        )
+    logger.info("  standard: 5000 chars input, 4000 tokens output")
+    logger.info("  extended: 15000 chars input, 8192 tokens output")
     
-    # Extended Tier Limits Summary
-    logger.info("Extended Tier Daily Limits:")
-    for tier, limit in EXTENDED_TIER_LIMITS.items():
-        logger.info(f"  {tier}: {limit} per day")
+    # Extended tier usage tracking removed
     
     logger.info("=" * 80)
 
@@ -295,9 +274,9 @@ def validate_tier_limits(input_data: str, tier: str) -> bool:
     Returns:
         True if input is within limits, False otherwise
     """
-    from .constants import TIER_LIMITS
-    
-    if tier not in TIER_LIMITS:
-        return False
-    return len(input_data) <= TIER_LIMITS[tier]["input_chars"]
+    if tier == "extended":
+        return len(input_data) <= 15000  # Extended: 15K chars
+    elif tier == "standard":
+        return len(input_data) <= 5000  # Standard: 5K chars
+    return False
 

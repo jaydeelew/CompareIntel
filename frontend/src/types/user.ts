@@ -30,8 +30,6 @@ export interface User {
   subscription_status: SubscriptionStatus;
   /** Billing period (monthly or yearly) */
   subscription_period: SubscriptionPeriod;
-  /** MODEL-BASED: counts individual model responses, not comparisons (legacy) */
-  daily_usage_count: number;
   /** Extended tier usage count */
   daily_extended_usage: number;
   /** MODEL-BASED: counts overage model responses (legacy) */

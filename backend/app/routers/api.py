@@ -10,8 +10,9 @@ from fastapi.responses import StreamingResponse, JSONResponse
 from pydantic import BaseModel, ConfigDict
 from typing import Optional, Dict, Any, Union
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 from collections import defaultdict
-from datetime import datetime
+from datetime import datetime, timezone
 import asyncio
 import json
 import os
@@ -48,10 +49,6 @@ from ..rate_limiting import (
     increment_anonymous_usage,
     get_model_limit,
     is_overage_allowed,
-    check_extended_tier_limit,
-    increment_extended_usage,
-    check_anonymous_extended_limit,
-    increment_anonymous_extended_usage,
     # Credit-based functions
     check_user_credits,
     deduct_user_credits,
@@ -69,7 +66,6 @@ model_stats: Dict[str, Dict[str, Any]] = defaultdict(
 
 # Import configuration constants
 from ..config import (
-    TIER_LIMITS,
     ANONYMOUS_DAILY_LIMIT,
     ANONYMOUS_MODEL_LIMIT,
     MODEL_LIMITS,
@@ -172,10 +168,12 @@ async def get_available_models(
     current_user: Optional[User] = Depends(get_current_user),
 ) -> Dict[str, Any]:
     """
-    Get list of available AI models filtered by user's subscription tier.
+    Get list of all AI models with tier_access field indicating availability.
 
-    - Anonymous/Free tiers: Only see free-tier models
-    - Paid tiers (Starter+): See all models
+    - Returns ALL models from model_runner.py
+    - Models are marked with tier_access field ('anonymous', 'free', or 'paid')
+    - Frontend displays locked models as disabled/restricted for anonymous and free tiers
+    - Backend still validates model access when making API calls
 
     OPTIMIZATION: Uses caching since model list is static data.
     """
@@ -189,19 +187,42 @@ async def get_available_models(
         tier = "anonymous"
 
     def get_models():
-        # Filter models based on tier
-        filtered_models = filter_models_by_tier(OPENROUTER_MODELS, tier)
+        from ..model_runner import get_model_token_limits_from_openrouter
         
-        # Filter models_by_provider
-        filtered_by_provider = {}
+        # Get all models with tier_access field (no filtering - show all models)
+        all_models = filter_models_by_tier(OPENROUTER_MODELS, tier)
+        
+        # Add token limits to each model
+        for model in all_models:
+            limits = get_model_token_limits_from_openrouter(model["id"])
+            if limits:
+                # Convert tokens to approximate characters (1 token ≈ 4 chars) for user-friendly display
+                model["max_input_chars"] = limits["max_input"] * 4
+                model["max_output_chars"] = limits["max_output"] * 4
+            else:
+                # Default fallback values
+                model["max_input_chars"] = 32768  # 8192 tokens * 4
+                model["max_output_chars"] = 32768  # 8192 tokens * 4
+        
+        # Get all models_by_provider with tier_access field
+        models_by_provider = {}
         for provider, models in MODELS_BY_PROVIDER.items():
-            filtered_provider_models = filter_models_by_tier(models, tier)
-            if filtered_provider_models:  # Only add provider if it has available models
-                filtered_by_provider[provider] = filtered_provider_models
+            provider_models = filter_models_by_tier(models, tier)
+            if provider_models:  # Add provider if it has any models
+                # Add token limits to provider models too
+                for model in provider_models:
+                    limits = get_model_token_limits_from_openrouter(model["id"])
+                    if limits:
+                        model["max_input_chars"] = limits["max_input"] * 4
+                        model["max_output_chars"] = limits["max_output"] * 4
+                    else:
+                        model["max_input_chars"] = 32768
+                        model["max_output_chars"] = 32768
+                models_by_provider[provider] = provider_models
         
         return {
-            "models": filtered_models,
-            "models_by_provider": filtered_by_provider,
+            "models": all_models,
+            "models_by_provider": models_by_provider,
             "user_tier": tier,
         }
 
@@ -397,18 +418,32 @@ async def compare(
         raise HTTPException(status_code=400, detail="At least one model must be selected")
 
     # Validate tier is valid
-    if req.tier not in TIER_LIMITS:
+    if req.tier not in ["standard", "extended"]:
         raise HTTPException(
             status_code=422,
-            detail=f"Invalid tier '{req.tier}'. Valid tiers are: {', '.join(TIER_LIMITS.keys())}",
+            detail=f"Invalid tier '{req.tier}'. Valid tiers are: standard, extended",
         )
 
-    # Validate tier limits
+    # Validate tier limits (character-based limits)
     if not validate_tier_limits(req.input_data, req.tier):
-        tier_limit = TIER_LIMITS[req.tier]["input_chars"]
+        tier_limit = 15000 if req.tier == "extended" else 5000
         raise HTTPException(
             status_code=400,
             detail=f"Input exceeds {req.tier} tier limit of {tier_limit} characters. Current: {len(req.input_data)} characters.",
+        )
+    
+    # Validate input against model token limits
+    from ..model_runner import get_min_max_input_tokens, estimate_token_count
+    min_max_input_tokens = get_min_max_input_tokens(req.models)
+    input_tokens = estimate_token_count(req.input_data)
+    
+    if input_tokens > min_max_input_tokens:
+        # Convert tokens to approximate characters for user-friendly message (1 token ≈ 4 chars)
+        approx_chars = input_tokens * 4
+        max_chars = min_max_input_tokens * 4
+        raise HTTPException(
+            status_code=400,
+            detail=f"Your input is too long for one or more of the selected models. The maximum input length is approximately {max_chars:,} characters, but your input is approximately {approx_chars:,} characters. Please shorten your input or select different models that support longer inputs.",
         )
 
     # Determine model limit based on user tier
@@ -522,7 +557,7 @@ async def compare(
         # Check IP-based credits
         ip_identifier = f"ip:{client_ip}"
         ip_sufficient, ip_credits_remaining, ip_credits_allocated = check_anonymous_credits(
-            ip_identifier, estimated_credits
+            ip_identifier, estimated_credits, db
         )
 
         fingerprint_sufficient = True
@@ -531,7 +566,7 @@ async def compare(
         if req.browser_fingerprint:
             fp_identifier = f"fp:{req.browser_fingerprint}"
             fingerprint_sufficient, fingerprint_credits_remaining, fingerprint_credits_allocated = check_anonymous_credits(
-                fp_identifier, estimated_credits
+                fp_identifier, estimated_credits, db
             )
 
         # Use the most restrictive limit (lowest remaining credits)
@@ -552,53 +587,7 @@ async def compare(
         print(f"Anonymous user - IP: {client_ip} - Credits: {credits_remaining}/{credits_allocated} (estimated: {estimated_credits:.2f})")
     # --- END CREDIT-BASED RATE LIMITING ---
 
-    # --- EXTENDED TIER LIMITING ---
-    if req.tier == "extended":
-        if current_user:
-            # Check Extended tier limit for authenticated users
-            extended_allowed, extended_count, extended_limit = check_extended_tier_limit(
-                current_user, db
-            )
-
-            if not extended_allowed:
-                raise HTTPException(
-                    status_code=429,
-                    detail=f"Daily Extended tier limit of {extended_limit} exceeded. You have used {extended_count} Extended interactions today. "
-                    f"Upgrade to a higher tier for more Extended interactions.",
-                )
-
-            # Don't increment here - wait until we know requests succeeded
-            print(
-                f"Authenticated user {current_user.email} - Extended usage: {extended_count}/{extended_limit} (will increment after success)"
-            )
-        else:
-            # Check Extended tier limit for anonymous users
-            ip_extended_allowed, ip_extended_count = check_anonymous_extended_limit(
-                f"ip:{client_ip}"
-            )
-            fingerprint_extended_allowed = True
-            fingerprint_extended_count = 0
-
-            if req.browser_fingerprint:
-                fingerprint_extended_allowed, fingerprint_extended_count = (
-                    check_anonymous_extended_limit(f"fp:{req.browser_fingerprint}")
-                )
-
-            if not ip_extended_allowed or (
-                req.browser_fingerprint and not fingerprint_extended_allowed
-            ):
-                extended_available = max(0, 2 - max(ip_extended_count, fingerprint_extended_count))
-                raise HTTPException(
-                    status_code=429,
-                    detail=f"Daily Extended tier limit of 2 exceeded. You have {extended_available} Extended interactions remaining. "
-                    f"Sign up for a free account to get 5 Extended interactions per day.",
-                )
-
-            # Don't increment here - wait until we know requests succeeded
-            print(
-                f"Anonymous user - Extended usage: {max(ip_extended_count, fingerprint_extended_count)}/2 (will increment after success)"
-            )
-    # --- END EXTENDED TIER LIMITING ---
+    # Extended tier usage tracking removed - extended mode is now unlimited (only limited by credits)
 
     # Check if mock mode is enabled for this user
     # IMPORTANT: Authenticated users should NEVER use anonymous mock mode
@@ -720,23 +709,23 @@ async def compare(
                     # Deduct credits for anonymous user
                     ip_identifier = f"ip:{client_ip}"
                     deduct_anonymous_credits(ip_identifier, total_credits_used)
+                    # Get updated IP credit balance
+                    _, ip_credits_remaining, _ = check_anonymous_credits(ip_identifier, Decimal(0), db)
+                    
+                    fingerprint_credits_remaining = ip_credits_remaining
                     if req.browser_fingerprint:
                         fp_identifier = f"fp:{req.browser_fingerprint}"
                         deduct_anonymous_credits(fp_identifier, total_credits_used)
-                    # Get updated credit balance
-                    _, credits_remaining, _ = check_anonymous_credits(ip_identifier, Decimal(0))
+                        # Get updated fingerprint credit balance
+                        _, fingerprint_credits_remaining, _ = check_anonymous_credits(fp_identifier, Decimal(0), db)
+                    
+                    # Use the most restrictive limit (lowest remaining credits) - same logic as at start
+                    credits_remaining = min(ip_credits_remaining, fingerprint_credits_remaining if req.browser_fingerprint else ip_credits_remaining)
             except ValueError as e:
                 # Should not happen since we checked before, but handle gracefully
                 print(f"Warning: Credit deduction failed: {e}")
 
-        # Increment extended usage - only count 1 per request regardless of model count
-        if req.tier == "extended" and successful_models > 0:
-            if current_user:
-                increment_extended_usage(current_user, db, count=1)
-            else:
-                increment_anonymous_extended_usage(f"ip:{client_ip}", count=1)
-                if req.browser_fingerprint:
-                    increment_anonymous_extended_usage(f"fp:{req.browser_fingerprint}", count=1)
+        # Extended tier usage tracking removed - no longer needed
 
         # Calculate processing time
         processing_time_ms = int((datetime.now() - start_time).total_seconds() * 1000)
@@ -801,18 +790,32 @@ async def compare_stream(
         raise HTTPException(status_code=400, detail="At least one model must be selected")
 
     # Validate tier is valid
-    if req.tier not in TIER_LIMITS:
+    if req.tier not in ["standard", "extended"]:
         raise HTTPException(
             status_code=422,
-            detail=f"Invalid tier '{req.tier}'. Valid tiers are: {', '.join(TIER_LIMITS.keys())}",
+            detail=f"Invalid tier '{req.tier}'. Valid tiers are: standard, extended",
         )
 
-    # Validate tier limits
+    # Validate tier limits (character-based limits)
     if not validate_tier_limits(req.input_data, req.tier):
-        tier_limit = TIER_LIMITS[req.tier]["input_chars"]
+        tier_limit = 15000 if req.tier == "extended" else 5000
         raise HTTPException(
             status_code=400,
             detail=f"Input exceeds {req.tier} tier limit of {tier_limit} characters. Current: {len(req.input_data)} characters.",
+        )
+    
+    # Validate input against model token limits
+    from ..model_runner import get_min_max_input_tokens, estimate_token_count
+    min_max_input_tokens = get_min_max_input_tokens(req.models)
+    input_tokens = estimate_token_count(req.input_data)
+    
+    if input_tokens > min_max_input_tokens:
+        # Convert tokens to approximate characters for user-friendly message (1 token ≈ 4 chars)
+        approx_chars = input_tokens * 4
+        max_chars = min_max_input_tokens * 4
+        raise HTTPException(
+            status_code=400,
+            detail=f"Your input is too long for one or more of the selected models. The maximum input length is approximately {max_chars:,} characters, but your input is approximately {approx_chars:,} characters. Please shorten your input or select different models that support longer inputs.",
         )
 
     # Determine model limit based on user tier
@@ -925,7 +928,7 @@ async def compare_stream(
         # Check IP-based credits
         ip_identifier = f"ip:{client_ip}"
         ip_sufficient, ip_credits_remaining, ip_credits_allocated = check_anonymous_credits(
-            ip_identifier, estimated_credits
+            ip_identifier, estimated_credits, db
         )
 
         fingerprint_sufficient = True
@@ -934,7 +937,7 @@ async def compare_stream(
         if req.browser_fingerprint:
             fp_identifier = f"fp:{req.browser_fingerprint}"
             fingerprint_sufficient, fingerprint_credits_remaining, fingerprint_credits_allocated = check_anonymous_credits(
-                fp_identifier, estimated_credits
+                fp_identifier, estimated_credits, db
             )
 
         # Use the most restrictive limit (lowest remaining credits)
@@ -955,45 +958,7 @@ async def compare_stream(
         print(f"Anonymous user - IP: {client_ip} - Credits: {credits_remaining}/{credits_allocated} (estimated: {estimated_credits:.2f})")
     # --- END CREDIT-BASED RATE LIMITING ---
 
-    # --- EXTENDED TIER LIMITING (same as regular endpoint) ---
-    if req.tier == "extended":
-        if current_user:
-            extended_allowed, extended_count, extended_limit = check_extended_tier_limit(
-                current_user, db
-            )
-            if not extended_allowed:
-                raise HTTPException(
-                    status_code=429,
-                    detail=f"Daily Extended tier limit of {extended_limit} exceeded.",
-                )
-            # Don't increment here - wait until we know requests succeeded
-            print(
-                f"Authenticated user {current_user.email} - Extended usage: {extended_count}/{extended_limit} (will increment after success)"
-            )
-        else:
-            ip_extended_allowed, ip_extended_count = check_anonymous_extended_limit(
-                f"ip:{client_ip}"
-            )
-            fingerprint_extended_allowed = True
-            fingerprint_extended_count = 0
-
-            if req.browser_fingerprint:
-                fingerprint_extended_allowed, fingerprint_extended_count = (
-                    check_anonymous_extended_limit(f"fp:{req.browser_fingerprint}")
-                )
-
-            if not ip_extended_allowed or (
-                req.browser_fingerprint and not fingerprint_extended_allowed
-            ):
-                raise HTTPException(
-                    status_code=429,
-                    detail=f"Daily Extended tier limit of 2 exceeded. Sign up for a free account to get 5 Extended interactions per day.",
-                )
-
-            # Don't increment here - wait until we know requests succeeded
-            print(
-                f"Anonymous user - Extended usage: {max(ip_extended_count, fingerprint_extended_count)}/2 (will increment after success)"
-            )
+    # Extended tier usage tracking removed - extended mode is now unlimited (only limited by credits)
 
     # Track if this is an extended interaction (long conversation context)
     # Industry best practice 2025: Separately track context-heavy requests
@@ -1025,6 +990,7 @@ async def compare_stream(
         - Graceful error handling per model
         - Non-blocking I/O throughout
         """
+        nonlocal credits_remaining  # Allow updating outer scope variable
         successful_models = 0
         failed_models = 0
         results_dict = {}
@@ -1066,6 +1032,12 @@ async def compare_stream(
                     use_mock = True
 
         try:
+            # Calculate minimum max output tokens across all models to avoid truncation
+            from ..model_runner import get_min_max_output_tokens, get_tier_max_tokens
+            min_max_output_tokens = get_min_max_output_tokens(req.models)
+            tier_max_tokens = get_tier_max_tokens(req.tier)
+            effective_max_tokens = min(min_max_output_tokens, tier_max_tokens)
+            
             # Send all start events at once (concurrent processing begins simultaneously)
             for model_id in req.models:
                 yield f"data: {json.dumps({'model': model_id, 'type': 'start'})}\n\n"
@@ -1100,6 +1072,7 @@ async def compare_stream(
                                 req.tier,
                                 req.conversation_history,
                                 use_mock,
+                                max_tokens_override=effective_max_tokens,
                             ):
                                 content += chunk
                                 count += 1
@@ -1235,41 +1208,45 @@ async def compare_stream(
                         # Deduct credits for anonymous user
                         ip_identifier = f"ip:{client_ip}"
                         deduct_anonymous_credits(ip_identifier, total_credits_used)
+                        # Get updated IP credit balance
+                        _, ip_credits_remaining, _ = check_anonymous_credits(ip_identifier, Decimal(0), db)
+                        
+                        fingerprint_credits_remaining = ip_credits_remaining
                         if req.browser_fingerprint:
                             fp_identifier = f"fp:{req.browser_fingerprint}"
                             deduct_anonymous_credits(fp_identifier, total_credits_used)
-                        # Get updated credit balance
-                        _, credits_remaining, _ = check_anonymous_credits(ip_identifier, Decimal(0))
+                            # Get updated fingerprint credit balance
+                            _, fingerprint_credits_remaining, _ = check_anonymous_credits(fp_identifier, Decimal(0), db)
+                        
+                        # Use the most restrictive limit (lowest remaining credits) - same logic as at start
+                        credits_remaining = min(ip_credits_remaining, fingerprint_credits_remaining if req.browser_fingerprint else ip_credits_remaining)
+                        print(f"[DEBUG] Anonymous credits after deduction - IP: {ip_credits_remaining}, FP: {fingerprint_credits_remaining if req.browser_fingerprint else 'N/A'}, Final: {credits_remaining}, Used: {total_credits_used}")
                 except ValueError as e:
                     # Should not happen since we checked before, but handle gracefully
                     print(f"Warning: Credit deduction failed: {e}")
                 finally:
                     credit_db.close()
+            else:
+                # Even if no credits were deducted, refresh credits_remaining for anonymous users
+                # (in case of any other state changes, though this shouldn't normally happen)
+                if not user_id:
+                    ip_identifier = f"ip:{client_ip}"
+                    _, ip_credits_remaining, _ = check_anonymous_credits(ip_identifier, Decimal(0), db)
+                    fingerprint_credits_remaining = ip_credits_remaining
+                    if req.browser_fingerprint:
+                        fp_identifier = f"fp:{req.browser_fingerprint}"
+                        _, fingerprint_credits_remaining, _ = check_anonymous_credits(fp_identifier, Decimal(0), db)
+                    credits_remaining = min(ip_credits_remaining, fingerprint_credits_remaining if req.browser_fingerprint else ip_credits_remaining)
 
-                # Increment extended usage - only count 1 per request regardless of model count
-                if req.tier == "extended":
-                    if user_id:
-                        # Create new session for extended increment
-                        increment_db = SessionLocal()
-                        try:
-                            increment_user_obj = (
-                                increment_db.query(User).filter(User.id == user_id).first()
-                            )
-                            if increment_user_obj:
-                                increment_extended_usage(increment_user_obj, increment_db, count=1)
-                        finally:
-                            increment_db.close()
-                    else:
-                        increment_anonymous_extended_usage(f"ip:{client_ip}", count=1)
-                        if req.browser_fingerprint:
-                            increment_anonymous_extended_usage(
-                                f"fp:{req.browser_fingerprint}", count=1
-                            )
+                # Extended tier usage tracking removed - no longer needed
 
             # Calculate processing time
             processing_time_ms = int((datetime.now() - start_time).total_seconds() * 1000)
 
             # Build metadata including credit information
+            # Debug: Log credits_remaining before including in metadata
+            if not user_id:
+                print(f"[DEBUG] Building metadata for anonymous user - credits_remaining: {credits_remaining}, credits_used: {total_credits_used}")
             metadata = {
                 "input_length": len(req.input_data),
                 "models_requested": len(req.models),
@@ -1625,12 +1602,16 @@ async def get_credit_balance(
     db: Session = Depends(get_db),
     current_user: Optional[User] = Depends(get_current_user),
     request: Request = None,
+    fingerprint: Optional[str] = None,
 ):
     """
     Get current credit balance and usage statistics.
     
     Returns credit balance, usage, and reset information for the current user.
     For anonymous users, returns daily credit balance.
+    
+    Args:
+        fingerprint: Optional browser fingerprint for anonymous users (to check both IP and fingerprint)
     """
     if current_user:
         # Authenticated user
@@ -1651,12 +1632,62 @@ async def get_credit_balance(
             "subscription_tier": stats["subscription_tier"],
         }
     else:
-        # Anonymous user
+        # Anonymous user - calculate credits from database (persists across server restarts)
         client_ip = get_client_ip(request) if request else "unknown"
-        ip_identifier = f"ip:{client_ip}"
+        credits_allocated = DAILY_CREDIT_LIMITS.get("anonymous", 50)
         
-        # Get anonymous credit stats
-        _, credits_remaining, credits_allocated = check_anonymous_credits(ip_identifier, Decimal(0))
+        # Calculate credits used today from UsageLog (database) - this persists across restarts
+        today_start = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
+        today_end = datetime.now(timezone.utc).replace(hour=23, minute=59, second=59, microsecond=999999)
+        
+        # Query UsageLog for credits used today by IP
+        ip_credits_query = db.query(func.sum(UsageLog.credits_used)).filter(
+            UsageLog.user_id.is_(None),  # Anonymous users only
+            UsageLog.ip_address == client_ip,
+            UsageLog.created_at >= today_start,
+            UsageLog.created_at <= today_end,
+            UsageLog.credits_used.isnot(None)
+        )
+        ip_credits_used = ip_credits_query.scalar() or Decimal(0)
+        ip_credits_remaining = max(0, credits_allocated - int(round(ip_credits_used)))
+        
+        # Query UsageLog for credits used today by fingerprint (if provided)
+        fingerprint_credits_remaining = ip_credits_remaining
+        fp_credits_used = Decimal(0)
+        if fingerprint:
+            fp_credits_query = db.query(func.sum(UsageLog.credits_used)).filter(
+                UsageLog.user_id.is_(None),  # Anonymous users only
+                UsageLog.browser_fingerprint == fingerprint,
+                UsageLog.created_at >= today_start,
+                UsageLog.created_at <= today_end,
+                UsageLog.credits_used.isnot(None)
+            )
+            fp_credits_used = fp_credits_query.scalar() or Decimal(0)
+            fingerprint_credits_remaining = max(0, credits_allocated - int(round(fp_credits_used)))
+        
+        # Use the most restrictive limit (lowest remaining credits) - same logic as compare endpoints
+        credits_remaining = min(ip_credits_remaining, fingerprint_credits_remaining if fingerprint else ip_credits_remaining)
+        
+        # Sync in-memory storage with database (for fast access in other endpoints)
+        from ..rate_limiting import anonymous_rate_limit_storage
+        ip_identifier = f"ip:{client_ip}"
+        today_str = datetime.now(timezone.utc).date().isoformat()
+        anonymous_rate_limit_storage[ip_identifier] = {
+            "count": int(round(ip_credits_used)),
+            "date": today_str,
+            "first_seen": anonymous_rate_limit_storage[ip_identifier].get("first_seen") or datetime.now(timezone.utc)
+        }
+        if fingerprint:
+            fp_identifier = f"fp:{fingerprint}"
+            anonymous_rate_limit_storage[fp_identifier] = {
+                "count": int(round(fp_credits_used)),
+                "date": today_str,
+                "first_seen": anonymous_rate_limit_storage[fp_identifier].get("first_seen") or datetime.now(timezone.utc)
+            }
+        
+        print(f"[DEBUG] get_credit_balance (from DB) - IP: {client_ip}, Fingerprint: {fingerprint[:20] if fingerprint else 'None'}...")
+        print(f"[DEBUG] DB Credits used - IP: {ip_credits_used}, FP: {fp_credits_used if fingerprint else 'N/A'}")
+        print(f"[DEBUG] Credits remaining - IP: {ip_credits_remaining}, FP: {fingerprint_credits_remaining if fingerprint else 'N/A'}, Final: {credits_remaining}")
         
         return {
             "credits_allocated": credits_allocated,
@@ -1757,10 +1788,10 @@ async def estimate_credits(
         raise HTTPException(status_code=400, detail="At least one model must be selected")
     
     # Validate tier
-    if req.tier not in TIER_LIMITS:
+    if req.tier not in ["standard", "extended"]:
         raise HTTPException(
             status_code=422,
-            detail=f"Invalid tier '{req.tier}'. Valid tiers are: {', '.join(TIER_LIMITS.keys())}",
+            detail=f"Invalid tier '{req.tier}'. Valid tiers are: standard, extended",
         )
     
     # Estimate credits
@@ -1787,7 +1818,7 @@ async def estimate_credits(
         client_ip = get_client_ip(request)
         ip_identifier = f"ip:{client_ip}"
         is_sufficient, credits_remaining, credits_allocated = check_anonymous_credits(
-            ip_identifier, estimated_credits
+            ip_identifier, estimated_credits, db
         )
     
     return {

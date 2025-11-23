@@ -89,7 +89,7 @@ export function useRateLimitStatus({
   // Reset usage counts to 0 when user becomes authenticated
   useEffect(() => {
     if (isAuthenticated) {
-      // Clear usage counts for authenticated users - they use user.daily_usage_count instead
+      // Clear usage counts for authenticated users - they use user.credits_used_this_period instead
       setUsageCount(0)
       setExtendedUsageCount(0)
     } else {

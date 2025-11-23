@@ -4,7 +4,14 @@ from fastapi.exceptions import RequestValidationError
 from pydantic import BaseModel
 from typing import Any
 from contextlib import asynccontextmanager
-from .model_runner import run_models, call_openrouter_streaming, clean_model_response, OPENROUTER_MODELS, MODELS_BY_PROVIDER
+from .model_runner import (
+    run_models,
+    call_openrouter_streaming,
+    clean_model_response,
+    OPENROUTER_MODELS,
+    MODELS_BY_PROVIDER,
+    preload_model_token_limits,
+)
 from fastapi.middleware.cors import CORSMiddleware
 from datetime import datetime, timedelta
 import asyncio
@@ -34,12 +41,6 @@ from .rate_limiting import (
     is_overage_allowed,
     get_overage_price,
     anonymous_rate_limit_storage,
-    check_extended_tier_limit,
-    increment_extended_usage,
-    check_anonymous_extended_limit,
-    increment_anonymous_extended_usage,
-    decrement_extended_usage,
-    decrement_anonymous_extended_usage,
 )
 from .routers import auth, admin, api
 
@@ -48,8 +49,6 @@ from .routers.api import model_stats
 
 # Import configuration constants
 from .config import (
-    TIER_LIMITS,
-    EXTENDED_TIER_LIMITS,
     MODEL_LIMITS,
     ANONYMOUS_DAILY_LIMIT,
     validate_tier_limits,
@@ -93,7 +92,11 @@ async def lifespan(app: FastAPI):
         logger.info("Initializing database tables...")
         Base.metadata.create_all(bind=engine, checkfirst=True)
         logger.info("Database initialization complete")
-        
+
+        # Preload model token limits from OpenRouter
+        logger.info("Preloading model token limits...")
+        preload_model_token_limits()
+
         logger.info("Application startup complete")
     except ValueError as e:
         # Configuration validation failed
