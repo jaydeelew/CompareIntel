@@ -20,9 +20,9 @@ const AdminPanel = lazy(() => import('./components/admin/AdminPanel'))
 import { Footer } from './components'
 import { AuthModal, VerifyEmail, VerificationBanner, ResetPassword } from './components/auth'
 import { ComparisonForm } from './components/comparison'
+import { LowCreditWarningBanner } from './components/credits'
 import { Navigation, Hero, MockModeBanner } from './components/layout'
 import { DoneSelectingCard, ErrorBoundary, LoadingSpinner } from './components/shared'
-import { LowCreditWarningBanner } from './components/credits'
 import { TermsOfService } from './components/TermsOfService'
 import { ANONYMOUS_DAILY_LIMIT, getDailyLimit, getCreditAllocation, getDailyCreditLimit } from './config/constants'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
@@ -42,9 +42,9 @@ import {
   compareStream,
 } from './services/compareService'
 import { getConversation } from './services/conversationService'
-import { getAvailableModels } from './services/modelsService'
 import { estimateCredits, getCreditBalance } from './services/creditService'
 import type { CreditBalance } from './services/creditService'
+import { getAvailableModels } from './services/modelsService'
 import type {
   CompareResponse,
   ConversationMessage,
@@ -89,7 +89,7 @@ function AppContent() {
       }
       // If isAuthenticated is true but user is null/undefined, don't redirect (might be loading)
     }
-  }, [location.pathname, isAuthenticated, user?.is_admin, authLoading, navigate])
+  }, [location.pathname, isAuthenticated, user, authLoading, navigate])
 
   // Custom hooks for state management
   const browserFingerprintHook = useBrowserFingerprint()
@@ -1067,6 +1067,7 @@ function AppContent() {
         }, 100)
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isScrollLocked, conversations])
 
   // Setup scroll listeners when conversations are rendered
@@ -1443,6 +1444,7 @@ function AppContent() {
       const history = loadHistoryFromLocalStorage()
       setConversationHistory(history)
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated, loadHistoryFromAPI, loadHistoryFromLocalStorage])
 
   // Refresh history when dropdown is opened for authenticated users
@@ -1455,6 +1457,7 @@ function AppContent() {
         setConversationHistory(history)
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showHistoryDropdown, isAuthenticated, loadHistoryFromAPI, loadHistoryFromLocalStorage])
 
   // Listen for anonymous usage cleared event from AdminPanel and refresh history
@@ -1474,6 +1477,7 @@ function AppContent() {
     return () => {
       window.removeEventListener('anonymousUsageCleared', handleAnonymousUsageCleared)
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated, loadHistoryFromLocalStorage])
 
   // Track currently visible comparison ID for authenticated users after history loads
@@ -1531,6 +1535,7 @@ function AppContent() {
         }
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     isAuthenticated,
     conversationHistory,
@@ -1558,6 +1563,7 @@ function AppContent() {
         document.removeEventListener('mousedown', handleClickOutside)
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showHistoryDropdown])
 
   // Helper function to create a conversation message
@@ -1601,6 +1607,7 @@ function AppContent() {
     if (user?.is_verified && error?.includes('verify your email')) {
       setError(null)
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.is_verified, error])
 
   // Scroll individual model result cards to top when they finish formatting (initial comparison only)
@@ -1651,6 +1658,7 @@ function AppContent() {
         }
       }, 300)
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [response, isFollowUpMode])
 
   // Scroll all conversation cards to top after formatting is applied (initial comparison only)
@@ -1709,6 +1717,7 @@ function AppContent() {
         }
       }, 400)
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [conversations, isFollowUpMode])
 
   // Immediately hide card when all models are deselected
@@ -1825,6 +1834,7 @@ function AppContent() {
       userInteracting.clear()
       lastScrollTop.clear()
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   // Cleanup usage banner timeout on unmount
@@ -1898,6 +1908,7 @@ function AppContent() {
       // Mark this round as aligned
       lastAlignedRoundRef.current = currentRound
     }, 500) // Wait for content to settle
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [conversations])
 
   // Track mouse position over models section with throttling for better performance
@@ -2195,6 +2206,7 @@ function AppContent() {
     ) {
       setError(null)
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [input, error])
 
   // Load usage data and fetch models on component mount
@@ -2436,6 +2448,7 @@ function AppContent() {
 
     // Update the ref to track current state for next render
     prevIsAuthenticatedRef.current = isAuthenticated
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated, currentAbortController])
 
   const toggleDropdown = (provider: string) => {
@@ -4151,11 +4164,6 @@ function AppContent() {
   // Helper function to render usage preview (used in both regular and follow-up modes)
   const renderUsagePreview = () => {
     const userTier = isAuthenticated ? user?.subscription_tier || 'free' : 'anonymous'
-
-    const regularLimit = getDailyLimit(userTier)
-
-    // Calculate current usage (legacy - model responses)
-    const currentRegularUsage = isAuthenticated && user ? (user.credits_used_this_period || 0) : usageCount
 
     // Get credit information (if available)
     // Prefer creditBalance if available (more up-to-date after model calls)
