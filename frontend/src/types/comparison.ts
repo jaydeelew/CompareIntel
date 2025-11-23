@@ -48,16 +48,6 @@ export interface CompareResponse {
 }
 
 /**
- * Comparison tier (affects input/output limits)
- */
-export const COMPARISON_TIER = {
-  STANDARD: 'standard',
-  EXTENDED: 'extended',
-} as const;
-
-export type ComparisonTier = typeof COMPARISON_TIER[keyof typeof COMPARISON_TIER];
-
-/**
  * Result tab type for displaying comparison results
  */
 export const RESULT_TAB = {

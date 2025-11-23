@@ -51,8 +51,6 @@ from .routers.api import model_stats
 from .config import (
     MODEL_LIMITS,
     ANONYMOUS_DAILY_LIMIT,
-    validate_tier_limits,
-    get_tier_max_tokens,
     validate_config,
     log_configuration,
     settings,
@@ -265,7 +263,6 @@ class CompareRequest(BaseModel):
     models: list[str]
     conversation_history: list[ConversationMessage] = []  # Optional conversation context
     browser_fingerprint: Optional[str] = None  # Optional browser fingerprint for rate limiting
-    tier: str = "standard"  # standard, extended
 
 
 class CompareResponse(BaseModel):

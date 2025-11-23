@@ -84,8 +84,6 @@ export interface CreditEstimateRequest {
   input_data: string
   /** List of model IDs */
   models: string[]
-  /** Response tier: 'standard' or 'extended' */
-  tier: 'standard' | 'extended'
   /** Optional conversation history */
   conversation_history?: Array<{ role: string; content: string }>
 }

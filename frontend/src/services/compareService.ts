@@ -20,7 +20,6 @@ export interface CompareRequestPayload {
   models: string[]
   conversation_history?: Array<{ role: string; content: string }>
   browser_fingerprint?: string
-  tier: 'standard' | 'extended'
   conversation_id?: number
 }
 
@@ -38,15 +37,10 @@ export interface RateLimitStatus {
   monthly_overage_count: number
   reset_time: string
   user_type: 'authenticated' | 'anonymous'
-  extended_usage?: number
-  extended_limit?: number
   // Optional fields for anonymous users
   fingerprint_usage?: number
   fingerprint_remaining?: number
   ip_usage?: number
-  daily_extended_usage?: number
-  fingerprint_extended_usage?: number
-  fingerprint_extended_remaining?: number
 }
 
 /**

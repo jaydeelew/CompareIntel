@@ -263,20 +263,4 @@ def log_configuration() -> None:
     logger.info("=" * 80)
 
 
-def validate_tier_limits(input_data: str, tier: str) -> bool:
-    """
-    Validate input length against tier limits.
-    
-    Args:
-        input_data: Input text to validate
-        tier: Response tier (standard, extended)
-        
-    Returns:
-        True if input is within limits, False otherwise
-    """
-    if tier == "extended":
-        return len(input_data) <= 15000  # Extended: 15K chars
-    elif tier == "standard":
-        return len(input_data) <= 5000  # Standard: 5K chars
-    return False
 

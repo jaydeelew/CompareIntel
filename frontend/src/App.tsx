@@ -24,7 +24,7 @@ import { Navigation, Hero, MockModeBanner } from './components/layout'
 import { DoneSelectingCard, ErrorBoundary, LoadingSpinner } from './components/shared'
 import { LowCreditWarningBanner } from './components/credits'
 import { TermsOfService } from './components/TermsOfService'
-import { ANONYMOUS_DAILY_LIMIT, getExtendedLimit, getDailyLimit, getCreditAllocation, getDailyCreditLimit } from './config/constants'
+import { ANONYMOUS_DAILY_LIMIT, getDailyLimit, getCreditAllocation, getDailyCreditLimit } from './config/constants'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
 import {
   useConversationHistory,
@@ -99,8 +99,6 @@ function AppContent() {
   const {
     usageCount,
     setUsageCount,
-    extendedUsageCount,
-    setExtendedUsageCount,
     fetchRateLimitStatus,
   } = rateLimitHook
 
@@ -117,8 +115,6 @@ function AppContent() {
   const {
     input,
     setInput,
-    isExtendedMode,
-    setIsExtendedMode,
     isLoading,
     setIsLoading,
     error,
@@ -1137,7 +1133,6 @@ function AppContent() {
           setSubmissionCount(0)
           localStorage.removeItem('compareintel_submission_count')
           setUsageCount(0)
-          setExtendedUsageCount(0)
           setShowUsageBanner(false)
           // Clear any existing timeout
           if (usageBannerTimeoutRef.current !== null) {
@@ -1145,7 +1140,6 @@ function AppContent() {
             usageBannerTimeoutRef.current = null
           }
           localStorage.removeItem('compareintel_usage')
-          localStorage.removeItem('compareintel_extended_usage')
 
           // Clear all conversation history from localStorage
           localStorage.removeItem('compareintel_conversation_history')
@@ -1191,76 +1185,8 @@ function AppContent() {
     ;(window as unknown as Record<string, unknown>).resetUsage = resetUsage
   }
 
-  // Sync extendedUsageCount with user data when user changes
-  useEffect(() => {
-    if (isAuthenticated && user) {
-      setExtendedUsageCount(user.daily_extended_usage || 0)
-    }
-  }, [isAuthenticated, user])
 
-  // Automatically disable extended mode when limits are reached
-  useEffect(() => {
-    if (!isExtendedMode) return // Only check if extended mode is on
 
-    const userTier = isAuthenticated ? user?.subscription_tier || 'free' : 'anonymous'
-    const regularLimit = getDailyLimit(userTier)
-    const extendedLimit = getExtendedLimit(userTier)
-
-    // Calculate current usage (legacy: use credits instead of daily_usage_count)
-    // For authenticated users, use credits; for anonymous, use usageCount (localStorage)
-    const currentRegularUsage = isAuthenticated && user ? (user.credits_used_this_period || 0) : usageCount
-    const currentExtendedUsage =
-      isAuthenticated && user ? user.daily_extended_usage : extendedUsageCount
-
-    const regularRemaining = regularLimit - currentRegularUsage
-    const hasReachedExtendedLimit = currentExtendedUsage >= extendedLimit
-    const hasNoRemainingRegularResponses = regularRemaining <= 0
-
-    // Auto-disable if limits reached
-    if (hasNoRemainingRegularResponses || hasReachedExtendedLimit) {
-      setIsExtendedMode(false)
-    }
-  }, [isExtendedMode, isAuthenticated, user, usageCount, extendedUsageCount])
-
-  // Tier recommendation function
-  const getExtendedRecommendation = (inputText: string): boolean => {
-    if (!inputText.trim()) return false
-
-    const text = inputText.toLowerCase()
-    const length = inputText.length
-
-    const extendedKeywords = [
-      'detailed',
-      'comprehensive',
-      'thorough',
-      'complete',
-      'full analysis',
-      'deep dive',
-      'explain in detail',
-      'comprehensive analysis',
-      'thorough explanation',
-      'complete guide',
-      'step by step',
-      'tutorial',
-      'guide',
-      'documentation',
-      'research',
-      'analysis',
-      'compare and contrast',
-      'pros and cons',
-      'advantages and disadvantages',
-      'code review',
-      'debug',
-      'optimize',
-      'refactor',
-      'architecture',
-      'design pattern',
-    ]
-
-    const hasExtendedKeywords = extendedKeywords.some(keyword => text.includes(keyword))
-
-    return length > 3000 || hasExtendedKeywords
-  }
 
   // Get all models in a flat array for compatibility
   const allModels = Object.values(modelsByProvider).flat()
@@ -2290,11 +2216,6 @@ function AppContent() {
             const usageCount = data.daily_usage || data.fingerprint_usage || data.ip_usage || 0
             setUsageCount(usageCount)
 
-            // Sync extended usage from backend if available
-            const extendedCount = data.extended_usage || data.daily_extended_usage
-            if (extendedCount !== undefined) {
-              setExtendedUsageCount(extendedCount)
-            }
 
             // Update localStorage to match backend
             const today = new Date().toDateString()
@@ -2306,16 +2227,6 @@ function AppContent() {
               })
             )
 
-            // Update extended usage in localStorage if synced from backend
-            if (extendedCount !== undefined) {
-              localStorage.setItem(
-                'compareintel_extended_usage',
-                JSON.stringify({
-                  count: extendedCount,
-                  date: today,
-                })
-              )
-            }
 
             // Fetch anonymous credit balance
             try {
@@ -2367,17 +2278,6 @@ function AppContent() {
             setUsageCount(usage.count || 0)
           } else {
             setUsageCount(0)
-          }
-        }
-
-        // Initialize Extended usage from localStorage
-        const savedExtendedUsage = localStorage.getItem('compareintel_extended_usage')
-        if (savedExtendedUsage) {
-          const extendedUsage = JSON.parse(savedExtendedUsage)
-          if (extendedUsage.date === today) {
-            setExtendedUsageCount(extendedUsage.count || 0)
-          } else {
-            setExtendedUsageCount(0)
           }
         }
       }
@@ -2505,7 +2405,6 @@ function AppContent() {
       setOriginalSelectedModels([])
       setClosedCards(new Set())
       setActiveResultTabs({})
-      setIsExtendedMode(false)
       setShowDoneSelectingCard(false)
       setIsModelsHidden(false)
       setIsScrollLocked(false)
@@ -2552,58 +2451,6 @@ function AppContent() {
   }
 
   // Helper function to check extended interaction limits
-  const checkExtendedInteractionLimit = async (): Promise<{
-    canProceed: boolean
-    errorMessage?: string
-  }> => {
-    const userTier = isAuthenticated ? user?.subscription_tier || 'free' : 'anonymous'
-    const extendedLimit = getExtendedLimit(userTier)
-
-    // Get current extended usage
-    let currentExtendedUsage =
-      isAuthenticated && user ? user.daily_extended_usage : extendedUsageCount
-
-    // For anonymous users, try to sync from backend
-    if (!isAuthenticated && browserFingerprint) {
-      try {
-        const data = await getRateLimitStatus(browserFingerprint)
-        const latestExtendedCount = data.extended_usage || data.daily_extended_usage
-        if (latestExtendedCount !== undefined) {
-          currentExtendedUsage = latestExtendedCount
-          setExtendedUsageCount(latestExtendedCount)
-          const today = new Date().toDateString()
-          localStorage.setItem(
-            'compareintel_extended_usage',
-            JSON.stringify({
-              count: latestExtendedCount,
-              date: today,
-            })
-          )
-        }
-      } catch (error) {
-        console.error('Failed to sync extended usage count:', error)
-      }
-    }
-
-    // For authenticated users, refresh to get latest usage
-    if (isAuthenticated) {
-      try {
-        await refreshUser()
-        currentExtendedUsage = user?.daily_extended_usage || 0
-      } catch (error) {
-        console.error('Failed to refresh user data:', error)
-      }
-    }
-
-    // Check if the request would exceed the limit (1 extended interaction per request)
-    if (currentExtendedUsage + 1 > extendedLimit) {
-      const remaining = extendedLimit - currentExtendedUsage
-      const errorMsg = `You have ${remaining} Extended interaction${remaining !== 1 ? 's' : ''} remaining today. ${userTier === 'free' ? 'Upgrade to a paid tier for more Extended interactions.' : `Upgrade to a higher tier for more Extended interactions.`}`
-      return { canProceed: false, errorMessage: errorMsg }
-    }
-
-    return { canProceed: true }
-  }
 
   const collapseAllDropdowns = () => {
     setOpenDropdowns(new Set())
@@ -2657,18 +2504,6 @@ function AppContent() {
           setError(null)
         }, 5000)
         return
-      }
-    } else {
-      // Check extended interaction limit if extended mode is on and we're selecting
-      if (isExtendedMode && !allProviderModelsSelected && !isFollowUpMode) {
-        const check = await checkExtendedInteractionLimit()
-        if (!check.canProceed) {
-          setError(check.errorMessage!)
-          setTimeout(() => {
-            setError(null)
-          }, 10000)
-          return
-        }
       }
     }
 
@@ -2739,22 +2574,6 @@ function AppContent() {
     }
   }
 
-  const handleExtendedModeToggle = async () => {
-    // If toggling ON, check if current model selection would exceed extended interaction limit
-    if (!isExtendedMode && selectedModels.length > 0) {
-      const check = await checkExtendedInteractionLimit()
-      if (!check.canProceed) {
-        setError(check.errorMessage!)
-        setTimeout(() => {
-          setError(null)
-        }, 10000)
-        return
-      }
-    }
-
-    // Toggle extended mode
-    setIsExtendedMode(!isExtendedMode)
-  }
 
   const handleModelToggle = async (modelId: string) => {
     if (selectedModels.includes(modelId)) {
@@ -2821,17 +2640,6 @@ function AppContent() {
         return
       }
 
-      // Check extended interaction limit if extended mode is on
-      if (isExtendedMode) {
-        const check = await checkExtendedInteractionLimit()
-        if (!check.canProceed) {
-          setError(check.errorMessage!)
-          setTimeout(() => {
-            setError(null)
-          }, 10000)
-          return
-        }
-      }
 
       setSelectedModels(prev => [...prev, modelId])
       // Clear any previous error when successfully adding a model
@@ -3071,23 +2879,9 @@ function AppContent() {
       return
     }
 
-    // Check input length against tier limits
+    // Check input length against selected models' limits
     const messageCount = conversations.length > 0 ? conversations[0]?.messages.length || 0 : 0
     const userTier = isAuthenticated ? user?.subscription_tier || 'free' : 'anonymous'
-    const shouldUseExtendedTier = isExtendedMode // Only use extended mode if explicitly enabled by user
-    const tierLimit = shouldUseExtendedTier ? 15000 : 5000 // Extended: 15K chars, Standard: 5K chars
-
-    if (input.length > tierLimit) {
-      const tierName = shouldUseExtendedTier ? 'Extended' : 'Standard'
-      const upgradeMsg = shouldUseExtendedTier
-        ? ' Your input has exceeded the Extended tier limit.'
-        : ' Enable Extended mode for up to 15,000 characters, or reduce your input.'
-      setError(
-        `${tierName} tier limit exceeded. Maximum ${formatNumber(tierLimit)} characters allowed, but your input has ${formatNumber(input.length)} characters.${upgradeMsg}`
-      )
-      window.scrollTo({ top: 0, behavior: 'smooth' })
-      return
-    }
 
     // Check input length against selected models' limits
     if (selectedModels.length > 0) {
@@ -3194,7 +2988,6 @@ function AppContent() {
 
     // Check if this comparison would exceed the limit
     if (currentUsageCount + modelsNeeded > regularLimit) {
-      const remaining = regularLimit - currentUsageCount
       const creditsAllocated = isAuthenticated && user 
         ? (user.monthly_credits_allocated || getCreditAllocation(userTier))
         : getDailyCreditLimit(userTier) || getCreditAllocation(userTier)
@@ -3212,59 +3005,6 @@ function AppContent() {
       return
     }
 
-    // Check Extended tier limit if using Extended tier (only when user explicitly enables it)
-    // Extended mode doubles token limits (5K→15K chars, 4K→8K tokens), equivalent to ~2 messages
-    // Reuse messageCount, userTier, and shouldUseExtendedTier declared above
-
-    if (shouldUseExtendedTier) {
-      const extendedLimit = getExtendedLimit(userTier)
-
-      // Sync extended usage from backend before checking limit
-      let currentExtendedUsage =
-        isAuthenticated && user ? user.daily_extended_usage : extendedUsageCount
-
-      // For anonymous users, try to sync from backend
-      if (!isAuthenticated && browserFingerprint) {
-        try {
-          const data = await getRateLimitStatus(browserFingerprint)
-          const latestExtendedCount = data.extended_usage || data.daily_extended_usage
-          if (latestExtendedCount !== undefined) {
-            currentExtendedUsage = latestExtendedCount
-            // Always update state to keep it in sync - this ensures renderUsagePreview shows correct values
-            setExtendedUsageCount(latestExtendedCount)
-            const today = new Date().toDateString()
-            localStorage.setItem(
-              'compareintel_extended_usage',
-              JSON.stringify({
-                count: latestExtendedCount,
-                date: today,
-              })
-            )
-          }
-        } catch (error) {
-          console.error('Failed to sync extended usage count before check:', error)
-          // Continue with current state if fetch fails
-        }
-      }
-
-      // Extended interactions needed = 1 per request (regardless of number of models)
-      const extendedInteractionsNeeded = 1
-
-      if (currentExtendedUsage >= extendedLimit) {
-        setError(`You've reached your daily Extended tier limit of ${extendedLimit} interactions.`)
-        return
-      }
-
-      // Check if this would exceed the Extended limit
-      if (currentExtendedUsage + extendedInteractionsNeeded > extendedLimit) {
-        const remaining = extendedLimit - currentExtendedUsage
-        // State and localStorage are already updated above, so UI components will show correct values
-        setError(
-          `You have ${remaining} Extended interaction${remaining !== 1 ? 's' : ''} remaining today, but need ${extendedInteractionsNeeded} for this comparison.`
-        )
-        return
-      }
-    }
 
     if (!input.trim()) {
       setError('Please enter some text to compare')
@@ -3355,7 +3095,6 @@ function AppContent() {
       const estimate = await estimateCredits({
         input_data: input,
         models: selectedModels,
-        tier: shouldUseExtendedTier ? 'extended' : 'standard',
         conversation_history: conversationHistory,
       })
 
@@ -3427,13 +3166,9 @@ function AppContent() {
 
     // Dynamic timeout based on request complexity
     // Models run concurrently, so timeout is based on slowest model + overhead, not sum
-    // Extended mode requests need more time due to larger inputs (15K vs 5K chars, 8K vs 4K tokens)
-    // Each model processes more tokens in extended mode, so the slowest model takes longer
     const baseTimeout = 180000 // 3 minutes base (covers slowest model + network overhead)
-    const extendedModeBonus = isExtendedMode ? 120000 : 0 // Add 2 minutes for extended mode (3x larger inputs = slower processing)
-    // Max timeout caps: higher for extended mode due to larger token processing
-    const maxTimeout = isExtendedMode ? 600000 : 480000 // 10 min extended / 8 min standard
-    const dynamicTimeout = Math.min(baseTimeout + extendedModeBonus, maxTimeout)
+    const maxTimeout = 480000 // 8 min max
+    const dynamicTimeout = Math.min(baseTimeout, maxTimeout)
 
     // Declare streaming variables outside try block so they're accessible in catch block for timeout handling
     const streamingResults: { [key: string]: string } = {}
@@ -3448,11 +3183,6 @@ function AppContent() {
       setCurrentAbortController(controller)
 
       const timeoutId = setTimeout(() => controller.abort(), dynamicTimeout)
-
-      // Determine tier: Extended if manually toggled OR if conversation exceeds 6 messages
-      // Extended mode doubles token limits (5K→15K chars, 4K→8K tokens), equivalent to ~2 messages
-      // So 6+ messages is a more reasonable threshold for context-heavy requests
-      // Reuse messageCount and shouldUseExtendedTier declared above
 
       // Use streaming endpoint for faster perceived response time
       // Include conversation_id if available (for authenticated users) to ensure correct conversation matching
@@ -3471,7 +3201,6 @@ function AppContent() {
         models: selectedModels,
         conversation_history: conversationHistory,
         browser_fingerprint: browserFingerprint,
-        tier: shouldUseExtendedTier ? 'extended' : 'standard',
         conversation_id: conversationId || undefined, // Only include if not null
       })
 
@@ -4158,11 +3887,6 @@ function AppContent() {
       if (filteredData.metadata.models_successful > 0) {
         setInput('')
 
-        // Deselect Extended mode after successful Extended request
-        // Only deselect if at least one model succeeded (request counted)
-        if (isExtendedMode) {
-          setIsExtendedMode(false)
-        }
       }
 
       // Track usage only if at least one model succeeded
@@ -4230,11 +3954,6 @@ function AppContent() {
             }
           }
 
-          // Sync extended usage from backend if available
-          const newExtendedCount = data.extended_usage || data.daily_extended_usage
-          if (newExtendedCount !== undefined) {
-            setExtendedUsageCount(newExtendedCount)
-          }
 
           // Update localStorage to match backend
           const today = new Date().toDateString()
@@ -4246,16 +3965,6 @@ function AppContent() {
             })
           )
 
-          // Update extended usage in localStorage if synced from backend
-          if (newExtendedCount !== undefined) {
-            localStorage.setItem(
-              'compareintel_extended_usage',
-              JSON.stringify({
-                count: newExtendedCount,
-                date: today,
-              })
-            )
-          }
         } catch (error) {
           // Silently handle cancellation errors (expected when component unmounts)
           if (error instanceof Error && error.name === 'CancellationError') {
@@ -4307,14 +4016,6 @@ function AppContent() {
             }
           }
 
-          // Calculate if this was an extended interaction - reuse variables from above
-
-          // Update Extended usage if using Extended tier (1 per request, not per model)
-          if (shouldUseExtendedTier) {
-            const newExtendedUsageCount = extendedUsageCount + 1
-            setExtendedUsageCount(newExtendedUsageCount)
-          }
-
           const today = new Date().toDateString()
           localStorage.setItem(
             'compareintel_usage',
@@ -4323,17 +4024,6 @@ function AppContent() {
               date: today,
             })
           )
-
-          // Store Extended usage separately (1 per request, not per model)
-          if (shouldUseExtendedTier) {
-            localStorage.setItem(
-              'compareintel_extended_usage',
-              JSON.stringify({
-                count: extendedUsageCount + 1,
-                date: today,
-              })
-            )
-          }
         }
       } else {
         // All models failed - show a message but don't count it
@@ -4463,12 +4153,9 @@ function AppContent() {
     const userTier = isAuthenticated ? user?.subscription_tier || 'free' : 'anonymous'
 
     const regularLimit = getDailyLimit(userTier)
-    const extendedLimit = getExtendedLimit(userTier)
 
     // Calculate current usage (legacy - model responses)
     const currentRegularUsage = isAuthenticated && user ? (user.credits_used_this_period || 0) : usageCount
-    const currentExtendedUsage =
-      isAuthenticated && user ? user.daily_extended_usage : extendedUsageCount
 
     // Get credit information (if available)
     // Prefer creditBalance if available (more up-to-date after model calls)
@@ -4492,20 +4179,12 @@ function AppContent() {
       creditsRemaining = Math.max(0, creditsAllocated - creditsUsed)
     }
 
-    // Extended mode is based on isExtendedMode flag
-    const isExtendedInteraction = isExtendedMode
-
     // Calculate what will be used
     const regularToUse = selectedModels.length
-    const extendedToUse = isExtendedInteraction ? 1 : 0 // Extended counts as 1 per request, not per model
 
-    // Calculate remaining (legacy - model responses)
-    const regularRemaining = Math.max(0, regularLimit - currentRegularUsage)
-    const extendedRemaining = Math.max(0, extendedLimit - currentExtendedUsage)
 
     // Estimate credits for this request
     // Base estimate: ~4 characters per token, ~1000 tokens = 1 credit
-    // Extended mode uses ~2x credits due to larger context
     // Conversation history adds to input tokens
     const inputTokens = Math.ceil(input.length / 4) // Rough estimate: 4 chars per token
     // Build conversation history from conversations prop (not from hook's conversationHistory)
@@ -4536,15 +4215,11 @@ function AppContent() {
     const effectiveTokensPerModel = totalInputTokens + (outputTokensPerModel * 2.5)
     const creditsPerModel = effectiveTokensPerModel / 1000
     
-    // Extended mode multiplier (approximately 2x due to larger context)
-    const extendedMultiplier = isExtendedInteraction ? 2 : 1
-    
     // Total estimated credits
-    const estimatedCredits = Math.ceil(creditsPerModel * regularToUse * extendedMultiplier)
+    const estimatedCredits = Math.ceil(creditsPerModel * regularToUse)
 
     return (
       <div
-        className={isExtendedInteraction ? 'usage-preview-extended' : ''}
         style={{
           marginTop: '0.5rem',
           fontSize: '0.825rem',
@@ -4552,18 +4227,11 @@ function AppContent() {
         }}
       >
         {/* Credits Display (Primary) */}
-        <span className={isExtendedInteraction ? 'usage-preview-item' : ''}>
+        <span>
           <strong>{regularToUse}</strong> {regularToUse === 1 ? 'model' : 'models'} selected •{' '}
           Estimated: <strong>~{estimatedCredits}</strong> credits •{' '}
           <strong>{Math.round(creditsRemaining)}</strong> credits remaining
         </span>
-        {isExtendedInteraction && (
-          <span className="usage-preview-item">
-            <span className="usage-preview-separator"> • </span>
-            <strong>{extendedToUse}</strong> extended use selected with{' '}
-            <strong>{extendedRemaining}</strong> remaining
-          </span>
-        )}
       </div>
     )
   }
@@ -4676,14 +4344,12 @@ function AppContent() {
                   setInput={setInput}
                   textareaRef={textareaRef}
                   isFollowUpMode={isFollowUpMode}
-                  isExtendedMode={isExtendedMode}
                   isLoading={isLoading}
                   isAnimatingButton={isAnimatingButton}
                   isAnimatingTextarea={isAnimatingTextarea}
                   isAuthenticated={isAuthenticated}
                   user={user}
                   usageCount={usageCount}
-                  extendedUsageCount={extendedUsageCount}
                   conversations={conversations}
                   showHistoryDropdown={showHistoryDropdown}
                   setShowHistoryDropdown={setShowHistoryDropdown}
@@ -4694,10 +4360,8 @@ function AppContent() {
                   onSubmitClick={handleSubmitClick}
                   onContinueConversation={handleContinueConversation}
                   onNewComparison={handleNewComparison}
-                  onExtendedModeToggle={handleExtendedModeToggle}
                   onLoadConversation={loadConversation}
                   onDeleteConversation={deleteConversation}
-                  getExtendedRecommendation={getExtendedRecommendation}
                   renderUsagePreview={renderUsagePreview}
                   selectedModels={selectedModels}
                 />

@@ -30,7 +30,7 @@ from .types import ConnectionQualityDict
 from .cache import cache
 
 # Import configuration
-from .config import settings, get_tier_max_tokens
+from .config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -939,7 +939,7 @@ def calculate_token_usage(prompt_tokens: int, completion_tokens: int) -> TokenUs
 
 
 def estimate_credits_before_request(
-    prompt: str, tier: str = "standard", num_models: int = 1, conversation_history: Optional[List[Any]] = None
+    prompt: str, num_models: int = 1, conversation_history: Optional[List[Any]] = None
 ) -> Decimal:
     """
     Estimate credits needed for a request before making the API call.
@@ -947,7 +947,6 @@ def estimate_credits_before_request(
 
     Args:
         prompt: User prompt text
-        tier: Response tier ('standard' or 'extended')
         num_models: Number of models that will be called
         conversation_history: Optional conversation history
 
@@ -961,13 +960,8 @@ def estimate_credits_before_request(
     if conversation_history:
         input_tokens += count_conversation_tokens(conversation_history)
 
-    # Estimate output tokens based on tier
-    # Standard tier: average ~1,500 tokens (37.5% of 4,000 max)
-    # Extended tier: average ~3,000 tokens (36.6% of 8,192 max)
-    if tier == "extended":
-        estimated_output_tokens = 3000
-    else:
-        estimated_output_tokens = 1500
+    # Estimate output tokens (average ~2,000 tokens, conservative estimate)
+    estimated_output_tokens = 2000
 
     # Calculate credits for one model call
     credits_per_model = calculate_credits(input_tokens, estimated_output_tokens)
@@ -1032,7 +1026,6 @@ def truncate_conversation_history(conversation_history: List[Any], max_messages:
 def call_openrouter_streaming(
     prompt: str,
     model_id: str,
-    tier: str = "standard",
     conversation_history: Optional[List[Any]] = None,
     use_mock: bool = False,
     max_tokens_override: Optional[int] = None,
@@ -1106,16 +1099,12 @@ def call_openrouter_streaming(
         messages.append({"role": "user", "content": prompt})
 
         # Use override if provided (for multi-model comparisons to avoid truncation)
-        # Otherwise, calculate based on tier and model limits
+        # Otherwise, use model's maximum capability
         if max_tokens_override is not None:
             max_tokens = max_tokens_override
         else:
-            # Get tier-based max_tokens limit from configuration
-            tier_max_tokens = get_tier_max_tokens(tier)
-
-            # Don't exceed model's maximum capability
-            model_max_tokens = get_model_max_tokens(model_id)
-            max_tokens = min(tier_max_tokens, model_max_tokens)
+            # Use model's maximum capability
+            max_tokens = get_model_max_tokens(model_id)
 
         # Enable streaming
         response = client.chat.completions.create(
@@ -1156,12 +1145,7 @@ def call_openrouter_streaming(
 
         # After streaming completes, handle finish_reason warnings
         if finish_reason == "length":
-            tier_messages = {
-                "standard": "\n\n⚠️ **Standard tier limit reached.** Response truncated at 4,000 tokens. Upgrade to Extended (8,000) for comprehensive responses.",
-                "extended": "\n\n⚠️ **Extended tier limit reached.** Response truncated at 8,000 tokens. This is the maximum response length available.",
-            }
-            warning = tier_messages.get(tier, "\n\n⚠️ Response truncated - model reached maximum output length.")
-            yield warning
+            yield "\n\n⚠️ Response truncated - model reached maximum output length."
         elif finish_reason == "content_filter":
             yield "\n\n⚠️ **Note:** Response stopped by content filter."
 
@@ -1188,7 +1172,6 @@ def call_openrouter_streaming(
 def call_openrouter(
     prompt: str,
     model_id: str,
-    tier: str = "standard",
     conversation_history: Optional[List[Any]] = None,
     use_mock: bool = False,
     max_tokens_override: Optional[int] = None,
@@ -1200,7 +1183,6 @@ def call_openrouter(
     Args:
         prompt: User prompt text
         model_id: Model identifier
-        tier: Response tier ('standard' or 'extended')
         conversation_history: Optional conversation history
         use_mock: If True, return mock responses instead of calling API (admin testing feature)
 
@@ -1210,8 +1192,8 @@ def call_openrouter(
     """
     # Mock mode: return pre-defined responses for testing
     if use_mock:
-        print(f"🎭 Mock mode enabled - returning mock {tier} response for {model_id}")
-        return get_mock_response(tier=tier), None
+        print(f"🎭 Mock mode enabled - returning mock response for {model_id}")
+        return get_mock_response(), None
 
     try:
         # Build messages array - use standard format like official AI providers
@@ -1251,16 +1233,12 @@ def call_openrouter(
         messages.append({"role": "user", "content": prompt})
 
         # Use override if provided (for multi-model comparisons to avoid truncation)
-        # Otherwise, calculate based on tier and model limits
+        # Otherwise, use model's maximum capability
         if max_tokens_override is not None:
             max_tokens = max_tokens_override
         else:
-            # Get tier-based max_tokens limit from configuration
-            tier_max_tokens = get_tier_max_tokens(tier)
-
-            # Don't exceed model's maximum capability
-            model_max_tokens = get_model_max_tokens(model_id)
-            max_tokens = min(tier_max_tokens, model_max_tokens)
+            # Use model's maximum capability
+            max_tokens = get_model_max_tokens(model_id)
 
         response = client.chat.completions.create(
             model=model_id,
@@ -1342,7 +1320,6 @@ def call_openrouter(
 def run_models(
     prompt: str,
     model_list: List[str],
-    tier: str = "standard",
     conversation_history: Optional[List[Any]] = None,
 ) -> Tuple[Dict[str, str], Dict[str, Optional[TokenUsage]]]:
     """
@@ -1361,14 +1338,11 @@ def run_models(
     usage_data = {}
 
     # Calculate minimum max output tokens across all models to avoid truncation
-    min_max_output_tokens = get_min_max_output_tokens(model_list)
-    # Also respect tier limit
-    tier_max_tokens = get_tier_max_tokens(tier)
-    effective_max_tokens = min(min_max_output_tokens, tier_max_tokens)
+    effective_max_tokens = get_min_max_output_tokens(model_list)
 
     def call(model_id):
         try:
-            content, usage = call_openrouter(prompt, model_id, tier, conversation_history, max_tokens_override=effective_max_tokens)
+            content, usage = call_openrouter(prompt, model_id, conversation_history, max_tokens_override=effective_max_tokens)
             return model_id, content, usage
         except Exception as e:
             return model_id, f"Error: {str(e)}", None

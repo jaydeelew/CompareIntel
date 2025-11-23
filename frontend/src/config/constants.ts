@@ -50,16 +50,6 @@ export const DAILY_LIMITS = {
 } as const
 
 // ============================================================================
-// Tier Limits for Input/Output
-// ============================================================================
-// Input/output character and token limits for each response tier
-
-export const TIER_LIMITS = {
-  standard: { input_chars: 5000, output_tokens: 4000 },
-  extended: { input_chars: 15000, output_tokens: 8192 },
-} as const
-
-// ============================================================================
 // Conversation History Limits
 // ============================================================================
 // Maximum number of conversations stored per subscription tier
@@ -138,44 +128,6 @@ export function getModelLimit(tier: SubscriptionTier | string): number {
  */
 export function getDailyLimit(tier: SubscriptionTier | string): number {
   return DAILY_LIMITS[tier as SubscriptionTier] ?? DAILY_LIMITS.anonymous
-}
-
-/**
- * LEGACY FUNCTION - DEPRECATED: Extended tier usage tracking removed.
- * Extended mode is now unlimited (only limited by credits).
- * Returns 0 to indicate no limit.
- */
-export function getExtendedLimit(tier: SubscriptionTier | string): number {
-  return 0  // Unlimited - extended mode is only limited by credits
-}
-
-/**
- * Validate input length against tier limits.
- *
- * @param inputData - Input text to validate
- * @param tier - Response tier (standard, extended)
- * @returns True if input is within limits, False otherwise
- */
-export function validateTierLimits(inputData: string, tier: ResponseTier | string): boolean {
-  if (tier === "extended") {
-    return inputData.length <= 15000  // Extended: 15K chars
-  } else if (tier === "standard") {
-    return inputData.length <= 5000  // Standard: 5K chars
-  }
-  return false
-}
-
-/**
- * Get maximum output tokens for a given response tier.
- *
- * @param tier - Response tier (standard, extended)
- * @returns Maximum output tokens for the tier
- */
-export function getTierMaxTokens(tier: ResponseTier | string): number {
-  if (tier === "extended") {
-    return 8192  // Extended: 8K tokens
-  }
-  return 4000  // Standard: 4K tokens
 }
 
 /**

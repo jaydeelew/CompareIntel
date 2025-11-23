@@ -17,8 +17,6 @@ export interface UseRateLimitStatusOptions {
 export interface UseRateLimitStatusReturn {
   usageCount: number
   setUsageCount: React.Dispatch<React.SetStateAction<number>>
-  extendedUsageCount: number
-  setExtendedUsageCount: React.Dispatch<React.SetStateAction<number>>
   rateLimitStatus: RateLimitStatus | null
   fetchRateLimitStatus: () => Promise<void>
 }
@@ -28,7 +26,6 @@ export function useRateLimitStatus({
   browserFingerprint,
 }: UseRateLimitStatusOptions): UseRateLimitStatusReturn {
   const [usageCount, setUsageCount] = useState(0)
-  const [extendedUsageCount, setExtendedUsageCount] = useState(0)
   const [rateLimitStatus, setRateLimitStatus] = useState<RateLimitStatus | null>(null)
 
   // Fetch rate limit status
@@ -48,12 +45,6 @@ export function useRateLimitStatus({
         const latestCount = status.fingerprint_usage || status.ip_usage || status.daily_usage || 0
         setUsageCount(latestCount)
 
-        // Update extended usage if available
-        const latestExtendedCount = status.extended_usage || status.daily_extended_usage
-        if (latestExtendedCount !== undefined) {
-          setExtendedUsageCount(latestExtendedCount)
-        }
-
         // Update localStorage to match backend
         const today = new Date().toDateString()
         localStorage.setItem(
@@ -63,16 +54,6 @@ export function useRateLimitStatus({
             date: today,
           })
         )
-
-        if (latestExtendedCount !== undefined) {
-          localStorage.setItem(
-            'compareintel_extended_usage',
-            JSON.stringify({
-              count: latestExtendedCount,
-              date: today,
-            })
-          )
-        }
       }
       // For authenticated users, usage count comes from user object, not from rate limit status
     } catch (error) {
@@ -91,11 +72,9 @@ export function useRateLimitStatus({
     if (isAuthenticated) {
       // Clear usage counts for authenticated users - they use user.credits_used_this_period instead
       setUsageCount(0)
-      setExtendedUsageCount(0)
     } else {
       // Only load from localStorage for anonymous users
       const savedUsage = localStorage.getItem('compareintel_usage')
-      const savedExtendedUsage = localStorage.getItem('compareintel_extended_usage')
 
       if (savedUsage) {
         try {
@@ -118,18 +97,6 @@ export function useRateLimitStatus({
         try {
           const { count, date } = JSON.parse(savedExtendedUsage)
           const today = new Date().toDateString()
-          if (date === today) {
-            setExtendedUsageCount(count)
-          } else {
-            // Reset count if it's a new day
-            setExtendedUsageCount(0)
-            localStorage.removeItem('compareintel_extended_usage')
-          }
-        } catch (e) {
-          console.error('Failed to parse extended usage count:', e)
-          setExtendedUsageCount(0)
-        }
-      }
     }
   }, [isAuthenticated])
 
@@ -160,8 +127,6 @@ export function useRateLimitStatus({
   return {
     usageCount,
     setUsageCount,
-    extendedUsageCount,
-    setExtendedUsageCount,
     rateLimitStatus,
     fetchRateLimitStatus,
   }

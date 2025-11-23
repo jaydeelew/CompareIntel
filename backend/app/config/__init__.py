@@ -30,7 +30,6 @@ from .constants import (
 # Import validation
 from .validation import (
     validate_config,
-    validate_tier_limits,
     log_configuration,
     mask_secret,
 )
@@ -39,9 +38,7 @@ from .validation import (
 from .helpers import (
     get_model_limit,
     get_daily_limit,
-    get_extended_limit,
     get_conversation_limit,
-    get_tier_max_tokens,
 )
 
 __all__ = [
@@ -57,15 +54,12 @@ __all__ = [
     "CONVERSATION_LIMITS",
     # Validation
     "validate_config",
-    "validate_tier_limits",
     "log_configuration",
     "mask_secret",
     # Helper functions
     "get_model_limit",
     "get_daily_limit",
-    "get_extended_limit",
     "get_conversation_limit",
-    "get_tier_max_tokens",
 ]
 
 # Run validation on import (optional - can be disabled for testing)

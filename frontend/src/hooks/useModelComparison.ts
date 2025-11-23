@@ -16,8 +16,6 @@ export interface UseModelComparisonReturn {
   // Comparison state
   input: string;
   setInput: React.Dispatch<React.SetStateAction<string>>;
-  isExtendedMode: boolean;
-  setIsExtendedMode: React.Dispatch<React.SetStateAction<boolean>>;
   isLoading: boolean;
   setIsLoading: React.Dispatch<React.SetStateAction<boolean>>;
   error: string | null;
@@ -79,7 +77,6 @@ export interface UseModelComparisonReturn {
 export function useModelComparison(): UseModelComparisonReturn {
   // Comparison state
   const [input, setInput] = useState('');
-  const [isExtendedMode, setIsExtendedMode] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
@@ -168,8 +165,6 @@ export function useModelComparison(): UseModelComparisonReturn {
     // Comparison state
     input,
     setInput,
-    isExtendedMode,
-    setIsExtendedMode,
     isLoading,
     setIsLoading,
     error,

@@ -1041,10 +1041,12 @@ async def zero_anonymous_usage(
     # Count entries before clearing for logging
     keys_to_remove = []
     for key in list(anonymous_rate_limit_storage.keys()):
-        # Remove all anonymous user entries (both regular and extended)
-        # Keys are formatted as "ip:xxx", "fp:xxx", "ip:xxx_extended", "fp:xxx_extended"
+        # Remove all anonymous user entries
+        # Keys are formatted as "ip:xxx", "fp:xxx"
         if key.startswith("ip:") or key.startswith("fp:"):
-            keys_to_remove.append(key)
+            # Skip extended keys (no longer used)
+            if not key.endswith("_extended"):
+                keys_to_remove.append(key)
 
     # Clear all anonymous usage entries from memory
     for key in keys_to_remove:

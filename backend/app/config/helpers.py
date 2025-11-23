@@ -56,16 +56,6 @@ def get_daily_limit(tier: str) -> int:
     return limit
 
 
-def get_extended_limit(tier: str) -> int:
-    """
-    LEGACY FUNCTION - DEPRECATED: Extended tier usage tracking removed.
-    Extended mode is now unlimited (only limited by credits).
-
-    Returns 0 to indicate no limit (unlimited).
-    """
-    return 0  # Unlimited - extended mode is only limited by credits
-
-
 def get_conversation_limit(tier: str) -> int:
     """
     Get conversation history limit for a given subscription tier.
@@ -79,16 +69,3 @@ def get_conversation_limit(tier: str) -> int:
     return CONVERSATION_LIMITS.get(tier, 2)  # Default to anonymous limit
 
 
-def get_tier_max_tokens(tier: str) -> int:
-    """
-    Get maximum output tokens for a given response tier.
-
-    Args:
-        tier: Response tier (standard, extended)
-
-    Returns:
-        Maximum output tokens for the tier
-    """
-    if tier == "extended":
-        return 8192  # Extended mode: 8K tokens
-    return 4000  # Standard mode: 4K tokens

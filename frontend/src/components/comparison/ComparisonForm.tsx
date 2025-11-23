@@ -2,7 +2,7 @@ import React, { memo, useEffect, useCallback } from 'react';
 import type { User } from '../../types';
 import type { ConversationSummary, ModelConversation } from '../../types';
 import { truncatePrompt, formatDate } from '../../utils';
-import { getConversationLimit, getDailyLimit, getExtendedLimit } from '../../config/constants';
+import { getConversationLimit, getDailyLimit } from '../../config/constants';
 
 interface ComparisonFormProps {
   // Input state
@@ -12,7 +12,6 @@ interface ComparisonFormProps {
 
   // Mode state
   isFollowUpMode: boolean;
-  isExtendedMode: boolean;
   isLoading: boolean;
   isAnimatingButton: boolean;
   isAnimatingTextarea: boolean;
@@ -21,7 +20,6 @@ interface ComparisonFormProps {
   isAuthenticated: boolean;
   user: User | null;
   usageCount: number;
-  extendedUsageCount: number;
 
   // Conversations
   conversations: ModelConversation[];
@@ -38,12 +36,10 @@ interface ComparisonFormProps {
   onSubmitClick: () => void;
   onContinueConversation: () => void;
   onNewComparison: () => void;
-  onExtendedModeToggle: () => void;
   onLoadConversation: (summary: ConversationSummary) => void;
   onDeleteConversation: (summary: ConversationSummary, e: React.MouseEvent) => void;
 
   // Utilities
-  getExtendedRecommendation: (input: string) => boolean;
   renderUsagePreview: () => React.ReactNode;
 
   // Model selection
@@ -68,14 +64,12 @@ export const ComparisonForm = memo<ComparisonFormProps>(({
   setInput,
   textareaRef,
   isFollowUpMode,
-  isExtendedMode,
   isLoading,
   isAnimatingButton,
   isAnimatingTextarea,
   isAuthenticated,
   user,
   usageCount,
-  extendedUsageCount,
   conversations,
   showHistoryDropdown,
   setShowHistoryDropdown,
@@ -86,10 +80,8 @@ export const ComparisonForm = memo<ComparisonFormProps>(({
   onSubmitClick,
   onContinueConversation,
   onNewComparison,
-  onExtendedModeToggle,
   onLoadConversation,
   onDeleteConversation,
-  getExtendedRecommendation,
   renderUsagePreview,
   selectedModels,
 }) => {
@@ -308,83 +300,15 @@ export const ComparisonForm = memo<ComparisonFormProps>(({
           </button>
 
           <div className="textarea-actions">
-            {(() => {
-              const userTier = isAuthenticated ? user?.subscription_tier || 'free' : 'anonymous';
-              const regularLimit = getDailyLimit(userTier);
-              const extendedLimit = getExtendedLimit(userTier);
-
-              const currentRegularUsage = isAuthenticated && user
-                ? (user.credits_used_this_period || 0)
-                : usageCount;
-              const currentExtendedUsage = isAuthenticated && user
-                ? user.daily_extended_usage
-                : extendedUsageCount;
-
-              const regularRemaining = regularLimit - currentRegularUsage;
-              const hasReachedExtendedLimit = currentExtendedUsage >= extendedLimit;
-              const hasNoRemainingRegularResponses = regularRemaining <= 0;
-
-              const handleClick = (e: React.MouseEvent) => {
-                if ((hasReachedExtendedLimit || hasNoRemainingRegularResponses) && !isExtendedMode) {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  return;
-                }
-                onExtendedModeToggle();
-              };
-
-              const getTitle = () => {
-                if (isExtendedMode) {
-                  return 'Disable Extended mode';
-                }
-                if (hasNoRemainingRegularResponses) {
-                  return `No remaining model responses today.${userTier === 'anonymous' ? ' Sign up for a free account to get 20 model responses per day!' : ' Paid tiers with higher limits will be available soon!'}`;
-                }
-                if (hasReachedExtendedLimit) {
-                  return `Daily Extended tier limit of ${extendedLimit} interactions reached`;
-                }
-
-                let tierDisplayName: string;
-                if (userTier.endsWith('_plus')) {
-                  const baseTier = userTier.replace('_plus', '');
-                  tierDisplayName = baseTier.charAt(0).toUpperCase() + baseTier.slice(1) + '+';
-                } else {
-                  tierDisplayName = userTier.split('_')
-                    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-                    .join(' ');
-                }
-                return `${tierDisplayName} tier users get ${extendedLimit} extended interactions`;
-              };
-
-              return (
-                <button
-                  className={`extended-mode-button ${isExtendedMode ? 'active' : ''} ${getExtendedRecommendation(input) ? 'recommended' : ''}`}
-                  onClick={handleClick}
-                  disabled={isLoading}
-                  style={(hasReachedExtendedLimit || hasNoRemainingRegularResponses) && !isLoading ? { cursor: 'not-allowed' } : undefined}
-                  title={getTitle()}
-                >
-                  E
-                </button>
-              );
-            })()}
             <button
               onClick={isFollowUpMode ? onContinueConversation : onSubmitClick}
               disabled={(() => {
-                const usesExtendedTier = isExtendedMode;
-                const tierLimit = usesExtendedTier ? 15000 : 5000;
-                const exceedsLimit = input.length > tierLimit;
-
                 return isLoading ||
-                  exceedsLimit ||
                   (isFollowUpMode && messageCount >= 24);
               })()}
               className={`textarea-icon-button submit-button ${!isFollowUpMode && !input.trim() ? 'not-ready' : ''} ${isAnimatingButton ? 'animate-pulse-glow' : ''}`}
               title={(() => {
                 if (messageCount >= 24) return 'Maximum conversation length reached - start a new comparison';
-                const usesExtendedTier = isExtendedMode;
-                const tierLimit = usesExtendedTier ? 15000 : 5000;
-                if (input.length > tierLimit) return `Input exceeds ${usesExtendedTier ? 'Extended' : 'Standard'} tier limit - reduce length or enable Extended mode`;
                 return isFollowUpMode ? 'Continue conversation' : 'Compare models';
               })()}
               data-testid="comparison-submit-button"

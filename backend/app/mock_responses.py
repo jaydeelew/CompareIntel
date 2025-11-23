@@ -114,21 +114,14 @@ The most important takeaway is that thoughtful, informed decision-making require
 I encourage you to take these concepts and apply them thoughtfully to your own context. Experiment, measure results, and continuously refine your approach based on what you learn. If you have any follow-up questions or would like me to dive deeper into any particular aspect of what we've discussed, I'm here to help. Thank you for this engaging question!"""
 
 
-def get_mock_response(tier: str = "standard") -> str:
+def get_mock_response() -> str:
     """
-    Get a mock response based on the requested tier.
-    
-    Args:
-        tier: Response tier ('standard' or 'extended')
+    Get a mock response for testing purposes.
         
     Returns:
-        Mock response string appropriate for the tier
+        Mock response string
     """
-    if tier == "extended":
-        return MOCK_RESPONSE_EXTENDED
-    else:
-        # Default to standard
-        return MOCK_RESPONSE_STANDARD
+    return MOCK_RESPONSE_STANDARD
 
 
 def stream_mock_response(tier: str = "standard", chunk_size: int = 50):

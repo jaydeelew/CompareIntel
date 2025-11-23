@@ -866,8 +866,6 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
             localStorage.removeItem('compareintel_usage');
             localStorageKeys.push('compareintel_usage');
 
-            localStorage.removeItem('compareintel_extended_usage');
-            localStorageKeys.push('compareintel_extended_usage');
 
             localStorage.removeItem('compareintel_submission_count');
             localStorageKeys.push('compareintel_submission_count');
@@ -1921,7 +1919,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                                     <button
                                         onClick={zeroAnonymousUsage}
                                         className={`mock-mode-btn zero-usage-btn ${historyCleared ? 'history-cleared-green' : ''}`}
-                                        title="Zero out all anonymous user daily/extended usage and clear comparison history"
+                                        title="Zero out all anonymous user usage and clear comparison history"
                                         style={{ minWidth: '220px' }}
                                     >
                                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -2112,7 +2110,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                                                         <button
                                                             onClick={() => resetUsage(userRow.id)}
                                                             className="reset-usage-btn"
-                                                            title="Reset daily usage and extended usage to 0 and remove all model comparison history"
+                                                            title="Reset daily usage to 0 and remove all model comparison history"
                                                         >
                                                             Zero Usage
                                                         </button>

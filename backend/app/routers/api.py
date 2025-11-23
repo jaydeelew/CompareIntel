@@ -41,7 +41,6 @@ from ..schemas import ConversationSummary, ConversationDetail
 from ..rate_limiting import (
     get_user_usage_stats,
     get_anonymous_usage_stats,
-    get_anonymous_extended_usage_stats,
     anonymous_rate_limit_storage,
     check_user_rate_limit,
     increment_user_usage,
@@ -94,7 +93,6 @@ class CompareRequest(BaseModel):
     models: list[str]
     conversation_history: list[ConversationMessage] = []  # Optional conversation context
     browser_fingerprint: Optional[str] = None  # Optional browser fingerprint for rate limiting
-    tier: str = "standard"  # standard, extended
     conversation_id: Optional[int] = (
         None  # Optional conversation ID for follow-ups (most reliable matching)
     )
@@ -108,7 +106,6 @@ class CompareRequest(BaseModel):
                     {"role": "user", "content": "What is AI?"},
                     {"role": "assistant", "content": "AI stands for Artificial Intelligence..."},
                 ],
-                "tier": "standard",
                 "conversation_id": 123,
             }
         }
@@ -127,8 +124,6 @@ class ResetRateLimitRequest(BaseModel):
 # Helper functions
 # get_conversation_limit_for_tier is now get_conversation_limit from config module
 
-# Import validation functions from config
-from ..config import validate_tier_limits
 
 
 def get_client_ip(request: Request) -> str:
@@ -294,21 +289,14 @@ async def get_rate_limit_status(
         # Anonymous user - return IP/fingerprint-based usage
         client_ip = get_client_ip(request)
         usage_stats = get_anonymous_usage_stats(f"ip:{client_ip}")
-        extended_stats = get_anonymous_extended_usage_stats(f"ip:{client_ip}")
 
         result = {**usage_stats, "authenticated": False, "ip_address": client_ip}
-        result.update(extended_stats)
 
         # Include fingerprint stats if provided
         if fingerprint:
             fp_stats = get_anonymous_usage_stats(f"fp:{fingerprint}")
             result["fingerprint_usage"] = fp_stats["daily_usage"]
             result["fingerprint_remaining"] = fp_stats["remaining_usage"]
-
-            # Include extended fingerprint stats
-            fp_extended_stats = get_anonymous_extended_usage_stats(f"fp:{fingerprint}")
-            result["fingerprint_extended_usage"] = fp_extended_stats["daily_extended_usage"]
-            result["fingerprint_extended_remaining"] = fp_extended_stats["remaining_extended_usage"]
 
         return result
 
@@ -372,22 +360,12 @@ async def reset_rate_limit_dev(
     if ip_key in anonymous_rate_limit_storage:
         del anonymous_rate_limit_storage[ip_key]
 
-    # Reset IP-based extended usage tracking
-    ip_extended_key = f"ip:{client_ip}_extended"
-    if ip_extended_key in anonymous_rate_limit_storage:
-        del anonymous_rate_limit_storage[ip_extended_key]
-
     # Reset fingerprint-based rate limit if provided
     fingerprint = req_body.fingerprint
     if fingerprint:
         fp_key = f"fp:{fingerprint}"
         if fp_key in anonymous_rate_limit_storage:
             del anonymous_rate_limit_storage[fp_key]
-
-        # Reset fingerprint-based extended usage tracking
-        fp_extended_key = f"fp:{fingerprint}_extended"
-        if fp_extended_key in anonymous_rate_limit_storage:
-            del anonymous_rate_limit_storage[fp_extended_key]
 
     return {
         "message": "Rate limits, usage, and conversation history reset successfully",
@@ -417,21 +395,6 @@ async def compare(
     if not req.models:
         raise HTTPException(status_code=400, detail="At least one model must be selected")
 
-    # Validate tier is valid
-    if req.tier not in ["standard", "extended"]:
-        raise HTTPException(
-            status_code=422,
-            detail=f"Invalid tier '{req.tier}'. Valid tiers are: standard, extended",
-        )
-
-    # Validate tier limits (character-based limits)
-    if not validate_tier_limits(req.input_data, req.tier):
-        tier_limit = 15000 if req.tier == "extended" else 5000
-        raise HTTPException(
-            status_code=400,
-            detail=f"Input exceeds {req.tier} tier limit of {tier_limit} characters. Current: {len(req.input_data)} characters.",
-        )
-    
     # Validate input against model token limits
     from ..model_runner import get_min_max_input_tokens, estimate_token_count
     min_max_input_tokens = get_min_max_input_tokens(req.models)
@@ -502,7 +465,6 @@ async def compare(
     # Estimate credits needed for this request
     estimated_credits = estimate_credits_before_request(
         prompt=req.input_data,
-        tier=req.tier,
         num_models=num_models,
         conversation_history=req.conversation_history,
     )
@@ -631,7 +593,7 @@ async def compare(
         else:
             loop = asyncio.get_running_loop()
             results, usage_data_dict = await loop.run_in_executor(
-                None, run_models, req.input_data, req.models, req.tier, req.conversation_history
+                None, run_models, req.input_data, req.models, req.conversation_history
             )
 
         # Count successful vs failed models and calculate total credits used
@@ -789,21 +751,6 @@ async def compare_stream(
     if not req.models:
         raise HTTPException(status_code=400, detail="At least one model must be selected")
 
-    # Validate tier is valid
-    if req.tier not in ["standard", "extended"]:
-        raise HTTPException(
-            status_code=422,
-            detail=f"Invalid tier '{req.tier}'. Valid tiers are: standard, extended",
-        )
-
-    # Validate tier limits (character-based limits)
-    if not validate_tier_limits(req.input_data, req.tier):
-        tier_limit = 15000 if req.tier == "extended" else 5000
-        raise HTTPException(
-            status_code=400,
-            detail=f"Input exceeds {req.tier} tier limit of {tier_limit} characters. Current: {len(req.input_data)} characters.",
-        )
-    
     # Validate input against model token limits
     from ..model_runner import get_min_max_input_tokens, estimate_token_count
     min_max_input_tokens = get_min_max_input_tokens(req.models)
@@ -874,7 +821,6 @@ async def compare_stream(
     # Estimate credits needed for this request
     estimated_credits = estimate_credits_before_request(
         prompt=req.input_data,
-        tier=req.tier,
         num_models=num_models,
         conversation_history=req.conversation_history,
     )
@@ -958,18 +904,6 @@ async def compare_stream(
         print(f"Anonymous user - IP: {client_ip} - Credits: {credits_remaining}/{credits_allocated} (estimated: {estimated_credits:.2f})")
     # --- END CREDIT-BASED RATE LIMITING ---
 
-    # Extended tier usage tracking removed - extended mode is now unlimited (only limited by credits)
-
-    # Track if this is an extended interaction (long conversation context)
-    # Industry best practice 2025: Separately track context-heavy requests
-    is_extended_interaction = False
-    conversation_message_count = len(req.conversation_history) if req.conversation_history else 0
-
-    # Consider it extended if conversation has more than 6 messages (3 exchanges)
-    # Extended mode doubles token limits (5K→15K chars, 4K→8K tokens), equivalent to ~2 messages
-    # So 6+ messages is a more reasonable threshold for context-heavy requests
-    if conversation_message_count > 6:
-        is_extended_interaction = True
 
     # Track start time for processing metrics
     start_time = datetime.now()
@@ -1033,10 +967,8 @@ async def compare_stream(
 
         try:
             # Calculate minimum max output tokens across all models to avoid truncation
-            from ..model_runner import get_min_max_output_tokens, get_tier_max_tokens
-            min_max_output_tokens = get_min_max_output_tokens(req.models)
-            tier_max_tokens = get_tier_max_tokens(req.tier)
-            effective_max_tokens = min(min_max_output_tokens, tier_max_tokens)
+            from ..model_runner import get_min_max_output_tokens
+            effective_max_tokens = get_min_max_output_tokens(req.models)
             
             # Send all start events at once (concurrent processing begins simultaneously)
             for model_id in req.models:
@@ -1069,7 +1001,6 @@ async def compare_stream(
                             for chunk in call_openrouter_streaming(
                                 req.input_data,
                                 model_id,
-                                req.tier,
                                 req.conversation_history,
                                 use_mock,
                                 max_tokens_override=effective_max_tokens,
@@ -1254,8 +1185,6 @@ async def compare_stream(
                 "models_failed": failed_models,
                 "timestamp": datetime.now().isoformat(),
                 "processing_time_ms": processing_time_ms,
-                "conversation_message_count": conversation_message_count,
-                "is_extended_interaction": is_extended_interaction,
                 # Credit-based fields
                 "credits_used": float(total_credits_used),
                 "credits_remaining": credits_remaining,

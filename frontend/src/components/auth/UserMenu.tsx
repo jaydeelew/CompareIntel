@@ -33,17 +33,6 @@ export const UserMenu: React.FC = () => {
     return limits[tier as keyof typeof limits] || 20
   }
 
-  // Extended tier limits per subscription tier
-  const getExtendedLimit = (tier: string): number => {
-    const limits = {
-      free: 5,
-      starter: 10,
-      starter_plus: 20,
-      pro: 40,
-      pro_plus: 80,
-    }
-    return limits[tier as keyof typeof limits] || 5
-  }
 
   // Fetch credit balance when menu opens
   useEffect(() => {
@@ -227,23 +216,6 @@ export const UserMenu: React.FC = () => {
                     </span>
                   </div>
                 )}
-              </div>
-              {/* Extended Interactions (Secondary) */}
-              <div className="usage-stat">
-                <div className="usage-stat-label">Extended Interactions</div>
-                <div className="usage-stat-value">
-                  <span className="usage-current">{user.daily_extended_usage || 0}</span>
-                  <span className="usage-separator">/</span>
-                  <span className="usage-limit">{getExtendedLimit(user.subscription_tier)}</span>
-                </div>
-                <div className="usage-progress-bar">
-                  <div
-                    className="usage-progress-fill extended"
-                    style={{
-                      width: `${Math.min(100, ((user.daily_extended_usage || 0) / getExtendedLimit(user.subscription_tier)) * 100)}%`,
-                    }}
-                  ></div>
-                </div>
               </div>
             </div>
             {/* Legacy Model Response Display (Hidden by default, can be shown for transition period) */}

@@ -21,7 +21,6 @@ from sqlalchemy import func
 from collections import defaultdict
 from .types import (
     UsageStatsDict,
-    ExtendedUsageStatsDict,
     FullUsageStatsDict,
     AnonymousRateLimitData,
 )
@@ -35,7 +34,6 @@ from .config import (
     ANONYMOUS_MODEL_LIMIT,
     get_model_limit,
     get_daily_limit,
-    get_extended_limit,
 )
 
 # Import credit management functions
@@ -337,10 +335,6 @@ def get_user_usage_stats(user: User) -> FullUsageStatsDict:
     # Legacy: daily_usage_count removed - use credits instead
     daily_remaining = 0  # Placeholder - credits system replaced this
 
-    # Get extended tier limits
-    extended_limit = get_extended_limit(tier)
-    extended_remaining = max(0, extended_limit - user.daily_extended_usage)
-
     return {
         # Credits-based fields (new)
         "credits_allocated": allocated,
@@ -352,9 +346,6 @@ def get_user_usage_stats(user: User) -> FullUsageStatsDict:
         "daily_usage": 0,  # Placeholder - use credits_used_this_period
         "daily_limit": daily_limit,
         "remaining_usage": daily_remaining,
-        "daily_extended_usage": user.daily_extended_usage,
-        "daily_extended_limit": extended_limit,
-        "remaining_extended_usage": extended_remaining,
         "subscription_tier": tier,
         "usage_reset_date": reset_date.isoformat(),
     }
@@ -511,146 +502,3 @@ def get_rate_limit_info() -> Dict[str, Any]:
     }
 
 
-# Extended tier usage tracking removed - extended mode is now unlimited (only limited by credits)
-
-
-def check_extended_tier_limit(user: User, db: Session) -> Tuple[bool, int, int]:
-    """
-    Check Extended tier limit for authenticated user.
-
-    Args:
-        user: Authenticated user object
-        db: Database session
-
-    Returns:
-        tuple: (is_allowed, current_count, daily_limit)
-    """
-    # Reset counter if it's a new day
-    today = date.today()
-    if user.extended_usage_reset_date != today:
-        user.daily_extended_usage = 0
-        user.extended_usage_reset_date = today
-        db.commit()
-
-    # Get daily limit based on subscription tier
-    daily_limit = get_extended_limit(user.subscription_tier)
-
-    # Check if user is within limit
-    is_allowed = user.daily_extended_usage < daily_limit
-
-    return is_allowed, user.daily_extended_usage, daily_limit
-
-
-def increment_extended_usage(user: User, db: Session, count: int = 1) -> None:
-    """
-    Increment authenticated user's daily Extended usage count.
-
-    Args:
-        user: Authenticated user object
-        db: Database session
-        count: Number of Extended responses to add (default: 1)
-    """
-    old_count = user.daily_extended_usage
-    user.daily_extended_usage += count
-    user.updated_at = datetime.utcnow()
-    db.commit()
-    db.refresh(user)  # Refresh to ensure we have the latest state
-    print(f"[increment_extended_usage] User {user.email}: {old_count} -> {user.daily_extended_usage} (added {count})")
-
-
-def check_anonymous_extended_limit(identifier: str) -> Tuple[bool, int]:
-    """
-    Check Extended tier limit for anonymous user.
-
-    Args:
-        identifier: IP or fingerprint identifier
-
-    Returns:
-        tuple: (is_allowed, current_count)
-    """
-    today = date.today().isoformat()
-    storage_key = f"{identifier}_extended"
-
-    # Reset if new day
-    if storage_key not in anonymous_rate_limit_storage or anonymous_rate_limit_storage[storage_key]["date"] != today:
-        anonymous_rate_limit_storage[storage_key] = {"count": 0, "date": today, "first_seen": datetime.now()}
-
-    current_count = anonymous_rate_limit_storage[storage_key]["count"]
-    # Extended tier usage tracking removed - extended mode is now unlimited (only limited by credits)
-    # Return True to allow (no limit)
-    daily_limit = 0  # Unlimited
-
-    is_allowed = True  # Always allowed since extended tier usage tracking is removed
-
-    return is_allowed, current_count
-
-
-def increment_anonymous_extended_usage(identifier: str, count: int = 1) -> None:
-    """
-    Increment anonymous user's Extended usage count.
-
-    Args:
-        identifier: IP or fingerprint identifier
-        count: Number of Extended responses to add (default: 1)
-    """
-    today = date.today().isoformat()
-    storage_key = f"{identifier}_extended"
-
-    if storage_key not in anonymous_rate_limit_storage:
-        anonymous_rate_limit_storage[storage_key] = {"count": 0, "date": today, "first_seen": datetime.now()}
-
-    anonymous_rate_limit_storage[storage_key]["count"] += count
-
-
-def decrement_extended_usage(user: User, db: Session, count: int = 1) -> None:
-    """
-    Decrement authenticated user's daily Extended usage count.
-    Used when requests fail and should not count against limit.
-
-    Args:
-        user: Authenticated user object
-        db: Database session
-        count: Number of Extended responses to remove (default: 1)
-    """
-    user.daily_extended_usage = max(0, user.daily_extended_usage - count)
-    user.updated_at = datetime.utcnow()
-    db.commit()
-
-
-def decrement_anonymous_extended_usage(identifier: str, count: int = 1) -> None:
-    """
-    Decrement anonymous user's Extended usage count.
-    Used when requests fail and should not count against limit.
-
-    Args:
-        identifier: IP or fingerprint identifier
-        count: Number of Extended responses to remove (default: 1)
-    """
-    storage_key = f"{identifier}_extended"
-
-    if storage_key in anonymous_rate_limit_storage:
-        anonymous_rate_limit_storage[storage_key]["count"] = max(0, anonymous_rate_limit_storage[storage_key]["count"] - count)
-
-
-def get_anonymous_extended_usage_stats(identifier: str) -> ExtendedUsageStatsDict:
-    """
-    Get Extended tier usage statistics for anonymous user.
-
-    Args:
-        identifier: IP or fingerprint identifier
-
-    Returns:
-        dict: Extended usage statistics including daily usage, limit, and remaining
-    """
-    _, current_count = check_anonymous_extended_limit(identifier)
-    # Extended tier usage tracking removed - extended mode is now unlimited (only limited by credits)
-    daily_limit = 0  # Unlimited
-    remaining = 0  # Unlimited
-
-    return {
-        "daily_extended_usage": current_count,
-        "daily_extended_limit": daily_limit,
-        "remaining_extended_usage": remaining,
-        "subscription_tier": "anonymous",
-        "usage_reset_date": date.today().isoformat(),
-    }
