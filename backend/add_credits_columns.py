@@ -12,6 +12,7 @@ from pathlib import Path
 # Try to load environment variables if dotenv is available
 try:
     from dotenv import load_dotenv
+
     load_dotenv()
 except ImportError:
     pass
@@ -90,7 +91,8 @@ for column_name, column_type in columns_to_add:
 # Set default values for existing users based on their tier
 if "monthly_credits_allocated" in added_columns or "monthly_credits_allocated" not in existing_columns:
     print("\nSetting default credit allocations based on subscription tier...")
-    cursor.execute("""
+    cursor.execute(
+        """
         UPDATE users 
         SET monthly_credits_allocated = CASE
             WHEN subscription_tier = 'anonymous' THEN 50
@@ -102,7 +104,8 @@ if "monthly_credits_allocated" in added_columns or "monthly_credits_allocated" n
             ELSE 0
         END
         WHERE monthly_credits_allocated IS NULL OR monthly_credits_allocated = 0
-    """)
+    """
+    )
     rows_updated = cursor.rowcount
     print(f"[OK] Updated {rows_updated} users with default credit allocations")
 
@@ -116,7 +119,7 @@ else:
     cursor.execute("PRAGMA table_info(usage_logs)")
     existing_usage_logs_columns = [row[1] for row in cursor.fetchall()]
     print(f"Existing usage_logs columns: {', '.join(existing_usage_logs_columns)}")
-    
+
     # Columns to add to usage_logs
     usage_logs_columns_to_add = [
         ("input_tokens", "INTEGER"),
@@ -126,7 +129,7 @@ else:
         ("credits_used", "DECIMAL(10, 4)"),
         ("actual_cost", "DECIMAL(10, 4)"),
     ]
-    
+
     # Add missing columns to usage_logs
     added_usage_logs_columns = []
     for column_name, column_type in usage_logs_columns_to_add:
@@ -147,8 +150,7 @@ conn.close()
 print("\n[OK] Migration complete!")
 if added_columns:
     print(f"Added columns to users: {', '.join(added_columns)}")
-if 'added_usage_logs_columns' in locals() and added_usage_logs_columns:
+if "added_usage_logs_columns" in locals() and added_usage_logs_columns:
     print(f"Added columns to usage_logs: {', '.join(added_usage_logs_columns)}")
-if (not added_columns) and ('added_usage_logs_columns' not in locals() or not added_usage_logs_columns):
+if (not added_columns) and ("added_usage_logs_columns" not in locals() or not added_usage_logs_columns):
     print("No new columns were added (all columns already exist)")
-

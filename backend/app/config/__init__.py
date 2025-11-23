@@ -70,6 +70,7 @@ __all__ = [
 
 # Run validation on import (optional - can be disabled for testing)
 import os
+
 if os.getenv("SKIP_CONFIG_VALIDATION", "false").lower() != "true":
     try:
         validate_config()
@@ -79,5 +80,5 @@ if os.getenv("SKIP_CONFIG_VALIDATION", "false").lower() != "true":
             raise
         # In development, just warn
         import warnings
-        warnings.warn(f"Configuration validation warning: {e}", UserWarning)
 
+        warnings.warn(f"Configuration validation warning: {e}", UserWarning)
