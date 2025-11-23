@@ -6,7 +6,6 @@
  */
 
 import type { StoredMessage } from './conversation';
-import type { ComparisonTier } from './comparison';
 import type { ModelId } from './branded';
 
 /**
@@ -57,8 +56,6 @@ export interface CompareRequest {
   conversation_history?: StoredMessage[];
   /** Browser fingerprint for usage tracking */
   browser_fingerprint?: string;
-  /** Comparison tier (standard or extended) */
-  tier: ComparisonTier;
 }
 
 /**

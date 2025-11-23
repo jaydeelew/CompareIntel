@@ -92,11 +92,6 @@ export function useRateLimitStatus({
           setUsageCount(0)
         }
       }
-
-      if (savedExtendedUsage) {
-        try {
-          const { count, date } = JSON.parse(savedExtendedUsage)
-          const today = new Date().toDateString()
     }
   }, [isAuthenticated])
 

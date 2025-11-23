@@ -30,7 +30,6 @@ import type {
   SubscriptionStatus,
   SubscriptionPeriod,
   UserRole,
-  ComparisonTier,
   StreamEvent,
   StreamEventType,
 } from '../../types';
@@ -40,7 +39,6 @@ import {
   createMessageId,
   createModelId,
 } from '../../types';
-import { COMPARISON_TIER } from '../../types';
 import { SUBSCRIPTION_STATUS, SUBSCRIPTION_PERIOD, USER_ROLE } from '../../types';
 import { STREAM_EVENT_TYPE } from '../../types';
 
@@ -60,7 +58,6 @@ export function createMockUser(overrides?: Partial<User>): User {
     subscription_status: overrides?.subscription_status || SUBSCRIPTION_STATUS.ACTIVE,
     subscription_period: overrides?.subscription_period || SUBSCRIPTION_PERIOD.MONTHLY,
     daily_usage_count: overrides?.daily_usage_count ?? 0,
-    daily_extended_usage: overrides?.daily_extended_usage ?? 0,
     monthly_overage_count: overrides?.monthly_overage_count ?? 0,
     mock_mode_enabled: overrides?.mock_mode_enabled ?? false,
     created_at: overrides?.created_at || new Date().toISOString(),
@@ -274,8 +271,6 @@ export function createMockRateLimitStatus(
     monthly_overage_count: overrides?.monthly_overage_count ?? 0,
     reset_time: overrides?.reset_time || new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
     user_type: overrides?.user_type || 'authenticated',
-    extended_usage: overrides?.extended_usage ?? 0,
-    extended_limit: overrides?.extended_limit ?? 10,
   };
 }
 

@@ -38,7 +38,6 @@ export type {
 export type {
   ComparisonMetadata,
   CompareResponse,
-  ComparisonTier,
   ResultTab,
   ActiveResultTabs,
 } from './comparison';
@@ -110,9 +109,7 @@ export {
 } from './conversation';
 
 export {
-  COMPARISON_TIER,
   RESULT_TAB,
-  COMPARISON_TIER as COMPARISON_TIER_CONST,
   RESULT_TAB as RESULT_TAB_CONST,
 } from './comparison';
 
