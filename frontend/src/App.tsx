@@ -3431,9 +3431,10 @@ function AppContent() {
                       if (streamingMetadata.credits_remaining !== undefined) {
                         console.log('[DEBUG] Updating anonymous credits from metadata:', streamingMetadata.credits_remaining)
                         const metadataCreditsRemaining = streamingMetadata.credits_remaining
+                        // Update anonymousCreditsRemaining state immediately - this is the primary source for anonymous users
                         setAnonymousCreditsRemaining(metadataCreditsRemaining)
                         
-                        // Update creditBalance immediately with metadata value
+                        // Update creditBalance immediately with metadata value to keep them in sync
                         const allocated = creditBalance?.credits_allocated ?? getDailyCreditLimit('anonymous')
                         setCreditBalance({
                           credits_allocated: allocated,
@@ -3442,6 +3443,8 @@ function AppContent() {
                           period_type: 'daily',
                           subscription_tier: 'anonymous',
                         })
+                        
+                        console.log('[DEBUG] State updated - anonymousCreditsRemaining:', metadataCreditsRemaining, 'creditBalance.credits_remaining:', metadataCreditsRemaining)
                         
                         const remainingPercent = allocated > 0
                           ? (metadataCreditsRemaining / allocated) * 100
@@ -4095,29 +4098,16 @@ function AppContent() {
       userCancelledRef.current = false
       setIsLoading(false)
       
-      // Final credit balance refresh to ensure credits remaining is up-to-date after comparison
-      // This ensures the renderUsagePreview shows the actual remaining credits, not the pre-comparison amount
-      if (isAuthenticated) {
-        refreshUser()
-          .then(() => getCreditBalance())
-          .then(balance => {
-            setCreditBalance(balance)
-          })
-          .catch(error => console.error('Failed to refresh credit balance after comparison:', error))
-      } else {
-        // For anonymous users, refresh from API
-        getCreditBalance(browserFingerprint)
-          .then(balance => {
-            setAnonymousCreditsRemaining(balance.credits_remaining)
-            setCreditBalance(balance)
-          })
-          .catch(error => console.error('Failed to refresh anonymous credit balance after comparison:', error))
-      }
+      // NOTE: We don't need to refresh credit balance here because the streaming metadata
+      // already provides the most up-to-date credits_remaining value (calculated right after deduction).
+      // Adding a delayed refresh here would actually overwrite the correct value with potentially stale data
+      // from the database due to timing/caching issues.
     }
   }
 
   // Helper function to render usage preview (used in both regular and follow-up modes)
-  const renderUsagePreview = () => {
+  // Wrapped in useCallback with dependencies so ComparisonForm (memoized) re-renders when credits change
+  const renderUsagePreview = useCallback(() => {
     const userTier = isAuthenticated ? user?.subscription_tier || 'free' : 'anonymous'
 
     // Get credit information (if available)
@@ -4206,7 +4196,18 @@ function AppContent() {
         </span>
       </div>
     )
-  }
+  }, [
+    isAuthenticated,
+    user,
+    creditBalance,
+    anonymousCreditsRemaining,
+    selectedModels,
+    input,
+    backendCreditEstimate,
+    isEstimatingCredits,
+    isFollowUpMode,
+    conversations,
+  ])
 
   return (
     <div className="app">

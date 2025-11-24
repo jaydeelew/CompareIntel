@@ -10,7 +10,7 @@ from fastapi.responses import StreamingResponse, JSONResponse
 from pydantic import BaseModel, ConfigDict
 from typing import Optional, Dict, Any, Union
 from sqlalchemy.orm import Session
-from sqlalchemy import func
+from sqlalchemy import func, cast, Date
 from collections import defaultdict
 from datetime import datetime, timezone
 import asyncio
@@ -33,7 +33,7 @@ from ..models import (
     ConversationMessage as ConversationMessageModel,
 )
 from ..credit_manager import ensure_credits_allocated, get_user_credits, get_credit_usage_stats
-from decimal import Decimal
+from decimal import Decimal, ROUND_CEILING
 from ..database import get_db
 from ..dependencies import get_current_user
 from ..schemas import ConversationSummary, ConversationDetail
@@ -807,6 +807,14 @@ async def compare_stream(
                     # Fall back to estimated credits if no actual usage data available
                     total_credits_used = estimated_credits
             
+            # Store the actual fractional credits for UsageLog (for analytics)
+            actual_credits_used = total_credits_used
+            
+            # Ensure minimum 1 credit deduction per comparison (round UP)
+            # This ensures users are charged at least 1 credit per comparison
+            if successful_models > 0 and total_credits_used > 0:
+                total_credits_used = max(Decimal(1), total_credits_used.quantize(Decimal('1'), rounding=ROUND_CEILING))
+            
             # Deduct credits - only for successful models
             if successful_models > 0 and total_credits_used > 0:
                 # Create a fresh database session to avoid detachment issues
@@ -842,7 +850,7 @@ async def compare_stream(
                         
                         # Use the most restrictive limit (lowest remaining credits) - same logic as at start
                         credits_remaining = min(ip_credits_remaining, fingerprint_credits_remaining if req.browser_fingerprint else ip_credits_remaining)
-                        print(f"[DEBUG] Anonymous credits after deduction - IP: {ip_credits_remaining}, FP: {fingerprint_credits_remaining if req.browser_fingerprint else 'N/A'}, Final: {credits_remaining}, Used: {total_credits_used}")
+                        print(f"[DEBUG] Anonymous credits after deduction - IP: {ip_credits_remaining}, FP: {fingerprint_credits_remaining if req.browser_fingerprint else 'N/A'}, Final: {credits_remaining}, Actual: {actual_credits_used}, Charged: {total_credits_used}")
                 except ValueError as e:
                     # Should not happen since we checked before, but handle gracefully
                     print(f"Warning: Credit deduction failed: {e}")
@@ -868,7 +876,7 @@ async def compare_stream(
             # Build metadata including credit information
             # Debug: Log credits_remaining before including in metadata
             if not user_id:
-                print(f"[DEBUG] Building metadata for anonymous user - credits_remaining: {credits_remaining}, credits_used: {total_credits_used}")
+                print(f"[DEBUG] Building metadata for anonymous user - credits_remaining: {credits_remaining}, actual_credits: {actual_credits_used}, charged_credits: {total_credits_used}")
             metadata = {
                 "input_length": len(req.input_data),
                 "models_requested": len(req.models),
@@ -882,7 +890,12 @@ async def compare_stream(
                 "estimated_credits": float(estimated_credits),
             }
 
-            # Log usage to database in background
+            # Log usage to database SYNCHRONOUSLY (not in background) to ensure database is updated
+            # before frontend queries for updated credits. This prevents race condition where
+            # frontend queries /credits/balance before UsageLog is committed.
+            # 
+            # IMPORTANT: UsageLog stores the CHARGED credits (minimum 1 per comparison)
+            # Token data (input_tokens, output_tokens, effective_tokens) preserves actual usage for analytics
             usage_log = UsageLog(
                 user_id=user_id,
                 ip_address=client_ip,
@@ -901,11 +914,19 @@ async def compare_stream(
                 output_tokens=total_output_tokens if total_output_tokens > 0 else None,
                 total_tokens=total_input_tokens + total_output_tokens if (total_input_tokens > 0 or total_output_tokens > 0) else None,
                 effective_tokens=total_effective_tokens if total_effective_tokens > 0 else None,
-                credits_used=total_credits_used,
+                credits_used=total_credits_used,  # Store charged credits (minimum 1 per comparison)
             )
-            # Create new session for background task
+            # Create new session and commit synchronously to ensure database is updated before returning
             log_db = SessionLocal()
-            background_tasks.add_task(log_usage_to_db, usage_log, log_db)
+            try:
+                log_db.add(usage_log)
+                log_db.commit()
+                print(f"[DEBUG] UsageLog committed to database - actual_credits: {actual_credits_used}, charged_credits: {total_credits_used}, user_id: {user_id}, ip: {client_ip}, fp: {req.browser_fingerprint[:20] if req.browser_fingerprint else 'None'}")
+            except Exception as e:
+                print(f"[ERROR] Failed to commit UsageLog: {e}")
+                log_db.rollback()
+            finally:
+                log_db.close()
 
             # Save conversation to database for authenticated users
             if user_id and successful_models > 0:
@@ -1261,19 +1282,20 @@ async def get_credit_balance(
         credits_allocated = DAILY_CREDIT_LIMITS.get("anonymous", 50)
         
         # Calculate credits used today from UsageLog (database) - this persists across restarts
-        today_start = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
-        today_end = datetime.now(timezone.utc).replace(hour=23, minute=59, second=59, microsecond=999999)
+        # Use date() comparison to avoid timezone issues between Python UTC and database timezone
+        today_date = datetime.now(timezone.utc).date()
         
         # Query UsageLog for credits used today by IP
         ip_credits_query = db.query(func.sum(UsageLog.credits_used)).filter(
             UsageLog.user_id.is_(None),  # Anonymous users only
             UsageLog.ip_address == client_ip,
-            UsageLog.created_at >= today_start,
-            UsageLog.created_at <= today_end,
+            cast(UsageLog.created_at, Date) == today_date,
             UsageLog.credits_used.isnot(None)
         )
         ip_credits_used = ip_credits_query.scalar() or Decimal(0)
-        ip_credits_remaining = max(0, credits_allocated - int(round(ip_credits_used)))
+        # Round UP to be conservative - never give free credits
+        ip_credits_used_rounded = int(ip_credits_used.quantize(Decimal('1'), rounding=ROUND_CEILING)) if ip_credits_used > 0 else 0
+        ip_credits_remaining = max(0, credits_allocated - ip_credits_used_rounded)
         
         # Query UsageLog for credits used today by fingerprint (if provided)
         fingerprint_credits_remaining = ip_credits_remaining
@@ -1282,29 +1304,31 @@ async def get_credit_balance(
             fp_credits_query = db.query(func.sum(UsageLog.credits_used)).filter(
                 UsageLog.user_id.is_(None),  # Anonymous users only
                 UsageLog.browser_fingerprint == fingerprint,
-                UsageLog.created_at >= today_start,
-                UsageLog.created_at <= today_end,
+                cast(UsageLog.created_at, Date) == today_date,
                 UsageLog.credits_used.isnot(None)
             )
             fp_credits_used = fp_credits_query.scalar() or Decimal(0)
-            fingerprint_credits_remaining = max(0, credits_allocated - int(round(fp_credits_used)))
+            # Round UP to be conservative - never give free credits
+            fp_credits_used_rounded = int(fp_credits_used.quantize(Decimal('1'), rounding=ROUND_CEILING)) if fp_credits_used > 0 else 0
+            fingerprint_credits_remaining = max(0, credits_allocated - fp_credits_used_rounded)
         
         # Use the most restrictive limit (lowest remaining credits) - same logic as compare endpoints
         credits_remaining = min(ip_credits_remaining, fingerprint_credits_remaining if fingerprint else ip_credits_remaining)
         
         # Sync in-memory storage with database (for fast access in other endpoints)
+        # Round UP to be conservative - never give free credits
         from ..rate_limiting import anonymous_rate_limit_storage
         ip_identifier = f"ip:{client_ip}"
         today_str = datetime.now(timezone.utc).date().isoformat()
         anonymous_rate_limit_storage[ip_identifier] = {
-            "count": int(round(ip_credits_used)),
+            "count": int(ip_credits_used.quantize(Decimal('1'), rounding=ROUND_CEILING)) if ip_credits_used > 0 else 0,
             "date": today_str,
             "first_seen": anonymous_rate_limit_storage[ip_identifier].get("first_seen") or datetime.now(timezone.utc)
         }
         if fingerprint:
             fp_identifier = f"fp:{fingerprint}"
             anonymous_rate_limit_storage[fp_identifier] = {
-                "count": int(round(fp_credits_used)),
+                "count": int(fp_credits_used.quantize(Decimal('1'), rounding=ROUND_CEILING)) if fp_credits_used > 0 else 0,
                 "date": today_str,
                 "first_seen": anonymous_rate_limit_storage[fp_identifier].get("first_seen") or datetime.now(timezone.utc)
             }

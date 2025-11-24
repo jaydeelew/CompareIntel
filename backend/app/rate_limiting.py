@@ -17,7 +17,7 @@ from typing import Optional, Tuple, Dict, Any
 from sqlalchemy.orm import Session
 from decimal import Decimal, ROUND_CEILING
 from .models import User, UsageLog
-from sqlalchemy import func
+from sqlalchemy import func, cast, Date
 from collections import defaultdict
 from .types import (
     UsageStatsDict,
@@ -144,36 +144,34 @@ def check_anonymous_credits(identifier: str, required_credits: Decimal, db: Opti
         if identifier.startswith("ip:"):
             ip_address = identifier[3:]  # Remove "ip:" prefix
             # Query UsageLog for credits used today
-            today_start = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
-            today_end = datetime.now(timezone.utc).replace(hour=23, minute=59, second=59, microsecond=999999)
+            # Use date() comparison to avoid timezone issues between Python UTC and database timezone
+            today_date = datetime.now(timezone.utc).date()
             credits_query = db.query(func.sum(UsageLog.credits_used)).filter(
                 UsageLog.user_id.is_(None),  # Anonymous users only
                 UsageLog.ip_address == ip_address,
-                UsageLog.created_at >= today_start,
-                UsageLog.created_at <= today_end,
+                cast(UsageLog.created_at, Date) == today_date,
                 UsageLog.credits_used.isnot(None),
             )
             db_credits_used = credits_query.scalar() or Decimal(0)
-            # Sync memory with database
-            user_data["count"] = int(round(db_credits_used))
+            # Sync memory with database (round UP to be conservative - never give free credits)
+            user_data["count"] = int(db_credits_used.quantize(Decimal('1'), rounding=ROUND_CEILING)) if db_credits_used > 0 else 0
             user_data["date"] = today
             if not user_data.get("first_seen"):
                 user_data["first_seen"] = datetime.now(timezone.utc)
         elif identifier.startswith("fp:"):
             fingerprint = identifier[3:]  # Remove "fp:" prefix
             # Query UsageLog for credits used today
-            today_start = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
-            today_end = datetime.now(timezone.utc).replace(hour=23, minute=59, second=59, microsecond=999999)
+            # Use date() comparison to avoid timezone issues between Python UTC and database timezone
+            today_date = datetime.now(timezone.utc).date()
             credits_query = db.query(func.sum(UsageLog.credits_used)).filter(
                 UsageLog.user_id.is_(None),  # Anonymous users only
                 UsageLog.browser_fingerprint == fingerprint,
-                UsageLog.created_at >= today_start,
-                UsageLog.created_at <= today_end,
+                cast(UsageLog.created_at, Date) == today_date,
                 UsageLog.credits_used.isnot(None),
             )
             db_credits_used = credits_query.scalar() or Decimal(0)
-            # Sync memory with database
-            user_data["count"] = int(round(db_credits_used))
+            # Sync memory with database (round UP to be conservative - never give free credits)
+            user_data["count"] = int(db_credits_used.quantize(Decimal('1'), rounding=ROUND_CEILING)) if db_credits_used > 0 else 0
             user_data["date"] = today
             if not user_data.get("first_seen"):
                 user_data["first_seen"] = datetime.now(timezone.utc)
@@ -217,9 +215,11 @@ def deduct_anonymous_credits(identifier: str, credits: Decimal) -> None:
         user_data["date"] = today
         user_data["first_seen"] = datetime.now(timezone.utc)
 
-    # Convert Decimal to int (round to nearest integer)
-    credits_int = int(round(credits))
+    # Convert Decimal to int (round UP to be conservative - never give free credits)
+    # Use ceiling to ensure we always deduct at least 1 credit for any usage
+    credits_int = int(credits.quantize(Decimal('1'), rounding=ROUND_CEILING))
     user_data["count"] += credits_int
+    print(f"[DEBUG] deduct_anonymous_credits - {identifier}: deducted {credits_int} credits (from {float(credits):.4f}), new count: {user_data['count']}")
 
 
 def check_user_rate_limit(user: User, db: Session) -> Tuple[bool, int, int]:
