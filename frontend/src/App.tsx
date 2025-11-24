@@ -4094,6 +4094,25 @@ function AppContent() {
       setCurrentAbortController(null)
       userCancelledRef.current = false
       setIsLoading(false)
+      
+      // Final credit balance refresh to ensure credits remaining is up-to-date after comparison
+      // This ensures the renderUsagePreview shows the actual remaining credits, not the pre-comparison amount
+      if (isAuthenticated) {
+        refreshUser()
+          .then(() => getCreditBalance())
+          .then(balance => {
+            setCreditBalance(balance)
+          })
+          .catch(error => console.error('Failed to refresh credit balance after comparison:', error))
+      } else {
+        // For anonymous users, refresh from API
+        getCreditBalance(browserFingerprint)
+          .then(balance => {
+            setAnonymousCreditsRemaining(balance.credits_remaining)
+            setCreditBalance(balance)
+          })
+          .catch(error => console.error('Failed to refresh anonymous credit balance after comparison:', error))
+      }
     }
   }
 
@@ -4126,10 +4145,12 @@ function AppContent() {
     // Calculate what will be used
     const regularToUse = selectedModels.length
 
-    // Use backend estimate if available (more accurate, matches validation)
-    // Fall back to local calculation if backend estimate not yet loaded
+    // If input is empty, show 0 credits (before debouncing completes)
+    // This ensures the estimate is zero until the user begins entering text
     let estimatedCredits: number
-    if (backendCreditEstimate) {
+    if (!input.trim()) {
+      estimatedCredits = 0
+    } else if (backendCreditEstimate) {
       // Use backend estimate (uses tiktoken and 2000 output tokens)
       estimatedCredits = Math.ceil(backendCreditEstimate.estimated_credits)
     } else {

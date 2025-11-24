@@ -71,7 +71,7 @@ logger = logging.getLogger(__name__)
 async def lifespan(app: FastAPI):
     """
     Lifespan event handler for FastAPI application.
-    
+
     This function handles startup and shutdown events:
     - Startup: Validates configuration, logs configuration, creates database tables
     - Shutdown: Cleanup tasks (if needed)
@@ -81,10 +81,10 @@ async def lifespan(app: FastAPI):
         # Validate configuration
         logger.info("Validating configuration...")
         validate_config()
-        
+
         # Log configuration (with masked secrets)
         log_configuration()
-        
+
         # Initialize database tables
         logger.info("Initializing database tables...")
         Base.metadata.create_all(bind=engine, checkfirst=True)
@@ -104,9 +104,9 @@ async def lifespan(app: FastAPI):
         logger.error(f"Startup error: {e}", exc_info=True)
         # Let the application continue, as tables may already exist
         pass
-    
+
     yield
-    
+
     # Shutdown (if needed)
     # Add any cleanup tasks here
 
@@ -146,7 +146,9 @@ app.add_middleware(
 # Add profiling middleware for performance monitoring
 # This should be added AFTER CORS middleware but BEFORE routers
 from .middleware.profiling import ProfilingMiddleware
+
 app.add_middleware(ProfilingMiddleware)
+
 
 # Global exception handler to ensure all errors return JSON
 # Note: HTTPException is handled by FastAPI automatically, so we only catch other exceptions
@@ -156,24 +158,20 @@ async def global_exception_handler(request: Request, exc: Exception):
     # Don't handle HTTPException - FastAPI handles it automatically
     if isinstance(exc, HTTPException):
         raise exc
-    
+
     import traceback
+
     error_type = type(exc).__name__
     error_message = str(exc)
     traceback_str = traceback.format_exc()
-    
+
     # Log the error
     logger.error(f"Unhandled exception: {error_type}: {error_message}")
     logger.error(f"Traceback:\n{traceback_str}")
-    
+
     # Return JSON error response
-    return JSONResponse(
-        status_code=500,
-        content={
-            "detail": f"Internal server error: {error_message}",
-            "error_type": error_type
-        }
-    )
+    return JSONResponse(status_code=500, content={"detail": f"Internal server error: {error_message}", "error_type": error_type})
+
 
 # Include routers AFTER middleware
 app.include_router(auth.router, prefix="/api")
@@ -215,7 +213,7 @@ def check_rate_limit(identifier: str) -> tuple[bool, int]:
     """
     Check if the identifier (IP or fingerprint) has exceeded the daily limit.
     Returns (is_allowed, current_count)
-    
+
     NOTE: This function appears to be legacy code. Consider using
     check_anonymous_rate_limit from rate_limiting module instead.
     """
@@ -237,7 +235,7 @@ def check_rate_limit(identifier: str) -> tuple[bool, int]:
 def increment_usage(identifier: str) -> None:
     """
     Increment the usage count for the identifier.
-    
+
     NOTE: This function appears to be legacy code. Consider using
     increment_anonymous_usage from rate_limiting module instead.
     """
@@ -278,9 +276,10 @@ async def root():
 async def health_check(db: Session = Depends(get_db)):
     import time
     from sqlalchemy import text
+
     start = time.time()
     print(f"[HEALTH] Health check requested at {time.strftime('%Y-%m-%d %H:%M:%S')}")
-    
+
     # Test database connection
     try:
         # Simple query to test database
@@ -288,7 +287,7 @@ async def health_check(db: Session = Depends(get_db)):
         result = db.execute(text("SELECT 1")).scalar()
         query_duration = time.time() - query_start
         print(f"[HEALTH] Database query completed in {query_duration:.3f}s, result: {result}")
-        
+
         total_duration = time.time() - start
         print(f"[HEALTH] Health check completed in {total_duration:.3f}s")
         return {"status": "healthy", "db_connected": True, "duration_ms": int(total_duration * 1000)}
@@ -296,6 +295,7 @@ async def health_check(db: Session = Depends(get_db)):
         total_duration = time.time() - start
         print(f"[HEALTH] Health check failed after {total_duration:.3f}s: {type(e).__name__}: {str(e)}")
         import traceback
+
         traceback.print_exc()
         return {"status": "unhealthy", "error": str(e), "duration_ms": int(total_duration * 1000)}
 

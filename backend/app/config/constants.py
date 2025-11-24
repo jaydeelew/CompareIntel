@@ -62,13 +62,9 @@ SUBSCRIPTION_CONFIG: Dict[str, TierConfigDict] = {
 }
 
 # Backwards compatibility - extract limits
-SUBSCRIPTION_LIMITS: Dict[str, int] = {
-    tier: config["daily_limit"] for tier, config in SUBSCRIPTION_CONFIG.items()
-}
+SUBSCRIPTION_LIMITS: Dict[str, int] = {tier: config["daily_limit"] for tier, config in SUBSCRIPTION_CONFIG.items()}
 
-MODEL_LIMITS: Dict[str, int] = {
-    tier: config["model_limit"] for tier, config in SUBSCRIPTION_CONFIG.items()
-}
+MODEL_LIMITS: Dict[str, int] = {tier: config["model_limit"] for tier, config in SUBSCRIPTION_CONFIG.items()}
 
 
 # Extended tier usage tracking removed - extended mode is now unlimited (only limited by credits)
@@ -114,16 +110,16 @@ CONVERSATION_LIMITS: Dict[str, int] = {
 
 # Daily credit limits for free tiers (resets daily)
 DAILY_CREDIT_LIMITS: Dict[str, int] = {
-    "anonymous": 50,   # 50 credits/day (~10 exchanges/day)
-    "free": 100,       # 100 credits/day (~20 exchanges/day)
+    "anonymous": 50,  # 50 credits/day (~10 exchanges/day)
+    "free": 100,  # 100 credits/day (~20 exchanges/day)
 }
 
 # Monthly credit allocations for paid tiers
 MONTHLY_CREDIT_ALLOCATIONS: Dict[str, int] = {
-    "starter": 1_200,      # $9.95/month - ~240 exchanges/month (~8/day)
+    "starter": 1_200,  # $9.95/month - ~240 exchanges/month (~8/day)
     "starter_plus": 2_500,  # $19.95/month - ~500 exchanges/month (~17/day)
-    "pro": 5_000,          # $39.95/month - ~1,000 exchanges/month (~33/day)
-    "pro_plus": 10_000,    # $79.95/month - ~2,000 exchanges/month (~67/day)
+    "pro": 5_000,  # $39.95/month - ~1,000 exchanges/month (~33/day)
+    "pro_plus": 10_000,  # $79.95/month - ~2,000 exchanges/month (~67/day)
 }
 
 # Subscription pricing (monthly)
@@ -138,4 +134,3 @@ TIER_PRICING: Dict[str, float] = {
 
 # Overage pricing (per 1,000 credits)
 OVERAGE_PRICE_PER_1000_CREDITS: float = 12.0  # $12 per 1,000 credits ($0.012 per credit)
-

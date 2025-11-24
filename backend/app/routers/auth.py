@@ -65,26 +65,25 @@ def get_client_ip(request: Request) -> str:
 def check_login_rate_limit(client_ip: str) -> None:
     """
     Check if IP has exceeded login attempt rate limit.
-    
+
     Raises HTTPException if rate limit exceeded.
     """
     now = datetime.utcnow()
-    
+
     # Clean old attempts outside lockout window
     failed_login_attempts[client_ip] = [
-        attempt for attempt in failed_login_attempts[client_ip]
-        if attempt > now - timedelta(minutes=LOCKOUT_DURATION_MINUTES)
+        attempt for attempt in failed_login_attempts[client_ip] if attempt > now - timedelta(minutes=LOCKOUT_DURATION_MINUTES)
     ]
-    
+
     # Check if limit exceeded
     if len(failed_login_attempts[client_ip]) >= MAX_LOGIN_ATTEMPTS:
         oldest_attempt = min(failed_login_attempts[client_ip])
         lockout_until = oldest_attempt + timedelta(minutes=LOCKOUT_DURATION_MINUTES)
         remaining_seconds = int((lockout_until - now).total_seconds())
-        
+
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-            detail=f"Too many login attempts. Please try again in {remaining_seconds} seconds."
+            detail=f"Too many login attempts. Please try again in {remaining_seconds} seconds.",
         )
 
 
@@ -102,10 +101,10 @@ def clear_login_attempts(client_ip: str) -> None:
 async def verify_recaptcha(token: Optional[str]) -> bool:
     """
     Verify reCAPTCHA v3 token with Google's API.
-    
+
     Args:
         token: reCAPTCHA token from frontend
-        
+
     Returns:
         bool: True if verification passes, False otherwise
     """
@@ -113,12 +112,12 @@ async def verify_recaptcha(token: Optional[str]) -> bool:
     if not settings.recaptcha_secret_key:
         logger.debug("reCAPTCHA secret key not configured, skipping verification")
         return True
-    
+
     # If token is not provided and reCAPTCHA is configured, fail
     if not token:
         logger.warning("reCAPTCHA verification failed: token not provided (reCAPTCHA is configured)")
         return False
-    
+
     try:
         async with httpx.AsyncClient(timeout=5.0) as client:
             response = await client.post(
@@ -129,7 +128,7 @@ async def verify_recaptcha(token: Optional[str]) -> bool:
                 },
             )
             result = response.json()
-            
+
             if not result.get("success", False):
                 error_codes = result.get("error-codes", [])
                 logger.warning(
@@ -138,17 +137,15 @@ async def verify_recaptcha(token: Optional[str]) -> bool:
                     f"token_preview={token[:20] if token else 'None'}..."
                 )
                 return False
-            
+
             score = result.get("score", 0.0)
             # reCAPTCHA v3 returns a score (0.0 to 1.0)
             # Score >= 0.5 is typically considered human
             # You can adjust this threshold based on your needs
             if score < 0.5:
-                logger.warning(
-                    f"reCAPTCHA verification failed: score too low (score={score}, threshold=0.5)"
-                )
+                logger.warning(f"reCAPTCHA verification failed: score too low (score={score}, threshold=0.5)")
                 return False
-            
+
             logger.debug(f"reCAPTCHA verification passed: score={score}")
             return True
     except httpx.TimeoutException as e:
@@ -176,11 +173,8 @@ async def register(user_data: UserRegister, background_tasks: BackgroundTasks, d
     """
     # Verify reCAPTCHA if configured
     if not await verify_recaptcha(user_data.recaptcha_token):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="reCAPTCHA verification failed. Please try again."
-        )
-    
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="reCAPTCHA verification failed. Please try again.")
+
     try:
         # Check if user already exists
         existing_user = db.query(User).filter(User.email == user_data.email).first()
@@ -269,30 +263,31 @@ async def login(user_data: UserLogin, request: Request, db: Session = Depends(ge
     - Rate limited: 5 attempts per 15 minutes per IP
     """
     import time
+
     start_time = time.time()
     print(f"[LOGIN] Login request received at {time.strftime('%Y-%m-%d %H:%M:%S')}")
     print(f"[LOGIN] Email: {user_data.email}")
-    
+
     try:
         client_ip = get_client_ip(request)
         print(f"[LOGIN] Client IP: {client_ip}")
-        
+
         # Check rate limiting before processing login
         print(f"[LOGIN] Checking rate limit...")
         check_login_rate_limit(client_ip)
         print(f"[LOGIN] Rate limit check passed")
-        
+
         print(f"[LOGIN] Querying database for user...")
         db_start = time.time()
         user = db.query(User).filter(User.email == user_data.email).first()
         db_duration = time.time() - db_start
         print(f"[LOGIN] Database query completed in {db_duration:.3f}s")
-        
+
         if not user:
             print(f"[LOGIN] User not found")
             record_failed_login(client_ip)
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Incorrect email or password")
-        
+
         print(f"[LOGIN] User found: {user.email}, verifying password...")
         verify_start = time.time()
         password_valid = verify_password(user_data.password, user.password_hash)
@@ -322,11 +317,9 @@ async def login(user_data: UserLogin, request: Request, db: Session = Depends(ge
 
         total_duration = time.time() - start_time
         print(f"[LOGIN] Login successful, total time: {total_duration:.3f}s")
-        
+
         # Create response with cookies
-        response = JSONResponse(
-            content={"access_token": access_token, "refresh_token": refresh_token, "token_type": "bearer"}
-        )
+        response = JSONResponse(content={"access_token": access_token, "refresh_token": refresh_token, "token_type": "bearer"})
         set_auth_cookies(response, access_token, refresh_token)
         return response
     except HTTPException:
@@ -337,16 +330,13 @@ async def login(user_data: UserLogin, request: Request, db: Session = Depends(ge
         total_duration = time.time() - start_time
         print(f"[LOGIN] Login error after {total_duration:.3f}s: {type(e).__name__}: {str(e)}")
         import traceback
+
         traceback.print_exc()
         raise
 
 
 @router.post("/refresh", response_model=TokenResponse)
-async def refresh_token(
-    request: Request,
-    token_data: Optional[RefreshTokenRequest] = None,
-    db: Session = Depends(get_db)
-):
+async def refresh_token(request: Request, token_data: Optional[RefreshTokenRequest] = None, db: Session = Depends(get_db)):
     """
     Refresh access token using refresh token.
 
@@ -358,7 +348,7 @@ async def refresh_token(
         refresh_token_value = get_refresh_token_from_cookies(request)
         if not refresh_token_value and token_data:
             refresh_token_value = token_data.refresh_token
-        
+
         if not refresh_token_value:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Refresh token required")
 
@@ -386,9 +376,7 @@ async def refresh_token(
         new_refresh_token = create_refresh_token(data={"sub": str(user.id)})
 
         # Create response with cookies
-        response = JSONResponse(
-            content={"access_token": access_token, "refresh_token": new_refresh_token, "token_type": "bearer"}
-        )
+        response = JSONResponse(content={"access_token": access_token, "refresh_token": new_refresh_token, "token_type": "bearer"})
         set_auth_cookies(response, access_token, new_refresh_token)
         return response
     except HTTPException:

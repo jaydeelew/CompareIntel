@@ -15,8 +15,19 @@ html {
 }
 
 body {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  font-family:
+    'Inter',
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    'Roboto',
+    'Oxygen',
+    'Ubuntu',
+    'Cantarell',
+    'Fira Sans',
+    'Droid Sans',
+    'Helvetica Neue',
+    sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   min-height: 100vh;
@@ -52,9 +63,7 @@ button:visited {
 }
 
 /* When banners are visible, ensure no white gap appears */
-.app:has(.mock-mode-banner) .hero-section {
-  /* Hero section background will cover any gap */
-}
+/* Note: Hero section background will cover any gap - no additional styles needed */
 
 /* Links */
 a {
@@ -64,7 +73,12 @@ a {
 }
 
 /* Headings */
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   margin: 0;
   font-weight: var(--font-bold);
   line-height: var(--line-tight);
@@ -76,4 +90,3 @@ h1, h2, h3, h4, h5, h6 {
   opacity: 0 !important;
   display: none !important;
 }
-
