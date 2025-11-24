@@ -5,7 +5,6 @@ from pydantic import BaseModel
 from typing import Any
 from contextlib import asynccontextmanager
 from .model_runner import (
-    run_models,
     call_openrouter_streaming,
     clean_model_response,
     OPENROUTER_MODELS,

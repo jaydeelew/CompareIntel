@@ -190,13 +190,25 @@ export const networkErrorInterceptor: ErrorInterceptor = async (error, config) =
 
 /**
  * Error interceptor: Log errors (development only)
+ * Suppresses expected 401 errors for auth endpoints (anonymous users)
  */
 export const loggingErrorInterceptor: ErrorInterceptor = async (error, config) => {
   if (import.meta.env.DEV) {
+    const status = (error as any).status;
+    const url = (config as any)._url || '';
+    
+    // Suppress expected 401 errors for auth endpoints (anonymous users)
+    // These are handled gracefully by AuthContext
+    if (status === 401 && (url.includes('/auth/me') || url.includes('/auth/refresh'))) {
+      // Silently skip logging - these are expected for anonymous users
+      return error;
+    }
+    
     console.error('[API Client Error]', {
       error: error.message,
       method: config.method || 'GET',
-      status: (error as any).status,
+      status,
+      url,
     });
   }
   return error;

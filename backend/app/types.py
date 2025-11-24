@@ -17,7 +17,6 @@ SubscriptionTier = Literal["free", "starter", "starter_plus", "pro", "pro_plus",
 SubscriptionStatus = Literal["active", "cancelled", "expired"]
 SubscriptionPeriod = Literal["monthly", "yearly"]
 UserRole = Literal["user", "moderator", "admin", "super_admin"]
-ResponseTier = Literal["standard", "extended"]
 
 
 # ============================================================================
@@ -32,12 +31,6 @@ class TierConfigDict(TypedDict):
     overage_allowed: bool
     overage_price: Optional[float]
     extended_overage_price: Optional[float]
-
-
-class TierLimitsDict(TypedDict):
-    """Input/output limits for a response tier."""
-    input_chars: int
-    output_tokens: int
 
 
 class ModelInfoDict(TypedDict, total=False):

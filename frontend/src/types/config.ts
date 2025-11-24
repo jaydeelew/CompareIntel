@@ -5,12 +5,12 @@
  * used throughout the application.
  */
 
-import type { SubscriptionTier, ResponseTier } from '../config/constants';
+import type { SubscriptionTier } from '../config/constants';
 
 /**
  * Subscription tier types - derived from constants
  */
-export type { SubscriptionTier, ResponseTier };
+export type { SubscriptionTier };
 
 /**
  * Subscription status values

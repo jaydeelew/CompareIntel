@@ -136,7 +136,6 @@ DELETE /api/auth/delete-account       # Delete user account
 
 **Core AI Comparison:**
 ```
-POST /api/compare                     # Compare AI models (rate limited)
 POST /api/compare-stream              # Streaming comparison (SSE)
 GET  /api/models                      # List all available models
 GET  /api/rate-limit-status           # Check usage status

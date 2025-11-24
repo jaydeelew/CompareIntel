@@ -73,7 +73,6 @@ export type {
 // Config types
 export type {
   SubscriptionTier,
-  ResponseTier,
   SubscriptionStatus,
   SubscriptionPeriod,
   UserRole,

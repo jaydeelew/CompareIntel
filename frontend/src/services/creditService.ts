@@ -104,8 +104,6 @@ export interface CreditEstimate {
   breakdown: {
     /** Number of models */
     num_models: number
-    /** Response tier */
-    tier: string
     /** Input length in characters */
     input_length: number
     /** Conversation history length */

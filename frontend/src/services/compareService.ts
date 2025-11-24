@@ -64,18 +64,6 @@ export interface ModelStats {
 }
 
 /**
- * Perform a standard (non-streaming) comparison
- *
- * @param payload - Comparison request payload
- * @returns Promise resolving to comparison results
- * @throws {ApiError} If the request fails
- */
-export async function compare(payload: CompareRequestPayload): Promise<CompareResponse> {
-  const response = await apiClient.post<CompareResponse>('/compare', payload)
-  return response.data
-}
-
-/**
  * Perform a streaming comparison using Server-Sent Events (SSE)
  *
  * Returns a ReadableStream that can be processed manually, or use

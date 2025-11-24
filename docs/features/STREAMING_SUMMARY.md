@@ -11,7 +11,7 @@ Full Server-Sent Events (SSE) streaming has been implemented for all model compa
    - Added `call_openrouter_streaming()` function
    - Yields tokens as they arrive from OpenRouter
    - Handles errors gracefully in streaming mode
-   - Supports all the same features as non-streaming (tiers, conversation history, etc.)
+   - Supports tiers, conversation history, and all other features
 
 2. **New Streaming Endpoint** (`backend/app/main.py`)
 
@@ -152,8 +152,7 @@ curl -N -H "Content-Type: application/json" \
 
 ### Backend
 
-- Added new endpoint (existing endpoint still works)
-- Added new streaming function (non-streaming still available)
+- Streaming endpoint with full feature support
 - Background task for database logging
 
 ## File Changes
@@ -276,7 +275,7 @@ No changes needed! The streaming endpoint uses the same ports and configuration 
 
 ### No Impact on Costs
 
-- Same token usage as non-streaming
+- Accurate token usage tracking
 - Same OpenRouter billing
 - Slightly reduced database load (background logging)
 - No additional infrastructure needed
@@ -284,7 +283,7 @@ No changes needed! The streaming endpoint uses the same ports and configuration 
 ### Rate Limiting
 
 - Applied before streaming starts
-- Same limits as non-streaming endpoint
+- Full rate limiting and credit system support
 - Usage tracked after streaming completes
 
 ## Security

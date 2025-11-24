@@ -458,10 +458,13 @@ function sleep(ms: number): Promise<void> {
         throw new CancellationError('Request was cancelled');
       }
 
+      // Store URL in config for error interceptors
+      const configWithUrl = { ...config, _url: url };
+
       // Apply error interceptors
       const processedError = await this.applyErrorInterceptors(
         error as Error,
-        config
+        configWithUrl
       );
 
       // Check if we should retry

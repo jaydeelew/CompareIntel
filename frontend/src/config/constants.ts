@@ -101,7 +101,6 @@ export const OVERAGE_PRICE_PER_1000_CREDITS = 12.0 // $12 per 1,000 credits ($0.
 // TypeScript types derived from constants for type safety
 
 export type SubscriptionTier = keyof typeof MODEL_LIMITS
-export type ResponseTier = keyof typeof TIER_LIMITS
 
 // ============================================================================
 // Helper Functions

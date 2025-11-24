@@ -158,14 +158,9 @@ Response: {
 }
 ```
 
-### Compare Endpoints
+### Compare Endpoint
 
 ```http
-# Compare (non-streaming)
-POST /api/compare
-# Includes credit validation and deduction
-# Returns metadata with credits_used and credits_remaining
-
 # Compare (streaming)
 POST /api/compare-stream
 # Includes credit validation and deduction

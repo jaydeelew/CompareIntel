@@ -30,78 +30,11 @@ describe('compareService', () => {
     vi.clearAllMocks();
   });
 
-  describe('compare', () => {
-    it('should perform standard comparison', async () => {
-      const payload = {
-        input_data: 'test input',
-        models: [createModelId('gpt-4'), createModelId('claude-3')],
-        tier: 'standard' as const,
-      };
-
-      const mockResponse = createMockCompareResponse(payload.models);
-      vi.mocked(apiClient.post).mockResolvedValue({ data: mockResponse });
-
-      const result = await compareService.compare(payload);
-
-      expect(apiClient.post).toHaveBeenCalledWith('/compare', payload);
-      expect(result).toEqual(mockResponse);
-    });
-
-    it('should include conversation history when provided', async () => {
-      const payload = {
-        input_data: 'test input',
-        models: [createModelId('gpt-4')],
-        tier: 'standard' as const,
-        conversation_history: [
-          { role: 'user', content: 'previous message' },
-          { role: 'assistant', content: 'previous response' },
-        ],
-      };
-
-      const mockResponse = createMockCompareResponse(payload.models);
-      vi.mocked(apiClient.post).mockResolvedValue({ data: mockResponse });
-
-      await compareService.compare(payload);
-
-      expect(apiClient.post).toHaveBeenCalledWith('/compare', payload);
-    });
-
-    it('should include browser fingerprint when provided', async () => {
-      const payload = {
-        input_data: 'test input',
-        models: [createModelId('gpt-4')],
-        tier: 'standard' as const,
-        browser_fingerprint: 'test-fingerprint',
-      };
-
-      const mockResponse = createMockCompareResponse(payload.models);
-      vi.mocked(apiClient.post).mockResolvedValue({ data: mockResponse });
-
-      await compareService.compare(payload);
-
-      expect(apiClient.post).toHaveBeenCalledWith('/compare', payload);
-    });
-
-    it('should handle API errors', async () => {
-      const payload = {
-        input_data: 'test input',
-        models: [createModelId('gpt-4')],
-        tier: 'standard' as const,
-      };
-
-      const error = new ApiError('Comparison failed', 500, 'Internal Server Error');
-      vi.mocked(apiClient.post).mockRejectedValue(error);
-
-      await expect(compareService.compare(payload)).rejects.toThrow(ApiError);
-    });
-  });
-
   describe('compareStream', () => {
     it('should perform streaming comparison', async () => {
       const payload = {
         input_data: 'test input',
         models: [createModelId('gpt-4')],
-        tier: 'standard' as const,
       };
 
       const mockStream = new ReadableStream<Uint8Array>();
@@ -117,7 +50,6 @@ describe('compareService', () => {
       const payload = {
         input_data: 'test input',
         models: [createModelId('gpt-4')],
-        tier: 'standard' as const,
       };
 
       vi.mocked(apiClient.stream).mockResolvedValue(null);
@@ -131,7 +63,6 @@ describe('compareService', () => {
       const payload = {
         input_data: 'test input',
         models: [createModelId('gpt-4')],
-        tier: 'standard' as const,
       };
 
       const error = new ApiError('Stream failed', 500, 'Internal Server Error');

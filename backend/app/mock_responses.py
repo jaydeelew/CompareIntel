@@ -5,8 +5,7 @@ This module provides pre-defined mock responses that can be used instead of
 actual API calls to OpenRouter. This allows admins and super-admins to test
 the application's behavior without incurring API costs.
 
-The responses are designed to simulate realistic model outputs with appropriate
-lengths for both standard and extended tiers.
+The responses are designed to simulate realistic model outputs.
 """
 
 # Standard length response (approximately 500-800 tokens)
@@ -124,18 +123,17 @@ def get_mock_response() -> str:
     return MOCK_RESPONSE_STANDARD
 
 
-def stream_mock_response(tier: str = "standard", chunk_size: int = 50):
+def stream_mock_response(chunk_size: int = 50):
     """
     Generator that yields mock response in chunks to simulate streaming.
     
     Args:
-        tier: Response tier ('standard' or 'extended')
         chunk_size: Number of characters per chunk (default: 50)
         
     Yields:
         String chunks of the mock response
     """
-    response = get_mock_response(tier)
+    response = get_mock_response()
     
     # Split into chunks and yield
     for i in range(0, len(response), chunk_size):

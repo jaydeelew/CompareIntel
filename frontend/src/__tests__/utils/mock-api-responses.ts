@@ -36,7 +36,7 @@ import {
 import { createModelId } from '../../types';
 
 /**
- * Mock response for /compare endpoint
+ * Mock response for /compare-stream endpoint (legacy format for testing)
  */
 export function mockCompareResponse(
   payload?: CompareRequestPayload,

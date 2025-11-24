@@ -1,7 +1,7 @@
 """
 Main API router for core application endpoints.
 
-This module contains the main application endpoints like /models, /compare, etc.
+This module contains the main application endpoints like /models, /compare-stream, etc.
 that are used by the frontend for the core AI comparison functionality.
 """
 
@@ -20,7 +20,6 @@ import os
 from ..model_runner import (
     OPENROUTER_MODELS,
     MODELS_BY_PROVIDER,
-    run_models,
     call_openrouter_streaming,
     clean_model_response,
     estimate_credits_before_request,
@@ -376,348 +375,6 @@ async def reset_rate_limit_dev(
     }
 
 
-@router.post("/compare")
-async def compare(
-    req: CompareRequest,
-    request: Request,
-    db: Session = Depends(get_db),
-    current_user: Optional[User] = Depends(get_current_user),
-) -> CompareResponse:
-    """
-    Compare AI models with hybrid rate limiting.
-
-    Supports both authenticated users (subscription-based limits) and
-    anonymous users (IP/fingerprint-based limits).
-    """
-    if not req.input_data.strip():
-        raise HTTPException(status_code=400, detail="Input data cannot be empty")
-
-    if not req.models:
-        raise HTTPException(status_code=400, detail="At least one model must be selected")
-
-    # Validate input against model token limits
-    from ..model_runner import get_min_max_input_tokens, estimate_token_count
-    min_max_input_tokens = get_min_max_input_tokens(req.models)
-    input_tokens = estimate_token_count(req.input_data)
-    
-    if input_tokens > min_max_input_tokens:
-        # Convert tokens to approximate characters for user-friendly message (1 token ≈ 4 chars)
-        approx_chars = input_tokens * 4
-        max_chars = min_max_input_tokens * 4
-        raise HTTPException(
-            status_code=400,
-            detail=f"Your input is too long for one or more of the selected models. The maximum input length is approximately {max_chars:,} characters, but your input is approximately {approx_chars:,} characters. Please shorten your input or select different models that support longer inputs.",
-        )
-
-    # Determine model limit based on user tier
-    if current_user:
-        tier_model_limit = get_model_limit(current_user.subscription_tier)
-        tier_name = current_user.subscription_tier
-    else:
-        tier_model_limit = ANONYMOUS_MODEL_LIMIT  # Anonymous users model limit from configuration
-        tier_name = "anonymous"
-
-    # Validate model access based on tier (check if restricted models are selected)
-    from ..model_runner import is_model_available_for_tier
-    restricted_models = [model_id for model_id in req.models if not is_model_available_for_tier(model_id, tier_name)]
-    if restricted_models:
-        upgrade_message = ""
-        if tier_name == "anonymous":
-            upgrade_message = " Sign up for a free account or upgrade to a paid tier to access premium models."
-        elif tier_name == "free":
-            upgrade_message = " Upgrade to Starter ($9.95/month) or higher to access all premium models."
-        else:
-            upgrade_message = " This model requires a paid subscription."
-        
-        raise HTTPException(
-            status_code=403,
-            detail=f"The following models are not available for {tier_name} tier: {', '.join(restricted_models)}.{upgrade_message}",
-        )
-
-    # Enforce tier-specific model limit
-    if len(req.models) > tier_model_limit:
-        upgrade_message = ""
-        if tier_name == "anonymous":
-            free_model_limit = get_model_limit("free")
-            upgrade_message = (
-                f" Sign up for a free account to compare up to {free_model_limit} models."
-            )
-        elif tier_name == "free":
-            starter_model_limit = get_model_limit("starter")
-            pro_model_limit = get_model_limit("pro")
-            upgrade_message = f" Upgrade to Starter for {starter_model_limit} models or Pro for {pro_model_limit} models."
-        elif tier_name in ["starter", "starter_plus"]:
-            pro_model_limit = get_model_limit("pro")
-            pro_plus_model_limit = get_model_limit("pro_plus")
-            upgrade_message = f" Upgrade to Pro for {pro_model_limit} models or Pro+ for {pro_plus_model_limit} models."
-
-        raise HTTPException(
-            status_code=400,
-            detail=f"Your {tier_name} tier allows maximum {tier_model_limit} models per comparison. You selected {len(req.models)} models.{upgrade_message}",
-        )
-
-    # Get number of models for usage tracking
-    num_models = len(req.models)
-
-    # --- CREDIT-BASED RATE LIMITING ---
-    client_ip = get_client_ip(request)
-
-    # Estimate credits needed for this request
-    estimated_credits = estimate_credits_before_request(
-        prompt=req.input_data,
-        num_models=num_models,
-        conversation_history=req.conversation_history,
-    )
-
-    is_overage = False
-    overage_charge = 0.0
-    credits_used = Decimal(0)
-    credits_remaining = 0
-    credits_allocated = 0
-
-    if current_user:
-        # Ensure credits are allocated for authenticated user
-        ensure_credits_allocated(current_user.id, db)
-        db.refresh(current_user)
-        
-        # Debug logging for authentication and tier
-        print(f"[API] Authenticated user: {current_user.email}, subscription_tier: '{current_user.subscription_tier}', is_active: {current_user.is_active}")
-        
-        # Check if user has sufficient credits
-        is_sufficient, credits_remaining, credits_allocated = check_user_credits(
-            current_user, estimated_credits, db
-        )
-
-        if not is_sufficient:
-            # Insufficient credits
-            tier_name = current_user.subscription_tier or "free"
-            if tier_name in ["anonymous", "free"]:
-                # Free tier - suggest upgrade
-                error_msg = (
-                    f"Insufficient credits: You have {credits_remaining} credits remaining, "
-                    f"but need approximately {estimated_credits:.2f} credits for this request. "
-                    f"Sign up for a paid tier to get more credits."
-                )
-            else:
-                # Paid tier - suggest overage or upgrade
-                error_msg = (
-                    f"Insufficient credits: You have {credits_remaining} credits remaining, "
-                    f"but need approximately {estimated_credits:.2f} credits for this request. "
-                    f"Your credits reset on {current_user.credits_reset_at.date().isoformat() if current_user.credits_reset_at else 'N/A'}. "
-                    f"Upgrade to a higher tier or purchase additional credits."
-                )
-            raise HTTPException(
-                status_code=402,  # Payment Required
-                detail=error_msg,
-            )
-
-        print(f"Authenticated user {current_user.email} - Credits: {credits_remaining}/{credits_allocated} (estimated: {estimated_credits:.2f})")
-    else:
-        # Anonymous user - check credit-based limits
-        print(f"[API] Anonymous user - IP: {client_ip}, fingerprint: {req.browser_fingerprint[:20] if req.browser_fingerprint else 'None'}...")
-        
-        # Check IP-based credits
-        ip_identifier = f"ip:{client_ip}"
-        ip_sufficient, ip_credits_remaining, ip_credits_allocated = check_anonymous_credits(
-            ip_identifier, estimated_credits, db
-        )
-
-        fingerprint_sufficient = True
-        fingerprint_credits_remaining = 0
-        fingerprint_credits_allocated = 0
-        if req.browser_fingerprint:
-            fp_identifier = f"fp:{req.browser_fingerprint}"
-            fingerprint_sufficient, fingerprint_credits_remaining, fingerprint_credits_allocated = check_anonymous_credits(
-                fp_identifier, estimated_credits, db
-            )
-
-        # Use the most restrictive limit (lowest remaining credits)
-        credits_remaining = min(ip_credits_remaining, fingerprint_credits_remaining if req.browser_fingerprint else ip_credits_remaining)
-        credits_allocated = ip_credits_allocated
-
-        if not ip_sufficient or (req.browser_fingerprint and not fingerprint_sufficient):
-            free_tier_limit = DAILY_CREDIT_LIMITS.get("free", 100)
-            raise HTTPException(
-                status_code=402,  # Payment Required
-                detail=(
-                    f"Insufficient credits: You have {credits_remaining} credits remaining, "
-                    f"but need approximately {estimated_credits:.2f} credits for this request. "
-                    f"Sign up for a free account ({free_tier_limit} credits/day) to continue."
-                ),
-            )
-
-        print(f"Anonymous user - IP: {client_ip} - Credits: {credits_remaining}/{credits_allocated} (estimated: {estimated_credits:.2f})")
-    # --- END CREDIT-BASED RATE LIMITING ---
-
-    # Extended tier usage tracking removed - extended mode is now unlimited (only limited by credits)
-
-    # Check if mock mode is enabled for this user
-    # IMPORTANT: Authenticated users should NEVER use anonymous mock mode
-    is_development = os.environ.get("ENVIRONMENT") == "development"
-    use_mock = False
-
-    if current_user:
-        # Check if mock mode is enabled for this authenticated user
-        # Allow mock mode for admins/super_admins even in production (for testing)
-        if current_user.mock_mode_enabled:
-            if is_development or current_user.role in ["admin", "super_admin"]:
-                use_mock = True
-    else:
-        # Only check anonymous mock mode if there is NO authenticated user
-        # Check if global anonymous mock mode is enabled (development only)
-        if is_development:
-            from ..cache import get_cached_app_settings
-
-            def get_settings():
-                return db.query(AppSettings).first()
-
-            settings = get_cached_app_settings(get_settings)
-            if settings and settings.anonymous_mock_mode_enabled:
-                use_mock = True
-
-    # Track start time for processing metrics
-    start_time = datetime.now()
-
-    try:
-        usage_data_dict = {}  # Store usage data per model
-        
-        if use_mock:
-            # Mock mode: Create fake successful results
-            results = {}
-            for model_id in req.models:
-                results[model_id] = (
-                    f"[MOCK MODE] This is a test response for {model_id}. Mock mode is enabled for testing."
-                )
-                # Mock mode: Use estimated credits (no actual token usage)
-                usage_data_dict[model_id] = None
-        else:
-            loop = asyncio.get_running_loop()
-            results, usage_data_dict = await loop.run_in_executor(
-                None, run_models, req.input_data, req.models, req.conversation_history
-            )
-
-        # Count successful vs failed models and calculate total credits used
-        successful_models = 0
-        failed_models = 0
-        total_input_tokens = 0
-        total_output_tokens = 0
-        total_effective_tokens = 0
-        total_credits_used = Decimal(0)
-
-        for model_id, result in results.items():
-            current_time = datetime.now().isoformat()
-            if result.startswith("Error:"):
-                failed_models += 1
-                model_stats[model_id]["failure"] += 1
-                model_stats[model_id]["last_error"] = current_time
-            else:
-                successful_models += 1
-                model_stats[model_id]["success"] += 1
-                model_stats[model_id]["last_success"] = current_time
-                
-                # Accumulate token usage from successful models
-                usage = usage_data_dict.get(model_id)
-                if usage:
-                    total_input_tokens += usage.prompt_tokens
-                    total_output_tokens += usage.completion_tokens
-                    total_effective_tokens += usage.effective_tokens
-                    total_credits_used += usage.credits
-
-        # If no actual usage data available (mock mode or missing), use estimated credits
-        if total_credits_used == 0 and successful_models > 0:
-            total_credits_used = estimated_credits
-
-        # Log usage to database first (so we have usage_log_id for credit transaction)
-        usage_log = UsageLog(
-            user_id=current_user.id if current_user else None,
-            ip_address=client_ip,
-            browser_fingerprint=req.browser_fingerprint,
-            models_used=json.dumps(req.models),
-            input_length=len(req.input_data),
-            models_requested=len(req.models),
-            models_successful=successful_models,
-            models_failed=failed_models,
-            processing_time_ms=processing_time_ms,
-            estimated_cost=len(req.models) * 0.0166,  # Legacy field - keep for backward compatibility
-            is_overage=is_overage,
-            overage_charge=overage_charge,
-            # Credit-based fields
-            input_tokens=total_input_tokens if total_input_tokens > 0 else None,
-            output_tokens=total_output_tokens if total_output_tokens > 0 else None,
-            total_tokens=total_input_tokens + total_output_tokens if (total_input_tokens > 0 or total_output_tokens > 0) else None,
-            effective_tokens=total_effective_tokens if total_effective_tokens > 0 else None,
-            credits_used=total_credits_used,
-        )
-        db.add(usage_log)
-        db.commit()
-        db.refresh(usage_log)  # Get the ID
-
-        # Deduct credits - only for successful models (now we have usage_log_id)
-        if successful_models > 0 and total_credits_used > 0:
-            try:
-                if current_user:
-                    # Deduct credits for authenticated user
-                    deduct_user_credits(
-                        current_user,
-                        total_credits_used,
-                        usage_log.id,  # Link to usage log
-                        db,
-                        description=f"Credits used for {successful_models} model comparison(s)",
-                    )
-                    # Refresh to get updated credit balance
-                    db.refresh(current_user)
-                    credits_remaining = get_user_credits(current_user.id, db)
-                else:
-                    # Deduct credits for anonymous user
-                    ip_identifier = f"ip:{client_ip}"
-                    deduct_anonymous_credits(ip_identifier, total_credits_used)
-                    # Get updated IP credit balance
-                    _, ip_credits_remaining, _ = check_anonymous_credits(ip_identifier, Decimal(0), db)
-                    
-                    fingerprint_credits_remaining = ip_credits_remaining
-                    if req.browser_fingerprint:
-                        fp_identifier = f"fp:{req.browser_fingerprint}"
-                        deduct_anonymous_credits(fp_identifier, total_credits_used)
-                        # Get updated fingerprint credit balance
-                        _, fingerprint_credits_remaining, _ = check_anonymous_credits(fp_identifier, Decimal(0), db)
-                    
-                    # Use the most restrictive limit (lowest remaining credits) - same logic as at start
-                    credits_remaining = min(ip_credits_remaining, fingerprint_credits_remaining if req.browser_fingerprint else ip_credits_remaining)
-            except ValueError as e:
-                # Should not happen since we checked before, but handle gracefully
-                print(f"Warning: Credit deduction failed: {e}")
-
-        # Extended tier usage tracking removed - no longer needed
-
-        # Calculate processing time
-        processing_time_ms = int((datetime.now() - start_time).total_seconds() * 1000)
-
-        # Add metadata including credit information
-        metadata = {
-            "input_length": len(req.input_data),
-            "models_requested": len(req.models),
-            "models_successful": successful_models,
-            "models_failed": failed_models,
-            "timestamp": datetime.now().isoformat(),
-            "processing_time_ms": processing_time_ms,
-            # Credit-based fields
-            "credits_used": float(total_credits_used),
-            "credits_remaining": credits_remaining,
-            "estimated_credits": float(estimated_credits),
-            # Token usage fields
-            "total_input_tokens": total_input_tokens,
-            "total_output_tokens": total_output_tokens,
-            "total_effective_tokens": total_effective_tokens,
-        }
-
-        return CompareResponse(results=results, metadata=metadata)
-
-    except Exception as e:
-        error_msg = f"Error processing request: {str(e)}"
-        print(f"Backend error: {error_msg}")
-        raise HTTPException(status_code=500, detail=error_msg)
-
-
 @router.post("/compare-stream")
 async def compare_stream(
     req: CompareRequest,
@@ -727,7 +384,7 @@ async def compare_stream(
     current_user: Optional[User] = Depends(get_current_user),
 ):
     """
-    Streaming version of /compare endpoint using Server-Sent Events (SSE).
+    Compare AI models using Server-Sent Events (SSE) streaming.
 
     Returns responses token-by-token as they arrive from OpenRouter for dramatically
     faster perceived response time (first tokens appear in ~500ms vs 6+ seconds).
@@ -744,7 +401,7 @@ async def compare_stream(
     - data: {"type": "complete", "metadata": {...}} - All models done
     - data: {"type": "error", "message": "..."} - Error occurred
     """
-    # All the same validation as the regular compare endpoint
+    # Validate request
     if not req.input_data.strip():
         raise HTTPException(status_code=400, detail="Input data cannot be empty")
 
@@ -928,6 +585,11 @@ async def compare_stream(
         successful_models = 0
         failed_models = 0
         results_dict = {}
+        # Track token usage for all models
+        total_input_tokens = 0
+        total_output_tokens = 0
+        total_effective_tokens = 0
+        usage_data_dict = {}  # Store usage data per model
 
         # Check if mock mode is enabled for this user
         # IMPORTANT: Authenticated users should NEVER use anonymous mock mode
@@ -994,34 +656,44 @@ async def compare_stream(
                         """
                         Process streaming response in thread pool.
                         Push chunks to async queue in real-time for true streaming.
+                        Returns: (content, is_error, usage_data)
                         """
                         content = ""
                         count = 0
+                        usage_data = None
                         try:
-                            for chunk in call_openrouter_streaming(
+                            # Manually iterate generator to capture return value (TokenUsage)
+                            gen = call_openrouter_streaming(
                                 req.input_data,
                                 model_id,
                                 req.conversation_history,
                                 use_mock,
                                 max_tokens_override=effective_max_tokens,
-                            ):
-                                content += chunk
-                                count += 1
+                            )
+                            
+                            try:
+                                while True:
+                                    chunk = next(gen)
+                                    content += chunk
+                                    count += 1
 
-                                # Push chunk to async queue (thread-safe)
-                                asyncio.run_coroutine_threadsafe(
-                                    chunk_queue.put(
-                                        {
-                                            "type": "chunk",
-                                            "model": model_id,
-                                            "content": chunk,
-                                            "chunk_count": count,
-                                        }
-                                    ),
-                                    loop,
-                                )
+                                    # Push chunk to async queue (thread-safe)
+                                    asyncio.run_coroutine_threadsafe(
+                                        chunk_queue.put(
+                                            {
+                                                "type": "chunk",
+                                                "model": model_id,
+                                                "content": chunk,
+                                                "chunk_count": count,
+                                            }
+                                        ),
+                                        loop,
+                                    )
+                            except StopIteration as e:
+                                # Generator return value is in e.value
+                                usage_data = e.value
 
-                            return content, False  # content, is_error
+                            return content, False, usage_data  # content, is_error, usage_data
 
                         except Exception as e:
                             error_msg = f"Error: {str(e)[:100]}"
@@ -1032,10 +704,10 @@ async def compare_stream(
                                 ),
                                 loop,
                             )
-                            return error_msg, True  # error_msg, is_error
+                            return error_msg, True, None  # error_msg, is_error, usage_data
 
                     # Run streaming in executor (allows true concurrent execution)
-                    full_content, is_error = await loop.run_in_executor(
+                    full_content, is_error, usage_data = await loop.run_in_executor(
                         None, process_stream_to_queue
                     )
 
@@ -1048,7 +720,12 @@ async def compare_stream(
                     # Final check if response is an error
                     is_error = is_error or model_content.startswith("Error:")
 
-                    return {"model": model_id, "content": model_content, "error": is_error}
+                    return {
+                        "model": model_id,
+                        "content": model_content,
+                        "error": is_error,
+                        "usage": usage_data,  # TokenUsage or None
+                    }
 
                 except Exception as e:
                     # Handle model-specific errors gracefully
@@ -1059,7 +736,7 @@ async def compare_stream(
                         {"type": "chunk", "model": model_id, "content": error_msg}
                     )
 
-                    return {"model": model_id, "content": error_msg, "error": True}
+                    return {"model": model_id, "content": error_msg, "error": True, "usage": None}
 
             # Create tasks for all models to run concurrently
             tasks = [asyncio.create_task(stream_single_model(model_id)) for model_id in req.models]
@@ -1091,6 +768,14 @@ async def compare_stream(
                         successful_models += 1
                         model_stats[model_id]["success"] += 1
                         model_stats[model_id]["last_success"] = datetime.now().isoformat()
+                        
+                        # Accumulate token usage from successful models
+                        usage = result.get("usage")  # TokenUsage or None
+                        if usage:
+                            usage_data_dict[model_id] = usage
+                            total_input_tokens += usage.prompt_tokens
+                            total_output_tokens += usage.completion_tokens
+                            total_effective_tokens += usage.effective_tokens
 
                     results_dict[model_id] = result["content"]
 
@@ -1112,9 +797,15 @@ async def compare_stream(
                 if pending_tasks:
                     await asyncio.sleep(0.01)  # 10ms yield
 
-            # Calculate credits used (use estimated if actual usage not available)
-            # TODO: Capture actual usage data from streaming responses
-            total_credits_used = estimated_credits if successful_models > 0 else Decimal(0)
+            # Calculate credits used (use actual usage if available, otherwise estimated)
+            total_credits_used = Decimal(0)
+            if successful_models > 0:
+                if total_effective_tokens > 0:
+                    # Use actual token usage data
+                    total_credits_used = Decimal(total_effective_tokens) / Decimal(1000)
+                else:
+                    # Fall back to estimated credits if no actual usage data available
+                    total_credits_used = estimated_credits
             
             # Deduct credits - only for successful models
             if successful_models > 0 and total_credits_used > 0:
@@ -1206,6 +897,10 @@ async def compare_stream(
                 is_overage=is_overage,
                 overage_charge=overage_charge,
                 # Credit-based fields
+                input_tokens=total_input_tokens if total_input_tokens > 0 else None,
+                output_tokens=total_output_tokens if total_output_tokens > 0 else None,
+                total_tokens=total_input_tokens + total_output_tokens if (total_input_tokens > 0 or total_output_tokens > 0) else None,
+                effective_tokens=total_effective_tokens if total_effective_tokens > 0 else None,
                 credits_used=total_credits_used,
             )
             # Create new session for background task
@@ -1694,7 +1389,6 @@ class CreditEstimateRequest(BaseModel):
     """Request model for credit estimation."""
     input_data: str
     models: list[str]
-    tier: str = "standard"
     conversation_history: list[ConversationMessage] = []
 
 
@@ -1708,7 +1402,7 @@ async def estimate_credits(
     """
     Estimate credits needed for a request before submitting.
     
-    Returns estimated credits based on prompt length, tier, and number of models.
+    Returns estimated credits based on prompt length and number of models.
     """
     if not req.input_data.strip():
         raise HTTPException(status_code=400, detail="Input data cannot be empty")
@@ -1716,17 +1410,9 @@ async def estimate_credits(
     if not req.models:
         raise HTTPException(status_code=400, detail="At least one model must be selected")
     
-    # Validate tier
-    if req.tier not in ["standard", "extended"]:
-        raise HTTPException(
-            status_code=422,
-            detail=f"Invalid tier '{req.tier}'. Valid tiers are: standard, extended",
-        )
-    
     # Estimate credits
     estimated_credits = estimate_credits_before_request(
         prompt=req.input_data,
-        tier=req.tier,
         num_models=len(req.models),
         conversation_history=req.conversation_history,
     )
@@ -1757,7 +1443,6 @@ async def estimate_credits(
         "is_sufficient": is_sufficient,
         "breakdown": {
             "num_models": len(req.models),
-            "tier": req.tier,
             "input_length": len(req.input_data),
             "conversation_history_length": len(req.conversation_history),
         },

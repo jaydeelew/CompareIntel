@@ -11,7 +11,7 @@ All constants should be imported from this module to maintain a single source of
 """
 
 from typing import Dict, Any
-from ..types import TierConfigDict, TierLimitsDict
+from ..types import TierConfigDict
 
 
 # ============================================================================

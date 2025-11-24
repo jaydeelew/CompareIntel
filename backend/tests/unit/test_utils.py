@@ -150,19 +150,6 @@ class TestErrorHandling:
 class TestConstants:
     """Tests for application constants."""
     
-    def test_tier_limits_exist(self):
-        """Test that tier limits are properly defined."""
-        from app.config import TIER_LIMITS
-        
-        assert isinstance(TIER_LIMITS, dict)
-        # TIER_LIMITS contains response tiers: standard, extended
-        expected_keys = ["standard", "extended"]
-        for key in expected_keys:
-            assert key in TIER_LIMITS, f"TIER_LIMITS missing response tier: {key}"
-            assert isinstance(TIER_LIMITS[key], dict)
-            assert "input_chars" in TIER_LIMITS[key]
-            assert "output_tokens" in TIER_LIMITS[key]
-    
     def test_extended_tier_limits_exist(self):
         """Test that extended tier limits are properly defined."""
         from app.config import EXTENDED_TIER_LIMITS

@@ -335,73 +335,9 @@ Delete user account permanently.
 
 ## Core AI Comparison Endpoints
 
-### POST `/api/compare`
-
-Compare multiple AI models with a single prompt.
-
-**Authentication:** Optional (anonymous users have lower limits)
-
-**Request Body:**
-```json
-{
-  "input_data": "Explain quantum computing in simple terms",
-  "models": ["openai/gpt-4", "anthropic/claude-3-opus", "google/gemini-pro"],
-  "conversation_history": [
-    {
-      "role": "user",
-      "content": "What is AI?"
-    },
-    {
-      "role": "assistant",
-      "content": "AI stands for Artificial Intelligence..."
-    }
-  ],
-  "browser_fingerprint": "optional-fingerprint-for-anonymous-users",
-  "tier": "standard",
-  "conversation_id": 123
-}
-```
-
-**Parameters:**
-- `input_data` (string, required): The prompt/question to send to models
-- `models` (array[string], required): List of model IDs to compare
-- `conversation_history` (array, optional): Previous messages for context
-- `browser_fingerprint` (string, optional): Browser fingerprint for anonymous rate limiting
-- `tier` (string, optional): `"standard"` or `"extended"` (default: `"standard"`)
-- `conversation_id` (integer, optional): ID of existing conversation for follow-ups
-
-**Tier Limits:**
-- `standard`: 5000 characters input, 4000 tokens output
-- `extended`: 15000 characters input, 8192 tokens output
-
-**Response:** `200 OK`
-```json
-{
-  "results": {
-    "openai/gpt-4": "Quantum computing is a type of computing...",
-    "anthropic/claude-3-opus": "Quantum computing leverages quantum mechanics...",
-    "google/gemini-pro": "Quantum computing uses quantum bits (qubits)..."
-  },
-  "metadata": {
-    "processing_time_ms": 3500,
-    "models_successful": 3,
-    "models_failed": 0,
-    "estimated_cost": 0.012
-  }
-}
-```
-
-**Error Responses:**
-- `400 Bad Request`: Empty input, no models selected, tier limit exceeded
-- `400 Bad Request`: Too many models selected (exceeds tier limit)
-- `422 Unprocessable Entity`: Invalid tier value
-- `429 Too Many Requests`: Rate limit exceeded
-
----
-
 ### POST `/api/compare-stream`
 
-Streaming version of `/compare` using Server-Sent Events (SSE).
+Compare multiple AI models with a single prompt using Server-Sent Events (SSE) streaming.
 
 **Authentication:** Optional
 

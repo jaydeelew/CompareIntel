@@ -43,7 +43,7 @@ import {
 } from './services/compareService'
 import { getConversation } from './services/conversationService'
 import { estimateCredits, getCreditBalance } from './services/creditService'
-import type { CreditBalance } from './services/creditService'
+import type { CreditBalance, CreditEstimate } from './services/creditService'
 import { getAvailableModels } from './services/modelsService'
 import type {
   CompareResponse,
@@ -171,6 +171,9 @@ function AppContent() {
   const [anonymousCreditsRemaining, setAnonymousCreditsRemaining] = useState<number | null>(null)
   const [creditBalance, setCreditBalance] = useState<CreditBalance | null>(null)
   const [showLowCreditWarning, setShowLowCreditWarning] = useState(false)
+  const [backendCreditEstimate, setBackendCreditEstimate] = useState<CreditEstimate | null>(null)
+  const [isEstimatingCredits, setIsEstimatingCredits] = useState(false)
+  const estimateDebounceTimeoutRef = useRef<number | null>(null)
 
   // Callback for when the active conversation is deleted
   const handleDeleteActiveConversation = useCallback(() => {
@@ -450,6 +453,65 @@ function AppContent() {
 
     fetchAnonymousMockModeSetting()
   }, [isAuthenticated, authLoading])
+
+  // Fetch backend credit estimate when input/models change (debounced)
+  useEffect(() => {
+    // Clear any pending timeout
+    if (estimateDebounceTimeoutRef.current !== null) {
+      clearTimeout(estimateDebounceTimeoutRef.current)
+    }
+
+    // Don't estimate if input is empty or no models selected
+    if (!input.trim() || selectedModels.length === 0) {
+      setBackendCreditEstimate(null)
+      return
+    }
+
+    // Debounce the API call (500ms delay)
+    estimateDebounceTimeoutRef.current = window.setTimeout(async () => {
+      setIsEstimatingCredits(true)
+      try {
+        // Build conversation history from conversations if in follow-up mode
+        const conversationHistoryMessages = isFollowUpMode && conversations.length > 0
+          ? (() => {
+              // Get the first conversation that has messages and is for a selected model
+              const selectedConversations = conversations.filter(
+                conv => selectedModels.includes(conv.modelId) && conv.messages.length > 0
+              )
+              if (selectedConversations.length === 0) return []
+              // Use the first selected conversation's messages
+              return selectedConversations[0].messages
+            })()
+          : []
+
+        // Convert to API format
+        const conversationHistory = conversationHistoryMessages.map(msg => ({
+          role: msg.role || 'user',
+          content: msg.content || ''
+        }))
+
+        const estimate = await estimateCredits({
+          input_data: input,
+          models: selectedModels,
+          conversation_history: conversationHistory,
+        })
+        setBackendCreditEstimate(estimate)
+      } catch (error) {
+        // Silently fail - we'll fall back to local calculation
+        console.error('Failed to fetch credit estimate:', error)
+        setBackendCreditEstimate(null)
+      } finally {
+        setIsEstimatingCredits(false)
+      }
+    }, 500)
+
+    // Cleanup function
+    return () => {
+      if (estimateDebounceTimeoutRef.current !== null) {
+        clearTimeout(estimateDebounceTimeoutRef.current)
+      }
+    }
+  }, [input, selectedModels, isFollowUpMode, conversations])
 
   // Screenshot handler for message area only
 
@@ -4064,41 +4126,48 @@ function AppContent() {
     // Calculate what will be used
     const regularToUse = selectedModels.length
 
-
-    // Estimate credits for this request
-    // Base estimate: ~4 characters per token, ~1000 tokens = 1 credit
-    // Conversation history adds to input tokens
-    const inputTokens = Math.ceil(input.length / 4) // Rough estimate: 4 chars per token
-    // Build conversation history from conversations prop (not from hook's conversationHistory)
-    const conversationHistoryMessages = isFollowUpMode && conversations.length > 0
-      ? (() => {
-          // Get the first conversation that has messages and is for a selected model
-          const selectedConversations = conversations.filter(
-            conv => selectedModels.includes(conv.modelId) && conv.messages.length > 0
-          )
-          if (selectedConversations.length === 0) return []
-          // Use the first selected conversation's messages
-          return selectedConversations[0].messages
-        })()
-      : []
-    const conversationHistoryTokens = conversationHistoryMessages.length > 0
-      ? conversationHistoryMessages.reduce((sum, msg) => {
-          // Safely handle messages that might not have content
-          const content = msg.content || ''
-          return sum + Math.ceil(content.length / 4)
-        }, 0)
-      : 0
-    const totalInputTokens = inputTokens + conversationHistoryTokens
-    
-    // Estimate output tokens: ~500-1500 tokens per model response (use 1000 as average)
-    // Effective tokens = input_tokens + (output_tokens × 2.5)
-    // Credits = effective_tokens / 1000
-    const outputTokensPerModel = 1000
-    const effectiveTokensPerModel = totalInputTokens + (outputTokensPerModel * 2.5)
-    const creditsPerModel = effectiveTokensPerModel / 1000
-    
-    // Total estimated credits
-    const estimatedCredits = Math.ceil(creditsPerModel * regularToUse)
+    // Use backend estimate if available (more accurate, matches validation)
+    // Fall back to local calculation if backend estimate not yet loaded
+    let estimatedCredits: number
+    if (backendCreditEstimate) {
+      // Use backend estimate (uses tiktoken and 2000 output tokens)
+      estimatedCredits = Math.ceil(backendCreditEstimate.estimated_credits)
+    } else {
+      // Fallback: local calculation (less accurate, but immediate)
+      // Base estimate: ~4 characters per token, ~1000 tokens = 1 credit
+      // Conversation history adds to input tokens
+      const inputTokens = Math.ceil(input.length / 4) // Rough estimate: 4 chars per token
+      // Build conversation history from conversations prop (not from hook's conversationHistory)
+      const conversationHistoryMessages = isFollowUpMode && conversations.length > 0
+        ? (() => {
+            // Get the first conversation that has messages and is for a selected model
+            const selectedConversations = conversations.filter(
+              conv => selectedModels.includes(conv.modelId) && conv.messages.length > 0
+            )
+            if (selectedConversations.length === 0) return []
+            // Use the first selected conversation's messages
+            return selectedConversations[0].messages
+          })()
+        : []
+      const conversationHistoryTokens = conversationHistoryMessages.length > 0
+        ? conversationHistoryMessages.reduce((sum, msg) => {
+            // Safely handle messages that might not have content
+            const content = msg.content || ''
+            return sum + Math.ceil(content.length / 4)
+          }, 0)
+        : 0
+      const totalInputTokens = inputTokens + conversationHistoryTokens
+      
+      // Estimate output tokens: ~500-1500 tokens per model response (use 1000 as average)
+      // Effective tokens = input_tokens + (output_tokens × 2.5)
+      // Credits = effective_tokens / 1000
+      const outputTokensPerModel = 1000
+      const effectiveTokensPerModel = totalInputTokens + (outputTokensPerModel * 2.5)
+      const creditsPerModel = effectiveTokensPerModel / 1000
+      
+      // Total estimated credits
+      estimatedCredits = Math.ceil(creditsPerModel * regularToUse)
+    }
 
     return (
       <div
@@ -4111,7 +4180,7 @@ function AppContent() {
         {/* Credits Display (Primary) */}
         <span>
           <strong>{regularToUse}</strong> {regularToUse === 1 ? 'model' : 'models'} selected •{' '}
-          Estimated: <strong>~{estimatedCredits}</strong> credits •{' '}
+          Estimated: <strong>~{estimatedCredits}</strong> credits{isEstimatingCredits && !backendCreditEstimate ? '...' : ''} •{' '}
           <strong>{Math.round(creditsRemaining)}</strong> credits remaining
         </span>
       </div>

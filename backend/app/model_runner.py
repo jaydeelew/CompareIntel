@@ -960,8 +960,10 @@ def estimate_credits_before_request(
     if conversation_history:
         input_tokens += count_conversation_tokens(conversation_history)
 
-    # Estimate output tokens (average ~2,000 tokens, conservative estimate)
-    estimated_output_tokens = 2000
+    # Dynamic estimate: output tokens typically 0.5x to 2x input tokens
+    # Use 1.5x as a balanced estimate (more accurate than fixed 2000)
+    # Apply bounds: minimum 500, maximum 4000 tokens for safety
+    estimated_output_tokens = max(500, min(4000, int(input_tokens * 1.5)))
 
     # Calculate credits for one model call
     credits_per_model = calculate_credits(input_tokens, estimated_output_tokens)
@@ -1044,9 +1046,9 @@ def call_openrouter_streaming(
     Args:
         prompt: User prompt text
         model_id: Model identifier
-        tier: Response tier ('standard' or 'extended')
         conversation_history: Optional conversation history
         use_mock: If True, return mock responses instead of calling API (admin testing feature)
+        max_tokens_override: Optional override for max output tokens (uses model limit if not provided)
 
     Yields:
         str: Content chunks as they arrive
@@ -1056,8 +1058,8 @@ def call_openrouter_streaming(
     """
     # Mock mode: return pre-defined responses for testing
     if use_mock:
-        print(f"🎭 Mock mode enabled - returning mock {tier} response for {model_id}")
-        for chunk in stream_mock_response(tier=tier, chunk_size=50):
+        print(f"🎭 Mock mode enabled - returning mock response for {model_id}")
+        for chunk in stream_mock_response(chunk_size=50):
             yield chunk
         return None
 
@@ -1167,204 +1169,6 @@ def call_openrouter_streaming(
             yield f"Error: {str(e)[:100]}"
         # Return None for usage data on error
         return None
-
-
-def call_openrouter(
-    prompt: str,
-    model_id: str,
-    conversation_history: Optional[List[Any]] = None,
-    use_mock: bool = False,
-    max_tokens_override: Optional[int] = None,
-) -> Tuple[str, Optional[TokenUsage]]:
-    """
-    Non-streaming version of OpenRouter call (kept for backward compatibility).
-    For better performance, use call_openrouter_streaming instead.
-
-    Args:
-        prompt: User prompt text
-        model_id: Model identifier
-        conversation_history: Optional conversation history
-        use_mock: If True, return mock responses instead of calling API (admin testing feature)
-
-    Returns:
-        Tuple of (content: str, usage: Optional[TokenUsage])
-        Usage will be None if unavailable or in mock mode
-    """
-    # Mock mode: return pre-defined responses for testing
-    if use_mock:
-        print(f"🎭 Mock mode enabled - returning mock response for {model_id}")
-        return get_mock_response(), None
-
-    try:
-        # Build messages array - use standard format like official AI providers
-        messages = []
-
-        # Add a minimal system message only to encourage complete thoughts
-        # This doesn't force verbosity, just ensures completion
-        if not conversation_history:
-            messages.append(
-                {
-                    "role": "system",
-                    "content": "Provide complete responses. Finish your thoughts and explanations fully.",
-                }
-            )
-
-        # Apply context window management (industry best practice 2025)
-        truncated_history = conversation_history
-        was_truncated = False
-
-        if conversation_history:
-            truncated_history, was_truncated, original_count = truncate_conversation_history(conversation_history, max_messages=20)
-
-            # Add truncated conversation history
-            for msg in truncated_history:
-                messages.append({"role": msg.role, "content": msg.content})
-
-            # If truncated, inform the model about it
-            if was_truncated:
-                messages.append(
-                    {
-                        "role": "system",
-                        "content": f"Note: Earlier conversation context ({original_count - len(truncated_history)} messages) has been summarized to focus on recent discussion.",
-                    }
-                )
-
-        # Add the current prompt as user message
-        messages.append({"role": "user", "content": prompt})
-
-        # Use override if provided (for multi-model comparisons to avoid truncation)
-        # Otherwise, use model's maximum capability
-        if max_tokens_override is not None:
-            max_tokens = max_tokens_override
-        else:
-            # Use model's maximum capability
-            max_tokens = get_model_max_tokens(model_id)
-
-        response = client.chat.completions.create(
-            model=model_id,
-            messages=messages,
-            timeout=settings.individual_model_timeout,
-            max_tokens=max_tokens,
-        )
-        content = response.choices[0].message.content
-        finish_reason = response.choices[0].finish_reason
-
-        # Extract token usage from response
-        usage_data = None
-        if hasattr(response, "usage") and response.usage:
-            usage = response.usage
-            prompt_tokens = getattr(usage, "prompt_tokens", 0)
-            completion_tokens = getattr(usage, "completion_tokens", 0)
-            if prompt_tokens > 0 or completion_tokens > 0:
-                usage_data = calculate_token_usage(prompt_tokens, completion_tokens)
-
-        # Only log issues, not every successful response
-        model_name = model_id.split("/")[-1]
-
-        # Detect incomplete responses heuristically
-        incomplete_indicators = [
-            "Therefore:",
-            "In conclusion:",
-            "Finally:",
-            "Thus:",
-            "So:",
-            "Hence:",
-            "Now,",
-            "Next,",
-            "Then,",
-            "Adding these",
-            "Combining",
-            "Putting it all together",
-        ]
-
-        is_likely_incomplete = False
-        if content:
-            last_30_chars = content.strip()[-30:] if len(content.strip()) > 30 else content.strip()
-            for indicator in incomplete_indicators:
-                if last_30_chars.endswith(indicator) or last_30_chars.endswith(indicator.lower()):
-                    is_likely_incomplete = True
-                    break
-
-        # Detect and warn about incomplete responses
-        if finish_reason == "length":
-            # Model hit token limit - response was cut off mid-thought
-            tier_messages = {
-                "standard": "⚠️ **Standard tier limit reached.** Response truncated at 4,000 tokens. Upgrade to Extended (8,000) for comprehensive responses.",
-                "extended": "⚠️ **Extended tier limit reached.** Response truncated at 8,000 tokens. This is the maximum response length available.",
-            }
-            content = (content or "") + f"\n\n{tier_messages.get(tier, 'Response truncated - model reached maximum output length.')}"
-        elif finish_reason == "content_filter":
-            content = (content or "") + "\n\n⚠️ **Note:** Response stopped by content filter."
-
-        # Clean up MathML and other unwanted markup before returning
-        cleaned_content = clean_model_response(content) if content is not None else "No response generated"
-        return cleaned_content, usage_data
-    except Exception as e:
-        error_str = str(e).lower()
-        # More descriptive error messages for faster debugging
-        error_content = None
-        if "timeout" in error_str:
-            error_content = f"Error: Timeout ({settings.individual_model_timeout}s)"
-        elif "rate limit" in error_str or "429" in error_str:
-            error_content = f"Error: Rate limited"
-        elif "not found" in error_str or "404" in error_str:
-            error_content = f"Error: Model not available"
-        elif "unauthorized" in error_str or "401" in error_str:
-            error_content = f"Error: Authentication failed"
-        else:
-            error_content = f"Error: {str(e)[:100]}"  # Truncate long error messages
-
-        return error_content, None
-
-
-def run_models(
-    prompt: str,
-    model_list: List[str],
-    conversation_history: Optional[List[Any]] = None,
-) -> Tuple[Dict[str, str], Dict[str, Optional[TokenUsage]]]:
-    """
-    Run models concurrently without batching.
-
-    Note: This function is kept for backward compatibility with the non-streaming endpoint.
-    The application primarily uses the streaming endpoint (/compare-stream) which processes
-    all models concurrently via asyncio tasks.
-
-    Returns:
-        Tuple of:
-        - Dictionary mapping model_id to response content
-        - Dictionary mapping model_id to TokenUsage (or None if unavailable/error)
-    """
-    results = {}
-    usage_data = {}
-
-    # Calculate minimum max output tokens across all models to avoid truncation
-    effective_max_tokens = get_min_max_output_tokens(model_list)
-
-    def call(model_id):
-        try:
-            content, usage = call_openrouter(prompt, model_id, conversation_history, max_tokens_override=effective_max_tokens)
-            return model_id, content, usage
-        except Exception as e:
-            return model_id, f"Error: {str(e)}", None
-
-    # Process all models concurrently without batching limits
-    # Uses default ThreadPoolExecutor which handles concurrency automatically
-    with concurrent.futures.ThreadPoolExecutor() as executor:
-        # Submit all futures
-        future_to_model = {executor.submit(call, model_id): model_id for model_id in model_list}
-
-        # Wait for all futures to complete
-        for future in concurrent.futures.as_completed(future_to_model):
-            model_id = future_to_model[future]
-            try:
-                _, result, usage = future.result()
-                results[model_id] = result
-                usage_data[model_id] = usage
-            except Exception as e:
-                results[model_id] = f"Error: {str(e)}"
-                usage_data[model_id] = None
-
-    return results, usage_data
 
 
 def test_connection_quality() -> ConnectionQualityDict:

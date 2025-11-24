@@ -40,6 +40,8 @@ export interface RequestConfig extends Omit<RequestInit, 'cache'> {
   _timeoutId?: ReturnType<typeof setTimeout>;
   /** Internal: Token getter function */
   getToken?: () => string | null;
+  /** Internal: Request URL for error handling */
+  _url?: string;
 }
 
 /**

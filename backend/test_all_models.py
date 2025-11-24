@@ -20,7 +20,7 @@ from datetime import datetime
 # Add the backend directory to the path so we can import app modules
 sys.path.insert(0, '/home/dan_wsl/jaydeelew/CompareIntel/backend')
 
-from app.model_runner import MODELS_BY_PROVIDER, call_openrouter, OPENROUTER_MODELS
+from app.model_runner import MODELS_BY_PROVIDER, call_openrouter_streaming, OPENROUTER_MODELS
 from app.config import settings
 
 
@@ -77,14 +77,18 @@ def test_model(model: Dict[str, Any]) -> Dict[str, Any]:
     }
     
     try:
-        # Call the model with a simple prompt
-        response = call_openrouter(
+        # Call the model with a simple prompt using streaming
+        chunks = []
+        for chunk in call_openrouter_streaming(
             prompt=TEST_PROMPT,
             model_id=model_id,
-            tier="standard",
             conversation_history=None,
             use_mock=False,  # Use real API calls
-        )
+        ):
+            chunks.append(chunk)
+        
+        # Combine all chunks into a single response
+        response = "".join(chunks) if chunks else ""
         
         response_time = time.time() - start_time
         result["response_time"] = response_time

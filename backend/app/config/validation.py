@@ -253,12 +253,7 @@ def log_configuration() -> None:
             f"overage: {config['overage_allowed']}"
         )
     
-    # Tier Limits Summary (hardcoded)
-    logger.info("Response Tier Limits:")
-    logger.info("  standard: 5000 chars input, 4000 tokens output")
-    logger.info("  extended: 15000 chars input, 8192 tokens output")
-    
-    # Extended tier usage tracking removed
+    # Response tier limits removed - now using model-specific limits
     
     logger.info("=" * 80)
 

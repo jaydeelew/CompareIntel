@@ -560,7 +560,7 @@ async def get_current_user_info(current_user: User = Depends(get_current_user_re
     - Refreshes user data from database to get latest usage counts
     """
     # Refresh the user object from the database to get the latest data
-    # This is important after usage increments in /compare endpoint
+    # This is important after usage increments in /compare-stream endpoint
     db.refresh(current_user)
     print(f"[/auth/me] Returning user data for {current_user.email}: credits_used={current_user.credits_used_this_period}")
     return current_user
