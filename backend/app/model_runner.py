@@ -599,19 +599,22 @@ def preload_model_token_limits() -> None:
     """
     Preload model token limits from OpenRouter on application startup.
     This ensures limits are available immediately without waiting for first request.
+    Only preloads limits for models configured in OPENROUTER_MODELS.
     """
     logger.info("Preloading model token limits from OpenRouter...")
     try:
         all_models = fetch_all_models_from_openrouter()
         if all_models:
-            # Extract and cache token limits for all models
+            # Extract and cache token limits only for configured models
+            configured_model_ids = {model["id"] for model in OPENROUTER_MODELS}
             limits_dict = {}
-            for mid, model_data in all_models.items():
-                limits = _extract_token_limits(model_data)
-                limits_dict[mid] = limits
+            for mid in configured_model_ids:
+                if mid in all_models:
+                    limits = _extract_token_limits(all_models[mid])
+                    limits_dict[mid] = limits
 
             _model_token_limits_cache.update(limits_dict)
-            logger.info(f"Preloaded token limits for {len(limits_dict)} models")
+            logger.info(f"Preloaded token limits for {len(limits_dict)} configured models")
         else:
             logger.warning("Failed to preload model token limits from OpenRouter")
     except Exception as e:
