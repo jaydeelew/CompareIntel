@@ -5,7 +5,7 @@ This module defines all database models including users, preferences,
 conversations, and usage tracking.
 """
 
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, Date, Text, ForeignKey, DECIMAL
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, Date, Text, ForeignKey, DECIMAL, BigInteger, UniqueConstraint
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from .database import Base
@@ -290,6 +290,48 @@ class CreditTransaction(Base):
     # Relationships
     user = relationship("User", back_populates="credit_transactions")
     usage_log = relationship("UsageLog", back_populates="credit_transactions")
+
+
+class UsageLogMonthlyAggregate(Base):
+    """Monthly aggregated usage statistics for long-term analysis and data retention."""
+
+    __tablename__ = "usage_log_monthly_aggregates"
+
+    id = Column(Integer, primary_key=True, index=True)
+    year = Column(Integer, nullable=False, index=True)
+    month = Column(Integer, nullable=False, index=True)
+
+    # Aggregated statistics
+    total_comparisons = Column(Integer, default=0)
+    total_models_requested = Column(Integer, default=0)
+    total_models_successful = Column(Integer, default=0)
+    total_models_failed = Column(Integer, default=0)
+
+    # Token aggregates
+    total_input_tokens = Column(BigInteger, default=0)
+    total_output_tokens = Column(BigInteger, default=0)
+    total_effective_tokens = Column(BigInteger, default=0)
+    avg_input_tokens = Column(DECIMAL(10, 2), default=0)
+    avg_output_tokens = Column(DECIMAL(10, 2), default=0)
+    avg_output_ratio = Column(DECIMAL(10, 4), default=0)  # output/input ratio
+
+    # Credit aggregates
+    total_credits_used = Column(DECIMAL(12, 4), default=0)
+    avg_credits_per_comparison = Column(DECIMAL(10, 4), default=0)
+
+    # Cost aggregates
+    total_actual_cost = Column(DECIMAL(12, 4), default=0)
+    total_estimated_cost = Column(DECIMAL(12, 4), default=0)
+
+    # Model breakdown (JSON: {"model_id": {"count": N, "avg_input_tokens": X, "avg_output_tokens": Y, "total_credits": Z}})
+    model_breakdown = Column(Text)  # JSON
+
+    created_at = Column(DateTime, default=func.now())
+    updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
+
+    __table_args__ = (
+        UniqueConstraint('year', 'month', name='uq_usage_log_monthly_year_month'),
+    )
 
 
 class AppSettings(Base):

@@ -10,7 +10,7 @@ from fastapi.responses import StreamingResponse, JSONResponse
 from pydantic import BaseModel, ConfigDict
 from typing import Optional, Dict, Any, Union
 from sqlalchemy.orm import Session
-from sqlalchemy import func, cast, Date
+from sqlalchemy import func
 from collections import defaultdict
 from datetime import datetime, timezone
 import asyncio
@@ -838,15 +838,15 @@ async def compare_stream(
                         # Deduct credits for anonymous user
                         ip_identifier = f"ip:{client_ip}"
                         deduct_anonymous_credits(ip_identifier, total_credits_used)
-                        # Get updated IP credit balance
-                        _, ip_credits_remaining, _ = check_anonymous_credits(ip_identifier, Decimal(0), db)
+                        # Get updated IP credit balance (no db arg - read from memory only)
+                        _, ip_credits_remaining, _ = check_anonymous_credits(ip_identifier, Decimal(0))
                         
                         fingerprint_credits_remaining = ip_credits_remaining
                         if req.browser_fingerprint:
                             fp_identifier = f"fp:{req.browser_fingerprint}"
                             deduct_anonymous_credits(fp_identifier, total_credits_used)
-                            # Get updated fingerprint credit balance
-                            _, fingerprint_credits_remaining, _ = check_anonymous_credits(fp_identifier, Decimal(0), db)
+                            # Get updated fingerprint credit balance (no db arg - read from memory only)
+                            _, fingerprint_credits_remaining, _ = check_anonymous_credits(fp_identifier, Decimal(0))
                         
                         # Use the most restrictive limit (lowest remaining credits) - same logic as at start
                         credits_remaining = min(ip_credits_remaining, fingerprint_credits_remaining if req.browser_fingerprint else ip_credits_remaining)
@@ -1282,14 +1282,14 @@ async def get_credit_balance(
         credits_allocated = DAILY_CREDIT_LIMITS.get("anonymous", 50)
         
         # Calculate credits used today from UsageLog (database) - this persists across restarts
-        # Use date() comparison to avoid timezone issues between Python UTC and database timezone
-        today_date = datetime.now(timezone.utc).date()
+        # Use func.date() for SQLite compatibility (CAST AS DATE doesn't work properly in SQLite)
+        today_date = datetime.now(timezone.utc).date().isoformat()  # Format as 'YYYY-MM-DD'
         
         # Query UsageLog for credits used today by IP
         ip_credits_query = db.query(func.sum(UsageLog.credits_used)).filter(
             UsageLog.user_id.is_(None),  # Anonymous users only
             UsageLog.ip_address == client_ip,
-            cast(UsageLog.created_at, Date) == today_date,
+            func.date(UsageLog.created_at) == today_date,
             UsageLog.credits_used.isnot(None)
         )
         ip_credits_used = ip_credits_query.scalar() or Decimal(0)
@@ -1304,7 +1304,7 @@ async def get_credit_balance(
             fp_credits_query = db.query(func.sum(UsageLog.credits_used)).filter(
                 UsageLog.user_id.is_(None),  # Anonymous users only
                 UsageLog.browser_fingerprint == fingerprint,
-                cast(UsageLog.created_at, Date) == today_date,
+                func.date(UsageLog.created_at) == today_date,
                 UsageLog.credits_used.isnot(None)
             )
             fp_credits_used = fp_credits_query.scalar() or Decimal(0)

@@ -6,6 +6,7 @@ user CRUD operations, role management, and audit logging.
 """
 
 from fastapi import APIRouter, Depends, HTTPException, status, Request, Query
+from fastapi import Request
 from fastapi.responses import JSONResponse, StreamingResponse
 from sqlalchemy.orm import Session
 from sqlalchemy import func, desc, and_
@@ -1089,6 +1090,69 @@ async def zero_anonymous_usage(
         "entries_cleared": len(keys_to_remove),
         "database_entries_deleted": usage_logs_deleted,
     }
+
+
+@router.post("/maintenance/cleanup-usage-logs")
+async def cleanup_usage_logs(
+    request: Request,
+    keep_days: int = 90,
+    dry_run: bool = False,
+    current_user: User = Depends(require_admin_role("admin")),
+    db: Session = Depends(get_db),
+):
+    """
+    Cleanup old UsageLog entries by aggregating them into monthly summaries.
+    
+    This endpoint aggregates UsageLog entries older than keep_days into monthly
+    summary records and then deletes the detailed entries. This helps manage
+    database growth while preserving aggregated data for long-term analysis.
+    
+    The aggregated data includes:
+    - Total comparisons, models requested/successful/failed
+    - Token aggregates (total and average input/output tokens)
+    - Credit aggregates (total and average credits per comparison)
+    - Cost aggregates (total actual and estimated costs)
+    - Model breakdown (per-model statistics)
+    
+    Detailed UsageLog entries are needed for:
+    - Token estimation (requires ~30 days of detailed data)
+    - Recent usage analysis
+    
+    Aggregated monthly summaries are kept indefinitely for:
+    - Long-term trend analysis
+    - Cost analysis over time
+    - Historical reporting
+    
+    Args:
+        keep_days: Number of days of detailed data to keep (default: 90)
+        dry_run: If True, only report what would be deleted, don't actually delete
+    
+    Returns:
+        Dictionary with cleanup statistics
+    """
+    from ..data_retention import cleanup_old_usage_logs
+    
+    try:
+        result = cleanup_old_usage_logs(db, keep_days=keep_days, dry_run=dry_run)
+        
+        # Log admin action
+        log_admin_action(
+            db=db,
+            admin_user=current_user,
+            action_type="cleanup_usage_logs",
+            action_description=f"Cleanup UsageLog entries older than {keep_days} days (dry_run={dry_run})",
+            target_user_id=None,
+            details=result,
+            request=request,
+        )
+        
+        return result
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error during cleanup: {str(e)}"
+        )
 
 
 # Model Management Endpoints

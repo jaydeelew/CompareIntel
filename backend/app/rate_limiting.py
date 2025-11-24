@@ -17,7 +17,7 @@ from typing import Optional, Tuple, Dict, Any
 from sqlalchemy.orm import Session
 from decimal import Decimal, ROUND_CEILING
 from .models import User, UsageLog
-from sqlalchemy import func, cast, Date
+from sqlalchemy import func
 from collections import defaultdict
 from .types import (
     UsageStatsDict,
@@ -144,12 +144,12 @@ def check_anonymous_credits(identifier: str, required_credits: Decimal, db: Opti
         if identifier.startswith("ip:"):
             ip_address = identifier[3:]  # Remove "ip:" prefix
             # Query UsageLog for credits used today
-            # Use date() comparison to avoid timezone issues between Python UTC and database timezone
-            today_date = datetime.now(timezone.utc).date()
+            # Use func.date() for SQLite compatibility (CAST AS DATE doesn't work properly in SQLite)
+            today_date = datetime.now(timezone.utc).date().isoformat()  # Format as 'YYYY-MM-DD'
             credits_query = db.query(func.sum(UsageLog.credits_used)).filter(
                 UsageLog.user_id.is_(None),  # Anonymous users only
                 UsageLog.ip_address == ip_address,
-                cast(UsageLog.created_at, Date) == today_date,
+                func.date(UsageLog.created_at) == today_date,
                 UsageLog.credits_used.isnot(None),
             )
             db_credits_used = credits_query.scalar() or Decimal(0)
@@ -161,12 +161,12 @@ def check_anonymous_credits(identifier: str, required_credits: Decimal, db: Opti
         elif identifier.startswith("fp:"):
             fingerprint = identifier[3:]  # Remove "fp:" prefix
             # Query UsageLog for credits used today
-            # Use date() comparison to avoid timezone issues between Python UTC and database timezone
-            today_date = datetime.now(timezone.utc).date()
+            # Use func.date() for SQLite compatibility (CAST AS DATE doesn't work properly in SQLite)
+            today_date = datetime.now(timezone.utc).date().isoformat()  # Format as 'YYYY-MM-DD'
             credits_query = db.query(func.sum(UsageLog.credits_used)).filter(
                 UsageLog.user_id.is_(None),  # Anonymous users only
                 UsageLog.browser_fingerprint == fingerprint,
-                cast(UsageLog.created_at, Date) == today_date,
+                func.date(UsageLog.created_at) == today_date,
                 UsageLog.credits_used.isnot(None),
             )
             db_credits_used = credits_query.scalar() or Decimal(0)
