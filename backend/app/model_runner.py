@@ -608,13 +608,18 @@ def preload_model_token_limits() -> None:
             # Extract and cache token limits only for configured models
             configured_model_ids = {model["id"] for model in OPENROUTER_MODELS}
             limits_dict = {}
+            missing_models = []
             for mid in configured_model_ids:
                 if mid in all_models:
                     limits = _extract_token_limits(all_models[mid])
                     limits_dict[mid] = limits
+                else:
+                    missing_models.append(mid)
 
             _model_token_limits_cache.update(limits_dict)
             logger.info(f"Preloaded token limits for {len(limits_dict)} configured models")
+            if missing_models:
+                logger.info(f"Skipped {len(missing_models)} model(s) not available from OpenRouter: {', '.join(missing_models)}")
         else:
             logger.warning("Failed to preload model token limits from OpenRouter")
     except Exception as e:
