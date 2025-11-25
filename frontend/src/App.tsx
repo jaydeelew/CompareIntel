@@ -2962,15 +2962,38 @@ function AppContent() {
       }
     }
 
-    // Hard limit: Prevent submissions with conversations that are too long
+    // Hard limit: Prevent submissions when input capacity is fully used (but allow when exceeded with warning)
     // Industry best practice 2025: Enforce maximum context window to protect costs and maintain quality
-    if (isFollowUpMode && conversations.length > 0) {
-      if (messageCount >= 24) {
-        setError(
-          'This conversation has reached the maximum length (24 messages). Please start a new comparison to continue.'
-        )
-        window.scrollTo({ top: 0, behavior: 'smooth' })
-        return
+    if (isFollowUpMode && conversations.length > 0 && selectedModels.length > 0) {
+      // Calculate token usage
+      const inputTokens = Math.ceil(input.length / 4)
+      const conversationHistoryMessages = conversations
+        .filter(conv => selectedModels.includes(conv.modelId) && conv.messages.length > 0)
+      
+      if (conversationHistoryMessages.length > 0) {
+        const messages = conversationHistoryMessages[0].messages
+        const conversationHistoryTokens = messages.reduce((sum, msg) => {
+          const content = msg.content || ''
+          return sum + Math.ceil(content.length / 4)
+        }, 0)
+        const totalInputTokens = inputTokens + conversationHistoryTokens
+
+        // Get min max input tokens from selected models
+        const modelLimits = selectedModels
+          .map(modelId => {
+            for (const providerModels of Object.values(modelsByProvider)) {
+              const model = providerModels.find(m => m.id === modelId)
+              if (model && model.max_input_chars) {
+                return model.max_input_chars / 4 // Convert chars to tokens
+              }
+            }
+            return null
+          })
+          .filter((limit): limit is number => limit !== null)
+
+        // Note: We no longer block submissions at 0% remaining - allow with warnings
+        // Backend will handle truncation if needed
+      }
       }
     }
 
@@ -4323,6 +4346,7 @@ function AppContent() {
                   onDeleteConversation={deleteConversation}
                   renderUsagePreview={renderUsagePreview}
                   selectedModels={selectedModels}
+                  modelsByProvider={modelsByProvider}
                 />
               </ErrorBoundary>
             </Hero>

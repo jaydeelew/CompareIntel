@@ -1,6 +1,7 @@
-import React, { memo, useEffect, useCallback } from 'react';
+import React, { memo, useEffect, useCallback, useMemo } from 'react';
 import type { User } from '../../types';
 import type { ConversationSummary, ModelConversation } from '../../types';
+import type { ModelsByProvider } from '../../types/models';
 import { truncatePrompt, formatDate } from '../../utils';
 import { getConversationLimit, getDailyLimit } from '../../config/constants';
 
@@ -43,6 +44,9 @@ interface ComparisonFormProps {
 
   // Model selection
   selectedModels: string[];
+  
+  // Models data for token limit calculations
+  modelsByProvider: ModelsByProvider;
 }
 
 /**
@@ -82,8 +86,72 @@ export const ComparisonForm = memo<ComparisonFormProps>(({
   onDeleteConversation,
   renderUsagePreview,
   selectedModels,
+  modelsByProvider,
 }) => {
   const messageCount = conversations.length > 0 ? conversations[0]?.messages.length || 0 : 0;
+
+  // Calculate token usage and percentage remaining
+  const tokenUsageInfo = useMemo(() => {
+    if (!isFollowUpMode || selectedModels.length === 0 || conversations.length === 0) {
+      return null;
+    }
+
+    // Get min max input tokens from selected models (convert max_input_chars to tokens by dividing by 4)
+    const modelLimits = selectedModels
+      .map(modelId => {
+        for (const providerModels of Object.values(modelsByProvider)) {
+          const model = providerModels.find(m => m.id === modelId);
+          if (model && model.max_input_chars) {
+            // Convert chars to tokens (1 token ≈ 4 chars)
+            return model.max_input_chars / 4;
+          }
+        }
+        return null;
+      })
+      .filter((limit): limit is number => limit !== null);
+
+    if (modelLimits.length === 0) {
+      return null;
+    }
+
+    const minMaxInputTokens = Math.min(...modelLimits);
+
+    // Calculate current input token usage
+    // Current input tokens
+    const currentInputTokens = Math.ceil(input.length / 4);
+
+    // Conversation history tokens
+    const conversationHistoryMessages = conversations
+      .filter(conv => selectedModels.includes(conv.modelId) && conv.messages.length > 0);
+    
+    if (conversationHistoryMessages.length === 0) {
+      return null;
+    }
+
+    // Use the first selected conversation's messages
+    const messages = conversationHistoryMessages[0].messages;
+    const conversationHistoryTokens = messages.reduce((sum, msg) => {
+      const content = msg.content || '';
+      return sum + Math.ceil(content.length / 4);
+    }, 0);
+
+    // Total input tokens (current input + conversation history)
+    const totalInputTokens = currentInputTokens + conversationHistoryTokens;
+
+    // Calculate percentage remaining
+    const percentageUsed = (totalInputTokens / minMaxInputTokens) * 100;
+    const percentageRemaining = Math.max(0, 100 - percentageUsed);
+
+    return {
+      minMaxInputTokens,
+      currentInputTokens,
+      conversationHistoryTokens,
+      totalInputTokens,
+      percentageUsed,
+      percentageRemaining,
+      isExceeded: totalInputTokens > minMaxInputTokens,
+    };
+  }, [isFollowUpMode, selectedModels, conversations, input, modelsByProvider]);
 
   // Auto-expand textarea based on content (like ChatGPT)
   // Scrollable after 5 lines (6th line triggers scrolling)
@@ -245,7 +313,9 @@ export const ComparisonForm = memo<ComparisonFormProps>(({
               WebkitBackgroundClip: 'text',
               backgroundClip: 'text'
             }}>
-              {messageCount + (input.trim() ? 1 : 0)} message context
+              {tokenUsageInfo 
+                ? `${Math.round(tokenUsageInfo.percentageRemaining)}% capacity remaining`
+                : `${messageCount + (input.trim() ? 1 : 0)} message context`}
             </span>
           </>
         ) : (
@@ -300,13 +370,15 @@ export const ComparisonForm = memo<ComparisonFormProps>(({
           <div className="textarea-actions">
             <button
               onClick={isFollowUpMode ? onContinueConversation : onSubmitClick}
-              disabled={(() => {
-                return isLoading ||
-                  (isFollowUpMode && messageCount >= 24);
-              })()}
+              disabled={isLoading}
               className={`textarea-icon-button submit-button ${!isFollowUpMode && !input.trim() ? 'not-ready' : ''} ${isAnimatingButton ? 'animate-pulse-glow' : ''}`}
               title={(() => {
-                if (messageCount >= 24) return 'Maximum conversation length reached - start a new comparison';
+                if (isFollowUpMode && tokenUsageInfo) {
+                  if (tokenUsageInfo.isExceeded) {
+                    return 'Input capacity exceeded - inputs may be truncated';
+                  }
+                  return 'Continue conversation';
+                }
                 return isFollowUpMode ? 'Continue conversation' : 'Compare models';
               })()}
               data-testid="comparison-submit-button"
@@ -437,26 +509,40 @@ export const ComparisonForm = memo<ComparisonFormProps>(({
         let warningMessage = '';
         let warningIcon = '';
 
-        if (messageCount >= 24) {
-          warningLevel = 'critical';
-          warningIcon = '🚫';
-          warningMessage = 'Maximum conversation length reached (24 messages). Please start a fresh comparison for continued assistance.';
-        } else if (messageCount >= 20) {
-          warningLevel = 'critical';
-          warningIcon = '✨';
-          warningMessage = 'Time for a fresh start! Starting a new comparison will give you the best response quality and speed.';
-        } else if (messageCount >= 14) {
-          warningLevel = 'high';
-          warningIcon = '💡';
-          warningMessage = 'Consider starting a fresh comparison! New conversations help maintain optimal context and response quality.';
-        } else if (messageCount >= 10) {
-          warningLevel = 'medium';
-          warningIcon = '🎯';
-          warningMessage = 'Pro tip: Fresh comparisons provide more focused and relevant responses!';
-        } else if (messageCount >= 6) {
-          warningLevel = 'info';
-          warningIcon = 'ℹ️';
-          warningMessage = 'Reminder: Starting a new comparison helps keep responses sharp and context-focused.';
+        if (tokenUsageInfo) {
+          const { percentageRemaining, isExceeded } = tokenUsageInfo;
+
+          if (isExceeded) {
+            // Exceeded max input - allow but warn about consequences
+            warningLevel = 'critical';
+            warningIcon = '⚠️';
+            warningMessage = 'You\'ve exceeded the maximum input capacity. Inputs may be truncated. Starting a new comparison is strongly recommended for best results.';
+          } else if (percentageRemaining <= 0) {
+            // At max input
+            warningLevel = 'critical';
+            warningIcon = '🚫';
+            warningMessage = 'Maximum input capacity reached. Please start a fresh comparison for continued assistance.';
+          } else if (percentageRemaining <= 10) {
+            // 0-10% remaining
+            warningLevel = 'critical';
+            warningIcon = '✨';
+            warningMessage = 'Time for a fresh start! Starting a new comparison will give you the best response quality and speed.';
+          } else if (percentageRemaining <= 25) {
+            // 10-25% remaining
+            warningLevel = 'high';
+            warningIcon = '💡';
+            warningMessage = 'Consider starting a fresh comparison! New conversations help maintain optimal context and response quality.';
+          } else if (percentageRemaining <= 50) {
+            // 25-50% remaining
+            warningLevel = 'medium';
+            warningIcon = '🎯';
+            warningMessage = 'Pro tip: Fresh comparisons provide more focused and relevant responses!';
+          } else if (percentageRemaining <= 75) {
+            // 50-75% remaining
+            warningLevel = 'info';
+            warningIcon = 'ℹ️';
+            warningMessage = 'Reminder: Starting a new comparison helps keep responses sharp and context-focused.';
+          }
         }
 
         return (
