@@ -102,19 +102,21 @@ def deduct_credits(
     if not user:
         raise ValueError(f"User {user_id} not found")
     
-    # Check if user has sufficient credits
+    # Calculate new credits_used_this_period
     allocated = user.monthly_credits_allocated or 0
     used = user.credits_used_this_period or 0
-    remaining = allocated - used
+    new_used = used + credits_int
     
-    if remaining < credits_int:
-        raise ValueError(
-            f"Insufficient credits: {remaining} remaining, {credits_int} required"
-        )
-    
-    # Update user's credit usage
-    user.credits_used_this_period = (user.credits_used_this_period or 0) + credits_int
-    user.total_credits_used = (user.total_credits_used or 0) + credits_int
+    # Cap credits_used_this_period at allocated amount (zero out credits, don't go negative)
+    # This allows comparisons to proceed even if they exceed remaining credits
+    if new_used > allocated:
+        user.credits_used_this_period = allocated
+        # Still track actual usage in total_credits_used for analytics
+        user.total_credits_used = (user.total_credits_used or 0) + credits_int
+    else:
+        # Normal deduction - credits are sufficient
+        user.credits_used_this_period = new_used
+        user.total_credits_used = (user.total_credits_used or 0) + credits_int
     
     # Create credit transaction record
     # Store exact Decimal value in transaction (as integer representing millicredits for precision)
@@ -324,12 +326,31 @@ def check_and_reset_credits_if_needed(user_id: int, db: Session) -> None:
     if user.credits_reset_at:
         now = datetime.now(timezone.utc)
         if now >= user.credits_reset_at:
-            # Reset needed
+            # Reset needed - reset time has passed
             if tier in DAILY_CREDIT_LIMITS:
                 reset_daily_credits(user_id, tier, db)
             elif tier in MONTHLY_CREDIT_ALLOCATIONS:
                 allocate_monthly_credits(user_id, tier, db)
     else:
-        # No reset time set - ensure credits are allocated
-        ensure_credits_allocated(user_id, db)
+        # No reset time set - this could mean:
+        # 1. New user who hasn't been allocated credits yet
+        # 2. User whose credits were never properly initialized
+        # Ensure credits are allocated, and if they're already allocated but exhausted,
+        # reset them (this handles edge cases where credits_reset_at was lost)
+        allocated = user.monthly_credits_allocated or 0
+        used = user.credits_used_this_period or 0
+        
+        if allocated == 0:
+            # No credits allocated - ensure they're allocated
+            ensure_credits_allocated(user_id, db)
+        elif allocated > 0 and used >= allocated:
+            # Credits are allocated but exhausted - reset them
+            if tier in DAILY_CREDIT_LIMITS:
+                reset_daily_credits(user_id, tier, db)
+            elif tier in MONTHLY_CREDIT_ALLOCATIONS:
+                allocate_monthly_credits(user_id, tier, db)
+        else:
+            # Credits are allocated and not exhausted, but no reset time set
+            # Set the reset time based on tier
+            ensure_credits_allocated(user_id, db)
 

@@ -41,8 +41,8 @@ import {
   compareStream,
 } from './services/compareService'
 import { getConversation } from './services/conversationService'
-import { estimateCredits, getCreditBalance } from './services/creditService'
-import type { CreditBalance, CreditEstimate } from './services/creditService'
+import { getCreditBalance } from './services/creditService'
+import type { CreditBalance } from './services/creditService'
 import { getAvailableModels } from './services/modelsService'
 import type {
   CompareResponse,
@@ -172,9 +172,6 @@ function AppContent() {
   const [creditWarningMessage, setCreditWarningMessage] = useState<string | null>(null)
   const [creditWarningType, setCreditWarningType] = useState<'low' | 'insufficient' | 'none' | null>(null)
   const [creditWarningDismissible, setCreditWarningDismissible] = useState(false)
-  const [backendCreditEstimate, setBackendCreditEstimate] = useState<CreditEstimate | null>(null)
-  const [isEstimatingCredits, setIsEstimatingCredits] = useState(false)
-  const estimateDebounceTimeoutRef = useRef<number | null>(null)
 
   // Callback for when the active conversation is deleted
   const handleDeleteActiveConversation = useCallback(() => {
@@ -277,125 +274,8 @@ function AppContent() {
     setCreditWarningDismissible(false)
   }, [])
 
-  // Set/update credit warnings based on backend estimate (while user is typing/selecting)
-  useEffect(() => {
-    // Only show warnings if user has selected models and entered input
-    if (!input.trim() || selectedModels.length === 0) {
-      // Clear warnings if input is empty or no models selected
-      if (creditWarningType === 'insufficient' || creditWarningType === 'low') {
-        setCreditWarningMessage(null)
-        setCreditWarningType(null)
-        setCreditWarningDismissible(false)
-      }
-      return
-    }
-
-    // Don't show warnings while loading estimate (to avoid flicker)
-    if (isEstimatingCredits) {
-      return
-    }
-
-    const userTier = isAuthenticated ? user?.subscription_tier || 'free' : 'anonymous'
-    const creditsResetAt = creditBalance?.credits_reset_at || user?.credits_reset_at
-
-    if (backendCreditEstimate) {
-      // Use backend estimate (most accurate)
-      const estimate = backendCreditEstimate
-      
-      // No credits - show no credits warning
-      if (estimate.credits_remaining <= 0) {
-        const message = getCreditWarningMessage('none', userTier, estimate.credits_remaining, undefined, creditsResetAt)
-        setCreditWarningMessage(message)
-        setCreditWarningType('none')
-        setCreditWarningDismissible(false)
-        return
-      }
-
-      // Insufficient credits - show insufficient warning
-      if (!estimate.is_sufficient) {
-        const message = getCreditWarningMessage('insufficient', userTier, estimate.credits_remaining, estimate.estimated_credits)
-        setCreditWarningMessage(message)
-        setCreditWarningType('insufficient')
-        setCreditWarningDismissible(false)
-        return
-      }
-
-      // Sufficient credits - check for low credits warning
-      const remainingPercent = estimate.credits_allocated > 0
-        ? (estimate.credits_remaining / estimate.credits_allocated) * 100
-        : 100
-      const periodType = userTier === 'anonymous' || userTier === 'free' ? 'daily' : 'monthly'
-      const lowCreditThreshold = (userTier === 'anonymous' || userTier === 'free') ? 20 : 10
-      
-      if (remainingPercent <= lowCreditThreshold && remainingPercent > 0) {
-        // Check if already dismissed for this period
-        if (!isLowCreditWarningDismissed(userTier, periodType, creditsResetAt)) {
-          const message = getCreditWarningMessage('low', userTier, estimate.credits_remaining, undefined, creditsResetAt)
-          setCreditWarningMessage(message)
-          setCreditWarningType('low')
-          setCreditWarningDismissible(true)
-        } else {
-          // Clear if dismissed
-          if (creditWarningType === 'low') {
-            setCreditWarningMessage(null)
-            setCreditWarningType(null)
-            setCreditWarningDismissible(false)
-          }
-        }
-      } else {
-        // Clear warnings if credits are sufficient and not low
-        if (creditWarningType === 'low' || creditWarningType === 'insufficient') {
-          setCreditWarningMessage(null)
-          setCreditWarningType(null)
-          setCreditWarningDismissible(false)
-        }
-      }
-    } else {
-      // No backend estimate yet - use local calculation as fallback
-      const creditsAllocated = creditBalance?.credits_allocated ?? (isAuthenticated && user 
-        ? (user.monthly_credits_allocated || getCreditAllocation(userTier))
-        : getDailyCreditLimit(userTier) || getCreditAllocation(userTier))
-      
-      let creditsRemaining: number
-      if (!isAuthenticated && anonymousCreditsRemaining !== null) {
-        creditsRemaining = anonymousCreditsRemaining
-      } else if (creditBalance?.credits_remaining !== undefined) {
-        creditsRemaining = creditBalance.credits_remaining
-      } else {
-        const creditsUsed = creditBalance?.credits_used_this_period ?? creditBalance?.credits_used_today ?? (isAuthenticated && user 
-          ? (user.credits_used_this_period || 0)
-          : 0)
-        creditsRemaining = Math.max(0, creditsAllocated - creditsUsed)
-      }
-
-      // Rough local estimate
-      const inputTokens = Math.ceil(input.length / 4)
-      const outputTokensPerModel = 1000
-      const effectiveTokensPerModel = inputTokens + (outputTokensPerModel * 2.5)
-      const creditsPerModel = effectiveTokensPerModel / 1000
-      const estimatedCredits = Math.ceil(creditsPerModel * selectedModels.length)
-
-      // Check for insufficient credits with local estimate
-      if (creditsRemaining <= 0) {
-        const message = getCreditWarningMessage('none', userTier, creditsRemaining, undefined, creditsResetAt)
-        setCreditWarningMessage(message)
-        setCreditWarningType('none')
-        setCreditWarningDismissible(false)
-      } else if (estimatedCredits > creditsRemaining) {
-        const message = getCreditWarningMessage('insufficient', userTier, creditsRemaining, estimatedCredits)
-        setCreditWarningMessage(message)
-        setCreditWarningType('insufficient')
-        setCreditWarningDismissible(false)
-      } else {
-        // Clear insufficient warning if local estimate shows sufficient credits
-        if (creditWarningType === 'insufficient') {
-          setCreditWarningMessage(null)
-          setCreditWarningType(null)
-          setCreditWarningDismissible(false)
-        }
-      }
-    }
-  }, [input, selectedModels, backendCreditEstimate, isEstimatingCredits, creditBalance, anonymousCreditsRemaining, user, isAuthenticated, creditWarningType, getCreditWarningMessage, isLowCreditWarningDismissed])
+  // Credit warnings removed - comparisons are allowed to proceed regardless of credit balance
+  // Credits will be capped at allocated amount during deduction if needed
 
   const {
     conversationHistory,
@@ -648,63 +528,7 @@ function AppContent() {
   }, [isAuthenticated, authLoading])
 
   // Fetch backend credit estimate when input/models change (debounced)
-  useEffect(() => {
-    // Clear any pending timeout
-    if (estimateDebounceTimeoutRef.current !== null) {
-      clearTimeout(estimateDebounceTimeoutRef.current)
-    }
-
-    // Don't estimate if input is empty or no models selected
-    if (!input.trim() || selectedModels.length === 0) {
-      setBackendCreditEstimate(null)
-      return
-    }
-
-    // Debounce the API call (500ms delay)
-    estimateDebounceTimeoutRef.current = window.setTimeout(async () => {
-      setIsEstimatingCredits(true)
-      try {
-        // Build conversation history from conversations if in follow-up mode
-        const conversationHistoryMessages = isFollowUpMode && conversations.length > 0
-          ? (() => {
-              // Get the first conversation that has messages and is for a selected model
-              const selectedConversations = conversations.filter(
-                conv => selectedModels.includes(conv.modelId) && conv.messages.length > 0
-              )
-              if (selectedConversations.length === 0) return []
-              // Use the first selected conversation's messages
-              return selectedConversations[0].messages
-            })()
-          : []
-
-        // Convert to API format
-        const conversationHistory = conversationHistoryMessages.map(msg => ({
-          role: msg.role || 'user',
-          content: msg.content || ''
-        }))
-
-        const estimate = await estimateCredits({
-          input_data: input,
-          models: selectedModels,
-          conversation_history: conversationHistory,
-        })
-        setBackendCreditEstimate(estimate)
-      } catch (error) {
-        // Silently fail - we'll fall back to local calculation
-        console.error('Failed to fetch credit estimate:', error)
-        setBackendCreditEstimate(null)
-      } finally {
-        setIsEstimatingCredits(false)
-      }
-    }, 500)
-
-    // Cleanup function
-    return () => {
-      if (estimateDebounceTimeoutRef.current !== null) {
-        clearTimeout(estimateDebounceTimeoutRef.current)
-      }
-    }
-  }, [input, selectedModels, isFollowUpMode, conversations])
+  // Credit estimation removed - no longer needed since comparisons proceed regardless of credit balance
 
   // Screenshot handler for message area only
 
@@ -3206,17 +3030,8 @@ function AppContent() {
     // Total estimated credits
     const estimatedCredits = Math.ceil(creditsPerModel * modelsNeeded)
 
-    // No credits - block submission (warnings are set by useEffect based on backendCreditEstimate)
-    if (creditsRemaining <= 0) {
-      const creditsResetAt = creditBalance?.credits_reset_at || user?.credits_reset_at
-      const message = getCreditWarningMessage('none', userTier, creditsRemaining, undefined, creditsResetAt)
-      setCreditWarningMessage(message)
-      setCreditWarningType('none')
-      setCreditWarningDismissible(false)
-      setError(null) // Clear any other errors
-      window.scrollTo({ top: 0, behavior: 'smooth' })
-      return
-    }
+    // Credit blocking removed - allow comparisons to proceed regardless of credit balance
+    // Credits will be capped at allocated amount during deduction, then blocked on next request if at 0
 
 
     if (!input.trim()) {
@@ -3303,7 +3118,7 @@ function AppContent() {
           })()
         : []
 
-    // Credit warnings are already set by useEffect based on backendCreditEstimate
+    // Credit warnings removed - comparisons proceed regardless of credit balance
     // No need to re-estimate here - just proceed with submission
 
     setIsLoading(true)
@@ -4360,50 +4175,7 @@ function AppContent() {
     // Calculate what will be used
     const regularToUse = selectedModels.length
 
-    // If input is empty, show 0 credits (before debouncing completes)
-    // This ensures the estimate is zero until the user begins entering text
-    let estimatedCredits: number
-    if (!input.trim()) {
-      estimatedCredits = 0
-    } else if (backendCreditEstimate) {
-      // Use backend estimate (uses tiktoken and 2000 output tokens)
-      estimatedCredits = Math.ceil(backendCreditEstimate.estimated_credits)
-    } else {
-      // Fallback: local calculation (less accurate, but immediate)
-      // Base estimate: ~4 characters per token, ~1000 tokens = 1 credit
-      // Conversation history adds to input tokens
-      const inputTokens = Math.ceil(input.length / 4) // Rough estimate: 4 chars per token
-      // Build conversation history from conversations prop (not from hook's conversationHistory)
-      const conversationHistoryMessages = isFollowUpMode && conversations.length > 0
-        ? (() => {
-            // Get the first conversation that has messages and is for a selected model
-            const selectedConversations = conversations.filter(
-              conv => selectedModels.includes(conv.modelId) && conv.messages.length > 0
-            )
-            if (selectedConversations.length === 0) return []
-            // Use the first selected conversation's messages
-            return selectedConversations[0].messages
-          })()
-        : []
-      const conversationHistoryTokens = conversationHistoryMessages.length > 0
-        ? conversationHistoryMessages.reduce((sum, msg) => {
-            // Safely handle messages that might not have content
-            const content = msg.content || ''
-            return sum + Math.ceil(content.length / 4)
-          }, 0)
-        : 0
-      const totalInputTokens = inputTokens + conversationHistoryTokens
-      
-      // Estimate output tokens: ~500-1500 tokens per model response (use 1000 as average)
-      // Effective tokens = input_tokens + (output_tokens × 2.5)
-      // Credits = effective_tokens / 1000
-      const outputTokensPerModel = 1000
-      const effectiveTokensPerModel = totalInputTokens + (outputTokensPerModel * 2.5)
-      const creditsPerModel = effectiveTokensPerModel / 1000
-      
-      // Total estimated credits
-      estimatedCredits = Math.ceil(creditsPerModel * regularToUse)
-    }
+    // Credit estimation removed - no longer needed since comparisons proceed regardless
 
     return (
       <div
@@ -4416,7 +4188,6 @@ function AppContent() {
         {/* Credits Display (Primary) */}
         <span>
           <strong>{regularToUse}</strong> {regularToUse === 1 ? 'model' : 'models'} selected •{' '}
-          Estimated: <strong>~{estimatedCredits}</strong> credits{isEstimatingCredits && !backendCreditEstimate ? '...' : ''} •{' '}
           <strong>{Math.round(creditsRemaining)}</strong> credits remaining
         </span>
       </div>
@@ -4427,9 +4198,6 @@ function AppContent() {
     creditBalance,
     anonymousCreditsRemaining,
     selectedModels,
-    input,
-    backendCreditEstimate,
-    isEstimatingCredits,
     isFollowUpMode,
     conversations,
   ])

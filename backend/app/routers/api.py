@@ -32,7 +32,7 @@ from ..models import (
     Conversation,
     ConversationMessage as ConversationMessageModel,
 )
-from ..credit_manager import ensure_credits_allocated, get_user_credits, get_credit_usage_stats
+from ..credit_manager import ensure_credits_allocated, get_user_credits, get_credit_usage_stats, check_and_reset_credits_if_needed
 from decimal import Decimal, ROUND_CEILING
 from ..database import get_db
 from ..dependencies import get_current_user
@@ -58,9 +58,7 @@ router = APIRouter(tags=["API"])
 
 # In-memory storage for model performance tracking
 # This is shared with main.py via import
-model_stats: Dict[str, Dict[str, Any]] = defaultdict(
-    lambda: {"success": 0, "failure": 0, "last_error": None, "last_success": None}
-)
+model_stats: Dict[str, Dict[str, Any]] = defaultdict(lambda: {"success": 0, "failure": 0, "last_error": None, "last_success": None})
 
 # Import configuration constants
 from ..config import (
@@ -80,11 +78,7 @@ class ConversationMessage(BaseModel):
     role: str  # "user" or "assistant"
     content: str
 
-    model_config = ConfigDict(
-        json_schema_extra={
-            "example": {"role": "user", "content": "What is artificial intelligence?"}
-        }
-    )
+    model_config = ConfigDict(json_schema_extra={"example": {"role": "user", "content": "What is artificial intelligence?"}})
 
 
 class CompareRequest(BaseModel):
@@ -92,9 +86,7 @@ class CompareRequest(BaseModel):
     models: list[str]
     conversation_history: list[ConversationMessage] = []  # Optional conversation context
     browser_fingerprint: Optional[str] = None  # Optional browser fingerprint for rate limiting
-    conversation_id: Optional[int] = (
-        None  # Optional conversation ID for follow-ups (most reliable matching)
-    )
+    conversation_id: Optional[int] = None  # Optional conversation ID for follow-ups (most reliable matching)
 
     model_config = ConfigDict(
         json_schema_extra={
@@ -122,7 +114,6 @@ class ResetRateLimitRequest(BaseModel):
 
 # Helper functions
 # get_conversation_limit_for_tier is now get_conversation_limit from config module
-
 
 
 def get_client_ip(request: Request) -> str:
@@ -182,10 +173,10 @@ async def get_available_models(
 
     def get_models():
         from ..model_runner import get_model_token_limits_from_openrouter
-        
+
         # Get all models with tier_access field (no filtering - show all models)
         all_models = filter_models_by_tier(OPENROUTER_MODELS, tier)
-        
+
         # Add token limits to each model
         for model in all_models:
             limits = get_model_token_limits_from_openrouter(model["id"])
@@ -197,7 +188,7 @@ async def get_available_models(
                 # Default fallback values
                 model["max_input_chars"] = 32768  # 8192 tokens * 4
                 model["max_output_chars"] = 32768  # 8192 tokens * 4
-        
+
         # Get all models_by_provider with tier_access field
         models_by_provider = {}
         for provider, models in MODELS_BY_PROVIDER.items():
@@ -213,7 +204,7 @@ async def get_available_models(
                         model["max_input_chars"] = 32768
                         model["max_output_chars"] = 32768
                 models_by_provider[provider] = provider_models
-        
+
         return {
             "models": all_models,
             "models_by_provider": models_by_provider,
@@ -333,9 +324,7 @@ async def reset_rate_limit_dev(
     """
     # Only allow in development mode
     if os.environ.get("ENVIRONMENT") != "development":
-        raise HTTPException(
-            status_code=403, detail="This endpoint is only available in development mode"
-        )
+        raise HTTPException(status_code=403, detail="This endpoint is only available in development mode")
 
     client_ip = get_client_ip(request)
     deleted_count = 0
@@ -348,9 +337,7 @@ async def reset_rate_limit_dev(
         current_user.daily_extended_usage = 0
 
         # Delete only this user's conversations (messages deleted via cascade)
-        deleted_count = (
-            db.query(Conversation).filter(Conversation.user_id == current_user.id).delete()
-        )
+        deleted_count = db.query(Conversation).filter(Conversation.user_id == current_user.id).delete()
         db.commit()
 
     # For anonymous users: reset IP-based rate limits
@@ -410,9 +397,10 @@ async def compare_stream(
 
     # Validate input against model token limits
     from ..model_runner import get_min_max_input_tokens, estimate_token_count
+
     min_max_input_tokens = get_min_max_input_tokens(req.models)
     input_tokens = estimate_token_count(req.input_data)
-    
+
     if input_tokens > min_max_input_tokens:
         # Convert tokens to approximate characters for user-friendly message (1 token ≈ 4 chars)
         approx_chars = input_tokens * 4
@@ -432,6 +420,7 @@ async def compare_stream(
 
     # Validate model access based on tier (check if restricted models are selected)
     from ..model_runner import is_model_available_for_tier
+
     restricted_models = [model_id for model_id in req.models if not is_model_available_for_tier(model_id, tier_name)]
     if restricted_models:
         upgrade_message = ""
@@ -441,7 +430,7 @@ async def compare_stream(
             upgrade_message = " Upgrade to Starter ($9.95/month) or higher to access all premium models."
         else:
             upgrade_message = " This model requires a paid subscription."
-        
+
         raise HTTPException(
             status_code=403,
             detail=f"The following models are not available for {tier_name} tier: {', '.join(restricted_models)}.{upgrade_message}",
@@ -452,9 +441,7 @@ async def compare_stream(
         upgrade_message = ""
         if tier_name == "anonymous":
             free_model_limit = get_model_limit("free")
-            upgrade_message = (
-                f" Sign up for a free account to compare up to {free_model_limit} models."
-            )
+            upgrade_message = f" Sign up for a free account to compare up to {free_model_limit} models."
         elif tier_name == "free":
             starter_model_limit = get_model_limit("starter")
             pro_model_limit = get_model_limit("pro")
@@ -489,19 +476,25 @@ async def compare_stream(
 
     if current_user:
         # Ensure credits are allocated for authenticated user
+        # IMPORTANT: Check and reset credits FIRST if reset time has passed,
+        # then ensure credits are allocated (in case they weren't allocated yet)
+        check_and_reset_credits_if_needed(current_user.id, db)
         ensure_credits_allocated(current_user.id, db)
         db.refresh(current_user)
-        
+
         # Debug logging for authentication and tier
-        print(f"[API] Authenticated user: {current_user.email}, subscription_tier: '{current_user.subscription_tier}', is_active: {current_user.is_active}")
-        
-        # Check if user has sufficient credits
-        is_sufficient, credits_remaining, credits_allocated = check_user_credits(
-            current_user, estimated_credits, db
+        print(
+            f"[API] Authenticated user: {current_user.email}, subscription_tier: '{current_user.subscription_tier}', is_active: {current_user.is_active}"
         )
 
-        # Block submission if credits are 0
-        if credits_remaining <= 0:
+        # Check current credit balance (for logging and blocking check)
+        # Note: We don't block based on estimated credits - allow comparisons to proceed
+        # Credits will be capped at allocated amount during deduction if needed
+        is_sufficient, credits_remaining, credits_allocated = check_user_credits(current_user, estimated_credits, db)
+
+        # Block submission ONLY if credits are already at 0 (after a previous comparison zeroed them out)
+        # This allows one final comparison that zeros out credits, then blocks subsequent requests
+        if credits_remaining == 0:
             tier_name = current_user.subscription_tier or "free"
             if tier_name in ["anonymous", "free"]:
                 error_msg = (
@@ -509,13 +502,13 @@ async def compare_stream(
                     f"or sign-up for a free account to get more credits, more models, and more history!"
                 )
             elif tier_name == "pro_plus":
-                reset_date = current_user.credits_reset_at.date().isoformat() if current_user.credits_reset_at else 'N/A'
+                reset_date = current_user.credits_reset_at.date().isoformat() if current_user.credits_reset_at else "N/A"
                 error_msg = (
                     f"You've run out of credits which will reset on {reset_date}. "
                     f"Wait until your reset, or sign-up for model comparison overages."
                 )
             else:
-                reset_date = current_user.credits_reset_at.date().isoformat() if current_user.credits_reset_at else 'N/A'
+                reset_date = current_user.credits_reset_at.date().isoformat() if current_user.credits_reset_at else "N/A"
                 error_msg = (
                     f"You've run out of credits which will reset on {reset_date}. "
                     f"Consider upgrading your plan for more credits, more models per comparison, and more history!"
@@ -525,16 +518,18 @@ async def compare_stream(
                 detail=error_msg,
             )
 
-        print(f"Authenticated user {current_user.email} - Credits: {credits_remaining}/{credits_allocated} (estimated: {estimated_credits:.2f}, sufficient: {is_sufficient})")
+        print(
+            f"Authenticated user {current_user.email} - Credits: {credits_remaining}/{credits_allocated} (estimated: {estimated_credits:.2f}, sufficient: {is_sufficient})"
+        )
     else:
         # Anonymous user - check credit-based limits
-        print(f"[API] Anonymous user - IP: {client_ip}, fingerprint: {req.browser_fingerprint[:20] if req.browser_fingerprint else 'None'}...")
-        
+        print(
+            f"[API] Anonymous user - IP: {client_ip}, fingerprint: {req.browser_fingerprint[:20] if req.browser_fingerprint else 'None'}..."
+        )
+
         # Check IP-based credits
         ip_identifier = f"ip:{client_ip}"
-        ip_sufficient, ip_credits_remaining, ip_credits_allocated = check_anonymous_credits(
-            ip_identifier, estimated_credits, db
-        )
+        ip_sufficient, ip_credits_remaining, ip_credits_allocated = check_anonymous_credits(ip_identifier, estimated_credits, db)
 
         fingerprint_sufficient = True
         fingerprint_credits_remaining = 0
@@ -546,12 +541,14 @@ async def compare_stream(
             )
 
         # Use the most restrictive limit (lowest remaining credits)
-        credits_remaining = min(ip_credits_remaining, fingerprint_credits_remaining if req.browser_fingerprint else ip_credits_remaining)
+        credits_remaining = min(
+            ip_credits_remaining, fingerprint_credits_remaining if req.browser_fingerprint else ip_credits_remaining
+        )
         credits_allocated = ip_credits_allocated
 
-        # Block submission if credits are 0
-        if credits_remaining <= 0:
-            free_tier_limit = DAILY_CREDIT_LIMITS.get("free", 100)
+        # Block submission ONLY if credits are already at 0 (after a previous comparison zeroed them out)
+        # This allows one final comparison that zeros out credits, then blocks subsequent requests
+        if credits_remaining == 0:
             raise HTTPException(
                 status_code=402,  # Payment Required
                 detail=(
@@ -560,12 +557,13 @@ async def compare_stream(
                 ),
             )
 
-        print(f"Anonymous user - IP: {client_ip} - Credits: {credits_remaining}/{credits_allocated} (estimated: {estimated_credits:.2f})")
-        
+        print(
+            f"Anonymous user - IP: {client_ip} - Credits: {credits_remaining}/{credits_allocated} (estimated: {estimated_credits:.2f})"
+        )
+
         # Set is_sufficient for anonymous users (used later for max_tokens calculation)
         is_sufficient = ip_sufficient and (not req.browser_fingerprint or fingerprint_sufficient)
     # --- END CREDIT-BASED RATE LIMITING ---
-
 
     # Track start time for processing metrics
     start_time = datetime.now()
@@ -608,6 +606,7 @@ async def compare_stream(
         if has_authenticated_user and user_id:
             # Query user fresh from database to get latest mock_mode_enabled value
             from ..database import SessionLocal
+
             fresh_db = SessionLocal()
             try:
                 fresh_user = fresh_db.query(User).filter(User.id == user_id).first()
@@ -636,12 +635,12 @@ async def compare_stream(
             # Calculate minimum max output tokens across all models to avoid truncation
             from ..model_runner import get_min_max_output_tokens, estimate_token_count, count_conversation_tokens
             from decimal import Decimal
-            
+
             # Calculate input tokens for this request
             input_tokens = estimate_token_count(req.input_data)
             if req.conversation_history:
                 input_tokens += count_conversation_tokens(req.conversation_history)
-            
+
             # If credits are insufficient, calculate reduced max_tokens based on available credits
             effective_max_tokens = get_min_max_output_tokens(req.models)
             if not is_sufficient and credits_remaining > 0:
@@ -655,8 +654,10 @@ async def compare_stream(
                 max_output_tokens_int = max(100, int(max_output_tokens_calc))  # Minimum 100 tokens
                 # Use the smaller of calculated max_tokens or model's max capability
                 effective_max_tokens = min(effective_max_tokens, max_output_tokens_int)
-                print(f"[API] Insufficient credits - reducing max_tokens from {get_min_max_output_tokens(req.models)} to {effective_max_tokens} (credits_remaining: {credits_remaining}, credits_per_model: {credits_per_model:.2f})")
-            
+                print(
+                    f"[API] Insufficient credits - reducing max_tokens from {get_min_max_output_tokens(req.models)} to {effective_max_tokens} (credits_remaining: {credits_remaining}, credits_per_model: {credits_per_model:.2f})"
+                )
+
             # Send all start events at once (concurrent processing begins simultaneously)
             for model_id in req.models:
                 yield f"data: {json.dumps({'model': model_id, 'type': 'start'})}\n\n"
@@ -695,7 +696,7 @@ async def compare_stream(
                                 use_mock,
                                 max_tokens_override=effective_max_tokens,
                             )
-                            
+
                             try:
                                 while True:
                                     chunk = next(gen)
@@ -724,17 +725,13 @@ async def compare_stream(
                             error_msg = f"Error: {str(e)[:100]}"
                             # Push error as chunk
                             asyncio.run_coroutine_threadsafe(
-                                chunk_queue.put(
-                                    {"type": "chunk", "model": model_id, "content": error_msg}
-                                ),
+                                chunk_queue.put({"type": "chunk", "model": model_id, "content": error_msg}),
                                 loop,
                             )
                             return error_msg, True, None  # error_msg, is_error, usage_data
 
                     # Run streaming in executor (allows true concurrent execution)
-                    full_content, is_error, usage_data = await loop.run_in_executor(
-                        None, process_stream_to_queue
-                    )
+                    full_content, is_error, usage_data = await loop.run_in_executor(None, process_stream_to_queue)
 
                     # Clean the final accumulated content (unless it's an error)
                     if not is_error:
@@ -757,9 +754,7 @@ async def compare_stream(
                     error_msg = f"Error: {str(e)[:100]}"
 
                     # Put error in queue as chunk
-                    await chunk_queue.put(
-                        {"type": "chunk", "model": model_id, "content": error_msg}
-                    )
+                    await chunk_queue.put({"type": "chunk", "model": model_id, "content": error_msg})
 
                     return {"model": model_id, "content": error_msg, "error": True, "usage": None}
 
@@ -793,7 +788,7 @@ async def compare_stream(
                         successful_models += 1
                         model_stats[model_id]["success"] += 1
                         model_stats[model_id]["last_success"] = datetime.now().isoformat()
-                        
+
                         # Accumulate token usage from successful models
                         usage = result.get("usage")  # TokenUsage or None
                         if usage:
@@ -831,19 +826,20 @@ async def compare_stream(
                 else:
                     # Fall back to estimated credits if no actual usage data available
                     total_credits_used = estimated_credits
-            
+
             # Store the actual fractional credits for UsageLog (for analytics)
             actual_credits_used = total_credits_used
-            
+
             # Ensure minimum 1 credit deduction per comparison (round UP)
             # This ensures users are charged at least 1 credit per comparison
             if successful_models > 0 and total_credits_used > 0:
-                total_credits_used = max(Decimal(1), total_credits_used.quantize(Decimal('1'), rounding=ROUND_CEILING))
-            
+                total_credits_used = max(Decimal(1), total_credits_used.quantize(Decimal("1"), rounding=ROUND_CEILING))
+
             # Deduct credits - only for successful models
             if successful_models > 0 and total_credits_used > 0:
                 # Create a fresh database session to avoid detachment issues
                 from ..database import SessionLocal
+
                 credit_db = SessionLocal()
                 try:
                     if user_id:
@@ -865,17 +861,21 @@ async def compare_stream(
                         deduct_anonymous_credits(ip_identifier, total_credits_used)
                         # Get updated IP credit balance (no db arg - read from memory only)
                         _, ip_credits_remaining, _ = check_anonymous_credits(ip_identifier, Decimal(0))
-                        
+
                         fingerprint_credits_remaining = ip_credits_remaining
                         if req.browser_fingerprint:
                             fp_identifier = f"fp:{req.browser_fingerprint}"
                             deduct_anonymous_credits(fp_identifier, total_credits_used)
                             # Get updated fingerprint credit balance (no db arg - read from memory only)
                             _, fingerprint_credits_remaining, _ = check_anonymous_credits(fp_identifier, Decimal(0))
-                        
+
                         # Use the most restrictive limit (lowest remaining credits) - same logic as at start
-                        credits_remaining = min(ip_credits_remaining, fingerprint_credits_remaining if req.browser_fingerprint else ip_credits_remaining)
-                        print(f"[DEBUG] Anonymous credits after deduction - IP: {ip_credits_remaining}, FP: {fingerprint_credits_remaining if req.browser_fingerprint else 'N/A'}, Final: {credits_remaining}, Actual: {actual_credits_used}, Charged: {total_credits_used}")
+                        credits_remaining = min(
+                            ip_credits_remaining, fingerprint_credits_remaining if req.browser_fingerprint else ip_credits_remaining
+                        )
+                        print(
+                            f"[DEBUG] Anonymous credits after deduction - IP: {ip_credits_remaining}, FP: {fingerprint_credits_remaining if req.browser_fingerprint else 'N/A'}, Final: {credits_remaining}, Actual: {actual_credits_used}, Charged: {total_credits_used}"
+                        )
                 except ValueError as e:
                     # Should not happen since we checked before, but handle gracefully
                     print(f"Warning: Credit deduction failed: {e}")
@@ -891,7 +891,9 @@ async def compare_stream(
                     if req.browser_fingerprint:
                         fp_identifier = f"fp:{req.browser_fingerprint}"
                         _, fingerprint_credits_remaining, _ = check_anonymous_credits(fp_identifier, Decimal(0), db)
-                    credits_remaining = min(ip_credits_remaining, fingerprint_credits_remaining if req.browser_fingerprint else ip_credits_remaining)
+                    credits_remaining = min(
+                        ip_credits_remaining, fingerprint_credits_remaining if req.browser_fingerprint else ip_credits_remaining
+                    )
 
                 # Extended tier usage tracking removed - no longer needed
 
@@ -901,7 +903,9 @@ async def compare_stream(
             # Build metadata including credit information
             # Debug: Log credits_remaining before including in metadata
             if not user_id:
-                print(f"[DEBUG] Building metadata for anonymous user - credits_remaining: {credits_remaining}, actual_credits: {actual_credits_used}, charged_credits: {total_credits_used}")
+                print(
+                    f"[DEBUG] Building metadata for anonymous user - credits_remaining: {credits_remaining}, actual_credits: {actual_credits_used}, charged_credits: {total_credits_used}"
+                )
             metadata = {
                 "input_length": len(req.input_data),
                 "models_requested": len(req.models),
@@ -918,7 +922,7 @@ async def compare_stream(
             # Log usage to database SYNCHRONOUSLY (not in background) to ensure database is updated
             # before frontend queries for updated credits. This prevents race condition where
             # frontend queries /credits/balance before UsageLog is committed.
-            # 
+            #
             # IMPORTANT: UsageLog stores the CHARGED credits (minimum 1 per comparison)
             # Token data (input_tokens, output_tokens, effective_tokens) preserves actual usage for analytics
             usage_log = UsageLog(
@@ -937,7 +941,9 @@ async def compare_stream(
                 # Credit-based fields
                 input_tokens=total_input_tokens if total_input_tokens > 0 else None,
                 output_tokens=total_output_tokens if total_output_tokens > 0 else None,
-                total_tokens=total_input_tokens + total_output_tokens if (total_input_tokens > 0 or total_output_tokens > 0) else None,
+                total_tokens=(
+                    total_input_tokens + total_output_tokens if (total_input_tokens > 0 or total_output_tokens > 0) else None
+                ),
                 effective_tokens=total_effective_tokens if total_effective_tokens > 0 else None,
                 credits_used=total_credits_used,  # Store charged credits (minimum 1 per comparison)
             )
@@ -946,7 +952,9 @@ async def compare_stream(
             try:
                 log_db.add(usage_log)
                 log_db.commit()
-                print(f"[DEBUG] UsageLog committed to database - actual_credits: {actual_credits_used}, charged_credits: {total_credits_used}, user_id: {user_id}, ip: {client_ip}, fp: {req.browser_fingerprint[:20] if req.browser_fingerprint else 'None'}")
+                print(
+                    f"[DEBUG] UsageLog committed to database - actual_credits: {actual_credits_used}, charged_credits: {total_credits_used}, user_id: {user_id}, ip: {client_ip}, fp: {req.browser_fingerprint[:20] if req.browser_fingerprint else 'None'}"
+                )
             except Exception as e:
                 print(f"[ERROR] Failed to commit UsageLog: {e}")
                 log_db.rollback()
@@ -961,9 +969,7 @@ async def compare_stream(
                     conv_db = SessionLocal()
                     try:
                         # Determine if this is a follow-up or new conversation
-                        is_follow_up = bool(
-                            req.conversation_history and len(req.conversation_history) > 0
-                        )
+                        is_follow_up = bool(req.conversation_history and len(req.conversation_history) > 0)
 
                         # Try to find existing conversation if this is a follow-up
                         existing_conversation = None
@@ -1008,15 +1014,10 @@ async def compare_stream(
 
                                 for conv in all_user_conversations:
                                     try:
-                                        conv_models = (
-                                            json.loads(conv.models_used) if conv.models_used else []
-                                        )
+                                        conv_models = json.loads(conv.models_used) if conv.models_used else []
                                         # Match by models AND original input_data to ensure correct conversation
                                         models_match = sorted(conv_models) == req_models_sorted
-                                        input_matches = (
-                                            original_input_data
-                                            and conv.input_data == original_input_data
-                                        )
+                                        input_matches = original_input_data and conv.input_data == original_input_data
 
                                         # Additional safeguard: if timestamps are available in future,
                                         # we could also match by comparing conversation.created_at with
@@ -1133,10 +1134,7 @@ async def get_conversations(
 
     # Get all conversations to check if cleanup is needed
     all_conversations = (
-        db.query(Conversation)
-        .filter(Conversation.user_id == current_user.id)
-        .order_by(Conversation.created_at.desc())
-        .all()
+        db.query(Conversation).filter(Conversation.user_id == current_user.id).order_by(Conversation.created_at.desc()).all()
     )
 
     # Clean up any conversations beyond the limit (in case deletion left extra conversations)
@@ -1267,6 +1265,7 @@ async def get_conversation(
 # Credit Management Endpoints
 # ============================================================================
 
+
 @router.get("/credits/balance")
 async def get_credit_balance(
     db: Session = Depends(get_db),
@@ -1276,20 +1275,23 @@ async def get_credit_balance(
 ):
     """
     Get current credit balance and usage statistics.
-    
+
     Returns credit balance, usage, and reset information for the current user.
     For anonymous users, returns daily credit balance.
-    
+
     Args:
         fingerprint: Optional browser fingerprint for anonymous users (to check both IP and fingerprint)
     """
     if current_user:
         # Authenticated user
+        # IMPORTANT: Check and reset credits FIRST if reset time has passed,
+        # then ensure credits are allocated (in case they weren't allocated yet)
+        check_and_reset_credits_if_needed(current_user.id, db)
         ensure_credits_allocated(current_user.id, db)
         db.refresh(current_user)
-        
+
         stats = get_credit_usage_stats(current_user.id, db)
-        
+
         return {
             "credits_allocated": stats["credits_allocated"],
             "credits_used_this_period": stats["credits_used_this_period"],
@@ -1305,23 +1307,23 @@ async def get_credit_balance(
         # Anonymous user - calculate credits from database (persists across server restarts)
         client_ip = get_client_ip(request) if request else "unknown"
         credits_allocated = DAILY_CREDIT_LIMITS.get("anonymous", 50)
-        
+
         # Calculate credits used today from UsageLog (database) - this persists across restarts
         # Use func.date() for SQLite compatibility (CAST AS DATE doesn't work properly in SQLite)
         today_date = datetime.now(timezone.utc).date().isoformat()  # Format as 'YYYY-MM-DD'
-        
+
         # Query UsageLog for credits used today by IP
         ip_credits_query = db.query(func.sum(UsageLog.credits_used)).filter(
             UsageLog.user_id.is_(None),  # Anonymous users only
             UsageLog.ip_address == client_ip,
             func.date(UsageLog.created_at) == today_date,
-            UsageLog.credits_used.isnot(None)
+            UsageLog.credits_used.isnot(None),
         )
         ip_credits_used = ip_credits_query.scalar() or Decimal(0)
         # Round UP to be conservative - never give free credits
-        ip_credits_used_rounded = int(ip_credits_used.quantize(Decimal('1'), rounding=ROUND_CEILING)) if ip_credits_used > 0 else 0
+        ip_credits_used_rounded = int(ip_credits_used.quantize(Decimal("1"), rounding=ROUND_CEILING)) if ip_credits_used > 0 else 0
         ip_credits_remaining = max(0, credits_allocated - ip_credits_used_rounded)
-        
+
         # Query UsageLog for credits used today by fingerprint (if provided)
         fingerprint_credits_remaining = ip_credits_remaining
         fp_credits_used = Decimal(0)
@@ -1330,38 +1332,45 @@ async def get_credit_balance(
                 UsageLog.user_id.is_(None),  # Anonymous users only
                 UsageLog.browser_fingerprint == fingerprint,
                 func.date(UsageLog.created_at) == today_date,
-                UsageLog.credits_used.isnot(None)
+                UsageLog.credits_used.isnot(None),
             )
             fp_credits_used = fp_credits_query.scalar() or Decimal(0)
             # Round UP to be conservative - never give free credits
-            fp_credits_used_rounded = int(fp_credits_used.quantize(Decimal('1'), rounding=ROUND_CEILING)) if fp_credits_used > 0 else 0
+            fp_credits_used_rounded = (
+                int(fp_credits_used.quantize(Decimal("1"), rounding=ROUND_CEILING)) if fp_credits_used > 0 else 0
+            )
             fingerprint_credits_remaining = max(0, credits_allocated - fp_credits_used_rounded)
-        
+
         # Use the most restrictive limit (lowest remaining credits) - same logic as compare endpoints
         credits_remaining = min(ip_credits_remaining, fingerprint_credits_remaining if fingerprint else ip_credits_remaining)
-        
+
         # Sync in-memory storage with database (for fast access in other endpoints)
         # Round UP to be conservative - never give free credits
         from ..rate_limiting import anonymous_rate_limit_storage
+
         ip_identifier = f"ip:{client_ip}"
         today_str = datetime.now(timezone.utc).date().isoformat()
         anonymous_rate_limit_storage[ip_identifier] = {
-            "count": int(ip_credits_used.quantize(Decimal('1'), rounding=ROUND_CEILING)) if ip_credits_used > 0 else 0,
+            "count": int(ip_credits_used.quantize(Decimal("1"), rounding=ROUND_CEILING)) if ip_credits_used > 0 else 0,
             "date": today_str,
-            "first_seen": anonymous_rate_limit_storage[ip_identifier].get("first_seen") or datetime.now(timezone.utc)
+            "first_seen": anonymous_rate_limit_storage[ip_identifier].get("first_seen") or datetime.now(timezone.utc),
         }
         if fingerprint:
             fp_identifier = f"fp:{fingerprint}"
             anonymous_rate_limit_storage[fp_identifier] = {
-                "count": int(fp_credits_used.quantize(Decimal('1'), rounding=ROUND_CEILING)) if fp_credits_used > 0 else 0,
+                "count": int(fp_credits_used.quantize(Decimal("1"), rounding=ROUND_CEILING)) if fp_credits_used > 0 else 0,
                 "date": today_str,
-                "first_seen": anonymous_rate_limit_storage[fp_identifier].get("first_seen") or datetime.now(timezone.utc)
+                "first_seen": anonymous_rate_limit_storage[fp_identifier].get("first_seen") or datetime.now(timezone.utc),
             }
-        
-        print(f"[DEBUG] get_credit_balance (from DB) - IP: {client_ip}, Fingerprint: {fingerprint[:20] if fingerprint else 'None'}...")
+
+        print(
+            f"[DEBUG] get_credit_balance (from DB) - IP: {client_ip}, Fingerprint: {fingerprint[:20] if fingerprint else 'None'}..."
+        )
         print(f"[DEBUG] DB Credits used - IP: {ip_credits_used}, FP: {fp_credits_used if fingerprint else 'N/A'}")
-        print(f"[DEBUG] Credits remaining - IP: {ip_credits_remaining}, FP: {fingerprint_credits_remaining if fingerprint else 'N/A'}, Final: {credits_remaining}")
-        
+        print(
+            f"[DEBUG] Credits remaining - IP: {ip_credits_remaining}, FP: {fingerprint_credits_remaining if fingerprint else 'N/A'}, Final: {credits_remaining}"
+        )
+
         return {
             "credits_allocated": credits_allocated,
             "credits_used_today": credits_allocated - credits_remaining,
@@ -1380,29 +1389,24 @@ async def get_credit_usage(
 ):
     """
     Get detailed credit usage history.
-    
+
     Returns paginated list of usage logs with credit and token information.
     """
     if not current_user:
         raise HTTPException(status_code=401, detail="Authentication required")
-    
+
     # Calculate offset
     offset = (page - 1) * per_page
-    
+
     # Query usage logs for this user
     query = db.query(UsageLog).filter(UsageLog.user_id == current_user.id)
-    
+
     # Get total count
     total_count = query.count()
-    
+
     # Get paginated results
-    usage_logs = (
-        query.order_by(UsageLog.created_at.desc())
-        .offset(offset)
-        .limit(per_page)
-        .all()
-    )
-    
+    usage_logs = query.order_by(UsageLog.created_at.desc()).offset(offset).limit(per_page).all()
+
     # Format results
     results = []
     for log in usage_logs:
@@ -1410,91 +1414,29 @@ async def get_credit_usage(
             models_used = json.loads(log.models_used) if log.models_used else []
         except (json.JSONDecodeError, TypeError):
             models_used = []
-        
-        results.append({
-            "id": log.id,
-            "created_at": log.created_at.isoformat() if log.created_at else None,
-            "models_used": models_used,
-            "models_successful": log.models_successful,
-            "models_failed": log.models_failed,
-            "credits_used": float(log.credits_used) if log.credits_used else None,
-            "input_tokens": log.input_tokens,
-            "output_tokens": log.output_tokens,
-            "total_tokens": log.total_tokens,
-            "effective_tokens": log.effective_tokens,
-            "processing_time_ms": log.processing_time_ms,
-        })
-    
+
+        results.append(
+            {
+                "id": log.id,
+                "created_at": log.created_at.isoformat() if log.created_at else None,
+                "models_used": models_used,
+                "models_successful": log.models_successful,
+                "models_failed": log.models_failed,
+                "credits_used": float(log.credits_used) if log.credits_used else None,
+                "input_tokens": log.input_tokens,
+                "output_tokens": log.output_tokens,
+                "total_tokens": log.total_tokens,
+                "effective_tokens": log.effective_tokens,
+                "processing_time_ms": log.processing_time_ms,
+            }
+        )
+
     return {
         "total": total_count,
         "page": page,
         "per_page": per_page,
         "total_pages": (total_count + per_page - 1) // per_page,
         "results": results,
-    }
-
-
-class CreditEstimateRequest(BaseModel):
-    """Request model for credit estimation."""
-    input_data: str
-    models: list[str]
-    conversation_history: list[ConversationMessage] = []
-
-
-@router.post("/credits/estimate")
-async def estimate_credits(
-    req: CreditEstimateRequest,
-    request: Request,
-    db: Session = Depends(get_db),
-    current_user: Optional[User] = Depends(get_current_user),
-):
-    """
-    Estimate credits needed for a request before submitting.
-    
-    Returns estimated credits based on prompt length and number of models.
-    """
-    if not req.input_data.strip():
-        raise HTTPException(status_code=400, detail="Input data cannot be empty")
-    
-    if not req.models:
-        raise HTTPException(status_code=400, detail="At least one model must be selected")
-    
-    # Estimate credits
-    estimated_credits = estimate_credits_before_request(
-        prompt=req.input_data,
-        num_models=len(req.models),
-        conversation_history=req.conversation_history,
-    )
-    
-    # Get current credit balance
-    credits_remaining = 0
-    credits_allocated = 0
-    is_sufficient = False
-    
-    if current_user:
-        ensure_credits_allocated(current_user.id, db)
-        db.refresh(current_user)
-        is_sufficient, credits_remaining, credits_allocated = check_user_credits(
-            current_user, estimated_credits, db
-        )
-    else:
-        # Anonymous user
-        client_ip = get_client_ip(request)
-        ip_identifier = f"ip:{client_ip}"
-        is_sufficient, credits_remaining, credits_allocated = check_anonymous_credits(
-            ip_identifier, estimated_credits, db
-        )
-    
-    return {
-        "estimated_credits": float(estimated_credits),
-        "credits_remaining": credits_remaining,
-        "credits_allocated": credits_allocated,
-        "is_sufficient": is_sufficient,
-        "breakdown": {
-            "num_models": len(req.models),
-            "input_length": len(req.input_data),
-            "conversation_history_length": len(req.conversation_history),
-        },
     }
 
 

@@ -76,3 +76,4 @@ def downgrade():
     op.drop_index(op.f('ix_usage_log_monthly_aggregates_id'), table_name='usage_log_monthly_aggregates')
     op.drop_table('usage_log_monthly_aggregates')
 
+

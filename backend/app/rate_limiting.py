@@ -82,11 +82,10 @@ def check_user_credits(user: User, required_credits: Decimal, db: Session) -> Tu
     Returns:
         tuple: (is_allowed, credits_remaining, credits_allocated)
     """
-    # Ensure credits are allocated
-    ensure_credits_allocated(user.id, db)
-
-    # Check and reset credits if needed
+    # IMPORTANT: Check and reset credits FIRST if reset time has passed,
+    # then ensure credits are allocated (in case they weren't allocated yet)
     check_and_reset_credits_if_needed(user.id, db)
+    ensure_credits_allocated(user.id, db)
 
     # Refresh user to get latest credit data
     db.refresh(user)
@@ -201,11 +200,14 @@ def deduct_anonymous_credits(identifier: str, credits: Decimal) -> None:
     Deduct credits from anonymous user's daily balance.
 
     CREDITS-BASED: Replaces increment_anonymous_usage() for credit-based system.
+    Credits are capped at allocated amount (50 for anonymous) - zero out instead of going negative.
 
     Args:
         identifier: Unique identifier (e.g., "ip:192.168.1.1" or "fp:xxx")
         credits: Credits to deduct (as Decimal)
     """
+    from .config.constants import DAILY_CREDIT_LIMITS
+    
     today = datetime.now(timezone.utc).date().isoformat()
     user_data = anonymous_rate_limit_storage[identifier]
 
@@ -218,8 +220,15 @@ def deduct_anonymous_credits(identifier: str, credits: Decimal) -> None:
     # Convert Decimal to int (round UP to be conservative - never give free credits)
     # Use ceiling to ensure we always deduct at least 1 credit for any usage
     credits_int = int(credits.quantize(Decimal('1'), rounding=ROUND_CEILING))
-    user_data["count"] += credits_int
-    print(f"[DEBUG] deduct_anonymous_credits - {identifier}: deducted {credits_int} credits (from {float(credits):.4f}), new count: {user_data['count']}")
+    
+    # Get allocated amount for anonymous users (50 credits)
+    allocated = DAILY_CREDIT_LIMITS.get("anonymous", 50)
+    
+    # Cap credits at allocated amount (zero out, don't go negative)
+    new_count = user_data["count"] + credits_int
+    user_data["count"] = min(new_count, allocated)
+    
+    print(f"[DEBUG] deduct_anonymous_credits - {identifier}: deducted {credits_int} credits (from {float(credits):.4f}), new count: {user_data['count']} (capped at {allocated})")
 
 
 def check_user_rate_limit(user: User, db: Session) -> Tuple[bool, int, int]:
