@@ -500,30 +500,32 @@ async def compare_stream(
             current_user, estimated_credits, db
         )
 
-        if not is_sufficient:
-            # Insufficient credits
+        # Block submission if credits are 0
+        if credits_remaining <= 0:
             tier_name = current_user.subscription_tier or "free"
             if tier_name in ["anonymous", "free"]:
-                # Free tier - suggest upgrade
                 error_msg = (
-                    f"Insufficient credits: You have {credits_remaining} credits remaining, "
-                    f"but need approximately {estimated_credits:.2f} credits for this request. "
-                    f"Sign up for a paid tier to get more credits."
+                    f"You've run out of credits. Credits will reset to {DAILY_CREDIT_LIMITS.get(tier_name, 50)} tomorrow, "
+                    f"or sign-up for a free account to get more credits, more models, and more history!"
+                )
+            elif tier_name == "pro_plus":
+                reset_date = current_user.credits_reset_at.date().isoformat() if current_user.credits_reset_at else 'N/A'
+                error_msg = (
+                    f"You've run out of credits which will reset on {reset_date}. "
+                    f"Wait until your reset, or sign-up for model comparison overages."
                 )
             else:
-                # Paid tier - suggest overage or upgrade
+                reset_date = current_user.credits_reset_at.date().isoformat() if current_user.credits_reset_at else 'N/A'
                 error_msg = (
-                    f"Insufficient credits: You have {credits_remaining} credits remaining, "
-                    f"but need approximately {estimated_credits:.2f} credits for this request. "
-                    f"Your credits reset on {current_user.credits_reset_at.date().isoformat() if current_user.credits_reset_at else 'N/A'}. "
-                    f"Upgrade to a higher tier or purchase additional credits."
+                    f"You've run out of credits which will reset on {reset_date}. "
+                    f"Consider upgrading your plan for more credits, more models per comparison, and more history!"
                 )
             raise HTTPException(
                 status_code=402,  # Payment Required
                 detail=error_msg,
             )
 
-        print(f"Authenticated user {current_user.email} - Credits: {credits_remaining}/{credits_allocated} (estimated: {estimated_credits:.2f})")
+        print(f"Authenticated user {current_user.email} - Credits: {credits_remaining}/{credits_allocated} (estimated: {estimated_credits:.2f}, sufficient: {is_sufficient})")
     else:
         # Anonymous user - check credit-based limits
         print(f"[API] Anonymous user - IP: {client_ip}, fingerprint: {req.browser_fingerprint[:20] if req.browser_fingerprint else 'None'}...")
@@ -547,18 +549,21 @@ async def compare_stream(
         credits_remaining = min(ip_credits_remaining, fingerprint_credits_remaining if req.browser_fingerprint else ip_credits_remaining)
         credits_allocated = ip_credits_allocated
 
-        if not ip_sufficient or (req.browser_fingerprint and not fingerprint_sufficient):
+        # Block submission if credits are 0
+        if credits_remaining <= 0:
             free_tier_limit = DAILY_CREDIT_LIMITS.get("free", 100)
             raise HTTPException(
                 status_code=402,  # Payment Required
                 detail=(
-                    f"Insufficient credits: You have {credits_remaining} credits remaining, "
-                    f"but need approximately {estimated_credits:.2f} credits for this request. "
-                    f"Sign up for a free account ({free_tier_limit} credits/day) to continue."
+                    f"You've run out of credits. Credits will reset to 50 tomorrow, "
+                    f"or sign-up for a free account to get more credits, more models, and more history!"
                 ),
             )
 
         print(f"Anonymous user - IP: {client_ip} - Credits: {credits_remaining}/{credits_allocated} (estimated: {estimated_credits:.2f})")
+        
+        # Set is_sufficient for anonymous users (used later for max_tokens calculation)
+        is_sufficient = ip_sufficient and (not req.browser_fingerprint or fingerprint_sufficient)
     # --- END CREDIT-BASED RATE LIMITING ---
 
 
@@ -629,8 +634,28 @@ async def compare_stream(
 
         try:
             # Calculate minimum max output tokens across all models to avoid truncation
-            from ..model_runner import get_min_max_output_tokens
+            from ..model_runner import get_min_max_output_tokens, estimate_token_count, count_conversation_tokens
+            from decimal import Decimal
+            
+            # Calculate input tokens for this request
+            input_tokens = estimate_token_count(req.input_data)
+            if req.conversation_history:
+                input_tokens += count_conversation_tokens(req.conversation_history)
+            
+            # If credits are insufficient, calculate reduced max_tokens based on available credits
             effective_max_tokens = get_min_max_output_tokens(req.models)
+            if not is_sufficient and credits_remaining > 0:
+                # Calculate credits available per model
+                credits_per_model = Decimal(credits_remaining) / Decimal(num_models)
+                # Calculate effective tokens available per model
+                effective_tokens_per_model = credits_per_model * Decimal(1000)
+                # Calculate max output tokens: (effective_tokens - input_tokens) / 2.5
+                # Ensure we don't go negative
+                max_output_tokens_calc = (effective_tokens_per_model - Decimal(input_tokens)) / Decimal(2.5)
+                max_output_tokens_int = max(100, int(max_output_tokens_calc))  # Minimum 100 tokens
+                # Use the smaller of calculated max_tokens or model's max capability
+                effective_max_tokens = min(effective_max_tokens, max_output_tokens_int)
+                print(f"[API] Insufficient credits - reducing max_tokens from {get_min_max_output_tokens(req.models)} to {effective_max_tokens} (credits_remaining: {credits_remaining}, credits_per_model: {credits_per_model:.2f})")
             
             # Send all start events at once (concurrent processing begins simultaneously)
             for model_id in req.models:

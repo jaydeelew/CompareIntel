@@ -7,6 +7,3 @@
 export { CreditBalance } from './CreditBalance'
 export type { CreditBalanceProps } from './CreditBalance'
 
-export { LowCreditWarningBanner } from './LowCreditWarningBanner'
-export type { LowCreditWarningBannerProps } from './LowCreditWarningBanner'
-

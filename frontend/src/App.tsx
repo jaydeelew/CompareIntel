@@ -20,7 +20,6 @@ const AdminPanel = lazy(() => import('./components/admin/AdminPanel'))
 import { Footer } from './components'
 import { AuthModal, VerifyEmail, VerificationBanner, ResetPassword } from './components/auth'
 import { ComparisonForm } from './components/comparison'
-import { LowCreditWarningBanner } from './components/credits'
 import { Navigation, Hero, MockModeBanner } from './components/layout'
 import { DoneSelectingCard, ErrorBoundary, LoadingSpinner } from './components/shared'
 import { TermsOfService } from './components/TermsOfService'
@@ -170,7 +169,9 @@ function AppContent() {
   const [modelErrors, setModelErrors] = useState<{ [key: string]: boolean }>({})
   const [anonymousCreditsRemaining, setAnonymousCreditsRemaining] = useState<number | null>(null)
   const [creditBalance, setCreditBalance] = useState<CreditBalance | null>(null)
-  const [showLowCreditWarning, setShowLowCreditWarning] = useState(false)
+  const [creditWarningMessage, setCreditWarningMessage] = useState<string | null>(null)
+  const [creditWarningType, setCreditWarningType] = useState<'low' | 'insufficient' | 'none' | null>(null)
+  const [creditWarningDismissible, setCreditWarningDismissible] = useState(false)
   const [backendCreditEstimate, setBackendCreditEstimate] = useState<CreditEstimate | null>(null)
   const [isEstimatingCredits, setIsEstimatingCredits] = useState(false)
   const estimateDebounceTimeoutRef = useRef<number | null>(null)
@@ -204,6 +205,90 @@ function AppContent() {
     user,
     onDeleteActiveConversation: handleDeleteActiveConversation,
   })
+
+  // Helper function to get credit warning message based on tier and scenario
+  const getCreditWarningMessage = useCallback((
+    type: 'low' | 'insufficient' | 'none',
+    tier: string,
+    creditsRemaining: number,
+    estimatedCredits?: number,
+    creditsResetAt?: string
+  ): string => {
+    if (type === 'none') {
+      // No Credits scenario
+      if (tier === 'anonymous') {
+        return "You've run out of credits. Credits will reset to 50 tomorrow, or sign-up for a free account to get more credits, more models, and more history!"
+      } else if (tier === 'free') {
+        return "You've run out of credits. Credits will reset to 100 tomorrow, or upgrade your plan for more credits, more models, and more history!"
+      } else if (tier === 'pro_plus') {
+        const resetDate = creditsResetAt ? new Date(creditsResetAt).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' }) : 'N/A'
+        return `You've run out of credits which will reset on ${resetDate}. Wait until your reset, or sign-up for model comparison overages.`
+      } else {
+        // starter, starter_plus, pro
+        const resetDate = creditsResetAt ? new Date(creditsResetAt).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' }) : 'N/A'
+        return `You've run out of credits which will reset on ${resetDate}. Consider upgrading your plan for more credits, more models per comparison, and more history!`
+      }
+    } else if (type === 'insufficient') {
+      // Possible Insufficient Credits scenario
+      return `This comparison is estimated to take ${estimatedCredits?.toFixed(1) || 'X'} credits and you have ${Math.round(creditsRemaining)} credits remaining. The model responses may be truncated. If possible, try selecting less models or shorten your input.`
+    } else {
+      // Low Credits scenario
+      if (tier === 'anonymous') {
+        return `You have ${Math.round(creditsRemaining)} credits left for today. Credits will reset to 50 tomorrow, or sign-up for a free account to get more credits, more models, and more history!`
+      } else if (tier === 'free') {
+        return `You have ${Math.round(creditsRemaining)} credits left for today. Credits will reset to 100 tomorrow, or upgrade your plan for more credits, more models, and more history!`
+      } else if (tier === 'pro_plus') {
+        return `You have ${Math.round(creditsRemaining)} credits left in your monthly billing cycle. Wait until your cycle starts again, or sign-up for model comparison overages.`
+      } else {
+        // starter, starter_plus, pro
+        return `You have ${Math.round(creditsRemaining)} credits left in your monthly billing cycle. Consider upgrading your plan for more credits, more models per comparison, and more history!`
+      }
+    }
+  }, [])
+
+  // Helper function to check if low credit warning was dismissed for current period
+  const isLowCreditWarningDismissed = useCallback((tier: string, periodType: 'daily' | 'monthly', creditsResetAt?: string): boolean => {
+    if (periodType === 'daily') {
+      const today = new Date().toDateString()
+      const dismissedDate = localStorage.getItem(`credit-warning-dismissed-${tier}-daily`)
+      return dismissedDate === today
+    } else {
+      // Monthly - check if dismissed for current billing period
+      if (!creditsResetAt) return false
+      const resetDate = new Date(creditsResetAt).toDateString()
+      const dismissedResetDate = localStorage.getItem(`credit-warning-dismissed-${tier}-monthly`)
+      return dismissedResetDate === resetDate
+    }
+  }, [])
+
+  // Helper function to dismiss low credit warning for current period
+  const dismissLowCreditWarning = useCallback((tier: string, periodType: 'daily' | 'monthly', creditsResetAt?: string) => {
+    if (periodType === 'daily') {
+      const today = new Date().toDateString()
+      localStorage.setItem(`credit-warning-dismissed-${tier}-daily`, today)
+    } else {
+      if (creditsResetAt) {
+        const resetDate = new Date(creditsResetAt).toDateString()
+        localStorage.setItem(`credit-warning-dismissed-${tier}-monthly`, resetDate)
+      }
+    }
+    setCreditWarningMessage(null)
+    setCreditWarningType(null)
+    setCreditWarningDismissible(false)
+  }, [])
+
+  // Clear insufficient credit warning when user adjusts input or models
+  useEffect(() => {
+    if (creditWarningType === 'insufficient') {
+      // Re-check if credits are now sufficient based on backend estimate
+      if (backendCreditEstimate && backendCreditEstimate.is_sufficient) {
+        setCreditWarningMessage(null)
+        setCreditWarningType(null)
+        setCreditWarningDismissible(false)
+      }
+    }
+  }, [input, selectedModels, backendCreditEstimate, creditWarningType])
+
   const {
     conversationHistory,
     setConversationHistory,
@@ -3017,22 +3102,50 @@ function AppContent() {
     // This frontend check is kept as a fallback/early warning
     // The backend will return proper credit error messages
     
-    // Check if user has run out of credits
+    // Check credit status and set appropriate warnings
+    const remainingPercent = creditsAllocated > 0 ? (creditsRemaining / creditsAllocated) * 100 : 100
+    const periodType = userTier === 'anonymous' || userTier === 'free' ? 'daily' : 'monthly'
+    const creditsResetAt = creditBalance?.credits_reset_at || user?.credits_reset_at
+
+    // No credits - block submission
     if (creditsRemaining <= 0) {
-      setError(
-        `You've run out of credits.${userTier === 'anonymous' ? ' Sign up for a free account to get 100 credits per day!' : ' Upgrade to a paid tier for more credits!'}`
-      )
+      const message = getCreditWarningMessage('none', userTier, creditsRemaining, undefined, creditsResetAt)
+      setCreditWarningMessage(message)
+      setCreditWarningType('none')
+      setCreditWarningDismissible(false)
+      setError(null) // Clear any other errors
       window.scrollTo({ top: 0, behavior: 'smooth' })
       return
     }
 
-    // Check if this request would exceed available credits
+    // Check if this request would exceed available credits (but allow submission with reduced tokens)
     if (estimatedCredits > creditsRemaining) {
-      setError(
-        `This request requires approximately ${estimatedCredits} credits, but you have ${Math.round(creditsRemaining)} credits remaining.${userTier === 'anonymous' ? ' Sign up for a free account to get 100 credits per day!' : ' Upgrade to a paid tier for more credits!'}`
-      )
-      window.scrollTo({ top: 0, behavior: 'smooth' })
-      return
+      const message = getCreditWarningMessage('insufficient', userTier, creditsRemaining, estimatedCredits)
+      setCreditWarningMessage(message)
+      setCreditWarningType('insufficient')
+      setCreditWarningDismissible(false)
+      setError(null) // Clear any other errors
+      // Don't return - allow submission with reduced max_tokens
+    } else {
+      // Check for low credits warning (dismissible)
+      const lowCreditThreshold = (userTier === 'anonymous' || userTier === 'free') ? 20 : 10
+      if (remainingPercent <= lowCreditThreshold && remainingPercent > 0) {
+        // Check if already dismissed for this period
+        if (!isLowCreditWarningDismissed(userTier, periodType, creditsResetAt)) {
+          const message = getCreditWarningMessage('low', userTier, creditsRemaining, undefined, creditsResetAt)
+          setCreditWarningMessage(message)
+          setCreditWarningType('low')
+          setCreditWarningDismissible(true)
+        } else {
+          setCreditWarningMessage(null)
+          setCreditWarningType(null)
+          setCreditWarningDismissible(false)
+        }
+      } else {
+        setCreditWarningMessage(null)
+        setCreditWarningType(null)
+        setCreditWarningDismissible(false)
+      }
     }
 
 
@@ -3128,33 +3241,62 @@ function AppContent() {
         conversation_history: conversationHistory,
       })
 
-      // Check if user has sufficient credits
-      if (!estimate.is_sufficient) {
-        setError(
-          `Insufficient credits: You have ${estimate.credits_remaining.toFixed(2)} credits remaining, ` +
-          `but need approximately ${estimate.estimated_credits.toFixed(2)} credits for this request. ` +
-          `${userTier === 'anonymous' ? 'Sign up for a free account to get 100 credits per day!' : 'Upgrade to a paid tier for more credits!'}`
-        )
+      // Update credit balance with estimate data
+      setCreditBalance({
+        credits_allocated: estimate.credits_allocated,
+        credits_used_this_period: estimate.credits_allocated - estimate.credits_remaining,
+        credits_remaining: estimate.credits_remaining,
+        period_type: userTier === 'anonymous' || userTier === 'free' ? 'daily' : 'monthly',
+        subscription_tier: userTier,
+        credits_reset_at: creditBalance?.credits_reset_at,
+      })
+
+      // Check credit status and set appropriate warnings
+      const remainingPercent = estimate.credits_allocated > 0
+        ? (estimate.credits_remaining / estimate.credits_allocated) * 100
+        : 100
+      const periodType = userTier === 'anonymous' || userTier === 'free' ? 'daily' : 'monthly'
+      const creditsResetAt = creditBalance?.credits_reset_at || user?.credits_reset_at
+
+      // No credits - block submission
+      if (estimate.credits_remaining <= 0) {
+        const message = getCreditWarningMessage('none', userTier, estimate.credits_remaining, undefined, creditsResetAt)
+        setCreditWarningMessage(message)
+        setCreditWarningType('none')
+        setCreditWarningDismissible(false)
+        setError(null)
         window.scrollTo({ top: 0, behavior: 'smooth' })
         return
       }
 
-      // Show warning if credits are low (< 20% remaining)
-      const creditUsagePercent = estimate.credits_allocated > 0
-        ? (estimate.credits_remaining / estimate.credits_allocated) * 100
-        : 100
-      if (creditUsagePercent < 20 && creditUsagePercent > 0) {
-        // Update credit balance to show warning banner
-        setCreditBalance({
-          credits_allocated: estimate.credits_allocated,
-          credits_used_this_period: estimate.credits_allocated - estimate.credits_remaining,
-          credits_remaining: estimate.credits_remaining,
-          period_type: userTier === 'anonymous' || userTier === 'free' ? 'daily' : 'monthly',
-          subscription_tier: userTier,
-        })
-        setShowLowCreditWarning(true)
+      // Check if this request would exceed available credits (but allow submission with reduced tokens)
+      if (!estimate.is_sufficient) {
+        const message = getCreditWarningMessage('insufficient', userTier, estimate.credits_remaining, estimate.estimated_credits)
+        setCreditWarningMessage(message)
+        setCreditWarningType('insufficient')
+        setCreditWarningDismissible(false)
+        setError(null)
+        // Don't return - allow submission with reduced max_tokens
       } else {
-        setShowLowCreditWarning(false)
+        // Check for low credits warning (dismissible)
+        const lowCreditThreshold = (userTier === 'anonymous' || userTier === 'free') ? 20 : 10
+        if (remainingPercent <= lowCreditThreshold && remainingPercent > 0) {
+          // Check if already dismissed for this period
+          if (!isLowCreditWarningDismissed(userTier, periodType, creditsResetAt)) {
+            const message = getCreditWarningMessage('low', userTier, estimate.credits_remaining, undefined, creditsResetAt)
+            setCreditWarningMessage(message)
+            setCreditWarningType('low')
+            setCreditWarningDismissible(true)
+          } else {
+            setCreditWarningMessage(null)
+            setCreditWarningType(null)
+            setCreditWarningDismissible(false)
+          }
+        } else {
+          setCreditWarningMessage(null)
+          setCreditWarningType(null)
+          setCreditWarningDismissible(false)
+        }
       }
     } catch (error) {
       // Handle estimation error gracefully - don't block submission
@@ -3165,6 +3307,12 @@ function AppContent() {
 
     setIsLoading(true)
     setError(null)
+    // Clear insufficient credit warning on submission (submission is allowed with reduced tokens)
+    if (creditWarningType === 'insufficient') {
+      setCreditWarningMessage(null)
+      setCreditWarningType(null)
+      setCreditWarningDismissible(false)
+    }
     setIsModelsHidden(true) // Hide models section after clicking Compare
     setShowDoneSelectingCard(false) // Hide "Done Selecting" card after clicking Compare
 
@@ -3419,10 +3567,35 @@ function AppContent() {
                         .then(() => getCreditBalance()) // Authenticated users don't need fingerprint
                         .then(balance => {
                           setCreditBalance(balance)
+                          // Update credit warnings based on new balance
+                          const userTier = user?.subscription_tier || 'free'
                           const remainingPercent = balance.credits_allocated > 0
                             ? (balance.credits_remaining / balance.credits_allocated) * 100
                             : 100
-                          setShowLowCreditWarning(remainingPercent < 20 && remainingPercent > 0)
+                          const periodType = userTier === 'anonymous' || userTier === 'free' ? 'daily' : 'monthly'
+                          const lowCreditThreshold = (userTier === 'anonymous' || userTier === 'free') ? 20 : 10
+                          
+                          if (balance.credits_remaining <= 0) {
+                            const message = getCreditWarningMessage('none', userTier, balance.credits_remaining, undefined, balance.credits_reset_at)
+                            setCreditWarningMessage(message)
+                            setCreditWarningType('none')
+                            setCreditWarningDismissible(false)
+                          } else if (remainingPercent <= lowCreditThreshold && remainingPercent > 0) {
+                            if (!isLowCreditWarningDismissed(userTier, periodType, balance.credits_reset_at)) {
+                              const message = getCreditWarningMessage('low', userTier, balance.credits_remaining, undefined, balance.credits_reset_at)
+                              setCreditWarningMessage(message)
+                              setCreditWarningType('low')
+                              setCreditWarningDismissible(true)
+                            } else {
+                              setCreditWarningMessage(null)
+                              setCreditWarningType(null)
+                              setCreditWarningDismissible(false)
+                            }
+                          } else {
+                            setCreditWarningMessage(null)
+                            setCreditWarningType(null)
+                            setCreditWarningDismissible(false)
+                          }
                         })
                         .catch(error => console.error('Failed to refresh user credit balance:', error))
                     } else {
@@ -3449,7 +3622,32 @@ function AppContent() {
                         const remainingPercent = allocated > 0
                           ? (metadataCreditsRemaining / allocated) * 100
                           : 100
-                        setShowLowCreditWarning(remainingPercent < 20 && remainingPercent > 0)
+                        // Update credit warnings based on new balance
+                        const userTier = 'anonymous'
+                        const periodType = 'daily'
+                        const lowCreditThreshold = 20
+                        
+                        if (metadataCreditsRemaining <= 0) {
+                          const message = getCreditWarningMessage('none', userTier, metadataCreditsRemaining)
+                          setCreditWarningMessage(message)
+                          setCreditWarningType('none')
+                          setCreditWarningDismissible(false)
+                        } else if (remainingPercent <= lowCreditThreshold && remainingPercent > 0) {
+                          if (!isLowCreditWarningDismissed(userTier, periodType)) {
+                            const message = getCreditWarningMessage('low', userTier, metadataCreditsRemaining)
+                            setCreditWarningMessage(message)
+                            setCreditWarningType('low')
+                            setCreditWarningDismissible(true)
+                          } else {
+                            setCreditWarningMessage(null)
+                            setCreditWarningType(null)
+                            setCreditWarningDismissible(false)
+                          }
+                        } else {
+                          setCreditWarningMessage(null)
+                          setCreditWarningType(null)
+                          setCreditWarningDismissible(false)
+                        }
                         
                         // Optionally refresh from API, but don't overwrite if metadata value is more recent
                         // Now API has fingerprint info, so it should match metadata
@@ -3477,10 +3675,35 @@ function AppContent() {
                           .then(balance => {
                             setAnonymousCreditsRemaining(balance.credits_remaining)
                             setCreditBalance(balance)
+                            // Update credit warnings based on new balance
+                            const userTier = 'anonymous'
+                            const periodType = 'daily'
                             const remainingPercent = balance.credits_allocated > 0
                               ? (balance.credits_remaining / balance.credits_allocated) * 100
                               : 100
-                            setShowLowCreditWarning(remainingPercent < 20 && remainingPercent > 0)
+                            const lowCreditThreshold = 20
+                            
+                            if (balance.credits_remaining <= 0) {
+                              const message = getCreditWarningMessage('none', userTier, balance.credits_remaining)
+                              setCreditWarningMessage(message)
+                              setCreditWarningType('none')
+                              setCreditWarningDismissible(false)
+                            } else if (remainingPercent <= lowCreditThreshold && remainingPercent > 0) {
+                              if (!isLowCreditWarningDismissed(userTier, periodType)) {
+                                const message = getCreditWarningMessage('low', userTier, balance.credits_remaining)
+                                setCreditWarningMessage(message)
+                                setCreditWarningType('low')
+                                setCreditWarningDismissible(true)
+                              } else {
+                                setCreditWarningMessage(null)
+                                setCreditWarningType(null)
+                                setCreditWarningDismissible(false)
+                              }
+                            } else {
+                              setCreditWarningMessage(null)
+                              setCreditWarningType(null)
+                              setCreditWarningDismissible(false)
+                            }
                           })
                           .catch(error => console.error('Failed to refresh anonymous credit balance:', error))
                       }
@@ -4297,17 +4520,34 @@ function AppContent() {
               </ErrorBoundary>
             </Hero>
 
-            {/* Low Credit Warning Banner */}
-            {showLowCreditWarning && creditBalance && (
-              <LowCreditWarningBanner
-                balance={creditBalance}
-                onUpgradeClick={() => {
-                  // Open upgrade modal - you can integrate with your upgrade modal here
-                  // For now, just show an error message
-                  setError('Please upgrade your plan to get more credits. Visit your account settings to upgrade.')
-                }}
-                onDismiss={() => setShowLowCreditWarning(false)}
-              />
+            {/* Credit Warning Messages */}
+            {creditWarningMessage && (
+              <div className="error-message">
+                <span>⚠️ {creditWarningMessage}</span>
+                {creditWarningDismissible && creditBalance && (
+                  <button
+                    onClick={() => {
+                      const userTier = isAuthenticated ? user?.subscription_tier || 'free' : 'anonymous'
+                      const periodType = userTier === 'anonymous' || userTier === 'free' ? 'daily' : 'monthly'
+                      dismissLowCreditWarning(userTier, periodType, creditBalance.credits_reset_at)
+                    }}
+                    style={{
+                      marginLeft: 'auto',
+                      background: 'none',
+                      border: 'none',
+                      color: '#dc2626',
+                      cursor: 'pointer',
+                      fontSize: '1.2rem',
+                      padding: '0 0.5rem',
+                      lineHeight: 1,
+                    }}
+                    aria-label="Dismiss warning"
+                    title="Dismiss warning"
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
             )}
 
             {error && (
