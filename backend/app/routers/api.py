@@ -22,7 +22,6 @@ from ..model_runner import (
     MODELS_BY_PROVIDER,
     call_openrouter_streaming,
     clean_model_response,
-    estimate_credits_before_request,
     TokenUsage,
 )
 from ..models import (
@@ -462,13 +461,6 @@ async def compare_stream(
     # --- CREDIT-BASED RATE LIMITING ---
     client_ip = get_client_ip(request)
 
-    # Estimate credits needed for this request
-    estimated_credits = estimate_credits_before_request(
-        prompt=req.input_data,
-        num_models=num_models,
-        conversation_history=req.conversation_history,
-    )
-
     is_overage = False
     overage_charge = 0.0
     credits_remaining = 0
@@ -487,10 +479,9 @@ async def compare_stream(
             f"[API] Authenticated user: {current_user.email}, subscription_tier: '{current_user.subscription_tier}', is_active: {current_user.is_active}"
         )
 
-        # Check current credit balance (for logging and blocking check)
-        # Note: We don't block based on estimated credits - allow comparisons to proceed
-        # Credits will be capped at allocated amount during deduction if needed
-        is_sufficient, credits_remaining, credits_allocated = check_user_credits(current_user, estimated_credits, db)
+        # Get current credit balance (no estimate needed - we don't block based on estimates)
+        credits_remaining = get_user_credits(current_user.id, db)
+        credits_allocated = current_user.monthly_credits_allocated or 0
 
         # Block submission ONLY if credits are already at 0 (after a previous comparison zeroed them out)
         # This allows one final comparison that zeros out credits, then blocks subsequent requests
@@ -519,7 +510,7 @@ async def compare_stream(
             )
 
         print(
-            f"Authenticated user {current_user.email} - Credits: {credits_remaining}/{credits_allocated} (estimated: {estimated_credits:.2f}, sufficient: {is_sufficient})"
+            f"Authenticated user {current_user.email} - Credits: {credits_remaining}/{credits_allocated}"
         )
     else:
         # Anonymous user - check credit-based limits
@@ -527,17 +518,16 @@ async def compare_stream(
             f"[API] Anonymous user - IP: {client_ip}, fingerprint: {req.browser_fingerprint[:20] if req.browser_fingerprint else 'None'}..."
         )
 
-        # Check IP-based credits
+        # Check IP-based credits (pass Decimal(0) since we don't need estimate for blocking)
         ip_identifier = f"ip:{client_ip}"
-        ip_sufficient, ip_credits_remaining, ip_credits_allocated = check_anonymous_credits(ip_identifier, estimated_credits, db)
+        _, ip_credits_remaining, ip_credits_allocated = check_anonymous_credits(ip_identifier, Decimal(0), db)
 
-        fingerprint_sufficient = True
-        fingerprint_credits_remaining = 0
-        fingerprint_credits_allocated = 0
+        fingerprint_credits_remaining = ip_credits_remaining
+        fingerprint_credits_allocated = ip_credits_allocated
         if req.browser_fingerprint:
             fp_identifier = f"fp:{req.browser_fingerprint}"
-            fingerprint_sufficient, fingerprint_credits_remaining, fingerprint_credits_allocated = check_anonymous_credits(
-                fp_identifier, estimated_credits, db
+            _, fingerprint_credits_remaining, fingerprint_credits_allocated = check_anonymous_credits(
+                fp_identifier, Decimal(0), db
             )
 
         # Use the most restrictive limit (lowest remaining credits)
@@ -558,11 +548,8 @@ async def compare_stream(
             )
 
         print(
-            f"Anonymous user - IP: {client_ip} - Credits: {credits_remaining}/{credits_allocated} (estimated: {estimated_credits:.2f})"
+            f"Anonymous user - IP: {client_ip} - Credits: {credits_remaining}/{credits_allocated}"
         )
-
-        # Set is_sufficient for anonymous users (used later for max_tokens calculation)
-        is_sufficient = ip_sufficient and (not req.browser_fingerprint or fingerprint_sufficient)
     # --- END CREDIT-BASED RATE LIMITING ---
 
     # Track start time for processing metrics
@@ -641,21 +628,39 @@ async def compare_stream(
             if req.conversation_history:
                 input_tokens += count_conversation_tokens(req.conversation_history)
 
-            # If credits are insufficient, calculate reduced max_tokens based on available credits
+            # If credits are low, calculate reduced max_tokens based on available credits per model
+            # This helps ensure users can still get responses even with low credits
             effective_max_tokens = get_min_max_output_tokens(req.models)
-            if not is_sufficient and credits_remaining > 0:
-                # Calculate credits available per model
-                credits_per_model = Decimal(credits_remaining) / Decimal(num_models)
+            
+            # Calculate credits available per model
+            credits_per_model = Decimal(credits_remaining) / Decimal(num_models) if num_models > 0 else Decimal(0)
+            
+            # Minimum usable response threshold: 300 output tokens
+            # This ensures responses are meaningful even with low credits
+            # 300 tokens ≈ 225 words, enough for a brief but complete answer
+            MIN_USABLE_OUTPUT_TOKENS = 300
+            
+            # Check if credits per model are low enough to require max_tokens reduction
+            # Threshold: < 2 credits per model (roughly < 300 tokens after accounting for input)
+            if credits_remaining > 0 and credits_per_model < 2:
                 # Calculate effective tokens available per model
                 effective_tokens_per_model = credits_per_model * Decimal(1000)
                 # Calculate max output tokens: (effective_tokens - input_tokens) / 2.5
                 # Ensure we don't go negative
                 max_output_tokens_calc = (effective_tokens_per_model - Decimal(input_tokens)) / Decimal(2.5)
-                max_output_tokens_int = max(100, int(max_output_tokens_calc))  # Minimum 100 tokens
+                max_output_tokens_int = max(MIN_USABLE_OUTPUT_TOKENS, int(max_output_tokens_calc))  # Enforce minimum usable threshold
+                
+                # If we had to enforce the minimum threshold, the comparison will exceed available credits
+                # Credits will be capped to 0 after deduction (handled by credit_manager)
+                if max_output_tokens_int == MIN_USABLE_OUTPUT_TOKENS and max_output_tokens_calc < MIN_USABLE_OUTPUT_TOKENS:
+                    print(
+                        f"[API] Low credits per model ({credits_per_model:.2f}) - enforcing minimum usable response ({MIN_USABLE_OUTPUT_TOKENS} tokens). Credits will be capped to 0."
+                    )
+                
                 # Use the smaller of calculated max_tokens or model's max capability
                 effective_max_tokens = min(effective_max_tokens, max_output_tokens_int)
                 print(
-                    f"[API] Insufficient credits - reducing max_tokens from {get_min_max_output_tokens(req.models)} to {effective_max_tokens} (credits_remaining: {credits_remaining}, credits_per_model: {credits_per_model:.2f})"
+                    f"[API] Low credits - reducing max_tokens from {get_min_max_output_tokens(req.models)} to {effective_max_tokens} (credits_remaining: {credits_remaining}, credits_per_model: {credits_per_model:.2f})"
                 )
 
             # Send all start events at once (concurrent processing begins simultaneously)
@@ -817,15 +822,20 @@ async def compare_stream(
                 if pending_tasks:
                     await asyncio.sleep(0.01)  # 10ms yield
 
-            # Calculate credits used (use actual usage if available, otherwise estimated)
+            # Calculate credits used - only for successful models
+            # Use actual token usage data from successful model responses
             total_credits_used = Decimal(0)
             if successful_models > 0:
                 if total_effective_tokens > 0:
-                    # Use actual token usage data
+                    # Use actual token usage data from successful models
                     total_credits_used = Decimal(total_effective_tokens) / Decimal(1000)
                 else:
-                    # Fall back to estimated credits if no actual usage data available
-                    total_credits_used = estimated_credits
+                    # Fallback: charge minimum 1 credit per successful model if no usage data available
+                    # This should rarely happen, but ensures we only charge for successful models
+                    total_credits_used = Decimal(successful_models)
+                    print(
+                        f"[WARNING] No token usage data available for {successful_models} successful model(s), charging minimum {total_credits_used} credits"
+                    )
 
             # Store the actual fractional credits for UsageLog (for analytics)
             actual_credits_used = total_credits_used
@@ -916,7 +926,6 @@ async def compare_stream(
                 # Credit-based fields
                 "credits_used": float(total_credits_used),
                 "credits_remaining": credits_remaining,
-                "estimated_credits": float(estimated_credits),
             }
 
             # Log usage to database SYNCHRONOUSLY (not in background) to ensure database is updated
