@@ -277,17 +277,125 @@ function AppContent() {
     setCreditWarningDismissible(false)
   }, [])
 
-  // Clear insufficient credit warning when user adjusts input or models
+  // Set/update credit warnings based on backend estimate (while user is typing/selecting)
   useEffect(() => {
-    if (creditWarningType === 'insufficient') {
-      // Re-check if credits are now sufficient based on backend estimate
-      if (backendCreditEstimate && backendCreditEstimate.is_sufficient) {
+    // Only show warnings if user has selected models and entered input
+    if (!input.trim() || selectedModels.length === 0) {
+      // Clear warnings if input is empty or no models selected
+      if (creditWarningType === 'insufficient' || creditWarningType === 'low') {
         setCreditWarningMessage(null)
         setCreditWarningType(null)
         setCreditWarningDismissible(false)
       }
+      return
     }
-  }, [input, selectedModels, backendCreditEstimate, creditWarningType])
+
+    // Don't show warnings while loading estimate (to avoid flicker)
+    if (isEstimatingCredits) {
+      return
+    }
+
+    const userTier = isAuthenticated ? user?.subscription_tier || 'free' : 'anonymous'
+    const creditsResetAt = creditBalance?.credits_reset_at || user?.credits_reset_at
+
+    if (backendCreditEstimate) {
+      // Use backend estimate (most accurate)
+      const estimate = backendCreditEstimate
+      
+      // No credits - show no credits warning
+      if (estimate.credits_remaining <= 0) {
+        const message = getCreditWarningMessage('none', userTier, estimate.credits_remaining, undefined, creditsResetAt)
+        setCreditWarningMessage(message)
+        setCreditWarningType('none')
+        setCreditWarningDismissible(false)
+        return
+      }
+
+      // Insufficient credits - show insufficient warning
+      if (!estimate.is_sufficient) {
+        const message = getCreditWarningMessage('insufficient', userTier, estimate.credits_remaining, estimate.estimated_credits)
+        setCreditWarningMessage(message)
+        setCreditWarningType('insufficient')
+        setCreditWarningDismissible(false)
+        return
+      }
+
+      // Sufficient credits - check for low credits warning
+      const remainingPercent = estimate.credits_allocated > 0
+        ? (estimate.credits_remaining / estimate.credits_allocated) * 100
+        : 100
+      const periodType = userTier === 'anonymous' || userTier === 'free' ? 'daily' : 'monthly'
+      const lowCreditThreshold = (userTier === 'anonymous' || userTier === 'free') ? 20 : 10
+      
+      if (remainingPercent <= lowCreditThreshold && remainingPercent > 0) {
+        // Check if already dismissed for this period
+        if (!isLowCreditWarningDismissed(userTier, periodType, creditsResetAt)) {
+          const message = getCreditWarningMessage('low', userTier, estimate.credits_remaining, undefined, creditsResetAt)
+          setCreditWarningMessage(message)
+          setCreditWarningType('low')
+          setCreditWarningDismissible(true)
+        } else {
+          // Clear if dismissed
+          if (creditWarningType === 'low') {
+            setCreditWarningMessage(null)
+            setCreditWarningType(null)
+            setCreditWarningDismissible(false)
+          }
+        }
+      } else {
+        // Clear warnings if credits are sufficient and not low
+        if (creditWarningType === 'low' || creditWarningType === 'insufficient') {
+          setCreditWarningMessage(null)
+          setCreditWarningType(null)
+          setCreditWarningDismissible(false)
+        }
+      }
+    } else {
+      // No backend estimate yet - use local calculation as fallback
+      const creditsAllocated = creditBalance?.credits_allocated ?? (isAuthenticated && user 
+        ? (user.monthly_credits_allocated || getCreditAllocation(userTier))
+        : getDailyCreditLimit(userTier) || getCreditAllocation(userTier))
+      
+      let creditsRemaining: number
+      if (!isAuthenticated && anonymousCreditsRemaining !== null) {
+        creditsRemaining = anonymousCreditsRemaining
+      } else if (creditBalance?.credits_remaining !== undefined) {
+        creditsRemaining = creditBalance.credits_remaining
+      } else {
+        const creditsUsed = creditBalance?.credits_used_this_period ?? creditBalance?.credits_used_today ?? (isAuthenticated && user 
+          ? (user.credits_used_this_period || 0)
+          : 0)
+        creditsRemaining = Math.max(0, creditsAllocated - creditsUsed)
+      }
+
+      // Rough local estimate
+      const inputTokens = Math.ceil(input.length / 4)
+      const outputTokensPerModel = 1000
+      const effectiveTokensPerModel = inputTokens + (outputTokensPerModel * 2.5)
+      const creditsPerModel = effectiveTokensPerModel / 1000
+      const estimatedCredits = Math.ceil(creditsPerModel * selectedModels.length)
+
+      // Check for insufficient credits with local estimate
+      if (creditsRemaining <= 0) {
+        const message = getCreditWarningMessage('none', userTier, creditsRemaining, undefined, creditsResetAt)
+        setCreditWarningMessage(message)
+        setCreditWarningType('none')
+        setCreditWarningDismissible(false)
+      } else if (estimatedCredits > creditsRemaining) {
+        const message = getCreditWarningMessage('insufficient', userTier, creditsRemaining, estimatedCredits)
+        setCreditWarningMessage(message)
+        setCreditWarningType('insufficient')
+        setCreditWarningDismissible(false)
+      } else {
+        // Clear insufficient warning if local estimate shows sufficient credits
+        if (creditWarningType === 'insufficient') {
+          setCreditWarningMessage(null)
+          setCreditWarningType(null)
+          setCreditWarningDismissible(false)
+        }
+      }
+    }
+  }, [input, selectedModels, backendCreditEstimate, isEstimatingCredits, creditBalance, anonymousCreditsRemaining, user, isAuthenticated, creditWarningType, getCreditWarningMessage, isLowCreditWarningDismissed])
 
   const {
     conversationHistory,
@@ -3098,17 +3206,9 @@ function AppContent() {
     // Total estimated credits
     const estimatedCredits = Math.ceil(creditsPerModel * modelsNeeded)
 
-    // Note: Credit checking is now handled by the backend (returns 402 if insufficient)
-    // This frontend check is kept as a fallback/early warning
-    // The backend will return proper credit error messages
-    
-    // Check credit status and set appropriate warnings
-    const remainingPercent = creditsAllocated > 0 ? (creditsRemaining / creditsAllocated) * 100 : 100
-    const periodType = userTier === 'anonymous' || userTier === 'free' ? 'daily' : 'monthly'
-    const creditsResetAt = creditBalance?.credits_reset_at || user?.credits_reset_at
-
-    // No credits - block submission
+    // No credits - block submission (warnings are set by useEffect based on backendCreditEstimate)
     if (creditsRemaining <= 0) {
+      const creditsResetAt = creditBalance?.credits_reset_at || user?.credits_reset_at
       const message = getCreditWarningMessage('none', userTier, creditsRemaining, undefined, creditsResetAt)
       setCreditWarningMessage(message)
       setCreditWarningType('none')
@@ -3116,36 +3216,6 @@ function AppContent() {
       setError(null) // Clear any other errors
       window.scrollTo({ top: 0, behavior: 'smooth' })
       return
-    }
-
-    // Check if this request would exceed available credits (but allow submission with reduced tokens)
-    if (estimatedCredits > creditsRemaining) {
-      const message = getCreditWarningMessage('insufficient', userTier, creditsRemaining, estimatedCredits)
-      setCreditWarningMessage(message)
-      setCreditWarningType('insufficient')
-      setCreditWarningDismissible(false)
-      setError(null) // Clear any other errors
-      // Don't return - allow submission with reduced max_tokens
-    } else {
-      // Check for low credits warning (dismissible)
-      const lowCreditThreshold = (userTier === 'anonymous' || userTier === 'free') ? 20 : 10
-      if (remainingPercent <= lowCreditThreshold && remainingPercent > 0) {
-        // Check if already dismissed for this period
-        if (!isLowCreditWarningDismissed(userTier, periodType, creditsResetAt)) {
-          const message = getCreditWarningMessage('low', userTier, creditsRemaining, undefined, creditsResetAt)
-          setCreditWarningMessage(message)
-          setCreditWarningType('low')
-          setCreditWarningDismissible(true)
-        } else {
-          setCreditWarningMessage(null)
-          setCreditWarningType(null)
-          setCreditWarningDismissible(false)
-        }
-      } else {
-        setCreditWarningMessage(null)
-        setCreditWarningType(null)
-        setCreditWarningDismissible(false)
-      }
     }
 
 
@@ -3233,82 +3303,14 @@ function AppContent() {
           })()
         : []
 
-    // Estimate credits before submission (before setting loading state)
-    try {
-      const estimate = await estimateCredits({
-        input_data: input,
-        models: selectedModels,
-        conversation_history: conversationHistory,
-      })
-
-      // Update credit balance with estimate data
-      setCreditBalance({
-        credits_allocated: estimate.credits_allocated,
-        credits_used_this_period: estimate.credits_allocated - estimate.credits_remaining,
-        credits_remaining: estimate.credits_remaining,
-        period_type: userTier === 'anonymous' || userTier === 'free' ? 'daily' : 'monthly',
-        subscription_tier: userTier,
-        credits_reset_at: creditBalance?.credits_reset_at,
-      })
-
-      // Check credit status and set appropriate warnings
-      const remainingPercent = estimate.credits_allocated > 0
-        ? (estimate.credits_remaining / estimate.credits_allocated) * 100
-        : 100
-      const periodType = userTier === 'anonymous' || userTier === 'free' ? 'daily' : 'monthly'
-      const creditsResetAt = creditBalance?.credits_reset_at || user?.credits_reset_at
-
-      // No credits - block submission
-      if (estimate.credits_remaining <= 0) {
-        const message = getCreditWarningMessage('none', userTier, estimate.credits_remaining, undefined, creditsResetAt)
-        setCreditWarningMessage(message)
-        setCreditWarningType('none')
-        setCreditWarningDismissible(false)
-        setError(null)
-        window.scrollTo({ top: 0, behavior: 'smooth' })
-        return
-      }
-
-      // Check if this request would exceed available credits (but allow submission with reduced tokens)
-      if (!estimate.is_sufficient) {
-        const message = getCreditWarningMessage('insufficient', userTier, estimate.credits_remaining, estimate.estimated_credits)
-        setCreditWarningMessage(message)
-        setCreditWarningType('insufficient')
-        setCreditWarningDismissible(false)
-        setError(null)
-        // Don't return - allow submission with reduced max_tokens
-      } else {
-        // Check for low credits warning (dismissible)
-        const lowCreditThreshold = (userTier === 'anonymous' || userTier === 'free') ? 20 : 10
-        if (remainingPercent <= lowCreditThreshold && remainingPercent > 0) {
-          // Check if already dismissed for this period
-          if (!isLowCreditWarningDismissed(userTier, periodType, creditsResetAt)) {
-            const message = getCreditWarningMessage('low', userTier, estimate.credits_remaining, undefined, creditsResetAt)
-            setCreditWarningMessage(message)
-            setCreditWarningType('low')
-            setCreditWarningDismissible(true)
-          } else {
-            setCreditWarningMessage(null)
-            setCreditWarningType(null)
-            setCreditWarningDismissible(false)
-          }
-        } else {
-          setCreditWarningMessage(null)
-          setCreditWarningType(null)
-          setCreditWarningDismissible(false)
-        }
-      }
-    } catch (error) {
-      // Handle estimation error gracefully - don't block submission
-      // Backend will validate credits anyway
-      console.error('Failed to estimate credits:', error)
-      // Continue with submission - backend will validate
-    }
+    // Credit warnings are already set by useEffect based on backendCreditEstimate
+    // No need to re-estimate here - just proceed with submission
 
     setIsLoading(true)
     setError(null)
-    // Clear insufficient credit warning on submission (submission is allowed with reduced tokens)
-    if (creditWarningType === 'insufficient') {
+    // Clear insufficient/low credit warnings on submission (submission is allowed with reduced tokens)
+    // "No credits" warning will be set after submission if credits are actually 0
+    if (creditWarningType === 'insufficient' || creditWarningType === 'low') {
       setCreditWarningMessage(null)
       setCreditWarningType(null)
       setCreditWarningDismissible(false)
