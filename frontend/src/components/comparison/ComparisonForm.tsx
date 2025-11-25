@@ -99,8 +99,9 @@ export const ComparisonForm = memo<ComparisonFormProps>(({
     // Get min max input tokens from selected models (convert max_input_chars to tokens by dividing by 4)
     const modelLimits = selectedModels
       .map(modelId => {
+        const modelIdStr = String(modelId);
         for (const providerModels of Object.values(modelsByProvider)) {
-          const model = providerModels.find(m => m.id === modelId);
+          const model = providerModels.find(m => String(m.id) === modelIdStr);
           if (model && model.max_input_chars) {
             // Convert chars to tokens (1 token ≈ 4 chars)
             return model.max_input_chars / 4;
@@ -121,8 +122,12 @@ export const ComparisonForm = memo<ComparisonFormProps>(({
     const currentInputTokens = Math.ceil(input.length / 4);
 
     // Conversation history tokens
+    // Convert both selectedModels and conv.modelId to strings for reliable comparison
     const conversationHistoryMessages = conversations
-      .filter(conv => selectedModels.includes(conv.modelId) && conv.messages.length > 0);
+      .filter(conv => {
+        const convModelIdStr = String(conv.modelId);
+        return selectedModels.some(selectedId => String(selectedId) === convModelIdStr) && conv.messages.length > 0;
+      });
     
     if (conversationHistoryMessages.length === 0) {
       return null;
@@ -130,10 +135,13 @@ export const ComparisonForm = memo<ComparisonFormProps>(({
 
     // Use the first selected conversation's messages
     const messages = conversationHistoryMessages[0].messages;
-    const conversationHistoryTokens = messages.reduce((sum, msg) => {
-      const content = msg.content || '';
-      return sum + Math.ceil(content.length / 4);
-    }, 0);
+    // Only count messages that have actual content
+    const conversationHistoryTokens = messages
+      .filter(msg => msg.content && msg.content.trim().length > 0)
+      .reduce((sum, msg) => {
+        const content = msg.content || '';
+        return sum + Math.ceil(content.length / 4);
+      }, 0);
 
     // Total input tokens (current input + conversation history)
     const totalInputTokens = currentInputTokens + conversationHistoryTokens;
@@ -314,7 +322,14 @@ export const ComparisonForm = memo<ComparisonFormProps>(({
               backgroundClip: 'text'
             }}>
               {tokenUsageInfo 
-                ? `${Math.round(tokenUsageInfo.percentageRemaining)}% capacity remaining`
+                ? (() => {
+                    // Show "99%+" instead of "100%" when there's conversation history and percentage is >= 99.5%
+                    const displayPercent = tokenUsageInfo.conversationHistoryTokens > 0 && 
+                                          tokenUsageInfo.percentageRemaining >= 99.5
+                      ? "99%+"
+                      : Math.round(tokenUsageInfo.percentageRemaining);
+                    return `${displayPercent}% capacity remaining`;
+                  })()
                 : `${messageCount + (input.trim() ? 1 : 0)} message context`}
             </span>
           </>

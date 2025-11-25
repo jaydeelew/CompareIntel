@@ -2994,7 +2994,6 @@ function AppContent() {
         // Note: We no longer block submissions at 0% remaining - allow with warnings
         // Backend will handle truncation if needed
       }
-      }
     }
 
     // Check credit balance before submitting
@@ -3124,7 +3123,7 @@ function AppContent() {
     // Prepare conversation history for the API (needed for credit estimation)
     // For follow-up mode, we send the complete conversation history (both user and assistant messages)
     // This matches how official AI chat interfaces work and provides proper context
-    const conversationHistory =
+    const apiConversationHistory =
       isFollowUpMode && conversations.length > 0
         ? (() => {
             // Get the first conversation that has messages and is for a selected model
@@ -3217,7 +3216,7 @@ function AppContent() {
       const stream = await compareStream({
         input_data: input,
         models: selectedModels,
-        conversation_history: conversationHistory,
+        conversation_history: apiConversationHistory,
         browser_fingerprint: browserFingerprint,
         conversation_id: conversationId || undefined, // Only include if not null
       })
