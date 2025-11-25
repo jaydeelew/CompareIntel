@@ -4100,6 +4100,38 @@ function AppContent() {
           })
         }
 
+        // Refresh credits if any models completed successfully before timeout
+        // The backend should have deducted credits for successful models even if the client disconnected
+        const successfulModelsCount = selectedModels.filter(modelId => {
+          const createdModelId = createModelId(modelId)
+          const hasCompleted = completedModels.has(createdModelId)
+          const hasError = timeoutModelErrors[createdModelId] === true
+          const content = streamingResults[createdModelId] || ''
+          const isError = isErrorMessage(content)
+          return hasCompleted && !hasError && !isError && content.trim().length > 0
+        }).length
+
+        if (successfulModelsCount > 0) {
+          // Refresh credits from API since we didn't receive the complete event with metadata
+          if (isAuthenticated) {
+            // For authenticated users, refresh user data and credit balance
+            refreshUser()
+              .then(() => getCreditBalance())
+              .then(balance => {
+                setCreditBalance(balance)
+              })
+              .catch(error => console.error('Failed to refresh credit balance after timeout:', error))
+          } else {
+            // For anonymous users, refresh credit balance from API
+            getCreditBalance(browserFingerprint)
+              .then(balance => {
+                setAnonymousCreditsRemaining(balance.credits_remaining)
+                setCreditBalance(balance)
+              })
+              .catch(error => console.error('Failed to refresh anonymous credit balance after timeout:', error))
+          }
+        }
+
         if (userCancelledRef.current) {
           const elapsedTime = Date.now() - startTime
           const elapsedSeconds = (elapsedTime / 1000).toFixed(1)
