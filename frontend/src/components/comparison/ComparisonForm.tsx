@@ -443,6 +443,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(({
                 <div 
                   className="token-usage-indicator"
                   title={`${Math.round(percentage)}% of input capacity used`}
+                  style={{ cursor: 'default' }}
                 >
                   <svg width="32" height="32" viewBox="0 0 32 32" style={{ transform: 'rotate(-90deg)' }}>
                     {/* Background circle (grey) */}
