@@ -1836,11 +1836,12 @@ function AppContent() {
           clearTimeout(scrollTimeout)
         }
 
-        // Reset flag after scrolling stops (150ms of no scroll activity)
+        // Reset flag after scrolling stops (300ms of no scroll activity)
+        // Use a longer delay to ensure user has finished scrolling before resuming auto-scroll
         scrollTimeout = window.setTimeout(() => {
           isPageScrollingRef.current = false
           scrollTimeout = null
-        }, 150)
+        }, 300)
       }
 
       lastPageScrollTop = currentScrollTop
@@ -3199,6 +3200,7 @@ function AppContent() {
     let timeoutId: ReturnType<typeof setTimeout> | null = null
     let hasReceivedChunk = false // Track if we've received at least one chunk
     let lastChunkTime = Date.now() // Track when last chunk was received
+    const modelLastChunkTimes: { [key: string]: number } = {} // Track when each model last received a chunk
 
     try {
       const controller = new AbortController()
@@ -3221,20 +3223,43 @@ function AppContent() {
           timeoutId = null
         }
 
+        // Check if any models are still actively streaming (not completed and received chunk recently)
+        const getActiveStreamingModels = () => {
+          const now = Date.now()
+          return selectedModels.filter(modelId => {
+            // Model is active if it hasn't completed and received a chunk within the idle timeout
+            if (completedModels.has(modelId)) return false
+            const lastChunk = modelLastChunkTimes[modelId]
+            if (!lastChunk) return false // Model started but never received chunks
+            return (now - lastChunk) < STREAMING_IDLE_TIMEOUT
+          })
+        }
+
         // If we haven't received any chunks yet, use initial connection timeout
-        // Once we've received chunks, only timeout if idle (no chunks for STREAMING_IDLE_TIMEOUT)
+        // Once we've received chunks, only timeout if no models are actively streaming
+        const activeStreamingModels = getActiveStreamingModels()
         const timeoutDuration = hasReceivedChunk 
           ? STREAMING_IDLE_TIMEOUT 
           : INITIAL_CONNECTION_TIMEOUT
 
         // Set new timeout
         timeoutId = setTimeout(() => {
-          // Only abort if we haven't received a chunk recently
-          const timeSinceLastChunk = Date.now() - lastChunkTime
-          if (!hasReceivedChunk || timeSinceLastChunk >= timeoutDuration) {
-            controller.abort()
+          // Check again if any models are still actively streaming
+          const stillActiveModels = getActiveStreamingModels()
+          
+          // Only abort if no models are actively streaming
+          // This allows completed models to finish while others continue streaming
+          if (stillActiveModels.length === 0) {
+            // No models are actively streaming - check if we should abort
+            const timeSinceLastChunk = Date.now() - lastChunkTime
+            if (!hasReceivedChunk || timeSinceLastChunk >= timeoutDuration) {
+              controller.abort()
+            } else {
+              // Reset timeout if we received a chunk just before timeout fired
+              resetStreamingTimeout()
+            }
           } else {
-            // Reset timeout if we received a chunk just before timeout fired
+            // Some models are still actively streaming - reset timeout to wait for them
             resetStreamingTimeout()
           }
         }, timeoutDuration)
@@ -3331,6 +3356,10 @@ function AppContent() {
                   // Content chunk arrived - append to result
                   streamingResults[event.model] =
                     (streamingResults[event.model] || '') + event.content
+                  // Update per-model chunk time to track which models are actively streaming
+                  modelLastChunkTimes[event.model] = Date.now()
+                  lastChunkTime = Date.now() // Also update global for backward compatibility
+                  resetStreamingTimeout() // Reset timeout since this model is actively streaming
                   shouldUpdate = true
 
                   // Set up scroll listener on first chunk (DOM should be ready by now)
@@ -4207,21 +4236,53 @@ function AppContent() {
           const elapsedSeconds = (elapsedTime / 1000).toFixed(1)
           setError(`Comparison cancelled by user after ${elapsedSeconds} seconds`)
         } else {
-          // Determine timeout message based on whether we received any chunks
+          // Determine timeout message based on which models completed vs timed out
+          const completedCount = completedModels.size
+          const totalCount = selectedModels.length
+          const timedOutCount = totalCount - completedCount
+          
+          // Check if any models were actively streaming when timeout occurred
+          const now = Date.now()
+          const wasAnyModelStreaming = Object.keys(modelLastChunkTimes).some(modelId => {
+            if (completedModels.has(modelId)) return false
+            const lastChunk = modelLastChunkTimes[modelId]
+            return lastChunk && (now - lastChunk) < STREAMING_IDLE_TIMEOUT
+          })
+          
           const timeoutDuration = hasReceivedChunk ? STREAMING_IDLE_TIMEOUT : INITIAL_CONNECTION_TIMEOUT
           const timeoutMinutes = Math.floor(timeoutDuration / 60000)
           const timeoutSeconds = Math.floor((timeoutDuration % 60000) / 1000)
-          const modelText = selectedModels.length === 1 ? 'model' : 'models'
-          const timeoutReason = hasReceivedChunk 
-            ? 'No data received for'
-            : 'Connection timeout after'
-          const suggestionText =
-            selectedModels.length === 1
-              ? 'Please wait a moment and try again.'
-              : 'Try selecting fewer models, or wait a moment and try again.'
-          setError(
-            `${timeoutReason} ${timeoutMinutes}:${timeoutSeconds.toString().padStart(2, '0')} (${selectedModels.length} ${modelText}). ${suggestionText}`
-          )
+          
+          let errorMessage: string
+          
+          if (completedCount === 0) {
+            // No models completed - show standard timeout message
+            const timeoutReason = hasReceivedChunk 
+              ? 'No data received for'
+              : 'Connection timeout after'
+            const modelText = totalCount === 1 ? 'model' : 'models'
+            const suggestionText =
+              totalCount === 1
+                ? 'Please wait a moment and try again.'
+                : 'Try selecting fewer models, or wait a moment and try again.'
+            errorMessage = `${timeoutReason} ${timeoutMinutes}:${timeoutSeconds.toString().padStart(2, '0')} (${totalCount} ${modelText}). ${suggestionText}`
+          } else if (completedCount < totalCount) {
+            // Some models completed, some timed out
+            const completedText = completedCount === 1 ? 'model completed' : 'models completed'
+            const timedOutText = timedOutCount === 1 ? 'model timed out' : 'models timed out'
+            
+            // If models were actively streaming when timeout occurred, mention that
+            if (wasAnyModelStreaming) {
+              errorMessage = `${completedCount} ${completedText}, but ${timedOutCount} ${timedOutText} after ${timeoutMinutes}:${timeoutSeconds.toString().padStart(2, '0')} of inactivity.`
+            } else {
+              errorMessage = `${completedCount} ${completedText}, but ${timedOutCount} ${timedOutText} after ${timeoutMinutes}:${timeoutSeconds.toString().padStart(2, '0')} of no data.`
+            }
+          } else {
+            // All models completed (shouldn't happen in catch block, but handle gracefully)
+            errorMessage = 'All models completed successfully.'
+          }
+          
+          setError(errorMessage)
         }
       } else if (err instanceof PaymentRequiredError) {
         // Handle insufficient credits error (402 Payment Required)
