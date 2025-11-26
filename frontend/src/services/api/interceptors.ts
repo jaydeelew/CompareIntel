@@ -57,8 +57,17 @@ export const defaultHeadersInterceptor: RequestInterceptor = async (url, config)
 
 /**
  * Request interceptor: Add request timeout
+ * 
+ * Note: Streaming requests (detected by presence of onChunk) do not get a timeout,
+ * as they should only timeout if no data is received for a period, not from the start.
  */
 export const timeoutInterceptor: RequestInterceptor = async (url, config) => {
+  // Skip timeout for streaming requests - they handle timeout differently
+  // (only timeout if no chunks received for a period, not from request start)
+  if ('onChunk' in config) {
+    return [url, config];
+  }
+
   const timeout = config.timeout ?? 60000; // Default 60 seconds
 
   // Create abort controller if not provided

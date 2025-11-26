@@ -467,6 +467,22 @@
   margin-left: auto;
 }
 
+.token-usage-indicator {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  cursor: help;
+}
+
+.token-usage-indicator svg {
+  width: 32px;
+  height: 32px;
+  display: block;
+}
+
 .textarea-icon-button {
   width: 32px;
   height: 32px;

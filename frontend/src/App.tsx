@@ -3181,11 +3181,11 @@ function AppContent() {
 
     const startTime = Date.now()
 
-    // Dynamic timeout based on request complexity
-    // Models run concurrently, so timeout is based on slowest model + overhead, not sum
-    const baseTimeout = 180000 // 3 minutes base (covers slowest model + network overhead)
-    const maxTimeout = 480000 // 8 min max
-    const dynamicTimeout = Math.min(baseTimeout, maxTimeout)
+    // Timeout configuration for streaming
+    // Only timeout if no chunks are received for this period (not from request start)
+    // This allows long-running streams to continue as long as they're actively streaming
+    const STREAMING_IDLE_TIMEOUT = 300000 // 5 minutes of no data = timeout
+    const INITIAL_CONNECTION_TIMEOUT = 60000 // 1 minute to establish connection and receive first chunk
 
     // Declare streaming variables outside try block so they're accessible in catch block for timeout handling
     const streamingResults: { [key: string]: string } = {}
@@ -3195,11 +3195,14 @@ function AppContent() {
     const modelCompletionTimes: { [key: string]: string } = {} // Track when each model completes
     let streamingMetadata: CompareResponse['metadata'] | null = null
 
+    // Track timeout state for streaming (declared outside try block for access in catch/finally)
+    let timeoutId: ReturnType<typeof setTimeout> | null = null
+    let hasReceivedChunk = false // Track if we've received at least one chunk
+    let lastChunkTime = Date.now() // Track when last chunk was received
+
     try {
       const controller = new AbortController()
       setCurrentAbortController(controller)
-
-      const timeoutId = setTimeout(() => controller.abort(), dynamicTimeout)
 
       // Use streaming endpoint for faster perceived response time
       // Include conversation_id if available (for authenticated users) to ensure correct conversation matching
@@ -3210,7 +3213,35 @@ function AppContent() {
             : currentVisibleComparisonId
           : null
 
-      clearTimeout(timeoutId)
+      // Function to reset/update the timeout based on streaming activity
+      const resetStreamingTimeout = () => {
+        // Clear existing timeout
+        if (timeoutId) {
+          clearTimeout(timeoutId)
+          timeoutId = null
+        }
+
+        // If we haven't received any chunks yet, use initial connection timeout
+        // Once we've received chunks, only timeout if idle (no chunks for STREAMING_IDLE_TIMEOUT)
+        const timeoutDuration = hasReceivedChunk 
+          ? STREAMING_IDLE_TIMEOUT 
+          : INITIAL_CONNECTION_TIMEOUT
+
+        // Set new timeout
+        timeoutId = setTimeout(() => {
+          // Only abort if we haven't received a chunk recently
+          const timeSinceLastChunk = Date.now() - lastChunkTime
+          if (!hasReceivedChunk || timeSinceLastChunk >= timeoutDuration) {
+            controller.abort()
+          } else {
+            // Reset timeout if we received a chunk just before timeout fired
+            resetStreamingTimeout()
+          }
+        }, timeoutDuration)
+      }
+
+      // Start initial timeout
+      resetStreamingTimeout()
 
       // Use service for streaming request
       const stream = await compareStream({
@@ -3269,6 +3300,11 @@ function AppContent() {
 
             // Decode the chunk and add to buffer
             buffer += decoder.decode(value, { stream: true })
+
+            // Reset timeout when we receive any data (indicates active streaming)
+            hasReceivedChunk = true
+            lastChunkTime = Date.now()
+            resetStreamingTimeout()
 
             // Process complete SSE messages (separated by \n\n)
             const messages = buffer.split('\n\n')
@@ -3701,6 +3737,12 @@ function AppContent() {
                 })
               })
             }
+          }
+
+          // Clean up timeout since stream completed successfully
+          if (timeoutId) {
+            clearTimeout(timeoutId)
+            timeoutId = null
           }
 
           // Final update to ensure all content is displayed
@@ -4154,20 +4196,31 @@ function AppContent() {
           }
         }
 
+        // Clean up timeout
+        if (timeoutId) {
+          clearTimeout(timeoutId)
+          timeoutId = null
+        }
+
         if (userCancelledRef.current) {
           const elapsedTime = Date.now() - startTime
           const elapsedSeconds = (elapsedTime / 1000).toFixed(1)
           setError(`Comparison cancelled by user after ${elapsedSeconds} seconds`)
         } else {
-          const timeoutMinutes = Math.floor(dynamicTimeout / 60000)
-          const timeoutSeconds = Math.floor((dynamicTimeout % 60000) / 1000)
+          // Determine timeout message based on whether we received any chunks
+          const timeoutDuration = hasReceivedChunk ? STREAMING_IDLE_TIMEOUT : INITIAL_CONNECTION_TIMEOUT
+          const timeoutMinutes = Math.floor(timeoutDuration / 60000)
+          const timeoutSeconds = Math.floor((timeoutDuration % 60000) / 1000)
           const modelText = selectedModels.length === 1 ? 'model' : 'models'
+          const timeoutReason = hasReceivedChunk 
+            ? 'No data received for'
+            : 'Connection timeout after'
           const suggestionText =
             selectedModels.length === 1
               ? 'Please wait a moment and try again.'
               : 'Try selecting fewer models, or wait a moment and try again.'
           setError(
-            `Request timed out after ${timeoutMinutes}:${timeoutSeconds.toString().padStart(2, '0')} (${selectedModels.length} ${modelText}). ${suggestionText}`
+            `${timeoutReason} ${timeoutMinutes}:${timeoutSeconds.toString().padStart(2, '0')} (${selectedModels.length} ${modelText}). ${suggestionText}`
           )
         }
       } else if (err instanceof PaymentRequiredError) {
@@ -4193,6 +4246,12 @@ function AppContent() {
         setError('An unexpected error occurred')
       }
     } finally {
+      // Clean up timeout if it still exists
+      if (timeoutId) {
+        clearTimeout(timeoutId)
+        timeoutId = null
+      }
+      
       setCurrentAbortController(null)
       userCancelledRef.current = false
       setIsLoading(false)

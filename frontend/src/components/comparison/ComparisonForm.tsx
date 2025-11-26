@@ -3,7 +3,7 @@ import type { User } from '../../types';
 import type { ConversationSummary, ModelConversation } from '../../types';
 import type { ModelsByProvider } from '../../types/models';
 import { truncatePrompt, formatDate } from '../../utils';
-import { getConversationLimit, getDailyLimit } from '../../config/constants';
+import { getConversationLimit } from '../../config/constants';
 
 interface ComparisonFormProps {
   // Input state
@@ -90,7 +90,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(({
 }) => {
   const messageCount = conversations.length > 0 ? conversations[0]?.messages.length || 0 : 0;
 
-  // Calculate token usage and percentage remaining
+  // Calculate token usage and percentage remaining for follow-up mode
   const tokenUsageInfo = useMemo(() => {
     if (!isFollowUpMode || selectedModels.length === 0 || conversations.length === 0) {
       return null;
@@ -160,6 +160,68 @@ export const ComparisonForm = memo<ComparisonFormProps>(({
       isExceeded: totalInputTokens > minMaxInputTokens,
     };
   }, [isFollowUpMode, selectedModels, conversations, input, modelsByProvider]);
+
+  // Calculate token usage percentage for pie chart (works in both regular and follow-up mode)
+  const tokenUsagePercentage = useMemo(() => {
+    if (selectedModels.length === 0) {
+      return 0;
+    }
+
+    // Get min max input tokens from selected models (convert max_input_chars to tokens by dividing by 4)
+    const modelLimits = selectedModels
+      .map(modelId => {
+        const modelIdStr = String(modelId);
+        for (const providerModels of Object.values(modelsByProvider)) {
+          const model = providerModels.find(m => String(m.id) === modelIdStr);
+          if (model && model.max_input_chars) {
+            // Convert chars to tokens (1 token ≈ 4 chars)
+            return model.max_input_chars / 4;
+          }
+        }
+        return null;
+      })
+      .filter((limit): limit is number => limit !== null);
+
+    if (modelLimits.length === 0) {
+      return 0;
+    }
+
+    const minMaxInputTokens = Math.min(...modelLimits);
+    
+    // Calculate current input token usage
+    const currentInputTokens = Math.ceil(input.length / 4);
+    
+    // Calculate conversation history tokens if in follow-up mode
+    let conversationHistoryTokens = 0;
+    if (isFollowUpMode && conversations.length > 0) {
+      // Convert both selectedModels and conv.modelId to strings for reliable comparison
+      const conversationHistoryMessages = conversations
+        .filter(conv => {
+          const convModelIdStr = String(conv.modelId);
+          return selectedModels.some(selectedId => String(selectedId) === convModelIdStr) && conv.messages.length > 0;
+        });
+      
+      if (conversationHistoryMessages.length > 0) {
+        // Use the first selected conversation's messages
+        const messages = conversationHistoryMessages[0].messages;
+        // Only count messages that have actual content
+        conversationHistoryTokens = messages
+          .filter(msg => msg.content && msg.content.trim().length > 0)
+          .reduce((sum, msg) => {
+            const content = msg.content || '';
+            return sum + Math.ceil(content.length / 4);
+          }, 0);
+      }
+    }
+    
+    // Total input tokens (current input + conversation history)
+    const totalInputTokens = currentInputTokens + conversationHistoryTokens;
+    
+    // Calculate percentage used (clamp between 0 and 100)
+    const percentageUsed = Math.min(100, Math.max(0, (totalInputTokens / minMaxInputTokens) * 100));
+    
+    return percentageUsed;
+  }, [selectedModels, input, modelsByProvider, isFollowUpMode, conversations]);
 
   // Auto-expand textarea based on content (like ChatGPT)
   // Scrollable after 5 lines (6th line triggers scrolling)
@@ -276,7 +338,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(({
         {isFollowUpMode ? (
           <>
             <h2 style={{ margin: 0 }}>
-              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Follow Up Mode
+              Follow Up Mode
             </h2>
             <button
               onClick={onNewComparison}
@@ -309,29 +371,6 @@ export const ComparisonForm = memo<ComparisonFormProps>(({
                 <circle cx="12" cy="12" r="8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
               </svg>
             </button>
-            <span style={{
-              fontSize: 'clamp(1.25rem, 3vw, 1.5rem)',
-              fontWeight: 700,
-              color: 'transparent',
-              textAlign: 'center',
-              margin: 0,
-              letterSpacing: '-0.025em',
-              textShadow: '0 2px 8px rgba(0, 0, 0, 0.2)',
-              background: 'linear-gradient(135deg, #ffffff 0%, #e2e8f0 100%)',
-              WebkitBackgroundClip: 'text',
-              backgroundClip: 'text'
-            }}>
-              {tokenUsageInfo 
-                ? (() => {
-                    // Show "99%+" instead of "100%" when there's conversation history and percentage is >= 99.5%
-                    const displayPercent = tokenUsageInfo.conversationHistoryTokens > 0 && 
-                                          tokenUsageInfo.percentageRemaining >= 99.5
-                      ? "99%+"
-                      : Math.round(tokenUsageInfo.percentageRemaining);
-                    return `${displayPercent}% capacity remaining`;
-                  })()
-                : `${messageCount + (input.trim() ? 1 : 0)} message context`}
-            </span>
           </>
         ) : (
           <h2>Enter Your Prompt</h2>
@@ -383,6 +422,59 @@ export const ComparisonForm = memo<ComparisonFormProps>(({
           </button>
 
           <div className="textarea-actions">
+            {/* Token usage pie chart indicator */}
+            {selectedModels.length > 0 && (() => {
+              const percentage = tokenUsagePercentage;
+              const radius = 14; // 32px diameter / 2 - 2px stroke
+              const circumference = 2 * Math.PI * radius;
+              const offset = circumference - (percentage / 100) * circumference;
+              
+              // Determine color based on percentage
+              let fillColor = '#3b82f6'; // Blue for normal usage
+              if (percentage >= 90) {
+                fillColor = '#ef4444'; // Red for high usage
+              } else if (percentage >= 75) {
+                fillColor = '#f59e0b'; // Orange for medium-high usage
+              } else if (percentage >= 50) {
+                fillColor = '#eab308'; // Yellow for medium usage
+              }
+
+              return (
+                <div 
+                  className="token-usage-indicator"
+                  title={`${Math.round(percentage)}% of input capacity used`}
+                >
+                  <svg width="32" height="32" viewBox="0 0 32 32" style={{ transform: 'rotate(-90deg)' }}>
+                    {/* Background circle (grey) */}
+                    <circle
+                      cx="16"
+                      cy="16"
+                      r={radius}
+                      fill="none"
+                      stroke="#e5e7eb"
+                      strokeWidth="2"
+                    />
+                    {/* Progress circle (filled portion) */}
+                    {percentage > 0 && (
+                      <circle
+                        cx="16"
+                        cy="16"
+                        r={radius}
+                        fill="none"
+                        stroke={fillColor}
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeDasharray={circumference}
+                        strokeDashoffset={offset}
+                        style={{
+                          transition: 'stroke-dashoffset 0.3s ease, stroke 0.3s ease',
+                        }}
+                      />
+                    )}
+                  </svg>
+                </div>
+              );
+            })()}
             <button
               onClick={isFollowUpMode ? onContinueConversation : onSubmitClick}
               disabled={isLoading}
