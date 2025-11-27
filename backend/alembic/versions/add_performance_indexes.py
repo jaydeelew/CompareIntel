@@ -17,7 +17,7 @@ import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision = 'add_performance_indexes'
-down_revision = None  # Update this with your latest revision
+down_revision = 'add_credits_system_fields'  # Revises credits system fields migration
 branch_labels = None
 depends_on = None
 

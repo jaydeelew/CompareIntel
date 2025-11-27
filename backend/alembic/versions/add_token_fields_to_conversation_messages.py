@@ -13,7 +13,7 @@ import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision = 'add_token_fields_to_conversation_messages'
-down_revision = 'add_credits_system_fields'
+down_revision = 'add_performance_indexes'  # Revises performance indexes migration
 branch_labels = None
 depends_on = None
 

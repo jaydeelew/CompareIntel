@@ -15,7 +15,7 @@ from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
 revision = 'add_usage_log_monthly_aggregate'
-down_revision = None  # Will be set to merge both heads
+down_revision = 'add_token_fields_to_conversation_messages'  # Revises token fields migration
 branch_labels = None
 depends_on = None
 
