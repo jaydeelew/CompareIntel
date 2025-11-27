@@ -177,6 +177,51 @@ function AppContent() {
   const [creditWarningMessage, setCreditWarningMessage] = useState<string | null>(null)
   const [creditWarningType, setCreditWarningType] = useState<'low' | 'insufficient' | 'none' | null>(null)
   const [creditWarningDismissible, setCreditWarningDismissible] = useState(false)
+  
+  // Refs for error message elements to enable scrolling
+  const creditWarningMessageRef = useRef<HTMLDivElement>(null)
+  const errorMessageRef = useRef<HTMLDivElement>(null)
+  const prevCreditWarningMessageRef = useRef<string | null>(null)
+  const prevErrorRef = useRef<string | null>(null)
+
+  // Helper function to scroll to an element and center it vertically
+  const scrollToCenterElement = useCallback((element: HTMLElement | null) => {
+    if (!element) return
+    
+    // Wait for DOM to update, then scroll
+    setTimeout(() => {
+      const elementRect = element.getBoundingClientRect()
+      const elementTop = elementRect.top + window.scrollY
+      const elementHeight = elementRect.height
+      const windowHeight = window.innerHeight
+      
+      // Calculate scroll position to center the element vertically
+      const scrollPosition = elementTop - (windowHeight / 2) + (elementHeight / 2)
+      
+      window.scrollTo({
+        top: Math.max(0, scrollPosition),
+        behavior: 'smooth'
+      })
+    }, 100) // Small delay to ensure DOM is updated
+  }, [])
+
+  // Scroll to credit warning message when it first appears and center it vertically
+  useEffect(() => {
+    // Check if credit warning message just appeared
+    if (creditWarningMessage && !prevCreditWarningMessageRef.current) {
+      scrollToCenterElement(creditWarningMessageRef.current)
+    }
+    prevCreditWarningMessageRef.current = creditWarningMessage
+  }, [creditWarningMessage, scrollToCenterElement])
+
+  // Scroll to error message when it first appears and center it vertically
+  useEffect(() => {
+    // Check if error message just appeared
+    if (error && !prevErrorRef.current) {
+      scrollToCenterElement(errorMessageRef.current)
+    }
+    prevErrorRef.current = error
+  }, [error, scrollToCenterElement])
 
   // Callback for when the active conversation is deleted
   const handleDeleteActiveConversation = useCallback(() => {
@@ -4591,7 +4636,7 @@ function AppContent() {
 
             {/* Credit Warning Messages */}
             {creditWarningMessage && (
-              <div className="error-message">
+              <div className="error-message" ref={creditWarningMessageRef}>
                 <span>⚠️ {creditWarningMessage}</span>
                 {creditWarningDismissible && creditBalance && (
                   <button
@@ -4620,7 +4665,7 @@ function AppContent() {
             )}
 
             {error && (
-              <div className="error-message">
+              <div className="error-message" ref={errorMessageRef}>
                 <span>⚠️ {error}</span>
               </div>
             )}
