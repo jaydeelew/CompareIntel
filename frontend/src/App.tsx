@@ -3396,9 +3396,19 @@ function AppContent() {
           })
         }
 
+        // Check if any models have already exceeded the timeout (immediate abort check)
+        const activeStreamingModels = getActiveStreamingModels()
+        const allModelsCompleted = completedModels.size === selectedModels.length
+        
+        // If we have received chunks and not all models are completed, check if any have timed out
+        if (hasReceivedChunk && !allModelsCompleted && activeStreamingModels.length === 0) {
+          // No models are actively streaming and not all are completed - abort immediately
+          controller.abort()
+          return
+        }
+
         // If we haven't received any chunks yet, use initial connection timeout
         // Once we've received chunks, only timeout if no models are actively streaming
-        const activeStreamingModels = getActiveStreamingModels()
         const timeoutDuration = hasReceivedChunk 
           ? STREAMING_IDLE_TIMEOUT 
           : INITIAL_CONNECTION_TIMEOUT
@@ -3411,13 +3421,17 @@ function AppContent() {
           // Only abort if no models are actively streaming
           // This allows completed models to finish while others continue streaming
           if (stillActiveModels.length === 0) {
-            // No models are actively streaming - check if we should abort
-            const timeSinceLastChunk = Date.now() - lastChunkTime
-            if (!hasReceivedChunk || timeSinceLastChunk >= timeoutDuration) {
-              controller.abort()
-            } else {
-              // Reset timeout if we received a chunk just before timeout fired
+            // No models are actively streaming - check if all models have completed
+            const allModelsCompleted = completedModels.size === selectedModels.length
+            
+            if (allModelsCompleted) {
+              // All models completed - no need to abort, stream should end naturally
+              // Reset timeout just in case (shouldn't be needed, but safe)
               resetStreamingTimeout()
+            } else {
+              // Some models haven't completed but aren't actively streaming
+              // This means they've exceeded the idle timeout - abort the request
+              controller.abort()
             }
           } else {
             // Some models are still actively streaming - reset timeout to wait for them
@@ -3555,6 +3569,9 @@ function AppContent() {
                   localModelErrors[event.model] = hasError
                   setModelErrors(prev => ({ ...prev, [event.model]: hasError }))
                   shouldUpdate = true
+
+                  // Reset timeout when a model completes - this recalculates timeout based on remaining active models
+                  resetStreamingTimeout()
 
                   // Clean up pause state for this model (but keep scroll listeners for scroll lock feature)
                   autoScrollPausedRef.current.delete(event.model)
