@@ -216,22 +216,37 @@ Conversation Messages:
 
 When the user starts typing a 4th message, the frontend:
 
-1. **Sums tokens from database** (no API call needed):
+1. **Sums tokens from database per model** (no API call needed):
    ```javascript
-   conversationHistoryTokens = 5 + 150 + 7 + 200 + 9 + 180 = 551 tokens
+   // For each model in the comparison, sum tokens from its conversation history
+   // Model 1 (GPT-4): 5 + 150 + 7 + 200 + 9 + 180 = 551 tokens
+   // Model 2 (Claude): 5 + 145 + 7 + 195 + 9 + 175 = 536 tokens
+   // Model 3 (Gemini): 5 + 155 + 7 + 205 + 9 + 185 = 566 tokens
    ```
 
-2. **Estimates current input being typed:**
+2. **Uses the greatest token count across all models:**
    ```javascript
+   conversationHistoryTokens = Math.max(551, 536, 566) = 566 tokens
+   ```
+   - **Why?** Different models may have different token counts for the same conversation
+   - **Purpose:** Ensures warnings and capacity graphics use the most conservative (largest) estimate
+   - **Used for:** Context warnings, "N% of input capacity used" graphic, and conversation length warnings
+
+3. **Estimates current input being typed:**
+   ```javascript
+   // Only submits current textarea content to backend (not full conversation history)
    currentInputTokens = estimate_token_count("What about neural networks?") = 4 tokens
    ```
 
-3. **Shows total:**
+4. **Shows total:**
    ```javascript
-   totalInputTokens = 551 + 4 = 555 tokens
+   totalInputTokens = 566 + 4 = 570 tokens
    ```
 
-This avoids sending the entire conversation history to the backend for estimation.
+This approach:
+- ✅ Avoids sending the entire conversation history to the backend for estimation
+- ✅ Only submits the current text being entered for token estimation
+- ✅ Uses the maximum token count across all models for conservative warnings and capacity displays
 
 ---
 
@@ -284,12 +299,46 @@ Where `sum_previous_tokens` includes:
   - **Solution:** Estimate user prompt tokens directly (accurate since it's just the user's text)
 - **Missing data**: Falls back to estimate if previous tokens aren't available
 
+### Multi-Model Comparison Handling
+
+When comparing multiple models in a conversation:
+
+1. **Per-Model Token Calculation:**
+   - Each model's conversation history is tracked separately
+   - Tokens are summed independently for each model's conversation
+   - Different models may have different token counts for the same messages (due to different tokenizers)
+
+2. **Using the Greatest Token Count:**
+   ```typescript
+   // Frontend calculates tokens per model
+   const tokenCountsByModel = {
+     'gpt-4': 551,
+     'claude-3-opus': 536,
+     'gemini-pro': 566
+   };
+   
+   // Uses maximum for warnings and capacity graphics
+   const conversationHistoryTokens = Math.max(...Object.values(tokenCountsByModel)); // = 566
+   ```
+
+3. **Why Use Maximum?**
+   - **Conservative approach**: Ensures warnings trigger based on the model with highest token usage
+   - **Consistent UX**: Single capacity graphic shows worst-case scenario
+   - **Accurate warnings**: "Start new chat" warnings use the model that's closest to context limits
+   - **Fair representation**: The "N% of input capacity used" graphic reflects the most constrained model
+
+4. **Implementation Location:**
+   - `frontend/src/components/comparison/ComparisonForm.tsx` (lines ~223-256)
+   - Calculates `tokenCountsByModel` for each selected model
+   - Uses `Math.max()` to get the greatest token count
+
 ### Benefits
 
 1. **Accurate token tracking**: Database reflects actual token usage from OpenRouter
 2. **Efficient frontend estimation**: Frontend can sum tokens from database without API calls
 3. **Correct context management**: Token counts match actual usage for context window calculations
 4. **Backward compatible**: Handles cases where previous messages don't have token data
+5. **Multi-model aware**: Uses greatest token count across models for conservative warnings and capacity displays
 
 ---
 
@@ -316,6 +365,8 @@ Where `sum_previous_tokens` includes:
 - `backend/app/routers/api.py` - Main implementation (lines ~1151-1205)
 - `backend/app/models.py` - Database schema (`ConversationMessage` model)
 - `backend/app/model_runner.py` - OpenRouter API calls and token extraction
+- `frontend/src/components/comparison/ComparisonForm.tsx` - Frontend token estimation using greatest count across models (lines ~223-256)
+- `frontend/src/App.tsx` - Token calculation for API calls (lines ~3070-3084)
 
 ---
 
