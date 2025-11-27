@@ -1,9 +1,11 @@
-import React, { memo, useEffect, useCallback, useMemo } from 'react';
+import React, { memo, useEffect, useCallback, useMemo, useState, useRef } from 'react';
 import type { User } from '../../types';
 import type { ConversationSummary, ModelConversation } from '../../types';
 import type { ModelsByProvider } from '../../types/models';
 import { truncatePrompt, formatDate } from '../../utils';
 import { getConversationLimit } from '../../config/constants';
+import { useDebounce } from '../../hooks/useDebounce';
+import { estimateTokens } from '../../services/compareService';
 
 interface ComparisonFormProps {
   // Input state
@@ -90,7 +92,104 @@ export const ComparisonForm = memo<ComparisonFormProps>(({
 }) => {
   const messageCount = conversations.length > 0 ? conversations[0]?.messages.length || 0 : 0;
 
+  // State for accurate token counts from API
+  const [accurateTokenCounts, setAccurateTokenCounts] = useState<{
+    input_tokens: number;
+    conversation_history_tokens: number;
+    total_input_tokens: number;
+  } | null>(null);
+  const [isLoadingAccurateTokens, setIsLoadingAccurateTokens] = useState(false);
+  const abortControllerRef = useRef<AbortController | null>(null);
+
+  // Debounce input for API calls (only call API when user pauses typing)
+  const debouncedInput = useDebounce(input, 600); // 600ms delay
+
+  // Debounced API call for accurate token counting
+  useEffect(() => {
+    // Only call API if:
+    // 1. We're in follow-up mode
+    // 2. We have selected models
+    // 3. We have conversations
+    // 4. Input is substantial (avoid calls for single characters)
+    if (
+      !isFollowUpMode ||
+      selectedModels.length === 0 ||
+      conversations.length === 0 ||
+      debouncedInput.length < 10
+    ) {
+      setAccurateTokenCounts(null);
+      return;
+    }
+
+    // Cancel previous request if still in flight
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+
+    // Create new abort controller for this request
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+
+    setIsLoadingAccurateTokens(true);
+
+    // Get conversation history for the first selected model
+    const conversationHistoryMessages = conversations
+      .filter(conv => {
+        const convModelIdStr = String(conv.modelId);
+        return selectedModels.some(selectedId => String(selectedId) === convModelIdStr) && conv.messages.length > 0;
+      });
+
+    if (conversationHistoryMessages.length === 0) {
+      setIsLoadingAccurateTokens(false);
+      return;
+    }
+
+    const messages = conversationHistoryMessages[0].messages;
+    const conversationHistory = messages
+      .filter(msg => msg.content && msg.content.trim().length > 0)
+      .map(msg => ({
+        role: msg.role,
+        content: msg.content || '',
+      }));
+
+    // Use first model for accurate token counting
+    const modelId = selectedModels[0];
+
+    estimateTokens({
+      input_data: debouncedInput,
+      model_id: modelId,
+      conversation_history: conversationHistory,
+    })
+      .then((response) => {
+        // Only update if request wasn't cancelled
+        if (!controller.signal.aborted) {
+          setAccurateTokenCounts({
+            input_tokens: response.input_tokens,
+            conversation_history_tokens: response.conversation_history_tokens,
+            total_input_tokens: response.total_input_tokens,
+          });
+          setIsLoadingAccurateTokens(false);
+        }
+      })
+      .catch((error) => {
+        // Ignore cancellation errors
+        if (error.name === 'AbortError' || controller.signal.aborted) {
+          return;
+        }
+        // On error, fall back to character-based estimation
+        console.warn('Failed to get accurate token count:', error);
+        setIsLoadingAccurateTokens(false);
+        // Keep accurateTokenCounts as null to use estimate
+      });
+
+    // Cleanup: abort request if component unmounts or dependencies change
+    return () => {
+      controller.abort();
+    };
+  }, [debouncedInput, isFollowUpMode, selectedModels, conversations]);
+
   // Calculate token usage and percentage remaining for follow-up mode
+  // Uses accurate counts from API when available, falls back to character-based estimate
   const tokenUsageInfo = useMemo(() => {
     if (!isFollowUpMode || selectedModels.length === 0 || conversations.length === 0) {
       return null;
@@ -117,34 +216,44 @@ export const ComparisonForm = memo<ComparisonFormProps>(({
 
     const minMaxInputTokens = Math.min(...modelLimits);
 
-    // Calculate current input token usage
-    // Current input tokens
-    const currentInputTokens = Math.ceil(input.length / 4);
+    // Use accurate token counts from API if available, otherwise use character-based estimate
+    let currentInputTokens: number;
+    let conversationHistoryTokens: number;
+    let totalInputTokens: number;
 
-    // Conversation history tokens
-    // Convert both selectedModels and conv.modelId to strings for reliable comparison
-    const conversationHistoryMessages = conversations
-      .filter(conv => {
-        const convModelIdStr = String(conv.modelId);
-        return selectedModels.some(selectedId => String(selectedId) === convModelIdStr) && conv.messages.length > 0;
-      });
-    
-    if (conversationHistoryMessages.length === 0) {
-      return null;
+    if (accurateTokenCounts) {
+      // Use accurate counts from API
+      currentInputTokens = accurateTokenCounts.input_tokens;
+      conversationHistoryTokens = accurateTokenCounts.conversation_history_tokens;
+      totalInputTokens = accurateTokenCounts.total_input_tokens;
+    } else {
+      // Fall back to character-based estimation
+      currentInputTokens = Math.ceil(input.length / 4);
+      
+      // Conversation history tokens
+      const conversationHistoryMessages = conversations
+        .filter(conv => {
+          const convModelIdStr = String(conv.modelId);
+          return selectedModels.some(selectedId => String(selectedId) === convModelIdStr) && conv.messages.length > 0;
+        });
+      
+      if (conversationHistoryMessages.length === 0) {
+        return null;
+      }
+
+      // Use the first selected conversation's messages
+      const messages = conversationHistoryMessages[0].messages;
+      // Only count messages that have actual content
+      conversationHistoryTokens = messages
+        .filter(msg => msg.content && msg.content.trim().length > 0)
+        .reduce((sum, msg) => {
+          const content = msg.content || '';
+          return sum + Math.ceil(content.length / 4);
+        }, 0);
+
+      // Total input tokens (current input + conversation history)
+      totalInputTokens = currentInputTokens + conversationHistoryTokens;
     }
-
-    // Use the first selected conversation's messages
-    const messages = conversationHistoryMessages[0].messages;
-    // Only count messages that have actual content
-    const conversationHistoryTokens = messages
-      .filter(msg => msg.content && msg.content.trim().length > 0)
-      .reduce((sum, msg) => {
-        const content = msg.content || '';
-        return sum + Math.ceil(content.length / 4);
-      }, 0);
-
-    // Total input tokens (current input + conversation history)
-    const totalInputTokens = currentInputTokens + conversationHistoryTokens;
 
     // Calculate percentage remaining
     const percentageUsed = (totalInputTokens / minMaxInputTokens) * 100;
@@ -158,8 +267,10 @@ export const ComparisonForm = memo<ComparisonFormProps>(({
       percentageUsed,
       percentageRemaining,
       isExceeded: totalInputTokens > minMaxInputTokens,
+      isAccurate: accurateTokenCounts !== null, // Indicates if using accurate counts
+      isLoadingAccurate: isLoadingAccurateTokens, // Indicates if fetching accurate counts
     };
-  }, [isFollowUpMode, selectedModels, conversations, input, modelsByProvider]);
+  }, [isFollowUpMode, selectedModels, conversations, input, modelsByProvider, accurateTokenCounts, isLoadingAccurateTokens]);
 
   // Calculate token usage percentage for pie chart (works in both regular and follow-up mode)
   const tokenUsagePercentage = useMemo(() => {
@@ -188,40 +299,43 @@ export const ComparisonForm = memo<ComparisonFormProps>(({
 
     const minMaxInputTokens = Math.min(...modelLimits);
     
-    // Calculate current input token usage
-    const currentInputTokens = Math.ceil(input.length / 4);
+    // Use accurate counts if available, otherwise use estimate
+    let totalInputTokens: number;
     
-    // Calculate conversation history tokens if in follow-up mode
-    let conversationHistoryTokens = 0;
-    if (isFollowUpMode && conversations.length > 0) {
-      // Convert both selectedModels and conv.modelId to strings for reliable comparison
-      const conversationHistoryMessages = conversations
-        .filter(conv => {
-          const convModelIdStr = String(conv.modelId);
-          return selectedModels.some(selectedId => String(selectedId) === convModelIdStr) && conv.messages.length > 0;
-        });
+    if (accurateTokenCounts) {
+      totalInputTokens = accurateTokenCounts.total_input_tokens;
+    } else {
+      // Calculate current input token usage (estimate)
+      const currentInputTokens = Math.ceil(input.length / 4);
       
-      if (conversationHistoryMessages.length > 0) {
-        // Use the first selected conversation's messages
-        const messages = conversationHistoryMessages[0].messages;
-        // Only count messages that have actual content
-        conversationHistoryTokens = messages
-          .filter(msg => msg.content && msg.content.trim().length > 0)
-          .reduce((sum, msg) => {
-            const content = msg.content || '';
-            return sum + Math.ceil(content.length / 4);
-          }, 0);
+      // Calculate conversation history tokens if in follow-up mode
+      let conversationHistoryTokens = 0;
+      if (isFollowUpMode && conversations.length > 0) {
+        const conversationHistoryMessages = conversations
+          .filter(conv => {
+            const convModelIdStr = String(conv.modelId);
+            return selectedModels.some(selectedId => String(selectedId) === convModelIdStr) && conv.messages.length > 0;
+          });
+        
+        if (conversationHistoryMessages.length > 0) {
+          const messages = conversationHistoryMessages[0].messages;
+          conversationHistoryTokens = messages
+            .filter(msg => msg.content && msg.content.trim().length > 0)
+            .reduce((sum, msg) => {
+              const content = msg.content || '';
+              return sum + Math.ceil(content.length / 4);
+            }, 0);
+        }
       }
+      
+      totalInputTokens = currentInputTokens + conversationHistoryTokens;
     }
-    
-    // Total input tokens (current input + conversation history)
-    const totalInputTokens = currentInputTokens + conversationHistoryTokens;
     
     // Calculate percentage used (clamp between 0 and 100)
     const percentageUsed = Math.min(100, Math.max(0, (totalInputTokens / minMaxInputTokens) * 100));
     
     return percentageUsed;
-  }, [selectedModels, input, modelsByProvider, isFollowUpMode, conversations]);
+  }, [selectedModels, input, modelsByProvider, isFollowUpMode, conversations, accurateTokenCounts]);
 
   // Auto-expand textarea based on content (like ChatGPT)
   // Scrollable after 5 lines (6th line triggers scrolling)

@@ -243,3 +243,42 @@ export async function resetRateLimit(fingerprint?: string): Promise<{ message: s
   const response = await apiClient.post<{ message: string }>('/dev/reset-rate-limit', payload)
   return response.data
 }
+
+/**
+ * Request payload for token estimation
+ */
+export interface EstimateTokensRequestPayload {
+  input_data: string
+  model_id?: string
+  conversation_history?: Array<{ role: string; content: string }>
+}
+
+/**
+ * Response from token estimation endpoint
+ */
+export interface EstimateTokensResponse {
+  input_tokens: number
+  conversation_history_tokens: number
+  total_input_tokens: number
+  model_id?: string | null
+}
+
+/**
+ * Estimate token count for input text and optional conversation history
+ *
+ * Uses provider-specific tokenizers when available for accurate counting.
+ * Designed for debounced API calls from the frontend.
+ *
+ * @param payload - Token estimation request payload
+ * @returns Promise resolving to token counts
+ * @throws {ApiError} If the request fails
+ */
+export async function estimateTokens(
+  payload: EstimateTokensRequestPayload
+): Promise<EstimateTokensResponse> {
+  const response = await apiClient.post<EstimateTokensResponse>('/estimate-tokens', payload, {
+    // Short cache TTL since token counts change frequently
+    cacheTTL: 0, // No caching - always get fresh count
+  })
+  return response.data
+}

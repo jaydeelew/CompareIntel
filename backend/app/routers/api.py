@@ -107,6 +107,34 @@ class CompareResponse(BaseModel):
     metadata: dict[str, Any]
 
 
+class EstimateTokensRequest(BaseModel):
+    """Request model for token estimation endpoint."""
+    input_data: str
+    model_id: Optional[str] = None  # Optional model ID for accurate token counting
+    conversation_history: list[ConversationMessage] = []  # Optional conversation context
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "input_data": "Explain quantum computing",
+                "model_id": "openai/gpt-4",
+                "conversation_history": [
+                    {"role": "user", "content": "What is AI?"},
+                    {"role": "assistant", "content": "AI stands for..."},
+                ],
+            }
+        }
+    )
+
+
+class EstimateTokensResponse(BaseModel):
+    """Response model for token estimation endpoint."""
+    input_tokens: int
+    conversation_history_tokens: int
+    total_input_tokens: int
+    model_id: Optional[str] = None
+
+
 class ResetRateLimitRequest(BaseModel):
     fingerprint: Optional[str] = None
 
@@ -359,6 +387,45 @@ async def reset_rate_limit_dev(
         "conversations_deleted": deleted_count,
         "user_type": "authenticated" if current_user else "anonymous",
     }
+
+
+@router.post("/estimate-tokens", response_model=EstimateTokensResponse)
+async def estimate_tokens(
+    req: EstimateTokensRequest,
+    current_user: Optional[User] = Depends(get_current_user),
+) -> EstimateTokensResponse:
+    """
+    Estimate token count for input text and optional conversation history.
+    
+    Uses provider-specific tokenizers when available for accurate counting:
+    - Anthropic: Official SDK tokenizer (95-99% accurate)
+    - OpenAI: tiktoken with correct encoding
+    - Hugging Face models: transformers library (90-95% accurate)
+    - Others: tiktoken cl100k_base approximation
+    
+    This endpoint is designed for real-time token counting in the frontend
+    with debounced API calls to provide accurate token estimates.
+    """
+    from ..model_runner import estimate_token_count, count_conversation_tokens
+    
+    # Estimate tokens for current input
+    input_tokens = estimate_token_count(req.input_data, model_id=req.model_id)
+    
+    # Estimate tokens for conversation history if provided
+    conversation_history_tokens = 0
+    if req.conversation_history:
+        conversation_history_tokens = count_conversation_tokens(
+            req.conversation_history, model_id=req.model_id
+        )
+    
+    total_input_tokens = input_tokens + conversation_history_tokens
+    
+    return EstimateTokensResponse(
+        input_tokens=input_tokens,
+        conversation_history_tokens=conversation_history_tokens,
+        total_input_tokens=total_input_tokens,
+        model_id=req.model_id,
+    )
 
 
 @router.post("/compare-stream")
