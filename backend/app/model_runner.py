@@ -18,7 +18,7 @@ import os
 from openai import OpenAI
 from dotenv import load_dotenv
 import concurrent.futures
-from typing import Dict, List, Any, Optional, Generator, Tuple, NamedTuple
+from typing import Dict, List, Any, Optional, Generator, NamedTuple
 import time
 import re
 import tiktoken
@@ -1180,35 +1180,6 @@ def count_conversation_tokens(messages: List[Any], model_id: Optional[str] = Non
     return total_tokens
 
 
-def truncate_conversation_history(conversation_history: List[Any], max_messages: int = 20) -> Tuple[List[Any], bool, int]:
-    """
-    Truncate conversation history to recent messages to manage context window.
-    Returns (truncated_history, was_truncated, original_message_count).
-
-    Industry best practice (2025): Keep sliding window of recent messages
-    rather than sending entire conversation history.
-
-    Args:
-        conversation_history: List of conversation messages
-        max_messages: Maximum number of messages to keep (default: 20)
-
-    Returns:
-        Tuple of (truncated messages, whether truncation occurred, original count)
-    """
-    if not conversation_history:
-        return [], False, 0
-
-    original_count = len(conversation_history)
-
-    if original_count <= max_messages:
-        return conversation_history, False, original_count
-
-    # Keep the most recent max_messages
-    truncated = conversation_history[-max_messages:]
-
-    return truncated, True, original_count
-
-
 def call_openrouter_streaming(
     prompt: str,
     model_id: str,
@@ -1260,26 +1231,10 @@ def call_openrouter_streaming(
                 }
             )
 
-        # Apply context window management (industry best practice 2025)
-        # Truncate conversation history to prevent context overflow and manage costs
-        truncated_history = conversation_history
-        was_truncated = False
-
+        # Add conversation history if provided
         if conversation_history:
-            truncated_history, was_truncated, original_count = truncate_conversation_history(conversation_history, max_messages=20)
-
-            # Add truncated conversation history
-            for msg in truncated_history:
+            for msg in conversation_history:
                 messages.append({"role": msg.role, "content": msg.content})
-
-            # If truncated, inform the model about it
-            if was_truncated:
-                messages.append(
-                    {
-                        "role": "system",
-                        "content": f"Note: Earlier conversation context ({original_count - len(truncated_history)} messages) has been summarized to focus on recent discussion.",
-                    }
-                )
 
         # Add the current prompt as user message
         messages.append({"role": "user", "content": prompt})
