@@ -2980,16 +2980,26 @@ function AppContent() {
     // Hard limit: Prevent submissions when input capacity is fully used (but allow when exceeded with warning)
     // Industry best practice 2025: Enforce maximum context window to protect costs and maintain quality
     if (isFollowUpMode && conversations.length > 0 && selectedModels.length > 0) {
-      // Calculate token usage
-      const inputTokens = Math.ceil(input.length / 4)
+      // Calculate token usage using backend model-specific token estimators
+      // Use accurate token count from ComparisonForm if available, otherwise use 0
+      const inputTokens = accurateInputTokens ?? 0
+      
       const conversationHistoryMessages = conversations
         .filter(conv => selectedModels.includes(conv.modelId) && conv.messages.length > 0)
       
       if (conversationHistoryMessages.length > 0) {
+        // Calculate conversation history tokens using saved token counts from database
         const messages = conversationHistoryMessages[0].messages
         const conversationHistoryTokens = messages.reduce((sum, msg) => {
-          const content = msg.content || ''
-          return sum + Math.ceil(content.length / 4)
+          if (msg.type === 'user' && msg.input_tokens) {
+            // User messages: use saved input_tokens (calculated from backend tokenizers)
+            return sum + msg.input_tokens
+          } else if (msg.type === 'assistant' && msg.output_tokens) {
+            // Assistant messages: use saved output_tokens (from OpenRouter API)
+            return sum + msg.output_tokens
+          }
+          // Skip messages without token data (don't estimate with chars/4)
+          return sum
         }, 0)
         const totalInputTokens = inputTokens + conversationHistoryTokens
 
@@ -3033,9 +3043,11 @@ function AppContent() {
       creditsRemaining = Math.max(0, creditsAllocated - creditsUsed)
     }
 
-    // Calculate estimated credits for this request using the same logic as renderUsagePreview
+    // Calculate estimated credits for this request using backend model-specific token estimators
     const modelsNeeded = selectedModels.length
-    const inputTokens = Math.ceil(input.length / 4) // Rough estimate: 4 chars per token
+    // Use accurate token count from ComparisonForm (backend tokenizer) if available
+    const inputTokens = accurateInputTokens ?? 0
+    
     // Build conversation history from conversations prop (not from hook's conversationHistory)
     const conversationHistoryMessages = isFollowUpMode && conversations.length > 0
       ? (() => {
@@ -3048,11 +3060,19 @@ function AppContent() {
           return selectedConversations[0].messages
         })()
       : []
+    
+    // Calculate conversation history tokens using saved token counts from database
     const conversationHistoryTokens = conversationHistoryMessages.length > 0
       ? conversationHistoryMessages.reduce((sum, msg) => {
-          // Safely handle messages that might not have content
-          const content = msg.content || ''
-          return sum + Math.ceil(content.length / 4)
+          if (msg.type === 'user' && msg.input_tokens) {
+            // User messages: use saved input_tokens (calculated from backend tokenizers)
+            return sum + msg.input_tokens
+          } else if (msg.type === 'assistant' && msg.output_tokens) {
+            // Assistant messages: use saved output_tokens (from OpenRouter API)
+            return sum + msg.output_tokens
+          }
+          // Skip messages without token data (don't estimate with chars/4)
+          return sum
         }, 0)
       : 0
     const totalInputTokens = inputTokens + conversationHistoryTokens

@@ -108,16 +108,21 @@ export const ComparisonForm = memo<ComparisonFormProps>(({
   // Debounce input for API calls (only call API when user pauses typing)
   const debouncedInput = useDebounce(input, 600); // 600ms delay
 
-  // Debounced API call for accurate token counting
-  // Now only sends current input text, not conversation history
+  // Debounced API call for accurate token counting using backend model-specific token estimators
+  // Uses backend tokenizers for accurate counting instead of chars/4 estimation
   useEffect(() => {
-    // Only call API if:
-    // 1. We have selected models
-    // 2. Input is substantial (avoid calls for single characters)
-    if (
-      selectedModels.length === 0 ||
-      debouncedInput.length < 10
-    ) {
+    // Only call API if we have selected models
+    // Note: We call API even for short inputs to get accurate counts from backend tokenizers
+    if (selectedModels.length === 0) {
+      setAccurateTokenCounts(null);
+      if (onAccurateTokenCountChange) {
+        onAccurateTokenCountChange(null);
+      }
+      return;
+    }
+
+    // If input is empty, clear token counts
+    if (!debouncedInput.trim()) {
       setAccurateTokenCounts(null);
       if (onAccurateTokenCountChange) {
         onAccurateTokenCountChange(null);
@@ -168,10 +173,10 @@ export const ComparisonForm = memo<ComparisonFormProps>(({
         if (error.name === 'AbortError' || controller.signal.aborted) {
           return;
         }
-        // On error, fall back to character-based estimation
-        console.warn('Failed to get accurate token count:', error);
+        // On error, log but don't fall back to character-based estimation
+        // Keep accurateTokenCounts as null - UI will show 0% or loading state
+        console.warn('Failed to get accurate token count from backend:', error);
         setIsLoadingAccurateTokens(false);
-        // Keep accurateTokenCounts as null to use estimate
         // Notify parent that we don't have accurate count
         if (onAccurateTokenCountChange) {
           onAccurateTokenCountChange(null);
@@ -185,7 +190,8 @@ export const ComparisonForm = memo<ComparisonFormProps>(({
   }, [debouncedInput, isFollowUpMode, selectedModels, conversations, onAccurateTokenCountChange]);
 
   // Calculate token usage and percentage remaining for follow-up mode
-  // Uses accurate counts from API when available, falls back to character-based estimate
+  // Uses backend model-specific token estimators when available
+  // Conversation history tokens are retrieved from saved tokens in database
   const tokenUsageInfo = useMemo(() => {
     if (!isFollowUpMode || selectedModels.length === 0 || conversations.length === 0) {
       return null;
@@ -212,7 +218,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(({
 
     const minMaxInputTokens = Math.min(...modelLimits);
 
-    // Calculate tokens from conversation history using saved token counts
+    // Calculate tokens from conversation history using saved token counts from database
     // For each model, sum: input_tokens from user messages + output_tokens from that model's assistant messages
     const tokenCountsByModel: { [modelId: string]: number } = {};
     
@@ -227,19 +233,17 @@ export const ComparisonForm = memo<ComparisonFormProps>(({
         const modelId = String(conv.modelId);
         let totalTokens = 0;
         
-        // Sum tokens from messages
+        // Sum tokens from messages using saved token counts
         conv.messages.forEach(msg => {
           if (msg.type === 'user' && msg.input_tokens) {
-            // User messages: add input_tokens (same for all models)
+            // User messages: add input_tokens (calculated from backend tokenizers, saved in database)
             totalTokens += msg.input_tokens;
           } else if (msg.type === 'assistant' && msg.output_tokens) {
-            // Assistant messages: add output_tokens (specific to this model)
+            // Assistant messages: add output_tokens (from OpenRouter API, saved in database)
             totalTokens += msg.output_tokens;
-          } else {
-            // Fallback: estimate from content if tokens not available
-            const content = msg.content || '';
-            totalTokens += Math.ceil(content.length / 4);
           }
+          // Note: If tokens are missing, we skip that message rather than estimating
+          // This ensures we only use accurate token counts from backend/database
         });
         
         tokenCountsByModel[modelId] = totalTokens;
@@ -251,20 +255,21 @@ export const ComparisonForm = memo<ComparisonFormProps>(({
       ? Math.max(...Object.values(tokenCountsByModel))
       : 0;
 
-    // Get current input tokens
+    // Get current input tokens - use backend model-specific token estimator
     let currentInputTokens: number;
     let totalInputTokens: number;
 
     if (accurateTokenCounts) {
-      // Use accurate count from API for current input only
+      // Use accurate count from backend API (model-specific tokenizer)
       currentInputTokens = accurateTokenCounts.input_tokens;
-      // Add conversation history tokens (calculated from saved tokens above)
+      // Add conversation history tokens (retrieved from saved tokens in database)
       totalInputTokens = currentInputTokens + conversationHistoryTokens;
     } else {
-      // Fall back to character-based estimation
-      currentInputTokens = Math.ceil(input.length / 4);
-      // Add conversation history tokens (calculated from saved tokens above, or fallback estimate)
-      totalInputTokens = currentInputTokens + conversationHistoryTokens;
+      // If accurate counts not available yet (API call in progress or failed),
+      // use 0 to avoid showing incorrect estimates
+      // The UI will show loading state or 0% until accurate counts are available
+      currentInputTokens = 0;
+      totalInputTokens = conversationHistoryTokens; // Only show history tokens, not current input estimate
     }
 
     // Calculate percentage remaining using the greatest token count
@@ -279,7 +284,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(({
       percentageUsed,
       percentageRemaining,
       isExceeded: totalInputTokens > minMaxInputTokens,
-      isAccurate: accurateTokenCounts !== null, // Indicates if using accurate counts
+      isAccurate: accurateTokenCounts !== null, // Indicates if using accurate counts from backend
       isLoadingAccurate: isLoadingAccurateTokens, // Indicates if fetching accurate counts
     };
   }, [isFollowUpMode, selectedModels, conversations, input, modelsByProvider, accurateTokenCounts, isLoadingAccurateTokens]);
@@ -298,6 +303,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(({
   }, [tokenUsageInfo, accurateTokenCounts, isFollowUpMode, onAccurateTokenCountChange]);
 
   // Calculate token usage percentage for pie chart (works in both regular and follow-up mode)
+  // Uses backend model-specific token estimators - no chars/4 fallback
   const tokenUsagePercentage = useMemo(() => {
     if (selectedModels.length === 0) {
       return 0;
@@ -324,7 +330,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(({
 
     const minMaxInputTokens = Math.min(...modelLimits);
     
-    // Calculate tokens from conversation history using saved token counts
+    // Calculate tokens from conversation history using saved token counts from database
     // For each model, sum: input_tokens from user messages + output_tokens from that model's assistant messages
     const tokenCountsByModel: { [modelId: string]: number } = {};
     
@@ -339,19 +345,17 @@ export const ComparisonForm = memo<ComparisonFormProps>(({
         const modelId = String(conv.modelId);
         let totalTokens = 0;
         
-        // Sum tokens from messages
+        // Sum tokens from messages using saved token counts
         conv.messages.forEach(msg => {
           if (msg.type === 'user' && msg.input_tokens) {
-            // User messages: add input_tokens (same for all models)
+            // User messages: add input_tokens (calculated from backend tokenizers, saved in database)
             totalTokens += msg.input_tokens;
           } else if (msg.type === 'assistant' && msg.output_tokens) {
-            // Assistant messages: add output_tokens (specific to this model)
+            // Assistant messages: add output_tokens (from OpenRouter API, saved in database)
             totalTokens += msg.output_tokens;
-          } else {
-            // Fallback: estimate from content if tokens not available
-            const content = msg.content || '';
-            totalTokens += Math.ceil(content.length / 4);
           }
+          // Note: If tokens are missing, we skip that message rather than estimating
+          // This ensures we only use accurate token counts from backend/database
         });
         
         tokenCountsByModel[modelId] = totalTokens;
@@ -363,19 +367,19 @@ export const ComparisonForm = memo<ComparisonFormProps>(({
       ? Math.max(...Object.values(tokenCountsByModel))
       : 0;
 
-    // Get current input tokens
+    // Get current input tokens - use backend model-specific token estimator
     let totalInputTokens: number;
     
     if (accurateTokenCounts) {
-      // Use accurate count from API for current input only
+      // Use accurate count from backend API (model-specific tokenizer)
       const currentInputTokens = accurateTokenCounts.input_tokens;
-      // Add conversation history tokens (calculated from saved tokens above)
+      // Add conversation history tokens (retrieved from saved tokens in database)
       totalInputTokens = currentInputTokens + conversationHistoryTokens;
     } else {
-      // Fall back to character-based estimation
-      const currentInputTokens = Math.ceil(input.length / 4);
-      // Add conversation history tokens (calculated from saved tokens above, or fallback estimate)
-      totalInputTokens = currentInputTokens + conversationHistoryTokens;
+      // If accurate counts not available yet (API call in progress or failed),
+      // use 0 to avoid showing incorrect estimates
+      // The UI will show 0% until accurate counts are available
+      totalInputTokens = conversationHistoryTokens; // Only show history tokens, not current input estimate
     }
     
     // Calculate percentage used (clamp between 0 and 100)
