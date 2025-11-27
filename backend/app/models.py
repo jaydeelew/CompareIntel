@@ -143,6 +143,10 @@ class ConversationMessage(Base):
     role = Column(String(20), nullable=False)  # 'user' or 'assistant'
     content = Column(Text, nullable=False)
 
+    # Token usage (from OpenRouter API responses)
+    input_tokens = Column(Integer)  # Input tokens for user messages (null for assistant messages)
+    output_tokens = Column(Integer)  # Output tokens for assistant messages (null for user messages)
+
     # Metadata
     success = Column(Boolean, default=True)
     processing_time_ms = Column(Integer)

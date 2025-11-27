@@ -39,6 +39,10 @@ export interface ConversationMessage {
   content: string;
   /** ISO timestamp when the message was created */
   timestamp: string;
+  /** Input tokens for user messages (from OpenRouter API) */
+  input_tokens?: number | null;
+  /** Output tokens for assistant messages (from OpenRouter API) */
+  output_tokens?: number | null;
 }
 
 /**
@@ -55,6 +59,10 @@ export interface StoredMessage {
   model_id?: ModelId;
   /** Optional unique identifier */
   id?: MessageId | ConversationId;
+  /** Input tokens for user messages (from OpenRouter API) */
+  input_tokens?: number | null;
+  /** Output tokens for assistant messages (from OpenRouter API) */
+  output_tokens?: number | null;
 }
 
 /**

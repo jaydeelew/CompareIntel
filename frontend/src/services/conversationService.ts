@@ -30,6 +30,8 @@ export interface ConversationMessage {
   model_id: string | null;
   role: 'user' | 'assistant';
   content: string;
+  input_tokens?: number | null;  // Input tokens for user messages (from OpenRouter)
+  output_tokens?: number | null;  // Output tokens for assistant messages (from OpenRouter)
   success: boolean;
   processing_time_ms: number | null;
   created_at: string;

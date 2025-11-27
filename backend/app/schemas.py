@@ -289,6 +289,8 @@ class ConversationMessage(BaseModel):
     model_id: Optional[str] = None
     role: Literal["user", "assistant"] = Field(..., description="Message role: 'user' or 'assistant'")
     content: str = Field(..., min_length=1, description="Message content")
+    input_tokens: Optional[int] = Field(None, ge=0, description="Input tokens for user messages (from OpenRouter)")
+    output_tokens: Optional[int] = Field(None, ge=0, description="Output tokens for assistant messages (from OpenRouter)")
     success: bool = Field(default=True, description="Whether the message was successfully processed")
     processing_time_ms: Optional[int] = Field(None, ge=0, description="Processing time in milliseconds")
     created_at: datetime

@@ -23,6 +23,7 @@ from ..model_runner import (
     call_openrouter_streaming,
     clean_model_response,
     TokenUsage,
+    estimate_token_count,
 )
 from ..models import (
     User,
@@ -1132,6 +1133,16 @@ async def compare_stream(
                             conv_db.add(conversation)
                             conv_db.flush()  # Get the ID
 
+                        # Estimate input tokens for user message
+                        # Use first model for token estimation (all models should have similar tokenization)
+                        user_input_tokens = None
+                        if req.models:
+                            try:
+                                user_input_tokens = estimate_token_count(req.input_data, model_id=req.models[0])
+                            except Exception:
+                                # Fallback: estimate without model-specific tokenizer
+                                user_input_tokens = estimate_token_count(req.input_data, model_id=None)
+
                         # Save user message (current prompt)
                         # For new conversations, this is the first message
                         # For follow-ups, this is the new user prompt
@@ -1140,6 +1151,7 @@ async def compare_stream(
                             role="user",
                             content=req.input_data,
                             model_id=None,
+                            input_tokens=user_input_tokens,
                         )
                         conv_db.add(user_msg)
 
@@ -1147,6 +1159,12 @@ async def compare_stream(
                         messages_saved = 0
                         for model_id, content in results_dict.items():
                             if not content.startswith("Error:"):
+                                # Get output tokens from usage_data_dict if available
+                                output_tokens = None
+                                if model_id in usage_data_dict:
+                                    usage = usage_data_dict[model_id]
+                                    output_tokens = usage.completion_tokens
+
                                 assistant_msg = ConversationMessageModel(
                                     conversation_id=conversation.id,
                                     role="assistant",
@@ -1154,6 +1172,7 @@ async def compare_stream(
                                     model_id=model_id,
                                     success=True,
                                     processing_time_ms=processing_time_ms,
+                                    output_tokens=output_tokens,
                                 )
                                 conv_db.add(assistant_msg)
                                 messages_saved += 1
@@ -1333,6 +1352,8 @@ async def get_conversation(
             model_id=msg.model_id,
             role=msg.role,
             content=msg.content,
+            input_tokens=msg.input_tokens,
+            output_tokens=msg.output_tokens,
             success=msg.success,
             processing_time_ms=msg.processing_time_ms,
             created_at=msg.created_at,

@@ -109,11 +109,11 @@ export const ComparisonForm = memo<ComparisonFormProps>(({
   const debouncedInput = useDebounce(input, 600); // 600ms delay
 
   // Debounced API call for accurate token counting
+  // Now only sends current input text, not conversation history
   useEffect(() => {
     // Only call API if:
     // 1. We have selected models
     // 2. Input is substantial (avoid calls for single characters)
-    // Note: We call API for both new comparisons and follow-ups for consistent accuracy
     if (
       selectedModels.length === 0 ||
       debouncedInput.length < 10
@@ -136,49 +136,31 @@ export const ComparisonForm = memo<ComparisonFormProps>(({
 
     setIsLoadingAccurateTokens(true);
 
-    // Get conversation history if in follow-up mode
-    let conversationHistory: Array<{ role: string; content: string }> = [];
-    
-    if (isFollowUpMode && conversations.length > 0) {
-      const conversationHistoryMessages = conversations
-        .filter(conv => {
-          const convModelIdStr = String(conv.modelId);
-          return selectedModels.some(selectedId => String(selectedId) === convModelIdStr) && conv.messages.length > 0;
-        });
-
-      if (conversationHistoryMessages.length > 0) {
-        const messages = conversationHistoryMessages[0].messages;
-        conversationHistory = messages
-          .filter(msg => msg.content && msg.content.trim().length > 0)
-          .map(msg => ({
-            role: msg.role,
-            content: msg.content || '',
-          }));
-      }
-    }
+    // Note: Conversation history tokens will be calculated in tokenUsageInfo useMemo
+    // from saved tokens in messages, so we don't need to calculate them here
 
     // Use first model for accurate token counting
     const modelId = selectedModels[0];
 
+    // Only send current input text, not conversation history
     estimateTokens({
       input_data: debouncedInput,
       model_id: modelId,
-      conversation_history: conversationHistory.length > 0 ? conversationHistory : undefined,
+      // Don't send conversation_history - we'll sum tokens from saved messages instead
     })
       .then((response) => {
         // Only update if request wasn't cancelled
         if (!controller.signal.aborted) {
+          // response.input_tokens is just for the current input
+          // Conversation history tokens will be calculated from saved tokens in tokenUsageInfo useMemo
           const counts = {
             input_tokens: response.input_tokens,
-            conversation_history_tokens: response.conversation_history_tokens,
-            total_input_tokens: response.total_input_tokens,
+            conversation_history_tokens: 0, // Will be calculated from saved tokens in useMemo
+            total_input_tokens: response.input_tokens, // Will be updated with history tokens in useMemo
           };
           setAccurateTokenCounts(counts);
           setIsLoadingAccurateTokens(false);
-          // Notify parent component of accurate token count
-          if (onAccurateTokenCountChange) {
-            onAccurateTokenCountChange(counts.total_input_tokens);
-          }
+          // Don't notify parent here - let the useEffect below handle it with total including history
         }
       })
       .catch((error) => {
@@ -230,46 +212,62 @@ export const ComparisonForm = memo<ComparisonFormProps>(({
 
     const minMaxInputTokens = Math.min(...modelLimits);
 
-    // Use accurate token counts from API if available, otherwise use character-based estimate
+    // Calculate tokens from conversation history using saved token counts
+    // For each model, sum: input_tokens from user messages + output_tokens from that model's assistant messages
+    const tokenCountsByModel: { [modelId: string]: number } = {};
+    
+    if (isFollowUpMode && conversations.length > 0) {
+      // Get all conversations for selected models
+      const selectedConversations = conversations.filter(conv => {
+        const convModelIdStr = String(conv.modelId);
+        return selectedModels.some(selectedId => String(selectedId) === convModelIdStr) && conv.messages.length > 0;
+      });
+
+      selectedConversations.forEach(conv => {
+        const modelId = String(conv.modelId);
+        let totalTokens = 0;
+        
+        // Sum tokens from messages
+        conv.messages.forEach(msg => {
+          if (msg.type === 'user' && msg.input_tokens) {
+            // User messages: add input_tokens (same for all models)
+            totalTokens += msg.input_tokens;
+          } else if (msg.type === 'assistant' && msg.output_tokens) {
+            // Assistant messages: add output_tokens (specific to this model)
+            totalTokens += msg.output_tokens;
+          } else {
+            // Fallback: estimate from content if tokens not available
+            const content = msg.content || '';
+            totalTokens += Math.ceil(content.length / 4);
+          }
+        });
+        
+        tokenCountsByModel[modelId] = totalTokens;
+      });
+    }
+
+    // Use the greatest token count across all models (as per user requirement)
+    const conversationHistoryTokens = Object.keys(tokenCountsByModel).length > 0
+      ? Math.max(...Object.values(tokenCountsByModel))
+      : 0;
+
+    // Get current input tokens
     let currentInputTokens: number;
-    let conversationHistoryTokens: number;
     let totalInputTokens: number;
 
     if (accurateTokenCounts) {
-      // Use accurate counts from API
+      // Use accurate count from API for current input only
       currentInputTokens = accurateTokenCounts.input_tokens;
-      conversationHistoryTokens = accurateTokenCounts.conversation_history_tokens;
-      totalInputTokens = accurateTokenCounts.total_input_tokens;
+      // Add conversation history tokens (calculated from saved tokens above)
+      totalInputTokens = currentInputTokens + conversationHistoryTokens;
     } else {
       // Fall back to character-based estimation
       currentInputTokens = Math.ceil(input.length / 4);
-      
-      // Conversation history tokens
-      const conversationHistoryMessages = conversations
-        .filter(conv => {
-          const convModelIdStr = String(conv.modelId);
-          return selectedModels.some(selectedId => String(selectedId) === convModelIdStr) && conv.messages.length > 0;
-        });
-      
-      if (conversationHistoryMessages.length === 0) {
-        return null;
-      }
-
-      // Use the first selected conversation's messages
-      const messages = conversationHistoryMessages[0].messages;
-      // Only count messages that have actual content
-      conversationHistoryTokens = messages
-        .filter(msg => msg.content && msg.content.trim().length > 0)
-        .reduce((sum, msg) => {
-          const content = msg.content || '';
-          return sum + Math.ceil(content.length / 4);
-        }, 0);
-
-      // Total input tokens (current input + conversation history)
+      // Add conversation history tokens (calculated from saved tokens above, or fallback estimate)
       totalInputTokens = currentInputTokens + conversationHistoryTokens;
     }
 
-    // Calculate percentage remaining
+    // Calculate percentage remaining using the greatest token count
     const percentageUsed = (totalInputTokens / minMaxInputTokens) * 100;
     const percentageRemaining = Math.max(0, 100 - percentageUsed);
 
@@ -285,6 +283,19 @@ export const ComparisonForm = memo<ComparisonFormProps>(({
       isLoadingAccurate: isLoadingAccurateTokens, // Indicates if fetching accurate counts
     };
   }, [isFollowUpMode, selectedModels, conversations, input, modelsByProvider, accurateTokenCounts, isLoadingAccurateTokens]);
+
+  // Notify parent of total token count (including conversation history) when available
+  useEffect(() => {
+    if (tokenUsageInfo && onAccurateTokenCountChange) {
+      onAccurateTokenCountChange(tokenUsageInfo.totalInputTokens);
+    } else if (!isFollowUpMode && accurateTokenCounts && onAccurateTokenCountChange) {
+      // For new conversations (not follow-up), just use current input tokens
+      onAccurateTokenCountChange(accurateTokenCounts.input_tokens);
+    } else if (!accurateTokenCounts && onAccurateTokenCountChange) {
+      // No accurate count available
+      onAccurateTokenCountChange(null);
+    }
+  }, [tokenUsageInfo, accurateTokenCounts, isFollowUpMode, onAccurateTokenCountChange]);
 
   // Calculate token usage percentage for pie chart (works in both regular and follow-up mode)
   const tokenUsagePercentage = useMemo(() => {
@@ -313,35 +324,57 @@ export const ComparisonForm = memo<ComparisonFormProps>(({
 
     const minMaxInputTokens = Math.min(...modelLimits);
     
-    // Use accurate counts if available, otherwise use estimate
+    // Calculate tokens from conversation history using saved token counts
+    // For each model, sum: input_tokens from user messages + output_tokens from that model's assistant messages
+    const tokenCountsByModel: { [modelId: string]: number } = {};
+    
+    if (isFollowUpMode && conversations.length > 0) {
+      // Get all conversations for selected models
+      const selectedConversations = conversations.filter(conv => {
+        const convModelIdStr = String(conv.modelId);
+        return selectedModels.some(selectedId => String(selectedId) === convModelIdStr) && conv.messages.length > 0;
+      });
+
+      selectedConversations.forEach(conv => {
+        const modelId = String(conv.modelId);
+        let totalTokens = 0;
+        
+        // Sum tokens from messages
+        conv.messages.forEach(msg => {
+          if (msg.type === 'user' && msg.input_tokens) {
+            // User messages: add input_tokens (same for all models)
+            totalTokens += msg.input_tokens;
+          } else if (msg.type === 'assistant' && msg.output_tokens) {
+            // Assistant messages: add output_tokens (specific to this model)
+            totalTokens += msg.output_tokens;
+          } else {
+            // Fallback: estimate from content if tokens not available
+            const content = msg.content || '';
+            totalTokens += Math.ceil(content.length / 4);
+          }
+        });
+        
+        tokenCountsByModel[modelId] = totalTokens;
+      });
+    }
+
+    // Use the greatest token count across all models (as per user requirement)
+    const conversationHistoryTokens = Object.keys(tokenCountsByModel).length > 0
+      ? Math.max(...Object.values(tokenCountsByModel))
+      : 0;
+
+    // Get current input tokens
     let totalInputTokens: number;
     
     if (accurateTokenCounts) {
-      totalInputTokens = accurateTokenCounts.total_input_tokens;
+      // Use accurate count from API for current input only
+      const currentInputTokens = accurateTokenCounts.input_tokens;
+      // Add conversation history tokens (calculated from saved tokens above)
+      totalInputTokens = currentInputTokens + conversationHistoryTokens;
     } else {
-      // Calculate current input token usage (estimate)
+      // Fall back to character-based estimation
       const currentInputTokens = Math.ceil(input.length / 4);
-      
-      // Calculate conversation history tokens if in follow-up mode
-      let conversationHistoryTokens = 0;
-      if (isFollowUpMode && conversations.length > 0) {
-        const conversationHistoryMessages = conversations
-          .filter(conv => {
-            const convModelIdStr = String(conv.modelId);
-            return selectedModels.some(selectedId => String(selectedId) === convModelIdStr) && conv.messages.length > 0;
-          });
-        
-        if (conversationHistoryMessages.length > 0) {
-          const messages = conversationHistoryMessages[0].messages;
-          conversationHistoryTokens = messages
-            .filter(msg => msg.content && msg.content.trim().length > 0)
-            .reduce((sum, msg) => {
-              const content = msg.content || '';
-              return sum + Math.ceil(content.length / 4);
-            }, 0);
-        }
-      }
-      
+      // Add conversation history tokens (calculated from saved tokens above, or fallback estimate)
       totalInputTokens = currentInputTokens + conversationHistoryTokens;
     }
     

@@ -1300,6 +1300,13 @@ function AppContent() {
           if (msg.id !== undefined && msg.id !== null) {
             storedMessage.id = createMessageId(String(msg.id))
           }
+          // Preserve token fields from API response
+          if (msg.input_tokens !== undefined && msg.input_tokens !== null) {
+            storedMessage.input_tokens = msg.input_tokens
+          }
+          if (msg.output_tokens !== undefined && msg.output_tokens !== null) {
+            storedMessage.output_tokens = msg.output_tokens
+          }
           return storedMessage
         }),
       }
@@ -1410,6 +1417,8 @@ function AppContent() {
             type: 'user' as const,
             content: round.user.content,
             timestamp: round.user.created_at || new Date().toISOString(),
+            // Preserve token fields from stored message
+            input_tokens: round.user.input_tokens,
           })
 
           // Add assistant message for this specific model if it exists in this round
@@ -1429,6 +1438,8 @@ function AppContent() {
               type: 'assistant' as const,
               content: modelAssistant.content,
               timestamp: modelAssistant.created_at || new Date().toISOString(),
+              // Preserve token fields from stored message
+              output_tokens: modelAssistant.output_tokens,
             })
           }
         })
