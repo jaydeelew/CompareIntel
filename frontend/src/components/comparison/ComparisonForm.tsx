@@ -646,13 +646,10 @@ export const ComparisonForm = memo<ComparisonFormProps>(({
               disabled={isLoading}
               className={`textarea-icon-button submit-button ${!isFollowUpMode && !input.trim() ? 'not-ready' : ''} ${isAnimatingButton ? 'animate-pulse-glow' : ''}`}
               title={(() => {
-                if (isFollowUpMode && tokenUsageInfo) {
-                  if (tokenUsageInfo.isExceeded) {
-                    return 'Input capacity exceeded - inputs may be truncated';
-                  }
-                  return 'Continue conversation';
+                if (isFollowUpMode && tokenUsageInfo && tokenUsageInfo.isExceeded) {
+                  return 'Input capacity exceeded - inputs may be truncated';
                 }
-                return isFollowUpMode ? 'Continue conversation' : 'Compare models';
+                return 'Submit';
               })()}
               data-testid="comparison-submit-button"
             >
