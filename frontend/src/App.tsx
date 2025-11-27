@@ -2949,31 +2949,37 @@ function AppContent() {
     const messageCount = conversations.length > 0 ? conversations[0]?.messages.length || 0 : 0
     const userTier = isAuthenticated ? user?.subscription_tier || 'free' : 'anonymous'
 
-    // Check input length against selected models' limits
+    // Check input tokens against selected models' limits (token-based validation)
     if (selectedModels.length > 0) {
-      // Find the minimum max input length across all selected models
-      const modelLimits = selectedModels
+      // Get minimum max input tokens across all selected models
+      const modelTokenLimits = selectedModels
         .map(modelId => {
           // Find model in modelsByProvider
           for (const providerModels of Object.values(modelsByProvider)) {
             const model = providerModels.find(m => m.id === modelId)
-            if (model && model.max_input_chars) {
-              return model.max_input_chars
+            if (model && model.max_input_tokens) {
+              return model.max_input_tokens
             }
           }
           return null
         })
         .filter((limit): limit is number => limit !== null)
 
-      if (modelLimits.length > 0) {
-        const minMaxInput = Math.min(...modelLimits)
-        if (input.length > minMaxInput) {
+      if (modelTokenLimits.length > 0) {
+        const minMaxInputTokens = Math.min(...modelTokenLimits)
+        
+        // Use accurate token count if available (from ComparisonForm), otherwise validate on submit
+        if (accurateInputTokens !== null && accurateInputTokens > minMaxInputTokens) {
+          // Convert tokens to approximate characters for user-friendly error message
+          const approxMaxChars = minMaxInputTokens * 4
+          const approxInputChars = accurateInputTokens * 4
           setError(
-            `Your input is too long for one or more of the selected models. The maximum input length is approximately ${formatNumber(minMaxInput)} characters, but your input is ${formatNumber(input.length)} characters. Please shorten your input or select different models that support longer inputs.`
+            `Your input exceeds the token limit for one or more of the selected models. The maximum input is ${formatNumber(minMaxInputTokens)} tokens (approximately ${formatNumber(approxMaxChars)} characters), but your input is ${formatNumber(accurateInputTokens)} tokens (approximately ${formatNumber(approxInputChars)} characters). Please shorten your input or select different models that support longer inputs.`
           )
           window.scrollTo({ top: 0, behavior: 'smooth' })
           return
         }
+        // If accurateInputTokens not available yet, backend will validate on submit
       }
     }
 
@@ -3003,13 +3009,13 @@ function AppContent() {
         }, 0)
         const totalInputTokens = inputTokens + conversationHistoryTokens
 
-        // Get min max input tokens from selected models
+        // Get min max input tokens from selected models (use accurate token limits)
         const modelLimits = selectedModels
           .map(modelId => {
             for (const providerModels of Object.values(modelsByProvider)) {
               const model = providerModels.find(m => m.id === modelId)
-              if (model && model.max_input_chars) {
-                return model.max_input_chars / 4 // Convert chars to tokens
+              if (model && model.max_input_tokens) {
+                return model.max_input_tokens // Use accurate token limit directly
               }
             }
             return null

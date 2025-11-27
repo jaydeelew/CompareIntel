@@ -210,13 +210,13 @@ async def get_available_models(
         for model in all_models:
             limits = get_model_token_limits_from_openrouter(model["id"])
             if limits:
-                # Convert tokens to approximate characters (1 token ≈ 4 chars) for user-friendly display
-                model["max_input_chars"] = limits["max_input"] * 4
-                model["max_output_chars"] = limits["max_output"] * 4
+                # Include token limits directly (accurate)
+                model["max_input_tokens"] = limits["max_input"]
+                model["max_output_tokens"] = limits["max_output"]
             else:
                 # Default fallback values
-                model["max_input_chars"] = 32768  # 8192 tokens * 4
-                model["max_output_chars"] = 32768  # 8192 tokens * 4
+                model["max_input_tokens"] = 8192
+                model["max_output_tokens"] = 8192
 
         # Get all models_by_provider with tier_access field
         models_by_provider = {}
@@ -227,11 +227,12 @@ async def get_available_models(
                 for model in provider_models:
                     limits = get_model_token_limits_from_openrouter(model["id"])
                     if limits:
-                        model["max_input_chars"] = limits["max_input"] * 4
-                        model["max_output_chars"] = limits["max_output"] * 4
+                        # Include token limits directly (accurate)
+                        model["max_input_tokens"] = limits["max_input"]
+                        model["max_output_tokens"] = limits["max_output"]
                     else:
-                        model["max_input_chars"] = 32768
-                        model["max_output_chars"] = 32768
+                        model["max_input_tokens"] = 8192
+                        model["max_output_tokens"] = 8192
                 models_by_provider[provider] = provider_models
 
         return {

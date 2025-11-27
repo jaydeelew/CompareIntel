@@ -25,10 +25,10 @@ export interface Model {
   available?: boolean;
   /** Tier access level: 'anonymous', 'free', or 'paid' */
   tier_access?: 'anonymous' | 'free' | 'paid';
-  /** Maximum input length in characters (approximate) */
-  max_input_chars?: number;
-  /** Maximum output length in characters (approximate) */
-  max_output_chars?: number;
+  /** Maximum input tokens (accurate, from model tokenizer) */
+  max_input_tokens?: number;
+  /** Maximum output tokens (accurate, from model tokenizer) */
+  max_output_tokens?: number;
 }
 
 /**

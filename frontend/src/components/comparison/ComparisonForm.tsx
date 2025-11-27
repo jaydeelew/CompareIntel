@@ -197,15 +197,15 @@ export const ComparisonForm = memo<ComparisonFormProps>(({
       return null;
     }
 
-    // Get min max input tokens from selected models (convert max_input_chars to tokens by dividing by 4)
+    // Get min max input tokens from selected models (use accurate token limits)
     const modelLimits = selectedModels
       .map(modelId => {
         const modelIdStr = String(modelId);
         for (const providerModels of Object.values(modelsByProvider)) {
           const model = providerModels.find(m => String(m.id) === modelIdStr);
-          if (model && model.max_input_chars) {
-            // Convert chars to tokens (1 token ≈ 4 chars)
-            return model.max_input_chars / 4;
+          if (model && model.max_input_tokens) {
+            // Use accurate token limit directly
+            return model.max_input_tokens;
           }
         }
         return null;
@@ -309,15 +309,15 @@ export const ComparisonForm = memo<ComparisonFormProps>(({
       return 0;
     }
 
-    // Get min max input tokens from selected models (convert max_input_chars to tokens by dividing by 4)
+    // Get min max input tokens from selected models (use accurate token limits)
     const modelLimits = selectedModels
       .map(modelId => {
         const modelIdStr = String(modelId);
         for (const providerModels of Object.values(modelsByProvider)) {
           const model = providerModels.find(m => String(m.id) === modelIdStr);
-          if (model && model.max_input_chars) {
-            // Convert chars to tokens (1 token ≈ 4 chars)
-            return model.max_input_chars / 4;
+          if (model && model.max_input_tokens) {
+            // Use accurate token limit directly
+            return model.max_input_tokens;
           }
         }
         return null;
