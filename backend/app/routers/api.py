@@ -398,7 +398,9 @@ async def compare_stream(
     from ..model_runner import get_min_max_input_tokens, estimate_token_count
 
     min_max_input_tokens = get_min_max_input_tokens(req.models)
-    input_tokens = estimate_token_count(req.input_data)
+    # Use first model for accurate token counting (if available)
+    model_id = req.models[0] if req.models else None
+    input_tokens = estimate_token_count(req.input_data, model_id=model_id)
 
     if input_tokens > min_max_input_tokens:
         # Convert tokens to approximate characters for user-friendly message (1 token ≈ 4 chars)
@@ -624,9 +626,11 @@ async def compare_stream(
             from decimal import Decimal
 
             # Calculate input tokens for this request
-            input_tokens = estimate_token_count(req.input_data)
+            # Use first model for accurate token counting (if available)
+            model_id = req.models[0] if req.models else None
+            input_tokens = estimate_token_count(req.input_data, model_id=model_id)
             if req.conversation_history:
-                input_tokens += count_conversation_tokens(req.conversation_history)
+                input_tokens += count_conversation_tokens(req.conversation_history, model_id=model_id)
 
             # If credits are low, calculate reduced max_tokens based on available credits per model
             # This helps ensure users can still get responses even with low credits

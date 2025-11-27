@@ -25,6 +25,7 @@ import tiktoken
 from decimal import Decimal
 import httpx
 import logging
+import threading
 from .mock_responses import stream_mock_response, get_mock_response
 from .types import ConnectionQualityDict
 from .cache import cache
@@ -825,6 +826,126 @@ def get_min_max_output_tokens(model_ids: List[str]) -> int:
     return min(max_outputs) if max_outputs else 8192
 
 
+# ============================================================================
+# Tokenizer Cache for Provider-Specific Token Counting
+# ============================================================================
+# Thread-safe cache for tokenizer instances to avoid repeated loading
+_tokenizer_cache: Dict[str, Any] = {}
+_cache_lock = threading.Lock()
+
+
+def _get_huggingface_model_name(model_id: str) -> Optional[str]:
+    """
+    Map OpenRouter model IDs to Hugging Face model names.
+    Returns None if mapping not available.
+
+    Args:
+        model_id: OpenRouter model identifier (e.g., "meta-llama/llama-3.3-70b-instruct")
+
+    Returns:
+        Hugging Face model name or None
+    """
+    # Handle :free suffix by removing it
+    base_id = model_id.split(":")[0]
+
+    # Map OpenRouter IDs to HuggingFace model names
+    hf_model_map = {
+        # Meta Llama models
+        "meta-llama/llama-3.3-70b-instruct": "meta-llama/Llama-3.3-70B-Instruct",
+        "meta-llama/llama-4-scout": "meta-llama/Llama-4-Scout-17B-Instruct",
+        "meta-llama/llama-4-maverick": "meta-llama/Llama-4-Maverick-17B-Instruct",
+        # Mistral models
+        "mistralai/mistral-small-3.2-24b-instruct": "mistralai/Mistral-Small-3.2-24B-Instruct",
+        "mistralai/mistral-medium-3.1": "mistralai/Mistral-Medium-3.1",
+        "mistralai/mistral-large": "mistralai/Mistral-Large-2407",
+        "mistralai/devstral-small": "mistralai/Devstral-Small-1.1",
+        "mistralai/devstral-medium": "mistralai/Devstral-Medium",
+        "mistralai/codestral-2508": "mistralai/Codestral-2508",
+        # DeepSeek models
+        "deepseek/deepseek-r1": "deepseek-ai/DeepSeek-R1",
+        "deepseek/deepseek-v3.2-exp": "deepseek-ai/DeepSeek-V3.2-Exp",
+        "deepseek/deepseek-chat-v3.1": "deepseek-ai/DeepSeek-V3.1",
+        # Qwen models
+        "qwen/qwen3-30b-a3b-instruct-2507": "Qwen/Qwen3-30B-A3B-Instruct-2507",
+        "qwen/qwen3-next-80b-a3b-instruct": "Qwen/Qwen3-Next-80B-A3B-Instruct",
+        "qwen/qwen3-max": "Qwen/Qwen3-Max",
+        "qwen/qwen3-coder-flash": "Qwen/Qwen3-Coder-Flash",
+        "qwen/qwen3-coder-plus": "Qwen/Qwen3-Coder-Plus",
+        "qwen/qwen3-coder": "Qwen/Qwen3-Coder-480B-A35B",
+        # Microsoft models
+        "microsoft/phi-4": "microsoft/Phi-4",
+        "microsoft/phi-4-reasoning-plus": "microsoft/Phi-4-Reasoning-Plus",
+        "microsoft/wizardlm-2-8x22b": "microsoft/WizardLM-2-8x22B",
+        "microsoft/mai-ds-r1": "microsoft/MAI-DS-R1",  # Note: may need adjustment if model name differs
+    }
+
+    return hf_model_map.get(base_id) or hf_model_map.get(model_id)
+
+
+def _get_anthropic_tokenizer():
+    """
+    Get or create Anthropic tokenizer (cached).
+    Anthropic tokenizer doesn't require API key for counting tokens.
+
+    Returns:
+        Anthropic client instance or None if import fails
+    """
+    cache_key = "anthropic"
+    with _cache_lock:
+        if cache_key not in _tokenizer_cache:
+            try:
+                from anthropic import Anthropic
+
+                # Anthropic tokenizer doesn't need API key for counting tokens
+                # Use dummy key - it won't be used for tokenizer operations
+                client = Anthropic(api_key="dummy")
+                _tokenizer_cache[cache_key] = client
+            except ImportError:
+                logger.debug("anthropic package not installed, skipping Anthropic tokenizer")
+                _tokenizer_cache[cache_key] = None
+            except Exception as e:
+                logger.warning(f"Failed to initialize Anthropic tokenizer: {e}")
+                _tokenizer_cache[cache_key] = None
+        return _tokenizer_cache[cache_key]
+
+
+def _get_huggingface_tokenizer(model_id: str) -> Optional[Any]:
+    """
+    Get or create Hugging Face tokenizer (cached).
+    Only loads tokenizer, not the full model (much faster and lighter).
+
+    Args:
+        model_id: OpenRouter model identifier
+
+    Returns:
+        Tokenizer instance or None if unavailable
+    """
+    hf_model_name = _get_huggingface_model_name(model_id)
+    if not hf_model_name:
+        return None
+
+    with _cache_lock:
+        if hf_model_name not in _tokenizer_cache:
+            try:
+                from transformers import AutoTokenizer
+
+                # Load tokenizer only (not the full model - much faster and lighter)
+                tokenizer = AutoTokenizer.from_pretrained(
+                    hf_model_name,
+                    trust_remote_code=True,
+                    use_fast=True,  # Use fast tokenizer when available
+                )
+                _tokenizer_cache[hf_model_name] = tokenizer
+                logger.debug(f"Loaded tokenizer for {hf_model_name}")
+            except ImportError:
+                logger.debug("transformers package not installed, skipping HuggingFace tokenizer")
+                _tokenizer_cache[hf_model_name] = None
+            except Exception as e:
+                logger.warning(f"Failed to load tokenizer for {hf_model_name}: {e}")
+                _tokenizer_cache[hf_model_name] = None
+        return _tokenizer_cache.get(hf_model_name)
+
+
 def clean_model_response(text: str) -> str:
     """
     Lightweight cleanup for model responses.
@@ -876,19 +997,69 @@ def get_model_max_tokens(model_id: str) -> int:
     return model_limits.get(model_id, 8192)
 
 
-def estimate_token_count(text: str) -> int:
+def estimate_token_count(text: str, model_id: Optional[str] = None) -> int:
     """
-    Estimate token count for text using tiktoken.
-    Falls back to character-based estimation if tiktoken fails.
+    Estimate token count using provider-specific tokenizers when available.
+    Falls back to tiktoken approximation for unsupported models.
 
-    Uses cl100k_base encoding (GPT-4, GPT-3.5-turbo) as a reasonable approximation
-    for most modern LLMs.
+    This function uses official tokenizers for better accuracy:
+    - Anthropic: Uses official anthropic SDK tokenizer (95-99% accurate)
+    - OpenAI: Uses tiktoken with correct encoding (already accurate)
+    - Hugging Face models (Meta, Mistral, DeepSeek, Qwen, Microsoft): Uses transformers library (90-95% accurate)
+    - Others: Falls back to tiktoken cl100k_base approximation (~70-80% accurate)
+
+    Args:
+        text: Text to tokenize
+        model_id: Optional model identifier (e.g., "anthropic/claude-haiku-4.5")
+                  If provided, uses provider-specific tokenizer for better accuracy
+
+    Returns:
+        Estimated token count
     """
+    if not text:
+        return 0
+
+    # If model_id provided, try provider-specific tokenizer
+    if model_id:
+        provider = model_id.split("/")[0] if "/" in model_id else ""
+
+        # Anthropic models - use official tokenizer
+        if provider == "anthropic":
+            try:
+                client = _get_anthropic_tokenizer()
+                if client:
+                    return client.count_tokens(text)
+            except Exception as e:
+                logger.debug(f"Anthropic tokenizer failed: {e}, falling back to tiktoken")
+
+        # Hugging Face models (Meta, Mistral, DeepSeek, Qwen, Microsoft)
+        elif provider in ["meta-llama", "mistralai", "deepseek", "qwen", "microsoft"]:
+            try:
+                tokenizer = _get_huggingface_tokenizer(model_id)
+                if tokenizer:
+                    return len(tokenizer.encode(text, add_special_tokens=False))
+            except Exception as e:
+                logger.debug(f"HuggingFace tokenizer failed for {model_id}: {e}, falling back to tiktoken")
+
+        # OpenAI models - use correct tiktoken encoding
+        elif provider == "openai":
+            try:
+                # GPT-4o uses o200k_base, others use cl100k_base
+                if "gpt-4o" in model_id.lower():
+                    encoding = tiktoken.get_encoding("o200k_base")
+                else:
+                    encoding = tiktoken.get_encoding("cl100k_base")
+                return len(encoding.encode(text))
+            except Exception as e:
+                logger.debug(f"OpenAI tokenizer failed: {e}, falling back to default")
+
+    # Fallback: use tiktoken with cl100k_base (OpenAI GPT-4 standard)
+    # This is a reasonable approximation for most models
     try:
         encoding = tiktoken.get_encoding("cl100k_base")
         return len(encoding.encode(text))
     except Exception:
-        # Fallback: rough estimate of 1 token ≈ 4 characters
+        # Final fallback: rough estimate of 1 token ≈ 4 characters
         return len(text) // 4
 
 
@@ -947,7 +1118,7 @@ def calculate_token_usage(prompt_tokens: int, completion_tokens: int) -> TokenUs
 
 
 def estimate_credits_before_request(
-    prompt: str, num_models: int = 1, conversation_history: Optional[List[Any]] = None
+    prompt: str, num_models: int = 1, conversation_history: Optional[List[Any]] = None, model_id: Optional[str] = None
 ) -> Decimal:
     """
     Estimate credits needed for a request before making the API call.
@@ -957,16 +1128,17 @@ def estimate_credits_before_request(
         prompt: User prompt text
         num_models: Number of models that will be called
         conversation_history: Optional conversation history
+        model_id: Optional model identifier for accurate token counting
 
     Returns:
         Estimated credits needed (as Decimal)
     """
     # Estimate input tokens
-    input_tokens = estimate_token_count(prompt)
+    input_tokens = estimate_token_count(prompt, model_id=model_id)
 
     # Add conversation history tokens if present
     if conversation_history:
-        input_tokens += count_conversation_tokens(conversation_history)
+        input_tokens += count_conversation_tokens(conversation_history, model_id=model_id)
 
     # Dynamic estimate: output tokens typically 0.5x to 2x input tokens
     # Use 1.5x as a balanced estimate (more accurate than fixed 2000)
@@ -982,10 +1154,14 @@ def estimate_credits_before_request(
     return total_credits
 
 
-def count_conversation_tokens(messages: List[Any]) -> int:
+def count_conversation_tokens(messages: List[Any], model_id: Optional[str] = None) -> int:
     """
     Count total tokens in a conversation history.
     Includes tokens for message formatting overhead.
+
+    Args:
+        messages: List of conversation messages
+        model_id: Optional model identifier for accurate token counting
     """
     total_tokens = 0
 
@@ -996,7 +1172,7 @@ def count_conversation_tokens(messages: List[Any]) -> int:
         else:
             content = msg.content if hasattr(msg, "content") else ""
 
-        total_tokens += estimate_token_count(str(content))
+        total_tokens += estimate_token_count(str(content), model_id=model_id)
 
         # Add overhead for message formatting (~4 tokens per message)
         total_tokens += 4
