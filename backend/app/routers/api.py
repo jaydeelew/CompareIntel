@@ -1133,15 +1133,97 @@ async def compare_stream(
                             conv_db.add(conversation)
                             conv_db.flush()  # Get the ID
 
-                        # Estimate input tokens for user message
-                        # Use first model for token estimation (all models should have similar tokenization)
+                        # Calculate input tokens for user message
+                        # For follow-ups: use actual tokens from OpenRouter by subtracting previous tokens
+                        # For new conversations: use estimate (since we'd need system message tokens)
                         user_input_tokens = None
-                        if req.models:
-                            try:
-                                user_input_tokens = estimate_token_count(req.input_data, model_id=req.models[0])
-                            except Exception:
-                                # Fallback: estimate without model-specific tokenizer
-                                user_input_tokens = estimate_token_count(req.input_data, model_id=None)
+                        
+                        # Check if we have actual usage data from OpenRouter
+                        # All models receive the same messages array, so prompt_tokens should be the same
+                        # Use the first successful model's usage data
+                        actual_prompt_tokens = None
+                        if usage_data_dict:
+                            # Get prompt_tokens from any model (they should all be the same)
+                            first_model_usage = next(iter(usage_data_dict.values()))
+                            if first_model_usage:
+                                actual_prompt_tokens = first_model_usage.prompt_tokens
+                        
+                        if actual_prompt_tokens is not None and existing_conversation:
+                            # This is a follow-up: calculate tokens for just the current prompt
+                            # by subtracting all previous message tokens from total prompt_tokens
+                            # OpenRouter's prompt_tokens includes ALL messages sent (user + assistant)
+                            previous_user_messages = (
+                                conv_db.query(ConversationMessageModel)
+                                .filter(
+                                    ConversationMessageModel.conversation_id == conversation.id,
+                                    ConversationMessageModel.role == "user",
+                                )
+                                .all()
+                            )
+                            
+                            previous_assistant_messages = (
+                                conv_db.query(ConversationMessageModel)
+                                .filter(
+                                    ConversationMessageModel.conversation_id == conversation.id,
+                                    ConversationMessageModel.role == "assistant",
+                                )
+                                .all()
+                            )
+                            
+                            # Sum up input_tokens from all previous user messages
+                            sum_previous_user_tokens = sum(
+                                msg.input_tokens for msg in previous_user_messages 
+                                if msg.input_tokens is not None
+                            )
+                            
+                            # Sum up output_tokens from all previous assistant messages
+                            # When assistant messages are sent back to OpenRouter as conversation history,
+                            # they count as input tokens, so we use their output_tokens value
+                            sum_previous_assistant_tokens = sum(
+                                msg.output_tokens for msg in previous_assistant_messages 
+                                if msg.output_tokens is not None
+                            )
+                            
+                            # Total previous tokens = user messages + assistant messages
+                            sum_previous_tokens = sum_previous_user_tokens + sum_previous_assistant_tokens
+                            
+                            # Check if we have valid previous token data
+                            # If no previous messages or previous messages don't have token data saved,
+                            # we can't accurately calculate, so fall back to estimate
+                            has_previous_messages = previous_user_messages or previous_assistant_messages
+                            if not has_previous_messages or sum_previous_tokens == 0:
+                                # No previous messages or previous messages don't have token data
+                                # (likely from before this feature was implemented)
+                                # Fall back to estimate
+                                if req.models:
+                                    try:
+                                        user_input_tokens = estimate_token_count(req.input_data, model_id=req.models[0])
+                                    except Exception:
+                                        user_input_tokens = estimate_token_count(req.input_data, model_id=None)
+                            else:
+                                # Calculate current prompt tokens
+                                # prompt_tokens from OpenRouter = previous user tokens + previous assistant tokens + current prompt tokens
+                                user_input_tokens = actual_prompt_tokens - sum_previous_tokens
+                                
+                                # Sanity check: ensure we don't get negative or unreasonably small values
+                                # If calculation seems wrong, fall back to estimate
+                                if user_input_tokens < 0 or user_input_tokens < len(req.input_data) // 10:
+                                    # Fallback to estimate if calculation seems incorrect
+                                    if req.models:
+                                        try:
+                                            user_input_tokens = estimate_token_count(req.input_data, model_id=req.models[0])
+                                        except Exception:
+                                            user_input_tokens = estimate_token_count(req.input_data, model_id=None)
+                        else:
+                            # New conversation or no usage data: use estimate
+                            # For new conversations, prompt_tokens includes system message tokens
+                            # which we don't track separately, so estimate is more practical
+                            if req.models:
+                                try:
+                                    user_input_tokens = estimate_token_count(req.input_data, model_id=req.models[0])
+                                except Exception:
+                                    # Fallback: estimate without model-specific tokenizer
+                                    user_input_tokens = estimate_token_count(req.input_data, model_id=None)
 
                         # Save user message (current prompt)
                         # For new conversations, this is the first message
