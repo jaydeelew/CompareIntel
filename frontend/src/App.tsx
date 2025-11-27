@@ -110,6 +110,9 @@ function AppContent() {
     maxModelsLimit,
   } = modelSelectionHook
 
+  // Store accurate token count from ComparisonForm (from /estimate-tokens endpoint)
+  const [accurateInputTokens, setAccurateInputTokens] = useState<number | null>(null)
+
   const comparisonHook = useModelComparison()
   const {
     input,
@@ -3269,12 +3272,14 @@ function AppContent() {
       resetStreamingTimeout()
 
       // Use service for streaming request
+      // Include accurate token count from frontend if available (avoids duplicate calculation on backend)
       const stream = await compareStream({
         input_data: input,
         models: selectedModels,
         conversation_history: apiConversationHistory,
         browser_fingerprint: browserFingerprint,
         conversation_id: conversationId || undefined, // Only include if not null
+        estimated_input_tokens: accurateInputTokens || undefined, // Include accurate count if available
       })
 
       if (!stream) {
@@ -4466,6 +4471,7 @@ function AppContent() {
                   renderUsagePreview={renderUsagePreview}
                   selectedModels={selectedModels}
                   modelsByProvider={modelsByProvider}
+                  onAccurateTokenCountChange={setAccurateInputTokens}
                 />
               </ErrorBoundary>
             </Hero>

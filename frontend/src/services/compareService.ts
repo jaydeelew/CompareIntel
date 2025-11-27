@@ -21,6 +21,7 @@ export interface CompareRequestPayload {
   conversation_history?: Array<{ role: string; content: string }>
   browser_fingerprint?: string
   conversation_id?: number
+  estimated_input_tokens?: number  // Optional: Accurate token count from /estimate-tokens endpoint
 }
 
 /**

@@ -86,6 +86,7 @@ class CompareRequest(BaseModel):
     conversation_history: list[ConversationMessage] = []  # Optional conversation context
     browser_fingerprint: Optional[str] = None  # Optional browser fingerprint for rate limiting
     conversation_id: Optional[int] = None  # Optional conversation ID for follow-ups (most reliable matching)
+    estimated_input_tokens: Optional[int] = None  # Optional: Accurate token count from frontend (from /estimate-tokens endpoint)
 
     model_config = ConfigDict(
         json_schema_extra={
@@ -465,9 +466,17 @@ async def compare_stream(
     from ..model_runner import get_min_max_input_tokens, estimate_token_count
 
     min_max_input_tokens = get_min_max_input_tokens(req.models)
-    # Use first model for accurate token counting (if available)
-    model_id = req.models[0] if req.models else None
-    input_tokens = estimate_token_count(req.input_data, model_id=model_id)
+    
+    # Use frontend-provided token count if available (from /estimate-tokens endpoint)
+    # Otherwise calculate it ourselves. This avoids duplicate work since frontend
+    # already has accurate token counts from the hybrid approach.
+    if req.estimated_input_tokens is not None and req.estimated_input_tokens >= 0:
+        # Use frontend-provided count (already validated by /estimate-tokens endpoint)
+        input_tokens = req.estimated_input_tokens
+    else:
+        # Fallback: calculate ourselves (for backwards compatibility or if frontend didn't provide it)
+        model_id = req.models[0] if req.models else None
+        input_tokens = estimate_token_count(req.input_data, model_id=model_id)
 
     if input_tokens > min_max_input_tokens:
         # Convert tokens to approximate characters for user-friendly message (1 token ≈ 4 chars)

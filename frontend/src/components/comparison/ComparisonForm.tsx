@@ -49,6 +49,9 @@ interface ComparisonFormProps {
   
   // Models data for token limit calculations
   modelsByProvider: ModelsByProvider;
+
+  // Callback to expose accurate token count to parent (for API calls)
+  onAccurateTokenCountChange?: (totalInputTokens: number | null) => void;
 }
 
 /**
@@ -89,6 +92,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(({
   renderUsagePreview,
   selectedModels,
   modelsByProvider,
+  onAccurateTokenCountChange,
 }) => {
   const messageCount = conversations.length > 0 ? conversations[0]?.messages.length || 0 : 0;
 
@@ -107,17 +111,17 @@ export const ComparisonForm = memo<ComparisonFormProps>(({
   // Debounced API call for accurate token counting
   useEffect(() => {
     // Only call API if:
-    // 1. We're in follow-up mode
-    // 2. We have selected models
-    // 3. We have conversations
-    // 4. Input is substantial (avoid calls for single characters)
+    // 1. We have selected models
+    // 2. Input is substantial (avoid calls for single characters)
+    // Note: We call API for both new comparisons and follow-ups for consistent accuracy
     if (
-      !isFollowUpMode ||
       selectedModels.length === 0 ||
-      conversations.length === 0 ||
       debouncedInput.length < 10
     ) {
       setAccurateTokenCounts(null);
+      if (onAccurateTokenCountChange) {
+        onAccurateTokenCountChange(null);
+      }
       return;
     }
 
@@ -132,25 +136,26 @@ export const ComparisonForm = memo<ComparisonFormProps>(({
 
     setIsLoadingAccurateTokens(true);
 
-    // Get conversation history for the first selected model
-    const conversationHistoryMessages = conversations
-      .filter(conv => {
-        const convModelIdStr = String(conv.modelId);
-        return selectedModels.some(selectedId => String(selectedId) === convModelIdStr) && conv.messages.length > 0;
-      });
+    // Get conversation history if in follow-up mode
+    let conversationHistory: Array<{ role: string; content: string }> = [];
+    
+    if (isFollowUpMode && conversations.length > 0) {
+      const conversationHistoryMessages = conversations
+        .filter(conv => {
+          const convModelIdStr = String(conv.modelId);
+          return selectedModels.some(selectedId => String(selectedId) === convModelIdStr) && conv.messages.length > 0;
+        });
 
-    if (conversationHistoryMessages.length === 0) {
-      setIsLoadingAccurateTokens(false);
-      return;
+      if (conversationHistoryMessages.length > 0) {
+        const messages = conversationHistoryMessages[0].messages;
+        conversationHistory = messages
+          .filter(msg => msg.content && msg.content.trim().length > 0)
+          .map(msg => ({
+            role: msg.role,
+            content: msg.content || '',
+          }));
+      }
     }
-
-    const messages = conversationHistoryMessages[0].messages;
-    const conversationHistory = messages
-      .filter(msg => msg.content && msg.content.trim().length > 0)
-      .map(msg => ({
-        role: msg.role,
-        content: msg.content || '',
-      }));
 
     // Use first model for accurate token counting
     const modelId = selectedModels[0];
@@ -158,17 +163,22 @@ export const ComparisonForm = memo<ComparisonFormProps>(({
     estimateTokens({
       input_data: debouncedInput,
       model_id: modelId,
-      conversation_history: conversationHistory,
+      conversation_history: conversationHistory.length > 0 ? conversationHistory : undefined,
     })
       .then((response) => {
         // Only update if request wasn't cancelled
         if (!controller.signal.aborted) {
-          setAccurateTokenCounts({
+          const counts = {
             input_tokens: response.input_tokens,
             conversation_history_tokens: response.conversation_history_tokens,
             total_input_tokens: response.total_input_tokens,
-          });
+          };
+          setAccurateTokenCounts(counts);
           setIsLoadingAccurateTokens(false);
+          // Notify parent component of accurate token count
+          if (onAccurateTokenCountChange) {
+            onAccurateTokenCountChange(counts.total_input_tokens);
+          }
         }
       })
       .catch((error) => {
@@ -180,13 +190,17 @@ export const ComparisonForm = memo<ComparisonFormProps>(({
         console.warn('Failed to get accurate token count:', error);
         setIsLoadingAccurateTokens(false);
         // Keep accurateTokenCounts as null to use estimate
+        // Notify parent that we don't have accurate count
+        if (onAccurateTokenCountChange) {
+          onAccurateTokenCountChange(null);
+        }
       });
 
     // Cleanup: abort request if component unmounts or dependencies change
     return () => {
       controller.abort();
     };
-  }, [debouncedInput, isFollowUpMode, selectedModels, conversations]);
+  }, [debouncedInput, isFollowUpMode, selectedModels, conversations, onAccurateTokenCountChange]);
 
   // Calculate token usage and percentage remaining for follow-up mode
   // Uses accurate counts from API when available, falls back to character-based estimate
