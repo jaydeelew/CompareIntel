@@ -75,7 +75,11 @@ if actual_prompt_tokens is not None and existing_conversation:
 ```
 
 **Fallback Logic:**
-- New conversations: Use estimate (system message tokens aren't tracked separately)
+- **New conversations**: Use estimate because:
+  - OpenRouter's `prompt_tokens` includes system message tokens (~15 tokens)
+  - System messages are not stored in the database (only user/assistant messages are stored)
+  - Without stored system message tokens, we cannot accurately calculate: `current_prompt_tokens = prompt_tokens - system_tokens`
+  - Therefore, we estimate the user prompt tokens directly
 - No usage data: Use estimate
 - Missing previous token data: Use estimate
 - Invalid calculation (negative/unreasonable): Use estimate
@@ -94,7 +98,9 @@ if actual_prompt_tokens is not None and existing_conversation:
 
 **What happens:**
 1. OpenRouter receives:
-   - System message: "Provide complete responses..." (~15 tokens)
+   - System message: "Provide complete responses. Finish your thoughts and explanations fully." (~15 tokens)
+     - **Note:** This system message is ONLY sent for new conversations (when `conversation_history` is empty)
+     - **Purpose:** Encourages models to provide complete, thorough responses
    - User message: "What is machine learning?" (~5 tokens)
    - **Total messages sent:** 2
 
@@ -103,7 +109,10 @@ if actual_prompt_tokens is not None and existing_conversation:
    - `completion_tokens = 150` (assistant response)
 
 3. Database saves:
-   - User message: `input_tokens = 5` ✅ (estimated, since it's a new conversation)
+   - User message: `input_tokens = 5` ✅ (estimated, because system message tokens aren't stored)
+     - **Why estimate?** OpenRouter's `prompt_tokens = 20` includes both system (~15) and user (~5) tokens
+     - Since system messages aren't stored in the database, we can't calculate: `user_tokens = 20 - 15`
+     - Instead, we estimate the user prompt tokens directly (~5 tokens)
    - Assistant message: `output_tokens = 150` ✅ (from OpenRouter)
 
 **Database state:**
@@ -228,6 +237,34 @@ This avoids sending the entire conversation history to the backend for estimatio
 
 ## 🔑 Key Points
 
+### System Message Details
+
+**Complete System Message:**
+```
+"Provide complete responses. Finish your thoughts and explanations fully."
+```
+
+**When it's sent:**
+- ✅ **Only for new conversations** (when `conversation_history` is `None` or empty)
+- ❌ **NOT sent for follow-ups** (when conversation history exists)
+
+**Purpose:**
+- Encourages models to provide complete, thorough responses
+- Helps prevent truncated or incomplete answers
+- Only needed at conversation start, not for follow-ups
+
+**Token Count:**
+- Approximately 15 tokens (varies slightly by tokenizer)
+- Included in OpenRouter's `prompt_tokens` for the first message
+- **Not stored in the database** - Only user and assistant messages are stored in `conversation_messages` table
+
+**Why This Matters:**
+- For new conversations, OpenRouter's `prompt_tokens` includes: `system_tokens + user_tokens`
+- To calculate user tokens, we would need: `user_tokens = prompt_tokens - system_tokens`
+- But system message tokens aren't stored anywhere, so we can't subtract them
+- **Solution:** Estimate the user prompt tokens directly (which is accurate since it's just the user's text)
+- For follow-ups, this isn't an issue because system messages aren't sent (only conversation history + current prompt)
+
 ### What Gets Calculated
 
 The equation: `current_prompt_tokens = prompt_tokens - sum_previous_tokens`
@@ -239,7 +276,12 @@ Where `sum_previous_tokens` includes:
 ### When Calculation Happens
 
 - **Follow-up messages**: Calculates actual tokens from OpenRouter response
-- **New conversations**: Uses estimate (system message tokens aren't tracked separately)
+  - Can accurately calculate because: `current_tokens = prompt_tokens - sum(previous_stored_tokens)`
+  - All previous tokens are stored in the database (user `input_tokens` + assistant `output_tokens`)
+- **New conversations**: Uses estimate
+  - **Reason:** System message tokens (~15) are included in OpenRouter's `prompt_tokens` but aren't stored in the database
+  - Cannot calculate: `user_tokens = prompt_tokens - system_tokens` (system_tokens not available)
+  - **Solution:** Estimate user prompt tokens directly (accurate since it's just the user's text)
 - **Missing data**: Falls back to estimate if previous tokens aren't available
 
 ### Benefits
