@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback, lazy, Suspense } from 'react'
+import { useState, useEffect, useLayoutEffect, useRef, useCallback, lazy, Suspense } from 'react'
 import { Routes, Route, useNavigate, useLocation } from 'react-router-dom'
 
 // Import all CSS modules directly (better for Vite than CSS @import)
@@ -157,6 +157,8 @@ function AppContent() {
   const scrolledToTopRef = useRef<Set<string>>(new Set()) // Track which model cards have been scrolled to top
   const shouldScrollToTopAfterFormattingRef = useRef<boolean>(false) // Track if we should scroll to top after all models format (initial comparison only)
   const isPageScrollingRef = useRef<boolean>(false) // Track if user is scrolling the page
+  const justLoadedFromHistoryRef = useRef<boolean>(false) // Track if we just loaded conversations from history
+  const isScrollingToTopFromHistoryRef = useRef<boolean>(false) // Track if we're currently scrolling to top from history (prevents scroll sync)
   const [modelsByProvider, setModelsByProvider] = useState<ModelsByProvider>({})
   const [isLoadingModels, setIsLoadingModels] = useState(true)
   const [openDropdowns, setOpenDropdowns] = useState<Set<string>>(new Set())
@@ -650,6 +652,11 @@ function AppContent() {
       // Update last scroll position
       lastScrollTopRef.current.set(modelId, currentScrollTop)
 
+      // If we're scrolling to top from history, don't sync to prevent interference
+      if (isScrollingToTopFromHistoryRef.current) {
+        return
+      }
+
       // If scroll lock is enabled, sync this scroll to all other cards
       if (!isScrollLockedRef.current) {
         return
@@ -1098,12 +1105,97 @@ function AppContent() {
     }
   }
 
+  // Scroll all conversations to top when loaded from history
+  // Use useLayoutEffect to run synchronously before browser paint
+  useLayoutEffect(() => {
+    if (justLoadedFromHistoryRef.current && conversations.length > 0 && !isLoadingHistory) {
+      // Set flag to prevent scroll syncing from interfering
+      isScrollingToTopFromHistoryRef.current = true
+      // Temporarily disable scroll syncing immediately
+      syncingFromElementRef.current = null
+
+      // Try to scroll immediately
+      const scrollImmediately = () => {
+        conversations.forEach((conversation) => {
+          const safeId = getSafeId(conversation.modelId)
+          const conversationContent = document.querySelector(
+            `#conversation-content-${safeId}`
+          ) as HTMLElement
+          if (conversationContent) {
+            conversationContent.scrollTop = 0
+          }
+        })
+      }
+
+      scrollImmediately()
+
+      // Also use a retry mechanism in case elements aren't rendered yet
+      const scrollToTop = (attempts = 0) => {
+        const maxAttempts = 25
+        const delay = attempts === 0 ? 100 : attempts < 10 ? 50 : 25
+
+        setTimeout(() => {
+          const elementsToScroll: HTMLElement[] = []
+          let allFound = true
+
+          // Collect all conversation content elements
+          conversations.forEach((conversation) => {
+            const safeId = getSafeId(conversation.modelId)
+            const conversationContent = document.querySelector(
+              `#conversation-content-${safeId}`
+            ) as HTMLElement
+            if (conversationContent) {
+              // Verify element has content and is visible
+              if (conversationContent.scrollHeight > 0 && conversationContent.offsetHeight > 0) {
+                elementsToScroll.push(conversationContent)
+                // Scroll to top
+                conversationContent.scrollTop = 0
+              } else {
+                allFound = false
+              }
+            } else {
+              allFound = false
+            }
+          })
+
+          // Retry if not all elements were found
+          if (!allFound && attempts < maxAttempts) {
+            scrollToTop(attempts + 1)
+          } else {
+            // Verify all are scrolled to top
+            const allScrolledToTop = elementsToScroll.length === conversations.length &&
+              elementsToScroll.every(el => Math.abs(el.scrollTop) < 1)
+
+            if (!allScrolledToTop && attempts < maxAttempts) {
+              scrollToTop(attempts + 1)
+            } else {
+              // Keep flags set for longer to prevent scroll sync from interfering
+              setTimeout(() => {
+                justLoadedFromHistoryRef.current = false
+                // Keep scroll prevention flag set longer to ensure no sync happens
+                setTimeout(() => {
+                  isScrollingToTopFromHistoryRef.current = false
+                }, 1000) // Keep it set for 1 second total to prevent any sync interference
+              }, 600)
+            }
+          }
+        }, delay)
+      }
+
+      // Start retry mechanism after a brief delay
+      requestAnimationFrame(() => {
+        scrollToTop()
+      })
+    }
+  }, [conversations, isLoadingHistory])
+
   // Keep ref in sync with state
   useEffect(() => {
     isScrollLockedRef.current = isScrollLocked
 
     // When scroll lock is enabled, align all cards to the first card's scroll position
-    if (isScrollLocked && conversations.length > 0) {
+    // But skip if we just loaded from history (to prevent interference)
+    if (isScrollLocked && conversations.length > 0 && !justLoadedFromHistoryRef.current) {
       const allConversations = document.querySelectorAll('[id^="conversation-content-"]')
       if (allConversations.length > 0) {
         const firstCard = allConversations[0] as HTMLElement
@@ -1469,27 +1561,8 @@ function AppContent() {
       setIsModelsHidden(true) // Collapse the models section when selecting from history
       collapseAllDropdowns() // Collapse all provider dropdowns when selecting from history
 
-      // Scroll to results section and reset all conversation cards to top
-      // Use requestAnimationFrame to ensure DOM is rendered before scrolling
-      requestAnimationFrame(() => {
-        setTimeout(() => {
-          const resultsSection = document.querySelector('.results-section')
-          if (resultsSection) {
-            resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' })
-          }
-
-          // Scroll all conversation content divs to the top
-          modelsUsed.forEach((modelId: string) => {
-            const safeId = modelId.replace(/[^a-zA-Z0-9_-]/g, '-')
-            const conversationContent = document.querySelector(
-              `#conversation-content-${safeId}`
-            ) as HTMLElement
-            if (conversationContent) {
-              conversationContent.scrollTop = 0
-            }
-          })
-        }, 200) // Delay to ensure DOM is fully rendered
-      })
+      // Mark that we just loaded from history - this will trigger scrolling to top
+      justLoadedFromHistoryRef.current = true
 
       // Track this conversation as currently visible so it shows as active in history dropdown
       setCurrentVisibleComparisonId(String(summary.id))
@@ -1910,6 +1983,9 @@ function AppContent() {
   // Align "You" sections across all model cards after each round completes
   useEffect(() => {
     if (conversations.length === 0) return
+
+    // Don't align if we just loaded from history (to prevent scrolling)
+    if (justLoadedFromHistoryRef.current || isScrollingToTopFromHistoryRef.current) return
 
     // Get the current round number
     const firstConversation = conversations[0]
