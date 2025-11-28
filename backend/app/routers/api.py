@@ -41,10 +41,6 @@ from ..rate_limiting import (
     get_user_usage_stats,
     get_anonymous_usage_stats,
     anonymous_rate_limit_storage,
-    check_user_rate_limit,
-    increment_user_usage,
-    check_anonymous_rate_limit,
-    increment_anonymous_usage,
     get_model_limit,
     is_overage_allowed,
     # Credit-based functions
@@ -62,7 +58,6 @@ model_stats: Dict[str, Dict[str, Any]] = defaultdict(lambda: {"success": 0, "fai
 
 # Import configuration constants
 from ..config import (
-    ANONYMOUS_DAILY_LIMIT,
     ANONYMOUS_MODEL_LIMIT,
     MODEL_LIMITS,
     SUBSCRIPTION_CONFIG,
@@ -361,8 +356,7 @@ async def reset_rate_limit_dev(
 
     # For authenticated users: reset usage and delete their conversations
     if current_user:
-        # Reset usage counts
-        current_user.daily_usage_count = 0
+        # Reset usage counts (credits are reset via credit_manager, not here)
         current_user.monthly_overage_count = 0
         current_user.daily_extended_usage = 0
 

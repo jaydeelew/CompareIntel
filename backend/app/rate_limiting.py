@@ -8,8 +8,7 @@ authenticated users (subscription-based limits) and anonymous users
 CREDITS-BASED SYSTEM:
 - Authenticated users: Credit-based monthly allocations (paid tiers) or daily limits (free tier)
 - Anonymous users: Credit-based daily limits
-- All rate limiting now uses credits instead of model responses
-- Legacy functions maintained for backward compatibility during transition
+- All rate limiting uses credits instead of model responses
 """
 
 from datetime import datetime, date, timezone
@@ -64,8 +63,7 @@ anonymous_rate_limit_storage: Dict[str, AnonymousRateLimitData] = defaultdict(_d
 # ============================================================================
 # CREDITS-BASED RATE LIMITING FUNCTIONS
 # ============================================================================
-# New credit-based functions that replace model-response-based functions
-# Legacy functions below are kept for backward compatibility during transition
+# Credit-based functions for rate limiting
 
 
 def check_user_credits(user: User, required_credits: Decimal, db: Session) -> Tuple[bool, int, int]:
@@ -231,103 +229,18 @@ def deduct_anonymous_credits(identifier: str, credits: Decimal) -> None:
     print(f"[DEBUG] deduct_anonymous_credits - {identifier}: deducted {credits_int} credits (from {float(credits):.4f}), new count: {user_data['count']} (capped at {allocated})")
 
 
-def check_user_rate_limit(user: User, db: Session) -> Tuple[bool, int, int]:
-    """
-    LEGACY FUNCTION - DEPRECATED: Use check_user_credits() instead.
-
-    Check rate limit for authenticated user based on subscription tier.
-    This function is kept for backward compatibility but should not be used.
-
-    Args:
-        user: Authenticated user object
-        db: Database session
-
-    Returns:
-        tuple: (is_allowed, current_count, daily_limit)
-    """
-    # LEGACY: daily_usage_count removed - use credits instead
-    # This function is deprecated and returns placeholder values
-    subscription_tier = (user.subscription_tier or "").strip().lower()
-    daily_limit = get_daily_limit(subscription_tier)
-    # Return True to allow (credits system handles actual limiting)
-    return True, 0, daily_limit
-
-
-def increment_user_usage(user: User, db: Session, count: int = 1) -> None:
-    """
-    LEGACY FUNCTION - DEPRECATED: Use deduct_user_credits() instead.
-
-    Increment authenticated user's daily usage count.
-    This function is kept for backward compatibility but should not be used.
-
-    Args:
-        user: Authenticated user object
-        db: Database session
-        count: Number of model responses to add (default: 1)
-    """
-    # LEGACY: daily_usage_count removed - use credits instead
-    # This function is deprecated and does nothing
-    print(f"[increment_user_usage] LEGACY FUNCTION - Use deduct_user_credits() instead. User {user.email}")
-
-
-def check_anonymous_rate_limit(identifier: str) -> Tuple[bool, int]:
-    """
-    Check rate limit for anonymous user using IP/fingerprint.
-
-    Args:
-        identifier: Unique identifier (e.g., "ip:192.168.1.1" or "fp:xxx")
-
-    Returns:
-        tuple: (is_allowed, current_count)
-    """
-    today = datetime.now().date().isoformat()
-    user_data = anonymous_rate_limit_storage[identifier]
-
-    # Reset count if it's a new day
-    if user_data["date"] != today:
-        user_data["count"] = 0
-        user_data["date"] = today
-        user_data["first_seen"] = datetime.now()
-
-    current_count = user_data["count"]
-
-    # Anonymous (unregistered) users get model responses per day based on configuration
-    is_allowed = current_count < ANONYMOUS_DAILY_LIMIT
-
-    return is_allowed, current_count
-
-
-def increment_anonymous_usage(identifier: str, count: int = 1) -> None:
-    """
-    Increment usage count for anonymous user.
-
-    Args:
-        identifier: Unique identifier (e.g., "ip:192.168.1.1" or "fp:xxx")
-        count: Number of model responses to add (default: 1)
-    """
-    today = datetime.now().date().isoformat()
-    user_data = anonymous_rate_limit_storage[identifier]
-
-    if user_data["date"] != today:
-        user_data["count"] = count
-        user_data["date"] = today
-        user_data["first_seen"] = datetime.now()
-    else:
-        user_data["count"] += count
-
-
 def get_user_usage_stats(user: User) -> FullUsageStatsDict:
     """
     Get usage statistics for authenticated user.
 
-    CREDITS-BASED: Now returns credit-based statistics.
-    Legacy model-response fields maintained for backward compatibility.
+    CREDITS-BASED: Returns credit-based statistics.
+    Legacy model-response fields maintained for backward compatibility in API responses.
 
     Args:
         user: Authenticated user object
 
     Returns:
-        dict: Usage statistics including credits, daily usage (legacy), and extended usage
+        dict: Usage statistics including credits and legacy daily usage fields
     """
     # Get credit-based stats
     tier = user.subscription_tier or "free"
@@ -339,20 +252,20 @@ def get_user_usage_stats(user: User) -> FullUsageStatsDict:
     reset_at = user.credits_reset_at
     reset_date = reset_at.date() if reset_at else date.today()
 
-    # Legacy fields (for backward compatibility during transition)
+    # Legacy fields (for backward compatibility in API responses)
     daily_limit = get_daily_limit(tier)
-    # Legacy: daily_usage_count removed - use credits instead
-    daily_remaining = 0  # Placeholder - credits system replaced this
+    # Approximate conversion: credits_used / 5 (since average exchange is ~5 credits)
+    daily_usage = int(used / 5) if used > 0 else 0
+    daily_remaining = max(0, daily_limit - daily_usage)
 
     return {
-        # Credits-based fields (new)
+        # Credits-based fields (primary)
         "credits_allocated": allocated,
         "credits_used_this_period": used,
         "credits_remaining": remaining,
         "credits_reset_date": reset_date.isoformat(),
-        # Legacy fields (for backward compatibility)
-        # Legacy: daily_usage_count removed - use credits instead
-        "daily_usage": 0,  # Placeholder - use credits_used_this_period
+        # Legacy fields (for backward compatibility in API responses)
+        "daily_usage": daily_usage,
         "daily_limit": daily_limit,
         "remaining_usage": daily_remaining,
         "subscription_tier": tier,
@@ -364,8 +277,8 @@ def get_anonymous_usage_stats(identifier: str) -> UsageStatsDict:
     """
     Get usage statistics for anonymous user.
 
-    CREDITS-BASED: Now returns credit-based statistics.
-    Legacy model-response fields maintained for backward compatibility.
+    CREDITS-BASED: Returns credit-based statistics.
+    Legacy model-response fields maintained for backward compatibility in API responses.
 
     Args:
         identifier: Unique identifier
@@ -386,17 +299,20 @@ def get_anonymous_usage_stats(identifier: str) -> UsageStatsDict:
 
     credits_remaining = max(0, credits_allocated - credits_used)
 
-    # Legacy fields (for backward compatibility)
-    _, current_count = check_anonymous_rate_limit(identifier)
+    # Legacy fields (for backward compatibility in API responses)
+    # Calculate legacy daily_usage from credits (approximate: 1 credit ≈ 0.2 model responses)
+    # This is only for API compatibility, actual limiting uses credits
     daily_limit = ANONYMOUS_DAILY_LIMIT
+    # Approximate conversion: credits_used / 5 (since average exchange is ~5 credits)
+    current_count = int(credits_used / 5) if credits_used > 0 else 0
     remaining = max(0, daily_limit - current_count)
 
     return {
-        # Credits-based fields (new)
+        # Credits-based fields (primary)
         "credits_allocated": credits_allocated,
         "credits_used_today": credits_used,
         "credits_remaining": credits_remaining,
-        # Legacy fields (for backward compatibility)
+        # Legacy fields (for backward compatibility in API responses)
         "daily_usage": current_count,
         "daily_limit": daily_limit,
         "remaining_usage": remaining,
@@ -409,7 +325,7 @@ def should_send_usage_warning(user: User) -> bool:
     """
     Check if usage warning email should be sent to user.
 
-    Sends warning at 80% usage (16/20 for free, 120/150 for starter, 360/450 for pro).
+    Sends warning at 80% of credit allocation.
 
     Args:
         user: Authenticated user object
@@ -417,10 +333,6 @@ def should_send_usage_warning(user: User) -> bool:
     Returns:
         bool: True if warning should be sent
     """
-    daily_limit = get_daily_limit(user.subscription_tier)
-    warning_threshold = int(daily_limit * 0.8)
-
-    # Legacy: daily_usage_count removed - use credits instead
     # Check credits usage for warning threshold
     credits_used = user.credits_used_this_period or 0
     credits_allocated = user.monthly_credits_allocated or 0

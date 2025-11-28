@@ -103,16 +103,17 @@ class TestStreamingComparison:
     
     def test_streaming_rate_limit(self, authenticated_client, db_session):
         """Test streaming endpoint respects rate limits."""
-        from app.rate_limiting import increment_user_usage
-        from app.config import SUBSCRIPTION_CONFIG
+        from app.rate_limiting import deduct_user_credits
+        from decimal import Decimal
         
         client, user, token, _ = authenticated_client
         
-        # Exhaust user's rate limit
-        daily_limit = SUBSCRIPTION_CONFIG.get(user.subscription_tier, {}).get("daily_limit", 20)
-        for _ in range(daily_limit):
-            increment_user_usage(user, db_session, count=1)
-            db_session.refresh(user)
+        # Exhaust user's credits by deducting all allocated credits
+        db_session.refresh(user)
+        allocated = user.monthly_credits_allocated or 100  # Default to 100 if not set
+        # Deduct all credits to exhaust the limit
+        deduct_user_credits(user, Decimal(allocated), None, db_session, "Test: Exhaust credits")
+        db_session.refresh(user)
         
         response = client.post(
             "/api/compare-stream",
@@ -121,6 +122,7 @@ class TestStreamingComparison:
                 "models": ["gpt-4"],
             }
         )
-        assert response.status_code == status.HTTP_429_TOO_MANY_REQUESTS
+        # Should return 402 Payment Required when credits are exhausted
+        assert response.status_code == status.HTTP_402_PAYMENT_REQUIRED
 
 

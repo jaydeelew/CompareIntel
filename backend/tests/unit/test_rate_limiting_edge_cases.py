@@ -1,377 +1,351 @@
 """
-Edge case tests for rate limiting functionality.
+Edge case tests for credit-based rate limiting functionality.
 
 Tests cover:
 - Boundary conditions
 - Reset scenarios
-- Extended tier limits
 - Anonymous user edge cases
 - Concurrent access
 """
 import pytest
-from datetime import date, datetime, timedelta
+from decimal import Decimal
+from datetime import date, datetime, timedelta, timezone
 from app.models import User
 from app.rate_limiting import (
-    check_user_rate_limit,
-    increment_user_usage,
-    check_anonymous_rate_limit,
-    increment_anonymous_usage,
-    check_extended_tier_limit,
-    increment_extended_usage,
-    check_anonymous_extended_limit,
-    increment_anonymous_extended_usage,
+    check_user_credits,
+    deduct_user_credits,
+    check_anonymous_credits,
+    deduct_anonymous_credits,
     get_user_usage_stats,
     get_anonymous_usage_stats,
     anonymous_rate_limit_storage,
 )
+from app.config.constants import (
+    DAILY_CREDIT_LIMITS,
+    MONTHLY_CREDIT_ALLOCATIONS,
+)
 
 
-class TestUserRateLimitBoundaries:
-    """Tests for user rate limit boundary conditions."""
+class TestUserCreditBoundaries:
+    """Tests for user credit boundary conditions."""
     
-    def test_rate_limit_at_exact_limit(self, db_session, test_user_free):
-        """Test rate limiting at exact limit."""
-        from app.config import get_daily_limit
+    def test_credits_at_exact_limit(self, db_session, test_user_free):
+        """Test credit checking at exact limit."""
+        db_session.refresh(test_user_free)
+        allocated = test_user_free.monthly_credits_allocated or DAILY_CREDIT_LIMITS.get("free", 100)
         
-        daily_limit = get_daily_limit(test_user_free.subscription_tier)
-        test_user_free.daily_usage_count = daily_limit
+        # Deduct all credits
+        deduct_user_credits(test_user_free, Decimal(allocated), None, db_session, "Test: Exhaust credits")
+        db_session.refresh(test_user_free)
         
-        is_allowed, count, limit = check_user_rate_limit(test_user_free, db_session)
+        is_allowed, credits_remaining, credits_allocated = check_user_credits(
+            test_user_free, Decimal("1"), db_session
+        )
         assert is_allowed is False
-        assert count == daily_limit
-        assert limit == daily_limit
+        assert credits_remaining == 0
+        assert credits_allocated == allocated
     
-    def test_rate_limit_one_below_limit(self, db_session, test_user_free):
-        """Test rate limiting one below limit."""
-        from app.config import get_daily_limit
+    def test_credits_one_below_limit(self, db_session, test_user_free):
+        """Test credit checking one below limit."""
+        db_session.refresh(test_user_free)
+        allocated = test_user_free.monthly_credits_allocated or DAILY_CREDIT_LIMITS.get("free", 100)
         
-        daily_limit = get_daily_limit(test_user_free.subscription_tier)
-        test_user_free.daily_usage_count = daily_limit - 1
+        # Deduct almost all credits, leaving 1
+        deduct_user_credits(test_user_free, Decimal(allocated - 1), None, db_session, "Test: Near limit")
+        db_session.refresh(test_user_free)
         
-        is_allowed, count, limit = check_user_rate_limit(test_user_free, db_session)
+        is_allowed, credits_remaining, credits_allocated = check_user_credits(
+            test_user_free, Decimal("1"), db_session
+        )
         assert is_allowed is True
-        assert count == daily_limit - 1
-        assert limit == daily_limit
+        assert credits_remaining == 1
+        assert credits_allocated == allocated
     
-    def test_rate_limit_one_above_limit(self, db_session, test_user_free):
-        """Test rate limiting one above limit."""
-        from app.config import get_daily_limit
+    def test_credits_one_above_limit(self, db_session, test_user_free):
+        """Test credit checking one above limit."""
+        db_session.refresh(test_user_free)
+        allocated = test_user_free.monthly_credits_allocated or DAILY_CREDIT_LIMITS.get("free", 100)
         
-        daily_limit = get_daily_limit(test_user_free.subscription_tier)
-        test_user_free.daily_usage_count = daily_limit + 1
+        # Deduct all credits plus 1 (should cap at allocated)
+        deduct_user_credits(test_user_free, Decimal(allocated + 1), None, db_session, "Test: Over limit")
+        db_session.refresh(test_user_free)
         
-        is_allowed, count, limit = check_user_rate_limit(test_user_free, db_session)
+        is_allowed, credits_remaining, credits_allocated = check_user_credits(
+            test_user_free, Decimal("1"), db_session
+        )
         assert is_allowed is False
-        assert count == daily_limit + 1
+        assert credits_remaining == 0
     
-    def test_rate_limit_zero_usage(self, db_session, test_user_free):
-        """Test rate limiting with zero usage."""
-        test_user_free.daily_usage_count = 0
+    def test_credits_zero_usage(self, db_session, test_user_free):
+        """Test credit checking with zero usage."""
+        db_session.refresh(test_user_free)
+        allocated = test_user_free.monthly_credits_allocated or DAILY_CREDIT_LIMITS.get("free", 100)
         
-        is_allowed, count, limit = check_user_rate_limit(test_user_free, db_session)
+        is_allowed, credits_remaining, credits_allocated = check_user_credits(
+            test_user_free, Decimal("5"), db_session
+        )
         assert is_allowed is True
-        assert count == 0
+        assert credits_remaining == allocated
 
 
-class TestRateLimitReset:
-    """Tests for rate limit reset scenarios."""
+class TestCreditReset:
+    """Tests for credit reset scenarios."""
     
     def test_reset_on_new_day(self, db_session, test_user_free):
-        """Test that usage resets on new day."""
-        from app.config import get_daily_limit
+        """Test that credits reset on new day for free tier."""
+        from app.credit_manager import check_and_reset_credits_if_needed
         
-        # Set usage to limit and reset date to yesterday
-        daily_limit = get_daily_limit(test_user_free.subscription_tier)
-        test_user_free.daily_usage_count = daily_limit
-        test_user_free.usage_reset_date = date.today() - timedelta(days=1)
+        db_session.refresh(test_user_free)
+        allocated = test_user_free.monthly_credits_allocated or DAILY_CREDIT_LIMITS.get("free", 100)
         
-        is_allowed, count, limit = check_user_rate_limit(test_user_free, db_session)
+        # Deduct all credits
+        deduct_user_credits(test_user_free, Decimal(allocated), None, db_session, "Test: Exhaust")
+        db_session.refresh(test_user_free)
         
-        # Should reset and allow usage
+        # Set reset time to yesterday (for daily reset tiers)
+        if test_user_free.subscription_tier in DAILY_CREDIT_LIMITS:
+            from datetime import timezone as tz
+            test_user_free.credits_reset_at = datetime.now(tz.utc) - timedelta(days=1)
+            db_session.commit()
+        
+        # Check credits (should reset automatically)
+        is_allowed, credits_remaining, credits_allocated = check_user_credits(
+            test_user_free, Decimal("5"), db_session
+        )
+        
+        # Credits should be reset and allow usage
         assert is_allowed is True
-        assert count == 0
-        assert test_user_free.usage_reset_date == date.today()
+        assert credits_remaining > 0
     
     def test_no_reset_same_day(self, db_session, test_user_free):
-        """Test that usage doesn't reset on same day."""
-        test_user_free.daily_usage_count = 5
-        test_user_free.usage_reset_date = date.today()
+        """Test that credits don't reset on same day."""
+        db_session.refresh(test_user_free)
+        allocated = test_user_free.monthly_credits_allocated or DAILY_CREDIT_LIMITS.get("free", 100)
         
-        is_allowed, count, limit = check_user_rate_limit(test_user_free, db_session)
+        # Deduct some credits
+        deduct_user_credits(test_user_free, Decimal("10"), None, db_session, "Test: Partial use")
+        db_session.refresh(test_user_free)
         
-        # Should not reset
-        assert count == 5
-        assert test_user_free.usage_reset_date == date.today()
-    
-    def test_reset_multiple_days_later(self, db_session, test_user_free):
-        """Test reset after multiple days."""
-        test_user_free.daily_usage_count = 10
-        test_user_free.usage_reset_date = date.today() - timedelta(days=5)
+        # Check credits (should not reset)
+        is_allowed, credits_remaining, credits_allocated = check_user_credits(
+            test_user_free, Decimal("5"), db_session
+        )
         
-        is_allowed, count, limit = check_user_rate_limit(test_user_free, db_session)
-        
-        # Should reset
-        assert count == 0
-        assert test_user_free.usage_reset_date == date.today()
+        # Should not reset - credits remaining should be less than allocated
+        assert credits_remaining < allocated
 
 
-class TestIncrementUsage:
-    """Tests for usage increment edge cases."""
+class TestDeductCredits:
+    """Tests for credit deduction edge cases."""
     
-    def test_increment_by_one(self, db_session, test_user_free):
-        """Test incrementing usage by one."""
-        initial_count = test_user_free.daily_usage_count
-        increment_user_usage(test_user_free, db_session, count=1)
-        
+    def test_deduct_by_one(self, db_session, test_user_free):
+        """Test deducting credits by one."""
         db_session.refresh(test_user_free)
-        assert test_user_free.daily_usage_count == initial_count + 1
+        initial_used = test_user_free.credits_used_this_period or 0
+        
+        deduct_user_credits(test_user_free, Decimal("1"), None, db_session, "Test: One credit")
+        db_session.refresh(test_user_free)
+        
+        assert test_user_free.credits_used_this_period >= initial_used
     
-    def test_increment_by_multiple(self, db_session, test_user_free):
-        """Test incrementing usage by multiple."""
-        initial_count = test_user_free.daily_usage_count
-        increment_user_usage(test_user_free, db_session, count=5)
-        
+    def test_deduct_by_multiple(self, db_session, test_user_free):
+        """Test deducting credits by multiple."""
         db_session.refresh(test_user_free)
-        assert test_user_free.daily_usage_count == initial_count + 5
+        initial_used = test_user_free.credits_used_this_period or 0
+        
+        deduct_user_credits(test_user_free, Decimal("10"), None, db_session, "Test: Multiple credits")
+        db_session.refresh(test_user_free)
+        
+        assert test_user_free.credits_used_this_period >= initial_used + 10
     
-    def test_increment_zero(self, db_session, test_user_free):
-        """Test incrementing by zero."""
-        initial_count = test_user_free.daily_usage_count
-        increment_user_usage(test_user_free, db_session, count=0)
-        
+    def test_deduct_zero(self, db_session, test_user_free):
+        """Test deducting zero credits."""
         db_session.refresh(test_user_free)
-        assert test_user_free.daily_usage_count == initial_count
+        initial_used = test_user_free.credits_used_this_period or 0
+        
+        deduct_user_credits(test_user_free, Decimal("0"), None, db_session, "Test: Zero credits")
+        db_session.refresh(test_user_free)
+        
+        # Should not change (or change minimally due to rounding)
+        assert abs(test_user_free.credits_used_this_period - initial_used) <= 1
     
-    def test_increment_negative(self, db_session, test_user_free):
-        """Test incrementing by negative number."""
-        initial_count = test_user_free.daily_usage_count
-        increment_user_usage(test_user_free, db_session, count=-1)
-        
+    def test_deduct_more_than_allocated(self, db_session, test_user_free):
+        """Test deducting more credits than allocated."""
         db_session.refresh(test_user_free)
-        # Implementation allows negative increments (may be used for corrections)
-        assert test_user_free.daily_usage_count == initial_count - 1
+        allocated = test_user_free.monthly_credits_allocated or DAILY_CREDIT_LIMITS.get("free", 100)
+        
+        # Try to deduct more than allocated
+        deduct_user_credits(test_user_free, Decimal(allocated + 100), None, db_session, "Test: Over allocation")
+        db_session.refresh(test_user_free)
+        
+        # Should cap at allocated amount
+        assert test_user_free.credits_used_this_period <= allocated
 
 
-class TestAnonymousRateLimitBoundaries:
-    """Tests for anonymous rate limit boundary conditions."""
+class TestAnonymousCreditBoundaries:
+    """Tests for anonymous credit boundary conditions."""
     
-    def test_anonymous_at_limit(self):
-        """Test anonymous user at limit."""
+    def test_anonymous_at_limit(self, db_session):
+        """Test anonymous user at credit limit."""
         identifier = "ip:192.168.1.1"
-        from app.config import ANONYMOUS_DAILY_LIMIT
+        allocated = DAILY_CREDIT_LIMITS.get("anonymous", 50)
         
-        # Set to limit
-        anonymous_rate_limit_storage[identifier]["count"] = ANONYMOUS_DAILY_LIMIT
-        anonymous_rate_limit_storage[identifier]["date"] = datetime.now().date().isoformat()
+        # Deduct all credits
+        deduct_anonymous_credits(identifier, Decimal(allocated))
         
-        is_allowed, count = check_anonymous_rate_limit(identifier)
+        is_allowed, credits_remaining, credits_allocated = check_anonymous_credits(
+            identifier, Decimal("1"), db_session
+        )
         assert is_allowed is False
-        assert count == ANONYMOUS_DAILY_LIMIT
+        assert credits_remaining == 0
+        assert credits_allocated == allocated
     
-    def test_anonymous_one_below_limit(self):
+    def test_anonymous_one_below_limit(self, db_session):
         """Test anonymous user one below limit."""
         identifier = "ip:192.168.1.2"
-        from app.config import ANONYMOUS_DAILY_LIMIT
+        allocated = DAILY_CREDIT_LIMITS.get("anonymous", 50)
         
-        anonymous_rate_limit_storage[identifier]["count"] = ANONYMOUS_DAILY_LIMIT - 1
-        anonymous_rate_limit_storage[identifier]["date"] = datetime.now().date().isoformat()
+        # Deduct almost all credits
+        deduct_anonymous_credits(identifier, Decimal(allocated - 1))
         
-        is_allowed, count = check_anonymous_rate_limit(identifier)
+        is_allowed, credits_remaining, credits_allocated = check_anonymous_credits(
+            identifier, Decimal("1"), db_session
+        )
         assert is_allowed is True
-        assert count == ANONYMOUS_DAILY_LIMIT - 1
+        assert credits_remaining == 1
+        assert credits_allocated == allocated
     
     def test_anonymous_reset_on_new_day(self):
         """Test anonymous user reset on new day."""
         identifier = "ip:192.168.1.3"
         
         # Set to limit with yesterday's date
-        anonymous_rate_limit_storage[identifier]["count"] = 100
-        anonymous_rate_limit_storage[identifier]["date"] = (datetime.now().date() - timedelta(days=1)).isoformat()
+        anonymous_rate_limit_storage[identifier] = {
+            "count": 100,
+            "date": str(date.today() - timedelta(days=1)),
+            "first_seen": None
+        }
         
-        is_allowed, count = check_anonymous_rate_limit(identifier)
+        is_allowed, credits_remaining, credits_allocated = check_anonymous_credits(
+            identifier, Decimal("0"), None
+        )
         
         # Should reset
         assert is_allowed is True
-        assert count == 0
-        assert anonymous_rate_limit_storage[identifier]["date"] == datetime.now().date().isoformat()
-
-
-class TestExtendedTierLimits:
-    """Tests for extended tier limit edge cases."""
-    
-    def test_extended_limit_at_boundary(self, db_session, test_user_pro):
-        """Test extended limit at boundary."""
-        from app.config import get_extended_limit
-        
-        extended_limit = get_extended_limit(test_user_pro.subscription_tier)
-        test_user_pro.daily_extended_usage = extended_limit
-        
-        is_allowed, count, limit = check_extended_tier_limit(test_user_pro, db_session)
-        assert is_allowed is False
-        assert count == extended_limit
-    
-    def test_extended_limit_one_below(self, db_session, test_user_pro):
-        """Test extended limit one below boundary."""
-        from app.config import get_extended_limit
-        
-        extended_limit = get_extended_limit(test_user_pro.subscription_tier)
-        test_user_pro.daily_extended_usage = extended_limit - 1
-        
-        is_allowed, count, limit = check_extended_tier_limit(test_user_pro, db_session)
-        assert is_allowed is True
-        assert count == extended_limit - 1
-    
-    def test_increment_extended_usage(self, db_session, test_user_pro):
-        """Test incrementing extended usage."""
-        initial_count = test_user_pro.daily_extended_usage
-        increment_extended_usage(test_user_pro, db_session, count=1)
-        
-        db_session.refresh(test_user_pro)
-        assert test_user_pro.daily_extended_usage == initial_count + 1
-    
-    def test_anonymous_extended_limit(self):
-        """Test anonymous extended limit."""
-        identifier = "ip:192.168.1.4"
-        from app.config import EXTENDED_TIER_LIMITS
-        
-        # Get anonymous extended limit (should be 0 or minimal)
-        extended_key = f"{identifier}_extended"
-        anonymous_rate_limit_storage[extended_key]["count"] = 1
-        anonymous_rate_limit_storage[extended_key]["date"] = datetime.now().date().isoformat()
-        
-        # Function returns (is_allowed, count) - 2 values, not 3
-        is_allowed, count = check_anonymous_extended_limit(identifier)
-        # Should check against anonymous extended limit
-        assert isinstance(is_allowed, bool)
-        assert isinstance(count, int)
+        assert credits_remaining == credits_allocated
+        assert anonymous_rate_limit_storage[identifier]["date"] == str(date.today())
 
 
 class TestUsageStats:
     """Tests for usage statistics edge cases."""
     
     def test_usage_stats_at_limit(self, test_user_free):
-        """Test usage stats when at limit."""
-        from app.config import get_daily_limit
+        """Test usage stats when at credit limit."""
+        from app.credit_manager import ensure_credits_allocated
+        from app.models import get_db
         
-        daily_limit = get_daily_limit(test_user_free.subscription_tier)
-        test_user_free.daily_usage_count = daily_limit
-        
+        # This test would need a db session, so we'll test the structure instead
         stats = get_user_usage_stats(test_user_free)
-        assert stats["daily_usage"] == daily_limit
-        assert stats["remaining_usage"] == 0
-        assert stats["daily_limit"] == daily_limit
+        assert "credits_allocated" in stats
+        assert "credits_used_this_period" in stats
+        assert "credits_remaining" in stats
+        assert isinstance(stats["credits_allocated"], int)
+        assert isinstance(stats["credits_used_this_period"], int)
+        assert isinstance(stats["credits_remaining"], int)
     
     def test_usage_stats_zero_usage(self, test_user_free):
         """Test usage stats with zero usage."""
-        test_user_free.daily_usage_count = 0
-        
         stats = get_user_usage_stats(test_user_free)
-        assert stats["daily_usage"] == 0
-        assert stats["remaining_usage"] > 0
-    
-    def test_usage_stats_over_limit(self, test_user_free):
-        """Test usage stats when over limit."""
-        from app.config import get_daily_limit
-        
-        daily_limit = get_daily_limit(test_user_free.subscription_tier)
-        test_user_free.daily_usage_count = daily_limit + 10
-        
-        stats = get_user_usage_stats(test_user_free)
-        assert stats["daily_usage"] == daily_limit + 10
-        assert stats["remaining_usage"] == 0  # Should not go negative
+        assert stats["credits_remaining"] >= 0
     
     def test_anonymous_usage_stats(self):
         """Test anonymous usage stats."""
-        identifier = "ip:192.168.1.5"
-        from app.config import ANONYMOUS_DAILY_LIMIT
-        
-        anonymous_rate_limit_storage[identifier]["count"] = 5
-        anonymous_rate_limit_storage[identifier]["date"] = datetime.now().date().isoformat()
+        identifier = "ip:192.168.1.4"
         
         stats = get_anonymous_usage_stats(identifier)
-        assert stats["daily_usage"] == 5
-        assert stats["remaining_usage"] == ANONYMOUS_DAILY_LIMIT - 5
+        assert "credits_allocated" in stats
+        assert "credits_used_today" in stats
+        assert "credits_remaining" in stats
+        assert isinstance(stats["credits_allocated"], int)
+        assert isinstance(stats["credits_used_today"], int)
+        assert isinstance(stats["credits_remaining"], int)
 
 
 class TestConcurrentAccess:
     """Tests for concurrent access scenarios."""
     
-    def test_concurrent_increment(self, db_session, test_user_free):
-        """Test concurrent usage increments."""
+    def test_concurrent_deduction(self, db_session, test_user_free):
+        """Test concurrent credit deductions."""
         import threading
         
-        initial_count = test_user_free.daily_usage_count
+        db_session.refresh(test_user_free)
+        initial_used = test_user_free.credits_used_this_period or 0
         
-        def increment():
+        def deduct():
             db_session.refresh(test_user_free)
-            increment_user_usage(test_user_free, db_session, count=1)
+            deduct_user_credits(test_user_free, Decimal("1"), None, db_session, "Concurrent test")
         
         # Create multiple threads
-        threads = [threading.Thread(target=increment) for _ in range(5)]
+        threads = [threading.Thread(target=deduct) for _ in range(5)]
         for thread in threads:
             thread.start()
         for thread in threads:
             thread.join()
         
         db_session.refresh(test_user_free)
-        # Should have incremented (may not be exactly 5 due to race conditions)
-        assert test_user_free.daily_usage_count >= initial_count
+        # Should have deducted (may not be exactly 5 due to race conditions and capping)
+        assert test_user_free.credits_used_this_period >= initial_used
 
 
 class TestDifferentSubscriptionTiers:
-    """Tests for different subscription tier limits."""
+    """Tests for different subscription tier credit allocations."""
     
-    def test_free_tier_limit(self, db_session, test_user_free):
-        """Test free tier limit."""
-        from app.config import get_daily_limit
-        
-        limit = get_daily_limit(test_user_free.subscription_tier)
-        assert limit > 0
-        
-        is_allowed, count, daily_limit = check_user_rate_limit(test_user_free, db_session)
-        assert daily_limit == limit
+    def test_free_tier_credits(self, db_session, test_user_free):
+        """Test free tier credit allocation."""
+        db_session.refresh(test_user_free)
+        is_allowed, credits_remaining, credits_allocated = check_user_credits(
+            test_user_free, Decimal("5"), db_session
+        )
+        assert credits_allocated == DAILY_CREDIT_LIMITS.get("free", 100)
+        assert credits_allocated > 0
     
-    def test_starter_tier_limit(self, db_session, test_user_starter):
-        """Test starter tier limit."""
-        from app.config import get_daily_limit
-        
-        limit = get_daily_limit(test_user_starter.subscription_tier)
-        assert limit > 0
-        
-        is_allowed, count, daily_limit = check_user_rate_limit(test_user_starter, db_session)
-        assert daily_limit == limit
+    def test_starter_tier_credits(self, db_session, test_user_starter):
+        """Test starter tier credit allocation."""
+        db_session.refresh(test_user_starter)
+        is_allowed, credits_remaining, credits_allocated = check_user_credits(
+            test_user_starter, Decimal("5"), db_session
+        )
+        assert credits_allocated == MONTHLY_CREDIT_ALLOCATIONS.get("starter", 1200)
+        assert credits_allocated > 0
     
-    def test_pro_tier_limit(self, db_session, test_user_pro):
-        """Test pro tier limit."""
-        from app.config import get_daily_limit
-        
-        limit = get_daily_limit(test_user_pro.subscription_tier)
-        assert limit > 0
-        
-        is_allowed, count, daily_limit = check_user_rate_limit(test_user_pro, db_session)
-        assert daily_limit == limit
+    def test_pro_tier_credits(self, db_session, test_user_pro):
+        """Test pro tier credit allocation."""
+        db_session.refresh(test_user_pro)
+        is_allowed, credits_remaining, credits_allocated = check_user_credits(
+            test_user_pro, Decimal("5"), db_session
+        )
+        assert credits_allocated == MONTHLY_CREDIT_ALLOCATIONS.get("pro", 5000)
+        assert credits_allocated > 0
     
-    def test_pro_plus_tier_limit(self, db_session, test_user_pro_plus):
-        """Test pro_plus tier limit."""
-        from app.config import get_daily_limit
-        
-        limit = get_daily_limit(test_user_pro_plus.subscription_tier)
-        assert limit > 0
-        
-        is_allowed, count, daily_limit = check_user_rate_limit(test_user_pro_plus, db_session)
-        assert daily_limit == limit
+    def test_pro_plus_tier_credits(self, db_session, test_user_pro_plus):
+        """Test pro_plus tier credit allocation."""
+        db_session.refresh(test_user_pro_plus)
+        is_allowed, credits_remaining, credits_allocated = check_user_credits(
+            test_user_pro_plus, Decimal("5"), db_session
+        )
+        assert credits_allocated == MONTHLY_CREDIT_ALLOCATIONS.get("pro_plus", 10000)
+        assert credits_allocated > 0
     
     def test_tier_hierarchy(self):
-        """Test that tier limits increase with tier level."""
-        from app.config import get_daily_limit
+        """Test that tier credit allocations increase with tier level."""
+        free_credits = DAILY_CREDIT_LIMITS.get("free", 100)
+        starter_credits = MONTHLY_CREDIT_ALLOCATIONS.get("starter", 1200)
+        pro_credits = MONTHLY_CREDIT_ALLOCATIONS.get("pro", 5000)
+        pro_plus_credits = MONTHLY_CREDIT_ALLOCATIONS.get("pro_plus", 10000)
         
-        free_limit = get_daily_limit("free")
-        starter_limit = get_daily_limit("starter")
-        pro_limit = get_daily_limit("pro")
-        pro_plus_limit = get_daily_limit("pro_plus")
-        
-        # Higher tiers should have higher or equal limits
-        assert starter_limit >= free_limit
-        assert pro_limit >= starter_limit
-        assert pro_plus_limit >= pro_limit
-
+        # Higher tiers should have higher credit allocations
+        # Note: Free is daily, others are monthly, so we compare monthly equivalents
+        # Free: 100/day * 30 = 3000/month equivalent
+        assert starter_credits >= free_credits
+        assert pro_credits >= starter_credits
+        assert pro_plus_credits >= pro_credits

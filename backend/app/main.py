@@ -30,10 +30,6 @@ from .database import get_db, Base, engine
 from .models import User, UsageLog
 from .dependencies import get_current_user
 from .rate_limiting import (
-    check_user_rate_limit,
-    increment_user_usage,
-    check_anonymous_rate_limit,
-    increment_anonymous_usage,
     get_user_usage_stats,
     get_anonymous_usage_stats,
     get_model_limit,
@@ -49,7 +45,6 @@ from .routers.api import model_stats
 # Import configuration constants
 from .config import (
     MODEL_LIMITS,
-    ANONYMOUS_DAILY_LIMIT,
     validate_config,
     log_configuration,
     settings,
@@ -182,10 +177,6 @@ app.include_router(api.router, prefix="/api")
 # Use the maximum model limit from configuration (pro_plus tier)
 MAX_MODELS_PER_REQUEST: int = max(MODEL_LIMITS.values()) if MODEL_LIMITS else 9
 
-# Rate limiting configuration
-# Use anonymous daily limit from configuration
-MAX_DAILY_COMPARISONS: int = ANONYMOUS_DAILY_LIMIT
-
 # Note: model_stats is now imported from .routers.api to share the same storage
 
 
@@ -207,47 +198,6 @@ def get_client_ip(request: Request) -> str:
         return request.client.host
 
     return "unknown"
-
-
-def check_rate_limit(identifier: str) -> tuple[bool, int]:
-    """
-    Check if the identifier (IP or fingerprint) has exceeded the daily limit.
-    Returns (is_allowed, current_count)
-
-    NOTE: This function appears to be legacy code. Consider using
-    check_anonymous_rate_limit from rate_limiting module instead.
-    """
-    today = datetime.now().date().isoformat()
-    user_data = anonymous_rate_limit_storage[identifier]
-
-    # Reset count if it's a new day
-    if user_data["date"] != today:
-        user_data["count"] = 0
-        user_data["date"] = today
-        user_data["first_seen"] = datetime.now()
-
-    current_count = user_data["count"]
-    is_allowed = current_count < MAX_DAILY_COMPARISONS
-
-    return is_allowed, current_count
-
-
-def increment_usage(identifier: str) -> None:
-    """
-    Increment the usage count for the identifier.
-
-    NOTE: This function appears to be legacy code. Consider using
-    increment_anonymous_usage from rate_limiting module instead.
-    """
-    today = datetime.now().date().isoformat()
-    user_data = anonymous_rate_limit_storage[identifier]
-
-    if user_data["date"] != today:
-        user_data["count"] = 1
-        user_data["date"] = today
-        user_data["first_seen"] = datetime.now()
-    else:
-        user_data["count"] += 1
 
 
 class ConversationMessage(BaseModel):
