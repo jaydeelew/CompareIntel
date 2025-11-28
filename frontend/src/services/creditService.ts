@@ -85,7 +85,7 @@ export interface CreditEstimateRequest {
   /** List of model IDs */
   models: string[]
   /** Optional conversation history */
-  conversation_history?: Array<{ role: string; content: string }>
+  conversation_history?: Array<{ role: string; content: string; model_id?: string }>
 }
 
 /**

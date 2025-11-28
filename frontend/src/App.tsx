@@ -3284,20 +3284,65 @@ function AppContent() {
 
     // Prepare conversation history for the API (needed for credit estimation)
     // For follow-up mode, we send the complete conversation history (both user and assistant messages)
-    // This matches how official AI chat interfaces work and provides proper context
+    // with model_id tags so the backend can filter per-model histories.
+    // Each model will receive: all user messages + only its own assistant messages
     const apiConversationHistory =
       isFollowUpMode && conversations.length > 0
         ? (() => {
-            // Get the first conversation that has messages and is for a selected model
+            // Get all conversations for selected models
             const selectedConversations = conversations.filter(
               conv => selectedModels.includes(conv.modelId) && conv.messages.length > 0
             )
             if (selectedConversations.length === 0) return []
 
-            // Use the first selected conversation's messages
-            return selectedConversations[0].messages.map(msg => ({
-              role: msg.type === 'user' ? 'user' : 'assistant',
+            // Collect all messages from all selected conversations
+            const allMessages: Array<{
+              role: 'user' | 'assistant'
+              content: string
+              model_id?: string
+              timestamp: string
+            }> = []
+
+            // Collect all messages with their timestamps
+            selectedConversations.forEach(conv => {
+              conv.messages.forEach(msg => {
+                allMessages.push({
+                  role: msg.type === 'user' ? 'user' : 'assistant',
+                  content: msg.content,
+                  model_id: msg.type === 'assistant' ? conv.modelId : undefined, // Include model_id for assistant messages
+                  timestamp: msg.timestamp,
+                })
+              })
+            })
+
+            // Deduplicate user messages (same content and timestamp within 1 second)
+            const seenUserMessages = new Set<string>()
+            const deduplicatedMessages: typeof allMessages = []
+
+            // Sort all messages by timestamp to maintain chronological order
+            const sortedMessages = [...allMessages].sort(
+              (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+            )
+
+            sortedMessages.forEach(msg => {
+              if (msg.role === 'user') {
+                // Deduplicate user messages
+                const key = `${msg.content}-${Math.floor(new Date(msg.timestamp).getTime() / 1000)}`
+                if (!seenUserMessages.has(key)) {
+                  seenUserMessages.add(key)
+                  deduplicatedMessages.push(msg)
+                }
+              } else {
+                // Always include assistant messages (they're already per-model)
+                deduplicatedMessages.push(msg)
+              }
+            })
+
+            // Return in API format (without timestamp, backend doesn't need it for filtering)
+            return deduplicatedMessages.map(msg => ({
+              role: msg.role,
               content: msg.content,
+              model_id: msg.model_id, // Include model_id for backend filtering
             }))
           })()
         : []

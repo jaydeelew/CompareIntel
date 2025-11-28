@@ -72,6 +72,7 @@ from ..config.constants import DAILY_CREDIT_LIMITS
 class ConversationMessage(BaseModel):
     role: str  # "user" or "assistant"
     content: str
+    model_id: Optional[str] = None  # Optional model ID for assistant messages (used to filter per-model history)
 
     model_config = ConfigDict(json_schema_extra={"example": {"role": "user", "content": "What is artificial intelligence?"}})
 
@@ -109,7 +110,7 @@ class EstimateTokensRequest(BaseModel):
     """Request model for token estimation endpoint."""
     input_data: str
     model_id: Optional[str] = None  # Optional model ID for accurate token counting
-    conversation_history: list[ConversationMessage] = []  # Optional conversation context
+    conversation_history: list[ConversationMessage] = []  # Optional conversation context (with optional model_id for filtering)
 
     model_config = ConfigDict(
         json_schema_extra={
@@ -852,11 +853,26 @@ async def compare_stream(
                         count = 0
                         usage_data = None
                         try:
+                            # Filter conversation history for this specific model:
+                            # - Include all user messages (shared context)
+                            # - Include only assistant messages from this model (filtered by model_id)
+                            filtered_history = []
+                            if req.conversation_history:
+                                for msg in req.conversation_history:
+                                    # Always include user messages
+                                    if msg.role == "user":
+                                        filtered_history.append(msg)
+                                    # Only include assistant messages from this model
+                                    elif msg.role == "assistant":
+                                        # Include if model_id matches, or if model_id is None (legacy support)
+                                        if msg.model_id is None or msg.model_id == model_id:
+                                            filtered_history.append(msg)
+                            
                             # Manually iterate generator to capture return value (TokenUsage)
                             gen = call_openrouter_streaming(
                                 req.input_data,
                                 model_id,
-                                req.conversation_history,
+                                filtered_history,
                                 use_mock,
                                 max_tokens_override=effective_max_tokens,
                             )

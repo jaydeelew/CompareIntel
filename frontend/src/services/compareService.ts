@@ -18,7 +18,7 @@ import { apiClient } from './api/client'
 export interface CompareRequestPayload {
   input_data: string
   models: string[]
-  conversation_history?: Array<{ role: string; content: string }>
+  conversation_history?: Array<{ role: string; content: string; model_id?: string }>
   browser_fingerprint?: string
   conversation_id?: number
   estimated_input_tokens?: number  // Optional: Accurate token count from /estimate-tokens endpoint
@@ -259,7 +259,7 @@ export async function resetRateLimit(fingerprint?: string): Promise<{ message: s
 export interface EstimateTokensRequestPayload {
   input_data: string
   model_id?: string
-  conversation_history?: Array<{ role: string; content: string }>
+  conversation_history?: Array<{ role: string; content: string; model_id?: string }>
 }
 
 /**

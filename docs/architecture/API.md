@@ -341,7 +341,29 @@ Compare multiple AI models with a single prompt using Server-Sent Events (SSE) s
 
 **Authentication:** Optional
 
-**Request Body:** Same as `/api/compare`
+**Request Body:**
+```json
+{
+  "input_data": "Explain quantum computing",
+  "models": ["openai/gpt-4", "anthropic/claude-3-opus"],
+  "conversation_history": [
+    {"role": "user", "content": "What is AI?"},
+    {"role": "assistant", "content": "AI stands for...", "model_id": "openai/gpt-4"},
+    {"role": "assistant", "content": "Artificial Intelligence...", "model_id": "anthropic/claude-3-opus"}
+  ],
+  "conversation_id": 123,
+  "browser_fingerprint": "abc123",
+  "estimated_input_tokens": 50,
+  "timezone": "America/Chicago"
+}
+```
+
+**Conversation History Filtering:**
+- Each model receives **only its own conversation history** for independent comparisons
+- **User messages** are included for all models (shared context)
+- **Assistant messages** are filtered by `model_id` - each model only sees its own previous responses
+- This ensures fair, independent model comparisons without cross-contamination
+- If `model_id` is not provided for an assistant message, it will be sent to all models (legacy support)
 
 **Response:** `200 OK` (Streaming)
 

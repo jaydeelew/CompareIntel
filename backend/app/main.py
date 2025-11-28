@@ -203,6 +203,7 @@ def get_client_ip(request: Request) -> str:
 class ConversationMessage(BaseModel):
     role: str  # "user" or "assistant"
     content: str
+    model_id: Optional[str] = None  # Optional model ID for assistant messages (used to filter per-model history)
 
 
 class CompareRequest(BaseModel):
