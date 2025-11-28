@@ -11,13 +11,14 @@ CREDITS-BASED SYSTEM:
 - All rate limiting uses credits instead of model responses
 """
 
-from datetime import datetime, date, timezone
+from datetime import datetime, date, timezone, timedelta
 from typing import Optional, Tuple, Dict, Any
 from sqlalchemy.orm import Session
 from decimal import Decimal, ROUND_CEILING
 from .models import User, UsageLog
 from sqlalchemy import func
 from collections import defaultdict
+import pytz
 from .types import (
     UsageStatsDict,
     FullUsageStatsDict,
@@ -51,14 +52,89 @@ from .config.constants import (
 
 
 # In-memory storage for anonymous rate limiting
-# Structure: { "identifier": { "count": int, "date": str, "first_seen": datetime } }
+# Structure: { "identifier": { "count": int, "date": str, "first_seen": datetime, "timezone": str, "last_reset_at": datetime } }
 # CREDITS-BASED: Now stores credits used instead of model responses
 def _default_rate_limit_data() -> AnonymousRateLimitData:
     """Default factory for anonymous rate limit storage."""
-    return {"count": 0, "date": "", "first_seen": None}
+    return {"count": 0, "date": "", "first_seen": None, "timezone": "UTC", "last_reset_at": None}
 
 
 anonymous_rate_limit_storage: Dict[str, AnonymousRateLimitData] = defaultdict(_default_rate_limit_data)
+
+
+# ============================================================================
+# TIMEZONE UTILITY FUNCTIONS
+# ============================================================================
+
+def _validate_timezone(timezone_str: str) -> str:
+    """
+    Validate and return a timezone string, defaulting to UTC if invalid.
+    
+    Args:
+        timezone_str: IANA timezone string (e.g., "America/Chicago")
+        
+    Returns:
+        Valid timezone string (defaults to "UTC" if invalid)
+    """
+    try:
+        pytz.timezone(timezone_str)
+        return timezone_str
+    except (pytz.exceptions.UnknownTimeZoneError, AttributeError):
+        return "UTC"
+
+
+def _get_local_date(timezone_str: str) -> str:
+    """
+    Get today's date string (YYYY-MM-DD) in the specified timezone.
+    
+    Args:
+        timezone_str: IANA timezone string
+        
+    Returns:
+        Date string in YYYY-MM-DD format
+    """
+    tz = pytz.timezone(_validate_timezone(timezone_str))
+    now_local = datetime.now(tz)
+    return now_local.date().isoformat()
+
+
+def _get_next_local_midnight(timezone_str: str) -> datetime:
+    """
+    Get the next midnight in the specified timezone, converted to UTC.
+    
+    Args:
+        timezone_str: IANA timezone string
+        
+    Returns:
+        UTC datetime representing next midnight in the timezone
+    """
+    tz = pytz.timezone(_validate_timezone(timezone_str))
+    now_local = datetime.now(tz)
+    # Get next midnight in local timezone
+    tomorrow_local = (now_local + timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
+    # Convert to UTC for storage
+    return tomorrow_local.astimezone(timezone.utc)
+
+
+def _can_reset_credits(last_reset_at: Optional[datetime], min_hours_between_resets: int = 20) -> bool:
+    """
+    Check if credits can be reset (safeguard against abuse).
+    
+    Prevents multiple resets within a short time period (e.g., by changing timezone).
+    
+    Args:
+        last_reset_at: UTC timestamp of last reset (None if never reset)
+        min_hours_between_resets: Minimum hours between resets (default 20 to allow for timezone changes)
+        
+    Returns:
+        True if reset is allowed, False otherwise
+    """
+    if last_reset_at is None:
+        return True
+    
+    now = datetime.now(timezone.utc)
+    hours_since_reset = (now - last_reset_at).total_seconds() / 3600
+    return hours_since_reset >= min_hours_between_resets
 
 # ============================================================================
 # CREDITS-BASED RATE LIMITING FUNCTIONS
@@ -116,7 +192,7 @@ def deduct_user_credits(
     deduct_credits(user.id, credits, usage_log_id, db, description)
 
 
-def check_anonymous_credits(identifier: str, required_credits: Decimal, db: Optional[Session] = None) -> Tuple[bool, int, int]:
+def check_anonymous_credits(identifier: str, required_credits: Decimal, timezone_str: str = "UTC", db: Optional[Session] = None) -> Tuple[bool, int, int]:
     """
     Check if anonymous user has sufficient credits for a request.
 
@@ -127,26 +203,40 @@ def check_anonymous_credits(identifier: str, required_credits: Decimal, db: Opti
     Args:
         identifier: Unique identifier (e.g., "ip:192.168.1.1" or "fp:xxx")
         required_credits: Credits needed for the request (as Decimal)
+        timezone_str: IANA timezone string (e.g., "America/Chicago"), defaults to "UTC"
         db: Optional database session to sync credits from database
 
     Returns:
         tuple: (is_allowed, credits_remaining, credits_allocated)
     """
-    today = datetime.now(timezone.utc).date().isoformat()
+    # Validate and normalize timezone
+    timezone_str = _validate_timezone(timezone_str)
+    
+    # Get today's date in user's timezone
+    today = _get_local_date(timezone_str)
     user_data = anonymous_rate_limit_storage[identifier]
+    
+    # Initialize timezone if not set
+    if not user_data.get("timezone"):
+        user_data["timezone"] = timezone_str
 
     # Sync with database if db session is provided (for persistence across restarts)
     if db is not None:
         # Extract IP or fingerprint from identifier
         if identifier.startswith("ip:"):
             ip_address = identifier[3:]  # Remove "ip:" prefix
-            # Query UsageLog for credits used today
-            # Use func.date() for SQLite compatibility (CAST AS DATE doesn't work properly in SQLite)
-            today_date = datetime.now(timezone.utc).date().isoformat()  # Format as 'YYYY-MM-DD'
+            # Query UsageLog for credits used today in user's timezone
+            # Note: Database queries use UTC dates, but we filter by UTC date range that covers the local day
+            tz = pytz.timezone(timezone_str)
+            now_local = datetime.now(tz)
+            today_start_utc = now_local.replace(hour=0, minute=0, second=0, microsecond=0).astimezone(timezone.utc)
+            today_end_utc = (now_local + timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0).astimezone(timezone.utc)
+            
             credits_query = db.query(func.sum(UsageLog.credits_used)).filter(
                 UsageLog.user_id.is_(None),  # Anonymous users only
                 UsageLog.ip_address == ip_address,
-                func.date(UsageLog.created_at) == today_date,
+                UsageLog.created_at >= today_start_utc,
+                UsageLog.created_at < today_end_utc,
                 UsageLog.credits_used.isnot(None),
             )
             db_credits_used = credits_query.scalar() or Decimal(0)
@@ -157,13 +247,17 @@ def check_anonymous_credits(identifier: str, required_credits: Decimal, db: Opti
                 user_data["first_seen"] = datetime.now(timezone.utc)
         elif identifier.startswith("fp:"):
             fingerprint = identifier[3:]  # Remove "fp:" prefix
-            # Query UsageLog for credits used today
-            # Use func.date() for SQLite compatibility (CAST AS DATE doesn't work properly in SQLite)
-            today_date = datetime.now(timezone.utc).date().isoformat()  # Format as 'YYYY-MM-DD'
+            # Query UsageLog for credits used today in user's timezone
+            tz = pytz.timezone(timezone_str)
+            now_local = datetime.now(tz)
+            today_start_utc = now_local.replace(hour=0, minute=0, second=0, microsecond=0).astimezone(timezone.utc)
+            today_end_utc = (now_local + timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0).astimezone(timezone.utc)
+            
             credits_query = db.query(func.sum(UsageLog.credits_used)).filter(
                 UsageLog.user_id.is_(None),  # Anonymous users only
                 UsageLog.browser_fingerprint == fingerprint,
-                func.date(UsageLog.created_at) == today_date,
+                UsageLog.created_at >= today_start_utc,
+                UsageLog.created_at < today_end_utc,
                 UsageLog.credits_used.isnot(None),
             )
             db_credits_used = credits_query.scalar() or Decimal(0)
@@ -173,12 +267,33 @@ def check_anonymous_credits(identifier: str, required_credits: Decimal, db: Opti
             if not user_data.get("first_seen"):
                 user_data["first_seen"] = datetime.now(timezone.utc)
 
-    # Reset credits if it's a new day
+    # Check if timezone changed (user might be traveling or using VPN)
+    stored_timezone = user_data.get("timezone", "UTC")
+    if stored_timezone != timezone_str:
+        # Timezone changed - check if we can reset (abuse prevention)
+        if _can_reset_credits(user_data.get("last_reset_at")):
+            # Allow timezone change, update stored timezone
+            user_data["timezone"] = timezone_str
+            # Check if it's a new day in the new timezone
+            if user_data["date"] != today:
+                user_data["count"] = 0
+                user_data["date"] = today
+                user_data["last_reset_at"] = datetime.now(timezone.utc)
+        else:
+            # Too soon to reset - keep using old timezone for now
+            timezone_str = stored_timezone
+            today = _get_local_date(timezone_str)
+
+    # Reset credits if it's a new day in user's timezone (with abuse prevention)
     if user_data["date"] != today:
-        user_data["count"] = 0  # Credits used (stored as integer)
-        user_data["date"] = today
-        if not user_data.get("first_seen"):
-            user_data["first_seen"] = datetime.now(timezone.utc)
+        # Check if reset is allowed (prevent abuse)
+        if _can_reset_credits(user_data.get("last_reset_at")):
+            user_data["count"] = 0  # Credits used (stored as integer)
+            user_data["date"] = today
+            user_data["timezone"] = timezone_str
+            user_data["last_reset_at"] = datetime.now(timezone.utc)
+            if not user_data.get("first_seen"):
+                user_data["first_seen"] = datetime.now(timezone.utc)
 
     # Get daily credit limit for anonymous users
     credits_allocated = DAILY_CREDIT_LIMITS.get("anonymous", 50)
@@ -193,7 +308,7 @@ def check_anonymous_credits(identifier: str, required_credits: Decimal, db: Opti
     return is_allowed, credits_remaining, credits_allocated
 
 
-def deduct_anonymous_credits(identifier: str, credits: Decimal) -> None:
+def deduct_anonymous_credits(identifier: str, credits: Decimal, timezone_str: str = "UTC") -> None:
     """
     Deduct credits from anonymous user's daily balance.
 
@@ -203,17 +318,45 @@ def deduct_anonymous_credits(identifier: str, credits: Decimal) -> None:
     Args:
         identifier: Unique identifier (e.g., "ip:192.168.1.1" or "fp:xxx")
         credits: Credits to deduct (as Decimal)
+        timezone_str: IANA timezone string (e.g., "America/Chicago"), defaults to "UTC"
     """
     from .config.constants import DAILY_CREDIT_LIMITS
     
-    today = datetime.now(timezone.utc).date().isoformat()
+    # Validate and normalize timezone
+    timezone_str = _validate_timezone(timezone_str)
+    
+    # Get today's date in user's timezone
+    today = _get_local_date(timezone_str)
     user_data = anonymous_rate_limit_storage[identifier]
+    
+    # Initialize timezone if not set
+    if not user_data.get("timezone"):
+        user_data["timezone"] = timezone_str
 
-    # Reset if new day
+    # Reset if new day in user's timezone (with abuse prevention)
+    stored_timezone = user_data.get("timezone", "UTC")
+    if stored_timezone != timezone_str:
+        # Timezone changed - check if we can reset
+        if _can_reset_credits(user_data.get("last_reset_at")):
+            user_data["timezone"] = timezone_str
+            if user_data["date"] != today:
+                user_data["count"] = 0
+                user_data["date"] = today
+                user_data["last_reset_at"] = datetime.now(timezone.utc)
+        else:
+            # Too soon - use stored timezone
+            timezone_str = stored_timezone
+            today = _get_local_date(timezone_str)
+    
     if user_data["date"] != today:
-        user_data["count"] = 0
-        user_data["date"] = today
-        user_data["first_seen"] = datetime.now(timezone.utc)
+        # Check if reset is allowed (prevent abuse)
+        if _can_reset_credits(user_data.get("last_reset_at")):
+            user_data["count"] = 0
+            user_data["date"] = today
+            user_data["timezone"] = timezone_str
+            user_data["last_reset_at"] = datetime.now(timezone.utc)
+            if not user_data.get("first_seen"):
+                user_data["first_seen"] = datetime.now(timezone.utc)
 
     # Convert Decimal to int (round UP to be conservative - never give free credits)
     # Use ceiling to ensure we always deduct at least 1 credit for any usage
@@ -273,7 +416,7 @@ def get_user_usage_stats(user: User) -> FullUsageStatsDict:
     }
 
 
-def get_anonymous_usage_stats(identifier: str) -> UsageStatsDict:
+def get_anonymous_usage_stats(identifier: str, timezone_str: str = "UTC") -> UsageStatsDict:
     """
     Get usage statistics for anonymous user.
 
@@ -282,18 +425,38 @@ def get_anonymous_usage_stats(identifier: str) -> UsageStatsDict:
 
     Args:
         identifier: Unique identifier
+        timezone_str: IANA timezone string (e.g., "America/Chicago"), defaults to "UTC"
 
     Returns:
         dict: Usage statistics including credits and legacy daily usage
     """
+    # Validate and normalize timezone
+    timezone_str = _validate_timezone(timezone_str)
+    
     # Get credit-based stats
     credits_allocated = DAILY_CREDIT_LIMITS.get("anonymous", 50)
-    today = datetime.now(timezone.utc).date().isoformat()
+    today = _get_local_date(timezone_str)
     user_data = anonymous_rate_limit_storage[identifier]
+    
+    # Initialize timezone if not set
+    if not user_data.get("timezone"):
+        user_data["timezone"] = timezone_str
 
-    # Reset if new day
+    # Use stored timezone if available (to be consistent)
+    stored_timezone = user_data.get("timezone", timezone_str)
+    today = _get_local_date(stored_timezone)
+
+    # Reset if new day in user's timezone
     if user_data["date"] != today:
-        credits_used = 0
+        # Check if reset is allowed (prevent abuse)
+        if _can_reset_credits(user_data.get("last_reset_at")):
+            credits_used = 0
+            user_data["date"] = today
+            user_data["timezone"] = stored_timezone
+            user_data["last_reset_at"] = datetime.now(timezone.utc)
+        else:
+            # Too soon to reset - use existing count
+            credits_used = user_data["count"]
     else:
         credits_used = user_data["count"]
 
@@ -317,7 +480,7 @@ def get_anonymous_usage_stats(identifier: str) -> UsageStatsDict:
         "daily_limit": daily_limit,
         "remaining_usage": remaining,
         "subscription_tier": "anonymous",
-        "usage_reset_date": date.today().isoformat(),
+        "usage_reset_date": today,  # Use timezone-aware date
     }
 
 

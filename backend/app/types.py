@@ -53,6 +53,8 @@ class AnonymousRateLimitData(TypedDict, total=False):
     count: int
     date: str
     first_seen: Optional[datetime]
+    timezone: str  # IANA timezone string (e.g., "America/Chicago")
+    last_reset_at: Optional[datetime]  # UTC timestamp of last reset (for abuse prevention)
 
 
 class UsageStatsDict(TypedDict):

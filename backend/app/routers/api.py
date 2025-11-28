@@ -83,6 +83,7 @@ class CompareRequest(BaseModel):
     browser_fingerprint: Optional[str] = None  # Optional browser fingerprint for rate limiting
     conversation_id: Optional[int] = None  # Optional conversation ID for follow-ups (most reliable matching)
     estimated_input_tokens: Optional[int] = None  # Optional: Accurate token count from frontend (from /estimate-tokens endpoint)
+    timezone: Optional[str] = None  # Optional: IANA timezone string (e.g., "America/Chicago") for credit reset timing
 
     model_config = ConfigDict(
         json_schema_extra={
@@ -158,6 +159,56 @@ def get_client_ip(request: Request) -> str:
         return request.client.host
 
     return "unknown"
+
+
+def get_timezone_from_request(req: CompareRequest, current_user: Optional[User] = None, db: Optional[Session] = None) -> str:
+    """
+    Get timezone from request, user preferences, or default to UTC.
+    
+    Priority:
+    1. Timezone from request body (req.timezone)
+    2. User's stored timezone preference (for authenticated users)
+    3. Default to UTC
+    
+    Args:
+        req: CompareRequest object
+        current_user: Optional authenticated user
+        db: Optional database session (needed to access user preferences)
+        
+    Returns:
+        IANA timezone string (e.g., "America/Chicago")
+    """
+    import pytz
+    
+    # First priority: timezone from request
+    if req.timezone:
+        try:
+            pytz.timezone(req.timezone)
+            # For authenticated users, save timezone to preferences if different
+            if current_user and db:
+                if not current_user.preferences:
+                    from ..models import UserPreference
+                    current_user.preferences = UserPreference(user_id=current_user.id, timezone=req.timezone)
+                    db.commit()
+                elif current_user.preferences.timezone != req.timezone:
+                    current_user.preferences.timezone = req.timezone
+                    db.commit()
+            return req.timezone
+        except (pytz.exceptions.UnknownTimeZoneError, AttributeError):
+            pass  # Fall through to next priority
+    
+    # Second priority: user's stored timezone preference
+    if current_user and db:
+        db.refresh(current_user)
+        if current_user.preferences and current_user.preferences.timezone:
+            try:
+                pytz.timezone(current_user.preferences.timezone)
+                return current_user.preferences.timezone
+            except (pytz.exceptions.UnknownTimeZoneError, AttributeError):
+                pass
+    
+    # Default to UTC
+    return "UTC"
 
 
 def log_usage_to_db(usage_log: UsageLog, db: Session) -> None:
@@ -283,6 +334,7 @@ async def get_rate_limit_status(
     fingerprint: Optional[str] = None,
     current_user: Optional[User] = Depends(get_current_user),
     db: Session = Depends(get_db),
+    timezone: Optional[str] = None,
 ):
     """
     Get current rate limit status for the client.
@@ -303,13 +355,31 @@ async def get_rate_limit_status(
     else:
         # Anonymous user - return IP/fingerprint-based usage
         client_ip = get_client_ip(request)
-        usage_stats = get_anonymous_usage_stats(f"ip:{client_ip}")
+        # Get timezone from query parameter or header, default to UTC
+        import pytz
+        user_timezone = "UTC"
+        if timezone:
+            try:
+                pytz.timezone(timezone)
+                user_timezone = timezone
+            except (pytz.exceptions.UnknownTimeZoneError, AttributeError):
+                pass
+        else:
+            header_tz = request.headers.get("X-Timezone")
+            if header_tz:
+                try:
+                    pytz.timezone(header_tz)
+                    user_timezone = header_tz
+                except (pytz.exceptions.UnknownTimeZoneError, AttributeError):
+                    pass
+        
+        usage_stats = get_anonymous_usage_stats(f"ip:{client_ip}", user_timezone)
 
         result = {**usage_stats, "authenticated": False, "ip_address": client_ip}
 
         # Include fingerprint stats if provided
         if fingerprint:
-            fp_stats = get_anonymous_usage_stats(f"fp:{fingerprint}")
+            fp_stats = get_anonymous_usage_stats(f"fp:{fingerprint}", user_timezone)
             result["fingerprint_usage"] = fp_stats["daily_usage"]
             result["fingerprint_remaining"] = fp_stats["remaining_usage"]
 
@@ -534,6 +604,19 @@ async def compare_stream(
 
     # --- CREDIT-BASED RATE LIMITING ---
     client_ip = get_client_ip(request)
+    
+    # Get timezone for credit reset timing
+    user_timezone = get_timezone_from_request(req, current_user, db)
+    
+    # For authenticated users, save timezone to preferences if provided
+    if current_user and req.timezone:
+        if not current_user.preferences:
+            from ..models import UserPreference
+            current_user.preferences = UserPreference(user_id=current_user.id, timezone=user_timezone)
+            db.commit()
+        elif current_user.preferences.timezone != user_timezone:
+            current_user.preferences.timezone = user_timezone
+            db.commit()
 
     is_overage = False
     overage_charge = 0.0
@@ -550,7 +633,7 @@ async def compare_stream(
 
         # Debug logging for authentication and tier
         print(
-            f"[API] Authenticated user: {current_user.email}, subscription_tier: '{current_user.subscription_tier}', is_active: {current_user.is_active}"
+            f"[API] Authenticated user: {current_user.email}, subscription_tier: '{current_user.subscription_tier}', is_active: {current_user.is_active}, timezone: {user_timezone}"
         )
 
         # Get current credit balance (no estimate needed - we don't block based on estimates)
@@ -589,19 +672,19 @@ async def compare_stream(
     else:
         # Anonymous user - check credit-based limits
         print(
-            f"[API] Anonymous user - IP: {client_ip}, fingerprint: {req.browser_fingerprint[:20] if req.browser_fingerprint else 'None'}..."
+            f"[API] Anonymous user - IP: {client_ip}, fingerprint: {req.browser_fingerprint[:20] if req.browser_fingerprint else 'None'}..., timezone: {user_timezone}"
         )
 
         # Check IP-based credits (pass Decimal(0) since we don't need estimate for blocking)
         ip_identifier = f"ip:{client_ip}"
-        _, ip_credits_remaining, ip_credits_allocated = check_anonymous_credits(ip_identifier, Decimal(0), db)
+        _, ip_credits_remaining, ip_credits_allocated = check_anonymous_credits(ip_identifier, Decimal(0), user_timezone, db)
 
         fingerprint_credits_remaining = ip_credits_remaining
         fingerprint_credits_allocated = ip_credits_allocated
         if req.browser_fingerprint:
             fp_identifier = f"fp:{req.browser_fingerprint}"
             _, fingerprint_credits_remaining, fingerprint_credits_allocated = check_anonymous_credits(
-                fp_identifier, Decimal(0), db
+                fp_identifier, Decimal(0), user_timezone, db
             )
 
         # Use the most restrictive limit (lowest remaining credits)
@@ -944,16 +1027,16 @@ async def compare_stream(
                     else:
                         # Deduct credits for anonymous user
                         ip_identifier = f"ip:{client_ip}"
-                        deduct_anonymous_credits(ip_identifier, total_credits_used)
+                        deduct_anonymous_credits(ip_identifier, total_credits_used, user_timezone)
                         # Get updated IP credit balance (no db arg - read from memory only)
-                        _, ip_credits_remaining, _ = check_anonymous_credits(ip_identifier, Decimal(0))
+                        _, ip_credits_remaining, _ = check_anonymous_credits(ip_identifier, Decimal(0), user_timezone)
 
                         fingerprint_credits_remaining = ip_credits_remaining
                         if req.browser_fingerprint:
                             fp_identifier = f"fp:{req.browser_fingerprint}"
-                            deduct_anonymous_credits(fp_identifier, total_credits_used)
+                            deduct_anonymous_credits(fp_identifier, total_credits_used, user_timezone)
                             # Get updated fingerprint credit balance (no db arg - read from memory only)
-                            _, fingerprint_credits_remaining, _ = check_anonymous_credits(fp_identifier, Decimal(0))
+                            _, fingerprint_credits_remaining, _ = check_anonymous_credits(fp_identifier, Decimal(0), user_timezone)
 
                         # Use the most restrictive limit (lowest remaining credits) - same logic as at start
                         credits_remaining = min(
@@ -1459,6 +1542,7 @@ async def get_credit_balance(
     current_user: Optional[User] = Depends(get_current_user),
     request: Request = None,
     fingerprint: Optional[str] = None,
+    timezone: Optional[str] = None,
 ):
     """
     Get current credit balance and usage statistics.
@@ -1494,16 +1578,40 @@ async def get_credit_balance(
         # Anonymous user - calculate credits from database (persists across server restarts)
         client_ip = get_client_ip(request) if request else "unknown"
         credits_allocated = DAILY_CREDIT_LIMITS.get("anonymous", 50)
+        
+        # Get timezone from query parameter or header, default to UTC
+        import pytz
+        user_timezone = "UTC"
+        if timezone:
+            try:
+                pytz.timezone(timezone)
+                user_timezone = timezone
+            except (pytz.exceptions.UnknownTimeZoneError, AttributeError):
+                pass
+        elif request:
+            header_tz = request.headers.get("X-Timezone")
+            if header_tz:
+                try:
+                    pytz.timezone(header_tz)
+                    user_timezone = header_tz
+                except (pytz.exceptions.UnknownTimeZoneError, AttributeError):
+                    pass
 
         # Calculate credits used today from UsageLog (database) - this persists across restarts
-        # Use func.date() for SQLite compatibility (CAST AS DATE doesn't work properly in SQLite)
-        today_date = datetime.now(timezone.utc).date().isoformat()  # Format as 'YYYY-MM-DD'
+        # Use timezone-aware date range for accurate daily reset
+        from ..rate_limiting import _get_local_date, _validate_timezone
+        user_timezone = _validate_timezone(user_timezone)
+        tz = pytz.timezone(user_timezone)
+        now_local = datetime.now(tz)
+        today_start_utc = now_local.replace(hour=0, minute=0, second=0, microsecond=0).astimezone(timezone.utc)
+        today_end_utc = (now_local + timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0).astimezone(timezone.utc)
 
-        # Query UsageLog for credits used today by IP
+        # Query UsageLog for credits used today by IP (using timezone-aware date range)
         ip_credits_query = db.query(func.sum(UsageLog.credits_used)).filter(
             UsageLog.user_id.is_(None),  # Anonymous users only
             UsageLog.ip_address == client_ip,
-            func.date(UsageLog.created_at) == today_date,
+            UsageLog.created_at >= today_start_utc,
+            UsageLog.created_at < today_end_utc,
             UsageLog.credits_used.isnot(None),
         )
         ip_credits_used = ip_credits_query.scalar() or Decimal(0)
@@ -1511,14 +1619,15 @@ async def get_credit_balance(
         ip_credits_used_rounded = int(ip_credits_used.quantize(Decimal("1"), rounding=ROUND_CEILING)) if ip_credits_used > 0 else 0
         ip_credits_remaining = max(0, credits_allocated - ip_credits_used_rounded)
 
-        # Query UsageLog for credits used today by fingerprint (if provided)
+        # Query UsageLog for credits used today by fingerprint (if provided, using timezone-aware date range)
         fingerprint_credits_remaining = ip_credits_remaining
         fp_credits_used = Decimal(0)
         if fingerprint:
             fp_credits_query = db.query(func.sum(UsageLog.credits_used)).filter(
                 UsageLog.user_id.is_(None),  # Anonymous users only
                 UsageLog.browser_fingerprint == fingerprint,
-                func.date(UsageLog.created_at) == today_date,
+                UsageLog.created_at >= today_start_utc,
+                UsageLog.created_at < today_end_utc,
                 UsageLog.credits_used.isnot(None),
             )
             fp_credits_used = fp_credits_query.scalar() or Decimal(0)
@@ -1533,13 +1642,14 @@ async def get_credit_balance(
 
         # Sync in-memory storage with database (for fast access in other endpoints)
         # Round UP to be conservative - never give free credits
-        from ..rate_limiting import anonymous_rate_limit_storage
+        from ..rate_limiting import anonymous_rate_limit_storage, _get_local_date
 
         ip_identifier = f"ip:{client_ip}"
-        today_str = datetime.now(timezone.utc).date().isoformat()
+        today_str = _get_local_date(user_timezone)
         anonymous_rate_limit_storage[ip_identifier] = {
             "count": int(ip_credits_used.quantize(Decimal("1"), rounding=ROUND_CEILING)) if ip_credits_used > 0 else 0,
             "date": today_str,
+            "timezone": user_timezone,
             "first_seen": anonymous_rate_limit_storage[ip_identifier].get("first_seen") or datetime.now(timezone.utc),
         }
         if fingerprint:
@@ -1547,6 +1657,7 @@ async def get_credit_balance(
             anonymous_rate_limit_storage[fp_identifier] = {
                 "count": int(fp_credits_used.quantize(Decimal("1"), rounding=ROUND_CEILING)) if fp_credits_used > 0 else 0,
                 "date": today_str,
+                "timezone": user_timezone,
                 "first_seen": anonymous_rate_limit_storage[fp_identifier].get("first_seen") or datetime.now(timezone.utc),
             }
 

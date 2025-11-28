@@ -14,7 +14,7 @@ atomicity and handle concurrent requests gracefully.
 """
 
 from sqlalchemy.orm import Session
-from sqlalchemy import select, update, func
+from sqlalchemy import select, update, func, desc
 from decimal import Decimal, ROUND_CEILING
 from datetime import datetime, timedelta, timezone
 from typing import Dict, Any, Optional
@@ -23,6 +23,7 @@ from .config.constants import (
     DAILY_CREDIT_LIMITS,
     MONTHLY_CREDIT_ALLOCATIONS,
 )
+import pytz
 
 
 def get_user_credits(user_id: int, db: Session) -> int:
@@ -185,11 +186,77 @@ def allocate_monthly_credits(user_id: int, tier: str, db: Session) -> None:
         db.commit()
 
 
+def _get_user_timezone(user: User) -> str:
+    """
+    Get user's timezone preference, defaulting to UTC.
+    
+    Args:
+        user: User object
+        
+    Returns:
+        IANA timezone string (e.g., "America/Chicago")
+    """
+    if user.preferences and user.preferences.timezone:
+        try:
+            pytz.timezone(user.preferences.timezone)
+            return user.preferences.timezone
+        except (pytz.exceptions.UnknownTimeZoneError, AttributeError):
+            pass
+    return "UTC"
+
+
+def _get_next_local_midnight(timezone_str: str) -> datetime:
+    """
+    Get the next midnight in the specified timezone, converted to UTC.
+    
+    Args:
+        timezone_str: IANA timezone string
+        
+    Returns:
+        UTC datetime representing next midnight in the timezone
+    """
+    tz = pytz.timezone(timezone_str)
+    now_local = datetime.now(tz)
+    # Get next midnight in local timezone
+    tomorrow_local = (now_local + timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
+    # Convert to UTC for storage
+    return tomorrow_local.astimezone(timezone.utc)
+
+
+def _can_reset_user_credits(user_id: int, db: Session, min_hours_between_resets: int = 20) -> bool:
+    """
+    Check if user credits can be reset (safeguard against abuse).
+    
+    Prevents multiple resets within a short time period by checking the last allocation transaction.
+    
+    Args:
+        user_id: User ID
+        db: Database session
+        min_hours_between_resets: Minimum hours between resets (default 20)
+        
+    Returns:
+        True if reset is allowed, False otherwise
+    """
+    # Find the most recent allocation transaction
+    last_allocation = db.query(CreditTransaction).filter(
+        CreditTransaction.user_id == user_id,
+        CreditTransaction.transaction_type == "allocation"
+    ).order_by(desc(CreditTransaction.created_at)).first()
+    
+    if last_allocation is None:
+        return True
+    
+    now = datetime.now(timezone.utc)
+    hours_since_reset = (now - last_allocation.created_at).total_seconds() / 3600
+    return hours_since_reset >= min_hours_between_resets
+
+
 def reset_daily_credits(user_id: int, tier: str, db: Session) -> None:
     """
     Reset daily credits for free/anonymous tier users.
     
-    Called daily at midnight UTC to reset credit balance.
+    Resets credits at midnight in the user's local timezone.
+    Includes abuse prevention to prevent multiple resets within a short period.
     
     Args:
         user_id: User ID
@@ -204,13 +271,21 @@ def reset_daily_credits(user_id: int, tier: str, db: Session) -> None:
     if not user:
         raise ValueError(f"User {user_id} not found")
     
+    # Check if reset is allowed (abuse prevention)
+    if not _can_reset_user_credits(user_id, db):
+        # Too soon to reset - return without resetting
+        return
+    
     credits = DAILY_CREDIT_LIMITS[tier]
     
-    # Reset credits for next day
-    now = datetime.now(timezone.utc)
-    tomorrow = now + timedelta(days=1)
-    # Set reset time to midnight UTC tomorrow
-    user.credits_reset_at = tomorrow.replace(hour=0, minute=0, second=0, microsecond=0)
+    # Get user's timezone preference
+    user_timezone = _get_user_timezone(user)
+    
+    # Calculate next midnight in user's timezone
+    next_midnight_utc = _get_next_local_midnight(user_timezone)
+    
+    # Set reset time to next midnight in user's timezone (stored as UTC)
+    user.credits_reset_at = next_midnight_utc
     
     # Reset allocation and usage
     user.monthly_credits_allocated = credits
@@ -221,7 +296,7 @@ def reset_daily_credits(user_id: int, tier: str, db: Session) -> None:
         user_id=user_id,
         transaction_type="allocation",
         credits_amount=credits,
-        description=f"Daily credit allocation for {tier} tier",
+        description=f"Daily credit allocation for {tier} tier (timezone: {user_timezone})",
     )
     db.add(transaction)
     db.commit()
@@ -297,11 +372,11 @@ def ensure_credits_allocated(user_id: int, db: Session) -> None:
         if tier in MONTHLY_CREDIT_ALLOCATIONS:
             allocate_monthly_credits(user_id, tier, db)
         elif tier in DAILY_CREDIT_LIMITS:
-            # Set daily credits and reset time
+            # Set daily credits and reset time based on user's timezone
             credits = DAILY_CREDIT_LIMITS[tier]
-            now = datetime.now(timezone.utc)
-            tomorrow = now + timedelta(days=1)
-            user.credits_reset_at = tomorrow.replace(hour=0, minute=0, second=0, microsecond=0)
+            user_timezone = _get_user_timezone(user)
+            next_midnight_utc = _get_next_local_midnight(user_timezone)
+            user.credits_reset_at = next_midnight_utc
             user.monthly_credits_allocated = credits
             user.credits_used_this_period = 0
             db.commit()

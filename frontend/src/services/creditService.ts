@@ -117,8 +117,15 @@ export interface CreditEstimate {
  * @param fingerprint - Optional browser fingerprint for anonymous users
  */
 export async function getCreditBalance(fingerprint?: string): Promise<CreditBalance> {
-  const params = fingerprint ? `?fingerprint=${encodeURIComponent(fingerprint)}` : ''
-  const response = await apiClient.get<CreditBalance>(`/credits/balance${params}`)
+  // Auto-detect timezone from browser
+  const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone
+  const params = new URLSearchParams()
+  if (fingerprint) {
+    params.append('fingerprint', fingerprint)
+  }
+  params.append('timezone', userTimezone)
+  const queryString = params.toString()
+  const response = await apiClient.get<CreditBalance>(`/credits/balance${queryString ? `?${queryString}` : ''}`)
   return response.data
 }
 

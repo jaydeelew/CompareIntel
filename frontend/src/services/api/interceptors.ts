@@ -52,6 +52,13 @@ export const defaultHeadersInterceptor: RequestInterceptor = async (url, config)
     headers.set('Accept', 'application/json');
   }
 
+  // Add timezone header for credit reset timing (auto-detect from browser)
+  // This is a fallback - endpoints should also accept timezone in query params or body
+  if (!headers.has('X-Timezone')) {
+    const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    headers.set('X-Timezone', userTimezone);
+  }
+
   return [url, { ...config, headers }];
 };
 

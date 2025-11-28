@@ -22,6 +22,7 @@ export interface CompareRequestPayload {
   browser_fingerprint?: string
   conversation_id?: number
   estimated_input_tokens?: number  // Optional: Accurate token count from /estimate-tokens endpoint
+  timezone?: string  // Optional: IANA timezone string (e.g., "America/Chicago") for credit reset timing
 }
 
 /**
@@ -191,12 +192,19 @@ export async function processStreamEvents(
  * @throws {ApiError} If the request fails
  */
 export async function getRateLimitStatus(fingerprint?: string): Promise<RateLimitStatus> {
-  const params = fingerprint ? `?fingerprint=${encodeURIComponent(fingerprint)}` : ''
+  // Auto-detect timezone from browser
+  const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone
+  const params = new URLSearchParams()
+  if (fingerprint) {
+    params.append('fingerprint', fingerprint)
+  }
+  params.append('timezone', userTimezone)
+  const queryString = params.toString()
   const cacheKey = fingerprint
-    ? `GET:/rate-limit-status?fingerprint=${encodeURIComponent(fingerprint)}`
-    : 'GET:/rate-limit-status'
+    ? `GET:/rate-limit-status?fingerprint=${encodeURIComponent(fingerprint)}&timezone=${userTimezone}`
+    : `GET:/rate-limit-status?timezone=${userTimezone}`
 
-  const response = await apiClient.get<RateLimitStatus>(`/rate-limit-status${params}`, {
+  const response = await apiClient.get<RateLimitStatus>(`/rate-limit-status?${queryString}`, {
     // Cache for 30 seconds - balances freshness with deduplication
     cacheTTL: 30 * 1000,
     _cacheKey: cacheKey,

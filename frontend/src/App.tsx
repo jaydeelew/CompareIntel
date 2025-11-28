@@ -3445,6 +3445,8 @@ function AppContent() {
 
       // Use service for streaming request
       // Include accurate token count from frontend if available (avoids duplicate calculation on backend)
+      // Include timezone for credit reset timing (auto-detect from browser)
+      const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone
       const stream = await compareStream({
         input_data: input,
         models: selectedModels,
@@ -3452,6 +3454,7 @@ function AppContent() {
         browser_fingerprint: browserFingerprint,
         conversation_id: conversationId || undefined, // Only include if not null
         estimated_input_tokens: accurateInputTokens || undefined, // Include accurate count if available
+        timezone: userTimezone, // Auto-detect timezone from browser
       })
 
       if (!stream) {

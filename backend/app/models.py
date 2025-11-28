@@ -100,6 +100,10 @@ class UserPreference(Base):
     email_notifications = Column(Boolean, default=True)
     usage_alerts = Column(Boolean, default=True)
 
+    # Timezone preference (IANA timezone string, e.g., "America/Chicago")
+    # Auto-detected from browser, defaults to UTC if not set
+    timezone = Column(String(50), default="UTC")
+
     # Timestamps
     created_at = Column(DateTime, default=func.now())
     updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
