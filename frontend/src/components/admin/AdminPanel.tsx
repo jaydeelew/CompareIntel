@@ -1822,9 +1822,18 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                                     <table className="analytics-table">
                                         <thead>
                                             <tr>
-                                                <th>Date</th>
-                                                <th className="number-header">Unique Visitors</th>
-                                                <th className="number-header">Comparisons</th>
+                                                <th>
+                                                    <span className="header-text-desktop">Date</span>
+                                                    <span className="header-text-mobile">Date</span>
+                                                </th>
+                                                <th className="number-header">
+                                                    <span className="header-text-desktop">Unique Visitors</span>
+                                                    <span className="header-text-mobile">Visitors</span>
+                                                </th>
+                                                <th className="number-header">
+                                                    <span className="header-text-desktop">Comparisons</span>
+                                                    <span className="header-text-mobile">Comps</span>
+                                                </th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -1861,16 +1870,15 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                 <div className="admin-stats" style={{ marginBottom: '2rem' }}>
                     <h2>Anonymous Users (Development Mode Only)</h2>
                     <div className="stats-grid">
-                        <div className="stat-card" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '1.5rem' }}>
-                            <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'center', gap: '1rem', width: '100%', flexWrap: 'wrap' }}>
+                        <div className="stat-card anonymous-settings-card-wrapper">
+                            <div className="anonymous-settings-container">
                                 {/* Anonymous Mock Mode Section */}
-                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.25rem', minWidth: '250px', flex: '1' }}>
-                                    <h3 style={{ marginBottom: '0.25rem', textTransform: 'uppercase', letterSpacing: '0.5px', fontSize: '1rem', fontWeight: 'bold' }}>Anonymous Tier Mock Mode</h3>
+                                <div className="anonymous-settings-section">
+                                    <h3 style={{ marginBottom: '0.25rem', textTransform: 'uppercase', letterSpacing: '0.5px', fontSize: '1rem', fontWeight: 'bold', textAlign: 'center' }}>Anonymous Tier Mock Mode</h3>
                                     <button
                                         onClick={toggleAnonymousMockMode}
                                         className={`mock-mode-btn ${appSettings.anonymous_mock_mode_enabled ? 'enabled' : 'disabled'}`}
                                         title={`Anonymous mock mode is ${appSettings.anonymous_mock_mode_enabled ? 'enabled' : 'disabled'} - ${appSettings.anonymous_mock_mode_enabled ? 'Anonymous users get mock responses' : 'Anonymous users use real API calls'}`}
-                                        style={{ minWidth: '220px' }}
                                     >
                                         🎭 Anonymous Mock {appSettings.anonymous_mock_mode_enabled ? 'ON' : 'OFF'}
                                     </button>
@@ -1882,13 +1890,12 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                                 </div>
 
                                 {/* Anonymous Zero Usage Section */}
-                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.25rem', minWidth: '250px', flex: '1' }}>
-                                    <h3 style={{ marginBottom: '0.25rem', textTransform: 'uppercase', letterSpacing: '0.5px', fontSize: '1rem', fontWeight: 'bold' }}>Anonymous Usage Data and History</h3>
+                                <div className="anonymous-settings-section">
+                                    <h3 style={{ marginBottom: '0.25rem', textTransform: 'uppercase', letterSpacing: '0.5px', fontSize: '1rem', fontWeight: 'bold', textAlign: 'center' }}>Anonymous Usage Data and History</h3>
                                     <button
                                         onClick={zeroAnonymousUsage}
                                         className={`mock-mode-btn zero-usage-btn ${historyCleared ? 'history-cleared-green' : ''}`}
                                         title="Zero out all anonymous user usage and clear comparison history"
-                                        style={{ minWidth: '220px' }}
                                     >
                                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                                             <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/>
@@ -1984,7 +1991,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                                         <th>Tier</th>
                                         <th>Status</th>
                                         <th>Verified</th>
-                                        <th>Usage</th>
+                                        <th>Credits</th>
                                         <th>Created</th>
                                         <th>Actions</th>
                                     </tr>
@@ -2039,7 +2046,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                                             </td>
                                             <td>
                                                 <div className="usage-info">
-                                                    <span className="usage-count">Credits: {userRow.credits_used_this_period || 0}/{userRow.monthly_credits_allocated || 0}</span>
+                                                    <span className="usage-count">{userRow.credits_used_this_period || 0}/{userRow.monthly_credits_allocated || 0}</span>
                                                     {userRow.monthly_overage_count > 0 && (
                                                         <span className="overage-count">
                                                             {userRow.monthly_overage_count} overages
