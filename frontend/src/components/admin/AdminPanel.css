@@ -1155,23 +1155,15 @@ button:hover {
     padding: 0.875rem 1.5rem;
   }
 
-  /* Tables - Convert to cards on mobile */
+  /* Tables - Hide on mobile, show cards instead */
   .users-table-container,
   .logs-table-container {
-    overflow-x: visible;
-    border: none;
-    box-shadow: none;
+    display: none;
   }
 
   .users-table,
   .logs-table {
     display: none;
-  }
-
-  /* Show cards on mobile, hide on desktop */
-  .users-cards-mobile,
-  .logs-cards-mobile {
-    display: block;
   }
 
   .pagination {
@@ -1290,9 +1282,21 @@ button:hover {
 }
 
 /* Desktop: Hide cards, show tables */
-.users-cards-mobile,
-.logs-cards-mobile {
-  display: none;
+@media (min-width: 769px) {
+  .users-cards-mobile,
+  .logs-cards-mobile {
+    display: none;
+  }
+
+  .users-table-container,
+  .logs-table-container {
+    display: block;
+  }
+
+  .users-table,
+  .logs-table {
+    display: table;
+  }
 }
 
 /* Desktop: Show full header text, hide mobile header text */
@@ -1307,6 +1311,15 @@ button:hover {
 /* Mobile Card Layouts */
 @media (max-width: 768px) {
   /* User Card Layout */
+  .users-cards-mobile {
+    display: block;
+    max-height: 60vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    padding-right: 0.5rem;
+  }
+
   .user-card {
     display: block;
     background: var(--bg-primary);
@@ -1368,6 +1381,14 @@ button:hover {
     text-align: right;
     font-weight: 500;
     color: var(--text-primary);
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.25rem;
+  }
+
+  .user-card-value .usage-info {
+    align-items: flex-end;
   }
 
   .user-card-actions {

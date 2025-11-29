@@ -2050,30 +2050,151 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
 
                     {/* Users Table */}
                     {users && (
-                        <div className="users-table-container">
-                            <table className="users-table">
-                                <thead>
-                                    <tr>
-                                        <th>Email</th>
-                                        <th>Role</th>
-                                        <th>Tier</th>
-                                        <th>Status</th>
-                                        <th>Verified</th>
-                                        <th>Credits</th>
-                                        <th>Created</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {users.users.map((userRow) => (
-                                        <tr key={userRow.id}>
-                                            <td>{userRow.email}</td>
-                                            <td>
+                        <>
+                            {/* Desktop Table View */}
+                            <div className="users-table-container">
+                                <table className="users-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Email</th>
+                                            <th>Role</th>
+                                            <th>Tier</th>
+                                            <th>Status</th>
+                                            <th>Verified</th>
+                                            <th>Credits</th>
+                                            <th>Created</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {users.users.map((userRow) => (
+                                            <tr key={userRow.id}>
+                                                <td>{userRow.email}</td>
+                                                <td>
+                                                    <span className={`role-badge role-${userRow.role}`}>
+                                                        {userRow.role}
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    {user?.role === 'super_admin' ? (
+                                                        <select
+                                                            value={userRow.subscription_tier}
+                                                            onChange={(e) => handleTierChangeClick(userRow.id, userRow.email, userRow.subscription_tier, e.target.value)}
+                                                            className="tier-select"
+                                                            title="Change subscription tier (Super Admin only)"
+                                                        >
+                                                            <option value="free">Free</option>
+                                                            <option value="starter">Starter</option>
+                                                            <option value="starter_plus">Starter+</option>
+                                                            <option value="pro">Pro</option>
+                                                            <option value="pro_plus">Pro+</option>
+                                                        </select>
+                                                    ) : (
+                                                        <span className={`tier-badge tier-${userRow.subscription_tier}`}>
+                                                            {userRow.subscription_tier}
+                                                        </span>
+                                                    )}
+                                                </td>
+                                                <td>
+                                                    <span className={`status-badge ${userRow.is_active ? 'active' : 'inactive'}`}>
+                                                        {userRow.is_active ? 'Active' : 'Inactive'}
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <span className={`verified-badge ${userRow.is_verified ? 'verified' : 'unverified'}`}>
+                                                        {userRow.is_verified ? (
+                                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                                                <polyline points="20 6 9 17 4 12"/>
+                                                            </svg>
+                                                        ) : (
+                                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                                                <line x1="18" y1="6" x2="6" y2="18"/>
+                                                                <line x1="6" y1="6" x2="18" y2="18"/>
+                                                            </svg>
+                                                        )}
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <div className="usage-info">
+                                                        <span className="usage-count">{userRow.credits_used_this_period || 0}/{userRow.monthly_credits_allocated || 0}</span>
+                                                        {userRow.monthly_overage_count > 0 && (
+                                                            <span className="overage-count">
+                                                                {userRow.monthly_overage_count} overages
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <span title={new Date(userRow.created_at).toLocaleString()}>
+                                                        {(() => {
+                                                            const date = new Date(userRow.created_at);
+                                                            const month = String(date.getMonth() + 1).padStart(2, '0');
+                                                            const day = String(date.getDate()).padStart(2, '0');
+                                                            const year = date.getFullYear();
+                                                            return `${month}/${day}/${year}`;
+                                                        })()}
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <div className="action-buttons">
+                                                        <button
+                                                            onClick={() => toggleUserActive(userRow.id)}
+                                                            className={`toggle-btn ${userRow.is_active ? 'deactivate' : 'activate'}`}
+                                                        >
+                                                            {userRow.is_active ? 'Deactivate' : 'Activate'}
+                                                        </button>
+                                                        {!userRow.is_verified && (
+                                                            <button
+                                                                onClick={() => sendVerification(userRow.id)}
+                                                                className="verify-btn"
+                                                            >
+                                                                Send Verification
+                                                            </button>
+                                                        )}
+                                                        {(userRow.credits_used_this_period || 0) > 0 && (
+                                                            <button
+                                                                onClick={() => resetUsage(userRow.id)}
+                                                                className="reset-usage-btn"
+                                                                title="Reset daily usage to 0 and remove all model comparison history"
+                                                            >
+                                                                Zero Usage
+                                                            </button>
+                                                        )}
+                                                        {/* Mock mode toggle - available for any user in development mode, admin/super-admin in production */}
+                                                        {(import.meta.env.DEV || userRow.role === 'admin' || userRow.role === 'super_admin') && (
+                                                            <button
+                                                                onClick={() => toggleMockMode(userRow.id)}
+                                                                className={`mock-mode-btn ${userRow.mock_mode_enabled ? 'enabled' : 'disabled'}`}
+                                                                title={`Mock mode is ${userRow.mock_mode_enabled ? 'enabled' : 'disabled'} - ${userRow.mock_mode_enabled ? 'Using mock responses' : 'Using real API calls'}${import.meta.env.DEV ? ' (Dev Mode)' : ''}`}
+                                                            >
+                                                                {userRow.mock_mode_enabled ? 'Mock ON' : 'Mock OFF'}
+                                                            </button>
+                                                        )}
+                                                        <button
+                                                            onClick={() => handleDeleteClick(userRow.id, userRow.email)}
+                                                            className="delete-btn"
+                                                            title="Delete user (Super Admin only)"
+                                                        >
+                                                            Delete
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            {/* Mobile Card View */}
+                            <div className="users-cards-mobile">
+                                {users.users.map((userRow) => (
+                                    <div key={userRow.id} className="user-card">
+                                        <div className="user-card-header">
+                                            <div className="user-card-email">{userRow.email}</div>
+                                            <div className="user-card-badges">
                                                 <span className={`role-badge role-${userRow.role}`}>
                                                     {userRow.role}
                                                 </span>
-                                            </td>
-                                            <td>
                                                 {user?.role === 'super_admin' ? (
                                                     <select
                                                         value={userRow.subscription_tier}
@@ -2092,13 +2213,21 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                                                         {userRow.subscription_tier}
                                                     </span>
                                                 )}
-                                            </td>
-                                            <td>
+                                            </div>
+                                        </div>
+
+                                        <div className="user-card-row">
+                                            <span className="user-card-label">Status</span>
+                                            <span className="user-card-value">
                                                 <span className={`status-badge ${userRow.is_active ? 'active' : 'inactive'}`}>
                                                     {userRow.is_active ? 'Active' : 'Inactive'}
                                                 </span>
-                                            </td>
-                                            <td>
+                                            </span>
+                                        </div>
+
+                                        <div className="user-card-row">
+                                            <span className="user-card-label">Verified</span>
+                                            <span className="user-card-value">
                                                 <span className={`verified-badge ${userRow.is_verified ? 'verified' : 'unverified'}`}>
                                                     {userRow.is_verified ? (
                                                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -2111,8 +2240,12 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                                                         </svg>
                                                     )}
                                                 </span>
-                                            </td>
-                                            <td>
+                                            </span>
+                                        </div>
+
+                                        <div className="user-card-row">
+                                            <span className="user-card-label">Credits</span>
+                                            <span className="user-card-value">
                                                 <div className="usage-info">
                                                     <span className="usage-count">{userRow.credits_used_this_period || 0}/{userRow.monthly_credits_allocated || 0}</span>
                                                     {userRow.monthly_overage_count > 0 && (
@@ -2121,66 +2254,69 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                                                         </span>
                                                     )}
                                                 </div>
-                                            </td>
-                                            <td>
-                                                <span title={new Date(userRow.created_at).toLocaleString()}>
-                                                    {(() => {
-                                                        const date = new Date(userRow.created_at);
-                                                        const month = String(date.getMonth() + 1).padStart(2, '0');
-                                                        const day = String(date.getDate()).padStart(2, '0');
-                                                        const year = date.getFullYear();
-                                                        return `${month}/${day}/${year}`;
-                                                    })()}
-                                                </span>
-                                            </td>
-                                            <td>
-                                                <div className="action-buttons">
+                                            </span>
+                                        </div>
+
+                                        <div className="user-card-row">
+                                            <span className="user-card-label">Created</span>
+                                            <span className="user-card-value" title={new Date(userRow.created_at).toLocaleString()}>
+                                                {(() => {
+                                                    const date = new Date(userRow.created_at);
+                                                    const month = String(date.getMonth() + 1).padStart(2, '0');
+                                                    const day = String(date.getDate()).padStart(2, '0');
+                                                    const year = date.getFullYear();
+                                                    return `${month}/${day}/${year}`;
+                                                })()}
+                                            </span>
+                                        </div>
+
+                                        <div className="user-card-actions">
+                                            <div className="action-buttons">
+                                                <button
+                                                    onClick={() => toggleUserActive(userRow.id)}
+                                                    className={`toggle-btn ${userRow.is_active ? 'deactivate' : 'activate'}`}
+                                                >
+                                                    {userRow.is_active ? 'Deactivate' : 'Activate'}
+                                                </button>
+                                                {!userRow.is_verified && (
                                                     <button
-                                                        onClick={() => toggleUserActive(userRow.id)}
-                                                        className={`toggle-btn ${userRow.is_active ? 'deactivate' : 'activate'}`}
+                                                        onClick={() => sendVerification(userRow.id)}
+                                                        className="verify-btn"
                                                     >
-                                                        {userRow.is_active ? 'Deactivate' : 'Activate'}
+                                                        Send Verification
                                                     </button>
-                                                    {!userRow.is_verified && (
-                                                        <button
-                                                            onClick={() => sendVerification(userRow.id)}
-                                                            className="verify-btn"
-                                                        >
-                                                            Send Verification
-                                                        </button>
-                                                    )}
-                                                    {(userRow.credits_used_this_period || 0) > 0 && (
-                                                        <button
-                                                            onClick={() => resetUsage(userRow.id)}
-                                                            className="reset-usage-btn"
-                                                            title="Reset daily usage to 0 and remove all model comparison history"
-                                                        >
-                                                            Zero Usage
-                                                        </button>
-                                                    )}
-                                                    {/* Mock mode toggle - available for any user in development mode, admin/super-admin in production */}
-                                                    {(import.meta.env.DEV || userRow.role === 'admin' || userRow.role === 'super_admin') && (
-                                                        <button
-                                                            onClick={() => toggleMockMode(userRow.id)}
-                                                            className={`mock-mode-btn ${userRow.mock_mode_enabled ? 'enabled' : 'disabled'}`}
-                                                            title={`Mock mode is ${userRow.mock_mode_enabled ? 'enabled' : 'disabled'} - ${userRow.mock_mode_enabled ? 'Using mock responses' : 'Using real API calls'}${import.meta.env.DEV ? ' (Dev Mode)' : ''}`}
-                                                        >
-                                                            {userRow.mock_mode_enabled ? 'Mock ON' : 'Mock OFF'}
-                                                        </button>
-                                                    )}
+                                                )}
+                                                {(userRow.credits_used_this_period || 0) > 0 && (
                                                     <button
-                                                        onClick={() => handleDeleteClick(userRow.id, userRow.email)}
-                                                        className="delete-btn"
-                                                        title="Delete user (Super Admin only)"
+                                                        onClick={() => resetUsage(userRow.id)}
+                                                        className="reset-usage-btn"
+                                                        title="Reset daily usage to 0 and remove all model comparison history"
                                                     >
-                                                        Delete
+                                                        Zero Usage
                                                     </button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
+                                                )}
+                                                {/* Mock mode toggle - available for any user in development mode, admin/super-admin in production */}
+                                                {(import.meta.env.DEV || userRow.role === 'admin' || userRow.role === 'super_admin') && (
+                                                    <button
+                                                        onClick={() => toggleMockMode(userRow.id)}
+                                                        className={`mock-mode-btn ${userRow.mock_mode_enabled ? 'enabled' : 'disabled'}`}
+                                                        title={`Mock mode is ${userRow.mock_mode_enabled ? 'enabled' : 'disabled'} - ${userRow.mock_mode_enabled ? 'Using mock responses' : 'Using real API calls'}${import.meta.env.DEV ? ' (Dev Mode)' : ''}`}
+                                                    >
+                                                        {userRow.mock_mode_enabled ? 'Mock ON' : 'Mock OFF'}
+                                                    </button>
+                                                )}
+                                                <button
+                                                    onClick={() => handleDeleteClick(userRow.id, userRow.email)}
+                                                    className="delete-btn"
+                                                    title="Delete user (Super Admin only)"
+                                                >
+                                                    Delete
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
 
                             {/* Pagination */}
                             {users.total_pages > 1 && (
@@ -2206,7 +2342,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                                     </button>
                                 </div>
                             )}
-                        </div>
+                        </>
                     )}
                 </div>
             )}
