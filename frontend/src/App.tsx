@@ -1854,7 +1854,16 @@ function AppContent() {
 
   // Scroll to results section when results are loaded (only once per comparison)
   useEffect(() => {
-    if (response && !isFollowUpMode && !hasScrolledToResultsRef.current) {
+    // Don't scroll to results if there's an error (e.g., all models failed)
+    // The error message scroll will handle centering the error instead
+    if (response && !isFollowUpMode && !hasScrolledToResultsRef.current && !error) {
+      // Also check if all models failed (even if error state hasn't updated yet)
+      const allModelsFailed = response.metadata?.models_successful === 0
+      if (allModelsFailed) {
+        // Don't scroll if all models failed - error message will be shown instead
+        return
+      }
+
       // Mark that we've scrolled for this comparison
       hasScrolledToResultsRef.current = true
 
@@ -1871,7 +1880,7 @@ function AppContent() {
       }, 300)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [response, isFollowUpMode])
+  }, [response, isFollowUpMode, error])
 
   // Scroll all conversation cards to top after formatting is applied (initial comparison only)
   useEffect(() => {
