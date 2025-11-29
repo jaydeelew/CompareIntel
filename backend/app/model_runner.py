@@ -338,17 +338,7 @@ MODELS_BY_PROVIDER = {
             "category": "Language/Reasoning",
             "provider": "Microsoft",
         },
-        {
-            "id": "microsoft/mai-ds-r1",
-            "name": "Mai Ds R1",
-            "description": 'MAI-DS-R1 is a post-trained variant of DeepSeek-R1 developed by the Microsoft AI team to improve the model’s responsiveness on previously blocked topics while enhancing its safety profile.',
-            "category": "Language",
-            "provider": "Microsoft",
-        },
-    ](/microsoft) Phi-4 is designed to perform well in complex reasoning tasks and can operate efficiently in situations with limited memory or where quick responses are needed.",
-            "category": "Language/Reasoning",
-            "provider": "Microsoft",
-        },    ],
+    ],
     "Mistral": [
         {
             "id": "mistralai/mistral-large",
@@ -877,7 +867,6 @@ def _get_huggingface_model_name(model_id: str) -> Optional[str]:
         "microsoft/phi-4": "microsoft/Phi-4",
         "microsoft/phi-4-reasoning-plus": "microsoft/Phi-4-Reasoning-Plus",
         "microsoft/wizardlm-2-8x22b": "microsoft/WizardLM-2-8x22B",
-        "microsoft/mai-ds-r1": "microsoft/MAI-DS-R1",  # Note: may need adjustment if model name differs
     }
 
     return hf_model_map.get(base_id) or hf_model_map.get(model_id)
