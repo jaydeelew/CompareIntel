@@ -143,6 +143,50 @@ python scripts/generate_renderer_configs.py analysis.json --overwrite
 - Models that already have configs are skipped
 - Use `--overwrite` flag to regenerate all configs (backup first!)
 
+### `list_model_token_limits.py`
+
+Lists all models and their input token capacities from OpenRouter API.
+
+**Usage:**
+```bash
+# List all models in table format (default)
+python3 scripts/list_model_token_limits.py
+
+# Show summary statistics
+python3 scripts/list_model_token_limits.py --summary
+
+# Filter by provider
+python3 scripts/list_model_token_limits.py --provider OpenAI
+
+# Filter by minimum capacity
+python3 scripts/list_model_token_limits.py --min-capacity 100000
+
+# Output as JSON
+python3 scripts/list_model_token_limits.py --format json
+
+# Output as CSV
+python3 scripts/list_model_token_limits.py --format csv
+
+# Save to file
+python3 scripts/list_model_token_limits.py --output-file model_capacities.txt
+
+# Sort by capacity (highest first)
+python3 scripts/list_model_token_limits.py --sort-by capacity
+```
+
+**Options:**
+- `--format`: Output format - `table` (default), `json`, or `csv`
+- `--sort-by`: Sort by `provider` (default), `name`, `capacity`, or `model_id`
+- `--provider`: Filter by specific provider (e.g., `OpenAI`, `Anthropic`)
+- `--min-capacity`: Filter by minimum input capacity (e.g., `100000`)
+- `--output-file`: Save output to file (optional)
+- `--summary`: Show summary statistics (only for table format)
+
+**Note:**
+- Requires OpenRouter API key to be configured
+- Fetches token limits from OpenRouter API at runtime
+- Falls back to default values (8192 tokens) if API is unavailable
+
 ## Workflow
 
 ### Step 1: Collect Responses
@@ -196,6 +240,8 @@ backend/
 │   ├── test_prompts.py
 │   ├── collect_model_responses.py
 │   ├── analyze_responses.py
+│   ├── generate_renderer_configs.py
+│   ├── list_model_token_limits.py
 │   └── README.md
 └── data/
     ├── model_responses/      # Collected responses (created by collection script)
