@@ -1077,7 +1077,7 @@ button:hover {
 
   /* Tabs - 2x2 grid on mobile */
   .admin-tabs {
-    display: grid;
+    display: grid !important;
     grid-template-columns: 1fr 1fr;
     gap: 0.75rem;
     padding: 0.75rem;
@@ -1086,6 +1086,7 @@ button:hover {
 
   .admin-tab {
     width: 100%;
+    flex: none !important;
     padding: 0.875rem 1rem;
     font-size: 0.9rem;
     white-space: nowrap;
@@ -1094,6 +1095,14 @@ button:hover {
   .admin-tab svg {
     width: 16px;
     height: 16px;
+  }
+
+  .admin-tab-text-desktop {
+    display: none !important;
+  }
+
+  .admin-tab-text-mobile {
+    display: inline !important;
   }
 
   .search-controls {
@@ -1477,10 +1486,28 @@ button:hover {
     font-size: 1.75rem;
   }
 
+  /* Tabs - 2x2 grid on extra small screens */
+  .admin-tabs {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+    padding: 0.5rem;
+  }
+
   .admin-tab {
-    min-width: 120px;
-    padding: 0.75rem 1rem;
+    flex: none !important;
+    min-width: unset;
+    width: 100%;
+    padding: 0.75rem 0.875rem;
     font-size: 0.85rem;
+  }
+
+  .admin-tab-text-desktop {
+    display: none !important;
+  }
+
+  .admin-tab-text-mobile {
+    display: inline !important;
   }
 
   .user-card,
@@ -2076,6 +2103,14 @@ button:hover {
   width: 18px;
   height: 18px;
   flex-shrink: 0;
+}
+
+.admin-tab-text-mobile {
+  display: none;
+}
+
+.admin-tab-text-desktop {
+  display: inline;
 }
 
 .admin-tab:hover {

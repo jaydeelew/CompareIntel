@@ -1245,7 +1245,8 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                         <path d="M3 3v18h18M7 16l4-4 4 4 6-6"/>
                         <path d="M7 10h.01M11 7h.01M15 4h.01"/>
                     </svg>
-                    Visitor Analytics
+                    <span className="admin-tab-text-desktop">Visitor Analytics</span>
+                    <span className="admin-tab-text-mobile">Analytics</span>
                 </button>
             </div>
 
