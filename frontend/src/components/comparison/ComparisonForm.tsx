@@ -52,6 +52,9 @@ interface ComparisonFormProps {
 
   // Callback to expose accurate token count to parent (for API calls)
   onAccurateTokenCountChange?: (totalInputTokens: number | null) => void;
+
+  // Credits remaining (used to disable submit button when credits run out)
+  creditsRemaining: number;
 }
 
 /**
@@ -93,6 +96,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(({
   selectedModels,
   modelsByProvider,
   onAccurateTokenCountChange,
+  creditsRemaining,
 }) => {
   const messageCount = conversations.length > 0 ? conversations[0]?.messages.length || 0 : 0;
 
@@ -681,9 +685,12 @@ export const ComparisonForm = memo<ComparisonFormProps>(({
             })()}
             <button
               onClick={isFollowUpMode ? onContinueConversation : onSubmitClick}
-              disabled={isLoading}
+              disabled={isLoading || creditsRemaining <= 0}
               className={`textarea-icon-button submit-button ${!isFollowUpMode && !input.trim() ? 'not-ready' : ''} ${isAnimatingButton ? 'animate-pulse-glow' : ''}`}
               title={(() => {
+                if (creditsRemaining <= 0) {
+                  return 'You have run out of credits';
+                }
                 if (isFollowUpMode && tokenUsageInfo && tokenUsageInfo.isExceeded) {
                   return 'Input capacity exceeded - inputs may be truncated';
                 }

@@ -1,4 +1,4 @@
-import { useState, useEffect, useLayoutEffect, useRef, useCallback, lazy, Suspense } from 'react'
+import { useState, useEffect, useLayoutEffect, useRef, useCallback, useMemo, lazy, Suspense } from 'react'
 import { Routes, Route, useNavigate, useLocation } from 'react-router-dom'
 
 // Import all CSS modules directly (better for Vite than CSS @import)
@@ -177,7 +177,7 @@ function AppContent() {
   const [creditWarningMessage, setCreditWarningMessage] = useState<string | null>(null)
   const [creditWarningType, setCreditWarningType] = useState<'low' | 'insufficient' | 'none' | null>(null)
   const [creditWarningDismissible, setCreditWarningDismissible] = useState(false)
-  
+
   // Refs for error message elements to enable scrolling
   const creditWarningMessageRef = useRef<HTMLDivElement>(null)
   const errorMessageRef = useRef<HTMLDivElement>(null)
@@ -187,17 +187,17 @@ function AppContent() {
   // Helper function to scroll to an element and center it vertically
   const scrollToCenterElement = useCallback((element: HTMLElement | null) => {
     if (!element) return
-    
+
     // Wait for DOM to update, then scroll
     setTimeout(() => {
       const elementRect = element.getBoundingClientRect()
       const elementTop = elementRect.top + window.scrollY
       const elementHeight = elementRect.height
       const windowHeight = window.innerHeight
-      
+
       // Calculate scroll position to center the element vertically
       const scrollPosition = elementTop - (windowHeight / 2) + (elementHeight / 2)
-      
+
       window.scrollTo({
         top: Math.max(0, scrollPosition),
         behavior: 'smooth'
@@ -1377,7 +1377,7 @@ function AppContent() {
 
   // Expose resetUsage to window for debugging (prevents TypeScript unused variable error)
   if (typeof window !== 'undefined') {
-    ;(window as unknown as Record<string, unknown>).resetUsage = resetUsage
+    ; (window as unknown as Record<string, unknown>).resetUsage = resetUsage
   }
 
 
@@ -1522,7 +1522,7 @@ function AppContent() {
                 String(asm.model_id) === String(msg.model_id) &&
                 asm.content === msg.content &&
                 Math.abs(new Date(asm.created_at).getTime() - new Date(msg.created_at).getTime()) <
-                  1000
+                1000
             )
 
             if (!isDuplicate) {
@@ -2561,7 +2561,7 @@ function AppContent() {
 
   // Track previous authentication state to detect transitions
   const prevIsAuthenticatedRef = useRef<boolean | null>(null)
-  
+
   // Track previous user ID to detect user changes (including switching between authenticated users)
   const prevUserIdRef = useRef<number | null | undefined>(null)
   const isInitialMountRef = useRef<boolean>(true)
@@ -2569,20 +2569,20 @@ function AppContent() {
   // Clear error state whenever the user changes (handles switching between users)
   useEffect(() => {
     const currentUserId = user?.id
-    
+
     // Skip on initial mount - don't clear errors that might be from a page refresh
     if (isInitialMountRef.current) {
       isInitialMountRef.current = false
       prevUserIdRef.current = currentUserId
       return
     }
-    
+
     // If user ID changed (including null/undefined transitions), clear error state
     // Credit errors shouldn't persist across users or when switching auth states
     if (prevUserIdRef.current !== currentUserId) {
       setError(null)
     }
-    
+
     // Update the ref to track current user ID for next render
     prevUserIdRef.current = currentUserId
   }, [user?.id])
@@ -2670,18 +2670,18 @@ function AppContent() {
 
   const toggleAllForProvider = async (provider: string) => {
     const providerModels = modelsByProvider[provider] || []
-    
+
     // Determine user tier and filter out restricted models
     const userTier = isAuthenticated ? user?.subscription_tier || 'free' : 'anonymous'
     const isPaidTier = ['starter', 'starter_plus', 'pro', 'pro_plus'].includes(userTier)
-    
+
     // Filter out unavailable models (where available === false) and restricted models based on tier
     const availableProviderModels = providerModels.filter(model => {
       // Filter out unavailable models
       if (model.available === false) {
         return false
       }
-      
+
       // Filter out restricted models based on tier access
       if (isPaidTier) {
         // Paid tiers have access to all models
@@ -2693,10 +2693,10 @@ function AppContent() {
         // Free tier has access to anonymous and free-tier models
         return model.tier_access !== 'paid'
       }
-      
+
       return true
     })
-    
+
     const providerModelIds = availableProviderModels.map(model => model.id)
 
     // Check if all provider models are currently selected
@@ -3078,6 +3078,41 @@ function AppContent() {
       return
     }
 
+    // Check if user has credits before submitting
+    const userTier = isAuthenticated ? user?.subscription_tier || 'free' : 'anonymous'
+    const creditsAllocated = creditBalance?.credits_allocated ?? (isAuthenticated && user
+      ? (user.monthly_credits_allocated || getCreditAllocation(userTier))
+      : getDailyCreditLimit(userTier) || getCreditAllocation(userTier))
+
+    // Calculate credits remaining using the same logic as renderUsagePreview
+    let currentCreditsRemaining: number
+    if (!isAuthenticated && anonymousCreditsRemaining !== null) {
+      currentCreditsRemaining = anonymousCreditsRemaining
+    } else if (creditBalance?.credits_remaining !== undefined) {
+      currentCreditsRemaining = creditBalance.credits_remaining
+    } else {
+      const creditsUsed = creditBalance?.credits_used_this_period ?? creditBalance?.credits_used_today ?? (isAuthenticated && user
+        ? (user.credits_used_this_period || 0)
+        : 0)
+      currentCreditsRemaining = Math.max(0, creditsAllocated - creditsUsed)
+    }
+
+    // Prevent submission if credits are 0
+    if (currentCreditsRemaining <= 0) {
+      // Exit follow-up mode if in it
+      if (isFollowUpMode) {
+        setIsFollowUpMode(false)
+      }
+      const tierName = user?.subscription_tier || 'free'
+      if (tierName === 'anonymous' || tierName === 'free') {
+        setError('You\'ve run out of credits. Credits will reset tomorrow, or sign-up for a free account to get more credits!')
+      } else {
+        setError('You\'ve run out of credits. Please wait for credits to reset or upgrade your plan.')
+      }
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+      return
+    }
+
     handleSubmit()
   }
 
@@ -3113,7 +3148,7 @@ function AppContent() {
 
       if (modelTokenLimits.length > 0) {
         const minMaxInputTokens = Math.min(...modelTokenLimits)
-        
+
         // Use accurate token count if available (from ComparisonForm), otherwise validate on submit
         if (accurateInputTokens !== null && accurateInputTokens > minMaxInputTokens) {
           // Convert tokens to approximate characters for user-friendly error message
@@ -3135,10 +3170,10 @@ function AppContent() {
       // Calculate token usage using backend model-specific token estimators
       // Use accurate token count from ComparisonForm if available, otherwise use 0
       const inputTokens = accurateInputTokens ?? 0
-      
+
       const conversationHistoryMessages = conversations
         .filter(conv => selectedModels.includes(conv.modelId) && conv.messages.length > 0)
-      
+
       if (conversationHistoryMessages.length > 0) {
         // Calculate conversation history tokens using saved token counts from database
         const messages = conversationHistoryMessages[0].messages
@@ -3175,10 +3210,10 @@ function AppContent() {
 
     // Check credit balance before submitting
     // Use the same calculation logic as renderUsagePreview for consistency
-    const creditsAllocated = creditBalance?.credits_allocated ?? (isAuthenticated && user 
+    const creditsAllocated = creditBalance?.credits_allocated ?? (isAuthenticated && user
       ? (user.monthly_credits_allocated || getCreditAllocation(userTier))
       : getDailyCreditLimit(userTier) || getCreditAllocation(userTier))
-    
+
     // Calculate credits remaining using the same logic as renderUsagePreview
     let creditsRemaining: number
     if (!isAuthenticated && anonymousCreditsRemaining !== null) {
@@ -3189,7 +3224,7 @@ function AppContent() {
       creditsRemaining = creditBalance.credits_remaining
     } else {
       // Fallback: calculate from allocated and used
-      const creditsUsed = creditBalance?.credits_used_this_period ?? creditBalance?.credits_used_today ?? (isAuthenticated && user 
+      const creditsUsed = creditBalance?.credits_used_this_period ?? creditBalance?.credits_used_today ?? (isAuthenticated && user
         ? (user.credits_used_this_period || 0)
         : 0)
       creditsRemaining = Math.max(0, creditsAllocated - creditsUsed)
@@ -3199,43 +3234,43 @@ function AppContent() {
     const modelsNeeded = selectedModels.length
     // Use accurate token count from ComparisonForm (backend tokenizer) if available
     const inputTokens = accurateInputTokens ?? 0
-    
+
     // Build conversation history from conversations prop (not from hook's conversationHistory)
     const conversationHistoryMessages = isFollowUpMode && conversations.length > 0
       ? (() => {
-          // Get the first conversation that has messages and is for a selected model
-          const selectedConversations = conversations.filter(
-            conv => selectedModels.includes(conv.modelId) && conv.messages.length > 0
-          )
-          if (selectedConversations.length === 0) return []
-          // Use the first selected conversation's messages
-          return selectedConversations[0].messages
-        })()
+        // Get the first conversation that has messages and is for a selected model
+        const selectedConversations = conversations.filter(
+          conv => selectedModels.includes(conv.modelId) && conv.messages.length > 0
+        )
+        if (selectedConversations.length === 0) return []
+        // Use the first selected conversation's messages
+        return selectedConversations[0].messages
+      })()
       : []
-    
+
     // Calculate conversation history tokens using saved token counts from database
     const conversationHistoryTokens = conversationHistoryMessages.length > 0
       ? conversationHistoryMessages.reduce((sum, msg) => {
-          if (msg.type === 'user' && msg.input_tokens) {
-            // User messages: use saved input_tokens (calculated from backend tokenizers)
-            return sum + msg.input_tokens
-          } else if (msg.type === 'assistant' && msg.output_tokens) {
-            // Assistant messages: use saved output_tokens (from OpenRouter API)
-            return sum + msg.output_tokens
-          }
-          // Skip messages without token data (don't estimate with chars/4)
-          return sum
-        }, 0)
+        if (msg.type === 'user' && msg.input_tokens) {
+          // User messages: use saved input_tokens (calculated from backend tokenizers)
+          return sum + msg.input_tokens
+        } else if (msg.type === 'assistant' && msg.output_tokens) {
+          // Assistant messages: use saved output_tokens (from OpenRouter API)
+          return sum + msg.output_tokens
+        }
+        // Skip messages without token data (don't estimate with chars/4)
+        return sum
+      }, 0)
       : 0
     const totalInputTokens = inputTokens + conversationHistoryTokens
-    
+
     // Estimate output tokens: ~500-1500 tokens per model response (use 1000 as average)
     // Effective tokens = input_tokens + (output_tokens × 2.5)
     // Credits = effective_tokens / 1000
     const outputTokensPerModel = 1000
     const effectiveTokensPerModel = totalInputTokens + (outputTokensPerModel * 2.5)
     const creditsPerModel = effectiveTokensPerModel / 1000
-    
+
     // Total estimated credits
     const estimatedCredits = Math.ceil(creditsPerModel * modelsNeeded)
 
@@ -3314,62 +3349,62 @@ function AppContent() {
     const apiConversationHistory =
       isFollowUpMode && conversations.length > 0
         ? (() => {
-            // Get all conversations for selected models
-            const selectedConversations = conversations.filter(
-              conv => selectedModels.includes(conv.modelId) && conv.messages.length > 0
-            )
-            if (selectedConversations.length === 0) return []
+          // Get all conversations for selected models
+          const selectedConversations = conversations.filter(
+            conv => selectedModels.includes(conv.modelId) && conv.messages.length > 0
+          )
+          if (selectedConversations.length === 0) return []
 
-            // Collect all messages from all selected conversations
-            const allMessages: Array<{
-              role: 'user' | 'assistant'
-              content: string
-              model_id?: string
-              timestamp: string
-            }> = []
+          // Collect all messages from all selected conversations
+          const allMessages: Array<{
+            role: 'user' | 'assistant'
+            content: string
+            model_id?: string
+            timestamp: string
+          }> = []
 
-            // Collect all messages with their timestamps
-            selectedConversations.forEach(conv => {
-              conv.messages.forEach(msg => {
-                allMessages.push({
-                  role: msg.type === 'user' ? 'user' : 'assistant',
-                  content: msg.content,
-                  model_id: msg.type === 'assistant' ? conv.modelId : undefined, // Include model_id for assistant messages
-                  timestamp: msg.timestamp,
-                })
+          // Collect all messages with their timestamps
+          selectedConversations.forEach(conv => {
+            conv.messages.forEach(msg => {
+              allMessages.push({
+                role: msg.type === 'user' ? 'user' : 'assistant',
+                content: msg.content,
+                model_id: msg.type === 'assistant' ? conv.modelId : undefined, // Include model_id for assistant messages
+                timestamp: msg.timestamp,
               })
             })
+          })
 
-            // Deduplicate user messages (same content and timestamp within 1 second)
-            const seenUserMessages = new Set<string>()
-            const deduplicatedMessages: typeof allMessages = []
+          // Deduplicate user messages (same content and timestamp within 1 second)
+          const seenUserMessages = new Set<string>()
+          const deduplicatedMessages: typeof allMessages = []
 
-            // Sort all messages by timestamp to maintain chronological order
-            const sortedMessages = [...allMessages].sort(
-              (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
-            )
+          // Sort all messages by timestamp to maintain chronological order
+          const sortedMessages = [...allMessages].sort(
+            (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+          )
 
-            sortedMessages.forEach(msg => {
-              if (msg.role === 'user') {
-                // Deduplicate user messages
-                const key = `${msg.content}-${Math.floor(new Date(msg.timestamp).getTime() / 1000)}`
-                if (!seenUserMessages.has(key)) {
-                  seenUserMessages.add(key)
-                  deduplicatedMessages.push(msg)
-                }
-              } else {
-                // Always include assistant messages (they're already per-model)
+          sortedMessages.forEach(msg => {
+            if (msg.role === 'user') {
+              // Deduplicate user messages
+              const key = `${msg.content}-${Math.floor(new Date(msg.timestamp).getTime() / 1000)}`
+              if (!seenUserMessages.has(key)) {
+                seenUserMessages.add(key)
                 deduplicatedMessages.push(msg)
               }
-            })
+            } else {
+              // Always include assistant messages (they're already per-model)
+              deduplicatedMessages.push(msg)
+            }
+          })
 
-            // Return in API format (without timestamp, backend doesn't need it for filtering)
-            return deduplicatedMessages.map(msg => ({
-              role: msg.role,
-              content: msg.content,
-              model_id: msg.model_id, // Include model_id for backend filtering
-            }))
-          })()
+          // Return in API format (without timestamp, backend doesn't need it for filtering)
+          return deduplicatedMessages.map(msg => ({
+            role: msg.role,
+            content: msg.content,
+            model_id: msg.model_id, // Include model_id for backend filtering
+          }))
+        })()
         : []
 
     // Credit warnings removed - comparisons proceed regardless of credit balance
@@ -3469,7 +3504,7 @@ function AppContent() {
         // Check if any models have already exceeded the timeout (immediate abort check)
         const activeStreamingModels = getActiveStreamingModels()
         const allModelsCompleted = completedModels.size === selectedModels.length
-        
+
         // If we have received chunks and not all models are completed, check if any have timed out
         if (hasReceivedChunk && !allModelsCompleted && activeStreamingModels.length === 0) {
           // No models are actively streaming and not all are completed - abort immediately
@@ -3479,21 +3514,21 @@ function AppContent() {
 
         // If we haven't received any chunks yet, use initial connection timeout
         // Once we've received chunks, only timeout if no models are actively streaming
-        const timeoutDuration = hasReceivedChunk 
-          ? STREAMING_IDLE_TIMEOUT 
+        const timeoutDuration = hasReceivedChunk
+          ? STREAMING_IDLE_TIMEOUT
           : INITIAL_CONNECTION_TIMEOUT
 
         // Set new timeout
         timeoutId = setTimeout(() => {
           // Check again if any models are still actively streaming
           const stillActiveModels = getActiveStreamingModels()
-          
+
           // Only abort if no models are actively streaming
           // This allows completed models to finish while others continue streaming
           if (stillActiveModels.length === 0) {
             // No models are actively streaming - check if all models have completed
             const allModelsCompleted = completedModels.size === selectedModels.length
-            
+
             if (allModelsCompleted) {
               // All models completed - no need to abort, stream should end naturally
               // Reset timeout just in case (shouldn't be needed, but safe)
@@ -3731,8 +3766,12 @@ function AppContent() {
                             : 100
                           const periodType = userTier === 'anonymous' || userTier === 'free' ? 'daily' : 'monthly'
                           const lowCreditThreshold = (userTier === 'anonymous' || userTier === 'free') ? 20 : 10
-                          
+
                           if (balance.credits_remaining <= 0) {
+                            // Exit follow-up mode when credits run out
+                            if (isFollowUpMode) {
+                              setIsFollowUpMode(false)
+                            }
                             const message = getCreditWarningMessage('none', userTier, balance.credits_remaining, undefined, balance.credits_reset_at)
                             setCreditWarningMessage(message)
                             setCreditWarningType('none')
@@ -3763,7 +3802,7 @@ function AppContent() {
                         const metadataCreditsRemaining = streamingMetadata.credits_remaining
                         // Update anonymousCreditsRemaining state immediately - this is the primary source for anonymous users
                         setAnonymousCreditsRemaining(metadataCreditsRemaining)
-                        
+
                         // Update creditBalance immediately with metadata value to keep them in sync
                         const allocated = creditBalance?.credits_allocated ?? getDailyCreditLimit('anonymous')
                         setCreditBalance({
@@ -3773,9 +3812,9 @@ function AppContent() {
                           period_type: 'daily',
                           subscription_tier: 'anonymous',
                         })
-                        
+
                         console.log('[DEBUG] State updated - anonymousCreditsRemaining:', metadataCreditsRemaining, 'creditBalance.credits_remaining:', metadataCreditsRemaining)
-                        
+
                         const remainingPercent = allocated > 0
                           ? (metadataCreditsRemaining / allocated) * 100
                           : 100
@@ -3783,8 +3822,12 @@ function AppContent() {
                         const userTier = 'anonymous'
                         const periodType = 'daily'
                         const lowCreditThreshold = 20
-                        
+
                         if (metadataCreditsRemaining <= 0) {
+                          // Exit follow-up mode when credits run out
+                          if (isFollowUpMode) {
+                            setIsFollowUpMode(false)
+                          }
                           const message = getCreditWarningMessage('none', userTier, metadataCreditsRemaining)
                           setCreditWarningMessage(message)
                           setCreditWarningType('none')
@@ -3805,7 +3848,7 @@ function AppContent() {
                           setCreditWarningType(null)
                           setCreditWarningDismissible(false)
                         }
-                        
+
                         // Optionally refresh from API, but don't overwrite if metadata value is more recent
                         // Now API has fingerprint info, so it should match metadata
                         getCreditBalance(browserFingerprint)
@@ -3839,8 +3882,12 @@ function AppContent() {
                               ? (balance.credits_remaining / balance.credits_allocated) * 100
                               : 100
                             const lowCreditThreshold = 20
-                            
+
                             if (balance.credits_remaining <= 0) {
+                              // Exit follow-up mode when credits run out
+                              if (isFollowUpMode) {
+                                setIsFollowUpMode(false)
+                              }
                               const message = getCreditWarningMessage('none', userTier, balance.credits_remaining)
                               setCreditWarningMessage(message)
                               setCreditWarningType('none')
@@ -3979,10 +4026,10 @@ function AppContent() {
                         messages: conv.messages.map((msg, idx) =>
                           idx === conv.messages.length - 1 && msg.type === 'assistant'
                             ? {
-                                ...msg,
-                                content,
-                                timestamp: completionTime || msg.timestamp,
-                              }
+                              ...msg,
+                              content,
+                              timestamp: completionTime || msg.timestamp,
+                            }
                             : msg
                         ),
                       }
@@ -4493,7 +4540,7 @@ function AppContent() {
           const completedCount = completedModels.size
           const totalCount = selectedModels.length
           const timedOutCount = totalCount - completedCount
-          
+
           // Check if any models were actively streaming when timeout occurred
           const now = Date.now()
           const wasAnyModelStreaming = Object.keys(modelLastChunkTimes).some(modelId => {
@@ -4501,16 +4548,16 @@ function AppContent() {
             const lastChunk = modelLastChunkTimes[modelId]
             return lastChunk && (now - lastChunk) < STREAMING_IDLE_TIMEOUT
           })
-          
+
           const timeoutDuration = hasReceivedChunk ? STREAMING_IDLE_TIMEOUT : INITIAL_CONNECTION_TIMEOUT
           const timeoutMinutes = Math.floor(timeoutDuration / 60000)
           const timeoutSeconds = Math.floor((timeoutDuration % 60000) / 1000)
-          
+
           let errorMessage: string
-          
+
           if (completedCount === 0) {
             // No models completed - show standard timeout message
-            const timeoutReason = hasReceivedChunk 
+            const timeoutReason = hasReceivedChunk
               ? 'No data received for'
               : 'Connection timeout after'
             const modelText = totalCount === 1 ? 'model' : 'models'
@@ -4523,7 +4570,7 @@ function AppContent() {
             // Some models completed, some timed out
             const completedText = completedCount === 1 ? 'model completed' : 'models completed'
             const timedOutText = timedOutCount === 1 ? 'model timed out' : 'models timed out'
-            
+
             // If models were actively streaming when timeout occurred, mention that
             if (wasAnyModelStreaming) {
               errorMessage = `${completedCount} ${completedText}, but ${timedOutCount} ${timedOutText} after ${timeoutMinutes}:${timeoutSeconds.toString().padStart(2, '0')} of inactivity.`
@@ -4534,11 +4581,15 @@ function AppContent() {
             // All models completed (shouldn't happen in catch block, but handle gracefully)
             errorMessage = 'All models completed successfully.'
           }
-          
+
           setError(errorMessage)
         }
       } else if (err instanceof PaymentRequiredError) {
         // Handle insufficient credits error (402 Payment Required)
+        // Exit follow-up mode when user runs out of credits
+        if (isFollowUpMode) {
+          setIsFollowUpMode(false)
+        }
         // Don't show error banner if credit warning banner is already showing (credits are 0)
         if (creditWarningType !== 'none') {
           setError(err.message || 'Insufficient credits for this request. Please upgrade your plan or wait for credits to reset.')
@@ -4546,6 +4597,10 @@ function AppContent() {
         }
       } else if (err instanceof ApiError && err.status === 402) {
         // Handle 402 Payment Required (insufficient credits)
+        // Exit follow-up mode when user runs out of credits
+        if (isFollowUpMode) {
+          setIsFollowUpMode(false)
+        }
         // Don't show error banner if credit warning banner is already showing (credits are 0)
         if (creditWarningType !== 'none') {
           const errorMessage = err.response?.detail || err.message || 'Insufficient credits for this request.'
@@ -4565,17 +4620,56 @@ function AppContent() {
         clearTimeout(timeoutId)
         timeoutId = null
       }
-      
+
       setCurrentAbortController(null)
       userCancelledRef.current = false
       setIsLoading(false)
-      
+
       // NOTE: We don't need to refresh credit balance here because the streaming metadata
       // already provides the most up-to-date credits_remaining value (calculated right after deduction).
       // Adding a delayed refresh here would actually overwrite the correct value with potentially stale data
       // from the database due to timing/caching issues.
     }
   }
+
+  // Calculate credits remaining (reusable across components)
+  // This is used to disable submit button and exit follow-up mode when credits run out
+  const creditsRemaining = useMemo(() => {
+    const userTier = isAuthenticated ? user?.subscription_tier || 'free' : 'anonymous'
+
+    // Get credit information (if available)
+    // Prefer creditBalance if available (more up-to-date after model calls)
+    const creditsAllocated = creditBalance?.credits_allocated ?? (isAuthenticated && user
+      ? (user.monthly_credits_allocated || getCreditAllocation(userTier))
+      : getDailyCreditLimit(userTier) || getCreditAllocation(userTier))
+
+    // For anonymous users, prefer anonymousCreditsRemaining if available, then creditBalance
+    if (!isAuthenticated && anonymousCreditsRemaining !== null) {
+      // Use anonymousCreditsRemaining state if available (most up-to-date for anonymous users)
+      return anonymousCreditsRemaining
+    } else if (creditBalance?.credits_remaining !== undefined) {
+      // Use creditBalance if available
+      return creditBalance.credits_remaining
+    } else {
+      // Fallback: calculate from allocated and used
+      const creditsUsed = creditBalance?.credits_used_this_period ?? creditBalance?.credits_used_today ?? (isAuthenticated && user
+        ? (user.credits_used_this_period || 0)
+        : 0)
+      return Math.max(0, creditsAllocated - creditsUsed)
+    }
+  }, [
+    isAuthenticated,
+    user,
+    creditBalance,
+    anonymousCreditsRemaining,
+  ])
+
+  // Exit follow-up mode when credits run out
+  useEffect(() => {
+    if (isFollowUpMode && creditsRemaining <= 0) {
+      setIsFollowUpMode(false)
+    }
+  }, [creditsRemaining, isFollowUpMode, setIsFollowUpMode])
 
   // Helper function to render usage preview (used in both regular and follow-up modes)
   // Wrapped in useCallback with dependencies so ComparisonForm (memoized) re-renders when credits change
@@ -4584,25 +4678,9 @@ function AppContent() {
 
     // Get credit information (if available)
     // Prefer creditBalance if available (more up-to-date after model calls)
-    const creditsAllocated = creditBalance?.credits_allocated ?? (isAuthenticated && user 
+    const creditsAllocated = creditBalance?.credits_allocated ?? (isAuthenticated && user
       ? (user.monthly_credits_allocated || getCreditAllocation(userTier))
       : getDailyCreditLimit(userTier) || getCreditAllocation(userTier))
-    
-    // For anonymous users, prefer anonymousCreditsRemaining if available, then creditBalance
-    let creditsRemaining: number
-    if (!isAuthenticated && anonymousCreditsRemaining !== null) {
-      // Use anonymousCreditsRemaining state if available (most up-to-date for anonymous users)
-      creditsRemaining = anonymousCreditsRemaining
-    } else if (creditBalance?.credits_remaining !== undefined) {
-      // Use creditBalance if available
-      creditsRemaining = creditBalance.credits_remaining
-    } else {
-      // Fallback: calculate from allocated and used
-      const creditsUsed = creditBalance?.credits_used_this_period ?? creditBalance?.credits_used_today ?? (isAuthenticated && user 
-        ? (user.credits_used_this_period || 0)
-        : 0)
-      creditsRemaining = Math.max(0, creditsAllocated - creditsUsed)
-    }
 
     // Calculate what will be used
     const regularToUse = selectedModels.length
@@ -4632,6 +4710,7 @@ function AppContent() {
     selectedModels,
     isFollowUpMode,
     conversations,
+    creditsRemaining,
   ])
 
   return (
@@ -4680,7 +4759,7 @@ function AppContent() {
           {!showPasswordReset && !authLoading && (
             <>
               <VerifyEmail
-                onClose={() => {}}
+                onClose={() => { }}
                 externalToken={verificationToken}
                 suppressVerification={suppressVerification}
               />
@@ -4720,6 +4799,7 @@ function AppContent() {
                   selectedModels={selectedModels}
                   modelsByProvider={modelsByProvider}
                   onAccurateTokenCountChange={setAccurateInputTokens}
+                  creditsRemaining={creditsRemaining}
                 />
               </ErrorBoundary>
             </Hero>
@@ -4772,13 +4852,13 @@ function AppContent() {
                     // Force the padding-right value to ensure it overrides CSS media query
                     ...(isWideLayout && selectedModels.length > 0
                       ? {
-                          paddingRight: 'calc(340px + 2rem + 2.5rem)',
-                        }
+                        paddingRight: 'calc(340px + 2rem + 2.5rem)',
+                      }
                       : {}),
                     ...(isWideLayout && selectedModels.length === 0
                       ? {
-                          paddingRight: isModelsHidden ? 'calc(36px + 2rem)' : '0',
-                        }
+                        paddingRight: isModelsHidden ? 'calc(36px + 2rem)' : '0',
+                      }
                       : {}),
                     // Always center items vertically
                     alignItems: 'center',
@@ -4793,23 +4873,22 @@ function AppContent() {
                     <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.875rem', color: '#6b7280' }}>
                       {isFollowUpMode
                         ? 'You can deselect models or reselect previously selected ones (minimum 1 model required)'
-                        : `Choose up to ${maxModelsLimit} models${
-                            !isAuthenticated
-                              ? ' (Anonymous Tier)'
-                              : user?.subscription_tier
-                                ? (() => {
-                                    const parts = user.subscription_tier
-                                      .split('_')
-                                      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-                                    // Replace "Plus" with "+" when it appears after another word
-                                    const formatted =
-                                      parts.length > 1 && parts[1] === 'Plus'
-                                        ? parts[0] + '+'
-                                        : parts.join(' ')
-                                    return ` (${formatted} Tier)`
-                                  })()
-                                : ''
-                          }`}
+                        : `Choose up to ${maxModelsLimit} models${!isAuthenticated
+                          ? ' (Anonymous Tier)'
+                          : user?.subscription_tier
+                            ? (() => {
+                              const parts = user.subscription_tier
+                                .split('_')
+                                .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                              // Replace "Plus" with "+" when it appears after another word
+                              const formatted =
+                                parts.length > 1 && parts[1] === 'Plus'
+                                  ? parts[0] + '+'
+                                  : parts.join(' ')
+                              return ` (${formatted} Tier)`
+                            })()
+                            : ''
+                        }`}
                     </p>
                   </div>
                   <div
@@ -5049,11 +5128,11 @@ function AppContent() {
                                         model.id
                                       )
                                       const isUnavailable = model.available === false
-                                      
+
                                       // Check if model is restricted for current user tier
                                       const userTier = isAuthenticated ? user?.subscription_tier || 'free' : 'anonymous'
                                       const isPaidTier = ['starter', 'starter_plus', 'pro', 'pro_plus'].includes(userTier)
-                                      
+
                                       // Determine if model is restricted based on user tier
                                       // Anonymous tier: only models with tier_access === 'anonymous' are available
                                       // Free tier: models with tier_access === 'anonymous' or 'free' are available
@@ -5069,15 +5148,15 @@ function AppContent() {
                                         // Free tier has access to anonymous and free-tier models
                                         isRestricted = model.tier_access === 'paid'
                                       }
-                                      
+
                                       const requiresUpgrade = isRestricted && (userTier === 'anonymous' || userTier === 'free')
-                                      
+
                                       const isDisabled =
                                         isUnavailable ||
                                         isRestricted ||
                                         (selectedModels.length >= maxModelsLimit && !isSelected) ||
                                         (isFollowUpMode && !isSelected && !wasOriginallySelected)
-                                      
+
                                       const handleModelClick = () => {
                                         if (isRestricted && requiresUpgrade) {
                                           // Open upgrade modal or show upgrade message
@@ -5089,7 +5168,7 @@ function AppContent() {
                                           handleModelToggle(model.id)
                                         }
                                       }
-                                      
+
                                       return (
                                         <label
                                           key={model.id}

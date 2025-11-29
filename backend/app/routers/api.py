@@ -12,7 +12,7 @@ from typing import Optional, Dict, Any, Union
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from collections import defaultdict
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 import asyncio
 import json
 import os
@@ -1569,7 +1569,7 @@ async def get_credit_balance(
     current_user: Optional[User] = Depends(get_current_user),
     request: Request = None,
     fingerprint: Optional[str] = None,
-    timezone_param: Optional[str] = None,
+    timezone: Optional[str] = None,
 ):
     """
     Get current credit balance and usage statistics.
@@ -1608,6 +1608,7 @@ async def get_credit_balance(
         
         # Get timezone from query parameter or header, default to UTC
         import pytz
+        from datetime import timezone as dt_timezone
         user_timezone = "UTC"
         if timezone:
             try:
@@ -1630,8 +1631,8 @@ async def get_credit_balance(
         user_timezone = _validate_timezone(user_timezone)
         tz = pytz.timezone(user_timezone)
         now_local = datetime.now(tz)
-        today_start_utc = now_local.replace(hour=0, minute=0, second=0, microsecond=0).astimezone(timezone.utc)
-        today_end_utc = (now_local + timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0).astimezone(timezone.utc)
+        today_start_utc = now_local.replace(hour=0, minute=0, second=0, microsecond=0).astimezone(dt_timezone.utc)
+        today_end_utc = (now_local + timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0).astimezone(dt_timezone.utc)
 
         # Query UsageLog for credits used today by IP (using timezone-aware date range)
         ip_credits_query = db.query(func.sum(UsageLog.credits_used)).filter(
@@ -1677,7 +1678,7 @@ async def get_credit_balance(
             "count": int(ip_credits_used.quantize(Decimal("1"), rounding=ROUND_CEILING)) if ip_credits_used > 0 else 0,
             "date": today_str,
             "timezone": user_timezone,
-            "first_seen": anonymous_rate_limit_storage[ip_identifier].get("first_seen") or datetime.now(timezone.utc),
+            "first_seen": anonymous_rate_limit_storage[ip_identifier].get("first_seen") or datetime.now(dt_timezone.utc),
         }
         if fingerprint:
             fp_identifier = f"fp:{fingerprint}"
@@ -1685,7 +1686,7 @@ async def get_credit_balance(
                 "count": int(fp_credits_used.quantize(Decimal("1"), rounding=ROUND_CEILING)) if fp_credits_used > 0 else 0,
                 "date": today_str,
                 "timezone": user_timezone,
-                "first_seen": anonymous_rate_limit_storage[fp_identifier].get("first_seen") or datetime.now(timezone.utc),
+                "first_seen": anonymous_rate_limit_storage[fp_identifier].get("first_seen") or datetime.now(dt_timezone.utc),
             }
 
         print(
