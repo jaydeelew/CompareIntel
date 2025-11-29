@@ -1064,6 +1064,17 @@ async def compare_stream(
                 except ValueError as e:
                     # Should not happen since we checked before, but handle gracefully
                     print(f"Warning: Credit deduction failed: {e}")
+                    # Refresh credits_remaining even if deduction failed (may have partially succeeded)
+                    if not user_id:
+                        ip_identifier = f"ip:{client_ip}"
+                        _, ip_credits_remaining, _ = check_anonymous_credits(ip_identifier, Decimal(0), user_timezone)
+                        fingerprint_credits_remaining = ip_credits_remaining
+                        if req.browser_fingerprint:
+                            fp_identifier = f"fp:{req.browser_fingerprint}"
+                            _, fingerprint_credits_remaining, _ = check_anonymous_credits(fp_identifier, Decimal(0), user_timezone)
+                        credits_remaining = min(
+                            ip_credits_remaining, fingerprint_credits_remaining if req.browser_fingerprint else ip_credits_remaining
+                        )
                 finally:
                     credit_db.close()
             else:
@@ -1071,11 +1082,11 @@ async def compare_stream(
                 # (in case of any other state changes, though this shouldn't normally happen)
                 if not user_id:
                     ip_identifier = f"ip:{client_ip}"
-                    _, ip_credits_remaining, _ = check_anonymous_credits(ip_identifier, Decimal(0), db)
+                    _, ip_credits_remaining, _ = check_anonymous_credits(ip_identifier, Decimal(0), user_timezone)
                     fingerprint_credits_remaining = ip_credits_remaining
                     if req.browser_fingerprint:
                         fp_identifier = f"fp:{req.browser_fingerprint}"
-                        _, fingerprint_credits_remaining, _ = check_anonymous_credits(fp_identifier, Decimal(0), db)
+                        _, fingerprint_credits_remaining, _ = check_anonymous_credits(fp_identifier, Decimal(0), user_timezone)
                     credits_remaining = min(
                         ip_credits_remaining, fingerprint_credits_remaining if req.browser_fingerprint else ip_credits_remaining
                     )
