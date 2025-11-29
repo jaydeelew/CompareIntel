@@ -78,8 +78,9 @@ export interface AdminActionLog {
  */
 export interface AppSettings {
   anonymous_mock_mode_enabled: boolean;
-  created_at: string;
-  updated_at: string;
+  is_development: boolean;
+  created_at: string | null;
+  updated_at: string | null;
 }
 
 /**

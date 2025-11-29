@@ -5,6 +5,7 @@ import { useAuth, useAuthHeaders } from '../../contexts/AuthContext';
 import type { AvailableModelsResponse } from '../../services/modelsService';
 import type { Model } from '../../types/models';
 import { LoadingSpinner } from '../shared/LoadingSpinner';
+import { getAppSettings, toggleAnonymousMockMode as toggleMockMode, type AppSettings } from '../../services/adminService';
 import './AdminPanel.css';
 
 interface AdminUser {
@@ -215,7 +216,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
         is_verified: false
     });
     const [showPassword, setShowPassword] = useState(false);
-    const [appSettings, setAppSettings] = useState<{ anonymous_mock_mode_enabled: boolean; is_development: boolean } | null>(null);
+    const [appSettings, setAppSettings] = useState<AppSettings | null>(null);
     
     // Models management state
     const [models, setModels] = useState<AvailableModelsResponse | null>(null);
@@ -258,30 +259,13 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
 
     const fetchAppSettings = useCallback(async () => {
         try {
-            const headers = getAuthHeaders();
-
-            const response = await fetch('/api/admin/settings', {
-                headers,
-                credentials: 'include'
-            });
-
-            if (!response.ok) {
-                if (response.status === 401) {
-                    throw new Error('Authentication required. Please log in again.');
-                } else if (response.status === 403) {
-                    throw new Error('Access denied. Admin privileges required.');
-                } else {
-                    throw new Error(`Failed to fetch app settings (${response.status})`);
-                }
-            }
-
-            const data = await response.json();
+            const data = await getAppSettings();
             setAppSettings(data);
         } catch (err) {
             console.error('Error fetching app settings:', err);
             setError(err instanceof Error ? err.message : 'Failed to fetch app settings');
         }
-    }, [getAuthHeaders]);
+    }, []);
 
     const fetchActionLogs = useCallback(async (page = 1, actionType?: string) => {
         try {
@@ -805,25 +789,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
 
     const toggleAnonymousMockMode = async () => {
         try {
-            const headers = getAuthHeaders();
-
-            const response = await fetch('/api/admin/settings/toggle-anonymous-mock-mode', {
-                method: 'POST',
-                headers,
-                credentials: 'include'
-            });
-
-            if (!response.ok) {
-                if (response.status === 401) {
-                    throw new Error('Authentication required. Please log in again.');
-                } else if (response.status === 403) {
-                    throw new Error('Access denied. Admin privileges required.');
-                } else {
-                    throw new Error(`Failed to toggle anonymous mock mode (${response.status})`);
-                }
-            }
-
-            const data = await response.json();
+            const data = await toggleMockMode();
             
             // Update state immediately from the toggle response
             if (appSettings) {

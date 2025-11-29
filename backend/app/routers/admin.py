@@ -934,11 +934,17 @@ async def get_app_settings(
         db.refresh(settings)
         invalidate_app_settings_cache()
 
+    # Format datetime fields for JSON serialization
+    created_at_str = settings.created_at.isoformat() if settings.created_at else None
+    updated_at_str = settings.updated_at.isoformat() if settings.updated_at else None
+    
     return {
         "anonymous_mock_mode_enabled": (
             settings.anonymous_mock_mode_enabled if is_development else False
         ),
         "is_development": is_development,
+        "created_at": created_at_str,
+        "updated_at": updated_at_str,
     }
 
 

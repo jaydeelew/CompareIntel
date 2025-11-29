@@ -1569,7 +1569,7 @@ async def get_credit_balance(
     current_user: Optional[User] = Depends(get_current_user),
     request: Request = None,
     fingerprint: Optional[str] = None,
-    timezone: Optional[str] = None,
+    timezone_param: Optional[str] = None,
 ):
     """
     Get current credit balance and usage statistics.
