@@ -5,7 +5,7 @@ import { useAuth, useAuthHeaders } from '../../contexts/AuthContext';
 import type { AvailableModelsResponse } from '../../services/modelsService';
 import type { Model } from '../../types/models';
 import { LoadingSpinner } from '../shared/LoadingSpinner';
-import { getAppSettings, toggleAnonymousMockMode as toggleMockMode, type AppSettings } from '../../services/adminService';
+import { getAppSettings, toggleAnonymousMockMode as toggleAnonymousMockModeService, type AppSettings } from '../../services/adminService';
 import './AdminPanel.css';
 
 interface AdminUser {
@@ -121,7 +121,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
     // Ref to track scroll position
     const scrollPositionRef = useRef<number>(0);
     const adminPanelRef = useRef<HTMLDivElement>(null);
-    
+
     // Update collapsed state when window is resized
     useEffect(() => {
         const handleResize = () => {
@@ -131,18 +131,18 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                 role: isMobile ? prev.role : false
             }));
         };
-        
+
         window.addEventListener('resize', handleResize);
         return () => window.removeEventListener('resize', handleResize);
     }, []);
-    
+
     // Save activeTab to sessionStorage whenever it changes
     useEffect(() => {
         if (typeof window !== 'undefined') {
             sessionStorage.setItem('adminPanel_activeTab', activeTab);
         }
     }, [activeTab]);
-    
+
     // Save scroll position before operations and restore after
     const saveScrollPosition = () => {
         if (typeof window !== 'undefined' && adminPanelRef.current) {
@@ -150,7 +150,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
             sessionStorage.setItem('adminPanel_scrollPosition', String(scrollPositionRef.current));
         }
     };
-    
+
     const restoreScrollPosition = () => {
         if (typeof window !== 'undefined' && adminPanelRef.current) {
             const savedScroll = sessionStorage.getItem('adminPanel_scrollPosition');
@@ -165,23 +165,23 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
             }
         }
     };
-    
+
     // Save scroll position on scroll
     useEffect(() => {
         const panel = adminPanelRef.current;
         if (!panel) return;
-        
+
         const handleScroll = () => {
             scrollPositionRef.current = panel.scrollTop;
             if (typeof window !== 'undefined') {
                 sessionStorage.setItem('adminPanel_scrollPosition', String(panel.scrollTop));
             }
         };
-        
+
         panel.addEventListener('scroll', handleScroll, { passive: true });
         return () => panel.removeEventListener('scroll', handleScroll);
     }, []);
-    
+
     // Ensure we stay on /admin route - prevent navigation away
     // But don't navigate if we're in the middle of an operation
     useEffect(() => {
@@ -189,7 +189,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
             navigate('/admin', { replace: true });
         }
     }, [location.pathname, user?.is_admin, navigate]);
-    
+
     // On mount, restore activeTab and scroll position from sessionStorage (in case component remounted)
     useEffect(() => {
         if (typeof window !== 'undefined') {
@@ -246,7 +246,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
     });
     const [showPassword, setShowPassword] = useState(false);
     const [appSettings, setAppSettings] = useState<AppSettings | null>(null);
-    
+
     // Models management state
     const [models, setModels] = useState<AvailableModelsResponse | null>(null);
     const [modelsLoading, setModelsLoading] = useState(false);
@@ -421,12 +421,12 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
 
         // Save scroll position BEFORE starting the operation
         saveScrollPosition();
-        
+
         // Ensure we're on /admin route BEFORE starting the operation
         if (location.pathname !== '/admin') {
             navigate('/admin', { replace: true });
         }
-        
+
         // Save to sessionStorage immediately so it persists even if component remounts
         if (typeof window !== 'undefined') {
             sessionStorage.setItem('adminPanel_activeTab', 'models');
@@ -507,7 +507,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                     if (line.startsWith('data: ')) {
                         try {
                             const data = JSON.parse(line.slice(6));
-                            
+
                             if (data.type === 'progress') {
                                 setModelProgress({
                                     stage: data.stage || 'processing',
@@ -564,12 +564,12 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
 
         // Save scroll position BEFORE starting the operation
         saveScrollPosition();
-        
+
         // Ensure we're on /admin route BEFORE starting the operation
         if (location.pathname !== '/admin') {
             navigate('/admin', { replace: true });
         }
-        
+
         // Save to sessionStorage immediately so it persists even if component remounts
         if (typeof window !== 'undefined') {
             sessionStorage.setItem('adminPanel_activeTab', 'models');
@@ -818,8 +818,8 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
 
     const toggleAnonymousMockMode = async () => {
         try {
-            const data = await toggleMockMode();
-            
+            const data = await toggleAnonymousMockModeService();
+
             // Update state immediately from the toggle response
             if (appSettings) {
                 setAppSettings({
@@ -1189,24 +1189,24 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
 
                     <div className="stats-breakdown">
                         <div className="breakdown-section">
-                            <button 
+                            <button
                                 className="breakdown-toggle"
                                 onClick={() => toggleBreakdown('tier')}
                                 aria-expanded={!breakdownCollapsed.tier}
                             >
                                 <h3>Users by Subscription Tier</h3>
-                                <svg 
+                                <svg
                                     className={`breakdown-chevron ${!breakdownCollapsed.tier ? 'expanded' : ''}`}
-                                    width="20" 
-                                    height="20" 
-                                    viewBox="0 0 24 24" 
-                                    fill="none" 
-                                    stroke="currentColor" 
-                                    strokeWidth="2" 
-                                    strokeLinecap="round" 
+                                    width="20"
+                                    height="20"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="2"
+                                    strokeLinecap="round"
                                     strokeLinejoin="round"
                                 >
-                                    <path d="M6 9l6 6 6-6"/>
+                                    <path d="M6 9l6 6 6-6" />
                                 </svg>
                             </button>
                             <div className={`breakdown-list ${breakdownCollapsed.tier ? 'collapsed' : 'expanded'}`}>
@@ -1220,24 +1220,24 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                         </div>
 
                         <div className="breakdown-section">
-                            <button 
+                            <button
                                 className="breakdown-toggle"
                                 onClick={() => toggleBreakdown('role')}
                                 aria-expanded={!breakdownCollapsed.role}
                             >
                                 <h3>Users by Role</h3>
-                                <svg 
+                                <svg
                                     className={`breakdown-chevron ${!breakdownCollapsed.role ? 'expanded' : ''}`}
-                                    width="20" 
-                                    height="20" 
-                                    viewBox="0 0 24 24" 
-                                    fill="none" 
-                                    stroke="currentColor" 
-                                    strokeWidth="2" 
-                                    strokeLinecap="round" 
+                                    width="20"
+                                    height="20"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="2"
+                                    strokeLinecap="round"
                                     strokeLinejoin="round"
                                 >
-                                    <path d="M6 9l6 6 6-6"/>
+                                    <path d="M6 9l6 6 6-6" />
                                 </svg>
                             </button>
                             <div className={`breakdown-list ${breakdownCollapsed.role ? 'collapsed' : 'expanded'}`}>
@@ -1266,9 +1266,9 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                     disabled={isModelOperationRef.current || addingModel || deletingModel}
                 >
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
-                        <circle cx="9" cy="7" r="4"/>
-                        <path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
+                        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                        <circle cx="9" cy="7" r="4" />
+                        <path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
                     </svg>
                     Users
                 </button>
@@ -1277,8 +1277,8 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                     onClick={() => setActiveTab('models')}
                 >
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M12 2v20M2 12h20"/>
-                        <circle cx="12" cy="12" r="2"/>
+                        <path d="M12 2v20M2 12h20" />
+                        <circle cx="12" cy="12" r="2" />
                     </svg>
                     Models
                 </button>
@@ -1293,8 +1293,8 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                     disabled={isModelOperationRef.current || addingModel || deletingModel}
                 >
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/>
-                        <path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/>
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z" />
+                        <path d="M14 2v6h6M16 13H8M16 17H8M10 9H8" />
                     </svg>
                     Action Logs
                 </button>
@@ -1309,8 +1309,8 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                     disabled={isModelOperationRef.current || addingModel || deletingModel}
                 >
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M3 3v18h18M7 16l4-4 4 4 6-6"/>
-                        <path d="M7 10h.01M11 7h.01M15 4h.01"/>
+                        <path d="M3 3v18h18M7 16l4-4 4 4 6-6" />
+                        <path d="M7 10h.01M11 7h.01M15 4h.01" />
                     </svg>
                     <span className="admin-tab-text-desktop">Visitor Analytics</span>
                     <span className="admin-tab-text-mobile">Analytics</span>
@@ -1328,9 +1328,9 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                             disabled={modelsLoading}
                         >
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                                <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/>
-                                <path d="M21 3v5h-5M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/>
-                                <path d="M8 16H3v5"/>
+                                <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
+                                <path d="M21 3v5h-5M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" />
+                                <path d="M8 16H3v5" />
                             </svg>
                             Refresh
                         </button>
@@ -1572,9 +1572,9 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                             disabled={logsLoading}
                         >
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                                <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/>
-                                <path d="M21 3v5h-5M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/>
-                                <path d="M8 16H3v5"/>
+                                <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
+                                <path d="M21 3v5h-5M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" />
+                                <path d="M8 16H3v5" />
                             </svg>
                             Refresh
                         </button>
@@ -1629,8 +1629,8 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                                 disabled={logsLoading}
                             >
                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                                    <circle cx="11" cy="11" r="8"/>
-                                    <path d="m21 21-4.35-4.35"/>
+                                    <circle cx="11" cy="11" r="8" />
+                                    <path d="m21 21-4.35-4.35" />
                                 </svg>
                                 Search
                             </button>
@@ -1755,16 +1755,16 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                             {analyticsLoading ? (
                                 <>
                                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                                        <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+                                        <path d="M21 12a9 9 0 1 1-6.219-8.56" />
                                     </svg>
                                     Loading...
                                 </>
                             ) : (
                                 <>
                                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                                        <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/>
-                                        <path d="M21 3v5h-5M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/>
-                                        <path d="M8 16H3v5"/>
+                                        <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
+                                        <path d="M21 3v5h-5M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" />
+                                        <path d="M8 16H3v5" />
                                     </svg>
                                     Refresh
                                 </>
@@ -1851,7 +1851,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                                             const barHeight = maxVisitors > 0 ? (day.unique_visitors / maxVisitors) * 100 : 0;
                                             const date = new Date(day.date);
                                             const isToday = date.toDateString() === new Date().toDateString();
-                                            
+
                                             return (
                                                 <div key={index} className="daily-chart-bar-container">
                                                     <div className="daily-chart-bar-wrapper">
@@ -1911,9 +1911,9 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                                                 return (
                                                     <tr key={index} className={isToday ? 'today-row' : ''}>
                                                         <td>
-                                                            {date.toLocaleDateString('en-US', { 
+                                                            {date.toLocaleDateString('en-US', {
                                                                 weekday: 'short',
-                                                                month: 'short', 
+                                                                month: 'short',
                                                                 day: 'numeric',
                                                                 year: 'numeric'
                                                             })}
@@ -1966,9 +1966,9 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                                         title="Zero out all anonymous user usage and clear comparison history"
                                     >
                                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                                            <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/>
-                                            <path d="M21 3v5h-5M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/>
-                                            <path d="M8 16H3v5"/>
+                                            <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
+                                            <path d="M21 3v5h-5M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" />
+                                            <path d="M8 16H3v5" />
                                         </svg>
                                         {historyCleared ? 'History Cleared' : 'Anonymous Zero Usage'}
                                     </button>
@@ -1992,7 +1992,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                             onClick={() => setShowCreateModal(true)}
                         >
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                                <path d="M5 12h14M12 5v14"/>
+                                <path d="M5 12h14M12 5v14" />
                             </svg>
                             Create User
                         </button>
@@ -2040,8 +2040,8 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                                 onClick={handleManualSearch}
                             >
                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                                    <circle cx="11" cy="11" r="8"/>
-                                    <path d="m21 21-4.35-4.35"/>
+                                    <circle cx="11" cy="11" r="8" />
+                                    <path d="m21 21-4.35-4.35" />
                                 </svg>
                                 Search
                             </button>
@@ -2104,12 +2104,12 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                                                     <span className={`verified-badge ${userRow.is_verified ? 'verified' : 'unverified'}`}>
                                                         {userRow.is_verified ? (
                                                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                                                                <polyline points="20 6 9 17 4 12"/>
+                                                                <polyline points="20 6 9 17 4 12" />
                                                             </svg>
                                                         ) : (
                                                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                                                                <line x1="18" y1="6" x2="6" y2="18"/>
-                                                                <line x1="6" y1="6" x2="18" y2="18"/>
+                                                                <line x1="18" y1="6" x2="6" y2="18" />
+                                                                <line x1="6" y1="6" x2="18" y2="18" />
                                                             </svg>
                                                         )}
                                                     </span>
@@ -2189,31 +2189,29 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                             <div className="users-cards-mobile">
                                 {users.users.map((userRow) => (
                                     <div key={userRow.id} className="user-card">
-                                        <div className="user-card-header">
-                                            <div className="user-card-email">{userRow.email}</div>
-                                            <div className="user-card-badges">
-                                                <span className={`role-badge role-${userRow.role}`}>
-                                                    {userRow.role}
+                                        <div className="user-card-email">{userRow.email}</div>
+                                        <div className="user-card-badges">
+                                            <span className={`role-badge role-${userRow.role}`}>
+                                                {userRow.role}
+                                            </span>
+                                            {user?.role === 'super_admin' ? (
+                                                <select
+                                                    value={userRow.subscription_tier}
+                                                    onChange={(e) => handleTierChangeClick(userRow.id, userRow.email, userRow.subscription_tier, e.target.value)}
+                                                    className="tier-select"
+                                                    title="Change subscription tier (Super Admin only)"
+                                                >
+                                                    <option value="free">Free</option>
+                                                    <option value="starter">Starter</option>
+                                                    <option value="starter_plus">Starter+</option>
+                                                    <option value="pro">Pro</option>
+                                                    <option value="pro_plus">Pro+</option>
+                                                </select>
+                                            ) : (
+                                                <span className={`tier-badge tier-${userRow.subscription_tier}`}>
+                                                    {userRow.subscription_tier}
                                                 </span>
-                                                {user?.role === 'super_admin' ? (
-                                                    <select
-                                                        value={userRow.subscription_tier}
-                                                        onChange={(e) => handleTierChangeClick(userRow.id, userRow.email, userRow.subscription_tier, e.target.value)}
-                                                        className="tier-select"
-                                                        title="Change subscription tier (Super Admin only)"
-                                                    >
-                                                        <option value="free">Free</option>
-                                                        <option value="starter">Starter</option>
-                                                        <option value="starter_plus">Starter+</option>
-                                                        <option value="pro">Pro</option>
-                                                        <option value="pro_plus">Pro+</option>
-                                                    </select>
-                                                ) : (
-                                                    <span className={`tier-badge tier-${userRow.subscription_tier}`}>
-                                                        {userRow.subscription_tier}
-                                                    </span>
-                                                )}
-                                            </div>
+                                            )}
                                         </div>
 
                                         <div className="user-card-row">
@@ -2231,12 +2229,12 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                                                 <span className={`verified-badge ${userRow.is_verified ? 'verified' : 'unverified'}`}>
                                                     {userRow.is_verified ? (
                                                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                                                            <polyline points="20 6 9 17 4 12"/>
+                                                            <polyline points="20 6 9 17 4 12" />
                                                         </svg>
                                                     ) : (
                                                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                                                            <line x1="18" y1="6" x2="6" y2="18"/>
-                                                            <line x1="6" y1="6" x2="18" y2="18"/>
+                                                            <line x1="18" y1="6" x2="6" y2="18" />
+                                                            <line x1="6" y1="6" x2="18" y2="18" />
                                                         </svg>
                                                     )}
                                                 </span>
@@ -2354,8 +2352,8 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                         <div className="modal-header">
                             <h2>
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '0.5rem' }}>
-                                    <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/>
-                                    <path d="M12 9v4M12 17h.01"/>
+                                    <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" />
+                                    <path d="M12 9v4M12 17h.01" />
                                 </svg>
                                 Confirm Delete
                             </h2>
@@ -2365,8 +2363,8 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                                 aria-label="Close"
                             >
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                    <line x1="18" y1="6" x2="6" y2="18"/>
-                                    <line x1="6" y1="6" x2="18" y2="18"/>
+                                    <line x1="18" y1="6" x2="6" y2="18" />
+                                    <line x1="6" y1="6" x2="18" y2="18" />
                                 </svg>
                             </button>
                         </div>
@@ -2410,9 +2408,9 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                         <div className="modal-header">
                             <h2>
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '0.5rem' }}>
-                                    <circle cx="12" cy="12" r="10"/>
-                                    <line x1="12" y1="8" x2="12" y2="12"/>
-                                    <line x1="12" y1="16" x2="12.01" y2="16"/>
+                                    <circle cx="12" cy="12" r="10" />
+                                    <line x1="12" y1="8" x2="12" y2="12" />
+                                    <line x1="12" y1="16" x2="12.01" y2="16" />
                                 </svg>
                                 Cannot Delete Self
                             </h2>
@@ -2422,8 +2420,8 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                                 aria-label="Close"
                             >
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                    <line x1="18" y1="6" x2="6" y2="18"/>
-                                    <line x1="6" y1="6" x2="18" y2="18"/>
+                                    <line x1="18" y1="6" x2="6" y2="18" />
+                                    <line x1="6" y1="6" x2="18" y2="18" />
                                 </svg>
                             </button>
                         </div>
@@ -2460,8 +2458,8 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                         <div className="modal-header">
                             <h2>
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '0.5rem' }}>
-                                    <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/>
-                                    <path d="M12 9v4M12 17h.01"/>
+                                    <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" />
+                                    <path d="M12 9v4M12 17h.01" />
                                 </svg>
                                 Confirm Tier Change
                             </h2>
@@ -2471,8 +2469,8 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                                 aria-label="Close"
                             >
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                    <line x1="18" y1="6" x2="6" y2="18"/>
-                                    <line x1="6" y1="6" x2="18" y2="18"/>
+                                    <line x1="18" y1="6" x2="6" y2="18" />
+                                    <line x1="6" y1="6" x2="18" y2="18" />
                                 </svg>
                             </button>
                         </div>
@@ -2501,8 +2499,8 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                             <p className="tier-change-note">
                                 <strong>
                                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '0.25rem' }}>
-                                        <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/>
-                                        <path d="M12 9v4M12 17h.01"/>
+                                        <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" />
+                                        <path d="M12 9v4M12 17h.01" />
                                     </svg>
                                     Warning:
                                 </strong> This will immediately change the user's subscription tier and may affect their access limits, features, and billing. This action will be logged in the admin audit trail.
@@ -2547,8 +2545,8 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                                 aria-label="Close"
                             >
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                    <line x1="18" y1="6" x2="6" y2="18"/>
-                                    <line x1="6" y1="6" x2="18" y2="18"/>
+                                    <line x1="18" y1="6" x2="6" y2="18" />
+                                    <line x1="6" y1="6" x2="18" y2="18" />
                                 </svg>
                             </button>
                         </div>
@@ -2586,15 +2584,15 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                                     >
                                         {showPassword ? (
                                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                                                <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/>
-                                                <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/>
-                                                <path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/>
-                                                <line x1="2" y1="2" x2="22" y2="22"/>
+                                                <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24" />
+                                                <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68" />
+                                                <path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61" />
+                                                <line x1="2" y1="2" x2="22" y2="22" />
                                             </svg>
                                         ) : (
                                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                                                <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/>
-                                                <circle cx="12" cy="12" r="3"/>
+                                                <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
+                                                <circle cx="12" cy="12" r="3" />
                                             </svg>
                                         )}
                                     </button>
@@ -2808,9 +2806,9 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                         <div className="modal-header">
                             <h2>
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '0.5rem' }}>
-                                    <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
-                                    <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
-                                    <line x1="12" y1="22.08" x2="12" y2="12"/>
+                                    <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+                                    <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
+                                    <line x1="12" y1="22.08" x2="12" y2="12" />
                                 </svg>
                                 Adding Model
                             </h2>
@@ -2819,9 +2817,9 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                             <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: '1.5rem' }}>
                                 <LoadingSpinner size="large" modern={true} />
                             </div>
-                            <p style={{ 
-                                marginTop: '0', 
-                                color: 'var(--text-primary)', 
+                            <p style={{
+                                marginTop: '0',
+                                color: 'var(--text-primary)',
                                 fontSize: '1rem',
                                 fontWeight: 500
                             }}>
@@ -2829,9 +2827,9 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                             </p>
                             {modelProgress && (
                                 <>
-                                    <p style={{ 
-                                        marginTop: '1rem', 
-                                        color: 'var(--text-primary)', 
+                                    <p style={{
+                                        marginTop: '1rem',
+                                        color: 'var(--text-primary)',
                                         fontSize: '0.95rem',
                                         fontWeight: 600
                                     }}>
@@ -2853,9 +2851,9 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                                             borderRadius: '4px'
                                         }} />
                                     </div>
-                                    <p style={{ 
-                                        marginTop: '0.5rem', 
-                                        color: 'var(--text-secondary)', 
+                                    <p style={{
+                                        marginTop: '0.5rem',
+                                        color: 'var(--text-secondary)',
                                         fontSize: '0.75rem'
                                     }}>
                                         {Math.round(modelProgress.progress)}% complete
@@ -2863,9 +2861,9 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                                 </>
                             )}
                             {!modelProgress && (
-                                <p style={{ 
-                                    marginTop: '0.5rem', 
-                                    color: 'var(--text-secondary)', 
+                                <p style={{
+                                    marginTop: '0.5rem',
+                                    color: 'var(--text-secondary)',
                                     fontSize: '0.875rem'
                                 }}>
                                     Please wait while we validate and add the model to your system.

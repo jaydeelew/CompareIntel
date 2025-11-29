@@ -42,12 +42,10 @@ button:hover {
   left: 0;
   right: 0;
   height: 4px;
-  background: linear-gradient(
-    90deg,
-    var(--primary-color),
-    var(--accent-color),
-    var(--success-color)
-  );
+  background: linear-gradient(90deg,
+      var(--primary-color),
+      var(--accent-color),
+      var(--success-color));
 }
 
 .admin-header-content {
@@ -384,6 +382,7 @@ button:hover {
 
 /* Desktop: Always visible */
 @media (min-width: 769px) {
+
   .breakdown-list.collapsed,
   .breakdown-list.expanded {
     max-height: none;
@@ -1260,18 +1259,19 @@ button:hover {
   }
 
   /* Better spacing for mobile */
-  .admin-panel > * {
+  .admin-panel>* {
     margin-bottom: 1.5rem;
   }
 
-  .admin-panel > *:last-child {
+  .admin-panel>*:last-child {
     margin-bottom: 0;
   }
 
   /* Improved form inputs on mobile */
   input,
   select {
-    font-size: 16px; /* Prevents zoom on iOS */
+    font-size: 16px;
+    /* Prevents zoom on iOS */
   }
 
   /* Better scroll behavior */
@@ -1283,6 +1283,7 @@ button:hover {
 
 /* Desktop: Hide cards, show tables */
 @media (min-width: 769px) {
+
   .users-cards-mobile,
   .logs-cards-mobile {
     display: none;
@@ -1310,6 +1311,7 @@ button:hover {
 
 /* Mobile Card Layouts */
 @media (max-width: 768px) {
+
   /* User Card Layout */
   .users-cards-mobile {
     display: block;
@@ -1330,29 +1332,23 @@ button:hover {
     box-shadow: var(--shadow-sm);
   }
 
-  .user-card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 1rem;
-    padding-bottom: 1rem;
-    border-bottom: 1px solid var(--border-color);
-  }
-
   .user-card-email {
     font-weight: 700;
     color: var(--text-primary);
     font-size: 1rem;
     word-break: break-word;
-    flex: 1;
-    margin-right: 0.5rem;
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border-color);
   }
 
   .user-card-badges {
     display: flex;
     flex-wrap: wrap;
     gap: 0.5rem;
-    margin-top: 0.5rem;
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border-color);
   }
 
   .user-card-row {
@@ -1570,12 +1566,10 @@ button:hover {
 
 /* Loading States */
 .loading-skeleton {
-  background: linear-gradient(
-    90deg,
-    var(--bg-tertiary) 25%,
-    var(--bg-secondary) 50%,
-    var(--bg-tertiary) 75%
-  );
+  background: linear-gradient(90deg,
+      var(--bg-tertiary) 25%,
+      var(--bg-secondary) 50%,
+      var(--bg-tertiary) 75%);
   background-size: 200% 100%;
   animation: loading 1.5s infinite;
 }
