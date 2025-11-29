@@ -137,7 +137,7 @@ export async function listUsers(params?: {
 
   const queryString = queryParams.toString();
   const url = `/admin/users${queryString ? `?${queryString}` : ''}`;
-  
+
   const response = await apiClient.get<AdminUserList>(url);
   return response.data;
 }
@@ -328,7 +328,7 @@ export async function getActionLogs(params?: {
 
   const queryString = queryParams.toString();
   const url = `/admin/action-logs${queryString ? `?${queryString}` : ''}`;
-  
+
   const response = await apiClient.get<AdminActionLog[]>(url);
   return response.data;
 }
