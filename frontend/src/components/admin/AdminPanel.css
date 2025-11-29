@@ -1013,7 +1013,8 @@ button:hover {
     flex: 1;
     text-align: center;
     min-width: 0;
-    padding: 0 3rem;
+    padding: 3rem 4rem 0 3rem;
+    margin-top: 0;
   }
 
   .admin-title-section h1 {
@@ -1023,6 +1024,8 @@ button:hover {
 
   .admin-title-section p {
     font-size: 0.9rem;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
   }
 
   .sign-out-button {
@@ -1031,6 +1034,7 @@ button:hover {
     right: 0;
     padding: 0.625rem 1.25rem;
     font-size: 0.875rem;
+    z-index: 5;
   }
 
   .admin-stats {
@@ -1442,7 +1446,7 @@ button:hover {
   }
 
   .admin-title-section {
-    padding: 0 2.5rem;
+    padding: 2.5rem 3.5rem 0 2.5rem;
   }
 
   .back-button {
@@ -1457,11 +1461,14 @@ button:hover {
 
   .admin-title-section p {
     font-size: 0.85rem;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
   }
 
   .sign-out-button {
     padding: 0.5rem 1rem;
     font-size: 0.8rem;
+    z-index: 5;
   }
 
   .admin-stats,
