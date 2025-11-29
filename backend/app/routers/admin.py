@@ -1371,7 +1371,7 @@ async def validate_model(
     db: Session = Depends(get_db),
 ):
     """
-    Validate that a model exists in OpenRouter.
+    Validate that a model exists in OpenRouter and is callable.
     """
     model_id = req.model_id.strip()
     
@@ -1387,10 +1387,17 @@ async def validate_model(
                     detail=f"Model {model_id} already exists in model_runner.py"
                 )
     
-    # Check if model exists in OpenRouter by making a test API call
+    # First, check if model exists in OpenRouter's model list
+    model_data = await fetch_model_data_from_openrouter(model_id)
+    if not model_data:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Model {model_id} not found in OpenRouter's model list"
+        )
+    
+    # Model exists in the list, now verify it's actually callable
     try:
-        # Make a minimal test call to OpenRouter to validate the model exists
-        # We'll use a very small prompt with minimal tokens to check if model is available
+        # Make a minimal test call to OpenRouter to validate the model is callable
         test_response = client.chat.completions.create(
             model=model_id,
             messages=[{"role": "user", "content": "Hi"}],
@@ -1413,55 +1420,40 @@ async def validate_model(
         return {
             "valid": True,
             "model_id": model_id,
-            "message": f"Model {model_id} exists in OpenRouter"
+            "message": f"Model {model_id} exists in OpenRouter and is callable"
         }
         
     except HTTPException:
         raise
-    except NotFoundError:
-        # Model not found in OpenRouter
+    except NotFoundError as e:
+        # This shouldn't happen if model is in the list, but handle it anyway
         raise HTTPException(
             status_code=404,
-            detail=f"Model {model_id} not found in OpenRouter"
+            detail=f"Model {model_id} found in OpenRouter's list but API call failed: {str(e)}"
         )
     except (RateLimitError, APITimeoutError, APIConnectionError) as e:
         # Temporary errors - network issues, rate limits, timeouts
-        # These are temporary and shouldn't block validation, but we should inform the user
         return {
             "valid": False,
             "model_id": model_id,
-            "message": f"Unable to validate model {model_id} due to temporary error: {str(e)}. Please try again later."
+            "message": f"Model {model_id} exists in OpenRouter but validation failed due to temporary error: {str(e)}. Please try again later."
         }
     except APIError as e:
-        # Other API errors - likely invalid model
-        error_str = str(e).lower()
-        if "not found" in error_str or "404" in error_str or "model" in error_str and ("not available" in error_str or "invalid" in error_str or "does not exist" in error_str):
-            raise HTTPException(
-                status_code=404,
-                detail=f"Model {model_id} not found in OpenRouter"
-            )
-        else:
-            # Unknown API error - treat as invalid model
-            return {
-                "valid": False,
-                "model_id": model_id,
-                "message": f"Model {model_id} validation failed: {str(e)}"
-            }
+        # Return the actual error message so user knows what went wrong
+        error_str = str(e)
+        return {
+            "valid": False,
+            "model_id": model_id,
+            "message": f"Model {model_id} exists in OpenRouter's list but API call failed: {error_str}. The model may require special access, be in beta, or have other restrictions."
+        }
     except Exception as e:
-        # Unexpected errors - treat as validation failure
-        error_str = str(e).lower()
-        if "not found" in error_str or "404" in error_str or "model" in error_str and ("not available" in error_str or "invalid" in error_str or "does not exist" in error_str):
-            raise HTTPException(
-                status_code=404,
-                detail=f"Model {model_id} not found in OpenRouter"
-            )
-        else:
-            # Unknown error - treat as invalid model
-            return {
-                "valid": False,
-                "model_id": model_id,
-                "message": f"Model {model_id} validation failed: {str(e)}"
-            }
+        # Unexpected errors - return the actual error
+        error_str = str(e)
+        return {
+            "valid": False,
+            "model_id": model_id,
+            "message": f"Model {model_id} exists in OpenRouter's list but validation failed: {error_str}"
+        }
 
 
 @router.post("/models/add")

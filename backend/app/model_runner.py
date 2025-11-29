@@ -61,9 +61,7 @@ ANONYMOUS_TIER_MODELS = {
     # Meta - Free/open models
     "meta-llama/llama-3.3-70b-instruct:free",
     "meta-llama/llama-3.3-70b-instruct",  # Also allow non-free version
-    # Microsoft - Free models
-    "microsoft/mai-ds-r1:free",
-    "microsoft/phi-4",  # Efficient reasoning model
+    # Microsoft - Free models"microsoft/phi-4",  # Efficient reasoning model
     # Mistral - Small/efficient models
     "mistralai/mistral-small-3.2-24b-instruct",
     "mistralai/devstral-small",  # Smaller code model
@@ -339,15 +337,7 @@ MODELS_BY_PROVIDER = {
             "description": "[Microsoft Research](/microsoft) Phi-4 is designed to perform well in complex reasoning tasks and can operate efficiently in situations with limited memory or where quick responses are needed.",
             "category": "Language/Reasoning",
             "provider": "Microsoft",
-        },
-        {
-            "id": "microsoft/mai-ds-r1:free",
-            "name": "MAI-DS-R1 (Free)",
-            "description": "MAI-DS-R1 is a post-trained variant of DeepSeek-R1 developed by the Microsoft AI team to improve the model’s responsiveness on previously blocked topics while enhancing its safety profile.",
-            "category": "Reasoning",
-            "provider": "Microsoft",
-        },
-    ],
+        },    ],
     "Mistral": [
         {
             "id": "mistralai/mistral-large",
