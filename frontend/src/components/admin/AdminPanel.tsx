@@ -101,11 +101,40 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
         return 'users';
     };
     const [activeTab, setActiveTab] = useState<AdminTab>(getInitialTab);
+    // State for collapsed breakdown sections on mobile
+    const [breakdownCollapsed, setBreakdownCollapsed] = useState<{ [key: string]: boolean }>(() => {
+        // Start collapsed on mobile by default
+        if (typeof window !== 'undefined' && window.innerWidth <= 768) {
+            return { tier: true, role: true };
+        }
+        return { tier: false, role: false };
+    });
+    // Toggle breakdown section collapse state
+    const toggleBreakdown = (section: 'tier' | 'role') => {
+        setBreakdownCollapsed(prev => ({
+            ...prev,
+            [section]: !prev[section]
+        }));
+    };
     // Keep track of whether we're in a model operation to prevent tab changes
     const isModelOperationRef = useRef(false);
     // Ref to track scroll position
     const scrollPositionRef = useRef<number>(0);
     const adminPanelRef = useRef<HTMLDivElement>(null);
+    
+    // Update collapsed state when window is resized
+    useEffect(() => {
+        const handleResize = () => {
+            const isMobile = window.innerWidth <= 768;
+            setBreakdownCollapsed(prev => ({
+                tier: isMobile ? prev.tier : false,
+                role: isMobile ? prev.role : false
+            }));
+        };
+        
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
     
     // Save activeTab to sessionStorage whenever it changes
     useEffect(() => {
@@ -1160,8 +1189,27 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
 
                     <div className="stats-breakdown">
                         <div className="breakdown-section">
-                            <h3>Users by Subscription Tier</h3>
-                            <div className="breakdown-list">
+                            <button 
+                                className="breakdown-toggle"
+                                onClick={() => toggleBreakdown('tier')}
+                                aria-expanded={!breakdownCollapsed.tier}
+                            >
+                                <h3>Users by Subscription Tier</h3>
+                                <svg 
+                                    className={`breakdown-chevron ${!breakdownCollapsed.tier ? 'expanded' : ''}`}
+                                    width="20" 
+                                    height="20" 
+                                    viewBox="0 0 24 24" 
+                                    fill="none" 
+                                    stroke="currentColor" 
+                                    strokeWidth="2" 
+                                    strokeLinecap="round" 
+                                    strokeLinejoin="round"
+                                >
+                                    <path d="M6 9l6 6 6-6"/>
+                                </svg>
+                            </button>
+                            <div className={`breakdown-list ${breakdownCollapsed.tier ? 'collapsed' : 'expanded'}`}>
                                 {Object.entries(stats.users_by_tier).map(([tier, count]) => (
                                     <div key={tier} className="breakdown-item">
                                         <span className="tier-name">{formatName(tier)}</span>
@@ -1172,8 +1220,27 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                         </div>
 
                         <div className="breakdown-section">
-                            <h3>Users by Role</h3>
-                            <div className="breakdown-list">
+                            <button 
+                                className="breakdown-toggle"
+                                onClick={() => toggleBreakdown('role')}
+                                aria-expanded={!breakdownCollapsed.role}
+                            >
+                                <h3>Users by Role</h3>
+                                <svg 
+                                    className={`breakdown-chevron ${!breakdownCollapsed.role ? 'expanded' : ''}`}
+                                    width="20" 
+                                    height="20" 
+                                    viewBox="0 0 24 24" 
+                                    fill="none" 
+                                    stroke="currentColor" 
+                                    strokeWidth="2" 
+                                    strokeLinecap="round" 
+                                    strokeLinejoin="round"
+                                >
+                                    <path d="M6 9l6 6 6-6"/>
+                                </svg>
+                            </button>
+                            <div className={`breakdown-list ${breakdownCollapsed.role ? 'collapsed' : 'expanded'}`}>
                                 {Object.entries(stats.users_by_role).map(([role, count]) => (
                                     <div key={role} className="breakdown-item">
                                         <span className="role-name">{formatName(role)}</span>
