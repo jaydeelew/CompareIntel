@@ -1737,20 +1737,62 @@ async def add_model_stream(
             yield f"data: {json.dumps({'type': 'error', 'message': 'Model ID cannot be empty'})}\n\n"
             return
         
+        # Backup paths for rollback
+        model_runner_path = Path(__file__).parent.parent / "model_runner.py"
+        config_path = Path(__file__).parent.parent.parent / "frontend" / "src" / "config" / "model_renderer_configs.json"
+        backup_model_runner_path = model_runner_path.with_suffix('.py.backup')
+        backup_config_path = config_path.with_suffix('.json.backup')
+        
+        # Save backups before making any changes
+        model_runner_backup = None
+        config_backup = None
+        process = None
+        
         try:
+            # Read and backup model_runner.py
+            with open(model_runner_path, "r", encoding="utf-8") as f:
+                model_runner_backup = f.read()
+            with open(backup_model_runner_path, "w", encoding="utf-8") as f:
+                f.write(model_runner_backup)
+            
+            # Backup renderer config if it exists
+            if config_path.exists():
+                with open(config_path, "r", encoding="utf-8") as f:
+                    config_backup = f.read()
+                with open(backup_config_path, "w", encoding="utf-8") as f:
+                    f.write(config_backup)
+            else:
+                config_backup = None
+            
             # Send initial progress
-            yield f"data: {json.dumps({'type': 'progress', 'stage': 'validating', 'message': f'Validating model {model_id}...', 'progress': 0})}\n\n"
+            try:
+                yield f"data: {json.dumps({'type': 'progress', 'stage': 'validating', 'message': f'Validating model {model_id}...', 'progress': 0})}\n\n"
+            except (BrokenPipeError, ConnectionResetError, ConnectionAbortedError, OSError,
+                    TimeoutError, asyncio.TimeoutError, httpx.ConnectError, httpx.TimeoutException,
+                    httpx.NetworkError, httpx.ConnectTimeout, httpx.ReadTimeout):
+                # Client disconnected or network error, restore backups
+                raise
             
             # Check if model already exists
             for provider, models in MODELS_BY_PROVIDER.items():
                 for model in models:
                     if model["id"] == model_id:
-                        yield f"data: {json.dumps({'type': 'error', 'message': f'Model {model_id} already exists in model_runner.py'})}\n\n"
+                        try:
+                            yield f"data: {json.dumps({'type': 'error', 'message': f'Model {model_id} already exists in model_runner.py'})}\n\n"
+                        except (BrokenPipeError, ConnectionResetError, ConnectionAbortedError, OSError,
+                                TimeoutError, asyncio.TimeoutError, httpx.ConnectError, httpx.TimeoutException,
+                                httpx.NetworkError, httpx.ConnectTimeout, httpx.ReadTimeout):
+                            raise
                         return
             
             # Extract provider from model_id
             if '/' not in model_id:
-                yield f"data: {json.dumps({'type': 'error', 'message': 'Invalid model ID format. Expected: provider/model-name'})}\n\n"
+                try:
+                    yield f"data: {json.dumps({'type': 'error', 'message': 'Invalid model ID format. Expected: provider/model-name'})}\n\n"
+                except (BrokenPipeError, ConnectionResetError, ConnectionAbortedError, OSError,
+                        TimeoutError, asyncio.TimeoutError, httpx.ConnectError, httpx.TimeoutException,
+                        httpx.NetworkError, httpx.ConnectTimeout, httpx.ReadTimeout):
+                    raise
                 return
             
             provider_name = model_id.split('/')[0]
@@ -1766,16 +1808,22 @@ async def add_model_stream(
             model_name = model_name.replace('-', ' ').replace('_', ' ').title()
             
             # Fetch description
-            yield f"data: {json.dumps({'type': 'progress', 'stage': 'fetching', 'message': f'Fetching model description from OpenRouter...', 'progress': 10})}\n\n"
+            try:
+                yield f"data: {json.dumps({'type': 'progress', 'stage': 'fetching', 'message': f'Fetching model description from OpenRouter...', 'progress': 10})}\n\n"
+            except (BrokenPipeError, ConnectionResetError, OSError):
+                raise
             model_description = await fetch_model_description_from_openrouter(model_id)
             
             if not model_description:
                 model_description = f"{provider_name}'s {model_name} model"
             
             # Add model to model_runner.py
-            yield f"data: {json.dumps({'type': 'progress', 'stage': 'adding', 'message': f'Adding model to model_runner.py...', 'progress': 20})}\n\n"
-            
-            model_runner_path = Path(__file__).parent.parent / "model_runner.py"
+            try:
+                yield f"data: {json.dumps({'type': 'progress', 'stage': 'adding', 'message': f'Adding model to model_runner.py...', 'progress': 20})}\n\n"
+            except (BrokenPipeError, ConnectionResetError, ConnectionAbortedError, OSError,
+                    TimeoutError, asyncio.TimeoutError, httpx.ConnectError, httpx.TimeoutException,
+                    httpx.NetworkError, httpx.ConnectTimeout, httpx.ReadTimeout):
+                raise
             
             with open(model_runner_path, "r", encoding="utf-8") as f:
                 content = f.read()
@@ -1795,7 +1843,12 @@ async def add_model_stream(
                     new_provider_section = f',\n    "{provider_name}": [\n        {{\n            "id": "{model_id}",\n            "name": "{model_name}",\n            "description": {escaped_description},\n            "category": "Language",\n            "provider": "{provider_name}",\n        }},\n    ]'
                     content = content[:match.end()-1] + new_provider_section + content[match.end()-1:]
                 else:
-                    yield f"data: {json.dumps({'type': 'error', 'message': 'Could not find MODELS_BY_PROVIDER structure'})}\n\n"
+                    try:
+                        yield f"data: {json.dumps({'type': 'error', 'message': 'Could not find MODELS_BY_PROVIDER structure'})}\n\n"
+                    except (BrokenPipeError, ConnectionResetError, ConnectionAbortedError, OSError,
+                            TimeoutError, asyncio.TimeoutError, httpx.ConnectError, httpx.TimeoutException,
+                            httpx.NetworkError, httpx.ConnectTimeout, httpx.ReadTimeout):
+                        raise
                     return
             else:
                 existing_models = MODELS_BY_PROVIDER.get(provider_name, []).copy()
@@ -1831,7 +1884,12 @@ async def add_model_stream(
                     new_provider_section = f'"{provider_name}": [\n{models_str}\n    ]'
                     content = content[:match.start(1)] + new_provider_section + content[match.end(3):]
                 else:
-                    yield f"data: {json.dumps({'type': 'error', 'message': f'Could not find provider {provider_name} in MODELS_BY_PROVIDER'})}\n\n"
+                    try:
+                        yield f"data: {json.dumps({'type': 'error', 'message': f'Could not find provider {provider_name} in MODELS_BY_PROVIDER'})}\n\n"
+                    except (BrokenPipeError, ConnectionResetError, ConnectionAbortedError, OSError,
+                            TimeoutError, asyncio.TimeoutError, httpx.ConnectError, httpx.TimeoutException,
+                            httpx.NetworkError, httpx.ConnectTimeout, httpx.ReadTimeout):
+                        raise
                     return
             
             # Write back to file
@@ -1839,9 +1897,20 @@ async def add_model_stream(
                 f.write(content)
             
             # Classify model based on OpenRouter pricing and add to appropriate tier set
-            yield f"data: {json.dumps({'type': 'progress', 'stage': 'classifying', 'message': f'Classifying model tier based on pricing...', 'progress': 25})}\n\n"
-            model_data = await fetch_model_data_from_openrouter(model_id)
-            tier_classification = await classify_model_by_pricing(model_id, model_data)
+            try:
+                yield f"data: {json.dumps({'type': 'progress', 'stage': 'classifying', 'message': f'Classifying model tier based on pricing...', 'progress': 25})}\n\n"
+            except (BrokenPipeError, ConnectionResetError, ConnectionAbortedError, OSError,
+                    TimeoutError, asyncio.TimeoutError, httpx.ConnectError, httpx.TimeoutException,
+                    httpx.NetworkError, httpx.ConnectTimeout, httpx.ReadTimeout):
+                raise
+            try:
+                model_data = await fetch_model_data_from_openrouter(model_id)
+                tier_classification = await classify_model_by_pricing(model_id, model_data)
+            except (BrokenPipeError, ConnectionResetError, ConnectionAbortedError, OSError,
+                    TimeoutError, asyncio.TimeoutError, httpx.ConnectError, httpx.TimeoutException,
+                    httpx.NetworkError, httpx.ConnectTimeout, httpx.ReadTimeout) as e:
+                # Network error during API call - trigger rollback
+                raise
             
             # Read file again to add model to tier sets
             with open(model_runner_path, "r", encoding="utf-8") as f:
@@ -1886,7 +1955,12 @@ async def add_model_stream(
             with open(model_runner_path, "w", encoding="utf-8") as f:
                 f.write(content)
             
-            yield f"data: {json.dumps({'type': 'progress', 'stage': 'classifying', 'message': f'Model classified as {tier_classification} tier', 'progress': 27})}\n\n"
+            try:
+                yield f"data: {json.dumps({'type': 'progress', 'stage': 'classifying', 'message': f'Model classified as {tier_classification} tier', 'progress': 27})}\n\n"
+            except (BrokenPipeError, ConnectionResetError, ConnectionAbortedError, OSError,
+                    TimeoutError, asyncio.TimeoutError, httpx.ConnectError, httpx.TimeoutException,
+                    httpx.NetworkError, httpx.ConnectTimeout, httpx.ReadTimeout):
+                raise
             
             # Reload module
             importlib.reload(model_runner)
@@ -1894,7 +1968,12 @@ async def add_model_stream(
             sys.modules[__name__].OPENROUTER_MODELS = model_runner.OPENROUTER_MODELS
             
             # Run setup script with streaming output
-            yield f"data: {json.dumps({'type': 'progress', 'stage': 'setup', 'message': f'Starting renderer configuration setup...', 'progress': 30})}\n\n"
+            try:
+                yield f"data: {json.dumps({'type': 'progress', 'stage': 'setup', 'message': f'Starting renderer configuration setup...', 'progress': 30})}\n\n"
+            except (BrokenPipeError, ConnectionResetError, ConnectionAbortedError, OSError,
+                    TimeoutError, asyncio.TimeoutError, httpx.ConnectError, httpx.TimeoutException,
+                    httpx.NetworkError, httpx.ConnectTimeout, httpx.ReadTimeout):
+                raise
             
             script_path = Path(__file__).parent.parent.parent / "scripts" / "setup_model_renderer.py"
             backend_dir = Path(__file__).parent.parent.parent
@@ -1913,7 +1992,18 @@ async def add_model_stream(
             
             # Read stdout line by line asynchronously
             while True:
-                line_bytes = await process.stdout.readline()
+                try:
+                    line_bytes = await process.stdout.readline()
+                except (BrokenPipeError, ConnectionResetError, ConnectionAbortedError, OSError,
+                        TimeoutError, asyncio.TimeoutError, httpx.ConnectError, httpx.TimeoutException,
+                        httpx.NetworkError, httpx.ConnectTimeout, httpx.ReadTimeout) as e:
+                    # Network error while reading subprocess output - trigger rollback
+                    if process:
+                        try:
+                            process.kill()
+                        except:
+                            pass
+                    raise
                 if not line_bytes:
                     break
                 
@@ -1944,7 +2034,18 @@ async def add_model_stream(
                         else:
                             mapped_progress = 30 + (script_progress * 0.65)
                         
-                        yield f"data: {json.dumps({'type': 'progress', 'stage': stage, 'message': message, 'progress': mapped_progress})}\n\n"
+                        try:
+                            yield f"data: {json.dumps({'type': 'progress', 'stage': stage, 'message': message, 'progress': mapped_progress})}\n\n"
+                        except (BrokenPipeError, ConnectionResetError, ConnectionAbortedError, OSError,
+                                TimeoutError, asyncio.TimeoutError, httpx.ConnectError, httpx.TimeoutException,
+                                httpx.NetworkError, httpx.ConnectTimeout, httpx.ReadTimeout):
+                            # Kill the subprocess if client disconnected or network error
+                            if process:
+                                try:
+                                    process.kill()
+                                except:
+                                    pass
+                            raise
                     except json.JSONDecodeError:
                         pass  # Skip invalid JSON lines
             
@@ -1959,11 +2060,21 @@ async def add_model_stream(
             if return_code != 0:
                 # Get error from stderr
                 error_msg = '\n'.join(stderr_lines[-10:])[:500] if stderr_lines else "Unknown error"
-                yield f"data: {json.dumps({'type': 'error', 'message': f'Renderer config generation failed: {error_msg}'})}\n\n"
+                try:
+                    yield f"data: {json.dumps({'type': 'error', 'message': f'Renderer config generation failed: {error_msg}'})}\n\n"
+                except (BrokenPipeError, ConnectionResetError, ConnectionAbortedError, OSError,
+                        TimeoutError, asyncio.TimeoutError, httpx.ConnectError, httpx.TimeoutException,
+                        httpx.NetworkError, httpx.ConnectTimeout, httpx.ReadTimeout):
+                    raise
                 return
             
             # Invalidate cache
-            yield f"data: {json.dumps({'type': 'progress', 'stage': 'finalizing', 'message': 'Finalizing model addition...', 'progress': 95})}\n\n"
+            try:
+                yield f"data: {json.dumps({'type': 'progress', 'stage': 'finalizing', 'message': 'Finalizing model addition...', 'progress': 95})}\n\n"
+            except (BrokenPipeError, ConnectionResetError, ConnectionAbortedError, OSError,
+                    TimeoutError, asyncio.TimeoutError, httpx.ConnectError, httpx.TimeoutException,
+                    httpx.NetworkError, httpx.ConnectTimeout, httpx.ReadTimeout):
+                raise
             from ..cache import invalidate_models_cache
             invalidate_models_cache()
             
@@ -1979,12 +2090,112 @@ async def add_model_stream(
             )
             
             # Send success
-            yield f"data: {json.dumps({'type': 'success', 'message': f'Model {model_id} added successfully', 'model_id': model_id, 'provider': provider_name, 'progress': 100})}\n\n"
+            try:
+                yield f"data: {json.dumps({'type': 'success', 'message': f'Model {model_id} added successfully', 'model_id': model_id, 'provider': provider_name, 'progress': 100})}\n\n"
+            except (BrokenPipeError, ConnectionResetError, ConnectionAbortedError, OSError,
+                    TimeoutError, asyncio.TimeoutError, httpx.ConnectError, httpx.TimeoutException,
+                    httpx.NetworkError, httpx.ConnectTimeout, httpx.ReadTimeout):
+                # Even on success, if client disconnected or network error, we should rollback
+                raise
             
+            # Clean up backups on success
+            try:
+                if backup_model_runner_path.exists():
+                    backup_model_runner_path.unlink()
+                if backup_config_path.exists() and config_backup:
+                    backup_config_path.unlink()
+            except:
+                pass  # Ignore cleanup errors
+            
+        except (BrokenPipeError, ConnectionResetError, ConnectionAbortedError, OSError, 
+                TimeoutError, asyncio.TimeoutError, httpx.ConnectError, httpx.TimeoutException,
+                httpx.NetworkError, httpx.ConnectTimeout, httpx.ReadTimeout) as e:
+            # Client disconnected or network error - rollback all changes
+            # This covers: manual cancellation, network disruptions, timeouts, connection failures
+            try:
+                # Kill subprocess if still running
+                if process and process.returncode is None:
+                    try:
+                        process.kill()
+                        await process.wait()
+                    except:
+                        pass
+                
+                # Restore model_runner.py backup
+                if model_runner_backup and backup_model_runner_path.exists():
+                    with open(model_runner_path, "w", encoding="utf-8") as f:
+                        f.write(model_runner_backup)
+                    backup_model_runner_path.unlink()
+                    # Reload module to ensure in-memory state matches restored file
+                    try:
+                        importlib.reload(model_runner)
+                        sys.modules[__name__].MODELS_BY_PROVIDER = model_runner.MODELS_BY_PROVIDER
+                        sys.modules[__name__].OPENROUTER_MODELS = model_runner.OPENROUTER_MODELS
+                    except:
+                        pass  # Ignore reload errors
+                
+                # Restore renderer config backup
+                if config_backup and backup_config_path.exists():
+                    with open(config_path, "w", encoding="utf-8") as f:
+                        f.write(config_backup)
+                    backup_config_path.unlink()
+                else:
+                    # Remove model from renderer config if it was partially added (no backup existed)
+                    if config_path.exists():
+                        try:
+                            with open(config_path, "r", encoding="utf-8") as f:
+                                configs = json.load(f)
+                            if isinstance(configs, dict) and model_id in configs:
+                                del configs[model_id]
+                                with open(config_path, "w", encoding="utf-8") as f:
+                                    json.dump(configs, f, indent=2)
+                        except:
+                            pass  # Ignore errors during cleanup
+            except Exception as cleanup_error:
+                # Log cleanup error but don't raise - we've done our best
+                print(f"Error during rollback cleanup: {cleanup_error}", file=sys.stderr)
+            # Don't yield error message - client is already disconnected
+            return
         except HTTPException as e:
-            yield f"data: {json.dumps({'type': 'error', 'message': e.detail})}\n\n"
+            try:
+                yield f"data: {json.dumps({'type': 'error', 'message': e.detail})}\n\n"
+            except (BrokenPipeError, ConnectionResetError, ConnectionAbortedError, OSError,
+                    TimeoutError, asyncio.TimeoutError, httpx.ConnectError, httpx.TimeoutException,
+                    httpx.NetworkError, httpx.ConnectTimeout, httpx.ReadTimeout):
+                # Rollback on disconnection or network error even for HTTP exceptions
+                raise
         except Exception as e:
-            yield f"data: {json.dumps({'type': 'error', 'message': f'Error adding model: {str(e)}'})}\n\n"
+            try:
+                yield f"data: {json.dumps({'type': 'error', 'message': f'Error adding model: {str(e)}'})}\n\n"
+            except (BrokenPipeError, ConnectionResetError, ConnectionAbortedError, OSError,
+                    TimeoutError, asyncio.TimeoutError, httpx.ConnectError, httpx.TimeoutException,
+                    httpx.NetworkError, httpx.ConnectTimeout, httpx.ReadTimeout):
+                # Rollback on disconnection or network error
+                raise
+            finally:
+                # On any error, attempt rollback
+                try:
+                    # Kill subprocess if still running
+                    if process and process.returncode is None:
+                        try:
+                            process.kill()
+                            await process.wait()
+                        except:
+                            pass
+                    
+                    # Restore backups if we had errors
+                    if backup_model_runner_path.exists():
+                        if model_runner_backup:
+                            with open(model_runner_path, "w", encoding="utf-8") as f:
+                                f.write(model_runner_backup)
+                        backup_model_runner_path.unlink()
+                    
+                    if backup_config_path.exists() and config_backup:
+                        with open(config_path, "w", encoding="utf-8") as f:
+                            f.write(config_backup)
+                        backup_config_path.unlink()
+                except:
+                    pass  # Ignore cleanup errors
     
     return StreamingResponse(generate_progress_stream(), media_type="text/event-stream")
 

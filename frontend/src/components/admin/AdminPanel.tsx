@@ -121,6 +121,10 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
     // Ref to track scroll position
     const scrollPositionRef = useRef<number>(0);
     const adminPanelRef = useRef<HTMLDivElement>(null);
+    // Ref to store AbortController for canceling model addition
+    const addModelAbortControllerRef = useRef<AbortController | null>(null);
+    // Ref to store reader for canceling stream reading
+    const addModelReaderRef = useRef<ReadableStreamDefaultReader<Uint8Array> | null>(null);
 
     // Update collapsed state when window is resized
     useEffect(() => {
@@ -440,6 +444,10 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
         setModelSuccess(null);
         setModelProgress({ stage: 'validating', message: 'Validating model...', progress: 0 });
 
+        // Create AbortController for cancellation
+        const abortController = new AbortController();
+        addModelAbortControllerRef.current = abortController;
+
         try {
             const headers = getAuthHeaders();
 
@@ -451,7 +459,8 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({ model_id: newModelId.trim() }),
-                credentials: 'include'
+                credentials: 'include',
+                signal: abortController.signal
             });
 
             const validateData = await validateResponse.json();
@@ -473,7 +482,8 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({ model_id: newModelId.trim() }),
-                credentials: 'include'
+                credentials: 'include',
+                signal: abortController.signal
             });
 
             if (!response.ok) {
@@ -492,6 +502,9 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
             if (!reader) {
                 throw new Error('Response body is not readable');
             }
+
+            // Store reader reference for cancellation
+            addModelReaderRef.current = reader;
 
             let buffer = '';
 
@@ -520,6 +533,8 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                                 await fetchModels();
                                 setModelProgress(null);
                                 setAddingModel(false);
+                                addModelAbortControllerRef.current = null;
+                                addModelReaderRef.current = null;
                                 isModelOperationRef.current = false;
                                 if (typeof window !== 'undefined') {
                                     sessionStorage.setItem('adminPanel_activeTab', 'models');
@@ -544,9 +559,16 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
             // If we get here without success, something went wrong
             throw new Error('Stream ended unexpectedly');
         } catch (err) {
-            setModelError(err instanceof Error ? err.message : 'Failed to add model');
+            // Don't show error if it was a cancellation
+            if (err instanceof Error && err.name === 'AbortError') {
+                setModelError('Model addition cancelled');
+            } else {
+                setModelError(err instanceof Error ? err.message : 'Failed to add model');
+            }
             setModelProgress(null);
             setAddingModel(false);
+            addModelAbortControllerRef.current = null;
+            addModelReaderRef.current = null;
             isModelOperationRef.current = false;
             // Ensure Models tab stays active even on error
             if (typeof window !== 'undefined') {
@@ -557,6 +579,21 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                 restoreScrollPosition();
             }, 50);
         }
+    };
+
+    const handleCancelAddModel = () => {
+        if (addModelAbortControllerRef.current) {
+            addModelAbortControllerRef.current.abort();
+            addModelAbortControllerRef.current = null;
+        }
+        if (addModelReaderRef.current) {
+            addModelReaderRef.current.cancel();
+            addModelReaderRef.current = null;
+        }
+        setModelProgress(null);
+        setAddingModel(false);
+        isModelOperationRef.current = false;
+        setModelError('Model addition cancelled');
     };
 
     const handleDeleteModel = async () => {
@@ -2930,6 +2967,44 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                                     Please wait while we validate and add the model to your system.
                                 </p>
                             )}
+                            <div style={{
+                                marginTop: '2rem',
+                                display: 'flex',
+                                justifyContent: 'center',
+                                gap: '1rem'
+                            }}>
+                                <button
+                                    onClick={handleCancelAddModel}
+                                    style={{
+                                        padding: '0.75rem 1.5rem',
+                                        fontSize: '0.95rem',
+                                        fontWeight: 600,
+                                        color: 'var(--text-primary)',
+                                        background: 'var(--bg-secondary)',
+                                        border: '1px solid var(--border-color)',
+                                        borderRadius: '8px',
+                                        cursor: 'pointer',
+                                        transition: 'all 0.2s ease',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '0.5rem'
+                                    }}
+                                    onMouseEnter={(e) => {
+                                        e.currentTarget.style.background = 'var(--bg-tertiary)';
+                                        e.currentTarget.style.borderColor = 'var(--error-color)';
+                                    }}
+                                    onMouseLeave={(e) => {
+                                        e.currentTarget.style.background = 'var(--bg-secondary)';
+                                        e.currentTarget.style.borderColor = 'var(--border-color)';
+                                    }}
+                                >
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                                    </svg>
+                                    Cancel
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
