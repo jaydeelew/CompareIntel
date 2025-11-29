@@ -1061,6 +1061,10 @@ button:hover {
     font-size: 2rem;
   }
 
+  .stat-label {
+    display: none;
+  }
+
   .stats-breakdown {
     grid-template-columns: 1fr;
     gap: 1rem;
