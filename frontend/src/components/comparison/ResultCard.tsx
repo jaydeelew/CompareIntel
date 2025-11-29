@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { MessageBubble } from '../conversation/MessageBubble';
 import { getSafeId } from '../../utils';
 import { RESULT_TAB, type ResultTab, type ConversationMessage } from '../../types';
@@ -70,6 +70,32 @@ export const ResultCard: React.FC<ResultCardProps> = ({
   
   // Fallback error detection: check the message content directly if isError prop is not set correctly
   const hasError = isError || isErrorMessage(latestMessage?.content);
+
+  // Detect when screen is small enough that "chars" would wrap
+  const [isSmallLayout, setIsSmallLayout] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return false;
+    return window.innerWidth <= 640; // Breakpoint where "N chars" would wrap
+  });
+
+  useEffect(() => {
+    const handleResize = () => setIsSmallLayout(window.innerWidth <= 640);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // State for tooltip visibility (for mobile tap)
+  const [showTooltip, setShowTooltip] = useState(false);
+
+  // Handle tap/click to show tooltip on mobile
+  const handleOutputLengthClick = () => {
+    if (isSmallLayout) {
+      setShowTooltip(true);
+      // Auto-hide after 2 seconds
+      setTimeout(() => {
+        setShowTooltip(false);
+      }, 2000);
+    }
+  };
 
   return (
     <div className={`result-card conversation-card ${className}`.trim()}>
@@ -150,7 +176,16 @@ export const ResultCard: React.FC<ResultCardProps> = ({
           </div>
         </div>
         <div className="result-header-bottom">
-          <span className="output-length">{latestMessage?.content.length || 0} chars</span>
+          <span 
+            className={`output-length ${showTooltip ? 'tooltip-visible' : ''}`}
+            onClick={handleOutputLengthClick}
+            style={{ cursor: isSmallLayout ? 'pointer' : 'default' }}
+          >
+            {latestMessage?.content.length || 0}{isSmallLayout ? '' : ' chars'}
+            {isSmallLayout && (
+              <span className="output-length-tooltip">Characters</span>
+            )}
+          </span>
           <div className="result-tabs">
             <button
               className={`tab-button ${activeTab === RESULT_TAB.FORMATTED ? 'active' : ''}`}

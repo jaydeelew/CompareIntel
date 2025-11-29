@@ -375,6 +375,32 @@ function AppContent() {
     return () => window.removeEventListener('resize', handleResize)
   }, [])
 
+  // Detect when screen is small enough that "chars" would wrap in result cards
+  const [isSmallLayout, setIsSmallLayout] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return false
+    return window.innerWidth <= 640 // Breakpoint where "N chars" would wrap
+  })
+
+  useEffect(() => {
+    const handleResize = () => setIsSmallLayout(window.innerWidth <= 640)
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
+
+  // State for character count tooltip visibility (per modelId)
+  const [visibleCharTooltip, setVisibleCharTooltip] = useState<string | null>(null)
+
+  // Handle tap/click to show character count tooltip on mobile
+  const handleCharCountClick = (modelId: string) => {
+    if (isSmallLayout) {
+      setVisibleCharTooltip(modelId)
+      // Auto-hide after 2 seconds
+      setTimeout(() => {
+        setVisibleCharTooltip(null)
+      }, 2000)
+    }
+  }
+
   // State for mobile tooltip visibility (capability tiles)
   const [visibleTooltip, setVisibleTooltip] = useState<string | null>(null)
 
@@ -5592,8 +5618,15 @@ function AppContent() {
                                 </div>
                               </div>
                               <div className="result-header-bottom">
-                                <span className="output-length">
-                                  {latestMessage?.content.length || 0} chars
+                                <span
+                                  className={`output-length ${visibleCharTooltip === conversation.modelId ? 'tooltip-visible' : ''}`}
+                                  onClick={() => handleCharCountClick(conversation.modelId)}
+                                  style={{ cursor: isSmallLayout ? 'pointer' : 'default' }}
+                                >
+                                  {latestMessage?.content.length || 0}{isSmallLayout ? '' : ' chars'}
+                                  {isSmallLayout && (
+                                    <span className="output-length-tooltip">Characters</span>
+                                  )}
                                 </span>
                                 <div className="result-tabs">
                                   <button
