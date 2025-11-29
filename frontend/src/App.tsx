@@ -1951,16 +1951,44 @@ function AppContent() {
   ])
 
   // Detect page-level scrolling to prevent card auto-scroll from interfering
+  // Only pauses card auto-scroll when user is actually scrolling the page
   useEffect(() => {
     let lastPageScrollTop = window.scrollY || document.documentElement.scrollTop
     let scrollTimeout: number | null = null
 
+    // Detect wheel events on card boundaries - user trying to scroll past card to page
+    // This helps detect when user wants to scroll the page, but we primarily rely on
+    // actual scroll movement detection below
+    const handlePageWheel = (e: WheelEvent) => {
+      const target = e.target as HTMLElement
+      const isCardContent = target.closest('.conversation-content')
+
+      // If wheel is on a card content, let the card handle it
+      // The card's own scroll handler will manage scrolling within the card
+      if (isCardContent) {
+        return
+      }
+
+      // Wheel event is on page/document level (not on a card)
+      // The actual scroll movement handler below will detect if page scrolling occurs
+    }
+
+    // Detect touch events - card touches are handled by card scroll listeners
+    // We primarily rely on actual scroll movement detection
+    const handlePageTouchStart = () => {
+      // Touch events are handled by card scroll listeners
+      // Actual scroll movement will be detected by handlePageScroll below
+    }
+
+    // Track actual scroll movement - this is the primary detection method
     const handlePageScroll = () => {
       const currentScrollTop = window.scrollY || document.documentElement.scrollTop
+      const scrollDelta = Math.abs(currentScrollTop - lastPageScrollTop)
 
       // Only mark as page scrolling if there's actual scroll movement
       // This prevents false positives from programmatic scrolls
-      if (Math.abs(currentScrollTop - lastPageScrollTop) > 1) {
+      if (scrollDelta > 1) {
+        // User is actually scrolling the page - pause card auto-scroll
         isPageScrollingRef.current = true
 
         // Clear any existing timeout
@@ -1969,7 +1997,6 @@ function AppContent() {
         }
 
         // Reset flag after scrolling stops (300ms of no scroll activity)
-        // Use a longer delay to ensure user has finished scrolling before resuming auto-scroll
         scrollTimeout = window.setTimeout(() => {
           isPageScrollingRef.current = false
           scrollTimeout = null
@@ -1979,15 +2006,16 @@ function AppContent() {
       lastPageScrollTop = currentScrollTop
     }
 
-    // Use passive listener for better performance
+    // Use capture phase for wheel events (though we primarily rely on scroll movement)
+    // Rely primarily on actual scroll movement detection for pausing card auto-scroll
+    document.addEventListener('wheel', handlePageWheel, { passive: true, capture: true })
+    document.addEventListener('touchstart', handlePageTouchStart, { passive: true, capture: true })
     window.addEventListener('scroll', handlePageScroll, { passive: true })
-    window.addEventListener('wheel', handlePageScroll, { passive: true })
-    window.addEventListener('touchmove', handlePageScroll, { passive: true })
 
     return () => {
+      document.removeEventListener('wheel', handlePageWheel, { capture: true })
+      document.removeEventListener('touchstart', handlePageTouchStart, { capture: true })
       window.removeEventListener('scroll', handlePageScroll)
-      window.removeEventListener('wheel', handlePageScroll)
-      window.removeEventListener('touchmove', handlePageScroll)
       if (scrollTimeout !== null) {
         clearTimeout(scrollTimeout)
       }
@@ -4045,13 +4073,18 @@ function AppContent() {
               // Use requestAnimationFrame for smooth scrolling
               requestAnimationFrame(() => {
                 // Don't auto-scroll cards if user is actively scrolling the page
-                if (isPageScrollingRef.current) return
+                // This check happens first to prevent any card scrolling when page scroll is detected
+                // Note: We don't modify autoScrollPausedRef here - that's only for individual card pauses
+                // Page scrolling pause is temporary and handled by this check alone
+                if (isPageScrollingRef.current) {
+                  return
+                }
 
                 Object.keys(streamingResults).forEach(modelId => {
                   // Skip auto-scrolling for completed models so users can scroll through them
                   if (completedModels.has(modelId)) return
 
-                  // Skip auto-scrolling if user has manually scrolled away from bottom
+                  // Skip auto-scrolling if user has manually scrolled away from bottom within this card
                   // Use REF for immediate check without state update delay
                   if (autoScrollPausedRef.current.has(modelId)) return
 
@@ -4060,7 +4093,12 @@ function AppContent() {
                     `#conversation-content-${safeId}`
                   ) as HTMLElement
                   if (conversationContent) {
+                    // Check again if page scrolling started during this frame
+                    // This provides an extra safety check
+                    if (isPageScrollingRef.current) return
+
                     // Use scrollTop assignment without triggering events that interfere with page scroll
+                    // This direct assignment is less likely to interfere with page scrolling
                     conversationContent.scrollTop = conversationContent.scrollHeight
                   }
                 })
