@@ -349,6 +349,8 @@ class AdminUserResponse(BaseModel):
     subscription_status: str
     subscription_period: str
     monthly_overage_count: int
+    monthly_credits_allocated: Optional[int] = 0
+    credits_used_this_period: Optional[int] = 0
     mock_mode_enabled: Optional[bool] = False  # Testing feature for admins
     created_at: datetime
     updated_at: Optional[datetime] = None

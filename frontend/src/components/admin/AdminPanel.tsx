@@ -18,6 +18,8 @@ interface AdminUser {
     subscription_status: string;
     subscription_period: string;
     monthly_overage_count: number;
+    monthly_credits_allocated?: number;
+    credits_used_this_period?: number;
     mock_mode_enabled: boolean;
     created_at: string;
     updated_at: string;

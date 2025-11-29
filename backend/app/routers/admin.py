@@ -30,7 +30,7 @@ from ..dependencies import get_current_admin_user, require_admin_role
 from ..auth import get_password_hash
 from ..rate_limiting import anonymous_rate_limit_storage
 from datetime import date
-from ..credit_manager import allocate_monthly_credits, reset_daily_credits
+from ..credit_manager import allocate_monthly_credits, reset_daily_credits, ensure_credits_allocated
 from ..config.constants import DAILY_CREDIT_LIMITS, MONTHLY_CREDIT_ALLOCATIONS
 
 from ..email_service import send_verification_email
@@ -304,8 +304,12 @@ async def list_users(
     users = query.order_by(desc(User.created_at)).offset(offset).limit(per_page).all()
 
     # Ensure usage is reset for all users if it's a new day
+    # Also ensure credits are allocated for all users
     for user in users:
         ensure_usage_reset(user, db)
+        ensure_credits_allocated(user.id, db)
+        # Refresh user from database to get updated credit values
+        db.refresh(user)
 
     # Calculate total pages
     total_pages = (total + per_page - 1) // per_page
@@ -333,6 +337,10 @@ async def get_user(
 
     # Ensure usage is reset if it's a new day
     ensure_usage_reset(user, db)
+    # Ensure credits are allocated
+    ensure_credits_allocated(user.id, db)
+    # Refresh user from database to get updated credit values
+    db.refresh(user)
 
     return AdminUserResponse.model_validate(user)
 
