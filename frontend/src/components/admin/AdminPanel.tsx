@@ -1645,67 +1645,128 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                             <p>No logs found.</p>
                         </div>
                     ) : (
-                        <div className="logs-table-container">
-                            <table className="logs-table">
-                                <thead>
-                                    <tr>
-                                        <th>Timestamp</th>
-                                        <th>Action Type</th>
-                                        <th>Description</th>
-                                        <th>Admin</th>
-                                        <th>Target User</th>
-                                        <th>IP Address</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {actionLogs
-                                        .filter(log =>
-                                            !logsSearchTerm ||
-                                            log.action_description.toLowerCase().includes(logsSearchTerm.toLowerCase()) ||
-                                            log.action_type.toLowerCase().includes(logsSearchTerm.toLowerCase())
-                                        )
-                                        .map((log) => (
-                                            <tr key={log.id}>
-                                                <td>
-                                                    <span title={new Date(log.created_at).toLocaleString()}>
-                                                        {new Date(log.created_at).toLocaleDateString()} {new Date(log.created_at).toLocaleTimeString()}
-                                                    </span>
-                                                </td>
-                                                <td>
+                        <>
+                            {/* Desktop Table View */}
+                            <div className="logs-table-container">
+                                <table className="logs-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Timestamp</th>
+                                            <th>Action Type</th>
+                                            <th>Description</th>
+                                            <th>Admin</th>
+                                            <th>Target User</th>
+                                            <th>IP Address</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {actionLogs
+                                            .filter(log =>
+                                                !logsSearchTerm ||
+                                                log.action_description.toLowerCase().includes(logsSearchTerm.toLowerCase()) ||
+                                                log.action_type.toLowerCase().includes(logsSearchTerm.toLowerCase())
+                                            )
+                                            .map((log) => (
+                                                <tr key={log.id}>
+                                                    <td>
+                                                        <span title={new Date(log.created_at).toLocaleString()}>
+                                                            {new Date(log.created_at).toLocaleDateString()} {new Date(log.created_at).toLocaleTimeString()}
+                                                        </span>
+                                                    </td>
+                                                    <td>
+                                                        <span className={`action-type-badge action-${log.action_type}`}>
+                                                            {log.action_type.replace(/_/g, ' ')}
+                                                        </span>
+                                                    </td>
+                                                    <td className="log-description">
+                                                        {log.action_description}
+                                                    </td>
+                                                    <td>
+                                                        <span className="log-user-email">{log.admin_user_email || 'Unknown'}</span>
+                                                    </td>
+                                                    <td>
+                                                        {log.target_user_email ? (
+                                                            <span className="log-user-email">{log.target_user_email}</span>
+                                                        ) : (
+                                                            <span className="log-na">N/A</span>
+                                                        )}
+                                                    </td>
+                                                    <td className="log-ip">{log.ip_address || 'N/A'}</td>
+                                                    <td>
+                                                        <button
+                                                            onClick={() => {
+                                                                setSelectedLog(log);
+                                                                setShowLogDetailModal(true);
+                                                            }}
+                                                            className="view-details-btn"
+                                                        >
+                                                            View Details
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            {/* Mobile Card View */}
+                            <div className="logs-cards-mobile">
+                                {actionLogs
+                                    .filter(log =>
+                                        !logsSearchTerm ||
+                                        log.action_description.toLowerCase().includes(logsSearchTerm.toLowerCase()) ||
+                                        log.action_type.toLowerCase().includes(logsSearchTerm.toLowerCase())
+                                    )
+                                    .map((log) => (
+                                        <div key={log.id} className="log-card">
+                                            <div className="log-card-header">
+                                                <div className="log-card-timestamp">
+                                                    {new Date(log.created_at).toLocaleDateString()} {new Date(log.created_at).toLocaleTimeString()}
+                                                </div>
+                                                <div className="log-card-action-type">
                                                     <span className={`action-type-badge action-${log.action_type}`}>
                                                         {log.action_type.replace(/_/g, ' ')}
                                                     </span>
-                                                </td>
-                                                <td className="log-description">
-                                                    {log.action_description}
-                                                </td>
-                                                <td>
-                                                    <span className="log-user-email">{log.admin_user_email || 'Unknown'}</span>
-                                                </td>
-                                                <td>
-                                                    {log.target_user_email ? (
-                                                        <span className="log-user-email">{log.target_user_email}</span>
-                                                    ) : (
-                                                        <span className="log-na">N/A</span>
-                                                    )}
-                                                </td>
-                                                <td className="log-ip">{log.ip_address || 'N/A'}</td>
-                                                <td>
-                                                    <button
-                                                        onClick={() => {
-                                                            setSelectedLog(log);
-                                                            setShowLogDetailModal(true);
-                                                        }}
-                                                        className="view-details-btn"
-                                                    >
-                                                        View Details
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                        ))}
-                                </tbody>
-                            </table>
+                                                </div>
+                                            </div>
+
+                                            <div className="log-card-row">
+                                                <span className="log-card-label">Description</span>
+                                                <span className="log-card-value">{log.action_description}</span>
+                                            </div>
+
+                                            <div className="log-card-row">
+                                                <span className="log-card-label">Admin</span>
+                                                <span className="log-card-value">{log.admin_user_email || 'Unknown'}</span>
+                                            </div>
+
+                                            <div className="log-card-row">
+                                                <span className="log-card-label">Target User</span>
+                                                <span className="log-card-value">
+                                                    {log.target_user_email || 'N/A'}
+                                                </span>
+                                            </div>
+
+                                            <div className="log-card-row">
+                                                <span className="log-card-label">IP Address</span>
+                                                <span className="log-card-value log-ip">{log.ip_address || 'N/A'}</span>
+                                            </div>
+
+                                            <div className="log-card-actions">
+                                                <button
+                                                    onClick={() => {
+                                                        setSelectedLog(log);
+                                                        setShowLogDetailModal(true);
+                                                    }}
+                                                    className="view-details-btn"
+                                                >
+                                                    View Details
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ))}
+                            </div>
 
                             {/* Logs Pagination */}
                             <div className="pagination">
@@ -1737,7 +1798,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                                     Next
                                 </button>
                             </div>
-                        </div>
+                        </>
                     )}
                 </div>
             )}

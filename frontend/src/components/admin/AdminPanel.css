@@ -1165,6 +1165,16 @@ button:hover {
     display: none;
   }
 
+  /* Log Card Layout */
+  .logs-cards-mobile {
+    display: block;
+    max-height: 60vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    padding-right: 0.5rem;
+  }
+
   .pagination {
     flex-direction: column;
     gap: 0.75rem;
@@ -1349,6 +1359,12 @@ button:hover {
     margin-bottom: 1rem;
     padding-bottom: 1rem;
     border-bottom: 1px solid var(--border-color);
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .user-card-badges .tier-select {
+    margin-left: auto;
   }
 
   .user-card-row {
@@ -1407,7 +1423,7 @@ button:hover {
   .log-card-header {
     display: flex;
     justify-content: space-between;
-    align-items: flex-start;
+    align-items: center;
     margin-bottom: 1rem;
     padding-bottom: 1rem;
     border-bottom: 1px solid var(--border-color);
@@ -1417,10 +1433,12 @@ button:hover {
     font-size: 0.875rem;
     color: var(--text-secondary);
     font-weight: 600;
+    flex: 1;
   }
 
   .log-card-action-type {
-    margin-top: 0.5rem;
+    margin-left: 1rem;
+    flex-shrink: 0;
   }
 
   .log-card-row {
@@ -2842,6 +2860,8 @@ button:hover {
 
 .analytics-table-container {
   overflow-x: auto;
+  overflow-y: auto;
+  max-height: 400px;
   border-radius: var(--radius-lg);
   border: 1px solid var(--border-color);
 }
@@ -2879,6 +2899,10 @@ button:hover {
   text-transform: uppercase;
   letter-spacing: 0.5px;
   border-bottom: 2px solid var(--border-color);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--bg-secondary);
 }
 
 .analytics-table th.number-header {
