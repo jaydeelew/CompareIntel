@@ -23,7 +23,7 @@ import { ComparisonForm } from './components/comparison'
 import { Navigation, Hero, MockModeBanner } from './components/layout'
 import { DoneSelectingCard, ErrorBoundary, LoadingSpinner } from './components/shared'
 import { TermsOfService } from './components/TermsOfService'
-import { getDailyLimit, getCreditAllocation, getDailyCreditLimit } from './config/constants'
+import { getCreditAllocation, getDailyCreditLimit } from './config/constants'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
 import {
   useConversationHistory,
@@ -3154,10 +3154,6 @@ function AppContent() {
       return
     }
 
-    // Check input length against selected models' limits
-    const messageCount = conversations.length > 0 ? conversations[0]?.messages.length || 0 : 0
-    const userTier = isAuthenticated ? user?.subscription_tier || 'free' : 'anonymous'
-
     // Check input tokens against selected models' limits (token-based validation)
     if (selectedModels.length > 0) {
       // Get minimum max input tokens across all selected models
@@ -3192,118 +3188,9 @@ function AppContent() {
       }
     }
 
-    // Hard limit: Prevent submissions when input capacity is fully used (but allow when exceeded with warning)
-    // Industry best practice 2025: Enforce maximum context window to protect costs and maintain quality
-    if (isFollowUpMode && conversations.length > 0 && selectedModels.length > 0) {
-      // Calculate token usage using backend model-specific token estimators
-      // Use accurate token count from ComparisonForm if available, otherwise use 0
-      const inputTokens = accurateInputTokens ?? 0
-
-      const conversationHistoryMessages = conversations
-        .filter(conv => selectedModels.includes(conv.modelId) && conv.messages.length > 0)
-
-      if (conversationHistoryMessages.length > 0) {
-        // Calculate conversation history tokens using saved token counts from database
-        const messages = conversationHistoryMessages[0].messages
-        const conversationHistoryTokens = messages.reduce((sum, msg) => {
-          if (msg.type === 'user' && msg.input_tokens) {
-            // User messages: use saved input_tokens (calculated from backend tokenizers)
-            return sum + msg.input_tokens
-          } else if (msg.type === 'assistant' && msg.output_tokens) {
-            // Assistant messages: use saved output_tokens (from OpenRouter API)
-            return sum + msg.output_tokens
-          }
-          // Skip messages without token data (don't estimate with chars/4)
-          return sum
-        }, 0)
-        const totalInputTokens = inputTokens + conversationHistoryTokens
-
-        // Get min max input tokens from selected models (use accurate token limits)
-        const modelLimits = selectedModels
-          .map(modelId => {
-            for (const providerModels of Object.values(modelsByProvider)) {
-              const model = providerModels.find(m => m.id === modelId)
-              if (model && model.max_input_tokens) {
-                return model.max_input_tokens // Use accurate token limit directly
-              }
-            }
-            return null
-          })
-          .filter((limit): limit is number => limit !== null)
-
-        // Note: We no longer block submissions at 0% remaining - allow with warnings
-        // Backend will handle truncation if needed
-      }
-    }
-
     // Check credit balance before submitting
-    // Use the same calculation logic as renderUsagePreview for consistency
-    const creditsAllocated = creditBalance?.credits_allocated ?? (isAuthenticated && user
-      ? (user.monthly_credits_allocated || getCreditAllocation(userTier))
-      : getDailyCreditLimit(userTier) || getCreditAllocation(userTier))
-
-    // Calculate credits remaining using the same logic as renderUsagePreview
-    let creditsRemaining: number
-    if (!isAuthenticated && anonymousCreditsRemaining !== null) {
-      // Use anonymousCreditsRemaining state if available (most up-to-date for anonymous users)
-      creditsRemaining = anonymousCreditsRemaining
-    } else if (creditBalance?.credits_remaining !== undefined) {
-      // Use creditBalance if available
-      creditsRemaining = creditBalance.credits_remaining
-    } else {
-      // Fallback: calculate from allocated and used
-      const creditsUsed = creditBalance?.credits_used_this_period ?? creditBalance?.credits_used_today ?? (isAuthenticated && user
-        ? (user.credits_used_this_period || 0)
-        : 0)
-      creditsRemaining = Math.max(0, creditsAllocated - creditsUsed)
-    }
-
-    // Calculate estimated credits for this request using backend model-specific token estimators
-    const modelsNeeded = selectedModels.length
-    // Use accurate token count from ComparisonForm (backend tokenizer) if available
-    const inputTokens = accurateInputTokens ?? 0
-
-    // Build conversation history from conversations prop (not from hook's conversationHistory)
-    const conversationHistoryMessages = isFollowUpMode && conversations.length > 0
-      ? (() => {
-        // Get the first conversation that has messages and is for a selected model
-        const selectedConversations = conversations.filter(
-          conv => selectedModels.includes(conv.modelId) && conv.messages.length > 0
-        )
-        if (selectedConversations.length === 0) return []
-        // Use the first selected conversation's messages
-        return selectedConversations[0].messages
-      })()
-      : []
-
-    // Calculate conversation history tokens using saved token counts from database
-    const conversationHistoryTokens = conversationHistoryMessages.length > 0
-      ? conversationHistoryMessages.reduce((sum, msg) => {
-        if (msg.type === 'user' && msg.input_tokens) {
-          // User messages: use saved input_tokens (calculated from backend tokenizers)
-          return sum + msg.input_tokens
-        } else if (msg.type === 'assistant' && msg.output_tokens) {
-          // Assistant messages: use saved output_tokens (from OpenRouter API)
-          return sum + msg.output_tokens
-        }
-        // Skip messages without token data (don't estimate with chars/4)
-        return sum
-      }, 0)
-      : 0
-    const totalInputTokens = inputTokens + conversationHistoryTokens
-
-    // Estimate output tokens: ~500-1500 tokens per model response (use 1000 as average)
-    // Effective tokens = input_tokens + (output_tokens × 2.5)
-    // Credits = effective_tokens / 1000
-    const outputTokensPerModel = 1000
-    const effectiveTokensPerModel = totalInputTokens + (outputTokensPerModel * 2.5)
-    const creditsPerModel = effectiveTokensPerModel / 1000
-
-    // Total estimated credits
-    const estimatedCredits = Math.ceil(creditsPerModel * modelsNeeded)
-
-    // Credit blocking removed - allow comparisons to proceed regardless of credit balance
-    // Credits will be capped at allocated amount during deduction, then blocked on next request if at 0
+    // Credit blocking removed - comparisons proceed regardless of credit balance
+    // Credits will be capped at allocated amount during deduction if needed
 
 
     if (!input.trim()) {
@@ -3493,7 +3380,6 @@ function AppContent() {
     // Track timeout state for streaming (declared outside try block for access in catch/finally)
     let timeoutId: ReturnType<typeof setTimeout> | null = null
     let hasReceivedChunk = false // Track if we've received at least one chunk
-    let lastChunkTime = Date.now() // Track when last chunk was received
     const modelLastChunkTimes: { [key: string]: number } = {} // Track when each model last received a chunk
 
     try {
@@ -3641,7 +3527,6 @@ function AppContent() {
 
             // Reset timeout when we receive any data (indicates active streaming)
             hasReceivedChunk = true
-            lastChunkTime = Date.now()
             resetStreamingTimeout()
 
             // Process complete SSE messages (separated by \n\n)
@@ -3671,7 +3556,6 @@ function AppContent() {
                     (streamingResults[event.model] || '') + event.content
                   // Update per-model chunk time to track which models are actively streaming
                   modelLastChunkTimes[event.model] = Date.now()
-                  lastChunkTime = Date.now() // Also update global for backward compatibility
                   resetStreamingTimeout() // Reset timeout since this model is actively streaming
                   shouldUpdate = true
 
@@ -4712,14 +4596,6 @@ function AppContent() {
   // Helper function to render usage preview (used in both regular and follow-up modes)
   // Wrapped in useCallback with dependencies so ComparisonForm (memoized) re-renders when credits change
   const renderUsagePreview = useCallback(() => {
-    const userTier = isAuthenticated ? user?.subscription_tier || 'free' : 'anonymous'
-
-    // Get credit information (if available)
-    // Prefer creditBalance if available (more up-to-date after model calls)
-    const creditsAllocated = creditBalance?.credits_allocated ?? (isAuthenticated && user
-      ? (user.monthly_credits_allocated || getCreditAllocation(userTier))
-      : getDailyCreditLimit(userTier) || getCreditAllocation(userTier))
-
     // Calculate what will be used
     const regularToUse = selectedModels.length
 
