@@ -1282,8 +1282,13 @@ def calculate_average_cost_per_million_tokens(model_data: Dict[str, Any]) -> Opt
         return None
     
     # Get input and output pricing (per million tokens)
-    input_price = pricing.get("prompt", 0)  # Price per million input tokens
-    output_price = pricing.get("completion", 0)  # Price per million output tokens
+    # Convert to float in case they come as strings from the API
+    try:
+        input_price = float(pricing.get("prompt", 0) or 0)  # Price per million input tokens
+        output_price = float(pricing.get("completion", 0) or 0)  # Price per million output tokens
+    except (ValueError, TypeError):
+        # If conversion fails, return None
+        return None
     
     # If both are zero or missing, return None
     if input_price == 0 and output_price == 0:
