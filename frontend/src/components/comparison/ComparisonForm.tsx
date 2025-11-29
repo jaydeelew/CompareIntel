@@ -302,33 +302,56 @@ export const ComparisonForm = memo<ComparisonFormProps>(({
     }
   }, [tokenUsageInfo, accurateTokenCounts, isFollowUpMode, onAccurateTokenCountChange]);
 
+  // Helper function to format capacity in characters (approximate: 1 token ≈ 4 chars)
+  const formatCapacityChars = useCallback((tokens: number): string => {
+    const chars = tokens * 4;
+    if (chars >= 1_000_000) {
+      return `~${(chars / 1_000_000).toFixed(1)}M chars`;
+    } else if (chars >= 1_000) {
+      return `~${Math.round(chars / 1_000)}k chars`;
+    } else {
+      return `~${chars} chars`;
+    }
+  }, []);
+
   // Calculate token usage percentage for pie chart (works in both regular and follow-up mode)
   // Uses backend model-specific token estimators - no chars/4 fallback
-  const tokenUsagePercentage = useMemo(() => {
+  const tokenUsagePercentageInfo = useMemo(() => {
     if (selectedModels.length === 0) {
-      return 0;
+      return { percentage: 0, limitingModel: null };
     }
 
-    // Get min max input tokens from selected models (use accurate token limits)
-    const modelLimits = selectedModels
+    // Get model limits with model info
+    const modelLimitsWithInfo = selectedModels
       .map(modelId => {
         const modelIdStr = String(modelId);
         for (const providerModels of Object.values(modelsByProvider)) {
           const model = providerModels.find(m => String(m.id) === modelIdStr);
           if (model && model.max_input_tokens) {
-            // Use accurate token limit directly
-            return model.max_input_tokens;
+            return {
+              modelId: modelIdStr,
+              modelName: model.name,
+              maxInputTokens: model.max_input_tokens,
+            };
           }
         }
         return null;
       })
-      .filter((limit): limit is number => limit !== null);
+      .filter((info): info is { modelId: string; modelName: string; maxInputTokens: number } => info !== null);
 
-    if (modelLimits.length === 0) {
-      return 0;
+    if (modelLimitsWithInfo.length === 0) {
+      return { percentage: 0, limitingModel: null };
     }
 
-    const minMaxInputTokens = Math.min(...modelLimits);
+    // Find the limiting model (minimum capacity)
+    const minLimit = Math.min(...modelLimitsWithInfo.map(info => info.maxInputTokens));
+    const limitingModelInfo = modelLimitsWithInfo.find(info => info.maxInputTokens === minLimit);
+    
+    // Check if there's a significant difference (min is < 50% of max)
+    const maxLimit = Math.max(...modelLimitsWithInfo.map(info => info.maxInputTokens));
+    const hasSignificantDifference = maxLimit > 0 && (minLimit / maxLimit) < 0.5;
+
+    const minMaxInputTokens = minLimit;
     
     // Calculate tokens from conversation history using saved token counts from database
     // For each model, sum: input_tokens from user messages + output_tokens from that model's assistant messages
@@ -385,8 +408,17 @@ export const ComparisonForm = memo<ComparisonFormProps>(({
     // Calculate percentage used (clamp between 0 and 100)
     const percentageUsed = Math.min(100, Math.max(0, (totalInputTokens / minMaxInputTokens) * 100));
     
-    return percentageUsed;
-  }, [selectedModels, input, modelsByProvider, isFollowUpMode, conversations, accurateTokenCounts]);
+    return {
+      percentage: percentageUsed,
+      limitingModel: hasSignificantDifference && limitingModelInfo ? {
+        name: limitingModelInfo.modelName,
+        capacityChars: formatCapacityChars(limitingModelInfo.maxInputTokens),
+      } : null,
+    };
+  }, [selectedModels, input, modelsByProvider, isFollowUpMode, conversations, accurateTokenCounts, formatCapacityChars]);
+
+  // Extract percentage for backward compatibility
+  const tokenUsagePercentage = tokenUsagePercentageInfo.percentage;
 
   // Auto-expand textarea based on content (like ChatGPT)
   // Scrollable after 5 lines (6th line triggers scrolling)
@@ -604,10 +636,16 @@ export const ComparisonForm = memo<ComparisonFormProps>(({
                 fillColor = '#eab308'; // Yellow for medium usage
               }
 
+              // Build tooltip text
+              let tooltipText = `${Math.round(percentage)}% of input capacity used`;
+              if (tokenUsagePercentageInfo.limitingModel) {
+                tooltipText = `Limited by ${tokenUsagePercentageInfo.limitingModel.name} at (${tokenUsagePercentageInfo.limitingModel.capacityChars})`;
+              }
+
               return (
                 <div 
                   className="token-usage-indicator"
-                  title={`${Math.round(percentage)}% of input capacity used`}
+                  title={tooltipText}
                   style={{ cursor: 'default' }}
                 >
                   <svg width="32" height="32" viewBox="0 0 32 32" style={{ transform: 'rotate(-90deg)' }}>
