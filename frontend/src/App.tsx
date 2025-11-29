@@ -2561,6 +2561,31 @@ function AppContent() {
 
   // Track previous authentication state to detect transitions
   const prevIsAuthenticatedRef = useRef<boolean | null>(null)
+  
+  // Track previous user ID to detect user changes (including switching between authenticated users)
+  const prevUserIdRef = useRef<number | null | undefined>(null)
+  const isInitialMountRef = useRef<boolean>(true)
+
+  // Clear error state whenever the user changes (handles switching between users)
+  useEffect(() => {
+    const currentUserId = user?.id
+    
+    // Skip on initial mount - don't clear errors that might be from a page refresh
+    if (isInitialMountRef.current) {
+      isInitialMountRef.current = false
+      prevUserIdRef.current = currentUserId
+      return
+    }
+    
+    // If user ID changed (including null/undefined transitions), clear error state
+    // Credit errors shouldn't persist across users or when switching auth states
+    if (prevUserIdRef.current !== currentUserId) {
+      setError(null)
+    }
+    
+    // Update the ref to track current user ID for next render
+    prevUserIdRef.current = currentUserId
+  }, [user?.id])
 
   // Handle authentication state changes (logout and sign-in from anonymous)
   useEffect(() => {
