@@ -199,6 +199,14 @@ export function useConversationHistory({
       const conversationMessages: any[] = [];
       const seenUserMessages = new Set<string>(); // Track user messages to avoid duplicates
 
+      // Simple token estimation function (1 token ≈ 4 chars) for when token counts are missing
+      const estimateTokensSimple = (text: string): number => {
+        if (!text.trim()) {
+          return 0;
+        }
+        return Math.max(1, Math.ceil(text.length / 4));
+      };
+
       // Group messages from conversations by model
       conversationsToSave.forEach(conv => {
         conv.messages.forEach(msg => {
@@ -207,19 +215,29 @@ export function useConversationHistory({
             const userKey = `${msg.content}-${new Date(msg.timestamp).getTime()}`;
             if (!seenUserMessages.has(userKey)) {
               seenUserMessages.add(userKey);
-              conversationMessages.push({
+              const userMessage: any = {
                 role: 'user',
                 content: msg.content,
                 created_at: msg.timestamp,
-              });
+              };
+              // Preserve token counts if available, otherwise estimate
+              userMessage.input_tokens = msg.input_tokens !== undefined && msg.input_tokens !== null
+                ? msg.input_tokens
+                : estimateTokensSimple(msg.content);
+              conversationMessages.push(userMessage);
             }
           } else {
-            conversationMessages.push({
+            const assistantMessage: any = {
               role: 'assistant',
               model_id: conv.modelId,
               content: msg.content,
               created_at: msg.timestamp,
-            });
+            };
+            // Preserve token counts if available, otherwise estimate
+            assistantMessage.output_tokens = msg.output_tokens !== undefined && msg.output_tokens !== null
+              ? msg.output_tokens
+              : estimateTokensSimple(msg.content);
+            conversationMessages.push(assistantMessage);
           }
         });
       });
