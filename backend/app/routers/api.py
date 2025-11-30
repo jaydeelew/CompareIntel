@@ -530,7 +530,7 @@ async def compare_stream(
         raise HTTPException(status_code=400, detail="At least one model must be selected")
 
     # Validate input against model token limits
-    from ..model_runner import get_min_max_input_tokens, estimate_token_count
+    from ..model_runner import get_min_max_input_tokens, get_model_max_input_tokens, estimate_token_count
 
     min_max_input_tokens = get_min_max_input_tokens(req.models)
     
@@ -546,12 +546,36 @@ async def compare_stream(
         input_tokens = estimate_token_count(req.input_data, model_id=model_id)
 
     if input_tokens > min_max_input_tokens:
+        # Find problem models (those with max_input_tokens < input_tokens)
+        problem_models = []
+        for model_id in req.models:
+            model_max_input = get_model_max_input_tokens(model_id)
+            if model_max_input < input_tokens:
+                # Find model name from MODELS_BY_PROVIDER
+                model_name = None
+                for provider_models in MODELS_BY_PROVIDER.values():
+                    for model in provider_models:
+                        if model.get("id") == model_id:
+                            model_name = model.get("name", model_id)
+                            break
+                    if model_name:
+                        break
+                if not model_name:
+                    # Fallback: format model_id nicely
+                    model_name = model_id.split("/")[-1].replace("-", " ").replace("_", " ").title()
+                problem_models.append(model_name)
+        
         # Convert tokens to approximate characters for user-friendly message (1 token ≈ 4 chars)
         approx_chars = input_tokens * 4
         max_chars = min_max_input_tokens * 4
+        
+        problem_models_text = ""
+        if problem_models:
+            problem_models_text = f" Problem model(s): {', '.join(problem_models)}."
+        
         raise HTTPException(
             status_code=400,
-            detail=f"Your input is too long for one or more of the selected models. The maximum input length is approximately {max_chars:,} characters, but your input is approximately {approx_chars:,} characters. Please shorten your input or select different models that support longer inputs.",
+            detail=f"⚠️ Your input is too long for one or more of the selected models. The maximum input length is approximately {max_chars:,} characters, but your input is approximately {approx_chars:,} characters.{problem_models_text} Please shorten your input or select different models that support longer inputs.",
         )
 
     # Determine model limit based on user tier

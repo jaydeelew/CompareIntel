@@ -223,6 +223,19 @@ function AppContent() {
     prevErrorRef.current = error
   }, [error, scrollToCenterElement])
 
+  // Auto-dismiss "input too long" error after 10 seconds
+  useEffect(() => {
+    if (error && error.includes('Your input is too long for one or more of the selected models')) {
+      const timeoutId = setTimeout(() => {
+        setError(null)
+      }, 10000) // 10 seconds
+
+      return () => {
+        clearTimeout(timeoutId)
+      }
+    }
+  }, [error, setError])
+
   // Callback for when the active conversation is deleted
   const handleDeleteActiveConversation = useCallback(() => {
     setIsFollowUpMode(false)
@@ -1628,6 +1641,10 @@ function AppContent() {
       setIsFollowUpMode(loadedConversations.some(conv => conv.messages.length > 0))
       setClosedCards(new Set()) // Ensure all result cards are open/visible
       setResponse(null) // Clear any previous response state
+      // Clear "input too long" error when selecting from history
+      if (error && error.includes('Your input is too long for one or more of the selected models')) {
+        setError(null)
+      }
       setShowHistoryDropdown(false)
       setIsModelsHidden(true) // Collapse the models section when selecting from history
       collapseAllDropdowns() // Collapse all provider dropdowns when selecting from history
@@ -3112,7 +3129,40 @@ function AppContent() {
       }
 
       // Allow deselection in both normal and follow-up mode
-      setSelectedModels(prev => prev.filter(id => id !== modelId))
+      const updatedSelectedModels = selectedModels.filter(id => id !== modelId)
+      setSelectedModels(updatedSelectedModels)
+      
+      // Clear "input too long" error only if all problematic models are deselected
+      if (error && error.includes('Your input is too long for one or more of the selected models')) {
+        // Check if any problematic models are still selected
+        if (accurateInputTokens !== null && updatedSelectedModels.length > 0) {
+          // Get model info for remaining selected models
+          const remainingModelInfo = updatedSelectedModels
+            .map(id => {
+              for (const providerModels of Object.values(modelsByProvider)) {
+                const model = providerModels.find(m => m.id === id)
+                if (model && model.max_input_tokens) {
+                  return { id, maxInputTokens: model.max_input_tokens }
+                }
+              }
+              return null
+            })
+            .filter((info): info is { id: string; maxInputTokens: number } => info !== null)
+          
+          // Check if any remaining models are still problematic
+          const stillHasProblemModels = remainingModelInfo.some(
+            m => m.maxInputTokens < accurateInputTokens
+          )
+          
+          // Only clear error if no problematic models remain
+          if (!stillHasProblemModels) {
+            setError(null)
+          }
+        } else {
+          // No models selected or no token count, clear error
+          setError(null)
+        }
+      }
       // Clear any previous error when deselecting a model
       if (error && error.includes('Maximum')) {
         setError(null)
@@ -3352,6 +3402,11 @@ function AppContent() {
 
   // Handler for submit button that provides helpful validation messages
   const handleSubmitClick = () => {
+    // Clear "input too long" error when clicking submit
+    if (error && error.includes('Your input is too long for one or more of the selected models')) {
+      setError(null)
+    }
+
     // Clear animations when submitting
     if (animationTimeoutRef.current !== null) {
       window.clearTimeout(animationTimeoutRef.current)
@@ -3440,30 +3495,40 @@ function AppContent() {
 
     // Check input tokens against selected models' limits (token-based validation)
     if (selectedModels.length > 0) {
-      // Get minimum max input tokens across all selected models
-      const modelTokenLimits = selectedModels
+      // Get model info with token limits
+      const modelInfo = selectedModels
         .map(modelId => {
           // Find model in modelsByProvider
           for (const providerModels of Object.values(modelsByProvider)) {
             const model = providerModels.find(m => m.id === modelId)
             if (model && model.max_input_tokens) {
-              return model.max_input_tokens
+              return { id: modelId, name: model.name, maxInputTokens: model.max_input_tokens }
             }
           }
           return null
         })
-        .filter((limit): limit is number => limit !== null)
+        .filter((info): info is { id: string; name: string; maxInputTokens: number } => info !== null)
 
-      if (modelTokenLimits.length > 0) {
-        const minMaxInputTokens = Math.min(...modelTokenLimits)
+      if (modelInfo.length > 0) {
+        const minMaxInputTokens = Math.min(...modelInfo.map(m => m.maxInputTokens))
 
         // Use accurate token count if available (from ComparisonForm), otherwise validate on submit
         if (accurateInputTokens !== null && accurateInputTokens > minMaxInputTokens) {
+          // Find problem models (those with max_input_tokens < accurateInputTokens)
+          const problemModels = modelInfo
+            .filter(m => m.maxInputTokens < accurateInputTokens)
+            .map(m => m.name)
+          
           // Convert tokens to approximate characters for user-friendly error message
           const approxMaxChars = minMaxInputTokens * 4
           const approxInputChars = accurateInputTokens * 4
+          
+          const problemModelsText = problemModels.length > 0
+            ? ` Problem model(s): ${problemModels.join(', ')}.`
+            : ''
+          
           setError(
-            `Your input exceeds the token limit for one or more of the selected models. The maximum input is ${formatNumber(minMaxInputTokens)} tokens (approximately ${formatNumber(approxMaxChars)} characters), but your input is ${formatNumber(accurateInputTokens)} tokens (approximately ${formatNumber(approxInputChars)} characters). Please shorten your input or select different models that support longer inputs.`
+            `⚠️ Your input is too long for one or more of the selected models. The maximum input length is approximately ${formatNumber(approxMaxChars)} characters, but your input is approximately ${formatNumber(approxInputChars)} characters.${problemModelsText} Please shorten your input or select different models that support longer inputs.`
           )
           window.scrollTo({ top: 0, behavior: 'smooth' })
           return
