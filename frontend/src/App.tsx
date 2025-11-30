@@ -223,12 +223,12 @@ function AppContent() {
     prevErrorRef.current = error
   }, [error, scrollToCenterElement])
 
-  // Auto-dismiss "input too long" error after 10 seconds
+  // Auto-dismiss "input too long" error after 20 seconds
   useEffect(() => {
     if (error && error.includes('Your input is too long for one or more of the selected models')) {
       const timeoutId = setTimeout(() => {
         setError(null)
-      }, 10000) // 10 seconds
+      }, 20000) // 20 seconds
 
       return () => {
         clearTimeout(timeoutId)
@@ -3528,7 +3528,7 @@ function AppContent() {
             : ''
 
           setError(
-            `⚠️ Your input is too long for one or more of the selected models. The maximum input length is approximately ${formatNumber(approxMaxChars)} characters, but your input is approximately ${formatNumber(approxInputChars)} characters.${problemModelsText} Please shorten your input or select different models that support longer inputs.`
+            `Your input is too long for one or more of the selected models. The maximum input length is approximately ${formatNumber(approxMaxChars)} characters, but your input is approximately ${formatNumber(approxInputChars)} characters.${problemModelsText} Please shorten your input or select different models that support longer inputs.`
           )
           window.scrollTo({ top: 0, behavior: 'smooth' })
           return

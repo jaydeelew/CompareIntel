@@ -575,7 +575,7 @@ async def compare_stream(
         
         raise HTTPException(
             status_code=400,
-            detail=f"⚠️ Your input is too long for one or more of the selected models. The maximum input length is approximately {max_chars:,} characters, but your input is approximately {approx_chars:,} characters.{problem_models_text} Please shorten your input or select different models that support longer inputs.",
+            detail=f"Your input is too long for one or more of the selected models. The maximum input length is approximately {max_chars:,} characters, but your input is approximately {approx_chars:,} characters.{problem_models_text} Please shorten your input or select different models that support longer inputs.",
         )
 
     # Determine model limit based on user tier
