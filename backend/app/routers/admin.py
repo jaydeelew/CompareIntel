@@ -1629,21 +1629,22 @@ async def add_model(
                     content = content[:insertion_point] + model_entry + content[insertion_point:]
         elif tier_classification == "free":
             # Add to FREE_TIER_MODELS (which includes anonymous models)
-            free_pattern = r'(FREE_TIER_MODELS\s*=\s*\{)(.*?)(\s*\})'
+            # Pattern matches: FREE_TIER_MODELS = ANONYMOUS_TIER_MODELS.union({ ... })
+            free_pattern = r'(FREE_TIER_MODELS\s*=\s*ANONYMOUS_TIER_MODELS\.union\()(\{)(.*?)(\})(\))'
             match = re.search(free_pattern, content, re.DOTALL)
             if match:
                 # Check if model already in set
-                if f'"{model_id}"' not in match.group(2):
-                    # Find insertion point - add after the anonymous models unpacking
+                if f'"{model_id}"' not in match.group(3):
+                    # Find insertion point - add after the comment about additional mid-level models
                     # Look for the comment about additional mid-level models
                     mid_level_comment = "# Additional mid-level models"
-                    if mid_level_comment in match.group(2):
-                        insertion_point = match.start(2) + match.group(2).find(mid_level_comment)
+                    if mid_level_comment in match.group(3):
+                        insertion_point = match.start(3) + match.group(3).find(mid_level_comment)
                         model_entry = f'\n    "{model_id}",  # Auto-classified based on pricing\n    '
                         content = content[:insertion_point] + model_entry + content[insertion_point:]
                     else:
-                        # Add before closing brace
-                        insertion_point = match.end() - 1
+                        # Add before closing brace of the set literal
+                        insertion_point = match.start(4)  # Position of the closing brace
                         model_entry = f',\n    "{model_id}",  # Auto-classified based on pricing'
                         content = content[:insertion_point] + model_entry + content[insertion_point:]
         # If tier_classification == "paid", don't add to any tier set (defaults to paid)
@@ -1938,21 +1939,22 @@ async def add_model_stream(
                         content = content[:insertion_point] + model_entry + content[insertion_point:]
             elif tier_classification == "free":
                 # Add to FREE_TIER_MODELS (which includes anonymous models)
-                free_pattern = r'(FREE_TIER_MODELS\s*=\s*\{)(.*?)(\s*\})'
+                # Pattern matches: FREE_TIER_MODELS = ANONYMOUS_TIER_MODELS.union({ ... })
+                free_pattern = r'(FREE_TIER_MODELS\s*=\s*ANONYMOUS_TIER_MODELS\.union\()(\{)(.*?)(\})(\))'
                 match = re.search(free_pattern, content, re.DOTALL)
                 if match:
                     # Check if model already in set
-                    if f'"{model_id}"' not in match.group(2):
-                        # Find insertion point - add after the anonymous models unpacking
+                    if f'"{model_id}"' not in match.group(3):
+                        # Find insertion point - add after the comment about additional mid-level models
                         # Look for the comment about additional mid-level models
                         mid_level_comment = "# Additional mid-level models"
-                        if mid_level_comment in match.group(2):
-                            insertion_point = match.start(2) + match.group(2).find(mid_level_comment)
+                        if mid_level_comment in match.group(3):
+                            insertion_point = match.start(3) + match.group(3).find(mid_level_comment)
                             model_entry = f'\n    "{model_id}",  # Auto-classified based on pricing\n    '
                             content = content[:insertion_point] + model_entry + content[insertion_point:]
                         else:
-                            # Add before closing brace
-                            insertion_point = match.end() - 1
+                            # Add before closing brace of the set literal
+                            insertion_point = match.start(4)  # Position of the closing brace
                             model_entry = f',\n    "{model_id}",  # Auto-classified based on pricing'
                             content = content[:insertion_point] + model_entry + content[insertion_point:]
             # If tier_classification == "paid", don't add to any tier set (defaults to paid)
@@ -2410,13 +2412,14 @@ async def delete_model(
             content = content[:match.start(2)] + anonymous_content + content[match.end(2):]
         
         # Remove from FREE_TIER_MODELS
-        free_pattern = r'(FREE_TIER_MODELS\s*=\s*\{)(.*?)(\s*\})'
+        # Pattern matches: FREE_TIER_MODELS = ANONYMOUS_TIER_MODELS.union({ ... })
+        free_pattern = r'(FREE_TIER_MODELS\s*=\s*ANONYMOUS_TIER_MODELS\.union\()(\{)(.*?)(\})(\))'
         match = re.search(free_pattern, content, re.DOTALL)
         if match:
-            free_content = match.group(2)
+            free_content = match.group(3)  # The content inside the set literal
             # Remove the model entry (with or without trailing comma)
             free_content = re.sub(rf'\s*"{re.escape(model_id)}",?\s*(?:#.*)?\n?', '', free_content)
-            content = content[:match.start(2)] + free_content + content[match.end(2):]
+            content = content[:match.start(3)] + free_content + content[match.end(3):]
         
         # If provider list becomes empty, remove the provider section
         # This is more complex, so we'll leave empty provider lists for now
