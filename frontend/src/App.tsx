@@ -1833,7 +1833,7 @@ function AppContent() {
                     messagesByModel[modelId] = []
                   }
                   messagesByModel[modelId].push({
-                    id: msg.id || createMessageId(`${Date.now()}-user-${Math.random()}`),
+                    id: msg.id ? createMessageId(String(msg.id)) : createMessageId(`${Date.now()}-user-${Math.random()}`),
                     type: 'user' as const,
                     content: msg.content,
                     timestamp: msg.created_at,
@@ -1847,7 +1847,7 @@ function AppContent() {
                   messagesByModel[modelId] = []
                 }
                 messagesByModel[modelId].push({
-                  id: msg.id || createMessageId(`${Date.now()}-${Math.random()}`),
+                  id: msg.id ? createMessageId(String(msg.id)) : createMessageId(`${Date.now()}-${Math.random()}`),
                   type: 'assistant' as const,
                   content: msg.content,
                   timestamp: msg.created_at,
@@ -1864,14 +1864,14 @@ function AppContent() {
               // If we have API messages for this model, update with token counts
               if (apiMessages.length > 0) {
                 // Match messages by content and timestamp to preserve order
-                const updatedMessages = conv.messages.map((msg, idx) => {
+                const updatedMessages = conv.messages.map((msg) => {
                   const apiMsg = apiMessages.find(
                     apiMsg =>
                       apiMsg.type === msg.type &&
                       apiMsg.content === msg.content &&
                       Math.abs(
                         new Date(apiMsg.timestamp).getTime() -
-                          new Date(msg.timestamp).getTime()
+                        new Date(msg.timestamp).getTime()
                       ) < 5000 // Within 5 seconds
                   )
 
@@ -1926,7 +1926,7 @@ function AppContent() {
                     messagesByModel[modelId] = []
                   }
                   messagesByModel[modelId].push({
-                    id: msg.id || createMessageId(`${Date.now()}-user-${Math.random()}`),
+                    id: msg.id ? createMessageId(String(msg.id)) : createMessageId(`${Date.now()}-user-${Math.random()}`),
                     type: 'user' as const,
                     content: msg.content,
                     timestamp: msg.created_at,
@@ -1941,7 +1941,7 @@ function AppContent() {
                   messagesByModel[modelId] = []
                 }
                 messagesByModel[modelId].push({
-                  id: msg.id || createMessageId(`${Date.now()}-${Math.random()}`),
+                  id: msg.id ? createMessageId(String(msg.id)) : createMessageId(`${Date.now()}-${Math.random()}`),
                   type: 'assistant' as const,
                   content: msg.content,
                   timestamp: msg.created_at,
@@ -1959,14 +1959,14 @@ function AppContent() {
               // If we have stored messages for this model, update with token counts
               if (storedMessages.length > 0) {
                 // Match messages by content and timestamp to preserve order
-                const updatedMessages = conv.messages.map((msg, idx) => {
+                const updatedMessages = conv.messages.map((msg) => {
                   const storedMsg = storedMessages.find(
                     storedMsg =>
                       storedMsg.type === msg.type &&
                       storedMsg.content === msg.content &&
                       Math.abs(
                         new Date(storedMsg.timestamp).getTime() -
-                          new Date(msg.timestamp).getTime()
+                        new Date(msg.timestamp).getTime()
                       ) < 5000 // Within 5 seconds
                   )
 
@@ -3131,7 +3131,7 @@ function AppContent() {
       // Allow deselection in both normal and follow-up mode
       const updatedSelectedModels = selectedModels.filter(id => id !== modelId)
       setSelectedModels(updatedSelectedModels)
-      
+
       // Clear "input too long" error only if all problematic models are deselected
       if (error && error.includes('Your input is too long for one or more of the selected models')) {
         // Check if any problematic models are still selected
@@ -3148,12 +3148,12 @@ function AppContent() {
               return null
             })
             .filter((info): info is { id: string; maxInputTokens: number } => info !== null)
-          
+
           // Check if any remaining models are still problematic
           const stillHasProblemModels = remainingModelInfo.some(
             m => m.maxInputTokens < accurateInputTokens
           )
-          
+
           // Only clear error if no problematic models remain
           if (!stillHasProblemModels) {
             setError(null)
@@ -3518,15 +3518,15 @@ function AppContent() {
           const problemModels = modelInfo
             .filter(m => m.maxInputTokens < accurateInputTokens)
             .map(m => m.name)
-          
+
           // Convert tokens to approximate characters for user-friendly error message
           const approxMaxChars = minMaxInputTokens * 4
           const approxInputChars = accurateInputTokens * 4
-          
+
           const problemModelsText = problemModels.length > 0
             ? ` Problem model(s): ${problemModels.join(', ')}.`
             : ''
-          
+
           setError(
             `⚠️ Your input is too long for one or more of the selected models. The maximum input length is approximately ${formatNumber(approxMaxChars)} characters, but your input is approximately ${formatNumber(approxInputChars)} characters.${problemModelsText} Please shorten your input or select different models that support longer inputs.`
           )
