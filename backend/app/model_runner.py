@@ -76,14 +76,13 @@ ANONYMOUS_TIER_MODELS = {
     # xAI - Efficient models
     "x-ai/grok-code-fast-1",
     "x-ai/grok-4-fast",
+}
 
 # List of model IDs available to free (registered) users
 # Includes all anonymous tier models PLUS mid-level inexpensive models as an incentive to register
 # Classification criteria: Models costing <$1 per million tokens (input+output average)
 # Generally includes: anonymous models + small/medium versions, "plus" variants, fast versions of premium models
-FREE_TIER_MODELS = {
-    # Include all anonymous tier models
-    *ANONYMOUS_TIER_MODELS,
+FREE_TIER_MODELS = ANONYMOUS_TIER_MODELS.union({
     # Additional mid-level models (inexpensive but better than anonymous tier)
     # These provide incentive for users to register for a free account
     # OpenAI - Mid-level models
@@ -110,7 +109,7 @@ FREE_TIER_MODELS = {
     # - Anonymous tier: Models costing <$0.50 per million tokens
     # - Free tier: Models costing <$1 per million tokens (includes anonymous + mid-level)
     # - Paid tier: Models costing >=$1 per million tokens
-}
+})
 
 
 def is_model_available_for_tier(model_id: str, tier: str) -> bool:
