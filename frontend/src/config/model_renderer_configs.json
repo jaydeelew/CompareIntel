@@ -3440,5 +3440,73 @@
       "createdAt": "2025-11-22T05:19:27.009096Z",
       "needsManualReview": true
     }
+  },
+  {
+    "modelId": "x-ai/grok-4.1-fast:free",
+    "version": "1.0.0",
+    "displayMathDelimiters": [
+      {
+        "pattern": "/\\\\\\[\\s*([\\s\\S]*?)\\s*\\\\\\]/g",
+        "name": "bracket",
+        "priority": 1
+      },
+      {
+        "pattern": "/\\$\\$([^\\$]+?)\\$\\$/gs",
+        "name": "double-dollar",
+        "priority": 2
+      }
+    ],
+    "inlineMathDelimiters": [
+      {
+        "pattern": "/\\\\\\(\\s*([^\\\\]*?)\\s*\\\\\\)/g",
+        "name": "paren",
+        "priority": 1
+      },
+      {
+        "pattern": "/(?<!\\$)\\$([^\\$\\n]+?)\\$(?!\\$)/g",
+        "name": "single-dollar",
+        "priority": 2
+      }
+    ],
+    "preprocessing": {
+      "fixEscapedDollars": true,
+      "removeHtmlFromMath": false,
+      "removeMathML": true,
+      "removeSVG": true
+    },
+    "markdownProcessing": {
+      "processLinks": true,
+      "fixBrokenLinks": false,
+      "processTables": true,
+      "processBlockquotes": true,
+      "processHorizontalRules": true,
+      "processHeaders": true,
+      "processBoldItalic": true,
+      "processLists": true,
+      "processInlineCode": true
+    },
+    "katexOptions": {
+      "throwOnError": false,
+      "strict": false,
+      "trust": [
+        "\\url",
+        "\\href",
+        "\\includegraphics"
+      ],
+      "macros": {
+        "\\eqref": "\\href{###1}{(\\text{#1})}"
+      },
+      "maxSize": 500,
+      "maxExpand": 1000
+    },
+    "codeBlockPreservation": {
+      "enabled": true,
+      "extractBeforeProcessing": true,
+      "restoreAfterProcessing": true
+    },
+    "metadata": {
+      "createdAt": "2025-11-30T01:25:44.551304Z",
+      "needsManualReview": true
+    }
   }
 ]
