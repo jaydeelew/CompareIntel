@@ -8,6 +8,7 @@ import { useDebounce } from '../../hooks/useDebounce';
 import { estimateTokens } from '../../services/compareService';
 import { showNotification } from '../../utils/error';
 import * as pdfjsLib from 'pdfjs-dist';
+import pdfjsWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 import mammoth from 'mammoth';
 
 interface ComparisonFormProps {
@@ -551,7 +552,8 @@ export const ComparisonForm = memo<ComparisonFormProps>(({
 
   // Configure PDF.js worker
   useEffect(() => {
-    pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+    // Use the worker file from the pdfjs-dist package instead of CDN
+    pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
   }, []);
 
   // Extract text from PDF file
