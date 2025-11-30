@@ -46,7 +46,7 @@ interface ComparisonFormProps {
 
   // Model selection
   selectedModels: string[];
-  
+
   // Models data for token limit calculations
   modelsByProvider: ModelsByProvider;
 
@@ -225,7 +225,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(({
     // Calculate tokens from conversation history using saved token counts from database
     // For each model, sum: input_tokens from user messages + output_tokens from that model's assistant messages
     const tokenCountsByModel: { [modelId: string]: number } = {};
-    
+
     if (isFollowUpMode && conversations.length > 0) {
       // Get all conversations for selected models
       const selectedConversations = conversations.filter(conv => {
@@ -236,7 +236,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(({
       selectedConversations.forEach(conv => {
         const modelId = String(conv.modelId);
         let totalTokens = 0;
-        
+
         // Sum tokens from messages using saved token counts
         conv.messages.forEach(msg => {
           if (msg.type === 'user' && msg.input_tokens) {
@@ -249,7 +249,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(({
           // Note: If tokens are missing, we skip that message rather than estimating
           // This ensures we only use accurate token counts from backend/database
         });
-        
+
         tokenCountsByModel[modelId] = totalTokens;
       });
     }
@@ -322,7 +322,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(({
   // Uses backend model-specific token estimators - no chars/4 fallback
   const tokenUsagePercentageInfo = useMemo(() => {
     if (selectedModels.length === 0) {
-      return { percentage: 0, limitingModel: null };
+      return { percentage: 0, limitingModel: null, totalInputTokens: 0 };
     }
 
     // Get model limits with model info
@@ -344,23 +344,23 @@ export const ComparisonForm = memo<ComparisonFormProps>(({
       .filter((info): info is { modelId: string; modelName: string; maxInputTokens: number } => info !== null);
 
     if (modelLimitsWithInfo.length === 0) {
-      return { percentage: 0, limitingModel: null };
+      return { percentage: 0, limitingModel: null, totalInputTokens: 0 };
     }
 
     // Find the limiting model (minimum capacity)
     const minLimit = Math.min(...modelLimitsWithInfo.map(info => info.maxInputTokens));
     const limitingModelInfo = modelLimitsWithInfo.find(info => info.maxInputTokens === minLimit);
-    
+
     // Check if there's a significant difference (min is < 50% of max)
     const maxLimit = Math.max(...modelLimitsWithInfo.map(info => info.maxInputTokens));
     const hasSignificantDifference = maxLimit > 0 && (minLimit / maxLimit) < 0.5;
 
     const minMaxInputTokens = minLimit;
-    
+
     // Calculate tokens from conversation history using saved token counts from database
     // For each model, sum: input_tokens from user messages + output_tokens from that model's assistant messages
     const tokenCountsByModel: { [modelId: string]: number } = {};
-    
+
     if (isFollowUpMode && conversations.length > 0) {
       // Get all conversations for selected models
       const selectedConversations = conversations.filter(conv => {
@@ -371,7 +371,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(({
       selectedConversations.forEach(conv => {
         const modelId = String(conv.modelId);
         let totalTokens = 0;
-        
+
         // Sum tokens from messages using saved token counts
         conv.messages.forEach(msg => {
           if (msg.type === 'user' && msg.input_tokens) {
@@ -384,7 +384,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(({
           // Note: If tokens are missing, we skip that message rather than estimating
           // This ensures we only use accurate token counts from backend/database
         });
-        
+
         tokenCountsByModel[modelId] = totalTokens;
       });
     }
@@ -396,7 +396,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(({
 
     // Get current input tokens - use backend model-specific token estimator
     let totalInputTokens: number;
-    
+
     if (accurateTokenCounts) {
       // Use accurate count from backend API (model-specific tokenizer)
       const currentInputTokens = accurateTokenCounts.input_tokens;
@@ -408,12 +408,13 @@ export const ComparisonForm = memo<ComparisonFormProps>(({
       // The UI will show 0% until accurate counts are available
       totalInputTokens = conversationHistoryTokens; // Only show history tokens, not current input estimate
     }
-    
+
     // Calculate percentage used (clamp between 0 and 100)
     const percentageUsed = Math.min(100, Math.max(0, (totalInputTokens / minMaxInputTokens) * 100));
-    
+
     return {
       percentage: percentageUsed,
+      totalInputTokens, // Include this to check if tokens exist for visual display
       limitingModel: hasSignificantDifference && limitingModelInfo ? {
         name: limitingModelInfo.modelName,
         capacityChars: formatCapacityChars(limitingModelInfo.maxInputTokens),
@@ -626,10 +627,16 @@ export const ComparisonForm = memo<ComparisonFormProps>(({
             {/* Token usage pie chart indicator */}
             {selectedModels.length > 0 && (() => {
               const percentage = tokenUsagePercentage;
+              const totalInputTokens = tokenUsagePercentageInfo.totalInputTokens;
               const radius = 14; // 32px diameter / 2 - 2px stroke
               const circumference = 2 * Math.PI * radius;
-              const offset = circumference - (percentage / 100) * circumference;
-              
+
+              // For visual display, use a minimum of 1% when there are actual tokens
+              // This ensures users can see that their prompt is being counted even if < 1%
+              const hasTokens = totalInputTokens > 0;
+              const displayPercentage = hasTokens && percentage < 1 ? 1 : percentage;
+              const offset = circumference - (displayPercentage / 100) * circumference;
+
               // Determine color based on percentage
               let fillColor = '#3b82f6'; // Blue for normal usage
               if (percentage >= 90) {
@@ -640,14 +647,20 @@ export const ComparisonForm = memo<ComparisonFormProps>(({
                 fillColor = '#eab308'; // Yellow for medium usage
               }
 
-              // Build tooltip text
-              let tooltipText = `${Math.round(percentage)}% of input capacity used`;
+              // Build tooltip text - show "<1%" for sub-1% usage
+              let tooltipText: string;
+              if (percentage < 1 && percentage > 0) {
+                tooltipText = '<1% of input capacity used';
+              } else {
+                tooltipText = `${Math.round(percentage)}% of input capacity used`;
+              }
+
               if (tokenUsagePercentageInfo.limitingModel) {
                 tooltipText = `Limited by ${tokenUsagePercentageInfo.limitingModel.name} at (${tokenUsagePercentageInfo.limitingModel.capacityChars})`;
               }
 
               return (
-                <div 
+                <div
                   className="token-usage-indicator"
                   title={tooltipText}
                   style={{ cursor: 'default' }}
@@ -662,8 +675,8 @@ export const ComparisonForm = memo<ComparisonFormProps>(({
                       stroke="#e5e7eb"
                       strokeWidth="2"
                     />
-                    {/* Progress circle (filled portion) */}
-                    {percentage > 0 && (
+                    {/* Progress circle (filled portion) - show minimum 1% visual when tokens exist */}
+                    {hasTokens && (
                       <circle
                         cx="16"
                         cy="16"
