@@ -456,7 +456,7 @@
   display: flex;
   flex-direction: row;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   z-index: 1000;
   pointer-events: auto;
   visibility: visible;
@@ -590,6 +590,54 @@
   box-shadow:
     0 8px 24px rgba(245, 158, 11, 0.5),
     0 4px 16px rgba(245, 158, 11, 0.3);
+}
+
+.file-upload-button {
+  background: white;
+  border: 2px solid #e5e7eb;
+  color: #e5e7eb;
+  box-sizing: border-box;
+}
+
+.file-upload-button:hover:not(:disabled) {
+  background: white;
+  border-color: rgba(59, 130, 246, 0.6);
+  color: rgba(59, 130, 246, 0.9);
+  transform: translateY(-2px) scale(1.05);
+  box-shadow:
+    0 8px 24px rgba(37, 99, 235, 0.3),
+    0 4px 16px rgba(37, 99, 235, 0.2);
+}
+
+.file-upload-button:hover:not(:disabled)::before {
+  opacity: 0;
+}
+
+.file-upload-button:active:not(:disabled) {
+  background: white;
+  border-color: rgba(59, 130, 246, 0.7);
+  color: rgba(59, 130, 246, 1);
+  transform: translateY(-1px) scale(1.02);
+  box-shadow:
+    0 4px 16px rgba(37, 99, 235, 0.3),
+    0 2px 8px rgba(37, 99, 235, 0.2);
+}
+
+.file-upload-button:focus,
+.file-upload-button:focus-visible {
+  outline: none !important;
+  border-color: #e5e7eb;
+  box-shadow: none;
+}
+
+.file-upload-button:disabled {
+  background: white;
+  border-color: #e5e7eb;
+  color: #e5e7eb;
+  opacity: 0.5;
+  cursor: default;
+  transform: none;
+  box-shadow: none;
 }
 
 .note-icon svg {

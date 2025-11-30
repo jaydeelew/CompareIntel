@@ -6,6 +6,9 @@ import { truncatePrompt, formatDate } from '../../utils';
 import { getConversationLimit } from '../../config/constants';
 import { useDebounce } from '../../hooks/useDebounce';
 import { estimateTokens } from '../../services/compareService';
+import { showNotification } from '../../utils/error';
+import * as pdfjsLib from 'pdfjs-dist';
+import mammoth from 'mammoth';
 
 interface ComparisonFormProps {
   // Input state
@@ -108,6 +111,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(({
   } | null>(null);
   const [isLoadingAccurateTokens, setIsLoadingAccurateTokens] = useState(false);
   const abortControllerRef = useRef<AbortController | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   // Debounce input for API calls (only call API when user pauses typing)
   const debouncedInput = useDebounce(input, 600); // 600ms delay
@@ -545,6 +549,292 @@ export const ComparisonForm = memo<ComparisonFormProps>(({
     return () => clearTimeout(timer);
   }, [adjustTextareaHeight]);
 
+  // Configure PDF.js worker
+  useEffect(() => {
+    pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+  }, []);
+
+  // Extract text from PDF file
+  const extractTextFromPDF = useCallback(async (file: File): Promise<string> => {
+    try {
+      const arrayBuffer = await file.arrayBuffer();
+      const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+      let fullText = '';
+
+      for (let i = 1; i <= pdf.numPages; i++) {
+        const page = await pdf.getPage(i);
+        const textContent = await page.getTextContent();
+        const pageText = textContent.items
+          .map((item: any) => item.str)
+          .join(' ');
+        fullText += pageText + '\n\n';
+      }
+
+      return fullText.trim();
+    } catch (error) {
+      console.error('Error extracting text from PDF:', error);
+      throw new Error('Failed to extract text from PDF file');
+    }
+  }, []);
+
+  // Extract text from DOCX file
+  const extractTextFromDOCX = useCallback(async (file: File): Promise<string> => {
+    try {
+      const arrayBuffer = await file.arrayBuffer();
+      const result = await mammoth.extractRawText({ arrayBuffer });
+      return result.value;
+    } catch (error) {
+      console.error('Error extracting text from DOCX:', error);
+      throw new Error('Failed to extract text from DOCX file');
+    }
+  }, []);
+
+  // Check if file is a document type that can have text extracted
+  const isDocumentFile = useCallback((file: File): boolean => {
+    const fileName = file.name.toLowerCase();
+    const mimeType = file.type.toLowerCase();
+
+    const documentExtensions = ['.pdf', '.docx', '.doc', '.rtf', '.odt', '.txt'];
+    const documentMimeTypes = [
+      'application/pdf',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'application/msword',
+      'application/rtf',
+      'application/vnd.oasis.opendocument.text',
+      'text/rtf',
+    ];
+
+    return (
+      documentExtensions.some(ext => fileName.endsWith(ext)) ||
+      documentMimeTypes.some(type => mimeType.includes(type))
+    );
+  }, []);
+
+  // Detect if a file is a text/code/document file by checking MIME type and file content
+  const isTextOrCodeFile = useCallback(async (file: File): Promise<boolean> => {
+    // Check if it's a document file (PDF, DOCX, etc.)
+    if (isDocumentFile(file)) {
+      return true;
+    }
+    // Check MIME type first
+    const mimeType = file.type.toLowerCase();
+
+    // Common text/code MIME types
+    const textMimeTypes = [
+      'text/plain',
+      'text/html',
+      'text/css',
+      'text/javascript',
+      'text/xml',
+      'text/csv',
+      'text/markdown',
+      'application/json',
+      'application/javascript',
+      'application/xml',
+      'application/x-sh',
+      'application/x-python',
+      'application/x-httpd-php',
+      'application/x-java-source',
+      'application/x-c',
+      'application/x-c++',
+      'application/x-csharp',
+      'application/x-ruby',
+      'application/x-go',
+      'application/x-rust',
+      'application/x-swift',
+      'application/x-kotlin',
+      'application/x-typescript',
+      'application/x-yaml',
+      'application/x-toml',
+      'application/x-ini',
+      'application/x-shellscript',
+    ];
+
+    // Check if MIME type matches known text types
+    if (mimeType && textMimeTypes.some(type => mimeType.includes(type) || mimeType.startsWith(type))) {
+      return true;
+    }
+
+    // If MIME type is empty or generic (application/octet-stream), check file extension
+    const fileName = file.name.toLowerCase();
+    const textExtensions = [
+      '.txt', '.md', '.markdown', '.json', '.xml', '.html', '.htm', '.css', '.js', '.jsx',
+      '.ts', '.tsx', '.py', '.java', '.c', '.cpp', '.cc', '.cxx', '.h', '.hpp', '.cs',
+      '.rb', '.go', '.rs', '.swift', '.kt', '.php', '.sh', '.bash', '.zsh', '.fish',
+      '.yaml', '.yml', '.toml', '.ini', '.cfg', '.conf', '.log', '.csv', '.sql',
+      '.r', '.R', '.m', '.pl', '.pm', '.lua', '.scala', '.clj', '.cljs', '.hs',
+      '.elm', '.ex', '.exs', '.dart', '.vue', '.svelte', '.astro', '.graphql', '.gql',
+      '.dockerfile', '.env', '.gitignore', '.gitattributes', '.editorconfig',
+      '.eslintrc', '.prettierrc', '.babelrc', '.webpack', '.rollup', '.vite',
+      '.makefile', '.cmake', '.gradle', '.maven', '.pom', '.sbt', '.build',
+      '.lock', '.lockfile', '.package', '.requirements', '.pip', '.conda',
+      '.dockerignore', '.npmignore', '.yarnignore', '.eslintignore', '.prettierignore',
+    ];
+
+    if (textExtensions.some(ext => fileName.endsWith(ext))) {
+      return true;
+    }
+
+    // If MIME type is empty or generic, try to read first bytes to detect text
+    // Text files typically start with printable ASCII characters or UTF-8 BOM
+    try {
+      const firstBytes = await file.slice(0, 512).arrayBuffer();
+      const uint8Array = new Uint8Array(firstBytes);
+
+      // Check for UTF-8 BOM
+      if (uint8Array.length >= 3 && uint8Array[0] === 0xEF && uint8Array[1] === 0xBB && uint8Array[2] === 0xBF) {
+        return true;
+      }
+
+      // Check for UTF-16 BOM (LE or BE)
+      if (uint8Array.length >= 2 && ((uint8Array[0] === 0xFF && uint8Array[1] === 0xFE) || (uint8Array[0] === 0xFE && uint8Array[1] === 0xFF))) {
+        return true;
+      }
+
+      // Check if most bytes are printable ASCII (32-126) or common whitespace (9, 10, 13)
+      // Allow some non-printable bytes for encoding variations
+      let printableCount = 0;
+      for (let i = 0; i < Math.min(uint8Array.length, 256); i++) {
+        const byte = uint8Array[i];
+        if ((byte >= 32 && byte <= 126) || byte === 9 || byte === 10 || byte === 13) {
+          printableCount++;
+        }
+      }
+
+      // If more than 80% of bytes are printable, likely a text file
+      const printableRatio = printableCount / Math.min(uint8Array.length, 256);
+      if (printableRatio > 0.8) {
+        return true;
+      }
+    } catch (error) {
+      // If we can't read the file, default to false (not a text file)
+      console.warn('Error reading file for type detection:', error);
+      return false;
+    }
+
+    return false;
+  }, []);
+
+  // Handle file upload
+  const handleFileUpload = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Check if file is text/code/document
+    const isTextFile = await isTextOrCodeFile(file);
+
+    if (!isTextFile) {
+      showNotification('Only text, code, and document files can be uploaded. Please select a supported file.', 'error');
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+      return;
+    }
+
+    // Extract text content based on file type
+    try {
+      const fileName = file.name.toLowerCase();
+      let content = '';
+      let fileType = 'text file';
+
+      // Handle PDF files
+      if (fileName.endsWith('.pdf')) {
+        fileType = 'PDF file';
+        content = await extractTextFromPDF(file);
+      }
+      // Handle DOCX files
+      else if (fileName.endsWith('.docx')) {
+        fileType = 'DOCX file';
+        content = await extractTextFromDOCX(file);
+      }
+      // Handle other document types (DOC, RTF, ODT) - try as text first
+      else if (fileName.endsWith('.doc') || fileName.endsWith('.rtf') || fileName.endsWith('.odt')) {
+        if (fileName.endsWith('.doc')) fileType = 'DOC file';
+        else if (fileName.endsWith('.rtf')) fileType = 'RTF file';
+        else if (fileName.endsWith('.odt')) fileType = 'ODT file';
+
+        // Try to read as text (works for some RTF files)
+        try {
+          content = await new Promise<string>((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = (e) => resolve(e.target?.result as string);
+            reader.onerror = reject;
+            reader.readAsText(file);
+          });
+        } catch {
+          showNotification(`${fileType} extraction not fully supported. Please convert to PDF or DOCX.`, 'error');
+          if (fileInputRef.current) {
+            fileInputRef.current.value = '';
+          }
+          return;
+        }
+      }
+      // Handle text/code files
+      else {
+        // Detect file type for notification
+        if (fileName.endsWith('.py')) fileType = 'Python file';
+        else if (fileName.endsWith('.js') || fileName.endsWith('.jsx')) fileType = 'JavaScript file';
+        else if (fileName.endsWith('.ts') || fileName.endsWith('.tsx')) fileType = 'TypeScript file';
+        else if (fileName.endsWith('.java')) fileType = 'Java file';
+        else if (fileName.endsWith('.cpp') || fileName.endsWith('.cc') || fileName.endsWith('.cxx') || fileName.endsWith('.c')) fileType = 'C/C++ file';
+        else if (fileName.endsWith('.cs')) fileType = 'C# file';
+        else if (fileName.endsWith('.rb')) fileType = 'Ruby file';
+        else if (fileName.endsWith('.go')) fileType = 'Go file';
+        else if (fileName.endsWith('.rs')) fileType = 'Rust file';
+        else if (fileName.endsWith('.php')) fileType = 'PHP file';
+        else if (fileName.endsWith('.sh') || fileName.endsWith('.bash')) fileType = 'Shell script';
+        else if (fileName.endsWith('.html') || fileName.endsWith('.htm')) fileType = 'HTML file';
+        else if (fileName.endsWith('.css')) fileType = 'CSS file';
+        else if (fileName.endsWith('.json')) fileType = 'JSON file';
+        else if (fileName.endsWith('.xml')) fileType = 'XML file';
+        else if (fileName.endsWith('.md') || fileName.endsWith('.markdown')) fileType = 'Markdown file';
+        else if (fileName.endsWith('.yaml') || fileName.endsWith('.yml')) fileType = 'YAML file';
+        else if (fileName.endsWith('.sql')) fileType = 'SQL file';
+        else if (fileName.endsWith('.txt')) fileType = 'text file';
+
+        // Read as text
+        content = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = (e) => resolve(e.target?.result as string);
+          reader.onerror = reject;
+          reader.readAsText(file);
+        });
+      }
+
+      if (content && content.trim()) {
+        // Append content to textarea (add newline before if textarea has content)
+        const separator = input.trim() ? '\n\n' : '';
+        setInput(input + separator + content);
+
+        const notification = showNotification(`${fileType} "${file.name}" uploaded successfully`, 'success');
+        // Clear the default 3-second timeout and set a custom 5-second timeout
+        notification.clearAutoRemove();
+        setTimeout(() => {
+          notification();
+        }, 5000);
+      } else {
+        showNotification(`No text content found in ${fileType}.`, 'error');
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Error uploading file. Please try again.';
+      showNotification(errorMessage, 'error');
+      console.error('File upload error:', error);
+    } finally {
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  }, [input, setInput, isTextOrCodeFile, isDocumentFile, extractTextFromPDF, extractTextFromDOCX]);
+
+  // Handle click on upload button
+  const handleUploadButtonClick = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
+    fileInputRef.current?.click();
+    // Remove focus from button after clicking to prevent blue outline
+    e.currentTarget.blur();
+  }, []);
+
 
   return (
     <>
@@ -636,6 +926,14 @@ export const ComparisonForm = memo<ComparisonFormProps>(({
           </button>
 
           <div className="textarea-actions">
+            {/* File upload input - hidden */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".txt,.md,.markdown,.json,.xml,.html,.htm,.css,.js,.jsx,.ts,.tsx,.py,.java,.c,.cpp,.cc,.cxx,.h,.hpp,.cs,.rb,.go,.rs,.swift,.kt,.php,.sh,.bash,.zsh,.fish,.yaml,.yml,.toml,.ini,.cfg,.conf,.log,.csv,.sql,.r,.R,.m,.pl,.pm,.lua,.scala,.clj,.cljs,.hs,.elm,.ex,.exs,.dart,.vue,.svelte,.astro,.graphql,.gql,.dockerfile,.env,.gitignore,.gitattributes,.editorconfig,.eslintrc,.prettierrc,.babelrc,.webpack,.rollup,.vite,.makefile,.cmake,.gradle,.maven,.pom,.sbt,.build,.lock,.lockfile,.package,.requirements,.pip,.conda,.dockerignore,.npmignore,.yarnignore,.eslintignore,.prettierignore,.pdf,.docx,.doc,.rtf,.odt,text/*,application/json,application/javascript,application/xml,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/msword,application/rtf,application/vnd.oasis.opendocument.text"
+              style={{ display: 'none' }}
+              onChange={handleFileUpload}
+            />
             {/* Token usage pie chart indicator */}
             {selectedModels.length > 0 && (() => {
               const percentage = tokenUsagePercentage;
@@ -708,6 +1006,18 @@ export const ComparisonForm = memo<ComparisonFormProps>(({
                 </div>
               );
             })()}
+            {/* File upload button */}
+            <button
+              type="button"
+              onClick={handleUploadButtonClick}
+              className="textarea-icon-button file-upload-button"
+              title="Upload text or code file"
+              disabled={isLoading}
+            >
+              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ width: '20px', height: '20px', display: 'block' }}>
+                <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </button>
             <button
               onClick={isFollowUpMode ? onContinueConversation : onSubmitClick}
               disabled={isLoading || creditsRemaining <= 0}
