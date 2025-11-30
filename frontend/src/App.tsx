@@ -2724,6 +2724,29 @@ function AppContent() {
         if (isAuthenticated && user) {
           // For authenticated users, use credits instead of daily_usage_count
           setUsageCount(user.credits_used_this_period || 0)
+          
+          // Fetch credit balance for authenticated users on mount
+          try {
+            const creditBalance = await getCreditBalance()
+            setCreditBalance(creditBalance)
+          } catch (error) {
+            // Silently handle credit balance fetch errors
+            console.error('Failed to fetch authenticated user credit balance:', error)
+            // Fallback to user object data if available
+            if (user.monthly_credits_allocated !== undefined) {
+              setCreditBalance({
+                credits_allocated: user.monthly_credits_allocated || 0,
+                credits_used_this_period: user.credits_used_this_period || 0,
+                credits_remaining: Math.max(0, (user.monthly_credits_allocated || 0) - (user.credits_used_this_period || 0)),
+                total_credits_used: user.total_credits_used,
+                credits_reset_at: user.credits_reset_at,
+                billing_period_start: user.billing_period_start,
+                billing_period_end: user.billing_period_end,
+                period_type: user.billing_period_start ? 'monthly' : 'daily',
+                subscription_tier: user.subscription_tier,
+              })
+            }
+          }
         } else {
           try {
             const data = await getRateLimitStatus(fingerprint)
@@ -4941,6 +4964,39 @@ function AppContent() {
       setIsFollowUpMode(false)
     }
   }, [creditsRemaining, isFollowUpMode, setIsFollowUpMode])
+
+  // Check credits and set error message if credits are 0 (persists across page refresh and login/logout)
+  useEffect(() => {
+    // Only check if we have credit data available
+    // Skip if credits are still loading (null/undefined)
+    if (creditsRemaining === null || creditsRemaining === undefined) {
+      return
+    }
+
+    const userTier = isAuthenticated ? user?.subscription_tier || 'free' : 'anonymous'
+    const resetDate = creditBalance?.credits_reset_at || user?.credits_reset_at
+
+    // Check if credits are 0
+    if (creditsRemaining <= 0) {
+      // Calculate what the error message should be for 0 credits
+      const expectedErrorMessage = getCreditWarningMessage('none', userTier, creditsRemaining, undefined, resetDate)
+      
+      // Set error message if credits are 0 and error is not already set correctly
+      if (error !== expectedErrorMessage) {
+        setError(expectedErrorMessage)
+      }
+    } else {
+      // If credits are > 0, clear error if it's a credit-related error
+      // Check if error matches credit error patterns (to avoid clearing other errors)
+      if (error && (
+        error.includes("You've run out of credits") ||
+        error.includes("run out of credits") ||
+        (error.includes("credits") && error.includes("reset"))
+      )) {
+        setError(null)
+      }
+    }
+  }, [creditsRemaining, creditBalance, user, isAuthenticated, getCreditWarningMessage, error, setError])
 
   // Helper function to render usage preview (used in both regular and follow-up modes)
   // Wrapped in useCallback with dependencies so ComparisonForm (memoized) re-renders when credits change
