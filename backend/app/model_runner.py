@@ -76,6 +76,7 @@ ANONYMOUS_TIER_MODELS = {
     # xAI - Efficient models
     "x-ai/grok-code-fast-1",
     "x-ai/grok-4-fast",
+    "x-ai/grok-4.1-fast:free",  # Auto-classified based on pricing
 }
 
 # List of model IDs available to free (registered) users
@@ -547,6 +548,13 @@ MODELS_BY_PROVIDER = {
             "category": "Language",
             "provider": "xAI",
             "available": False,
+        },
+        {
+            "id": "x-ai/grok-4.1-fast:free",
+            "name": "Grok 4.1 Fast:Free",
+            "description": "Grok 4.1 Fast is xAI's best agentic tool calling model that shines in real-world use cases like customer support and deep research.",
+            "category": "Language",
+            "provider": "xAI",
         },
         {
             "id": "x-ai/grok-4-fast",
@@ -1289,6 +1297,73 @@ def call_openrouter_streaming(
             yield f"Error: {str(e)[:100]}"
         # Return None for usage data on error
         return None
+
+
+def call_openrouter(
+    prompt: str,
+    model_id: str,
+    mode: str = "standard",
+    conversation_history: Optional[List[Any]] = None,
+    use_mock: bool = False,
+) -> str:
+    """
+    Non-streaming wrapper for call_openrouter_streaming.
+    Collects all chunks and returns the complete response as a string.
+    
+    This function is used by scripts that need synchronous, non-streaming responses.
+    For production use, prefer call_openrouter_streaming for better performance.
+    
+    Args:
+        prompt: User prompt text
+        model_id: Model identifier
+        mode: Mode string (unused, kept for backward compatibility)
+        conversation_history: Optional conversation history
+        use_mock: If True, return mock responses instead of calling API
+    
+    Returns:
+        str: Complete response text
+    
+    Raises:
+        Exception: If the API call fails or returns an error
+    """
+    try:
+        # Collect all chunks from the streaming function
+        chunks = []
+        generator = call_openrouter_streaming(
+            prompt=prompt,
+            model_id=model_id,
+            conversation_history=conversation_history,
+            use_mock=use_mock,
+        )
+        
+        # Collect all chunks
+        for chunk in generator:
+            chunks.append(chunk)
+        
+        # Join all chunks into a single response
+        response = "".join(chunks)
+        
+        # Check if response contains an error message
+        if response.startswith("Error:"):
+            raise Exception(response)
+        
+        # Clean the response
+        response = clean_model_response(response)
+        
+        return response
+    except Exception as e:
+        # Re-raise exceptions from the streaming function
+        error_str = str(e).lower()
+        if "timeout" in error_str:
+            raise Exception(f"Timeout calling model {model_id}")
+        elif "rate limit" in error_str or "429" in error_str:
+            raise Exception(f"Rate limited when calling model {model_id}")
+        elif "not found" in error_str or "404" in error_str:
+            raise Exception(f"Model {model_id} not available")
+        elif "unauthorized" in error_str or "401" in error_str:
+            raise Exception(f"Authentication failed for model {model_id}")
+        else:
+            raise
 
 
 def test_connection_quality() -> ConnectionQualityDict:
