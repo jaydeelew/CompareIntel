@@ -318,8 +318,18 @@ export const ComparisonForm = memo<ComparisonFormProps>(({
     }
   }, []);
 
+  // Simple client-side token estimation for real-time updates (1 token ≈ 4 chars)
+  // This provides immediate feedback while accurate counts are being fetched from the API
+  const estimateTokensSimple = useCallback((text: string): number => {
+    if (!text.trim()) {
+      return 0;
+    }
+    // Rough estimate: 1 token ≈ 4 characters
+    return Math.max(1, Math.ceil(text.length / 4));
+  }, []);
+
   // Calculate token usage percentage for pie chart (works in both regular and follow-up mode)
-  // Uses backend model-specific token estimators - no chars/4 fallback
+  // Uses backend model-specific token estimators when available, falls back to simple chars/4 estimation for real-time updates
   const tokenUsagePercentageInfo = useMemo(() => {
     if (selectedModels.length === 0) {
       return { percentage: 0, limitingModel: null, totalInputTokens: 0 };
@@ -394,7 +404,8 @@ export const ComparisonForm = memo<ComparisonFormProps>(({
       ? Math.max(...Object.values(tokenCountsByModel))
       : 0;
 
-    // Get current input tokens - use backend model-specific token estimator
+    // Get current input tokens - use backend model-specific token estimator when available,
+    // otherwise use simple client-side estimation for real-time updates
     let totalInputTokens: number;
 
     if (accurateTokenCounts) {
@@ -404,9 +415,10 @@ export const ComparisonForm = memo<ComparisonFormProps>(({
       totalInputTokens = currentInputTokens + conversationHistoryTokens;
     } else {
       // If accurate counts not available yet (API call in progress or failed),
-      // use 0 to avoid showing incorrect estimates
-      // The UI will show 0% until accurate counts are available
-      totalInputTokens = conversationHistoryTokens; // Only show history tokens, not current input estimate
+      // use simple client-side estimation for real-time updates as user types
+      // This provides immediate feedback while accurate counts are being fetched
+      const estimatedInputTokens = estimateTokensSimple(input);
+      totalInputTokens = estimatedInputTokens + conversationHistoryTokens;
     }
 
     // Calculate percentage used (clamp between 0 and 100)
@@ -420,7 +432,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(({
         capacityChars: formatCapacityChars(limitingModelInfo.maxInputTokens),
       } : null,
     };
-  }, [selectedModels, input, modelsByProvider, isFollowUpMode, conversations, accurateTokenCounts, formatCapacityChars]);
+  }, [selectedModels, input, modelsByProvider, isFollowUpMode, conversations, accurateTokenCounts, formatCapacityChars, estimateTokensSimple]);
 
   // Extract percentage for backward compatibility
   const tokenUsagePercentage = tokenUsagePercentageInfo.percentage;
