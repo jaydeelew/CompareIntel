@@ -61,7 +61,8 @@ ANONYMOUS_TIER_MODELS = {
     # Meta - Free/open models
     "meta-llama/llama-3.3-70b-instruct:free",
     "meta-llama/llama-3.3-70b-instruct",  # Also allow non-free version
-    # Microsoft - Free models"microsoft/phi-4",  # Efficient reasoning model
+    # Microsoft - Free models
+    "microsoft/phi-4",  # Efficient reasoning model
     # Mistral - Small/efficient models
     "mistralai/mistral-small-3.2-24b-instruct",
     "mistralai/devstral-small",  # Smaller code model
@@ -75,7 +76,7 @@ ANONYMOUS_TIER_MODELS = {
     # xAI - Efficient models
     "x-ai/grok-code-fast-1",
     "x-ai/grok-4-fast",
-    "x-ai/grok-4.1-fast",  # Fast version
+    "x-ai/grok-4.1-fast:free",  # Auto-classified based on pricing
 }
 
 # List of model IDs available to free (registered) users
@@ -536,6 +537,13 @@ MODELS_BY_PROVIDER = {
     ],
     "xAI": [
         {
+            "id": "x-ai/grok-code-fast-1",
+            "name": "Grok Code Fast 1",
+            "description": 'Grok Code Fast 1 is a speedy and economical reasoning model that excels at agentic coding.',
+            "category": "Language",
+            "provider": "xAI",
+        },
+        {
             "id": "x-ai/grok-5",
             "name": "Grok 5 (Coming Soon)",
             "description": "xAI's upcoming Grok 5 model expected by end of 2025. This model is not yet available for selection.",
@@ -544,8 +552,8 @@ MODELS_BY_PROVIDER = {
             "available": False,
         },
         {
-            "id": "x-ai/grok-4.1-fast",
-            "name": "Grok 4.1 Fast",
+            "id": "x-ai/grok-4.1-fast:free",
+            "name": "Grok 4.1 Fast:Free",
             "description": "Grok 4.1 Fast is xAI's best agentic tool calling model that shines in real-world use cases like customer support and deep research.",
             "category": "Language",
             "provider": "xAI",
@@ -561,13 +569,6 @@ MODELS_BY_PROVIDER = {
             "id": "x-ai/grok-4",
             "name": "Grok 4",
             "description": "Grok 4 is xAI's latest reasoning model with a 256k context window.",
-            "category": "Language",
-            "provider": "xAI",
-        },
-        {
-            "id": "x-ai/grok-code-fast-1",
-            "name": "Grok Code Fast 1",
-            "description": "Grok Code Fast 1 is a speedy and economical reasoning model that excels at agentic coding.",
             "category": "Language",
             "provider": "xAI",
         },

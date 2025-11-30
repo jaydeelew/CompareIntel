@@ -14,6 +14,7 @@ from typing import List, Optional, Dict, Any
 from datetime import datetime, timedelta, timezone
 import json
 import httpx
+import asyncio
 
 from ..database import get_db
 from ..models import User, AdminActionLog, AppSettings, Conversation, UsageLog
@@ -1403,11 +1404,16 @@ async def validate_model(
     # Model exists in the list, now verify it's actually callable
     try:
         # Make a minimal test call to OpenRouter to validate the model is callable
-        test_response = client.chat.completions.create(
-            model=model_id,
-            messages=[{"role": "user", "content": "Hi"}],
-            max_tokens=5,
-            timeout=10,
+        # Run the synchronous call in a thread executor to avoid blocking the event loop
+        loop = asyncio.get_event_loop()
+        test_response = await loop.run_in_executor(
+            None,
+            lambda: client.chat.completions.create(
+                model=model_id,
+                messages=[{"role": "user", "content": "Hi"}],
+                max_tokens=5,
+                timeout=10,
+            )
         )
         
         # If we get here, the model exists and is accessible

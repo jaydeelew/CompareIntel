@@ -8,7 +8,8 @@ password resets, and subscription notifications.
 from fastapi_mail import FastMail, MessageSchema, ConnectionConfig
 from pydantic import EmailStr
 import os
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
+from datetime import datetime
 
 # Email configuration from environment variables
 # Only initialize if we have valid email settings
@@ -536,3 +537,199 @@ async def send_usage_limit_warning_email(email: EmailStr, usage_count: int, dail
         print(f"Failed to send usage warning email to {email}: {str(e)}")
         # Don't raise exception - this is just a notification
         pass
+
+
+async def send_model_availability_report(check_results: Dict[str, Any]) -> None:
+    """
+    Send model availability check report email to support@compareintel.com.
+    
+    Args:
+        check_results: Dictionary containing check results with:
+            - total_models: Total number of models checked
+            - available_models: List of available models
+            - unavailable_models: List of unavailable models with details
+            - check_timestamp: When the check was performed
+            - error: Any error that occurred
+    """
+    recipient_email = "support@compareintel.com"
+    
+    # Skip sending email if not configured (development mode)
+    if not EMAIL_CONFIGURED:
+        return
+    
+    total_models = check_results.get("total_models", 0)
+    available_models = check_results.get("available_models", [])
+    unavailable_models = check_results.get("unavailable_models", [])
+    check_timestamp = check_results.get("check_timestamp", "")
+    error = check_results.get("error")
+    
+    # Determine status and subject
+    if error:
+        status = "error"
+        status_color = "#dc2626"
+        status_text = "Error"
+        subject = f"⚠️ Model Availability Check - Error"
+    elif unavailable_models:
+        status = "warning"
+        status_color = "#f59e0b"
+        status_text = "Issues Found"
+        subject = f"⚠️ Model Availability Check - {len(unavailable_models)} Model(s) Unavailable"
+    else:
+        status = "success"
+        status_color = "#10b981"
+        status_text = "All Models Available"
+        subject = f"✓ Model Availability Check - All {total_models} Models Available"
+    
+    # Format timestamp
+    try:
+        dt = datetime.fromisoformat(check_timestamp.replace('Z', '+00:00'))
+        formatted_timestamp = dt.strftime('%Y-%m-%d %H:%M:%S UTC')
+    except:
+        formatted_timestamp = check_timestamp
+    
+    # Build unavailable models HTML
+    unavailable_html = ""
+    if unavailable_models:
+        unavailable_html = "<h3 style='color: #dc2626; margin-top: 20px;'>Unavailable Models</h3><ul style='list-style: none; padding: 0;'>"
+        for model in unavailable_models:
+            model_id = model.get("id", "Unknown")
+            model_name = model.get("name", model_id)
+            provider = model.get("provider", "Unknown")
+            reason = model.get("reason", "Unknown reason")
+            unavailable_html += f"""
+            <li style='background: #fee2e2; border-left: 4px solid #dc2626; padding: 12px; margin: 8px 0; border-radius: 4px;'>
+                <strong>{model_name}</strong> ({model_id})<br>
+                <span style='color: #666; font-size: 14px;'>Provider: {provider}</span><br>
+                <span style='color: #dc2626; font-size: 14px;'>Reason: {reason}</span>
+            </li>
+            """
+        unavailable_html += "</ul>"
+    
+    # Build available models summary (only show if there are issues)
+    available_summary = ""
+    if unavailable_models:
+        available_summary = f"<p><strong>Available Models:</strong> {len(available_models)}/{total_models}</p>"
+    
+    # Build error section if present
+    error_html = ""
+    if error:
+        error_html = f"""
+        <div style='background: #fee2e2; border: 2px solid #dc2626; padding: 15px; border-radius: 6px; margin: 20px 0;'>
+            <strong style='color: #dc2626;'>Error:</strong> {error}
+        </div>
+        """
+    
+    html = f"""
+    <html>
+      <head>
+        <style>
+          body {{
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+          }}
+          .container {{
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+          }}
+          .header {{
+            background: linear-gradient(135deg, #1e40af 0%, #0ea5e9 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+            border-radius: 8px 8px 0 0;
+          }}
+          .content {{
+            background: #f9f9f9;
+            padding: 30px;
+            border-radius: 0 0 8px 8px;
+          }}
+          .status-box {{
+            background: white;
+            border: 2px solid {status_color};
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            text-align: center;
+          }}
+          .status-box h2 {{
+            color: {status_color};
+            margin: 0 0 10px 0;
+          }}
+          .summary {{
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+          }}
+          .summary-item {{
+            padding: 10px 0;
+            border-bottom: 1px solid #e0e0e0;
+          }}
+          .summary-item:last-child {{
+            border-bottom: none;
+          }}
+          .footer {{
+            text-align: center;
+            margin-top: 20px;
+            color: #666;
+            font-size: 12px;
+          }}
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1>Model Availability Check Report</h1>
+          </div>
+          <div class="content">
+            <div class="status-box">
+              <h2>{status_text}</h2>
+              <p style="margin: 0; color: #666;">Check performed on {formatted_timestamp}</p>
+            </div>
+            
+            {error_html}
+            
+            <div class="summary">
+              <h3>Summary</h3>
+              <div class="summary-item">
+                <strong>Total Models Checked:</strong> {total_models}
+              </div>
+              <div class="summary-item">
+                <strong>Available:</strong> <span style="color: #10b981;">{len(available_models)}</span>
+              </div>
+              <div class="summary-item">
+                <strong>Unavailable:</strong> <span style="color: #dc2626;">{len(unavailable_models)}</span>
+              </div>
+            </div>
+            
+            {available_summary}
+            {unavailable_html}
+            
+            <p style="margin-top: 30px; color: #666; font-size: 14px;">
+              This is an automated daily check of model availability from OpenRouter API.
+            </p>
+          </div>
+          <div class="footer">
+            <p>CompareIntel Model Availability Monitor</p>
+            <p>&copy; 2025 CompareIntel. All rights reserved.</p>
+          </div>
+        </div>
+      </body>
+    </html>
+    """
+    
+    message = MessageSchema(
+        subject=subject,
+        recipients=[recipient_email],
+        body=html,
+        subtype="html"
+    )
+    
+    try:
+        await fm.send_message(message)
+    except Exception as e:
+        print(f"Failed to send model availability report email: {str(e)}")
+        raise
+
