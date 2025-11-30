@@ -76,8 +76,6 @@ ANONYMOUS_TIER_MODELS = {
     # xAI - Efficient models
     "x-ai/grok-code-fast-1",
     "x-ai/grok-4-fast",
-    "x-ai/grok-4.1-fast:free",  # Auto-classified based on pricing
-}
 
 # List of model IDs available to free (registered) users
 # Includes all anonymous tier models PLUS mid-level inexpensive models as an incentive to register
@@ -550,13 +548,6 @@ MODELS_BY_PROVIDER = {
             "category": "Language",
             "provider": "xAI",
             "available": False,
-        },
-        {
-            "id": "x-ai/grok-4.1-fast:free",
-            "name": "Grok 4.1 Fast:Free",
-            "description": "Grok 4.1 Fast is xAI's best agentic tool calling model that shines in real-world use cases like customer support and deep research.",
-            "category": "Language",
-            "provider": "xAI",
         },
         {
             "id": "x-ai/grok-4-fast",

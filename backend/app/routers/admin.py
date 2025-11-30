@@ -1969,9 +1969,44 @@ async def add_model_stream(
                 raise
             
             # Reload module
-            importlib.reload(model_runner)
-            sys.modules[__name__].MODELS_BY_PROVIDER = model_runner.MODELS_BY_PROVIDER
-            sys.modules[__name__].OPENROUTER_MODELS = model_runner.OPENROUTER_MODELS
+            try:
+                importlib.reload(model_runner)
+                sys.modules[__name__].MODELS_BY_PROVIDER = model_runner.MODELS_BY_PROVIDER
+                sys.modules[__name__].OPENROUTER_MODELS = model_runner.OPENROUTER_MODELS
+            except SyntaxError as e:
+                # If there's a syntax error in model_runner.py, rollback FIRST before any yield
+                # This ensures the file is restored even if the stream has ended
+                rollback_success = False
+                if model_runner_backup and backup_model_runner_path.exists():
+                    try:
+                        with open(model_runner_path, "w", encoding="utf-8") as f:
+                            f.write(model_runner_backup)
+                        # Verify restoration by attempting reload
+                        try:
+                            importlib.reload(model_runner)
+                            sys.modules[__name__].MODELS_BY_PROVIDER = model_runner.MODELS_BY_PROVIDER
+                            sys.modules[__name__].OPENROUTER_MODELS = model_runner.OPENROUTER_MODELS
+                            rollback_success = True
+                            backup_model_runner_path.unlink()
+                        except Exception as reload_err:
+                            print(f"Warning: Failed to verify rollback after SyntaxError: {reload_err}", file=sys.stderr)
+                            # File was restored but reload failed - might be a different issue
+                            rollback_success = True  # File was written, consider it successful
+                    except Exception as restore_err:
+                        print(f"Error restoring backup after SyntaxError: {restore_err}", file=sys.stderr)
+                
+                # Now try to yield error message (but rollback already happened)
+                try:
+                    if rollback_success:
+                        yield f"data: {json.dumps({'type': 'error', 'message': f'Syntax error in model_runner.py after modification: {str(e)}. Changes have been rolled back.'})}\n\n"
+                    else:
+                        yield f"data: {json.dumps({'type': 'error', 'message': f'Syntax error in model_runner.py after modification: {str(e)}. Attempted rollback - please check backup file at {backup_model_runner_path}'})}\n\n"
+                except (BrokenPipeError, ConnectionResetError, ConnectionAbortedError, OSError,
+                        TimeoutError, asyncio.TimeoutError, httpx.ConnectError, httpx.TimeoutException,
+                        httpx.NetworkError, httpx.ConnectTimeout, httpx.ReadTimeout):
+                    # Stream ended, but rollback already happened, so we're good
+                    pass
+                return
             
             # Run setup script with streaming output
             try:
@@ -2129,16 +2164,29 @@ async def add_model_stream(
                 
                 # Restore model_runner.py backup
                 if model_runner_backup and backup_model_runner_path.exists():
-                    with open(model_runner_path, "w", encoding="utf-8") as f:
-                        f.write(model_runner_backup)
-                    backup_model_runner_path.unlink()
-                    # Reload module to ensure in-memory state matches restored file
                     try:
-                        importlib.reload(model_runner)
-                        sys.modules[__name__].MODELS_BY_PROVIDER = model_runner.MODELS_BY_PROVIDER
-                        sys.modules[__name__].OPENROUTER_MODELS = model_runner.OPENROUTER_MODELS
-                    except:
-                        pass  # Ignore reload errors
+                        with open(model_runner_path, "w", encoding="utf-8") as f:
+                            f.write(model_runner_backup)
+                        # Verify the file was written correctly before deleting backup
+                        # Try to reload to verify syntax is valid
+                        try:
+                            importlib.reload(model_runner)
+                            sys.modules[__name__].MODELS_BY_PROVIDER = model_runner.MODELS_BY_PROVIDER
+                            sys.modules[__name__].OPENROUTER_MODELS = model_runner.OPENROUTER_MODELS
+                            # Only delete backup if reload succeeded
+                            backup_model_runner_path.unlink()
+                        except (SyntaxError, ImportError, AttributeError) as reload_error:
+                            # If reload fails, the backup might be corrupted or there's a deeper issue
+                            # Keep the backup file for manual inspection
+                            print(f"Warning: Failed to reload model_runner after rollback: {reload_error}", file=sys.stderr)
+                            print(f"Backup file kept at: {backup_model_runner_path}", file=sys.stderr)
+                            # Try to restore from backup again in case write failed
+                            if backup_model_runner_path.exists():
+                                with open(model_runner_path, "w", encoding="utf-8") as f:
+                                    f.write(model_runner_backup)
+                    except Exception as restore_error:
+                        print(f"Error restoring model_runner.py backup: {restore_error}", file=sys.stderr)
+                        print(f"Backup file location: {backup_model_runner_path}", file=sys.stderr)
                 
                 # Restore renderer config backup
                 if config_backup and backup_config_path.exists():
@@ -2192,9 +2240,23 @@ async def add_model_stream(
                     # Restore backups if we had errors
                     if backup_model_runner_path.exists():
                         if model_runner_backup:
-                            with open(model_runner_path, "w", encoding="utf-8") as f:
-                                f.write(model_runner_backup)
-                        backup_model_runner_path.unlink()
+                            try:
+                                with open(model_runner_path, "w", encoding="utf-8") as f:
+                                    f.write(model_runner_backup)
+                                # Verify restoration by attempting reload
+                                try:
+                                    importlib.reload(model_runner)
+                                    sys.modules[__name__].MODELS_BY_PROVIDER = model_runner.MODELS_BY_PROVIDER
+                                    sys.modules[__name__].OPENROUTER_MODELS = model_runner.OPENROUTER_MODELS
+                                    # Only delete backup if reload succeeded
+                                    backup_model_runner_path.unlink()
+                                except (SyntaxError, ImportError, AttributeError) as reload_error:
+                                    # Keep backup if reload fails
+                                    print(f"Warning: Failed to verify rollback: {reload_error}", file=sys.stderr)
+                                    print(f"Backup file kept at: {backup_model_runner_path}", file=sys.stderr)
+                            except Exception as restore_error:
+                                print(f"Error restoring backup in finally block: {restore_error}", file=sys.stderr)
+                                print(f"Backup file location: {backup_model_runner_path}", file=sys.stderr)
                     
                     if backup_config_path.exists() and config_backup:
                         with open(config_path, "w", encoding="utf-8") as f:
