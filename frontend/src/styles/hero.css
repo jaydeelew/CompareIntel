@@ -4,14 +4,12 @@
   margin: 0;
   margin-top: 0 !important;
   text-align: center;
-  background: linear-gradient(
-    135deg,
-    #0f172a 0%,
-    #1e3a8a 20%,
-    #0ea5e9 50%,
-    #1e40af 80%,
-    #0f172a 100%
-  );
+  background: linear-gradient(135deg,
+      #0f172a 0%,
+      #1e3a8a 20%,
+      #0ea5e9 50%,
+      #1e40af 80%,
+      #0f172a 100%);
   color: var(--text-inverse);
   position: relative;
   overflow: hidden;
@@ -50,16 +48,14 @@
   left: -50%;
   width: 200%;
   height: 200%;
-  background: conic-gradient(
-    from 0deg at 50% 50%,
-    transparent 0deg,
-    rgba(255, 255, 255, 0.03) 60deg,
-    transparent 120deg,
-    rgba(255, 255, 255, 0.02) 180deg,
-    transparent 240deg,
-    rgba(255, 255, 255, 0.03) 300deg,
-    transparent 360deg
-  );
+  background: conic-gradient(from 0deg at 50% 50%,
+      transparent 0deg,
+      rgba(255, 255, 255, 0.03) 60deg,
+      transparent 120deg,
+      rgba(255, 255, 255, 0.02) 180deg,
+      transparent 240deg,
+      rgba(255, 255, 255, 0.03) 300deg,
+      transparent 360deg);
   animation: conicRotate 30s linear infinite;
   pointer-events: none;
 }
@@ -327,12 +323,19 @@
   flex-direction: column;
   width: 100%;
   /* Ensure wrapper contains textarea and buttons for proper positioning */
+  overflow: hidden;
+  border-radius: 1.5rem;
+  /* Clip scrollbar to respect border radius */
 }
 
 /* When history dropdown is visible, adjust border radius */
 .textarea-container:has(.history-inline-list) .hero-input-textarea {
   border-radius: 1.5rem 1.5rem 0 0;
   border-bottom: none;
+}
+
+.textarea-container:has(.history-inline-list) .textarea-wrapper {
+  border-radius: 1.5rem 1.5rem 0 0;
 }
 
 .textarea-container:has(.history-inline-list) .textarea-actions-area {
@@ -379,6 +382,11 @@
   background: white;
   backdrop-filter: blur(20px);
   transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* When actions area is present, wrapper should also have rounded top corners only */
+.textarea-container:has(.textarea-actions-area) .textarea-wrapper {
+  border-radius: 1.5rem 1.5rem 0 0;
 }
 
 /* Actions area below textarea - looks like part of textarea */
@@ -444,7 +452,7 @@
 }
 
 /* Ensure usage preview content fits within container and doesn't cause expansion */
-.usage-preview-container > div {
+.usage-preview-container>div {
   margin-top: 0 !important;
   line-height: 1.2;
   font-size: 0.825rem;
@@ -848,6 +856,10 @@
     white-space: nowrap !important;
   }
 
+  .textarea-wrapper {
+    border-radius: 1.25rem;
+  }
+
   .hero-input-textarea {
     /* Left padding: 1.4375rem (23px) to align placeholder with chevron icon
        Chevron position = actions area left padding (1rem = 16px) + button offset (7px) = 23px */
@@ -861,6 +873,10 @@
   }
 
   /* Ensure seamless connection between textarea and actions area on mobile */
+  .textarea-container:has(.textarea-actions-area) .textarea-wrapper {
+    border-radius: 1.25rem 1.25rem 0 0;
+  }
+
   .textarea-container:has(.textarea-actions-area) .hero-input-textarea {
     border-bottom: none !important;
     margin-bottom: -1px;
@@ -1086,16 +1102,14 @@
   left: 20px;
   right: 20px;
   height: 3px;
-  background: linear-gradient(
-    90deg,
-    rgba(255, 71, 87, 1) 0%,
-    rgba(0, 245, 255, 1) 20%,
-    rgba(255, 255, 255, 1) 40%,
-    rgba(99, 102, 241, 1) 50%,
-    rgba(255, 255, 255, 1) 60%,
-    rgba(0, 245, 255, 1) 80%,
-    rgba(255, 165, 2, 1) 100%
-  );
+  background: linear-gradient(90deg,
+      rgba(255, 71, 87, 1) 0%,
+      rgba(0, 245, 255, 1) 20%,
+      rgba(255, 255, 255, 1) 40%,
+      rgba(99, 102, 241, 1) 50%,
+      rgba(255, 255, 255, 1) 60%,
+      rgba(0, 245, 255, 1) 80%,
+      rgba(255, 165, 2, 1) 100%);
   transform: translateY(-50%);
   animation: beamScan 2.5s ease-in-out infinite;
   box-shadow:
