@@ -1756,6 +1756,129 @@ function AppContent() {
     currentVisibleComparisonId,
   ])
 
+  // Reload conversations with token counts when currentVisibleComparisonId is set after a comparison completes
+  // This ensures token counts are available for the token-usage-indicator in follow-up mode
+  useEffect(() => {
+    if (!currentVisibleComparisonId || !isAuthenticated || conversations.length === 0) {
+      return
+    }
+
+    // Check if conversations already have token counts
+    const hasTokenCounts = conversations.some(conv =>
+      conv.messages.some(msg =>
+        (msg.type === 'user' && msg.input_tokens) ||
+        (msg.type === 'assistant' && msg.output_tokens)
+      )
+    )
+
+    // If conversations already have token counts, no need to reload
+    if (hasTokenCounts) {
+      return
+    }
+
+    // Reload conversation from API to get token counts
+    const conversationId = typeof currentVisibleComparisonId === 'string'
+      ? parseInt(currentVisibleComparisonId, 10)
+      : currentVisibleComparisonId
+
+    if (isNaN(conversationId)) {
+      return
+    }
+
+    // Use a small delay to ensure backend has finished saving
+    const timeoutId = setTimeout(async () => {
+      try {
+        const conversationData = await loadConversationFromAPI(conversationId)
+        if (!conversationData) {
+          return
+        }
+
+        // Update conversations with token counts from API
+        setConversations(prevConversations => {
+          const modelsUsed = conversationData.models_used
+          const messagesByModel: { [modelId: string]: ConversationMessage[] } = {}
+
+          // Group messages by model
+          conversationData.messages.forEach(msg => {
+            if (msg.role === 'user') {
+              // User messages go to all models
+              modelsUsed.forEach((modelId: string) => {
+                if (!messagesByModel[modelId]) {
+                  messagesByModel[modelId] = []
+                }
+                messagesByModel[modelId].push({
+                  id: msg.id || createMessageId(`${Date.now()}-user-${Math.random()}`),
+                  type: 'user' as const,
+                  content: msg.content,
+                  timestamp: msg.created_at,
+                  input_tokens: msg.input_tokens,
+                })
+              })
+            } else if (msg.role === 'assistant' && msg.model_id) {
+              // Assistant messages go to their specific model
+              const modelId = createModelId(msg.model_id)
+              if (!messagesByModel[modelId]) {
+                messagesByModel[modelId] = []
+              }
+              messagesByModel[modelId].push({
+                id: msg.id || createMessageId(`${Date.now()}-${Math.random()}`),
+                type: 'assistant' as const,
+                content: msg.content,
+                timestamp: msg.created_at,
+                output_tokens: msg.output_tokens,
+              })
+            }
+          })
+
+          // Update conversations with token counts, preserving existing structure
+          return prevConversations.map(conv => {
+            const modelId = conv.modelId
+            const apiMessages = messagesByModel[modelId] || []
+
+            // If we have API messages for this model, update with token counts
+            if (apiMessages.length > 0) {
+              // Match messages by content and timestamp to preserve order
+              const updatedMessages = conv.messages.map((msg, idx) => {
+                const apiMsg = apiMessages.find(
+                  apiMsg =>
+                    apiMsg.type === msg.type &&
+                    apiMsg.content === msg.content &&
+                    Math.abs(
+                      new Date(apiMsg.timestamp).getTime() -
+                        new Date(msg.timestamp).getTime()
+                    ) < 5000 // Within 5 seconds
+                )
+
+                if (apiMsg) {
+                  // Update with token counts from API
+                  return {
+                    ...msg,
+                    input_tokens: apiMsg.input_tokens,
+                    output_tokens: apiMsg.output_tokens,
+                  }
+                }
+                return msg
+              })
+
+              return {
+                ...conv,
+                messages: updatedMessages,
+              }
+            }
+
+            return conv
+          })
+        })
+      } catch (error) {
+        console.error('Failed to reload conversation with token counts:', error)
+      }
+    }, 2000) // Give backend time to finish saving
+
+    return () => {
+      clearTimeout(timeoutId)
+    }
+  }, [currentVisibleComparisonId, isAuthenticated, conversations, loadConversationFromAPI])
+
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
