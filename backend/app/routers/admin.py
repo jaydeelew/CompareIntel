@@ -1616,17 +1616,28 @@ async def add_model(
         # Add model to appropriate tier set(s)
         if tier_classification == "anonymous":
             # Add to ANONYMOUS_TIER_MODELS
-            anonymous_pattern = r'(ANONYMOUS_TIER_MODELS\s*=\s*\{)(.*?)(\s*\})'
+            # Pattern must match up to the closing brace, but stop before FREE_TIER_MODELS definition
+            anonymous_pattern = r'(ANONYMOUS_TIER_MODELS\s*=\s*\{)(.*?)(\n\})'
             match = re.search(anonymous_pattern, content, re.DOTALL)
-            if match:
-                # Check if model already in set
-                if f'"{model_id}"' not in match.group(2):
-                    # Find a good insertion point (after last model in the set)
-                    # Add before closing brace
-                    insertion_point = match.end() - 1  # Before closing brace
-                    # Format: add with proper indentation and comment if needed
+            if not match:
+                raise HTTPException(
+                    status_code=500,
+                    detail="Could not find ANONYMOUS_TIER_MODELS structure in model_runner.py"
+                )
+            # Check if model already in set
+            if f'"{model_id}"' not in match.group(2):
+                # Find a good insertion point (after last model in the set)
+                # Add before closing brace, but check if last entry has a comma
+                insertion_point = match.start(3)  # Start of closing brace group (newline + brace)
+                # Check if the content before closing brace ends with a comma
+                content_before_brace = match.group(2).rstrip()
+                if content_before_brace and content_before_brace[-1] == ',':
+                    # Last entry already has comma, add new entry with comma
+                    model_entry = f'\n    "{model_id}",  # Auto-classified based on pricing'
+                else:
+                    # Last entry doesn't have comma, add comma before new entry
                     model_entry = f',\n    "{model_id}",  # Auto-classified based on pricing'
-                    content = content[:insertion_point] + model_entry + content[insertion_point:]
+                content = content[:insertion_point] + model_entry + content[insertion_point:]
         elif tier_classification == "free":
             # Add to FREE_TIER_MODELS (which includes anonymous models)
             # Pattern matches: FREE_TIER_MODELS = ANONYMOUS_TIER_MODELS.union({ ... })
@@ -1926,16 +1937,43 @@ async def add_model_stream(
             # Add model to appropriate tier set(s)
             if tier_classification == "anonymous":
                 # Add to ANONYMOUS_TIER_MODELS
-                anonymous_pattern = r'(ANONYMOUS_TIER_MODELS\s*=\s*\{)(.*?)(\s*\})'
+                # Pattern must match up to the closing brace, explicitly stopping before FREE_TIER_MODELS
+                anonymous_pattern = r'(ANONYMOUS_TIER_MODELS\s*=\s*\{)(.*?)(\n\}\s*\n\s*# List of model IDs available to free)'
                 match = re.search(anonymous_pattern, content, re.DOTALL)
-                if match:
-                    # Check if model already in set
-                    if f'"{model_id}"' not in match.group(2):
-                        # Find a good insertion point (after last model in the set)
-                        # Add before closing brace
-                        insertion_point = match.end() - 1  # Before closing brace
-                        # Format: add with proper indentation and comment if needed
+                if not match:
+                    # Fallback to simpler pattern if the above doesn't match
+                    anonymous_pattern = r'(ANONYMOUS_TIER_MODELS\s*=\s*\{)(.*?)(\n\})'
+                    match = re.search(anonymous_pattern, content, re.DOTALL)
+                if not match:
+                    try:
+                        yield f"data: {json.dumps({'type': 'error', 'message': 'Could not find ANONYMOUS_TIER_MODELS structure in model_runner.py'})}\n\n"
+                    except (BrokenPipeError, ConnectionResetError, ConnectionAbortedError, OSError,
+                            TimeoutError, asyncio.TimeoutError, httpx.ConnectError, httpx.TimeoutException,
+                            httpx.NetworkError, httpx.ConnectTimeout, httpx.ReadTimeout):
+                        raise
+                    return
+                # Check if model already in set
+                if f'"{model_id}"' not in match.group(2):
+                    # Find a good insertion point (after last model in the set)
+                    # Add before closing brace, but check if last entry has a comma
+                    # Use the position before the closing brace (which is in group 3)
+                    insertion_point = match.start(3)  # Start of closing pattern
+                    # Check if the content before closing brace ends with a comma
+                    content_before_brace = match.group(2).rstrip()
+                    if content_before_brace and content_before_brace[-1] == ',':
+                        # Last entry already has comma, add new entry with comma
+                        model_entry = f'\n    "{model_id}",  # Auto-classified based on pricing'
+                    else:
+                        # Last entry doesn't have comma, add comma before new entry
                         model_entry = f',\n    "{model_id}",  # Auto-classified based on pricing'
+                    # Insert before the closing brace/newline pattern
+                    # If the pattern matched the full closing pattern (with comment), we need to preserve it
+                    # Otherwise, just insert before the closing brace
+                    if match.lastindex >= 3 and '# List of model IDs available to free' in match.group(3):
+                        # Pattern matched the full closing with comment, insert before it
+                        content = content[:insertion_point] + model_entry + content[insertion_point:]
+                    else:
+                        # Simple pattern match, insert before closing brace
                         content = content[:insertion_point] + model_entry + content[insertion_point:]
             elif tier_classification == "free":
                 # Add to FREE_TIER_MODELS (which includes anonymous models)
