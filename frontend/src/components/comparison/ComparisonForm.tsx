@@ -935,7 +935,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(({
               onChange={handleFileUpload}
             />
             {/* Token usage pie chart indicator */}
-            {selectedModels.length > 0 && (() => {
+            {(isFollowUpMode || input.trim().length > 0) && (() => {
               const percentage = tokenUsagePercentage;
               const totalInputTokens = tokenUsagePercentageInfo.totalInputTokens;
               const radius = 14; // 32px diameter / 2 - 2px stroke
