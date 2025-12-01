@@ -944,7 +944,50 @@ async def compare_stream(
                         model_content = full_content
 
                     # Final check if response is an error
-                    is_error = is_error or model_content.startswith("Error:")
+                    # Only check for backend error patterns, not any content starting with "Error:"
+                    # This prevents false positives when models legitimately discuss error handling
+                    if not is_error and model_content:
+                        import re
+                        trimmed_content = model_content.strip()
+                        
+                        # Check for backend error patterns (from call_openrouter_streaming)
+                        # These are specific error messages, not general discussions about errors
+                        backend_error_patterns = [
+                            r'^Error:\s*Timeout\s*\(',  # Error: Timeout (Xs)
+                            r'^Error:\s*Rate\s*limit',  # Error: Rate limited
+                            r'^Error:\s*Model\s*not\s*available',  # Error: Model not available
+                            r'^Error:\s*Authentication\s*failed',  # Error: Authentication failed
+                            r'^Error:\s*\d+',  # Error: 404, Error: 500, etc.
+                        ]
+                        
+                        # Only mark as error if content matches backend error patterns
+                        # This prevents false positives when models discuss error handling
+                        if trimmed_content.startswith("Error:"):
+                            # Check if it matches known backend error patterns
+                            matches_pattern = any(re.match(pattern, trimmed_content, re.IGNORECASE) 
+                                                for pattern in backend_error_patterns)
+                            if matches_pattern:
+                                is_error = True
+                            # If content is very short (< 100 chars) and starts with "Error:",
+                            # it's likely a backend error (not a model explanation)
+                            # This catches cases like "Error: Timeout" without the full pattern match
+                            elif len(trimmed_content) < 100 and not any(c in trimmed_content for c in '.!?'):
+                                # Very short, no sentence-ending punctuation = likely backend error
+                                is_error = True
+                            # Content starting with "Error:" that doesn't match patterns and is longer
+                            # or has sentence structure is likely legitimate (e.g., "Error handling in Python...")
+                            # Don't mark as error
+                        
+                        # Check if error was appended at the end (during streaming failure)
+                        elif len(trimmed_content) > 200:
+                            error_index = trimmed_content.lower().rfind('error:')
+                            if error_index >= len(trimmed_content) - 200:
+                                # Check if the appended error matches backend patterns
+                                error_text = trimmed_content[error_index:]
+                                matches_pattern = any(re.match(pattern, error_text, re.IGNORECASE) 
+                                                    for pattern in backend_error_patterns)
+                                if matches_pattern:
+                                    is_error = True
 
                     return {
                         "model": model_id,
