@@ -3001,6 +3001,9 @@ function AppContent() {
       setIsModelsHidden(false)
       setIsScrollLocked(false)
       setOpenDropdowns(new Set())
+      // Clear credit state from anonymous session - authenticated users have separate credit tracking
+      setCreditBalance(null)
+      setAnonymousCreditsRemaining(null)
       // Clear any ongoing requests
       if (currentAbortController) {
         currentAbortController.abort()
@@ -3023,6 +3026,9 @@ function AppContent() {
       setIsFollowUpMode(false)
       // Clear currently visible comparison ID on logout so saved comparisons appear in history
       setCurrentVisibleComparisonId(null)
+      // Clear credit state from authenticated session - anonymous users have separate credit tracking
+      setCreditBalance(null)
+      setAnonymousCreditsRemaining(null)
       // Don't reset selectedModels or usage count - let them keep their selections
     }
 
@@ -4967,18 +4973,28 @@ function AppContent() {
       : getDailyCreditLimit(userTier) || getCreditAllocation(userTier))
 
     // For anonymous users, prefer anonymousCreditsRemaining if available, then creditBalance
-    if (!isAuthenticated && anonymousCreditsRemaining !== null) {
-      // Use anonymousCreditsRemaining state if available (most up-to-date for anonymous users)
-      return anonymousCreditsRemaining
-    } else if (creditBalance?.credits_remaining !== undefined) {
-      // Use creditBalance if available
-      return creditBalance.credits_remaining
+    if (!isAuthenticated) {
+      if (anonymousCreditsRemaining !== null) {
+        // Use anonymousCreditsRemaining state if available (most up-to-date for anonymous users)
+        return anonymousCreditsRemaining
+      } else if (creditBalance?.credits_remaining !== undefined && creditBalance?.subscription_tier === 'anonymous') {
+        // Only use creditBalance if it's for anonymous users (prevent using authenticated user's balance)
+        return creditBalance.credits_remaining
+      } else {
+        // Fallback: calculate from allocated and used
+        const creditsUsed = creditBalance?.credits_used_today ?? 0
+        return Math.max(0, creditsAllocated - creditsUsed)
+      }
     } else {
-      // Fallback: calculate from allocated and used
-      const creditsUsed = creditBalance?.credits_used_this_period ?? creditBalance?.credits_used_today ?? (isAuthenticated && user
-        ? (user.credits_used_this_period || 0)
-        : 0)
-      return Math.max(0, creditsAllocated - creditsUsed)
+      // For authenticated users, only use creditBalance if it matches their tier
+      if (creditBalance?.credits_remaining !== undefined && creditBalance?.subscription_tier === userTier) {
+        // Use creditBalance if available and matches current user's tier
+        return creditBalance.credits_remaining
+      } else {
+        // Fallback: calculate from allocated and used
+        const creditsUsed = creditBalance?.credits_used_this_period ?? (user?.credits_used_this_period || 0)
+        return Math.max(0, creditsAllocated - creditsUsed)
+      }
     }
   }, [
     isAuthenticated,
@@ -5003,7 +5019,21 @@ function AppContent() {
     }
 
     const userTier = isAuthenticated ? user?.subscription_tier || 'free' : 'anonymous'
-    const resetDate = creditBalance?.credits_reset_at || user?.credits_reset_at
+
+    // Only use creditBalance if it matches the current user's tier to prevent cross-contamination
+    const resetDate = (creditBalance?.subscription_tier === userTier
+      ? creditBalance?.credits_reset_at
+      : null) || user?.credits_reset_at
+
+    // Verify that creditBalance matches current user type before using it
+    // This prevents anonymous user's zero credits from affecting authenticated users
+    const creditBalanceMatchesUser = !creditBalance || creditBalance.subscription_tier === userTier
+
+    // Only check credits if creditBalance matches current user (or if we're using fallback calculation)
+    if (!creditBalanceMatchesUser && creditBalance) {
+      // creditBalance is for a different user type - ignore it and use fallback
+      return
+    }
 
     // Check if credits are 0
     if (creditsRemaining <= 0) {
