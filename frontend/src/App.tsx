@@ -4591,10 +4591,12 @@ function AppContent() {
                       return { ...msg, timestamp: startTime || msg.timestamp }
                     } else if (idx === 1 && msg.type === 'assistant') {
                       // Update assistant message timestamp with model completion time
+                      // Include output_tokens for token usage calculation
                       return {
                         ...msg,
                         content,
                         timestamp: completionTime || msg.timestamp,
+                        output_tokens: msg.output_tokens || estimateTokensSimple(content),
                       }
                     }
                     return msg
@@ -4611,6 +4613,8 @@ function AppContent() {
               const updated = prevConversations.map(conv => {
                 const content = streamingResults[conv.modelId] || ''
                 const completionTime = modelCompletionTimes[conv.modelId]
+                // Estimate output tokens for the assistant message
+                const outputTokens = estimateTokensSimple(content)
 
                 // Check if we already added the new user message
                 const hasNewUserMessage = conv.messages.some(
@@ -4621,20 +4625,24 @@ function AppContent() {
                 if (!hasNewUserMessage) {
                   // Add user message and assistant message if they weren't added during streaming
                   const startTime = modelStartTimes[conv.modelId]
+                  const assistantMessage = createMessage(
+                    'assistant',
+                    content,
+                    completionTime || new Date().toISOString()
+                  )
+                  // Add output_tokens to assistant message for token usage calculation
+                  assistantMessage.output_tokens = outputTokens
+
                   return {
                     ...conv,
                     messages: [
                       ...conv.messages,
                       createMessage('user', input, startTime || userTimestamp),
-                      createMessage(
-                        'assistant',
-                        content,
-                        completionTime || new Date().toISOString()
-                      ),
+                      assistantMessage,
                     ],
                   }
                 } else {
-                  // Update the last assistant message with final content and timestamp
+                  // Update the last assistant message with final content, timestamp, and output_tokens
                   return {
                     ...conv,
                     messages: conv.messages.map((msg, idx) => {
@@ -4643,6 +4651,9 @@ function AppContent() {
                           ...msg,
                           content: content || msg.content, // Ensure content is set
                           timestamp: completionTime || msg.timestamp,
+                          // Always update output_tokens with estimated tokens for the new response
+                          // This ensures token usage indicator updates immediately after streaming completes
+                          output_tokens: outputTokens,
                         }
                       }
                       return msg
