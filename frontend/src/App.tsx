@@ -4103,6 +4103,46 @@ function AppContent() {
                     if (!isFollowUpMode) {
                       shouldScrollToTopAfterFormattingRef.current = true
                     }
+
+                    // Refresh credits when all models complete (in case "complete" event isn't received)
+                    // This ensures credits are updated even if the stream is aborted before "complete" event
+                    // Check if any models completed successfully (not just the last one)
+                    const hasSuccessfulModels = selectedModels.some(modelId => {
+                      const createdModelId = createModelId(modelId)
+                      const hasCompleted = completedModels.has(createdModelId)
+                      const hasError = localModelErrors[createdModelId] === true
+                      const content = streamingResults[createdModelId] || ''
+                      const isError = isErrorMessage(content)
+                      return hasCompleted && !hasError && !isError && content.trim().length > 0
+                    })
+
+                    if (hasSuccessfulModels) {
+                      // Refresh credit balance when all models complete and at least one was successful
+                      // Use a small delay to ensure backend has finished processing
+                      setTimeout(() => {
+                        if (isAuthenticated) {
+                          // For authenticated users, refresh user data and credit balance
+                          refreshUser()
+                            .then(() => getCreditBalance())
+                            .then(balance => {
+                              setCreditBalance(balance)
+                            })
+                            .catch(error =>
+                              console.error('Failed to refresh authenticated credit balance after all models completed:', error)
+                            )
+                        } else {
+                          // For anonymous users, refresh credit balance from API
+                          getCreditBalance(browserFingerprint)
+                            .then(balance => {
+                              setAnonymousCreditsRemaining(balance.credits_remaining)
+                              setCreditBalance(balance)
+                            })
+                            .catch(error =>
+                              console.error('Failed to refresh anonymous credit balance after all models completed:', error)
+                            )
+                        }
+                      }, 500) // Small delay to ensure backend has processed all completions
+                    }
                   }
                 } else if (event.type === 'complete') {
                   // All models complete - save metadata
