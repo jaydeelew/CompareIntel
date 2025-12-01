@@ -1,284 +1,17 @@
 [
   {
-    "modelId": "openai/gpt-5.1",
+    "modelId": "anthropic/claude-3.7-sonnet",
     "version": "1.0.0",
     "displayMathDelimiters": [
       {
-        "pattern": "/\\\\\\[\\s*([\\s\\S]*?)\\s*\\\\\\]/g",
-        "name": "bracket",
+        "pattern": "/\\\\begin\\{align\\}([\\s\\S]*?)\\\\end\\{align\\}/g",
+        "name": "align-env",
         "priority": 1
       },
-      {
-        "pattern": "/\\$\\$([^\\$]+?)\\$\\$/gs",
-        "name": "double-dollar",
-        "priority": 2
-      }
-    ],
-    "inlineMathDelimiters": [
-      {
-        "pattern": "/\\\\\\(\\s*([^\\\\]*?)\\s*\\\\\\)/g",
-        "name": "paren",
-        "priority": 1
-      },
-      {
-        "pattern": "/(?<!\\$)\\$([^\\$\\n]+?)\\$(?!\\$)/g",
-        "name": "single-dollar",
-        "priority": 2
-      }
-    ],
-    "preprocessing": {
-      "fixEscapedDollars": true,
-      "removeHtmlFromMath": true,
-      "removeMathML": true,
-      "removeSVG": true
-    },
-    "markdownProcessing": {
-      "processLinks": true,
-      "fixBrokenLinks": false,
-      "processTables": true,
-      "processBlockquotes": true,
-      "processHorizontalRules": true,
-      "processHeaders": true,
-      "processBoldItalic": true,
-      "processLists": true,
-      "processInlineCode": true
-    },
-    "katexOptions": {
-      "throwOnError": false,
-      "strict": false,
-      "trust": [
-        "\\url",
-        "\\href",
-        "\\includegraphics"
-      ],
-      "macros": {
-        "\\eqref": "\\href{###1}{(\\text{#1})}"
-      },
-      "maxSize": 500,
-      "maxExpand": 1000
-    },
-    "codeBlockPreservation": {
-      "enabled": true,
-      "extractBeforeProcessing": true,
-      "restoreAfterProcessing": true
-    },
-    "metadata": {
-      "createdAt": "2025-11-18T21:25:49.785690Z",
-      "needsManualReview": true
-    }
-  },
-  {
-    "modelId": "openai/gpt-5.1-chat",
-    "version": "1.0.0",
-    "displayMathDelimiters": [
-      {
-        "pattern": "/\\\\\\[\\s*([\\s\\S]*?)\\s*\\\\\\]/g",
-        "name": "bracket",
-        "priority": 1
-      },
-      {
-        "pattern": "/\\$\\$([^\\$]+?)\\$\\$/gs",
-        "name": "double-dollar",
-        "priority": 2
-      }
-    ],
-    "inlineMathDelimiters": [
-      {
-        "pattern": "/\\\\\\(\\s*([^\\\\]*?)\\s*\\\\\\)/g",
-        "name": "paren",
-        "priority": 1
-      },
-      {
-        "pattern": "/(?<!\\$)\\$([^\\$\\n]+?)\\$(?!\\$)/g",
-        "name": "single-dollar",
-        "priority": 2
-      }
-    ],
-    "preprocessing": {
-      "fixEscapedDollars": true,
-      "removeHtmlFromMath": false,
-      "removeMathML": true,
-      "removeSVG": true
-    },
-    "markdownProcessing": {
-      "processLinks": true,
-      "fixBrokenLinks": false,
-      "processTables": true,
-      "processBlockquotes": true,
-      "processHorizontalRules": true,
-      "processHeaders": true,
-      "processBoldItalic": true,
-      "processLists": true,
-      "processInlineCode": true
-    },
-    "katexOptions": {
-      "throwOnError": false,
-      "strict": false,
-      "trust": [
-        "\\url",
-        "\\href",
-        "\\includegraphics"
-      ],
-      "macros": {
-        "\\eqref": "\\href{###1}{(\\text{#1})}"
-      },
-      "maxSize": 500,
-      "maxExpand": 1000
-    },
-    "codeBlockPreservation": {
-      "enabled": true,
-      "extractBeforeProcessing": true,
-      "restoreAfterProcessing": true
-    },
-    "metadata": {
-      "createdAt": "2025-11-18T21:25:49.790719Z",
-      "needsManualReview": true
-    }
-  },
-  {
-    "modelId": "openai/gpt-5.1-codex",
-    "version": "1.0.0",
-    "displayMathDelimiters": [
-      {
-        "pattern": "/\\\\\\[\\s*([\\s\\S]*?)\\s*\\\\\\]/g",
-        "name": "bracket",
-        "priority": 1
-      },
-      {
-        "pattern": "/\\$\\$([^\\$]+?)\\$\\$/gs",
-        "name": "double-dollar",
-        "priority": 2
-      }
-    ],
-    "inlineMathDelimiters": [
-      {
-        "pattern": "/\\\\\\(\\s*([^\\\\]*?)\\s*\\\\\\)/g",
-        "name": "paren",
-        "priority": 1
-      },
-      {
-        "pattern": "/(?<!\\$)\\$([^\\$\\n]+?)\\$(?!\\$)/g",
-        "name": "single-dollar",
-        "priority": 2
-      }
-    ],
-    "preprocessing": {
-      "fixEscapedDollars": true,
-      "removeHtmlFromMath": false,
-      "removeMathML": true,
-      "removeSVG": true
-    },
-    "markdownProcessing": {
-      "processLinks": true,
-      "fixBrokenLinks": false,
-      "processTables": true,
-      "processBlockquotes": true,
-      "processHorizontalRules": true,
-      "processHeaders": true,
-      "processBoldItalic": true,
-      "processLists": true,
-      "processInlineCode": true
-    },
-    "katexOptions": {
-      "throwOnError": false,
-      "strict": false,
-      "trust": [
-        "\\url",
-        "\\href",
-        "\\includegraphics"
-      ],
-      "macros": {
-        "\\eqref": "\\href{###1}{(\\text{#1})}"
-      },
-      "maxSize": 500,
-      "maxExpand": 1000
-    },
-    "codeBlockPreservation": {
-      "enabled": true,
-      "extractBeforeProcessing": true,
-      "restoreAfterProcessing": true
-    },
-    "metadata": {
-      "createdAt": "2025-11-18T21:25:49.800760Z",
-      "needsManualReview": true
-    }
-  },
-  {
-    "modelId": "openai/gpt-5.1-codex-mini",
-    "version": "1.0.0",
-    "displayMathDelimiters": [
-      {
-        "pattern": "/\\\\\\[\\s*([\\s\\S]*?)\\s*\\\\\\]/g",
-        "name": "bracket",
-        "priority": 1
-      },
-      {
-        "pattern": "/\\$\\$([^\\$]+?)\\$\\$/gs",
-        "name": "double-dollar",
-        "priority": 2
-      }
-    ],
-    "inlineMathDelimiters": [
-      {
-        "pattern": "/\\\\\\(\\s*([^\\\\]*?)\\s*\\\\\\)/g",
-        "name": "paren",
-        "priority": 1
-      },
-      {
-        "pattern": "/(?<!\\$)\\$([^\\$\\n]+?)\\$(?!\\$)/g",
-        "name": "single-dollar",
-        "priority": 2
-      }
-    ],
-    "preprocessing": {
-      "fixEscapedDollars": true,
-      "removeHtmlFromMath": false,
-      "removeMathML": true,
-      "removeSVG": true
-    },
-    "markdownProcessing": {
-      "processLinks": true,
-      "fixBrokenLinks": false,
-      "processTables": true,
-      "processBlockquotes": true,
-      "processHorizontalRules": true,
-      "processHeaders": true,
-      "processBoldItalic": true,
-      "processLists": true,
-      "processInlineCode": true
-    },
-    "katexOptions": {
-      "throwOnError": false,
-      "strict": false,
-      "trust": [
-        "\\url",
-        "\\href",
-        "\\includegraphics"
-      ],
-      "macros": {
-        "\\eqref": "\\href{###1}{(\\text{#1})}"
-      },
-      "maxSize": 500,
-      "maxExpand": 1000
-    },
-    "codeBlockPreservation": {
-      "enabled": true,
-      "extractBeforeProcessing": true,
-      "restoreAfterProcessing": true
-    },
-    "metadata": {
-      "createdAt": "2025-11-18T21:25:49.803851Z",
-      "needsManualReview": true
-    }
-  },
-  {
-    "modelId": "anthropic/claude-sonnet-4.5",
-    "version": "1.0.0",
-    "displayMathDelimiters": [
       {
         "pattern": "/\\$\\$([^$]+?)\\$\\$/gs",
         "name": "double-dollar",
-        "priority": 1
+        "priority": 2
       }
     ],
     "inlineMathDelimiters": [
@@ -308,11 +41,7 @@
     "katexOptions": {
       "throwOnError": false,
       "strict": false,
-      "trust": [
-        "\\url",
-        "\\href",
-        "\\includegraphics"
-      ],
+      "trust": ["\\url", "\\href", "\\includegraphics"],
       "macros": {
         "\\eqref": "\\href{###1}{(\\text{#1})}"
       },
@@ -325,7 +54,7 @@
       "restoreAfterProcessing": true
     },
     "metadata": {
-      "createdAt": "2025-11-13T02:02:42.461376Z",
+      "createdAt": "2025-11-13T02:02:42.463495Z",
       "needsManualReview": true
     }
   },
@@ -366,11 +95,7 @@
     "katexOptions": {
       "throwOnError": false,
       "strict": false,
-      "trust": [
-        "\\url",
-        "\\href",
-        "\\includegraphics"
-      ],
+      "trust": ["\\url", "\\href", "\\includegraphics"],
       "macros": {
         "\\eqref": "\\href{###1}{(\\text{#1})}"
       },
@@ -424,11 +149,7 @@
     "katexOptions": {
       "throwOnError": false,
       "strict": false,
-      "trust": [
-        "\\url",
-        "\\href",
-        "\\includegraphics"
-      ],
+      "trust": ["\\url", "\\href", "\\includegraphics"],
       "macros": {
         "\\eqref": "\\href{###1}{(\\text{#1})}"
       },
@@ -487,11 +208,7 @@
     "katexOptions": {
       "throwOnError": false,
       "strict": false,
-      "trust": [
-        "\\url",
-        "\\href",
-        "\\includegraphics"
-      ],
+      "trust": ["\\url", "\\href", "\\includegraphics"],
       "macros": {
         "\\eqref": "\\href{###1}{(\\text{#1})}"
       },
@@ -509,18 +226,13 @@
     }
   },
   {
-    "modelId": "anthropic/claude-3.7-sonnet",
+    "modelId": "anthropic/claude-sonnet-4.5",
     "version": "1.0.0",
     "displayMathDelimiters": [
       {
-        "pattern": "/\\\\begin\\{align\\}([\\s\\S]*?)\\\\end\\{align\\}/g",
-        "name": "align-env",
-        "priority": 1
-      },
-      {
         "pattern": "/\\$\\$([^$]+?)\\$\\$/gs",
         "name": "double-dollar",
-        "priority": 2
+        "priority": 1
       }
     ],
     "inlineMathDelimiters": [
@@ -550,11 +262,7 @@
     "katexOptions": {
       "throwOnError": false,
       "strict": false,
-      "trust": [
-        "\\url",
-        "\\href",
-        "\\includegraphics"
-      ],
+      "trust": ["\\url", "\\href", "\\includegraphics"],
       "macros": {
         "\\eqref": "\\href{###1}{(\\text{#1})}"
       },
@@ -567,7 +275,71 @@
       "restoreAfterProcessing": true
     },
     "metadata": {
-      "createdAt": "2025-11-13T02:02:42.463495Z",
+      "createdAt": "2025-11-13T02:02:42.461376Z",
+      "needsManualReview": true
+    }
+  },
+  {
+    "modelId": "cohere/command-a",
+    "version": "1.0.0",
+    "displayMathDelimiters": [
+      {
+        "pattern": "/\\\\\\[\\s*([\\s\\S]*?)\\s*\\\\\\]/g",
+        "name": "bracket",
+        "priority": 1
+      },
+      {
+        "pattern": "/\\$\\$([^$]+?)\\$\\$/gs",
+        "name": "double-dollar",
+        "priority": 2
+      }
+    ],
+    "inlineMathDelimiters": [
+      {
+        "pattern": "/\\\\\\(\\s*([\\s\\S]*?)\\s*\\\\\\)/g",
+        "name": "paren",
+        "priority": 1
+      },
+      {
+        "pattern": "/(?<!\\$)\\$([^$\\n]+?)\\$(?!\\$)/g",
+        "name": "single-dollar",
+        "priority": 2
+      }
+    ],
+    "preprocessing": {
+      "fixEscapedDollars": true,
+      "removeHtmlFromMath": false,
+      "removeMathML": true,
+      "removeSVG": true
+    },
+    "markdownProcessing": {
+      "processLinks": true,
+      "fixBrokenLinks": false,
+      "processTables": true,
+      "processBlockquotes": true,
+      "processHorizontalRules": true,
+      "processHeaders": true,
+      "processBoldItalic": true,
+      "processLists": true,
+      "processInlineCode": true
+    },
+    "katexOptions": {
+      "throwOnError": false,
+      "strict": false,
+      "trust": ["\\url", "\\href", "\\includegraphics"],
+      "macros": {
+        "\\eqref": "\\href{###1}{(\\text{#1})}"
+      },
+      "maxSize": 500,
+      "maxExpand": 1000
+    },
+    "codeBlockPreservation": {
+      "enabled": true,
+      "extractBeforeProcessing": true,
+      "restoreAfterProcessing": true
+    },
+    "metadata": {
+      "createdAt": "2025-11-13T02:02:42.463572Z",
       "needsManualReview": true
     }
   },
@@ -613,11 +385,7 @@
     "katexOptions": {
       "throwOnError": false,
       "strict": false,
-      "trust": [
-        "\\url",
-        "\\href",
-        "\\includegraphics"
-      ],
+      "trust": ["\\url", "\\href", "\\includegraphics"],
       "macros": {
         "\\eqref": "\\href{###1}{(\\text{#1})}"
       },
@@ -681,11 +449,7 @@
     "katexOptions": {
       "throwOnError": false,
       "strict": false,
-      "trust": [
-        "\\url",
-        "\\href",
-        "\\includegraphics"
-      ],
+      "trust": ["\\url", "\\href", "\\includegraphics"],
       "macros": {
         "\\eqref": "\\href{###1}{(\\text{#1})}"
       },
@@ -703,7 +467,7 @@
     }
   },
   {
-    "modelId": "cohere/command-a",
+    "modelId": "deepseek/deepseek-chat-v3.1",
     "version": "1.0.0",
     "displayMathDelimiters": [
       {
@@ -749,11 +513,7 @@
     "katexOptions": {
       "throwOnError": false,
       "strict": false,
-      "trust": [
-        "\\url",
-        "\\href",
-        "\\includegraphics"
-      ],
+      "trust": ["\\url", "\\href", "\\includegraphics"],
       "macros": {
         "\\eqref": "\\href{###1}{(\\text{#1})}"
       },
@@ -766,7 +526,7 @@
       "restoreAfterProcessing": true
     },
     "metadata": {
-      "createdAt": "2025-11-13T02:02:42.463572Z",
+      "createdAt": "2025-11-13T02:02:42.463652Z",
       "needsManualReview": true
     }
   },
@@ -817,11 +577,7 @@
     "katexOptions": {
       "throwOnError": false,
       "strict": false,
-      "trust": [
-        "\\url",
-        "\\href",
-        "\\includegraphics"
-      ],
+      "trust": ["\\url", "\\href", "\\includegraphics"],
       "macros": {
         "\\eqref": "\\href{###1}{(\\text{#1})}"
       },
@@ -885,11 +641,7 @@
     "katexOptions": {
       "throwOnError": false,
       "strict": false,
-      "trust": [
-        "\\url",
-        "\\href",
-        "\\includegraphics"
-      ],
+      "trust": ["\\url", "\\href", "\\includegraphics"],
       "macros": {
         "\\eqref": "\\href{###1}{(\\text{#1})}"
       },
@@ -903,132 +655,6 @@
     },
     "metadata": {
       "createdAt": "2025-11-13T02:02:42.463621Z",
-      "needsManualReview": true
-    }
-  },
-  {
-    "modelId": "deepseek/deepseek-chat-v3.1",
-    "version": "1.0.0",
-    "displayMathDelimiters": [
-      {
-        "pattern": "/\\\\\\[\\s*([\\s\\S]*?)\\s*\\\\\\]/g",
-        "name": "bracket",
-        "priority": 1
-      },
-      {
-        "pattern": "/\\$\\$([^$]+?)\\$\\$/gs",
-        "name": "double-dollar",
-        "priority": 2
-      }
-    ],
-    "inlineMathDelimiters": [
-      {
-        "pattern": "/\\\\\\(\\s*([\\s\\S]*?)\\s*\\\\\\)/g",
-        "name": "paren",
-        "priority": 1
-      },
-      {
-        "pattern": "/(?<!\\$)\\$([^$\\n]+?)\\$(?!\\$)/g",
-        "name": "single-dollar",
-        "priority": 2
-      }
-    ],
-    "preprocessing": {
-      "fixEscapedDollars": true,
-      "removeHtmlFromMath": false,
-      "removeMathML": true,
-      "removeSVG": true
-    },
-    "markdownProcessing": {
-      "processLinks": true,
-      "fixBrokenLinks": false,
-      "processTables": true,
-      "processBlockquotes": true,
-      "processHorizontalRules": true,
-      "processHeaders": true,
-      "processBoldItalic": true,
-      "processLists": true,
-      "processInlineCode": true
-    },
-    "katexOptions": {
-      "throwOnError": false,
-      "strict": false,
-      "trust": [
-        "\\url",
-        "\\href",
-        "\\includegraphics"
-      ],
-      "macros": {
-        "\\eqref": "\\href{###1}{(\\text{#1})}"
-      },
-      "maxSize": 500,
-      "maxExpand": 1000
-    },
-    "codeBlockPreservation": {
-      "enabled": true,
-      "extractBeforeProcessing": true,
-      "restoreAfterProcessing": true
-    },
-    "metadata": {
-      "createdAt": "2025-11-13T02:02:42.463652Z",
-      "needsManualReview": true
-    }
-  },
-  {
-    "modelId": "google/gemini-2.5-pro",
-    "version": "1.0.0",
-    "displayMathDelimiters": [
-      {
-        "pattern": "/\\$\\$([^$]+?)\\$\\$/gs",
-        "name": "double-dollar",
-        "priority": 1
-      }
-    ],
-    "inlineMathDelimiters": [
-      {
-        "pattern": "/(?<!\\$)\\$([^$\\n]+?)\\$(?!\\$)/g",
-        "name": "single-dollar",
-        "priority": 1
-      }
-    ],
-    "preprocessing": {
-      "fixEscapedDollars": true,
-      "removeHtmlFromMath": false,
-      "removeMathML": true,
-      "removeSVG": true
-    },
-    "markdownProcessing": {
-      "processLinks": true,
-      "fixBrokenLinks": false,
-      "processTables": true,
-      "processBlockquotes": true,
-      "processHorizontalRules": true,
-      "processHeaders": true,
-      "processBoldItalic": true,
-      "processLists": true,
-      "processInlineCode": true
-    },
-    "katexOptions": {
-      "throwOnError": false,
-      "strict": false,
-      "trust": [
-        "\\url",
-        "\\href",
-        "\\includegraphics"
-      ],
-      "macros": {
-        "\\eqref": "\\href{###1}{(\\text{#1})}"
-      },
-      "maxSize": 500,
-      "maxExpand": 1000
-    },
-    "codeBlockPreservation": {
-      "enabled": true,
-      "extractBeforeProcessing": true,
-      "restoreAfterProcessing": true
-    },
-    "metadata": {
-      "createdAt": "2025-11-13T02:02:42.463669Z",
       "needsManualReview": true
     }
   },
@@ -1069,11 +695,7 @@
     "katexOptions": {
       "throwOnError": false,
       "strict": false,
-      "trust": [
-        "\\url",
-        "\\href",
-        "\\includegraphics"
-      ],
+      "trust": ["\\url", "\\href", "\\includegraphics"],
       "macros": {
         "\\eqref": "\\href{###1}{(\\text{#1})}"
       },
@@ -1088,6 +710,222 @@
     "metadata": {
       "createdAt": "2025-11-13T02:02:42.463690Z",
       "needsManualReview": true
+    }
+  },
+  {
+    "modelId": "google/gemini-2.5-pro",
+    "version": "1.0.0",
+    "displayMathDelimiters": [
+      {
+        "pattern": "/\\$\\$([^$]+?)\\$\\$/gs",
+        "name": "double-dollar",
+        "priority": 1
+      }
+    ],
+    "inlineMathDelimiters": [
+      {
+        "pattern": "/(?<!\\$)\\$([^$\\n]+?)\\$(?!\\$)/g",
+        "name": "single-dollar",
+        "priority": 1
+      }
+    ],
+    "preprocessing": {
+      "fixEscapedDollars": true,
+      "removeHtmlFromMath": false,
+      "removeMathML": true,
+      "removeSVG": true
+    },
+    "markdownProcessing": {
+      "processLinks": true,
+      "fixBrokenLinks": false,
+      "processTables": true,
+      "processBlockquotes": true,
+      "processHorizontalRules": true,
+      "processHeaders": true,
+      "processBoldItalic": true,
+      "processLists": true,
+      "processInlineCode": true
+    },
+    "katexOptions": {
+      "throwOnError": false,
+      "strict": false,
+      "trust": ["\\url", "\\href", "\\includegraphics"],
+      "macros": {
+        "\\eqref": "\\href{###1}{(\\text{#1})}"
+      },
+      "maxSize": 500,
+      "maxExpand": 1000
+    },
+    "codeBlockPreservation": {
+      "enabled": true,
+      "extractBeforeProcessing": true,
+      "restoreAfterProcessing": true
+    },
+    "metadata": {
+      "createdAt": "2025-11-13T02:02:42.463669Z",
+      "needsManualReview": true
+    }
+  },
+  {
+    "modelId": "google/gemini-3-pro-preview",
+    "version": "1.0.0",
+    "displayMathDelimiters": [
+      {
+        "pattern": "/\\$\\$([^\\$]+?)\\$\\$/gs",
+        "name": "double-dollar",
+        "priority": 1
+      }
+    ],
+    "inlineMathDelimiters": [
+      {
+        "pattern": "/(?<!\\$)\\$([^\\$\\n]+?)\\$(?!\\$)/g",
+        "name": "single-dollar",
+        "priority": 1
+      }
+    ],
+    "preprocessing": {
+      "fixEscapedDollars": true,
+      "removeHtmlFromMath": false,
+      "removeMathML": true,
+      "removeSVG": true
+    },
+    "markdownProcessing": {
+      "processLinks": true,
+      "fixBrokenLinks": false,
+      "processTables": true,
+      "processBlockquotes": true,
+      "processHorizontalRules": true,
+      "processHeaders": true,
+      "processBoldItalic": true,
+      "processLists": true,
+      "processInlineCode": true
+    },
+    "katexOptions": {
+      "throwOnError": false,
+      "strict": false,
+      "trust": ["\\url", "\\href", "\\includegraphics"],
+      "macros": {
+        "\\eqref": "\\href{###1}{(\\text{#1})}"
+      },
+      "maxSize": 500,
+      "maxExpand": 1000
+    },
+    "codeBlockPreservation": {
+      "enabled": true,
+      "extractBeforeProcessing": true,
+      "restoreAfterProcessing": true
+    },
+    "metadata": {
+      "createdAt": "2025-11-22T05:19:27.009096Z",
+      "needsManualReview": true
+    }
+  },
+  {
+    "modelId": "meta-llama/llama-3.3-70b-instruct",
+    "version": "1.0.0",
+    "displayMathDelimiters": [
+      {
+        "pattern": "/\\$\\$([^$]+?)\\$\\$/gs",
+        "name": "double-dollar",
+        "priority": 1
+      }
+    ],
+    "inlineMathDelimiters": [
+      {
+        "pattern": "/(?<!\\$)\\$([^$\\n]+?)\\$(?!\\$)/g",
+        "name": "single-dollar",
+        "priority": 1
+      }
+    ],
+    "preprocessing": {
+      "fixEscapedDollars": true,
+      "removeHtmlFromMath": false,
+      "removeMathML": true,
+      "removeSVG": true
+    },
+    "markdownProcessing": {
+      "processLinks": true,
+      "fixBrokenLinks": false,
+      "processTables": true,
+      "processBlockquotes": true,
+      "processHorizontalRules": true,
+      "processHeaders": true,
+      "processBoldItalic": true,
+      "processLists": true,
+      "processInlineCode": true
+    },
+    "katexOptions": {
+      "throwOnError": false,
+      "strict": false,
+      "trust": ["\\url", "\\href", "\\includegraphics"],
+      "macros": {
+        "\\eqref": "\\href{###1}{(\\text{#1})}"
+      },
+      "maxSize": 500,
+      "maxExpand": 1000
+    },
+    "codeBlockPreservation": {
+      "enabled": true,
+      "extractBeforeProcessing": true,
+      "restoreAfterProcessing": true
+    },
+    "metadata": {
+      "createdAt": "2025-11-13T02:02:42.463783Z",
+      "needsManualReview": true
+    }
+  },
+  {
+    "modelId": "meta-llama/llama-3.3-70b-instruct:free",
+    "version": "1.0.0",
+    "displayMathDelimiters": [
+      {
+        "pattern": "/\\$\\$([^$]+?)\\$\\$/gs",
+        "name": "double-dollar",
+        "priority": 1
+      }
+    ],
+    "inlineMathDelimiters": [
+      {
+        "pattern": "/(?<!\\$)\\$([^$\\n]+?)\\$(?!\\$)/g",
+        "name": "single-dollar",
+        "priority": 1
+      }
+    ],
+    "preprocessing": {
+      "fixEscapedDollars": false,
+      "removeHtmlFromMath": false,
+      "removeMathML": true,
+      "removeSVG": true
+    },
+    "markdownProcessing": {
+      "processLinks": true,
+      "fixBrokenLinks": false,
+      "processTables": true,
+      "processBlockquotes": true,
+      "processHorizontalRules": true,
+      "processHeaders": true,
+      "processBoldItalic": true,
+      "processLists": true,
+      "processInlineCode": true
+    },
+    "katexOptions": {
+      "throwOnError": false,
+      "strict": false,
+      "trust": ["\\url", "\\href", "\\includegraphics"],
+      "macros": {
+        "\\eqref": "\\href{###1}{(\\text{#1})}"
+      },
+      "maxSize": 500,
+      "maxExpand": 1000
+    },
+    "codeBlockPreservation": {
+      "enabled": true,
+      "extractBeforeProcessing": true,
+      "restoreAfterProcessing": true
+    },
+    "metadata": {
+      "createdAt": "2025-11-13T02:02:42.463802Z",
+      "needsManualReview": false
     }
   },
   {
@@ -1132,11 +970,7 @@
     "katexOptions": {
       "throwOnError": false,
       "strict": false,
-      "trust": [
-        "\\url",
-        "\\href",
-        "\\includegraphics"
-      ],
+      "trust": ["\\url", "\\href", "\\includegraphics"],
       "macros": {
         "\\eqref": "\\href{###1}{(\\text{#1})}"
       },
@@ -1200,11 +1034,7 @@
     "katexOptions": {
       "throwOnError": false,
       "strict": false,
-      "trust": [
-        "\\url",
-        "\\href",
-        "\\includegraphics"
-      ],
+      "trust": ["\\url", "\\href", "\\includegraphics"],
       "macros": {
         "\\eqref": "\\href{###1}{(\\text{#1})}"
       },
@@ -1218,258 +1048,6 @@
     },
     "metadata": {
       "createdAt": "2025-11-13T02:02:42.463752Z",
-      "needsManualReview": true
-    }
-  },
-  {
-    "modelId": "meta-llama/llama-3.3-70b-instruct",
-    "version": "1.0.0",
-    "displayMathDelimiters": [
-      {
-        "pattern": "/\\$\\$([^$]+?)\\$\\$/gs",
-        "name": "double-dollar",
-        "priority": 1
-      }
-    ],
-    "inlineMathDelimiters": [
-      {
-        "pattern": "/(?<!\\$)\\$([^$\\n]+?)\\$(?!\\$)/g",
-        "name": "single-dollar",
-        "priority": 1
-      }
-    ],
-    "preprocessing": {
-      "fixEscapedDollars": true,
-      "removeHtmlFromMath": false,
-      "removeMathML": true,
-      "removeSVG": true
-    },
-    "markdownProcessing": {
-      "processLinks": true,
-      "fixBrokenLinks": false,
-      "processTables": true,
-      "processBlockquotes": true,
-      "processHorizontalRules": true,
-      "processHeaders": true,
-      "processBoldItalic": true,
-      "processLists": true,
-      "processInlineCode": true
-    },
-    "katexOptions": {
-      "throwOnError": false,
-      "strict": false,
-      "trust": [
-        "\\url",
-        "\\href",
-        "\\includegraphics"
-      ],
-      "macros": {
-        "\\eqref": "\\href{###1}{(\\text{#1})}"
-      },
-      "maxSize": 500,
-      "maxExpand": 1000
-    },
-    "codeBlockPreservation": {
-      "enabled": true,
-      "extractBeforeProcessing": true,
-      "restoreAfterProcessing": true
-    },
-    "metadata": {
-      "createdAt": "2025-11-13T02:02:42.463783Z",
-      "needsManualReview": true
-    }
-  },
-  {
-    "modelId": "meta-llama/llama-3.3-70b-instruct:free",
-    "version": "1.0.0",
-    "displayMathDelimiters": [
-      {
-        "pattern": "/\\$\\$([^$]+?)\\$\\$/gs",
-        "name": "double-dollar",
-        "priority": 1
-      }
-    ],
-    "inlineMathDelimiters": [
-      {
-        "pattern": "/(?<!\\$)\\$([^$\\n]+?)\\$(?!\\$)/g",
-        "name": "single-dollar",
-        "priority": 1
-      }
-    ],
-    "preprocessing": {
-      "fixEscapedDollars": false,
-      "removeHtmlFromMath": false,
-      "removeMathML": true,
-      "removeSVG": true
-    },
-    "markdownProcessing": {
-      "processLinks": true,
-      "fixBrokenLinks": false,
-      "processTables": true,
-      "processBlockquotes": true,
-      "processHorizontalRules": true,
-      "processHeaders": true,
-      "processBoldItalic": true,
-      "processLists": true,
-      "processInlineCode": true
-    },
-    "katexOptions": {
-      "throwOnError": false,
-      "strict": false,
-      "trust": [
-        "\\url",
-        "\\href",
-        "\\includegraphics"
-      ],
-      "macros": {
-        "\\eqref": "\\href{###1}{(\\text{#1})}"
-      },
-      "maxSize": 500,
-      "maxExpand": 1000
-    },
-    "codeBlockPreservation": {
-      "enabled": true,
-      "extractBeforeProcessing": true,
-      "restoreAfterProcessing": true
-    },
-    "metadata": {
-      "createdAt": "2025-11-13T02:02:42.463802Z",
-      "needsManualReview": false
-    }
-  },
-  {
-    "modelId": "microsoft/wizardlm-2-8x22b",
-    "version": "1.0.0",
-    "displayMathDelimiters": [
-      {
-        "pattern": "/\\\\\\[\\s*([\\s\\S]*?)\\s*\\\\\\]/g",
-        "name": "bracket",
-        "priority": 1
-      },
-      {
-        "pattern": "/\\$\\$([^$]+?)\\$\\$/gs",
-        "name": "double-dollar",
-        "priority": 2
-      }
-    ],
-    "inlineMathDelimiters": [
-      {
-        "pattern": "/\\\\\\(\\s*([\\s\\S]*?)\\s*\\\\\\)/g",
-        "name": "paren",
-        "priority": 1
-      },
-      {
-        "pattern": "/(?<!\\$)\\$([^$\\n]+?)\\$(?!\\$)/g",
-        "name": "single-dollar",
-        "priority": 2
-      }
-    ],
-    "preprocessing": {
-      "fixEscapedDollars": false,
-      "removeHtmlFromMath": false,
-      "removeMathML": true,
-      "removeSVG": true
-    },
-    "markdownProcessing": {
-      "processLinks": true,
-      "fixBrokenLinks": false,
-      "processTables": true,
-      "processBlockquotes": true,
-      "processHorizontalRules": true,
-      "processHeaders": true,
-      "processBoldItalic": true,
-      "processLists": true,
-      "processInlineCode": true
-    },
-    "katexOptions": {
-      "throwOnError": false,
-      "strict": false,
-      "trust": [
-        "\\url",
-        "\\href",
-        "\\includegraphics"
-      ],
-      "macros": {
-        "\\eqref": "\\href{###1}{(\\text{#1})}"
-      },
-      "maxSize": 500,
-      "maxExpand": 1000
-    },
-    "codeBlockPreservation": {
-      "enabled": true,
-      "extractBeforeProcessing": true,
-      "restoreAfterProcessing": true
-    },
-    "metadata": {
-      "createdAt": "2025-11-13T02:02:42.463830Z",
-      "needsManualReview": true
-    }
-  },
-  {
-    "modelId": "microsoft/phi-4-reasoning-plus",
-    "version": "1.0.0",
-    "displayMathDelimiters": [
-      {
-        "pattern": "/\\\\\\[\\s*([\\s\\S]*?)\\s*\\\\\\]/g",
-        "name": "bracket",
-        "priority": 1
-      },
-      {
-        "pattern": "/\\$\\$([^$]+?)\\$\\$/gs",
-        "name": "double-dollar",
-        "priority": 2
-      }
-    ],
-    "inlineMathDelimiters": [
-      {
-        "pattern": "/\\\\\\(\\s*([\\s\\S]*?)\\s*\\\\\\)/g",
-        "name": "paren",
-        "priority": 1
-      },
-      {
-        "pattern": "/(?<!\\$)\\$([^$\\n]+?)\\$(?!\\$)/g",
-        "name": "single-dollar",
-        "priority": 2
-      }
-    ],
-    "preprocessing": {
-      "fixEscapedDollars": true,
-      "removeHtmlFromMath": false,
-      "removeMathML": true,
-      "removeSVG": true
-    },
-    "markdownProcessing": {
-      "processLinks": true,
-      "fixBrokenLinks": false,
-      "processTables": true,
-      "processBlockquotes": true,
-      "processHorizontalRules": true,
-      "processHeaders": true,
-      "processBoldItalic": true,
-      "processLists": true,
-      "processInlineCode": true
-    },
-    "katexOptions": {
-      "throwOnError": false,
-      "strict": false,
-      "trust": [
-        "\\url",
-        "\\href",
-        "\\includegraphics"
-      ],
-      "macros": {
-        "\\eqref": "\\href{###1}{(\\text{#1})}"
-      },
-      "maxSize": 500,
-      "maxExpand": 1000
-    },
-    "codeBlockPreservation": {
-      "enabled": true,
-      "extractBeforeProcessing": true,
-      "restoreAfterProcessing": true
-    },
-    "metadata": {
-      "createdAt": "2025-11-13T02:02:42.463850Z",
       "needsManualReview": true
     }
   },
@@ -1520,11 +1098,7 @@
     "katexOptions": {
       "throwOnError": false,
       "strict": false,
-      "trust": [
-        "\\url",
-        "\\href",
-        "\\includegraphics"
-      ],
+      "trust": ["\\url", "\\href", "\\includegraphics"],
       "macros": {
         "\\eqref": "\\href{###1}{(\\text{#1})}"
       },
@@ -1542,75 +1116,7 @@
     }
   },
   {
-    "modelId": "mistralai/mistral-large",
-    "version": "1.0.0",
-    "displayMathDelimiters": [
-      {
-        "pattern": "/\\\\\\[\\s*([\\s\\S]*?)\\s*\\\\\\]/g",
-        "name": "bracket",
-        "priority": 1
-      },
-      {
-        "pattern": "/\\$\\$([^$]+?)\\$\\$/gs",
-        "name": "double-dollar",
-        "priority": 2
-      }
-    ],
-    "inlineMathDelimiters": [
-      {
-        "pattern": "/\\\\\\(\\s*([\\s\\S]*?)\\s*\\\\\\)/g",
-        "name": "paren",
-        "priority": 1
-      },
-      {
-        "pattern": "/(?<!\\$)\\$([^$\\n]+?)\\$(?!\\$)/g",
-        "name": "single-dollar",
-        "priority": 2
-      }
-    ],
-    "preprocessing": {
-      "fixEscapedDollars": true,
-      "removeHtmlFromMath": true,
-      "removeMathML": true,
-      "removeSVG": true
-    },
-    "markdownProcessing": {
-      "processLinks": true,
-      "fixBrokenLinks": true,
-      "processTables": true,
-      "processBlockquotes": true,
-      "processHorizontalRules": true,
-      "processHeaders": true,
-      "processBoldItalic": true,
-      "processLists": true,
-      "processInlineCode": true
-    },
-    "katexOptions": {
-      "throwOnError": false,
-      "strict": false,
-      "trust": [
-        "\\url",
-        "\\href",
-        "\\includegraphics"
-      ],
-      "macros": {
-        "\\eqref": "\\href{###1}{(\\text{#1})}"
-      },
-      "maxSize": 500,
-      "maxExpand": 1000
-    },
-    "codeBlockPreservation": {
-      "enabled": true,
-      "extractBeforeProcessing": true,
-      "restoreAfterProcessing": true
-    },
-    "metadata": {
-      "createdAt": "2025-11-13T02:02:42.463956Z",
-      "needsManualReview": true
-    }
-  },
-  {
-    "modelId": "mistralai/mistral-medium-3.1",
+    "modelId": "microsoft/phi-4-reasoning-plus",
     "version": "1.0.0",
     "displayMathDelimiters": [
       {
@@ -1656,11 +1162,7 @@
     "katexOptions": {
       "throwOnError": false,
       "strict": false,
-      "trust": [
-        "\\url",
-        "\\href",
-        "\\includegraphics"
-      ],
+      "trust": ["\\url", "\\href", "\\includegraphics"],
       "macros": {
         "\\eqref": "\\href{###1}{(\\text{#1})}"
       },
@@ -1673,12 +1175,76 @@
       "restoreAfterProcessing": true
     },
     "metadata": {
-      "createdAt": "2025-11-13T02:02:42.463979Z",
+      "createdAt": "2025-11-13T02:02:42.463850Z",
       "needsManualReview": true
     }
   },
   {
-    "modelId": "mistralai/mistral-small-3.2-24b-instruct",
+    "modelId": "microsoft/wizardlm-2-8x22b",
+    "version": "1.0.0",
+    "displayMathDelimiters": [
+      {
+        "pattern": "/\\\\\\[\\s*([\\s\\S]*?)\\s*\\\\\\]/g",
+        "name": "bracket",
+        "priority": 1
+      },
+      {
+        "pattern": "/\\$\\$([^$]+?)\\$\\$/gs",
+        "name": "double-dollar",
+        "priority": 2
+      }
+    ],
+    "inlineMathDelimiters": [
+      {
+        "pattern": "/\\\\\\(\\s*([\\s\\S]*?)\\s*\\\\\\)/g",
+        "name": "paren",
+        "priority": 1
+      },
+      {
+        "pattern": "/(?<!\\$)\\$([^$\\n]+?)\\$(?!\\$)/g",
+        "name": "single-dollar",
+        "priority": 2
+      }
+    ],
+    "preprocessing": {
+      "fixEscapedDollars": false,
+      "removeHtmlFromMath": false,
+      "removeMathML": true,
+      "removeSVG": true
+    },
+    "markdownProcessing": {
+      "processLinks": true,
+      "fixBrokenLinks": false,
+      "processTables": true,
+      "processBlockquotes": true,
+      "processHorizontalRules": true,
+      "processHeaders": true,
+      "processBoldItalic": true,
+      "processLists": true,
+      "processInlineCode": true
+    },
+    "katexOptions": {
+      "throwOnError": false,
+      "strict": false,
+      "trust": ["\\url", "\\href", "\\includegraphics"],
+      "macros": {
+        "\\eqref": "\\href{###1}{(\\text{#1})}"
+      },
+      "maxSize": 500,
+      "maxExpand": 1000
+    },
+    "codeBlockPreservation": {
+      "enabled": true,
+      "extractBeforeProcessing": true,
+      "restoreAfterProcessing": true
+    },
+    "metadata": {
+      "createdAt": "2025-11-13T02:02:42.463830Z",
+      "needsManualReview": true
+    }
+  },
+  {
+    "modelId": "mistralai/codestral-2508",
     "version": "1.0.0",
     "displayMathDelimiters": [
       {
@@ -1724,11 +1290,7 @@
     "katexOptions": {
       "throwOnError": false,
       "strict": false,
-      "trust": [
-        "\\url",
-        "\\href",
-        "\\includegraphics"
-      ],
+      "trust": ["\\url", "\\href", "\\includegraphics"],
       "macros": {
         "\\eqref": "\\href{###1}{(\\text{#1})}"
       },
@@ -1741,7 +1303,7 @@
       "restoreAfterProcessing": true
     },
     "metadata": {
-      "createdAt": "2025-11-13T02:02:42.464009Z",
+      "createdAt": "2025-11-13T02:02:42.464077Z",
       "needsManualReview": true
     }
   },
@@ -1782,11 +1344,7 @@
     "katexOptions": {
       "throwOnError": false,
       "strict": false,
-      "trust": [
-        "\\url",
-        "\\href",
-        "\\includegraphics"
-      ],
+      "trust": ["\\url", "\\href", "\\includegraphics"],
       "macros": {
         "\\eqref": "\\href{###1}{(\\text{#1})}"
       },
@@ -1850,11 +1408,7 @@
     "katexOptions": {
       "throwOnError": false,
       "strict": false,
-      "trust": [
-        "\\url",
-        "\\href",
-        "\\includegraphics"
-      ],
+      "trust": ["\\url", "\\href", "\\includegraphics"],
       "macros": {
         "\\eqref": "\\href{###1}{(\\text{#1})}"
       },
@@ -1872,7 +1426,71 @@
     }
   },
   {
-    "modelId": "mistralai/codestral-2508",
+    "modelId": "mistralai/mistral-large",
+    "version": "1.0.0",
+    "displayMathDelimiters": [
+      {
+        "pattern": "/\\\\\\[\\s*([\\s\\S]*?)\\s*\\\\\\]/g",
+        "name": "bracket",
+        "priority": 1
+      },
+      {
+        "pattern": "/\\$\\$([^$]+?)\\$\\$/gs",
+        "name": "double-dollar",
+        "priority": 2
+      }
+    ],
+    "inlineMathDelimiters": [
+      {
+        "pattern": "/\\\\\\(\\s*([\\s\\S]*?)\\s*\\\\\\)/g",
+        "name": "paren",
+        "priority": 1
+      },
+      {
+        "pattern": "/(?<!\\$)\\$([^$\\n]+?)\\$(?!\\$)/g",
+        "name": "single-dollar",
+        "priority": 2
+      }
+    ],
+    "preprocessing": {
+      "fixEscapedDollars": true,
+      "removeHtmlFromMath": true,
+      "removeMathML": true,
+      "removeSVG": true
+    },
+    "markdownProcessing": {
+      "processLinks": true,
+      "fixBrokenLinks": true,
+      "processTables": true,
+      "processBlockquotes": true,
+      "processHorizontalRules": true,
+      "processHeaders": true,
+      "processBoldItalic": true,
+      "processLists": true,
+      "processInlineCode": true
+    },
+    "katexOptions": {
+      "throwOnError": false,
+      "strict": false,
+      "trust": ["\\url", "\\href", "\\includegraphics"],
+      "macros": {
+        "\\eqref": "\\href{###1}{(\\text{#1})}"
+      },
+      "maxSize": 500,
+      "maxExpand": 1000
+    },
+    "codeBlockPreservation": {
+      "enabled": true,
+      "extractBeforeProcessing": true,
+      "restoreAfterProcessing": true
+    },
+    "metadata": {
+      "createdAt": "2025-11-13T02:02:42.463956Z",
+      "needsManualReview": true
+    }
+  },
+  {
+    "modelId": "mistralai/mistral-medium-3.1",
     "version": "1.0.0",
     "displayMathDelimiters": [
       {
@@ -1918,11 +1536,7 @@
     "katexOptions": {
       "throwOnError": false,
       "strict": false,
-      "trust": [
-        "\\url",
-        "\\href",
-        "\\includegraphics"
-      ],
+      "trust": ["\\url", "\\href", "\\includegraphics"],
       "macros": {
         "\\eqref": "\\href{###1}{(\\text{#1})}"
       },
@@ -1935,25 +1549,35 @@
       "restoreAfterProcessing": true
     },
     "metadata": {
-      "createdAt": "2025-11-13T02:02:42.464077Z",
+      "createdAt": "2025-11-13T02:02:42.463979Z",
       "needsManualReview": true
     }
   },
   {
-    "modelId": "openai/gpt-5-pro",
+    "modelId": "mistralai/mistral-small-3.2-24b-instruct",
     "version": "1.0.0",
     "displayMathDelimiters": [
       {
+        "pattern": "/\\\\\\[\\s*([\\s\\S]*?)\\s*\\\\\\]/g",
+        "name": "bracket",
+        "priority": 1
+      },
+      {
         "pattern": "/\\$\\$([^$]+?)\\$\\$/gs",
         "name": "double-dollar",
-        "priority": 1
+        "priority": 2
       }
     ],
     "inlineMathDelimiters": [
       {
+        "pattern": "/\\\\\\(\\s*([\\s\\S]*?)\\s*\\\\\\)/g",
+        "name": "paren",
+        "priority": 1
+      },
+      {
         "pattern": "/(?<!\\$)\\$([^$\\n]+?)\\$(?!\\$)/g",
         "name": "single-dollar",
-        "priority": 1
+        "priority": 2
       }
     ],
     "preprocessing": {
@@ -1976,11 +1600,7 @@
     "katexOptions": {
       "throwOnError": false,
       "strict": false,
-      "trust": [
-        "\\url",
-        "\\href",
-        "\\includegraphics"
-      ],
+      "trust": ["\\url", "\\href", "\\includegraphics"],
       "macros": {
         "\\eqref": "\\href{###1}{(\\text{#1})}"
       },
@@ -1993,7 +1613,71 @@
       "restoreAfterProcessing": true
     },
     "metadata": {
-      "createdAt": "2025-11-13T02:02:42.464092Z",
+      "createdAt": "2025-11-13T02:02:42.464009Z",
+      "needsManualReview": true
+    }
+  },
+  {
+    "modelId": "openai/gpt-4o",
+    "version": "1.0.0",
+    "displayMathDelimiters": [
+      {
+        "pattern": "/\\\\\\[\\s*([\\s\\S]*?)\\s*\\\\\\]/g",
+        "name": "bracket",
+        "priority": 1
+      },
+      {
+        "pattern": "/\\$\\$([^$]+?)\\$\\$/gs",
+        "name": "double-dollar",
+        "priority": 2
+      }
+    ],
+    "inlineMathDelimiters": [
+      {
+        "pattern": "/\\\\\\(\\s*([\\s\\S]*?)\\s*\\\\\\)/g",
+        "name": "paren",
+        "priority": 1
+      },
+      {
+        "pattern": "/(?<!\\$)\\$([^$\\n]+?)\\$(?!\\$)/g",
+        "name": "single-dollar",
+        "priority": 2
+      }
+    ],
+    "preprocessing": {
+      "fixEscapedDollars": true,
+      "removeHtmlFromMath": false,
+      "removeMathML": true,
+      "removeSVG": true
+    },
+    "markdownProcessing": {
+      "processLinks": true,
+      "fixBrokenLinks": false,
+      "processTables": true,
+      "processBlockquotes": true,
+      "processHorizontalRules": true,
+      "processHeaders": true,
+      "processBoldItalic": true,
+      "processLists": true,
+      "processInlineCode": true
+    },
+    "katexOptions": {
+      "throwOnError": false,
+      "strict": false,
+      "trust": ["\\url", "\\href", "\\includegraphics"],
+      "macros": {
+        "\\eqref": "\\href{###1}{(\\text{#1})}"
+      },
+      "maxSize": 500,
+      "maxExpand": 1000
+    },
+    "codeBlockPreservation": {
+      "enabled": true,
+      "extractBeforeProcessing": true,
+      "restoreAfterProcessing": true
+    },
+    "metadata": {
+      "createdAt": "2025-11-13T02:02:42.464322Z",
       "needsManualReview": true
     }
   },
@@ -2034,11 +1718,7 @@
     "katexOptions": {
       "throwOnError": false,
       "strict": false,
-      "trust": [
-        "\\url",
-        "\\href",
-        "\\includegraphics"
-      ],
+      "trust": ["\\url", "\\href", "\\includegraphics"],
       "macros": {
         "\\eqref": "\\href{###1}{(\\text{#1})}"
       },
@@ -2052,6 +1732,134 @@
     },
     "metadata": {
       "createdAt": "2025-11-13T02:02:42.464107Z",
+      "needsManualReview": true
+    }
+  },
+  {
+    "modelId": "openai/gpt-5-chat",
+    "version": "1.0.0",
+    "displayMathDelimiters": [
+      {
+        "pattern": "/\\\\\\[\\s*([\\s\\S]*?)\\s*\\\\\\]/g",
+        "name": "bracket",
+        "priority": 1
+      },
+      {
+        "pattern": "/\\$\\$([^$]+?)\\$\\$/gs",
+        "name": "double-dollar",
+        "priority": 2
+      }
+    ],
+    "inlineMathDelimiters": [
+      {
+        "pattern": "/\\\\\\(\\s*([\\s\\S]*?)\\s*\\\\\\)/g",
+        "name": "paren",
+        "priority": 1
+      },
+      {
+        "pattern": "/(?<!\\$)\\$([^$\\n]+?)\\$(?!\\$)/g",
+        "name": "single-dollar",
+        "priority": 2
+      }
+    ],
+    "preprocessing": {
+      "fixEscapedDollars": true,
+      "removeHtmlFromMath": true,
+      "removeMathML": true,
+      "removeSVG": true
+    },
+    "markdownProcessing": {
+      "processLinks": true,
+      "fixBrokenLinks": false,
+      "processTables": true,
+      "processBlockquotes": true,
+      "processHorizontalRules": true,
+      "processHeaders": true,
+      "processBoldItalic": true,
+      "processLists": true,
+      "processInlineCode": true
+    },
+    "katexOptions": {
+      "throwOnError": false,
+      "strict": false,
+      "trust": ["\\url", "\\href", "\\includegraphics"],
+      "macros": {
+        "\\eqref": "\\href{###1}{(\\text{#1})}"
+      },
+      "maxSize": 500,
+      "maxExpand": 1000
+    },
+    "codeBlockPreservation": {
+      "enabled": true,
+      "extractBeforeProcessing": true,
+      "restoreAfterProcessing": true
+    },
+    "metadata": {
+      "createdAt": "2025-11-13T02:02:42.464300Z",
+      "needsManualReview": true
+    }
+  },
+  {
+    "modelId": "openai/gpt-5-codex",
+    "version": "1.0.0",
+    "displayMathDelimiters": [
+      {
+        "pattern": "/\\\\\\[\\s*([\\s\\S]*?)\\s*\\\\\\]/g",
+        "name": "bracket",
+        "priority": 1
+      },
+      {
+        "pattern": "/\\$\\$([^$]+?)\\$\\$/gs",
+        "name": "double-dollar",
+        "priority": 2
+      }
+    ],
+    "inlineMathDelimiters": [
+      {
+        "pattern": "/\\\\\\(\\s*([\\s\\S]*?)\\s*\\\\\\)/g",
+        "name": "paren",
+        "priority": 1
+      },
+      {
+        "pattern": "/(?<!\\$)\\$([^$\\n]+?)\\$(?!\\$)/g",
+        "name": "single-dollar",
+        "priority": 2
+      }
+    ],
+    "preprocessing": {
+      "fixEscapedDollars": true,
+      "removeHtmlFromMath": false,
+      "removeMathML": true,
+      "removeSVG": true
+    },
+    "markdownProcessing": {
+      "processLinks": true,
+      "fixBrokenLinks": false,
+      "processTables": true,
+      "processBlockquotes": true,
+      "processHorizontalRules": true,
+      "processHeaders": true,
+      "processBoldItalic": true,
+      "processLists": true,
+      "processInlineCode": true
+    },
+    "katexOptions": {
+      "throwOnError": false,
+      "strict": false,
+      "trust": ["\\url", "\\href", "\\includegraphics"],
+      "macros": {
+        "\\eqref": "\\href{###1}{(\\text{#1})}"
+      },
+      "maxSize": 500,
+      "maxExpand": 1000
+    },
+    "codeBlockPreservation": {
+      "enabled": true,
+      "extractBeforeProcessing": true,
+      "restoreAfterProcessing": true
+    },
+    "metadata": {
+      "createdAt": "2025-11-13T02:02:42.464276Z",
       "needsManualReview": true
     }
   },
@@ -2097,11 +1905,7 @@
     "katexOptions": {
       "throwOnError": false,
       "strict": false,
-      "trust": [
-        "\\url",
-        "\\href",
-        "\\includegraphics"
-      ],
+      "trust": ["\\url", "\\href", "\\includegraphics"],
       "macros": {
         "\\eqref": "\\href{###1}{(\\text{#1})}"
       },
@@ -2155,11 +1959,7 @@
     "katexOptions": {
       "throwOnError": false,
       "strict": false,
-      "trust": [
-        "\\url",
-        "\\href",
-        "\\includegraphics"
-      ],
+      "trust": ["\\url", "\\href", "\\includegraphics"],
       "macros": {
         "\\eqref": "\\href{###1}{(\\text{#1})}"
       },
@@ -2177,7 +1977,7 @@
     }
   },
   {
-    "modelId": "openai/gpt-5-codex",
+    "modelId": "openai/gpt-5.1",
     "version": "1.0.0",
     "displayMathDelimiters": [
       {
@@ -2186,87 +1986,19 @@
         "priority": 1
       },
       {
-        "pattern": "/\\$\\$([^$]+?)\\$\\$/gs",
+        "pattern": "/\\$\\$([^\\$]+?)\\$\\$/gs",
         "name": "double-dollar",
         "priority": 2
       }
     ],
     "inlineMathDelimiters": [
       {
-        "pattern": "/\\\\\\(\\s*([\\s\\S]*?)\\s*\\\\\\)/g",
+        "pattern": "/\\\\\\(\\s*([^\\\\]*?)\\s*\\\\\\)/g",
         "name": "paren",
         "priority": 1
       },
       {
-        "pattern": "/(?<!\\$)\\$([^$\\n]+?)\\$(?!\\$)/g",
-        "name": "single-dollar",
-        "priority": 2
-      }
-    ],
-    "preprocessing": {
-      "fixEscapedDollars": true,
-      "removeHtmlFromMath": false,
-      "removeMathML": true,
-      "removeSVG": true
-    },
-    "markdownProcessing": {
-      "processLinks": true,
-      "fixBrokenLinks": false,
-      "processTables": true,
-      "processBlockquotes": true,
-      "processHorizontalRules": true,
-      "processHeaders": true,
-      "processBoldItalic": true,
-      "processLists": true,
-      "processInlineCode": true
-    },
-    "katexOptions": {
-      "throwOnError": false,
-      "strict": false,
-      "trust": [
-        "\\url",
-        "\\href",
-        "\\includegraphics"
-      ],
-      "macros": {
-        "\\eqref": "\\href{###1}{(\\text{#1})}"
-      },
-      "maxSize": 500,
-      "maxExpand": 1000
-    },
-    "codeBlockPreservation": {
-      "enabled": true,
-      "extractBeforeProcessing": true,
-      "restoreAfterProcessing": true
-    },
-    "metadata": {
-      "createdAt": "2025-11-13T02:02:42.464276Z",
-      "needsManualReview": true
-    }
-  },
-  {
-    "modelId": "openai/gpt-5-chat",
-    "version": "1.0.0",
-    "displayMathDelimiters": [
-      {
-        "pattern": "/\\\\\\[\\s*([\\s\\S]*?)\\s*\\\\\\]/g",
-        "name": "bracket",
-        "priority": 1
-      },
-      {
-        "pattern": "/\\$\\$([^$]+?)\\$\\$/gs",
-        "name": "double-dollar",
-        "priority": 2
-      }
-    ],
-    "inlineMathDelimiters": [
-      {
-        "pattern": "/\\\\\\(\\s*([\\s\\S]*?)\\s*\\\\\\)/g",
-        "name": "paren",
-        "priority": 1
-      },
-      {
-        "pattern": "/(?<!\\$)\\$([^$\\n]+?)\\$(?!\\$)/g",
+        "pattern": "/(?<!\\$)\\$([^\\$\\n]+?)\\$(?!\\$)/g",
         "name": "single-dollar",
         "priority": 2
       }
@@ -2291,11 +2023,7 @@
     "katexOptions": {
       "throwOnError": false,
       "strict": false,
-      "trust": [
-        "\\url",
-        "\\href",
-        "\\includegraphics"
-      ],
+      "trust": ["\\url", "\\href", "\\includegraphics"],
       "macros": {
         "\\eqref": "\\href{###1}{(\\text{#1})}"
       },
@@ -2308,12 +2036,12 @@
       "restoreAfterProcessing": true
     },
     "metadata": {
-      "createdAt": "2025-11-13T02:02:42.464300Z",
+      "createdAt": "2025-11-18T21:25:49.785690Z",
       "needsManualReview": true
     }
   },
   {
-    "modelId": "openai/gpt-4o",
+    "modelId": "openai/gpt-5.1-chat",
     "version": "1.0.0",
     "displayMathDelimiters": [
       {
@@ -2322,19 +2050,19 @@
         "priority": 1
       },
       {
-        "pattern": "/\\$\\$([^$]+?)\\$\\$/gs",
+        "pattern": "/\\$\\$([^\\$]+?)\\$\\$/gs",
         "name": "double-dollar",
         "priority": 2
       }
     ],
     "inlineMathDelimiters": [
       {
-        "pattern": "/\\\\\\(\\s*([\\s\\S]*?)\\s*\\\\\\)/g",
+        "pattern": "/\\\\\\(\\s*([^\\\\]*?)\\s*\\\\\\)/g",
         "name": "paren",
         "priority": 1
       },
       {
-        "pattern": "/(?<!\\$)\\$([^$\\n]+?)\\$(?!\\$)/g",
+        "pattern": "/(?<!\\$)\\$([^\\$\\n]+?)\\$(?!\\$)/g",
         "name": "single-dollar",
         "priority": 2
       }
@@ -2359,11 +2087,7 @@
     "katexOptions": {
       "throwOnError": false,
       "strict": false,
-      "trust": [
-        "\\url",
-        "\\href",
-        "\\includegraphics"
-      ],
+      "trust": ["\\url", "\\href", "\\includegraphics"],
       "macros": {
         "\\eqref": "\\href{###1}{(\\text{#1})}"
       },
@@ -2376,7 +2100,135 @@
       "restoreAfterProcessing": true
     },
     "metadata": {
-      "createdAt": "2025-11-13T02:02:42.464322Z",
+      "createdAt": "2025-11-18T21:25:49.790719Z",
+      "needsManualReview": true
+    }
+  },
+  {
+    "modelId": "openai/gpt-5.1-codex",
+    "version": "1.0.0",
+    "displayMathDelimiters": [
+      {
+        "pattern": "/\\\\\\[\\s*([\\s\\S]*?)\\s*\\\\\\]/g",
+        "name": "bracket",
+        "priority": 1
+      },
+      {
+        "pattern": "/\\$\\$([^\\$]+?)\\$\\$/gs",
+        "name": "double-dollar",
+        "priority": 2
+      }
+    ],
+    "inlineMathDelimiters": [
+      {
+        "pattern": "/\\\\\\(\\s*([^\\\\]*?)\\s*\\\\\\)/g",
+        "name": "paren",
+        "priority": 1
+      },
+      {
+        "pattern": "/(?<!\\$)\\$([^\\$\\n]+?)\\$(?!\\$)/g",
+        "name": "single-dollar",
+        "priority": 2
+      }
+    ],
+    "preprocessing": {
+      "fixEscapedDollars": true,
+      "removeHtmlFromMath": false,
+      "removeMathML": true,
+      "removeSVG": true
+    },
+    "markdownProcessing": {
+      "processLinks": true,
+      "fixBrokenLinks": false,
+      "processTables": true,
+      "processBlockquotes": true,
+      "processHorizontalRules": true,
+      "processHeaders": true,
+      "processBoldItalic": true,
+      "processLists": true,
+      "processInlineCode": true
+    },
+    "katexOptions": {
+      "throwOnError": false,
+      "strict": false,
+      "trust": ["\\url", "\\href", "\\includegraphics"],
+      "macros": {
+        "\\eqref": "\\href{###1}{(\\text{#1})}"
+      },
+      "maxSize": 500,
+      "maxExpand": 1000
+    },
+    "codeBlockPreservation": {
+      "enabled": true,
+      "extractBeforeProcessing": true,
+      "restoreAfterProcessing": true
+    },
+    "metadata": {
+      "createdAt": "2025-11-18T21:25:49.800760Z",
+      "needsManualReview": true
+    }
+  },
+  {
+    "modelId": "openai/gpt-5.1-codex-mini",
+    "version": "1.0.0",
+    "displayMathDelimiters": [
+      {
+        "pattern": "/\\\\\\[\\s*([\\s\\S]*?)\\s*\\\\\\]/g",
+        "name": "bracket",
+        "priority": 1
+      },
+      {
+        "pattern": "/\\$\\$([^\\$]+?)\\$\\$/gs",
+        "name": "double-dollar",
+        "priority": 2
+      }
+    ],
+    "inlineMathDelimiters": [
+      {
+        "pattern": "/\\\\\\(\\s*([^\\\\]*?)\\s*\\\\\\)/g",
+        "name": "paren",
+        "priority": 1
+      },
+      {
+        "pattern": "/(?<!\\$)\\$([^\\$\\n]+?)\\$(?!\\$)/g",
+        "name": "single-dollar",
+        "priority": 2
+      }
+    ],
+    "preprocessing": {
+      "fixEscapedDollars": true,
+      "removeHtmlFromMath": false,
+      "removeMathML": true,
+      "removeSVG": true
+    },
+    "markdownProcessing": {
+      "processLinks": true,
+      "fixBrokenLinks": false,
+      "processTables": true,
+      "processBlockquotes": true,
+      "processHorizontalRules": true,
+      "processHeaders": true,
+      "processBoldItalic": true,
+      "processLists": true,
+      "processInlineCode": true
+    },
+    "katexOptions": {
+      "throwOnError": false,
+      "strict": false,
+      "trust": ["\\url", "\\href", "\\includegraphics"],
+      "macros": {
+        "\\eqref": "\\href{###1}{(\\text{#1})}"
+      },
+      "maxSize": 500,
+      "maxExpand": 1000
+    },
+    "codeBlockPreservation": {
+      "enabled": true,
+      "extractBeforeProcessing": true,
+      "restoreAfterProcessing": true
+    },
+    "metadata": {
+      "createdAt": "2025-11-18T21:25:49.803851Z",
       "needsManualReview": true
     }
   },
@@ -2427,11 +2279,7 @@
     "katexOptions": {
       "throwOnError": false,
       "strict": false,
-      "trust": [
-        "\\url",
-        "\\href",
-        "\\includegraphics"
-      ],
+      "trust": ["\\url", "\\href", "\\includegraphics"],
       "macros": {
         "\\eqref": "\\href{###1}{(\\text{#1})}"
       },
@@ -2485,11 +2333,7 @@
     "katexOptions": {
       "throwOnError": false,
       "strict": false,
-      "trust": [
-        "\\url",
-        "\\href",
-        "\\includegraphics"
-      ],
+      "trust": ["\\url", "\\href", "\\includegraphics"],
       "macros": {
         "\\eqref": "\\href{###1}{(\\text{#1})}"
       },
@@ -2507,143 +2351,7 @@
     }
   },
   {
-    "modelId": "openai/o1-pro",
-    "version": "1.0.0",
-    "displayMathDelimiters": [
-      {
-        "pattern": "/\\\\\\[\\s*([\\s\\S]*?)\\s*\\\\\\]/g",
-        "name": "bracket",
-        "priority": 1
-      },
-      {
-        "pattern": "/\\$\\$([^$]+?)\\$\\$/gs",
-        "name": "double-dollar",
-        "priority": 2
-      }
-    ],
-    "inlineMathDelimiters": [
-      {
-        "pattern": "/\\\\\\(\\s*([\\s\\S]*?)\\s*\\\\\\)/g",
-        "name": "paren",
-        "priority": 1
-      },
-      {
-        "pattern": "/(?<!\\$)\\$([^$\\n]+?)\\$(?!\\$)/g",
-        "name": "single-dollar",
-        "priority": 2
-      }
-    ],
-    "preprocessing": {
-      "fixEscapedDollars": true,
-      "removeHtmlFromMath": false,
-      "removeMathML": true,
-      "removeSVG": true
-    },
-    "markdownProcessing": {
-      "processLinks": true,
-      "fixBrokenLinks": false,
-      "processTables": true,
-      "processBlockquotes": true,
-      "processHorizontalRules": true,
-      "processHeaders": true,
-      "processBoldItalic": true,
-      "processLists": true,
-      "processInlineCode": true
-    },
-    "katexOptions": {
-      "throwOnError": false,
-      "strict": false,
-      "trust": [
-        "\\url",
-        "\\href",
-        "\\includegraphics"
-      ],
-      "macros": {
-        "\\eqref": "\\href{###1}{(\\text{#1})}"
-      },
-      "maxSize": 500,
-      "maxExpand": 1000
-    },
-    "codeBlockPreservation": {
-      "enabled": true,
-      "extractBeforeProcessing": true,
-      "restoreAfterProcessing": true
-    },
-    "metadata": {
-      "createdAt": "2025-11-13T02:02:42.464402Z",
-      "needsManualReview": true
-    }
-  },
-  {
-    "modelId": "openai/o1",
-    "version": "1.0.0",
-    "displayMathDelimiters": [
-      {
-        "pattern": "/\\\\\\[\\s*([\\s\\S]*?)\\s*\\\\\\]/g",
-        "name": "bracket",
-        "priority": 1
-      },
-      {
-        "pattern": "/\\$\\$([^$]+?)\\$\\$/gs",
-        "name": "double-dollar",
-        "priority": 2
-      }
-    ],
-    "inlineMathDelimiters": [
-      {
-        "pattern": "/\\\\\\(\\s*([\\s\\S]*?)\\s*\\\\\\)/g",
-        "name": "paren",
-        "priority": 1
-      },
-      {
-        "pattern": "/(?<!\\$)\\$([^$\\n]+?)\\$(?!\\$)/g",
-        "name": "single-dollar",
-        "priority": 2
-      }
-    ],
-    "preprocessing": {
-      "fixEscapedDollars": true,
-      "removeHtmlFromMath": false,
-      "removeMathML": true,
-      "removeSVG": true
-    },
-    "markdownProcessing": {
-      "processLinks": true,
-      "fixBrokenLinks": false,
-      "processTables": true,
-      "processBlockquotes": true,
-      "processHorizontalRules": true,
-      "processHeaders": true,
-      "processBoldItalic": true,
-      "processLists": true,
-      "processInlineCode": true
-    },
-    "katexOptions": {
-      "throwOnError": false,
-      "strict": false,
-      "trust": [
-        "\\url",
-        "\\href",
-        "\\includegraphics"
-      ],
-      "macros": {
-        "\\eqref": "\\href{###1}{(\\text{#1})}"
-      },
-      "maxSize": 500,
-      "maxExpand": 1000
-    },
-    "codeBlockPreservation": {
-      "enabled": true,
-      "extractBeforeProcessing": true,
-      "restoreAfterProcessing": true
-    },
-    "metadata": {
-      "createdAt": "2025-11-13T02:02:42.464425Z",
-      "needsManualReview": true
-    }
-  },
-  {
-    "modelId": "qwen/qwen3-vl-235b-a22b-thinking",
+    "modelId": "qwen/qwen3-235b-a22b",
     "version": "1.0.0",
     "displayMathDelimiters": [
       {
@@ -2667,7 +2375,7 @@
     },
     "markdownProcessing": {
       "processLinks": true,
-      "fixBrokenLinks": true,
+      "fixBrokenLinks": false,
       "processTables": true,
       "processBlockquotes": true,
       "processHorizontalRules": true,
@@ -2679,11 +2387,7 @@
     "katexOptions": {
       "throwOnError": false,
       "strict": false,
-      "trust": [
-        "\\url",
-        "\\href",
-        "\\includegraphics"
-      ],
+      "trust": ["\\url", "\\href", "\\includegraphics"],
       "macros": {
         "\\eqref": "\\href{###1}{(\\text{#1})}"
       },
@@ -2696,17 +2400,71 @@
       "restoreAfterProcessing": true
     },
     "metadata": {
-      "createdAt": "2025-11-13T02:02:42.464441Z",
+      "createdAt": "2025-11-13T02:02:42.464642Z",
+      "needsManualReview": false
+    }
+  },
+  {
+    "modelId": "qwen/qwen3-30b-a3b-instruct-2507",
+    "version": "1.0.0",
+    "displayMathDelimiters": [
+      {
+        "pattern": "/\\$\\$([^$]+?)\\$\\$/gs",
+        "name": "double-dollar",
+        "priority": 1
+      }
+    ],
+    "inlineMathDelimiters": [
+      {
+        "pattern": "/(?<!\\$)\\$([^$\\n]+?)\\$(?!\\$)/g",
+        "name": "single-dollar",
+        "priority": 1
+      }
+    ],
+    "preprocessing": {
+      "fixEscapedDollars": true,
+      "removeHtmlFromMath": false,
+      "removeMathML": true,
+      "removeSVG": true
+    },
+    "markdownProcessing": {
+      "processLinks": true,
+      "fixBrokenLinks": true,
+      "processTables": true,
+      "processBlockquotes": true,
+      "processHorizontalRules": true,
+      "processHeaders": true,
+      "processBoldItalic": true,
+      "processLists": true,
+      "processInlineCode": true
+    },
+    "katexOptions": {
+      "throwOnError": false,
+      "strict": false,
+      "trust": ["\\url", "\\href", "\\includegraphics"],
+      "macros": {
+        "\\eqref": "\\href{###1}{(\\text{#1})}"
+      },
+      "maxSize": 500,
+      "maxExpand": 1000
+    },
+    "codeBlockPreservation": {
+      "enabled": true,
+      "extractBeforeProcessing": true,
+      "restoreAfterProcessing": true
+    },
+    "metadata": {
+      "createdAt": "2025-11-13T02:02:42.464605Z",
       "needsManualReview": true
     }
   },
   {
-    "modelId": "qwen/qwen3-next-80b-a3b-thinking",
+    "modelId": "qwen/qwen3-coder",
     "version": "1.0.0",
     "displayMathDelimiters": [
       {
-        "pattern": "/\\\\\\[\\s*([\\s\\S]*?)\\s*\\\\\\]/g",
-        "name": "bracket",
+        "pattern": "/\\\\begin\\{align\\}([\\s\\S]*?)\\\\end\\{align\\}/g",
+        "name": "align-env",
         "priority": 1
       },
       {
@@ -2742,11 +2500,7 @@
     "katexOptions": {
       "throwOnError": false,
       "strict": false,
-      "trust": [
-        "\\url",
-        "\\href",
-        "\\includegraphics"
-      ],
+      "trust": ["\\url", "\\href", "\\includegraphics"],
       "macros": {
         "\\eqref": "\\href{###1}{(\\text{#1})}"
       },
@@ -2759,23 +2513,18 @@
       "restoreAfterProcessing": true
     },
     "metadata": {
-      "createdAt": "2025-11-13T02:02:42.464466Z",
+      "createdAt": "2025-11-13T02:02:42.464572Z",
       "needsManualReview": true
     }
   },
   {
-    "modelId": "qwen/qwen3-next-80b-a3b-instruct",
+    "modelId": "qwen/qwen3-coder-flash",
     "version": "1.0.0",
     "displayMathDelimiters": [
       {
-        "pattern": "/\\\\\\[\\s*([\\s\\S]*?)\\s*\\\\\\]/g",
-        "name": "bracket",
-        "priority": 1
-      },
-      {
         "pattern": "/\\$\\$([^$]+?)\\$\\$/gs",
         "name": "double-dollar",
-        "priority": 2
+        "priority": 1
       }
     ],
     "inlineMathDelimiters": [
@@ -2787,7 +2536,7 @@
     ],
     "preprocessing": {
       "fixEscapedDollars": true,
-      "removeHtmlFromMath": true,
+      "removeHtmlFromMath": false,
       "removeMathML": true,
       "removeSVG": true
     },
@@ -2805,11 +2554,7 @@
     "katexOptions": {
       "throwOnError": false,
       "strict": false,
-      "trust": [
-        "\\url",
-        "\\href",
-        "\\includegraphics"
-      ],
+      "trust": ["\\url", "\\href", "\\includegraphics"],
       "macros": {
         "\\eqref": "\\href{###1}{(\\text{#1})}"
       },
@@ -2822,7 +2567,61 @@
       "restoreAfterProcessing": true
     },
     "metadata": {
-      "createdAt": "2025-11-13T02:02:42.464490Z",
+      "createdAt": "2025-11-13T02:02:42.464551Z",
+      "needsManualReview": true
+    }
+  },
+  {
+    "modelId": "qwen/qwen3-coder-plus",
+    "version": "1.0.0",
+    "displayMathDelimiters": [
+      {
+        "pattern": "/\\$\\$([^$]+?)\\$\\$/gs",
+        "name": "double-dollar",
+        "priority": 1
+      }
+    ],
+    "inlineMathDelimiters": [
+      {
+        "pattern": "/(?<!\\$)\\$([^$\\n]+?)\\$(?!\\$)/g",
+        "name": "single-dollar",
+        "priority": 1
+      }
+    ],
+    "preprocessing": {
+      "fixEscapedDollars": true,
+      "removeHtmlFromMath": false,
+      "removeMathML": true,
+      "removeSVG": true
+    },
+    "markdownProcessing": {
+      "processLinks": true,
+      "fixBrokenLinks": false,
+      "processTables": true,
+      "processBlockquotes": true,
+      "processHorizontalRules": true,
+      "processHeaders": true,
+      "processBoldItalic": true,
+      "processLists": true,
+      "processInlineCode": true
+    },
+    "katexOptions": {
+      "throwOnError": false,
+      "strict": false,
+      "trust": ["\\url", "\\href", "\\includegraphics"],
+      "macros": {
+        "\\eqref": "\\href{###1}{(\\text{#1})}"
+      },
+      "maxSize": 500,
+      "maxExpand": 1000
+    },
+    "codeBlockPreservation": {
+      "enabled": true,
+      "extractBeforeProcessing": true,
+      "restoreAfterProcessing": true
+    },
+    "metadata": {
+      "createdAt": "2025-11-13T02:02:42.464526Z",
       "needsManualReview": true
     }
   },
@@ -2873,11 +2672,7 @@
     "katexOptions": {
       "throwOnError": false,
       "strict": false,
-      "trust": [
-        "\\url",
-        "\\href",
-        "\\includegraphics"
-      ],
+      "trust": ["\\url", "\\href", "\\includegraphics"],
       "macros": {
         "\\eqref": "\\href{###1}{(\\text{#1})}"
       },
@@ -2895,13 +2690,18 @@
     }
   },
   {
-    "modelId": "qwen/qwen3-coder-plus",
+    "modelId": "qwen/qwen3-next-80b-a3b-instruct",
     "version": "1.0.0",
     "displayMathDelimiters": [
       {
+        "pattern": "/\\\\\\[\\s*([\\s\\S]*?)\\s*\\\\\\]/g",
+        "name": "bracket",
+        "priority": 1
+      },
+      {
         "pattern": "/\\$\\$([^$]+?)\\$\\$/gs",
         "name": "double-dollar",
-        "priority": 1
+        "priority": 2
       }
     ],
     "inlineMathDelimiters": [
@@ -2913,7 +2713,7 @@
     ],
     "preprocessing": {
       "fixEscapedDollars": true,
-      "removeHtmlFromMath": false,
+      "removeHtmlFromMath": true,
       "removeMathML": true,
       "removeSVG": true
     },
@@ -2931,11 +2731,7 @@
     "katexOptions": {
       "throwOnError": false,
       "strict": false,
-      "trust": [
-        "\\url",
-        "\\href",
-        "\\includegraphics"
-      ],
+      "trust": ["\\url", "\\href", "\\includegraphics"],
       "macros": {
         "\\eqref": "\\href{###1}{(\\text{#1})}"
       },
@@ -2948,75 +2744,17 @@
       "restoreAfterProcessing": true
     },
     "metadata": {
-      "createdAt": "2025-11-13T02:02:42.464526Z",
+      "createdAt": "2025-11-13T02:02:42.464490Z",
       "needsManualReview": true
     }
   },
   {
-    "modelId": "qwen/qwen3-coder-flash",
+    "modelId": "qwen/qwen3-next-80b-a3b-thinking",
     "version": "1.0.0",
     "displayMathDelimiters": [
       {
-        "pattern": "/\\$\\$([^$]+?)\\$\\$/gs",
-        "name": "double-dollar",
-        "priority": 1
-      }
-    ],
-    "inlineMathDelimiters": [
-      {
-        "pattern": "/(?<!\\$)\\$([^$\\n]+?)\\$(?!\\$)/g",
-        "name": "single-dollar",
-        "priority": 1
-      }
-    ],
-    "preprocessing": {
-      "fixEscapedDollars": true,
-      "removeHtmlFromMath": false,
-      "removeMathML": true,
-      "removeSVG": true
-    },
-    "markdownProcessing": {
-      "processLinks": true,
-      "fixBrokenLinks": false,
-      "processTables": true,
-      "processBlockquotes": true,
-      "processHorizontalRules": true,
-      "processHeaders": true,
-      "processBoldItalic": true,
-      "processLists": true,
-      "processInlineCode": true
-    },
-    "katexOptions": {
-      "throwOnError": false,
-      "strict": false,
-      "trust": [
-        "\\url",
-        "\\href",
-        "\\includegraphics"
-      ],
-      "macros": {
-        "\\eqref": "\\href{###1}{(\\text{#1})}"
-      },
-      "maxSize": 500,
-      "maxExpand": 1000
-    },
-    "codeBlockPreservation": {
-      "enabled": true,
-      "extractBeforeProcessing": true,
-      "restoreAfterProcessing": true
-    },
-    "metadata": {
-      "createdAt": "2025-11-13T02:02:42.464551Z",
-      "needsManualReview": true
-    }
-  },
-  {
-    "modelId": "qwen/qwen3-coder",
-    "version": "1.0.0",
-    "displayMathDelimiters": [
-      {
-        "pattern": "/\\\\begin\\{align\\}([\\s\\S]*?)\\\\end\\{align\\}/g",
-        "name": "align-env",
+        "pattern": "/\\\\\\[\\s*([\\s\\S]*?)\\s*\\\\\\]/g",
+        "name": "bracket",
         "priority": 1
       },
       {
@@ -3052,11 +2790,7 @@
     "katexOptions": {
       "throwOnError": false,
       "strict": false,
-      "trust": [
-        "\\url",
-        "\\href",
-        "\\includegraphics"
-      ],
+      "trust": ["\\url", "\\href", "\\includegraphics"],
       "macros": {
         "\\eqref": "\\href{###1}{(\\text{#1})}"
       },
@@ -3069,128 +2803,12 @@
       "restoreAfterProcessing": true
     },
     "metadata": {
-      "createdAt": "2025-11-13T02:02:42.464572Z",
+      "createdAt": "2025-11-13T02:02:42.464466Z",
       "needsManualReview": true
     }
   },
   {
-    "modelId": "qwen/qwen3-30b-a3b-instruct-2507",
-    "version": "1.0.0",
-    "displayMathDelimiters": [
-      {
-        "pattern": "/\\$\\$([^$]+?)\\$\\$/gs",
-        "name": "double-dollar",
-        "priority": 1
-      }
-    ],
-    "inlineMathDelimiters": [
-      {
-        "pattern": "/(?<!\\$)\\$([^$\\n]+?)\\$(?!\\$)/g",
-        "name": "single-dollar",
-        "priority": 1
-      }
-    ],
-    "preprocessing": {
-      "fixEscapedDollars": true,
-      "removeHtmlFromMath": false,
-      "removeMathML": true,
-      "removeSVG": true
-    },
-    "markdownProcessing": {
-      "processLinks": true,
-      "fixBrokenLinks": true,
-      "processTables": true,
-      "processBlockquotes": true,
-      "processHorizontalRules": true,
-      "processHeaders": true,
-      "processBoldItalic": true,
-      "processLists": true,
-      "processInlineCode": true
-    },
-    "katexOptions": {
-      "throwOnError": false,
-      "strict": false,
-      "trust": [
-        "\\url",
-        "\\href",
-        "\\includegraphics"
-      ],
-      "macros": {
-        "\\eqref": "\\href{###1}{(\\text{#1})}"
-      },
-      "maxSize": 500,
-      "maxExpand": 1000
-    },
-    "codeBlockPreservation": {
-      "enabled": true,
-      "extractBeforeProcessing": true,
-      "restoreAfterProcessing": true
-    },
-    "metadata": {
-      "createdAt": "2025-11-13T02:02:42.464605Z",
-      "needsManualReview": true
-    }
-  },
-  {
-    "modelId": "qwen/qwen3-235b-a22b-thinking-2507",
-    "version": "1.0.0",
-    "displayMathDelimiters": [
-      {
-        "pattern": "/\\$\\$([^$]+?)\\$\\$/gs",
-        "name": "double-dollar",
-        "priority": 1
-      }
-    ],
-    "inlineMathDelimiters": [
-      {
-        "pattern": "/(?<!\\$)\\$([^$\\n]+?)\\$(?!\\$)/g",
-        "name": "single-dollar",
-        "priority": 1
-      }
-    ],
-    "preprocessing": {
-      "fixEscapedDollars": true,
-      "removeHtmlFromMath": true,
-      "removeMathML": true,
-      "removeSVG": true
-    },
-    "markdownProcessing": {
-      "processLinks": true,
-      "fixBrokenLinks": true,
-      "processTables": true,
-      "processBlockquotes": true,
-      "processHorizontalRules": true,
-      "processHeaders": true,
-      "processBoldItalic": true,
-      "processLists": true,
-      "processInlineCode": true
-    },
-    "katexOptions": {
-      "throwOnError": false,
-      "strict": false,
-      "trust": [
-        "\\url",
-        "\\href",
-        "\\includegraphics"
-      ],
-      "macros": {
-        "\\eqref": "\\href{###1}{(\\text{#1})}"
-      },
-      "maxSize": 500,
-      "maxExpand": 1000
-    },
-    "codeBlockPreservation": {
-      "enabled": true,
-      "extractBeforeProcessing": true,
-      "restoreAfterProcessing": true
-    },
-    "metadata": {
-      "createdAt": "2025-11-13T02:02:42.464628Z",
-      "needsManualReview": true
-    }
-  },
-  {
-    "modelId": "qwen/qwen3-235b-a22b",
+    "modelId": "qwen/qwen3-vl-235b-a22b-thinking",
     "version": "1.0.0",
     "displayMathDelimiters": [
       {
@@ -3214,7 +2832,7 @@
     },
     "markdownProcessing": {
       "processLinks": true,
-      "fixBrokenLinks": false,
+      "fixBrokenLinks": true,
       "processTables": true,
       "processBlockquotes": true,
       "processHorizontalRules": true,
@@ -3226,11 +2844,7 @@
     "katexOptions": {
       "throwOnError": false,
       "strict": false,
-      "trust": [
-        "\\url",
-        "\\href",
-        "\\includegraphics"
-      ],
+      "trust": ["\\url", "\\href", "\\includegraphics"],
       "macros": {
         "\\eqref": "\\href{###1}{(\\text{#1})}"
       },
@@ -3243,8 +2857,8 @@
       "restoreAfterProcessing": true
     },
     "metadata": {
-      "createdAt": "2025-11-13T02:02:42.464642Z",
-      "needsManualReview": false
+      "createdAt": "2025-11-13T02:02:42.464441Z",
+      "needsManualReview": true
     }
   },
   {
@@ -3294,11 +2908,7 @@
     "katexOptions": {
       "throwOnError": false,
       "strict": false,
-      "trust": [
-        "\\url",
-        "\\href",
-        "\\includegraphics"
-      ],
+      "trust": ["\\url", "\\href", "\\includegraphics"],
       "macros": {
         "\\eqref": "\\href{###1}{(\\text{#1})}"
       },
@@ -3362,11 +2972,7 @@
     "katexOptions": {
       "throwOnError": false,
       "strict": false,
-      "trust": [
-        "\\url",
-        "\\href",
-        "\\includegraphics"
-      ],
+      "trust": ["\\url", "\\href", "\\includegraphics"],
       "macros": {
         "\\eqref": "\\href{###1}{(\\text{#1})}"
       },
@@ -3380,64 +2986,6 @@
     },
     "metadata": {
       "createdAt": "2025-11-13T02:02:42.464701Z",
-      "needsManualReview": true
-    }
-  },
-  {
-    "modelId": "google/gemini-3-pro-preview",
-    "version": "1.0.0",
-    "displayMathDelimiters": [
-      {
-        "pattern": "/\\$\\$([^\\$]+?)\\$\\$/gs",
-        "name": "double-dollar",
-        "priority": 1
-      }
-    ],
-    "inlineMathDelimiters": [
-      {
-        "pattern": "/(?<!\\$)\\$([^\\$\\n]+?)\\$(?!\\$)/g",
-        "name": "single-dollar",
-        "priority": 1
-      }
-    ],
-    "preprocessing": {
-      "fixEscapedDollars": true,
-      "removeHtmlFromMath": false,
-      "removeMathML": true,
-      "removeSVG": true
-    },
-    "markdownProcessing": {
-      "processLinks": true,
-      "fixBrokenLinks": false,
-      "processTables": true,
-      "processBlockquotes": true,
-      "processHorizontalRules": true,
-      "processHeaders": true,
-      "processBoldItalic": true,
-      "processLists": true,
-      "processInlineCode": true
-    },
-    "katexOptions": {
-      "throwOnError": false,
-      "strict": false,
-      "trust": [
-        "\\url",
-        "\\href",
-        "\\includegraphics"
-      ],
-      "macros": {
-        "\\eqref": "\\href{###1}{(\\text{#1})}"
-      },
-      "maxSize": 500,
-      "maxExpand": 1000
-    },
-    "codeBlockPreservation": {
-      "enabled": true,
-      "extractBeforeProcessing": true,
-      "restoreAfterProcessing": true
-    },
-    "metadata": {
-      "createdAt": "2025-11-22T05:19:27.009096Z",
       "needsManualReview": true
     }
   },
@@ -3488,11 +3036,7 @@
     "katexOptions": {
       "throwOnError": false,
       "strict": false,
-      "trust": [
-        "\\url",
-        "\\href",
-        "\\includegraphics"
-      ],
+      "trust": ["\\url", "\\href", "\\includegraphics"],
       "macros": {
         "\\eqref": "\\href{###1}{(\\text{#1})}"
       },
@@ -3506,6 +3050,70 @@
     },
     "metadata": {
       "createdAt": "2025-11-30T01:25:44.551304Z",
+      "needsManualReview": true
+    }
+  },
+  {
+    "modelId": "x-ai/grok-code-fast-1",
+    "version": "1.0.0",
+    "displayMathDelimiters": [
+      {
+        "pattern": "/\\\\\\[\\s*([\\s\\S]*?)\\s*\\\\\\]/g",
+        "name": "bracket",
+        "priority": 1
+      },
+      {
+        "pattern": "/\\$\\$([^\\$]+?)\\$\\$/gs",
+        "name": "double-dollar",
+        "priority": 2
+      }
+    ],
+    "inlineMathDelimiters": [
+      {
+        "pattern": "/\\\\\\(\\s*([^\\\\]*?)\\s*\\\\\\)/g",
+        "name": "paren",
+        "priority": 1
+      },
+      {
+        "pattern": "/(?<!\\$)\\$([^\\$\\n]+?)\\$(?!\\$)/g",
+        "name": "single-dollar",
+        "priority": 2
+      }
+    ],
+    "preprocessing": {
+      "fixEscapedDollars": false,
+      "removeHtmlFromMath": true,
+      "removeMathML": true,
+      "removeSVG": true
+    },
+    "markdownProcessing": {
+      "processLinks": true,
+      "fixBrokenLinks": false,
+      "processTables": true,
+      "processBlockquotes": true,
+      "processHorizontalRules": true,
+      "processHeaders": true,
+      "processBoldItalic": true,
+      "processLists": true,
+      "processInlineCode": true
+    },
+    "katexOptions": {
+      "throwOnError": false,
+      "strict": false,
+      "trust": ["\\url", "\\href", "\\includegraphics"],
+      "macros": {
+        "\\eqref": "\\href{###1}{(\\text{#1})}"
+      },
+      "maxSize": 500,
+      "maxExpand": 1000
+    },
+    "codeBlockPreservation": {
+      "enabled": true,
+      "extractBeforeProcessing": true,
+      "restoreAfterProcessing": true
+    },
+    "metadata": {
+      "createdAt": "2025-12-01T19:31:32.659252Z",
       "needsManualReview": true
     }
   }

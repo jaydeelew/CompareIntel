@@ -1189,7 +1189,10 @@ import ast
 import re
 import sys
 import importlib
+import logging
 from openai import APIError, NotFoundError, APIConnectionError, RateLimitError, APITimeoutError
+
+logger = logging.getLogger(__name__)
 
 
 class AddModelRequest(BaseModel):
@@ -2472,30 +2475,44 @@ async def delete_model(
         sys.modules[__name__].MODELS_BY_PROVIDER = model_runner.MODELS_BY_PROVIDER
         sys.modules[__name__].OPENROUTER_MODELS = model_runner.OPENROUTER_MODELS
         
-        # Refresh token limits for the newly added model
-        refresh_model_token_limits(model_id)
-        
         # Remove renderer config from frontend config file
         project_root = Path(__file__).parent.parent.parent.parent
         frontend_config_path = project_root / "frontend" / "src" / "config" / "model_renderer_configs.json"
         
+        config_removed = False
         if frontend_config_path.exists():
             try:
                 with open(frontend_config_path, "r", encoding="utf-8") as f:
                     configs = json.load(f)
                 
+                # Count configs before removal
+                initial_count = len(configs) if isinstance(configs, list) else len(configs)
+                
                 # Filter out the deleted model's config
                 if isinstance(configs, list):
                     configs = [c for c in configs if c.get("modelId") != model_id]
+                    config_removed = len(configs) < initial_count
                 elif isinstance(configs, dict):
+                    config_removed = model_id in configs
                     configs.pop(model_id, None)
                     configs = list(configs.values())
                 
+                # Write back the updated configs
                 with open(frontend_config_path, "w", encoding="utf-8") as f:
                     json.dump(configs, f, indent=2, ensure_ascii=False)
+                
+                if config_removed:
+                    logger.info(f"Removed renderer config for {model_id} from {frontend_config_path}")
+                else:
+                    logger.info(f"No renderer config found for {model_id} in {frontend_config_path}")
             except Exception as e:
-                # Log but don't fail if config removal fails
-                print(f"Warning: Could not remove renderer config from {frontend_config_path}: {e}")
+                # Log error but don't fail the deletion - model is already removed from model_runner.py
+                logger.error(f"Failed to remove renderer config for {model_id} from {frontend_config_path}: {e}")
+                # Still raise the error so admin knows about it, but model deletion from model_runner.py succeeded
+                raise HTTPException(
+                    status_code=500,
+                    detail=f"Model removed from model_runner.py, but failed to remove renderer config: {str(e)}"
+                )
         
         # Invalidate models cache so fresh data is returned
         from ..cache import invalidate_models_cache
