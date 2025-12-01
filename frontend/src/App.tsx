@@ -3875,10 +3875,14 @@ function AppContent() {
           timeoutId = null
         }
 
-        // Check if any models are actively streaming (have received chunks and not completed)
+        const now = Date.now()
+
+        // Check if any models are actively streaming (have received chunks recently and not completed)
         const hasActiveStreaming = selectedModels.some(modelId => {
           if (completedModels.has(modelId)) return false
-          return modelLastChunkTimes[modelId] !== undefined
+          const lastChunkTime = modelLastChunkTimes[modelId]
+          // Model is actively streaming if it has received a chunk within the timeout duration
+          return lastChunkTime !== undefined && (now - lastChunkTime) < TIMEOUT_DURATION
         })
 
         // Check if all models are completed
@@ -3896,10 +3900,13 @@ function AppContent() {
 
         // No streaming activity and there are unfinished models - start 1 minute timer
         timeoutId = setTimeout(() => {
+          const checkNow = Date.now()
           // Check again if any models are actively streaming
           const stillHasActiveStreaming = selectedModels.some(modelId => {
             if (completedModels.has(modelId)) return false
-            return modelLastChunkTimes[modelId] !== undefined
+            const lastChunkTime = modelLastChunkTimes[modelId]
+            // Model is actively streaming if it has received a chunk within the timeout duration
+            return lastChunkTime !== undefined && (checkNow - lastChunkTime) < TIMEOUT_DURATION
           })
 
           const allModelsCompletedNow = completedModels.size === selectedModels.length
