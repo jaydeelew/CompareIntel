@@ -3,7 +3,7 @@
  * Manages user authentication state, login, logout, and token refresh
  */
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react'
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react'
 
 import type { User, AuthContextType, LoginCredentials, RegisterData, AuthResponse } from '../types'
 
@@ -19,6 +19,8 @@ interface AuthProviderProps {
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  // Use ref to prevent duplicate calls during React StrictMode double renders
+  const hasInitializedRef = useRef(false)
 
   // Note: Tokens are now stored in HTTP-only cookies set by the backend
   // We no longer need to manage tokens in localStorage
@@ -43,7 +45,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       const userData = await response.json()
       return userData
-    } catch (error) {
+    } catch (_error) {
       // Silently handle all errors (network errors, cancellation, etc.)
       // These are expected in various scenarios (no network, component unmount, etc.)
       return null
@@ -87,7 +89,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         // If we can't fetch user, user is not authenticated
         setUser(null)
       }
-    } catch (error) {
+    } catch (_error) {
       // Network errors and other exceptions - handle silently
       // These are expected in various scenarios (no network, etc.)
       setUser(null)
@@ -244,7 +246,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   }, [fetchCurrentUser])
 
   // Initialize auth state on mount (only once)
+  // Use ref to prevent duplicate calls during React StrictMode double renders
   useEffect(() => {
+    // Prevent duplicate initialization in React StrictMode
+    if (hasInitializedRef.current) {
+      return
+    }
+    hasInitializedRef.current = true
+
     let isMounted = true
 
     const initAuth = async () => {
@@ -314,6 +323,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 }
 
 // Custom hook to use auth context
+// eslint-disable-next-line react-refresh/only-export-components
 export const useAuth = (): AuthContextType => {
   const context = useContext(AuthContext)
   if (context === undefined) {
@@ -325,6 +335,7 @@ export const useAuth = (): AuthContextType => {
 // Helper hook to get auth headers for API calls
 // Note: With cookie-based auth, tokens are automatically sent with requests
 // This hook is kept for backward compatibility but no longer adds Authorization header
+// eslint-disable-next-line react-refresh/only-export-components
 export const useAuthHeaders = () => {
   const getHeaders = useCallback(() => {
     return {
