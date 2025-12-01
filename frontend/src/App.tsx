@@ -3838,9 +3838,9 @@ function AppContent() {
 
     const startTime = Date.now()
 
-    // Simplified timeout configuration: single 1 minute timeout
-    // Timer only runs when there's no streaming activity
-    const TIMEOUT_DURATION = 60000 // 1 minute
+    // Timeout configuration
+    const TIMEOUT_DURATION = 60000 // 1 minute - actual timeout duration
+    const ACTIVE_STREAMING_WINDOW = 5000 // 5 seconds - window to determine if model is actively streaming
 
     // Declare streaming variables outside try block so they're accessible in catch block for timeout handling
     const streamingResults: { [key: string]: string } = {}
@@ -3867,7 +3867,12 @@ function AppContent() {
             : currentVisibleComparisonId
           : null
 
-      // Simplified timeout function: timer only runs when there's no streaming activity
+      // Timeout function: timer only runs when there's no streaming activity
+      // Rules:
+      // 1. If no models respond at all for a minute, show error message
+      // 2. While any model is streaming, timer is at 0 and is not started
+      // 3. If all models have not completed and streaming stops on all incomplete models, start the 1 minute timer
+      // 4. If any model resumes streaming, set the timer back to 0
       const resetStreamingTimeout = () => {
         // Clear existing timeout
         if (timeoutId) {
@@ -3878,11 +3883,12 @@ function AppContent() {
         const now = Date.now()
 
         // Check if any models are actively streaming (have received chunks recently and not completed)
+        // Use a short window (ACTIVE_STREAMING_WINDOW) to determine if model is currently streaming
         const hasActiveStreaming = selectedModels.some(modelId => {
           if (completedModels.has(modelId)) return false
           const lastChunkTime = modelLastChunkTimes[modelId]
-          // Model is actively streaming if it has received a chunk within the timeout duration
-          return lastChunkTime !== undefined && (now - lastChunkTime) < TIMEOUT_DURATION
+          // Model is actively streaming if it has received a chunk within the active streaming window
+          return lastChunkTime !== undefined && (now - lastChunkTime) < ACTIVE_STREAMING_WINDOW
         })
 
         // Check if all models are completed
@@ -3901,12 +3907,12 @@ function AppContent() {
         // No streaming activity and there are unfinished models - start 1 minute timer
         timeoutId = setTimeout(() => {
           const checkNow = Date.now()
-          // Check again if any models are actively streaming
+          // Check again if any models are actively streaming (using the short window)
           const stillHasActiveStreaming = selectedModels.some(modelId => {
             if (completedModels.has(modelId)) return false
             const lastChunkTime = modelLastChunkTimes[modelId]
-            // Model is actively streaming if it has received a chunk within the timeout duration
-            return lastChunkTime !== undefined && (checkNow - lastChunkTime) < TIMEOUT_DURATION
+            // Model is actively streaming if it has received a chunk within the active streaming window
+            return lastChunkTime !== undefined && (checkNow - lastChunkTime) < ACTIVE_STREAMING_WINDOW
           })
 
           const allModelsCompletedNow = completedModels.size === selectedModels.length
@@ -3917,7 +3923,7 @@ function AppContent() {
           }
 
           if (stillHasActiveStreaming) {
-            // Activity detected - reset timer
+            // Activity detected - reset timer (this handles case where model resumes streaming)
             resetStreamingTimeout()
           } else {
             // No activity and unfinished models - timeout
@@ -3926,7 +3932,7 @@ function AppContent() {
         }, TIMEOUT_DURATION)
       }
 
-      // Start initial timeout
+      // Start initial timeout (will be reset when first chunk arrives)
       resetStreamingTimeout()
 
       // Use service for streaming request
