@@ -1691,7 +1691,7 @@ function AppContent() {
 
   // Listen for anonymous usage cleared event from AdminPanel and refresh history
   useEffect(() => {
-    const handleAnonymousUsageCleared = () => {
+    const handleAnonymousUsageCleared = async () => {
       // Clear conversation history state for anonymous users
       if (!isAuthenticated) {
         const history = loadHistoryFromLocalStorage()
@@ -1699,6 +1699,35 @@ function AppContent() {
         // Also clear any currently displayed conversations if they exist
         setConversations([])
         setCurrentVisibleComparisonId(null)
+
+        // Refresh credit balance to reflect the reset
+        if (browserFingerprint) {
+          try {
+            const creditBalance = await getCreditBalance(browserFingerprint)
+            setAnonymousCreditsRemaining(creditBalance.credits_remaining)
+            setCreditBalance(creditBalance)
+          } catch (err) {
+            console.error('Failed to refresh credit balance after reset:', err)
+            // Still reset credits optimistically
+            setAnonymousCreditsRemaining(50) // Default anonymous credits
+          }
+        } else {
+          // If fingerprint not available yet, reset credits optimistically
+          setAnonymousCreditsRemaining(50) // Default anonymous credits
+        }
+
+        // Always clear credit-related errors when usage is reset
+        // Use a function form of setError to access current error value
+        setError(currentError => {
+          if (currentError && (
+            currentError.includes("You've run out of credits") ||
+            currentError.includes("run out of credits") ||
+            (currentError.includes("credits") && currentError.includes("reset"))
+          )) {
+            return null
+          }
+          return currentError
+        })
       }
     }
 
@@ -1707,7 +1736,7 @@ function AppContent() {
       window.removeEventListener('anonymousUsageCleared', handleAnonymousUsageCleared)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAuthenticated, loadHistoryFromLocalStorage])
+  }, [isAuthenticated, loadHistoryFromLocalStorage, browserFingerprint])
 
   // Track currently visible comparison ID for authenticated users after history loads
   // This ensures the visible comparison is highlighted in the history dropdown
@@ -2724,7 +2753,7 @@ function AppContent() {
         if (isAuthenticated && user) {
           // For authenticated users, use credits instead of daily_usage_count
           setUsageCount(user.credits_used_this_period || 0)
-          
+
           // Fetch credit balance for authenticated users on mount
           try {
             const creditBalance = await getCreditBalance()
@@ -4980,7 +5009,7 @@ function AppContent() {
     if (creditsRemaining <= 0) {
       // Calculate what the error message should be for 0 credits
       const expectedErrorMessage = getCreditWarningMessage('none', userTier, creditsRemaining, undefined, resetDate)
-      
+
       // Set error message if credits are 0 and error is not already set correctly
       if (error !== expectedErrorMessage) {
         setError(expectedErrorMessage)
