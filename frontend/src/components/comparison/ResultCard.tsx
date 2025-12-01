@@ -1,16 +1,17 @@
-import React, { useState, useEffect } from 'react';
-import { MessageBubble } from '../conversation/MessageBubble';
-import { getSafeId } from '../../utils';
-import { RESULT_TAB, type ResultTab, type ConversationMessage } from '../../types';
-import { isErrorMessage } from '../../utils/error';
+import React, { useState, useEffect } from 'react'
+
+import { RESULT_TAB, type ResultTab, type ConversationMessage } from '../../types'
+import { getSafeId } from '../../utils'
+import { isErrorMessage } from '../../utils/error'
+import { MessageBubble } from '../conversation/MessageBubble'
 
 /**
  * Model type for ResultCard
  */
 export interface Model {
-  id: string;
-  name: string;
-  description?: string;
+  id: string
+  name: string
+  description?: string
 }
 
 /**
@@ -18,30 +19,30 @@ export interface Model {
  */
 export interface ResultCardProps {
   /** Model ID */
-  modelId: string;
+  modelId: string
   /** Model details */
-  model?: Model;
+  model?: Model
   /** Conversation messages */
-  messages: ConversationMessage[];
+  messages: ConversationMessage[]
   /** Active result tab (Formatted or Raw) */
-  activeTab?: ResultTab;
+  activeTab?: ResultTab
   /** Whether the result is an error */
-  isError?: boolean;
+  isError?: boolean
   /** Callback to screenshot/copy formatted history */
-  onScreenshot?: (modelId: string) => void;
+  onScreenshot?: (modelId: string) => void
   /** Callback to copy raw history */
-  onCopyResponse?: (modelId: string) => void;
+  onCopyResponse?: (modelId: string) => void
   /** Callback to close/hide the card */
-  onClose?: (modelId: string) => void;
+  onClose?: (modelId: string) => void
   /** Callback to switch result tab */
-  onSwitchTab?: (modelId: string, tab: ResultTab) => void;
+  onSwitchTab?: (modelId: string, tab: ResultTab) => void
   /** Custom className */
-  className?: string;
+  className?: string
 }
 
 /**
  * ResultCard component for displaying model comparison results
- * 
+ *
  * @example
  * ```tsx
  * <ResultCard
@@ -65,37 +66,37 @@ export const ResultCard: React.FC<ResultCardProps> = ({
   onSwitchTab,
   className = '',
 }) => {
-  const latestMessage = messages[messages.length - 1];
-  const safeId = getSafeId(modelId);
-  
+  const latestMessage = messages[messages.length - 1]
+  const safeId = getSafeId(modelId)
+
   // Fallback error detection: check the message content directly if isError prop is not set correctly
-  const hasError = isError || isErrorMessage(latestMessage?.content);
+  const hasError = isError || isErrorMessage(latestMessage?.content)
 
   // Detect when screen is small enough that "chars" would wrap
   const [isSmallLayout, setIsSmallLayout] = useState<boolean>(() => {
-    if (typeof window === 'undefined') return false;
-    return window.innerWidth <= 640; // Breakpoint where "N chars" would wrap
-  });
+    if (typeof window === 'undefined') return false
+    return window.innerWidth <= 640 // Breakpoint where "N chars" would wrap
+  })
 
   useEffect(() => {
-    const handleResize = () => setIsSmallLayout(window.innerWidth <= 640);
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
+    const handleResize = () => setIsSmallLayout(window.innerWidth <= 640)
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
 
   // State for tooltip visibility (for mobile tap)
-  const [showTooltip, setShowTooltip] = useState(false);
+  const [showTooltip, setShowTooltip] = useState(false)
 
   // Handle tap/click to show tooltip on mobile
   const handleOutputLengthClick = () => {
     if (isSmallLayout) {
-      setShowTooltip(true);
+      setShowTooltip(true)
       // Auto-hide after 2 seconds
       setTimeout(() => {
-        setShowTooltip(false);
-      }, 2000);
+        setShowTooltip(false)
+      }, 2000)
     }
-  };
+  }
 
   return (
     <div className={`result-card conversation-card ${className}`.trim()}>
@@ -106,9 +107,9 @@ export const ResultCard: React.FC<ResultCardProps> = ({
             {onScreenshot && (
               <button
                 className="screenshot-card-btn"
-                onClick={(e) => {
-                  onScreenshot(modelId);
-                  e.currentTarget.blur();
+                onClick={e => {
+                  onScreenshot(modelId)
+                  e.currentTarget.blur()
                 }}
                 title="Copy formatted chat history"
                 aria-label={`Copy formatted chat history for ${model?.name || modelId}`}
@@ -176,15 +177,14 @@ export const ResultCard: React.FC<ResultCardProps> = ({
           </div>
         </div>
         <div className="result-header-bottom">
-          <span 
+          <span
             className={`output-length ${showTooltip ? 'tooltip-visible' : ''}`}
             onClick={handleOutputLengthClick}
             style={{ cursor: isSmallLayout ? 'pointer' : 'default' }}
           >
-            {latestMessage?.content.length || 0}{isSmallLayout ? '' : ' chars'}
-            {isSmallLayout && (
-              <span className="output-length-tooltip">Characters</span>
-            )}
+            {latestMessage?.content.length || 0}
+            {isSmallLayout ? '' : ' chars'}
+            {isSmallLayout && <span className="output-length-tooltip">Characters</span>}
           </span>
           <div className="result-tabs">
             <button
@@ -206,7 +206,7 @@ export const ResultCard: React.FC<ResultCardProps> = ({
         </div>
       </div>
       <div className="conversation-content" id={`conversation-content-${safeId}`}>
-        {messages.map((message) => (
+        {messages.map(message => (
           <MessageBubble
             key={String(message.id)}
             id={String(message.id)}
@@ -218,8 +218,7 @@ export const ResultCard: React.FC<ResultCardProps> = ({
         ))}
       </div>
     </div>
-  );
-};
+  )
+}
 
-ResultCard.displayName = 'ResultCard';
-
+ResultCard.displayName = 'ResultCard'

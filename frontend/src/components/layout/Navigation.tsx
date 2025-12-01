@@ -1,13 +1,14 @@
-import { useNavigate, useLocation } from 'react-router-dom';
-import { UserMenu } from '../auth';
+import { useNavigate, useLocation } from 'react-router-dom'
+
+import { UserMenu } from '../auth'
 
 interface NavigationProps {
-  isAuthenticated: boolean;
-  isAdmin: boolean;
-  currentView: 'main' | 'admin';
-  onViewChange?: (view: 'main' | 'admin') => void; // Optional for backward compatibility
-  onSignInClick: () => void;
-  onSignUpClick: () => void;
+  isAuthenticated: boolean
+  isAdmin: boolean
+  currentView: 'main' | 'admin'
+  onViewChange?: (view: 'main' | 'admin') => void // Optional for backward compatibility
+  onSignInClick: () => void
+  onSignUpClick: () => void
 }
 
 /**
@@ -19,33 +20,29 @@ export function Navigation({
   currentView,
   onViewChange,
   onSignInClick,
-  onSignUpClick
+  onSignUpClick,
 }: NavigationProps) {
-  const navigate = useNavigate();
-  const location = useLocation();
-  
+  const navigate = useNavigate()
+  const location = useLocation()
+
   // Use React Router navigation if available, fallback to onViewChange prop
   const handleViewChange = (view: 'main' | 'admin') => {
     if (onViewChange) {
-      onViewChange(view);
+      onViewChange(view)
     } else {
-      navigate(view === 'admin' ? '/admin' : '/');
+      navigate(view === 'admin' ? '/admin' : '/')
     }
-  };
-  
+  }
+
   // Determine current view from location if not provided
-  const actualCurrentView = currentView || (location.pathname === '/admin' ? 'admin' : 'main');
-  
+  const actualCurrentView = currentView || (location.pathname === '/admin' ? 'admin' : 'main')
+
   return (
     <header className="app-header">
       <nav className="navbar">
         <div className="nav-brand">
           <div className="brand-logo">
-            <img
-              src="/CompareIntel.png"
-              alt="CompareIntel Logo"
-              className="logo-icon"
-            />
+            <img src="/CompareIntel.png" alt="CompareIntel Logo" className="logo-icon" />
             <div className="brand-text">
               <h1>CompareIntel</h1>
               <span className="brand-tagline">AI Model Comparison Platform</span>
@@ -62,11 +59,20 @@ export function Navigation({
                   onClick={() => handleViewChange(actualCurrentView === 'admin' ? 'main' : 'admin')}
                   title={actualCurrentView === 'admin' ? 'Back to Main App' : 'Admin Panel'}
                 >
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M4 6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6Z"/>
-                    <path d="M14 6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2h-2a2 2 0 0 1-2-2V6Z"/>
-                    <path d="M4 16a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-2Z"/>
-                    <path d="M14 16a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2h-2a2 2 0 0 1-2-2v-2Z"/>
+                  <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M4 6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6Z" />
+                    <path d="M14 6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2h-2a2 2 0 0 1-2-2V6Z" />
+                    <path d="M4 16a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-2Z" />
+                    <path d="M14 16a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2h-2a2 2 0 0 1-2-2v-2Z" />
                   </svg>
                 </button>
               )}
@@ -93,6 +99,5 @@ export function Navigation({
         </div>
       </nav>
     </header>
-  );
+  )
 }
-

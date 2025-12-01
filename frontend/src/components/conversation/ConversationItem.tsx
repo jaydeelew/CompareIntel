@@ -1,24 +1,25 @@
-import React from 'react';
-import { truncatePrompt, formatDate } from '../../utils';
-import type { ConversationSummary } from '../../types';
+import React from 'react'
+
+import type { ConversationSummary } from '../../types'
+import { truncatePrompt, formatDate } from '../../utils'
 
 /**
  * ConversationItem component props
  */
 export interface ConversationItemProps {
   /** Conversation summary data */
-  conversation: ConversationSummary;
+  conversation: ConversationSummary
   /** Whether this conversation is currently active */
-  isActive?: boolean;
+  isActive?: boolean
   /** Callback when conversation is clicked */
-  onClick?: (conversationId: string) => void;
+  onClick?: (conversationId: string) => void
   /** Custom className */
-  className?: string;
+  className?: string
 }
 
 /**
  * ConversationItem component for displaying a single conversation in history
- * 
+ *
  * @example
  * ```tsx
  * <ConversationItem
@@ -36,9 +37,9 @@ export const ConversationItem: React.FC<ConversationItemProps> = ({
 }) => {
   const handleClick = () => {
     if (onClick) {
-      onClick(String(conversation.id));
+      onClick(String(conversation.id))
     }
-  };
+  }
 
   const itemClassName = [
     'conversation-item',
@@ -47,7 +48,7 @@ export const ConversationItem: React.FC<ConversationItemProps> = ({
     className,
   ]
     .filter(Boolean)
-    .join(' ');
+    .join(' ')
 
   return (
     <div
@@ -55,10 +56,10 @@ export const ConversationItem: React.FC<ConversationItemProps> = ({
       onClick={handleClick}
       role="button"
       tabIndex={0}
-      onKeyDown={(e) => {
+      onKeyDown={e => {
         if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          handleClick();
+          e.preventDefault()
+          handleClick()
         }
       }}
     >
@@ -68,8 +69,7 @@ export const ConversationItem: React.FC<ConversationItemProps> = ({
         <span className="history-models">{conversation.models_used.length} models</span>
       </div>
     </div>
-  );
-};
+  )
+}
 
-ConversationItem.displayName = 'ConversationItem';
-
+ConversationItem.displayName = 'ConversationItem'

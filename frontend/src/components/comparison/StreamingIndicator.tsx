@@ -1,23 +1,24 @@
-import React from 'react';
-import { LoadingSpinner } from '../shared';
+import React from 'react'
+
+import { LoadingSpinner } from '../shared'
 
 /**
  * StreamingIndicator component props
  */
 export interface StreamingIndicatorProps {
   /** Number of models being processed */
-  modelCount: number;
+  modelCount: number
   /** Whether currently loading */
-  isLoading: boolean;
+  isLoading: boolean
   /** Callback to cancel the operation */
-  onCancel?: () => void;
+  onCancel?: () => void
   /** Custom className */
-  className?: string;
+  className?: string
 }
 
 /**
  * StreamingIndicator component for showing loading state during model comparison
- * 
+ *
  * @example
  * ```tsx
  * <StreamingIndicator
@@ -34,13 +35,13 @@ export const StreamingIndicator: React.FC<StreamingIndicatorProps> = ({
   className = '',
 }) => {
   if (!isLoading) {
-    return null;
+    return null
   }
 
   const message =
     modelCount === 1
       ? 'Processing response from 1 AI model...'
-      : `Processing responses from ${modelCount} AI models...`;
+      : `Processing responses from ${modelCount} AI models...`
 
   return (
     <div className={`loading-section ${className}`.trim()}>
@@ -49,18 +50,13 @@ export const StreamingIndicator: React.FC<StreamingIndicatorProps> = ({
         <p>{message}</p>
       </div>
       {onCancel && (
-        <button
-          onClick={onCancel}
-          className="cancel-button"
-          aria-label="Stop comparison"
-        >
+        <button onClick={onCancel} className="cancel-button" aria-label="Stop comparison">
           <span className="cancel-x">✕</span>
           <span className="cancel-text">Cancel</span>
         </button>
       )}
     </div>
-  );
-};
+  )
+}
 
-StreamingIndicator.displayName = 'StreamingIndicator';
-
+StreamingIndicator.displayName = 'StreamingIndicator'

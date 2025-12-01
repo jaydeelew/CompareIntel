@@ -1,6 +1,6 @@
 /**
  * Test Data Factories
- * 
+ *
  * Factory functions to create test data for all types in the application.
  * These factories make it easy to generate consistent test data with
  * sensible defaults that can be overridden.
@@ -8,9 +8,6 @@
 
 import type {
   User,
-  UserId,
-  ConversationId,
-  MessageId,
   ModelId,
   ConversationMessage,
   StoredMessage,
@@ -26,27 +23,25 @@ import type {
   AuthTokens,
   LoginCredentials,
   RegisterData,
-  SubscriptionTier,
-  SubscriptionStatus,
-  SubscriptionPeriod,
-  UserRole,
   StreamEvent,
   StreamEventType,
-} from '../../types';
+} from '../../types'
 import {
   createUserId,
   createConversationId,
   createMessageId,
   createModelId,
-} from '../../types';
-import { SUBSCRIPTION_STATUS, SUBSCRIPTION_PERIOD, USER_ROLE } from '../../types';
-import { STREAM_EVENT_TYPE } from '../../types';
+  SUBSCRIPTION_STATUS,
+  SUBSCRIPTION_PERIOD,
+  USER_ROLE,
+  STREAM_EVENT_TYPE,
+} from '../../types'
 
 /**
  * Create a mock User with sensible defaults
  */
 export function createMockUser(overrides?: Partial<User>): User {
-  const id = overrides?.id || createUserId(1);
+  const id = overrides?.id || createUserId(1)
   return {
     id,
     email: overrides?.email || `user-${id}-${Date.now()}@example.com`,
@@ -61,7 +56,7 @@ export function createMockUser(overrides?: Partial<User>): User {
     monthly_overage_count: overrides?.monthly_overage_count ?? 0,
     mock_mode_enabled: overrides?.mock_mode_enabled ?? false,
     created_at: overrides?.created_at || new Date().toISOString(),
-  };
+  }
 }
 
 /**
@@ -72,7 +67,7 @@ export function createMockAdminUser(overrides?: Partial<User>): User {
     role: USER_ROLE.ADMIN,
     is_admin: true,
     ...overrides,
-  });
+  })
 }
 
 /**
@@ -83,14 +78,14 @@ export function createMockPremiumUser(overrides?: Partial<User>): User {
     subscription_tier: 'premium',
     subscription_status: SUBSCRIPTION_STATUS.ACTIVE,
     ...overrides,
-  });
+  })
 }
 
 /**
  * Create a mock Model
  */
 export function createMockModel(overrides?: Partial<Model>): Model {
-  const id = overrides?.id || createModelId(`gpt-4-${Date.now()}`);
+  const id = overrides?.id || createModelId(`gpt-4-${Date.now()}`)
   return {
     id,
     name: overrides?.name || `Model ${id}`,
@@ -98,7 +93,7 @@ export function createMockModel(overrides?: Partial<Model>): Model {
     category: overrides?.category || 'gpt',
     provider: overrides?.provider || 'OpenAI',
     available: overrides?.available ?? true,
-  };
+  }
 }
 
 /**
@@ -108,8 +103,8 @@ export function createMockModelsByProvider(
   providers: string[] = ['OpenAI', 'Anthropic', 'Google'],
   modelsPerProvider: number = 2
 ): ModelsByProvider {
-  const result: ModelsByProvider = {};
-  
+  const result: ModelsByProvider = {}
+
   for (const provider of providers) {
     result[provider] = Array.from({ length: modelsPerProvider }, (_, i) =>
       createMockModel({
@@ -117,10 +112,10 @@ export function createMockModelsByProvider(
         category: provider.toLowerCase(),
         name: `${provider} Model ${i + 1}`,
       })
-    );
+    )
   }
-  
-  return result;
+
+  return result
 }
 
 /**
@@ -129,13 +124,13 @@ export function createMockModelsByProvider(
 export function createMockConversationMessage(
   overrides?: Partial<ConversationMessage>
 ): ConversationMessage {
-  const id = overrides?.id || createMessageId(`msg-${Date.now()}`);
+  const id = overrides?.id || createMessageId(`msg-${Date.now()}`)
   return {
     id,
     type: overrides?.type || 'user',
     content: overrides?.content || `Test message content ${id}`,
     timestamp: overrides?.timestamp || new Date().toISOString(),
-  };
+  }
 }
 
 /**
@@ -148,7 +143,7 @@ export function createMockStoredMessage(overrides?: Partial<StoredMessage>): Sto
     created_at: overrides?.created_at || new Date().toISOString(),
     model_id: overrides?.model_id,
     id: overrides?.id,
-  };
+  }
 }
 
 /**
@@ -157,17 +152,14 @@ export function createMockStoredMessage(overrides?: Partial<StoredMessage>): Sto
 export function createMockConversationSummary(
   overrides?: Partial<ConversationSummary>
 ): ConversationSummary {
-  const id = overrides?.id || createConversationId(1);
+  const id = overrides?.id || createConversationId(1)
   return {
     id,
     input_data: overrides?.input_data || `Test input data ${id}`,
-    models_used: overrides?.models_used || [
-      createModelId('gpt-4'),
-      createModelId('claude-3'),
-    ],
+    models_used: overrides?.models_used || [createModelId('gpt-4'), createModelId('claude-3')],
     created_at: overrides?.created_at || new Date().toISOString(),
     message_count: overrides?.message_count ?? 2,
-  };
+  }
 }
 
 /**
@@ -178,19 +170,17 @@ export function createMockConversationRound(
 ): ConversationRound {
   return {
     user: overrides?.user || createMockStoredMessage({ role: 'user' }),
-    assistants:
-      overrides?.assistants ||
-      [
-        createMockStoredMessage({
-          role: 'assistant',
-          model_id: createModelId('gpt-4'),
-        }),
-        createMockStoredMessage({
-          role: 'assistant',
-          model_id: createModelId('claude-3'),
-        }),
-      ],
-  };
+    assistants: overrides?.assistants || [
+      createMockStoredMessage({
+        role: 'assistant',
+        model_id: createModelId('gpt-4'),
+      }),
+      createMockStoredMessage({
+        role: 'assistant',
+        model_id: createModelId('claude-3'),
+      }),
+    ],
+  }
 }
 
 /**
@@ -199,16 +189,14 @@ export function createMockConversationRound(
 export function createMockModelConversation(
   overrides?: Partial<ModelConversation>
 ): ModelConversation {
-  const modelId = overrides?.modelId || createModelId('gpt-4');
+  const modelId = overrides?.modelId || createModelId('gpt-4')
   return {
     modelId,
-    messages:
-      overrides?.messages ||
-      [
-        createMockConversationMessage({ type: 'user' }),
-        createMockConversationMessage({ type: 'assistant' }),
-      ],
-  };
+    messages: overrides?.messages || [
+      createMockConversationMessage({ type: 'user' }),
+      createMockConversationMessage({ type: 'assistant' }),
+    ],
+  }
 }
 
 /**
@@ -224,7 +212,7 @@ export function createMockComparisonMetadata(
     models_failed: overrides?.models_failed ?? 0,
     timestamp: overrides?.timestamp || new Date().toISOString(),
     processing_time_ms: overrides?.processing_time_ms ?? 1500,
-  };
+  }
 }
 
 /**
@@ -234,12 +222,12 @@ export function createMockCompareResponse(
   modelIds: ModelId[] = [createModelId('gpt-4'), createModelId('claude-3')],
   overrides?: Partial<CompareResponse>
 ): CompareResponse {
-  const results: Record<ModelId, string> = {};
-  
+  const results: Record<ModelId, string> = {}
+
   for (const modelId of modelIds) {
-    results[modelId] = overrides?.results?.[modelId] || `Response from ${modelId}`;
+    results[modelId] = overrides?.results?.[modelId] || `Response from ${modelId}`
   }
-  
+
   return {
     results,
     metadata:
@@ -248,18 +236,16 @@ export function createMockCompareResponse(
         models_requested: modelIds.length,
         models_successful: modelIds.length,
       }),
-  };
+  }
 }
 
 /**
  * Create a mock RateLimitStatus
  */
-export function createMockRateLimitStatus(
-  overrides?: Partial<RateLimitStatus>
-): RateLimitStatus {
-  const dailyLimit = overrides?.daily_limit ?? 100;
-  const dailyUsage = overrides?.daily_usage ?? 0;
-  
+export function createMockRateLimitStatus(overrides?: Partial<RateLimitStatus>): RateLimitStatus {
+  const dailyLimit = overrides?.daily_limit ?? 100
+  const dailyUsage = overrides?.daily_usage ?? 0
+
   return {
     daily_usage: dailyUsage,
     daily_limit: dailyLimit,
@@ -271,7 +257,7 @@ export function createMockRateLimitStatus(
     monthly_overage_count: overrides?.monthly_overage_count ?? 0,
     reset_time: overrides?.reset_time || new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
     user_type: overrides?.user_type || 'authenticated',
-  };
+  }
 }
 
 /**
@@ -282,7 +268,7 @@ export function createMockAuthTokens(overrides?: Partial<AuthTokens>): AuthToken
     access_token: overrides?.access_token || `mock-access-token-${Date.now()}`,
     refresh_token: overrides?.refresh_token || `mock-refresh-token-${Date.now()}`,
     token_type: overrides?.token_type || 'bearer',
-  };
+  }
 }
 
 /**
@@ -292,7 +278,7 @@ export function createMockAuthResponse(overrides?: Partial<AuthResponse>): AuthR
   return {
     ...createMockAuthTokens(overrides),
     user: overrides?.user || createMockUser(),
-  };
+  }
 }
 
 /**
@@ -304,7 +290,7 @@ export function createMockLoginCredentials(
   return {
     email: overrides?.email || 'test@example.com',
     password: overrides?.password || 'test-password-123',
-  };
+  }
 }
 
 /**
@@ -315,7 +301,7 @@ export function createMockRegisterData(overrides?: Partial<RegisterData>): Regis
     email: overrides?.email || `test-${Date.now()}@example.com`,
     password: overrides?.password || 'test-password-123',
     confirm_password: overrides?.confirm_password || overrides?.password || 'test-password-123',
-  };
+  }
 }
 
 /**
@@ -327,42 +313,42 @@ export function createMockStreamEvent(
 ): StreamEvent {
   const base: StreamEvent = {
     type,
-  };
-  
+  }
+
   switch (type) {
     case STREAM_EVENT_TYPE.START:
       return {
         ...base,
         model: overrides?.model || createModelId('gpt-4'),
-      };
-    
+      }
+
     case STREAM_EVENT_TYPE.CHUNK:
       return {
         ...base,
         model: overrides?.model || createModelId('gpt-4'),
         content: overrides?.content || 'Chunk content',
-      };
-    
+      }
+
     case STREAM_EVENT_TYPE.DONE:
       return {
         ...base,
         model: overrides?.model || createModelId('gpt-4'),
-      };
-    
+      }
+
     case STREAM_EVENT_TYPE.COMPLETE:
       return {
         ...base,
         metadata: overrides?.metadata || createMockComparisonMetadata(),
-      };
-    
+      }
+
     case STREAM_EVENT_TYPE.ERROR:
       return {
         ...base,
         message: overrides?.message || 'Stream error occurred',
-      };
-    
+      }
+
     default:
-      return base;
+      return base
   }
 }
 
@@ -372,19 +358,19 @@ export function createMockStreamEvent(
 export function createMockStreamEvents(
   modelIds: ModelId[] = [createModelId('gpt-4'), createModelId('claude-3')]
 ): StreamEvent[] {
-  const events: StreamEvent[] = [];
-  
+  const events: StreamEvent[] = []
+
   for (const modelId of modelIds) {
-    events.push(createMockStreamEvent(STREAM_EVENT_TYPE.START, { model: modelId }));
+    events.push(createMockStreamEvent(STREAM_EVENT_TYPE.START, { model: modelId }))
     events.push(
       createMockStreamEvent(STREAM_EVENT_TYPE.CHUNK, {
         model: modelId,
         content: `Response chunk from ${modelId}`,
       })
-    );
-    events.push(createMockStreamEvent(STREAM_EVENT_TYPE.DONE, { model: modelId }));
+    )
+    events.push(createMockStreamEvent(STREAM_EVENT_TYPE.DONE, { model: modelId }))
   }
-  
+
   events.push(
     createMockStreamEvent(STREAM_EVENT_TYPE.COMPLETE, {
       metadata: createMockComparisonMetadata({
@@ -392,8 +378,7 @@ export function createMockStreamEvents(
         models_successful: modelIds.length,
       }),
     })
-  );
-  
-  return events;
-}
+  )
 
+  return events
+}

@@ -1,11 +1,12 @@
 /**
  * CreditBalance Component
- * 
+ *
  * Reusable component for displaying credit balance with progress bar and reset date.
  * Can be used in UserMenu, banners, and other places where credit information is needed.
  */
 
 import React from 'react'
+
 import type { CreditBalance as CreditBalanceType } from '../../services/creditService'
 import './CreditBalance.css'
 
@@ -26,10 +27,10 @@ export interface CreditBalanceProps {
 
 /**
  * CreditBalance component for displaying credit balance
- * 
+ *
  * @example
  * ```tsx
- * <CreditBalance 
+ * <CreditBalance
  *   balance={creditBalance}
  *   isLoading={false}
  *   variant="full"
@@ -68,12 +69,8 @@ export const CreditBalance: React.FC<CreditBalanceProps> = ({
   const creditsRemaining = balance.credits_remaining
   const creditsAllocated = balance.credits_allocated
   const creditsUsed = balance.credits_used_this_period ?? balance.credits_used_today ?? 0
-  const usagePercent = creditsAllocated > 0 
-    ? (creditsUsed / creditsAllocated) * 100 
-    : 0
-  const remainingPercent = creditsAllocated > 0
-    ? (creditsRemaining / creditsAllocated) * 100
-    : 0
+  const usagePercent = creditsAllocated > 0 ? (creditsUsed / creditsAllocated) * 100 : 0
+  const remainingPercent = creditsAllocated > 0 ? (creditsRemaining / creditsAllocated) * 100 : 0
 
   // Determine color based on remaining credits
   const getProgressColor = () => {
@@ -89,7 +86,7 @@ export const CreditBalance: React.FC<CreditBalanceProps> = ({
       const date = new Date(dateString)
       const now = new Date()
       const diffDays = Math.ceil((date.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
-      
+
       if (diffDays === 0) return 'Today'
       if (diffDays === 1) return 'Tomorrow'
       if (diffDays < 7) return `In ${diffDays} days`
@@ -99,9 +96,8 @@ export const CreditBalance: React.FC<CreditBalanceProps> = ({
     }
   }
 
-  const resetDateText = showResetDate && balance.credits_reset_at
-    ? formatResetDate(balance.credits_reset_at)
-    : null
+  const resetDateText =
+    showResetDate && balance.credits_reset_at ? formatResetDate(balance.credits_reset_at) : null
 
   const periodLabel = balance.period_type === 'monthly' ? 'This Month' : 'Today'
 
@@ -121,7 +117,7 @@ export const CreditBalance: React.FC<CreditBalanceProps> = ({
           </button>
         )}
       </div>
-      
+
       <div className="credit-balance-value-container">
         <div className="credit-balance-value">
           <span className="credit-balance-current">{Math.round(creditsRemaining)}</span>
@@ -129,9 +125,7 @@ export const CreditBalance: React.FC<CreditBalanceProps> = ({
           <span className="credit-balance-allocated">{creditsAllocated}</span>
         </div>
         {variant === 'full' && (
-          <div className="credit-balance-used">
-            {creditsUsed.toLocaleString()} used
-          </div>
+          <div className="credit-balance-used">{creditsUsed.toLocaleString()} used</div>
         )}
       </div>
 
@@ -151,19 +145,14 @@ export const CreditBalance: React.FC<CreditBalanceProps> = ({
       </div>
 
       {variant === 'full' && resetDateText && (
-        <div className="credit-balance-reset">
-          Resets {resetDateText}
-        </div>
+        <div className="credit-balance-reset">Resets {resetDateText}</div>
       )}
 
       {variant === 'compact' && resetDateText && (
-        <div className="credit-balance-reset-compact">
-          Resets {resetDateText}
-        </div>
+        <div className="credit-balance-reset-compact">Resets {resetDateText}</div>
       )}
     </div>
   )
 }
 
 CreditBalance.displayName = 'CreditBalance'
-

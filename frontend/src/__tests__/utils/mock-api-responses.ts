@@ -1,30 +1,27 @@
 /**
  * Mock API Responses
- * 
+ *
  * Provides mock response data for all API endpoints.
  * These can be used to mock fetch calls or API client responses.
  */
 
 import type {
+  CompareRequestPayload,
+  RateLimitStatus as CompareRateLimitStatus,
+} from '../../services/compareService'
+import type { ConversationDetail } from '../../services/conversationService'
+import type { AvailableModelsResponse } from '../../services/modelsService'
+import type {
   CompareResponse,
-  RateLimitStatus,
   User,
   AuthResponse,
   ConversationSummary,
-  ModelsByProvider,
   ModelStats,
   AnonymousMockModeStatus,
   StreamEvent,
-} from '../../types';
-import type {
-  CompareRequestPayload,
-  RateLimitStatus as CompareRateLimitStatus,
-} from '../../services/compareService';
-import type {
-  ConversationDetail,
-  ConversationMessage as ConversationDetailMessage,
-} from '../../services/conversationService';
-import type { AvailableModelsResponse } from '../../services/modelsService';
+} from '../../types'
+import { createModelId } from '../../types'
+
 import {
   createMockCompareResponse,
   createMockUser,
@@ -32,8 +29,7 @@ import {
   createMockStreamEvents,
   createMockConversationSummary,
   createMockModelsByProvider,
-} from './test-factories';
-import { createModelId } from '../../types';
+} from './test-factories'
 
 /**
  * Mock response for /compare-stream endpoint (legacy format for testing)
@@ -42,19 +38,17 @@ export function mockCompareResponse(
   payload?: CompareRequestPayload,
   overrides?: Partial<CompareResponse>
 ): CompareResponse {
-  const modelIds = payload?.models || [createModelId('gpt-4'), createModelId('claude-3')];
-  return createMockCompareResponse(modelIds, overrides);
+  const modelIds = payload?.models || [createModelId('gpt-4'), createModelId('claude-3')]
+  return createMockCompareResponse(modelIds, overrides)
 }
 
 /**
  * Mock response for /compare-stream endpoint (SSE events)
  * Returns an array of StreamEvent objects that would be sent via SSE
  */
-export function mockCompareStreamResponse(
-  payload?: CompareRequestPayload
-): StreamEvent[] {
-  const modelIds = payload?.models || [createModelId('gpt-4'), createModelId('claude-3')];
-  return createMockStreamEvents(modelIds);
+export function mockCompareStreamResponse(payload?: CompareRequestPayload): StreamEvent[] {
+  const modelIds = payload?.models || [createModelId('gpt-4'), createModelId('claude-3')]
+  return createMockStreamEvents(modelIds)
 }
 
 /**
@@ -63,7 +57,7 @@ export function mockCompareStreamResponse(
 export function mockRateLimitStatusResponse(
   overrides?: Partial<CompareRateLimitStatus>
 ): CompareRateLimitStatus {
-  return createMockRateLimitStatus(overrides);
+  return createMockRateLimitStatus(overrides)
 }
 
 /**
@@ -79,7 +73,7 @@ export function mockRegisterResponse(
     token_type: 'bearer',
     user: createMockUser(user),
     ...overrides,
-  };
+  }
 }
 
 /**
@@ -89,29 +83,29 @@ export function mockLoginResponse(
   user?: Partial<User>,
   overrides?: Partial<AuthResponse>
 ): AuthResponse {
-  return mockRegisterResponse(user, overrides);
+  return mockRegisterResponse(user, overrides)
 }
 
 /**
  * Mock response for /auth/refresh endpoint
  */
 export function mockRefreshTokenResponse(overrides?: Partial<AuthResponse>): {
-  access_token: string;
-  refresh_token: string;
-  token_type: string;
+  access_token: string
+  refresh_token: string
+  token_type: string
 } {
   return {
     access_token: overrides?.access_token || `mock-access-token-${Date.now()}`,
     refresh_token: overrides?.refresh_token || `mock-refresh-token-${Date.now()}`,
     token_type: overrides?.token_type || 'bearer',
-  };
+  }
 }
 
 /**
  * Mock response for /auth/me endpoint
  */
 export function mockGetCurrentUserResponse(overrides?: Partial<User>): User {
-  return createMockUser(overrides);
+  return createMockUser(overrides)
 }
 
 /**
@@ -120,7 +114,7 @@ export function mockGetCurrentUserResponse(overrides?: Partial<User>): User {
 export function mockVerifyEmailResponse(): { message: string } {
   return {
     message: 'Email verified successfully',
-  };
+  }
 }
 
 /**
@@ -129,7 +123,7 @@ export function mockVerifyEmailResponse(): { message: string } {
 export function mockResendVerificationResponse(): { message: string } {
   return {
     message: 'Verification email sent',
-  };
+  }
 }
 
 /**
@@ -138,7 +132,7 @@ export function mockResendVerificationResponse(): { message: string } {
 export function mockForgotPasswordResponse(): { message: string } {
   return {
     message: 'Password reset email sent',
-  };
+  }
 }
 
 /**
@@ -147,7 +141,7 @@ export function mockForgotPasswordResponse(): { message: string } {
 export function mockResetPasswordResponse(): { message: string } {
   return {
     message: 'Password reset successfully',
-  };
+  }
 }
 
 /**
@@ -156,7 +150,7 @@ export function mockResetPasswordResponse(): { message: string } {
 export function mockLogoutResponse(): { message: string } {
   return {
     message: 'Logged out successfully',
-  };
+  }
 }
 
 /**
@@ -165,7 +159,7 @@ export function mockLogoutResponse(): { message: string } {
 export function mockDeleteAccountResponse(): { message: string } {
   return {
     message: 'Account deleted successfully',
-  };
+  }
 }
 
 /**
@@ -175,9 +169,7 @@ export function mockConversationsListResponse(
   count: number = 5,
   overrides?: Partial<ConversationSummary>[]
 ): ConversationSummary[] {
-  return Array.from({ length: count }, (_, i) =>
-    createMockConversationSummary(overrides?.[i])
-  );
+  return Array.from({ length: count }, (_, i) => createMockConversationSummary(overrides?.[i]))
 }
 
 /**
@@ -193,38 +185,36 @@ export function mockConversationDetailResponse(
     input_data: overrides?.input_data || `Test input for conversation ${conversationId}`,
     models_used: overrides?.models_used || [createModelId('gpt-4'), createModelId('claude-3')],
     created_at: overrides?.created_at || new Date().toISOString(),
-    messages:
-      overrides?.messages ||
-      [
-        {
-          id: 1,
-          model_id: null,
-          role: 'user',
-          content: 'Test user message',
-          success: true,
-          processing_time_ms: null,
-          created_at: new Date().toISOString(),
-        },
-        {
-          id: 2,
-          model_id: createModelId('gpt-4'),
-          role: 'assistant',
-          content: 'Test assistant response from GPT-4',
-          success: true,
-          processing_time_ms: 1500,
-          created_at: new Date().toISOString(),
-        },
-        {
-          id: 3,
-          model_id: createModelId('claude-3'),
-          role: 'assistant',
-          content: 'Test assistant response from Claude-3',
-          success: true,
-          processing_time_ms: 1200,
-          created_at: new Date().toISOString(),
-        },
-      ],
-  };
+    messages: overrides?.messages || [
+      {
+        id: 1,
+        model_id: null,
+        role: 'user',
+        content: 'Test user message',
+        success: true,
+        processing_time_ms: null,
+        created_at: new Date().toISOString(),
+      },
+      {
+        id: 2,
+        model_id: createModelId('gpt-4'),
+        role: 'assistant',
+        content: 'Test assistant response from GPT-4',
+        success: true,
+        processing_time_ms: 1500,
+        created_at: new Date().toISOString(),
+      },
+      {
+        id: 3,
+        model_id: createModelId('claude-3'),
+        role: 'assistant',
+        content: 'Test assistant response from Claude-3',
+        success: true,
+        processing_time_ms: 1200,
+        created_at: new Date().toISOString(),
+      },
+    ],
+  }
 }
 
 /**
@@ -235,14 +225,14 @@ export function mockAvailableModelsResponse(
 ): AvailableModelsResponse {
   return {
     models_by_provider: overrides?.models_by_provider || createMockModelsByProvider(),
-  };
+  }
 }
 
 /**
  * Mock response for /model-stats endpoint
  */
 export function mockModelStatsResponse(overrides?: Partial<ModelStats>): {
-  model_stats: ModelStats;
+  model_stats: ModelStats
 } {
   return {
     model_stats: overrides || {
@@ -259,7 +249,7 @@ export function mockModelStatsResponse(overrides?: Partial<ModelStats>): {
         last_success: new Date().toISOString(),
       },
     },
-  };
+  }
 }
 
 /**
@@ -271,7 +261,7 @@ export function mockAnonymousMockModeStatusResponse(
   return {
     anonymous_mock_mode_enabled: overrides?.anonymous_mock_mode_enabled ?? false,
     is_development: overrides?.is_development ?? false,
-  };
+  }
 }
 
 /**
@@ -280,7 +270,7 @@ export function mockAnonymousMockModeStatusResponse(
 export function mockResetRateLimitResponse(): { message: string } {
   return {
     message: 'Rate limit reset successfully',
-  };
+  }
 }
 
 /**
@@ -293,7 +283,7 @@ export function mockErrorResponse(
   return {
     detail,
     code,
-  };
+  }
 }
 
 /**
@@ -302,7 +292,7 @@ export function mockErrorResponse(
 export function mockNotFoundResponse(): { detail: string } {
   return {
     detail: 'Not found',
-  };
+  }
 }
 
 /**
@@ -311,7 +301,7 @@ export function mockNotFoundResponse(): { detail: string } {
 export function mockUnauthorizedResponse(): { detail: string } {
   return {
     detail: 'Unauthorized',
-  };
+  }
 }
 
 /**
@@ -320,7 +310,7 @@ export function mockUnauthorizedResponse(): { detail: string } {
 export function mockForbiddenResponse(): { detail: string } {
   return {
     detail: 'Forbidden',
-  };
+  }
 }
 
 /**
@@ -329,7 +319,7 @@ export function mockForbiddenResponse(): { detail: string } {
 export function mockRateLimitExceededResponse(): { detail: string } {
   return {
     detail: 'Rate limit exceeded',
-  };
+  }
 }
 
 /**
@@ -338,6 +328,5 @@ export function mockRateLimitExceededResponse(): { detail: string } {
 export function mockInternalServerErrorResponse(): { detail: string } {
   return {
     detail: 'Internal server error',
-  };
+  }
 }
-

@@ -1,12 +1,12 @@
 /**
  * API request and response types for CompareIntel
- * 
+ *
  * These types define the structure of API requests and responses
  * used throughout the application.
  */
 
-import type { StoredMessage } from './conversation';
-import type { ModelId } from './branded';
+import type { ModelId } from './branded'
+import type { StoredMessage } from './conversation'
 
 /**
  * Streaming event types from the server
@@ -17,31 +17,31 @@ export const STREAM_EVENT_TYPE = {
   DONE: 'done',
   COMPLETE: 'complete',
   ERROR: 'error',
-} as const;
+} as const
 
-export type StreamEventType = typeof STREAM_EVENT_TYPE[keyof typeof STREAM_EVENT_TYPE];
+export type StreamEventType = (typeof STREAM_EVENT_TYPE)[keyof typeof STREAM_EVENT_TYPE]
 
 /**
  * Server-Sent Event (SSE) message structure
  */
 export interface StreamEvent {
   /** Type of event */
-  type: StreamEventType;
+  type: StreamEventType
   /** Model ID (for start, chunk, done events) */
-  model?: ModelId;
+  model?: ModelId
   /** Content chunk (for chunk events) */
-  content?: string;
+  content?: string
   /** Error message (for error events) */
-  message?: string;
+  message?: string
   /** Final metadata (for complete events) */
   metadata?: {
-    input_length: number;
-    models_requested: number;
-    models_successful: number;
-    models_failed: number;
-    timestamp: string;
-    processing_time_ms?: number;
-  };
+    input_length: number
+    models_requested: number
+    models_successful: number
+    models_failed: number
+    timestamp: string
+    processing_time_ms?: number
+  }
 }
 
 /**
@@ -49,13 +49,13 @@ export interface StreamEvent {
  */
 export interface CompareRequest {
   /** Input data to compare */
-  input_data: string;
+  input_data: string
   /** Array of model IDs to use for comparison */
-  models: ModelId[];
+  models: ModelId[]
   /** Optional conversation history */
-  conversation_history?: StoredMessage[];
+  conversation_history?: StoredMessage[]
   /** Browser fingerprint for usage tracking */
-  browser_fingerprint?: string;
+  browser_fingerprint?: string
 }
 
 /**
@@ -63,22 +63,21 @@ export interface CompareRequest {
  */
 export interface ApiErrorResponse {
   /** Error detail message */
-  detail: string;
+  detail: string
   /** Optional error code */
-  code?: string;
+  code?: string
 }
 
 /**
  * Browser fingerprint data structure
  */
 export interface BrowserFingerprint {
-  userAgent: string;
-  language: string;
-  platform: string;
-  screenResolution: string;
-  timezone: string;
-  canvas: string;
-  colorDepth: number;
-  hardwareConcurrency: number;
+  userAgent: string
+  language: string
+  platform: string
+  screenResolution: string
+  timezone: string
+  canvas: string
+  colorDepth: number
+  hardwareConcurrency: number
 }
-

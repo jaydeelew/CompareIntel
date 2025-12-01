@@ -1,30 +1,31 @@
-import React from 'react';
-import { UserMenu } from '../auth';
+import React from 'react'
+
+import { UserMenu } from '../auth'
 
 /**
  * Header component props
  */
 export interface HeaderProps {
   /** Whether user is authenticated */
-  isAuthenticated: boolean;
+  isAuthenticated: boolean
   /** User object */
   user?: {
-    is_admin?: boolean;
-    email?: string;
-  } | null;
+    is_admin?: boolean
+    email?: string
+  } | null
   /** Current view (main or admin) */
-  currentView?: 'main' | 'admin';
+  currentView?: 'main' | 'admin'
   /** Callback to toggle admin view */
-  onAdminToggle?: () => void;
+  onAdminToggle?: () => void
   /** Callback to open auth modal in login mode */
-  onSignInClick?: () => void;
+  onSignInClick?: () => void
   /** Callback to open auth modal in register mode */
-  onSignUpClick?: () => void;
+  onSignUpClick?: () => void
 }
 
 /**
  * Application header with navigation and branding
- * 
+ *
  * @example
  * ```tsx
  * <Header
@@ -48,11 +49,7 @@ export const Header: React.FC<HeaderProps> = ({
       <nav className="navbar">
         <div className="nav-brand">
           <div className="brand-logo">
-            <img
-              src="/CompareIntel.png"
-              alt="CompareIntel Logo"
-              className="logo-icon"
-            />
+            <img src="/CompareIntel.png" alt="CompareIntel Logo" className="logo-icon" />
             <div className="brand-text">
               <h1>CompareIntel</h1>
               <span className="brand-tagline">AI Model Comparison Platform</span>
@@ -79,10 +76,10 @@ export const Header: React.FC<HeaderProps> = ({
                     strokeLinecap="round"
                     strokeLinejoin="round"
                   >
-                    <path d="M4 6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6Z"/>
-                    <path d="M14 6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2h-2a2 2 0 0 1-2-2V6Z"/>
-                    <path d="M4 16a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-2Z"/>
-                    <path d="M14 16a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2h-2a2 2 0 0 1-2-2v-2Z"/>
+                    <path d="M4 6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6Z" />
+                    <path d="M14 6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2h-2a2 2 0 0 1-2-2V6Z" />
+                    <path d="M4 16a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-2Z" />
+                    <path d="M14 16a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2h-2a2 2 0 0 1-2-2v-2Z" />
                   </svg>
                 </button>
               )}
@@ -101,8 +98,7 @@ export const Header: React.FC<HeaderProps> = ({
         </div>
       </nav>
     </header>
-  );
-};
+  )
+}
 
-Header.displayName = 'Header';
-
+Header.displayName = 'Header'

@@ -4,7 +4,8 @@
  */
 
 import '@testing-library/jest-dom'
-import { expect, test, describe, it, beforeEach, afterEach, vi } from 'vitest'
+// Vitest globals are available via the test config
+// This file ensures TypeScript recognizes them
 
 declare global {
   // Vitest globals are available via the test config
@@ -12,4 +13,3 @@ declare global {
 }
 
 export {}
-

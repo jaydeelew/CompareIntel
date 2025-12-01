@@ -1,26 +1,27 @@
 /**
  * Tests for modelsService
- * 
+ *
  * Tests model listing endpoints and error handling.
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import * as modelsService from '../../services/modelsService';
-import { apiClient } from '../../services/api/client';
-import { ApiError } from '../../services/api/errors';
-import { createMockModelsByProvider } from '../utils';
+import { describe, it, expect, beforeEach, vi } from 'vitest'
+
+import { apiClient } from '../../services/api/client'
+import { ApiError } from '../../services/api/errors'
+import * as modelsService from '../../services/modelsService'
+import { createMockModelsByProvider } from '../utils'
 
 // Mock the API client
 vi.mock('../../services/api/client', () => ({
   apiClient: {
     get: vi.fn(),
   },
-}));
+}))
 
 describe('modelsService', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
-  });
+    vi.clearAllMocks()
+  })
 
   describe('getAvailableModels', () => {
     it('should get available models', async () => {
@@ -44,59 +45,58 @@ describe('modelsService', () => {
           },
         ],
         models_by_provider: createMockModelsByProvider(),
-      };
+      }
 
-      vi.mocked(apiClient.get).mockResolvedValue({ data: mockResponse });
+      vi.mocked(apiClient.get).mockResolvedValue({ data: mockResponse })
 
-      const result = await modelsService.getAvailableModels();
+      const result = await modelsService.getAvailableModels()
 
-      expect(apiClient.get).toHaveBeenCalledWith('/models');
-      expect(result).toEqual(mockResponse);
-    });
+      expect(apiClient.get).toHaveBeenCalledWith('/models')
+      expect(result).toEqual(mockResponse)
+    })
 
     it('should handle API errors', async () => {
-      const error = new ApiError('Failed to fetch models', 500, 'Internal Server Error');
-      vi.mocked(apiClient.get).mockRejectedValue(error);
+      const error = new ApiError('Failed to fetch models', 500, 'Internal Server Error')
+      vi.mocked(apiClient.get).mockRejectedValue(error)
 
-      await expect(modelsService.getAvailableModels()).rejects.toThrow(ApiError);
-    });
-  });
+      await expect(modelsService.getAvailableModels()).rejects.toThrow(ApiError)
+    })
+  })
 
   describe('getModelsByProvider', () => {
     it('should get models organized by provider', async () => {
-      const mockModelsByProvider = createMockModelsByProvider();
+      const mockModelsByProvider = createMockModelsByProvider()
       const mockResponse = {
         models: [],
         models_by_provider: mockModelsByProvider,
-      };
+      }
 
-      vi.mocked(apiClient.get).mockResolvedValue({ data: mockResponse });
+      vi.mocked(apiClient.get).mockResolvedValue({ data: mockResponse })
 
-      const result = await modelsService.getModelsByProvider();
+      const result = await modelsService.getModelsByProvider()
 
-      expect(apiClient.get).toHaveBeenCalledWith('/models');
-      expect(result).toEqual(mockModelsByProvider);
-    });
+      expect(apiClient.get).toHaveBeenCalledWith('/models')
+      expect(result).toEqual(mockModelsByProvider)
+    })
 
     it('should handle empty models', async () => {
       const mockResponse = {
         models: [],
         models_by_provider: {},
-      };
+      }
 
-      vi.mocked(apiClient.get).mockResolvedValue({ data: mockResponse });
+      vi.mocked(apiClient.get).mockResolvedValue({ data: mockResponse })
 
-      const result = await modelsService.getModelsByProvider();
+      const result = await modelsService.getModelsByProvider()
 
-      expect(result).toEqual({});
-    });
+      expect(result).toEqual({})
+    })
 
     it('should handle API errors', async () => {
-      const error = new ApiError('Failed to fetch models', 500, 'Internal Server Error');
-      vi.mocked(apiClient.get).mockRejectedValue(error);
+      const error = new ApiError('Failed to fetch models', 500, 'Internal Server Error')
+      vi.mocked(apiClient.get).mockRejectedValue(error)
 
-      await expect(modelsService.getModelsByProvider()).rejects.toThrow(ApiError);
-    });
-  });
-});
-
+      await expect(modelsService.getModelsByProvider()).rejects.toThrow(ApiError)
+    })
+  })
+})

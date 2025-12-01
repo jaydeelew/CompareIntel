@@ -1,33 +1,34 @@
-import React, { lazy, Suspense } from 'react';
-import { formatTime } from '../../utils';
-import { RESULT_TAB, type ResultTab } from '../../types';
+import React, { lazy, Suspense } from 'react'
+
+import { RESULT_TAB, type ResultTab } from '../../types'
+import { formatTime } from '../../utils'
 
 // Lazy load LatexRenderer for code splitting
-const LatexRenderer = lazy(() => import('../LatexRenderer'));
+const LatexRenderer = lazy(() => import('../LatexRenderer'))
 
 /**
  * MessageBubble component props
  */
 export interface MessageBubbleProps {
   /** Message ID */
-  id: string;
+  id: string
   /** Message type (user or assistant) */
-  type: 'user' | 'assistant';
+  type: 'user' | 'assistant'
   /** Message content */
-  content: string;
+  content: string
   /** Message timestamp (ISO string or Date) */
-  timestamp: string | Date;
+  timestamp: string | Date
   /** Active result tab for rendering */
-  activeTab?: ResultTab;
+  activeTab?: ResultTab
   /** Custom className */
-  className?: string;
+  className?: string
   /** Model ID for model-specific rendering */
-  modelId?: string;
+  modelId?: string
 }
 
 /**
  * MessageBubble component for displaying individual conversation messages
- * 
+ *
  * @example
  * ```tsx
  * <MessageBubble
@@ -51,7 +52,10 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
   return (
     <div key={id} className={`conversation-message ${type} ${className}`.trim()}>
       <div className="message-header">
-        <span className="message-type" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+        <span
+          className="message-type"
+          style={{ display: 'flex', alignItems: 'center', gap: '4px' }}
+        >
           {type === 'user' ? (
             <>
               <svg
@@ -104,7 +108,9 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
         {activeTab === RESULT_TAB.FORMATTED ? (
           /* Full LaTeX rendering for formatted view */
           <Suspense fallback={<pre className="result-output raw-output">{content}</pre>}>
-            <LatexRenderer className="result-output" modelId={modelId}>{content}</LatexRenderer>
+            <LatexRenderer className="result-output" modelId={modelId}>
+              {content}
+            </LatexRenderer>
           </Suspense>
         ) : (
           /* Raw text for immediate streaming display */
@@ -112,8 +118,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
         )}
       </div>
     </div>
-  );
-};
+  )
+}
 
-MessageBubble.displayName = 'MessageBubble';
-
+MessageBubble.displayName = 'MessageBubble'

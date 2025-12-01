@@ -5,8 +5,8 @@
 
 import React, { useState, useRef, useEffect } from 'react'
 
+import { getCreditAllocation, getDailyCreditLimit } from '../../config/constants'
 import { useAuth } from '../../contexts/AuthContext'
-import { getCreditAllocation, getDailyCreditLimit, getMonthlyCreditAllocation } from '../../config/constants'
 import { getCreditBalance } from '../../services/creditService'
 import type { CreditBalance } from '../../services/creditService'
 import './UserMenu.css'
@@ -33,23 +33,25 @@ export const UserMenu: React.FC = () => {
     return limits[tier as keyof typeof limits] || 20
   }
 
-
   // Fetch credit balance when menu opens
   useEffect(() => {
     if (isOpen && user) {
       setIsLoadingCredits(true)
       getCreditBalance()
-        .then((balance) => {
+        .then(balance => {
           setCreditBalance(balance)
         })
-        .catch((error) => {
+        .catch(error => {
           console.error('Failed to fetch credit balance:', error)
           // Fallback to user object data if available
           if (user.monthly_credits_allocated !== undefined) {
             setCreditBalance({
               credits_allocated: user.monthly_credits_allocated || 0,
               credits_used_this_period: user.credits_used_this_period || 0,
-              credits_remaining: Math.max(0, (user.monthly_credits_allocated || 0) - (user.credits_used_this_period || 0)),
+              credits_remaining: Math.max(
+                0,
+                (user.monthly_credits_allocated || 0) - (user.credits_used_this_period || 0)
+              ),
               total_credits_used: user.total_credits_used,
               credits_reset_at: user.credits_reset_at,
               billing_period_start: user.billing_period_start,
@@ -157,8 +159,8 @@ export const UserMenu: React.FC = () => {
                   {creditBalance
                     ? `${creditBalance.credits_allocated} ${creditBalance.period_type === 'monthly' ? 'credits/month' : 'credits/day'}`
                     : user.monthly_credits_allocated
-                    ? `${user.monthly_credits_allocated} credits/month`
-                    : `${getCreditAllocation(user.subscription_tier)} credits/${getDailyCreditLimit(user.subscription_tier) > 0 ? 'day' : 'month'}`}
+                      ? `${user.monthly_credits_allocated} credits/month`
+                      : `${getCreditAllocation(user.subscription_tier)} credits/${getDailyCreditLimit(user.subscription_tier) > 0 ? 'day' : 'month'}`}
                 </div>
               </div>
             </div>
@@ -185,9 +187,7 @@ export const UserMenu: React.FC = () => {
                         {Math.round(creditBalance.credits_remaining)}
                       </span>
                       <span className="usage-separator">/</span>
-                      <span className="usage-limit">
-                        {creditBalance.credits_allocated}
-                      </span>
+                      <span className="usage-limit">{creditBalance.credits_allocated}</span>
                     </div>
                     <div className="usage-progress-bar">
                       <div
@@ -198,7 +198,14 @@ export const UserMenu: React.FC = () => {
                       ></div>
                     </div>
                     {creditBalance.credits_reset_at && (
-                      <div className="usage-reset-info" style={{ fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.6)', marginTop: '0.25rem' }}>
+                      <div
+                        className="usage-reset-info"
+                        style={{
+                          fontSize: '0.75rem',
+                          color: 'rgba(255, 255, 255, 0.6)',
+                          marginTop: '0.25rem',
+                        }}
+                      >
                         Resets {new Date(creditBalance.credits_reset_at).toLocaleDateString()}
                       </div>
                     )}
@@ -207,18 +214,26 @@ export const UserMenu: React.FC = () => {
                   <div className="usage-stat-value">
                     <span className="usage-current">
                       {user.credits_used_this_period !== undefined
-                        ? Math.round(Math.max(0, (user.monthly_credits_allocated || 0) - (user.credits_used_this_period || 0)))
+                        ? Math.round(
+                            Math.max(
+                              0,
+                              (user.monthly_credits_allocated || 0) -
+                                (user.credits_used_this_period || 0)
+                            )
+                          )
                         : '—'}
                     </span>
                     <span className="usage-separator">/</span>
                     <span className="usage-limit">
-                      {user.monthly_credits_allocated || getCreditAllocation(user.subscription_tier)}
+                      {user.monthly_credits_allocated ||
+                        getCreditAllocation(user.subscription_tier)}
                     </span>
                   </div>
                 )}
               </div>
             </div>
             {/* Legacy Model Response Display (Hidden by default, can be shown for transition period) */}
+            {/* eslint-disable-next-line no-constant-binary-expression */}
             {false && (
               <div className="usage-stat" style={{ marginTop: '0.5rem', opacity: 0.7 }}>
                 <div className="usage-stat-label" style={{ fontSize: '0.75rem' }}>
@@ -430,8 +445,8 @@ export const UserMenu: React.FC = () => {
                     {creditBalance
                       ? `${creditBalance.credits_allocated} ${creditBalance.period_type === 'monthly' ? 'credits/month' : 'credits/day'}`
                       : user.monthly_credits_allocated
-                      ? `${user.monthly_credits_allocated} credits/month`
-                      : `${getCreditAllocation(user.subscription_tier)} credits/${getDailyCreditLimit(user.subscription_tier) > 0 ? 'day' : 'month'}`}
+                        ? `${user.monthly_credits_allocated} credits/month`
+                        : `${getCreditAllocation(user.subscription_tier)} credits/${getDailyCreditLimit(user.subscription_tier) > 0 ? 'day' : 'month'}`}
                   </strong>{' '}
                   • <strong>3 models max</strong> per comparison
                 </p>
@@ -611,14 +626,14 @@ export const UserMenu: React.FC = () => {
 
               <div className="upgrade-modal-footer">
                 <p className="pricing-notice">
-                  💡 <strong>Credit-based pricing:</strong> Credits are calculated based on token usage. 
-                  Each comparison uses credits based on the number of models and response size. 
-                  Higher tiers give you more monthly credits AND let you compare more models at once!
+                  💡 <strong>Credit-based pricing:</strong> Credits are calculated based on token
+                  usage. Each comparison uses credits based on the number of models and response
+                  size. Higher tiers give you more monthly credits AND let you compare more models
+                  at once!
                 </p>
                 <p className="pricing-notice" style={{ marginTop: '0.5rem', fontSize: '0.85rem' }}>
-                  <strong>How credits work:</strong> 1 credit = 1,000 effective tokens. 
-                  Effective tokens = input tokens + (output tokens × 2.5). 
-                  Average comparison uses ~5 credits.
+                  <strong>How credits work:</strong> 1 credit = 1,000 effective tokens. Effective
+                  tokens = input tokens + (output tokens × 2.5). Average comparison uses ~5 credits.
                 </p>
                 <p className="pricing-notice" style={{ marginTop: '0.75rem' }}>
                   Paid tiers and pricing will be available soon. We're working hard to bring you the

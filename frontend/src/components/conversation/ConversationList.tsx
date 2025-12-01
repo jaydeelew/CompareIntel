@@ -1,28 +1,30 @@
-import React from 'react';
-import { ConversationItem } from './ConversationItem';
-import type { ConversationSummary } from '../../types';
+import React from 'react'
+
+import type { ConversationSummary } from '../../types'
+
+import { ConversationItem } from './ConversationItem'
 
 /**
  * ConversationList component props
  */
 export interface ConversationListProps {
   /** List of conversation summaries */
-  conversations: ConversationSummary[];
+  conversations: ConversationSummary[]
   /** ID of the currently active conversation */
-  activeConversationId?: string;
+  activeConversationId?: string
   /** Callback when a conversation is clicked */
-  onConversationClick?: (conversationId: string) => void;
+  onConversationClick?: (conversationId: string) => void
   /** Maximum height for the list (with scrolling) */
-  maxHeight?: string;
+  maxHeight?: string
   /** Whether to hide scrollbar */
-  hideScrollbar?: boolean;
+  hideScrollbar?: boolean
   /** Custom className */
-  className?: string;
+  className?: string
 }
 
 /**
  * ConversationList component for displaying a list of conversations
- * 
+ *
  * @example
  * ```tsx
  * <ConversationList
@@ -45,7 +47,7 @@ export const ConversationList: React.FC<ConversationListProps> = ({
       <div className={`conversation-list-empty ${className}`.trim()}>
         <p>No conversations yet. Start by comparing some AI models!</p>
       </div>
-    );
+    )
   }
 
   const listClassName = [
@@ -54,13 +56,13 @@ export const ConversationList: React.FC<ConversationListProps> = ({
     className,
   ]
     .filter(Boolean)
-    .join(' ');
+    .join(' ')
 
-  const style = maxHeight ? { maxHeight } : undefined;
+  const style = maxHeight ? { maxHeight } : undefined
 
   return (
     <div className={listClassName} style={style}>
-      {conversations.map((conversation) => (
+      {conversations.map(conversation => (
         <ConversationItem
           key={conversation.id}
           conversation={conversation}
@@ -69,8 +71,7 @@ export const ConversationList: React.FC<ConversationListProps> = ({
         />
       ))}
     </div>
-  );
-};
+  )
+}
 
-ConversationList.displayName = 'ConversationList';
-
+ConversationList.displayName = 'ConversationList'

@@ -4,8 +4,8 @@
  */
 
 import '@testing-library/jest-dom'
-import { expect, afterEach, vi } from 'vitest'
 import { cleanup } from '@testing-library/react'
+import { afterEach, vi } from 'vitest'
 
 // Extend Vitest's expect with jest-dom matchers
 // This allows us to use matchers like toBeInTheDocument(), toHaveClass(), etc.
@@ -18,7 +18,7 @@ afterEach(() => {
 // Mock window.matchMedia
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
-  value: vi.fn().mockImplementation((query) => ({
+  value: vi.fn().mockImplementation(query => ({
     matches: false,
     media: query,
     onchange: null,
@@ -55,4 +55,3 @@ global.ResizeObserver = class ResizeObserver {
 //   error: vi.fn(),
 //   warn: vi.fn(),
 // }
-

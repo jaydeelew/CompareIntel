@@ -1,46 +1,47 @@
-import React from 'react';
-import { ResultCard, type Model } from './ResultCard';
-import type { ModelConversation, ActiveResultTabs } from '../../types';
-import { RESULT_TAB, type ResultTab } from '../../types';
-import { isErrorMessage } from '../../utils/error';
+import React from 'react'
+
+import type { ModelConversation, ActiveResultTabs, RESULT_TAB, type ResultTab } from '../../types'
+import { isErrorMessage } from '../../utils/error'
+
+import { ResultCard, type Model } from './ResultCard'
 
 /**
  * ResultsDisplay component props
  */
 export interface ResultsDisplayProps {
   /** Conversations to display */
-  conversations: ModelConversation[];
+  conversations: ModelConversation[]
   /** Selected model IDs */
-  selectedModels: string[];
+  selectedModels: string[]
   /** Set of closed card model IDs */
-  closedCards: Set<string>;
+  closedCards: Set<string>
   /** All available models */
-  allModels: Model[];
+  allModels: Model[]
   /** Active result tabs by model ID */
-  activeResultTabs: ActiveResultTabs;
+  activeResultTabs: ActiveResultTabs
   /** Processing time in milliseconds */
-  processingTime?: number;
+  processingTime?: number
   /** Response metadata */
   metadata?: {
-    models_completed: number;
-    models_failed: number;
-    total_tokens_used: number;
-  };
+    models_completed: number
+    models_failed: number
+    total_tokens_used: number
+  }
   /** Callback to screenshot/copy formatted history */
-  onScreenshot?: (modelId: string) => void;
+  onScreenshot?: (modelId: string) => void
   /** Callback to copy raw history */
-  onCopyResponse?: (modelId: string) => void;
+  onCopyResponse?: (modelId: string) => void
   /** Callback to close/hide a card */
-  onCloseCard?: (modelId: string) => void;
+  onCloseCard?: (modelId: string) => void
   /** Callback to switch result tab */
-  onSwitchTab?: (modelId: string, tab: ResultTab) => void;
+  onSwitchTab?: (modelId: string, tab: ResultTab) => void
   /** Custom className */
-  className?: string;
+  className?: string
 }
 
 /**
  * ResultsDisplay component for displaying comparison results grid
- * 
+ *
  * @example
  * ```tsx
  * <ResultsDisplay
@@ -68,11 +69,11 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
   className = '',
 }) => {
   const visibleConversations = conversations.filter(
-    (conv) => selectedModels.includes(conv.modelId) && !closedCards.has(conv.modelId)
-  );
+    conv => selectedModels.includes(conv.modelId) && !closedCards.has(conv.modelId)
+  )
 
   if (visibleConversations.length === 0) {
-    return null;
+    return null
   }
 
   /**
@@ -80,15 +81,15 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
    */
   const formatProcessingTime = (time: number): string => {
     if (time < 1000) {
-      return `${time}ms`;
+      return `${time}ms`
     } else if (time < 60000) {
-      return `${(time / 1000).toFixed(1)}s`;
+      return `${(time / 1000).toFixed(1)}s`
     } else {
-      const minutes = Math.floor(time / 60000);
-      const seconds = Math.floor((time % 60000) / 1000);
-      return `${minutes}m ${seconds}s`;
+      const minutes = Math.floor(time / 60000)
+      const seconds = Math.floor((time % 60000) / 1000)
+      return `${minutes}m ${seconds}s`
     }
-  };
+  }
 
   return (
     <section className={`results-section ${className}`.trim()}>
@@ -114,11 +115,11 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
       )}
 
       <div className="results-grid">
-        {visibleConversations.map((conversation) => {
-          const model = allModels.find((m) => m.id === conversation.modelId);
-          const latestMessage = conversation.messages[conversation.messages.length - 1];
-          const isError = isErrorMessage(latestMessage?.content);
-          const activeTab = activeResultTabs[conversation.modelId] || RESULT_TAB.FORMATTED;
+        {visibleConversations.map(conversation => {
+          const model = allModels.find(m => m.id === conversation.modelId)
+          const latestMessage = conversation.messages[conversation.messages.length - 1]
+          const isError = isErrorMessage(latestMessage?.content)
+          const activeTab = activeResultTabs[conversation.modelId] || RESULT_TAB.FORMATTED
 
           return (
             <ResultCard
@@ -133,12 +134,11 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
               onClose={onCloseCard}
               onSwitchTab={onSwitchTab}
             />
-          );
+          )
         })}
       </div>
     </section>
-  );
-};
+  )
+}
 
-ResultsDisplay.displayName = 'ResultsDisplay';
-
+ResultsDisplay.displayName = 'ResultsDisplay'
