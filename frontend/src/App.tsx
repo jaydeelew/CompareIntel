@@ -1305,7 +1305,8 @@ function AppContent() {
         scrollToTop()
       })
     }
-  }, [conversations, isLoadingHistory])
+    // syncingFromElementRef is a ref (stable reference), but ESLint requires it in deps
+  }, [conversations, isLoadingHistory, syncingFromElementRef])
 
   // Keep ref in sync with state
   useEffect(() => {
@@ -1464,68 +1465,74 @@ function AppContent() {
   // These functions have been migrated to the hook and are destructured from conversationHistoryHook
 
   // Load full conversation from localStorage (anonymous users)
-  const loadConversationFromLocalStorage = (
-    id: string
-  ): { input_data: string; models_used: string[]; messages: StoredMessage[] } | null => {
-    try {
-      const stored = localStorage.getItem(`compareintel_conversation_${id}`)
-      if (stored) {
-        const parsed = JSON.parse(stored)
-        return parsed
-      } else {
-        console.warn('No conversation found in localStorage for id:', id)
+  const loadConversationFromLocalStorage = useCallback(
+    (
+      id: string
+    ): { input_data: string; models_used: string[]; messages: StoredMessage[] } | null => {
+      try {
+        const stored = localStorage.getItem(`compareintel_conversation_${id}`)
+        if (stored) {
+          const parsed = JSON.parse(stored)
+          return parsed
+        } else {
+          console.warn('No conversation found in localStorage for id:', id)
+        }
+      } catch (e) {
+        console.error('Failed to load conversation from localStorage:', e, { id })
       }
-    } catch (e) {
-      console.error('Failed to load conversation from localStorage:', e, { id })
-    }
-    return null
-  }
+      return null
+    },
+    []
+  )
 
   // Load full conversation from API (authenticated users)
-  const loadConversationFromAPI = async (
-    id: number
-  ): Promise<{ input_data: string; models_used: string[]; messages: StoredMessage[] } | null> => {
-    if (!isAuthenticated) return null
+  const loadConversationFromAPI = useCallback(
+    async (
+      id: number
+    ): Promise<{ input_data: string; models_used: string[]; messages: StoredMessage[] } | null> => {
+      if (!isAuthenticated) return null
 
-    try {
-      const conversationId = createConversationId(id)
-      // Clear cache for this specific conversation to ensure we get the latest data
-      apiClient.deleteCache(`GET:/conversations/${id}`)
-      const data = await getConversation(conversationId)
-      return {
-        input_data: data.input_data,
-        models_used: data.models_used,
-        messages: data.messages.map(msg => {
-          const storedMessage: StoredMessage = {
-            role: msg.role,
-            content: msg.content,
-            created_at: msg.created_at,
-          }
-          if (msg.model_id !== null && msg.model_id !== undefined) {
-            storedMessage.model_id = createModelId(msg.model_id)
-          }
-          if (msg.id !== undefined && msg.id !== null) {
-            storedMessage.id = createMessageId(String(msg.id))
-          }
-          // Preserve token fields from API response
-          if (msg.input_tokens !== undefined && msg.input_tokens !== null) {
-            storedMessage.input_tokens = msg.input_tokens
-          }
-          if (msg.output_tokens !== undefined && msg.output_tokens !== null) {
-            storedMessage.output_tokens = msg.output_tokens
-          }
-          return storedMessage
-        }),
+      try {
+        const conversationId = createConversationId(id)
+        // Clear cache for this specific conversation to ensure we get the latest data
+        apiClient.deleteCache(`GET:/conversations/${id}`)
+        const data = await getConversation(conversationId)
+        return {
+          input_data: data.input_data,
+          models_used: data.models_used,
+          messages: data.messages.map(msg => {
+            const storedMessage: StoredMessage = {
+              role: msg.role,
+              content: msg.content,
+              created_at: msg.created_at,
+            }
+            if (msg.model_id !== null && msg.model_id !== undefined) {
+              storedMessage.model_id = createModelId(msg.model_id)
+            }
+            if (msg.id !== undefined && msg.id !== null) {
+              storedMessage.id = createMessageId(String(msg.id))
+            }
+            // Preserve token fields from API response
+            if (msg.input_tokens !== undefined && msg.input_tokens !== null) {
+              storedMessage.input_tokens = msg.input_tokens
+            }
+            if (msg.output_tokens !== undefined && msg.output_tokens !== null) {
+              storedMessage.output_tokens = msg.output_tokens
+            }
+            return storedMessage
+          }),
+        }
+      } catch (error) {
+        if (error instanceof ApiError) {
+          console.error('Failed to load conversation:', error.message)
+        } else {
+          console.error('Failed to load conversation from API:', error)
+        }
       }
-    } catch (error) {
-      if (error instanceof ApiError) {
-        console.error('Failed to load conversation:', error.message)
-      } else {
-        console.error('Failed to load conversation from API:', error)
-      }
-    }
-    return null
-  }
+      return null
+    },
+    [isAuthenticated]
+  )
 
   // Load a conversation from history
   const loadConversation = async (summary: ConversationSummary) => {
@@ -2102,6 +2109,7 @@ function AppContent() {
     conversations,
     loadConversationFromAPI,
     loadConversationFromLocalStorage,
+    setConversations,
   ])
 
   // Close dropdown when clicking outside
@@ -3015,7 +3023,7 @@ function AppContent() {
 
     // Update the ref to track current user ID for next render
     prevUserIdRef.current = currentUserId
-  }, [user?.id])
+  }, [user?.id, setError])
 
   // Handle authentication state changes (logout and sign-in from anonymous)
   useEffect(() => {
@@ -5198,16 +5206,7 @@ function AppContent() {
         </span>
       </div>
     )
-  }, [
-    isAuthenticated,
-    user,
-    creditBalance,
-    anonymousCreditsRemaining,
-    selectedModels,
-    isFollowUpMode,
-    conversations,
-    creditsRemaining,
-  ])
+  }, [selectedModels, creditsRemaining])
 
   return (
     <div className="app">

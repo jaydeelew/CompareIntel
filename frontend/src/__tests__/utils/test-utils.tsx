@@ -99,6 +99,7 @@ export function renderWithProviders(ui: React.ReactElement, options: CustomRende
 /**
  * Re-export everything from React Testing Library
  */
+// eslint-disable-next-line react-refresh/only-export-components
 export * from '@testing-library/react'
 
 /**

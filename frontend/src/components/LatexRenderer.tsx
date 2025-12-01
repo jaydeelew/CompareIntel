@@ -28,7 +28,7 @@
  */
 
 import katex from 'katex'
-import React, { useEffect, useRef, useMemo, useState } from 'react'
+import React, { useEffect, useRef, useMemo, useState, useCallback } from 'react'
 
 import { getModelConfig } from '../config/modelRendererRegistry'
 import type { ModelRendererConfig } from '../types/rendererConfig'
@@ -2652,389 +2652,394 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({ children, className = '',
    * Main rendering pipeline
    * Uses model-specific configurations and code block preservation utilities
    */
-  const renderLatex = (text: string): string => {
-    try {
-      let processed = text
+  const renderLatex = useCallback(
+    (text: string): string => {
+      try {
+        let processed = text
 
-      // Stage 0: Extract code blocks FIRST (before math extraction)
-      // This ensures code blocks are preserved and prevents math extraction from matching $$ inside code
-      const codeBlockExtraction = extractCodeBlocks(processed)
-      processed = codeBlockExtraction.text
+        // Stage 0: Extract code blocks FIRST (before math extraction)
+        // This ensures code blocks are preserved and prevents math extraction from matching $$ inside code
+        const codeBlockExtraction = extractCodeBlocks(processed)
+        processed = codeBlockExtraction.text
 
-      // Stage 0.5: Extract display math blocks BEFORE any processing
-      // This protects math content from being modified by preprocessing stages
-      const displayMathExtraction = extractDisplayMath(processed)
-      processed = displayMathExtraction.text
+        // Stage 0.5: Extract display math blocks BEFORE any processing
+        // This protects math content from being modified by preprocessing stages
+        const displayMathExtraction = extractDisplayMath(processed)
+        processed = displayMathExtraction.text
 
-      // Stage 0.6: Extract inline math blocks BEFORE any processing
-      // This protects inline math content from being modified by preprocessing stages
-      const inlineMathExtraction = extractInlineMath(processed)
-      processed = inlineMathExtraction.text
+        // Stage 0.6: Extract inline math blocks BEFORE any processing
+        // This protects inline math content from being modified by preprocessing stages
+        const inlineMathExtraction = extractInlineMath(processed)
+        processed = inlineMathExtraction.text
 
-      // Stage 0.7: Process horizontal rules VERY EARLY (before any preprocessing)
-      // This ensures horizontal rules are converted before any text modification
-      // Extract and protect horizontal rules by converting them to placeholders first
-      const hrPlaceholders: string[] = []
-      const markdownRules = config.markdownProcessing || {}
-      if (markdownRules.processHorizontalRules !== false) {
-        // Convert horizontal rules to protected placeholders
-        processed = processed.replace(/^---+(\s*)$/gm, () => {
-          const placeholder = `__HR_PLACEHOLDER_${hrPlaceholders.length}__`
-          hrPlaceholders.push('<hr class="markdown-hr">')
-          return placeholder
-        })
-        processed = processed.replace(/^\*\*\*+(\s*)$/gm, () => {
-          const placeholder = `__HR_PLACEHOLDER_${hrPlaceholders.length}__`
-          hrPlaceholders.push('<hr class="markdown-hr">')
-          return placeholder
-        })
-        processed = processed.replace(/^___+(\s*)$/gm, () => {
-          const placeholder = `__HR_PLACEHOLDER_${hrPlaceholders.length}__`
-          hrPlaceholders.push('<hr class="markdown-hr">')
-          return placeholder
-        })
-      }
-
-      // Stage 2: Clean malformed content (using model-specific preprocessing)
-      processed = cleanMalformedContent(processed)
-
-      // Stage 2.5: Restore horizontal rules after preprocessing
-      if (markdownRules.processHorizontalRules !== false && hrPlaceholders.length > 0) {
-        hrPlaceholders.forEach((hrTag, index) => {
-          processed = processed.replace(`__HR_PLACEHOLDER_${index}__`, `\n${hrTag}\n`)
-        })
-      }
-
-      // Stage 0.8: Preserve line breaks for consecutive equation lines
-      // This must happen early, before any processing that might collapse lines
-      processed = preserveEquationLineBreaks(processed)
-
-      // Stage 3: Fix LaTeX issues
-      processed = fixLatexIssues(processed)
-
-      // Stage 4: Convert implicit math notation
-      processed = convertImplicitMath(processed)
-
-      // Stage 5: Process markdown lists
-      // Note: Inline math placeholders are kept intact inside list placeholders
-      processed = processMarkdownLists(processed)
-
-      // Stage 5.5: Restore display math blocks before rendering
-      // This ensures the original math content is available for rendering
-      processed = restoreDisplayMath(processed, displayMathExtraction.mathBlocks)
-
-      // Stage 5.6: Restore inline math blocks before rendering
-      // This ensures the original inline math content is available for rendering
-      // IMPORTANT: Skip restoring inline math inside list placeholders to preserve placeholder structure
-      processed = restoreInlineMath(processed, inlineMathExtraction.mathBlocks, true)
-
-      // Stage 6: Render math content (using model-specific delimiters and KaTeX options)
-      processed = renderMathContent(processed)
-
-      // Stage 6.5: Preserve line breaks between consecutive math expressions
-      processed = preserveMathLineBreaks(processed)
-
-      // Stage 7: Process markdown formatting (using model-specific rules)
-      processed = processMarkdown(processed)
-
-      // Stage 7.5: Remove any MDPH placeholders that survived markdown processing
-      // This is critical because placeholders might be inside HTML tags from markdown formatting
-      while (processed.includes('((MDPH')) {
-        processed = processed.replace(/\(\(MDPH\d+\)\)/g, '')
-      }
-      while (processed.includes('{{MDPH')) {
-        processed = processed.replace(/\{\{MDPH\d+\}\}/g, '')
-      }
-      processed = processed.replace(/\(MDPH\d+\)/g, '')
-      processed = processed.replace(/\{MDPH\d+\}/g, '')
-      processed = processed.replace(/(?<!⟨⟨)MDPH\d+(?!⟩⟩)/g, '')
-
-      // Stage 8: Convert lists to HTML
-      processed = convertListsToHTML(processed)
-
-      // Stage 8.3: Restore display math placeholders that might be inside converted list HTML
-      // This handles cases where display math placeholders were inside list items
-      // and weren't restored in Stage 5.5 because they were hidden inside list placeholders
-      processed = restoreDisplayMath(processed, displayMathExtraction.mathBlocks)
-
-      // Stage 8.4: Render display math that was restored in Stage 8.3
-      // Display math blocks restored here need to be rendered since they weren't rendered in Stage 6
-      const displayDelimiters = [...config.displayMathDelimiters].sort((a, b) => {
-        const priorityA = a.priority ?? 999
-        const priorityB = b.priority ?? 999
-        return priorityA - priorityB
-      })
-      displayDelimiters.forEach(({ pattern }) => {
-        processed = processed.replace(pattern, (_match, math) => {
-          // Check if already rendered
-          if (_match.includes('<span class="katex">')) {
-            return _match
-          }
-          return safeRenderKatex(math, true, config.katexOptions)
-        })
-      })
-
-      // Stage 8.5: Restore and render any inline math placeholders that were nested inside list placeholders
-      // This handles cases where inline math placeholders were inside list items
-      // and weren't restored in Stage 5.6 because they were hidden inside list placeholders
-      processed = restoreInlineMath(processed, inlineMathExtraction.mathBlocks)
-
-      // Render the restored inline math (using model-specific delimiters)
-      const inlineDelimiters = [...config.inlineMathDelimiters].sort((a, b) => {
-        const priorityA = a.priority ?? 999
-        const priorityB = b.priority ?? 999
-        return priorityA - priorityB
-      })
-      inlineDelimiters.forEach(({ pattern }) => {
-        processed = processed.replace(pattern, (_match, math) => {
-          // Check if already rendered
-          if (_match.includes('<span class="katex">')) {
-            return _match
-          }
-          return safeRenderKatex(math, false, config.katexOptions)
-        })
-      })
-
-      // Stage 9: Apply paragraph breaks
-      processed = applyParagraphBreaks(processed)
-
-      // Stage 10: Restore code blocks from placeholders
-      // restoreCodeBlocks returns markdown format, so we need to render them
-      processed = restoreCodeBlocks(processed, codeBlockExtraction)
-
-      // Render restored code blocks to HTML
-      // Match code blocks in markdown format: ```language\ncontent\n```
-      processed = processed.replace(
-        /```([a-zA-Z0-9+#-]*)\n?([\s\S]*?)```/g,
-        (_match, language, code) => {
-          return renderCodeBlock(language || 'plaintext', code)
+        // Stage 0.7: Process horizontal rules VERY EARLY (before any preprocessing)
+        // This ensures horizontal rules are converted before any text modification
+        // Extract and protect horizontal rules by converting them to placeholders first
+        const hrPlaceholders: string[] = []
+        const markdownRules = config.markdownProcessing || {}
+        if (markdownRules.processHorizontalRules !== false) {
+          // Convert horizontal rules to protected placeholders
+          processed = processed.replace(/^---+(\s*)$/gm, () => {
+            const placeholder = `__HR_PLACEHOLDER_${hrPlaceholders.length}__`
+            hrPlaceholders.push('<hr class="markdown-hr">')
+            return placeholder
+          })
+          processed = processed.replace(/^\*\*\*+(\s*)$/gm, () => {
+            const placeholder = `__HR_PLACEHOLDER_${hrPlaceholders.length}__`
+            hrPlaceholders.push('<hr class="markdown-hr">')
+            return placeholder
+          })
+          processed = processed.replace(/^___+(\s*)$/gm, () => {
+            const placeholder = `__HR_PLACEHOLDER_${hrPlaceholders.length}__`
+            hrPlaceholders.push('<hr class="markdown-hr">')
+            return placeholder
+          })
         }
-      )
 
-      // Apply post-processing if configured
-      if (config.postProcessing) {
-        for (const postProcessor of config.postProcessing) {
-          processed = postProcessor(processed)
+        // Stage 2: Clean malformed content (using model-specific preprocessing)
+        processed = cleanMalformedContent(processed)
+
+        // Stage 2.5: Restore horizontal rules after preprocessing
+        if (markdownRules.processHorizontalRules !== false && hrPlaceholders.length > 0) {
+          hrPlaceholders.forEach((hrTag, index) => {
+            processed = processed.replace(`__HR_PLACEHOLDER_${index}__`, `\n${hrTag}\n`)
+          })
         }
-      }
 
-      // Final cleanup - handle any remaining inline math placeholders
-      // This catches placeholders that might have been missed or had underscores removed by markdown processing
-      // First, try to restore standard format placeholders: __INLINE_MATH_X__
-      processed = restoreInlineMath(processed, inlineMathExtraction.mathBlocks)
+        // Stage 0.8: Preserve line breaks for consecutive equation lines
+        // This must happen early, before any processing that might collapse lines
+        processed = preserveEquationLineBreaks(processed)
 
-      // Render any restored inline math that might have been restored above
-      // Reuse inlineDelimiters from Stage 8.5
-      inlineDelimiters.forEach(({ pattern }) => {
-        processed = processed.replace(pattern, (_match, math) => {
-          // Check if already rendered
-          if (_match.includes('<span class="katex">')) {
-            return _match
-          }
-          return safeRenderKatex(math, false, config.katexOptions)
-        })
-      })
+        // Stage 3: Fix LaTeX issues
+        processed = fixLatexIssues(processed)
 
-      // Then check for any remaining placeholders in various formats
-      // Check for both formats: __INLINE_MATH_X__ and INLINEMATHX (without underscores, possibly from bold processing)
-      const remainingInlineMathRegex = /(?:__)?INLINE[_\s]*MATH[_\s]*(\d+)(?:__)?/gi
-      processed = processed.replace(remainingInlineMathRegex, (_match, index) => {
-        const blockIndex = parseInt(index, 10)
-        if (blockIndex >= 0 && blockIndex < inlineMathExtraction.mathBlocks.length) {
-          // Restore the original math block and render it
-          const mathBlock = inlineMathExtraction.mathBlocks[blockIndex]
-          // The mathBlock contains the full match with delimiters (e.g., "$x^2$" or "\\(x^2\\)")
-          // Try to extract math content by matching against known delimiter patterns
-          for (const { pattern } of inlineDelimiters) {
-            const match = mathBlock.match(pattern)
-            if (match && match[1]) {
-              // Extract the math content (group 1 contains the math without delimiters)
-              return safeRenderKatex(match[1], false, config.katexOptions)
-            }
-          }
+        // Stage 4: Convert implicit math notation
+        processed = convertImplicitMath(processed)
 
-          // Fallback: try to extract math content by removing common delimiters
-          // Remove dollar signs, backslashes with parens/brackets
-          let cleaned = mathBlock.trim()
-          // Remove dollar sign delimiters
-          cleaned = cleaned.replace(/^\$\$?|\$\$?$/g, '')
-          // Remove \( and \) delimiters
-          cleaned = cleaned.replace(/^\\\(|\\\)$/g, '')
-          // Remove \[ and \] delimiters
-          cleaned = cleaned.replace(/^\\\[|\\\]$/g, '')
-          cleaned = cleaned.trim()
+        // Stage 5: Process markdown lists
+        // Note: Inline math placeholders are kept intact inside list placeholders
+        processed = processMarkdownLists(processed)
 
-          if (cleaned) {
-            return safeRenderKatex(cleaned, false, config.katexOptions)
-          }
+        // Stage 5.5: Restore display math blocks before rendering
+        // This ensures the original math content is available for rendering
+        processed = restoreDisplayMath(processed, displayMathExtraction.mathBlocks)
+
+        // Stage 5.6: Restore inline math blocks before rendering
+        // This ensures the original inline math content is available for rendering
+        // IMPORTANT: Skip restoring inline math inside list placeholders to preserve placeholder structure
+        processed = restoreInlineMath(processed, inlineMathExtraction.mathBlocks, true)
+
+        // Stage 6: Render math content (using model-specific delimiters and KaTeX options)
+        processed = renderMathContent(processed)
+
+        // Stage 6.5: Preserve line breaks between consecutive math expressions
+        processed = preserveMathLineBreaks(processed)
+
+        // Stage 7: Process markdown formatting (using model-specific rules)
+        processed = processMarkdown(processed)
+
+        // Stage 7.5: Remove any MDPH placeholders that survived markdown processing
+        // This is critical because placeholders might be inside HTML tags from markdown formatting
+        while (processed.includes('((MDPH')) {
+          processed = processed.replace(/\(\(MDPH\d+\)\)/g, '')
         }
-        // If index is invalid, remove the placeholder
-        return ''
-      })
-
-      // Final cleanup - only unescape markdown characters, not LaTeX commands
-      // Don't remove backslashes that are part of LaTeX commands
-      processed = processed.replace(/\\([`*_#+\-.!|])/g, '$1')
-
-      // Remove orphaned \( and \) delimiters that weren't processed as math
-      // These can occur if the content inside wasn't recognized as math or if the pattern didn't match
-      // We'll remove the delimiters but keep the content
-      // Match \( followed by any content (non-greedy) followed by \)
-      processed = processed.replace(/\\\(\s*([\s\S]*?)\s*\\\)/g, '$1')
-
-      // Final aggressive cleanup: Remove ANY remaining MDPH or internal placeholders
-      // This catches placeholders that might have escaped earlier stages
-      // Apply multiple passes to ensure all variations are caught
-
-      // First pass: Remove Unicode angle bracket format (most common internal format)
-      processed = processed.replace(/⟨⟨MDPH\d+⟩⟩/g, '')
-
-      // Second pass: Remove double parentheses format
-      while (processed.includes('((MDPH')) {
-        processed = processed.replace(/\(\(MDPH\d+\)\)/g, '')
-      }
-
-      // Third pass: Remove curly braces format
-      while (processed.includes('{{MDPH')) {
-        processed = processed.replace(/\{\{MDPH\d+\}\}/g, '')
-      }
-
-      // Fourth pass: Handle corrupted Unicode angle bracket format: <<MDPH (should be ⟨⟨MDPH)
-      while (processed.includes('<<MDPH')) {
-        processed = processed.replace(/<<MDPH\d+[^>]*>>?/g, '')
-        processed = processed.replace(/<<MDPH\d+\)\)/g, '')
-        processed = processed.replace(/<<MDPH\d+\(\(/g, '')
-      }
-
-      // Fifth pass: Remove single parentheses/braces and plain MDPH patterns
-      processed = processed.replace(/\(MDPH\d+\)/g, '')
-      processed = processed.replace(/\{MDPH\d+\}/g, '')
-
-      // Sixth pass: Remove plain MDPH followed by digits (catches any remaining variations)
-      // This is the most aggressive pattern and should catch everything
-      processed = processed.replace(/(?<!⟨⟨)MDPH\d+(?!⟩⟩)/g, '')
-
-      // Final pass: Remove any remaining Unicode angle bracket format (safety check)
-      processed = processed.replace(/⟨⟨MDPH\d+⟩⟩/g, '')
-
-      // Final attempt to restore any remaining placeholders before removing them
-      // This handles cases where placeholders might have been missed in earlier stages
-      processed = restoreDisplayMath(processed, displayMathExtraction.mathBlocks)
-      processed = restoreInlineMath(processed, inlineMathExtraction.mathBlocks)
-
-      // Render any restored math placeholders
-      displayDelimiters.forEach(({ pattern }) => {
-        processed = processed.replace(pattern, (_match, math) => {
-          if (_match.includes('<span class="katex">')) {
-            return _match
-          }
-          return safeRenderKatex(math, true, config.katexOptions)
-        })
-      })
-      inlineDelimiters.forEach(({ pattern }) => {
-        processed = processed.replace(pattern, (_match, math) => {
-          if (_match.includes('<span class="katex">')) {
-            return _match
-          }
-          return safeRenderKatex(math, false, config.katexOptions)
-        })
-      })
-
-      // Only remove placeholders that couldn't be restored (orphaned placeholders)
-      // Check if placeholder indices are valid before removing
-      processed = processed.replace(/__INLINE_MATH_(\d+)__/g, (_match, index) => {
-        const blockIndex = parseInt(index, 10)
-        if (blockIndex >= 0 && blockIndex < inlineMathExtraction.mathBlocks.length) {
-          // This placeholder should have been restored - try one more time
-          const mathBlock = inlineMathExtraction.mathBlocks[blockIndex]
-          for (const { pattern } of inlineDelimiters) {
-            const match = mathBlock.match(pattern)
-            if (match && match[1]) {
-              return safeRenderKatex(match[1], false, config.katexOptions)
-            }
-          }
-          // Fallback: extract math content manually
-          let cleaned = mathBlock.trim()
-          cleaned = cleaned.replace(/^\$\$?|\$\$?$/g, '')
-          cleaned = cleaned.replace(/^\\\(|\\\)$/g, '')
-          cleaned = cleaned.replace(/^\\\[|\\\]$/g, '')
-          if (cleaned) {
-            return safeRenderKatex(cleaned.trim(), false, config.katexOptions)
-          }
+        while (processed.includes('{{MDPH')) {
+          processed = processed.replace(/\{\{MDPH\d+\}\}/g, '')
         }
-        // Invalid index - remove the placeholder
-        return ''
-      })
-
-      processed = processed.replace(/__DISPLAY_MATH_(\d+)__/g, (_match, index) => {
-        const blockIndex = parseInt(index, 10)
-        if (blockIndex >= 0 && blockIndex < displayMathExtraction.mathBlocks.length) {
-          // This placeholder should have been restored - try one more time
-          const mathBlock = displayMathExtraction.mathBlocks[blockIndex]
-          for (const { pattern } of displayDelimiters) {
-            const match = mathBlock.match(pattern)
-            if (match && match[1]) {
-              return safeRenderKatex(match[1], true, config.katexOptions)
-            }
-          }
-          // Fallback: extract math content manually
-          let cleaned = mathBlock.trim()
-          cleaned = cleaned.replace(/^\$\$|\$\$$/g, '')
-          cleaned = cleaned.replace(/^\\\[|\\\]$/g, '')
-          if (cleaned) {
-            return safeRenderKatex(cleaned.trim(), true, config.katexOptions)
-          }
-        }
-        // Invalid index - remove the placeholder
-        return ''
-      })
-
-      processed = processed.replace(/__CODE_BLOCK_\d+__/g, '')
-
-      // Remove any malformed placeholder variations (case insensitive)
-      processed = processed.replace(/\b(?:INLINE|DISPLAY)[_\s]*MATH[_\s]*\d+\b/gi, '')
-
-      // Final cleanup: Remove any remaining markdown header markers that weren't converted
-      // This is a safety net to ensure headers don't show up as raw markdown in the output
-      // Only match at the start of a line to avoid false positives
-      processed = processed.replace(/^######\s+/gm, '')
-      processed = processed.replace(/^#####\s+/gm, '')
-      processed = processed.replace(/^####\s+/gm, '')
-      processed = processed.replace(/^###\s+/gm, '')
-      processed = processed.replace(/^##\s+/gm, '')
-      processed = processed.replace(/^#\s+/gm, '')
-
-      // ABSOLUTE FINAL cleanup: Remove ANY remaining MDPH placeholders in ALL formats
-      // This is the last chance to catch placeholders before output
-      // Apply in multiple passes to catch all variations
-      let cleanupIterations = 0
-      let previousCleanupLength = 0
-      while (previousCleanupLength !== processed.length && cleanupIterations < 5) {
-        previousCleanupLength = processed.length
-        cleanupIterations++
-
-        // Remove all known MDPH placeholder formats
-        processed = processed.replace(/⟨⟨MDPH\d+⟩⟩/g, '')
-        processed = processed.replace(/\(\(MDPH\d+\)\)/g, '')
-        processed = processed.replace(/\{\{MDPH\d+\}\}/g, '')
         processed = processed.replace(/\(MDPH\d+\)/g, '')
         processed = processed.replace(/\{MDPH\d+\}/g, '')
         processed = processed.replace(/(?<!⟨⟨)MDPH\d+(?!⟩⟩)/g, '')
-        processed = processed.replace(/<<MDPH\d+[^>]*>>?/g, '')
-      }
 
-      // Remove any empty placeholder shells that might remain
-      processed = processed.replace(/⟨⟨\s*⟩⟩/g, '')
+        // Stage 8: Convert lists to HTML
+        processed = convertListsToHTML(processed)
 
-      return processed
-    } catch (error) {
-      console.error('❌ Critical error in renderLatex:', error)
-      return `<div style="color: red; padding: 10px; border: 1px solid red;">
+        // Stage 8.3: Restore display math placeholders that might be inside converted list HTML
+        // This handles cases where display math placeholders were inside list items
+        // and weren't restored in Stage 5.5 because they were hidden inside list placeholders
+        processed = restoreDisplayMath(processed, displayMathExtraction.mathBlocks)
+
+        // Stage 8.4: Render display math that was restored in Stage 8.3
+        // Display math blocks restored here need to be rendered since they weren't rendered in Stage 6
+        const displayDelimiters = [...config.displayMathDelimiters].sort((a, b) => {
+          const priorityA = a.priority ?? 999
+          const priorityB = b.priority ?? 999
+          return priorityA - priorityB
+        })
+        displayDelimiters.forEach(({ pattern }) => {
+          processed = processed.replace(pattern, (_match, math) => {
+            // Check if already rendered
+            if (_match.includes('<span class="katex">')) {
+              return _match
+            }
+            return safeRenderKatex(math, true, config.katexOptions)
+          })
+        })
+
+        // Stage 8.5: Restore and render any inline math placeholders that were nested inside list placeholders
+        // This handles cases where inline math placeholders were inside list items
+        // and weren't restored in Stage 5.6 because they were hidden inside list placeholders
+        processed = restoreInlineMath(processed, inlineMathExtraction.mathBlocks)
+
+        // Render the restored inline math (using model-specific delimiters)
+        const inlineDelimiters = [...config.inlineMathDelimiters].sort((a, b) => {
+          const priorityA = a.priority ?? 999
+          const priorityB = b.priority ?? 999
+          return priorityA - priorityB
+        })
+        inlineDelimiters.forEach(({ pattern }) => {
+          processed = processed.replace(pattern, (_match, math) => {
+            // Check if already rendered
+            if (_match.includes('<span class="katex">')) {
+              return _match
+            }
+            return safeRenderKatex(math, false, config.katexOptions)
+          })
+        })
+
+        // Stage 9: Apply paragraph breaks
+        processed = applyParagraphBreaks(processed)
+
+        // Stage 10: Restore code blocks from placeholders
+        // restoreCodeBlocks returns markdown format, so we need to render them
+        processed = restoreCodeBlocks(processed, codeBlockExtraction)
+
+        // Render restored code blocks to HTML
+        // Match code blocks in markdown format: ```language\ncontent\n```
+        processed = processed.replace(
+          /```([a-zA-Z0-9+#-]*)\n?([\s\S]*?)```/g,
+          (_match, language, code) => {
+            return renderCodeBlock(language || 'plaintext', code)
+          }
+        )
+
+        // Apply post-processing if configured
+        if (config.postProcessing) {
+          for (const postProcessor of config.postProcessing) {
+            processed = postProcessor(processed)
+          }
+        }
+
+        // Final cleanup - handle any remaining inline math placeholders
+        // This catches placeholders that might have been missed or had underscores removed by markdown processing
+        // First, try to restore standard format placeholders: __INLINE_MATH_X__
+        processed = restoreInlineMath(processed, inlineMathExtraction.mathBlocks)
+
+        // Render any restored inline math that might have been restored above
+        // Reuse inlineDelimiters from Stage 8.5
+        inlineDelimiters.forEach(({ pattern }) => {
+          processed = processed.replace(pattern, (_match, math) => {
+            // Check if already rendered
+            if (_match.includes('<span class="katex">')) {
+              return _match
+            }
+            return safeRenderKatex(math, false, config.katexOptions)
+          })
+        })
+
+        // Then check for any remaining placeholders in various formats
+        // Check for both formats: __INLINE_MATH_X__ and INLINEMATHX (without underscores, possibly from bold processing)
+        const remainingInlineMathRegex = /(?:__)?INLINE[_\s]*MATH[_\s]*(\d+)(?:__)?/gi
+        processed = processed.replace(remainingInlineMathRegex, (_match, index) => {
+          const blockIndex = parseInt(index, 10)
+          if (blockIndex >= 0 && blockIndex < inlineMathExtraction.mathBlocks.length) {
+            // Restore the original math block and render it
+            const mathBlock = inlineMathExtraction.mathBlocks[blockIndex]
+            // The mathBlock contains the full match with delimiters (e.g., "$x^2$" or "\\(x^2\\)")
+            // Try to extract math content by matching against known delimiter patterns
+            for (const { pattern } of inlineDelimiters) {
+              const match = mathBlock.match(pattern)
+              if (match && match[1]) {
+                // Extract the math content (group 1 contains the math without delimiters)
+                return safeRenderKatex(match[1], false, config.katexOptions)
+              }
+            }
+
+            // Fallback: try to extract math content by removing common delimiters
+            // Remove dollar signs, backslashes with parens/brackets
+            let cleaned = mathBlock.trim()
+            // Remove dollar sign delimiters
+            cleaned = cleaned.replace(/^\$\$?|\$\$?$/g, '')
+            // Remove \( and \) delimiters
+            cleaned = cleaned.replace(/^\\\(|\\\)$/g, '')
+            // Remove \[ and \] delimiters
+            cleaned = cleaned.replace(/^\\\[|\\\]$/g, '')
+            cleaned = cleaned.trim()
+
+            if (cleaned) {
+              return safeRenderKatex(cleaned, false, config.katexOptions)
+            }
+          }
+          // If index is invalid, remove the placeholder
+          return ''
+        })
+
+        // Final cleanup - only unescape markdown characters, not LaTeX commands
+        // Don't remove backslashes that are part of LaTeX commands
+        processed = processed.replace(/\\([`*_#+\-.!|])/g, '$1')
+
+        // Remove orphaned \( and \) delimiters that weren't processed as math
+        // These can occur if the content inside wasn't recognized as math or if the pattern didn't match
+        // We'll remove the delimiters but keep the content
+        // Match \( followed by any content (non-greedy) followed by \)
+        processed = processed.replace(/\\\(\s*([\s\S]*?)\s*\\\)/g, '$1')
+
+        // Final aggressive cleanup: Remove ANY remaining MDPH or internal placeholders
+        // This catches placeholders that might have escaped earlier stages
+        // Apply multiple passes to ensure all variations are caught
+
+        // First pass: Remove Unicode angle bracket format (most common internal format)
+        processed = processed.replace(/⟨⟨MDPH\d+⟩⟩/g, '')
+
+        // Second pass: Remove double parentheses format
+        while (processed.includes('((MDPH')) {
+          processed = processed.replace(/\(\(MDPH\d+\)\)/g, '')
+        }
+
+        // Third pass: Remove curly braces format
+        while (processed.includes('{{MDPH')) {
+          processed = processed.replace(/\{\{MDPH\d+\}\}/g, '')
+        }
+
+        // Fourth pass: Handle corrupted Unicode angle bracket format: <<MDPH (should be ⟨⟨MDPH)
+        while (processed.includes('<<MDPH')) {
+          processed = processed.replace(/<<MDPH\d+[^>]*>>?/g, '')
+          processed = processed.replace(/<<MDPH\d+\)\)/g, '')
+          processed = processed.replace(/<<MDPH\d+\(\(/g, '')
+        }
+
+        // Fifth pass: Remove single parentheses/braces and plain MDPH patterns
+        processed = processed.replace(/\(MDPH\d+\)/g, '')
+        processed = processed.replace(/\{MDPH\d+\}/g, '')
+
+        // Sixth pass: Remove plain MDPH followed by digits (catches any remaining variations)
+        // This is the most aggressive pattern and should catch everything
+        processed = processed.replace(/(?<!⟨⟨)MDPH\d+(?!⟩⟩)/g, '')
+
+        // Final pass: Remove any remaining Unicode angle bracket format (safety check)
+        processed = processed.replace(/⟨⟨MDPH\d+⟩⟩/g, '')
+
+        // Final attempt to restore any remaining placeholders before removing them
+        // This handles cases where placeholders might have been missed in earlier stages
+        processed = restoreDisplayMath(processed, displayMathExtraction.mathBlocks)
+        processed = restoreInlineMath(processed, inlineMathExtraction.mathBlocks)
+
+        // Render any restored math placeholders
+        displayDelimiters.forEach(({ pattern }) => {
+          processed = processed.replace(pattern, (_match, math) => {
+            if (_match.includes('<span class="katex">')) {
+              return _match
+            }
+            return safeRenderKatex(math, true, config.katexOptions)
+          })
+        })
+        inlineDelimiters.forEach(({ pattern }) => {
+          processed = processed.replace(pattern, (_match, math) => {
+            if (_match.includes('<span class="katex">')) {
+              return _match
+            }
+            return safeRenderKatex(math, false, config.katexOptions)
+          })
+        })
+
+        // Only remove placeholders that couldn't be restored (orphaned placeholders)
+        // Check if placeholder indices are valid before removing
+        processed = processed.replace(/__INLINE_MATH_(\d+)__/g, (_match, index) => {
+          const blockIndex = parseInt(index, 10)
+          if (blockIndex >= 0 && blockIndex < inlineMathExtraction.mathBlocks.length) {
+            // This placeholder should have been restored - try one more time
+            const mathBlock = inlineMathExtraction.mathBlocks[blockIndex]
+            for (const { pattern } of inlineDelimiters) {
+              const match = mathBlock.match(pattern)
+              if (match && match[1]) {
+                return safeRenderKatex(match[1], false, config.katexOptions)
+              }
+            }
+            // Fallback: extract math content manually
+            let cleaned = mathBlock.trim()
+            cleaned = cleaned.replace(/^\$\$?|\$\$?$/g, '')
+            cleaned = cleaned.replace(/^\\\(|\\\)$/g, '')
+            cleaned = cleaned.replace(/^\\\[|\\\]$/g, '')
+            if (cleaned) {
+              return safeRenderKatex(cleaned.trim(), false, config.katexOptions)
+            }
+          }
+          // Invalid index - remove the placeholder
+          return ''
+        })
+
+        processed = processed.replace(/__DISPLAY_MATH_(\d+)__/g, (_match, index) => {
+          const blockIndex = parseInt(index, 10)
+          if (blockIndex >= 0 && blockIndex < displayMathExtraction.mathBlocks.length) {
+            // This placeholder should have been restored - try one more time
+            const mathBlock = displayMathExtraction.mathBlocks[blockIndex]
+            for (const { pattern } of displayDelimiters) {
+              const match = mathBlock.match(pattern)
+              if (match && match[1]) {
+                return safeRenderKatex(match[1], true, config.katexOptions)
+              }
+            }
+            // Fallback: extract math content manually
+            let cleaned = mathBlock.trim()
+            cleaned = cleaned.replace(/^\$\$|\$\$$/g, '')
+            cleaned = cleaned.replace(/^\\\[|\\\]$/g, '')
+            if (cleaned) {
+              return safeRenderKatex(cleaned.trim(), true, config.katexOptions)
+            }
+          }
+          // Invalid index - remove the placeholder
+          return ''
+        })
+
+        processed = processed.replace(/__CODE_BLOCK_\d+__/g, '')
+
+        // Remove any malformed placeholder variations (case insensitive)
+        processed = processed.replace(/\b(?:INLINE|DISPLAY)[_\s]*MATH[_\s]*\d+\b/gi, '')
+
+        // Final cleanup: Remove any remaining markdown header markers that weren't converted
+        // This is a safety net to ensure headers don't show up as raw markdown in the output
+        // Only match at the start of a line to avoid false positives
+        processed = processed.replace(/^######\s+/gm, '')
+        processed = processed.replace(/^#####\s+/gm, '')
+        processed = processed.replace(/^####\s+/gm, '')
+        processed = processed.replace(/^###\s+/gm, '')
+        processed = processed.replace(/^##\s+/gm, '')
+        processed = processed.replace(/^#\s+/gm, '')
+
+        // ABSOLUTE FINAL cleanup: Remove ANY remaining MDPH placeholders in ALL formats
+        // This is the last chance to catch placeholders before output
+        // Apply in multiple passes to catch all variations
+        let cleanupIterations = 0
+        let previousCleanupLength = 0
+        while (previousCleanupLength !== processed.length && cleanupIterations < 5) {
+          previousCleanupLength = processed.length
+          cleanupIterations++
+
+          // Remove all known MDPH placeholder formats
+          processed = processed.replace(/⟨⟨MDPH\d+⟩⟩/g, '')
+          processed = processed.replace(/\(\(MDPH\d+\)\)/g, '')
+          processed = processed.replace(/\{\{MDPH\d+\}\}/g, '')
+          processed = processed.replace(/\(MDPH\d+\)/g, '')
+          processed = processed.replace(/\{MDPH\d+\}/g, '')
+          processed = processed.replace(/(?<!⟨⟨)MDPH\d+(?!⟩⟩)/g, '')
+          processed = processed.replace(/<<MDPH\d+[^>]*>>?/g, '')
+        }
+
+        // Remove any empty placeholder shells that might remain
+        processed = processed.replace(/⟨⟨\s*⟩⟩/g, '')
+
+        return processed
+      } catch (error) {
+        console.error('❌ Critical error in renderLatex:', error)
+        return `<div style="color: red; padding: 10px; border: 1px solid red;">
                 <strong>Rendering Error:</strong> ${error instanceof Error ? error.message : String(error)}
                 <pre style="margin-top: 10px; padding: 10px; background: #f5f5f5;">${text.substring(0, 500)}</pre>
             </div>`
-    }
-  }
+      }
+      // Helper functions (cleanMalformedContent, extractDisplayMath, etc.) are pure functions
+      // defined in the component scope and don't need to be in dependencies
+    },
+    [config]
+  )
 
   // ============================================================================
   // RENDER
@@ -3048,7 +3053,7 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({ children, className = '',
   const processedContent = useMemo(() => {
     if (!isValidChildren) return ''
     return renderLatex(children)
-  }, [children, modelId, isValidChildren])
+  }, [children, isValidChildren, renderLatex])
 
   // Extract languages from code blocks in the content
   const detectedLanguages = useMemo(() => {
