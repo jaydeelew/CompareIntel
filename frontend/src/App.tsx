@@ -1,4 +1,13 @@
-import { useState, useEffect, useLayoutEffect, useRef, useCallback, useMemo, lazy, Suspense } from 'react'
+import {
+  useState,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useCallback,
+  useMemo,
+  lazy,
+  Suspense,
+} from 'react'
 import { Routes, Route, useNavigate, useLocation } from 'react-router-dom'
 
 // Import all CSS modules directly (better for Vite than CSS @import)
@@ -82,9 +91,14 @@ function AppContent() {
       // Don't redirect if user is null/undefined (might be during transitions)
       // Only redirect if explicitly not authenticated OR explicitly not admin
       if (isAuthenticated === false) {
-        navigate('/', { replace: true });
-      } else if (isAuthenticated === true && user !== null && user !== undefined && user.is_admin === false) {
-        navigate('/', { replace: true });
+        navigate('/', { replace: true })
+      } else if (
+        isAuthenticated === true &&
+        user !== null &&
+        user !== undefined &&
+        user.is_admin === false
+      ) {
+        navigate('/', { replace: true })
       }
       // If isAuthenticated is true but user is null/undefined, don't redirect (might be loading)
     }
@@ -95,11 +109,7 @@ function AppContent() {
   const { browserFingerprint, setBrowserFingerprint } = browserFingerprintHook
 
   const rateLimitHook = useRateLimitStatus({ isAuthenticated, browserFingerprint })
-  const {
-    usageCount,
-    setUsageCount,
-    fetchRateLimitStatus,
-  } = rateLimitHook
+  const { usageCount, setUsageCount, fetchRateLimitStatus } = rateLimitHook
 
   const modelSelectionHook = useModelSelection({ isAuthenticated, user })
   const {
@@ -175,7 +185,9 @@ function AppContent() {
   const [anonymousCreditsRemaining, setAnonymousCreditsRemaining] = useState<number | null>(null)
   const [creditBalance, setCreditBalance] = useState<CreditBalance | null>(null)
   const [creditWarningMessage, setCreditWarningMessage] = useState<string | null>(null)
-  const [creditWarningType, setCreditWarningType] = useState<'low' | 'insufficient' | 'none' | null>(null)
+  const [creditWarningType, setCreditWarningType] = useState<
+    'low' | 'insufficient' | 'none' | null
+  >(null)
   const [creditWarningDismissible, setCreditWarningDismissible] = useState(false)
 
   // Refs for error message elements to enable scrolling
@@ -196,11 +208,11 @@ function AppContent() {
       const windowHeight = window.innerHeight
 
       // Calculate scroll position to center the element vertically
-      const scrollPosition = elementTop - (windowHeight / 2) + (elementHeight / 2)
+      const scrollPosition = elementTop - windowHeight / 2 + elementHeight / 2
 
       window.scrollTo({
         top: Math.max(0, scrollPosition),
-        behavior: 'smooth'
+        behavior: 'smooth',
       })
     }, 100) // Small delay to ensure DOM is updated
   }, [])
@@ -267,75 +279,96 @@ function AppContent() {
   })
 
   // Helper function to get credit warning message based on tier and scenario
-  const getCreditWarningMessage = useCallback((
-    type: 'low' | 'insufficient' | 'none',
-    tier: string,
-    creditsRemaining: number,
-    estimatedCredits?: number,
-    creditsResetAt?: string
-  ): string => {
-    if (type === 'none') {
-      // No Credits scenario
-      if (tier === 'anonymous') {
-        return "You've run out of credits. Credits will reset to 50 tomorrow, or sign-up for a free account to get more credits, more models, and more history!"
-      } else if (tier === 'free') {
-        return "You've run out of credits. Credits will reset to 100 tomorrow, or upgrade your plan for more credits, more models, and more history!"
-      } else if (tier === 'pro_plus') {
-        const resetDate = creditsResetAt ? new Date(creditsResetAt).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' }) : 'N/A'
-        return `You've run out of credits which will reset on ${resetDate}. Wait until your reset, or sign-up for model comparison overages.`
+  const getCreditWarningMessage = useCallback(
+    (
+      type: 'low' | 'insufficient' | 'none',
+      tier: string,
+      creditsRemaining: number,
+      estimatedCredits?: number,
+      creditsResetAt?: string
+    ): string => {
+      if (type === 'none') {
+        // No Credits scenario
+        if (tier === 'anonymous') {
+          return "You've run out of credits. Credits will reset to 50 tomorrow, or sign-up for a free account to get more credits, more models, and more history!"
+        } else if (tier === 'free') {
+          return "You've run out of credits. Credits will reset to 100 tomorrow, or upgrade your plan for more credits, more models, and more history!"
+        } else if (tier === 'pro_plus') {
+          const resetDate = creditsResetAt
+            ? new Date(creditsResetAt).toLocaleDateString('en-US', {
+                month: '2-digit',
+                day: '2-digit',
+                year: 'numeric',
+              })
+            : 'N/A'
+          return `You've run out of credits which will reset on ${resetDate}. Wait until your reset, or sign-up for model comparison overages.`
+        } else {
+          // starter, starter_plus, pro
+          const resetDate = creditsResetAt
+            ? new Date(creditsResetAt).toLocaleDateString('en-US', {
+                month: '2-digit',
+                day: '2-digit',
+                year: 'numeric',
+              })
+            : 'N/A'
+          return `You've run out of credits which will reset on ${resetDate}. Consider upgrading your plan for more credits, more models per comparison, and more history!`
+        }
+      } else if (type === 'insufficient') {
+        // Possible Insufficient Credits scenario
+        return `This comparison is estimated to take ${estimatedCredits?.toFixed(1) || 'X'} credits and you have ${Math.round(creditsRemaining)} credits remaining. The model responses may be truncated. If possible, try selecting less models or shorten your input.`
       } else {
-        // starter, starter_plus, pro
-        const resetDate = creditsResetAt ? new Date(creditsResetAt).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' }) : 'N/A'
-        return `You've run out of credits which will reset on ${resetDate}. Consider upgrading your plan for more credits, more models per comparison, and more history!`
+        // Low Credits scenario
+        if (tier === 'anonymous') {
+          return `You have ${Math.round(creditsRemaining)} credits left for today. Credits will reset to 50 tomorrow, or sign-up for a free account to get more credits, more models, and more history!`
+        } else if (tier === 'free') {
+          return `You have ${Math.round(creditsRemaining)} credits left for today. Credits will reset to 100 tomorrow, or upgrade your plan for more credits, more models, and more history!`
+        } else if (tier === 'pro_plus') {
+          return `You have ${Math.round(creditsRemaining)} credits left in your monthly billing cycle. Wait until your cycle starts again, or sign-up for model comparison overages.`
+        } else {
+          // starter, starter_plus, pro
+          return `You have ${Math.round(creditsRemaining)} credits left in your monthly billing cycle. Consider upgrading your plan for more credits, more models per comparison, and more history!`
+        }
       }
-    } else if (type === 'insufficient') {
-      // Possible Insufficient Credits scenario
-      return `This comparison is estimated to take ${estimatedCredits?.toFixed(1) || 'X'} credits and you have ${Math.round(creditsRemaining)} credits remaining. The model responses may be truncated. If possible, try selecting less models or shorten your input.`
-    } else {
-      // Low Credits scenario
-      if (tier === 'anonymous') {
-        return `You have ${Math.round(creditsRemaining)} credits left for today. Credits will reset to 50 tomorrow, or sign-up for a free account to get more credits, more models, and more history!`
-      } else if (tier === 'free') {
-        return `You have ${Math.round(creditsRemaining)} credits left for today. Credits will reset to 100 tomorrow, or upgrade your plan for more credits, more models, and more history!`
-      } else if (tier === 'pro_plus') {
-        return `You have ${Math.round(creditsRemaining)} credits left in your monthly billing cycle. Wait until your cycle starts again, or sign-up for model comparison overages.`
-      } else {
-        // starter, starter_plus, pro
-        return `You have ${Math.round(creditsRemaining)} credits left in your monthly billing cycle. Consider upgrading your plan for more credits, more models per comparison, and more history!`
-      }
-    }
-  }, [])
+    },
+    []
+  )
 
   // Helper function to check if low credit warning was dismissed for current period
-  const isLowCreditWarningDismissed = useCallback((tier: string, periodType: 'daily' | 'monthly', creditsResetAt?: string): boolean => {
-    if (periodType === 'daily') {
-      const today = new Date().toDateString()
-      const dismissedDate = localStorage.getItem(`credit-warning-dismissed-${tier}-daily`)
-      return dismissedDate === today
-    } else {
-      // Monthly - check if dismissed for current billing period
-      if (!creditsResetAt) return false
-      const resetDate = new Date(creditsResetAt).toDateString()
-      const dismissedResetDate = localStorage.getItem(`credit-warning-dismissed-${tier}-monthly`)
-      return dismissedResetDate === resetDate
-    }
-  }, [])
+  const isLowCreditWarningDismissed = useCallback(
+    (tier: string, periodType: 'daily' | 'monthly', creditsResetAt?: string): boolean => {
+      if (periodType === 'daily') {
+        const today = new Date().toDateString()
+        const dismissedDate = localStorage.getItem(`credit-warning-dismissed-${tier}-daily`)
+        return dismissedDate === today
+      } else {
+        // Monthly - check if dismissed for current billing period
+        if (!creditsResetAt) return false
+        const resetDate = new Date(creditsResetAt).toDateString()
+        const dismissedResetDate = localStorage.getItem(`credit-warning-dismissed-${tier}-monthly`)
+        return dismissedResetDate === resetDate
+      }
+    },
+    []
+  )
 
   // Helper function to dismiss low credit warning for current period
-  const dismissLowCreditWarning = useCallback((tier: string, periodType: 'daily' | 'monthly', creditsResetAt?: string) => {
-    if (periodType === 'daily') {
-      const today = new Date().toDateString()
-      localStorage.setItem(`credit-warning-dismissed-${tier}-daily`, today)
-    } else {
-      if (creditsResetAt) {
-        const resetDate = new Date(creditsResetAt).toDateString()
-        localStorage.setItem(`credit-warning-dismissed-${tier}-monthly`, resetDate)
+  const dismissLowCreditWarning = useCallback(
+    (tier: string, periodType: 'daily' | 'monthly', creditsResetAt?: string) => {
+      if (periodType === 'daily') {
+        const today = new Date().toDateString()
+        localStorage.setItem(`credit-warning-dismissed-${tier}-daily`, today)
+      } else {
+        if (creditsResetAt) {
+          const resetDate = new Date(creditsResetAt).toDateString()
+          localStorage.setItem(`credit-warning-dismissed-${tier}-monthly`, resetDate)
+        }
       }
-    }
-    setCreditWarningMessage(null)
-    setCreditWarningType(null)
-    setCreditWarningDismissible(false)
-  }, [])
+      setCreditWarningMessage(null)
+      setCreditWarningType(null)
+      setCreditWarningDismissible(false)
+    },
+    []
+  )
 
   // Credit warnings removed - comparisons are allowed to proceed regardless of credit balance
   // Credits will be capped at allocated amount during deduction if needed
@@ -1200,7 +1233,7 @@ function AppContent() {
 
       // Try to scroll immediately
       const scrollImmediately = () => {
-        conversations.forEach((conversation) => {
+        conversations.forEach(conversation => {
           const safeId = getSafeId(conversation.modelId)
           const conversationContent = document.querySelector(
             `#conversation-content-${safeId}`
@@ -1223,7 +1256,7 @@ function AppContent() {
           let allFound = true
 
           // Collect all conversation content elements
-          conversations.forEach((conversation) => {
+          conversations.forEach(conversation => {
             const safeId = getSafeId(conversation.modelId)
             const conversationContent = document.querySelector(
               `#conversation-content-${safeId}`
@@ -1247,7 +1280,8 @@ function AppContent() {
             scrollToTop(attempts + 1)
           } else {
             // Verify all are scrolled to top
-            const allScrolledToTop = elementsToScroll.length === conversations.length &&
+            const allScrolledToTop =
+              elementsToScroll.length === conversations.length &&
               elementsToScroll.every(el => Math.abs(el.scrollTop) < 1)
 
             if (!allScrolledToTop && attempts < maxAttempts) {
@@ -1416,11 +1450,8 @@ function AppContent() {
 
   // Expose resetUsage to window for debugging (prevents TypeScript unused variable error)
   if (typeof window !== 'undefined') {
-    ; (window as unknown as Record<string, unknown>).resetUsage = resetUsage
+    ;(window as unknown as Record<string, unknown>).resetUsage = resetUsage
   }
-
-
-
 
   // Get all models in a flat array for compatibility
   const allModels = Object.values(modelsByProvider).flat()
@@ -1561,7 +1592,7 @@ function AppContent() {
                 String(asm.model_id) === String(msg.model_id) &&
                 asm.content === msg.content &&
                 Math.abs(new Date(asm.created_at).getTime() - new Date(msg.created_at).getTime()) <
-                1000
+                  1000
             )
 
             if (!isDuplicate) {
@@ -1642,7 +1673,10 @@ function AppContent() {
       setClosedCards(new Set()) // Ensure all result cards are open/visible
       setResponse(null) // Clear any previous response state
       // Clear "input too long" error when selecting from history
-      if (error && error.includes('Your input is too long for one or more of the selected models')) {
+      if (
+        error &&
+        error.includes('Your input is too long for one or more of the selected models')
+      ) {
         setError(null)
       }
       setShowHistoryDropdown(false)
@@ -1719,11 +1753,12 @@ function AppContent() {
         // Always clear credit-related errors when usage is reset
         // Use a function form of setError to access current error value
         setError(currentError => {
-          if (currentError && (
-            currentError.includes("You've run out of credits") ||
-            currentError.includes("run out of credits") ||
-            (currentError.includes("credits") && currentError.includes("reset"))
-          )) {
+          if (
+            currentError &&
+            (currentError.includes("You've run out of credits") ||
+              currentError.includes('run out of credits') ||
+              (currentError.includes('credits') && currentError.includes('reset')))
+          ) {
             return null
           }
           return currentError
@@ -1811,9 +1846,10 @@ function AppContent() {
 
     // Check if conversations already have token counts
     const hasTokenCounts = conversations.some(conv =>
-      conv.messages.some(msg =>
-        (msg.type === 'user' && msg.input_tokens) ||
-        (msg.type === 'assistant' && msg.output_tokens)
+      conv.messages.some(
+        msg =>
+          (msg.type === 'user' && msg.input_tokens) ||
+          (msg.type === 'assistant' && msg.output_tokens)
       )
     )
 
@@ -1832,9 +1868,10 @@ function AppContent() {
 
     if (isAuthenticated) {
       // For authenticated users, reload from API to get accurate token counts
-      const conversationId = typeof currentVisibleComparisonId === 'string'
-        ? parseInt(currentVisibleComparisonId, 10)
-        : currentVisibleComparisonId
+      const conversationId =
+        typeof currentVisibleComparisonId === 'string'
+          ? parseInt(currentVisibleComparisonId, 10)
+          : currentVisibleComparisonId
 
       if (isNaN(conversationId)) {
         return
@@ -1862,7 +1899,9 @@ function AppContent() {
                     messagesByModel[modelId] = []
                   }
                   messagesByModel[modelId].push({
-                    id: msg.id ? createMessageId(String(msg.id)) : createMessageId(`${Date.now()}-user-${Math.random()}`),
+                    id: msg.id
+                      ? createMessageId(String(msg.id))
+                      : createMessageId(`${Date.now()}-user-${Math.random()}`),
                     type: 'user' as const,
                     content: msg.content,
                     timestamp: msg.created_at,
@@ -1876,7 +1915,9 @@ function AppContent() {
                   messagesByModel[modelId] = []
                 }
                 messagesByModel[modelId].push({
-                  id: msg.id ? createMessageId(String(msg.id)) : createMessageId(`${Date.now()}-${Math.random()}`),
+                  id: msg.id
+                    ? createMessageId(String(msg.id))
+                    : createMessageId(`${Date.now()}-${Math.random()}`),
                   type: 'assistant' as const,
                   content: msg.content,
                   timestamp: msg.created_at,
@@ -1893,14 +1934,13 @@ function AppContent() {
               // If we have API messages for this model, update with token counts
               if (apiMessages.length > 0) {
                 // Match messages by content and timestamp to preserve order
-                const updatedMessages = conv.messages.map((msg) => {
+                const updatedMessages = conv.messages.map(msg => {
                   const apiMsg = apiMessages.find(
                     apiMsg =>
                       apiMsg.type === msg.type &&
                       apiMsg.content === msg.content &&
                       Math.abs(
-                        new Date(apiMsg.timestamp).getTime() -
-                        new Date(msg.timestamp).getTime()
+                        new Date(apiMsg.timestamp).getTime() - new Date(msg.timestamp).getTime()
                       ) < 5000 // Within 5 seconds
                   )
 
@@ -1955,7 +1995,9 @@ function AppContent() {
                     messagesByModel[modelId] = []
                   }
                   messagesByModel[modelId].push({
-                    id: msg.id ? createMessageId(String(msg.id)) : createMessageId(`${Date.now()}-user-${Math.random()}`),
+                    id: msg.id
+                      ? createMessageId(String(msg.id))
+                      : createMessageId(`${Date.now()}-user-${Math.random()}`),
                     type: 'user' as const,
                     content: msg.content,
                     timestamp: msg.created_at,
@@ -1970,7 +2012,9 @@ function AppContent() {
                   messagesByModel[modelId] = []
                 }
                 messagesByModel[modelId].push({
-                  id: msg.id ? createMessageId(String(msg.id)) : createMessageId(`${Date.now()}-${Math.random()}`),
+                  id: msg.id
+                    ? createMessageId(String(msg.id))
+                    : createMessageId(`${Date.now()}-${Math.random()}`),
                   type: 'assistant' as const,
                   content: msg.content,
                   timestamp: msg.created_at,
@@ -1988,14 +2032,13 @@ function AppContent() {
               // If we have stored messages for this model, update with token counts
               if (storedMessages.length > 0) {
                 // Match messages by content and timestamp to preserve order
-                const updatedMessages = conv.messages.map((msg) => {
+                const updatedMessages = conv.messages.map(msg => {
                   const storedMsg = storedMessages.find(
                     storedMsg =>
                       storedMsg.type === msg.type &&
                       storedMsg.content === msg.content &&
                       Math.abs(
-                        new Date(storedMsg.timestamp).getTime() -
-                        new Date(msg.timestamp).getTime()
+                        new Date(storedMsg.timestamp).getTime() - new Date(msg.timestamp).getTime()
                       ) < 5000 // Within 5 seconds
                   )
 
@@ -2010,12 +2053,14 @@ function AppContent() {
                   // If no match found, estimate tokens for this message
                   return {
                     ...msg,
-                    input_tokens: msg.type === 'user' && !msg.input_tokens
-                      ? estimateTokensSimple(msg.content)
-                      : msg.input_tokens,
-                    output_tokens: msg.type === 'assistant' && !msg.output_tokens
-                      ? estimateTokensSimple(msg.content)
-                      : msg.output_tokens,
+                    input_tokens:
+                      msg.type === 'user' && !msg.input_tokens
+                        ? estimateTokensSimple(msg.content)
+                        : msg.input_tokens,
+                    output_tokens:
+                      msg.type === 'assistant' && !msg.output_tokens
+                        ? estimateTokensSimple(msg.content)
+                        : msg.output_tokens,
                   }
                 })
 
@@ -2030,12 +2075,14 @@ function AppContent() {
                 ...conv,
                 messages: conv.messages.map(msg => ({
                   ...msg,
-                  input_tokens: msg.type === 'user' && !msg.input_tokens
-                    ? estimateTokensSimple(msg.content)
-                    : msg.input_tokens,
-                  output_tokens: msg.type === 'assistant' && !msg.output_tokens
-                    ? estimateTokensSimple(msg.content)
-                    : msg.output_tokens,
+                  input_tokens:
+                    msg.type === 'user' && !msg.input_tokens
+                      ? estimateTokensSimple(msg.content)
+                      : msg.input_tokens,
+                  output_tokens:
+                    msg.type === 'assistant' && !msg.output_tokens
+                      ? estimateTokensSimple(msg.content)
+                      : msg.output_tokens,
                 })),
               }
             })
@@ -2049,7 +2096,13 @@ function AppContent() {
         clearTimeout(timeoutId)
       }
     }
-  }, [currentVisibleComparisonId, isAuthenticated, conversations, loadConversationFromAPI, loadConversationFromLocalStorage])
+  }, [
+    currentVisibleComparisonId,
+    isAuthenticated,
+    conversations,
+    loadConversationFromAPI,
+    loadConversationFromLocalStorage,
+  ])
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -2381,7 +2434,6 @@ function AppContent() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
-
 
   // Align "You" sections across all model cards after each round completes
   useEffect(() => {
@@ -2766,7 +2818,10 @@ function AppContent() {
               setCreditBalance({
                 credits_allocated: user.monthly_credits_allocated || 0,
                 credits_used_this_period: user.credits_used_this_period || 0,
-                credits_remaining: Math.max(0, (user.monthly_credits_allocated || 0) - (user.credits_used_this_period || 0)),
+                credits_remaining: Math.max(
+                  0,
+                  (user.monthly_credits_allocated || 0) - (user.credits_used_this_period || 0)
+                ),
                 total_credits_used: user.total_credits_used,
                 credits_reset_at: user.credits_reset_at,
                 billing_period_start: user.billing_period_start,
@@ -2783,7 +2838,6 @@ function AppContent() {
             const usageCount = data.daily_usage || data.fingerprint_usage || data.ip_usage || 0
             setUsageCount(usageCount)
 
-
             // Update localStorage to match backend
             const today = new Date().toDateString()
             localStorage.setItem(
@@ -2794,10 +2848,12 @@ function AppContent() {
               })
             )
 
-
             // Fetch anonymous credit balance
             try {
-              console.log('[DEBUG] Fetching credit balance on page load with fingerprint:', fingerprint?.substring(0, 20))
+              console.log(
+                '[DEBUG] Fetching credit balance on page load with fingerprint:',
+                fingerprint?.substring(0, 20)
+              )
               const creditBalance = await getCreditBalance(fingerprint)
               console.log('[DEBUG] Received credit balance:', creditBalance.credits_remaining)
               setAnonymousCreditsRemaining(creditBalance.credits_remaining)
@@ -2893,7 +2949,10 @@ function AppContent() {
       // Only refetch if we don't already have a credit balance set, or if it's the default 50
       const shouldRefetch = anonymousCreditsRemaining === null || anonymousCreditsRemaining === 50
       if (shouldRefetch) {
-        console.log('[DEBUG] Refetching credit balance when fingerprint becomes available:', browserFingerprint.substring(0, 20))
+        console.log(
+          '[DEBUG] Refetching credit balance when fingerprint becomes available:',
+          browserFingerprint.substring(0, 20)
+        )
         getCreditBalance(browserFingerprint)
           .then(balance => {
             console.log('[DEBUG] Refetched credit balance:', balance.credits_remaining)
@@ -3173,7 +3232,6 @@ function AppContent() {
     }
   }
 
-
   const handleModelToggle = async (modelId: string) => {
     if (selectedModels.includes(modelId)) {
       // Check if this is the last selected model - only prevent in follow-up mode
@@ -3191,7 +3249,10 @@ function AppContent() {
       setSelectedModels(updatedSelectedModels)
 
       // Clear "input too long" error only if all problematic models are deselected
-      if (error && error.includes('Your input is too long for one or more of the selected models')) {
+      if (
+        error &&
+        error.includes('Your input is too long for one or more of the selected models')
+      ) {
         // Check if any problematic models are still selected
         if (accurateInputTokens !== null && updatedSelectedModels.length > 0) {
           // Get model info for remaining selected models
@@ -3271,7 +3332,6 @@ function AppContent() {
         )
         return
       }
-
 
       setSelectedModels(prev => [...prev, modelId])
       // Clear any previous error when successfully adding a model
@@ -3505,9 +3565,11 @@ function AppContent() {
 
     // Check if user has credits before submitting
     const userTier = isAuthenticated ? user?.subscription_tier || 'free' : 'anonymous'
-    const creditsAllocated = creditBalance?.credits_allocated ?? (isAuthenticated && user
-      ? (user.monthly_credits_allocated || getCreditAllocation(userTier))
-      : getDailyCreditLimit(userTier) || getCreditAllocation(userTier))
+    const creditsAllocated =
+      creditBalance?.credits_allocated ??
+      (isAuthenticated && user
+        ? user.monthly_credits_allocated || getCreditAllocation(userTier)
+        : getDailyCreditLimit(userTier) || getCreditAllocation(userTier))
 
     // Calculate credits remaining using the same logic as renderUsagePreview
     let currentCreditsRemaining: number
@@ -3516,9 +3578,10 @@ function AppContent() {
     } else if (creditBalance?.credits_remaining !== undefined) {
       currentCreditsRemaining = creditBalance.credits_remaining
     } else {
-      const creditsUsed = creditBalance?.credits_used_this_period ?? creditBalance?.credits_used_today ?? (isAuthenticated && user
-        ? (user.credits_used_this_period || 0)
-        : 0)
+      const creditsUsed =
+        creditBalance?.credits_used_this_period ??
+        creditBalance?.credits_used_today ??
+        (isAuthenticated && user ? user.credits_used_this_period || 0 : 0)
       currentCreditsRemaining = Math.max(0, creditsAllocated - creditsUsed)
     }
 
@@ -3530,9 +3593,13 @@ function AppContent() {
       }
       const tierName = user?.subscription_tier || 'free'
       if (tierName === 'anonymous' || tierName === 'free') {
-        setError('You\'ve run out of credits. Credits will reset tomorrow, or sign-up for a free account to get more credits!')
+        setError(
+          "You've run out of credits. Credits will reset tomorrow, or sign-up for a free account to get more credits!"
+        )
       } else {
-        setError('You\'ve run out of credits. Please wait for credits to reset or upgrade your plan.')
+        setError(
+          "You've run out of credits. Please wait for credits to reset or upgrade your plan."
+        )
       }
       window.scrollTo({ top: 0, behavior: 'smooth' })
       return
@@ -3565,7 +3632,9 @@ function AppContent() {
           }
           return null
         })
-        .filter((info): info is { id: string; name: string; maxInputTokens: number } => info !== null)
+        .filter(
+          (info): info is { id: string; name: string; maxInputTokens: number } => info !== null
+        )
 
       if (modelInfo.length > 0) {
         const minMaxInputTokens = Math.min(...modelInfo.map(m => m.maxInputTokens))
@@ -3581,9 +3650,8 @@ function AppContent() {
           const approxMaxChars = minMaxInputTokens * 4
           const approxInputChars = accurateInputTokens * 4
 
-          const problemModelsText = problemModels.length > 0
-            ? ` Problem model(s): ${problemModels.join(', ')}.`
-            : ''
+          const problemModelsText =
+            problemModels.length > 0 ? ` Problem model(s): ${problemModels.join(', ')}.` : ''
 
           setError(
             `Your input is too long for one or more of the selected models. The maximum input length is approximately ${formatNumber(approxMaxChars)} characters, but your input is approximately ${formatNumber(approxInputChars)} characters.${problemModelsText} Please shorten your input or select different models that support longer inputs.`
@@ -3598,7 +3666,6 @@ function AppContent() {
     // Check credit balance before submitting
     // Credit blocking removed - comparisons proceed regardless of credit balance
     // Credits will be capped at allocated amount during deduction if needed
-
 
     if (!input.trim()) {
       setError('Please enter some text to compare')
@@ -3671,62 +3738,62 @@ function AppContent() {
     const apiConversationHistory =
       isFollowUpMode && conversations.length > 0
         ? (() => {
-          // Get all conversations for selected models
-          const selectedConversations = conversations.filter(
-            conv => selectedModels.includes(conv.modelId) && conv.messages.length > 0
-          )
-          if (selectedConversations.length === 0) return []
+            // Get all conversations for selected models
+            const selectedConversations = conversations.filter(
+              conv => selectedModels.includes(conv.modelId) && conv.messages.length > 0
+            )
+            if (selectedConversations.length === 0) return []
 
-          // Collect all messages from all selected conversations
-          const allMessages: Array<{
-            role: 'user' | 'assistant'
-            content: string
-            model_id?: string
-            timestamp: string
-          }> = []
+            // Collect all messages from all selected conversations
+            const allMessages: Array<{
+              role: 'user' | 'assistant'
+              content: string
+              model_id?: string
+              timestamp: string
+            }> = []
 
-          // Collect all messages with their timestamps
-          selectedConversations.forEach(conv => {
-            conv.messages.forEach(msg => {
-              allMessages.push({
-                role: msg.type === 'user' ? 'user' : 'assistant',
-                content: msg.content,
-                model_id: msg.type === 'assistant' ? conv.modelId : undefined, // Include model_id for assistant messages
-                timestamp: msg.timestamp,
+            // Collect all messages with their timestamps
+            selectedConversations.forEach(conv => {
+              conv.messages.forEach(msg => {
+                allMessages.push({
+                  role: msg.type === 'user' ? 'user' : 'assistant',
+                  content: msg.content,
+                  model_id: msg.type === 'assistant' ? conv.modelId : undefined, // Include model_id for assistant messages
+                  timestamp: msg.timestamp,
+                })
               })
             })
-          })
 
-          // Deduplicate user messages (same content and timestamp within 1 second)
-          const seenUserMessages = new Set<string>()
-          const deduplicatedMessages: typeof allMessages = []
+            // Deduplicate user messages (same content and timestamp within 1 second)
+            const seenUserMessages = new Set<string>()
+            const deduplicatedMessages: typeof allMessages = []
 
-          // Sort all messages by timestamp to maintain chronological order
-          const sortedMessages = [...allMessages].sort(
-            (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
-          )
+            // Sort all messages by timestamp to maintain chronological order
+            const sortedMessages = [...allMessages].sort(
+              (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+            )
 
-          sortedMessages.forEach(msg => {
-            if (msg.role === 'user') {
-              // Deduplicate user messages
-              const key = `${msg.content}-${Math.floor(new Date(msg.timestamp).getTime() / 1000)}`
-              if (!seenUserMessages.has(key)) {
-                seenUserMessages.add(key)
+            sortedMessages.forEach(msg => {
+              if (msg.role === 'user') {
+                // Deduplicate user messages
+                const key = `${msg.content}-${Math.floor(new Date(msg.timestamp).getTime() / 1000)}`
+                if (!seenUserMessages.has(key)) {
+                  seenUserMessages.add(key)
+                  deduplicatedMessages.push(msg)
+                }
+              } else {
+                // Always include assistant messages (they're already per-model)
                 deduplicatedMessages.push(msg)
               }
-            } else {
-              // Always include assistant messages (they're already per-model)
-              deduplicatedMessages.push(msg)
-            }
-          })
+            })
 
-          // Return in API format (without timestamp, backend doesn't need it for filtering)
-          return deduplicatedMessages.map(msg => ({
-            role: msg.role,
-            content: msg.content,
-            model_id: msg.model_id, // Include model_id for backend filtering
-          }))
-        })()
+            // Return in API format (without timestamp, backend doesn't need it for filtering)
+            return deduplicatedMessages.map(msg => ({
+              role: msg.role,
+              content: msg.content,
+              model_id: msg.model_id, // Include model_id for backend filtering
+            }))
+          })()
         : []
 
     // Credit warnings removed - comparisons proceed regardless of credit balance
@@ -3818,7 +3885,7 @@ function AppContent() {
             if (completedModels.has(modelId)) return false
             const lastChunk = modelLastChunkTimes[modelId]
             if (!lastChunk) return false // Model started but never received chunks
-            return (now - lastChunk) < STREAMING_IDLE_TIMEOUT
+            return now - lastChunk < STREAMING_IDLE_TIMEOUT
           })
         }
 
@@ -4040,13 +4107,16 @@ function AppContent() {
                     console.log('[DEBUG] Received streaming metadata:', {
                       credits_used: streamingMetadata.credits_used,
                       credits_remaining: streamingMetadata.credits_remaining,
-                      metadata: streamingMetadata
+                      metadata: streamingMetadata,
                     })
                   }
 
                   // Refresh credit balance if credits were used OR if credits_remaining is provided
                   // Check for credits_remaining first (more reliable indicator)
-                  if (streamingMetadata?.credits_remaining !== undefined || streamingMetadata?.credits_used !== undefined) {
+                  if (
+                    streamingMetadata?.credits_remaining !== undefined ||
+                    streamingMetadata?.credits_used !== undefined
+                  ) {
                     if (isAuthenticated) {
                       // Use credits_remaining from metadata for immediate update (like anonymous users)
                       if (streamingMetadata.credits_remaining !== undefined) {
@@ -4055,14 +4125,18 @@ function AppContent() {
                           setCreditBalance({
                             ...creditBalance,
                             credits_remaining: streamingMetadata.credits_remaining,
-                            credits_used_this_period: creditBalance.credits_allocated - streamingMetadata.credits_remaining,
+                            credits_used_this_period:
+                              creditBalance.credits_allocated - streamingMetadata.credits_remaining,
                           })
                         } else if (user) {
                           // If creditBalance is not yet loaded, create a temporary one from user data
-                          const allocated = user.monthly_credits_allocated || getCreditAllocation(user.subscription_tier || 'free')
+                          const allocated =
+                            user.monthly_credits_allocated ||
+                            getCreditAllocation(user.subscription_tier || 'free')
                           setCreditBalance({
                             credits_allocated: allocated,
-                            credits_used_this_period: allocated - streamingMetadata.credits_remaining,
+                            credits_used_this_period:
+                              allocated - streamingMetadata.credits_remaining,
                             credits_remaining: streamingMetadata.credits_remaining,
                             period_type: user.billing_period_start ? 'monthly' : 'daily',
                             subscription_tier: user.subscription_tier || 'free',
@@ -4080,24 +4154,48 @@ function AppContent() {
                           setCreditBalance(balance)
                           // Update credit warnings based on new balance
                           const userTier = user?.subscription_tier || 'free'
-                          const remainingPercent = balance.credits_allocated > 0
-                            ? (balance.credits_remaining / balance.credits_allocated) * 100
-                            : 100
-                          const periodType = userTier === 'anonymous' || userTier === 'free' ? 'daily' : 'monthly'
-                          const lowCreditThreshold = (userTier === 'anonymous' || userTier === 'free') ? 20 : 10
+                          const remainingPercent =
+                            balance.credits_allocated > 0
+                              ? (balance.credits_remaining / balance.credits_allocated) * 100
+                              : 100
+                          const periodType =
+                            userTier === 'anonymous' || userTier === 'free' ? 'daily' : 'monthly'
+                          const lowCreditThreshold =
+                            userTier === 'anonymous' || userTier === 'free' ? 20 : 10
 
                           if (balance.credits_remaining <= 0) {
                             // Exit follow-up mode when credits run out
                             if (isFollowUpMode) {
                               setIsFollowUpMode(false)
                             }
-                            const message = getCreditWarningMessage('none', userTier, balance.credits_remaining, undefined, balance.credits_reset_at)
+                            const message = getCreditWarningMessage(
+                              'none',
+                              userTier,
+                              balance.credits_remaining,
+                              undefined,
+                              balance.credits_reset_at
+                            )
                             setCreditWarningMessage(message)
                             setCreditWarningType('none')
                             setCreditWarningDismissible(false)
-                          } else if (remainingPercent <= lowCreditThreshold && remainingPercent > 0) {
-                            if (!isLowCreditWarningDismissed(userTier, periodType, balance.credits_reset_at)) {
-                              const message = getCreditWarningMessage('low', userTier, balance.credits_remaining, undefined, balance.credits_reset_at)
+                          } else if (
+                            remainingPercent <= lowCreditThreshold &&
+                            remainingPercent > 0
+                          ) {
+                            if (
+                              !isLowCreditWarningDismissed(
+                                userTier,
+                                periodType,
+                                balance.credits_reset_at
+                              )
+                            ) {
+                              const message = getCreditWarningMessage(
+                                'low',
+                                userTier,
+                                balance.credits_remaining,
+                                undefined,
+                                balance.credits_reset_at
+                              )
                               setCreditWarningMessage(message)
                               setCreditWarningType('low')
                               setCreditWarningDismissible(true)
@@ -4112,18 +4210,24 @@ function AppContent() {
                             setCreditWarningDismissible(false)
                           }
                         })
-                        .catch(error => console.error('Failed to refresh user credit balance:', error))
+                        .catch(error =>
+                          console.error('Failed to refresh user credit balance:', error)
+                        )
                     } else {
                       // For anonymous users, refresh credit balance from API
                       // Use credits_remaining from metadata for immediate update (most accurate - calculated right after deduction)
                       if (streamingMetadata.credits_remaining !== undefined) {
-                        console.log('[DEBUG] Updating anonymous credits from metadata:', streamingMetadata.credits_remaining)
+                        console.log(
+                          '[DEBUG] Updating anonymous credits from metadata:',
+                          streamingMetadata.credits_remaining
+                        )
                         const metadataCreditsRemaining = streamingMetadata.credits_remaining
                         // Update anonymousCreditsRemaining state immediately - this is the primary source for anonymous users
                         setAnonymousCreditsRemaining(metadataCreditsRemaining)
 
                         // Update creditBalance immediately with metadata value to keep them in sync
-                        const allocated = creditBalance?.credits_allocated ?? getDailyCreditLimit('anonymous')
+                        const allocated =
+                          creditBalance?.credits_allocated ?? getDailyCreditLimit('anonymous')
                         setCreditBalance({
                           credits_allocated: allocated,
                           credits_used_today: allocated - metadataCreditsRemaining,
@@ -4132,11 +4236,15 @@ function AppContent() {
                           subscription_tier: 'anonymous',
                         })
 
-                        console.log('[DEBUG] State updated - anonymousCreditsRemaining:', metadataCreditsRemaining, 'creditBalance.credits_remaining:', metadataCreditsRemaining)
+                        console.log(
+                          '[DEBUG] State updated - anonymousCreditsRemaining:',
+                          metadataCreditsRemaining,
+                          'creditBalance.credits_remaining:',
+                          metadataCreditsRemaining
+                        )
 
-                        const remainingPercent = allocated > 0
-                          ? (metadataCreditsRemaining / allocated) * 100
-                          : 100
+                        const remainingPercent =
+                          allocated > 0 ? (metadataCreditsRemaining / allocated) * 100 : 100
                         // Update credit warnings based on new balance
                         const userTier = 'anonymous'
                         const periodType = 'daily'
@@ -4147,13 +4255,21 @@ function AppContent() {
                           if (isFollowUpMode) {
                             setIsFollowUpMode(false)
                           }
-                          const message = getCreditWarningMessage('none', userTier, metadataCreditsRemaining)
+                          const message = getCreditWarningMessage(
+                            'none',
+                            userTier,
+                            metadataCreditsRemaining
+                          )
                           setCreditWarningMessage(message)
                           setCreditWarningType('none')
                           setCreditWarningDismissible(false)
                         } else if (remainingPercent <= lowCreditThreshold && remainingPercent > 0) {
                           if (!isLowCreditWarningDismissed(userTier, periodType)) {
-                            const message = getCreditWarningMessage('low', userTier, metadataCreditsRemaining)
+                            const message = getCreditWarningMessage(
+                              'low',
+                              userTier,
+                              metadataCreditsRemaining
+                            )
                             setCreditWarningMessage(message)
                             setCreditWarningType('low')
                             setCreditWarningDismissible(true)
@@ -4174,21 +4290,31 @@ function AppContent() {
                           .then(balance => {
                             // Only update if API value matches metadata (to sync other fields)
                             // But keep the metadata credits_remaining value as it's more accurate
-                            if (Math.abs(balance.credits_remaining - metadataCreditsRemaining) <= 1) {
+                            if (
+                              Math.abs(balance.credits_remaining - metadataCreditsRemaining) <= 1
+                            ) {
                               setCreditBalance({
                                 ...balance,
                                 credits_remaining: metadataCreditsRemaining, // Keep metadata value
                               })
                             } else {
-                              console.log('[DEBUG] API credits_remaining differs from metadata, keeping metadata value:', {
-                                api: balance.credits_remaining,
-                                metadata: metadataCreditsRemaining
-                              })
+                              console.log(
+                                '[DEBUG] API credits_remaining differs from metadata, keeping metadata value:',
+                                {
+                                  api: balance.credits_remaining,
+                                  metadata: metadataCreditsRemaining,
+                                }
+                              )
                             }
                           })
-                          .catch(error => console.error('Failed to refresh anonymous credit balance:', error))
+                          .catch(error =>
+                            console.error('Failed to refresh anonymous credit balance:', error)
+                          )
                       } else {
-                        console.warn('[DEBUG] streamingMetadata.credits_remaining is undefined!', streamingMetadata)
+                        console.warn(
+                          '[DEBUG] streamingMetadata.credits_remaining is undefined!',
+                          streamingMetadata
+                        )
                         // Fallback: get from API if metadata not available
                         getCreditBalance(browserFingerprint)
                           .then(balance => {
@@ -4197,9 +4323,10 @@ function AppContent() {
                             // Update credit warnings based on new balance
                             const userTier = 'anonymous'
                             const periodType = 'daily'
-                            const remainingPercent = balance.credits_allocated > 0
-                              ? (balance.credits_remaining / balance.credits_allocated) * 100
-                              : 100
+                            const remainingPercent =
+                              balance.credits_allocated > 0
+                                ? (balance.credits_remaining / balance.credits_allocated) * 100
+                                : 100
                             const lowCreditThreshold = 20
 
                             if (balance.credits_remaining <= 0) {
@@ -4207,13 +4334,24 @@ function AppContent() {
                               if (isFollowUpMode) {
                                 setIsFollowUpMode(false)
                               }
-                              const message = getCreditWarningMessage('none', userTier, balance.credits_remaining)
+                              const message = getCreditWarningMessage(
+                                'none',
+                                userTier,
+                                balance.credits_remaining
+                              )
                               setCreditWarningMessage(message)
                               setCreditWarningType('none')
                               setCreditWarningDismissible(false)
-                            } else if (remainingPercent <= lowCreditThreshold && remainingPercent > 0) {
+                            } else if (
+                              remainingPercent <= lowCreditThreshold &&
+                              remainingPercent > 0
+                            ) {
                               if (!isLowCreditWarningDismissed(userTier, periodType)) {
-                                const message = getCreditWarningMessage('low', userTier, balance.credits_remaining)
+                                const message = getCreditWarningMessage(
+                                  'low',
+                                  userTier,
+                                  balance.credits_remaining
+                                )
                                 setCreditWarningMessage(message)
                                 setCreditWarningType('low')
                                 setCreditWarningDismissible(true)
@@ -4228,7 +4366,9 @@ function AppContent() {
                               setCreditWarningDismissible(false)
                             }
                           })
-                          .catch(error => console.error('Failed to refresh anonymous credit balance:', error))
+                          .catch(error =>
+                            console.error('Failed to refresh anonymous credit balance:', error)
+                          )
                       }
                     }
                   }
@@ -4345,10 +4485,10 @@ function AppContent() {
                         messages: conv.messages.map((msg, idx) =>
                           idx === conv.messages.length - 1 && msg.type === 'assistant'
                             ? {
-                              ...msg,
-                              content,
-                              timestamp: completionTime || msg.timestamp,
-                            }
+                                ...msg,
+                                content,
+                                timestamp: completionTime || msg.timestamp,
+                              }
                             : msg
                         ),
                       }
@@ -4681,7 +4821,6 @@ function AppContent() {
       // Keep input if all models failed so user can retry without retyping
       if (filteredData.metadata.models_successful > 0) {
         setInput('')
-
       }
 
       // Track usage only if at least one model succeeded
@@ -4718,7 +4857,6 @@ function AppContent() {
               date: today,
             })
           )
-
         } catch (error) {
           // Silently handle cancellation errors (expected when component unmounts)
           if (error instanceof Error && error.name === 'CancellationError') {
@@ -4842,7 +4980,9 @@ function AppContent() {
               .then(balance => {
                 setCreditBalance(balance)
               })
-              .catch(error => console.error('Failed to refresh credit balance after timeout:', error))
+              .catch(error =>
+                console.error('Failed to refresh credit balance after timeout:', error)
+              )
           } else {
             // For anonymous users, refresh credit balance from API
             getCreditBalance(browserFingerprint)
@@ -4850,7 +4990,9 @@ function AppContent() {
                 setAnonymousCreditsRemaining(balance.credits_remaining)
                 setCreditBalance(balance)
               })
-              .catch(error => console.error('Failed to refresh anonymous credit balance after timeout:', error))
+              .catch(error =>
+                console.error('Failed to refresh anonymous credit balance after timeout:', error)
+              )
           }
         }
 
@@ -4875,12 +5017,49 @@ function AppContent() {
           const wasAnyModelStreaming = Object.keys(modelLastChunkTimes).some(modelId => {
             if (completedModels.has(modelId)) return false
             const lastChunk = modelLastChunkTimes[modelId]
-            return lastChunk && (now - lastChunk) < STREAMING_IDLE_TIMEOUT
+            return lastChunk && now - lastChunk < STREAMING_IDLE_TIMEOUT
           })
 
-          const timeoutDuration = hasReceivedChunk ? STREAMING_IDLE_TIMEOUT : INITIAL_CONNECTION_TIMEOUT
+          // Calculate actual elapsed time for timed-out models
+          // Find the maximum elapsed time since last chunk for any timed-out model
+          let actualElapsedTime = 0
+          if (hasReceivedChunk && timedOutCount > 0) {
+            // Find timed-out models and calculate their elapsed time since last chunk
+            const timedOutModelElapsedTimes = selectedModels
+              .filter(modelId => !completedModels.has(modelId))
+              .map(modelId => {
+                const lastChunk = modelLastChunkTimes[modelId]
+                if (lastChunk) {
+                  return now - lastChunk
+                }
+                // If model never received chunks, use time since start
+                return now - startTime
+              })
+
+            // Use the maximum elapsed time among timed-out models
+            actualElapsedTime =
+              timedOutModelElapsedTimes.length > 0
+                ? Math.max(...timedOutModelElapsedTimes)
+                : now - startTime
+          } else {
+            // No chunks received - use time since start
+            actualElapsedTime = now - startTime
+          }
+
+          // Format the actual elapsed time
+          const actualMinutes = Math.floor(actualElapsedTime / 60000)
+          const actualSeconds = Math.floor((actualElapsedTime % 60000) / 1000)
+
+          // Fallback to configured timeout if actual time is somehow invalid
+          const timeoutDuration = hasReceivedChunk
+            ? STREAMING_IDLE_TIMEOUT
+            : INITIAL_CONNECTION_TIMEOUT
           const timeoutMinutes = Math.floor(timeoutDuration / 60000)
           const timeoutSeconds = Math.floor((timeoutDuration % 60000) / 1000)
+
+          // Use actual elapsed time if valid, otherwise fall back to configured timeout
+          const displayMinutes = actualElapsedTime > 0 ? actualMinutes : timeoutMinutes
+          const displaySeconds = actualElapsedTime > 0 ? actualSeconds : timeoutSeconds
 
           let errorMessage: string
 
@@ -4894,7 +5073,7 @@ function AppContent() {
               totalCount === 1
                 ? 'Please wait a moment and try again.'
                 : 'Try selecting fewer models, or wait a moment and try again.'
-            errorMessage = `${timeoutReason} ${timeoutMinutes}:${timeoutSeconds.toString().padStart(2, '0')} (${totalCount} ${modelText}). ${suggestionText}`
+            errorMessage = `${timeoutReason} ${displayMinutes}:${displaySeconds.toString().padStart(2, '0')} (${totalCount} ${modelText}). ${suggestionText}`
           } else if (completedCount < totalCount) {
             // Some models completed, some timed out
             const completedText = completedCount === 1 ? 'model completed' : 'models completed'
@@ -4902,9 +5081,9 @@ function AppContent() {
 
             // If models were actively streaming when timeout occurred, mention that
             if (wasAnyModelStreaming) {
-              errorMessage = `${completedCount} ${completedText}, but ${timedOutCount} ${timedOutText} after ${timeoutMinutes}:${timeoutSeconds.toString().padStart(2, '0')} of inactivity.`
+              errorMessage = `${completedCount} ${completedText}, but ${timedOutCount} ${timedOutText} after ${displayMinutes}:${displaySeconds.toString().padStart(2, '0')} of inactivity.`
             } else {
-              errorMessage = `${completedCount} ${completedText}, but ${timedOutCount} ${timedOutText} after ${timeoutMinutes}:${timeoutSeconds.toString().padStart(2, '0')} of no data.`
+              errorMessage = `${completedCount} ${completedText}, but ${timedOutCount} ${timedOutText} after ${displayMinutes}:${displaySeconds.toString().padStart(2, '0')} of no data.`
             }
           } else {
             // All models completed (shouldn't happen in catch block, but handle gracefully)
@@ -4921,7 +5100,10 @@ function AppContent() {
         }
         // Don't show error banner if credit warning banner is already showing (credits are 0)
         if (creditWarningType !== 'none') {
-          setError(err.message || 'Insufficient credits for this request. Please upgrade your plan or wait for credits to reset.')
+          setError(
+            err.message ||
+              'Insufficient credits for this request. Please upgrade your plan or wait for credits to reset.'
+          )
           window.scrollTo({ top: 0, behavior: 'smooth' })
         }
       } else if (err instanceof ApiError && err.status === 402) {
@@ -4932,7 +5114,8 @@ function AppContent() {
         }
         // Don't show error banner if credit warning banner is already showing (credits are 0)
         if (creditWarningType !== 'none') {
-          const errorMessage = err.response?.detail || err.message || 'Insufficient credits for this request.'
+          const errorMessage =
+            err.response?.detail || err.message || 'Insufficient credits for this request.'
           setError(errorMessage)
           window.scrollTo({ top: 0, behavior: 'smooth' })
         }
@@ -4968,16 +5151,21 @@ function AppContent() {
 
     // Get credit information (if available)
     // Prefer creditBalance if available (more up-to-date after model calls)
-    const creditsAllocated = creditBalance?.credits_allocated ?? (isAuthenticated && user
-      ? (user.monthly_credits_allocated || getCreditAllocation(userTier))
-      : getDailyCreditLimit(userTier) || getCreditAllocation(userTier))
+    const creditsAllocated =
+      creditBalance?.credits_allocated ??
+      (isAuthenticated && user
+        ? user.monthly_credits_allocated || getCreditAllocation(userTier)
+        : getDailyCreditLimit(userTier) || getCreditAllocation(userTier))
 
     // For anonymous users, prefer anonymousCreditsRemaining if available, then creditBalance
     if (!isAuthenticated) {
       if (anonymousCreditsRemaining !== null) {
         // Use anonymousCreditsRemaining state if available (most up-to-date for anonymous users)
         return anonymousCreditsRemaining
-      } else if (creditBalance?.credits_remaining !== undefined && creditBalance?.subscription_tier === 'anonymous') {
+      } else if (
+        creditBalance?.credits_remaining !== undefined &&
+        creditBalance?.subscription_tier === 'anonymous'
+      ) {
         // Only use creditBalance if it's for anonymous users (prevent using authenticated user's balance)
         return creditBalance.credits_remaining
       } else {
@@ -4987,21 +5175,20 @@ function AppContent() {
       }
     } else {
       // For authenticated users, only use creditBalance if it matches their tier
-      if (creditBalance?.credits_remaining !== undefined && creditBalance?.subscription_tier === userTier) {
+      if (
+        creditBalance?.credits_remaining !== undefined &&
+        creditBalance?.subscription_tier === userTier
+      ) {
         // Use creditBalance if available and matches current user's tier
         return creditBalance.credits_remaining
       } else {
         // Fallback: calculate from allocated and used
-        const creditsUsed = creditBalance?.credits_used_this_period ?? (user?.credits_used_this_period || 0)
+        const creditsUsed =
+          creditBalance?.credits_used_this_period ?? (user?.credits_used_this_period || 0)
         return Math.max(0, creditsAllocated - creditsUsed)
       }
     }
-  }, [
-    isAuthenticated,
-    user,
-    creditBalance,
-    anonymousCreditsRemaining,
-  ])
+  }, [isAuthenticated, user, creditBalance, anonymousCreditsRemaining])
 
   // Exit follow-up mode when credits run out
   useEffect(() => {
@@ -5021,9 +5208,9 @@ function AppContent() {
     const userTier = isAuthenticated ? user?.subscription_tier || 'free' : 'anonymous'
 
     // Only use creditBalance if it matches the current user's tier to prevent cross-contamination
-    const resetDate = (creditBalance?.subscription_tier === userTier
-      ? creditBalance?.credits_reset_at
-      : null) || user?.credits_reset_at
+    const resetDate =
+      (creditBalance?.subscription_tier === userTier ? creditBalance?.credits_reset_at : null) ||
+      user?.credits_reset_at
 
     // Verify that creditBalance matches current user type before using it
     // This prevents anonymous user's zero credits from affecting authenticated users
@@ -5038,7 +5225,13 @@ function AppContent() {
     // Check if credits are 0
     if (creditsRemaining <= 0) {
       // Calculate what the error message should be for 0 credits
-      const expectedErrorMessage = getCreditWarningMessage('none', userTier, creditsRemaining, undefined, resetDate)
+      const expectedErrorMessage = getCreditWarningMessage(
+        'none',
+        userTier,
+        creditsRemaining,
+        undefined,
+        resetDate
+      )
 
       // Set error message if credits are 0 and error is not already set correctly
       if (error !== expectedErrorMessage) {
@@ -5047,15 +5240,24 @@ function AppContent() {
     } else {
       // If credits are > 0, clear error if it's a credit-related error
       // Check if error matches credit error patterns (to avoid clearing other errors)
-      if (error && (
-        error.includes("You've run out of credits") ||
-        error.includes("run out of credits") ||
-        (error.includes("credits") && error.includes("reset"))
-      )) {
+      if (
+        error &&
+        (error.includes("You've run out of credits") ||
+          error.includes('run out of credits') ||
+          (error.includes('credits') && error.includes('reset')))
+      ) {
         setError(null)
       }
     }
-  }, [creditsRemaining, creditBalance, user, isAuthenticated, getCreditWarningMessage, error, setError])
+  }, [
+    creditsRemaining,
+    creditBalance,
+    user,
+    isAuthenticated,
+    getCreditWarningMessage,
+    error,
+    setError,
+  ])
 
   // Helper function to render usage preview (used in both regular and follow-up modes)
   // Wrapped in useCallback with dependencies so ComparisonForm (memoized) re-renders when credits change
@@ -5104,7 +5306,6 @@ function AppContent() {
         <MockModeBanner isAnonymous={true} isDev={true} />
       )}
 
-
       {/* Admin Panel - Show if user is admin and in admin view */}
       {currentView === 'admin' && user?.is_admin ? (
         <Suspense
@@ -5137,7 +5338,7 @@ function AppContent() {
           {!showPasswordReset && !authLoading && (
             <>
               <VerifyEmail
-                onClose={() => { }}
+                onClose={() => {}}
                 externalToken={verificationToken}
                 suppressVerification={suppressVerification}
               />
@@ -5189,8 +5390,11 @@ function AppContent() {
                 {creditWarningDismissible && creditBalance && (
                   <button
                     onClick={() => {
-                      const userTier = isAuthenticated ? user?.subscription_tier || 'free' : 'anonymous'
-                      const periodType = userTier === 'anonymous' || userTier === 'free' ? 'daily' : 'monthly'
+                      const userTier = isAuthenticated
+                        ? user?.subscription_tier || 'free'
+                        : 'anonymous'
+                      const periodType =
+                        userTier === 'anonymous' || userTier === 'free' ? 'daily' : 'monthly'
                       dismissLowCreditWarning(userTier, periodType, creditBalance.credits_reset_at)
                     }}
                     style={{
@@ -5230,13 +5434,13 @@ function AppContent() {
                     // Force the padding-right value to ensure it overrides CSS media query
                     ...(isWideLayout && selectedModels.length > 0
                       ? {
-                        paddingRight: 'calc(340px + 2rem + 2.5rem)',
-                      }
+                          paddingRight: 'calc(340px + 2rem + 2.5rem)',
+                        }
                       : {}),
                     ...(isWideLayout && selectedModels.length === 0
                       ? {
-                        paddingRight: isModelsHidden ? 'calc(36px + 2rem)' : '0',
-                      }
+                          paddingRight: isModelsHidden ? 'calc(36px + 2rem)' : '0',
+                        }
                       : {}),
                     // Always center items vertically
                     alignItems: 'center',
@@ -5251,22 +5455,23 @@ function AppContent() {
                     <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.875rem', color: '#6b7280' }}>
                       {isFollowUpMode
                         ? 'You can deselect models or reselect previously selected ones (minimum 1 model required)'
-                        : `Choose up to ${maxModelsLimit} models${!isAuthenticated
-                          ? ' (Anonymous Tier)'
-                          : user?.subscription_tier
-                            ? (() => {
-                              const parts = user.subscription_tier
-                                .split('_')
-                                .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-                              // Replace "Plus" with "+" when it appears after another word
-                              const formatted =
-                                parts.length > 1 && parts[1] === 'Plus'
-                                  ? parts[0] + '+'
-                                  : parts.join(' ')
-                              return ` (${formatted} Tier)`
-                            })()
-                            : ''
-                        }`}
+                        : `Choose up to ${maxModelsLimit} models${
+                            !isAuthenticated
+                              ? ' (Anonymous Tier)'
+                              : user?.subscription_tier
+                                ? (() => {
+                                    const parts = user.subscription_tier
+                                      .split('_')
+                                      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                                    // Replace "Plus" with "+" when it appears after another word
+                                    const formatted =
+                                      parts.length > 1 && parts[1] === 'Plus'
+                                        ? parts[0] + '+'
+                                        : parts.join(' ')
+                                    return ` (${formatted} Tier)`
+                                  })()
+                                : ''
+                          }`}
                     </p>
                   </div>
                   <div
@@ -5508,8 +5713,15 @@ function AppContent() {
                                       const isUnavailable = model.available === false
 
                                       // Check if model is restricted for current user tier
-                                      const userTier = isAuthenticated ? user?.subscription_tier || 'free' : 'anonymous'
-                                      const isPaidTier = ['starter', 'starter_plus', 'pro', 'pro_plus'].includes(userTier)
+                                      const userTier = isAuthenticated
+                                        ? user?.subscription_tier || 'free'
+                                        : 'anonymous'
+                                      const isPaidTier = [
+                                        'starter',
+                                        'starter_plus',
+                                        'pro',
+                                        'pro_plus',
+                                      ].includes(userTier)
 
                                       // Determine if model is restricted based on user tier
                                       // Anonymous tier: only models with tier_access === 'anonymous' are available
@@ -5527,7 +5739,9 @@ function AppContent() {
                                         isRestricted = model.tier_access === 'paid'
                                       }
 
-                                      const requiresUpgrade = isRestricted && (userTier === 'anonymous' || userTier === 'free')
+                                      const requiresUpgrade =
+                                        isRestricted &&
+                                        (userTier === 'anonymous' || userTier === 'free')
 
                                       const isDisabled =
                                         isUnavailable ||
@@ -5538,7 +5752,9 @@ function AppContent() {
                                       const handleModelClick = () => {
                                         if (isRestricted && requiresUpgrade) {
                                           // Open upgrade modal or show upgrade message
-                                          setError(`This model requires a paid subscription. Upgrade to access premium models like ${model.name}.`)
+                                          setError(
+                                            `This model requires a paid subscription. Upgrade to access premium models like ${model.name}.`
+                                          )
                                           window.scrollTo({ top: 0, behavior: 'smooth' })
                                           return
                                         }
@@ -5551,7 +5767,11 @@ function AppContent() {
                                         <label
                                           key={model.id}
                                           className={`model-option ${isSelected ? 'selected' : ''} ${isDisabled ? 'disabled' : ''} ${isRestricted ? 'restricted' : ''}`}
-                                          title={isRestricted ? `Upgrade to ${userTier === 'anonymous' ? 'a free account' : 'a paid tier'} to access this model` : undefined}
+                                          title={
+                                            isRestricted
+                                              ? `Upgrade to ${userTier === 'anonymous' ? 'a free account' : 'a paid tier'} to access this model`
+                                              : undefined
+                                          }
                                         >
                                           <input
                                             type="checkbox"
@@ -5564,7 +5784,10 @@ function AppContent() {
                                             <h4>
                                               {model.name}
                                               {isRestricted && (
-                                                <span className="model-badge premium" title="Premium model - upgrade required">
+                                                <span
+                                                  className="model-badge premium"
+                                                  title="Premium model - upgrade required"
+                                                >
                                                   <svg
                                                     width="12"
                                                     height="12"
@@ -5574,9 +5797,20 @@ function AppContent() {
                                                     strokeWidth="2"
                                                     strokeLinecap="round"
                                                     strokeLinejoin="round"
-                                                    style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '0.25rem' }}
+                                                    style={{
+                                                      display: 'inline-block',
+                                                      verticalAlign: 'middle',
+                                                      marginRight: '0.25rem',
+                                                    }}
                                                   >
-                                                    <rect x="5" y="11" width="14" height="10" rx="2" ry="2" />
+                                                    <rect
+                                                      x="5"
+                                                      y="11"
+                                                      width="14"
+                                                      height="10"
+                                                      rx="2"
+                                                      ry="2"
+                                                    />
                                                     <path d="M7 11V7a5 5 0 0 1 10 0v4" />
                                                   </svg>
                                                   Premium
@@ -6061,7 +6295,8 @@ function AppContent() {
                                   onClick={() => handleCharCountClick(conversation.modelId)}
                                   style={{ cursor: isSmallLayout ? 'pointer' : 'default' }}
                                 >
-                                  {latestMessage?.content.length || 0}{isSmallLayout ? '' : ' chars'}
+                                  {latestMessage?.content.length || 0}
+                                  {isSmallLayout ? '' : ' chars'}
                                   {isSmallLayout && (
                                     <span className="output-length-tooltip">Characters</span>
                                   )}
