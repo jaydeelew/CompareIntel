@@ -1175,6 +1175,7 @@ def call_openrouter_streaming(
     conversation_history: Optional[List[Any]] = None,
     use_mock: bool = False,
     max_tokens_override: Optional[int] = None,
+    credits_limited: bool = False,
 ) -> Generator[Any, None, Optional[TokenUsage]]:
     """
     Stream OpenRouter responses token-by-token for faster perceived response time.
@@ -1193,6 +1194,7 @@ def call_openrouter_streaming(
         conversation_history: Optional conversation history
         use_mock: If True, return mock responses instead of calling API (admin testing feature)
         max_tokens_override: Optional override for max output tokens (uses model limit if not provided)
+        credits_limited: If True, indicates max_tokens_override was reduced due to low credits
 
     Yields:
         str: Content chunks as they arrive
@@ -1275,7 +1277,10 @@ def call_openrouter_streaming(
 
         # After streaming completes, handle finish_reason warnings
         if finish_reason == "length":
-            yield "\n\n⚠️ Response truncated - model reached maximum output length."
+            if credits_limited:
+                yield "\n\n⚠️ Response stopped - credits exhausted."
+            else:
+                yield "\n\n⚠️ Response truncated - model reached maximum output length."
         elif finish_reason == "content_filter":
             yield "\n\n⚠️ **Note:** Response stopped by content filter."
 

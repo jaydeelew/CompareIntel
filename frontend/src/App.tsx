@@ -167,6 +167,7 @@ function AppContent() {
   const scrolledToTopRef = useRef<Set<string>>(new Set()) // Track which model cards have been scrolled to top
   const shouldScrollToTopAfterFormattingRef = useRef<boolean>(false) // Track if we should scroll to top after all models format (initial comparison only)
   const isPageScrollingRef = useRef<boolean>(false) // Track if user is scrolling the page
+  const hasScrolledToResultsOnFirstChunkRef = useRef<boolean>(false) // Track if we've scrolled to results section on first streaming chunk
   const justLoadedFromHistoryRef = useRef<boolean>(false) // Track if we just loaded conversations from history
   const isScrollingToTopFromHistoryRef = useRef<boolean>(false) // Track if we're currently scrolling to top from history (prevents scroll sync)
   const [modelsByProvider, setModelsByProvider] = useState<ModelsByProvider>({})
@@ -3459,6 +3460,7 @@ function AppContent() {
     // Clear currently visible comparison ID
     setCurrentVisibleComparisonId(null)
     setModelErrors({})
+    hasScrolledToResultsOnFirstChunkRef.current = false // Reset scroll tracking for first chunk
   }
 
   // Function to scroll all conversation content areas to the last user message
@@ -3820,6 +3822,7 @@ function AppContent() {
     setProcessingTime(null)
     userCancelledRef.current = false
     hasScrolledToResultsRef.current = false // Reset scroll tracking for new comparison
+    hasScrolledToResultsOnFirstChunkRef.current = false // Reset scroll tracking for first chunk
     scrolledToTopRef.current.clear() // Reset per-card scroll tracking for new comparison
     shouldScrollToTopAfterFormattingRef.current = false // Reset scroll-to-top-after-formatting flag for new comparison
     autoScrollPausedRef.current.clear() // Clear auto-scroll pause ref
@@ -4015,6 +4018,23 @@ function AppContent() {
                   resetStreamingTimeout() // Reset timeout since this model is actively streaming
                   shouldUpdate = true
 
+                  // Scroll to Comparison Results section on first chunk from first model
+                  if (!hasScrolledToResultsOnFirstChunkRef.current) {
+                    hasScrolledToResultsOnFirstChunkRef.current = true
+                    // Use requestAnimationFrame and a small delay to ensure DOM is ready
+                    requestAnimationFrame(() => {
+                      setTimeout(() => {
+                        const resultsSection = document.querySelector('.results-section')
+                        if (resultsSection) {
+                          resultsSection.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'start',
+                          })
+                        }
+                      }, 100) // Small delay to ensure section is rendered
+                    })
+                  }
+
                   // Set up scroll listener on first chunk (DOM should be ready by now)
                   if (!listenersSetUp.has(event.model)) {
                     listenersSetUp.add(event.model)
@@ -4150,16 +4170,9 @@ function AppContent() {
                             if (isFollowUpMode) {
                               setIsFollowUpMode(false)
                             }
-                            const message = getCreditWarningMessage(
-                              'none',
-                              userTier,
-                              balance.credits_remaining,
-                              undefined,
-                              balance.credits_reset_at
-                            )
-                            setCreditWarningMessage(message)
-                            setCreditWarningType('none')
-                            setCreditWarningDismissible(false)
+                            // Don't set creditWarningMessage here - let the useEffect handle it via setError
+                            // This prevents duplicate error messages
+                            // The useEffect will set the error message, which is displayed in the same place
                           } else if (
                             remainingPercent <= lowCreditThreshold &&
                             remainingPercent > 0
@@ -4237,14 +4250,9 @@ function AppContent() {
                           if (isFollowUpMode) {
                             setIsFollowUpMode(false)
                           }
-                          const message = getCreditWarningMessage(
-                            'none',
-                            userTier,
-                            metadataCreditsRemaining
-                          )
-                          setCreditWarningMessage(message)
-                          setCreditWarningType('none')
-                          setCreditWarningDismissible(false)
+                          // Don't set creditWarningMessage here - let the useEffect handle it via setError
+                          // This prevents duplicate error messages
+                          // The useEffect will set the error message, which is displayed in the same place
                         } else if (remainingPercent <= lowCreditThreshold && remainingPercent > 0) {
                           if (!isLowCreditWarningDismissed(userTier, periodType)) {
                             const message = getCreditWarningMessage(
@@ -4316,14 +4324,9 @@ function AppContent() {
                               if (isFollowUpMode) {
                                 setIsFollowUpMode(false)
                               }
-                              const message = getCreditWarningMessage(
-                                'none',
-                                userTier,
-                                balance.credits_remaining
-                              )
-                              setCreditWarningMessage(message)
-                              setCreditWarningType('none')
-                              setCreditWarningDismissible(false)
+                              // Don't set creditWarningMessage here - let the useEffect handle it via setError
+                              // This prevents duplicate error messages
+                              // The useEffect will set the error message, which is displayed in the same place
                             } else if (
                               remainingPercent <= lowCreditThreshold &&
                               remainingPercent > 0
@@ -5158,8 +5161,14 @@ function AppContent() {
       )
 
       // Set error message if credits are 0 and error is not already set correctly
+      // Also clear creditWarningMessage to prevent duplicate messages
       if (error !== expectedErrorMessage) {
         setError(expectedErrorMessage)
+        // Clear credit warning message to prevent duplicate display
+        if (creditWarningMessage && creditWarningMessage === expectedErrorMessage) {
+          setCreditWarningMessage(null)
+          setCreditWarningType(null)
+        }
       }
     } else {
       // If credits are > 0, clear error if it's a credit-related error

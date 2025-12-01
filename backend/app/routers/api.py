@@ -815,6 +815,7 @@ async def compare_stream(
             # If credits are low, calculate reduced max_tokens based on available credits per model
             # This helps ensure users can still get responses even with low credits
             effective_max_tokens = get_min_max_output_tokens(req.models)
+            credits_limited = False  # Track if max_tokens was reduced due to credits
             
             # Calculate credits available per model
             credits_per_model = Decimal(credits_remaining) / Decimal(num_models) if num_models > 0 else Decimal(0)
@@ -842,7 +843,11 @@ async def compare_stream(
                     )
                 
                 # Use the smaller of calculated max_tokens or model's max capability
+                original_max_tokens = effective_max_tokens
                 effective_max_tokens = min(effective_max_tokens, max_output_tokens_int)
+                # Mark as credits-limited if we actually reduced max_tokens
+                if effective_max_tokens < original_max_tokens:
+                    credits_limited = True
                 print(
                     f"[API] Low credits - reducing max_tokens from {get_min_max_output_tokens(req.models)} to {effective_max_tokens} (credits_remaining: {credits_remaining}, credits_per_model: {credits_per_model:.2f})"
                 )
@@ -899,6 +904,7 @@ async def compare_stream(
                                 filtered_history,
                                 use_mock,
                                 max_tokens_override=effective_max_tokens,
+                                credits_limited=credits_limited,
                             )
 
                             try:
