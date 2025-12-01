@@ -1035,17 +1035,29 @@ async def compare_stream(
                     print(
                         f"[WARNING] No token usage data available for {successful_models} successful model(s), charging minimum {total_credits_used} credits"
                     )
+                
+                # Ensure minimum 1 credit deduction per comparison (round UP)
+                # This ensures users are charged at least 1 credit per comparison
+                # Always round up and ensure at least 1 credit when models succeed
+                total_credits_used = max(Decimal(1), total_credits_used.quantize(Decimal("1"), rounding=ROUND_CEILING))
 
             # Store the actual fractional credits for UsageLog (for analytics)
             actual_credits_used = total_credits_used
 
-            # Ensure minimum 1 credit deduction per comparison (round UP)
-            # This ensures users are charged at least 1 credit per comparison
-            if successful_models > 0 and total_credits_used > 0:
-                total_credits_used = max(Decimal(1), total_credits_used.quantize(Decimal("1"), rounding=ROUND_CEILING))
-
             # Deduct credits - only for successful models
-            if successful_models > 0 and total_credits_used > 0:
+            # Note: total_credits_used is guaranteed to be >= 1 if successful_models > 0 (due to logic above)
+            if successful_models > 0:
+                # Safety check: ensure credits are always deducted when models succeed
+                # This should never trigger due to line 1042, but serves as a safeguard
+                if total_credits_used <= 0:
+                    print(
+                        f"[ERROR] successful_models={successful_models} but total_credits_used={total_credits_used}. "
+                        f"This should not happen! Forcing minimum 1 credit deduction."
+                    )
+                    total_credits_used = Decimal(1)
+                    actual_credits_used = total_credits_used
+                
+                # At this point, total_credits_used is guaranteed to be > 0
                 # Create a fresh database session to avoid detachment issues
                 from ..database import SessionLocal
 
@@ -1083,11 +1095,13 @@ async def compare_stream(
                             ip_credits_remaining, fingerprint_credits_remaining if req.browser_fingerprint else ip_credits_remaining
                         )
                         print(
-                            f"[DEBUG] Anonymous credits after deduction - IP: {ip_credits_remaining}, FP: {fingerprint_credits_remaining if req.browser_fingerprint else 'N/A'}, Final: {credits_remaining}, Actual: {actual_credits_used}, Charged: {total_credits_used}"
+                            f"[DEBUG] Anonymous credits after deduction - IP: {ip_credits_remaining}, FP: {fingerprint_credits_remaining if req.browser_fingerprint else 'N/A'}, Final: {credits_remaining}, Actual: {actual_credits_used}, Charged: {total_credits_used}, Successful models: {successful_models}"
                         )
-                except ValueError as e:
-                    # Should not happen since we checked before, but handle gracefully
-                    print(f"Warning: Credit deduction failed: {e}")
+                except Exception as e:
+                    # Handle any exception during credit deduction
+                    print(f"[ERROR] Credit deduction failed: {e}")
+                    import traceback
+                    traceback.print_exc()
                     # Refresh credits_remaining even if deduction failed (may have partially succeeded)
                     if not user_id:
                         ip_identifier = f"ip:{client_ip}"
@@ -1102,6 +1116,9 @@ async def compare_stream(
                 finally:
                     credit_db.close()
             else:
+                # No successful models - no credits deducted
+                if successful_models == 0 and failed_models > 0:
+                    print(f"[DEBUG] All models failed - no credits deducted. Failed: {failed_models}")
                 # Even if no credits were deducted, refresh credits_remaining for anonymous users
                 # (in case of any other state changes, though this shouldn't normally happen)
                 if not user_id:
@@ -1117,6 +1134,22 @@ async def compare_stream(
 
                 # Extended tier usage tracking removed - no longer needed
 
+            # Final refresh of credits_remaining right before building metadata to ensure accuracy
+            # This is especially important for anonymous users where credits are stored in memory
+            if not user_id and successful_models > 0:
+                ip_identifier = f"ip:{client_ip}"
+                _, ip_credits_remaining, _ = check_anonymous_credits(ip_identifier, Decimal(0), user_timezone)
+                fingerprint_credits_remaining = ip_credits_remaining
+                if req.browser_fingerprint:
+                    fp_identifier = f"fp:{req.browser_fingerprint}"
+                    _, fingerprint_credits_remaining, _ = check_anonymous_credits(fp_identifier, Decimal(0), user_timezone)
+                credits_remaining = min(
+                    ip_credits_remaining, fingerprint_credits_remaining if req.browser_fingerprint else ip_credits_remaining
+                )
+                print(
+                    f"[DEBUG] Final credits_remaining refresh before metadata - IP: {ip_credits_remaining}, FP: {fingerprint_credits_remaining if req.browser_fingerprint else 'N/A'}, Final: {credits_remaining}, Successful models: {successful_models}, Credits charged: {total_credits_used}"
+                )
+
             # Calculate processing time
             processing_time_ms = int((datetime.now() - start_time).total_seconds() * 1000)
 
@@ -1124,7 +1157,7 @@ async def compare_stream(
             # Debug: Log credits_remaining before including in metadata
             if not user_id:
                 print(
-                    f"[DEBUG] Building metadata for anonymous user - credits_remaining: {credits_remaining}, actual_credits: {actual_credits_used}, charged_credits: {total_credits_used}"
+                    f"[DEBUG] Building metadata for anonymous user - credits_remaining: {credits_remaining}, actual_credits: {actual_credits_used}, charged_credits: {total_credits_used}, successful_models: {successful_models}, failed_models: {failed_models}"
                 )
             metadata = {
                 "input_length": len(req.input_data),
@@ -1135,7 +1168,7 @@ async def compare_stream(
                 "processing_time_ms": processing_time_ms,
                 # Credit-based fields
                 "credits_used": float(total_credits_used),
-                "credits_remaining": credits_remaining,
+                "credits_remaining": int(credits_remaining),  # Convert to int for JSON serialization
             }
 
             # Log usage to database SYNCHRONOUSLY (not in background) to ensure database is updated
