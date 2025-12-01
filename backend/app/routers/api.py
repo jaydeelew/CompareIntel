@@ -1511,10 +1511,35 @@ async def compare_stream(
             # Send completion event with metadata
             yield f"data: {json.dumps({'type': 'complete', 'metadata': metadata})}\n\n"
         except Exception as e:
-            # Send error event
+            # If we have partial results, send complete event with them so frontend can save history
+            # Only send error event if no models completed at all
             error_msg = f"Error: {str(e)[:200]}"
             print(f"Error in generate_stream: {error_msg}")
-            yield f"data: {json.dumps({'type': 'error', 'message': error_msg})}\n\n"
+            
+            # Check if we have any successful models or results
+            has_partial_results = successful_models > 0 or len(results_dict) > 0
+            
+            if has_partial_results:
+                # Send complete event with partial results so frontend can save them
+                # Calculate processing time even on error
+                processing_time_ms = int((datetime.now() - start_time).total_seconds() * 1000)
+                
+                # Build metadata with partial results
+                partial_metadata = {
+                    "input_length": len(req.input_data),
+                    "models_requested": len(req.models),
+                    "models_successful": successful_models,
+                    "models_failed": failed_models + (len(req.models) - successful_models - failed_models),
+                    "timestamp": datetime.now().isoformat(),
+                    "processing_time_ms": processing_time_ms,
+                    "credits_used": float(total_credits_used) if successful_models > 0 else 0.0,
+                    "credits_remaining": int(credits_remaining),
+                    "error": error_msg,  # Include error message in metadata
+                }
+                yield f"data: {json.dumps({'type': 'complete', 'metadata': partial_metadata})}\n\n"
+            else:
+                # No partial results - send error event
+                yield f"data: {json.dumps({'type': 'error', 'message': error_msg})}\n\n"
 
     return StreamingResponse(generate_stream(), media_type="text/event-stream")
 

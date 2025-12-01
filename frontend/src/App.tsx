@@ -3979,6 +3979,9 @@ function AppContent() {
 
       // Track which models have had listeners set up (to avoid duplicates)
       const listenersSetUp = new Set<string>()
+      
+      // Track if we received an error event (but continue processing to save partial results)
+      let streamError: Error | null = null
 
       if (reader) {
         try {
@@ -3988,6 +3991,11 @@ function AppContent() {
             const { done, value } = await reader.read()
 
             if (done) break
+            
+            // If we already have an error, stop processing new chunks but continue to save what we have
+            if (streamError) {
+              break
+            }
 
             // Decode the chunk and add to buffer
             buffer += decoder.decode(value, { stream: true })
@@ -4416,7 +4424,19 @@ function AppContent() {
                     }, 1000)
                   }
                 } else if (event.type === 'error') {
-                  throw new Error(event.message || 'Streaming error occurred')
+                  // Store error but don't throw immediately - allow partial results to be saved
+                  streamError = new Error(event.message || 'Streaming error occurred')
+                  console.error('Streaming error received:', streamError.message)
+                  // Mark all incomplete models as failed
+                  selectedModels.forEach(modelId => {
+                    const createdModelId = createModelId(modelId)
+                    if (!completedModels.has(createdModelId)) {
+                      localModelErrors[createdModelId] = true
+                      setModelErrors(prev => ({ ...prev, [createdModelId]: true }))
+                    }
+                  })
+                  // Break out of message processing loop, but continue to save partial results
+                  break
                 }
               } catch (parseError) {
                 console.error('Error parsing SSE message:', parseError, message)
@@ -4569,10 +4589,30 @@ function AppContent() {
             }
           }
 
-          // Clean up timeout since stream completed successfully
+          // Clean up timeout since stream completed (or errored)
           if (timeoutId) {
             clearTimeout(timeoutId)
             timeoutId = null
+          }
+          
+          // If we received an error event, handle it gracefully
+          if (streamError) {
+            // Mark incomplete models as failed
+            const errorModelErrors: { [key: string]: boolean } = { ...localModelErrors }
+            selectedModels.forEach(modelId => {
+              const createdModelId = createModelId(modelId)
+              if (!completedModels.has(createdModelId)) {
+                errorModelErrors[createdModelId] = true
+              }
+            })
+            setModelErrors(errorModelErrors)
+            
+            // Show error message but don't crash - partial results are still valuable
+            setError(`Streaming error: ${streamError.message}. Partial results have been saved.`)
+            // Clear error after 10 seconds
+            setTimeout(() => {
+              setError(null)
+            }, 10000)
           }
 
           // Final update to ensure all content is displayed
@@ -4951,6 +4991,128 @@ function AppContent() {
         }, 500)
       }
     } catch (err) {
+      // Helper function to save partial results when an error occurs
+      const savePartialResultsOnError = () => {
+        // Ensure we have at least some results before trying to save
+        const hasAnyResults = Object.keys(streamingResults).some(
+          modelId => (streamingResults[modelId] || '').trim().length > 0
+        )
+        
+        if (!hasAnyResults) {
+          return // No results to save
+        }
+        
+        // Mark incomplete models as failed
+        const errorModelErrors: { [key: string]: boolean } = { ...localModelErrors }
+        selectedModels.forEach(modelId => {
+          const createdModelId = createModelId(modelId)
+          if (!completedModels.has(createdModelId)) {
+            errorModelErrors[createdModelId] = true
+          }
+        })
+        setModelErrors(errorModelErrors)
+        
+        // Update response with partial results
+        setResponse({
+          results: { ...streamingResults },
+          metadata: {
+            input_length: input.length,
+            models_requested: selectedModels.length,
+            models_successful: Object.keys(streamingResults).filter(
+              modelId =>
+                !isErrorMessage(streamingResults[modelId]) &&
+                (streamingResults[modelId] || '').trim().length > 0
+            ).length,
+            models_failed: Object.keys(streamingResults).filter(
+              modelId =>
+                isErrorMessage(streamingResults[modelId]) ||
+                (streamingResults[modelId] || '').trim().length === 0
+            ).length,
+            timestamp: new Date().toISOString(),
+            processing_time_ms: Date.now() - startTime,
+          },
+        })
+        
+        // Update conversations with partial results
+        if (!isFollowUpMode) {
+          setConversations(prevConversations => {
+            return prevConversations.map(conv => {
+              const content = streamingResults[conv.modelId] || ''
+              const startTime = modelStartTimes[conv.modelId]
+              const completionTime = modelCompletionTimes[conv.modelId]
+
+              return {
+                ...conv,
+                messages: conv.messages.map((msg, idx) => {
+                  if (idx === 0 && msg.type === 'user') {
+                    return { ...msg, timestamp: startTime || msg.timestamp }
+                  } else if (idx === 1 && msg.type === 'assistant') {
+                    return {
+                      ...msg,
+                      content,
+                      timestamp: completionTime || msg.timestamp,
+                    }
+                  }
+                  return msg
+                }),
+              }
+            })
+          })
+        }
+        
+        // Save to history (same logic as in finally block)
+        setTimeout(() => {
+          if (!isAuthenticated && !isFollowUpMode) {
+            setConversations(currentConversations => {
+              const conversationsWithMessages = currentConversations.filter(
+                conv => selectedModels.includes(conv.modelId) && conv.messages.length > 0
+              )
+
+              const hasCompleteMessages = conversationsWithMessages.some(conv => {
+                const assistantMessages = conv.messages.filter(msg => msg.type === 'assistant')
+                return (
+                  assistantMessages.length > 0 &&
+                  assistantMessages.some(msg => msg.content.trim().length > 0)
+                )
+              })
+
+              if (hasCompleteMessages && conversationsWithMessages.length > 0) {
+                const allUserMessages = conversationsWithMessages
+                  .flatMap(conv => conv.messages)
+                  .filter(msg => msg.type === 'user')
+                  .sort(
+                    (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+                  )
+
+                const firstUserMessage = allUserMessages[0]
+
+                if (firstUserMessage) {
+                  const inputData = firstUserMessage.content
+                  const savedId = saveConversationToLocalStorage(
+                    inputData,
+                    selectedModels,
+                    conversationsWithMessages
+                  )
+                  if (savedId) {
+                    setCurrentVisibleComparisonId(savedId)
+                  }
+                }
+              }
+
+              return currentConversations
+            })
+          } else if (isAuthenticated && !isFollowUpMode) {
+            // For registered users, reload history from API
+            setTimeout(async () => {
+              const firstUserMessage = getFirstUserMessage()
+              if (firstUserMessage) {
+                await syncHistoryAfterComparison(firstUserMessage.content, selectedModels)
+              }
+            }, 1500)
+          }
+        }, 200)
+      }
+      
       if (err instanceof Error && err.name === 'AbortError') {
         // Handle timeout: mark incomplete models as failed and format successful ones
         const timeoutModelErrors: { [key: string]: boolean } = { ...localModelErrors }
@@ -5106,10 +5268,16 @@ function AppContent() {
         }
       } else if (err instanceof Error && err.message.includes('Failed to fetch')) {
         setError('Unable to connect to the server. Please check if the backend is running.')
+        // Save partial results even on connection error
+        savePartialResultsOnError()
       } else if (err instanceof Error) {
         setError(err.message || 'An unexpected error occurred')
+        // Save partial results even on unexpected error
+        savePartialResultsOnError()
       } else {
         setError('An unexpected error occurred')
+        // Save partial results even on unknown error
+        savePartialResultsOnError()
       }
     } finally {
       // Clean up timeout if it still exists
