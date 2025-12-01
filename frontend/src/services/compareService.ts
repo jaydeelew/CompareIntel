@@ -7,7 +7,7 @@
  * - Rate limit status
  */
 
-import type { CompareResponse, StreamEvent } from '../types'
+import type { StreamEvent } from '../types'
 import { STREAM_EVENT_TYPE } from '../types'
 
 import { apiClient } from './api/client'
@@ -21,8 +21,8 @@ export interface CompareRequestPayload {
   conversation_history?: Array<{ role: string; content: string; model_id?: string }>
   browser_fingerprint?: string
   conversation_id?: number
-  estimated_input_tokens?: number  // Optional: Accurate token count from /estimate-tokens endpoint
-  timezone?: string  // Optional: IANA timezone string (e.g., "America/Chicago") for credit reset timing
+  estimated_input_tokens?: number // Optional: Accurate token count from /estimate-tokens endpoint
+  timezone?: string // Optional: IANA timezone string (e.g., "America/Chicago") for credit reset timing
 }
 
 /**
