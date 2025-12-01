@@ -2850,12 +2850,7 @@ function AppContent() {
 
             // Fetch anonymous credit balance
             try {
-              console.log(
-                '[DEBUG] Fetching credit balance on page load with fingerprint:',
-                fingerprint?.substring(0, 20)
-              )
               const creditBalance = await getCreditBalance(fingerprint)
-              console.log('[DEBUG] Received credit balance:', creditBalance.credits_remaining)
               setAnonymousCreditsRemaining(creditBalance.credits_remaining)
               setCreditBalance(creditBalance)
             } catch (error) {
@@ -2949,13 +2944,8 @@ function AppContent() {
       // Only refetch if we don't already have a credit balance set, or if it's the default 50
       const shouldRefetch = anonymousCreditsRemaining === null || anonymousCreditsRemaining === 50
       if (shouldRefetch) {
-        console.log(
-          '[DEBUG] Refetching credit balance when fingerprint becomes available:',
-          browserFingerprint.substring(0, 20)
-        )
         getCreditBalance(browserFingerprint)
           .then(balance => {
-            console.log('[DEBUG] Refetched credit balance:', balance.credits_remaining)
             // Only update if we got a different (lower) value, indicating credits were actually used
             if (balance.credits_remaining < 50) {
               setAnonymousCreditsRemaining(balance.credits_remaining)
