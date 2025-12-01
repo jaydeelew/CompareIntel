@@ -1,22 +1,22 @@
-import React from 'react';
+import React from 'react'
 
 /**
  * LoadingSpinner component props
  */
 export interface LoadingSpinnerProps {
   /** Size of the spinner */
-  size?: 'small' | 'medium' | 'large';
+  size?: 'small' | 'medium' | 'large'
   /** Custom className */
-  className?: string;
+  className?: string
   /** Loading message to display */
-  message?: string;
+  message?: string
   /** Whether to show the modern spinner animation */
-  modern?: boolean;
+  modern?: boolean
 }
 
 /**
  * Reusable LoadingSpinner component
- * 
+ *
  * @example
  * ```tsx
  * <LoadingSpinner size="medium" message="Loading..." />
@@ -28,16 +28,10 @@ export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
   message,
   modern = true,
 }) => {
-  const spinnerClassName = modern ? 'modern-spinner' : 'spinner';
-  const sizeClass = `spinner-${size}`;
-  
-  const combinedClassName = [
-    spinnerClassName,
-    sizeClass,
-    className,
-  ]
-    .filter(Boolean)
-    .join(' ');
+  const spinnerClassName = modern ? 'modern-spinner' : 'spinner'
+  const sizeClass = `spinner-${size}`
+
+  const combinedClassName = [spinnerClassName, sizeClass, className].filter(Boolean).join(' ')
 
   if (message) {
     return (
@@ -47,17 +41,17 @@ export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
         </div>
         {message && <p className="loading-spinner-message">{message}</p>}
       </div>
-    );
+    )
   }
 
   return (
     <div className={combinedClassName} role="status" aria-label="Loading">
       <span className="sr-only">Loading...</span>
     </div>
-  );
-};
+  )
+}
 
-LoadingSpinner.displayName = 'LoadingSpinner';
+LoadingSpinner.displayName = 'LoadingSpinner'
 
 /**
  * FullPageLoadingSpinner component for page-level loading states
@@ -67,8 +61,7 @@ export const FullPageLoadingSpinner: React.FC<{ message?: string }> = ({ message
     <div className="full-page-loading">
       <LoadingSpinner size="large" modern={true} message={message} />
     </div>
-  );
-};
+  )
+}
 
-FullPageLoadingSpinner.displayName = 'FullPageLoadingSpinner';
-
+FullPageLoadingSpinner.displayName = 'FullPageLoadingSpinner'

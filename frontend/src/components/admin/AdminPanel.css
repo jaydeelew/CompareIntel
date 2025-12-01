@@ -42,10 +42,12 @@ button:hover {
   left: 0;
   right: 0;
   height: 4px;
-  background: linear-gradient(90deg,
-      var(--primary-color),
-      var(--accent-color),
-      var(--success-color));
+  background: linear-gradient(
+    90deg,
+    var(--primary-color),
+    var(--accent-color),
+    var(--success-color)
+  );
 }
 
 .admin-header-content {
@@ -363,7 +365,10 @@ button:hover {
 /* Mobile: Collapsible behavior */
 @media (max-width: 768px) {
   .breakdown-list {
-    transition: max-height 0.3s ease, opacity 0.3s ease, margin-top 0.3s ease;
+    transition:
+      max-height 0.3s ease,
+      opacity 0.3s ease,
+      margin-top 0.3s ease;
     overflow: hidden;
   }
 
@@ -382,7 +387,6 @@ button:hover {
 
 /* Desktop: Always visible */
 @media (min-width: 769px) {
-
   .breakdown-list.collapsed,
   .breakdown-list.expanded {
     max-height: none;
@@ -1269,11 +1273,11 @@ button:hover {
   }
 
   /* Better spacing for mobile */
-  .admin-panel>* {
+  .admin-panel > * {
     margin-bottom: 1.5rem;
   }
 
-  .admin-panel>*:last-child {
+  .admin-panel > *:last-child {
     margin-bottom: 0;
   }
 
@@ -1293,7 +1297,6 @@ button:hover {
 
 /* Desktop: Hide cards, show tables */
 @media (min-width: 769px) {
-
   .users-cards-mobile,
   .logs-cards-mobile {
     display: none;
@@ -1321,7 +1324,6 @@ button:hover {
 
 /* Mobile Card Layouts */
 @media (max-width: 768px) {
-
   /* User Card Layout */
   .users-cards-mobile {
     display: block;
@@ -1564,9 +1566,9 @@ button:hover {
   /* Ensure all interactive elements are easily tappable */
   button,
   select,
-  input[type="text"],
-  input[type="email"],
-  input[type="password"] {
+  input[type='text'],
+  input[type='email'],
+  input[type='password'] {
     min-height: 44px;
   }
 
@@ -1584,10 +1586,12 @@ button:hover {
 
 /* Loading States */
 .loading-skeleton {
-  background: linear-gradient(90deg,
-      var(--bg-tertiary) 25%,
-      var(--bg-secondary) 50%,
-      var(--bg-tertiary) 75%);
+  background: linear-gradient(
+    90deg,
+    var(--bg-tertiary) 25%,
+    var(--bg-secondary) 50%,
+    var(--bg-tertiary) 75%
+  );
   background-size: 200% 100%;
   animation: loading 1.5s infinite;
 }

@@ -1,19 +1,19 @@
 /**
  * Custom error classes for API client
- * 
+ *
  * Provides type-safe error handling with structured error information
  */
 
-import type { ApiErrorResponse } from '../../types/api';
+import type { ApiErrorResponse } from '../../types/api'
 
 /**
  * Base API error class
  */
 export class ApiError extends Error {
-  public readonly status: number;
-  public readonly statusText: string;
-  public readonly response?: ApiErrorResponse;
-  public readonly originalError?: Error;
+  public readonly status: number
+  public readonly statusText: string
+  public readonly response?: ApiErrorResponse
+  public readonly originalError?: Error
 
   constructor(
     message: string,
@@ -22,18 +22,18 @@ export class ApiError extends Error {
     response?: ApiErrorResponse,
     originalError?: Error
   ) {
-    super(message);
-    this.name = 'ApiError';
-    this.status = status;
-    this.statusText = statusText;
-    this.response = response;
-    this.originalError = originalError;
+    super(message)
+    this.name = 'ApiError'
+    this.status = status
+    this.statusText = statusText
+    this.response = response
+    this.originalError = originalError
 
     // Maintains proper stack trace for where our error was thrown (only available on V8)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     if ((Error as any).captureStackTrace) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (Error as any).captureStackTrace(this, ApiError);
+      ;(Error as any).captureStackTrace(this, ApiError)
     }
   }
 
@@ -41,28 +41,28 @@ export class ApiError extends Error {
    * Check if error is a client error (4xx)
    */
   isClientError(): boolean {
-    return this.status >= 400 && this.status < 500;
+    return this.status >= 400 && this.status < 500
   }
 
   /**
    * Check if error is a server error (5xx)
    */
   isServerError(): boolean {
-    return this.status >= 500 && this.status < 600;
+    return this.status >= 500 && this.status < 600
   }
 
   /**
    * Check if error is a network error (no status)
    */
   isNetworkError(): boolean {
-    return this.status === 0;
+    return this.status === 0
   }
 
   /**
    * Check if error is a timeout error
    */
   isTimeoutError(): boolean {
-    return this.name === 'TimeoutError' || this.message.includes('timeout');
+    return this.name === 'TimeoutError' || this.message.includes('timeout')
   }
 
   /**
@@ -77,7 +77,7 @@ export class ApiError extends Error {
       this.isServerError() ||
       this.status === 429 ||
       this.status === 408
-    );
+    )
   }
 }
 
@@ -86,8 +86,8 @@ export class ApiError extends Error {
  */
 export class NetworkError extends ApiError {
   constructor(message: string = 'Network error occurred', originalError?: Error) {
-    super(message, 0, 'Network Error', undefined, originalError);
-    this.name = 'NetworkError';
+    super(message, 0, 'Network Error', undefined, originalError)
+    this.name = 'NetworkError'
   }
 }
 
@@ -96,11 +96,9 @@ export class NetworkError extends ApiError {
  */
 export class TimeoutError extends ApiError {
   constructor(message: string = 'Request timeout', timeoutMs?: number) {
-    const timeoutMessage = timeoutMs
-      ? `Request timeout after ${timeoutMs}ms`
-      : message;
-    super(timeoutMessage, 408, 'Request Timeout');
-    this.name = 'TimeoutError';
+    const timeoutMessage = timeoutMs ? `Request timeout after ${timeoutMs}ms` : message
+    super(timeoutMessage, 408, 'Request Timeout')
+    this.name = 'TimeoutError'
   }
 }
 
@@ -109,8 +107,8 @@ export class TimeoutError extends ApiError {
  */
 export class AuthenticationError extends ApiError {
   constructor(message: string = 'Authentication failed', response?: ApiErrorResponse) {
-    super(message, 401, 'Unauthorized', response);
-    this.name = 'AuthenticationError';
+    super(message, 401, 'Unauthorized', response)
+    this.name = 'AuthenticationError'
   }
 }
 
@@ -119,8 +117,8 @@ export class AuthenticationError extends ApiError {
  */
 export class AuthorizationError extends ApiError {
   constructor(message: string = 'Access forbidden', response?: ApiErrorResponse) {
-    super(message, 403, 'Forbidden', response);
-    this.name = 'AuthorizationError';
+    super(message, 403, 'Forbidden', response)
+    this.name = 'AuthorizationError'
   }
 }
 
@@ -129,8 +127,8 @@ export class AuthorizationError extends ApiError {
  */
 export class NotFoundError extends ApiError {
   constructor(message: string = 'Resource not found', response?: ApiErrorResponse) {
-    super(message, 404, 'Not Found', response);
-    this.name = 'NotFoundError';
+    super(message, 404, 'Not Found', response)
+    this.name = 'NotFoundError'
   }
 }
 
@@ -138,16 +136,16 @@ export class NotFoundError extends ApiError {
  * Rate limit error (429)
  */
 export class RateLimitError extends ApiError {
-  public readonly retryAfter?: number;
+  public readonly retryAfter?: number
 
   constructor(
     message: string = 'Rate limit exceeded',
     response?: ApiErrorResponse,
     retryAfter?: number
   ) {
-    super(message, 429, 'Too Many Requests', response);
-    this.name = 'RateLimitError';
-    this.retryAfter = retryAfter;
+    super(message, 429, 'Too Many Requests', response)
+    this.name = 'RateLimitError'
+    this.retryAfter = retryAfter
   }
 }
 
@@ -156,8 +154,8 @@ export class RateLimitError extends ApiError {
  */
 export class PaymentRequiredError extends ApiError {
   constructor(message: string = 'Payment required', response?: ApiErrorResponse) {
-    super(message, 402, 'Payment Required', response);
-    this.name = 'PaymentRequiredError';
+    super(message, 402, 'Payment Required', response)
+    this.name = 'PaymentRequiredError'
   }
 }
 
@@ -166,8 +164,8 @@ export class PaymentRequiredError extends ApiError {
  */
 export class ValidationError extends ApiError {
   constructor(message: string = 'Validation failed', response?: ApiErrorResponse) {
-    super(message, 422, 'Unprocessable Entity', response);
-    this.name = 'ValidationError';
+    super(message, 422, 'Unprocessable Entity', response)
+    this.name = 'ValidationError'
   }
 }
 
@@ -181,8 +179,8 @@ export class ServerError extends ApiError {
     statusText: string = 'Internal Server Error',
     response?: ApiErrorResponse
   ) {
-    super(message, status, statusText, response);
-    this.name = 'ServerError';
+    super(message, status, statusText, response)
+    this.name = 'ServerError'
   }
 }
 
@@ -191,8 +189,7 @@ export class ServerError extends ApiError {
  */
 export class CancellationError extends ApiError {
   constructor(message: string = 'Request was cancelled') {
-    super(message, 0, 'Cancelled');
-    this.name = 'CancellationError';
+    super(message, 0, 'Cancelled')
+    this.name = 'CancellationError'
   }
 }
-

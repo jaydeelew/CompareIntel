@@ -1,26 +1,26 @@
-import React from 'react';
+import React from 'react'
 
 /**
  * Button component props
  */
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   /** Button variant for styling */
-  variant?: 'primary' | 'secondary' | 'danger' | 'ghost';
+  variant?: 'primary' | 'secondary' | 'danger' | 'ghost'
   /** Button size */
-  size?: 'small' | 'medium' | 'large';
+  size?: 'small' | 'medium' | 'large'
   /** Whether button is in loading state */
-  isLoading?: boolean;
+  isLoading?: boolean
   /** Full width button */
-  fullWidth?: boolean;
+  fullWidth?: boolean
   /** Icon element to display before text */
-  icon?: React.ReactNode;
+  icon?: React.ReactNode
   /** Icon element to display after text */
-  iconAfter?: React.ReactNode;
+  iconAfter?: React.ReactNode
 }
 
 /**
  * Reusable Button component with consistent styling
- * 
+ *
  * @example
  * ```tsx
  * <Button variant="primary" onClick={handleClick}>
@@ -44,12 +44,12 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     },
     ref
   ) => {
-    const baseClasses = 'button';
-    const variantClasses = `button-${variant}`;
-    const sizeClasses = `button-${size}`;
-    const widthClasses = fullWidth ? 'button-full-width' : '';
-    const loadingClasses = isLoading ? 'button-loading' : '';
-    
+    const baseClasses = 'button'
+    const variantClasses = `button-${variant}`
+    const sizeClasses = `button-${size}`
+    const widthClasses = fullWidth ? 'button-full-width' : ''
+    const loadingClasses = isLoading ? 'button-loading' : ''
+
     const combinedClassName = [
       baseClasses,
       variantClasses,
@@ -59,15 +59,10 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       className,
     ]
       .filter(Boolean)
-      .join(' ');
+      .join(' ')
 
     return (
-      <button
-        ref={ref}
-        className={combinedClassName}
-        disabled={disabled || isLoading}
-        {...props}
-      >
+      <button ref={ref} className={combinedClassName} disabled={disabled || isLoading} {...props}>
         {isLoading && (
           <span className="button-spinner" aria-hidden="true">
             ⏳
@@ -85,9 +80,8 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
           </span>
         )}
       </button>
-    );
+    )
   }
-);
+)
 
-Button.displayName = 'Button';
-
+Button.displayName = 'Button'

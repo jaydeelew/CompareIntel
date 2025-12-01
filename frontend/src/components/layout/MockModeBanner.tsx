@@ -1,6 +1,6 @@
 interface MockModeBannerProps {
-  isAnonymous: boolean;
-  isDev?: boolean;
+  isAnonymous: boolean
+  isDev?: boolean
 }
 
 /**
@@ -13,11 +13,11 @@ export function MockModeBanner({ isAnonymous, isDev = false }: MockModeBannerPro
       <div className="mock-mode-banner-content">
         <span className="mock-mode-icon">🎭</span>
         <span className="mock-mode-text">
-          <strong>{isAnonymous ? 'Anonymous Mock Mode Active' : 'Mock Mode Active'}</strong> - Using test responses instead of real API calls
+          <strong>{isAnonymous ? 'Anonymous Mock Mode Active' : 'Mock Mode Active'}</strong> - Using
+          test responses instead of real API calls
           {isDev && <span className="dev-mode-indicator"> (Dev Mode)</span>}
         </span>
       </div>
     </div>
-  );
+  )
 }
-

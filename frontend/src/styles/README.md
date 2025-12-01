@@ -126,4 +126,3 @@ Remaining styles in `App.css` can be gradually migrated to additional modules:
 2. Consolidate all media queries into `responsive.css`
 3. Consider using CSS modules or styled-components for component-scoped styles
 4. Add CSS linting/prettier for consistency
-

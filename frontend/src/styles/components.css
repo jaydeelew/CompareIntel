@@ -135,7 +135,12 @@
 
 /* Compare Button */
 .compare-button {
-  background: linear-gradient(135deg, var(--primary-color) 0%, #3b82f6 50%, var(--primary-hover) 100%);
+  background: linear-gradient(
+    135deg,
+    var(--primary-color) 0%,
+    #3b82f6 50%,
+    var(--primary-hover) 100%
+  );
   color: var(--text-inverse);
   border: none;
   padding: var(--spacing-md) var(--spacing-xl);
@@ -157,7 +162,12 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.2) 50%, rgba(255, 255, 255, 0.1) 100%);
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.1) 0%,
+    rgba(255, 255, 255, 0.2) 50%,
+    rgba(255, 255, 255, 0.1) 100%
+  );
   opacity: 0;
   transition: opacity var(--transition-slow);
   pointer-events: none;
@@ -346,4 +356,3 @@
   font-size: var(--font-sm);
   margin: 0;
 }
-

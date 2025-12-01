@@ -1,6 +1,6 @@
 /**
  * Renderer Configuration Schema
- * 
+ *
  * Defines the structure for model-specific rendering configurations.
  * Each model can have its own configuration to handle formatting variations.
  */
@@ -9,51 +9,51 @@
  * Math delimiter pattern types
  */
 export type MathDelimiterType =
-  | 'double-dollar'    // $$...$$
-  | 'single-dollar'    // $...$
-  | 'bracket'         // \[...\]
-  | 'paren'           // \(...\)
-  | 'align-env'       // \begin{align}...\end{align}
-  | 'equation-env';   // \begin{equation}...\end{equation}
+  | 'double-dollar' // $$...$$
+  | 'single-dollar' // $...$
+  | 'bracket' // \[...\]
+  | 'paren' // \(...\)
+  | 'align-env' // \begin{align}...\end{align}
+  | 'equation-env' // \begin{equation}...\end{equation}
 
 /**
  * Math delimiter pattern definition
  */
 export interface MathDelimiterPattern {
   /** Regex pattern to match the delimiter */
-  pattern: RegExp;
+  pattern: RegExp
   /** Name/type of the delimiter */
-  name: MathDelimiterType;
+  name: MathDelimiterType
   /** Optional priority (lower numbers processed first) */
-  priority?: number;
+  priority?: number
 }
 
 /**
  * Preprocessing function type
  * Takes raw text and returns processed text
  */
-export type PreprocessingFunction = (text: string) => string;
+export type PreprocessingFunction = (text: string) => string
 
 /**
  * Post-processing function type
  * Takes rendered HTML and returns final HTML
  */
-export type PostProcessingFunction = (html: string) => string;
+export type PostProcessingFunction = (html: string) => string
 
 /**
  * Preprocessing pipeline options
  */
 export interface PreprocessingOptions {
   /** Remove HTML tags from math expressions */
-  removeHtmlFromMath?: boolean;
+  removeHtmlFromMath?: boolean
   /** Fix escaped dollar signs (e.g., \$ -> $) */
-  fixEscapedDollars?: boolean;
+  fixEscapedDollars?: boolean
   /** Remove MathML artifacts */
-  removeMathML?: boolean;
+  removeMathML?: boolean
   /** Remove SVG artifacts */
-  removeSVG?: boolean;
+  removeSVG?: boolean
   /** Custom preprocessing functions (applied in order) */
-  customPreprocessors?: PreprocessingFunction[];
+  customPreprocessors?: PreprocessingFunction[]
 }
 
 /**
@@ -61,23 +61,23 @@ export interface PreprocessingOptions {
  */
 export interface MarkdownProcessingRules {
   /** Process markdown links */
-  processLinks?: boolean;
+  processLinks?: boolean
   /** Fix broken markdown links */
-  fixBrokenLinks?: boolean;
+  fixBrokenLinks?: boolean
   /** Process markdown tables */
-  processTables?: boolean;
+  processTables?: boolean
   /** Process blockquotes */
-  processBlockquotes?: boolean;
+  processBlockquotes?: boolean
   /** Process horizontal rules */
-  processHorizontalRules?: boolean;
+  processHorizontalRules?: boolean
   /** Process headers */
-  processHeaders?: boolean;
+  processHeaders?: boolean
   /** Process bold/italic */
-  processBoldItalic?: boolean;
+  processBoldItalic?: boolean
   /** Process lists */
-  processLists?: boolean;
+  processLists?: boolean
   /** Process inline code */
-  processInlineCode?: boolean;
+  processInlineCode?: boolean
 }
 
 /**
@@ -85,19 +85,19 @@ export interface MarkdownProcessingRules {
  */
 export interface KatexOptions {
   /** Throw error on KaTeX parse errors (default: false) */
-  throwOnError?: boolean;
+  throwOnError?: boolean
   /** Strict mode (default: false) */
-  strict?: boolean | 'warn' | 'ignore';
+  strict?: boolean | 'warn' | 'ignore'
   /** Trust certain commands (function or array) */
-  trust?: boolean | ((context: { command?: string }) => boolean) | string[];
+  trust?: boolean | ((context: { command?: string }) => boolean) | string[]
   /** Custom macros */
-  macros?: Record<string, string>;
+  macros?: Record<string, string>
   /** Maximum size for KaTeX expressions */
-  maxSize?: number;
+  maxSize?: number
   /** Maximum expansion limit */
-  maxExpand?: number;
+  maxExpand?: number
   /** Error color for failed renders */
-  errorColor?: string;
+  errorColor?: string
 }
 
 /**
@@ -106,11 +106,11 @@ export interface KatexOptions {
  */
 export interface CodeBlockPreservationSettings {
   /** Always preserve code blocks (must be true) */
-  enabled: true;
+  enabled: true
   /** Extract code blocks before processing */
-  extractBeforeProcessing: true;
+  extractBeforeProcessing: true
   /** Restore code blocks after processing */
-  restoreAfterProcessing: true;
+  restoreAfterProcessing: true
 }
 
 /**
@@ -118,41 +118,41 @@ export interface CodeBlockPreservationSettings {
  */
 export interface ModelRendererConfig {
   /** Model identifier (e.g., "anthropic/claude-sonnet-4.5") */
-  modelId: string;
+  modelId: string
   /** Model version (optional, for tracking changes) */
-  version?: string;
-  
+  version?: string
+
   /** Math delimiter patterns for display math */
-  displayMathDelimiters: MathDelimiterPattern[];
+  displayMathDelimiters: MathDelimiterPattern[]
   /** Math delimiter patterns for inline math */
-  inlineMathDelimiters: MathDelimiterPattern[];
-  
+  inlineMathDelimiters: MathDelimiterPattern[]
+
   /** Preprocessing pipeline options */
-  preprocessing?: PreprocessingOptions;
-  
+  preprocessing?: PreprocessingOptions
+
   /** Markdown processing rules */
-  markdownProcessing?: MarkdownProcessingRules;
-  
+  markdownProcessing?: MarkdownProcessingRules
+
   /** KaTeX rendering options */
-  katexOptions?: KatexOptions;
-  
+  katexOptions?: KatexOptions
+
   /** Post-processing pipeline (applied after all rendering) */
-  postProcessing?: PostProcessingFunction[];
-  
+  postProcessing?: PostProcessingFunction[]
+
   /** Code block preservation settings (must always preserve) */
-  codeBlockPreservation: CodeBlockPreservationSettings;
-  
+  codeBlockPreservation: CodeBlockPreservationSettings
+
   /** Optional metadata */
   metadata?: {
     /** When this config was created */
-    createdAt?: string;
+    createdAt?: string
     /** When this config was last updated */
-    updatedAt?: string;
+    updatedAt?: string
     /** Notes about this configuration */
-    notes?: string;
+    notes?: string
     /** Whether this needs manual review */
-    needsManualReview?: boolean;
-  };
+    needsManualReview?: boolean
+  }
 }
 
 /**
@@ -161,6 +161,5 @@ export interface ModelRendererConfig {
  */
 export interface DefaultRendererConfig extends Omit<ModelRendererConfig, 'modelId'> {
   /** This is the default configuration */
-  isDefault: true;
+  isDefault: true
 }
-

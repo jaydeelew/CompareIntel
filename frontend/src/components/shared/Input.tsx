@@ -1,33 +1,33 @@
-import React from 'react';
+import React from 'react'
 
 /**
  * Input component props
  */
 export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   /** Label text for the input */
-  label?: string;
+  label?: string
   /** Error message to display */
-  error?: string;
+  error?: string
   /** Helper text to display below input */
-  helperText?: string;
+  helperText?: string
   /** Icon element to display before input */
-  icon?: React.ReactNode;
+  icon?: React.ReactNode
   /** Icon element to display after input */
-  iconAfter?: React.ReactNode;
+  iconAfter?: React.ReactNode
   /** Full width input */
-  fullWidth?: boolean;
+  fullWidth?: boolean
   /** Input container className */
-  containerClassName?: string;
+  containerClassName?: string
 }
 
 /**
  * Reusable Input component with label, error, and helper text support
- * 
+ *
  * @example
  * ```tsx
- * <Input 
- *   label="Email" 
- *   type="email" 
+ * <Input
+ *   label="Email"
+ *   type="email"
  *   error={errors.email}
  *   placeholder="Enter your email"
  * />
@@ -49,9 +49,9 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
     },
     ref
   ) => {
-    const inputId = id || `input-${Math.random().toString(36).substr(2, 9)}`;
-    const hasError = Boolean(error);
-    
+    const inputId = id || `input-${Math.random().toString(36).substr(2, 9)}`
+    const hasError = Boolean(error)
+
     const inputClassName = [
       'input',
       hasError ? 'input-error' : '',
@@ -60,7 +60,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
       className,
     ]
       .filter(Boolean)
-      .join(' ');
+      .join(' ')
 
     const containerClass = [
       'input-container',
@@ -68,7 +68,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
       containerClassName,
     ]
       .filter(Boolean)
-      .join(' ');
+      .join(' ')
 
     return (
       <div className={containerClass}>
@@ -110,35 +110,35 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
           </span>
         )}
       </div>
-    );
+    )
   }
-);
+)
 
-Input.displayName = 'Input';
+Input.displayName = 'Input'
 
 /**
  * Textarea component props
  */
 export interface TextareaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
   /** Label text for the textarea */
-  label?: string;
+  label?: string
   /** Error message to display */
-  error?: string;
+  error?: string
   /** Helper text to display below textarea */
-  helperText?: string;
+  helperText?: string
   /** Full width textarea */
-  fullWidth?: boolean;
+  fullWidth?: boolean
   /** Textarea container className */
-  containerClassName?: string;
+  containerClassName?: string
 }
 
 /**
  * Reusable Textarea component with label, error, and helper text support
- * 
+ *
  * @example
  * ```tsx
- * <Textarea 
- *   label="Message" 
+ * <Textarea
+ *   label="Message"
  *   rows={4}
  *   placeholder="Enter your message"
  * />
@@ -158,16 +158,12 @@ export const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
     },
     ref
   ) => {
-    const textareaId = id || `textarea-${Math.random().toString(36).substr(2, 9)}`;
-    const hasError = Boolean(error);
-    
-    const textareaClassName = [
-      'textarea',
-      hasError ? 'textarea-error' : '',
-      className,
-    ]
+    const textareaId = id || `textarea-${Math.random().toString(36).substr(2, 9)}`
+    const hasError = Boolean(error)
+
+    const textareaClassName = ['textarea', hasError ? 'textarea-error' : '', className]
       .filter(Boolean)
-      .join(' ');
+      .join(' ')
 
     const containerClass = [
       'textarea-container',
@@ -175,7 +171,7 @@ export const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
       containerClassName,
     ]
       .filter(Boolean)
-      .join(' ');
+      .join(' ')
 
     return (
       <div className={containerClass}>
@@ -205,9 +201,8 @@ export const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
           </span>
         )}
       </div>
-    );
+    )
   }
-);
+)
 
-Textarea.displayName = 'Textarea';
-
+Textarea.displayName = 'Textarea'

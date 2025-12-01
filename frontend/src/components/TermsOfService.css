@@ -1,134 +1,133 @@
 .terms-of-service {
-    min-height: 100vh;
-    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-    padding: 2rem 1rem;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-        'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-        sans-serif;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  padding: 2rem 1rem;
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell',
+    'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
 }
 
 .terms-container {
-    max-width: 900px;
-    margin: 0 auto;
-    background: white;
-    border-radius: 12px;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
-    padding: 3rem;
-    line-height: 1.8;
-    color: #333;
+  max-width: 900px;
+  margin: 0 auto;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+  padding: 3rem;
+  line-height: 1.8;
+  color: #333;
 }
 
 .terms-header {
-    text-align: center;
-    margin-bottom: 3rem;
-    padding-bottom: 2rem;
-    border-bottom: 2px solid #e0e0e0;
+  text-align: center;
+  margin-bottom: 3rem;
+  padding-bottom: 2rem;
+  border-bottom: 2px solid #e0e0e0;
 }
 
 .terms-header h1 {
-    font-size: 2.5rem;
-    color: #1e40af;
-    margin-bottom: 0.5rem;
-    font-weight: 700;
+  font-size: 2.5rem;
+  color: #1e40af;
+  margin-bottom: 0.5rem;
+  font-weight: 700;
 }
 
 .last-updated {
-    color: #666;
-    font-size: 0.9rem;
-    font-style: italic;
+  color: #666;
+  font-size: 0.9rem;
+  font-style: italic;
 }
 
 .terms-content {
-    margin-bottom: 2rem;
+  margin-bottom: 2rem;
 }
 
 .terms-content section {
-    margin-bottom: 2.5rem;
+  margin-bottom: 2.5rem;
 }
 
 .terms-content h2 {
-    font-size: 1.5rem;
-    color: #1e40af;
-    margin-bottom: 1rem;
-    font-weight: 600;
-    padding-top: 1rem;
+  font-size: 1.5rem;
+  color: #1e40af;
+  margin-bottom: 1rem;
+  font-weight: 600;
+  padding-top: 1rem;
 }
 
 .terms-content p {
-    margin-bottom: 1rem;
-    color: #444;
-    text-align: justify;
+  margin-bottom: 1rem;
+  color: #444;
+  text-align: justify;
 }
 
 .terms-content ul {
-    margin: 1rem 0;
-    padding-left: 2rem;
+  margin: 1rem 0;
+  padding-left: 2rem;
 }
 
 .terms-content li {
-    margin-bottom: 0.5rem;
-    color: #444;
+  margin-bottom: 0.5rem;
+  color: #444;
 }
 
 .terms-content li::marker {
-    color: #0ea5e9;
+  color: #0ea5e9;
 }
 
 .terms-footer {
-    margin-top: 3rem;
-    padding-top: 2rem;
-    border-top: 2px solid #e0e0e0;
-    text-align: center;
+  margin-top: 3rem;
+  padding-top: 2rem;
+  border-top: 2px solid #e0e0e0;
+  text-align: center;
 }
 
 .back-link {
-    display: inline-block;
-    color: #0ea5e9;
-    text-decoration: none;
-    font-weight: 600;
-    font-size: 1.1rem;
-    transition: color 0.2s ease;
+  display: inline-block;
+  color: #0ea5e9;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 1.1rem;
+  transition: color 0.2s ease;
 }
 
 .back-link:hover {
-    color: #0284c7;
-    text-decoration: underline;
+  color: #0284c7;
+  text-decoration: underline;
 }
 
 /* Responsive design */
 @media (max-width: 768px) {
-    .terms-container {
-        padding: 2rem 1.5rem;
-    }
+  .terms-container {
+    padding: 2rem 1.5rem;
+  }
 
-    .terms-header h1 {
-        font-size: 2rem;
-    }
+  .terms-header h1 {
+    font-size: 2rem;
+  }
 
-    .terms-content h2 {
-        font-size: 1.3rem;
-    }
+  .terms-content h2 {
+    font-size: 1.3rem;
+  }
 
-    .terms-content {
-        font-size: 0.95rem;
-    }
+  .terms-content {
+    font-size: 0.95rem;
+  }
 }
 
 @media (max-width: 480px) {
-    .terms-of-service {
-        padding: 1rem 0.5rem;
-    }
+  .terms-of-service {
+    padding: 1rem 0.5rem;
+  }
 
-    .terms-container {
-        padding: 1.5rem 1rem;
-    }
+  .terms-container {
+    padding: 1.5rem 1rem;
+  }
 
-    .terms-header h1 {
-        font-size: 1.75rem;
-    }
+  .terms-header h1 {
+    font-size: 1.75rem;
+  }
 
-    .terms-content h2 {
-        font-size: 1.2rem;
-    }
+  .terms-content h2 {
+    font-size: 1.2rem;
+  }
 }
-

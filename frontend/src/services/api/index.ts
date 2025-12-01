@@ -1,12 +1,12 @@
 /**
  * API Client Module
- * 
+ *
  * Centralized API client for CompareIntel frontend.
- * 
+ *
  * @example
  * ```typescript
  * import { apiClient, ApiError } from '@/services/api';
- * 
+ *
  * try {
  *   const response = await apiClient.get('/models');
  *   console.log(response.data);
@@ -19,7 +19,7 @@
  */
 
 // Export client
-export { ApiClient, createApiClient, apiClient } from './client';
+export { ApiClient, createApiClient, apiClient } from './client'
 
 // Export error classes
 export {
@@ -33,7 +33,7 @@ export {
   ValidationError,
   ServerError,
   CancellationError,
-} from './errors';
+} from './errors'
 
 // Export types
 export type {
@@ -50,7 +50,7 @@ export type {
   StreamHandler,
   StreamRequestConfig,
   ParsedError,
-} from './types';
+} from './types'
 
 // Export interceptors (for custom configurations)
 export {
@@ -63,5 +63,4 @@ export {
   loggingErrorInterceptor,
   loggingRequestInterceptor,
   loggingResponseInterceptor,
-} from './interceptors';
-
+} from './interceptors'

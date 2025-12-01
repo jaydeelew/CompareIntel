@@ -1,22 +1,22 @@
 /**
  * Component exports
- * 
+ *
  * Central export point for all application components
  */
 
-export { Footer } from './Footer';
+export { Footer } from './Footer'
 
 // Shared components
-export * from './shared';
+export * from './shared'
 
 // Layout components
-export * from './layout';
+export * from './layout'
 
 // Comparison components
-export * from './comparison';
+export * from './comparison'
 
 // Conversation components
-export * from './conversation';
+export * from './conversation'
 
 // Credits components
-export * from './credits';
+export * from './credits'

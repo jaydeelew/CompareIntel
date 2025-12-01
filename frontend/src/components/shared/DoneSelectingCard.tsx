@@ -1,5 +1,5 @@
 interface DoneSelectingCardProps {
-  onDone: () => void;
+  onDone: () => void
 }
 
 /**
@@ -16,12 +16,20 @@ export function DoneSelectingCard({ onDone }: DoneSelectingCardProps) {
           className="done-selecting-button"
           aria-label="Done selecting models"
         >
-          <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round">
+          <svg
+            width="44"
+            height="44"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="8"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
             <path d="M22 2L8 20L2 16" />
           </svg>
         </button>
       </div>
     </div>
-  );
+  )
 }
-

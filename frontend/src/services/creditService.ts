@@ -1,6 +1,6 @@
 /**
  * Credit Service
- * 
+ *
  * Handles credit-related API calls for the credits-based system
  */
 
@@ -113,7 +113,7 @@ export interface CreditEstimate {
 
 /**
  * Get current credit balance
- * 
+ *
  * @param fingerprint - Optional browser fingerprint for anonymous users
  */
 export async function getCreditBalance(fingerprint?: string): Promise<CreditBalance> {
@@ -125,7 +125,9 @@ export async function getCreditBalance(fingerprint?: string): Promise<CreditBala
   }
   params.append('timezone', userTimezone)
   const queryString = params.toString()
-  const response = await apiClient.get<CreditBalance>(`/credits/balance${queryString ? `?${queryString}` : ''}`)
+  const response = await apiClient.get<CreditBalance>(
+    `/credits/balance${queryString ? `?${queryString}` : ''}`
+  )
   return response.data
 }
 
@@ -145,13 +147,7 @@ export async function getCreditUsage(
 /**
  * Estimate credits needed for a request
  */
-export async function estimateCredits(
-  request: CreditEstimateRequest
-): Promise<CreditEstimate> {
-  const response = await apiClient.post<CreditEstimate>(
-    '/credits/estimate',
-    request
-  )
+export async function estimateCredits(request: CreditEstimateRequest): Promise<CreditEstimate> {
+  const response = await apiClient.post<CreditEstimate>('/credits/estimate', request)
   return response.data
 }
-

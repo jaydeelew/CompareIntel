@@ -54,7 +54,9 @@
   border-radius: var(--radius-lg);
   overflow: hidden;
   background: var(--bg-primary);
-  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  transition:
+    border-color 0.3s ease,
+    box-shadow 0.3s ease;
 }
 
 .provider-dropdown:hover {
@@ -93,12 +95,20 @@
 .provider-count {
   font-size: 0.875rem;
   font-weight: 400;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-family:
+    'Inter',
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    sans-serif;
   letter-spacing: 0.01em;
   padding: 0.25rem 0.5rem;
   border-radius: 8px;
   border: 1px solid var(--border-color);
-  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease;
   color: var(--text-muted);
   background: var(--bg-primary);
 }
@@ -109,7 +119,12 @@
   color: #ffffff;
   border: 1px solid #ffffff33;
   font-weight: 400;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-family:
+    'Inter',
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    sans-serif;
   letter-spacing: 0.01em;
 }
 
@@ -126,7 +141,12 @@
   color: #ffffff;
   border: 1px solid #ffffff33;
   font-weight: 400;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-family:
+    'Inter',
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    sans-serif;
   letter-spacing: 0.01em;
 }
 
@@ -271,12 +291,22 @@
 }
 
 .selected-models-grid::-webkit-scrollbar-thumb {
-  background: linear-gradient(135deg, var(--primary-color) 0%, #3b82f6 50%, var(--primary-hover) 100%);
+  background: linear-gradient(
+    135deg,
+    var(--primary-color) 0%,
+    #3b82f6 50%,
+    var(--primary-hover) 100%
+  );
   border-radius: 10px;
 }
 
 .selected-models-grid::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(135deg, var(--primary-hover) 0%, #3b82f6 50%, var(--primary-color) 100%);
+  background: linear-gradient(
+    135deg,
+    var(--primary-hover) 0%,
+    #3b82f6 50%,
+    var(--primary-color) 100%
+  );
 }
 
 /* Themed scrollbar for Firefox */
@@ -295,7 +325,12 @@
 }
 
 .selected-model-card {
-  background: linear-gradient(135deg, var(--primary-color) 0%, #3b82f6 50%, var(--primary-hover) 100%);
+  background: linear-gradient(
+    135deg,
+    var(--primary-color) 0%,
+    #3b82f6 50%,
+    var(--primary-hover) 100%
+  );
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: var(--radius-lg);
   padding: 0.75rem;
@@ -314,7 +349,12 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.2) 50%, rgba(255, 255, 255, 0.1) 100%);
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.1) 0%,
+    rgba(255, 255, 255, 0.2) 50%,
+    rgba(255, 255, 255, 0.1) 100%
+  );
   opacity: 0;
   transition: opacity 0.2s ease;
   pointer-events: none;
@@ -405,7 +445,11 @@
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  transition: box-shadow 0.3s, border-color 0.3s, background 0.3s, color 0.3s;
+  transition:
+    box-shadow 0.3s,
+    border-color 0.3s,
+    background 0.3s,
+    color 0.3s;
   cursor: pointer;
   outline: none;
   border: 2px solid rgba(255, 255, 255, 0.2);
@@ -468,7 +512,9 @@
   border: 2px solid #2563eb;
   border-radius: 4px;
   cursor: pointer;
-  transition: background 0.2s, border-color 0.2s;
+  transition:
+    background 0.2s,
+    border-color 0.2s;
   display: grid;
   place-content: center;
 }
@@ -539,7 +585,12 @@
 /* Note: Main styles are defined earlier in the file */
 
 .selected-model-card {
-  background: linear-gradient(135deg, var(--primary-color) 0%, #3b82f6 50%, var(--primary-hover) 100%);
+  background: linear-gradient(
+    135deg,
+    var(--primary-color) 0%,
+    #3b82f6 50%,
+    var(--primary-hover) 100%
+  );
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: var(--radius-lg);
   padding: 1.5rem;
@@ -557,7 +608,12 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.2) 50%, rgba(255, 255, 255, 0.1) 100%);
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.1) 0%,
+    rgba(255, 255, 255, 0.2) 50%,
+    rgba(255, 255, 255, 0.1) 100%
+  );
   opacity: 0;
   transition: opacity 0.2s ease;
   pointer-events: none;
@@ -630,7 +686,12 @@
 
 /* Button */
 .compare-button {
-  background: linear-gradient(135deg, var(--primary-color) 0%, #3b82f6 50%, var(--primary-hover) 100%);
+  background: linear-gradient(
+    135deg,
+    var(--primary-color) 0%,
+    #3b82f6 50%,
+    var(--primary-hover) 100%
+  );
   color: white;
   border: none;
   padding: 1rem 2rem;
@@ -653,7 +714,12 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.2) 50%, rgba(255, 255, 255, 0.1) 100%);
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.1) 0%,
+    rgba(255, 255, 255, 0.2) 50%,
+    rgba(255, 255, 255, 0.1) 100%
+  );
   opacity: 0;
   transition: opacity 0.3s ease;
   pointer-events: none;
@@ -1056,11 +1122,9 @@
   animation: sparkFlow12 2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
 }
 
-
 /* Spark flow animations - 12 particles expanding in circular formation to larger diameter */
 /* Each particle maintains its position on the circle as it expands outward */
 @keyframes sparkFlow1 {
-
   /* 0° - Up */
   0%,
   45% {
@@ -1125,7 +1189,6 @@
 }
 
 @keyframes sparkFlow2 {
-
   /* 30° */
   0%,
   45% {
@@ -1190,7 +1253,6 @@
 }
 
 @keyframes sparkFlow3 {
-
   /* 60° */
   0%,
   45% {
@@ -1255,7 +1317,6 @@
 }
 
 @keyframes sparkFlow4 {
-
   /* 90° - Right */
   0%,
   45% {
@@ -1320,7 +1381,6 @@
 }
 
 @keyframes sparkFlow5 {
-
   /* 120° */
   0%,
   45% {
@@ -1385,7 +1445,6 @@
 }
 
 @keyframes sparkFlow6 {
-
   /* 150° */
   0%,
   45% {
@@ -1450,7 +1509,6 @@
 }
 
 @keyframes sparkFlow7 {
-
   /* 180° - Down */
   0%,
   45% {
@@ -1515,7 +1573,6 @@
 }
 
 @keyframes sparkFlow8 {
-
   /* 210° */
   0%,
   45% {
@@ -1580,7 +1637,6 @@
 }
 
 @keyframes sparkFlow9 {
-
   /* 240° */
   0%,
   45% {
@@ -1645,7 +1701,6 @@
 }
 
 @keyframes sparkFlow10 {
-
   /* 270° - Left */
   0%,
   45% {
@@ -1710,7 +1765,6 @@
 }
 
 @keyframes sparkFlow11 {
-
   /* 300° */
   0%,
   45% {
@@ -1775,7 +1829,6 @@
 }
 
 @keyframes sparkFlow12 {
-
   /* 330° */
   0%,
   45% {
@@ -1972,7 +2025,6 @@
   }
 }
 
-
 /* Cancel Button */
 .cancel-button {
   background: linear-gradient(135deg, #991b1b, #7f1d1d);
@@ -1988,8 +2040,7 @@
   gap: 0.625rem;
   transition: all 0.25s ease;
   position: relative;
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(10px);
 }
 
@@ -1997,14 +2048,12 @@
   background: linear-gradient(135deg, #7f1d1d, #6b1c1c);
   border-color: #6b1c1c;
   transform: translateY(-1px);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15);
 }
 
 .cancel-button:active {
   transform: translateY(0);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
 .cancel-x {
@@ -2039,14 +2088,18 @@
   margin: 0 auto 1.5rem;
 }
 
-
 /* Models Count Indicator - Hybrid approach with CSS classes */
 .models-count-indicator {
   padding: 0.5rem 1rem;
   border-radius: 8px !important;
   font-size: 1rem;
   font-weight: 400;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-family:
+    'Inter',
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    sans-serif;
   letter-spacing: 0.01em;
   transition: all 0.2s ease;
   cursor: default;
@@ -2063,7 +2116,12 @@
   border: 1px solid #ffffff33;
   border-radius: 8px !important;
   font-weight: 400;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-family:
+    'Inter',
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    sans-serif;
   letter-spacing: 0.01em;
 }
 

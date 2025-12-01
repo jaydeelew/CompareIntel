@@ -1,47 +1,47 @@
 /**
  * API-specific types for the API client
- * 
+ *
  * Types used internally by the API client for configuration,
  * request/response handling, and interceptors.
  */
 
-import type { ApiErrorResponse } from '../../types/api';
+import type { ApiErrorResponse } from '../../types/api'
 
 /**
  * HTTP method types
  */
-export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE' | 'HEAD' | 'OPTIONS';
+export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE' | 'HEAD' | 'OPTIONS'
 
 /**
  * Request configuration options
  */
 export interface RequestConfig extends Omit<RequestInit, 'cache'> {
   /** Custom timeout in milliseconds */
-  timeout?: number;
+  timeout?: number
   /** Whether to retry on failure */
-  retry?: boolean;
+  retry?: boolean
   /** Maximum number of retry attempts */
-  maxRetries?: number;
+  maxRetries?: number
   /** Delay between retries in milliseconds */
-  retryDelay?: number;
+  retryDelay?: number
   /** Whether to cache the response (API client cache, not browser cache) */
-  enableCache?: boolean;
+  enableCache?: boolean
   /** Cache TTL in milliseconds */
-  cacheTTL?: number;
+  cacheTTL?: number
   /** Skip authentication token injection */
-  skipAuth?: boolean;
+  skipAuth?: boolean
   /** Custom headers (merged with default headers) */
-  headers?: HeadersInit;
+  headers?: HeadersInit
   /** Abort signal for request cancellation */
-  signal?: AbortSignal;
+  signal?: AbortSignal
   /** Internal: Cache key for this request */
-  _cacheKey?: string;
+  _cacheKey?: string
   /** Internal: Timeout ID for cleanup */
-  _timeoutId?: ReturnType<typeof setTimeout>;
+  _timeoutId?: ReturnType<typeof setTimeout>
   /** Internal: Token getter function */
-  getToken?: () => string | null;
+  getToken?: () => string | null
   /** Internal: Request URL for error handling */
-  _url?: string;
+  _url?: string
 }
 
 /**
@@ -49,15 +49,15 @@ export interface RequestConfig extends Omit<RequestInit, 'cache'> {
  */
 export interface ApiResponse<T = unknown> {
   /** Response data */
-  data: T;
+  data: T
   /** HTTP status code */
-  status: number;
+  status: number
   /** HTTP status text */
-  statusText: string;
+  statusText: string
   /** Response headers */
-  headers: Headers;
+  headers: Headers
   /** Original fetch response */
-  response: Response;
+  response: Response
 }
 
 /**
@@ -66,7 +66,7 @@ export interface ApiResponse<T = unknown> {
 export type RequestInterceptor = (
   url: string,
   config: RequestConfig
-) => Promise<[string, RequestConfig]> | [string, RequestConfig];
+) => Promise<[string, RequestConfig]> | [string, RequestConfig]
 
 /**
  * Response interceptor function
@@ -74,30 +74,27 @@ export type RequestInterceptor = (
 export type ResponseInterceptor = (
   response: Response,
   config: RequestConfig
-) => Promise<Response> | Response;
+) => Promise<Response> | Response
 
 /**
  * Error interceptor function
  */
-export type ErrorInterceptor = (
-  error: Error,
-  config: RequestConfig
-) => Promise<Error> | Error;
+export type ErrorInterceptor = (error: Error, config: RequestConfig) => Promise<Error> | Error
 
 /**
  * Retry configuration
  */
 export interface RetryConfig {
   /** Maximum number of retries */
-  maxRetries: number;
+  maxRetries: number
   /** Initial delay in milliseconds */
-  initialDelay: number;
+  initialDelay: number
   /** Maximum delay in milliseconds */
-  maxDelay: number;
+  maxDelay: number
   /** Exponential backoff multiplier */
-  backoffMultiplier: number;
+  backoffMultiplier: number
   /** Function to determine if error is retryable */
-  shouldRetry: (error: Error) => boolean;
+  shouldRetry: (error: Error) => boolean
 }
 
 /**
@@ -105,11 +102,11 @@ export interface RetryConfig {
  */
 export interface CacheEntry<T> {
   /** Cached data */
-  data: T;
+  data: T
   /** Timestamp when cached */
-  timestamp: number;
+  timestamp: number
   /** Time to live in milliseconds */
-  ttl: number;
+  ttl: number
 }
 
 /**
@@ -117,11 +114,11 @@ export interface CacheEntry<T> {
  */
 export interface CacheConfig {
   /** Default TTL in milliseconds */
-  defaultTTL: number;
+  defaultTTL: number
   /** Maximum cache size */
-  maxSize: number;
+  maxSize: number
   /** Function to generate cache key from request */
-  getKey: (url: string, config: RequestConfig) => string;
+  getKey: (url: string, config: RequestConfig) => string
 }
 
 /**
@@ -130,7 +127,7 @@ export interface CacheConfig {
 export function isStreamRequestConfig(
   config?: RequestConfig | StreamRequestConfig
 ): config is StreamRequestConfig {
-  return config !== undefined && 'onChunk' in config;
+  return config !== undefined && 'onChunk' in config
 }
 
 /**
@@ -138,42 +135,42 @@ export function isStreamRequestConfig(
  */
 export interface ApiClientConfig {
   /** Base URL for all requests */
-  baseURL: string;
+  baseURL: string
   /** Default timeout in milliseconds */
-  timeout?: number;
+  timeout?: number
   /** Default headers */
-  headers?: HeadersInit;
+  headers?: HeadersInit
   /** Retry configuration */
-  retry?: Partial<RetryConfig>;
+  retry?: Partial<RetryConfig>
   /** Cache configuration */
-  cache?: Partial<CacheConfig>;
+  cache?: Partial<CacheConfig>
   /** Token getter function */
-  getToken?: () => string | null;
+  getToken?: () => string | null
   /** Token refresh function */
-  refreshToken?: () => Promise<string | null>;
+  refreshToken?: () => Promise<string | null>
   /** Request interceptors */
-  requestInterceptors?: RequestInterceptor[];
+  requestInterceptors?: RequestInterceptor[]
   /** Response interceptors */
-  responseInterceptors?: ResponseInterceptor[];
+  responseInterceptors?: ResponseInterceptor[]
   /** Error interceptors */
-  errorInterceptors?: ErrorInterceptor[];
+  errorInterceptors?: ErrorInterceptor[]
 }
 
 /**
  * Streaming response handler
  */
-export type StreamHandler<T> = (chunk: T) => void;
+export type StreamHandler<T> = (chunk: T) => void
 
 /**
  * Streaming request configuration
  */
 export interface StreamRequestConfig extends RequestConfig {
   /** Handler for stream chunks */
-  onChunk?: StreamHandler<string>;
+  onChunk?: StreamHandler<string>
   /** Handler for stream completion */
-  onComplete?: () => void;
+  onComplete?: () => void
   /** Handler for stream errors */
-  onError?: (error: Error) => void;
+  onError?: (error: Error) => void
 }
 
 /**
@@ -181,12 +178,11 @@ export interface StreamRequestConfig extends RequestConfig {
  */
 export interface ParsedError {
   /** Error message */
-  message: string;
+  message: string
   /** Error code if available */
-  code?: string;
+  code?: string
   /** HTTP status */
-  status: number;
+  status: number
   /** Raw error response */
-  response?: ApiErrorResponse;
+  response?: ApiErrorResponse
 }
-

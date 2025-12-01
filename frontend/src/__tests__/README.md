@@ -21,4 +21,3 @@ npm run test:ui
 ```
 
 For detailed information on running tests, writing new tests, test utilities, E2E testing, and best practices, see the [Frontend Testing Guide](../../../docs/testing/FRONTEND_TESTING.md).
-

@@ -2295,7 +2295,6 @@ button.nav-button-primary {
   min-width: 200px;
 }
 
-
 @media (max-width: 640px) {
   .tier-selector-wrapper {
     flex-direction: column;

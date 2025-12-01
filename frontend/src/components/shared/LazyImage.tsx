@@ -1,72 +1,73 @@
-import React, { useState, useEffect, useRef } from 'react';
-import type { ImgHTMLAttributes } from 'react';
+import React, { useState, useEffect, useRef } from 'react'
+import type { ImgHTMLAttributes } from 'react'
 
-export interface LazyImageProps extends Omit<ImgHTMLAttributes<HTMLImageElement>, 'src' | 'srcSet' | 'loading'> {
+export interface LazyImageProps
+  extends Omit<ImgHTMLAttributes<HTMLImageElement>, 'src' | 'srcSet' | 'loading'> {
   /**
    * Image source URL
    */
-  src: string;
+  src: string
   /**
    * Alternative text for the image
    */
-  alt: string;
+  alt: string
   /**
    * Optional placeholder image URL to show while loading
    */
-  placeholder?: string;
+  placeholder?: string
   /**
    * Optional blur data URL for progressive loading
    */
-  blurDataURL?: string;
+  blurDataURL?: string
   /**
    * Whether to use native lazy loading (loading="lazy")
    * Set to false to use Intersection Observer instead
    */
-  useNativeLazy?: boolean;
+  useNativeLazy?: boolean
   /**
    * Root margin for Intersection Observer (e.g., "50px")
    */
-  rootMargin?: string;
+  rootMargin?: string
   /**
    * Threshold for Intersection Observer (0-1)
    */
-  threshold?: number;
+  threshold?: number
   /**
    * Optional srcSet for responsive images
    */
-  srcSet?: string;
+  srcSet?: string
   /**
    * Optional sizes attribute for responsive images
    */
-  sizes?: string;
+  sizes?: string
   /**
    * Optional picture sources for modern formats (WebP, AVIF)
    */
   sources?: Array<{
-    srcSet: string;
-    type: string;
-    media?: string;
-  }>;
+    srcSet: string
+    type: string
+    media?: string
+  }>
   /**
    * Callback when image loads successfully
    */
-  onLoad?: () => void;
+  onLoad?: () => void
   /**
    * Callback when image fails to load
    */
-  onError?: () => void;
+  onError?: () => void
 }
 
 /**
  * LazyImage component with lazy loading, modern format support, and progressive loading
- * 
+ *
  * Features:
  * - Native lazy loading with Intersection Observer fallback
  * - Support for WebP/AVIF via picture element
  * - Progressive loading with blur placeholder
  * - Responsive images via srcSet
  * - Error handling with fallback
- * 
+ *
  * @example
  * ```tsx
  * <LazyImage
@@ -98,60 +99,61 @@ export const LazyImage: React.FC<LazyImageProps> = ({
   style,
   ...rest
 }) => {
-  const [isLoaded, setIsLoaded] = useState(false);
-  const [isInView, setIsInView] = useState(useNativeLazy);
-  const [hasError, setHasError] = useState(false);
-  const imgRef = useRef<HTMLImageElement>(null);
-  const pictureRef = useRef<HTMLPictureElement>(null);
+  const [isLoaded, setIsLoaded] = useState(false)
+  const [isInView, setIsInView] = useState(useNativeLazy)
+  const [hasError, setHasError] = useState(false)
+  const imgRef = useRef<HTMLImageElement>(null)
+  const pictureRef = useRef<HTMLPictureElement>(null)
 
   // Intersection Observer for non-native lazy loading
   useEffect(() => {
-    if (useNativeLazy || isInView) return;
+    if (useNativeLazy || isInView) return
 
-    const targetElement = sources && sources.length > 0 ? pictureRef.current : imgRef.current;
-    if (!targetElement) return;
+    const targetElement = sources && sources.length > 0 ? pictureRef.current : imgRef.current
+    if (!targetElement) return
 
     const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
+      entries => {
+        entries.forEach(entry => {
           if (entry.isIntersecting) {
-            setIsInView(true);
-            observer.disconnect();
+            setIsInView(true)
+            observer.disconnect()
           }
-        });
+        })
       },
       {
         rootMargin,
         threshold,
       }
-    );
+    )
 
-    observer.observe(targetElement);
+    observer.observe(targetElement)
 
     return () => {
-      observer.disconnect();
-    };
-  }, [useNativeLazy, isInView, rootMargin, threshold, sources]);
+      observer.disconnect()
+    }
+  }, [useNativeLazy, isInView, rootMargin, threshold, sources])
 
   const handleLoad = () => {
-    setIsLoaded(true);
-    onLoad?.();
-  };
+    setIsLoaded(true)
+    onLoad?.()
+  }
 
   const handleError = () => {
-    setHasError(true);
-    onError?.();
-  };
+    setHasError(true)
+    onError?.()
+  }
 
   // Combine styles
   const imageStyle: React.CSSProperties = {
     ...style,
     transition: 'opacity 0.3s ease-in-out',
     opacity: isLoaded ? 1 : 0.5,
-    ...(blurDataURL && !isLoaded && {
-      filter: 'blur(10px)',
-    }),
-  };
+    ...(blurDataURL &&
+      !isLoaded && {
+        filter: 'blur(10px)',
+      }),
+  }
 
   // Render picture element if sources are provided (for modern formats)
   if (sources && sources.length > 0) {
@@ -209,7 +211,7 @@ export const LazyImage: React.FC<LazyImageProps> = ({
           </div>
         )}
       </picture>
-    );
+    )
   }
 
   // Render regular img element
@@ -285,8 +287,7 @@ export const LazyImage: React.FC<LazyImageProps> = ({
         </div>
       )}
     </div>
-  );
-};
+  )
+}
 
-LazyImage.displayName = 'LazyImage';
-
+LazyImage.displayName = 'LazyImage'

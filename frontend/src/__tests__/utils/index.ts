@@ -1,9 +1,9 @@
 /**
  * Test Utilities Index
- * 
+ *
  * Central export point for all test utilities.
  * Import from this module for convenient access to all testing helpers.
- * 
+ *
  * @example
  * ```ts
  * import { renderWithProviders, createMockUser, mockCompare } from '@/__tests__/utils';
@@ -18,11 +18,11 @@ export {
   createMockEvent,
   mockWindowLocation,
   type CustomRenderOptions,
-} from './test-utils';
+} from './test-utils'
 
 // Re-export React Testing Library utilities
-export * from '@testing-library/react';
-export { default as userEvent } from '@testing-library/user-event';
+export * from '@testing-library/react'
+export { default as userEvent } from '@testing-library/user-event'
 
 // Test data factories
 export {
@@ -45,7 +45,7 @@ export {
   createMockRegisterData,
   createMockStreamEvent,
   createMockStreamEvents,
-} from './test-factories';
+} from './test-factories'
 
 // Mock API responses
 export {
@@ -74,7 +74,7 @@ export {
   mockForbiddenResponse,
   mockRateLimitExceededResponse,
   mockInternalServerErrorResponse,
-} from './mock-api-responses';
+} from './mock-api-responses'
 
 // Mock service implementations
 export {
@@ -101,5 +101,4 @@ export {
   createMockServiceModule,
   resetAllMocks,
   setupMockServices,
-} from './mock-services';
-
+} from './mock-services'
