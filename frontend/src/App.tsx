@@ -3880,13 +3880,20 @@ function AppContent() {
           timeoutId = null
         }
 
+        // Safety check: ensure selectedModels is valid
+        if (!selectedModels || !Array.isArray(selectedModels) || selectedModels.length === 0) {
+          return
+        }
+
         const now = Date.now()
 
         // Check if any models are actively streaming (have received chunks recently and not completed)
         // Use a short window (ACTIVE_STREAMING_WINDOW) to determine if model is currently streaming
+        // Note: event.model from backend uses raw model ID format, same as selectedModels
         const hasActiveStreaming = selectedModels.some(modelId => {
-          if (completedModels.has(modelId)) return false
-          const lastChunkTime = modelLastChunkTimes[modelId]
+          if (!modelId || completedModels.has(modelId)) return false
+          // Check both raw model ID and formatted model ID to handle any format differences
+          const lastChunkTime = modelLastChunkTimes[modelId] || modelLastChunkTimes[createModelId(modelId)]
           // Model is actively streaming if it has received a chunk within the active streaming window
           return lastChunkTime !== undefined && (now - lastChunkTime) < ACTIVE_STREAMING_WINDOW
         })
@@ -3906,27 +3913,41 @@ function AppContent() {
 
         // No streaming activity and there are unfinished models - start 1 minute timer
         timeoutId = setTimeout(() => {
-          const checkNow = Date.now()
-          // Check again if any models are actively streaming (using the short window)
-          const stillHasActiveStreaming = selectedModels.some(modelId => {
-            if (completedModels.has(modelId)) return false
-            const lastChunkTime = modelLastChunkTimes[modelId]
-            // Model is actively streaming if it has received a chunk within the active streaming window
-            return lastChunkTime !== undefined && (checkNow - lastChunkTime) < ACTIVE_STREAMING_WINDOW
-          })
+          try {
+            // Safety check: ensure selectedModels is still valid
+            if (!selectedModels || !Array.isArray(selectedModels) || selectedModels.length === 0) {
+              return
+            }
 
-          const allModelsCompletedNow = completedModels.size === selectedModels.length
+            const checkNow = Date.now()
+            // Check again if any models are actively streaming (using the short window)
+            // Note: event.model from backend uses raw model ID format, same as selectedModels
+            const stillHasActiveStreaming = selectedModels.some(modelId => {
+              if (!modelId || completedModels.has(modelId)) return false
+              // Check both raw model ID and formatted model ID to handle any format differences
+              const lastChunkTime = modelLastChunkTimes[modelId] || modelLastChunkTimes[createModelId(modelId)]
+              // Model is actively streaming if it has received a chunk within the active streaming window
+              return lastChunkTime !== undefined && (checkNow - lastChunkTime) < ACTIVE_STREAMING_WINDOW
+            })
 
-          if (allModelsCompletedNow) {
-            // All models completed - no need to abort
-            return
-          }
+            const allModelsCompletedNow = completedModels.size === selectedModels.length
 
-          if (stillHasActiveStreaming) {
-            // Activity detected - reset timer (this handles case where model resumes streaming)
-            resetStreamingTimeout()
-          } else {
-            // No activity and unfinished models - timeout
+            if (allModelsCompletedNow) {
+              // All models completed - no need to abort
+              return
+            }
+
+            if (stillHasActiveStreaming) {
+              // Activity detected - reset timer (this handles case where model resumes streaming)
+              resetStreamingTimeout()
+            } else {
+              // No activity and unfinished models - timeout
+              controller.abort()
+            }
+          } catch (error) {
+            // Catch any errors in timeout callback to prevent white screen
+            console.error('Error in streaming timeout callback:', error)
+            // Still abort on error to prevent hanging
             controller.abort()
           }
         }, TIMEOUT_DURATION)
@@ -5121,13 +5142,18 @@ function AppContent() {
       
       if (err instanceof Error && err.name === 'AbortError') {
         // Handle timeout: mark incomplete models as failed and format successful ones
+        // Note: event.model uses raw model ID format (same as selectedModels)
         const timeoutModelErrors: { [key: string]: boolean } = { ...localModelErrors }
         selectedModels.forEach(modelId => {
-          const createdModelId = createModelId(modelId)
+          // Check both raw and formatted model ID formats for consistency
+          const rawModelId = modelId
+          const formattedModelId = createModelId(modelId)
           // If model hasn't completed, it should be marked as failed (timeout = failure)
           // This handles cases where response was cut short with partial content
-          if (!completedModels.has(createdModelId)) {
-            timeoutModelErrors[createdModelId] = true
+          if (!completedModels.has(rawModelId) && !completedModels.has(formattedModelId)) {
+            // Store error for both formats to ensure consistency
+            timeoutModelErrors[rawModelId] = true
+            timeoutModelErrors[formattedModelId] = true
           }
         })
         setModelErrors(timeoutModelErrors)
@@ -5135,11 +5161,13 @@ function AppContent() {
         // Switch successful models to formatted view even on timeout
         const formattedTabs: ActiveResultTabs = {} as ActiveResultTabs
         selectedModels.forEach(modelId => {
-          const createdModelId = createModelId(modelId)
-          const content = streamingResults[createdModelId] || ''
-          const hasError = timeoutModelErrors[createdModelId] === true || isErrorMessage(content)
+          const rawModelId = modelId
+          const formattedModelId = createModelId(modelId)
+          // Check both formats for content
+          const content = streamingResults[rawModelId] || streamingResults[formattedModelId] || ''
+          const hasError = timeoutModelErrors[rawModelId] === true || timeoutModelErrors[formattedModelId] === true || isErrorMessage(content)
           if (!hasError && content.trim().length > 0) {
-            formattedTabs[createdModelId] = RESULT_TAB.FORMATTED
+            formattedTabs[formattedModelId] = RESULT_TAB.FORMATTED
           }
         })
         setActiveResultTabs(prev => ({ ...prev, ...formattedTabs }))
@@ -5148,9 +5176,11 @@ function AppContent() {
         if (!isFollowUpMode) {
           setConversations(prevConversations => {
             return prevConversations.map(conv => {
-              const content = streamingResults[conv.modelId] || ''
-              const startTime = modelStartTimes[conv.modelId]
-              const completionTime = modelCompletionTimes[conv.modelId]
+              // conv.modelId is already formatted (from createModelId)
+              const rawModelId = selectedModels.find(m => createModelId(m) === conv.modelId) || conv.modelId
+              const content = streamingResults[rawModelId] || streamingResults[conv.modelId] || ''
+              const startTime = modelStartTimes[rawModelId] || modelStartTimes[conv.modelId]
+              const completionTime = modelCompletionTimes[rawModelId] || modelCompletionTimes[conv.modelId]
 
               return {
                 ...conv,
@@ -5173,11 +5203,15 @@ function AppContent() {
 
         // Refresh credits if any models completed successfully before timeout
         // The backend should have deducted credits for successful models even if the client disconnected
+        // Note: event.model uses raw model ID format (same as selectedModels)
         const successfulModelsCount = selectedModels.filter(modelId => {
-          const createdModelId = createModelId(modelId)
-          const hasCompleted = completedModels.has(createdModelId)
-          const hasError = timeoutModelErrors[createdModelId] === true
-          const content = streamingResults[createdModelId] || ''
+          const rawModelId = modelId
+          const formattedModelId = createModelId(modelId)
+          // Check both formats for completion
+          const hasCompleted = completedModels.has(rawModelId) || completedModels.has(formattedModelId)
+          const hasError = timeoutModelErrors[rawModelId] === true || timeoutModelErrors[formattedModelId] === true
+          // Check both formats for content
+          const content = streamingResults[rawModelId] || streamingResults[formattedModelId] || ''
           const isError = isErrorMessage(content)
           return hasCompleted && !hasError && !isError && content.trim().length > 0
         }).length
@@ -5218,14 +5252,47 @@ function AppContent() {
           const elapsedSeconds = (elapsedTime / 1000).toFixed(1)
           setError(`Comparison cancelled by user after ${elapsedSeconds} seconds`)
         } else {
-          // Simplified timeout message: always shows 1 minute timeout
-          const completedCount = completedModels.size
+          // Properly count successful, failed, and timed-out models
           const totalCount = selectedModels.length
-          const timedOutCount = totalCount - completedCount
+          let successfulCount = 0
+          let failedCount = 0
+          let timedOutCount = 0
+
+          selectedModels.forEach(modelId => {
+            // Check both raw and formatted model ID formats
+            const rawModelId = modelId
+            const formattedModelId = createModelId(modelId)
+            const modelIdToCheck = completedModels.has(rawModelId) ? rawModelId : formattedModelId
+            
+            if (completedModels.has(modelIdToCheck)) {
+              // Model completed - check if it was successful or failed
+              const hasError = localModelErrors[rawModelId] === true || localModelErrors[formattedModelId] === true
+              const content = streamingResults[rawModelId] || streamingResults[formattedModelId] || ''
+              const isError = hasError || isErrorMessage(content)
+              
+              if (isError || content.trim().length === 0) {
+                failedCount++
+              } else {
+                successfulCount++
+              }
+            } else {
+              // Model didn't complete - check if it was actively streaming
+              const lastChunkTime = modelLastChunkTimes[rawModelId] || modelLastChunkTimes[formattedModelId]
+              const wasStreaming = lastChunkTime !== undefined && (Date.now() - lastChunkTime) < ACTIVE_STREAMING_WINDOW
+              
+              if (wasStreaming) {
+                // Model was streaming when timeout occurred
+                timedOutCount++
+              } else {
+                // Model never started or stopped streaming long ago
+                timedOutCount++
+              }
+            }
+          })
 
           let errorMessage: string
 
-          if (completedCount === 0) {
+          if (successfulCount === 0 && failedCount === 0 && timedOutCount === totalCount) {
             // No models completed - show timeout message
             const modelText = totalCount === 1 ? 'model' : 'models'
             const suggestionText =
@@ -5233,14 +5300,30 @@ function AppContent() {
                 ? 'Please wait a moment and try again.'
                 : 'Try selecting fewer models, or wait a moment and try again.'
             errorMessage = `Request timed out after 1 minute with no response (${totalCount} ${modelText}). ${suggestionText}`
-          } else if (completedCount < totalCount) {
-            // Some models completed, some timed out
-            const completedText = completedCount === 1 ? 'model completed' : 'models completed'
-            const timedOutText = timedOutCount === 1 ? 'model timed out' : 'models timed out'
-            errorMessage = `${completedCount} ${completedText}, but ${timedOutCount} ${timedOutText} after 1 minute of inactivity.`
           } else {
-            // All models completed (shouldn't happen in catch block, but handle gracefully)
-            errorMessage = 'All models completed successfully.'
+            // Build detailed error message
+            const parts: string[] = []
+            
+            if (successfulCount > 0) {
+              const text = successfulCount === 1 ? 'model completed successfully' : 'models completed successfully'
+              parts.push(`${successfulCount} ${text}`)
+            }
+            
+            if (failedCount > 0) {
+              const text = failedCount === 1 ? 'model failed' : 'models failed'
+              parts.push(`${failedCount} ${text}`)
+            }
+            
+            if (timedOutCount > 0) {
+              const text = timedOutCount === 1 ? 'model timed out' : 'models timed out'
+              parts.push(`${timedOutCount} ${text} after 1 minute of inactivity`)
+            }
+            
+            if (parts.length > 0) {
+              errorMessage = parts.join(', ') + '.'
+            } else {
+              errorMessage = 'Request timed out after 1 minute of inactivity.'
+            }
           }
 
           setError(errorMessage)
