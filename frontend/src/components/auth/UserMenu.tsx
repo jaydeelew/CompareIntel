@@ -631,7 +631,7 @@ export const UserMenu: React.FC = () => {
                   size. Higher tiers give you more monthly credits AND let you compare more models
                   at once!
                 </p>
-                <p className="pricing-notice" style={{ marginTop: '0.5rem', fontSize: '0.85rem' }}>
+                <p className="pricing-notice" style={{ marginTop: '0.5rem' }}>
                   <strong>How credits work:</strong> 1 credit = 1,000 effective tokens. Effective
                   tokens = input tokens + (output tokens × 2.5). Average comparison uses ~5 credits.
                 </p>
