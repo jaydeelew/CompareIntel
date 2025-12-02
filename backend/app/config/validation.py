@@ -144,7 +144,7 @@ def validate_config() -> None:
     elif settings.model_inactivity_timeout >= 60:
         warnings.append(
             f"model_inactivity_timeout ({settings.model_inactivity_timeout}s) should be less than 60s "
-            "(frontend timeout) to ensure backend completes before frontend aborts."
+            "to ensure backend completes before frontend timeout. Recommended: 55s for 5-second buffer."
         )
     
     # ========================================================================

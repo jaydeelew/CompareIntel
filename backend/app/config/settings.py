@@ -69,8 +69,9 @@ class Settings(BaseSettings):
     
     # Backend per-model inactivity timeout (in seconds)
     # If a model doesn't send any chunks within this time, it's marked as timed out.
-    # Must be shorter than frontend's 60-second timeout to ensure backend completes first.
-    model_inactivity_timeout: int = 45
+    # Set to 55s to give 5-second buffer before frontend's 60-second timeout.
+    # User-facing message displays "1 minute" for cleaner UX.
+    model_inactivity_timeout: int = 55
     
     # Pydantic Settings v2 configuration
     model_config = SettingsConfigDict(
