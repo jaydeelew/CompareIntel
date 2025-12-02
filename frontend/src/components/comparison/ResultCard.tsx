@@ -66,8 +66,10 @@ export const ResultCard: React.FC<ResultCardProps> = ({
   onSwitchTab,
   className = '',
 }) => {
-  const latestMessage = messages[messages.length - 1]
-  const safeId = getSafeId(modelId)
+  // Safety check for messages array
+  const safeMessages = messages && Array.isArray(messages) ? messages : []
+  const latestMessage = safeMessages[safeMessages.length - 1]
+  const safeId = getSafeId(modelId || 'unknown')
 
   // Fallback error detection: check the message content directly if isError prop is not set correctly
   const hasError = isError || isErrorMessage(latestMessage?.content)
@@ -206,13 +208,13 @@ export const ResultCard: React.FC<ResultCardProps> = ({
         </div>
       </div>
       <div className="conversation-content" id={`conversation-content-${safeId}`}>
-        {messages.map(message => (
+        {safeMessages.map((message, index) => (
           <MessageBubble
-            key={String(message.id)}
-            id={String(message.id)}
-            type={message.type}
-            content={message.content}
-            timestamp={message.timestamp}
+            key={message.id ? String(message.id) : `msg-${index}`}
+            id={message.id ? String(message.id) : `msg-${index}`}
+            type={message.type || 'assistant'}
+            content={message.content || ''}
+            timestamp={message.timestamp || new Date().toISOString()}
             activeTab={activeTab}
           />
         ))}

@@ -2147,6 +2147,15 @@ function AppContent() {
     timestamp: customTimestamp || new Date().toISOString(),
   })
 
+  // Simple token estimation function (1 token ≈ 4 chars)
+  // Used for estimating output tokens when not provided by API
+  const estimateTokensSimple = (text: string): number => {
+    if (!text || !text.trim()) {
+      return 0
+    }
+    return Math.max(1, Math.ceil(text.length / 4))
+  }
+
   // Helper function to switch tabs for a specific conversation
   const switchResultTab = (modelId: string, tab: ResultTab) => {
     setActiveResultTabs((prev: ActiveResultTabs) => ({
@@ -3211,7 +3220,7 @@ function AppContent() {
     if (couldNotSelectAll && !allProviderModelsSelected && !isFollowUpMode) {
       const tierName = !isAuthenticated ? 'Anonymous' : user?.subscription_tier || 'free'
       setError(
-        `Your ${tierName} tier allows a maximum of ${maxModelsLimit} models per comparison. Not all models from ${provider} could be selected.`
+        `Your ${tierName} tier allows a maximum of ${maxModelsLimit} models per comparison. Not all available models from ${provider} could be selected.`
       )
       setTimeout(() => {
         setError(null)
@@ -3893,9 +3902,10 @@ function AppContent() {
         const hasActiveStreaming = selectedModels.some(modelId => {
           if (!modelId || completedModels.has(modelId)) return false
           // Check both raw model ID and formatted model ID to handle any format differences
-          const lastChunkTime = modelLastChunkTimes[modelId] || modelLastChunkTimes[createModelId(modelId)]
+          const lastChunkTime =
+            modelLastChunkTimes[modelId] || modelLastChunkTimes[createModelId(modelId)]
           // Model is actively streaming if it has received a chunk within the active streaming window
-          return lastChunkTime !== undefined && (now - lastChunkTime) < ACTIVE_STREAMING_WINDOW
+          return lastChunkTime !== undefined && now - lastChunkTime < ACTIVE_STREAMING_WINDOW
         })
 
         // Check if all models are completed
@@ -3925,9 +3935,12 @@ function AppContent() {
             const stillHasActiveStreaming = selectedModels.some(modelId => {
               if (!modelId || completedModels.has(modelId)) return false
               // Check both raw model ID and formatted model ID to handle any format differences
-              const lastChunkTime = modelLastChunkTimes[modelId] || modelLastChunkTimes[createModelId(modelId)]
+              const lastChunkTime =
+                modelLastChunkTimes[modelId] || modelLastChunkTimes[createModelId(modelId)]
               // Model is actively streaming if it has received a chunk within the active streaming window
-              return lastChunkTime !== undefined && (checkNow - lastChunkTime) < ACTIVE_STREAMING_WINDOW
+              return (
+                lastChunkTime !== undefined && checkNow - lastChunkTime < ACTIVE_STREAMING_WINDOW
+              )
             })
 
             const allModelsCompletedNow = completedModels.size === selectedModels.length
@@ -4006,7 +4019,7 @@ function AppContent() {
 
       // Track which models have had listeners set up (to avoid duplicates)
       const listenersSetUp = new Set<string>()
-      
+
       // Track if we received an error event (but continue processing to save partial results)
       let streamError: Error | null = null
 
@@ -4018,7 +4031,7 @@ function AppContent() {
             const { done, value } = await reader.read()
 
             if (done) break
-            
+
             // If we already have an error, stop processing new chunks but continue to save what we have
             if (streamError) {
               break
@@ -4163,7 +4176,10 @@ function AppContent() {
                               setCreditBalance(balance)
                             })
                             .catch(error =>
-                              console.error('Failed to refresh authenticated credit balance after all models completed:', error)
+                              console.error(
+                                'Failed to refresh authenticated credit balance after all models completed:',
+                                error
+                              )
                             )
                         } else {
                           // For anonymous users, refresh credit balance from API
@@ -4173,7 +4189,10 @@ function AppContent() {
                               setCreditBalance(balance)
                             })
                             .catch(error =>
-                              console.error('Failed to refresh anonymous credit balance after all models completed:', error)
+                              console.error(
+                                'Failed to refresh anonymous credit balance after all models completed:',
+                                error
+                              )
                             )
                         }
                       }, 500) // Small delay to ensure backend has processed all completions
@@ -4621,7 +4640,7 @@ function AppContent() {
             clearTimeout(timeoutId)
             timeoutId = null
           }
-          
+
           // If we received an error event, handle it gracefully
           if (streamError) {
             // Mark incomplete models as failed
@@ -4633,7 +4652,7 @@ function AppContent() {
               }
             })
             setModelErrors(errorModelErrors)
-            
+
             // Show error message but don't crash - partial results are still valuable
             setError(`Streaming error: ${streamError.message}. Partial results have been saved.`)
             // Clear error after 10 seconds
@@ -5024,11 +5043,11 @@ function AppContent() {
         const hasAnyResults = Object.keys(streamingResults).some(
           modelId => (streamingResults[modelId] || '').trim().length > 0
         )
-        
+
         if (!hasAnyResults) {
           return // No results to save
         }
-        
+
         // Mark incomplete models as failed
         // Note: event.model uses raw model ID format (same as selectedModels)
         const errorModelErrors: { [key: string]: boolean } = { ...(localModelErrors || {}) }
@@ -5048,7 +5067,7 @@ function AppContent() {
           })
         }
         setModelErrors(errorModelErrors)
-        
+
         // Update response with partial results
         setResponse({
           results: { ...streamingResults },
@@ -5069,19 +5088,29 @@ function AppContent() {
             processing_time_ms: Date.now() - startTime,
           },
         })
-        
+
         // Update conversations with partial results
         if (!isFollowUpMode) {
           setConversations(prevConversations => {
             return prevConversations.map(conv => {
               // conv.modelId is already formatted (from createModelId)
               // Find the raw model ID to look up streaming results
-              const rawModelId = selectedModels && Array.isArray(selectedModels) 
-                ? selectedModels.find(m => createModelId(m) === conv.modelId) || conv.modelId
-                : conv.modelId
-              const content = (streamingResults && (streamingResults[rawModelId] || streamingResults[conv.modelId])) || ''
-              const startTime = (modelStartTimes && (modelStartTimes[rawModelId] || modelStartTimes[conv.modelId])) || undefined
-              const completionTime = (modelCompletionTimes && (modelCompletionTimes[rawModelId] || modelCompletionTimes[conv.modelId])) || undefined
+              const rawModelId =
+                selectedModels && Array.isArray(selectedModels)
+                  ? selectedModels.find(m => createModelId(m) === conv.modelId) || conv.modelId
+                  : conv.modelId
+              const content =
+                (streamingResults &&
+                  (streamingResults[rawModelId] || streamingResults[conv.modelId])) ||
+                ''
+              const startTime =
+                (modelStartTimes &&
+                  (modelStartTimes[rawModelId] || modelStartTimes[conv.modelId])) ||
+                undefined
+              const completionTime =
+                (modelCompletionTimes &&
+                  (modelCompletionTimes[rawModelId] || modelCompletionTimes[conv.modelId])) ||
+                undefined
 
               return {
                 ...conv,
@@ -5101,7 +5130,7 @@ function AppContent() {
             })
           })
         }
-        
+
         // Save to history (same logic as in finally block)
         setTimeout(() => {
           if (!isAuthenticated && !isFollowUpMode) {
@@ -5122,9 +5151,7 @@ function AppContent() {
                 const allUserMessages = conversationsWithMessages
                   .flatMap(conv => conv.messages)
                   .filter(msg => msg.type === 'user')
-                  .sort(
-                    (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
-                  )
+                  .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
 
                 const firstUserMessage = allUserMessages[0]
 
@@ -5154,7 +5181,7 @@ function AppContent() {
           }
         }, 200)
       }
-      
+
       if (err instanceof Error && err.name === 'AbortError') {
         // Handle timeout: mark incomplete models as failed and format successful ones
         // Note: event.model uses raw model ID format (same as selectedModels)
@@ -5190,8 +5217,14 @@ function AppContent() {
             const rawModelId = modelId
             const formattedModelId = createModelId(modelId)
             // Check both formats for content
-            const content = (streamingResults && (streamingResults[rawModelId] || streamingResults[formattedModelId])) || ''
-            const hasError = timeoutModelErrors[rawModelId] === true || timeoutModelErrors[formattedModelId] === true || isErrorMessage(content)
+            const content =
+              (streamingResults &&
+                (streamingResults[rawModelId] || streamingResults[formattedModelId])) ||
+              ''
+            const hasError =
+              timeoutModelErrors[rawModelId] === true ||
+              timeoutModelErrors[formattedModelId] === true ||
+              isErrorMessage(content)
             if (!hasError && content.trim().length > 0) {
               formattedTabs[formattedModelId] = RESULT_TAB.FORMATTED
             }
@@ -5206,10 +5239,12 @@ function AppContent() {
           setConversations(prevConversations => {
             return prevConversations.map(conv => {
               // conv.modelId is already formatted (from createModelId)
-              const rawModelId = selectedModels.find(m => createModelId(m) === conv.modelId) || conv.modelId
+              const rawModelId =
+                selectedModels.find(m => createModelId(m) === conv.modelId) || conv.modelId
               const content = streamingResults[rawModelId] || streamingResults[conv.modelId] || ''
               const startTime = modelStartTimes[rawModelId] || modelStartTimes[conv.modelId]
-              const completionTime = modelCompletionTimes[rawModelId] || modelCompletionTimes[conv.modelId]
+              const completionTime =
+                modelCompletionTimes[rawModelId] || modelCompletionTimes[conv.modelId]
 
               return {
                 ...conv,
@@ -5234,15 +5269,25 @@ function AppContent() {
         // The backend should have deducted credits for successful models even if the client disconnected
         // Note: event.model uses raw model ID format (same as selectedModels)
         // Add safety checks to prevent crashes
-        const successfulModelsCount = (selectedModels && Array.isArray(selectedModels) ? selectedModels : []).filter(modelId => {
+        const successfulModelsCount = (
+          selectedModels && Array.isArray(selectedModels) ? selectedModels : []
+        ).filter(modelId => {
           try {
             const rawModelId = modelId
             const formattedModelId = createModelId(modelId)
             // Check both formats for completion
-            const hasCompleted = completedModels.has(rawModelId) || completedModels.has(formattedModelId)
-            const hasError = (timeoutModelErrors && (timeoutModelErrors[rawModelId] === true || timeoutModelErrors[formattedModelId] === true)) || false
+            const hasCompleted =
+              completedModels.has(rawModelId) || completedModels.has(formattedModelId)
+            const hasError =
+              (timeoutModelErrors &&
+                (timeoutModelErrors[rawModelId] === true ||
+                  timeoutModelErrors[formattedModelId] === true)) ||
+              false
             // Check both formats for content
-            const content = (streamingResults && (streamingResults[rawModelId] || streamingResults[formattedModelId])) || ''
+            const content =
+              (streamingResults &&
+                (streamingResults[rawModelId] || streamingResults[formattedModelId])) ||
+              ''
             const isError = isErrorMessage(content)
             return hasCompleted && !hasError && !isError && content.trim().length > 0
           } catch (error) {
@@ -5299,32 +5344,32 @@ function AppContent() {
           let failedCount = 0
           let timedOutCount = 0
 
-          // Ensure ACTIVE_STREAMING_WINDOW is defined (fallback to 5000 if not)
-          const activeWindow = typeof ACTIVE_STREAMING_WINDOW !== 'undefined' ? ACTIVE_STREAMING_WINDOW : 5000
-
           selectedModels.forEach(modelId => {
             try {
               // Check both raw and formatted model ID formats
               const rawModelId = modelId
               const formattedModelId = createModelId(modelId)
               const modelIdToCheck = completedModels.has(rawModelId) ? rawModelId : formattedModelId
-              
+
               if (completedModels.has(modelIdToCheck)) {
                 // Model completed - check if it was successful or failed
-                const hasError = (localModelErrors && (localModelErrors[rawModelId] === true || localModelErrors[formattedModelId] === true)) || false
-                const content = (streamingResults && (streamingResults[rawModelId] || streamingResults[formattedModelId])) || ''
+                const hasError =
+                  (localModelErrors &&
+                    (localModelErrors[rawModelId] === true ||
+                      localModelErrors[formattedModelId] === true)) ||
+                  false
+                const content =
+                  (streamingResults &&
+                    (streamingResults[rawModelId] || streamingResults[formattedModelId])) ||
+                  ''
                 const isError = hasError || isErrorMessage(content)
-                
+
                 if (isError || content.trim().length === 0) {
                   failedCount++
                 } else {
                   successfulCount++
                 }
               } else {
-                // Model didn't complete - check if it was actively streaming
-                const lastChunkTime = (modelLastChunkTimes && (modelLastChunkTimes[rawModelId] || modelLastChunkTimes[formattedModelId])) || undefined
-                const wasStreaming = lastChunkTime !== undefined && (Date.now() - lastChunkTime) < activeWindow
-                
                 // Model didn't complete - count as timed out
                 timedOutCount++
               }
@@ -5348,22 +5393,25 @@ function AppContent() {
           } else {
             // Build detailed error message
             const parts: string[] = []
-            
+
             if (successfulCount > 0) {
-              const text = successfulCount === 1 ? 'model completed successfully' : 'models completed successfully'
+              const text =
+                successfulCount === 1
+                  ? 'model completed successfully'
+                  : 'models completed successfully'
               parts.push(`${successfulCount} ${text}`)
             }
-            
+
             if (failedCount > 0) {
               const text = failedCount === 1 ? 'model failed' : 'models failed'
               parts.push(`${failedCount} ${text}`)
             }
-            
+
             if (timedOutCount > 0) {
               const text = timedOutCount === 1 ? 'model timed out' : 'models timed out'
               parts.push(`${timedOutCount} ${text} after 1 minute of inactivity`)
             }
-            
+
             if (parts.length > 0) {
               errorMessage = parts.join(', ') + '.'
             } else {
@@ -6458,9 +6506,20 @@ function AppContent() {
                     {conversations
                       .filter(
                         conv =>
-                          selectedModels.includes(conv.modelId) && !closedCards.has(conv.modelId)
+                          conv &&
+                          conv.modelId &&
+                          selectedModels.includes(conv.modelId) &&
+                          !closedCards.has(conv.modelId)
                       )
                       .map(conversation => {
+                        // Safety check for conversation data
+                        if (
+                          !conversation ||
+                          !conversation.messages ||
+                          !Array.isArray(conversation.messages)
+                        ) {
+                          return null
+                        }
                         const model = allModels.find(m => m.id === conversation.modelId)
                         const latestMessage =
                           conversation.messages[conversation.messages.length - 1]
@@ -6620,12 +6679,13 @@ function AppContent() {
                               className="conversation-content"
                               id={`conversation-content-${safeId}`}
                             >
-                              {conversation.messages.map(message => {
-                                const messageSafeId = getSafeId(message.id)
+                              {conversation.messages.map((message, msgIndex) => {
+                                const messageId = message.id || `msg-${msgIndex}`
+                                const messageSafeId = getSafeId(messageId)
                                 const messageContentId = `message-content-${safeId}-${messageSafeId}`
                                 return (
                                   <div
-                                    key={message.id}
+                                    key={messageId}
                                     className={`conversation-message ${message.type}`}
                                   >
                                     <div className="message-header">
@@ -6696,8 +6756,8 @@ function AppContent() {
                                           onClick={e => {
                                             handleCopyMessage(
                                               conversation.modelId,
-                                              message.id,
-                                              message.content
+                                              messageId,
+                                              message.content || ''
                                             )
                                             e.currentTarget.blur()
                                           }}
@@ -6739,7 +6799,7 @@ function AppContent() {
                                         <Suspense
                                           fallback={
                                             <pre className="result-output raw-output">
-                                              {message.content}
+                                              {message.content || ''}
                                             </pre>
                                           }
                                         >
@@ -6747,13 +6807,13 @@ function AppContent() {
                                             className="result-output"
                                             modelId={conversation.modelId}
                                           >
-                                            {message.content}
+                                            {message.content || ''}
                                           </LatexRenderer>
                                         </Suspense>
                                       ) : (
                                         /* Raw text for immediate streaming display */
                                         <pre className="result-output raw-output">
-                                          {message.content}
+                                          {message.content || ''}
                                         </pre>
                                       )}
                                     </div>
@@ -6789,15 +6849,17 @@ function AppContent() {
   )
 }
 
-// Wrap AppContent with AuthProvider
+// Wrap AppContent with AuthProvider and top-level ErrorBoundary
 function App() {
   return (
-    <AuthProvider>
-      <Routes>
-        <Route path="/terms-of-service" element={<TermsOfService />} />
-        <Route path="*" element={<AppContent />} />
-      </Routes>
-    </AuthProvider>
+    <ErrorBoundary>
+      <AuthProvider>
+        <Routes>
+          <Route path="/terms-of-service" element={<TermsOfService />} />
+          <Route path="*" element={<AppContent />} />
+        </Routes>
+      </AuthProvider>
+    </ErrorBoundary>
   )
 }
 

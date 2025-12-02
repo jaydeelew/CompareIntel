@@ -49,8 +49,22 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
   className = '',
   modelId,
 }) => {
+  // Safely format timestamp - handle undefined, null, or invalid dates
+  const getFormattedTime = () => {
+    if (!timestamp) return ''
+    try {
+      const dateString = typeof timestamp === 'string' ? timestamp : timestamp.toISOString()
+      return formatTime(dateString)
+    } catch {
+      return ''
+    }
+  }
+
+  // Ensure content is always a string
+  const safeContent = content || ''
+
   return (
-    <div key={id} className={`conversation-message ${type} ${className}`.trim()}>
+    <div key={id} className={`conversation-message ${type || 'assistant'} ${className}`.trim()}>
       <div className="message-header">
         <span
           className="message-type"
@@ -100,21 +114,19 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
             </>
           )}
         </span>
-        <span className="message-time">
-          {formatTime(typeof timestamp === 'string' ? timestamp : timestamp.toISOString())}
-        </span>
+        <span className="message-time">{getFormattedTime()}</span>
       </div>
       <div className="message-content">
         {activeTab === RESULT_TAB.FORMATTED ? (
           /* Full LaTeX rendering for formatted view */
-          <Suspense fallback={<pre className="result-output raw-output">{content}</pre>}>
+          <Suspense fallback={<pre className="result-output raw-output">{safeContent}</pre>}>
             <LatexRenderer className="result-output" modelId={modelId}>
-              {content}
+              {safeContent}
             </LatexRenderer>
           </Suspense>
         ) : (
           /* Raw text for immediate streaming display */
-          <pre className="result-output raw-output">{content}</pre>
+          <pre className="result-output raw-output">{safeContent}</pre>
         )}
       </div>
     </div>

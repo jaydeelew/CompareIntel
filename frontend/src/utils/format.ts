@@ -22,19 +22,33 @@
  * ```
  */
 export function formatDate(dateString: string): string {
-  const date = new Date(dateString)
-  const now = new Date()
-  const diffMs = now.getTime() - date.getTime()
-  const diffMins = Math.floor(diffMs / 60000)
-  const diffHours = Math.floor(diffMs / 3600000)
-  const diffDays = Math.floor(diffMs / 86400000)
+  // Safety check for invalid or undefined date strings
+  if (!dateString || typeof dateString !== 'string') {
+    return ''
+  }
 
-  if (diffMins < 1) return 'Just now'
-  if (diffMins < 60) return `${diffMins}m ago`
-  if (diffHours < 24) return `${diffHours}h ago`
-  if (diffDays === 1) return 'Yesterday'
-  if (diffDays < 7) return `${diffDays}d ago`
-  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+  try {
+    const date = new Date(dateString)
+    // Check if date is valid
+    if (isNaN(date.getTime())) {
+      return ''
+    }
+
+    const now = new Date()
+    const diffMs = now.getTime() - date.getTime()
+    const diffMins = Math.floor(diffMs / 60000)
+    const diffHours = Math.floor(diffMs / 3600000)
+    const diffDays = Math.floor(diffMs / 86400000)
+
+    if (diffMins < 1) return 'Just now'
+    if (diffMins < 60) return `${diffMins}m ago`
+    if (diffHours < 24) return `${diffHours}h ago`
+    if (diffDays === 1) return 'Yesterday'
+    if (diffDays < 7) return `${diffDays}d ago`
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+  } catch {
+    return ''
+  }
 }
 
 /**
@@ -50,8 +64,21 @@ export function formatDate(dateString: string): string {
  * ```
  */
 export function formatTime(dateString: string, locale?: string): string {
-  const date = new Date(dateString)
-  return date.toLocaleTimeString(locale)
+  // Safety check for invalid or undefined date strings
+  if (!dateString || typeof dateString !== 'string') {
+    return ''
+  }
+
+  try {
+    const date = new Date(dateString)
+    // Check if date is valid
+    if (isNaN(date.getTime())) {
+      return ''
+    }
+    return date.toLocaleTimeString(locale)
+  } catch {
+    return ''
+  }
 }
 
 /**

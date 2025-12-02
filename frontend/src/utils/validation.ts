@@ -21,6 +21,10 @@
  * ```
  */
 export function getSafeId(modelId: string): string {
+  // Safety check for undefined/null values
+  if (!modelId || typeof modelId !== 'string') {
+    return 'unknown'
+  }
   return modelId.replace(/[^a-zA-Z0-9_-]/g, '-')
 }
 
