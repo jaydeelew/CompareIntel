@@ -1870,15 +1870,15 @@ This document provides a comprehensive breakdown of all visual elements (section
 - **Lines:** [1022-1029](file:///home/dan_wsl/jaydeelew/CompareIntel/frontend/src/components/admin/AdminPanel.tsx#L1022)
 - **Class:** `mock-mode-btn` (with `enabled` or `disabled` modifiers)
 
-#### Anonymous Zero Usage Section
-- **Element:** Zero Anonymous Usage Controls
+#### Anonymous Credit Reset Section
+- **Element:** Reset Anonymous Credits Controls
 - **Lines:** [1038-1051](file:///home/dan_wsl/jaydeelew/CompareIntel/frontend/src/components/admin/AdminPanel.tsx#L1038)
 - **Inline styles**
 
-#### Zero Usage Button
-- **Element:** Zero Anonymous Usage Button
+#### Reset Credits Button
+- **Element:** Reset Anonymous Credits Button
 - **Lines:** [1040-1047](file:///home/dan_wsl/jaydeelew/CompareIntel/frontend/src/components/admin/AdminPanel.tsx#L1040)
-- **Class:** `mock-mode-btn zero-usage-btn` (with `history-cleared-green` modifier)
+- **Class:** `mock-mode-btn zero-usage-btn` (with `credits-reset-green` modifier)
 
 #### User Management Section
 - **Element:** User Management Container
@@ -2026,7 +2026,7 @@ This document provides a comprehensive breakdown of all visual elements (section
 - **Lines:** [1209-1217](file:///home/dan_wsl/jaydeelew/CompareIntel/frontend/src/components/admin/AdminPanel.tsx#L1209)
 - **Class:** `reset-usage-btn`
 - **Text:** "Zero Usage"
-- **Title:** "Reset daily usage and extended usage to 0 and remove all model comparison history"
+- **Title:** "Reset credits to maximum for user's tier"
 
 #### Mock Mode Button (User)
 - **Element:** Toggle User Mock Mode Button

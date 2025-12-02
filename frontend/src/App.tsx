@@ -1731,17 +1731,11 @@ function AppContent() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showHistoryDropdown, isAuthenticated, loadHistoryFromAPI, loadHistoryFromLocalStorage])
 
-  // Listen for anonymous usage cleared event from AdminPanel and refresh history
+  // Listen for anonymous credits reset event from AdminPanel and refresh credit display
   useEffect(() => {
-    const handleAnonymousUsageCleared = async () => {
-      // Clear conversation history state for anonymous users
+    const handleAnonymousCreditsReset = async () => {
+      // Refresh credit balance for anonymous users (history is not affected)
       if (!isAuthenticated) {
-        const history = loadHistoryFromLocalStorage()
-        setConversationHistory(history)
-        // Also clear any currently displayed conversations if they exist
-        setConversations([])
-        setCurrentVisibleComparisonId(null)
-
         // Refresh credit balance to reflect the reset
         if (browserFingerprint) {
           try {
@@ -1758,7 +1752,7 @@ function AppContent() {
           setAnonymousCreditsRemaining(50) // Default anonymous credits
         }
 
-        // Always clear credit-related errors when usage is reset
+        // Always clear credit-related errors when credits are reset
         // Use a function form of setError to access current error value
         setError(currentError => {
           if (
@@ -1774,12 +1768,12 @@ function AppContent() {
       }
     }
 
-    window.addEventListener('anonymousUsageCleared', handleAnonymousUsageCleared)
+    window.addEventListener('anonymousCreditsReset', handleAnonymousCreditsReset)
     return () => {
-      window.removeEventListener('anonymousUsageCleared', handleAnonymousUsageCleared)
+      window.removeEventListener('anonymousCreditsReset', handleAnonymousCreditsReset)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAuthenticated, loadHistoryFromLocalStorage, browserFingerprint])
+  }, [isAuthenticated, browserFingerprint])
 
   // Track currently visible comparison ID for authenticated users after history loads
   // This ensures the visible comparison is highlighted in the history dropdown

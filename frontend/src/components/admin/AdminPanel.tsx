@@ -232,7 +232,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
   const [users, setUsers] = useState<AdminUserListResponse | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [historyCleared, setHistoryCleared] = useState(false)
+  const [creditsReset, setCreditsReset] = useState(false)
   const [currentPage, setCurrentPage] = useState(1)
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedRole, setSelectedRole] = useState('')
@@ -910,46 +910,18 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
         } else if (response.status === 403) {
           throw new Error('Access denied. Admin privileges required.')
         } else {
-          throw new Error(`Failed to zero anonymous usage (${response.status})`)
+          throw new Error(`Failed to reset anonymous credits (${response.status})`)
         }
       }
-
-      // Clear all localStorage keys related to anonymous usage and history
-      const localStorageKeys: string[] = []
-
-      // Clear usage data
-      localStorage.removeItem('compareintel_usage')
-      localStorageKeys.push('compareintel_usage')
-
-      localStorage.removeItem('compareintel_submission_count')
-      localStorageKeys.push('compareintel_submission_count')
-
-      // Clear conversation history
-      localStorage.removeItem('compareintel_conversation_history')
-      localStorageKeys.push('compareintel_conversation_history')
-
-      // Clear all individual conversation data
-      // Iterate through all localStorage keys and remove conversation entries
-      const keysToRemove: string[] = []
-      for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i)
-        if (key && key.startsWith('compareintel_conversation_')) {
-          keysToRemove.push(key)
-        }
-      }
-      keysToRemove.forEach(key => {
-        localStorage.removeItem(key)
-        localStorageKeys.push(key)
-      })
 
       await response.json()
-      setHistoryCleared(true)
+      setCreditsReset(true)
 
-      // Dispatch custom event to notify App component to refresh conversation history
-      window.dispatchEvent(new CustomEvent('anonymousUsageCleared'))
+      // Dispatch custom event to notify components to refresh usage display
+      window.dispatchEvent(new CustomEvent('anonymousCreditsReset'))
     } catch (err) {
-      console.error('Error zeroing anonymous usage:', err)
-      setError(err instanceof Error ? err.message : 'Failed to zero anonymous usage')
+      console.error('Error resetting anonymous credits:', err)
+      setError(err instanceof Error ? err.message : 'Failed to reset anonymous credits')
     }
   }
 
@@ -2299,12 +2271,12 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                       textAlign: 'center',
                     }}
                   >
-                    Anonymous Usage Data and History
+                    Anonymous Credit Reset
                   </h3>
                   <button
                     onClick={zeroAnonymousUsage}
-                    className={`mock-mode-btn zero-usage-btn ${historyCleared ? 'history-cleared-green' : ''}`}
-                    title="Zero out all anonymous user usage and clear comparison history"
+                    className={`mock-mode-btn zero-usage-btn ${creditsReset ? 'credits-reset-green' : ''}`}
+                    title="Reset all anonymous user credits to maximum (50 credits)"
                   >
                     <svg
                       width="18"
@@ -2320,7 +2292,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                       <path d="M21 3v5h-5M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" />
                       <path d="M8 16H3v5" />
                     </svg>
-                    {historyCleared ? 'History Cleared' : 'Anonymous Zero Usage'}
+                    {creditsReset ? 'Credits Reset' : 'Reset Anonymous Credits'}
                   </button>
                   <p
                     style={{
@@ -2331,9 +2303,9 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                       minHeight: '2.5rem',
                     }}
                   >
-                    {historyCleared
-                      ? 'Usage counts and history have been cleared'
-                      : 'Usage counts and history will be cleared'}
+                    {creditsReset
+                      ? 'All anonymous user credits have been reset to maximum'
+                      : 'Resets all anonymous user credits to 50'}
                   </p>
                 </div>
               </div>
@@ -2556,7 +2528,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                               <button
                                 onClick={() => resetUsage(userRow.id)}
                                 className="reset-usage-btn"
-                                title="Reset daily usage to 0 and remove all model comparison history"
+                                title="Reset credits to maximum for user's tier"
                               >
                                 Zero Usage
                               </button>
@@ -2724,7 +2696,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                           <button
                             onClick={() => resetUsage(userRow.id)}
                             className="reset-usage-btn"
-                            title="Reset daily usage to 0 and remove all model comparison history"
+                            title="Reset credits to maximum for user's tier"
                           >
                             Zero Usage
                           </button>

@@ -17,7 +17,7 @@ import httpx
 import asyncio
 
 from ..database import get_db
-from ..models import User, AdminActionLog, AppSettings, Conversation, UsageLog
+from ..models import User, AdminActionLog, AppSettings, UsageLog
 from ..schemas import (
     AdminUserResponse,
     AdminUserCreate,
@@ -724,11 +724,17 @@ async def reset_user_usage(
     current_user: User = Depends(get_current_admin_user),
     db: Session = Depends(get_db),
 ):
-    """Reset user's daily usage count, extended usage, and credits to zero and remove all model comparison history.
+    """Reset user's credit usage to zero and restore full credits based on subscription tier.
     
-    This restores full credits based on the user's subscription tier:
-    - Paid tiers: Restores monthly credit allocation
-    - Free tier: Restores daily credit allocation
+    This resets:
+    - Credits used this period to 0
+    - Restores full credit allocation based on tier
+    
+    Credit allocation by tier:
+    - Free tier: Restores daily credit allocation (100 credits)
+    - Paid tiers: Restores monthly credit allocation (1,200 - 10,000 credits)
+    
+    Comparison history is NOT affected by this operation.
     """
 
     user = db.query(User).filter(User.id == user_id).first()
@@ -739,27 +745,18 @@ async def reset_user_usage(
     previous_credits_used = user.credits_used_this_period or 0
     previous_credits_allocated = user.monthly_credits_allocated or 0
 
-    # Get count of conversations to be deleted for logging
-    conversations_count = db.query(Conversation).filter(Conversation.user_id == user_id).count()
-
-    # Delete all conversations (comparison history) for this user
-    # This will cascade delete all related ConversationMessage records due to the cascade setting
-    db.query(Conversation).filter(Conversation.user_id == user_id).delete()
-
-    # Extended tier usage tracking removed - no longer needed
-
     # Restore full credits based on subscription tier
     tier = user.subscription_tier or "free"
     if tier in MONTHLY_CREDIT_ALLOCATIONS:
         # Paid tier: allocate monthly credits
-        # Note: allocate_monthly_credits commits the db, so we commit daily usage changes first
+        # Note: allocate_monthly_credits commits the db, so we commit any pending changes first
         db.commit()
         db.refresh(user)
         allocate_monthly_credits(user_id, tier, db)
         db.refresh(user)
     elif tier in DAILY_CREDIT_LIMITS:
         # Free tier: reset daily credits
-        # Note: reset_daily_credits commits the db, so we commit daily usage changes first
+        # Note: reset_daily_credits commits the db, so we commit any pending changes first
         db.commit()
         db.refresh(user)
         reset_daily_credits(user_id, tier, db)
@@ -775,14 +772,13 @@ async def reset_user_usage(
         db=db,
         admin_user=current_user,
         action_type="reset_usage",
-        action_description=f"Reset credits and removed all model comparison history for user {user.email}",
+        action_description=f"Reset credits to maximum for user {user.email} ({tier} tier)",
         target_user_id=user.id,
         details={
             "previous_credits_used": previous_credits_used,
             "previous_credits_allocated": previous_credits_allocated,
             "new_credits_allocated": user.monthly_credits_allocated or 0,
             "new_credits_used": 0,
-            "conversations_deleted": conversations_count,
             "subscription_tier": tier,
         },
         request=request,
@@ -1029,30 +1025,20 @@ async def zero_anonymous_usage(
     db: Session = Depends(get_db),
 ):
     """
-    Zero out all anonymous user usage data and clear comparison history.
+    Reset all anonymous user credits to maximum allocation.
 
-    This clears:
-    - Daily interaction usage for all anonymous users (in-memory storage)
-    - Extended interaction usage for all anonymous users (in-memory storage)
-    - ALL UsageLog database entries for anonymous users (not just today's, to handle timezone differences)
-    - Comparison history stored locally (client-side, handled by frontend)
+    This resets:
+    - Daily credit usage for all anonymous users (in-memory storage) to 0
+    - ALL UsageLog database entries for anonymous users (to ensure fresh credit tracking)
 
-    In development mode only, this restores full credits for all anonymous users
-    by clearing both memory and database tracking.
+    This restores full credits (50/day) for all anonymous users by clearing both
+    memory and database usage tracking. Comparison history is NOT affected.
 
-    Only available in development environment.
+    Available in both development and production environments.
     """
     import os
 
-    # Check if in development mode
     is_development = os.environ.get("ENVIRONMENT") == "development"
-
-    # Prevent usage in production
-    if not is_development:
-        raise HTTPException(
-            status_code=403,
-            detail="Zero anonymous usage is only available in development environment",
-        )
 
     # Reset all anonymous usage entries to 0 credits
     keys_reset = []
@@ -1104,19 +1090,19 @@ async def zero_anonymous_usage(
         db=db,
         admin_user=current_user,
         action_type="zero_anonymous_usage",
-        action_description=f"Zeroed out anonymous user usage data (reset {len(keys_reset)} memory entries to 0 credits, deleted {usage_logs_deleted} database entries)",
+        action_description=f"Reset anonymous user credits to maximum (reset {len(keys_reset)} memory entries to 0 used, deleted {usage_logs_deleted} usage log entries)",
         target_user_id=None,
         details={
             "memory_entries_reset": len(keys_reset),
             "database_entries_deleted": usage_logs_deleted,
             "keys_reset": keys_reset,
-            "development_mode": is_development,
+            "environment": "development" if is_development else "production",
         },
         request=request,
     )
 
     return {
-        "message": f"Anonymous usage data cleared ({len(keys_reset)} memory entries reset to 0 credits, {usage_logs_deleted} database entries deleted). Full credits restored. Client-side history should be cleared separately.",
+        "message": f"Anonymous credits reset to maximum ({len(keys_reset)} memory entries reset, {usage_logs_deleted} usage log entries deleted). Full credits restored.",
         "entries_reset": len(keys_reset),
         "database_entries_deleted": usage_logs_deleted,
     }

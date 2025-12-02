@@ -344,7 +344,10 @@ export async function toggleAnonymousMockMode(): Promise<AppSettings> {
 }
 
 /**
- * Zero out anonymous usage statistics
+ * Reset anonymous user credits to maximum allocation
+ *
+ * Resets all anonymous user credit usage to 0, restoring full credits (50/day).
+ * Does NOT affect comparison history.
  *
  * @returns Promise resolving to success message
  * @throws {ApiError} If reset fails

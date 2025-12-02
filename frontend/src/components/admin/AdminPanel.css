@@ -848,7 +848,7 @@ button:hover {
   color: white;
 }
 
-.mock-mode-btn.history-cleared-green {
+.mock-mode-btn.credits-reset-green {
   background: linear-gradient(135deg, #10b981, #059669);
   color: white;
 }
