@@ -5030,13 +5030,23 @@ function AppContent() {
         }
         
         // Mark incomplete models as failed
-        const errorModelErrors: { [key: string]: boolean } = { ...localModelErrors }
-        selectedModels.forEach(modelId => {
-          const createdModelId = createModelId(modelId)
-          if (!completedModels.has(createdModelId)) {
-            errorModelErrors[createdModelId] = true
-          }
-        })
+        // Note: event.model uses raw model ID format (same as selectedModels)
+        const errorModelErrors: { [key: string]: boolean } = { ...(localModelErrors || {}) }
+        if (selectedModels && Array.isArray(selectedModels)) {
+          selectedModels.forEach(modelId => {
+            try {
+              const rawModelId = modelId
+              const formattedModelId = createModelId(modelId)
+              // Check both formats - if model hasn't completed in either format, mark as failed
+              if (!completedModels.has(rawModelId) && !completedModels.has(formattedModelId)) {
+                errorModelErrors[rawModelId] = true
+                errorModelErrors[formattedModelId] = true
+              }
+            } catch (error) {
+              console.error('Error processing model in savePartialResultsOnError:', error)
+            }
+          })
+        }
         setModelErrors(errorModelErrors)
         
         // Update response with partial results
@@ -5064,9 +5074,14 @@ function AppContent() {
         if (!isFollowUpMode) {
           setConversations(prevConversations => {
             return prevConversations.map(conv => {
-              const content = streamingResults[conv.modelId] || ''
-              const startTime = modelStartTimes[conv.modelId]
-              const completionTime = modelCompletionTimes[conv.modelId]
+              // conv.modelId is already formatted (from createModelId)
+              // Find the raw model ID to look up streaming results
+              const rawModelId = selectedModels && Array.isArray(selectedModels) 
+                ? selectedModels.find(m => createModelId(m) === conv.modelId) || conv.modelId
+                : conv.modelId
+              const content = (streamingResults && (streamingResults[rawModelId] || streamingResults[conv.modelId])) || ''
+              const startTime = (modelStartTimes && (modelStartTimes[rawModelId] || modelStartTimes[conv.modelId])) || undefined
+              const completionTime = (modelCompletionTimes && (modelCompletionTimes[rawModelId] || modelCompletionTimes[conv.modelId])) || undefined
 
               return {
                 ...conv,
@@ -5143,17 +5158,27 @@ function AppContent() {
       if (err instanceof Error && err.name === 'AbortError') {
         // Handle timeout: mark incomplete models as failed and format successful ones
         // Note: event.model uses raw model ID format (same as selectedModels)
-        const timeoutModelErrors: { [key: string]: boolean } = { ...localModelErrors }
+        // Add safety checks to prevent crashes
+        if (!selectedModels || !Array.isArray(selectedModels) || selectedModels.length === 0) {
+          setError('Request timed out after 1 minute of inactivity.')
+          return
+        }
+
+        const timeoutModelErrors: { [key: string]: boolean } = { ...(localModelErrors || {}) }
         selectedModels.forEach(modelId => {
-          // Check both raw and formatted model ID formats for consistency
-          const rawModelId = modelId
-          const formattedModelId = createModelId(modelId)
-          // If model hasn't completed, it should be marked as failed (timeout = failure)
-          // This handles cases where response was cut short with partial content
-          if (!completedModels.has(rawModelId) && !completedModels.has(formattedModelId)) {
-            // Store error for both formats to ensure consistency
-            timeoutModelErrors[rawModelId] = true
-            timeoutModelErrors[formattedModelId] = true
+          try {
+            // Check both raw and formatted model ID formats for consistency
+            const rawModelId = modelId
+            const formattedModelId = createModelId(modelId)
+            // If model hasn't completed, it should be marked as failed (timeout = failure)
+            // This handles cases where response was cut short with partial content
+            if (!completedModels.has(rawModelId) && !completedModels.has(formattedModelId)) {
+              // Store error for both formats to ensure consistency
+              timeoutModelErrors[rawModelId] = true
+              timeoutModelErrors[formattedModelId] = true
+            }
+          } catch (error) {
+            console.error('Error processing model in timeout handler:', error)
           }
         })
         setModelErrors(timeoutModelErrors)
@@ -5161,13 +5186,17 @@ function AppContent() {
         // Switch successful models to formatted view even on timeout
         const formattedTabs: ActiveResultTabs = {} as ActiveResultTabs
         selectedModels.forEach(modelId => {
-          const rawModelId = modelId
-          const formattedModelId = createModelId(modelId)
-          // Check both formats for content
-          const content = streamingResults[rawModelId] || streamingResults[formattedModelId] || ''
-          const hasError = timeoutModelErrors[rawModelId] === true || timeoutModelErrors[formattedModelId] === true || isErrorMessage(content)
-          if (!hasError && content.trim().length > 0) {
-            formattedTabs[formattedModelId] = RESULT_TAB.FORMATTED
+          try {
+            const rawModelId = modelId
+            const formattedModelId = createModelId(modelId)
+            // Check both formats for content
+            const content = (streamingResults && (streamingResults[rawModelId] || streamingResults[formattedModelId])) || ''
+            const hasError = timeoutModelErrors[rawModelId] === true || timeoutModelErrors[formattedModelId] === true || isErrorMessage(content)
+            if (!hasError && content.trim().length > 0) {
+              formattedTabs[formattedModelId] = RESULT_TAB.FORMATTED
+            }
+          } catch (error) {
+            console.error('Error formatting model tab:', error)
           }
         })
         setActiveResultTabs(prev => ({ ...prev, ...formattedTabs }))
@@ -5204,16 +5233,22 @@ function AppContent() {
         // Refresh credits if any models completed successfully before timeout
         // The backend should have deducted credits for successful models even if the client disconnected
         // Note: event.model uses raw model ID format (same as selectedModels)
-        const successfulModelsCount = selectedModels.filter(modelId => {
-          const rawModelId = modelId
-          const formattedModelId = createModelId(modelId)
-          // Check both formats for completion
-          const hasCompleted = completedModels.has(rawModelId) || completedModels.has(formattedModelId)
-          const hasError = timeoutModelErrors[rawModelId] === true || timeoutModelErrors[formattedModelId] === true
-          // Check both formats for content
-          const content = streamingResults[rawModelId] || streamingResults[formattedModelId] || ''
-          const isError = isErrorMessage(content)
-          return hasCompleted && !hasError && !isError && content.trim().length > 0
+        // Add safety checks to prevent crashes
+        const successfulModelsCount = (selectedModels && Array.isArray(selectedModels) ? selectedModels : []).filter(modelId => {
+          try {
+            const rawModelId = modelId
+            const formattedModelId = createModelId(modelId)
+            // Check both formats for completion
+            const hasCompleted = completedModels.has(rawModelId) || completedModels.has(formattedModelId)
+            const hasError = (timeoutModelErrors && (timeoutModelErrors[rawModelId] === true || timeoutModelErrors[formattedModelId] === true)) || false
+            // Check both formats for content
+            const content = (streamingResults && (streamingResults[rawModelId] || streamingResults[formattedModelId])) || ''
+            const isError = isErrorMessage(content)
+            return hasCompleted && !hasError && !isError && content.trim().length > 0
+          } catch (error) {
+            console.error('Error checking successful model:', error)
+            return false
+          }
         }).length
 
         if (successfulModelsCount > 0) {
@@ -5253,40 +5288,50 @@ function AppContent() {
           setError(`Comparison cancelled by user after ${elapsedSeconds} seconds`)
         } else {
           // Properly count successful, failed, and timed-out models
+          // Add safety checks to prevent crashes
+          if (!selectedModels || !Array.isArray(selectedModels) || selectedModels.length === 0) {
+            setError('Request timed out after 1 minute of inactivity.')
+            return
+          }
+
           const totalCount = selectedModels.length
           let successfulCount = 0
           let failedCount = 0
           let timedOutCount = 0
 
+          // Ensure ACTIVE_STREAMING_WINDOW is defined (fallback to 5000 if not)
+          const activeWindow = typeof ACTIVE_STREAMING_WINDOW !== 'undefined' ? ACTIVE_STREAMING_WINDOW : 5000
+
           selectedModels.forEach(modelId => {
-            // Check both raw and formatted model ID formats
-            const rawModelId = modelId
-            const formattedModelId = createModelId(modelId)
-            const modelIdToCheck = completedModels.has(rawModelId) ? rawModelId : formattedModelId
-            
-            if (completedModels.has(modelIdToCheck)) {
-              // Model completed - check if it was successful or failed
-              const hasError = localModelErrors[rawModelId] === true || localModelErrors[formattedModelId] === true
-              const content = streamingResults[rawModelId] || streamingResults[formattedModelId] || ''
-              const isError = hasError || isErrorMessage(content)
+            try {
+              // Check both raw and formatted model ID formats
+              const rawModelId = modelId
+              const formattedModelId = createModelId(modelId)
+              const modelIdToCheck = completedModels.has(rawModelId) ? rawModelId : formattedModelId
               
-              if (isError || content.trim().length === 0) {
-                failedCount++
+              if (completedModels.has(modelIdToCheck)) {
+                // Model completed - check if it was successful or failed
+                const hasError = (localModelErrors && (localModelErrors[rawModelId] === true || localModelErrors[formattedModelId] === true)) || false
+                const content = (streamingResults && (streamingResults[rawModelId] || streamingResults[formattedModelId])) || ''
+                const isError = hasError || isErrorMessage(content)
+                
+                if (isError || content.trim().length === 0) {
+                  failedCount++
+                } else {
+                  successfulCount++
+                }
               } else {
-                successfulCount++
-              }
-            } else {
-              // Model didn't complete - check if it was actively streaming
-              const lastChunkTime = modelLastChunkTimes[rawModelId] || modelLastChunkTimes[formattedModelId]
-              const wasStreaming = lastChunkTime !== undefined && (Date.now() - lastChunkTime) < ACTIVE_STREAMING_WINDOW
-              
-              if (wasStreaming) {
-                // Model was streaming when timeout occurred
-                timedOutCount++
-              } else {
-                // Model never started or stopped streaming long ago
+                // Model didn't complete - check if it was actively streaming
+                const lastChunkTime = (modelLastChunkTimes && (modelLastChunkTimes[rawModelId] || modelLastChunkTimes[formattedModelId])) || undefined
+                const wasStreaming = lastChunkTime !== undefined && (Date.now() - lastChunkTime) < activeWindow
+                
+                // Model didn't complete - count as timed out
                 timedOutCount++
               }
+            } catch (modelError) {
+              // If there's an error processing a specific model, count it as timed out
+              console.error('Error processing model in timeout handler:', modelError)
+              timedOutCount++
             }
           })
 
@@ -5327,6 +5372,14 @@ function AppContent() {
           }
 
           setError(errorMessage)
+        }
+
+        // Save partial results to history even on timeout
+        // This ensures history entries are created when credits were used
+        try {
+          savePartialResultsOnError()
+        } catch (saveError) {
+          console.error('Error saving partial results on timeout:', saveError)
         }
       } else if (err instanceof PaymentRequiredError) {
         // Handle insufficient credits error (402 Payment Required)
