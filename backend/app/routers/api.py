@@ -1796,29 +1796,49 @@ async def get_credit_balance(
             )
             fingerprint_credits_remaining = max(0, credits_allocated - fp_credits_used_rounded)
 
-        # Use the most restrictive limit (lowest remaining credits) - same logic as compare endpoints
-        credits_remaining = min(ip_credits_remaining, fingerprint_credits_remaining if fingerprint else ip_credits_remaining)
-
         # Sync in-memory storage with database (for fast access in other endpoints)
         # Round UP to be conservative - never give free credits
+        # BUT: Skip sync if admin reset flag is set (prevents overwriting admin reset)
         from ..rate_limiting import anonymous_rate_limit_storage, _get_local_date
 
         ip_identifier = f"ip:{client_ip}"
         today_str = _get_local_date(user_timezone)
-        anonymous_rate_limit_storage[ip_identifier] = {
-            "count": int(ip_credits_used.quantize(Decimal("1"), rounding=ROUND_CEILING)) if ip_credits_used > 0 else 0,
-            "date": today_str,
-            "timezone": user_timezone,
-            "first_seen": anonymous_rate_limit_storage[ip_identifier].get("first_seen") or datetime.now(dt_timezone.utc),
-        }
-        if fingerprint:
-            fp_identifier = f"fp:{fingerprint}"
-            anonymous_rate_limit_storage[fp_identifier] = {
-                "count": int(fp_credits_used.quantize(Decimal("1"), rounding=ROUND_CEILING)) if fp_credits_used > 0 else 0,
+        
+        # Check if admin reset flag is set - if so, use the reset count instead of DB value
+        ip_has_admin_reset = anonymous_rate_limit_storage[ip_identifier].get("_admin_reset", False)
+        if ip_has_admin_reset:
+            print(f"[BALANCE] {ip_identifier}: admin reset flag detected, preserving reset count={anonymous_rate_limit_storage[ip_identifier].get('count', 0)}")
+            # Use the reset count from storage instead of database value
+            ip_credits_used_from_storage = anonymous_rate_limit_storage[ip_identifier].get("count", 0)
+            ip_credits_remaining = max(0, credits_allocated - ip_credits_used_from_storage)
+        else:
+            # Normal sync - update storage from database
+            anonymous_rate_limit_storage[ip_identifier] = {
+                "count": int(ip_credits_used.quantize(Decimal("1"), rounding=ROUND_CEILING)) if ip_credits_used > 0 else 0,
                 "date": today_str,
                 "timezone": user_timezone,
-                "first_seen": anonymous_rate_limit_storage[fp_identifier].get("first_seen") or datetime.now(dt_timezone.utc),
+                "first_seen": anonymous_rate_limit_storage[ip_identifier].get("first_seen") or datetime.now(dt_timezone.utc),
             }
+        
+        if fingerprint:
+            fp_identifier = f"fp:{fingerprint}"
+            fp_has_admin_reset = anonymous_rate_limit_storage[fp_identifier].get("_admin_reset", False)
+            if fp_has_admin_reset:
+                print(f"[BALANCE] {fp_identifier}: admin reset flag detected, preserving reset count={anonymous_rate_limit_storage[fp_identifier].get('count', 0)}")
+                # Use the reset count from storage instead of database value
+                fp_credits_used_from_storage = anonymous_rate_limit_storage[fp_identifier].get("count", 0)
+                fingerprint_credits_remaining = max(0, credits_allocated - fp_credits_used_from_storage)
+            else:
+                # Normal sync - update storage from database
+                anonymous_rate_limit_storage[fp_identifier] = {
+                    "count": int(fp_credits_used.quantize(Decimal("1"), rounding=ROUND_CEILING)) if fp_credits_used > 0 else 0,
+                    "date": today_str,
+                    "timezone": user_timezone,
+                    "first_seen": anonymous_rate_limit_storage[fp_identifier].get("first_seen") or datetime.now(dt_timezone.utc),
+                }
+        
+        # Use the most restrictive limit (lowest remaining credits) - same logic as compare endpoints
+        credits_remaining = min(ip_credits_remaining, fingerprint_credits_remaining if fingerprint else ip_credits_remaining)
 
         print(
             f"[DEBUG] get_credit_balance (from DB) - IP: {client_ip}, Fingerprint: {fingerprint[:20] if fingerprint else 'None'}..."

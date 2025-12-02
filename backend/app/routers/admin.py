@@ -1034,7 +1034,7 @@ async def zero_anonymous_usage(
     This clears:
     - Daily interaction usage for all anonymous users (in-memory storage)
     - Extended interaction usage for all anonymous users (in-memory storage)
-    - UsageLog database entries for anonymous users created today
+    - ALL UsageLog database entries for anonymous users (not just today's, to handle timezone differences)
     - Comparison history stored locally (client-side, handled by frontend)
 
     In development mode only, this restores full credits for all anonymous users
@@ -1056,35 +1056,48 @@ async def zero_anonymous_usage(
 
     # Reset all anonymous usage entries to 0 credits
     keys_reset = []
+    reset_timestamp = datetime.now(timezone.utc)
     for key in list(anonymous_rate_limit_storage.keys()):
         # Reset all anonymous user entries
         # Keys are formatted as "ip:xxx", "fp:xxx"
         if key.startswith("ip:") or key.startswith("fp:"):
             # Skip extended keys (no longer used)
             if not key.endswith("_extended"):
+                old_count = anonymous_rate_limit_storage[key].get("count", 0)
                 # Reset count to 0 instead of deleting the entry
                 anonymous_rate_limit_storage[key]["count"] = 0
                 # Update date to today in UTC to ensure it's treated as fresh
                 # The date will be updated to the user's timezone on their next request
                 anonymous_rate_limit_storage[key]["date"] = datetime.now(timezone.utc).date().isoformat()
-                anonymous_rate_limit_storage[key]["last_reset_at"] = datetime.now(timezone.utc)
+                anonymous_rate_limit_storage[key]["last_reset_at"] = reset_timestamp
+                # Add a flag to prevent sync from overwriting this reset
+                anonymous_rate_limit_storage[key]["_admin_reset"] = True
                 keys_reset.append(key)
+                print(f"[ZERO_USAGE] Reset {key}: count {old_count} -> 0, date={anonymous_rate_limit_storage[key]['date']}, reset_at={reset_timestamp}")
 
-    # Delete all UsageLog entries for anonymous users created today
+    # Delete ALL UsageLog entries for anonymous users (not just today's)
     # This ensures that when memory storage syncs with database, it finds 0 credits used
-    today_start = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
-    today_end = datetime.now(timezone.utc).replace(hour=23, minute=59, second=59, microsecond=999999)
+    # We delete all entries (not just today's) to handle timezone differences:
+    # - Entries created in different timezones might fall outside UTC "today"
+    # - Admin reset should clear everything to give users a fresh start
+    usage_logs_before = (
+        db.query(UsageLog)
+        .filter(
+            UsageLog.user_id.is_(None),  # Anonymous users only
+        )
+        .count()
+    )
     
     usage_logs_deleted = (
         db.query(UsageLog)
         .filter(
             UsageLog.user_id.is_(None),  # Anonymous users only
-            UsageLog.created_at >= today_start,
-            UsageLog.created_at <= today_end
         )
         .delete()
     )
     db.commit()
+    
+    print(f"[ZERO_USAGE] Deleted {usage_logs_deleted} UsageLog entries (found {usage_logs_before} total) for ALL anonymous users (not just today, to handle timezone differences)")
 
     # Log admin action
     log_admin_action(

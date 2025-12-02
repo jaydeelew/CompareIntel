@@ -221,7 +221,8 @@ def check_anonymous_credits(identifier: str, required_credits: Decimal, timezone
         user_data["timezone"] = timezone_str
 
     # Sync with database if db session is provided (for persistence across restarts)
-    if db is not None:
+    # Skip sync if admin reset flag is set (prevents overwriting admin reset)
+    if db is not None and not user_data.get("_admin_reset", False):
         # Extract IP or fingerprint from identifier
         if identifier.startswith("ip:"):
             ip_address = identifier[3:]  # Remove "ip:" prefix
@@ -245,6 +246,7 @@ def check_anonymous_credits(identifier: str, required_credits: Decimal, timezone
             user_data["date"] = today
             if not user_data.get("first_seen"):
                 user_data["first_seen"] = datetime.now(timezone.utc)
+            print(f"[SYNC] {identifier}: synced from DB, credits_used={db_credits_used}, count={user_data['count']}, date_range={today_start_utc} to {today_end_utc}")
         elif identifier.startswith("fp:"):
             fingerprint = identifier[3:]  # Remove "fp:" prefix
             # Query UsageLog for credits used today in user's timezone
@@ -266,6 +268,9 @@ def check_anonymous_credits(identifier: str, required_credits: Decimal, timezone
             user_data["date"] = today
             if not user_data.get("first_seen"):
                 user_data["first_seen"] = datetime.now(timezone.utc)
+            print(f"[SYNC] {identifier}: synced from DB, credits_used={db_credits_used}, count={user_data['count']}, date_range={today_start_utc} to {today_end_utc}")
+    elif db is not None and user_data.get("_admin_reset", False):
+        print(f"[SYNC] {identifier}: skipping sync due to admin reset flag, count={user_data.get('count', 0)}")
 
     # Check if timezone changed (user might be traveling or using VPN)
     stored_timezone = user_data.get("timezone", "UTC")
@@ -304,6 +309,11 @@ def check_anonymous_credits(identifier: str, required_credits: Decimal, timezone
     required_int = int(required_credits.quantize(Decimal("1"), rounding=ROUND_CEILING))
 
     is_allowed = credits_remaining >= required_int
+
+    # Clear admin reset flag after first check (allows normal syncing going forward)
+    if user_data.get("_admin_reset", False):
+        print(f"[CHECK] {identifier}: admin reset flag cleared after check, credits_used={credits_used}, credits_remaining={credits_remaining}, is_allowed={is_allowed}")
+        user_data.pop("_admin_reset", None)
 
     return is_allowed, credits_remaining, credits_allocated
 
