@@ -4182,18 +4182,26 @@ function AppContent() {
                               )
                             )
                         } else {
-                          // For anonymous users, refresh credit balance from API
-                          getCreditBalance(browserFingerprint)
-                            .then(balance => {
-                              setAnonymousCreditsRemaining(balance.credits_remaining)
-                              setCreditBalance(balance)
-                            })
-                            .catch(error =>
-                              console.error(
-                                'Failed to refresh anonymous credit balance after all models completed:',
-                                error
+                          // For anonymous users, ONLY refresh if we haven't already received valid credits from 'complete' event
+                          // The 'complete' event provides the most accurate credits_remaining value calculated right after deduction
+                          // This fallback refresh is only needed if the stream was aborted before 'complete' event arrived
+                          if (
+                            streamingMetadata?.credits_remaining === undefined ||
+                            streamingMetadata?.credits_remaining === null
+                          ) {
+                            getCreditBalance(browserFingerprint)
+                              .then(balance => {
+                                setAnonymousCreditsRemaining(balance.credits_remaining)
+                                setCreditBalance(balance)
+                              })
+                              .catch(error =>
+                                console.error(
+                                  'Failed to refresh anonymous credit balance after all models completed:',
+                                  error
+                                )
                               )
-                            )
+                          }
+                          // If streamingMetadata has credits_remaining, the 'complete' event handler already updated credits
                         }
                       }, 500) // Small delay to ensure backend has processed all completions
                     }
