@@ -935,6 +935,26 @@ async def get_app_settings(
     created_at_str = settings.created_at.isoformat() if settings.created_at else None
     updated_at_str = settings.updated_at.isoformat() if settings.updated_at else None
     
+    # Count anonymous users with credits used (development mode only)
+    # These values are only relevant for the anonymous credit reset feature
+    anonymous_users_with_usage = 0
+    anonymous_db_usage_count = 0
+    
+    if is_development:
+        # Check memory storage for anonymous entries with usage > 0
+        for key in list(anonymous_rate_limit_storage.keys()):
+            if (key.startswith("ip:") or key.startswith("fp:")) and not key.endswith("_extended"):
+                count = anonymous_rate_limit_storage[key].get("count", 0)
+                if count > 0:
+                    anonymous_users_with_usage += 1
+        
+        # Also check database for anonymous usage logs
+        anonymous_db_usage_count = (
+            db.query(UsageLog)
+            .filter(UsageLog.user_id.is_(None))  # Anonymous users only
+            .count()
+        )
+    
     return {
         "anonymous_mock_mode_enabled": (
             settings.anonymous_mock_mode_enabled if is_development else False
@@ -942,6 +962,8 @@ async def get_app_settings(
         "is_development": is_development,
         "created_at": created_at_str,
         "updated_at": updated_at_str,
+        "anonymous_users_with_usage": anonymous_users_with_usage,
+        "anonymous_db_usage_count": anonymous_db_usage_count,
     }
 
 
@@ -1034,11 +1056,18 @@ async def zero_anonymous_usage(
     This restores full credits (50/day) for all anonymous users by clearing both
     memory and database usage tracking. Comparison history is NOT affected.
 
-    Available in both development and production environments.
+    Only available in development environment.
     """
     import os
 
     is_development = os.environ.get("ENVIRONMENT") == "development"
+    
+    # Restrict to development mode only
+    if not is_development:
+        raise HTTPException(
+            status_code=403,
+            detail="Anonymous credit reset is only available in development environment",
+        )
 
     # Reset all anonymous usage entries to 0 credits
     keys_reset = []

@@ -307,6 +307,13 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
     try {
       const data = await getAppSettings()
       setAppSettings(data)
+      // Set creditsReset based on whether there's any anonymous usage to reset
+      // Only relevant in development mode where anonymous credit reset is available
+      if (data.is_development) {
+        const hasAnonymousUsage =
+          data.anonymous_users_with_usage > 0 || data.anonymous_db_usage_count > 0
+        setCreditsReset(!hasAnonymousUsage)
+      }
     } catch (err) {
       console.error('Error fetching app settings:', err)
       setError(err instanceof Error ? err.message : 'Failed to fetch app settings')

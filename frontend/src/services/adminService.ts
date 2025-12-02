@@ -82,6 +82,10 @@ export interface AppSettings {
   is_development: boolean
   created_at: string | null
   updated_at: string | null
+  /** Number of anonymous users with credits used (memory storage) */
+  anonymous_users_with_usage: number
+  /** Number of anonymous usage log entries in database */
+  anonymous_db_usage_count: number
 }
 
 /**
