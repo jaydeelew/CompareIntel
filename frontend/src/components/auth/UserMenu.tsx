@@ -627,9 +627,9 @@ export const UserMenu: React.FC = () => {
               <div className="upgrade-modal-footer">
                 <p className="pricing-notice">
                   💡 <strong>Credit-based pricing:</strong> Credits are calculated based on token
-                  usage. Each comparison uses credits based on the number of models and response
-                  size. Higher tiers give you more monthly credits AND let you compare more models
-                  at once!
+                  usage. Each comparison uses credits based on the number of models along with input
+                  and response size. Higher tiers give you more monthly credits, more comparison
+                  history, and let you compare more models at once!
                 </p>
                 <p className="pricing-notice" style={{ marginTop: '0.5rem' }}>
                   <strong>How credits work:</strong> 1 credit = 1,000 effective tokens. Effective
