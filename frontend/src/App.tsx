@@ -6020,6 +6020,18 @@ function AppContent() {
                                           !hasAnySelected &&
                                           !hasAnyOriginallySelected)
 
+                                      // Determine user tier for tooltip
+                                      const userTier = isAuthenticated
+                                        ? user?.subscription_tier || 'free'
+                                        : 'anonymous'
+                                      const isPaidTier = [
+                                        'starter',
+                                        'starter_plus',
+                                        'pro',
+                                        'pro_plus',
+                                      ].includes(userTier)
+                                      const isAnonymousOrFreeTier = !isPaidTier
+
                                       return (
                                         <div
                                           className={`provider-select-all ${isDisabled ? 'disabled' : ''} ${allProviderModelsSelected ? 'all-selected' : ''}`}
@@ -6036,7 +6048,9 @@ function AppContent() {
                                                 : `Cannot select more models (max ${maxModelsLimit} for your tier)`
                                               : allProviderModelsSelected
                                                 ? `Deselect All`
-                                                : `Select All`
+                                                : isAnonymousOrFreeTier
+                                                  ? `Select all Available`
+                                                  : `Select All`
                                           }
                                         >
                                           ✱
