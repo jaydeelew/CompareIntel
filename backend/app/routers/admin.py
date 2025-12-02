@@ -1054,19 +1054,21 @@ async def zero_anonymous_usage(
             detail="Zero anonymous usage is only available in development environment",
         )
 
-    # Count entries before clearing for logging
-    keys_to_remove = []
+    # Reset all anonymous usage entries to 0 credits
+    keys_reset = []
     for key in list(anonymous_rate_limit_storage.keys()):
-        # Remove all anonymous user entries
+        # Reset all anonymous user entries
         # Keys are formatted as "ip:xxx", "fp:xxx"
         if key.startswith("ip:") or key.startswith("fp:"):
             # Skip extended keys (no longer used)
             if not key.endswith("_extended"):
-                keys_to_remove.append(key)
-
-    # Clear all anonymous usage entries from memory
-    for key in keys_to_remove:
-        del anonymous_rate_limit_storage[key]
+                # Reset count to 0 instead of deleting the entry
+                anonymous_rate_limit_storage[key]["count"] = 0
+                # Update date to today in UTC to ensure it's treated as fresh
+                # The date will be updated to the user's timezone on their next request
+                anonymous_rate_limit_storage[key]["date"] = datetime.now(timezone.utc).date().isoformat()
+                anonymous_rate_limit_storage[key]["last_reset_at"] = datetime.now(timezone.utc)
+                keys_reset.append(key)
 
     # Delete all UsageLog entries for anonymous users created today
     # This ensures that when memory storage syncs with database, it finds 0 credits used
@@ -1089,20 +1091,20 @@ async def zero_anonymous_usage(
         db=db,
         admin_user=current_user,
         action_type="zero_anonymous_usage",
-        action_description=f"Zeroed out anonymous user usage data (cleared {len(keys_to_remove)} memory entries, deleted {usage_logs_deleted} database entries)",
+        action_description=f"Zeroed out anonymous user usage data (reset {len(keys_reset)} memory entries to 0 credits, deleted {usage_logs_deleted} database entries)",
         target_user_id=None,
         details={
-            "memory_entries_cleared": len(keys_to_remove),
+            "memory_entries_reset": len(keys_reset),
             "database_entries_deleted": usage_logs_deleted,
-            "keys_removed": keys_to_remove,
+            "keys_reset": keys_reset,
             "development_mode": is_development,
         },
         request=request,
     )
 
     return {
-        "message": f"Anonymous usage data cleared ({len(keys_to_remove)} memory entries removed, {usage_logs_deleted} database entries deleted). Full credits restored. Client-side history should be cleared separately.",
-        "entries_cleared": len(keys_to_remove),
+        "message": f"Anonymous usage data cleared ({len(keys_reset)} memory entries reset to 0 credits, {usage_logs_deleted} database entries deleted). Full credits restored. Client-side history should be cleared separately.",
+        "entries_reset": len(keys_reset),
         "database_entries_deleted": usage_logs_deleted,
     }
 
