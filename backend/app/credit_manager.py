@@ -253,11 +253,17 @@ def _can_reset_user_credits(user_id: int, db: Session, min_hours_between_resets:
         return True
 
     now = datetime.now(timezone.utc)
-    hours_since_reset = (now - last_allocation.created_at).total_seconds() / 3600
+    # Make created_at timezone-aware (SQLite stores as naive UTC)
+    created_at = (
+        last_allocation.created_at.replace(tzinfo=timezone.utc)
+        if last_allocation.created_at.tzinfo is None
+        else last_allocation.created_at
+    )
+    hours_since_reset = (now - created_at).total_seconds() / 3600
     return hours_since_reset >= min_hours_between_resets
 
 
-def reset_daily_credits(user_id: int, tier: str, db: Session) -> None:
+def reset_daily_credits(user_id: int, tier: str, db: Session, force: bool = False) -> None:
     """
     Reset daily credits for free/anonymous tier users.
 
@@ -268,6 +274,7 @@ def reset_daily_credits(user_id: int, tier: str, db: Session) -> None:
         user_id: User ID
         tier: Subscription tier (should be 'anonymous' or 'free')
         db: Database session
+        force: If True, bypass abuse prevention check (for admin resets)
     """
     if tier not in DAILY_CREDIT_LIMITS:
         # Not a daily-reset tier, skip
@@ -277,8 +284,8 @@ def reset_daily_credits(user_id: int, tier: str, db: Session) -> None:
     if not user:
         raise ValueError(f"User {user_id} not found")
 
-    # Check if reset is allowed (abuse prevention)
-    if not _can_reset_user_credits(user_id, db):
+    # Check if reset is allowed (abuse prevention) - skip if force=True (admin reset)
+    if not force and not _can_reset_user_credits(user_id, db):
         # Too soon to reset - return without resetting
         return
 

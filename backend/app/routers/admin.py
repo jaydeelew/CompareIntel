@@ -759,7 +759,7 @@ async def reset_user_usage(
         # Note: reset_daily_credits commits the db, so we commit any pending changes first
         db.commit()
         db.refresh(user)
-        reset_daily_credits(user_id, tier, db)
+        reset_daily_credits(user_id, tier, db, force=True)  # Admin reset bypasses abuse prevention
         db.refresh(user)
     else:
         # Unknown tier: just reset credits used to 0
