@@ -67,6 +67,11 @@ class Settings(BaseSettings):
     # These can be overridden via environment variables.
     individual_model_timeout: int = 120
     
+    # Backend per-model inactivity timeout (in seconds)
+    # If a model doesn't send any chunks within this time, it's marked as timed out.
+    # Must be shorter than frontend's 60-second timeout to ensure backend completes first.
+    model_inactivity_timeout: int = 45
+    
     # Pydantic Settings v2 configuration
     model_config = SettingsConfigDict(
         env_file=".env",

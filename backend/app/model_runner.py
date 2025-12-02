@@ -83,34 +83,36 @@ ANONYMOUS_TIER_MODELS = {
 # Includes all anonymous tier models PLUS mid-level inexpensive models as an incentive to register
 # Classification criteria: Models costing <$1 per million tokens (input+output average)
 # Generally includes: anonymous models + small/medium versions, "plus" variants, fast versions of premium models
-FREE_TIER_MODELS = ANONYMOUS_TIER_MODELS.union({
-    # Additional mid-level models (inexpensive but better than anonymous tier)
-    # These provide incentive for users to register for a free account
-    # OpenAI - Mid-level models
-    "openai/gpt-5.1-chat",  # Fast version of GPT-5.1
-    "openai/gpt-5-chat",  # Fast version of GPT-5
-    "openai/gpt-4o",  # Efficient premium model
-    # Anthropic - Mid-level models
-    "anthropic/claude-3.7-sonnet",  # Older but still efficient Sonnet version
-    # Mistral - Mid-level models
-    "mistralai/mistral-medium-3.1",  # Medium tier model
-    "mistralai/devstral-medium",  # Medium code model
-    # Cohere - Mid-level models
-    "cohere/command-r-plus-08-2024",  # Plus version
-    # Microsoft - Mid-level models
-    "microsoft/phi-4-reasoning-plus",  # Plus version
-    # Google - Mid-level models
-    "google/gemini-2.5-pro",  # Pro version (if cost-effective)
-    # Meta - Mid-level models
-    "meta-llama/llama-4-scout",  # Smaller MoE model
-    # Qwen - Mid-level models
-    "qwen/qwen3-next-80b-a3b-instruct",  # Mid-size model
-    # Note: Premium models (GPT-5.1, Claude Opus, Gemini 3 Pro, etc.) require paid subscription
-    # When adding new models, classify based on OpenRouter pricing:
-    # - Anonymous tier: Models costing <$0.50 per million tokens
-    # - Free tier: Models costing <$1 per million tokens (includes anonymous + mid-level)
-    # - Paid tier: Models costing >=$1 per million tokens
-})
+FREE_TIER_MODELS = ANONYMOUS_TIER_MODELS.union(
+    {
+        # Additional mid-level models (inexpensive but better than anonymous tier)
+        # These provide incentive for users to register for a free account
+        # OpenAI - Mid-level models
+        "openai/gpt-5.1-chat",  # Fast version of GPT-5.1
+        "openai/gpt-5-chat",  # Fast version of GPT-5
+        "openai/gpt-4o",  # Efficient premium model
+        # Anthropic - Mid-level models
+        "anthropic/claude-3.7-sonnet",  # Older but still efficient Sonnet version
+        # Mistral - Mid-level models
+        "mistralai/mistral-medium-3.1",  # Medium tier model
+        "mistralai/devstral-medium",  # Medium code model
+        # Cohere - Mid-level models
+        "cohere/command-r-plus-08-2024",  # Plus version
+        # Microsoft - Mid-level models
+        "microsoft/phi-4-reasoning-plus",  # Plus version
+        # Google - Mid-level models
+        "google/gemini-2.5-pro",  # Pro version (if cost-effective)
+        # Meta - Mid-level models
+        "meta-llama/llama-4-scout",  # Smaller MoE model
+        # Qwen - Mid-level models
+        "qwen/qwen3-next-80b-a3b-instruct",  # Mid-size model
+        # Note: Premium models (GPT-5.1, Claude Opus, Gemini 3 Pro, etc.) require paid subscription
+        # When adding new models, classify based on OpenRouter pricing:
+        # - Anonymous tier: Models costing <$0.50 per million tokens
+        # - Free tier: Models costing <$1 per million tokens (includes anonymous + mid-level)
+        # - Paid tier: Models costing >=$1 per million tokens
+    }
+)
 
 
 def is_model_available_for_tier(model_id: str, tier: str) -> bool:
@@ -220,7 +222,7 @@ MODELS_BY_PROVIDER = {
         {
             "id": "cohere/command-r-plus-08-2024",
             "name": "Command R+",
-            "description": "command-r-plus-08-2024 is an update of the [Command R+](/models/cohere/command-r-plus) with roughly 50% higher throughput and 25% lower latencies as compared to the previous Command R+ version, while keeping the hardware footprint the same.",
+            "description": "command-r-plus-08-2024 is an update of the Command R+ model with roughly 50% higher throughput and 25% lower latencies.",
             "category": "Language/Reasoning",
             "provider": "Cohere",
         },
@@ -326,14 +328,14 @@ MODELS_BY_PROVIDER = {
         {
             "id": "microsoft/phi-4-reasoning-plus",
             "name": "Phi 4 Reasoning Plus",
-            "description": 'Phi-4-reasoning-plus is an enhanced 14B parameter model from Microsoft, fine-tuned from Phi-4 with additional reinforcement learning to boost accuracy on math, science, and code reasoning tasks.',
+            "description": "Phi-4-reasoning-plus is an enhanced 14B parameter model from Microsoft, fine-tuned from Phi-4 with additional reinforcement learning to boost accuracy on math, science, and code reasoning tasks.",
             "category": "Reasoning",
             "provider": "Microsoft",
         },
         {
             "id": "microsoft/phi-4",
             "name": "Phi 4",
-            "description": '[Microsoft Research](/microsoft) Phi-4 is designed to perform well in complex reasoning tasks and can operate efficiently in situations with limited memory or where quick responses are needed.',
+            "description": "[Microsoft Research](/microsoft) Phi-4 is designed to perform well in complex reasoning tasks and can operate efficiently in situations with limited memory or where quick responses are needed.",
             "category": "Language/Reasoning",
             "provider": "Microsoft",
         },
@@ -537,7 +539,7 @@ MODELS_BY_PROVIDER = {
         {
             "id": "x-ai/grok-code-fast-1",
             "name": "Grok Code Fast 1",
-            "description": 'Grok Code Fast 1 is a speedy and economical reasoning model that excels at agentic coding.',
+            "description": "Grok Code Fast 1 is a speedy and economical reasoning model that excels at agentic coding.",
             "category": "Language",
             "provider": "xAI",
         },
@@ -610,7 +612,9 @@ def preload_model_token_limits() -> None:
             _model_token_limits_cache.update(limits_dict)
             logger.info(f"Preloaded token limits for {len(limits_dict)} configured models")
             if missing_models:
-                logger.info(f"Skipped {len(missing_models)} model(s) not available from OpenRouter: {', '.join(missing_models)}")
+                logger.info(
+                    f"Skipped {len(missing_models)} model(s) not available from OpenRouter: {', '.join(missing_models)}"
+                )
         else:
             logger.warning("Failed to preload model token limits from OpenRouter")
     except Exception as e:
@@ -1028,7 +1032,9 @@ def estimate_token_count(text: str, model_id: Optional[str] = None) -> int:
                 if tokenizer:
                     return len(tokenizer.encode(text, add_special_tokens=False))
             except Exception as e:
-                logger.debug(f"HuggingFace tokenizer failed for {model_id}: {e}, falling back to tiktoken")
+                logger.debug(
+                    f"HuggingFace tokenizer failed for {model_id}: {e}, falling back to tiktoken"
+                )
 
         # OpenAI models - use correct tiktoken encoding
         elif provider == "openai":
@@ -1107,7 +1113,10 @@ def calculate_token_usage(prompt_tokens: int, completion_tokens: int) -> TokenUs
 
 
 def estimate_credits_before_request(
-    prompt: str, num_models: int = 1, conversation_history: Optional[List[Any]] = None, model_id: Optional[str] = None
+    prompt: str,
+    num_models: int = 1,
+    conversation_history: Optional[List[Any]] = None,
+    model_id: Optional[str] = None,
 ) -> Decimal:
     """
     Estimate credits needed for a request before making the API call.
@@ -1314,20 +1323,20 @@ def call_openrouter(
     """
     Non-streaming wrapper for call_openrouter_streaming.
     Collects all chunks and returns the complete response as a string.
-    
+
     This function is used by scripts that need synchronous, non-streaming responses.
     For production use, prefer call_openrouter_streaming for better performance.
-    
+
     Args:
         prompt: User prompt text
         model_id: Model identifier
         mode: Mode string (unused, kept for backward compatibility)
         conversation_history: Optional conversation history
         use_mock: If True, return mock responses instead of calling API
-    
+
     Returns:
         str: Complete response text
-    
+
     Raises:
         Exception: If the API call fails or returns an error
     """
@@ -1340,21 +1349,21 @@ def call_openrouter(
             conversation_history=conversation_history,
             use_mock=use_mock,
         )
-        
+
         # Collect all chunks
         for chunk in generator:
             chunks.append(chunk)
-        
+
         # Join all chunks into a single response
         response = "".join(chunks)
-        
+
         # Check if response contains an error message
         if response.startswith("Error:"):
             raise Exception(response)
-        
+
         # Clean the response
         response = clean_model_response(response)
-        
+
         return response
     except Exception as e:
         # Re-raise exceptions from the streaming function

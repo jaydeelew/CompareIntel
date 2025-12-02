@@ -37,6 +37,7 @@ from decimal import Decimal, ROUND_CEILING
 from ..database import get_db
 from ..dependencies import get_current_user
 from ..schemas import ConversationSummary, ConversationDetail
+from ..config.settings import settings
 from ..rate_limiting import (
     get_user_usage_stats,
     get_anonymous_usage_stats,
@@ -754,6 +755,10 @@ async def compare_stream(
         - Non-blocking I/O throughout
         """
         nonlocal credits_remaining  # Allow updating outer scope variable
+        
+        # Capture settings values in local variables to avoid closure issues with nested functions
+        model_inactivity_timeout = settings.model_inactivity_timeout
+        
         successful_models = 0
         failed_models = 0
         results_dict = {}
@@ -796,8 +801,8 @@ async def compare_stream(
                 def get_settings():
                     return db.query(AppSettings).first()
 
-                settings = get_cached_app_settings(get_settings)
-                if settings and settings.anonymous_mock_mode_enabled:
+                app_settings = get_cached_app_settings(get_settings)
+                if app_settings and app_settings.anonymous_mock_mode_enabled:
                     use_mock = True
 
         try:
@@ -940,8 +945,25 @@ async def compare_stream(
                             )
                             return error_msg, True, None  # error_msg, is_error, usage_data
 
-                    # Run streaming in executor (allows true concurrent execution)
-                    full_content, is_error, usage_data = await loop.run_in_executor(None, process_stream_to_queue)
+                    # Run streaming in executor with inactivity timeout
+                    # Use a timeout shorter than the frontend's 60-second timeout
+                    # This ensures the backend completes (and can deduct credits) before frontend aborts
+                    try:
+                        full_content, is_error, usage_data = await asyncio.wait_for(
+                            loop.run_in_executor(None, process_stream_to_queue),
+                            timeout=model_inactivity_timeout  # 45 seconds by default
+                        )
+                    except asyncio.TimeoutError:
+                        # Model didn't respond within the inactivity timeout
+                        error_msg = f"Error: Model timed out after {model_inactivity_timeout}s of inactivity"
+                        # Push timeout error as chunk
+                        await chunk_queue.put({"type": "chunk", "model": model_id, "content": error_msg})
+                        return {
+                            "model": model_id,
+                            "content": error_msg,
+                            "error": True,
+                            "usage": None,
+                        }
 
                     # Clean the final accumulated content (unless it's an error)
                     if not is_error:

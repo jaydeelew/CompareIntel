@@ -552,12 +552,7 @@ export class ApiClient {
     data?: unknown,
     config?: StreamRequestConfig
   ): Promise<ReadableStream<Uint8Array> | null> {
-    const {
-      onChunk: _onChunk,
-      onComplete: _onComplete,
-      onError: _onError,
-      ...requestConfig
-    } = config || {}
+    const { onChunk: _onChunk, onComplete: _onComplete, onError, ...requestConfig } = config || {}
 
     try {
       // Apply request interceptors

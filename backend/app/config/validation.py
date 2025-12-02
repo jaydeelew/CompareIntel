@@ -138,6 +138,15 @@ def validate_config() -> None:
             "This may cause long-running requests."
         )
     
+    # Model inactivity timeout validation
+    if settings.model_inactivity_timeout < 10:
+        errors.append("model_inactivity_timeout must be at least 10 seconds")
+    elif settings.model_inactivity_timeout >= 60:
+        warnings.append(
+            f"model_inactivity_timeout ({settings.model_inactivity_timeout}s) should be less than 60s "
+            "(frontend timeout) to ensure backend completes before frontend aborts."
+        )
+    
     # ========================================================================
     # Environment Configuration
     # ========================================================================
@@ -243,6 +252,7 @@ def log_configuration() -> None:
     # Performance Settings
     logger.info("Performance Settings:")
     logger.info(f"  Individual Model Timeout: {settings.individual_model_timeout}s")
+    logger.info(f"  Model Inactivity Timeout: {settings.model_inactivity_timeout}s")
     
     # Subscription Configuration Summary
     logger.info("Subscription Tiers:")
