@@ -1,466 +1,501 @@
 # CompareIntel
 
-Compare responses from 50+ AI models side-by-side. Production-ready platform with authentication, tiered subscriptions, and comprehensive LaTeX/Markdown rendering.
+<p align="center">
+  <strong>Compare 50+ AI Models Side-by-Side in Real-Time</strong>
+</p>
 
-**Live:** [https://compareintel.com](https://compareintel.com)
+<p align="center">
+  <a href="#features">Features</a> •
+  <a href="#tech-stack">Tech Stack</a> •
+  <a href="#getting-started">Getting Started</a> •
+  <a href="#architecture">Architecture</a> •
+  <a href="#api-reference">API Reference</a> •
+  <a href="#contributing">Contributing</a>
+</p>
+
+---
+
+## Overview
+
+**CompareIntel** is a full-stack web application that enables users to compare responses from 50+ AI language models simultaneously. Built with a modern React frontend and FastAPI backend, it provides real-time streaming responses, conversation history, and a credit-based usage system with tiered subscriptions.
+
+The platform integrates with [OpenRouter](https://openrouter.ai/) to access models from OpenAI, Anthropic, Google, Meta, Mistral, Cohere, xAI, and more—all through a single, unified interface.
+
+---
+
+## Features
+
+### Core Functionality
+- **Multi-Model Comparison** — Select up to 12 models (depending on tier) and compare their responses side-by-side
+- **Real-Time Streaming** — Server-Sent Events (SSE) streaming for instant, token-by-token responses
+- **Conversation History** — Follow-up questions with full conversation context per model
+- **LaTeX Rendering** — Mathematical notation support with KaTeX
+- **File Upload Support** — Parse and analyze PDF and Word documents
+
+### User Management
+- **Authentication** — Email/password registration with verification, JWT-based sessions with HTTP-only cookies
+- **Subscription Tiers** — Free, Starter, Starter+, Pro, and Pro+ tiers with varying limits
+- **Credit System** — Token-based credit allocation (daily for free users, monthly for paid)
+- **Admin Panel** — User management, mock mode testing, and system settings
+
+### Security & Performance
+- **Rate Limiting** — Per-user and anonymous rate limiting with browser fingerprinting
+- **reCAPTCHA v3** — Bot protection on registration
+- **Request Caching** — Intelligent caching with deduplication
+- **Profiling Middleware** — Performance monitoring in development
+
+---
 
 ## Tech Stack
 
-- **Frontend:** React 18 + TypeScript + Vite
-- **Backend:** FastAPI (Python) + PostgreSQL/SQLite + JWT Authentication
-- **AI Integration:** OpenRouter API (unified access to 50+ models)
-- **Infrastructure:** Docker + Nginx + Let's Encrypt SSL
-- **Deployment:** AWS EC2
+### Frontend
+| Technology | Purpose |
+|------------|---------|
+| **React 18** | UI framework with hooks |
+| **TypeScript** | Type safety |
+| **Vite 7** | Build tool and dev server |
+| **React Router 7** | Client-side routing |
+| **KaTeX** | LaTeX math rendering |
+| **Lucide React** | Icon library |
+| **PDF.js** | PDF parsing |
+| **Mammoth** | Word document parsing |
 
-## Key Features
+### Backend
+| Technology | Purpose |
+|------------|---------|
+| **FastAPI** | Python web framework |
+| **Pydantic v2** | Data validation and settings |
+| **SQLAlchemy 2** | ORM |
+| **Alembic** | Database migrations |
+| **PostgreSQL 15** | Production database |
+| **OpenAI SDK** | OpenRouter API client |
+| **Tiktoken** | Token counting |
+| **Passlib + Bcrypt** | Password hashing |
+| **python-jose** | JWT handling |
 
-- 50+ models from Anthropic, OpenAI, Google, Meta, Mistral, DeepSeek, Cohere, Qwen, xAI
-- User authentication with email verification
-- Tiered subscriptions (Free: 10/day, Starter: 25/day, Pro: 50/day + overages)
-- Rate limiting (IP + browser fingerprint for anonymous, subscription-based for authenticated)
-- LaTeX/KaTeX rendering for mathematical content
-- Multi-turn conversations with context preservation
-- Concurrent model processing (up to 12 models simultaneously)
+### Infrastructure
+| Technology | Purpose |
+|------------|---------|
+| **Docker & Docker Compose** | Containerization |
+| **Nginx** | Reverse proxy and SSL termination |
+| **Gunicorn + Uvicorn** | Production ASGI server |
+| **Let's Encrypt** | SSL certificates |
 
-## Quick Start
+### Testing
+| Technology | Purpose |
+|------------|---------|
+| **Vitest** | Frontend unit testing |
+| **Playwright** | End-to-end testing |
+| **Pytest** | Backend testing |
+| **Testing Library** | React component testing |
+
+---
+
+## Getting Started
 
 ### Prerequisites
 
-- Docker & Docker Compose
-- [OpenRouter API Key](https://openrouter.ai/) (free)
-
-### Setup
-
-```bash
-git clone https://github.com/jaydeelew/CompareIntel.git
-cd CompareIntel
-
-# Configure backend environment
-cd backend
-cp .env.example .env
-# Edit .env and add your OPENROUTER_API_KEY and SECRET_KEY
-# Generate SECRET_KEY: python -c "import secrets; print(secrets.token_urlsafe(32))"
-
-# Configure frontend environment (optional - defaults work for local dev)
-cd ../frontend
-cp .env.example .env
-
-# Start development environment
-cd ..
-docker compose up --build
-```
-
-**Access:** http://localhost:8080 (frontend) | http://localhost:8000 (API)
+- **Node.js** ≥ 18.x
+- **Python** ≥ 3.11
+- **Docker** & **Docker Compose** (recommended)
+- **PostgreSQL 15** (for production, SQLite for development)
 
 ### Environment Variables
 
-See **[Environment Setup Guide](docs/getting-started/ENVIRONMENT_SETUP.md)** for detailed configuration.
-
-**Quick Reference:**
-- **Backend:** Copy `backend/.env.example` to `backend/.env` and fill in:
-  - `SECRET_KEY` (required) - Generate with: `python -c "import secrets; print(secrets.token_urlsafe(32))"`
-  - `OPENROUTER_API_KEY` (required) - Get from [openrouter.ai](https://openrouter.ai/keys)
-  - `DATABASE_URL` (optional) - Defaults to SQLite for development
-  - Email configuration (optional) - For user verification emails
-
-- **Frontend:** Copy `frontend/.env.example` to `frontend/.env` (optional - defaults work)
-  - `VITE_API_URL` - Defaults to `/api` (uses Vite proxy)
-
-## Production Deployment
+Create `backend/.env` with the following variables:
 
 ```bash
-# Manual deployment
-docker compose -f docker-compose.ssl.yml up -d --build
+# Required
+SECRET_KEY=your-secure-random-secret-key
+OPENROUTER_API_KEY=your-openrouter-api-key
 
-# Or use deployment scripts
-./deploy-production.sh
+# Database (PostgreSQL for production)
+DATABASE_URL=postgresql://compareintel:password@postgres:5432/compareintel
+
+# Optional: Email (for verification emails)
+MAIL_USERNAME=your-smtp-username
+MAIL_PASSWORD=your-smtp-password
+MAIL_FROM=noreply@yourdomain.com
+MAIL_SERVER=smtp.yourdomain.com
+MAIL_PORT=587
+
+# Optional: reCAPTCHA v3 (for registration protection)
+RECAPTCHA_SECRET_KEY=your-recaptcha-secret
+
+# Environment
+ENVIRONMENT=development  # or "production"
+FRONTEND_URL=http://localhost:5173
 ```
 
-**Deploy Options:**
+### Quick Start with Docker
 
-- `docker-compose.yml` - Development (HTTP)
-- `docker-compose.dev-ssl.yml` - Development (HTTPS, self-signed)
-- `docker-compose.prod.yml` - Production (HTTP)
-- `docker-compose.ssl.yml` - Production (HTTPS, Let's Encrypt)
-
-See [DEV_WORKFLOW.md](DEV_WORKFLOW.md) for detailed deployment workflows.
-
-## Architecture
-
-**Authentication Flow:**
-
-- JWT tokens (30min access, 7-day refresh)
-- Email verification via SendGrid/SMTP
-- Password reset with secure tokens
-- Optional anonymous usage (IP/fingerprint tracking)
-
-**Rate Limiting (Model-Based):**
-
-- Anonymous (unregistered): 10 model responses/day (IP + browser fingerprint)
-- Free (registered): 20 model responses/day
-- Starter: 50 model responses/day + overage options (pricing TBD)
-- Starter+: 100 model responses/day + overage options (pricing TBD)
-- Pro: 200 model responses/day + overage options (pricing TBD)
-- Pro+: 400 model responses/day + overage options (pricing TBD)
-
-**Model Limits per Comparison:**
-
-- Anonymous: 3 models max
-- Free: 3 models max
-- Starter/Starter+: 6 models max
-- Pro: 9 models max
-- Pro+: 12 models max
-
-**Support & Features:**
-
-- Starter/Starter+: 48-hour email support, 10-20 conversations saved
-- Pro/Pro+: 24-hour priority email support, 40-80 conversations saved
-
-## Key API Endpoints
-
-All endpoints are prefixed with `/api`:
-
-**Authentication:**
-```
-POST /api/auth/register              # Create account
-POST /api/auth/login                  # Get JWT tokens  
-POST /api/auth/refresh                # Refresh access token
-POST /api/auth/verify-email           # Verify email with token
-POST /api/auth/resend-verification    # Resend verification email
-POST /api/auth/forgot-password        # Request password reset
-POST /api/auth/reset-password         # Reset password with token
-POST /api/auth/logout                 # Logout (invalidate tokens)
-GET  /api/auth/me                     # Get current user info
-DELETE /api/auth/delete-account       # Delete user account
-```
-
-**Core AI Comparison:**
-```
-POST /api/compare-stream              # Streaming comparison (SSE)
-GET  /api/models                      # List all available models
-GET  /api/rate-limit-status           # Check usage status
-GET  /api/model-stats                 # Performance metrics
-GET  /api/anonymous-mock-mode-status  # Check anonymous mock mode (dev only)
-POST /api/dev/reset-rate-limit        # Reset limits (dev only)
-GET  /api/conversations               # List user conversations
-GET  /api/conversations/{id}          # Get conversation details
-DELETE /api/conversations/{id}        # Delete conversation
-```
-
-**Admin (requires admin privileges):**
-```
-GET    /api/admin/stats                        # System statistics
-GET    /api/admin/users                        # List all users
-GET    /api/admin/users/{user_id}              # Get user details
-POST   /api/admin/users                        # Create new user
-PUT    /api/admin/users/{user_id}              # Update user
-DELETE /api/admin/users/{user_id}              # Delete user
-POST   /api/admin/users/{user_id}/toggle-active        # Toggle user active status
-POST   /api/admin/users/{user_id}/reset-usage          # Reset user usage
-POST   /api/admin/users/{user_id}/toggle-mock-mode     # Toggle mock mode
-POST   /api/admin/users/{user_id}/change-tier          # Change subscription tier
-POST   /api/admin/users/{user_id}/send-verification    # Resend verification
-POST   /api/admin/users/{user_id}/reset-password       # Admin password reset
-GET    /api/admin/action-logs                   # View admin action logs
-GET    /api/admin/settings                      # Get app settings (dev only)
-POST   /api/admin/settings/toggle-anonymous-mock-mode # Toggle anonymous mock mode (dev only)
-POST   /api/admin/settings/zero-anonymous-usage        # Reset anonymous usage (dev only)
-```
-
-## Configuration
-
-**Performance Tuning** (`backend/app/config/settings.py`):
-
-- `INDIVIDUAL_MODEL_TIMEOUT = 120` - Seconds per model timeout (used in streaming endpoint)
-
-**Subscription Tiers** (`backend/app/rate_limiting.py`):
-
-```python
-# MODEL-BASED PRICING: daily_limit = model responses per day
-SUBSCRIPTION_CONFIG = {
-    "free": {"daily_limit": 20, "model_limit": 3, "overage_allowed": False},  # Registered users
-    "starter": {"daily_limit": 50, "model_limit": 6, "overage_allowed": True},
-    "starter_plus": {"daily_limit": 100, "model_limit": 6, "overage_allowed": True},
-    "pro": {"daily_limit": 200, "model_limit": 9, "overage_allowed": True},
-    "pro_plus": {"daily_limit": 400, "model_limit": 12, "overage_allowed": True}
-}
-# Anonymous (unregistered): 10 model responses/day, 3 models max
-```
-
-**Note:** Usage is now tracked by individual model responses, not comparisons. Each model in a comparison counts as one response toward the daily limit.
-
-## Project Structure
-
-```
-backend/
-├── app/
-│   ├── main.py              # FastAPI app, endpoints, CORS
-│   ├── model_runner.py      # OpenRouter integration
-│   ├── auth.py              # JWT, password hashing
-│   ├── database.py          # SQLAlchemy setup
-│   ├── models.py            # Database models
-│   ├── schemas.py           # Pydantic schemas
-│   ├── dependencies.py      # Auth dependencies
-│   ├── rate_limiting.py     # Rate limit logic
-│   ├── email_service.py     # Email sending
-│   ├── mock_responses.py    # Mock responses for testing
-│   └── routers/
-│       ├── auth.py          # Auth endpoints
-│       ├── admin.py         # Admin endpoints
-│       └── api.py           # Core API endpoints (compare, models, etc.)
-├── alembic/                 # Database migrations
-├── create_admin_user.py    # Admin user creation script
-├── requirements.txt
-└── openrouter_models.json  # Model definitions
-
-frontend/
-├── src/
-│   ├── App.tsx              # Main component
-│   ├── main.tsx            # Entry point
-│   ├── components/
-│   │   ├── LatexRenderer.tsx       # LaTeX/Markdown renderer
-│   │   ├── TermsOfService.tsx      # Terms of service component
-│   │   ├── Footer.tsx              # Footer component
-│   │   ├── auth/                   # Auth components
-│   │   ├── admin/                  # Admin panel components
-│   │   └── index.ts                # Component exports
-│   ├── contexts/
-│   │   └── AuthContext.tsx  # Auth state management
-│   ├── types/
-│   │   └── auth.ts          # TypeScript types
-│   └── styles/              # CSS styles
-└── package.json
-```
-
-## Architecture
-
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                         Frontend (React)                        │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐         │
-│  │   App.tsx    │  │  Components  │  │   Services   │         │
-│  │  (Main UI)   │  │  (Modular)   │  │  (API Layer) │         │
-│  └──────┬───────┘  └──────┬───────┘  └──────┬───────┘         │
-│         │                 │                 │                  │
-│         └─────────────────┴─────────────────┘                  │
-│                            │                                    │
-│                            ▼                                    │
-│                   ┌─────────────────┐                          │
-│                   │  Auth Context   │                          │
-│                   │  (JWT Tokens)    │                          │
-│                   └────────┬─────────┘                          │
-└────────────────────────────┼────────────────────────────────────┘
-                             │ HTTP/HTTPS
-                             │ REST API + SSE
-┌────────────────────────────┼────────────────────────────────────┐
-│                            ▼                                    │
-│                   ┌─────────────────┐                          │
-│                   │   FastAPI App   │                          │
-│                   │   (Python)      │                          │
-│                   └────────┬─────────┘                          │
-│                            │                                    │
-│         ┌──────────────────┼──────────────────┐                │
-│         │                  │                  │                 │
-│         ▼                  ▼                  ▼                 │
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐            │
-│  │   Auth      │  │   API       │  │   Admin     │            │
-│  │   Router    │  │   Router    │  │   Router    │            │
-│  └──────┬──────┘  └──────┬───────┘  └──────┬───────┘            │
-│         │               │                 │                     │
-│         └───────────────┴─────────────────┘                     │
-│                            │                                    │
-│                            ▼                                    │
-│              ┌─────────────────────────────┐                    │
-│              │   Rate Limiting & Config    │                    │
-│              └──────────────┬──────────────┘                    │
-│                             │                                    │
-│         ┌───────────────────┼───────────────────┐                │
-│         │                   │                   │                │
-│         ▼                   ▼                   ▼                │
-│  ┌─────────────┐   ┌─────────────┐   ┌─────────────┐          │
-│  │  Database   │   │ OpenRouter  │   │  Email       │          │
-│  │ (SQLite/    │   │    API      │   │  Service     │          │
-│  │ PostgreSQL) │   │             │   │ (SendGrid)   │          │
-│  └─────────────┘   └─────────────┘   └─────────────┘          │
-└─────────────────────────────────────────────────────────────────┘
-```
-
-### Key Components
-
-1. **Frontend (React + TypeScript)**
-   - Modular component architecture
-   - Service layer for API calls
-   - Context API for authentication state
-   - Server-Sent Events (SSE) for streaming
-
-2. **Backend (FastAPI + Python)**
-   - RESTful API with OpenAPI/Swagger docs
-   - JWT-based authentication
-   - Rate limiting per subscription tier
-   - Background tasks for email sending
-
-3. **Database (SQLite/PostgreSQL)**
-   - User management and authentication
-   - Conversation history
-   - Usage tracking and analytics
-   - Admin action logs
-
-4. **External Services**
-   - OpenRouter API (50+ AI models)
-   - SendGrid/SMTP (email verification)
-   - Stripe (payment processing - planned)
-
-## Documentation
-
-**📚 [Complete Documentation Index](docs/README.md)** - Start here for all documentation
-
-**Getting Started:**
-- [Environment Setup Guide](docs/getting-started/ENVIRONMENT_SETUP.md) - Complete environment configuration guide
-- [Tooling Setup](docs/getting-started/TOOLING_SETUP.md) - Development tools configuration
-- [Development Workflow](docs/DEV_WORKFLOW.md) - Development & deployment guide
-
-**Architecture:**
-- [API Documentation](docs/architecture/API.md) - Complete API reference with examples
-- [Authentication Guide](docs/architecture/AUTHENTICATION.md) - JWT authentication & authorization
-- [Database Schema](docs/architecture/DATABASE.md) - Database models and relationships
-
-**Features:**
-- [Rate Limiting](docs/RATE_LIMITING_IMPLEMENTATION.md) - Rate limiting implementation details
-- [Context Management](docs/CONTEXT_MANAGEMENT_IMPLEMENTATION.md) - Conversation context handling
-- [Streaming](docs/STREAMING_SUMMARY.md) - Server-Sent Events (SSE) streaming
-- [Image Optimization](docs/features/IMAGE_OPTIMIZATION.md) - Image optimization and lazy loading
-- [Performance Monitoring](docs/development/PERFORMANCE_MONITORING.md) - Performance tracking
-
-**Planning:**
-- [Implementation Plan 2025](docs/getting-started/IMPLEMENTATION_PLAN_2025.md) - Comprehensive refactoring plan
-- [Feature Recommendations](docs/planning/FEATURE_RECOMMENDATIONS.md) - Future feature suggestions
-- [Future Optimizations](docs/planning/FUTURE_OPTIMIZATIONS.md) - Optimization opportunities
-- [Overage Pricing Analysis](docs/planning/OVERAGE_PRICING_ANALYSIS.md) - Pricing model analysis
-
-## Contributing
-
-We welcome contributions! Please follow these guidelines:
-
-### Getting Started
-
-1. **Fork the repository** and clone your fork
-2. **Set up your development environment** following the [Environment Setup Guide](docs/getting-started/ENVIRONMENT_SETUP.md)
-3. **Create a feature branch** from `main`:
-   ```bash
-   git checkout -b feature/your-feature-name
-   ```
-
-### Development Guidelines
-
-**Code Style:**
-- **Frontend:** Follow TypeScript best practices, use ESLint/Prettier
-- **Backend:** Follow PEP 8, use type hints, add docstrings
-- **Commits:** Use conventional commits (feat:, fix:, docs:, etc.)
-
-**Testing:**
-- Write tests for new features
-- Ensure all tests pass before submitting PR
-- Test with multiple AI models when applicable
-
-**Documentation:**
-- Update relevant documentation files
-- Add JSDoc/docstrings for new functions
-- Update API documentation if endpoints change
-
-### Pull Request Process
-
-1. **Update your branch** with latest changes from `main`
-2. **Write clear commit messages** describing your changes
-3. **Test thoroughly** - ensure no regressions
-4. **Update documentation** if needed
-5. **Submit PR** with:
-   - Clear description of changes
-   - Reference to related issues
-   - Screenshots (for UI changes)
-
-### Code Review
-
-- PRs require at least one approval
-- Address review feedback promptly
-- Keep PRs focused and under 500 lines when possible
-
-### Reporting Issues
-
-When reporting bugs or requesting features:
-- Use the issue templates
-- Provide clear reproduction steps
-- Include environment details
-- Add screenshots/logs when relevant
-
-## Troubleshooting
-
-### Common Issues
-
-**Backend won't start:**
 ```bash
-# Check environment variables
+# Clone the repository
+git clone https://github.com/your-username/CompareIntel.git
+cd CompareIntel
+
+# Start all services (PostgreSQL, backend, frontend, nginx)
+docker compose up -d
+
+# View logs
+docker compose logs -f
+
+# Access the application
+open http://localhost:8080
+```
+
+### Local Development (Without Docker)
+
+#### Backend Setup
+
+```bash
 cd backend
-cat .env  # Ensure SECRET_KEY and OPENROUTER_API_KEY are set
 
-# Check database
-python -c "from app.database import engine; engine.connect()"
+# Create virtual environment
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
 
-# Check logs
-tail -f backend.log
+# Install dependencies
+pip install -r requirements-dev.txt
+
+# Run database migrations
+alembic upgrade head
+
+# Start development server
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-**Frontend build errors:**
+#### Frontend Setup
+
 ```bash
-# Clear node_modules and reinstall
 cd frontend
-rm -rf node_modules package-lock.json
+
+# Install dependencies
 npm install
 
-# Check TypeScript errors
+# Start development server
+npm run dev
+```
+
+The frontend will be available at `http://localhost:5173` and the API at `http://localhost:8000`.
+
+---
+
+## Architecture
+
+### Project Structure
+
+```
+CompareIntel/
+├── backend/
+│   ├── app/
+│   │   ├── config/           # Settings, constants, validation
+│   │   ├── middleware/       # Profiling, CORS
+│   │   ├── routers/          # API route handlers
+│   │   │   ├── api.py        # Core comparison endpoints
+│   │   │   ├── auth.py       # Authentication endpoints
+│   │   │   └── admin.py      # Admin panel endpoints
+│   │   ├── utils/            # Helper functions
+│   │   ├── auth.py           # JWT and password utilities
+│   │   ├── credit_manager.py # Credit allocation and tracking
+│   │   ├── database.py       # SQLAlchemy setup
+│   │   ├── models.py         # Database models
+│   │   ├── model_runner.py   # OpenRouter API integration
+│   │   ├── rate_limiting.py  # Usage limits
+│   │   └── schemas.py        # Pydantic schemas
+│   ├── alembic/              # Database migrations
+│   ├── tests/                # Backend tests
+│   └── requirements.txt
+│
+├── frontend/
+│   ├── src/
+│   │   ├── components/       # React components
+│   │   │   ├── admin/        # Admin panel components
+│   │   │   ├── auth/         # Authentication UI
+│   │   │   ├── comparison/   # Core comparison UI
+│   │   │   ├── conversation/ # Chat history
+│   │   │   ├── credits/      # Credit display
+│   │   │   ├── layout/       # Navigation, hero, banners
+│   │   │   └── shared/       # Reusable components
+│   │   ├── contexts/         # React Context providers
+│   │   ├── hooks/            # Custom React hooks
+│   │   ├── services/         # API client and services
+│   │   ├── styles/           # CSS modules
+│   │   ├── types/            # TypeScript type definitions
+│   │   └── utils/            # Utility functions
+│   ├── e2e/                  # Playwright E2E tests
+│   └── package.json
+│
+├── nginx/                    # Nginx configurations
+├── docker-compose.yml        # Development setup
+├── docker-compose.prod.yml   # Production setup
+├── docker-compose.ssl.yml    # Production with SSL
+└── deploy-production.sh      # Deployment script
+```
+
+### Data Flow
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                        Frontend                              │
+│  React + TypeScript + Vite                                  │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────┐  │
+│  │ CompareForm │  │ ModelSelect │  │ ResultsDisplay     │  │
+│  └──────┬──────┘  └──────┬──────┘  └──────────┬─────────┘  │
+│         └────────────────┴───────────────────┬┘             │
+│                                              │ SSE Stream   │
+└──────────────────────────────────────────────┼──────────────┘
+                                               │
+                                               ▼
+┌──────────────────────────────────────────────┼──────────────┐
+│                     Nginx (Reverse Proxy)    │              │
+│                     SSL Termination          │              │
+└──────────────────────────────────────────────┼──────────────┘
+                                               │
+                                               ▼
+┌─────────────────────────────────────────────────────────────┐
+│                        Backend                               │
+│  FastAPI + SQLAlchemy + Pydantic                            │
+│  ┌──────────────┐  ┌──────────────┐  ┌────────────────┐     │
+│  │ Auth Router  │  │  API Router  │  │ Admin Router   │     │
+│  └──────────────┘  └──────┬───────┘  └────────────────┘     │
+│                          │                                   │
+│                          ▼                                   │
+│                  ┌───────────────┐                           │
+│                  │ Model Runner  │ ─────► OpenRouter API     │
+│                  │ (50+ Models)  │        (External)         │
+│                  └───────────────┘                           │
+│                          │                                   │
+│                          ▼                                   │
+│  ┌──────────────────────────────────────────────────────┐   │
+│  │                    PostgreSQL                         │   │
+│  │  Users, Conversations, Credits, Usage Logs           │   │
+│  └──────────────────────────────────────────────────────┘   │
+└─────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## API Reference
+
+### Authentication
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/auth/register` | POST | Register new user |
+| `/api/auth/login` | POST | Login and receive tokens |
+| `/api/auth/logout` | POST | Clear authentication cookies |
+| `/api/auth/refresh` | POST | Refresh access token |
+| `/api/auth/verify-email` | POST | Verify email with token |
+| `/api/auth/resend-verification` | POST | Resend verification email |
+| `/api/auth/forgot-password` | POST | Request password reset |
+| `/api/auth/reset-password` | POST | Reset password with token |
+| `/api/auth/me` | GET | Get current user info |
+
+### Core API
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/models` | GET | List available AI models |
+| `/api/compare-stream` | POST | Stream model comparisons (SSE) |
+| `/api/estimate-tokens` | POST | Estimate token usage before comparison |
+| `/api/rate-limit-status` | GET | Get user's remaining credits |
+| `/api/credit-balance` | GET | Get detailed credit balance |
+| `/api/conversations` | GET | List user's conversation history |
+| `/api/conversations/{id}` | GET | Get conversation details |
+| `/api/conversations/{id}` | DELETE | Delete a conversation |
+
+### Admin
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/admin/users` | GET | List all users |
+| `/api/admin/users/{id}` | PATCH | Update user (tier, admin status) |
+| `/api/admin/users/{id}/mock-mode` | POST | Toggle mock mode for testing |
+| `/api/admin/settings` | GET/PUT | Manage application settings |
+
+---
+
+## Subscription Tiers
+
+| Tier | Price | Daily/Monthly Credits | Models per Comparison | Conversation History |
+|------|-------|----------------------|----------------------|---------------------|
+| **Anonymous** | Free | 50/day | 3 | 2 |
+| **Free** | Free | 100/day | 3 | 3 |
+| **Starter** | $9.95/mo | 1,200/month | 6 | 10 |
+| **Starter+** | $19.95/mo | 2,500/month | 6 | 20 |
+| **Pro** | $39.95/mo | 5,000/month | 9 | 40 |
+| **Pro+** | $79.95/mo | 10,000/month | 12 | 80 |
+
+### Credit System
+
+Credits are calculated based on token usage:
+- **1 credit = 1,000 effective tokens**
+- **Effective tokens = input_tokens + (output_tokens × 2.5)**
+- Average comparison: ~5 credits (mix of standard/extended/follow-ups)
+
+---
+
+## Testing
+
+### Backend Tests
+
+```bash
+cd backend
+
+# Run all tests
+pytest
+
+# Run with coverage
+pytest --cov=app --cov-report=html
+
+# Run specific test file
+pytest tests/unit/test_auth.py
+
+# Run tests matching pattern
+pytest -k "test_login"
+```
+
+### Frontend Tests
+
+```bash
+cd frontend
+
+# Run unit tests
+npm run test
+
+# Run with UI
+npm run test:ui
+
+# Run with coverage
+npm run test:coverage
+
+# Run E2E tests
+npm run test:e2e
+
+# Run E2E with browser visible
+npm run test:e2e:headed
+```
+
+---
+
+## Deployment
+
+### Production Deployment
+
+The project includes a comprehensive deployment script for Ubuntu/PostgreSQL servers:
+
+```bash
+# Full deployment (git pull, migrations, build, restart)
+./deploy-production.sh deploy
+
+# Quick deploy (no git pull, for hotfixes)
+./deploy-production.sh quick-deploy
+
+# Check system status
+./deploy-production.sh status
+
+# View logs
+./deploy-production.sh logs
+
+# Rollback to previous version
+./deploy-production.sh rollback
+```
+
+### Docker Compose Files
+
+| File | Purpose |
+|------|---------|
+| `docker-compose.yml` | Local development |
+| `docker-compose.dev-ssl.yml` | Local development with SSL |
+| `docker-compose.prod.yml` | Production without SSL |
+| `docker-compose.ssl.yml` | Production with SSL (recommended) |
+
+---
+
+## Development
+
+### Code Quality
+
+The project uses several tools to maintain code quality:
+
+**Backend:**
+- **Ruff** — Fast Python linter
+- **Black** — Code formatter
+- **Mypy** — Static type checking
+- **Pre-commit hooks** — Automated checks
+
+**Frontend:**
+- **ESLint** — JavaScript/TypeScript linting
+- **Prettier** — Code formatting
+- **TypeScript** — Static typing
+
+### Running Linters
+
+```bash
+# Backend
+cd backend
+ruff check .
+black --check .
+mypy app
+
+# Frontend
+cd frontend
+npm run lint
+npm run format:check
 npm run type-check
 ```
 
-**Database migration issues:**
-```bash
-cd backend
-# Check current migration status
-alembic current
+---
 
-# Create new migration
-alembic revision --autogenerate -m "Description"
+## Contributing
 
-# Apply migrations
-alembic upgrade head
-```
+We welcome contributions! Please follow these steps:
 
-**Rate limiting issues:**
-- Check user's subscription tier in database
-- Verify rate limit configuration in `backend/app/config.py`
-- Check usage reset dates are correct
+1. **Fork** the repository
+2. **Create** a feature branch (`git checkout -b feature/amazing-feature`)
+3. **Commit** your changes (`git commit -m 'Add amazing feature'`)
+4. **Push** to the branch (`git push origin feature/amazing-feature`)
+5. **Open** a Pull Request
 
-**Email not sending:**
-- Verify email configuration in `.env`
-- Check SendGrid API key (if using SendGrid)
-- Check SMTP settings (if using SMTP)
-- Email sending is optional in development mode
+### Development Guidelines
 
-**CORS errors:**
-- Verify `allowed_origins` in `backend/app/main.py`
-- Check frontend URL matches allowed origins
-- Ensure credentials are included in requests
+- Write tests for new features
+- Follow existing code style and patterns
+- Update documentation as needed
+- Keep commits atomic and well-described
+- Ensure all tests pass before submitting PR
 
-**OpenRouter API errors:**
-- Verify `OPENROUTER_API_KEY` is set correctly
-- Check API key has sufficient credits
-- Verify model IDs are correct (check `/api/models`)
-
-### Getting Help
-
-- **Documentation:** Check [docs/README.md](docs/README.md) for comprehensive guides
-- **API Docs:** Visit `http://localhost:8000/docs` for interactive API documentation
-- **Issues:** Search existing issues or create a new one
-- **Discussions:** Use GitHub Discussions for questions
+---
 
 ## License
 
-MIT License - see [LICENSE](LICENSE) file.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+```
+MIT License
+
+Copyright (c) 2025 Jack Daniel Lewis
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software...
+```
+
+---
+
+## Acknowledgments
+
+- [OpenRouter](https://openrouter.ai/) — Unified access to 50+ AI models
+- [FastAPI](https://fastapi.tiangolo.com/) — Modern Python web framework
+- [Vite](https://vitejs.dev/) — Next-generation frontend tooling
+- [KaTeX](https://katex.org/) — Fast math typesetting
+
+---
+
+<p align="center">
+  <sub>Built with ❤️ by Jack Daniel Lewis</sub>
+</p>
+
