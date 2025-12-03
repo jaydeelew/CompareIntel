@@ -1422,9 +1422,13 @@ async def compare_stream(
 
             # Save conversation to database for authenticated users
             if user_id and successful_models > 0:
+                print(
+                    f"[DEBUG] Will save conversation for user_id: {user_id}, successful_models: {successful_models}"
+                )
 
                 def save_conversation_to_db():
                     """Save conversation and messages to database."""
+                    print(f"[DEBUG] save_conversation_to_db started for user_id: {user_id}")
                     conv_db = SessionLocal()
                     try:
                         # Determine if this is a follow-up or new conversation
@@ -1657,6 +1661,9 @@ async def compare_stream(
                                 messages_saved += 1
 
                         conv_db.commit()
+                        print(
+                            f"[DEBUG] Conversation saved successfully for user_id: {user_id}, messages_saved: {messages_saved}"
+                        )
 
                         # Enforce tier-based conversation limits
                         # Store exactly display_limit conversations (no longer need +1 since we don't filter in frontend)
@@ -1684,15 +1691,34 @@ async def compare_stream(
                     except Exception as e:
                         import traceback
 
-                        # Log error silently (errors should be handled by proper logging infrastructure)
+                        # Log the error for debugging
+                        print(f"[ERROR] Failed to save conversation to database: {e}")
+                        print(f"[ERROR] Traceback: {traceback.format_exc()}")
                         conv_db.rollback()
                     finally:
                         conv_db.close()
 
                 # Save conversation - execute in thread executor to avoid blocking stream
                 # Background tasks don't execute reliably with StreamingResponse, so we run it here
-                loop = asyncio.get_event_loop()
-                loop.run_in_executor(None, save_conversation_to_db)
+                try:
+                    loop = asyncio.get_running_loop()
+                    future = loop.run_in_executor(None, save_conversation_to_db)
+
+                    # Add callback to log any errors from the executor
+                    def log_executor_error(fut):
+                        try:
+                            fut.result()
+                        except Exception as e:
+                            print(f"[ERROR] Exception in save_conversation_to_db executor: {e}")
+
+                    future.add_done_callback(log_executor_error)
+                except Exception as e:
+                    print(f"[ERROR] Failed to start save_conversation_to_db executor: {e}")
+                    # Fall back to synchronous save if executor fails
+                    try:
+                        save_conversation_to_db()
+                    except Exception as e2:
+                        print(f"[ERROR] Fallback synchronous save also failed: {e2}")
 
             # Send completion event with metadata
             yield f"data: {json.dumps({'type': 'complete', 'metadata': metadata})}\n\n"
