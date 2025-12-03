@@ -2214,6 +2214,47 @@
   stroke: #9ca3af;
 }
 
+/* Hide Premium Models Button */
+.hide-premium-button {
+  padding: 0;
+  font-size: 0.75rem;
+  border: none;
+  background: transparent;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: var(--models-header-control-height);
+  aspect-ratio: 1 / 1;
+  transition: all 0.2s ease;
+  color: #9ca3af;
+  cursor: pointer;
+  opacity: 1;
+}
+
+.hide-premium-button:hover {
+  color: #6b7280;
+}
+
+.hide-premium-button.active {
+  color: #10b981;
+}
+
+.hide-premium-button.active:hover {
+  color: #059669;
+}
+
+.hide-premium-button svg {
+  height: 100%;
+  width: 100%;
+}
+
+.hide-premium-button svg path,
+.hide-premium-button svg circle,
+.hide-premium-button svg line {
+  stroke: currentColor;
+}
+
 /* Provider Select All Asterisk */
 .provider-select-all {
   padding: 0.25rem 0.5rem;

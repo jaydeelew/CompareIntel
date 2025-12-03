@@ -181,6 +181,7 @@ function AppContent() {
   const [isAnimatingTextarea, setIsAnimatingTextarea] = useState(false)
   const animationTimeoutRef = useRef<number | null>(null)
   const [isModelsHidden, setIsModelsHidden] = useState(false)
+  const [hidePremiumModels, setHidePremiumModels] = useState(false)
   const [isMetadataCollapsed, setIsMetadataCollapsed] = useState(false)
   const [modelErrors, setModelErrors] = useState<{ [key: string]: boolean }>({})
   const [anonymousCreditsRemaining, setAnonymousCreditsRemaining] = useState<number | null>(null)
@@ -5830,6 +5831,81 @@ function AppContent() {
                     }}
                   >
                     <div className="models-header-buttons">
+                      {/* Hide Premium Models Toggle - only for anonymous and free tiers */}
+                      {(() => {
+                        const userTier = isAuthenticated
+                          ? user?.subscription_tier || 'free'
+                          : 'anonymous'
+                        const showHidePremiumToggle =
+                          userTier === 'anonymous' || userTier === 'free'
+                        if (!showHidePremiumToggle) return null
+                        return (
+                          <button
+                            className={`hide-premium-button ${hidePremiumModels ? 'active' : ''}`}
+                            onClick={e => {
+                              e.stopPropagation()
+                              setHidePremiumModels(!hidePremiumModels)
+                            }}
+                            title={
+                              hidePremiumModels ? 'Show premium models' : 'Hide premium models'
+                            }
+                            aria-label={
+                              hidePremiumModels ? 'Show premium models' : 'Hide premium models'
+                            }
+                          >
+                            {hidePremiumModels ? (
+                              /* Eye icon (show) */
+                              <svg
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                xmlns="http://www.w3.org/2000/svg"
+                                aria-hidden="true"
+                                preserveAspectRatio="xMidYMid meet"
+                              >
+                                <path
+                                  d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"
+                                  strokeWidth="1"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                />
+                                <circle
+                                  cx="12"
+                                  cy="12"
+                                  r="3"
+                                  strokeWidth="1"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                />
+                              </svg>
+                            ) : (
+                              /* Eye-off icon (hide) */
+                              <svg
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                xmlns="http://www.w3.org/2000/svg"
+                                aria-hidden="true"
+                                preserveAspectRatio="xMidYMid meet"
+                              >
+                                <path
+                                  d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"
+                                  strokeWidth="1"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                />
+                                <line
+                                  x1="1"
+                                  y1="1"
+                                  x2="23"
+                                  y2="23"
+                                  strokeWidth="1"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                />
+                              </svg>
+                            )}
+                          </button>
+                        )
+                      })()}
                       <button
                         className="collapse-all-button"
                         onClick={e => {
@@ -5958,7 +6034,36 @@ function AppContent() {
                       <div className="models-selection-layout">
                         <div className="provider-dropdowns">
                           {Object.entries(modelsByProvider).map(([provider, models]) => {
-                            const hasSelectedModels = models.some(model =>
+                            // Determine user tier for filtering
+                            const userTier = isAuthenticated
+                              ? user?.subscription_tier || 'free'
+                              : 'anonymous'
+                            const isPaidTier = [
+                              'starter',
+                              'starter_plus',
+                              'pro',
+                              'pro_plus',
+                            ].includes(userTier)
+
+                            // Filter models based on hidePremiumModels toggle
+                            // When toggle is active, hide models that are restricted for the user's tier
+                            const visibleModels = hidePremiumModels
+                              ? models.filter(model => {
+                                  if (isPaidTier) return true // Paid tiers see all
+                                  if (userTier === 'anonymous') {
+                                    return model.tier_access === 'anonymous'
+                                  }
+                                  // Free tier
+                                  return model.tier_access !== 'paid'
+                                })
+                              : models
+
+                            // Skip this provider if no visible models after filtering
+                            if (visibleModels.length === 0) {
+                              return null
+                            }
+
+                            const hasSelectedModels = visibleModels.some(model =>
                               selectedModels.includes(model.id)
                             )
                             return (
@@ -5978,21 +6083,20 @@ function AppContent() {
                                     style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
                                   >
                                     {(() => {
-                                      const selectedCount = models.filter(model =>
+                                      const selectedCount = visibleModels.filter(model =>
                                         selectedModels.includes(model.id)
                                       ).length
                                       return (
                                         <span
                                           className={`provider-count ${selectedCount > 0 ? 'has-selected' : 'empty'}`}
                                         >
-                                          {selectedCount} of {models.length} selected
+                                          {selectedCount} of {visibleModels.length} selected
                                         </span>
                                       )
                                     })()}
                                     {(() => {
-                                      const providerModels = modelsByProvider[provider] || []
                                       // Filter out unavailable models (where available === false)
-                                      const availableProviderModels = providerModels.filter(
+                                      const availableProviderModels = visibleModels.filter(
                                         model => model.available !== false
                                       )
                                       const providerModelIds = availableProviderModels.map(
@@ -6014,16 +6118,6 @@ function AppContent() {
                                           !hasAnySelected &&
                                           !hasAnyOriginallySelected)
 
-                                      // Determine user tier for tooltip
-                                      const userTier = isAuthenticated
-                                        ? user?.subscription_tier || 'free'
-                                        : 'anonymous'
-                                      const isPaidTier = [
-                                        'starter',
-                                        'starter_plus',
-                                        'pro',
-                                        'pro_plus',
-                                      ].includes(userTier)
                                       const isAnonymousOrFreeTier = !isPaidTier
 
                                       return (
@@ -6061,38 +6155,28 @@ function AppContent() {
 
                                 {openDropdowns.has(provider) && (
                                   <div className="provider-models">
-                                    {models.map(model => {
+                                    {visibleModels.map(model => {
                                       const isSelected = selectedModels.includes(model.id)
                                       const wasOriginallySelected = originalSelectedModels.includes(
                                         model.id
                                       )
                                       const isUnavailable = model.available === false
 
-                                      // Check if model is restricted for current user tier
-                                      const userTier = isAuthenticated
-                                        ? user?.subscription_tier || 'free'
-                                        : 'anonymous'
-                                      const isPaidTier = [
-                                        'starter',
-                                        'starter_plus',
-                                        'pro',
-                                        'pro_plus',
-                                      ].includes(userTier)
-
                                       // Determine if model is restricted based on user tier
-                                      // Anonymous tier: only models with tier_access === 'anonymous' are available
-                                      // Free tier: models with tier_access === 'anonymous' or 'free' are available
-                                      // Paid tiers: all models are available
+                                      // (userTier and isPaidTier are already defined at provider level)
+                                      // When hidePremiumModels is true, restricted models are already filtered out
                                       let isRestricted = false
-                                      if (isPaidTier) {
-                                        // Paid tiers have access to all models
-                                        isRestricted = false
-                                      } else if (userTier === 'anonymous') {
-                                        // Anonymous tier only has access to anonymous-tier models
-                                        isRestricted = model.tier_access !== 'anonymous'
-                                      } else if (userTier === 'free') {
-                                        // Free tier has access to anonymous and free-tier models
-                                        isRestricted = model.tier_access === 'paid'
+                                      if (!hidePremiumModels) {
+                                        if (isPaidTier) {
+                                          // Paid tiers have access to all models
+                                          isRestricted = false
+                                        } else if (userTier === 'anonymous') {
+                                          // Anonymous tier only has access to anonymous-tier models
+                                          isRestricted = model.tier_access !== 'anonymous'
+                                        } else if (userTier === 'free') {
+                                          // Free tier has access to anonymous and free-tier models
+                                          isRestricted = model.tier_access === 'paid'
+                                        }
                                       }
 
                                       const requiresUpgrade =
