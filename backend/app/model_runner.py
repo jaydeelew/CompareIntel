@@ -76,7 +76,9 @@ ANONYMOUS_TIER_MODELS = {
     # xAI - Efficient models
     "x-ai/grok-code-fast-1",
     "x-ai/grok-4-fast",
-    "x-ai/grok-4.1-fast:free",  # Auto-classified based on pricing
+    "x-ai/grok-4.1-fast:free",  # Auto-classified based on pricing,
+    "anthropic/claude-opus-4.5",  # Auto-classified based on pricing,
+    "anthropic/claude-opus-4",  # Auto-classified based on pricing
 }
 
 # List of model IDs available to free (registered) users
@@ -185,35 +187,49 @@ MODELS_BY_PROVIDER = {
         {
             "id": "anthropic/claude-sonnet-4.5",
             "name": "Claude Sonnet 4.5",
-            "description": "Claude Sonnet 4.5 is Anthropic’s most advanced Sonnet model to date, optimized for real-world agents and coding workflows.",
+            "description": 'Claude Sonnet 4.5 is Anthropic’s most advanced Sonnet model to date, optimized for real-world agents and coding workflows.',
             "category": "Language",
             "provider": "Anthropic",
         },
         {
-            "id": "anthropic/claude-haiku-4.5",
-            "name": "Claude Haiku 4.5",
-            "description": "Claude Haiku 4.5 is Anthropic’s fastest and most efficient model, delivering near-frontier intelligence at a fraction of the cost and latency of larger Claude models.",
+            "id": "anthropic/claude-opus-4.5",
+            "name": "Claude Opus 4.5",
+            "description": 'Claude Opus 4.5 is Anthropic’s frontier reasoning model optimized for complex software engineering, agentic workflows, and long-horizon computer use.',
             "category": "Language",
             "provider": "Anthropic",
         },
         {
             "id": "anthropic/claude-opus-4.1",
             "name": "Claude Opus 4.1",
-            "description": "Claude Opus 4.1 is an updated version of Anthropic’s flagship model, offering improved performance in coding, reasoning, and agentic tasks.",
+            "description": 'Claude Opus 4.1 is an updated version of Anthropic’s flagship model, offering improved performance in coding, reasoning, and agentic tasks.',
             "category": "Language/Code",
+            "provider": "Anthropic",
+        },
+        {
+            "id": "anthropic/claude-opus-4",
+            "name": "Claude Opus 4",
+            "description": 'Claude Opus 4 is benchmarked as the world’s best coding model, at time of release, bringing sustained performance on complex, long-running tasks and agent workflows.',
+            "category": "Language",
+            "provider": "Anthropic",
+        },
+        {
+            "id": "anthropic/claude-haiku-4.5",
+            "name": "Claude Haiku 4.5",
+            "description": 'Claude Haiku 4.5 is Anthropic’s fastest and most efficient model, delivering near-frontier intelligence at a fraction of the cost and latency of larger Claude models.',
+            "category": "Language",
             "provider": "Anthropic",
         },
         {
             "id": "anthropic/claude-sonnet-4",
             "name": "Claude 4 Sonnet",
-            "description": "Claude Sonnet 4 significantly enhances the capabilities of its predecessor, Sonnet 3.7, excelling in both coding and reasoning tasks with improved precision and controllability.",
+            "description": 'Claude Sonnet 4 significantly enhances the capabilities of its predecessor, Sonnet 3.7, excelling in both coding and reasoning tasks with improved precision and controllability.',
             "category": "Language",
             "provider": "Anthropic",
         },
         {
             "id": "anthropic/claude-3.7-sonnet",
             "name": "Claude 3.7 Sonnet",
-            "description": "Claude 3.7 Sonnet is an advanced large language model with improved reasoning, coding, and problem-solving capabilities.",
+            "description": 'Claude 3.7 Sonnet is an advanced large language model with improved reasoning, coding, and problem-solving capabilities.',
             "category": "Language/Reasoning",
             "provider": "Anthropic",
         },
