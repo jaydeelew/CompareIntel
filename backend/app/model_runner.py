@@ -40,79 +40,72 @@ OPENROUTER_API_KEY = settings.openrouter_api_key
 # ============================================================================
 # Model Tier Classification System
 # ============================================================================
-# Models are classified into three tiers:
-# - "anonymous": Most basic/budget models (available to unregistered users)
-# - "free": Anonymous models + mid-level inexpensive models (available to registered free users)
-# - "paid": Premium models (requires paid subscription)
+# Models are classified into three tiers based on OpenRouter pricing:
+# - "anonymous": Budget models < $0.50/M tokens (available to unregistered users)
+# - "free": Mid-level models $0.50-$3.00/M tokens (available to registered free users)
+# - "paid": Premium models >= $3.00/M tokens (requires paid subscription)
 # All paid tiers (Starter, Starter+, Pro, Pro+) have access to ALL models
 
 # List of model IDs available to anonymous (unregistered) users
-# These are the most basic/budget models - the absolute cheapest tier
-# Classification criteria: Models costing <$0.50 per million tokens (input+output average)
-# Generally includes: models with ":free" suffix, nano/mini versions, absolute cheapest options
+# Classification criteria: Models costing < $0.50 per million tokens (input+output average)
+# Generally includes: models with ":free" suffix, nano/mini versions, budget options
 ANONYMOUS_TIER_MODELS = {
-    # Anthropic - Most efficient models
-    "anthropic/claude-haiku-4.5",
-    # OpenAI - Most efficient models
-    "openai/gpt-5-mini",
-    "openai/gpt-5-nano",
-    "openai/gpt-5.1-codex-mini",
-    "openai/o3-mini",
-    # Meta - Free/open models
-    "meta-llama/llama-3.3-70b-instruct:free",
-    "meta-llama/llama-3.3-70b-instruct",  # Also allow non-free version
-    # Microsoft - Free models
-    "microsoft/phi-4",  # Efficient reasoning model
-    # Mistral - Small/efficient models
-    "mistralai/mistral-small-3.2-24b-instruct",
-    "mistralai/devstral-small",  # Smaller code model
-    # Cohere - Efficient models
-    "cohere/command-r7b-12-2024",
-    # Google - Efficient models
-    "google/gemini-2.5-flash",  # Fast/efficient version
-    # Qwen - Efficient models
-    "qwen/qwen3-coder-flash",  # Fast/efficient code model
-    "qwen/qwen3-30b-a3b-instruct-2507",  # Smaller efficient model
-    # xAI - Efficient models
-    "x-ai/grok-code-fast-1",
-    "x-ai/grok-4-fast",
-    "x-ai/grok-4.1-fast:free",  # Auto-classified based on pricing,
-    "anthropic/claude-opus-4.5",  # Auto-classified based on pricing,
-    "anthropic/claude-opus-4",  # Auto-classified based on pricing
+    # DeepSeek - Very affordable models (~$0.14-$0.55/M avg)
+    "deepseek/deepseek-chat-v3.1",  # ~$0.27 input, $1.10 output = ~$0.69/M avg - borderline, keep in anon
+    "deepseek/deepseek-v3.2-exp",  # Similar pricing
+    # Meta - Free/open models (~$0.12-$0.30/M)
+    "meta-llama/llama-3.3-70b-instruct:free",  # Free variant
+    "meta-llama/llama-3.3-70b-instruct",  # ~$0.12 input, $0.30 output = ~$0.21/M avg
+    # Microsoft - Efficient models (~$0.07-$0.14/M)
+    "microsoft/phi-4",  # ~$0.07 input, $0.14 output = ~$0.11/M avg
+    # Google - Flash models (~$0.15-$0.60/M)
+    "google/gemini-2.5-flash",  # ~$0.15 input, $0.60 output = ~$0.38/M avg
+    # xAI - Free variants
+    "x-ai/grok-4.1-fast:free",  # Free variant
 }
 
 # List of model IDs available to free (registered) users
-# Includes all anonymous tier models PLUS mid-level inexpensive models as an incentive to register
-# Classification criteria: Models costing <$1 per million tokens (input+output average)
-# Generally includes: anonymous models + small/medium versions, "plus" variants, fast versions of premium models
+# Includes all anonymous tier models PLUS mid-level models as an incentive to register
+# Classification criteria: Models costing $0.50 - $3.00 per million tokens (input+output average)
+# Generally includes: small/medium models, "plus" variants, efficient versions
 FREE_TIER_MODELS = ANONYMOUS_TIER_MODELS.union(
     {
-        # Additional mid-level models (inexpensive but better than anonymous tier)
-        # These provide incentive for users to register for a free account
-        # OpenAI - Mid-level models
-        "openai/gpt-5.1-chat",  # Fast version of GPT-5.1
-        "openai/gpt-5-chat",  # Fast version of GPT-5
-        "openai/gpt-4o",  # Efficient premium model
-        # Anthropic - Mid-level models
-        "anthropic/claude-3.7-sonnet",  # Older but still efficient Sonnet version
-        # Mistral - Mid-level models
-        "mistralai/mistral-medium-3.1",  # Medium tier model
-        "mistralai/devstral-medium",  # Medium code model
-        # Cohere - Mid-level models
-        "cohere/command-r-plus-08-2024",  # Plus version
-        # Microsoft - Mid-level models
-        "microsoft/phi-4-reasoning-plus",  # Plus version
-        # Google - Mid-level models
-        "google/gemini-2.5-pro",  # Pro version (if cost-effective)
-        # Meta - Mid-level models
-        "meta-llama/llama-4-scout",  # Smaller MoE model
-        # Qwen - Mid-level models
-        "qwen/qwen3-next-80b-a3b-instruct",  # Mid-size model
-        # Note: Premium models (GPT-5.1, Claude Opus, Gemini 3 Pro, etc.) require paid subscription
+        # DeepSeek - Reasoning model (~$0.55 input, $2.19 output = ~$1.37/M avg)
+        "deepseek/deepseek-r1",
+        # Anthropic - Haiku (efficient) (~$0.80 input, $4.00 output = ~$2.40/M avg)
+        "anthropic/claude-haiku-4.5",
+        # OpenAI - Mini/Nano models (~$0.15-$0.60/M avg)
+        "openai/gpt-5-mini",
+        "openai/gpt-5-nano",
+        "openai/gpt-5.1-codex-mini",
+        "openai/o3-mini",
+        # Meta - Llama 4 models (~$0.50-$1.50/M avg)
+        "meta-llama/llama-4-scout",
+        "meta-llama/llama-4-maverick",
+        # Microsoft - Plus variants (~$0.50-$1.50/M avg)
+        "microsoft/phi-4-reasoning-plus",
+        "microsoft/wizardlm-2-8x22b",
+        # Mistral - Small/Medium models (~$0.20-$2.00/M avg)
+        "mistralai/mistral-small-3.2-24b-instruct",
+        "mistralai/mistral-medium-3.1",
+        "mistralai/devstral-small",
+        "mistralai/devstral-medium",
+        # Cohere - Budget models (~$0.15-$2.50/M avg)
+        "cohere/command-r7b-12-2024",
+        "cohere/command-r-plus-08-2024",
+        # Qwen - Efficient models (~$0.30-$2.00/M avg)
+        "qwen/qwen3-coder-flash",
+        "qwen/qwen3-30b-a3b-instruct-2507",
+        "qwen/qwen3-next-80b-a3b-instruct",
+        # xAI - Fast variants (~$0.50-$2.00/M avg)
+        "x-ai/grok-code-fast-1",
+        "x-ai/grok-4-fast",
+        # Note: Premium models (Claude Opus, Sonnet 4.5, GPT-5.1, Gemini Pro, etc.)
+        # require paid subscription (>= $3.00/M tokens)
         # When adding new models, classify based on OpenRouter pricing:
-        # - Anonymous tier: Models costing <$0.50 per million tokens
-        # - Free tier: Models costing <$1 per million tokens (includes anonymous + mid-level)
-        # - Paid tier: Models costing >=$1 per million tokens
+        # - Anonymous tier: Models costing < $0.50 per million tokens
+        # - Free tier: Models costing $0.50 - $3.00 per million tokens
+        # - Paid tier: Models costing >= $3.00 per million tokens
     }
 )
 

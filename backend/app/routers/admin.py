@@ -1315,18 +1315,24 @@ def calculate_average_cost_per_million_tokens(model_data: Dict[str, Any]) -> Opt
     if not pricing:
         return None
     
-    # Get input and output pricing (per million tokens)
+    # Get input and output pricing from OpenRouter API
+    # IMPORTANT: OpenRouter returns price PER TOKEN, not per million tokens!
+    # We need to multiply by 1,000,000 to get per-million-token pricing
     # Convert to float in case they come as strings from the API
     try:
-        input_price = float(pricing.get("prompt", 0) or 0)  # Price per million input tokens
-        output_price = float(pricing.get("completion", 0) or 0)  # Price per million output tokens
+        input_price_per_token = float(pricing.get("prompt", 0) or 0)
+        output_price_per_token = float(pricing.get("completion", 0) or 0)
     except (ValueError, TypeError):
         # If conversion fails, return None
         return None
     
     # If both are zero or missing, return None
-    if input_price == 0 and output_price == 0:
+    if input_price_per_token == 0 and output_price_per_token == 0:
         return None
+    
+    # Convert from per-token to per-million-tokens pricing
+    input_price = input_price_per_token * 1_000_000
+    output_price = output_price_per_token * 1_000_000
     
     # Calculate average: (input + output) / 2
     # This gives us a rough average cost per million tokens
@@ -1347,9 +1353,9 @@ async def classify_model_by_pricing(model_id: str, model_data: Optional[Dict[str
     Classify a model into anonymous, free, or paid tier based on OpenRouter pricing.
     
     Classification criteria:
-    - Anonymous tier: Models costing <$0.50 per million tokens (input+output average)
-    - Free tier: Models costing <$1 per million tokens (includes anonymous + mid-level)
-    - Paid tier: Models costing >=$1 per million tokens
+    - Anonymous tier: Models costing < $0.50 per million tokens (input+output average)
+    - Free tier: Models costing $0.50 - $3.00 per million tokens
+    - Paid tier: Models costing >= $3.00 per million tokens
     
     Args:
         model_id: The model ID (e.g., "openai/gpt-4")
@@ -1373,17 +1379,23 @@ async def classify_model_by_pricing(model_id: str, model_data: Optional[Dict[str
     if avg_cost is None:
         # Fallback: use naming patterns to classify
         model_name_lower = model_id.lower()
-        if any(pattern in model_name_lower for pattern in [":free", "-mini", "-nano", "-small", "-flash", "-fast"]):
+        # Anonymous: only truly free variants (cost $0)
+        if ":free" in model_name_lower:
             return "anonymous"
-        elif any(pattern in model_name_lower for pattern in ["-medium", "-plus", "-chat"]):
+        # Free tier: budget/efficient model variants (typically $0.50-$3.00/M)
+        elif any(pattern in model_name_lower for pattern in ["-mini", "-nano", "-small", "-flash", "-fast", "-medium"]):
             return "free"
+        # Everything else defaults to paid (safest option)
         else:
             return "paid"
     
     # Classify based on pricing thresholds
+    # Anonymous tier: < $0.50/M - most budget models (free variants, nano/mini)
+    # Free tier: $0.50 - $3.00/M - mid-level models for registered users
+    # Paid tier: >= $3.00/M - premium models for subscribers
     if avg_cost < 0.5:
         return "anonymous"
-    elif avg_cost < 1.0:
+    elif avg_cost < 3.0:
         return "free"
     else:
         return "paid"
