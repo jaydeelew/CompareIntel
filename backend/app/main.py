@@ -115,13 +115,19 @@ if os.environ.get("ENVIRONMENT") == "development":
     allowed_origins = ["*"]  # Allow all origins in development
 else:
     allowed_origins = [
-        "http://54.163.207.252",  # Your frontend URL
-        "http://compareintel.com",  # Your frontend domain
-        "https://localhost",  # HTTPS localhost (production-like dev)
+        # Production domains
+        "https://compareintel.com",  # Main production domain (HTTPS)
+        "https://www.compareintel.com",  # www subdomain (HTTPS)
+        "http://compareintel.com",  # HTTP (redirects to HTTPS)
+        "http://www.compareintel.com",  # HTTP www (redirects to HTTPS)
+        "http://54.163.207.252",  # Server IP (legacy)
+        # Local development with SSL
+        "https://localhost",  # HTTPS localhost
         "https://localhost:443",  # HTTPS localhost with port
-        "http://localhost:5173",  # For local development
-        "http://localhost:5174",  # Alternative local port
-        "http://localhost:5175",  # Alternative local port
+        # Local development without SSL
+        "http://localhost:5173",  # Vite default port
+        "http://localhost:5174",  # Alternative Vite port
+        "http://localhost:5175",  # Alternative Vite port
         "http://localhost:3000",  # Alternative local port
         "http://127.0.0.1:5173",  # Alternative localhost
         "http://127.0.0.1:5174",  # Alternative localhost

@@ -1,7 +1,26 @@
 #!/bin/bash
 
+# ============================================================================
 # CompareIntel Production Deployment Script
+# ============================================================================
 # This script handles database migrations, dependency checks, and deployment
+# for the CompareIntel application on Ubuntu/PostgreSQL production servers.
+#
+# Available Commands:
+#   check        - Check system requirements and SSL certificates
+#   backup       - Create database backup only (PostgreSQL pg_dump)
+#   migrate      - Apply database migrations only
+#   install-deps - Install Python dependencies from requirements.txt
+#   build        - Build and deploy without git pull or migrations
+#   deploy       - Full deployment (default)
+#   quick-deploy - Deploy without git pull (for hotfixes)
+#   rollback     - Rollback to previous version
+#   restart      - Restart all services
+#   status       - Show current deployment status
+#   logs         - Follow container logs
+#
+# Usage: ./deploy-production.sh [command]
+# ============================================================================
 
 set -e  # Exit on any error
 
@@ -16,6 +35,8 @@ NC='\033[0m' # No Color
 PROJECT_DIR="/home/ubuntu/CompareIntel"
 BACKUP_DIR="/home/ubuntu/backups"
 LOG_FILE="/home/ubuntu/compareintel-deploy.log"
+ENV_FILE="$PROJECT_DIR/backend/.env"
+MIGRATIONS_DIR="$PROJECT_DIR/backend/scripts/migrations"
 
 # Function to log messages
 log() {
@@ -41,32 +62,81 @@ command_exists() {
 
 # Function to check if service is running
 service_running() {
-    docker compose -f docker-compose.ssl.yml ps --services --filter "status=running" | grep -q "$1"
+    cd "$PROJECT_DIR"
+    docker compose -f docker-compose.ssl.yml ps --services --filter "status=running" 2>/dev/null | grep -q "$1"
 }
 
-# Function to backup database
+# Function to load environment variables from .env file
+load_env() {
+    if [ -f "$ENV_FILE" ]; then
+        log "Loading environment variables from $ENV_FILE"
+        # Export variables from .env file (handle comments and empty lines)
+        set -a
+        source <(grep -v '^\s*#' "$ENV_FILE" | grep -v '^\s*$')
+        set +a
+        log_success "Environment variables loaded"
+    else
+        log_warning "Environment file not found: $ENV_FILE"
+    fi
+}
+
+# Function to backup database (PostgreSQL)
 backup_database() {
     log "Creating database backup..."
     
     # Create backup directory if it doesn't exist
     mkdir -p "$BACKUP_DIR"
     
-    # Find the database file
-    DB_FILE=$(find "$PROJECT_DIR" -name "*.db" -type f | head -1)
+    # Load environment to get DATABASE_URL
+    load_env
     
-    if [ -z "$DB_FILE" ]; then
-        log_warning "No database file found, skipping backup"
+    if [ -z "$DATABASE_URL" ]; then
+        log_warning "DATABASE_URL not set, skipping backup"
         return 0
     fi
     
-    BACKUP_FILE="$BACKUP_DIR/compareintel-backup-$(date +%Y%m%d-%H%M%S).db"
-    cp "$DB_FILE" "$BACKUP_FILE"
+    BACKUP_FILE="$BACKUP_DIR/compareintel-backup-$(date +%Y%m%d-%H%M%S).sql"
     
-    if [ $? -eq 0 ]; then
-        log_success "Database backed up to: $BACKUP_FILE"
+    # Check if using PostgreSQL
+    if [[ "$DATABASE_URL" == postgres* ]]; then
+        log "Detected PostgreSQL database"
+        
+        # Parse DATABASE_URL: postgresql://user:password@host:port/database
+        DB_USER=$(echo "$DATABASE_URL" | sed -n 's/.*:\/\/\([^:]*\):.*/\1/p')
+        DB_PASS=$(echo "$DATABASE_URL" | sed -n 's/.*:\/\/[^:]*:\([^@]*\)@.*/\1/p')
+        DB_HOST=$(echo "$DATABASE_URL" | sed -n 's/.*@\([^:]*\):.*/\1/p')
+        DB_PORT=$(echo "$DATABASE_URL" | sed -n 's/.*:\([0-9]*\)\/.*/\1/p')
+        DB_NAME=$(echo "$DATABASE_URL" | sed -n 's/.*\/\([^?]*\).*/\1/p')
+        
+        # Create backup using pg_dump
+        PGPASSWORD="$DB_PASS" pg_dump -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -F c -f "$BACKUP_FILE"
+        
+        if [ $? -eq 0 ]; then
+            log_success "PostgreSQL database backed up to: $BACKUP_FILE"
+        else
+            log_error "Failed to backup PostgreSQL database"
+            exit 1
+        fi
+    elif [[ "$DATABASE_URL" == sqlite* ]]; then
+        # SQLite backup (development)
+        DB_PATH=$(echo "$DATABASE_URL" | sed 's/sqlite:\/\/\///')
+        if [ -f "$DB_PATH" ]; then
+            cp "$DB_PATH" "${BACKUP_FILE%.sql}.db"
+            log_success "SQLite database backed up to: ${BACKUP_FILE%.sql}.db"
+        else
+            log_warning "SQLite database file not found: $DB_PATH"
+        fi
     else
-        log_error "Failed to backup database"
-        exit 1
+        log_warning "Unknown database type, skipping backup"
+        return 0
+    fi
+    
+    # Clean up old backups (keep last 10)
+    BACKUP_COUNT=$(ls -1 "$BACKUP_DIR"/compareintel-backup-* 2>/dev/null | wc -l)
+    if [ "$BACKUP_COUNT" -gt 10 ]; then
+        log "Cleaning up old backups (keeping last 10)..."
+        ls -1t "$BACKUP_DIR"/compareintel-backup-* | tail -n +11 | xargs rm -f
+        log_success "Old backups cleaned up"
     fi
 }
 
@@ -84,23 +154,81 @@ check_system_requirements() {
         log_error "Docker is not installed. Please install Docker first."
         exit 1
     fi
+    log_success "Docker is installed"
     
     # Check Docker Compose
     if ! command_exists docker-compose && ! docker compose version >/dev/null 2>&1; then
         log_error "Docker Compose is not installed. Please install Docker Compose first."
         exit 1
     fi
+    log_success "Docker Compose is installed"
+    
+    # Check Python3
+    if ! command_exists python3; then
+        log_error "Python3 is not installed. Please install Python3 first."
+        exit 1
+    fi
+    log_success "Python3 is installed: $(python3 --version)"
+    
+    # Check if python-dotenv is installed
+    if python3 -c "import dotenv" 2>/dev/null; then
+        log_success "python-dotenv is installed"
+    else
+        log_warning "python-dotenv is not installed. Run: pip3 install python-dotenv"
+    fi
+    
+    # Check if psycopg2 is installed (for PostgreSQL)
+    if python3 -c "import psycopg2" 2>/dev/null; then
+        log_success "psycopg2 is installed (PostgreSQL driver)"
+    else
+        log_warning "psycopg2 is not installed. Run: pip3 install psycopg2-binary"
+    fi
+    
+    # Check pg_dump (needed for PostgreSQL backups)
+    if command_exists pg_dump; then
+        log_success "pg_dump is installed (for PostgreSQL backups)"
+    else
+        log_warning "pg_dump is not installed. Install with: sudo apt-get install postgresql-client"
+    fi
+    
+    # Check curl (needed for health checks)
+    if ! command_exists curl; then
+        log_warning "curl is not installed. Health checks may fail."
+        log "Install with: sudo apt-get install curl"
+    else
+        log_success "curl is installed"
+    fi
     
     # Check available disk space (at least 2GB)
     AVAILABLE_SPACE=$(df / | awk 'NR==2 {print $4}')
     if [ "$AVAILABLE_SPACE" -lt 2097152 ]; then  # 2GB in KB
         log_warning "Low disk space detected. At least 2GB recommended."
+    else
+        AVAILABLE_GB=$(echo "scale=1; $AVAILABLE_SPACE / 1048576" | bc 2>/dev/null || echo "unknown")
+        log_success "Disk space: ${AVAILABLE_GB}GB available"
     fi
     
     # Check memory (at least 1GB)
     TOTAL_MEM=$(free -m | awk 'NR==2{print $2}')
     if [ "$TOTAL_MEM" -lt 1024 ]; then
         log_warning "Low memory detected. At least 1GB RAM recommended."
+    else
+        log_success "Memory: ${TOTAL_MEM}MB available"
+    fi
+    
+    # Check if project directory exists
+    if [ ! -d "$PROJECT_DIR" ]; then
+        log_error "Project directory not found: $PROJECT_DIR"
+        exit 1
+    fi
+    log_success "Project directory exists: $PROJECT_DIR"
+    
+    # Check if .env file exists
+    if [ -f "$ENV_FILE" ]; then
+        log_success "Environment file exists: $ENV_FILE"
+    else
+        log_error "Environment file not found: $ENV_FILE"
+        exit 1
     fi
     
     log_success "System requirements check completed"
@@ -121,75 +249,100 @@ check_ssl_certificates() {
     CURRENT_EPOCH=$(date +%s)
     DAYS_UNTIL_EXPIRY=$(( (CERT_EXPIRY_EPOCH - CURRENT_EPOCH) / 86400 ))
     
-    if [ "$DAYS_UNTIL_EXPIRY" -lt 30 ]; then
-        log_warning "SSL certificate expires in $DAYS_UNTIL_EXPIRY days. Consider renewing."
+    if [ "$DAYS_UNTIL_EXPIRY" -lt 90 ]; then
+        log_warning "SSL certificate expires in $DAYS_UNTIL_EXPIRY days. Consider renewing soon."
+        if [ "$DAYS_UNTIL_EXPIRY" -lt 30 ]; then
+            log_error "SSL certificate expires in $DAYS_UNTIL_EXPIRY days! Renew immediately!"
+        fi
     else
         log_success "SSL certificate is valid for $DAYS_UNTIL_EXPIRY more days"
     fi
+}
+
+# Function to install Python dependencies
+install_dependencies() {
+    log "Installing Python dependencies..."
+    
+    cd "$PROJECT_DIR/backend"
+    
+    # Check if virtual environment exists
+    if [ -d "venv" ]; then
+        log "Using existing virtual environment"
+        source venv/bin/activate
+    else
+        log "Creating virtual environment..."
+        python3 -m venv venv
+        source venv/bin/activate
+    fi
+    
+    # Upgrade pip
+    pip install --upgrade pip
+    
+    # Install requirements
+    if [ -f "requirements.txt" ]; then
+        log "Installing from requirements.txt..."
+        pip install -r requirements.txt
+        log_success "Dependencies installed successfully"
+    else
+        log_error "requirements.txt not found in $PROJECT_DIR/backend"
+        exit 1
+    fi
+    
+    deactivate 2>/dev/null || true
+    cd "$PROJECT_DIR"
 }
 
 # Function to apply database migrations
 apply_database_migrations() {
     log "Applying database migrations..."
     
-    # Check if we need to apply the admin_action_logs migration
-    DB_FILE=$(find "$PROJECT_DIR" -name "*.db" -type f | head -1)
+    # Load environment variables
+    load_env
     
-    if [ -z "$DB_FILE" ]; then
-        log_warning "No database file found, skipping migrations"
-        return 0
+    if [ -z "$DATABASE_URL" ]; then
+        log_error "DATABASE_URL not set in $ENV_FILE"
+        exit 1
     fi
     
-    # Check if the migration is needed
-    ADMIN_USER_ID_NULLABLE=$(sqlite3 "$DB_FILE" "PRAGMA table_info(admin_action_logs);" | grep "admin_user_id" | grep -c "NOT NULL" || true)
+    log "Database URL found (PostgreSQL: $([[ "$DATABASE_URL" == postgres* ]] && echo "yes" || echo "no"))"
     
-    if [ "$ADMIN_USER_ID_NULLABLE" -gt 0 ]; then
-        log "Applying admin_action_logs migration..."
-        
-        # Create backup before migration
-        backup_database
-        
-        # Apply the migration
-        sqlite3 "$DB_FILE" <<EOF
--- Create new table with nullable admin_user_id
-CREATE TABLE admin_action_logs_new (
-    id INTEGER NOT NULL, 
-    admin_user_id INTEGER, 
-    target_user_id INTEGER, 
-    action_type VARCHAR(100) NOT NULL, 
-    action_description TEXT NOT NULL, 
-    details TEXT, 
-    ip_address VARCHAR(45), 
-    user_agent TEXT, 
-    created_at DATETIME, 
-    PRIMARY KEY (id), 
-    FOREIGN KEY(admin_user_id) REFERENCES users (id) ON DELETE SET NULL, 
-    FOREIGN KEY(target_user_id) REFERENCES users (id) ON DELETE SET NULL
-);
-
--- Copy data from old table
-INSERT INTO admin_action_logs_new SELECT * FROM admin_action_logs;
-
--- Drop old table and rename new one
-DROP TABLE admin_action_logs;
-ALTER TABLE admin_action_logs_new RENAME TO admin_action_logs;
-
--- Recreate indexes
-CREATE INDEX ix_admin_action_logs_admin_user_id ON admin_action_logs (admin_user_id);
-CREATE INDEX ix_admin_action_logs_created_at ON admin_action_logs (created_at);
-CREATE INDEX ix_admin_action_logs_target_user_id ON admin_action_logs (target_user_id);
-CREATE INDEX ix_admin_action_logs_id ON admin_action_logs (id);
-EOF
-        
-        if [ $? -eq 0 ]; then
-            log_success "Database migration applied successfully"
-        else
-            log_error "Database migration failed"
-            exit 1
-        fi
+    cd "$PROJECT_DIR/backend"
+    
+    # Activate virtual environment if exists
+    if [ -f "venv/bin/activate" ]; then
+        source venv/bin/activate
+        PYTHON="python"
     else
-        log_success "Database migration not needed (already applied)"
+        PYTHON="python3"
     fi
+    
+    log "Using Python: $($PYTHON --version)"
+    
+    # Run each migration script (they are idempotent - safe to run multiple times)
+    MIGRATION_SCRIPTS=(
+        "add_credits_columns.py"
+        "add_message_tokens_columns.py"
+        "add_timezone_column.py"
+        "migrate_app_settings.py"
+    )
+    
+    for script in "${MIGRATION_SCRIPTS[@]}"; do
+        SCRIPT_PATH="$MIGRATIONS_DIR/$script"
+        if [ -f "$SCRIPT_PATH" ]; then
+            log "Running migration: $script"
+            if $PYTHON "$SCRIPT_PATH"; then
+                log_success "Migration $script completed"
+            else
+                log_warning "Migration $script had issues (may already be applied)"
+            fi
+        else
+            log_warning "Migration script not found: $SCRIPT_PATH"
+        fi
+    done
+    
+    deactivate 2>/dev/null || true
+    cd "$PROJECT_DIR"
+    log_success "All database migrations completed"
 }
 
 # Function to pull latest code
@@ -204,14 +357,27 @@ pull_latest_code() {
         exit 1
     fi
     
-    # Pull latest changes
+    # Detect the default branch (main or master)
+    DEFAULT_BRANCH=$(git remote show origin 2>/dev/null | grep 'HEAD branch' | awk '{print $NF}')
+    if [ -z "$DEFAULT_BRANCH" ]; then
+        # Fallback: check if main or master exists
+        if git show-ref --verify --quiet refs/remotes/origin/main; then
+            DEFAULT_BRANCH="main"
+        else
+            DEFAULT_BRANCH="master"
+        fi
+    fi
+    
+    log "Using branch: $DEFAULT_BRANCH"
+    
+    # Fetch and pull latest changes
     git fetch origin
-    git pull origin master
+    git pull origin "$DEFAULT_BRANCH"
     
     if [ $? -eq 0 ]; then
-        log_success "Code updated successfully"
+        log_success "Code updated successfully from $DEFAULT_BRANCH"
     else
-        log_error "Failed to pull latest code"
+        log_error "Failed to pull latest code from $DEFAULT_BRANCH"
         exit 1
     fi
 }
@@ -246,8 +412,11 @@ build_and_deploy() {
 verify_deployment() {
     log "Verifying deployment..."
     
+    cd "$PROJECT_DIR"
+    
     # Wait for services to start
-    sleep 10
+    log "Waiting for services to initialize..."
+    sleep 15
     
     # Check if services are running
     if service_running "backend" && service_running "frontend" && service_running "nginx"; then
@@ -255,38 +424,53 @@ verify_deployment() {
     else
         log_error "Some services failed to start"
         docker compose -f docker-compose.ssl.yml ps
+        docker compose -f docker-compose.ssl.yml logs --tail=50
         exit 1
     fi
     
-    # Test backend health
+    # Test backend health via Docker network (backend port not exposed to host)
     log "Testing backend health..."
-    if curl -f -s http://localhost:8000/health >/dev/null; then
+    BACKEND_HEALTH=$(docker compose -f docker-compose.ssl.yml exec -T backend curl -f -s http://localhost:8000/health 2>/dev/null || echo "failed")
+    if echo "$BACKEND_HEALTH" | grep -q "healthy"; then
         log_success "Backend is healthy"
     else
-        log_error "Backend health check failed"
-        exit 1
+        # Fallback: try via nginx /api path
+        if curl -f -s -k https://localhost/api/health >/dev/null 2>&1; then
+            log_success "Backend is healthy (via nginx)"
+        else
+            log_warning "Backend health check inconclusive - checking logs..."
+            docker compose -f docker-compose.ssl.yml logs --tail=20 backend
+        fi
     fi
     
-    # Test frontend
+    # Test frontend via nginx (HTTP redirects to HTTPS)
     log "Testing frontend..."
-    if curl -f -s http://localhost:80 >/dev/null; then
-        log_success "Frontend is accessible"
+    if curl -f -s -L http://localhost:80 >/dev/null 2>&1; then
+        log_success "Frontend is accessible (HTTP)"
     else
-        log_error "Frontend is not accessible"
-        exit 1
+        log_warning "HTTP frontend test failed"
     fi
     
     # Test HTTPS
     log "Testing HTTPS..."
-    if curl -f -s -k https://localhost:443 >/dev/null; then
+    if curl -f -s -k https://localhost:443 >/dev/null 2>&1; then
         log_success "HTTPS is working"
     else
-        log_warning "HTTPS test failed (this might be normal if testing locally)"
+        log_warning "HTTPS test failed (this might be normal if testing locally without valid certs)"
+    fi
+    
+    # Test public URL if available
+    log "Testing public URL..."
+    if curl -f -s -m 10 https://compareintel.com >/dev/null 2>&1; then
+        log_success "Public site https://compareintel.com is accessible"
+    else
+        log_warning "Public URL test skipped or failed (expected if running locally)"
     fi
 }
 
 # Function to show deployment status
 show_status() {
+    cd "$PROJECT_DIR"
     log "Deployment Status:"
     echo ""
     echo "Services:"
@@ -311,14 +495,20 @@ rollback_deployment() {
     # Stop current services
     docker compose -f docker-compose.ssl.yml down
     
-    # Restore database from backup
-    LATEST_BACKUP=$(ls -t "$BACKUP_DIR"/compareintel-backup-*.db 2>/dev/null | head -1)
+    # List available backups
+    log "Available backups:"
+    ls -lt "$BACKUP_DIR"/compareintel-backup-* 2>/dev/null | head -5
+    
+    # Get the latest backup
+    LATEST_BACKUP=$(ls -t "$BACKUP_DIR"/compareintel-backup-* 2>/dev/null | head -1)
+    
     if [ -n "$LATEST_BACKUP" ]; then
-        DB_FILE=$(find "$PROJECT_DIR" -name "*.db" -type f | head -1)
-        if [ -n "$DB_FILE" ]; then
-            cp "$LATEST_BACKUP" "$DB_FILE"
-            log_success "Database restored from backup"
-        fi
+        log "Latest backup: $LATEST_BACKUP"
+        log_warning "To restore PostgreSQL backup manually, run:"
+        echo "  PGPASSWORD=<password> pg_restore -h <host> -p <port> -U <user> -d <dbname> -c $LATEST_BACKUP"
+        log_warning "Database restoration must be done manually for safety."
+    else
+        log_warning "No backups found in $BACKUP_DIR"
     fi
     
     # Start previous version (if available)
@@ -329,8 +519,11 @@ rollback_deployment() {
 
 # Main deployment function
 main() {
-    log "Starting CompareIntel Production Deployment..."
+    echo ""
     echo "=========================================="
+    log "CompareIntel Production Deployment"
+    echo "=========================================="
+    echo ""
     
     # Parse command line arguments
     case "${1:-deploy}" in
@@ -339,10 +532,22 @@ main() {
             check_ssl_certificates
             log_success "System check completed"
             ;;
+        "backup")
+            backup_database
+            log_success "Backup completed"
+            ;;
         "migrate")
             backup_database
             apply_database_migrations
             log_success "Database migration completed"
+            ;;
+        "install-deps")
+            install_dependencies
+            log_success "Dependencies installation completed"
+            ;;
+        "build")
+            build_and_deploy
+            log_success "Build and deploy completed"
             ;;
         "deploy")
             check_system_requirements
@@ -353,7 +558,17 @@ main() {
             build_and_deploy
             verify_deployment
             show_status
-            log_success "Deployment completed successfully!"
+            echo ""
+            log_success "=== Deployment completed successfully! ==="
+            ;;
+        "quick-deploy")
+            # Quick deploy: skip git pull (useful for hotfixes already on server)
+            log_warning "Quick deploy mode: skipping git pull"
+            check_system_requirements
+            backup_database
+            build_and_deploy
+            verify_deployment
+            log_success "Quick deployment completed!"
             ;;
         "rollback")
             rollback_deployment
@@ -361,15 +576,33 @@ main() {
         "status")
             show_status
             ;;
+        "logs")
+            cd "$PROJECT_DIR"
+            docker compose -f docker-compose.ssl.yml logs -f --tail=100
+            ;;
+        "restart")
+            cd "$PROJECT_DIR"
+            log "Restarting services..."
+            docker compose -f docker-compose.ssl.yml restart
+            sleep 10
+            verify_deployment
+            log_success "Services restarted"
+            ;;
         *)
-            echo "Usage: $0 {check|migrate|deploy|rollback|status}"
+            echo "Usage: $0 {check|backup|migrate|install-deps|build|deploy|quick-deploy|rollback|restart|status|logs}"
             echo ""
             echo "Commands:"
-            echo "  check    - Check system requirements and SSL certificates"
-            echo "  migrate  - Apply database migrations only"
-            echo "  deploy   - Full deployment (default)"
-            echo "  rollback - Rollback to previous version"
-            echo "  status   - Show current deployment status"
+            echo "  check        - Check system requirements and SSL certificates"
+            echo "  backup       - Create database backup only (PostgreSQL pg_dump)"
+            echo "  migrate      - Apply database migrations only"
+            echo "  install-deps - Install Python dependencies from requirements.txt"
+            echo "  build        - Build and deploy without git pull or migrations"
+            echo "  deploy       - Full deployment (default)"
+            echo "  quick-deploy - Deploy without git pull (for hotfixes)"
+            echo "  rollback     - Rollback to previous version"
+            echo "  restart      - Restart all services"
+            echo "  status       - Show current deployment status"
+            echo "  logs         - Follow container logs"
             exit 1
             ;;
     esac

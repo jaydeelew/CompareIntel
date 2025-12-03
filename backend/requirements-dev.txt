@@ -1,0 +1,42 @@
+# ============================================================================
+# CompareIntel Backend - Development Dependencies
+# ============================================================================
+# This file includes all production dependencies plus development tools.
+# Install with: pip install -r requirements-dev.txt
+# ============================================================================
+
+# Include all production dependencies
+-r requirements.txt
+
+# ============================================================================
+# Development Server (Auto-reload)
+# ============================================================================
+watchfiles>=0.18.0    # Development auto-reload for uvicorn
+
+# ============================================================================
+# Code Quality Tools (Linting, Formatting, Type Checking)
+# ============================================================================
+ruff>=0.6.0              # Fast Python linter (replaces flake8, isort, etc.)
+black>=24.0.0            # Code formatter
+mypy>=1.11.0             # Static type checker
+pre-commit>=3.7.0        # Git hooks framework
+
+# ============================================================================
+# Type Stubs (for mypy)
+# ============================================================================
+types-sqlalchemy>=1.4.0  # Type stubs for SQLAlchemy
+types-python-jose>=3.3.0 # Type stubs for python-jose
+types-passlib>=1.7.6     # Type stubs for passlib
+types-PyYAML>=6.0.0      # Type stubs for PyYAML
+
+# ============================================================================
+# Testing Framework & Tools
+# ============================================================================
+pytest>=8.0.0            # Testing framework
+pytest-asyncio>=0.23.0   # Async test support
+pytest-cov>=5.0.0        # Coverage reporting
+pytest-mock>=3.14.0      # Mocking utilities
+pytest-timeout>=2.3.0    # Test timeout management
+faker>=24.0.0            # Fake data generation
+freezegun>=1.5.0         # Time mocking for testing
+
