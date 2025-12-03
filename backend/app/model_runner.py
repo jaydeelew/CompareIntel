@@ -226,6 +226,13 @@ MODELS_BY_PROVIDER = {
             "category": "Language/Reasoning",
             "provider": "Anthropic",
         },
+        {
+            "id": "anthropic/claude-3.5-haiku",
+            "name": "Claude 3.5 Haiku",
+            "description": 'Claude 3.5 Haiku features offers enhanced capabilities in speed, coding accuracy, and tool use.',
+            "category": "Language",
+            "provider": "Anthropic",
+        },
     ],
     "Cohere": [
         {
