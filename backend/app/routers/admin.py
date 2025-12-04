@@ -1225,6 +1225,94 @@ from openai import APIError, NotFoundError, APIConnectionError, RateLimitError, 
 logger = logging.getLogger(__name__)
 
 
+def find_matching_brace(content: str, start_pos: int, open_char: str = '{', close_char: str = '}') -> int:
+    """
+    Find the position after the matching closing brace/bracket starting from start_pos.
+    Handles nested braces and ignores braces inside strings.
+    
+    Args:
+        content: The content to search in
+        start_pos: Position right after the opening brace/bracket
+        open_char: The opening character ('{' or '[')
+        close_char: The closing character ('}' or ']')
+    
+    Returns:
+        Position after the closing brace/bracket, or -1 if not found
+    """
+    count = 1
+    pos = start_pos
+    in_string = False
+    string_char = None
+    escape_next = False
+    
+    while pos < len(content) and count > 0:
+        char = content[pos]
+        
+        if escape_next:
+            escape_next = False
+        elif char == '\\':
+            escape_next = True
+        elif in_string:
+            if char == string_char:
+                in_string = False
+        elif char in ('"', "'"):
+            in_string = True
+            string_char = char
+        elif char == open_char:
+            count += 1
+        elif char == close_char:
+            count -= 1
+        
+        pos += 1
+    
+    return pos if count == 0 else -1
+
+
+def find_provider_list_bounds(content: str, provider_name: str) -> tuple[int, int] | None:
+    """
+    Find the start and end positions of a provider's model list in the content.
+    Uses bracket counting to handle brackets inside strings correctly.
+    
+    Returns (start, end) where start is the position of the opening quote of provider name
+    and end is the position after the closing bracket, or None if not found.
+    """
+    provider_start_pattern = rf'("{re.escape(provider_name)}"\s*:\s*\[)'
+    start_match = re.search(provider_start_pattern, content)
+    
+    if not start_match:
+        return None
+    
+    # Use bracket counting to find the matching closing bracket
+    list_start = start_match.end()  # Position after the opening [
+    end_pos = find_matching_brace(content, list_start, '[', ']')
+    
+    if end_pos > 0:
+        return (start_match.start(), end_pos)
+    
+    return None
+
+
+def find_models_by_provider_end(content: str) -> int:
+    """
+    Find the position of the closing brace of MODELS_BY_PROVIDER dict.
+    Uses brace counting to handle nested structures correctly.
+    
+    Returns the position of the closing }, or -1 if not found.
+    """
+    pattern = r'MODELS_BY_PROVIDER\s*=\s*\{'
+    match = re.search(pattern, content)
+    
+    if not match:
+        return -1
+    
+    # Start after the opening brace
+    dict_start = match.end()
+    end_pos = find_matching_brace(content, dict_start, '{', '}')
+    
+    # Return position of the closing brace itself (not after it)
+    return end_pos - 1 if end_pos > 0 else -1
+
+
 class AddModelRequest(BaseModel):
     model_id: str
 
@@ -1585,15 +1673,22 @@ async def add_model(
         
         if not provider_found:
             # Create new provider section
-            # Find the closing brace of MODELS_BY_PROVIDER
-            pattern = r'(MODELS_BY_PROVIDER\s*=\s*\{[^}]*)\}'
-            match = re.search(pattern, content, re.DOTALL)
-            if match:
+            # Find the closing brace of MODELS_BY_PROVIDER using brace counting
+            closing_brace_pos = find_models_by_provider_end(content)
+            if closing_brace_pos > 0:
                 # Add new provider before closing brace
                 # Escape description for Python string (handle quotes and special chars)
                 escaped_description = repr(model_description)
-                new_provider_section = f',\n    "{provider_name}": [\n        {{\n            "id": "{model_id}",\n            "name": "{model_name}",\n            "description": {escaped_description},\n            "category": "Language",\n            "provider": "{provider_name}",\n        }},\n    ]'
-                content = content[:match.end()-1] + new_provider_section + content[match.end()-1:]
+                # Check if previous content has a trailing comma (usually it does)
+                # We need to look at content before the closing brace
+                content_before = content[:closing_brace_pos].rstrip()
+                if content_before.endswith(','):
+                    # Previous entry has trailing comma, don't add leading comma
+                    new_provider_section = f'\n    "{provider_name}": [\n        {{\n            "id": "{model_id}",\n            "name": "{model_name}",\n            "description": {escaped_description},\n            "category": "Language",\n            "provider": "{provider_name}",\n        }},\n    ],\n'
+                else:
+                    # Need to add comma separator
+                    new_provider_section = f',\n    "{provider_name}": [\n        {{\n            "id": "{model_id}",\n            "name": "{model_name}",\n            "description": {escaped_description},\n            "category": "Language",\n            "provider": "{provider_name}",\n        }},\n    ],\n'
+                content = content[:closing_brace_pos] + new_provider_section + content[closing_brace_pos:]
             else:
                 raise HTTPException(status_code=500, detail="Could not find MODELS_BY_PROVIDER structure")
         else:
@@ -1617,10 +1712,11 @@ async def add_model(
             # Sort models by name in decreasing alphanumeric order (Z->A, 9->0)
             existing_models.sort(key=lambda x: x["name"], reverse=True)
             
-            # Find the provider's list in the file
-            provider_pattern = rf'("{re.escape(provider_name)}"\s*:\s*\[)(.*?)(\s*\])'
-            match = re.search(provider_pattern, content, re.DOTALL)
-            if match:
+            # Find the provider's list in the file using bracket counting
+            # This handles brackets inside strings correctly (e.g., descriptions with [feature])
+            bounds = find_provider_list_bounds(content, provider_name)
+            if bounds:
+                start_pos, end_pos = bounds
                 # Reconstruct the provider's list with sorted models
                 models_lines = []
                 for model in existing_models:
@@ -1642,7 +1738,7 @@ async def add_model(
                 
                 # Replace the provider's list with the sorted one
                 new_provider_section = f'"{provider_name}": [\n{models_str}\n    ]'
-                content = content[:match.start(1)] + new_provider_section + content[match.end(3):]
+                content = content[:start_pos] + new_provider_section + content[end_pos:]
             else:
                 raise HTTPException(status_code=500, detail=f"Could not find provider {provider_name} in MODELS_BY_PROVIDER")
         
@@ -1899,12 +1995,19 @@ async def add_model_stream(
                     break
             
             if not provider_found:
-                pattern = r'(MODELS_BY_PROVIDER\s*=\s*\{[^}]*)\}'
-                match = re.search(pattern, content, re.DOTALL)
-                if match:
+                # Find the closing brace of MODELS_BY_PROVIDER using brace counting
+                closing_brace_pos = find_models_by_provider_end(content)
+                if closing_brace_pos > 0:
                     escaped_description = repr(model_description)
-                    new_provider_section = f',\n    "{provider_name}": [\n        {{\n            "id": "{model_id}",\n            "name": "{model_name}",\n            "description": {escaped_description},\n            "category": "Language",\n            "provider": "{provider_name}",\n        }},\n    ]'
-                    content = content[:match.end()-1] + new_provider_section + content[match.end()-1:]
+                    # Check if previous content has a trailing comma (usually it does)
+                    content_before = content[:closing_brace_pos].rstrip()
+                    if content_before.endswith(','):
+                        # Previous entry has trailing comma, don't add leading comma
+                        new_provider_section = f'\n    "{provider_name}": [\n        {{\n            "id": "{model_id}",\n            "name": "{model_name}",\n            "description": {escaped_description},\n            "category": "Language",\n            "provider": "{provider_name}",\n        }},\n    ],\n'
+                    else:
+                        # Need to add comma separator
+                        new_provider_section = f',\n    "{provider_name}": [\n        {{\n            "id": "{model_id}",\n            "name": "{model_name}",\n            "description": {escaped_description},\n            "category": "Language",\n            "provider": "{provider_name}",\n        }},\n    ],\n'
+                    content = content[:closing_brace_pos] + new_provider_section + content[closing_brace_pos:]
                 else:
                     try:
                         yield f"data: {json.dumps({'type': 'error', 'message': 'Could not find MODELS_BY_PROVIDER structure'})}\n\n"
@@ -1925,9 +2028,10 @@ async def add_model_stream(
                 existing_models.append(new_model_dict)
                 existing_models.sort(key=lambda x: x["name"], reverse=True)
                 
-                provider_pattern = rf'("{re.escape(provider_name)}"\s*:\s*\[)(.*?)(\s*\])'
-                match = re.search(provider_pattern, content, re.DOTALL)
-                if match:
+                # Find the provider's list using bracket counting (handles brackets in strings)
+                bounds = find_provider_list_bounds(content, provider_name)
+                if bounds:
+                    start_pos, end_pos = bounds
                     models_lines = []
                     for model in existing_models:
                         model_lines = [
@@ -1945,7 +2049,7 @@ async def add_model_stream(
                     
                     models_str = "\n".join(models_lines)
                     new_provider_section = f'"{provider_name}": [\n{models_str}\n    ]'
-                    content = content[:match.start(1)] + new_provider_section + content[match.end(3):]
+                    content = content[:start_pos] + new_provider_section + content[end_pos:]
                 else:
                     try:
                         yield f"data: {json.dumps({'type': 'error', 'message': f'Could not find provider {provider_name} in MODELS_BY_PROVIDER'})}\n\n"

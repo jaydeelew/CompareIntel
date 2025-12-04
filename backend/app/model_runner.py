@@ -595,6 +595,16 @@ MODELS_BY_PROVIDER = {
             "provider": "xAI",
         },
     ],
+
+    "Minimax": [
+        {
+            "id": "minimax/minimax-m2",
+            "name": "Minimax M2",
+            "description": 'MiniMax-M2 is a compact, high-efficiency large language model optimized for end-to-end coding and agentic workflows.',
+            "category": "Language",
+            "provider": "Minimax",
+        },
+    ],
 }
 
 # Flatten the models for backward compatibility
