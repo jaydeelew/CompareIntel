@@ -1,6 +1,7 @@
 import React from 'react'
 
-import type { ModelConversation, ActiveResultTabs, RESULT_TAB, ResultTab } from '../../types'
+import { RESULT_TAB } from '../../types'
+import type { ModelConversation, ActiveResultTabs, ResultTab } from '../../types'
 import { isErrorMessage } from '../../utils/error'
 
 import { ResultCard, type Model } from './ResultCard'

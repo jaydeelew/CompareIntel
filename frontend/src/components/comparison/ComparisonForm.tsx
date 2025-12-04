@@ -600,7 +600,10 @@ export const ComparisonForm = memo<ComparisonFormProps>(
         for (let i = 1; i <= pdf.numPages; i++) {
           const page = await pdf.getPage(i)
           const textContent = await page.getTextContent()
-          const pageText = textContent.items.map((item: { str: string }) => item.str).join(' ')
+          const pageText = textContent.items
+            .filter((item): item is { str: string } => 'str' in item)
+            .map(item => item.str)
+            .join(' ')
           fullText += pageText + '\n\n'
         }
 

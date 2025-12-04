@@ -193,7 +193,7 @@ export const UserMenu: React.FC = () => {
                       <div
                         className="usage-progress-fill"
                         style={{
-                          width: `${Math.min(100, (creditBalance.credits_used_this_period / creditBalance.credits_allocated) * 100)}%`,
+                          width: `${Math.min(100, ((creditBalance.credits_used_this_period ?? 0) / creditBalance.credits_allocated) * 100)}%`,
                         }}
                       ></div>
                     </div>
@@ -234,13 +234,13 @@ export const UserMenu: React.FC = () => {
             </div>
             {/* Legacy Model Response Display (Hidden by default, can be shown for transition period) */}
             {/* eslint-disable-next-line no-constant-binary-expression */}
-            {false && (
+            {false && user && (
               <div className="usage-stat" style={{ marginTop: '0.5rem', opacity: 0.7 }}>
                 <div className="usage-stat-label" style={{ fontSize: '0.75rem' }}>
                   Model Responses (Legacy)
                 </div>
                 <div className="usage-stat-value" style={{ fontSize: '0.875rem' }}>
-                  <span className="usage-current">{user.credits_used_this_period || 0}</span>
+                  <span className="usage-current">{user.credits_used_this_period ?? 0}</span>
                   <span className="usage-separator">/</span>
                   <span className="usage-limit">{getDailyLimit(user.subscription_tier)}</span>
                 </div>

@@ -138,9 +138,13 @@ export async function getCreditUsage(
   page: number = 1,
   perPage: number = 50
 ): Promise<CreditUsageHistory> {
-  const response = await apiClient.get<CreditUsageHistory>('/credits/usage', {
-    params: { page, per_page: perPage },
-  })
+  const params = new URLSearchParams()
+  params.append('page', String(page))
+  params.append('per_page', String(perPage))
+  const queryString = params.toString()
+  const response = await apiClient.get<CreditUsageHistory>(
+    `/credits/usage${queryString ? `?${queryString}` : ''}`
+  )
   return response.data
 }
 

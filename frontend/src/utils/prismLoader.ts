@@ -14,9 +14,10 @@ interface PrismLoaderOptions {
 // Type definition for Prism.js global object
 interface PrismGlobal {
   manual?: boolean
-  highlight?: (code: string, grammar: unknown, language: string) => string
-  languages?: Record<string, unknown>
-  [key: string]: unknown
+  highlight: (code: string, grammar: unknown, language: string) => string
+  highlightAllUnder: (container: Element | Document, async?: boolean, callback?: () => void) => void
+  highlightElement: (element: Element, async?: boolean, callback?: () => void) => void
+  languages: Record<string, unknown>
 }
 
 // Extend Window interface to include Prism
