@@ -5,10 +5,10 @@ Daily model availability check script (Production-ready version).
 This script checks if all models configured in the website are available
 for API calls from OpenRouter and sends an email report to support@compareintel.com.
 
-Production usage:
-  - Inside Docker: docker exec compareintel-backend-1 python3 /app/scripts/check_model_availability_prod.py
-  - On host: python3 /path/to/backend/scripts/check_model_availability_prod.py
-  - Via cron: See setup_daily_model_check_prod.sh
+Production usage (Docker only):
+  docker exec compareintel-backend-1 python3 /app/scripts/check_model_availability_prod.py
+
+For automated daily checks via cron, see: setup_daily_model_check_prod.sh
 """
 
 import sys

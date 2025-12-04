@@ -6,11 +6,13 @@
 # This script handles database migrations, dependency checks, and deployment
 # for the CompareIntel application on Ubuntu/PostgreSQL production servers.
 #
+# All Python dependencies and execution happen inside Docker containers.
+# No virtual environment (venv) is used on the host.
+#
 # Available Commands:
 #   check        - Check system requirements and SSL certificates
 #   backup       - Create database backup only (PostgreSQL pg_dump)
-#   migrate      - Apply database migrations only
-#   install-deps - Install Python dependencies from requirements.txt
+#   migrate      - Apply database migrations only (via Docker)
 #   build        - Build and deploy without git pull or migrations
 #   deploy       - Full deployment (default)
 #   quick-deploy - Deploy without git pull (for hotfixes)
@@ -163,27 +165,6 @@ check_system_requirements() {
     fi
     log_success "Docker Compose is installed"
     
-    # Check Python3
-    if ! command_exists python3; then
-        log_error "Python3 is not installed. Please install Python3 first."
-        exit 1
-    fi
-    log_success "Python3 is installed: $(python3 --version)"
-    
-    # Check if python-dotenv is installed
-    if python3 -c "import dotenv" 2>/dev/null; then
-        log_success "python-dotenv is installed"
-    else
-        log_warning "python-dotenv is not installed. Run: pip3 install python-dotenv"
-    fi
-    
-    # Check if psycopg2 is installed (for PostgreSQL)
-    if python3 -c "import psycopg2" 2>/dev/null; then
-        log_success "psycopg2 is installed (PostgreSQL driver)"
-    else
-        log_warning "psycopg2 is not installed. Run: pip3 install psycopg2-binary"
-    fi
-    
     # Check pg_dump (needed for PostgreSQL backups)
     if command_exists pg_dump; then
         log_success "pg_dump is installed (for PostgreSQL backups)"
@@ -260,78 +241,24 @@ check_ssl_certificates() {
     fi
 }
 
-# Function to install Python dependencies
-install_dependencies() {
-    log "Installing Python dependencies..."
-    
-    cd "$PROJECT_DIR/backend"
-    
-    # Check if virtual environment exists and has pip
-    if [ -d "venv" ] && [ -f "venv/bin/pip" ]; then
-        log "Using existing virtual environment"
-    else
-        # Remove broken venv if it exists
-        if [ -d "venv" ]; then
-            log_warning "Existing venv is missing pip, recreating..."
-            rm -rf venv
-        fi
-        log "Creating virtual environment..."
-        python3 -m venv venv
-        if [ ! -f "venv/bin/pip" ]; then
-            log_error "Failed to create venv with pip. Please install python3-venv:"
-            log_error "  sudo apt-get update && sudo apt-get install -y python3-venv python3-pip"
-            exit 1
-        fi
-    fi
-    
-    # Activate the virtual environment
-    source venv/bin/activate
-    
-    # Use the venv's pip directly for reliability
-    # Upgrade pip first
-    ./venv/bin/pip install --upgrade pip
-    
-    # Install requirements
-    if [ -f "requirements.txt" ]; then
-        log "Installing from requirements.txt..."
-        ./venv/bin/pip install -r requirements.txt
-        log_success "Dependencies installed successfully"
-    else
-        log_error "requirements.txt not found in $PROJECT_DIR/backend"
-        exit 1
-    fi
-    
-    deactivate 2>/dev/null || true
-    cd "$PROJECT_DIR"
-}
-
-# Function to apply database migrations
+# Function to apply database migrations (via Docker)
 apply_database_migrations() {
-    log "Applying database migrations..."
+    log "Applying database migrations via Docker..."
     
-    # Load environment variables
-    load_env
+    cd "$PROJECT_DIR"
     
-    if [ -z "$DATABASE_URL" ]; then
-        log_error "DATABASE_URL not set in $ENV_FILE"
+    # Ensure backend container is running
+    if ! docker compose -f docker-compose.ssl.yml ps --services --filter "status=running" 2>/dev/null | grep -q "backend"; then
+        log_error "Backend container is not running. Please run 'build' or 'deploy' first."
         exit 1
     fi
     
-    log "Database URL found (PostgreSQL: $([[ "$DATABASE_URL" == postgres* ]] && echo "yes" || echo "no"))"
+    # Wait a moment for the container to be fully ready
+    log "Waiting for backend container to be ready..."
+    sleep 5
     
-    cd "$PROJECT_DIR/backend"
-    
-    # Activate virtual environment if exists
-    if [ -f "venv/bin/activate" ]; then
-        source venv/bin/activate
-        PYTHON="python"
-    else
-        PYTHON="python3"
-    fi
-    
-    log "Using Python: $($PYTHON --version)"
-    
-    # Run each migration script (they are idempotent - safe to run multiple times)
+    # Run each migration script inside the Docker container
+    # All dependencies are already installed in the container
     MIGRATION_SCRIPTS=(
         "add_credits_columns.py"
         "add_message_tokens_columns.py"
@@ -340,21 +267,15 @@ apply_database_migrations() {
     )
     
     for script in "${MIGRATION_SCRIPTS[@]}"; do
-        SCRIPT_PATH="$MIGRATIONS_DIR/$script"
-        if [ -f "$SCRIPT_PATH" ]; then
-            log "Running migration: $script"
-            if $PYTHON "$SCRIPT_PATH"; then
-                log_success "Migration $script completed"
-            else
-                log_warning "Migration $script had issues (may already be applied)"
-            fi
+        SCRIPT_PATH="/app/scripts/migrations/$script"
+        log "Running migration: $script"
+        if docker compose -f docker-compose.ssl.yml exec -T backend python3 "$SCRIPT_PATH" 2>&1; then
+            log_success "Migration $script completed"
         else
-            log_warning "Migration script not found: $SCRIPT_PATH"
+            log_warning "Migration $script had issues (may already be applied)"
         fi
     done
     
-    deactivate 2>/dev/null || true
-    cd "$PROJECT_DIR"
     log_success "All database migrations completed"
 }
 
@@ -551,12 +472,15 @@ main() {
             ;;
         "migrate")
             backup_database
+            # For standalone migrate command, ensure containers are running
+            cd "$PROJECT_DIR"
+            if ! docker compose -f docker-compose.ssl.yml ps --services --filter "status=running" 2>/dev/null | grep -q "backend"; then
+                log "Starting backend container for migrations..."
+                docker compose -f docker-compose.ssl.yml up -d backend
+                sleep 10
+            fi
             apply_database_migrations
             log_success "Database migration completed"
-            ;;
-        "install-deps")
-            install_dependencies
-            log_success "Dependencies installation completed"
             ;;
         "build")
             build_and_deploy
@@ -566,9 +490,9 @@ main() {
             check_system_requirements
             check_ssl_certificates
             backup_database
-            apply_database_migrations
             pull_latest_code
             build_and_deploy
+            apply_database_migrations  # Run after build so migrations use new code in container
             verify_deployment
             show_status
             echo ""
@@ -602,13 +526,12 @@ main() {
             log_success "Services restarted"
             ;;
         *)
-            echo "Usage: $0 {check|backup|migrate|install-deps|build|deploy|quick-deploy|rollback|restart|status|logs}"
+            echo "Usage: $0 {check|backup|migrate|build|deploy|quick-deploy|rollback|restart|status|logs}"
             echo ""
             echo "Commands:"
             echo "  check        - Check system requirements and SSL certificates"
             echo "  backup       - Create database backup only (PostgreSQL pg_dump)"
-            echo "  migrate      - Apply database migrations only"
-            echo "  install-deps - Install Python dependencies from requirements.txt"
+            echo "  migrate      - Apply database migrations only (via Docker)"
             echo "  build        - Build and deploy without git pull or migrations"
             echo "  deploy       - Full deployment (default)"
             echo "  quick-deploy - Deploy without git pull (for hotfixes)"
@@ -616,6 +539,9 @@ main() {
             echo "  restart      - Restart all services"
             echo "  status       - Show current deployment status"
             echo "  logs         - Follow container logs"
+            echo ""
+            echo "Note: All Python dependencies are managed inside Docker containers."
+            echo "      No virtual environment (venv) is used on the host."
             exit 1
             ;;
     esac
