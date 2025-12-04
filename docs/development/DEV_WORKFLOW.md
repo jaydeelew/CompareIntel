@@ -177,6 +177,46 @@ docker compose -f docker-compose.ssl.yml logs -f
 
 ```
 
+### SSL Certificate Management
+
+**Initial Setup (one-time):**
+```bash
+# Run from home directory (not inside CompareIntel)
+cd ~
+./setup-compareintel-ssl.sh
+```
+
+**Manual Renewal (if auto-renewal fails):**
+```bash
+cd ~/CompareIntel
+docker compose -f docker-compose.ssl.yml down
+sudo certbot renew --force-renewal
+docker compose -f docker-compose.ssl.yml up -d --build
+```
+
+**Check certificate expiration:**
+```bash
+sudo openssl x509 -in /etc/letsencrypt/live/compareintel.com/fullchain.pem -noout -dates
+```
+
+**Auto-renewal hook (if not using setup script):**
+
+Certbot renews certificates automatically, but nginx needs to reload them. Add this hook:
+```bash
+sudo mkdir -p /etc/letsencrypt/renewal-hooks/deploy
+sudo tee /etc/letsencrypt/renewal-hooks/deploy/restart-nginx.sh << 'EOF'
+#!/bin/bash
+cd /home/ubuntu/CompareIntel 2>/dev/null || cd ~/CompareIntel 2>/dev/null
+docker compose -f docker-compose.ssl.yml exec -T nginx nginx -s reload 2>/dev/null || true
+EOF
+sudo chmod +x /etc/letsencrypt/renewal-hooks/deploy/restart-nginx.sh
+```
+
+**Verify auto-renewal is active:**
+```bash
+sudo systemctl status certbot.timer
+```
+
 ### Access & Verification
 
 - **Primary URL:** https://compareintel.com

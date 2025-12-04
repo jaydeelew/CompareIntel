@@ -276,13 +276,14 @@ install_dependencies() {
         source venv/bin/activate
     fi
     
-    # Upgrade pip
-    pip install --upgrade pip
+    # Use python3 -m pip for reliability (works even when pip is not in PATH)
+    # Upgrade pip first
+    python3 -m pip install --upgrade pip
     
     # Install requirements
     if [ -f "requirements.txt" ]; then
         log "Installing from requirements.txt..."
-        pip install -r requirements.txt
+        python3 -m pip install -r requirements.txt
         log_success "Dependencies installed successfully"
     else
         log_error "requirements.txt not found in $PROJECT_DIR/backend"
