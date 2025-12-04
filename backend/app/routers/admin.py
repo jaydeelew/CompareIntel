@@ -1672,25 +1672,39 @@ async def add_model(
                 break
         
         if not provider_found:
-            # Create new provider section
-            # Find the closing brace of MODELS_BY_PROVIDER using brace counting
-            closing_brace_pos = find_models_by_provider_end(content)
-            if closing_brace_pos > 0:
-                # Add new provider before closing brace
-                # Escape description for Python string (handle quotes and special chars)
-                escaped_description = repr(model_description)
-                # Check if previous content has a trailing comma (usually it does)
-                # We need to look at content before the closing brace
-                content_before = content[:closing_brace_pos].rstrip()
-                if content_before.endswith(','):
-                    # Previous entry has trailing comma, don't add leading comma
-                    new_provider_section = f'\n    "{provider_name}": [\n        {{\n            "id": "{model_id}",\n            "name": "{model_name}",\n            "description": {escaped_description},\n            "category": "Language",\n            "provider": "{provider_name}",\n        }},\n    ],\n'
+            # Create new provider section - insert in alphabetical order
+            escaped_description = repr(model_description)
+            new_provider_section = f'"{provider_name}": [\n        {{\n            "id": "{model_id}",\n            "name": "{model_name}",\n            "description": {escaped_description},\n            "category": "Language",\n            "provider": "{provider_name}",\n        }},\n    ]'
+            
+            # Get existing providers and sort them with the new provider to find insertion point
+            existing_providers = list(MODELS_BY_PROVIDER.keys())
+            # Sort providers alphabetically (case-insensitive)
+            all_providers_sorted = sorted(existing_providers + [provider_name], key=lambda x: x.lower())
+            new_provider_index = all_providers_sorted.index(provider_name)
+            
+            if new_provider_index == len(all_providers_sorted) - 1:
+                # New provider comes last alphabetically - insert before closing brace
+                closing_brace_pos = find_models_by_provider_end(content)
+                if closing_brace_pos > 0:
+                    content_before = content[:closing_brace_pos].rstrip()
+                    if content_before.endswith(','):
+                        new_provider_section = f'\n    {new_provider_section},\n'
+                    else:
+                        new_provider_section = f',\n    {new_provider_section},\n'
+                    content = content[:closing_brace_pos] + new_provider_section + content[closing_brace_pos:]
                 else:
-                    # Need to add comma separator
-                    new_provider_section = f',\n    "{provider_name}": [\n        {{\n            "id": "{model_id}",\n            "name": "{model_name}",\n            "description": {escaped_description},\n            "category": "Language",\n            "provider": "{provider_name}",\n        }},\n    ],\n'
-                content = content[:closing_brace_pos] + new_provider_section + content[closing_brace_pos:]
+                    raise HTTPException(status_code=500, detail="Could not find MODELS_BY_PROVIDER structure")
             else:
-                raise HTTPException(status_code=500, detail="Could not find MODELS_BY_PROVIDER structure")
+                # Find the provider that should come after the new one
+                next_provider = all_providers_sorted[new_provider_index + 1]
+                next_provider_bounds = find_provider_list_bounds(content, next_provider)
+                if next_provider_bounds:
+                    insert_pos = next_provider_bounds[0]
+                    # Insert new provider before the next provider
+                    new_provider_section = f'{new_provider_section},\n    '
+                    content = content[:insert_pos] + new_provider_section + content[insert_pos:]
+                else:
+                    raise HTTPException(status_code=500, detail=f"Could not find provider {next_provider} in MODELS_BY_PROVIDER")
         else:
             # Add to existing provider
             # Use the already-loaded MODELS_BY_PROVIDER to get existing models
