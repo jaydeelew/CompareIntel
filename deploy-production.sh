@@ -238,13 +238,14 @@ check_system_requirements() {
 check_ssl_certificates() {
     log "Checking SSL certificates..."
     
-    if [ ! -d "/etc/letsencrypt/live/compareintel.com" ]; then
+    # Use sudo to check certificate directory (requires root permissions to read /etc/letsencrypt/live/)
+    if ! sudo test -d "/etc/letsencrypt/live/compareintel.com"; then
         log_error "SSL certificates not found. Please run setup-compareintel-ssl.sh first."
         exit 1
     fi
     
-    # Check certificate expiration
-    CERT_EXPIRY=$(openssl x509 -in /etc/letsencrypt/live/compareintel.com/fullchain.pem -noout -enddate | cut -d= -f2)
+    # Check certificate expiration (use sudo to read cert file)
+    CERT_EXPIRY=$(sudo openssl x509 -in /etc/letsencrypt/live/compareintel.com/fullchain.pem -noout -enddate | cut -d= -f2)
     CERT_EXPIRY_EPOCH=$(date -d "$CERT_EXPIRY" +%s)
     CURRENT_EPOCH=$(date +%s)
     DAYS_UNTIL_EXPIRY=$(( (CERT_EXPIRY_EPOCH - CURRENT_EPOCH) / 86400 ))
