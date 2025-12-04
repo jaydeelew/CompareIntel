@@ -61,7 +61,8 @@ ANONYMOUS_TIER_MODELS = {
     # Google - Flash models (~$0.15-$0.60/M)
     "google/gemini-2.5-flash",  # ~$0.15 input, $0.60 output = ~$0.38/M avg
     # xAI - Free variants
-    "x-ai/grok-4.1-fast:free",  # Free variant
+    "x-ai/grok-4.1-fast:free",  # Free variant,
+    "google/gemini-2.0-flash",  # Auto-classified based on pricing
 }
 
 # List of model IDs available to free (registered) users
@@ -284,14 +285,14 @@ MODELS_BY_PROVIDER = {
         {
             "id": "google/gemini-3-pro-preview",
             "name": "Gemini 3 Pro Preview",
-            "description": "Gemini 3 Pro is Google’s flagship frontier model for high-precision multimodal reasoning, combining strong performance across text, image, video, audio, and code with a 1M-token context window.",
+            "description": 'Gemini 3 Pro is Google’s flagship frontier model for high-precision multimodal reasoning, combining strong performance across text, image, video, audio, and code with a 1M-token context window.',
             "category": "Language",
             "provider": "Google",
         },
         {
             "id": "google/gemini-2.5-pro",
             "name": "Gemini 2.5 Pro",
-            "description": "Gemini 2.5 Pro is Google’s state-of-the-art AI model designed for advanced reasoning, coding, mathematics, and scientific tasks.",
+            "description": 'Gemini 2.5 Pro is Google’s state-of-the-art AI model designed for advanced reasoning, coding, mathematics, and scientific tasks.',
             "category": "Language",
             "provider": "Google",
         },
@@ -299,6 +300,13 @@ MODELS_BY_PROVIDER = {
             "id": "google/gemini-2.5-flash",
             "name": "Gemini 2.5 Flash",
             "description": "Gemini 2.5 Flash is Google's state-of-the-art workhorse model, specifically designed for advanced reasoning, coding, mathematics, and scientific tasks.",
+            "category": "Language",
+            "provider": "Google",
+        },
+        {
+            "id": "google/gemini-2.0-flash",
+            "name": "Gemini 2.0 Flash",
+            "description": 'Gemini Flash 2.0 offers a significantly faster time to first token (TTFT) compared to Gemini Flash 1.5, while maintaining quality on par with larger models like Gemini Pro 1.5.',
             "category": "Language",
             "provider": "Google",
         },
