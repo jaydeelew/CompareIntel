@@ -232,4 +232,20 @@ sudo systemctl status certbot.timer
 
 ---
 
+## Production Utility Scripts
+
+Scripts in `backend/scripts/` must be run via Docker in production (no virtual environment on the host):
+
+```bash
+# Check model availability (sends email report)
+docker exec compareintel-backend-1 python3 /app/scripts/check_model_availability_prod.py
+
+# Set up daily automated check (cron job on host)
+./backend/scripts/setup_daily_model_check_prod.sh
+```
+
+See `backend/scripts/PRODUCTION_NOTES.md` for detailed documentation and troubleshooting.
+
+---
+
 **Cache Busting**: Your builds automatically generate unique filenames (e.g., `index.abc123.js`) so users always get the latest version without clearing browser cache.
