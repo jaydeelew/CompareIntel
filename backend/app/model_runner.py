@@ -14,16 +14,14 @@ Key Features:
 - Connection quality tracking
 """
 
-import os
-from openai import OpenAI
-from dotenv import load_dotenv
+from openai import OpenAI  # type: ignore[import-untyped]
 import concurrent.futures
 from typing import Dict, List, Any, Optional, Generator, NamedTuple
 import time
 import re
-import tiktoken
+import tiktoken  # type: ignore[import-untyped]
 from decimal import Decimal
-import httpx
+import httpx  # type: ignore[import-untyped]
 import logging
 import threading
 from .mock_responses import stream_mock_response, get_mock_response
@@ -911,7 +909,7 @@ def _get_anthropic_tokenizer():
     with _cache_lock:
         if cache_key not in _tokenizer_cache:
             try:
-                from anthropic import Anthropic
+                from anthropic import Anthropic  # type: ignore[import-untyped]
 
                 # Anthropic tokenizer doesn't need API key for counting tokens
                 # Use dummy key - it won't be used for tokenizer operations
@@ -944,7 +942,7 @@ def _get_huggingface_tokenizer(model_id: str) -> Optional[Any]:
     with _cache_lock:
         if hf_model_name not in _tokenizer_cache:
             try:
-                from transformers import AutoTokenizer
+                from transformers import AutoTokenizer  # type: ignore[import-untyped]
 
                 # Load tokenizer only (not the full model - much faster and lighter)
                 tokenizer = AutoTokenizer.from_pretrained(
