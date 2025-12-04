@@ -1313,6 +1313,34 @@ def find_models_by_provider_end(content: str) -> int:
     return end_pos - 1 if end_pos > 0 else -1
 
 
+def extract_providers_from_content(content: str) -> list[str]:
+    """
+    Extract provider names from MODELS_BY_PROVIDER in the file content.
+    Returns list of provider names in the order they appear in the file.
+    """
+    providers = []
+    
+    # Find the start and end of MODELS_BY_PROVIDER
+    mbp_start = content.find('MODELS_BY_PROVIDER = {')
+    if mbp_start == -1:
+        return providers
+    
+    mbp_end = find_models_by_provider_end(content)
+    if mbp_end == -1:
+        return providers
+    
+    # Search within MODELS_BY_PROVIDER section
+    mbp_content = content[mbp_start:mbp_end]
+    
+    # Match provider entries like: \n    "Anthropic": [
+    # Using explicit newline + 4 spaces to find top-level provider keys
+    provider_pattern = r'\n    "([^"]+)"\s*:\s*\['
+    for match in re.finditer(provider_pattern, mbp_content):
+        providers.append(match.group(1))
+    
+    return providers
+
+
 class AddModelRequest(BaseModel):
     model_id: str
 
@@ -1664,8 +1692,9 @@ async def add_model(
         # We need to add the model to the appropriate provider list
         provider_found = False
         
-        # Try to find existing provider
-        for existing_provider in MODELS_BY_PROVIDER.keys():
+        # Try to find existing provider - use file content, not in-memory dict
+        existing_providers_in_file = extract_providers_from_content(content)
+        for existing_provider in existing_providers_in_file:
             if existing_provider.lower() == provider_name.lower():
                 provider_name = existing_provider  # Use exact case from file
                 provider_found = True
@@ -1676,8 +1705,8 @@ async def add_model(
             escaped_description = repr(model_description)
             new_provider_section = f'"{provider_name}": [\n        {{\n            "id": "{model_id}",\n            "name": "{model_name}",\n            "description": {escaped_description},\n            "category": "Language",\n            "provider": "{provider_name}",\n        }},\n    ]'
             
-            # Get existing providers and sort them with the new provider to find insertion point
-            existing_providers = list(MODELS_BY_PROVIDER.keys())
+            # Get existing providers from file content (not in-memory dict which may be stale)
+            existing_providers = extract_providers_from_content(content)
             # Sort providers alphabetically (case-insensitive)
             all_providers_sorted = sorted(existing_providers + [provider_name], key=lambda x: x.lower())
             new_provider_index = all_providers_sorted.index(provider_name)
