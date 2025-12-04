@@ -174,6 +174,28 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
     }
   }
 
+  // Helper to wait for server to come back up after model_runner.py is modified
+  // This is needed because uvicorn --reload restarts the server when the file changes
+  const waitForServerRestart = async (maxRetries = 20, delayMs = 500): Promise<boolean> => {
+    const headers = getAuthHeaders()
+
+    for (let i = 0; i < maxRetries; i++) {
+      try {
+        const response = await fetch('/api/admin/models', {
+          headers,
+          credentials: 'include',
+        })
+        if (response.ok) {
+          return true
+        }
+      } catch {
+        // Server not ready yet, wait and retry
+      }
+      await new Promise(resolve => setTimeout(resolve, delayMs))
+    }
+    return false
+  }
+
   // Save scroll position on scroll
   useEffect(() => {
     const panel = adminPanelRef.current
@@ -555,6 +577,13 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
               } else if (data.type === 'success') {
                 setModelSuccess(`Model ${data.model_id || newModelId.trim()} added successfully!`)
                 setNewModelId('')
+                // Wait for server to restart (uvicorn --reload triggers when model_runner.py changes)
+                setModelProgress({
+                  stage: 'restarting',
+                  message: 'Waiting for server to restart...',
+                  progress: 95,
+                })
+                await waitForServerRestart()
                 await fetchModels()
                 setModelProgress(null)
                 setAddingModel(false)
@@ -665,6 +694,8 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
       setModelSuccess(`Model ${modelToDelete.id} deleted successfully!`)
       setShowDeleteConfirm(false)
       setModelToDelete(null)
+      // Wait for server to restart (uvicorn --reload triggers when model_runner.py changes)
+      await waitForServerRestart()
       await fetchModels()
       // Ensure Models tab stays active
       if (typeof window !== 'undefined') {
