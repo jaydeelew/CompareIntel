@@ -266,24 +266,35 @@ install_dependencies() {
     
     cd "$PROJECT_DIR/backend"
     
-    # Check if virtual environment exists
-    if [ -d "venv" ]; then
+    # Check if virtual environment exists and has pip
+    if [ -d "venv" ] && [ -f "venv/bin/pip" ]; then
         log "Using existing virtual environment"
-        source venv/bin/activate
     else
+        # Remove broken venv if it exists
+        if [ -d "venv" ]; then
+            log_warning "Existing venv is missing pip, recreating..."
+            rm -rf venv
+        fi
         log "Creating virtual environment..."
         python3 -m venv venv
-        source venv/bin/activate
+        if [ ! -f "venv/bin/pip" ]; then
+            log_error "Failed to create venv with pip. Please install python3-venv:"
+            log_error "  sudo apt-get update && sudo apt-get install -y python3-venv python3-pip"
+            exit 1
+        fi
     fi
     
-    # Use python3 -m pip for reliability (works even when pip is not in PATH)
+    # Activate the virtual environment
+    source venv/bin/activate
+    
+    # Use the venv's pip directly for reliability
     # Upgrade pip first
-    python3 -m pip install --upgrade pip
+    ./venv/bin/pip install --upgrade pip
     
     # Install requirements
     if [ -f "requirements.txt" ]; then
         log "Installing from requirements.txt..."
-        python3 -m pip install -r requirements.txt
+        ./venv/bin/pip install -r requirements.txt
         log_success "Dependencies installed successfully"
     else
         log_error "requirements.txt not found in $PROJECT_DIR/backend"
