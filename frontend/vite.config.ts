@@ -6,10 +6,12 @@ import { defineConfig } from 'vitest/config'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [
-    // @ts-expect-error - Plugin types conflict between vite and vitest bundled vite
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore - Plugin types may conflict between vite and vitest bundled vite
     react(),
     // Image optimization - automatically generates WebP/AVIF variants
-    // @ts-expect-error - Plugin types conflict between vite and vitest bundled vite
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore - Plugin types may conflict between vite and vitest bundled vite
     imagetools({
       defaultDirectives: (url) => {
         // Generate modern formats with quality optimization
@@ -24,7 +26,8 @@ export default defineConfig({
       },
     }),
     // Bundle analyzer - generates stats.html in dist/ after build
-    // @ts-expect-error - Plugin types conflict between vite and vitest bundled vite
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore - Plugin types may conflict between vite and vitest bundled vite
     visualizer({
       filename: 'dist/stats.html',
       open: false,
