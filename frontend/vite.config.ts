@@ -1,14 +1,15 @@
 import react from '@vitejs/plugin-react'
 import { visualizer } from 'rollup-plugin-visualizer'
-import type { PluginOption } from 'vite'
 import { imagetools } from 'vite-imagetools'
 import { defineConfig } from 'vitest/config'
 
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [
-    react() as PluginOption,
+    // @ts-expect-error - Plugin types conflict between vite and vitest bundled vite
+    react(),
     // Image optimization - automatically generates WebP/AVIF variants
+    // @ts-expect-error - Plugin types conflict between vite and vitest bundled vite
     imagetools({
       defaultDirectives: (url) => {
         // Generate modern formats with quality optimization
@@ -21,15 +22,16 @@ export default defineConfig({
         }
         return new URLSearchParams()
       },
-    }) as PluginOption,
+    }),
     // Bundle analyzer - generates stats.html in dist/ after build
+    // @ts-expect-error - Plugin types conflict between vite and vitest bundled vite
     visualizer({
       filename: 'dist/stats.html',
       open: false,
       gzipSize: true,
       brotliSize: true,
       template: 'treemap', // treemap, sunburst, network
-    }) as PluginOption,
+    }),
   ],
   cacheDir: '/tmp/vite-cache',
   server: {

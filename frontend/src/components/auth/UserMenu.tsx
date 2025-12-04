@@ -240,9 +240,9 @@ export const UserMenu: React.FC = () => {
                   Model Responses (Legacy)
                 </div>
                 <div className="usage-stat-value" style={{ fontSize: '0.875rem' }}>
-                  <span className="usage-current">{user.credits_used_this_period ?? 0}</span>
+                  <span className="usage-current">{user!.credits_used_this_period ?? 0}</span>
                   <span className="usage-separator">/</span>
-                  <span className="usage-limit">{getDailyLimit(user.subscription_tier)}</span>
+                  <span className="usage-limit">{getDailyLimit(user!.subscription_tier)}</span>
                 </div>
               </div>
             )}
