@@ -3367,7 +3367,7 @@
     ],
     "preprocessing": {
       "fixEscapedDollars": true,
-      "removeHtmlFromMath": false,
+      "removeHtmlFromMath": true,
       "removeMathML": true,
       "removeSVG": true
     },
@@ -3398,7 +3398,7 @@
       "restoreAfterProcessing": true
     },
     "metadata": {
-      "createdAt": "2025-12-04T15:56:26.752174Z",
+      "createdAt": "2025-12-04T16:23:05.863518Z",
       "needsManualReview": true
     }
   }

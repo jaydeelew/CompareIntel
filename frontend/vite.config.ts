@@ -39,6 +39,11 @@ export default defineConfig({
         target: 'http://127.0.0.1:8000',
         changeOrigin: true
       }
+    },
+    // Exclude model_renderer_configs.json from HMR to prevent page reload
+    // when backend modifies this file during model add/delete operations
+    watch: {
+      ignored: ['**/model_renderer_configs.json']
     }
   },
   build: {
