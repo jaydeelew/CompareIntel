@@ -819,7 +819,7 @@ This document provides a comprehensive breakdown of all visual elements (section
 - **Element:** Form Subtitle
 - **Lines:** [166](file:///home/dan_wsl/jaydeelew/CompareIntel/frontend/src/components/auth/RegisterForm.tsx#L166)
 - **Tag:** `<p>`
-- **Text:** "Get 20 daily comparisons for free"
+- **Text:** "Get 100 daily credits for free"
 
 #### Auth Form
 - **Element:** Form Element
