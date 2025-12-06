@@ -28,11 +28,11 @@ def set_auth_cookies(
 ) -> None:
     """
     Set HTTP-only authentication cookies for access and refresh tokens.
-    
+
     Uses SameSite='lax' by default for CSRF protection while maintaining usability.
     'Lax' allows cookies to be sent with top-level navigations (like clicking links)
     but not with cross-site POST requests, providing good CSRF protection.
-    
+
     Args:
         response: FastAPI Response object
         access_token: JWT access token
@@ -43,7 +43,7 @@ def set_auth_cookies(
     # Determine secure flag based on environment if not explicitly set
     if secure is None:
         secure = settings.environment == "production"
-    
+
     # Set access token cookie
     response.set_cookie(
         key=ACCESS_TOKEN_COOKIE,
@@ -54,7 +54,7 @@ def set_auth_cookies(
         samesite=same_site,
         path="/",
     )
-    
+
     # Set refresh token cookie
     response.set_cookie(
         key=REFRESH_TOKEN_COOKIE,
@@ -70,26 +70,30 @@ def set_auth_cookies(
 def clear_auth_cookies(response: Response) -> None:
     """
     Clear authentication cookies by setting them to expire immediately.
-    
+
     Args:
         response: FastAPI Response object
     """
+    # Use the same secure setting as when cookies were set
+    # This is important for cookie deletion to work properly
+    secure = settings.environment == "production"
+
     response.set_cookie(
         key=ACCESS_TOKEN_COOKIE,
         value="",
         max_age=0,
         httponly=True,
-        secure=True,  # Always secure for clearing
+        secure=secure,
         samesite="lax",
         path="/",
     )
-    
+
     response.set_cookie(
         key=REFRESH_TOKEN_COOKIE,
         value="",
         max_age=0,
         httponly=True,
-        secure=True,  # Always secure for clearing
+        secure=secure,
         samesite="lax",
         path="/",
     )
@@ -98,25 +102,32 @@ def clear_auth_cookies(response: Response) -> None:
 def get_token_from_cookies(request) -> Optional[str]:
     """
     Get access token from cookies.
-    
+
     Args:
         request: FastAPI Request object
-        
+
     Returns:
         Access token string if found, None otherwise
     """
-    return request.cookies.get(ACCESS_TOKEN_COOKIE)
+    token = request.cookies.get(ACCESS_TOKEN_COOKIE)
+    # Debug logging for development
+    if settings.environment == "development":
+        all_cookies = dict(request.cookies)
+        cookie_names = list(all_cookies.keys())
+        print(f"[COOKIE DEBUG] Request to {request.url.path}")
+        print(f"[COOKIE DEBUG] Cookies received: {cookie_names}")
+        print(f"[COOKIE DEBUG] access_token present: {token is not None}")
+    return token
 
 
 def get_refresh_token_from_cookies(request) -> Optional[str]:
     """
     Get refresh token from cookies.
-    
+
     Args:
         request: FastAPI Request object
-        
+
     Returns:
         Refresh token string if found, None otherwise
     """
     return request.cookies.get(REFRESH_TOKEN_COOKIE)
-

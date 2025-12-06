@@ -3,7 +3,7 @@
  * Manages user authentication state, login, logout, and token refresh
  */
 
-import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react'
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react'
 
 import type { User, AuthContextType, LoginCredentials, RegisterData, AuthResponse } from '../types'
 
@@ -19,8 +19,6 @@ interface AuthProviderProps {
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
-  // Use ref to prevent duplicate calls during React StrictMode double renders
-  const hasInitializedRef = useRef(false)
 
   // Note: Tokens are now stored in HTTP-only cookies set by the backend
   // We no longer need to manage tokens in localStorage
@@ -245,16 +243,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   }, [fetchCurrentUser])
 
-  // Initialize auth state on mount (only once)
-  // Use ref to prevent duplicate calls during React StrictMode double renders
+  // Initialize auth state on mount
+  // Use AbortController for proper cleanup in React StrictMode
   useEffect(() => {
-    // Prevent duplicate initialization in React StrictMode
-    if (hasInitializedRef.current) {
-      return
-    }
-    hasInitializedRef.current = true
-
-    let isMounted = true
+    const abortController = new AbortController()
 
     const initAuth = async () => {
       // Only log in development mode to reduce console noise
@@ -263,35 +255,82 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
       const initStartTime = Date.now()
 
-      // Try to fetch user (cookies are automatically sent)
-      const userData = await fetchCurrentUser()
+      try {
+        // Try to fetch user (cookies are automatically sent)
+        const response = await fetch(`${API_BASE_URL}/auth/me`, {
+          credentials: 'include',
+          signal: abortController.signal,
+        })
 
-      if (!isMounted) return
+        if (abortController.signal.aborted) return
 
-      if (userData) {
-        if (import.meta.env.DEV) {
-          const initDuration = Date.now() - initStartTime
-          console.log('[Auth] Auth initialization completed in', initDuration, 'ms')
+        if (response.ok) {
+          const userData = await response.json()
+          if (abortController.signal.aborted) return
+
+          if (import.meta.env.DEV) {
+            const initDuration = Date.now() - initStartTime
+            console.log('[Auth] Auth initialization completed in', initDuration, 'ms')
+          }
+          setUser(userData)
+          setIsLoading(false)
+        } else if (response.status === 401) {
+          // Access token invalid/missing, try to refresh
+          if (import.meta.env.DEV) {
+            console.log('[Auth] Access token invalid, attempting refresh...')
+          }
+
+          const refreshResponse = await fetch(`${API_BASE_URL}/auth/refresh`, {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            signal: abortController.signal,
+          })
+
+          if (abortController.signal.aborted) return
+
+          if (refreshResponse.ok) {
+            // Refresh succeeded, fetch user again
+            const retryResponse = await fetch(`${API_BASE_URL}/auth/me`, {
+              credentials: 'include',
+              signal: abortController.signal,
+            })
+
+            if (abortController.signal.aborted) return
+
+            if (retryResponse.ok) {
+              const userData = await retryResponse.json()
+              if (abortController.signal.aborted) return
+
+              if (import.meta.env.DEV) {
+                const initDuration = Date.now() - initStartTime
+                console.log('[Auth] Auth initialization completed (after refresh) in', initDuration, 'ms')
+              }
+              setUser(userData)
+            }
+          }
+          // If refresh failed, user remains null (not authenticated)
+          setIsLoading(false)
+        } else {
+          // Other error, user not authenticated
+          setIsLoading(false)
         }
-        setUser(userData)
+      } catch (error) {
+        // Ignore abort errors, handle other errors silently
+        if (error instanceof Error && error.name === 'AbortError') {
+          return
+        }
+        // Network errors, etc. - user not authenticated
         setIsLoading(false)
-      } else {
-        // If access token is invalid, try to refresh (silently)
-        await refreshToken()
-        if (isMounted && import.meta.env.DEV) {
-          const initDuration = Date.now() - initStartTime
-          console.log('[Auth] Auth initialization completed (after refresh) in', initDuration, 'ms')
-        }
       }
     }
 
     initAuth()
 
     return () => {
-      isMounted = false
+      abortController.abort()
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []) // Only run once on mount - fetchCurrentUser and refreshToken are stable callbacks
+  }, []) // Only run once on mount
 
   // Set up token refresh interval (refresh every 14 minutes, tokens expire in 15)
   useEffect(() => {

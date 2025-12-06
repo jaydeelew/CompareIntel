@@ -43,7 +43,24 @@ export default defineConfig({
     proxy: {
       '/api': {
         target: 'http://127.0.0.1:8000',
-        changeOrigin: true
+        changeOrigin: true,
+        // Ensure cookies are properly handled through the proxy
+        cookieDomainRewrite: {
+          '*': ''  // Remove domain from cookies so they work with localhost
+        },
+        // Ensure cookies are forwarded
+        configure: (proxy) => {
+          proxy.on('proxyRes', (proxyRes) => {
+            // Ensure Set-Cookie headers are properly forwarded
+            const cookies = proxyRes.headers['set-cookie'];
+            if (cookies) {
+              proxyRes.headers['set-cookie'] = cookies.map((cookie: string) => {
+                // Remove Secure flag in development since we're using HTTP
+                return cookie.replace(/;\s*Secure/gi, '');
+              });
+            }
+          });
+        }
       }
     },
     // Exclude model_renderer_configs.json from HMR to prevent page reload
