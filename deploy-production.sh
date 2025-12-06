@@ -14,8 +14,8 @@
 #   backup       - Create database backup only (PostgreSQL pg_dump)
 #   migrate      - Apply database migrations only (via Docker)
 #   build        - Build and deploy without git pull or migrations
-#   deploy       - Full deployment (default)
-#   quick-deploy - Deploy without git pull (for hotfixes)
+#   deploy       - Full deployment with git pull and migrations (default)
+#   quick-deploy - Deploy local fixes without git pull
 #   rollback     - Rollback to previous version
 #   restart      - Restart all services
 #   status       - Show current deployment status
