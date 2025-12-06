@@ -50,8 +50,11 @@ export default defineConfig({
         'maskable_icon_x192.png',
         'maskable_icon_x512.png',
         'CompareIntel.png',
+        'screenshot-desktop.png',
+        'screenshot-mobile.png',
       ],
       manifest: {
+        id: '/',
         name: 'CompareIntel - Compare 50+ AI Models Side-by-Side',
         short_name: 'CompareIntel',
         description:
@@ -131,7 +134,7 @@ export default defineConfig({
           },
           {
             src: 'screenshot-mobile.png',
-            sizes: '750x1334',
+            sizes: '601x1334',
             type: 'image/png',
             form_factor: 'narrow',
             label: 'CompareIntel - Compare AI models on mobile',
