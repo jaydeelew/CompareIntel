@@ -2307,3 +2307,10 @@
   background: rgba(245, 158, 11, 0.2);
   color: #f59e0b;
 }
+
+/* Small screen adjustments for provider count indicator */
+@media (max-width: 350px) {
+  .provider-count {
+    font-size: 0.8125rem;
+  }
+}

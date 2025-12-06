@@ -977,11 +977,19 @@
   .brand-tagline {
     font-size: 0.625rem !important; /* 10px - further reduced to prevent text wrapping */
   }
+
+  .hero-subtitle {
+    font-size: clamp(0.8875rem, 4vw, 1.15rem); /* Reduced by 1pt from 0.95rem to prevent wrapping */
+  }
 }
 
 @media (max-width: 360px) {
   .brand-tagline {
     font-size: 0.5625rem !important; /* 9px - further reduced to prevent text wrapping */
+  }
+
+  .hero-subtitle {
+    font-size: clamp(0.825rem, 4vw, 1.15rem); /* Reduced by 1pt more from 0.8875rem */
   }
 }
 
