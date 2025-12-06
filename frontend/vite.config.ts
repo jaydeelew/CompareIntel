@@ -49,7 +49,6 @@ export default defineConfig({
         'maskable_icon.png',
         'maskable_icon_x192.png',
         'maskable_icon_x512.png',
-        'CompareIntel.png', // Keep for social media meta tags
         'CompareIntel-48.webp', // Optimized logo for navigation
         'CompareIntel-96.webp', // Optimized logo for high-DPI displays
         'screenshot-desktop.png',
