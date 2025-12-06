@@ -42,7 +42,15 @@ export function Navigation({
       <nav className="navbar">
         <div className="nav-brand">
           <div className="brand-logo">
-            <img src="/CompareIntel.png" alt="CompareIntel Logo" className="logo-icon" />
+            <img
+              src="/CompareIntel-48.webp"
+              srcSet="/CompareIntel-48.webp 1x, /CompareIntel-96.webp 2x"
+              alt="CompareIntel Logo"
+              className="logo-icon"
+              width="48"
+              height="48"
+              loading="eager"
+            />
             <div className="brand-text">
               <h1>CompareIntel</h1>
               <span className="brand-tagline">AI Model Comparison Platform</span>
