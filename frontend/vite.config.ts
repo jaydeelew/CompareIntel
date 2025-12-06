@@ -1,6 +1,7 @@
 import react from '@vitejs/plugin-react'
 import { visualizer } from 'rollup-plugin-visualizer'
 import { imagetools } from 'vite-imagetools'
+import { VitePWA } from 'vite-plugin-pwa'
 import { defineConfig } from 'vitest/config'
 
 // https://vite.dev/config/
@@ -34,6 +35,163 @@ export default defineConfig({
       gzipSize: true,
       brotliSize: true,
       template: 'treemap', // treemap, sunburst, network
+    }),
+    // PWA - Progressive Web App support
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore - Plugin types may conflict between vite and vitest bundled vite
+    VitePWA({
+      registerType: 'autoUpdate',
+      includeAssets: [
+        'CI_favicon.svg',
+        'CI_favicon.png',
+        'CI_favicon_192x192.png',
+        'CI_favicon_512x512.png',
+        'maskable_icon.png',
+        'maskable_icon_x192.png',
+        'maskable_icon_x512.png',
+        'CompareIntel.png',
+      ],
+      manifest: {
+        name: 'CompareIntel - Compare 50+ AI Models Side-by-Side',
+        short_name: 'CompareIntel',
+        description:
+          'Compare 50+ AI models side-by-side including GPT-4, Claude, Gemini, and Llama. Test prompts simultaneously with LaTeX/Markdown rendering.',
+        theme_color: '#2563eb',
+        background_color: '#ffffff',
+        display: 'standalone',
+        scope: '/',
+        start_url: '/',
+        orientation: 'portrait-primary',
+        categories: ['productivity', 'utilities', 'developer tools'],
+        icons: [
+          // Standard icons
+          {
+            src: 'CI_favicon_192x192.png',
+            sizes: '192x192',
+            type: 'image/png',
+            purpose: 'any',
+          },
+          {
+            src: 'CI_favicon_512x512.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'any',
+          },
+          // Maskable icons for Android adaptive icons
+          {
+            src: 'maskable_icon_x48.png',
+            sizes: '48x48',
+            type: 'image/png',
+            purpose: 'maskable',
+          },
+          {
+            src: 'maskable_icon_x72.png',
+            sizes: '72x72',
+            type: 'image/png',
+            purpose: 'maskable',
+          },
+          {
+            src: 'maskable_icon_x96.png',
+            sizes: '96x96',
+            type: 'image/png',
+            purpose: 'maskable',
+          },
+          {
+            src: 'maskable_icon_x128.png',
+            sizes: '128x128',
+            type: 'image/png',
+            purpose: 'maskable',
+          },
+          {
+            src: 'maskable_icon_x192.png',
+            sizes: '192x192',
+            type: 'image/png',
+            purpose: 'maskable',
+          },
+          {
+            src: 'maskable_icon_x384.png',
+            sizes: '384x384',
+            type: 'image/png',
+            purpose: 'maskable',
+          },
+          {
+            src: 'maskable_icon_x512.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'maskable',
+          },
+        ],
+        screenshots: [
+          {
+            src: 'screenshot-desktop.png',
+            sizes: '1280x720',
+            type: 'image/png',
+            form_factor: 'wide',
+            label: 'CompareIntel - Compare AI models side-by-side on desktop',
+          },
+          {
+            src: 'screenshot-mobile.png',
+            sizes: '750x1334',
+            type: 'image/png',
+            form_factor: 'narrow',
+            label: 'CompareIntel - Compare AI models on mobile',
+          },
+        ],
+      },
+      workbox: {
+        // Precache all static assets
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+        // Don't precache source maps or large screenshots
+        globIgnores: ['**/node_modules/**', '**/*.map', '**/screenshot-*.png'],
+        // Runtime caching strategies
+        runtimeCaching: [
+          {
+            // Cache API responses with network-first strategy
+            urlPattern: /^https:\/\/compareintel\.com\/api\/.*/i,
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'api-cache',
+              expiration: {
+                maxEntries: 100,
+                maxAgeSeconds: 60 * 60 * 24, // 24 hours
+              },
+              cacheableResponse: {
+                statuses: [0, 200],
+              },
+            },
+          },
+          {
+            // Cache images with cache-first strategy
+            urlPattern: /\.(?:png|jpg|jpeg|svg|gif|webp|avif)$/i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'image-cache',
+              expiration: {
+                maxEntries: 50,
+                maxAgeSeconds: 60 * 60 * 24 * 30, // 30 days
+              },
+            },
+          },
+          {
+            // Cache fonts
+            urlPattern: /\.(?:woff|woff2|ttf|otf|eot)$/i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'font-cache',
+              expiration: {
+                maxEntries: 20,
+                maxAgeSeconds: 60 * 60 * 24 * 365, // 1 year
+              },
+            },
+          },
+        ],
+        // Offline fallback
+        navigateFallback: '/offline.html',
+        navigateFallbackDenylist: [/^\/api\//],
+      },
+      devOptions: {
+        enabled: false, // Disable in development to avoid caching issues
+      },
     }),
   ],
   cacheDir: '/tmp/vite-cache',
