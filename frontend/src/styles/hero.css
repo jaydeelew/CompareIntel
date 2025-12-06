@@ -688,7 +688,7 @@
   }
 
   .nav-brand .brand-text h1 {
-    font-size: 1.375rem;
+    font-size: 1.5rem !important;
     color: #000000 !important;
     font-weight: 800;
     text-shadow: none !important;
@@ -702,7 +702,7 @@
   }
 
   .brand-tagline {
-    font-size: 0.6875rem;
+    font-size: 0.75rem !important;
     color: #374151;
     font-weight: 600;
     opacity: 1;
@@ -715,13 +715,13 @@
   }
 
   .nav-brand .brand-text h1 {
-    font-size: 1.125rem;
+    font-size: 1.25rem !important;
   }
 
   .nav-button-text,
   .nav-button-primary {
     white-space: nowrap !important;
-    font-size: 0.75rem !important;
+    font-size: 0.9375rem !important;
     min-width: 70px !important;
     width: auto !important;
     max-width: none !important;
