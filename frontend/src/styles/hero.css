@@ -966,6 +966,25 @@
   }
 }
 
+/* Small mobile - prevent brand tagline text wrapping */
+@media (max-width: 400px) {
+  .brand-tagline {
+    font-size: 0.6875rem !important; /* 11px - reduced from 12px to prevent text wrapping */
+  }
+}
+
+@media (max-width: 380px) {
+  .brand-tagline {
+    font-size: 0.625rem !important; /* 10px - further reduced to prevent text wrapping */
+  }
+}
+
+@media (max-width: 360px) {
+  .brand-tagline {
+    font-size: 0.5625rem !important; /* 9px - further reduced to prevent text wrapping */
+  }
+}
+
 .header-content {
   display: flex;
   flex-direction: column;
