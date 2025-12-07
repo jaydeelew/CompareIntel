@@ -1,8 +1,7 @@
 /* App.css - App-specific styles only */
 /* All modular CSS is now imported directly in App.tsx (better for Vite) */
 
-/* Font import */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+/* Font is now loaded via <link> tag in index.html for better performance */
 
 /* App container */
 .app {

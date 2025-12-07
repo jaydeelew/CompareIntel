@@ -50,8 +50,7 @@ export const Header: React.FC<HeaderProps> = ({
         <div className="nav-brand">
           <div className="brand-logo">
             <img
-              src="/CompareIntel-48.webp"
-              srcSet="/CompareIntel-48.webp 1x, /CompareIntel-96.webp 2x"
+              src="/CI_favicon.svg"
               alt="CompareIntel Logo"
               className="logo-icon"
               width="48"

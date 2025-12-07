@@ -16,18 +16,18 @@
   <link rel="icon" type="image/png" sizes="48x48" href="/CI_favicon_192x192.png" />
   <link rel="icon" type="image/png" sizes="32x32" href="/CI_favicon_32x32.png" />
   <link rel="icon" type="image/png" sizes="16x16" href="/CI_favicon_16x16.png" />
-  <!-- Fallback without size for maximum compatibility -->
-  <link rel="icon" type="image/png" href="/CI_favicon.png" />
   <!-- Apple devices - SVG for modern iOS (11+) with PNG fallback for older devices -->
   <link rel="apple-touch-icon" type="image/svg+xml" href="/CI_favicon.svg" />
   <link rel="apple-touch-icon" sizes="180x180" href="/CI_favicon_180x180.png" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <!-- Preconnect to Google Fonts for faster font loading -->
-  <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin />
+  <!-- Preconnect to Google Fonts for faster font loading - MUST be before font stylesheet -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
-  <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
+  
+  <!-- Google Fonts - Load asynchronously to prevent render-blocking -->
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'" />
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" /></noscript>
 
   <!-- PWA Meta Tags -->
   <meta name="theme-color" content="#2563eb" />

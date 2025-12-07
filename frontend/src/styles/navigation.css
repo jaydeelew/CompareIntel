@@ -72,7 +72,7 @@
 
 .brand-tagline {
   font-size: var(--font-xs);
-  color: #374151;
+  color: #1f2937; /* Improved contrast: darker gray for better accessibility (was #374151) */
   font-weight: var(--font-semibold);
   margin-top: 0.0625rem;
   display: block;
@@ -167,7 +167,7 @@
   box-shadow: none !important;
   background: transparent;
   border-radius: var(--radius-md);
-  color: var(--text-secondary);
+  color: #374151; /* Improved contrast: explicit darker color for better accessibility (was var(--text-secondary)) */
   font-size: var(--font-sm);
   font-weight: var(--font-medium);
   cursor: pointer;

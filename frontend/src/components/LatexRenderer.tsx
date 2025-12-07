@@ -34,6 +34,7 @@ import { getModelConfig } from '../config/modelRendererRegistry'
 import type { ModelRendererConfig } from '../types/rendererConfig'
 import { extractCodeBlocks, restoreCodeBlocks } from '../utils/codeBlockPreservation'
 import { loadPrism, getPrism, isPrismLoaded } from '../utils/prismLoader'
+import { loadKatexCss } from '../utils/katexLoader'
 
 interface LatexRendererProps {
   children: string
@@ -3082,6 +3083,13 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({ children, className = '',
     }
     return Array.from(languages)
   }, [children, isValidChildren])
+
+  // Load KaTeX CSS dynamically on component mount (only once)
+  useEffect(() => {
+    loadKatexCss().catch(error => {
+      console.warn('Failed to load KaTeX CSS:', error)
+    })
+  }, [])
 
   // Load Prism.js dynamically when code blocks are detected
 

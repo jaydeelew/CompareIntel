@@ -174,10 +174,12 @@
 
 @keyframes titleGlow {
   0% {
-    filter: drop-shadow(0 0 20px rgba(255, 255, 255, 0.3));
+    opacity: 0.9;
+    transform: translateZ(0) scale(1);
   }
   100% {
-    filter: drop-shadow(0 0 30px rgba(255, 255, 255, 0.5));
+    opacity: 1;
+    transform: translateZ(0) scale(1);
   }
 }
 

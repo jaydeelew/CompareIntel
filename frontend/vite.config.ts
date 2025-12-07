@@ -41,16 +41,15 @@ export default defineConfig({
     // @ts-ignore - Plugin types may conflict between vite and vitest bundled vite
     VitePWA({
       registerType: 'autoUpdate',
+      // Defer service worker registration until after page load to prevent render-blocking
+      injectRegister: null,
       includeAssets: [
-        'CI_favicon.svg',
-        'CI_favicon.png',
+        'CI_favicon.svg', // Logo used in Header and Navigation
         'CI_favicon_192x192.png',
         'CI_favicon_512x512.png',
         'maskable_icon.png',
         'maskable_icon_x192.png',
         'maskable_icon_x512.png',
-        'CompareIntel-48.webp', // Optimized logo for navigation
-        'CompareIntel-96.webp', // Optimized logo for high-DPI displays
         'screenshot-desktop.png',
         'screenshot-mobile.png',
       ],

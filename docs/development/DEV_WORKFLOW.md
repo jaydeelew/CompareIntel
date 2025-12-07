@@ -102,6 +102,26 @@ docker compose -f docker-compose.dev-ssl.yml down
 - Verifying optimized builds work correctly
 - Final testing before AWS deployment
 - Debugging production build issues
+- Running Lighthouse performance audits
+- Testing production-optimized assets
+
+### Quick Production Preview (Recommended for Lighthouse Testing)
+
+**For quick local testing of production builds without Docker:**
+
+```bash
+cd frontend
+npm run build && npm run preview
+```
+
+This builds the production bundle and serves it at `http://localhost:4173`. Perfect for:
+
+- Running Lighthouse audits on production builds
+- Quick verification that the build works
+- Testing performance optimizations
+- Checking bundle sizes
+
+**Stop the preview server:** Press `Ctrl+C` in the terminal
 
 ### Pre-Deployment Build Check
 
@@ -180,6 +200,7 @@ docker compose -f docker-compose.ssl.yml logs -f
 ### SSL Certificate Management
 
 **Initial Setup (one-time):**
+
 ```bash
 # Run from home directory (not inside CompareIntel)
 cd ~
@@ -187,6 +208,7 @@ cd ~
 ```
 
 **Manual Renewal (if auto-renewal fails):**
+
 ```bash
 cd ~/CompareIntel
 docker compose -f docker-compose.ssl.yml down
@@ -195,6 +217,7 @@ docker compose -f docker-compose.ssl.yml up -d --build
 ```
 
 **Check certificate expiration:**
+
 ```bash
 sudo openssl x509 -in /etc/letsencrypt/live/compareintel.com/fullchain.pem -noout -dates
 ```
@@ -202,6 +225,7 @@ sudo openssl x509 -in /etc/letsencrypt/live/compareintel.com/fullchain.pem -noou
 **Auto-renewal hook (if not using setup script):**
 
 Certbot renews certificates automatically, but nginx needs to reload them. Add this hook:
+
 ```bash
 sudo mkdir -p /etc/letsencrypt/renewal-hooks/deploy
 sudo tee /etc/letsencrypt/renewal-hooks/deploy/restart-nginx.sh << 'EOF'
@@ -213,6 +237,7 @@ sudo chmod +x /etc/letsencrypt/renewal-hooks/deploy/restart-nginx.sh
 ```
 
 **Verify auto-renewal is active:**
+
 ```bash
 sudo systemctl status certbot.timer
 ```

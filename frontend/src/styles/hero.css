@@ -97,6 +97,10 @@
   letter-spacing: -0.02em;
   animation: titleGlow 3s ease-in-out infinite alternate;
   padding-bottom: 0.25rem;
+  /* GPU acceleration for smooth animation */
+  will-change: opacity;
+  transform: translateZ(0);
+  backface-visibility: hidden;
 }
 
 .hero-subtitle {
@@ -202,7 +206,7 @@
 
 .capability-description {
   font-size: 0.6875rem;
-  color: rgba(255, 255, 255, 0.7);
+  color: rgba(255, 255, 255, 0.9); /* Improved contrast: increased opacity from 0.7 to 0.9 for better accessibility */
   line-height: 1.5;
   margin: 0;
   position: relative;
@@ -975,7 +979,7 @@
 
 @media (max-width: 380px) {
   .brand-tagline {
-    font-size: 0.625rem !important; /* 10px - further reduced to prevent text wrapping */
+    font-size: 0.6875rem !important; /* Improved accessibility: increased from 0.625rem (10px) to 0.6875rem (11px) */
   }
 
   .hero-subtitle {

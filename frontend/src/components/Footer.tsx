@@ -18,16 +18,24 @@ export const Footer: React.FC = () => {
         <a
           href="mailto:support@compareintel.com"
           style={{
-            color: '#0ea5e9',
-            textDecoration: 'none',
+            color: '#0284c7',
+            textDecoration: 'underline',
+            textDecorationThickness: '1px',
+            textUnderlineOffset: '2px',
           }}
-          onMouseOver={e => (e.currentTarget.style.textDecoration = 'underline')}
-          onMouseOut={e => (e.currentTarget.style.textDecoration = 'none')}
+          onMouseOver={e => {
+            e.currentTarget.style.color = '#0369a1'
+            e.currentTarget.style.textDecorationThickness = '2px'
+          }}
+          onMouseOut={e => {
+            e.currentTarget.style.color = '#0284c7'
+            e.currentTarget.style.textDecorationThickness = '1px'
+          }}
         >
           support@compareintel.com
         </a>
       </p>
-      <p style={{ margin: '8px 0', fontSize: '12px', color: '#9ca3af' }}>
+      <p style={{ margin: '8px 0', fontSize: '12px', color: '#4b5563' }}>
         © 2025 CompareIntel. All rights reserved.
       </p>
     </footer>

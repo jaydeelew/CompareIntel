@@ -131,7 +131,7 @@
 /* Provider count without selected models - matches models-count-indicator */
 .provider-count.empty {
   background: #f3f4f6;
-  color: #6b7280;
+  color: #374151; /* Improved contrast: darker gray for better accessibility (was #6b7280) */
   border: 1px solid #e5e7eb;
 }
 
@@ -2127,7 +2127,7 @@
 
 .models-count-indicator.empty {
   background: #f3f4f6;
-  color: #6b7280;
+  color: #374151; /* Improved contrast: darker gray for better accessibility (was #6b7280) */
   border: 1px solid #e5e7eb;
   border-radius: 8px !important;
 }

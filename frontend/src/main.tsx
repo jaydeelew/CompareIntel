@@ -3,7 +3,8 @@ import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 
 import './index.css'
-import 'katex/dist/katex.min.css'
+// KaTeX CSS loaded asynchronously to prevent render-blocking
+// It will be loaded when LatexRenderer component is first used
 import App from './App.tsx'
 import { initializeRegistry } from './config/loadModelConfigs'
 import { initWebVitals } from './utils/performance'
@@ -36,3 +37,35 @@ createRoot(document.getElementById('root')!).render(
     </BrowserRouter>
   </StrictMode>
 )
+
+// Defer service worker registration until after page load to prevent render-blocking
+// This improves FCP and LCP by not blocking the main thread during initial render
+if ('serviceWorker' in navigator && import.meta.env.PROD) {
+  // Use requestIdleCallback if available, otherwise defer with setTimeout
+  const registerSW = () => {
+    import('virtual:pwa-register')
+      .then(({ registerSW }) => {
+        registerSW({
+          immediate: false,
+          onNeedRefresh: () => {
+            // Handle update available
+          },
+          onOfflineReady: () => {
+            // Handle offline ready
+          },
+        }).catch((error: unknown) => {
+          console.warn('Service worker registration failed:', error)
+        })
+      })
+      .catch(() => {
+        // Service worker registration script not available (dev mode or build issue)
+      })
+  }
+
+  if ('requestIdleCallback' in window) {
+    requestIdleCallback(registerSW, { timeout: 2000 })
+  } else {
+    // Fallback for browsers without requestIdleCallback
+    setTimeout(registerSW, 2000)
+  }
+}
