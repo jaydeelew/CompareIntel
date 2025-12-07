@@ -274,3 +274,249 @@ See `backend/scripts/PRODUCTION_NOTES.md` for detailed documentation and trouble
 ---
 
 **Cache Busting**: Your builds automatically generate unique filenames (e.g., `index.abc123.js`) so users always get the latest version without clearing browser cache.
+
+---
+
+## PWA Testing Guide
+
+**Important:** PWA features (service workers, installability) require a **production build** and **HTTPS** (or `localhost`). Service workers are disabled in development mode (`devOptions.enabled: false`).
+
+### Quick PWA Test Setup
+
+**For local PWA testing:**
+
+```bash
+cd frontend
+npm run build && npm run preview
+```
+
+Then visit `http://localhost:4173` (localhost is allowed for PWA testing without HTTPS).
+
+**For HTTPS PWA testing (recommended for full testing):**
+
+```bash
+# Use Environment 2 (HTTPS) with production build
+cd frontend
+npm run build
+# Then use docker-compose.dev-ssl.yml or deploy to production
+```
+
+### 1. Lighthouse PWA Audit
+
+**Run Lighthouse PWA audit in Chrome DevTools:**
+
+1. Open `http://localhost:4173` (or your production URL)
+2. Open Chrome DevTools (F12)
+3. Go to **Lighthouse** tab
+4. Select **Progressive Web App** category
+5. Click **Analyze page load**
+6. Review PWA score and checklist
+
+**Key PWA requirements checked:**
+
+- ✅ HTTPS (or localhost)
+- ✅ Valid Web App Manifest
+- ✅ Service Worker registered
+- ✅ Responsive design
+- ✅ Fast load times
+- ✅ Works offline (basic offline page)
+
+### 2. Service Worker Testing
+
+**Check service worker registration:**
+
+1. Open Chrome DevTools → **Application** tab
+2. Click **Service Workers** in left sidebar
+3. Verify service worker is **activated and running**
+4. Check **Update on reload** to test updates
+
+**Test service worker update flow:**
+
+```bash
+# Make a change to your code
+# Rebuild
+npm run build && npm run preview
+
+# In DevTools → Application → Service Workers:
+# 1. Click "Update" button
+# 2. Verify new service worker activates
+# 3. Test that old cache is cleared
+```
+
+**Inspect cached assets:**
+
+1. DevTools → **Application** → **Cache Storage**
+2. Check `workbox-precache-*` cache (precached assets)
+3. Check `api-cache`, `image-cache`, `font-cache` (runtime caches)
+
+### 3. Installability Testing
+
+**Desktop (Chrome/Edge):**
+
+1. Visit your PWA URL
+2. Look for install icon in address bar (or menu)
+3. Click **Install** button
+4. Verify app installs and opens in standalone window
+5. Check app icon appears in applications menu
+
+**Mobile (Android Chrome):**
+
+1. Visit PWA URL
+2. Tap browser menu (3 dots)
+3. Select **Add to Home screen** or **Install app**
+4. Verify app icon appears on home screen
+5. Tap icon - should open in standalone mode (no browser UI)
+
+**iOS Safari:**
+
+1. Visit PWA URL
+2. Tap **Share** button
+3. Select **Add to Home Screen**
+4. Verify app icon appears
+5. Note: iOS has limited PWA support compared to Android
+
+**Verify manifest:**
+
+1. DevTools → **Application** → **Manifest**
+2. Check all fields are correct:
+   - Name, short_name, icons
+   - Theme color, background color
+   - Start URL, scope
+   - Display mode (should be "standalone")
+
+### 4. Offline Functionality Testing
+
+**Test offline page:**
+
+1. Visit your PWA URL
+2. DevTools → **Network** tab → Check **Offline** checkbox
+3. Navigate to a non-cached route (e.g., `/some-page`)
+4. Verify `/offline.html` page displays
+5. Uncheck **Offline** → Page should reload automatically
+
+**Test cached assets:**
+
+1. Load your PWA normally (online)
+2. DevTools → **Network** → Check **Offline**
+3. Refresh page
+4. Verify:
+   - ✅ Page loads from cache
+   - ✅ Images/icons load from cache
+   - ✅ Fonts load from cache
+   - ✅ API calls show "Failed" (expected - API requires network)
+
+**Test API caching (NetworkFirst strategy):**
+
+1. Make API calls while online
+2. Go offline
+3. API calls should fail (expected - API requires real-time data)
+4. Note: Your PWA uses `NetworkFirst` for API, so it won't cache failed requests
+
+### 5. Update Mechanism Testing
+
+**Test auto-update (registerType: 'autoUpdate'):**
+
+1. Load PWA in browser
+2. Make code changes and rebuild: `npm run build`
+3. Refresh page
+4. Service worker should detect update and activate automatically
+5. Check console for update messages
+
+**Test update notification (if you add it):**
+
+Currently your PWA uses `autoUpdate`, which updates silently. To test update prompts, you'd need to implement `onNeedRefresh` callback (see `main.tsx`).
+
+### 6. Manifest Validation
+
+**Validate manifest.json:**
+
+1. Visit: `http://localhost:4173/manifest.webmanifest` (or your production URL)
+2. Verify JSON is valid and all required fields present
+3. Check icons exist at specified paths
+4. Use online validator: https://manifest-validator.appspot.com/
+
+**Check icons:**
+
+1. Verify all icon sizes exist in `public/`:
+   - `CI_favicon_192x192.png`
+   - `CI_favicon_512x512.png`
+   - `maskable_icon_x*.png` (various sizes)
+2. Test maskable icons render correctly on Android
+
+### 7. Performance Testing
+
+**Test PWA performance impact:**
+
+1. Run Lighthouse **Performance** audit
+2. Compare with/without service worker
+3. Verify service worker registration doesn't block render (should be deferred)
+4. Check cache hit rates in Network tab
+
+**Monitor service worker performance:**
+
+1. DevTools → **Performance** tab
+2. Record page load
+3. Check service worker registration timing
+4. Verify it happens after page load (deferred)
+
+### 8. Browser Compatibility Testing
+
+**Test in multiple browsers:**
+
+- ✅ **Chrome/Edge** (Desktop & Android) - Full PWA support
+- ✅ **Firefox** (Desktop & Android) - Good PWA support
+- ⚠️ **Safari** (iOS/macOS) - Limited PWA support
+- ✅ **Samsung Internet** - Good PWA support
+
+**Check feature support:**
+
+Visit: https://caniuse.com/serviceworkers and https://caniuse.com/web-app-manifest
+
+### Common PWA Testing Issues
+
+**Service worker not registering:**
+
+- ✅ Ensure you're using production build (`npm run build`)
+- ✅ Check you're on HTTPS or localhost
+- ✅ Verify `devOptions.enabled: false` in `vite.config.ts` (for production)
+- ✅ Check browser console for errors
+
+**App not installable:**
+
+- ✅ Verify manifest is valid and accessible
+- ✅ Check all required icons exist (192x192, 512x512)
+- ✅ Ensure HTTPS (or localhost)
+- ✅ Check manifest has `display: "standalone"`
+
+**Offline page not showing:**
+
+- ✅ Verify `offline.html` exists in `public/` folder
+- ✅ Check `navigateFallback: '/offline.html'` in `vite.config.ts`
+- ✅ Ensure service worker is activated
+
+**Cache not updating:**
+
+- ✅ Check service worker version changed (new build = new hash)
+- ✅ Hard refresh (Ctrl+Shift+R) to bypass cache
+- ✅ Unregister service worker in DevTools → Application → Service Workers → Unregister
+
+### PWA Testing Checklist
+
+Before deploying to production:
+
+- [ ] Lighthouse PWA audit passes (score > 90)
+- [ ] Service worker registers and activates
+- [ ] App installs on desktop (Chrome/Edge)
+- [ ] App installs on mobile (Android Chrome)
+- [ ] Offline page displays when offline
+- [ ] Cached assets load when offline
+- [ ] Manifest validates correctly
+- [ ] All icons display correctly
+- [ ] Theme color matches brand
+- [ ] App opens in standalone mode
+- [ ] Service worker updates automatically
+- [ ] No console errors related to PWA
+
+---
+
+**Cache Busting**: Your builds automatically generate unique filenames (e.g., `index.abc123.js`) so users always get the latest version without clearing browser cache.
