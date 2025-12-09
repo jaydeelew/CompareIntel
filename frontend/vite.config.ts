@@ -1,12 +1,27 @@
 import react from '@vitejs/plugin-react'
 import { visualizer } from 'rollup-plugin-visualizer'
+import type { Plugin } from 'vite'
 import { imagetools } from 'vite-imagetools'
 import { VitePWA } from 'vite-plugin-pwa'
 import { defineConfig } from 'vitest/config'
 
+// Plugin to auto-version social sharing images (cache busting)
+// Replaces __SOCIAL_IMAGE_VERSION__ with build timestamp in index.html
+function socialImageVersionPlugin(): Plugin {
+  return {
+    name: 'social-image-version',
+    transformIndexHtml(html) {
+      const version = Date.now().toString(36) // Compact timestamp: e.g., "m5x2k8f"
+      return html.replace(/__SOCIAL_IMAGE_VERSION__/g, version)
+    },
+  }
+}
+
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [
+    // Auto-version social sharing images on every build (cache busting for OG/Twitter images)
+    socialImageVersionPlugin(),
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore - Plugin types may conflict between vite and vitest bundled vite
     react(),
