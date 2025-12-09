@@ -70,12 +70,6 @@ This document lists all GUI components for the CompareIntel website, divided int
 - **Filename:** `frontend/src/components/shared/LoadingSpinner.tsx`
 - **Line Range:** 65-73
 
-### Header
-- **Parent Element:** Not currently used (replaced by Navigation)
-- **Description:** Application header with navigation and branding. Includes user menu and admin toggle.
-- **Filename:** `frontend/src/components/layout/Header.tsx`
-- **Line Range:** 1-108
-
 ### Hero
 - **Parent Element:** `App.tsx` (AppContent component)
 - **Description:** Main hero section with title, capabilities, and comparison form. Displays capability tiles (Natural Language, Code Generation, Formatted Math) with tooltips.

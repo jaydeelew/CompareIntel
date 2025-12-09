@@ -46,8 +46,8 @@ export function Navigation({
               src="/CI_favicon.svg"
               alt="CompareIntel Logo"
               className="logo-icon"
-              width="48"
-              height="48"
+              width="36"
+              height="36"
               loading="eager"
             />
             <div className="brand-text">

@@ -362,8 +362,7 @@ This document provides a comprehensive, modern implementation plan to refactor C
    │   ├── ConversationItem.tsx      # Single conversation item
    │   └── MessageBubble.tsx          # Individual message
    ├── layout/
-   │   ├── Header.tsx                # Header component
-   │   ├── Navigation.tsx            # Navigation bar
+   │   ├── Navigation.tsx            # Navigation bar (main header)
    │   ├── MainLayout.tsx            # Main layout wrapper
    │   └── Hero.tsx                  # Hero section
    └── shared/
