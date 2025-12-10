@@ -58,9 +58,7 @@ ANONYMOUS_TIER_MODELS = {
     "microsoft/phi-4",  # ~$0.07 input, $0.14 output = ~$0.11/M avg
     # Google - Flash models (~$0.15-$0.60/M)
     "google/gemini-2.5-flash",  # ~$0.15 input, $0.60 output = ~$0.38/M avg
-    # xAI - Free variants
-    "x-ai/grok-4.1-fast:free",  # Free variant,
-    "google/gemini-2.0-flash-001",  # Auto-classified based on pricing
+    # xAI - Free variants    "google/gemini-2.0-flash-001",  # Auto-classified based on pricing
     "openai/gpt-oss-120b",  # Auto-classified based on pricing
 }
 
@@ -582,15 +580,7 @@ MODELS_BY_PROVIDER = {
             "category": "Language",
             "provider": "xAI",
             "available": False,
-        },
-        {
-            "id": "x-ai/grok-4.1-fast:free",
-            "name": "Grok 4.1 Fast:Free",
-            "description": "Grok 4.1 Fast is xAI's best agentic tool calling model that shines in real-world use cases like customer support and deep research.",
-            "category": "Language",
-            "provider": "xAI",
-        },
-        {
+        },        {
             "id": "x-ai/grok-4-fast",
             "name": "Grok 4 Fast",
             "description": "Grok 4 Fast is xAI's latest multimodal model with SOTA cost-efficiency and a 2M token context window.",
