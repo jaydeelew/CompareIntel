@@ -67,9 +67,20 @@ if [ "$DEPLOYMENT_TYPE" = "docker" ]; then
     fi
     
     # Add new cron job (on host system)
-    (crontab -l 2>/dev/null; echo "$CRON_ENTRY") | crontab -
+    # Handle case where no crontab exists yet (crontab -l returns error)
+    TEMP_CRON=$(mktemp)
+    trap "rm -f '$TEMP_CRON'" EXIT
+    crontab -l 2>/dev/null > "$TEMP_CRON" || true  # Create empty file if no crontab exists
+    echo "$CRON_ENTRY" >> "$TEMP_CRON"
+    crontab "$TEMP_CRON"
     
-    echo "✓ Cron job installed on host system (runs script in Docker container)"
+    # Verify the cron job was added
+    if crontab -l 2>/dev/null | grep -q "check_model_availability_prod.py"; then
+        echo "✓ Cron job installed on host system (runs script in Docker container)"
+    else
+        echo "✗ ERROR: Failed to install cron job. Please check permissions and try again."
+        exit 1
+    fi
     
 else
     # Host deployment: Standard cron job
@@ -82,9 +93,20 @@ else
     fi
     
     # Add new cron job
-    (crontab -l 2>/dev/null; echo "$CRON_ENTRY") | crontab -
+    # Handle case where no crontab exists yet (crontab -l returns error)
+    TEMP_CRON=$(mktemp)
+    trap "rm -f '$TEMP_CRON'" EXIT
+    crontab -l 2>/dev/null > "$TEMP_CRON" || true  # Create empty file if no crontab exists
+    echo "$CRON_ENTRY" >> "$TEMP_CRON"
+    crontab "$TEMP_CRON"
     
-    echo "✓ Cron job installed successfully"
+    # Verify the cron job was added
+    if crontab -l 2>/dev/null | grep -q "check_model_availability_prod.py"; then
+        echo "✓ Cron job installed successfully"
+    else
+        echo "✗ ERROR: Failed to install cron job. Please check permissions and try again."
+        exit 1
+    fi
 fi
 
 echo ""
