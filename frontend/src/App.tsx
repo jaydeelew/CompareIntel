@@ -181,7 +181,7 @@ function AppContent() {
   const [isAnimatingTextarea, setIsAnimatingTextarea] = useState(false)
   const animationTimeoutRef = useRef<number | null>(null)
   const [isModelsHidden, setIsModelsHidden] = useState(false)
-  const [hidePremiumModels, setHidePremiumModels] = useState(false)
+  const [hidePremiumModels, setHidePremiumModels] = useState(true)
   const [isMetadataCollapsed, setIsMetadataCollapsed] = useState(false)
   const [modelErrors, setModelErrors] = useState<{ [key: string]: boolean }>({})
   const [anonymousCreditsRemaining, setAnonymousCreditsRemaining] = useState<number | null>(null)

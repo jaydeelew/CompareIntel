@@ -48,6 +48,10 @@ OPENROUTER_API_KEY = settings.openrouter_api_key
 # Classification criteria: Models costing < $0.50 per million tokens (input+output average)
 # Generally includes: models with ":free" suffix, nano/mini versions, budget options
 ANONYMOUS_TIER_MODELS = {
+    # Anthropic - OVERRIDING PRICE CLASSIFICATION
+    "anthropic/claude-3.5-haiku",
+    # Cohere - OVERRIDING PRICE CLASSIFICATION
+    "cohere/command-r7b-12-2024",
     # DeepSeek - Very affordable models (~$0.14-$0.55/M avg)
     "deepseek/deepseek-chat-v3.1",  # ~$0.27 input, $1.10 output = ~$0.69/M avg - borderline, keep in anon
     "deepseek/deepseek-v3.2-exp",  # Similar pricing
@@ -57,9 +61,11 @@ ANONYMOUS_TIER_MODELS = {
     # Microsoft - Efficient models (~$0.07-$0.14/M)
     "microsoft/phi-4",  # ~$0.07 input, $0.14 output = ~$0.11/M avg
     # Google - Flash models (~$0.15-$0.60/M)
+    "google/gemini-2.0-flash-001",
     "google/gemini-2.5-flash",  # ~$0.15 input, $0.60 output = ~$0.38/M avg
-    # xAI - Free variants    "google/gemini-2.0-flash-001",  # Auto-classified based on pricing
-    "openai/gpt-oss-120b",  # Auto-classified based on pricing
+    "openai/gpt-oss-120b",  # Auto-classified based on pricing,
+    "x-ai/grok-code-fast-1",
+    "x-ai/grok-4-fast",
 }
 
 # List of model IDs available to free (registered) users
@@ -89,17 +95,13 @@ FREE_TIER_MODELS = ANONYMOUS_TIER_MODELS.union(
         "mistralai/devstral-small",
         "mistralai/devstral-medium",
         # Cohere - Budget models (~$0.15-$2.50/M avg)
-        "cohere/command-r7b-12-2024",
         "cohere/command-r-plus-08-2024",
         # Qwen - Efficient models (~$0.30-$2.00/M avg)
         "qwen/qwen3-coder-flash",
         "qwen/qwen3-30b-a3b-instruct-2507",
         "qwen/qwen3-next-80b-a3b-instruct",
-        # xAI - Fast variants (~$0.50-$2.00/M avg)
-        "x-ai/grok-code-fast-1",
-        "x-ai/grok-4-fast",
-        # Note: Premium models (Claude Opus, Sonnet 4.5, GPT-5.1, Gemini Pro, etc.)
-        # require paid subscription (>= $3.00/M tokens)
+        # xAI
+        "x-ai/grok-3-mini",  # Auto-classified based on pricing
         # When adding new models, classify based on OpenRouter pricing:
         # - Anonymous tier: Models costing < $0.50 per million tokens
         # - Free tier: Models costing $0.50 - $3.00 per million tokens
@@ -416,23 +418,9 @@ MODELS_BY_PROVIDER = {
     ],
     "OpenAI": [
         {
-            "id": "openai/o3-mini",
-            "name": "o3 Mini",
-            "description": "OpenAI o3-mini is a cost-efficient language model optimized for STEM reasoning tasks, particularly excelling in science, mathematics, and coding.",
-            "category": "Reasoning",
-            "provider": "OpenAI",
-        },
-        {
-            "id": "openai/o3",
-            "name": "o3",
-            "description": "o3 is a well-rounded and powerful model across domains.",
-            "category": "Reasoning",
-            "provider": "OpenAI",
-        },
-        {
-            "id": "openai/gpt-oss-120b",
-            "name": "Gpt Oss 120B",
-            "description": "gpt-oss-120b is an open-weight, 117B-parameter Mixture-of-Experts (MoE) language model from OpenAI designed for high-reasoning, agentic, and general-purpose production use cases.",
+            "id": "openai/gpt-5.1",
+            "name": "GPT-5.1",
+            "description": "GPT-5.1 is the latest frontier-grade model in the GPT-5 series, offering stronger general-purpose reasoning, improved instruction adherence, and a more natural conversational style compared to GPT-5.",
             "category": "Language",
             "provider": "OpenAI",
         },
@@ -458,9 +446,9 @@ MODELS_BY_PROVIDER = {
             "provider": "OpenAI",
         },
         {
-            "id": "openai/gpt-5.1",
-            "name": "GPT-5.1",
-            "description": "GPT-5.1 is the latest frontier-grade model in the GPT-5 series, offering stronger general-purpose reasoning, improved instruction adherence, and a more natural conversational style compared to GPT-5.",
+            "id": "openai/gpt-5",
+            "name": "GPT-5",
+            "description": "GPT-5 is OpenAI’s most advanced model, offering major improvements in reasoning, code quality, and user experience.",
             "category": "Language",
             "provider": "OpenAI",
         },
@@ -493,16 +481,30 @@ MODELS_BY_PROVIDER = {
             "provider": "OpenAI",
         },
         {
-            "id": "openai/gpt-5",
-            "name": "GPT-5",
-            "description": "GPT-5 is OpenAI’s most advanced model, offering major improvements in reasoning, code quality, and user experience.",
+            "id": "openai/gpt-4o",
+            "name": "GPT-4o",
+            "description": 'GPT-4o ("o" for "omni") is OpenAI\'s latest AI model, supporting both text and image inputs with text outputs.',
             "category": "Language",
             "provider": "OpenAI",
         },
         {
-            "id": "openai/gpt-4o",
-            "name": "GPT-4o",
-            "description": 'GPT-4o ("o" for "omni") is OpenAI\'s latest AI model, supporting both text and image inputs with text outputs.',
+            "id": "openai/o3-mini",
+            "name": "o3 Mini",
+            "description": "OpenAI o3-mini is a cost-efficient language model optimized for STEM reasoning tasks, particularly excelling in science, mathematics, and coding.",
+            "category": "Reasoning",
+            "provider": "OpenAI",
+        },
+        {
+            "id": "openai/o3",
+            "name": "o3",
+            "description": "o3 is a well-rounded and powerful model across domains.",
+            "category": "Reasoning",
+            "provider": "OpenAI",
+        },
+        {
+            "id": "openai/gpt-oss-120b",
+            "name": "Gpt Oss 120B",
+            "description": "gpt-oss-120b is an open-weight, 117B-parameter Mixture-of-Experts (MoE) language model from OpenAI designed for high-reasoning, agentic, and general-purpose production use cases.",
             "category": "Language",
             "provider": "OpenAI",
         },
@@ -580,7 +582,8 @@ MODELS_BY_PROVIDER = {
             "category": "Language",
             "provider": "xAI",
             "available": False,
-        },        {
+        },
+        {
             "id": "x-ai/grok-4-fast",
             "name": "Grok 4 Fast",
             "description": "Grok 4 Fast is xAI's latest multimodal model with SOTA cost-efficiency and a 2M token context window.",
@@ -595,9 +598,16 @@ MODELS_BY_PROVIDER = {
             "provider": "xAI",
         },
         {
+            "id": "x-ai/grok-3-mini",
+            "name": "Grok 3 Mini",
+            "description": 'A lightweight model that thinks before responding.',
+            "category": "Language",
+            "provider": "xAI",
+        },
+        {
             "id": "x-ai/grok-code-fast-1",
             "name": "Grok Code Fast 1",
-            "description": "Grok Code Fast 1 is a speedy and economical reasoning model that excels at agentic coding.",
+            "description": 'Grok Code Fast 1 is a speedy and economical reasoning model that excels at agentic coding.',
             "category": "Language",
             "provider": "xAI",
         },
