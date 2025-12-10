@@ -43,8 +43,7 @@ export function Hero({ visibleTooltip, onCapabilityTileTap, children }: HeroProp
     <div className="hero-section">
       <div className="hero-content">
         <h2 className="hero-title">
-          <span className="hero-title-first-line">Compare AI Models</span>{' '}
-          <span className="hero-title-second-line">Side by Side</span>
+          <span className="hero-title-first-line">Compare AI Models</span> <span className="hero-title-second-line">Side by Side</span>
         </h2>
         <p className="hero-subtitle">
           Get concurrent responses from multiple AI models{' '}
