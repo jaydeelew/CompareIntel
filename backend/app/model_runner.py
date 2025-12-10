@@ -61,6 +61,7 @@ ANONYMOUS_TIER_MODELS = {
     # xAI - Free variants
     "x-ai/grok-4.1-fast:free",  # Free variant,
     "google/gemini-2.0-flash-001",  # Auto-classified based on pricing
+    "openai/gpt-oss-120b",  # Auto-classified based on pricing
 }
 
 # List of model IDs available to free (registered) users
@@ -366,7 +367,7 @@ MODELS_BY_PROVIDER = {
         {
             "id": "minimax/minimax-m2",
             "name": "Minimax M2",
-            "description": 'MiniMax-M2 is a compact, high-efficiency large language model optimized for end-to-end coding and agentic workflows.',
+            "description": "MiniMax-M2 is a compact, high-efficiency large language model optimized for end-to-end coding and agentic workflows.",
             "category": "Language",
             "provider": "Minimax",
         },
@@ -417,24 +418,24 @@ MODELS_BY_PROVIDER = {
     ],
     "OpenAI": [
         {
-            "id": "openai/gpt-5.1",
-            "name": "GPT-5.1",
-            "description": "GPT-5.1 is the latest frontier-grade model in the GPT-5 series, offering stronger general-purpose reasoning, improved instruction adherence, and a more natural conversational style compared to GPT-5.",
-            "category": "Language",
+            "id": "openai/o3-mini",
+            "name": "o3 Mini",
+            "description": "OpenAI o3-mini is a cost-efficient language model optimized for STEM reasoning tasks, particularly excelling in science, mathematics, and coding.",
+            "category": "Reasoning",
             "provider": "OpenAI",
         },
         {
-            "id": "openai/gpt-5.1-chat",
-            "name": "GPT-5.1 Chat",
-            "description": "GPT-5.1 Chat (AKA Instant is the fast, lightweight member of the 5.1 family, optimized for low-latency chat while retaining strong general intelligence.",
-            "category": "Language",
+            "id": "openai/o3",
+            "name": "o3",
+            "description": "o3 is a well-rounded and powerful model across domains.",
+            "category": "Reasoning",
             "provider": "OpenAI",
         },
         {
-            "id": "openai/gpt-5.1-codex",
-            "name": "GPT-5.1-Codex",
-            "description": "GPT-5.1-Codex is a specialized version of GPT-5.1 optimized for software engineering and coding workflows.",
-            "category": "Code",
+            "id": "openai/gpt-oss-120b",
+            "name": "Gpt Oss 120B",
+            "description": "gpt-oss-120b is an open-weight, 117B-parameter Mixture-of-Experts (MoE) language model from OpenAI designed for high-reasoning, agentic, and general-purpose production use cases.",
+            "category": "Language",
             "provider": "OpenAI",
         },
         {
@@ -445,16 +446,23 @@ MODELS_BY_PROVIDER = {
             "provider": "OpenAI",
         },
         {
-            "id": "openai/gpt-5",
-            "name": "GPT-5",
-            "description": "GPT-5 is OpenAI’s most advanced model, offering major improvements in reasoning, code quality, and user experience.",
+            "id": "openai/gpt-5.1-codex",
+            "name": "GPT-5.1-Codex",
+            "description": "GPT-5.1-Codex is a specialized version of GPT-5.1 optimized for software engineering and coding workflows.",
+            "category": "Code",
+            "provider": "OpenAI",
+        },
+        {
+            "id": "openai/gpt-5.1-chat",
+            "name": "GPT-5.1 Chat",
+            "description": "GPT-5.1 Chat (AKA Instant is the fast, lightweight member of the 5.1 family, optimized for low-latency chat while retaining strong general intelligence.",
             "category": "Language",
             "provider": "OpenAI",
         },
         {
-            "id": "openai/gpt-5-mini",
-            "name": "GPT-5 Mini",
-            "description": "GPT-5 Mini is a compact version of GPT-5, designed to handle lighter-weight reasoning tasks.",
+            "id": "openai/gpt-5.1",
+            "name": "GPT-5.1",
+            "description": "GPT-5.1 is the latest frontier-grade model in the GPT-5 series, offering stronger general-purpose reasoning, improved instruction adherence, and a more natural conversational style compared to GPT-5.",
             "category": "Language",
             "provider": "OpenAI",
         },
@@ -462,6 +470,13 @@ MODELS_BY_PROVIDER = {
             "id": "openai/gpt-5-nano",
             "name": "GPT-5 Nano",
             "description": "GPT-5-Nano is the smallest and fastest variant in the GPT-5 system, optimized for developer tools, rapid interactions, and ultra-low latency environments.",
+            "category": "Language",
+            "provider": "OpenAI",
+        },
+        {
+            "id": "openai/gpt-5-mini",
+            "name": "GPT-5 Mini",
+            "description": "GPT-5 Mini is a compact version of GPT-5, designed to handle lighter-weight reasoning tasks.",
             "category": "Language",
             "provider": "OpenAI",
         },
@@ -480,24 +495,17 @@ MODELS_BY_PROVIDER = {
             "provider": "OpenAI",
         },
         {
-            "id": "openai/gpt-4o",
-            "name": "GPT-4o",
-            "description": 'GPT-4o ("o" for "omni") is OpenAI\'s latest AI model, supporting both text and image inputs with text outputs.',
+            "id": "openai/gpt-5",
+            "name": "GPT-5",
+            "description": "GPT-5 is OpenAI’s most advanced model, offering major improvements in reasoning, code quality, and user experience.",
             "category": "Language",
             "provider": "OpenAI",
         },
         {
-            "id": "openai/o3",
-            "name": "o3",
-            "description": "o3 is a well-rounded and powerful model across domains.",
-            "category": "Reasoning",
-            "provider": "OpenAI",
-        },
-        {
-            "id": "openai/o3-mini",
-            "name": "o3 Mini",
-            "description": "OpenAI o3-mini is a cost-efficient language model optimized for STEM reasoning tasks, particularly excelling in science, mathematics, and coding.",
-            "category": "Reasoning",
+            "id": "openai/gpt-4o",
+            "name": "GPT-4o",
+            "description": 'GPT-4o ("o" for "omni") is OpenAI\'s latest AI model, supporting both text and image inputs with text outputs.',
+            "category": "Language",
             "provider": "OpenAI",
         },
     ],
@@ -568,13 +576,6 @@ MODELS_BY_PROVIDER = {
     ],
     "xAI": [
         {
-            "id": "x-ai/grok-code-fast-1",
-            "name": "Grok Code Fast 1",
-            "description": "Grok Code Fast 1 is a speedy and economical reasoning model that excels at agentic coding.",
-            "category": "Language",
-            "provider": "xAI",
-        },
-        {
             "id": "x-ai/grok-5",
             "name": "Grok 5 (Coming Soon)",
             "description": "xAI's upcoming Grok 5 model expected by end of 2025. This model is not yet available for selection.",
@@ -600,6 +601,13 @@ MODELS_BY_PROVIDER = {
             "id": "x-ai/grok-4",
             "name": "Grok 4",
             "description": "Grok 4 is xAI's latest reasoning model with a 256k context window.",
+            "category": "Language",
+            "provider": "xAI",
+        },
+        {
+            "id": "x-ai/grok-code-fast-1",
+            "name": "Grok Code Fast 1",
+            "description": "Grok Code Fast 1 is a speedy and economical reasoning model that excels at agentic coding.",
             "category": "Language",
             "provider": "xAI",
         },
