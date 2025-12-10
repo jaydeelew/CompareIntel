@@ -60,7 +60,7 @@ ANONYMOUS_TIER_MODELS = {
     "google/gemini-2.5-flash",  # ~$0.15 input, $0.60 output = ~$0.38/M avg
     # xAI - Free variants
     "x-ai/grok-4.1-fast:free",  # Free variant,
-    "google/gemini-2.0-flash",  # Auto-classified based on pricing
+    "google/gemini-2.0-flash-001",  # Auto-classified based on pricing
 }
 
 # List of model IDs available to free (registered) users
@@ -302,7 +302,7 @@ MODELS_BY_PROVIDER = {
             "provider": "Google",
         },
         {
-            "id": "google/gemini-2.0-flash",
+            "id": "google/gemini-2.0-flash-001",
             "name": "Gemini 2.0 Flash",
             "description": "Gemini Flash 2.0 offers a significantly faster time to first token (TTFT) compared to Gemini Flash 1.5, while maintaining quality on par with larger models like Gemini Pro 1.5.",
             "category": "Language",
