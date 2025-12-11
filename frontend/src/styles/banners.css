@@ -63,21 +63,32 @@
   padding-top: 7.25rem; /* Push content down, background covers gap */
 }
 
-/* Install Prompt Banner */
+/* Install Prompt Banner - Enhanced for 2025 best practices */
 .install-prompt-banner {
   position: fixed;
-  bottom: var(--spacing-md);
-  left: var(--spacing-md);
-  right: var(--spacing-md);
+  bottom: max(var(--spacing-md), env(safe-area-inset-bottom, 0px));
+  left: max(var(--spacing-md), env(safe-area-inset-left, 0px));
+  right: max(var(--spacing-md), env(safe-area-inset-right, 0px));
   z-index: var(--z-banner);
   background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
   color: white;
   padding: var(--spacing-md);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-lg);
-  animation: slideUp 0.3s ease-out;
   max-width: 600px;
   margin: 0 auto;
+  /* Add margin-bottom to prevent overlap with content */
+  margin-bottom: calc(var(--spacing-md) + env(safe-area-inset-bottom, 0px));
+}
+
+/* Animation only if motion is not reduced */
+.install-prompt-banner:not(.no-animation) {
+  animation: slideUp 0.3s ease-out;
+}
+
+.install-prompt-banner.no-animation {
+  /* Instant appearance for reduced motion */
+  animation: none;
 }
 
 .install-prompt-content {
@@ -263,10 +274,11 @@
 /* Responsive adjustments */
 @media (max-width: 640px) {
   .install-prompt-banner {
-    left: var(--spacing-sm);
-    right: var(--spacing-sm);
-    bottom: var(--spacing-sm);
+    left: max(var(--spacing-sm), env(safe-area-inset-left, 0px));
+    right: max(var(--spacing-sm), env(safe-area-inset-right, 0px));
+    bottom: max(var(--spacing-sm), env(safe-area-inset-bottom, 0px));
     padding: var(--spacing-sm);
+    margin-bottom: calc(var(--spacing-sm) + env(safe-area-inset-bottom, 0px));
   }
 
   .install-prompt-content {
@@ -281,6 +293,15 @@
 
   .install-prompt-text {
     font-size: var(--font-xs);
+  }
+}
+
+/* Respect reduced motion for animations */
+@media (prefers-reduced-motion: reduce) {
+  .install-prompt-banner,
+  .install-prompt-modal {
+    animation: none !important;
+    transition: none !important;
   }
 }
 
