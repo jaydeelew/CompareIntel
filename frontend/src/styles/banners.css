@@ -64,16 +64,18 @@
 }
 
 /* Install Prompt Banner - Enhanced for 2025 best practices */
+/* Styled to match site theme with white background and subtle borders */
 .install-prompt-banner {
   position: fixed;
   bottom: max(var(--spacing-md), env(safe-area-inset-bottom, 0px));
   left: max(var(--spacing-md), env(safe-area-inset-left, 0px));
   right: max(var(--spacing-md), env(safe-area-inset-right, 0px));
   z-index: var(--z-banner);
-  background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
-  color: white;
+  background: var(--bg-primary);
+  color: var(--text-primary);
   padding: var(--spacing-md);
   border-radius: var(--radius-lg);
+  border: 1px solid var(--border-color);
   box-shadow: var(--shadow-lg);
   max-width: 600px;
   margin: 0 auto;
@@ -106,8 +108,16 @@
 }
 
 .install-prompt-icon {
-  font-size: var(--font-2xl);
+  font-size: var(--font-xl);
   flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-xs);
 }
 
 .install-prompt-text {
@@ -119,11 +129,12 @@
 .install-prompt-text strong {
   font-weight: var(--font-bold);
   font-size: var(--font-base);
+  color: var(--text-primary);
 }
 
 .install-prompt-text span {
   font-size: var(--font-xs);
-  opacity: 0.9;
+  color: var(--text-secondary);
 }
 
 .install-prompt-actions {
@@ -133,21 +144,22 @@
 }
 
 .install-prompt-button {
-  background: white;
-  color: #2563eb;
+  background: linear-gradient(135deg, #0ea5e9 0%, #1e40af 100%);
+  color: var(--text-inverse);
   border: none;
-  padding: var(--spacing-xs) var(--spacing-md);
+  padding: var(--spacing-sm) var(--spacing-lg);
   border-radius: var(--radius-md);
   font-weight: var(--font-semibold);
   font-size: var(--font-sm);
   cursor: pointer;
-  transition: all var(--transition-fast);
+  transition: all var(--transition-base);
   white-space: nowrap;
+  box-shadow: var(--shadow-sm);
 }
 
 .install-prompt-button:hover {
-  background: #f3f4f6;
   transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(14, 165, 233, 0.4);
 }
 
 .install-prompt-button:active {
@@ -156,23 +168,24 @@
 
 .install-prompt-dismiss {
   background: transparent;
-  color: white;
+  color: var(--text-muted);
   border: none;
-  font-size: var(--font-2xl);
+  font-size: var(--font-xl);
   line-height: 1;
   cursor: pointer;
   padding: var(--spacing-xs);
-  opacity: 0.8;
-  transition: opacity var(--transition-fast);
-  width: 24px;
-  height: 24px;
+  transition: all var(--transition-base);
+  width: 28px;
+  height: 28px;
   display: flex;
   align-items: center;
   justify-content: center;
+  border-radius: var(--radius-sm);
 }
 
 .install-prompt-dismiss:hover {
-  opacity: 1;
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
 }
 
 /* iOS Instructions Modal */
