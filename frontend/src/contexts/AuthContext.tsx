@@ -226,8 +226,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     setUser(null)
     setIsLoading(false)
-    // Refresh the webpage after logout to ensure clean state
-    window.location.reload()
+    // Redirect to home page after logout instead of reloading
+    // This prevents the offline modal from appearing when logging out from /admin
+    window.location.href = '/'
   }
 
   // Update user data
@@ -304,7 +305,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
               if (import.meta.env.DEV) {
                 const initDuration = Date.now() - initStartTime
-                console.log('[Auth] Auth initialization completed (after refresh) in', initDuration, 'ms')
+                console.log(
+                  '[Auth] Auth initialization completed (after refresh) in',
+                  initDuration,
+                  'ms'
+                )
               }
               setUser(userData)
             }

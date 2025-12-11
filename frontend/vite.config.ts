@@ -205,7 +205,7 @@ export default defineConfig({
         ],
         // Offline fallback
         navigateFallback: '/offline.html',
-        navigateFallbackDenylist: [/^\/api\//],
+        navigateFallbackDenylist: [/^\/api\//, /^\/admin/],
       },
       devOptions: {
         enabled: false, // Disable in development to avoid caching issues
