@@ -29,7 +29,7 @@ const AdminPanel = lazy(() => import('./components/admin/AdminPanel'))
 import { Footer } from './components'
 import { AuthModal, VerifyEmail, VerificationBanner, ResetPassword } from './components/auth'
 import { ComparisonForm } from './components/comparison'
-import { Navigation, Hero, MockModeBanner } from './components/layout'
+import { Navigation, Hero, MockModeBanner, InstallPrompt } from './components/layout'
 import { DoneSelectingCard, ErrorBoundary, LoadingSpinner } from './components/shared'
 import { TermsOfService } from './components/TermsOfService'
 import { getCreditAllocation, getDailyCreditLimit } from './config/constants'
@@ -5609,6 +5609,7 @@ function AppContent() {
     getCreditWarningMessage,
     error,
     setError,
+    creditWarningMessage,
   ])
 
   // Helper function to render usage preview (used in both regular and follow-up modes)
@@ -6943,6 +6944,9 @@ function AppContent() {
             initialMode={authModalMode}
             initialEmail={loginEmail}
           />
+
+          {/* Install Prompt - Only show in production */}
+          {import.meta.env.PROD && <InstallPrompt />}
         </>
       )}
     </div>
