@@ -473,12 +473,6 @@ export const UserMenu: React.FC = () => {
                     </div>
                     <div className="feature-item">
                       <span className="feature-icon">✓</span>
-                      <span className="feature-text">
-                        <strong>10 extended interactions</strong> per day
-                      </span>
-                    </div>
-                    <div className="feature-item">
-                      <span className="feature-icon">✓</span>
                       <span className="feature-text">Overage options available</span>
                     </div>
                     <div className="feature-item">
@@ -511,12 +505,6 @@ export const UserMenu: React.FC = () => {
                       <span className="feature-icon">✓</span>
                       <span className="feature-text">
                         Compare up to <strong>6 models</strong> simultaneously (2x more)
-                      </span>
-                    </div>
-                    <div className="feature-item">
-                      <span className="feature-icon">✓</span>
-                      <span className="feature-text">
-                        <strong>20 extended interactions</strong> per day
                       </span>
                     </div>
                     <div className="feature-item">
@@ -558,12 +546,6 @@ export const UserMenu: React.FC = () => {
                     </div>
                     <div className="feature-item">
                       <span className="feature-icon">✓</span>
-                      <span className="feature-text">
-                        <strong>40 extended interactions</strong> per day
-                      </span>
-                    </div>
-                    <div className="feature-item">
-                      <span className="feature-icon">✓</span>
                       <span className="feature-text">Overage options available</span>
                     </div>
                     <div className="feature-item">
@@ -596,12 +578,6 @@ export const UserMenu: React.FC = () => {
                       <span className="feature-icon">✓</span>
                       <span className="feature-text">
                         Compare up to <strong>12 models</strong> simultaneously (4x more)
-                      </span>
-                    </div>
-                    <div className="feature-item">
-                      <span className="feature-icon">✓</span>
-                      <span className="feature-text">
-                        <strong>80 extended interactions</strong> per day
                       </span>
                     </div>
                     <div className="feature-item">
