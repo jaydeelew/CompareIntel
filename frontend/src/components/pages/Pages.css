@@ -1,0 +1,510 @@
+/**
+ * SEO Pages Styles
+ * Styles for About, Features, FAQ, Privacy Policy, and How It Works pages
+ */
+
+/* Base page styles */
+.seo-page {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f8fafc 0%, #eef2ff 100%);
+  padding: 2rem 1rem 4rem;
+}
+
+.seo-page-container {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+/* Breadcrumb navigation */
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 2rem;
+  font-size: 0.875rem;
+  color: #64748b;
+}
+
+.breadcrumb a {
+  color: #2563eb;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.breadcrumb a:hover {
+  color: #1d4ed8;
+  text-decoration: underline;
+}
+
+.breadcrumb-separator {
+  color: #94a3b8;
+}
+
+/* Page content */
+.seo-page-content {
+  background: white;
+  border-radius: 1rem;
+  padding: 2.5rem;
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -2px rgba(0, 0, 0, 0.1);
+}
+
+/* Page header */
+.seo-page-header {
+  text-align: center;
+  margin-bottom: 3rem;
+  padding-bottom: 2rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.seo-page-header h1 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 1rem;
+  line-height: 1.2;
+}
+
+.seo-page-intro {
+  font-size: 1.25rem;
+  color: #475569;
+  line-height: 1.6;
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+.last-updated {
+  font-size: 0.875rem;
+  color: #64748b;
+  margin-top: 0.5rem;
+}
+
+/* Sections */
+.seo-section {
+  margin-bottom: 3rem;
+}
+
+.seo-section:last-child {
+  margin-bottom: 0;
+}
+
+.seo-section h2 {
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0 0 1rem;
+}
+
+.seo-section h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #334155;
+  margin: 1.5rem 0 0.75rem;
+}
+
+.seo-section p {
+  font-size: 1rem;
+  line-height: 1.75;
+  color: #475569;
+  margin: 0 0 1rem;
+}
+
+.seo-section a {
+  color: #2563eb;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.seo-section a:hover {
+  color: #1d4ed8;
+}
+
+/* Lists */
+.seo-list {
+  margin: 1rem 0;
+  padding-left: 1.5rem;
+}
+
+.seo-list li {
+  font-size: 1rem;
+  line-height: 1.75;
+  color: #475569;
+  margin-bottom: 0.75rem;
+}
+
+.seo-list.numbered {
+  list-style-type: decimal;
+}
+
+.seo-list li strong {
+  color: #1e293b;
+}
+
+/* Features grid (About page) */
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+}
+
+.feature-item {
+  background: #f8fafc;
+  padding: 1.5rem;
+  border-radius: 0.75rem;
+  border: 1px solid #e2e8f0;
+}
+
+.feature-item h3 {
+  color: #2563eb;
+  margin: 0 0 0.75rem;
+  font-size: 1.125rem;
+}
+
+.feature-item p {
+  margin: 0;
+  font-size: 0.9375rem;
+}
+
+/* Model providers grid (Features page) */
+.model-providers {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+}
+
+.provider-card {
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  padding: 1.5rem;
+  border-radius: 0.75rem;
+  border: 1px solid #e2e8f0;
+}
+
+.provider-card h3 {
+  color: #1e293b;
+  margin: 0 0 0.75rem;
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+
+.provider-card p {
+  font-size: 0.9375rem;
+  margin-bottom: 1rem;
+}
+
+.provider-card ul {
+  margin: 0;
+  padding-left: 1.25rem;
+}
+
+.provider-card li {
+  font-size: 0.875rem;
+  margin-bottom: 0.375rem;
+}
+
+/* Feature details (Features page) */
+.feature-detail {
+  background: #fafafa;
+  padding: 1.5rem;
+  border-radius: 0.5rem;
+  margin: 1.5rem 0;
+  border-left: 4px solid #2563eb;
+}
+
+.feature-detail h3 {
+  margin-top: 0;
+}
+
+.feature-detail p:last-child {
+  margin-bottom: 0;
+}
+
+/* Pricing overview (Features page) */
+.pricing-overview {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+}
+
+.pricing-tier {
+  background: #f8fafc;
+  padding: 1.5rem;
+  border-radius: 0.75rem;
+  border: 1px solid #e2e8f0;
+  text-align: center;
+}
+
+.pricing-tier h3 {
+  color: #2563eb;
+  margin: 0 0 1rem;
+}
+
+.pricing-tier p {
+  margin: 0;
+  font-size: 0.9375rem;
+}
+
+/* FAQ styles */
+.faq-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.faq-item {
+  background: #f8fafc;
+  border-radius: 0.75rem;
+  border: 1px solid #e2e8f0;
+  overflow: hidden;
+  transition: border-color 0.2s;
+}
+
+.faq-item.open {
+  border-color: #2563eb;
+}
+
+.faq-question {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.25rem 1.5rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  font-size: 1rem;
+  font-weight: 500;
+  color: #1e293b;
+  transition: background 0.2s;
+}
+
+.faq-question:hover {
+  background: #f1f5f9;
+}
+
+.faq-icon {
+  flex-shrink: 0;
+  color: #64748b;
+  transition: transform 0.3s ease;
+}
+
+.faq-icon.rotated {
+  transform: rotate(180deg);
+}
+
+.faq-answer {
+  max-height: 0;
+  overflow: hidden;
+  transition:
+    max-height 0.3s ease,
+    padding 0.3s ease;
+}
+
+.faq-answer.visible {
+  max-height: 1000px;
+  padding: 0 1.5rem 1.5rem;
+}
+
+.faq-answer p,
+.faq-answer ul,
+.faq-answer ol {
+  font-size: 0.9375rem;
+  color: #475569;
+}
+
+.faq-answer ul,
+.faq-answer ol {
+  padding-left: 1.5rem;
+  margin: 1rem 0;
+}
+
+.faq-answer li {
+  margin-bottom: 0.5rem;
+}
+
+/* How It Works steps */
+.steps-section {
+  counter-reset: step;
+}
+
+.step-card {
+  display: flex;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  background: #f8fafc;
+  border-radius: 0.75rem;
+  border: 1px solid #e2e8f0;
+}
+
+.step-number {
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.step-content {
+  flex: 1;
+}
+
+.step-content h3 {
+  margin: 0 0 0.75rem;
+  color: #1e293b;
+}
+
+.step-content p {
+  margin: 0 0 1rem;
+  font-size: 0.9375rem;
+}
+
+.step-content ul {
+  margin: 0.75rem 0 0;
+  padding-left: 1.25rem;
+}
+
+.step-content li {
+  font-size: 0.9375rem;
+  margin-bottom: 0.5rem;
+}
+
+/* Use case grid (How It Works) */
+.use-case-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+}
+
+.use-case-card {
+  background: linear-gradient(135deg, #f8fafc 0%, #eef2ff 100%);
+  padding: 1.5rem;
+  border-radius: 0.75rem;
+  border: 1px solid #e2e8f0;
+}
+
+.use-case-card h3 {
+  margin: 0 0 0.75rem;
+  font-size: 1.125rem;
+  color: #1e293b;
+}
+
+.use-case-card p {
+  margin: 0;
+  font-size: 0.9375rem;
+}
+
+/* CTA section */
+.cta-section {
+  text-align: center;
+  padding: 2.5rem;
+  background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%);
+  border-radius: 1rem;
+  margin-top: 3rem;
+}
+
+.cta-section h2 {
+  color: #1e293b;
+}
+
+.cta-section p {
+  max-width: 600px;
+  margin: 0 auto 1.5rem;
+}
+
+.cta-button {
+  display: inline-block;
+  padding: 1rem 2rem;
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  color: white !important;
+  text-decoration: none !important;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  font-size: 1rem;
+  transition:
+    transform 0.2s,
+    box-shadow 0.2s;
+}
+
+.cta-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
+}
+
+/* Legal page specifics */
+.legal-page .seo-section h3 {
+  font-size: 1.125rem;
+  margin-top: 2rem;
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+  .seo-page {
+    padding: 1rem 0.75rem 3rem;
+  }
+
+  .seo-page-content {
+    padding: 1.5rem;
+    border-radius: 0.75rem;
+  }
+
+  .seo-page-header h1 {
+    font-size: 1.875rem;
+  }
+
+  .seo-page-intro {
+    font-size: 1.125rem;
+  }
+
+  .seo-section h2 {
+    font-size: 1.5rem;
+  }
+
+  .step-card {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .step-number {
+    width: 40px;
+    height: 40px;
+    font-size: 1.125rem;
+  }
+
+  .features-grid,
+  .model-providers,
+  .pricing-overview,
+  .use-case-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .cta-section {
+    padding: 1.5rem;
+  }
+
+  .cta-button {
+    width: 100%;
+    text-align: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .seo-page-header h1 {
+    font-size: 1.5rem;
+  }
+
+  .breadcrumb {
+    font-size: 0.8125rem;
+  }
+}

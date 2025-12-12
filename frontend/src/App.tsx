@@ -30,6 +30,7 @@ import { Footer } from './components'
 import { AuthModal, VerifyEmail, VerificationBanner, ResetPassword } from './components/auth'
 import { ComparisonForm } from './components/comparison'
 import { Navigation, Hero, MockModeBanner, InstallPrompt } from './components/layout'
+import { About, Features, FAQ, PrivacyPolicy, HowItWorks } from './components/pages'
 import { DoneSelectingCard, ErrorBoundary, LoadingSpinner } from './components/shared'
 import { TermsOfService } from './components/TermsOfService'
 import { getCreditAllocation, getDailyCreditLimit } from './config/constants'
@@ -6959,7 +6960,14 @@ function App() {
     <ErrorBoundary>
       <AuthProvider>
         <Routes>
+          {/* SEO Content Pages */}
+          <Route path="/about" element={<About />} />
+          <Route path="/features" element={<Features />} />
+          <Route path="/how-it-works" element={<HowItWorks />} />
+          <Route path="/faq" element={<FAQ />} />
+          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
           <Route path="/terms-of-service" element={<TermsOfService />} />
+          {/* Main Application */}
           <Route path="*" element={<AppContent />} />
         </Routes>
       </AuthProvider>
