@@ -69,9 +69,9 @@ const faqData = [
     answer: (
       <>
         <p>
-          Yes! CompareIntel offers a free tier that includes 10 model responses per day. This is
-          perfect for casual users who want to explore different AI models without any commitment.
-          No credit card is required to sign up.
+          Yes! CompareIntel offers a free tier with daily credits. This is perfect for casual users
+          who want to explore different AI models without any commitment. No credit card is required
+          to sign up.
         </p>
         <p>
           For users who need more responses, we offer premium plans with higher limits and
@@ -341,7 +341,8 @@ export const FAQ: React.FC = () => {
             <h2>Ready to Compare AI Models?</h2>
             <p>
               Start comparing GPT-4, Claude, Gemini, Llama, and 50+ other AI models today. Sign up
-              for free and get 10 model responses per day—no credit card required.
+              for free and receive daily credits—no credit card required. Registered users get twice
+              the credits of unregistered users.
             </p>
             <Link to="/" className="cta-button">
               Start Comparing Free

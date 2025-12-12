@@ -134,7 +134,7 @@ export const About: React.FC = () => {
               </div>
               <div className="feature-item">
                 <h3>Free Tier Available</h3>
-                <p>Get started for free with 10 model responses per day—no credit card required.</p>
+                <p>Get started for free—no credit card required.</p>
               </div>
               <div className="feature-item">
                 <h3>Privacy Focused</h3>
@@ -193,9 +193,9 @@ export const About: React.FC = () => {
               <li>Compare results and make informed decisions</li>
             </ol>
             <p>
-              No credit card is required to start comparing AI models. Our free tier gives you 10
-              model responses per day, perfect for casual users and those wanting to explore the
-              platform.
+              No credit card is required to start comparing AI models. Our free tier provides daily
+              credits for comparing models, and registered users receive twice the credits of
+              unregistered users—perfect for casual users and those wanting to explore the platform.
             </p>
           </section>
 

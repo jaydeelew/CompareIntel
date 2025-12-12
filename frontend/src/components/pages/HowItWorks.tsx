@@ -45,8 +45,9 @@ export const HowItWorks: React.FC = () => {
                 <h3>Create Your Free Account</h3>
                 <p>
                   Sign up for CompareIntel using your email address. Registration is quick and
-                  free—no credit card required. Your free account includes 10 model responses per
-                  day, giving you plenty of room to explore different AI models.
+                  free—no credit card required. Your free account includes daily credits for
+                  comparing models, and registered users receive twice the credits of unregistered
+                  users, giving you plenty of room to explore different AI models.
                 </p>
                 <p>
                   After registering, you'll receive a verification email. Click the link to verify
@@ -288,9 +289,9 @@ export const HowItWorks: React.FC = () => {
             <h2>Ready to Start Comparing?</h2>
             <p>
               Now that you know how CompareIntel works, it's time to put it into action. Create your
-              free account and start comparing AI models in minutes. With 10 free responses per day
-              and access to 50+ models, you have everything you need to find the perfect AI for your
-              tasks.
+              free account and start comparing AI models in minutes. With daily credits and access
+              to 50+ models, you have everything you need to find the perfect AI for your tasks.
+              Plus, registered users get twice the credits of unregistered users.
             </p>
             <Link to="/" className="cta-button">
               Start Comparing Free

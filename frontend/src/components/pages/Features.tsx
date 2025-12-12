@@ -192,8 +192,8 @@ export const Features: React.FC = () => {
               <div className="pricing-tier">
                 <h3>Free Tier</h3>
                 <p>
-                  Get started with 10 free model responses per day. Perfect for casual users who
-                  want to explore AI comparison without any commitment. No credit card required.
+                  Get started for free with daily credits. Perfect for casual users who want to
+                  explore AI comparison without any commitment. No credit card required.
                 </p>
               </div>
               <div className="pricing-tier">
