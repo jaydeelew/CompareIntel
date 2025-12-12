@@ -33,8 +33,8 @@ import React, { useEffect, useRef, useMemo, useState, useCallback } from 'react'
 import { getModelConfig } from '../config/modelRendererRegistry'
 import type { ModelRendererConfig } from '../types/rendererConfig'
 import { extractCodeBlocks, restoreCodeBlocks } from '../utils/codeBlockPreservation'
-import { loadPrism, getPrism, isPrismLoaded } from '../utils/prismLoader'
 import { loadKatexCss } from '../utils/katexLoader'
+import { loadPrism, getPrism, isPrismLoaded } from '../utils/prismLoader'
 
 interface LatexRendererProps {
   children: string
@@ -692,8 +692,151 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({ children, className = '',
    * This is called after code blocks are restored from placeholders
    */
   const renderCodeBlock = (language: string, code: string): string => {
-    const lang = language || 'plaintext'
+    const lang = language || ''
     const cleanCode = code.replace(/^\n+|\n+$/g, '')
+
+    // List of recognized programming languages that should be rendered as styled code blocks
+    // Only these languages will show the code block header with language label
+    const recognizedLanguages = new Set([
+      // Common programming languages
+      'javascript',
+      'js',
+      'typescript',
+      'ts',
+      'python',
+      'py',
+      'java',
+      'c',
+      'cpp',
+      'c++',
+      'csharp',
+      'c#',
+      'cs',
+      'go',
+      'rust',
+      'ruby',
+      'rb',
+      'php',
+      'swift',
+      'kotlin',
+      'scala',
+      'r',
+      'perl',
+      'lua',
+      'dart',
+      'elixir',
+      'erlang',
+      'haskell',
+      'clojure',
+      'fsharp',
+      'f#',
+      'ocaml',
+      'julia',
+      'zig',
+      'nim',
+      'crystal',
+      // Web technologies
+      'html',
+      'css',
+      'scss',
+      'sass',
+      'less',
+      'jsx',
+      'tsx',
+      'vue',
+      'svelte',
+      'xml',
+      'svg',
+      'json',
+      'yaml',
+      'yml',
+      'toml',
+      'graphql',
+      'wasm',
+      // Shell and scripting
+      'bash',
+      'sh',
+      'shell',
+      'zsh',
+      'fish',
+      'powershell',
+      'ps1',
+      'batch',
+      'bat',
+      'cmd',
+      // Databases and query languages
+      'sql',
+      'mysql',
+      'postgresql',
+      'sqlite',
+      'mongodb',
+      'redis',
+      'cassandra',
+      // Configuration and markup
+      'markdown',
+      'md',
+      'latex',
+      'tex',
+      'dockerfile',
+      'docker',
+      'nginx',
+      'apache',
+      'makefile',
+      'make',
+      'cmake',
+      'gradle',
+      'maven',
+      // Data formats
+      'csv',
+      'ini',
+      'properties',
+      'env',
+      // Other
+      'regex',
+      'diff',
+      'git',
+      'http',
+      'asm',
+      'assembly',
+      'wgsl',
+      'glsl',
+      'hlsl',
+      'cuda',
+      'opencl',
+      'vhdl',
+      'verilog',
+      'systemverilog',
+      'tcl',
+      'prolog',
+      'scheme',
+      'lisp',
+      'racket',
+      'elm',
+      'purescript',
+      'reason',
+      'rescript',
+      'solidity',
+      'vyper',
+      'move',
+      'cairo',
+      'terraform',
+      'hcl',
+      'puppet',
+      'ansible',
+      'nix',
+      'dhall',
+      'jsonnet',
+      'cue',
+      'protobuf',
+      'proto',
+      'thrift',
+      'avro',
+      'capnproto',
+      'flatbuffers',
+    ])
+
+    // Check if this is a recognized programming language
+    const isRecognizedLanguage = lang && recognizedLanguages.has(lang.toLowerCase())
 
     // Map common aliases to Prism language names
     const languageMap: { [key: string]: string } = {
@@ -711,7 +854,9 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({ children, className = '',
       cs: 'csharp',
     }
 
-    const prismLang = languageMap[lang.toLowerCase()] || lang.toLowerCase()
+    const prismLang = isRecognizedLanguage
+      ? languageMap[lang.toLowerCase()] || lang.toLowerCase()
+      : 'none'
 
     // Escape the code for safe HTML insertion
     const escapedCode = cleanCode.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
@@ -720,6 +865,28 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({ children, className = '',
     const base64Code =
       typeof btoa !== 'undefined' ? btoa(unescape(encodeURIComponent(cleanCode))) : ''
 
+    // For unrecognized languages (including plaintext, text, or empty), render as simple preformatted text
+    // without the styled code block header
+    if (!isRecognizedLanguage) {
+      return `
+            <div class="preformatted-text" data-code-base64="${base64Code}" style="
+                background: #f6f8fa;
+                border: 1px solid #d0d7de;
+                border-radius: 6px;
+                padding: 16px;
+                margin: 16px 0;
+                overflow-x: auto;
+                font-size: 14px;
+                line-height: 1.5;
+                font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+                white-space: pre-wrap;
+                word-wrap: break-word;
+                color: #1f2328;
+            "><code style="font-family: inherit; background: none; padding: 0;">${escapedCode}</code></div>
+        `
+    }
+
+    // For recognized languages, render as styled code block with language header
     return `
             <div class="code-block-direct" data-language="${lang}" data-code-base64="${base64Code}" style="
                 background: #0d1117;
@@ -2809,7 +2976,7 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({ children, className = '',
         processed = processed.replace(
           /```([a-zA-Z0-9+#-]*)\n?([\s\S]*?)```/g,
           (_match, language, code) => {
-            return renderCodeBlock(language || 'plaintext', code)
+            return renderCodeBlock(language || '', code)
           }
         )
 

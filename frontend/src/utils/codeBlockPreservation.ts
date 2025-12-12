@@ -62,7 +62,7 @@ export function extractCodeBlocks(text: string): CodeBlockExtraction {
   const fencedBlockRegex = /```([a-zA-Z0-9+#-]*)\n?([\s\S]*?)```/g
 
   processed = processed.replace(fencedBlockRegex, (match, language, content, offset) => {
-    const lang = (language || '').trim() || 'plaintext'
+    const lang = (language || '').trim() // Keep empty if no language specified
     const cleanContent = content.replace(/^\n+|\n+$/g, '') // Remove leading/trailing newlines
 
     const placeholder = `__CODE_BLOCK_${blockCounter}__`
@@ -175,7 +175,7 @@ export function extractCodeBlocks(text: string): CodeBlockExtraction {
 
     const block: CodeBlock = {
       id: `block-${blockCounter}`,
-      language: 'plaintext',
+      language: '', // No language specified for indented code blocks
       content: cleanContent,
       startIndex: offset,
       endIndex: offset + match.length,

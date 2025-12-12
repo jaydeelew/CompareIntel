@@ -59,7 +59,7 @@ describe('codeBlockPreservation', () => {
       const result = extractCodeBlocks(text)
 
       expect(result.blocks).toHaveLength(1)
-      expect(result.blocks[0].language).toBe('plaintext')
+      expect(result.blocks[0].language).toBe('') // No language specified - empty string
       expect(result.blocks[0].content).toContain('plain text code')
     })
 
