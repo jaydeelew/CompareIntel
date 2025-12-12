@@ -99,9 +99,21 @@ export function extractCodeBlocks(text: string): CodeBlockExtraction {
       return match
     }
 
-    // Skip if this contains markdown formatting (bold, italic, links, headers)
+    // Skip if this contains markdown formatting (bold, italic, links, headers, lists)
+    // This includes:
+    // - Bold: ** or __
+    // - Links: [text](url)
+    // - Headers: #
+    // - List markers: * , - , + , or numbered lists like 1.
     if (match.match(/\*\*|__|\[.*\]\(|#+\s/)) {
       return match // Probably markdown, not code
+    }
+
+    // Skip if this looks like markdown list items (indented lists are common in markdown)
+    // Check for lines that start with list markers after the indentation
+    const listMarkerPattern = /^\s*[*\-+]\s+|^\s*\d+\.\s+/m
+    if (listMarkerPattern.test(match)) {
+      return match // This is a markdown list, not code
     }
 
     // CRITICAL: Skip if this contains LaTeX delimiters - it should be processed as math, not code
@@ -127,13 +139,14 @@ export function extractCodeBlocks(text: string): CodeBlockExtraction {
     // CRITICAL: Skip if this contains mathematical notation without explicit LaTeX delimiters
     // This catches plain math expressions like "b² = (-4)² = 16" that should be rendered as math, not code
     // Check for mathematical patterns:
-    // 1. Mathematical operators and symbols (including Unicode superscripts)
-    // 2. Variables with exponents (like b², x³)
+    // 1. Mathematical operators and symbols (including Unicode superscripts and subscripts)
+    // 2. Variables with exponents (like b², x³) or subscripts (like x₁, x₂)
     // 3. Mathematical expressions with equals signs and operators
     const mathPatterns = [
-      /[×·÷±≠≤≥≈∞∑∏∫√²³⁴⁵⁶⁷⁸⁹⁰¹]/, // Mathematical operators and superscripts
-      /[a-z][²³⁴⁵⁶⁷⁸⁹⁰¹]/, // Variables with Unicode superscripts (b², x³)
+      /[×·÷±≠≤≥≈∞∑∏∫√²³⁴⁵⁶⁷⁸⁹⁰¹₀₁₂₃₄₅₆₇₈₉]/, // Mathematical operators, superscripts, and subscripts
+      /[a-z][²³⁴⁵⁶⁷⁸⁹⁰¹₀₁₂₃₄₅₆₇₈₉]/, // Variables with Unicode superscripts or subscripts (b², x³, x₁, x₂)
       /[a-z]\^[0-9{]/, // Variables with caret notation (x^2)
+      /[a-z]_[0-9{]/, // Variables with underscore subscript notation (x_1)
       /\([^)]*\)[²³⁴⁵⁶⁷⁸⁹⁰¹]/, // Parentheses with superscripts ((-4)²)
       /\d+\s*[×·÷]\s*\d+/, // Number multiplication/division (4 × 2)
       /\d+\s*[+-]\s*\([^)]+\)/, // Number plus/minus parentheses (16 - (-48))
