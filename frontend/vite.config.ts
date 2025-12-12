@@ -70,7 +70,7 @@ export default defineConfig({
       ],
       manifest: {
         id: '/',
-        name: 'CompareIntel - Compare 50+ AI Models Side-by-Side',
+        name: 'CompareIntel',
         short_name: 'CompareIntel',
         description:
           'Compare 50+ AI models side-by-side including GPT-4, Claude, Gemini, and Llama. Test prompts simultaneously with LaTeX/Markdown rendering.',
