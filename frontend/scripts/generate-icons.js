@@ -141,17 +141,6 @@ async function main() {
     background: { r: 255, g: 255, b: 255, alpha: 1 }
   });
 
-  // Generate additional variants mentioned in public folder
-  console.log('\n📁 Generating additional variants...');
-
-  // Blue background variant
-  await generatePNG(512, join(PUBLIC_DIR, 'CI_favicon_blue.png'));
-
-  // White variant (icon on white bg) - for dark mode contexts
-  await generatePNG(512, join(PUBLIC_DIR, 'CI_favicon_white.png'), {
-    background: { r: 255, g: 255, b: 255, alpha: 1 }
-  });
-
   // Generate favicon.ico
   console.log('\n📁 Generating favicon.ico...');
   await generateICO(join(PUBLIC_DIR, 'favicon.ico'));
