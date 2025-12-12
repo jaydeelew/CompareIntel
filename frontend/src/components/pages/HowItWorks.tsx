@@ -21,18 +21,19 @@ export const HowItWorks: React.FC = () => {
           <header className="seo-page-header">
             <h1>How CompareIntel Works</h1>
             <p className="seo-page-intro">
-              Learn how to compare AI models side-by-side and find the best AI for your needs in
-              just a few simple steps.
+              Learn how to access and compare cutting-edge AI models side-by-side to find the best
+              AI for your needs in just a few simple steps.
             </p>
           </header>
 
           <section className="seo-section">
             <h2>Getting Started with AI Model Comparison</h2>
             <p>
-              CompareIntel makes it easy to test and compare multiple AI models with a single
-              prompt. Whether you're evaluating GPT-4 against Claude, testing Gemini's capabilities,
-              or exploring open-source alternatives like Llama, our platform streamlines the
-              comparison process.
+              CompareIntel gives you access to the newest and most capable AI models and makes it
+              easy to compare them with a single prompt. We continuously add new models as they're
+              released, so you're always working with cutting-edge technology. Whether you're
+              evaluating GPT-4 against Claude, testing Gemini's capabilities, or exploring
+              open-source alternatives like Llama, our platform streamlines the comparison process.
             </p>
           </section>
 

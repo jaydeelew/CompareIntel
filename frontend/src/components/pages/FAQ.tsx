@@ -44,10 +44,12 @@ const faqData = [
     question: 'What is CompareIntel?',
     answer: (
       <p>
-        CompareIntel is an AI model comparison platform that allows you to test and compare
-        responses from over 50 different artificial intelligence models side-by-side. You can send
-        the same prompt to multiple models simultaneously and see how each one responds, making it
-        easy to evaluate which AI model works best for your specific needs.
+        CompareIntel is an AI model comparison platform that gives you access to the latest and
+        greatest artificial intelligence models available. We continuously update our platform as
+        new models are released, allowing you to test and compare responses from cutting-edge AI
+        models side-by-side. You can send the same prompt to multiple models simultaneously and see
+        how each one responds, making it easy to evaluate which AI model works best for your
+        specific needs.
       </p>
     ),
   },
@@ -56,10 +58,11 @@ const faqData = [
     question: 'How many AI models can I compare?',
     answer: (
       <p>
-        CompareIntel provides access to over 50 AI models from leading providers including OpenAI
-        (GPT-4, GPT-4o), Anthropic (Claude 3.5 Sonnet, Claude 3 Opus), Google (Gemini Pro, Gemini
-        Ultra), Meta (Llama 3), Mistral AI, and many more. You can select any combination of models
-        to compare in a single query.
+        CompareIntel provides access to a wide range of the latest AI models from leading providers
+        including OpenAI (GPT-4, GPT-4o), Anthropic (Claude 3.5 Sonnet, Claude 3 Opus), Google
+        (Gemini Pro, Gemini Ultra), Meta (Llama 3), Mistral AI, and many more. We continuously add
+        new models as they're released, so you always have access to the newest AI technology. You
+        can select any combination of models to compare in a single query.
       </p>
     ),
   },
@@ -226,10 +229,11 @@ const faqData = [
     question: 'How often are new AI models added?',
     answer: (
       <p>
-        We regularly update our model library as new AI models are released by providers. When major
-        new models from OpenAI, Anthropic, Google, Meta, or other providers become available, we
-        work to add them to CompareIntel as quickly as possible. This ensures you always have access
-        to the latest AI technology for your comparisons.
+        Providing access to cutting-edge AI models is a core value of CompareIntel. We prioritize
+        adding new models as soon as they become available from providers. When OpenAI, Anthropic,
+        Google, Meta, or other providers release new AI models, we work to add them to CompareIntel
+        as quickly as possible—often within days of their public release. This commitment ensures
+        you're always able to evaluate the most advanced AI technology available.
       </p>
     ),
   },

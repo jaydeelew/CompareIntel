@@ -21,16 +21,18 @@ export const Features: React.FC = () => {
           <header className="seo-page-header">
             <h1>CompareIntel Features</h1>
             <p className="seo-page-intro">
-              Discover the powerful features that make CompareIntel the most comprehensive AI model
-              comparison platform available.
+              Discover the powerful features that make CompareIntel the go-to platform for accessing
+              and comparing cutting-edge AI models.
             </p>
           </header>
 
           <section className="seo-section">
-            <h2>Comprehensive AI Model Library</h2>
+            <h2>Always the Latest AI Models</h2>
             <p>
-              CompareIntel provides access to over 50 leading AI models from the world's top AI
-              companies. Our extensive library includes:
+              CompareIntel is committed to providing access to the newest and most capable AI models
+              as soon as they become available. We continuously update our platform when AI
+              providers release new models, ensuring you're always working with cutting-edge
+              technology. Our library includes:
             </p>
 
             <div className="model-providers">

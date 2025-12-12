@@ -21,27 +21,30 @@ export const About: React.FC = () => {
           <header className="seo-page-header">
             <h1>About CompareIntel</h1>
             <p className="seo-page-intro">
-              The leading AI model comparison platform that helps you make informed decisions by
-              testing multiple AI models side-by-side.
+              The leading AI model comparison platform that gives you access to the latest and
+              greatest AI models, helping you make informed decisions by testing them side-by-side.
             </p>
           </header>
 
           <section className="seo-section">
             <h2>What is CompareIntel?</h2>
             <p>
-              CompareIntel is a powerful web application designed to help users compare responses
-              from over 50 leading artificial intelligence models simultaneously. Whether you're a
-              developer evaluating AI tools for your next project, a researcher comparing language
-              model capabilities, or a business professional seeking the best AI solution for your
-              needs, CompareIntel provides the tools you need to make data-driven decisions.
+              CompareIntel is a powerful web application designed to give you access to the latest
+              and most capable artificial intelligence models available. We continuously update our
+              platform as new models are released, ensuring you always have access to cutting-edge
+              AI technology. Whether you're a developer evaluating AI tools for your next project, a
+              researcher comparing language model capabilities, or a business professional seeking
+              the best AI solution for your needs, CompareIntel provides the tools you need to make
+              data-driven decisions.
             </p>
             <p>
-              Our platform supports the most popular AI models including GPT-4 and GPT-4o from
-              OpenAI, Claude 3.5 Sonnet and Claude 3 Opus from Anthropic, Google's Gemini Pro and
-              Gemini Ultra, Meta's Llama 3, Mistral AI's models, and many more. With CompareIntel,
-              you can send the same prompt to multiple models and receive their responses in
-              real-time, making it easy to evaluate which model performs best for your specific use
-              case.
+              Our platform supports the newest and most powerful AI models including GPT-4 and
+              GPT-4o from OpenAI, Claude 3.5 Sonnet and Claude 3 Opus from Anthropic, Google's
+              Gemini Pro and Gemini Ultra, Meta's Llama 3, Mistral AI's models, and many more. As AI
+              providers release new versions and capabilities, we add them to CompareIntel so you're
+              never left behind. You can send the same prompt to multiple models and receive their
+              responses in real-time, making it easy to evaluate which model performs best for your
+              specific use case.
             </p>
           </section>
 
@@ -90,14 +93,17 @@ export const About: React.FC = () => {
           <section className="seo-section">
             <h2>Our Mission</h2>
             <p>
-              At CompareIntel, our mission is to democratize access to AI comparison tools. We
-              believe that everyone should be able to make informed decisions about which AI models
-              to use, without needing deep technical expertise or expensive enterprise solutions.
+              At CompareIntel, our mission is to provide access to the newest and most advanced AI
+              models and democratize AI comparison tools. We believe that everyone should be able to
+              evaluate and use cutting-edge AI technology without needing deep technical expertise
+              or expensive enterprise solutions. When new AI models launch, we prioritize adding
+              them to our platform so you can be among the first to test them.
             </p>
             <p>
               We're committed to providing a transparent, unbiased platform where you can see
               exactly how different AI models respond to your prompts. We don't favor any particular
-              AI provider—our goal is to help you find the best tool for your needs.
+              AI provider—our goal is to help you find the best tool for your needs by giving you
+              access to the most advanced models available.
             </p>
           </section>
 
@@ -105,10 +111,11 @@ export const About: React.FC = () => {
             <h2>Key Features</h2>
             <div className="features-grid">
               <div className="feature-item">
-                <h3>50+ AI Models</h3>
+                <h3>Latest AI Models</h3>
                 <p>
-                  Access a comprehensive library of over 50 AI models from leading providers
-                  including OpenAI, Anthropic, Google, Meta, Mistral, and more.
+                  Access the newest and most capable AI models as soon as they're released. We
+                  continuously update our library to include cutting-edge models from OpenAI,
+                  Anthropic, Google, Meta, Mistral, and more.
                 </p>
               </div>
               <div className="feature-item">
