@@ -5,6 +5,7 @@
  */
 
 export { Footer } from './Footer'
+export { Layout } from './Layout'
 
 // Shared components
 export * from './shared'

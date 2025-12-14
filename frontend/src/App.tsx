@@ -26,7 +26,7 @@ import './App.css'
 // Lazy load heavy components for code splitting
 const LatexRenderer = lazy(() => import('./components/LatexRenderer'))
 const AdminPanel = lazy(() => import('./components/admin/AdminPanel'))
-import { Footer } from './components'
+import { Layout } from './components'
 import { AuthModal, VerifyEmail, VerificationBanner, ResetPassword } from './components/auth'
 import { ComparisonForm } from './components/comparison'
 import { Navigation, Hero, MockModeBanner, InstallPrompt } from './components/layout'
@@ -6932,9 +6932,6 @@ function AppContent() {
             )}
           </main>
 
-          {/* Footer */}
-          <Footer />
-
           {/* Auth Modal */}
           <AuthModal
             isOpen={isAuthModalOpen}
@@ -6960,15 +6957,18 @@ function App() {
     <ErrorBoundary>
       <AuthProvider>
         <Routes>
-          {/* SEO Content Pages */}
-          <Route path="/about" element={<About />} />
-          <Route path="/features" element={<Features />} />
-          <Route path="/how-it-works" element={<HowItWorks />} />
-          <Route path="/faq" element={<FAQ />} />
-          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-          <Route path="/terms-of-service" element={<TermsOfService />} />
-          {/* Main Application */}
-          <Route path="*" element={<AppContent />} />
+          {/* Layout wrapper provides consistent footer across all pages */}
+          <Route element={<Layout />}>
+            {/* SEO Content Pages */}
+            <Route path="/about" element={<About />} />
+            <Route path="/features" element={<Features />} />
+            <Route path="/how-it-works" element={<HowItWorks />} />
+            <Route path="/faq" element={<FAQ />} />
+            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+            <Route path="/terms-of-service" element={<TermsOfService />} />
+            {/* Main Application */}
+            <Route path="*" element={<AppContent />} />
+          </Route>
         </Routes>
       </AuthProvider>
     </ErrorBoundary>
