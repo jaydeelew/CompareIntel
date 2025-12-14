@@ -39,7 +39,7 @@ export const About: React.FC = () => {
             </p>
             <p>
               Our platform supports the newest and most powerful AI models including the GPT family of models and 
-              o3 from OpenAI, Claude Opus, Sonnet, and Haiku from Anthropic, Google's
+              o3 from OpenAI, Claude Opus, Claude Sonnet, and Claude Haiku from Anthropic, Google's
               Gemini Pro and Gemini Flash, Meta's Llama 3, Mistral AI's models, xAI's Grok line and many more. As AI
               providers release new versions and capabilities, we add them to CompareIntel so you're
               never left behind. You can send the same prompt to multiple models and receive their
