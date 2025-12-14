@@ -1,12 +1,34 @@
-import React from 'react'
-import { Link } from 'react-router-dom'
+import React, { useCallback } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 
 export const Footer: React.FC = () => {
+  const navigate = useNavigate()
+
   const linkStyle: React.CSSProperties = {
     color: '#0284c7',
     textDecoration: 'none',
     transition: 'color 0.2s',
+    cursor: 'pointer',
   }
+
+  // Handle navigation - scroll the .app container to top and navigate
+  const handleNavClick = useCallback((e: React.MouseEvent<HTMLAnchorElement>, path: string) => {
+    e.preventDefault()
+    
+    // Scroll the .app container (which has overflow-y: auto) to top
+    const appContainer = document.querySelector('.app')
+    if (appContainer) {
+      appContainer.scrollTop = 0
+    }
+    
+    // Also scroll window/document as fallback
+    window.scrollTo(0, 0)
+    document.documentElement.scrollTop = 0
+    document.body.scrollTop = 0
+    
+    // Navigate
+    navigate(path)
+  }, [navigate])
 
   return (
     <footer
@@ -31,22 +53,22 @@ export const Footer: React.FC = () => {
         }}
         aria-label="Footer navigation"
       >
-        <Link to="/about" style={linkStyle}>
+        <Link to="/about" style={linkStyle} onClick={e => handleNavClick(e, '/about')}>
           About
         </Link>
-        <Link to="/features" style={linkStyle}>
+        <Link to="/features" style={linkStyle} onClick={e => handleNavClick(e, '/features')}>
           Features
         </Link>
-        <Link to="/how-it-works" style={linkStyle}>
+        <Link to="/how-it-works" style={linkStyle} onClick={e => handleNavClick(e, '/how-it-works')}>
           How It Works
         </Link>
-        <Link to="/faq" style={linkStyle}>
+        <Link to="/faq" style={linkStyle} onClick={e => handleNavClick(e, '/faq')}>
           FAQ
         </Link>
-        <Link to="/privacy-policy" style={linkStyle}>
+        <Link to="/privacy-policy" style={linkStyle} onClick={e => handleNavClick(e, '/privacy-policy')}>
           Privacy Policy
         </Link>
-        <Link to="/terms-of-service" style={linkStyle}>
+        <Link to="/terms-of-service" style={linkStyle} onClick={e => handleNavClick(e, '/terms-of-service')}>
           Terms of Service
         </Link>
       </nav>

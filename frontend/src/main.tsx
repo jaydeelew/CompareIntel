@@ -9,6 +9,17 @@ import App from './App.tsx'
 import { initializeRegistry } from './config/loadModelConfigs'
 import { initWebVitals } from './utils/performance'
 
+// CRITICAL: Disable browser scroll restoration BEFORE React renders
+// This must happen as early as possible to prevent any scroll position restoration
+if ('scrollRestoration' in history) {
+  history.scrollRestoration = 'manual'
+}
+if ('scrollRestoration' in window.history) {
+  window.history.scrollRestoration = 'manual'
+}
+// Force scroll to top on initial load
+window.scrollTo(0, 0)
+
 // Initialize model renderer registry before rendering
 initializeRegistry().catch(error => {
   console.error('Failed to initialize model renderer registry:', error)
