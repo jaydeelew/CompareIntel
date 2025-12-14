@@ -188,21 +188,30 @@ export const Features: React.FC = () => {
           </section>
 
           <section className="seo-section">
-            <h2>Flexible Pricing Tiers</h2>
-            <p>CompareIntel offers flexible pricing options to fit your needs:</p>
+            <h2>Flexible Access Tiers</h2>
+            <p>CompareIntel offers flexible access options to fit your needs:</p>
             <div className="pricing-overview">
               <div className="pricing-tier">
-                <h3>Free Tier</h3>
+                <h3>Unregistered Access</h3>
                 <p>
-                  Get started for free with daily credits. Perfect for casual users who want to
-                  explore AI comparison without any commitment. No credit card required.
+                  Get familiar with CompareIntel by accessing a handful of models. Perfect for trying 
+                  out the platform and seeing how AI model comparison works. No account required.
                 </p>
               </div>
               <div className="pricing-tier">
-                <h3>Premium Plans</h3>
+                <h3>Free Account</h3>
                 <p>
-                  For power users and professionals who need more responses, our premium plans offer
-                  higher limits and additional features. Scale your usage as your needs grow.
+                  Sign up for a free account to access more models and receive twice the credits of 
+                  unregistered users. Perfect for casual users who want to explore AI comparison 
+                  without any commitment. No credit card required.
+                </p>
+              </div>
+              <div className="pricing-tier">
+                <h3>Paid Tiers (Coming Soon)</h3>
+                <p>
+                  Paid tiers will be available soon that unlock all of the latest and greatest premium 
+                  AI models. Get access to the most advanced capabilities as soon as they're released, 
+                  with higher limits and priority access to new models.
                 </p>
               </div>
             </div>

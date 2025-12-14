@@ -72,13 +72,16 @@ const faqData = [
     answer: (
       <>
         <p>
-          Yes! CompareIntel offers a free tier with daily credits. This is perfect for casual users
-          who want to explore different AI models without any commitment. No credit card is required
-          to sign up.
+          Yes! CompareIntel offers free access options. <strong>Unregistered users</strong> can get 
+          familiar with the platform by accessing a handful of models—no account required. For access 
+          to more models and additional credits, you can <strong>sign up for a free account</strong> 
+          with daily credits. No credit card is required to sign up.
         </p>
         <p>
-          For users who need more responses, we offer premium plans with higher limits and
-          additional features.
+          Free registered users receive twice the credits of unregistered users, giving you more 
+          opportunities to explore different AI models. <strong>Paid tiers will be available soon</strong> 
+          that unlock all of the latest and greatest premium AI models, with higher limits and priority 
+          access to new models.
         </p>
       </>
     ),
@@ -241,11 +244,23 @@ const faqData = [
     id: 'account-required',
     question: 'Do I need an account to use CompareIntel?',
     answer: (
-      <p>
-        Yes, a free account is required to use CompareIntel. This allows us to provide you with your
-        free daily quota of model responses, save your conversation history, and maintain a secure,
-        personalized experience. Registration is quick and only requires an email address.
-      </p>
+      <>
+        <p>
+          No, you can start using CompareIntel without an account! <strong>Unregistered users</strong> 
+          can get familiar with the platform by accessing a handful of models. This is perfect for 
+          trying out AI model comparison and seeing how it works.
+        </p>
+        <p>
+          However, <strong>signing up for a free account</strong> gives you access to more models and 
+          twice the credits of unregistered users. A free account also allows us to save your 
+          conversation history and provide a secure, personalized experience. Registration is quick 
+          and only requires an email address—no credit card needed.
+        </p>
+        <p>
+          <strong>Paid tiers will be available soon</strong> that unlock all of the latest and greatest 
+          premium AI models for users who need access to the most advanced capabilities.
+        </p>
+      </>
     ),
   },
 ]
@@ -344,9 +359,10 @@ export const FAQ: React.FC = () => {
           <section className="seo-section cta-section">
             <h2>Ready to Compare AI Models?</h2>
             <p>
-              Start comparing GPT-4, Claude, Gemini, Llama, and 50+ other AI models today. Sign up
-              for free and receive daily credits—no credit card required. Registered users get twice
-              the credits of unregistered users.
+              Start comparing GPT-4, Claude, Gemini, Llama, and 50+ other AI models today. Unregistered 
+              users can get familiar with a handful of models, or sign up for a free account to access 
+              more models and receive twice the credits—no credit card required. Paid tiers coming soon 
+              for premium AI models.
             </p>
             <Link to="/" className="cta-button">
               Start Comparing Free

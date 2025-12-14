@@ -21,7 +21,7 @@ export const About: React.FC = () => {
           <header className="seo-page-header">
             <h1>About CompareIntel</h1>
             <p className="seo-page-intro">
-              The leading AI model comparison platform that gives you access to the latest and
+              AI model comparison platform that gives you access to the latest and
               greatest AI models, helping you make informed decisions by testing them side-by-side.
             </p>
           </header>
@@ -38,9 +38,9 @@ export const About: React.FC = () => {
               data-driven decisions.
             </p>
             <p>
-              Our platform supports the newest and most powerful AI models including GPT-4 and
-              GPT-4o from OpenAI, Claude 3.5 Sonnet and Claude 3 Opus from Anthropic, Google's
-              Gemini Pro and Gemini Ultra, Meta's Llama 3, Mistral AI's models, and many more. As AI
+              Our platform supports the newest and most powerful AI models including the GPT family of models and 
+              o3 from OpenAI, Claude Opus, Sonnet, and Haiku from Anthropic, Google's
+              Gemini Pro and Gemini Flash, Meta's Llama 3, Mistral AI's models, xAI's Grok line and many more. As AI
               providers release new versions and capabilities, we add them to CompareIntel so you're
               never left behind. You can send the same prompt to multiple models and receive their
               responses in real-time, making it easy to evaluate which model performs best for your
@@ -102,7 +102,7 @@ export const About: React.FC = () => {
             <p>
               We're committed to providing a transparent, unbiased platform where you can see
               exactly how different AI models respond to your prompts. We don't favor any particular
-              AI provider—our goal is to help you find the best tool for your needs by giving you
+              AI provider —our goal is to help you find the best tool for your needs by giving you
               access to the most advanced models available.
             </p>
           </section>
@@ -115,7 +115,7 @@ export const About: React.FC = () => {
                 <p>
                   Access the newest and most capable AI models as soon as they're released. We
                   continuously update our library to include cutting-edge models from OpenAI,
-                  Anthropic, Google, Meta, Mistral, and more.
+                  Anthropic, Google, Meta, Mistral, xAI and more.
                 </p>
               </div>
               <div className="feature-item">
@@ -135,13 +135,16 @@ export const About: React.FC = () => {
               <div className="feature-item">
                 <h3>Multi-Turn Conversations</h3>
                 <p>
-                  Continue conversations with individual models while maintaining context across
+                  Continue conversations with all selected models while maintaining context across
                   multiple exchanges.
                 </p>
               </div>
               <div className="feature-item">
-                <h3>Free Tier Available</h3>
-                <p>Get started for free—no credit card required.</p>
+                <h3>Flexible Access Tiers</h3>
+                <p>
+                  Unregistered users can explore with a handful of models. Sign up for a free account 
+                  to access more models and credits. Paid tiers coming soon for premium AI models.
+                </p>
               </div>
               <div className="feature-item">
                 <h3>Privacy Focused</h3>
@@ -192,7 +195,7 @@ export const About: React.FC = () => {
             <p>Ready to compare AI models? Getting started with CompareIntel is easy:</p>
             <ol className="seo-list numbered">
               <li>
-                Visit our <Link to="/">homepage</Link> and create a free account
+                Visit our <Link to="/">homepage</Link> and explore the platform
               </li>
               <li>Select the AI models you want to compare</li>
               <li>Enter your prompt or question</li>
@@ -200,9 +203,15 @@ export const About: React.FC = () => {
               <li>Compare results and make informed decisions</li>
             </ol>
             <p>
-              No credit card is required to start comparing AI models. Our free tier provides daily
-              credits for comparing models, and registered users receive twice the credits of
-              unregistered users—perfect for casual users and those wanting to explore the platform.
+              <strong>Unregistered users</strong> can get familiar with CompareIntel by accessing a handful of models. 
+              For access to more models and additional credits, <strong>sign up for a free account</strong>—no credit card required. 
+              Free registered users receive twice the credits of unregistered users, giving you more opportunities to explore 
+              different AI models and their capabilities.
+            </p>
+            <p>
+              <strong>Paid tiers will be available soon</strong> that unlock all of the latest and greatest premium AI models, 
+              giving you access to the most advanced capabilities as soon as they're released. In the meantime, our free tier 
+              is perfect for casual users and those wanting to explore the platform.
             </p>
           </section>
 

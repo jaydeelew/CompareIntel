@@ -43,16 +43,26 @@ export const HowItWorks: React.FC = () => {
             <div className="step-card">
               <div className="step-number">1</div>
               <div className="step-content">
-                <h3>Create Your Free Account</h3>
+                <h3>Get Started (Account Optional)</h3>
                 <p>
-                  Sign up for CompareIntel using your email address. Registration is quick and
-                  free—no credit card required. Your free account includes daily credits for
-                  comparing models, and registered users receive twice the credits of unregistered
-                  users, giving you plenty of room to explore different AI models.
+                  You can start using CompareIntel right away without an account! Unregistered users 
+                  can get familiar with the platform by accessing a handful of models. This is perfect 
+                  for trying out AI model comparison and seeing how it works.
+                </p>
+                <p>
+                  For access to more models and additional credits, sign up for a free account using 
+                  your email address. Registration is quick and free—no credit card required. Free 
+                  registered users receive twice the credits of unregistered users, giving you plenty 
+                  of room to explore different AI models.
+                </p>
+                <p>
+                  <strong>Paid tiers will be available soon</strong> that unlock all of the latest and 
+                  greatest premium AI models, giving you access to the most advanced capabilities as 
+                  soon as they're released.
                 </p>
                 <p>
                   After registering, you'll receive a verification email. Click the link to verify
-                  your account and you're ready to start comparing AI models.
+                  your account and unlock additional features.
                 </p>
               </div>
             </div>
