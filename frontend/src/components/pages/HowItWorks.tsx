@@ -98,9 +98,9 @@ export const HowItWorks: React.FC = () => {
                   </li>
                 </ul>
                 <p>
-                  Click on each model you want to include in your comparison. There's no limit to
-                  how many models you can select, though comparing 2-5 models at once provides the
-                  most readable results.
+                  Click on each model you want to include in your comparison. Unregistered and Free-tier
+                  users can select up to 3 models at a time. Paid tiers will allow the simultaneous
+                  selection and comparison of more models.
                 </p>
               </div>
             </div>
