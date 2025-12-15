@@ -75,13 +75,22 @@ export const VerifyEmail: React.FC<VerifyEmailProps> = ({
       setStatus('verifying')
 
       try {
+        // Use fetch with explicit error handling to prevent service worker from intercepting
+        const controller = new AbortController()
+        const timeoutId = setTimeout(() => controller.abort(), 30000) // 30 second timeout
+
         const response = await fetch(`${API_BASE_URL}/auth/verify-email`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({ token }),
+          signal: controller.signal,
+          // Prevent service worker from caching this request
+          cache: 'no-store',
         })
+
+        clearTimeout(timeoutId)
 
         if (response.ok) {
           // Refresh user data first to update verification status (triggers orange banner fade-out)
@@ -101,12 +110,19 @@ export const VerifyEmail: React.FC<VerifyEmailProps> = ({
             setTimeout(() => setHasAnimatedIn(true), 50)
           }, 1000) // Increased delay to 1 second to allow orange banner fade-out to complete
         } else {
-          const error = await response.json()
+          let errorMessage = 'Verification failed. The link may have expired.'
+          try {
+            const error = await response.json()
+            errorMessage = error.detail || errorMessage
+          } catch {
+            // If response is not JSON, use default message
+          }
+
           // Only show error banner if user is authenticated or auth is still loading
           // If user is signed out, silently clear the token from URL without showing error
           if (user || authLoading) {
             setStatus('error')
-            setMessage(error.detail || 'Verification failed. The link may have expired.')
+            setMessage(errorMessage)
             // Trigger error banner animation
             setTimeout(() => setHasAnimatedIn(true), 50)
           } else {
@@ -118,11 +134,23 @@ export const VerifyEmail: React.FC<VerifyEmailProps> = ({
         }
       } catch (error) {
         console.error('Verification error:', error)
+
+        // Check if this is a network error (not just any error)
+        const isNetworkError =
+          error instanceof TypeError &&
+          (error.message.includes('Failed to fetch') ||
+            error.message.includes('NetworkError') ||
+            error.name === 'AbortError')
+
         // Only show error banner if user is authenticated or auth is still loading
         // If user is signed out, silently clear the token from URL without showing error
         if (user || authLoading) {
           setStatus('error')
-          setMessage('Failed to verify email. Please try again later.')
+          setMessage(
+            isNetworkError
+              ? 'Unable to connect to the server. Please check your internet connection and try again.'
+              : 'Failed to verify email. Please try again later.'
+          )
           // Trigger error banner animation
           setTimeout(() => setHasAnimatedIn(true), 50)
         } else {
