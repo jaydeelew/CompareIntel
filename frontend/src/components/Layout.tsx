@@ -9,12 +9,18 @@
 import React, { useEffect, useLayoutEffect, useRef } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
 import { Footer } from './Footer'
+import { updatePageTitle } from '../../utils/pageTitles'
 
 export const Layout: React.FC = () => {
   const { pathname } = useLocation()
   const prevPathnameRef = useRef<string>(pathname)
   const timeoutRefs = useRef<NodeJS.Timeout[]>([])
   const rafRef = useRef<number | null>(null)
+
+  // Set initial page title on mount
+  useEffect(() => {
+    updatePageTitle(pathname)
+  }, []) // Only run on mount
 
   // Disable browser's automatic scroll restoration on mount
   useEffect(() => {
@@ -46,10 +52,12 @@ export const Layout: React.FC = () => {
     })
   }
 
-  // Scroll to top on route change - immediate attempt
+  // Update page title and scroll to top on route change - immediate attempt
   useLayoutEffect(() => {
     if (prevPathnameRef.current !== pathname) {
       prevPathnameRef.current = pathname
+      // Update page title immediately (synchronously before paint)
+      updatePageTitle(pathname)
       // Scroll immediately (synchronously before paint)
       scrollToTop()
     }
