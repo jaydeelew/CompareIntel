@@ -204,7 +204,8 @@
 
 .capability-description {
   font-size: 0.6875rem;
-  color: rgba(255, 255, 255, 0.9); /* Improved contrast: increased opacity from 0.7 to 0.9 for better accessibility */
+  color: rgba(255, 255, 255, 0.9);
+  /* Improved contrast: increased opacity from 0.7 to 0.9 for better accessibility */
   line-height: 1.5;
   margin: 0;
   position: relative;
@@ -689,7 +690,7 @@
     height: 40px;
   }
 
-  .nav-brand .brand-text h1 {
+  .nav-brand .brand-text .brand-name {
     font-size: 1.5rem !important;
     color: #000000 !important;
     font-weight: 800;
@@ -716,7 +717,7 @@
     max-width: calc(100% - 140px);
   }
 
-  .nav-brand .brand-text h1 {
+  .nav-brand .brand-text .brand-name {
     font-size: 1.25rem !important;
   }
 
@@ -971,27 +972,32 @@
 /* Small mobile - prevent brand tagline text wrapping */
 @media (max-width: 400px) {
   .brand-tagline {
-    font-size: 0.6875rem !important; /* 11px - reduced from 12px to prevent text wrapping */
+    font-size: 0.6875rem !important;
+    /* 11px - reduced from 12px to prevent text wrapping */
   }
 }
 
 @media (max-width: 380px) {
   .brand-tagline {
-    font-size: 0.6875rem !important; /* Improved accessibility: increased from 0.625rem (10px) to 0.6875rem (11px) */
+    font-size: 0.6875rem !important;
+    /* Improved accessibility: increased from 0.625rem (10px) to 0.6875rem (11px) */
   }
 
   .hero-subtitle {
-    font-size: clamp(0.8875rem, 4vw, 1.15rem); /* Reduced by 1pt from 0.95rem to prevent wrapping */
+    font-size: clamp(0.8875rem, 4vw, 1.15rem);
+    /* Reduced by 1pt from 0.95rem to prevent wrapping */
   }
 }
 
 @media (max-width: 360px) {
   .brand-tagline {
-    font-size: 0.5625rem !important; /* 9px - further reduced to prevent text wrapping */
+    font-size: 0.5625rem !important;
+    /* 9px - further reduced to prevent text wrapping */
   }
 
   .hero-subtitle {
-    font-size: clamp(0.825rem, 4vw, 1.15rem); /* Reduced by 1pt more from 0.8875rem */
+    font-size: clamp(0.825rem, 4vw, 1.15rem);
+    /* Reduced by 1pt more from 0.8875rem */
   }
 }
 

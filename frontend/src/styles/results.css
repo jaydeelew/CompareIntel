@@ -12,7 +12,8 @@
 }
 
 .metadata-header {
-  display: none; /* Hidden by default on large screens */
+  display: none;
+  /* Hidden by default on large screens */
   align-items: center;
   gap: 0.5rem;
   justify-content: flex-end;
@@ -30,7 +31,8 @@
 }
 
 .metadata-items {
-  display: contents; /* Use parent's grid/flex layout */
+  display: contents;
+  /* Use parent's grid/flex layout */
 }
 
 /* On wide screens, display metadata items in a row */
@@ -51,7 +53,8 @@
   }
 
   .metadata-header {
-    display: none; /* Hide toggle on very large screens where everything fits */
+    display: none;
+    /* Hide toggle on very large screens where everything fits */
   }
 }
 
@@ -86,7 +89,8 @@
   }
 
   .results-metadata.collapsed .metadata-header {
-    justify-content: flex-end; /* Keep toggle on right when collapsed */
+    justify-content: flex-end;
+    /* Keep toggle on right when collapsed */
   }
 }
 
@@ -949,7 +953,8 @@
   }
 
   .results-metadata.collapsed .metadata-header {
-    justify-content: flex-end; /* Keep toggle on right when collapsed */
+    justify-content: flex-end;
+    /* Keep toggle on right when collapsed */
   }
 
   .results-grid {
@@ -1722,7 +1727,8 @@
   }
 
   .results-metadata.collapsed .metadata-header {
-    justify-content: flex-end; /* Keep toggle on right when collapsed */
+    justify-content: flex-end;
+    /* Keep toggle on right when collapsed */
   }
 
   .results-metadata.collapsed .metadata-items {
@@ -1773,7 +1779,7 @@
     max-width: calc(100% - 130px);
   }
 
-  .nav-brand .brand-text h1 {
+  .nav-brand .brand-text .brand-name {
     font-size: 1rem;
   }
 
@@ -1836,7 +1842,8 @@
   bottom: 10px;
   right: 10px;
   background: rgba(0, 0, 0, 0.3);
-  color: rgba(255, 255, 255, 0.9); /* Improved contrast: increased opacity from 0.7 to 0.9 for better accessibility */
+  color: rgba(255, 255, 255, 0.9);
+  /* Improved contrast: increased opacity from 0.7 to 0.9 for better accessibility */
   padding: 4px 8px;
   border-radius: 4px;
   font-size: 0.75rem;
@@ -2250,7 +2257,8 @@ button.nav-button-primary {
   button.nav-button-text,
   button.nav-button-primary {
     white-space: nowrap !important;
-    font-size: 0.6875rem !important; /* Improved accessibility: increased from 0.65rem (10.4px) to 0.6875rem (11px) */
+    font-size: 0.6875rem !important;
+    /* Improved accessibility: increased from 0.65rem (10.4px) to 0.6875rem (11px) */
     min-width: 65px !important;
     width: auto !important;
     max-width: none !important;
@@ -2279,7 +2287,8 @@ button.nav-button-primary {
 }
 
 .custom-select-option.disabled {
-  color: rgba(255, 255, 255, 0.85); /* Improved contrast: increased opacity from 0.5 to 0.85 for better accessibility */
+  color: rgba(255, 255, 255, 0.85);
+  /* Improved contrast: increased opacity from 0.5 to 0.85 for better accessibility */
   cursor: not-allowed;
 }
 
@@ -2714,12 +2723,14 @@ button.nav-button-primary {
   /* Maintain alignment: button in actions area is 32px, SVG is 18px
      Chevron left edge = actions area left padding (1rem = 16px) + (32px - 18px) / 2 = 23px */
   .hero-input-textarea {
-    padding: 0.5rem 1rem 0.5rem 1.4375rem !important; /* Left padding: 1.4375rem (23px) to align with chevron */
+    padding: 0.5rem 1rem 0.5rem 1.4375rem !important;
+    /* Left padding: 1.4375rem (23px) to align with chevron */
   }
 
   /* Ensure actions area maintains consistent padding for alignment */
   .textarea-actions-area {
-    padding: 0.5rem 1rem !important; /* Left padding: 1rem (16px) */
+    padding: 0.5rem 1rem !important;
+    /* Left padding: 1rem (16px) */
   }
 
   /* Button in actions area remains 32px (higher specificity selector takes precedence) */

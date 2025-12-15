@@ -51,7 +51,7 @@ export function Navigation({
               loading="eager"
             />
             <div className="brand-text">
-              <h1>CompareIntel</h1>
+              <div className="brand-name">CompareIntel</div>
               <span className="brand-tagline">AI Model Comparison Platform</span>
             </div>
           </div>

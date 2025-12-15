@@ -1,6 +1,6 @@
 /**
  * Page Title Utility
- * 
+ *
  * Maps routes to their corresponding page titles for SEO.
  * Follows best practices: 50-60 characters, descriptive, includes brand.
  */
@@ -12,7 +12,7 @@ const BASE_TITLE = 'CompareIntel'
  * Format: "Page Name - CompareIntel" (keeps titles under 60 chars)
  */
 const ROUTE_TITLES: Record<string, string> = {
-  '/': BASE_TITLE,
+  '/': 'CompareIntel - Compare AI Models Side-by-Side',
   '/about': 'About - CompareIntel',
   '/features': 'Features - CompareIntel',
   '/how-it-works': 'How It Works - CompareIntel',
@@ -30,17 +30,17 @@ const ROUTE_TITLES: Record<string, string> = {
 export function getPageTitle(pathname: string): string {
   // Normalize pathname (remove trailing slash, handle exact matches)
   const normalizedPath = pathname === '/' ? '/' : pathname.replace(/\/$/, '')
-  
+
   // Check for exact match first
   if (ROUTE_TITLES[normalizedPath]) {
     return ROUTE_TITLES[normalizedPath]
   }
-  
+
   // Check if it's an admin route (could be /admin/*)
   if (normalizedPath.startsWith('/admin')) {
     return ROUTE_TITLES['/admin']
   }
-  
+
   // Default fallback
   return BASE_TITLE
 }
