@@ -39,14 +39,14 @@ export const Features: React.FC = () => {
               <div className="provider-card">
                 <h3>OpenAI Models</h3>
                 <p>
-                  Compare responses from GPT-4, GPT-4o, GPT-4 Turbo, and other OpenAI models known
-                  for their strong general-purpose capabilities and creative outputs.
+                  Compare responses from GPT-5, GPT-4o, o3, and other OpenAI models known for their
+                  strong general-purpose capabilities and creative outputs.
                 </p>
                 <ul>
-                  <li>GPT-4o - Latest multimodal flagship model</li>
-                  <li>GPT-4 Turbo - Faster, more cost-effective GPT-4</li>
-                  <li>GPT-4 - Original large language model</li>
-                  <li>GPT-3.5 Turbo - Fast and efficient for many tasks</li>
+                  <li>GPT-5.1 - Latest frontier-grade model with improved reasoning</li>
+                  <li>GPT-5 - Advanced model for reasoning and code quality</li>
+                  <li>GPT-4o - Multimodal model supporting text and images</li>
+                  <li>o3 - Powerful reasoning model across domains</li>
                 </ul>
               </div>
 
@@ -57,10 +57,10 @@ export const Features: React.FC = () => {
                   performance on complex reasoning tasks.
                 </p>
                 <ul>
-                  <li>Claude 3.5 Sonnet - Best balance of speed and intelligence</li>
-                  <li>Claude 3 Opus - Most capable for complex tasks</li>
-                  <li>Claude 3 Sonnet - Fast and efficient</li>
-                  <li>Claude 3 Haiku - Ultra-fast for quick responses</li>
+                  <li>Claude Opus 4.5 - Frontier reasoning for complex workflows</li>
+                  <li>Claude Sonnet 4.5 - Advanced model for coding and agents</li>
+                  <li>Claude 3.7 Sonnet - Improved reasoning and problem-solving</li>
+                  <li>Claude 3.5 Haiku - Ultra-fast for quick responses</li>
                 </ul>
               </div>
 
@@ -71,9 +71,10 @@ export const Features: React.FC = () => {
                   capabilities and advanced reasoning.
                 </p>
                 <ul>
-                  <li>Gemini Pro - Balanced performance model</li>
-                  <li>Gemini Ultra - Most capable Gemini model</li>
-                  <li>Gemini Flash - Optimized for speed</li>
+                  <li>Gemini 3 Pro Preview - Flagship multimodal reasoning model</li>
+                  <li>Gemini 2.5 Pro - State-of-the-art for advanced reasoning</li>
+                  <li>Gemini 2.5 Flash - Workhorse model for STEM tasks</li>
+                  <li>Gemini 2.0 Flash - Fast with quality on par with Pro</li>
                 </ul>
               </div>
 
@@ -84,10 +85,10 @@ export const Features: React.FC = () => {
                   transparency and customization options.
                 </p>
                 <ul>
-                  <li>Llama 3.1 - Latest Meta foundation model</li>
-                  <li>Llama 3 - Previous generation Llama</li>
-                  <li>Mistral Large - European AI leader</li>
-                  <li>Mixtral - Mixture of experts model</li>
+                  <li>Llama 4 Maverick - High-capacity multimodal MoE model</li>
+                  <li>Llama 4 Scout - Efficient MoE language model</li>
+                  <li>Llama 3.3 70B - Multilingual instruction-tuned model</li>
+                  <li>Mistral Large - Flagship model from Mistral AI</li>
                 </ul>
               </div>
             </div>
@@ -194,27 +195,120 @@ export const Features: React.FC = () => {
               <div className="pricing-tier">
                 <h3>Unregistered Access</h3>
                 <p>
-                  Get familiar with CompareIntel by accessing a handful of models. Perfect for trying 
-                  out the platform and seeing how AI model comparison works. No account required.
+                  Get familiar with CompareIntel by accessing a handful of models. Perfect for
+                  trying out the platform and seeing how AI model comparison works. No account
+                  required.
                 </p>
               </div>
               <div className="pricing-tier">
                 <h3>Free Account</h3>
                 <p>
-                  Sign up for a free account to access more models and receive twice the credits of 
-                  unregistered users. Perfect for casual users who want to explore AI comparison 
+                  Sign up for a free account to access more models and receive twice the credits of
+                  unregistered users. Perfect for casual users who want to explore AI comparison
                   without any commitment. No credit card required.
                 </p>
               </div>
-              <div className="pricing-tier">
+              <div className="pricing-tier pricing-tier-full">
                 <h3>Paid Tiers (Coming Soon)</h3>
                 <p>
-                  Paid tiers will be available soon that unlock all of the latest and greatest premium 
-                  AI models. Get access to the most advanced capabilities as soon as they're released, 
-                  with higher limits and priority access to new models.
+                  Paid tiers will be available soon that unlock all of the latest and greatest
+                  premium AI models. Get access to the most advanced capabilities as soon as they're
+                  released, with higher limits and priority access to new models.
                 </p>
+                <div className="paid-tiers-grid">
+                  <div className="paid-tier-item">
+                    <h4>Starter</h4>
+                    <ul>
+                      <li>1,200 credits/month (~240 exchanges)</li>
+                      <li>Compare up to 6 models simultaneously</li>
+                      <li>10 multi-model conversations saved</li>
+                      <li>Email support</li>
+                    </ul>
+                  </div>
+                  <div className="paid-tier-item">
+                    <h4>Starter+</h4>
+                    <ul>
+                      <li>2,500 credits/month (~500 exchanges)</li>
+                      <li>Compare up to 6 models simultaneously</li>
+                      <li>20 multi-model conversations saved</li>
+                      <li>Email support</li>
+                    </ul>
+                  </div>
+                  <div className="paid-tier-item">
+                    <h4>Pro</h4>
+                    <ul>
+                      <li>5,000 credits/month (~1,000 exchanges)</li>
+                      <li>Compare up to 9 models simultaneously</li>
+                      <li>40 multi-model conversations saved</li>
+                      <li>Priority email support</li>
+                    </ul>
+                  </div>
+                  <div className="paid-tier-item">
+                    <h4>Pro+</h4>
+                    <ul>
+                      <li>10,000 credits/month (~2,000 exchanges)</li>
+                      <li>Compare up to 12 models simultaneously</li>
+                      <li>80 multi-model conversations saved</li>
+                      <li>Priority email support</li>
+                    </ul>
+                  </div>
+                </div>
               </div>
             </div>
+          </section>
+
+          <section className="seo-section">
+            <h2>Document Import & File Support</h2>
+            <p>
+              Easily incorporate your existing documents into AI comparisons. CompareIntel supports
+              importing a variety of file formats to streamline your workflow:
+            </p>
+            <ul className="seo-list">
+              <li>
+                <strong>PDF Documents:</strong> Import PDF files and have their content extracted
+                automatically for use in your prompts and comparisons.
+              </li>
+              <li>
+                <strong>Text Files:</strong> Drag and drop plain text files (.txt) directly into
+                your conversations.
+              </li>
+              <li>
+                <strong>Word Documents:</strong> Upload .docx files and CompareIntel will extract
+                the text content for seamless integration with AI models.
+              </li>
+              <li>
+                <strong>Additional Formats:</strong> Support for markdown, code files, and other
+                common document types to fit your specific use case.
+              </li>
+            </ul>
+          </section>
+
+          <section className="seo-section">
+            <h2>Flexible Output Export Options</h2>
+            <p>
+              CompareIntel makes it easy to save and share AI responses with powerful copy and
+              export functionality:
+            </p>
+            <ul className="seo-list">
+              <li>
+                <strong>Copy Formatted Output:</strong> Copy individual model responses with full
+                formatting intact—including markdown, code highlighting, and LaTeX equations—ready
+                to paste into documents or presentations.
+              </li>
+              <li>
+                <strong>Copy Raw Output:</strong> Extract the raw text response from any model
+                without formatting for use in scripts, data processing, or plain text applications.
+              </li>
+              <li>
+                <strong>Copy Entire Conversation:</strong> Export your complete conversation history
+                with a specific model, including all prompts and responses, for documentation or
+                further analysis.
+              </li>
+              <li>
+                <strong>One-Click Copying:</strong> Each response panel includes convenient copy
+                buttons for quick access to both formatted and raw output options.
+              </li>
+            </ul>
           </section>
 
           <section className="seo-section">

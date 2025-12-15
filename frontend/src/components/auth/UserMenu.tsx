@@ -477,9 +477,7 @@ export const UserMenu: React.FC = () => {
                     </div>
                     <div className="feature-item">
                       <span className="feature-icon">✓</span>
-                      <span className="feature-text">
-                        Email support (<strong>48-hour</strong> response)
-                      </span>
+                      <span className="feature-text">Email support</span>
                     </div>
                     <div className="feature-item">
                       <span className="feature-icon">✓</span>
@@ -513,9 +511,7 @@ export const UserMenu: React.FC = () => {
                     </div>
                     <div className="feature-item">
                       <span className="feature-icon">✓</span>
-                      <span className="feature-text">
-                        Email support (<strong>48-hour</strong> response)
-                      </span>
+                      <span className="feature-text">Email support</span>
                     </div>
                     <div className="feature-item">
                       <span className="feature-icon">✓</span>
@@ -550,9 +546,7 @@ export const UserMenu: React.FC = () => {
                     </div>
                     <div className="feature-item">
                       <span className="feature-icon">✓</span>
-                      <span className="feature-text">
-                        Priority email support (<strong>24-hour</strong> response)
-                      </span>
+                      <span className="feature-text">Priority email support</span>
                     </div>
                     <div className="feature-item">
                       <span className="feature-icon">✓</span>
@@ -586,9 +580,7 @@ export const UserMenu: React.FC = () => {
                     </div>
                     <div className="feature-item">
                       <span className="feature-icon">✓</span>
-                      <span className="feature-text">
-                        Priority email support (<strong>24-hour</strong> response)
-                      </span>
+                      <span className="feature-text">Priority email support</span>
                     </div>
                     <div className="feature-item">
                       <span className="feature-icon">✓</span>

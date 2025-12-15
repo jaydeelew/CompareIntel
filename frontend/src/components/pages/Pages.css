@@ -247,6 +247,77 @@
   font-size: 0.9375rem;
 }
 
+.pricing-tier-full {
+  grid-column: 1 / -1;
+  text-align: left;
+}
+
+.pricing-tier-full > p {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.pricing-tier-full > h3 {
+  text-align: center;
+}
+
+.paid-tiers-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+@media (max-width: 600px) {
+  .paid-tiers-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.paid-tier-item {
+  background: #ffffff;
+  padding: 1.25rem;
+  border-radius: 0.5rem;
+  border: 1px solid #e2e8f0;
+  text-align: center;
+}
+
+.paid-tier-item h4 {
+  color: #2563eb;
+  margin: 0 0 0.75rem;
+  font-size: 1.1rem;
+}
+
+.paid-tier-item p {
+  margin: 0;
+  font-size: 0.875rem;
+  color: #475569;
+  line-height: 1.5;
+}
+
+.paid-tier-item ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  text-align: left;
+}
+
+.paid-tier-item li {
+  font-size: 0.875rem;
+  color: #475569;
+  line-height: 1.6;
+  padding-left: 1.25rem;
+  position: relative;
+}
+
+.paid-tier-item li::before {
+  content: '✓';
+  position: absolute;
+  left: 0;
+  color: #2563eb;
+  font-weight: bold;
+}
+
 /* FAQ styles */
 .faq-list {
   display: flex;
