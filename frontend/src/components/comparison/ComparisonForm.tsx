@@ -989,8 +989,8 @@ export const ComparisonForm = memo<ComparisonFormProps>(
       [processFile]
     )
 
-    // Handle drag and drop events
-    const handleDragEnter = useCallback((e: React.DragEvent<HTMLTextAreaElement>) => {
+    // Handle drag and drop events (works for both textarea and actions area)
+    const handleDragEnter = useCallback((e: React.DragEvent<HTMLElement>) => {
       e.preventDefault()
       e.stopPropagation()
       // Only show drag-over state if dragging files (not text or other content)
@@ -999,7 +999,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
       }
     }, [])
 
-    const handleDragOver = useCallback((e: React.DragEvent<HTMLTextAreaElement>) => {
+    const handleDragOver = useCallback((e: React.DragEvent<HTMLElement>) => {
       e.preventDefault()
       e.stopPropagation()
       // Only show drag-over state if dragging files (not text or other content)
@@ -1008,18 +1008,30 @@ export const ComparisonForm = memo<ComparisonFormProps>(
       }
     }, [])
 
-    const handleDragLeave = useCallback((e: React.DragEvent<HTMLTextAreaElement>) => {
+    const handleDragLeave = useCallback((e: React.DragEvent<HTMLElement>) => {
       e.preventDefault()
       e.stopPropagation()
-      // Only set dragging to false if we're leaving the textarea itself
-      // (not just moving to a child element)
-      if (e.currentTarget === e.target) {
+
+      // Check if we're actually leaving the textarea container
+      // relatedTarget is the element we're moving to
+      const relatedTarget = e.relatedTarget as Node | null
+      const currentTarget = e.currentTarget
+
+      // If relatedTarget is null or not a child of the textarea container, we're leaving
+      if (!relatedTarget) {
+        setIsDraggingOver(false)
+        return
+      }
+
+      // Check if relatedTarget is still within the textarea container
+      const textareaContainer = currentTarget.closest('.textarea-container')
+      if (textareaContainer && !textareaContainer.contains(relatedTarget)) {
         setIsDraggingOver(false)
       }
     }, [])
 
     const handleDrop = useCallback(
-      async (e: React.DragEvent<HTMLTextAreaElement>) => {
+      async (e: React.DragEvent<HTMLElement>) => {
         e.preventDefault()
         e.stopPropagation()
         setIsDraggingOver(false)
@@ -1139,7 +1151,13 @@ export const ComparisonForm = memo<ComparisonFormProps>(
           </div>
 
           {/* Actions area below textarea - looks like part of textarea */}
-          <div className="textarea-actions-area">
+          <div
+            className={`textarea-actions-area ${isDraggingOver ? 'drag-over' : ''}`}
+            onDragEnter={handleDragEnter}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+          >
             {/* History Toggle Button - positioned on left side */}
             <button
               type="button"

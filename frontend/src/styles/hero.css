@@ -449,6 +449,19 @@
   background: rgba(59, 130, 246, 0.05);
 }
 
+/* When actions area itself is in drag-over state */
+.textarea-actions-area.drag-over {
+  border-color: rgba(59, 130, 246, 0.6) !important;
+  background: rgba(59, 130, 246, 0.05) !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* When actions area is in drag-over state, also style the textarea above it */
+.textarea-container:has(.textarea-actions-area.drag-over) .hero-input-textarea {
+  border-color: rgba(59, 130, 246, 0.6);
+  background: rgba(59, 130, 246, 0.05);
+}
+
 /* When textarea is focused, update actions area border to match */
 .textarea-container:has(.hero-input-textarea:focus) .textarea-actions-area {
   border-color: rgba(255, 255, 255, 0.3);
