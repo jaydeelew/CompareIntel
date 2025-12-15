@@ -1269,102 +1269,105 @@ export const ComparisonForm = memo<ComparisonFormProps>(
                 return `${250 + notificationHeight}px` // Height for 3 entries + notification if present
               }
 
+              const maxHeight = getMaxHeight()
               return (
                 <div
                   className={`history-inline-list ${shouldHideScrollbar ? 'no-scrollbar' : 'scrollable'}`}
-                  style={{ maxHeight: getMaxHeight() }}
+                  style={{ maxHeight, height: maxHeight }}
                 >
-                  {isLoadingHistory ? (
-                    <div className="history-loading">Loading...</div>
-                  ) : conversationHistory.length === 0 ? (
-                    <div className="history-empty">No conversation history</div>
-                  ) : (
-                    <>
-                      {conversationHistory.slice(0, historyLimit).map(summary => {
-                        const isActive =
-                          currentVisibleComparisonId &&
-                          String(summary.id) === currentVisibleComparisonId
+                  <div className="history-inline-list-content">
+                    {isLoadingHistory ? (
+                      <div className="history-loading">Loading...</div>
+                    ) : conversationHistory.length === 0 ? (
+                      <div className="history-empty">No conversation history</div>
+                    ) : (
+                      <>
+                        {conversationHistory.slice(0, historyLimit).map(summary => {
+                          const isActive =
+                            currentVisibleComparisonId &&
+                            String(summary.id) === currentVisibleComparisonId
 
-                        return (
-                          <div
-                            key={summary.id}
-                            className={`history-item ${isActive ? 'history-item-active' : ''}`}
-                            onClick={() => onLoadConversation(summary)}
-                          >
-                            <div className="history-item-content">
-                              <div className="history-item-prompt">
-                                {truncatePrompt(summary.input_data)}
-                              </div>
-                              <div className="history-item-meta">
-                                <span className="history-item-models">
-                                  {summary.models_used.length} model
-                                  {summary.models_used.length !== 1 ? 's' : ''}
-                                </span>
-                                <span className="history-item-date">
-                                  {formatDate(summary.created_at)}
-                                </span>
-                              </div>
-                            </div>
-                            <button
-                              className="history-item-delete"
-                              onClick={e => onDeleteConversation(summary, e)}
+                          return (
+                            <div
+                              key={summary.id}
+                              className={`history-item ${isActive ? 'history-item-active' : ''}`}
+                              onClick={() => onLoadConversation(summary)}
                             >
-                              ×
-                            </button>
-                          </div>
-                        )
-                      })}
-
-                      {/* Tier limit message */}
-                      {(() => {
-                        const userTier = isAuthenticated
-                          ? user?.subscription_tier || 'free'
-                          : 'anonymous'
-                        const tierLimit = getConversationLimit(userTier)
-
-                        if (userTier !== 'anonymous' && userTier !== 'free') {
-                          return null
-                        }
-
-                        const visibleCount = conversationHistory.length
-                        const isAtLimit = visibleCount >= tierLimit
-
-                        if (!isAtLimit) {
-                          return null
-                        }
-
-                        if (!isAuthenticated) {
-                          return (
-                            <div className="history-signup-prompt">
-                              <div className="history-signup-message">
-                                <span className="history-signup-line">
-                                  You can only save the last 2 comparisons.
-                                </span>
-                                <span className="history-signup-line">
-                                  {' '}
-                                  Sign up for a free account to save more!
-                                </span>
+                              <div className="history-item-content">
+                                <div className="history-item-prompt">
+                                  {truncatePrompt(summary.input_data)}
+                                </div>
+                                <div className="history-item-meta">
+                                  <span className="history-item-models">
+                                    {summary.models_used.length} model
+                                    {summary.models_used.length !== 1 ? 's' : ''}
+                                  </span>
+                                  <span className="history-item-date">
+                                    {formatDate(summary.created_at)}
+                                  </span>
+                                </div>
                               </div>
+                              <button
+                                className="history-item-delete"
+                                onClick={e => onDeleteConversation(summary, e)}
+                              >
+                                ×
+                              </button>
                             </div>
                           )
-                        } else {
-                          return (
-                            <div className="history-signup-prompt">
-                              <div className="history-signup-message">
-                                <span className="history-signup-line">
-                                  You only have 3 saves for your tier.
-                                </span>
-                                <span className="history-signup-line">
-                                  {' '}
-                                  Upgrade to Starter for 10 saved comparisons or Pro for 50!
-                                </span>
+                        })}
+
+                        {/* Tier limit message */}
+                        {(() => {
+                          const userTier = isAuthenticated
+                            ? user?.subscription_tier || 'free'
+                            : 'anonymous'
+                          const tierLimit = getConversationLimit(userTier)
+
+                          if (userTier !== 'anonymous' && userTier !== 'free') {
+                            return null
+                          }
+
+                          const visibleCount = conversationHistory.length
+                          const isAtLimit = visibleCount >= tierLimit
+
+                          if (!isAtLimit) {
+                            return null
+                          }
+
+                          if (!isAuthenticated) {
+                            return (
+                              <div className="history-signup-prompt">
+                                <div className="history-signup-message">
+                                  <span className="history-signup-line">
+                                    You can only save the last 2 comparisons.
+                                  </span>
+                                  <span className="history-signup-line">
+                                    {' '}
+                                    Sign up for a free account to save more!
+                                  </span>
+                                </div>
                               </div>
-                            </div>
-                          )
-                        }
-                      })()}
-                    </>
-                  )}
+                            )
+                          } else {
+                            return (
+                              <div className="history-signup-prompt">
+                                <div className="history-signup-message">
+                                  <span className="history-signup-line">
+                                    You only have 3 saves for your tier.
+                                  </span>
+                                  <span className="history-signup-line">
+                                    {' '}
+                                    Upgrade to Starter for 10 saved comparisons or Pro for 50!
+                                  </span>
+                                </div>
+                              </div>
+                            )
+                          }
+                        })()}
+                      </>
+                    )}
+                  </div>
                 </div>
               )
             })()}
