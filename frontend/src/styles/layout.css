@@ -49,6 +49,7 @@
 /* Specific padding adjustment for models section */
 .models-section {
   padding: var(--spacing-xl) var(--spacing-md) var(--spacing-md) var(--spacing-md);
+  margin-bottom: 2rem;
 }
 
 /* Models section header */
