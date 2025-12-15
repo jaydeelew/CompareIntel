@@ -875,17 +875,21 @@ export const ComparisonForm = memo<ComparisonFormProps>(
             fileType = 'DOCX file'
             content = await extractTextFromDOCX(file)
           }
-          // Handle other document types (DOC, RTF, ODT) - try as text first
-          else if (
-            fileName.endsWith('.doc') ||
-            fileName.endsWith('.rtf') ||
-            fileName.endsWith('.odt')
-          ) {
+          // Handle RTF files - not supported
+          else if (fileName.endsWith('.rtf')) {
+            fileType = 'RTF file'
+            showNotification(
+              'RTF file extraction not fully supported. Please convert to PDF or DOCX.',
+              'error'
+            )
+            return false
+          }
+          // Handle other document types (DOC, ODT) - try as text first
+          else if (fileName.endsWith('.doc') || fileName.endsWith('.odt')) {
             if (fileName.endsWith('.doc')) fileType = 'DOC file'
-            else if (fileName.endsWith('.rtf')) fileType = 'RTF file'
             else if (fileName.endsWith('.odt')) fileType = 'ODT file'
 
-            // Try to read as text (works for some RTF files)
+            // Try to read as text (works for some DOC/ODT files)
             try {
               content = await new Promise<string>((resolve, reject) => {
                 const reader = new FileReader()
