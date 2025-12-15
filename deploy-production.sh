@@ -14,7 +14,7 @@
 #   backup       - Create database backup only (PostgreSQL pg_dump)
 #   migrate      - Apply database migrations only (via Docker)
 #   build        - Build and deploy without git pull or migrations
-#   deploy       - Full deployment with git pull and migrations (default)
+#   deploy       - Full deployment with git pull (migrations run separately via 'migrate')
 #   quick-deploy - Deploy local fixes without git pull
 #   rollback     - Rollback to previous version
 #   restart      - Restart all services
@@ -554,11 +554,12 @@ main() {
             backup_database
             pull_latest_code
             build_and_deploy
-            apply_database_migrations  # Run after build so migrations use new code in container
+            # Note: Migrations are NOT run automatically. Run 'migrate' separately if needed.
             verify_deployment
             show_status
             echo ""
             log_success "=== Deployment completed successfully! ==="
+            log_warning "Remember: Run './deploy-production.sh migrate' separately if database migrations are needed"
             ;;
         "quick-deploy")
             # Quick deploy: skip git pull (useful for hotfixes already on server)
@@ -595,7 +596,7 @@ main() {
             echo "  backup       - Create database backup only (PostgreSQL pg_dump)"
             echo "  migrate      - Apply database migrations only (via Docker)"
             echo "  build        - Build and deploy without git pull or migrations"
-            echo "  deploy       - Full deployment (default)"
+            echo "  deploy       - Full deployment with git pull (migrations run separately)"
             echo "  quick-deploy - Deploy without git pull (for hotfixes)"
             echo "  rollback     - Rollback to previous version"
             echo "  restart      - Restart all services"
@@ -604,6 +605,11 @@ main() {
             echo ""
             echo "Note: All Python dependencies are managed inside Docker containers."
             echo "      No virtual environment (venv) is used on the host."
+            echo ""
+            echo "Migration Workflow:"
+            echo "  If your deployment requires database migrations, run migrations first:"
+            echo "    1. ./deploy-production.sh migrate   (applies migrations)"
+            echo "    2. ./deploy-production.sh deploy    (deploys code)"
             exit 1
             ;;
     esac
