@@ -9,7 +9,7 @@
 import React, { useEffect, useLayoutEffect, useRef } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
 import { Footer } from './Footer'
-import { updatePageTitle } from '../../utils/pageTitles'
+import { updatePageTitle } from '../utils/pageTitles'
 
 export const Layout: React.FC = () => {
   const { pathname } = useLocation()
