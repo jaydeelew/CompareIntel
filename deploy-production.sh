@@ -68,6 +68,25 @@ service_running() {
     docker compose -f docker-compose.ssl.yml ps --services --filter "status=running" 2>/dev/null | grep -q "$1"
 }
 
+# Function to check if service completed successfully (for build-only services)
+service_completed() {
+    cd "$PROJECT_DIR"
+    # Check if service exited successfully (exit code 0)
+    # Get all containers for this service and check their exit codes
+    CONTAINERS=$(docker compose -f docker-compose.ssl.yml ps -a --format "{{.Name}}" 2>/dev/null | grep -i "$1" || true)
+    if [ -z "$CONTAINERS" ]; then
+        return 1
+    fi
+    # Check if any container for this service exited with code 0
+    for container in $CONTAINERS; do
+        EXIT_CODE=$(docker inspect "$container" --format='{{.State.ExitCode}}' 2>/dev/null || echo "1")
+        if [ "$EXIT_CODE" = "0" ]; then
+            return 0
+        fi
+    done
+    return 1
+}
+
 # Function to load environment variables from .env file
 load_env() {
     if [ -f "$ENV_FILE" ]; then
@@ -352,8 +371,38 @@ verify_deployment() {
     log "Waiting for services to initialize..."
     sleep 15
     
-    # Check if services are running
-    if service_running "backend" && service_running "frontend" && service_running "nginx"; then
+    # Check if services are running (frontend is build-only, so check if build output exists)
+    BACKEND_OK=false
+    FRONTEND_OK=false
+    NGINX_OK=false
+    
+    if service_running "backend"; then
+        BACKEND_OK=true
+        log_success "Backend service is running"
+    else
+        log_error "Backend service is not running"
+    fi
+    
+    # Frontend is a build-only service that exits after building
+    # Check if dist directory exists (indicates successful build)
+    if [ -d "$PROJECT_DIR/frontend/dist" ] && [ -n "$(ls -A "$PROJECT_DIR/frontend/dist" 2>/dev/null)" ]; then
+        FRONTEND_OK=true
+        log_success "Frontend build completed (dist directory exists)"
+    elif service_completed "frontend"; then
+        FRONTEND_OK=true
+        log_success "Frontend build completed"
+    else
+        log_error "Frontend build failed or incomplete"
+    fi
+    
+    if service_running "nginx"; then
+        NGINX_OK=true
+        log_success "Nginx service is running"
+    else
+        log_error "Nginx service is not running"
+    fi
+    
+    if [ "$BACKEND_OK" = true ] && [ "$FRONTEND_OK" = true ] && [ "$NGINX_OK" = true ]; then
         log_success "All services are running"
     else
         log_error "Some services failed to start"
