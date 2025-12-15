@@ -114,6 +114,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
     const [isLoadingAccurateTokens, setIsLoadingAccurateTokens] = useState(false)
     const abortControllerRef = useRef<AbortController | null>(null)
     const fileInputRef = useRef<HTMLInputElement | null>(null)
+    const [isDraggingOver, setIsDraggingOver] = useState(false)
 
     // Debounce input for API calls (only call API when user pauses typing)
     const debouncedInput = useDebounce(input, 600) // 600ms delay
@@ -844,12 +845,9 @@ export const ComparisonForm = memo<ComparisonFormProps>(
       [isDocumentFile]
     )
 
-    // Handle file upload
-    const handleFileUpload = useCallback(
-      async (event: React.ChangeEvent<HTMLInputElement>) => {
-        const file = event.target.files?.[0]
-        if (!file) return
-
+    // Process a file (used by both file input and drag-and-drop)
+    const processFile = useCallback(
+      async (file: File) => {
         // Check if file is text/code/document
         const isTextFile = await isTextOrCodeFile(file)
 
@@ -858,11 +856,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
             'Only text, code, and document files can be uploaded. Please select a supported file.',
             'error'
           )
-          // Reset file input
-          if (fileInputRef.current) {
-            fileInputRef.current.value = ''
-          }
-          return
+          return false
         }
 
         // Extract text content based on file type
@@ -904,10 +898,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
                 `${fileType} extraction not fully supported. Please convert to PDF or DOCX.`,
                 'error'
               )
-              if (fileInputRef.current) {
-                fileInputRef.current.value = ''
-              }
-              return
+              return false
             }
           }
           // Handle text/code files
@@ -966,22 +957,84 @@ export const ComparisonForm = memo<ComparisonFormProps>(
             setTimeout(() => {
               notification()
             }, 5000)
+            return true
           } else {
             showNotification(`No text content found in ${fileType}.`, 'error')
+            return false
           }
         } catch (error) {
           const errorMessage =
             error instanceof Error ? error.message : 'Error uploading file. Please try again.'
           showNotification(errorMessage, 'error')
           console.error('File upload error:', error)
-        } finally {
-          // Reset file input
-          if (fileInputRef.current) {
-            fileInputRef.current.value = ''
-          }
+          return false
         }
       },
       [input, setInput, isTextOrCodeFile, extractTextFromPDF, extractTextFromDOCX]
+    )
+
+    // Handle file upload from file input
+    const handleFileUpload = useCallback(
+      async (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0]
+        if (!file) return
+
+        await processFile(file)
+
+        // Reset file input
+        if (fileInputRef.current) {
+          fileInputRef.current.value = ''
+        }
+      },
+      [processFile]
+    )
+
+    // Handle drag and drop events
+    const handleDragEnter = useCallback((e: React.DragEvent<HTMLTextAreaElement>) => {
+      e.preventDefault()
+      e.stopPropagation()
+      // Only show drag-over state if dragging files (not text or other content)
+      if (e.dataTransfer.types.includes('Files')) {
+        setIsDraggingOver(true)
+      }
+    }, [])
+
+    const handleDragOver = useCallback((e: React.DragEvent<HTMLTextAreaElement>) => {
+      e.preventDefault()
+      e.stopPropagation()
+      // Only show drag-over state if dragging files (not text or other content)
+      if (e.dataTransfer.types.includes('Files')) {
+        setIsDraggingOver(true)
+      }
+    }, [])
+
+    const handleDragLeave = useCallback((e: React.DragEvent<HTMLTextAreaElement>) => {
+      e.preventDefault()
+      e.stopPropagation()
+      // Only set dragging to false if we're leaving the textarea itself
+      // (not just moving to a child element)
+      if (e.currentTarget === e.target) {
+        setIsDraggingOver(false)
+      }
+    }, [])
+
+    const handleDrop = useCallback(
+      async (e: React.DragEvent<HTMLTextAreaElement>) => {
+        e.preventDefault()
+        e.stopPropagation()
+        setIsDraggingOver(false)
+
+        // Only process if files are being dropped (not text or other content)
+        if (!e.dataTransfer.types.includes('Files')) {
+          return
+        }
+
+        const file = e.dataTransfer.files?.[0]
+        if (!file) return
+
+        await processFile(file)
+      },
+      [processFile]
     )
 
     // Handle click on upload button
@@ -1072,10 +1125,14 @@ export const ComparisonForm = memo<ComparisonFormProps>(
                   }
                 }
               }}
+              onDragEnter={handleDragEnter}
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
               placeholder={
                 isFollowUpMode ? 'Continue your conversation here' : "Let's get started..."
               }
-              className="hero-input-textarea"
+              className={`hero-input-textarea ${isDraggingOver ? 'drag-over' : ''}`}
               rows={1}
               data-testid="comparison-input-textarea"
             />
