@@ -47,6 +47,11 @@ async def send_verification_email(email: EmailStr, token: str) -> None:
     Args:
         email: User's email address
         token: Verification token
+    
+    Note: The verification link uses clicktracking="off" attribute to prevent
+    SendGrid from wrapping the link in a subdomain (e.g., url3882.compareintel.com)
+    which would cause SSL certificate errors. This ensures users can directly
+    access the verification URL without certificate warnings.
     """
     # Skip sending email if not configured (development mode)
     if not EMAIL_CONFIGURED:
@@ -112,7 +117,7 @@ async def send_verification_email(email: EmailStr, token: str) -> None:
             <p>Thank you for registering with CompareIntel, the AI model comparison platform.</p>
             <p>To complete your registration and start comparing AI models, please verify your email address by clicking the button below:</p>
             <div style="text-align: center;">
-              <a href="{verification_url}" class="button" target="_blank">Verify Email Address</a>
+              <a href="{verification_url}" class="button" target="_blank" clicktracking="off">Verify Email Address</a>
             </div>
             <p>Or copy and paste this link into your browser:</p>
             <p style="word-break: break-all; color: #0ea5e9;">{verification_url}</p>
@@ -145,6 +150,10 @@ async def send_password_reset_email(email: EmailStr, token: str) -> None:
     Args:
         email: User's email address
         token: Password reset token
+    
+    Note: The password reset link uses clicktracking="off" attribute to prevent
+    SendGrid from wrapping the link in a subdomain which would cause SSL certificate
+    errors. This ensures users can directly access the reset URL without certificate warnings.
     """
     # Skip sending email if not configured (development mode)
     if not EMAIL_CONFIGURED:
@@ -218,7 +227,7 @@ async def send_password_reset_email(email: EmailStr, token: str) -> None:
             <p>You requested to reset your password for your CompareIntel account.</p>
             <p>Click the button below to create a new password:</p>
             <div style="text-align: center;">
-              <a href="{reset_url}" class="button">Reset Password</a>
+              <a href="{reset_url}" class="button" clicktracking="off">Reset Password</a>
             </div>
             <p>Or copy and paste this link into your browser:</p>
             <p style="word-break: break-all; color: #0ea5e9;">{reset_url}</p>
