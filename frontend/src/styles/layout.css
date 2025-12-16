@@ -6,12 +6,12 @@
   width: 100%;
   max-width: none;
   margin: 0;
-  margin-bottom: 4rem;
+  margin-bottom: var(--spacing-lg);
   padding: 0 var(--page-gutter);
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-xl);
+  gap: var(--spacing-md);
 }
 
 /* Three-tile grid layout for equal height tiles */
@@ -50,6 +50,7 @@
 /* Specific padding adjustment for models section */
 .models-section {
   padding: var(--spacing-xl) var(--spacing-md) var(--spacing-md) var(--spacing-md);
+  margin-top: var(--spacing-xl);
   margin-bottom: 2rem;
 }
 
