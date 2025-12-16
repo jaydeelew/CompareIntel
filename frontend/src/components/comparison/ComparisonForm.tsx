@@ -1276,7 +1276,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
                 type="button"
                 onClick={handleUploadButtonClick}
                 className="textarea-icon-button file-upload-button"
-                title="Upload text or code file"
+                title="Select or drag file here"
                 disabled={isLoading}
               >
                 <svg
