@@ -6,6 +6,7 @@
   width: 100%;
   max-width: none;
   margin: 0;
+  margin-bottom: 4rem;
   padding: 0 var(--page-gutter);
   box-sizing: border-box;
   display: flex;
