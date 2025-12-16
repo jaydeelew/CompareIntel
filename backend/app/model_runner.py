@@ -1268,40 +1268,39 @@ def call_openrouter_streaming(
             yield chunk
         return None
 
-    try:
-        # Build messages array - use standard format like official AI providers
-        messages = []
+    # Build messages array - use standard format like official AI providers
+    messages = []
 
-        # Add a minimal system message only to encourage complete thoughts
-        if not conversation_history:
-            messages.append(
-                {
-                    "role": "system",
-                    "content": "Provide complete responses. Finish your thoughts and explanations fully.",
-                }
-            )
+    # Add a minimal system message only to encourage complete thoughts
+    if not conversation_history:
+        messages.append(
+            {
+                "role": "system",
+                "content": "Provide complete responses. Finish your thoughts and explanations fully.",
+            }
+        )
 
-        # Add conversation history if provided
-        if conversation_history:
-            for msg in conversation_history:
-                messages.append({"role": msg.role, "content": msg.content})
+    # Add conversation history if provided
+    if conversation_history:
+        for msg in conversation_history:
+            messages.append({"role": msg.role, "content": msg.content})
 
-        # Add the current prompt as user message
-        messages.append({"role": "user", "content": prompt})
+    # Add the current prompt as user message
+    messages.append({"role": "user", "content": prompt})
 
-        # Use override if provided (for multi-model comparisons to avoid truncation)
-        # Otherwise, use model's maximum capability
-        if max_tokens_override is not None:
-            max_tokens = max_tokens_override
-        else:
-            # Use model's maximum capability
-            max_tokens = get_model_max_tokens(model_id)
+    # Use override if provided (for multi-model comparisons to avoid truncation)
+    # Otherwise, use model's maximum capability
+    if max_tokens_override is not None:
+        max_tokens = max_tokens_override
+    else:
+        # Use model's maximum capability
+        max_tokens = get_model_max_tokens(model_id)
 
-        # Track retry count for max_tokens reduction on 402 errors
-        retry_count = 0
-        max_retries = 1  # Only retry once with reduced max_tokens
+    # Track retry count for max_tokens reduction on 402 errors
+    retry_count = 0
+    max_retries = 1  # Only retry once with reduced max_tokens
 
-        while retry_count <= max_retries:
+    while retry_count <= max_retries:
             try:
                 # Enable streaming
                 response = client.chat.completions.create(
