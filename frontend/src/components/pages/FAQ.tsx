@@ -72,16 +72,18 @@ const faqData = [
     answer: (
       <>
         <p>
-          Yes! CompareIntel offers free access options. <strong>Unregistered users</strong> can get 
-          familiar with the platform by accessing a handful of models—no account required. For access 
-          to more models and additional credits, you can <strong>sign up for a free account</strong> 
+          Yes! CompareIntel offers free access options. <strong>Unregistered users</strong> can get
+          familiar with the platform by accessing a handful of models—no account required. For
+          access to more models and additional credits, you can{' '}
+          <strong>sign up for a free account</strong>
           with daily credits. No credit card is required to sign up.
         </p>
         <p>
-          Free registered users receive twice the credits of unregistered users, giving you more 
-          opportunities to explore different AI models. <strong>Paid tiers will be available soon</strong> 
-          that unlock all of the latest and greatest premium AI models, with higher limits and priority 
-          access to new models.
+          Free registered users receive twice the credits of unregistered users, giving you more
+          opportunities to explore different AI models.{' '}
+          <strong>Paid tiers will be available soon</strong>
+          that unlock all of the latest and greatest premium AI models, with higher limits and
+          priority access to new models.
         </p>
       </>
     ),
@@ -164,9 +166,11 @@ const faqData = [
     answer: (
       <p>
         Yes, CompareIntel supports multi-turn conversations. After receiving initial responses, you
-        can continue the conversation with individual models. Each model maintains its conversation
-        history, allowing you to ask follow-up questions and build on previous responses. This is
-        great for testing how well models handle context over extended interactions.
+        can ask follow-up questions that are sent to all selected models simultaneously. Each model
+        maintains its own conversation history (seeing only its own previous responses), allowing
+        you to build on previous interactions and test how well each model handles context over
+        extended conversations. This is great for comparing how different models maintain context
+        and respond to follow-up questions.
       </p>
     ),
   },
@@ -246,19 +250,20 @@ const faqData = [
     answer: (
       <>
         <p>
-          No, you can start using CompareIntel without an account! <strong>Unregistered users</strong> 
-          can get familiar with the platform by accessing a handful of models. This is perfect for 
+          No, you can start using CompareIntel without an account!{' '}
+          <strong>Unregistered users</strong>
+          can get familiar with the platform by accessing a handful of models. This is perfect for
           trying out AI model comparison and seeing how it works.
         </p>
         <p>
-          However, <strong>signing up for a free account</strong> gives you access to more models and 
-          twice the credits of unregistered users. A free account also allows us to save your 
-          conversation history and provide a secure, personalized experience. Registration is quick 
+          However, <strong>signing up for a free account</strong> gives you access to more models
+          and twice the credits of unregistered users. A free account also allows us to save your
+          conversation history and provide a secure, personalized experience. Registration is quick
           and only requires an email address—no credit card needed.
         </p>
         <p>
-          <strong>Paid tiers will be available soon</strong> that unlock all of the latest and greatest 
-          premium AI models for users who need access to the most advanced capabilities.
+          <strong>Paid tiers will be available soon</strong> that unlock all of the latest and
+          greatest premium AI models for users who need access to the most advanced capabilities.
         </p>
       </>
     ),
@@ -359,10 +364,10 @@ export const FAQ: React.FC = () => {
           <section className="seo-section cta-section">
             <h2>Ready to Compare AI Models?</h2>
             <p>
-              Start comparing GPT-4, Claude, Gemini, Llama, and 50+ other AI models today. Unregistered 
-              users can get familiar with a handful of models, or sign up for a free account to access 
-              more models and receive twice the credits—no credit card required. Paid tiers coming soon 
-              for premium AI models.
+              Start comparing GPT-4, Claude, Gemini, Llama, and 50+ other AI models today.
+              Unregistered users can get familiar with a handful of models, or sign up for a free
+              account to access more models and receive twice the credits—no credit card required.
+              Paid tiers coming soon for premium AI models.
             </p>
             <Link to="/" className="cta-button">
               Start Comparing Free

@@ -174,12 +174,14 @@ export const Features: React.FC = () => {
             </p>
             <ul className="seo-list">
               <li>
-                <strong>Context Retention:</strong> Each model maintains its conversation history,
-                allowing you to ask follow-up questions and build on previous responses.
+                <strong>Context Retention:</strong> Each model maintains its own conversation
+                history (seeing only its own previous responses), allowing you to ask follow-up
+                questions and build on previous interactions.
               </li>
               <li>
-                <strong>Per-Model Conversations:</strong> Continue conversations with individual
-                models independently, exploring different directions with each.
+                <strong>Follow-up Comparisons:</strong> Send follow-up questions to all selected
+                models simultaneously to compare how each model handles context and maintains
+                conversation continuity.
               </li>
               <li>
                 <strong>Conversation History:</strong> Review your conversation history and return
