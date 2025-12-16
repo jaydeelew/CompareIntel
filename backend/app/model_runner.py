@@ -1017,16 +1017,27 @@ def get_model_max_tokens(model_id: str) -> int:
     # Try to get from OpenRouter data
     limits = get_model_token_limits_from_openrouter(model_id)
     if limits:
-        return limits.get("max_output", 8192)
+        max_output = limits.get("max_output", 8192)
+    else:
+        max_output = 8192
 
     # Fallback: Model-specific token limits for exceptions (manual overrides)
+    # Some models have OpenRouter credit restrictions that require lower max_tokens
     model_limits = {
-        # Add any models with non-standard limits here if OpenRouter data is unavailable
+        # Claude Opus 4.1 and 4 have OpenRouter credit restrictions that require lower max_tokens
+        # Cap at 4096 to avoid 402 errors (OpenRouter may reject higher values based on credits)
+        "anthropic/claude-opus-4.1": 4096,
+        "anthropic/claude-opus-4": 4096,
+        # Add any other models with non-standard limits here if OpenRouter data is unavailable
         # Example: "some-provider/model-id": 4096,
     }
 
-    # Return model-specific limit or default to 8192
-    return model_limits.get(model_id, 8192)
+    # Apply model-specific override if exists, otherwise use OpenRouter value
+    if model_id in model_limits:
+        return min(model_limits[model_id], max_output)  # Use the smaller of override or OpenRouter limit
+    
+    # Return OpenRouter limit or default to 8192
+    return max_output
 
 
 def estimate_token_count(text: str, model_id: Optional[str] = None) -> int:
@@ -1286,70 +1297,100 @@ def call_openrouter_streaming(
             # Use model's maximum capability
             max_tokens = get_model_max_tokens(model_id)
 
-        # Enable streaming
-        response = client.chat.completions.create(
-            model=model_id,
-            messages=messages,
-            timeout=settings.individual_model_timeout,
-            max_tokens=max_tokens,
-            stream=True,  # Enable streaming!
-        )
+        # Track retry count for max_tokens reduction on 402 errors
+        retry_count = 0
+        max_retries = 1  # Only retry once with reduced max_tokens
 
-        full_content = ""
-        finish_reason = None
-        usage_data = None
+        while retry_count <= max_retries:
+            try:
+                # Enable streaming
+                response = client.chat.completions.create(
+                    model=model_id,
+                    messages=messages,
+                    timeout=settings.individual_model_timeout,
+                    max_tokens=max_tokens,
+                    stream=True,  # Enable streaming!
+                )
 
-        # Iterate through chunks as they arrive
-        for chunk in response:
-            if chunk.choices and len(chunk.choices) > 0:
-                delta = chunk.choices[0].delta
+                full_content = ""
+                finish_reason = None
+                usage_data = None
 
-                # Yield content chunks as they arrive
-                if hasattr(delta, "content") and delta.content:
-                    content_chunk = delta.content
-                    full_content += content_chunk
-                    yield content_chunk
+                # Iterate through chunks as they arrive
+                for chunk in response:
+                    if chunk.choices and len(chunk.choices) > 0:
+                        delta = chunk.choices[0].delta
 
-                # Capture finish reason from last chunk
-                if chunk.choices[0].finish_reason:
-                    finish_reason = chunk.choices[0].finish_reason
+                        # Yield content chunks as they arrive
+                        if hasattr(delta, "content") and delta.content:
+                            content_chunk = delta.content
+                            full_content += content_chunk
+                            yield content_chunk
 
-            # Extract usage data from chunk if available
-            # OpenRouter/OpenAI streaming responses include usage in the final chunk
-            if hasattr(chunk, "usage") and chunk.usage:
-                usage = chunk.usage
-                prompt_tokens = getattr(usage, "prompt_tokens", 0)
-                completion_tokens = getattr(usage, "completion_tokens", 0)
-                if prompt_tokens > 0 or completion_tokens > 0:
-                    usage_data = calculate_token_usage(prompt_tokens, completion_tokens)
+                        # Capture finish reason from last chunk
+                        if chunk.choices[0].finish_reason:
+                            finish_reason = chunk.choices[0].finish_reason
 
-        # After streaming completes, handle finish_reason warnings
-        if finish_reason == "length":
-            if credits_limited:
-                yield "\n\n⚠️ Response stopped - credits exhausted."
-            else:
-                yield "\n\n⚠️ Response truncated - model reached maximum output length."
-        elif finish_reason == "content_filter":
-            yield "\n\n⚠️ **Note:** Response stopped by content filter."
+                    # Extract usage data from chunk if available
+                    # OpenRouter/OpenAI streaming responses include usage in the final chunk
+                    if hasattr(chunk, "usage") and chunk.usage:
+                        usage = chunk.usage
+                        prompt_tokens = getattr(usage, "prompt_tokens", 0)
+                        completion_tokens = getattr(usage, "completion_tokens", 0)
+                        if prompt_tokens > 0 or completion_tokens > 0:
+                            usage_data = calculate_token_usage(prompt_tokens, completion_tokens)
 
-        # Return usage data (generator return value)
-        return usage_data
+                # After streaming completes, handle finish_reason warnings
+                if finish_reason == "length":
+                    if credits_limited:
+                        yield "\n\n⚠️ Response stopped - credits exhausted."
+                    else:
+                        yield "\n\n⚠️ Response truncated - model reached maximum output length."
+                elif finish_reason == "content_filter":
+                    yield "\n\n⚠️ **Note:** Response stopped by content filter."
 
-    except Exception as e:
-        error_str = str(e).lower()
-        # Yield error messages in the stream
-        if "timeout" in error_str:
-            yield f"Error: Timeout ({settings.individual_model_timeout}s)"
-        elif "rate limit" in error_str or "429" in error_str:
-            yield f"Error: Rate limited"
-        elif "not found" in error_str or "404" in error_str:
-            yield f"Error: Model not available"
-        elif "unauthorized" in error_str or "401" in error_str:
-            yield f"Error: Authentication failed"
-        else:
-            yield f"Error: {str(e)[:100]}"
-        # Return None for usage data on error
-        return None
+                # Return usage data (generator return value)
+                return usage_data
+
+            except Exception as e:
+                error_str = str(e).lower()
+                error_message = str(e)
+                
+                # Check for 402 error related to max_tokens (OpenRouter credit/token limit issue)
+                is_402_max_tokens_error = (
+                    "402" in error_message or 
+                    "payment required" in error_str or
+                    ("requires more credits" in error_str and "max_tokens" in error_str)
+                )
+                
+                # If it's a 402 max_tokens error and we haven't retried yet, reduce max_tokens and retry
+                if is_402_max_tokens_error and retry_count < max_retries:
+                    # Reduce max_tokens by 50% or cap at 2048, whichever is higher
+                    reduced_max_tokens = max(2048, int(max_tokens * 0.5))
+                    if reduced_max_tokens < max_tokens:
+                        print(
+                            f"[API] 402 max_tokens error for {model_id} - retrying with reduced max_tokens: "
+                            f"{max_tokens} -> {reduced_max_tokens}"
+                        )
+                        max_tokens = reduced_max_tokens
+                        retry_count += 1
+                        continue  # Retry with reduced max_tokens
+                
+                # If not a retryable 402 error, or retries exhausted, yield error
+                if "timeout" in error_str:
+                    yield f"Error: Timeout ({settings.individual_model_timeout}s)"
+                elif "rate limit" in error_str or "429" in error_str:
+                    yield f"Error: Rate limited"
+                elif "not found" in error_str or "404" in error_str:
+                    yield f"Error: Model not available"
+                elif "unauthorized" in error_str or "401" in error_str:
+                    yield f"Error: Authentication failed"
+                elif is_402_max_tokens_error:
+                    yield f"Error: This request requires more credits or fewer max_tokens. Please try with a shorter prompt or reduce the number of models."
+                else:
+                    yield f"Error: {str(e)[:100]}"
+                # Return None for usage data on error
+                return None
 
 
 def call_openrouter(
