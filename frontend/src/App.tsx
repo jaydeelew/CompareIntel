@@ -41,6 +41,7 @@ import {
   useRateLimitStatus,
   useModelSelection,
   useModelComparison,
+  useSavedModelSelections,
 } from './hooks'
 import { apiClient } from './services/api/client'
 import { ApiError, PaymentRequiredError } from './services/api/errors'
@@ -121,6 +122,17 @@ function AppContent() {
     maxModelsLimit,
   } = modelSelectionHook
 
+  // Saved model selections hook for storing/loading named model selection groups
+  const savedSelectionsHook = useSavedModelSelections()
+  const {
+    savedSelections: savedModelSelections,
+    saveSelection: saveModelSelection,
+    loadSelection: loadModelSelectionFromStorage,
+    deleteSelection: deleteModelSelection,
+    canSaveMore: canSaveMoreSelections,
+    maxSelections: maxSavedSelections,
+  } = savedSelectionsHook
+
   // Store accurate token count from ComparisonForm (from /estimate-tokens endpoint)
   const [accurateInputTokens, setAccurateInputTokens] = useState<number | null>(null)
 
@@ -192,6 +204,65 @@ function AppContent() {
     'low' | 'insufficient' | 'none' | null
   >(null)
   const [creditWarningDismissible, setCreditWarningDismissible] = useState(false)
+
+  // Handler to save current model selection
+  const handleSaveModelSelection = useCallback(
+    (name: string) => {
+      return saveModelSelection(name, selectedModels)
+    },
+    [saveModelSelection, selectedModels]
+  )
+
+  // Handler to load a saved model selection
+  const handleLoadModelSelection = useCallback(
+    (id: string) => {
+      const modelIds = loadModelSelectionFromStorage(id)
+      if (modelIds) {
+        // Filter to only include models that still exist and are within the current tier limit
+        const validModelIds = modelIds.filter(modelId => {
+          for (const providerModels of Object.values(modelsByProvider)) {
+            if (providerModels.some(m => String(m.id) === modelId)) {
+              return true
+            }
+          }
+          return false
+        })
+
+        // Limit to maxModelsLimit
+        const limitedModelIds = validModelIds.slice(0, maxModelsLimit)
+
+        if (limitedModelIds.length === 0) {
+          showNotification('None of the saved models are available anymore', 'error')
+          return
+        }
+
+        if (limitedModelIds.length < modelIds.length) {
+          showNotification(
+            `Some models were removed (not available or tier limit exceeded)`,
+            'info'
+          )
+        }
+
+        setSelectedModels(limitedModelIds)
+
+        // Clear any existing comparison results when loading a saved selection
+        if (response || conversations.length > 0) {
+          setConversations([])
+          setResponse(null)
+        }
+      }
+    },
+    [
+      loadModelSelectionFromStorage,
+      modelsByProvider,
+      maxModelsLimit,
+      setSelectedModels,
+      response,
+      conversations.length,
+      setConversations,
+      setResponse,
+    ]
+  )
 
   // Refs for error message elements to enable scrolling
   const creditWarningMessageRef = useRef<HTMLDivElement>(null)
@@ -5724,6 +5795,12 @@ function AppContent() {
                   modelsByProvider={modelsByProvider}
                   onAccurateTokenCountChange={setAccurateInputTokens}
                   creditsRemaining={creditsRemaining}
+                  savedModelSelections={savedModelSelections}
+                  onSaveModelSelection={handleSaveModelSelection}
+                  onLoadModelSelection={handleLoadModelSelection}
+                  onDeleteModelSelection={deleteModelSelection}
+                  canSaveMoreSelections={canSaveMoreSelections}
+                  maxSavedSelections={maxSavedSelections}
                 />
               </ErrorBoundary>
             </Hero>

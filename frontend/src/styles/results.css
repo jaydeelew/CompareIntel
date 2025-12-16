@@ -2766,3 +2766,350 @@ button.nav-button-primary {
     text-align: center;
   }
 }
+
+/* ============================================
+   Saved Model Selections Styles
+   ============================================ */
+
+/* Container for the saved selections button */
+.saved-selections-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+/* Saved selections button styling - matches history toggle button */
+.saved-selections-button {
+  width: 32px;
+  height: 32px;
+  background-color: transparent;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s ease;
+  color: #9ca3af;
+  box-sizing: border-box;
+  padding: 0;
+  flex-shrink: 0;
+  position: relative;
+  transform: none;
+  z-index: 1001;
+}
+
+.saved-selections-button:hover {
+  color: #6b7280;
+}
+
+.saved-selections-button.active {
+  color: #3b82f6;
+}
+
+.saved-selections-button svg {
+  width: 18px;
+  height: 18px;
+  stroke: currentColor;
+  stroke-width: 2;
+  transition: transform 0.2s ease;
+}
+
+.saved-selections-button.active svg {
+  fill: currentColor;
+  fill-opacity: 0.1;
+}
+
+/* Saved selections dropdown */
+.saved-selections-dropdown {
+  width: 100%;
+  background: #ffffff;
+  border-top: 1px solid rgba(226, 232, 240, 0.5);
+  border-radius: 0 0 1.5rem 1.5rem;
+  animation: slideDown 0.2s ease-out;
+  box-sizing: border-box;
+  padding: 1rem;
+  max-height: 350px;
+  overflow-y: auto;
+}
+
+/* Header */
+.saved-selections-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+}
+
+.saved-selections-header h4 {
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.saved-selections-count {
+  font-size: 0.75rem;
+  color: #6b7280;
+  background: rgba(226, 232, 240, 0.5);
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.375rem;
+}
+
+/* Add button */
+.saved-selections-add-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1rem;
+  margin-bottom: 0.75rem;
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.saved-selections-add-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.saved-selections-add-btn:disabled {
+  background: #e5e7eb;
+  color: #9ca3af;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.saved-selections-add-btn svg {
+  stroke: currentColor;
+  width: 16px;
+  height: 16px;
+}
+
+/* Save form */
+.saved-selections-save-form {
+  margin-bottom: 0.75rem;
+  padding: 0.75rem;
+  background: rgba(241, 245, 249, 0.5);
+  border-radius: 0.5rem;
+  border: 1px solid rgba(226, 232, 240, 0.8);
+}
+
+.saved-selections-name-input {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  color: #374151;
+  background: white;
+  box-sizing: border-box;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.saved-selections-name-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.saved-selections-name-input::placeholder {
+  color: #9ca3af;
+}
+
+.saved-selections-save-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.saved-selections-save-btn {
+  flex: 1;
+  padding: 0.5rem 1rem;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  border: none;
+  border-radius: 0.375rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.saved-selections-save-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+}
+
+.saved-selections-save-btn:disabled {
+  background: #e5e7eb;
+  color: #9ca3af;
+  cursor: not-allowed;
+}
+
+.saved-selections-cancel-btn {
+  flex: 1;
+  padding: 0.5rem 1rem;
+  background: #f3f4f6;
+  color: #6b7280;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.375rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.saved-selections-cancel-btn:hover {
+  background: #e5e7eb;
+  color: #374151;
+}
+
+.saved-selections-error {
+  margin-top: 0.5rem;
+  padding: 0.375rem 0.5rem;
+  background: rgba(239, 68, 68, 0.1);
+  color: #dc2626;
+  border-radius: 0.25rem;
+  font-size: 0.75rem;
+}
+
+/* Selections list */
+.saved-selections-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.saved-selections-empty {
+  padding: 1rem;
+  text-align: center;
+  color: #6b7280;
+  font-size: 0.8125rem;
+  background: rgba(241, 245, 249, 0.5);
+  border-radius: 0.5rem;
+  border: 1px dashed #e5e7eb;
+}
+
+/* Individual selection item */
+.saved-selection-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem;
+  background: rgba(241, 245, 249, 0.5);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  border-radius: 0.5rem;
+  transition: all 0.2s ease;
+}
+
+.saved-selection-item:hover {
+  background: rgba(226, 232, 240, 0.5);
+  border-color: #3b82f6;
+}
+
+.saved-selection-info {
+  flex: 1;
+  min-width: 0;
+  cursor: pointer;
+}
+
+.saved-selection-name {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #374151;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.saved-selection-meta {
+  font-size: 0.75rem;
+  color: #6b7280;
+  margin-top: 0.125rem;
+}
+
+.saved-selection-delete {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  color: #9ca3af;
+  font-size: 1.25rem;
+  font-weight: 400;
+  cursor: pointer;
+  border-radius: 0.25rem;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+  margin-left: 0.5rem;
+}
+
+.saved-selection-delete:hover {
+  background: rgba(239, 68, 68, 0.1);
+  color: #dc2626;
+}
+
+/* Scrollbar for dropdown */
+.saved-selections-dropdown::-webkit-scrollbar {
+  width: 8px;
+}
+
+.saved-selections-dropdown::-webkit-scrollbar-track {
+  background: rgba(241, 245, 249, 0.5);
+  border-radius: 4px;
+}
+
+.saved-selections-dropdown::-webkit-scrollbar-thumb {
+  background: rgba(203, 213, 225, 0.8);
+  border-radius: 4px;
+}
+
+.saved-selections-dropdown::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.8);
+}
+
+/* Mobile responsive */
+@media (max-width: 640px) {
+  .saved-selections-button {
+    width: 32px;
+    height: 32px;
+  }
+
+  .saved-selections-dropdown {
+    padding: 0.75rem;
+    max-height: 280px;
+    border-radius: 0 0 1.25rem 1.25rem;
+  }
+
+  .saved-selections-header h4 {
+    font-size: 0.8125rem;
+  }
+
+  .saved-selections-add-btn {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.75rem;
+  }
+
+  .saved-selection-item {
+    padding: 0.625rem;
+  }
+
+  .saved-selection-name {
+    font-size: 0.8125rem;
+  }
+}
