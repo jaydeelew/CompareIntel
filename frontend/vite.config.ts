@@ -203,9 +203,18 @@ export default defineConfig({
             },
           },
         ],
-        // Offline fallback
+        // Offline fallback - only show when actually offline
         navigateFallback: '/offline.html',
-        navigateFallbackDenylist: [/^\/api\//, /^\/admin/, /^\/verify-email/, /^\/reset-password/],
+        navigateFallbackDenylist: [
+          /^\/api\//,
+          /^\/admin/,
+          /^\/verify-email/,
+          /^\/reset-password/,
+          /^\/sitemap\.xml$/,
+          /^\/robots\.txt$/,
+          // Exclude other static files that should be served directly
+          /\.(xml|txt|json|ico|webmanifest)$/i,
+        ],
       },
       devOptions: {
         enabled: false, // Disable in development to avoid caching issues
