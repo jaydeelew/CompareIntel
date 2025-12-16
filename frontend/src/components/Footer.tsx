@@ -15,7 +15,7 @@ export const Footer: React.FC = () => {
         textAlign: 'center',
         padding: '20px 20px 16px',
         // borderTop: '1px solid #e5e7eb',
-        marginTop: '25px',
+        marginTop: 'var(--spacing-md)',
         color: '#6b7280',
         fontSize: '14px',
         backgroundColor: '#ffffff',
