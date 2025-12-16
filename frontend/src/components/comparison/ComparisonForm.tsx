@@ -1332,27 +1332,51 @@ export const ComparisonForm = memo<ComparisonFormProps>(
                 (userTier === 'anonymous' || userTier === 'free') &&
                 conversationHistory.length >= tierLimit
 
-              // Allow scrolling when notification is present to ensure message is always visible
-              const shouldHideScrollbar = historyLimit <= 3 && !shouldShowNotification
+              // Determine max visible entries for dropdown display
+              // Anonymous: 2, Free: 3, Paid: 3 (with scrolling)
+              const maxVisibleEntries = userTier === 'anonymous' ? 2 : 3
 
-              // Calculate max height based on user tier
+              // For paid tiers, show scrolling when there are more than 3 entries
+              // For anonymous/free, hide scrollbar when at or below limit
+              const isPaidTier = userTier !== 'anonymous' && userTier !== 'free'
+              const shouldHideScrollbar =
+                !isPaidTier &&
+                conversationHistory.length <= maxVisibleEntries &&
+                !shouldShowNotification
+
+              // Only calculate max height when there are entries to show
               // Each entry: 1rem top padding (16px) + content (~23px prompt + 8px margin + ~15px meta) + 1rem bottom padding (16px) ≈ 78px
               // Plus borders between items (1px each)
               // Notification height: ~70px (margin-top 8px + padding-top 8px + 2 lines of text ~41px + padding-bottom 8px + some buffer)
               const getMaxHeight = () => {
+                // If no entries, return undefined to allow natural height
+                if (conversationHistory.length === 0) {
+                  return undefined
+                }
+
                 const notificationHeight = shouldShowNotification ? 70 : 0
 
-                if (historyLimit === 2) {
-                  return `${165 + notificationHeight}px` // Height for 2 entries + notification if present
+                if (maxVisibleEntries === 2) {
+                  // Anonymous tier: 2 entries max
+                  return `${165 + notificationHeight}px`
                 }
-                return `${250 + notificationHeight}px` // Height for 3 entries + notification if present
+                // Free/Paid tiers: 3 entries max visible
+                return `${250 + notificationHeight}px`
               }
 
               const maxHeight = getMaxHeight()
+              // For paid tiers, set both maxHeight and height to ensure scrolling works
+              // For other tiers, only set maxHeight to allow shrinking when empty
+              const containerStyle = maxHeight
+                ? isPaidTier
+                  ? { maxHeight, height: maxHeight }
+                  : { maxHeight }
+                : undefined
+
               return (
                 <div
                   className={`history-inline-list ${shouldHideScrollbar ? 'no-scrollbar' : 'scrollable'}`}
-                  style={{ maxHeight, height: maxHeight }}
+                  style={containerStyle}
                 >
                   <div className="history-inline-list-content">
                     {isLoadingHistory ? (
@@ -1361,40 +1385,42 @@ export const ComparisonForm = memo<ComparisonFormProps>(
                       <div className="history-empty">No conversation history</div>
                     ) : (
                       <>
-                        {conversationHistory.slice(0, historyLimit).map(summary => {
-                          const isActive =
-                            currentVisibleComparisonId &&
-                            String(summary.id) === currentVisibleComparisonId
+                        {conversationHistory
+                          .slice(0, isPaidTier ? historyLimit : maxVisibleEntries)
+                          .map(summary => {
+                            const isActive =
+                              currentVisibleComparisonId &&
+                              String(summary.id) === currentVisibleComparisonId
 
-                          return (
-                            <div
-                              key={summary.id}
-                              className={`history-item ${isActive ? 'history-item-active' : ''}`}
-                              onClick={() => onLoadConversation(summary)}
-                            >
-                              <div className="history-item-content">
-                                <div className="history-item-prompt">
-                                  {truncatePrompt(summary.input_data)}
-                                </div>
-                                <div className="history-item-meta">
-                                  <span className="history-item-models">
-                                    {summary.models_used.length} model
-                                    {summary.models_used.length !== 1 ? 's' : ''}
-                                  </span>
-                                  <span className="history-item-date">
-                                    {formatDate(summary.created_at)}
-                                  </span>
-                                </div>
-                              </div>
-                              <button
-                                className="history-item-delete"
-                                onClick={e => onDeleteConversation(summary, e)}
+                            return (
+                              <div
+                                key={summary.id}
+                                className={`history-item ${isActive ? 'history-item-active' : ''}`}
+                                onClick={() => onLoadConversation(summary)}
                               >
-                                ×
-                              </button>
-                            </div>
-                          )
-                        })}
+                                <div className="history-item-content">
+                                  <div className="history-item-prompt">
+                                    {truncatePrompt(summary.input_data)}
+                                  </div>
+                                  <div className="history-item-meta">
+                                    <span className="history-item-models">
+                                      {summary.models_used.length} model
+                                      {summary.models_used.length !== 1 ? 's' : ''}
+                                    </span>
+                                    <span className="history-item-date">
+                                      {formatDate(summary.created_at)}
+                                    </span>
+                                  </div>
+                                </div>
+                                <button
+                                  className="history-item-delete"
+                                  onClick={e => onDeleteConversation(summary, e)}
+                                >
+                                  ×
+                                </button>
+                              </div>
+                            )
+                          })}
 
                         {/* Tier limit message */}
                         {(() => {
