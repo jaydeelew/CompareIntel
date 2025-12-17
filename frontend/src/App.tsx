@@ -240,7 +240,7 @@ function AppContent() {
         if (limitedModelIds.length < modelIds.length) {
           showNotification(
             `Some models were removed (not available or tier limit exceeded)`,
-            'info'
+            'success'
           )
         }
 
