@@ -246,6 +246,31 @@ function AppContent() {
 
         setSelectedModels(limitedModelIds)
 
+        // Collapse any expanded dropdowns that don't have selected models
+        setOpenDropdowns(prev => {
+          const newSet = new Set(prev)
+          let hasChanges = false
+          
+          // Check each open dropdown
+          for (const provider of prev) {
+            const providerModels = modelsByProvider[provider]
+            if (providerModels) {
+              // Check if this provider has any selected models
+              const hasSelectedModels = providerModels.some(model =>
+                limitedModelIds.includes(String(model.id))
+              )
+              
+              // If dropdown is open but provider has no selected models, collapse it
+              if (!hasSelectedModels) {
+                newSet.delete(provider)
+                hasChanges = true
+              }
+            }
+          }
+          
+          return hasChanges ? newSet : prev
+        })
+
         // Clear any existing comparison results when loading a saved selection
         if (response || conversations.length > 0) {
           setConversations([])
@@ -258,6 +283,7 @@ function AppContent() {
       modelsByProvider,
       maxModelsLimit,
       setSelectedModels,
+      setOpenDropdowns,
       response,
       conversations.length,
       setConversations,
