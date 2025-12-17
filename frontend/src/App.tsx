@@ -123,7 +123,8 @@ function AppContent() {
   } = modelSelectionHook
 
   // Saved model selections hook for storing/loading named model selection groups
-  const savedSelectionsHook = useSavedModelSelections()
+  // Pass user ID to store selections per user (registered users use their ID, anonymous users get a generated ID)
+  const savedSelectionsHook = useSavedModelSelections(user?.id)
   const {
     savedSelections: savedModelSelections,
     saveSelection: saveModelSelection,

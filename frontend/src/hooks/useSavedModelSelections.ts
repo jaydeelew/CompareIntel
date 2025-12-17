@@ -3,11 +3,16 @@
  *
  * Allows users to save, load, and delete named groups of model selections.
  * Persisted to localStorage with a maximum of 10 saved selections.
+ *
+ * Each user (registered or anonymous) has their own independent collection:
+ * - Registered users: keyed by their user ID
+ * - Anonymous users: keyed by a persistent anonymous ID stored in localStorage
  */
 
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useMemo } from 'react'
 
-const STORAGE_KEY = 'compareintel_saved_model_selections'
+const STORAGE_KEY_PREFIX = 'compareintel_saved_model_selections'
+const ANONYMOUS_ID_KEY = 'compareintel_anonymous_id'
 const MAX_SAVED_SELECTIONS = 10
 
 export interface SavedModelSelection {
@@ -36,11 +41,41 @@ function generateId(): string {
 }
 
 /**
- * Load saved selections from localStorage
+ * Get or create an anonymous user ID
+ * This ID persists in localStorage so anonymous users keep their selections
  */
-function loadFromStorage(): SavedModelSelection[] {
+function getAnonymousId(): string {
   try {
-    const stored = localStorage.getItem(STORAGE_KEY)
+    let anonymousId = localStorage.getItem(ANONYMOUS_ID_KEY)
+    if (!anonymousId) {
+      anonymousId = `anon_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`
+      localStorage.setItem(ANONYMOUS_ID_KEY, anonymousId)
+    }
+    return anonymousId
+  } catch (error) {
+    // If localStorage fails, generate a session-only ID
+    console.warn('Failed to access localStorage for anonymous ID:', error)
+    return `anon_session_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`
+  }
+}
+
+/**
+ * Get the storage key for a specific user
+ * @param userId - The user ID (number for registered users, undefined for anonymous)
+ */
+function getStorageKey(userId: number | undefined): string {
+  if (userId !== undefined) {
+    return `${STORAGE_KEY_PREFIX}_user_${userId}`
+  }
+  return `${STORAGE_KEY_PREFIX}_${getAnonymousId()}`
+}
+
+/**
+ * Load saved selections from localStorage for a specific user
+ */
+function loadFromStorage(storageKey: string): SavedModelSelection[] {
+  try {
+    const stored = localStorage.getItem(storageKey)
     if (stored) {
       const parsed = JSON.parse(stored)
       if (Array.isArray(parsed)) {
@@ -54,23 +89,30 @@ function loadFromStorage(): SavedModelSelection[] {
 }
 
 /**
- * Save selections to localStorage
+ * Save selections to localStorage for a specific user
  */
-function saveToStorage(selections: SavedModelSelection[]): void {
+function saveToStorage(storageKey: string, selections: SavedModelSelection[]): void {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(selections))
+    localStorage.setItem(storageKey, JSON.stringify(selections))
   } catch (error) {
     console.warn('Failed to save model selections to localStorage:', error)
   }
 }
 
-export function useSavedModelSelections(): UseSavedModelSelectionsReturn {
+/**
+ * Hook for managing saved model selections
+ * @param userId - The user ID (number for registered users, undefined for anonymous)
+ */
+export function useSavedModelSelections(userId: number | undefined): UseSavedModelSelectionsReturn {
   const [savedSelections, setSavedSelections] = useState<SavedModelSelection[]>([])
 
-  // Load saved selections from localStorage on mount
+  // Compute the storage key based on user ID
+  const storageKey = useMemo(() => getStorageKey(userId), [userId])
+
+  // Load saved selections from localStorage when storage key changes
   useEffect(() => {
-    setSavedSelections(loadFromStorage())
-  }, [])
+    setSavedSelections(loadFromStorage(storageKey))
+  }, [storageKey])
 
   // Check if user can save more selections
   const canSaveMore = savedSelections.length < MAX_SAVED_SELECTIONS
@@ -119,11 +161,11 @@ export function useSavedModelSelections(): UseSavedModelSelectionsReturn {
 
       const updated = [...savedSelections, newSelection]
       setSavedSelections(updated)
-      saveToStorage(updated)
+      saveToStorage(storageKey, updated)
 
       return { success: true }
     },
-    [savedSelections]
+    [savedSelections, storageKey]
   )
 
   /**
@@ -147,9 +189,9 @@ export function useSavedModelSelections(): UseSavedModelSelectionsReturn {
     (id: string): void => {
       const updated = savedSelections.filter(s => s.id !== id)
       setSavedSelections(updated)
-      saveToStorage(updated)
+      saveToStorage(storageKey, updated)
     },
-    [savedSelections]
+    [savedSelections, storageKey]
   )
 
   /**
@@ -185,11 +227,11 @@ export function useSavedModelSelections(): UseSavedModelSelectionsReturn {
       })
 
       setSavedSelections(updated)
-      saveToStorage(updated)
+      saveToStorage(storageKey, updated)
 
       return { success: true }
     },
-    [savedSelections]
+    [savedSelections, storageKey]
   )
 
   return {
