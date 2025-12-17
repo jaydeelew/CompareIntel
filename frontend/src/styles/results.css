@@ -2383,10 +2383,6 @@ button.nav-button-primary {
   /* No transform to prevent position shifting */
 }
 
-.history-toggle-button.active {
-  /* No transform on button - rotation is applied to SVG only */
-}
-
 .history-toggle-button.active:hover {
   color: #6b7280;
 }
