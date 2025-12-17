@@ -246,12 +246,12 @@ function AppContent() {
 
         setSelectedModels(limitedModelIds)
 
-        // Collapse any expanded dropdowns that don't have selected models
+        // Update dropdown states: collapse dropdowns without selections, expand dropdowns with selections
         setOpenDropdowns(prev => {
           const newSet = new Set(prev)
           let hasChanges = false
           
-          // Check each open dropdown
+          // First, collapse any open dropdowns that don't have selected models
           for (const provider of prev) {
             const providerModels = modelsByProvider[provider]
             if (providerModels) {
@@ -263,6 +263,22 @@ function AppContent() {
               // If dropdown is open but provider has no selected models, collapse it
               if (!hasSelectedModels) {
                 newSet.delete(provider)
+                hasChanges = true
+              }
+            }
+          }
+          
+          // Then, expand dropdowns for providers that have selected models
+          for (const [provider, providerModels] of Object.entries(modelsByProvider)) {
+            if (providerModels) {
+              // Check if this provider has any selected models
+              const hasSelectedModels = providerModels.some(model =>
+                limitedModelIds.includes(String(model.id))
+              )
+              
+              // If provider has selected models and dropdown is not already open, expand it
+              if (hasSelectedModels && !newSet.has(provider)) {
+                newSet.add(provider)
                 hasChanges = true
               }
             }
