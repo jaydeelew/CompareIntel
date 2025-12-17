@@ -2820,17 +2820,50 @@ button.nav-button-primary {
   fill-opacity: 0.1;
 }
 
-/* Saved selections dropdown */
+/* Saved selections dropdown - seamlessly extends textarea container */
 .saved-selections-dropdown {
   width: 100%;
   background: #ffffff;
-  border-top: 1px solid rgba(226, 232, 240, 0.5);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  /* Hide overflow on outer container to clip scrollbar to rounded corners */
+  overflow: hidden;
   border-radius: 0 0 1.5rem 1.5rem;
   animation: slideDown 0.2s ease-out;
   box-sizing: border-box;
-  padding: 1rem;
+}
+
+/* Content wrapper for proper scrolling */
+.saved-selections-content {
+  width: 100%;
   max-height: 350px;
   overflow-y: auto;
+  overflow-x: hidden;
+  padding: 1rem;
+  /* Custom scrollbar styling to match dropdown gradient */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(226, 232, 240, 0.8) rgba(255, 255, 255, 0.5);
+  /* Add padding-bottom to create space so scrollbar doesn't extend to bottom edge */
+  padding-bottom: 0.5rem;
+  box-sizing: border-box;
+}
+
+.saved-selections-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.saved-selections-content::-webkit-scrollbar-track {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(226, 232, 240, 0.8) 100%);
+  border-radius: 4px;
+}
+
+.saved-selections-content::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, rgba(226, 232, 240, 0.9) 0%, rgba(241, 245, 249, 0.9) 100%);
+  border-radius: 4px;
+  border: 1px solid rgba(226, 232, 240, 0.5);
+}
+
+.saved-selections-content::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, rgba(203, 213, 225, 0.9) 0%, rgba(226, 232, 240, 0.9) 100%);
 }
 
 /* Header */
@@ -3064,25 +3097,6 @@ button.nav-button-primary {
   color: #dc2626;
 }
 
-/* Scrollbar for dropdown */
-.saved-selections-dropdown::-webkit-scrollbar {
-  width: 8px;
-}
-
-.saved-selections-dropdown::-webkit-scrollbar-track {
-  background: rgba(241, 245, 249, 0.5);
-  border-radius: 4px;
-}
-
-.saved-selections-dropdown::-webkit-scrollbar-thumb {
-  background: rgba(203, 213, 225, 0.8);
-  border-radius: 4px;
-}
-
-.saved-selections-dropdown::-webkit-scrollbar-thumb:hover {
-  background: rgba(148, 163, 184, 0.8);
-}
-
 /* Mobile responsive */
 @media (max-width: 640px) {
   .saved-selections-button {
@@ -3091,9 +3105,12 @@ button.nav-button-primary {
   }
 
   .saved-selections-dropdown {
+    border-radius: 0 0 1.25rem 1.25rem;
+  }
+
+  .saved-selections-content {
     padding: 0.75rem;
     max-height: 280px;
-    border-radius: 0 0 1.25rem 1.25rem;
   }
 
   .saved-selections-header h4 {

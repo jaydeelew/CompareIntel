@@ -349,6 +349,21 @@
   border-radius: 0 0 0 0;
 }
 
+/* When saved selections dropdown is visible, adjust border radius */
+.textarea-container:has(.saved-selections-dropdown) .hero-input-textarea {
+  border-radius: 1.5rem 1.5rem 0 0;
+  border-bottom: none;
+}
+
+.textarea-container:has(.saved-selections-dropdown) .textarea-wrapper {
+  border-radius: 1.5rem 1.5rem 0 0;
+}
+
+.textarea-container:has(.saved-selections-dropdown) .textarea-actions-area {
+  border-radius: 0;
+  border-bottom: none;
+}
+
 .hero-input-textarea {
   width: 100%;
   /* Left padding: 1.6875rem (27px) to align placeholder with chevron icon
