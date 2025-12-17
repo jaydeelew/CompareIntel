@@ -1680,15 +1680,16 @@ export const ComparisonForm = memo<ComparisonFormProps>(
                   </button>
                 )}
 
-                {/* Saved Selections List */}
-                <div className="saved-selections-list">
-                  {savedModelSelections.length === 0 ? (
-                    <div className="saved-selections-empty">
-                      No saved selections yet. Save your current model selection to quickly load it
-                      later!
-                    </div>
-                  ) : (
-                    savedModelSelections.map(selection => (
+                {/* Saved Selections List - wrapped for scrolling */}
+                <div className="saved-selections-list-wrapper">
+                  <div className="saved-selections-list">
+                    {savedModelSelections.length === 0 ? (
+                      <div className="saved-selections-empty">
+                        No saved selections yet. Save your current model selection to quickly load it
+                        later!
+                      </div>
+                    ) : (
+                      savedModelSelections.map(selection => (
                       <div key={selection.id} className="saved-selection-item">
                         <div
                           className="saved-selection-info"
@@ -1735,6 +1736,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
                       </div>
                     ))
                   )}
+                  </div>
                 </div>
               </div>
             </div>

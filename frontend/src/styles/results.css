@@ -2832,37 +2832,41 @@ button.nav-button-primary {
   box-sizing: border-box;
 }
 
-/* Content wrapper for proper scrolling */
+/* Content wrapper - non-scrolling container for sticky header and save button */
 .saved-selections-content {
   width: 100%;
-  max-height: 350px;
-  overflow-y: auto;
-  overflow-x: hidden;
   padding: 1rem;
-  /* Custom scrollbar styling to match dropdown gradient */
-  scrollbar-width: thin;
-  scrollbar-color: rgba(226, 232, 240, 0.8) rgba(255, 255, 255, 0.5);
-  /* Add padding-bottom to create space so scrollbar doesn't extend to bottom edge */
   padding-bottom: 0.5rem;
   box-sizing: border-box;
 }
 
-.saved-selections-content::-webkit-scrollbar {
+/* Scrollable wrapper for the list only - height for ~3 items */
+.saved-selections-list-wrapper {
+  /* Height calculation: 3 items * ~67px per item + 2 gaps * 8px = ~217px, with buffer */
+  max-height: 230px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  /* Custom scrollbar styling to match dropdown gradient */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(226, 232, 240, 0.8) rgba(255, 255, 255, 0.5);
+}
+
+.saved-selections-list-wrapper::-webkit-scrollbar {
   width: 8px;
 }
 
-.saved-selections-content::-webkit-scrollbar-track {
+.saved-selections-list-wrapper::-webkit-scrollbar-track {
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(226, 232, 240, 0.8) 100%);
   border-radius: 4px;
 }
 
-.saved-selections-content::-webkit-scrollbar-thumb {
+.saved-selections-list-wrapper::-webkit-scrollbar-thumb {
   background: linear-gradient(135deg, rgba(226, 232, 240, 0.9) 0%, rgba(241, 245, 249, 0.9) 100%);
   border-radius: 4px;
   border: 1px solid rgba(226, 232, 240, 0.5);
 }
 
-.saved-selections-content::-webkit-scrollbar-thumb:hover {
+.saved-selections-list-wrapper::-webkit-scrollbar-thumb:hover {
   background: linear-gradient(135deg, rgba(203, 213, 225, 0.9) 0%, rgba(226, 232, 240, 0.9) 100%);
 }
 
@@ -3110,7 +3114,11 @@ button.nav-button-primary {
 
   .saved-selections-content {
     padding: 0.75rem;
-    max-height: 280px;
+  }
+
+  .saved-selections-list-wrapper {
+    /* Slightly smaller on mobile due to reduced item padding, with buffer for 3 items */
+    max-height: 210px;
   }
 
   .saved-selections-header h4 {
