@@ -2,7 +2,7 @@
  * Custom hook for managing saved model selections
  *
  * Allows users to save, load, and delete named groups of model selections.
- * Persisted to localStorage with a maximum of 10 saved selections.
+ * Persisted to localStorage with tier-based limits on saved selections.
  *
  * Each user (registered or anonymous) has their own independent collection:
  * - Registered users: keyed by their user ID
@@ -10,10 +10,10 @@
  */
 
 import { useState, useCallback, useEffect, useMemo } from 'react'
+import { getSavedModelSelectionLimit, type SubscriptionTier } from '../config/constants'
 
 const STORAGE_KEY_PREFIX = 'compareintel_saved_model_selections'
 const ANONYMOUS_ID_KEY = 'compareintel_anonymous_id'
-const MAX_SAVED_SELECTIONS = 10
 
 export interface SavedModelSelection {
   id: string
@@ -102,12 +102,19 @@ function saveToStorage(storageKey: string, selections: SavedModelSelection[]): v
 /**
  * Hook for managing saved model selections
  * @param userId - The user ID (number for registered users, undefined for anonymous)
+ * @param tier - The subscription tier (defaults to 'anonymous' if not provided)
  */
-export function useSavedModelSelections(userId: number | undefined): UseSavedModelSelectionsReturn {
+export function useSavedModelSelections(
+  userId: number | undefined,
+  tier: SubscriptionTier = 'anonymous'
+): UseSavedModelSelectionsReturn {
   const [savedSelections, setSavedSelections] = useState<SavedModelSelection[]>([])
 
   // Compute the storage key based on user ID
   const storageKey = useMemo(() => getStorageKey(userId), [userId])
+
+  // Calculate max selections based on tier
+  const maxSelections = useMemo(() => getSavedModelSelectionLimit(tier), [tier])
 
   // Load saved selections from localStorage when storage key changes
   useEffect(() => {
@@ -115,7 +122,7 @@ export function useSavedModelSelections(userId: number | undefined): UseSavedMod
   }, [storageKey])
 
   // Check if user can save more selections
-  const canSaveMore = savedSelections.length < MAX_SAVED_SELECTIONS
+  const canSaveMore = savedSelections.length < maxSelections
 
   /**
    * Save a new model selection with a name
@@ -138,10 +145,10 @@ export function useSavedModelSelections(userId: number | undefined): UseSavedMod
       }
 
       // Check if at limit
-      if (savedSelections.length >= MAX_SAVED_SELECTIONS) {
+      if (savedSelections.length >= maxSelections) {
         return {
           success: false,
-          error: `Maximum of ${MAX_SAVED_SELECTIONS} saved selections reached. Please delete one to save a new selection.`,
+          error: `Maximum of ${maxSelections} saved selections reached. Please delete one to save a new selection.`,
         }
       }
 
@@ -165,7 +172,7 @@ export function useSavedModelSelections(userId: number | undefined): UseSavedMod
 
       return { success: true }
     },
-    [savedSelections, storageKey]
+    [savedSelections, storageKey, maxSelections]
   )
 
   /**
@@ -241,6 +248,6 @@ export function useSavedModelSelections(userId: number | undefined): UseSavedMod
     deleteSelection,
     renameSelection,
     canSaveMore,
-    maxSelections: MAX_SAVED_SELECTIONS,
+    maxSelections,
   }
 }

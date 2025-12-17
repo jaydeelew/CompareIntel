@@ -62,6 +62,20 @@ export const CONVERSATION_LIMITS = {
 } as const
 
 // ============================================================================
+// Saved Model Selection Limits
+// ============================================================================
+// Maximum number of saved model selections per subscription tier
+
+export const SAVED_MODEL_SELECTION_LIMITS = {
+  anonymous: 2,
+  free: 3,
+  starter: 5,
+  starter_plus: 10,
+  pro: 15,
+  pro_plus: 20,
+} as const
+
+// ============================================================================
 // Credit-Based System Configuration
 // ============================================================================
 // Credit allocations for each tier
@@ -134,6 +148,16 @@ export function getDailyLimit(tier: SubscriptionTier | string): number {
  */
 export function getConversationLimit(tier: SubscriptionTier | string): number {
   return CONVERSATION_LIMITS[tier as SubscriptionTier] ?? CONVERSATION_LIMITS.anonymous
+}
+
+/**
+ * Get saved model selection limit for a given subscription tier.
+ *
+ * @param tier - Subscription tier name
+ * @returns Maximum number of saved model selections allowed
+ */
+export function getSavedModelSelectionLimit(tier: SubscriptionTier | string): number {
+  return SAVED_MODEL_SELECTION_LIMITS[tier as SubscriptionTier] ?? SAVED_MODEL_SELECTION_LIMITS.anonymous
 }
 
 /**

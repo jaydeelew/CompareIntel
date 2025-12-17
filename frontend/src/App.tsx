@@ -124,7 +124,8 @@ function AppContent() {
 
   // Saved model selections hook for storing/loading named model selection groups
   // Pass user ID to store selections per user (registered users use their ID, anonymous users get a generated ID)
-  const savedSelectionsHook = useSavedModelSelections(user?.id)
+  // Pass subscription tier to enforce tier-based limits on saved selections
+  const savedSelectionsHook = useSavedModelSelections(user?.id, user?.subscription_tier ?? 'anonymous')
   const {
     savedSelections: savedModelSelections,
     saveSelection: saveModelSelection,
