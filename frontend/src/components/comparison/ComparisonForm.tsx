@@ -1,6 +1,3 @@
-import mammoth from 'mammoth'
-import * as pdfjsLib from 'pdfjs-dist'
-import pdfjsWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?url'
 import React, { memo, useEffect, useCallback, useMemo, useState, useRef } from 'react'
 
 import { getConversationLimit } from '../../config/constants'
@@ -681,48 +678,6 @@ export const ComparisonForm = memo<ComparisonFormProps>(
         }
       }
     }, [showSavedSelectionsDropdown])
-
-    // Configure PDF.js worker
-    useEffect(() => {
-      // Use the worker file from the pdfjs-dist package instead of CDN
-      pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker
-    }, [])
-
-    // Extract text from PDF file
-    const extractTextFromPDF = useCallback(async (file: File): Promise<string> => {
-      try {
-        const arrayBuffer = await file.arrayBuffer()
-        const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise
-        let fullText = ''
-
-        for (let i = 1; i <= pdf.numPages; i++) {
-          const page = await pdf.getPage(i)
-          const textContent = await page.getTextContent()
-          const pageText = textContent.items
-            .filter(item => 'str' in item)
-            .map(item => (item as { str: string }).str)
-            .join(' ')
-          fullText += pageText + '\n\n'
-        }
-
-        return fullText.trim()
-      } catch (error) {
-        console.error('Error extracting text from PDF:', error)
-        throw new Error('Failed to extract text from PDF file')
-      }
-    }, [])
-
-    // Extract text from DOCX file
-    const extractTextFromDOCX = useCallback(async (file: File): Promise<string> => {
-      try {
-        const arrayBuffer = await file.arrayBuffer()
-        const result = await mammoth.extractRawText({ arrayBuffer })
-        return result.value
-      } catch (error) {
-        console.error('Error extracting text from DOCX:', error)
-        throw new Error('Failed to extract text from DOCX file')
-      }
-    }, [])
 
     // Check if file is a document type that can have text extracted
     const isDocumentFile = useCallback((file: File): boolean => {

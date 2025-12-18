@@ -14,3 +14,4 @@ export { ResultsDisplay } from './ResultsDisplay'
 export type { ResultsDisplayProps } from './ResultsDisplay'
 
 export { ComparisonForm } from './ComparisonForm'
+export type { AttachedFile, StoredAttachedFile } from './ComparisonForm'

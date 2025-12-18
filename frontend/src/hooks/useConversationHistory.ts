@@ -45,7 +45,8 @@ export interface UseConversationHistoryReturn {
     inputData: string,
     modelsUsed: string[],
     conversationsToSave: ModelConversation[],
-    isUpdate?: boolean
+    isUpdate?: boolean,
+    fileContents?: Array<{ name: string; content: string; placeholder: string }>
   ) => string
   deleteConversation: (summary: ConversationSummary, e: React.MouseEvent) => Promise<void>
   loadConversationFromAPI: (conversationId: ConversationId) => Promise<ModelConversation[] | null>
