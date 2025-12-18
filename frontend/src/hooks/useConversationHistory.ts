@@ -101,7 +101,8 @@ export function useConversationHistory({
       inputData: string,
       modelsUsed: string[],
       conversationsToSave: ModelConversation[],
-      isUpdate: boolean = false
+      isUpdate: boolean = false,
+      fileContents?: Array<{ name: string; content: string; placeholder: string }>
     ): string => {
       try {
         const history = loadHistoryFromLocalStorage()
@@ -279,10 +280,11 @@ export function useConversationHistory({
         localStorage.setItem(
           `compareintel_conversation_${conversationId}`,
           JSON.stringify({
-            input_data: inputData, // Always keep first query as input_data
+            input_data: inputData, // Always keep first query as input_data (with placeholders)
             models_used: modelsUsed,
             created_at: existingData?.created_at || conversationSummary.created_at,
             messages: conversationMessages,
+            file_contents: fileContents || [], // Store extracted file contents separately
           })
         )
 

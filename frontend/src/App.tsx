@@ -9,6 +9,9 @@ import {
   Suspense,
 } from 'react'
 import { Routes, Route, useNavigate, useLocation } from 'react-router-dom'
+import mammoth from 'mammoth'
+import * as pdfjsLib from 'pdfjs-dist'
+import pdfjsWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?url'
 
 // Import all CSS modules directly (better for Vite than CSS @import)
 import './styles/variables.css'
@@ -28,7 +31,7 @@ const LatexRenderer = lazy(() => import('./components/LatexRenderer'))
 const AdminPanel = lazy(() => import('./components/admin/AdminPanel'))
 import { Layout } from './components'
 import { AuthModal, VerifyEmail, VerificationBanner, ResetPassword } from './components/auth'
-import { ComparisonForm } from './components/comparison'
+import { ComparisonForm, type AttachedFile, type StoredAttachedFile } from './components/comparison'
 import { Navigation, Hero, MockModeBanner, InstallPrompt } from './components/layout'
 import { About, Features, FAQ, PrivacyPolicy, HowItWorks } from './components/pages'
 import { DoneSelectingCard, ErrorBoundary, LoadingSpinner } from './components/shared'
@@ -137,6 +140,225 @@ function AppContent() {
 
   // Store accurate token count from ComparisonForm (from /estimate-tokens endpoint)
   const [accurateInputTokens, setAccurateInputTokens] = useState<number | null>(null)
+
+  // File attachments state
+  const [attachedFiles, setAttachedFiles] = useState<AttachedFile[]>([])
+
+  // Configure PDF.js worker
+  useEffect(() => {
+    pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker
+  }, [])
+
+  // Extract text from PDF file
+  const extractTextFromPDF = useCallback(async (file: File): Promise<string> => {
+    try {
+      const arrayBuffer = await file.arrayBuffer()
+      const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise
+      let fullText = ''
+
+      for (let i = 1; i <= pdf.numPages; i++) {
+        const page = await pdf.getPage(i)
+        const textContent = await page.getTextContent()
+        const pageText = textContent.items
+          .filter(item => 'str' in item)
+          .map(item => (item as { str: string }).str)
+          .join(' ')
+        fullText += pageText + '\n\n'
+      }
+
+      return fullText.trim()
+    } catch (error) {
+      console.error('Error extracting text from PDF:', error)
+      throw new Error('Failed to extract text from PDF file')
+    }
+  }, [])
+
+  // Extract text from DOCX file
+  const extractTextFromDOCX = useCallback(async (file: File): Promise<string> => {
+    try {
+      const arrayBuffer = await file.arrayBuffer()
+      const result = await mammoth.extractRawText({ arrayBuffer })
+      return result.value
+    } catch (error) {
+      console.error('Error extracting text from DOCX:', error)
+      throw new Error('Failed to extract text from DOCX file')
+    }
+  }, [])
+
+  // Expand file contents - replaces placeholders with actual file contents
+  // Structures the message similar to Cursor IDE: user input separated from file contents
+  const expandFiles = useCallback(
+    async (files: (AttachedFile | StoredAttachedFile)[], userInput: string): Promise<string> => {
+      if (files.length === 0) {
+        return userInput
+      }
+
+      // Extract content from all files
+      // Handle both AttachedFile (with File object) and StoredAttachedFile (with stored content)
+      const fileContents: Array<{ name: string; content: string }> = []
+
+      for (const attachedFile of files) {
+        try {
+          let content = ''
+
+          // Check if this is a StoredAttachedFile (has content property)
+          if ('content' in attachedFile && attachedFile.content) {
+            // Use stored content directly
+            content = attachedFile.content
+          } else if ('file' in attachedFile && attachedFile.file) {
+            // Extract content from File object (AttachedFile)
+            const fileName = attachedFile.file.name.toLowerCase()
+
+            // Handle PDF files
+            if (fileName.endsWith('.pdf')) {
+              content = await extractTextFromPDF(attachedFile.file)
+            }
+            // Handle DOCX files
+            else if (fileName.endsWith('.docx')) {
+              content = await extractTextFromDOCX(attachedFile.file)
+            }
+            // Handle other document types (DOC, ODT) - try as text first
+            else if (fileName.endsWith('.doc') || fileName.endsWith('.odt')) {
+              try {
+                content = await new Promise<string>((resolve, reject) => {
+                  const reader = new FileReader()
+                  reader.onload = e => resolve(e.target?.result as string)
+                  reader.onerror = reject
+                  reader.readAsText(attachedFile.file)
+                })
+              } catch {
+                throw new Error(`Failed to extract text from ${attachedFile.name}`)
+              }
+            }
+            // Handle text/code files
+            else {
+              content = await new Promise<string>((resolve, reject) => {
+                const reader = new FileReader()
+                reader.onload = e => resolve(e.target?.result as string)
+                reader.onerror = reject
+                reader.readAsText(attachedFile.file)
+              })
+            }
+          }
+
+          if (content && content.trim()) {
+            fileContents.push({ name: attachedFile.name, content: content.trim() })
+          }
+        } catch (error) {
+          console.error(`Error extracting content from ${attachedFile.name}:`, error)
+          // Continue with other files even if one fails
+        }
+      }
+
+      // Create a map of placeholder -> file content for quick lookup
+      const fileContentMap = new Map<string, string>()
+      fileContents.forEach(({ name, content }) => {
+        // Find the matching attached file by name
+        const attachedFile = files.find(f => f.name === name)
+        if (attachedFile) {
+          fileContentMap.set(attachedFile.placeholder, content)
+        }
+      })
+
+      // Preserve the order of user input and files as they appear in the textarea
+      // This handles any combination:
+      // - Files before user input: [file: test.txt] Please review this
+      // - User input before files: Please review [file: test.txt]
+      // - Mixed: [file: file1.txt] Review this [file: file2.txt] and this
+      // - Multiple files: [file: file1.txt] [file: file2.txt]
+      
+      // Replace each placeholder with explicit file markers and content
+      // Format: [FILE: filename] followed by content, then [/FILE: filename]
+      // This makes it very clear to the model what is file content vs user input
+      let result = userInput
+      
+      // Process files in the order they appear in the input (by finding placeholders)
+      // Use a more robust replacement that handles multiple occurrences
+      files.forEach(attachedFile => {
+        const placeholder = attachedFile.placeholder
+        const content = fileContentMap.get(placeholder)
+        
+        if (content) {
+          // Replace placeholder with explicit file markers and content
+          // Use clear markers that the model can easily distinguish:
+          // [FILE: filename] marks the start of file content
+          // [/FILE: filename] marks the end of file content
+          const fileSection = `\n\n[FILE: ${attachedFile.name}]\n${content}\n[/FILE: ${attachedFile.name}]\n\n`
+          // Replace all occurrences of this placeholder (in case user pasted it multiple times)
+          result = result.split(placeholder).join(fileSection)
+        } else {
+          // File extraction failed, remove placeholder but add a note
+          const errorSection = `\n\n[FILE: ${attachedFile.name} - extraction failed]\n\n`
+          result = result.split(placeholder).join(errorSection)
+        }
+      })
+
+      // Clean up excessive newlines (more than 2 consecutive) while preserving structure
+      result = result.replace(/\n{3,}/g, '\n\n')
+      
+      return result.trim()
+    },
+    [extractTextFromPDF, extractTextFromDOCX]
+  )
+
+  // Helper function to extract file content from AttachedFile[] for storage
+  const extractFileContentForStorage = useCallback(
+    async (files: AttachedFile[]): Promise<Array<{ name: string; content: string; placeholder: string }>> => {
+      const extractedFiles: Array<{ name: string; content: string; placeholder: string }> = []
+
+      for (const attachedFile of files) {
+        try {
+          const fileName = attachedFile.file.name.toLowerCase()
+          let content = ''
+
+          // Handle PDF files
+          if (fileName.endsWith('.pdf')) {
+            content = await extractTextFromPDF(attachedFile.file)
+          }
+          // Handle DOCX files
+          else if (fileName.endsWith('.docx')) {
+            content = await extractTextFromDOCX(attachedFile.file)
+          }
+          // Handle other document types (DOC, ODT) - try as text first
+          else if (fileName.endsWith('.doc') || fileName.endsWith('.odt')) {
+            try {
+              content = await new Promise<string>((resolve, reject) => {
+                const reader = new FileReader()
+                reader.onload = e => resolve(e.target?.result as string)
+                reader.onerror = reject
+                reader.readAsText(attachedFile.file)
+              })
+            } catch {
+              throw new Error(`Failed to extract text from ${attachedFile.name}`)
+            }
+          }
+          // Handle text/code files
+          else {
+            content = await new Promise<string>((resolve, reject) => {
+              const reader = new FileReader()
+              reader.onload = e => resolve(e.target?.result as string)
+              reader.onerror = reject
+              reader.readAsText(attachedFile.file)
+            })
+          }
+
+          if (content && content.trim()) {
+            extractedFiles.push({
+              name: attachedFile.name,
+              content: content.trim(),
+              placeholder: attachedFile.placeholder,
+            })
+          }
+        } catch (error) {
+          console.error(`Error extracting content from ${attachedFile.name} for storage:`, error)
+          // Continue with other files even if one fails
+        }
+      }
+
+      return extractedFiles
+    },
+    [extractTextFromPDF, extractTextFromDOCX]
+  )
 
   const comparisonHook = useModelComparison()
   const {
@@ -1586,7 +1808,7 @@ function AppContent() {
   const loadConversationFromLocalStorage = useCallback(
     (
       id: string
-    ): { input_data: string; models_used: string[]; messages: StoredMessage[] } | null => {
+    ): { input_data: string; models_used: string[]; messages: StoredMessage[]; file_contents?: Array<{ name: string; content: string; placeholder: string }> } | null => {
       try {
         const stored = localStorage.getItem(`compareintel_conversation_${id}`)
         if (stored) {
@@ -1660,6 +1882,7 @@ function AppContent() {
         input_data: string
         models_used: string[]
         messages: StoredMessage[]
+        file_contents?: Array<{ name: string; content: string; placeholder: string }>
       } | null = null
 
       if (isAuthenticated && typeof summary.id === 'number') {
@@ -3581,6 +3804,8 @@ function AppContent() {
     setCurrentVisibleComparisonId(null)
     setModelErrors({})
     hasScrolledToResultsOnFirstChunkRef.current = false // Reset scroll tracking for first chunk
+    // Clear attached files when starting a new comparison
+    setAttachedFiles([])
   }
 
   // Function to scroll all conversation content areas to the last user message
@@ -3855,66 +4080,92 @@ function AppContent() {
     // For follow-up mode, we send the complete conversation history (both user and assistant messages)
     // with model_id tags so the backend can filter per-model histories.
     // Each model will receive: all user messages + only its own assistant messages
-    const apiConversationHistory =
-      isFollowUpMode && conversations.length > 0
-        ? (() => {
-            // Get all conversations for selected models
-            const selectedConversations = conversations.filter(
-              conv => selectedModels.includes(conv.modelId) && conv.messages.length > 0
-            )
-            if (selectedConversations.length === 0) return []
+    // IMPORTANT: Expand file placeholders in user messages so models can see file content in history
+    let apiConversationHistory: Array<{
+      role: 'user' | 'assistant'
+      content: string
+      model_id?: string
+    }> = []
 
-            // Collect all messages from all selected conversations
-            const allMessages: Array<{
-              role: 'user' | 'assistant'
-              content: string
-              model_id?: string
-              timestamp: string
-            }> = []
+    if (isFollowUpMode && conversations.length > 0) {
+      // Get all conversations for selected models
+      const selectedConversations = conversations.filter(
+        conv => selectedModels.includes(conv.modelId) && conv.messages.length > 0
+      )
+      
+      if (selectedConversations.length > 0) {
+        // Collect all messages from all selected conversations
+        const allMessages: Array<{
+          role: 'user' | 'assistant'
+          content: string
+          model_id?: string
+          timestamp: string
+        }> = []
 
-            // Collect all messages with their timestamps
-            selectedConversations.forEach(conv => {
-              conv.messages.forEach(msg => {
-                allMessages.push({
-                  role: msg.type === 'user' ? 'user' : 'assistant',
-                  content: msg.content,
-                  model_id: msg.type === 'assistant' ? conv.modelId : undefined, // Include model_id for assistant messages
-                  timestamp: msg.timestamp,
-                })
-              })
+        // Collect all messages with their timestamps
+        selectedConversations.forEach(conv => {
+          conv.messages.forEach(msg => {
+            allMessages.push({
+              role: msg.type === 'user' ? 'user' : 'assistant',
+              content: msg.content,
+              model_id: msg.type === 'assistant' ? conv.modelId : undefined, // Include model_id for assistant messages
+              timestamp: msg.timestamp,
             })
+          })
+        })
 
-            // Deduplicate user messages (same content and timestamp within 1 second)
-            const seenUserMessages = new Set<string>()
-            const deduplicatedMessages: typeof allMessages = []
+        // Deduplicate user messages (same content and timestamp within 1 second)
+        const seenUserMessages = new Set<string>()
+        const deduplicatedMessages: typeof allMessages = []
 
-            // Sort all messages by timestamp to maintain chronological order
-            const sortedMessages = [...allMessages].sort(
-              (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
-            )
+        // Sort all messages by timestamp to maintain chronological order
+        const sortedMessages = [...allMessages].sort(
+          (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+        )
 
-            sortedMessages.forEach(msg => {
-              if (msg.role === 'user') {
-                // Deduplicate user messages
-                const key = `${msg.content}-${Math.floor(new Date(msg.timestamp).getTime() / 1000)}`
-                if (!seenUserMessages.has(key)) {
-                  seenUserMessages.add(key)
-                  deduplicatedMessages.push(msg)
+        sortedMessages.forEach(msg => {
+          if (msg.role === 'user') {
+            // Deduplicate user messages
+            const key = `${msg.content}-${Math.floor(new Date(msg.timestamp).getTime() / 1000)}`
+            if (!seenUserMessages.has(key)) {
+              seenUserMessages.add(key)
+              deduplicatedMessages.push(msg)
+            }
+          } else {
+            // Always include assistant messages (they're already per-model)
+            deduplicatedMessages.push(msg)
+          }
+        })
+
+        // Expand file placeholders in user messages using stored file contents
+        // This ensures models can see file content in conversation history for follow-ups
+        const expandedMessages = await Promise.all(
+          deduplicatedMessages.map(async msg => {
+            if (msg.role === 'user' && attachedFiles.length > 0) {
+              // Check if message contains file placeholders
+              const hasPlaceholder = attachedFiles.some(f => msg.content.includes(f.placeholder))
+              if (hasPlaceholder) {
+                // Expand placeholders using stored file contents
+                const expandedContent = await expandFiles(attachedFiles, msg.content)
+                return {
+                  role: msg.role,
+                  content: expandedContent,
+                  model_id: msg.model_id,
                 }
-              } else {
-                // Always include assistant messages (they're already per-model)
-                deduplicatedMessages.push(msg)
               }
-            })
-
-            // Return in API format (without timestamp, backend doesn't need it for filtering)
-            return deduplicatedMessages.map(msg => ({
+            }
+            // Return message as-is (assistant messages or user messages without placeholders)
+            return {
               role: msg.role,
               content: msg.content,
-              model_id: msg.model_id, // Include model_id for backend filtering
-            }))
-          })()
-        : []
+              model_id: msg.model_id,
+            }
+          })
+        )
+
+        apiConversationHistory = expandedMessages
+      }
+    }
 
     // Credit warnings removed - comparisons proceed regardless of credit balance
     // No need to re-estimate here - just proceed with submission
@@ -4080,12 +4331,25 @@ function AppContent() {
       // Start initial timeout (will be reset when first chunk arrives)
       resetStreamingTimeout()
 
-      // Use service for streaming request
+      // Expand file contents before submission
+    let expandedInput = input
+    if (attachedFiles.length > 0) {
+      try {
+        expandedInput = await expandFiles(attachedFiles, input)
+      } catch (error) {
+        console.error('Error expanding files:', error)
+        setError('Failed to process attached files. Please try again.')
+        setIsLoading(false)
+        return
+      }
+    }
+
+    // Use service for streaming request
       // Include accurate token count from frontend if available (avoids duplicate calculation on backend)
       // Include timezone for credit reset timing (auto-detect from browser)
       const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone
       const stream = await compareStream({
-        input_data: input,
+        input_data: expandedInput, // Use expanded input with file contents
         models: selectedModels,
         conversation_history: apiConversationHistory,
         browser_fingerprint: browserFingerprint,
@@ -4958,12 +5222,35 @@ function AppContent() {
 
                   if (firstUserMessage) {
                     const inputData = firstUserMessage.content
+                    // Extract file contents for storage if attachedFiles contains AttachedFile objects
+                    let fileContentsForSave: Array<{ name: string; content: string; placeholder: string }> = []
+                    const attachedFilesToExtract = attachedFiles.filter(
+                      (f): f is AttachedFile => 'file' in f && f.file instanceof File
+                    )
+                    if (attachedFilesToExtract.length > 0) {
+                      // Extract from File objects
+                      extractFileContentForStorage(attachedFilesToExtract).then(extracted => {
+                        fileContentsForSave = extracted
+                      })
+                    } else {
+                      // Use stored content from StoredAttachedFile objects
+                      const storedFiles = attachedFiles.filter(
+                        (f): f is StoredAttachedFile => 'content' in f && !('file' in f)
+                      )
+                      fileContentsForSave = storedFiles.map(f => ({
+                        name: f.name,
+                        content: f.content,
+                        placeholder: f.placeholder,
+                      }))
+                    }
                     // Always save the conversation - saveConversationToLocalStorage handles the 2-conversation limit
                     // by keeping only the 2 most recent conversations
                     const savedId = saveConversationToLocalStorage(
                       inputData,
                       selectedModels,
-                      conversationsWithMessages
+                      conversationsWithMessages,
+                      false,
+                      fileContentsForSave
                     )
                     // Set currentVisibleComparisonId to the saved comparison ID so it shows as active in the dropdown
                     // This allows users to see their saved comparison highlighted in the dropdown right after streaming completes
@@ -5014,18 +5301,40 @@ function AppContent() {
 
                   if (firstUserMessage) {
                     const inputData = firstUserMessage.content
-                    // Update existing conversation (isUpdate = true)
-                    const savedId = saveConversationToLocalStorage(
-                      inputData,
-                      selectedModels,
-                      conversationsWithMessages,
-                      true
-                    )
-                    // Set currentVisibleComparisonId to the saved comparison ID so it shows as active in the dropdown
-                    // This allows users to see their saved comparison highlighted in the dropdown right after streaming completes
-                    if (savedId) {
-                      setCurrentVisibleComparisonId(savedId)
-                    }
+                    // Extract file contents for storage if attachedFiles contains AttachedFile objects
+                    ;(async () => {
+                      let fileContentsForSave: Array<{ name: string; content: string; placeholder: string }> = []
+                      const attachedFilesToExtract = attachedFiles.filter(
+                        (f): f is AttachedFile => 'file' in f && f.file instanceof File
+                      )
+                      if (attachedFilesToExtract.length > 0) {
+                        // Extract from File objects (async)
+                        fileContentsForSave = await extractFileContentForStorage(attachedFilesToExtract)
+                      } else {
+                        // Use stored content from StoredAttachedFile objects (synchronous)
+                        const storedFiles = attachedFiles.filter(
+                          (f): f is StoredAttachedFile => 'content' in f && !('file' in f)
+                        )
+                        fileContentsForSave = storedFiles.map(f => ({
+                          name: f.name,
+                          content: f.content,
+                          placeholder: f.placeholder,
+                        }))
+                      }
+                      // Update existing conversation (isUpdate = true)
+                      const savedId = saveConversationToLocalStorage(
+                        inputData,
+                        selectedModels,
+                        conversationsWithMessages,
+                        true,
+                        fileContentsForSave
+                      )
+                      // Set currentVisibleComparisonId to the saved comparison ID so it shows as active in the dropdown
+                      // This allows users to see their saved comparison highlighted in the dropdown right after streaming completes
+                      if (savedId) {
+                        setCurrentVisibleComparisonId(savedId)
+                      }
+                    })()
                   }
                 }
 
@@ -5276,14 +5585,37 @@ function AppContent() {
 
                 if (firstUserMessage) {
                   const inputData = firstUserMessage.content
-                  const savedId = saveConversationToLocalStorage(
-                    inputData,
-                    selectedModels,
-                    conversationsWithMessages
-                  )
-                  if (savedId) {
-                    setCurrentVisibleComparisonId(savedId)
-                  }
+                  // Extract file contents for storage if attachedFiles contains AttachedFile objects
+                  ;(async () => {
+                    let fileContentsForSave: Array<{ name: string; content: string; placeholder: string }> = []
+                    const attachedFilesToExtract = attachedFiles.filter(
+                      (f): f is AttachedFile => 'file' in f && f.file instanceof File
+                    )
+                    if (attachedFilesToExtract.length > 0) {
+                      // Extract from File objects (async)
+                      fileContentsForSave = await extractFileContentForStorage(attachedFilesToExtract)
+                    } else {
+                      // Use stored content from StoredAttachedFile objects (synchronous)
+                      const storedFiles = attachedFiles.filter(
+                        (f): f is StoredAttachedFile => 'content' in f && !('file' in f)
+                      )
+                      fileContentsForSave = storedFiles.map(f => ({
+                        name: f.name,
+                        content: f.content,
+                        placeholder: f.placeholder,
+                      }))
+                    }
+                    const savedId = saveConversationToLocalStorage(
+                      inputData,
+                      selectedModels,
+                      conversationsWithMessages,
+                      false,
+                      fileContentsForSave
+                    )
+                    if (savedId) {
+                      setCurrentVisibleComparisonId(savedId)
+                    }
+                  })()
                 }
               }
 
@@ -5845,6 +6177,9 @@ function AppContent() {
                   onDeleteModelSelection={deleteModelSelection}
                   canSaveMoreSelections={canSaveMoreSelections}
                   maxSavedSelections={maxSavedSelections}
+                  attachedFiles={attachedFiles}
+                  setAttachedFiles={setAttachedFiles}
+                  onExpandFiles={expandFiles}
                 />
               </ErrorBoundary>
             </Hero>

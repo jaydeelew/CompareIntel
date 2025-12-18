@@ -12,6 +12,22 @@ import type { ModelsByProvider } from '../../types/models'
 import { truncatePrompt, formatDate } from '../../utils'
 import { showNotification } from '../../utils/error'
 
+// File attachment interface
+export interface AttachedFile {
+  id: string // Unique identifier for the file
+  file: File // The actual File object
+  name: string // File name
+  placeholder: string // Placeholder text to display (e.g., "[file: filename.txt]")
+}
+
+// Stored file attachment interface (for files loaded from history)
+export interface StoredAttachedFile {
+  id: string // Unique identifier for the file
+  name: string // File name
+  placeholder: string // Placeholder text to display (e.g., "[file: filename.txt]")
+  content: string // Extracted file content (stored for persistence)
+}
+
 interface ComparisonFormProps {
   // Input state
   input: string
@@ -68,6 +84,12 @@ interface ComparisonFormProps {
   onDeleteModelSelection: (id: string) => void
   canSaveMoreSelections: boolean
   maxSavedSelections: number
+
+  // File attachments (can be AttachedFile for new uploads or StoredAttachedFile for loaded history)
+  attachedFiles: (AttachedFile | StoredAttachedFile)[]
+  setAttachedFiles: (files: (AttachedFile | StoredAttachedFile)[]) => void
+  // Callback to expand files for token counting (takes files and userInput, returns expanded string)
+  onExpandFiles?: (files: (AttachedFile | StoredAttachedFile)[], userInput: string) => Promise<string>
 }
 
 /**
@@ -117,6 +139,9 @@ export const ComparisonForm = memo<ComparisonFormProps>(
     onDeleteModelSelection,
     canSaveMoreSelections,
     maxSavedSelections,
+    attachedFiles,
+    setAttachedFiles,
+    onExpandFiles,
   }) => {
     const messageCount = conversations.length > 0 ? conversations[0]?.messages.length || 0 : 0
 
@@ -143,6 +168,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
 
     // Debounced API call for accurate token counting using backend model-specific token estimators
     // Uses backend tokenizers for accurate counting instead of chars/4 estimation
+    // Now includes attached file contents for accurate token counting
     useEffect(() => {
       // Only call API if we have selected models
       // Note: We call API even for short inputs to get accurate counts from backend tokenizers
@@ -154,8 +180,8 @@ export const ComparisonForm = memo<ComparisonFormProps>(
         return
       }
 
-      // If input is empty, clear token counts
-      if (!debouncedInput.trim()) {
+      // If input is empty and no files attached, clear token counts
+      if (!debouncedInput.trim() && attachedFiles.length === 0) {
         setAccurateTokenCounts(null)
         if (onAccurateTokenCountChange) {
           onAccurateTokenCountChange(null)
@@ -180,16 +206,39 @@ export const ComparisonForm = memo<ComparisonFormProps>(
       // Use first model for accurate token counting
       const modelId = selectedModels[0]
 
-      // Only send current input text, not conversation history
-      estimateTokens({
-        input_data: debouncedInput,
-        model_id: modelId,
-        // Don't send conversation_history - we'll sum tokens from saved messages instead
-      })
+      // Expand files if they exist, otherwise use input as-is
+      const getExpandedInputForTokens = async (): Promise<string> => {
+        if (attachedFiles.length > 0 && onExpandFiles) {
+          try {
+            return await onExpandFiles(attachedFiles, debouncedInput)
+          } catch (error) {
+            console.warn('Failed to expand files for token counting:', error)
+            // Fall back to input with placeholders if expansion fails
+            return debouncedInput
+          }
+        }
+        return debouncedInput
+      }
+
+      // Get expanded input and then estimate tokens
+      getExpandedInputForTokens()
+        .then(expandedInput => {
+          // Only proceed if request wasn't cancelled
+          if (controller.signal.aborted) {
+            return
+          }
+
+          // Only send current input text (with expanded files), not conversation history
+          return estimateTokens({
+            input_data: expandedInput,
+            model_id: modelId,
+            // Don't send conversation_history - we'll sum tokens from saved messages instead
+          })
+        })
         .then(response => {
           // Only update if request wasn't cancelled
-          if (!controller.signal.aborted) {
-            // response.input_tokens is just for the current input
+          if (!controller.signal.aborted && response) {
+            // response.input_tokens is just for the current input (including expanded files)
             // Conversation history tokens will be calculated from saved tokens in tokenUsageInfo useMemo
             const counts = {
               input_tokens: response.input_tokens,
@@ -220,7 +269,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
       return () => {
         controller.abort()
       }
-    }, [debouncedInput, isFollowUpMode, selectedModels, conversations, onAccurateTokenCountChange])
+    }, [debouncedInput, attachedFiles, isFollowUpMode, selectedModels, conversations, onAccurateTokenCountChange, onExpandFiles])
 
     // Calculate token usage and percentage remaining for follow-up mode
     // Uses backend model-specific token estimators when available
@@ -488,6 +537,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
     }, [
       selectedModels,
       input,
+      attachedFiles,
       modelsByProvider,
       isFollowUpMode,
       conversations,
@@ -893,6 +943,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
     )
 
     // Process a file (used by both file input and drag-and-drop)
+    // Now stores file reference instead of reading content immediately
     const processFile = useCallback(
       async (file: File) => {
         // Check if file is text/code/document
@@ -906,122 +957,95 @@ export const ComparisonForm = memo<ComparisonFormProps>(
           return false
         }
 
-        // Extract text content based on file type
         try {
-          const fileName = file.name.toLowerCase()
-          let content = ''
-          let fileType = 'text file'
-
-          // Handle PDF files
-          if (fileName.endsWith('.pdf')) {
-            fileType = 'PDF file'
-            content = await extractTextFromPDF(file)
-          }
-          // Handle DOCX files
-          else if (fileName.endsWith('.docx')) {
-            fileType = 'DOCX file'
-            content = await extractTextFromDOCX(file)
-          }
-          // Handle RTF files - not supported
-          else if (fileName.endsWith('.rtf')) {
-            fileType = 'RTF file'
-            showNotification(
-              'RTF file extraction not fully supported. Please convert to PDF or DOCX.',
-              'error'
-            )
-            return false
-          }
-          // Handle other document types (DOC, ODT) - try as text first
-          else if (fileName.endsWith('.doc') || fileName.endsWith('.odt')) {
-            if (fileName.endsWith('.doc')) fileType = 'DOC file'
-            else if (fileName.endsWith('.odt')) fileType = 'ODT file'
-
-            // Try to read as text (works for some DOC/ODT files)
-            try {
-              content = await new Promise<string>((resolve, reject) => {
-                const reader = new FileReader()
-                reader.onload = e => resolve(e.target?.result as string)
-                reader.onerror = reject
-                reader.readAsText(file)
-              })
-            } catch {
-              showNotification(
-                `${fileType} extraction not fully supported. Please convert to PDF or DOCX.`,
-                'error'
-              )
-              return false
-            }
-          }
-          // Handle text/code files
-          else {
-            // Detect file type for notification
-            if (fileName.endsWith('.py')) fileType = 'Python file'
-            else if (fileName.endsWith('.js') || fileName.endsWith('.jsx'))
-              fileType = 'JavaScript file'
-            else if (fileName.endsWith('.ts') || fileName.endsWith('.tsx'))
-              fileType = 'TypeScript file'
-            else if (fileName.endsWith('.java')) fileType = 'Java file'
-            else if (
-              fileName.endsWith('.cpp') ||
-              fileName.endsWith('.cc') ||
-              fileName.endsWith('.cxx') ||
-              fileName.endsWith('.c')
-            )
-              fileType = 'C/C++ file'
-            else if (fileName.endsWith('.cs')) fileType = 'C# file'
-            else if (fileName.endsWith('.rb')) fileType = 'Ruby file'
-            else if (fileName.endsWith('.go')) fileType = 'Go file'
-            else if (fileName.endsWith('.rs')) fileType = 'Rust file'
-            else if (fileName.endsWith('.php')) fileType = 'PHP file'
-            else if (fileName.endsWith('.sh') || fileName.endsWith('.bash'))
-              fileType = 'Shell script'
-            else if (fileName.endsWith('.html') || fileName.endsWith('.htm')) fileType = 'HTML file'
-            else if (fileName.endsWith('.css')) fileType = 'CSS file'
-            else if (fileName.endsWith('.json')) fileType = 'JSON file'
-            else if (fileName.endsWith('.xml')) fileType = 'XML file'
-            else if (fileName.endsWith('.md') || fileName.endsWith('.markdown'))
-              fileType = 'Markdown file'
-            else if (fileName.endsWith('.yaml') || fileName.endsWith('.yml')) fileType = 'YAML file'
-            else if (fileName.endsWith('.sql')) fileType = 'SQL file'
-            else if (fileName.endsWith('.txt')) fileType = 'text file'
-
-            // Read as text
-            content = await new Promise<string>((resolve, reject) => {
-              const reader = new FileReader()
-              reader.onload = e => resolve(e.target?.result as string)
-              reader.onerror = reject
-              reader.readAsText(file)
-            })
+          // Create a unique ID for this file
+          const fileId = `file-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+          
+          // Create placeholder text
+          const placeholder = `[file: ${file.name}]`
+          
+          // Create attached file object
+          const attachedFile: AttachedFile = {
+            id: fileId,
+            file: file,
+            name: file.name,
+            placeholder: placeholder,
           }
 
-          if (content && content.trim()) {
-            // Append content to textarea (add newline before if textarea has content)
-            const separator = input.trim() ? '\n\n' : ''
-            setInput(input + separator + content)
+          // Add file to attached files list
+          setAttachedFiles([...attachedFiles, attachedFile])
 
-            const notification = showNotification(
-              `${fileType} "${file.name}" uploaded successfully`,
-              'success'
-            )
-            // Clear the default 3-second timeout and set a custom 5-second timeout
-            notification.clearAutoRemove()
+          // Insert placeholder into textarea at cursor position or append
+          const textarea = textareaRef.current
+          if (textarea) {
+            const start = textarea.selectionStart
+            const end = textarea.selectionEnd
+            const textBefore = input.substring(0, start)
+            const textAfter = input.substring(end)
+            
+            // Add separator if needed
+            const separatorBefore = textBefore.trim() && !textBefore.endsWith('\n') ? '\n\n' : ''
+            const separatorAfter = textAfter.trim() && !textAfter.startsWith('\n') ? '\n\n' : ''
+            
+            const newInput = textBefore + separatorBefore + placeholder + separatorAfter + textAfter
+            setInput(newInput)
+            
+            // Set cursor position after placeholder
             setTimeout(() => {
-              notification()
-            }, 5000)
-            return true
+              if (textareaRef.current) {
+                const newCursorPos = start + separatorBefore.length + placeholder.length + separatorAfter.length
+                textareaRef.current.setSelectionRange(newCursorPos, newCursorPos)
+              }
+            }, 0)
           } else {
-            showNotification(`No text content found in ${fileType}.`, 'error')
-            return false
+            // Fallback: append to end
+            const separator = input.trim() ? '\n\n' : ''
+            setInput(input + separator + placeholder)
           }
+
+          // Detect file type for notification
+          const fileName = file.name.toLowerCase()
+          let fileType = 'text file'
+          if (fileName.endsWith('.pdf')) fileType = 'PDF file'
+          else if (fileName.endsWith('.docx')) fileType = 'DOCX file'
+          else if (fileName.endsWith('.py')) fileType = 'Python file'
+          else if (fileName.endsWith('.js') || fileName.endsWith('.jsx')) fileType = 'JavaScript file'
+          else if (fileName.endsWith('.ts') || fileName.endsWith('.tsx')) fileType = 'TypeScript file'
+          else if (fileName.endsWith('.java')) fileType = 'Java file'
+          else if (fileName.endsWith('.cpp') || fileName.endsWith('.cc') || fileName.endsWith('.cxx') || fileName.endsWith('.c')) fileType = 'C/C++ file'
+          else if (fileName.endsWith('.cs')) fileType = 'C# file'
+          else if (fileName.endsWith('.rb')) fileType = 'Ruby file'
+          else if (fileName.endsWith('.go')) fileType = 'Go file'
+          else if (fileName.endsWith('.rs')) fileType = 'Rust file'
+          else if (fileName.endsWith('.php')) fileType = 'PHP file'
+          else if (fileName.endsWith('.sh') || fileName.endsWith('.bash')) fileType = 'Shell script'
+          else if (fileName.endsWith('.html') || fileName.endsWith('.htm')) fileType = 'HTML file'
+          else if (fileName.endsWith('.css')) fileType = 'CSS file'
+          else if (fileName.endsWith('.json')) fileType = 'JSON file'
+          else if (fileName.endsWith('.xml')) fileType = 'XML file'
+          else if (fileName.endsWith('.md') || fileName.endsWith('.markdown')) fileType = 'Markdown file'
+          else if (fileName.endsWith('.yaml') || fileName.endsWith('.yml')) fileType = 'YAML file'
+          else if (fileName.endsWith('.sql')) fileType = 'SQL file'
+          else if (fileName.endsWith('.txt')) fileType = 'text file'
+
+          const notification = showNotification(
+            `${fileType} "${file.name}" attached (will be expanded on submit)`,
+            'success'
+          )
+          notification.clearAutoRemove()
+          setTimeout(() => {
+            notification()
+          }, 5000)
+          return true
         } catch (error) {
           const errorMessage =
-            error instanceof Error ? error.message : 'Error uploading file. Please try again.'
+            error instanceof Error ? error.message : 'Error attaching file. Please try again.'
           showNotification(errorMessage, 'error')
-          console.error('File upload error:', error)
+          console.error('File attachment error:', error)
           return false
         }
       },
-      [input, setInput, isTextOrCodeFile, extractTextFromPDF, extractTextFromDOCX]
+      [attachedFiles, setAttachedFiles, input, setInput, isTextOrCodeFile, textareaRef]
     )
 
     // Handle file upload from file input
