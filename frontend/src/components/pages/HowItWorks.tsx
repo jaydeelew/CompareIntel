@@ -102,6 +102,15 @@ export const HowItWorks: React.FC = () => {
                   users can select up to 3 models at a time. Paid tiers will allow the simultaneous
                   selection and comparison of more models.
                 </p>
+                <p>
+                  <strong>Save your favorite model combinations:</strong> Once you've selected your models,
+                  you can save this combination with a custom name for quick access later. Saved selections
+                  persist across sessions, so you can quickly load your preferred model combinations
+                  without manually selecting them each time. Unregistered users can save up to 2 selections,
+                  free accounts can save up to 3, and paid tiers offer even more saved selections. This
+                  feature works great for different use cases—save one selection for coding tasks, another
+                  for creative writing, and another for data analysis.
+                </p>
               </div>
             </div>
 

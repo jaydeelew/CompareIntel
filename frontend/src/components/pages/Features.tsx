@@ -167,6 +167,39 @@ export const Features: React.FC = () => {
           </section>
 
           <section className="seo-section">
+            <h2>Saved Model Selections</h2>
+            <p>
+              Save time by storing your favorite model combinations for quick access. CompareIntel's
+              saved selections feature lets you create named groups of models that you use frequently:
+            </p>
+            <ul className="seo-list">
+              <li>
+                <strong>Save Any Combination:</strong> After selecting your models, save the combination
+                with a custom name (up to 50 characters). Perfect for organizing selections by use case
+                like "Coding Models", "Creative Writing", or "Data Analysis".
+              </li>
+              <li>
+                <strong>Quick Loading:</strong> Load any saved selection with a single click to instantly
+                restore your preferred model combination without manually selecting each model again.
+              </li>
+              <li>
+                <strong>Manage Your Selections:</strong> Rename or delete saved selections as your needs
+                change. Each selection shows how many models it contains and when it was last updated.
+              </li>
+              <li>
+                <strong>Tier-Based Limits:</strong> The number of saved selections you can store depends
+                on your account tier. Unregistered users can save up to 2 selections, free accounts get
+                3, and paid tiers offer even more (up to 20 for Pro+ users).
+              </li>
+              <li>
+                <strong>Persistent Storage:</strong> Your saved selections are stored locally in your
+                browser and persist across sessions. Registered users' selections are tied to their
+                account, while anonymous users' selections are preserved using a persistent anonymous ID.
+              </li>
+            </ul>
+          </section>
+
+          <section className="seo-section">
             <h2>Multi-Turn Conversation Support</h2>
             <p>
               Real-world AI interactions often involve back-and-forth conversations. CompareIntel
