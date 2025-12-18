@@ -141,8 +141,13 @@ function AppContent() {
   // Store accurate token count from ComparisonForm (from /estimate-tokens endpoint)
   const [accurateInputTokens, setAccurateInputTokens] = useState<number | null>(null)
 
-  // File attachments state
-  const [attachedFiles, setAttachedFiles] = useState<AttachedFile[]>([])
+  // File attachments state (can be AttachedFile for new uploads or StoredAttachedFile for loaded history)
+  const [attachedFiles, setAttachedFilesState] = useState<(AttachedFile | StoredAttachedFile)[]>([])
+  
+  // Wrapper function to match ComparisonForm's expected signature
+  const setAttachedFiles = useCallback((files: (AttachedFile | StoredAttachedFile)[]) => {
+    setAttachedFilesState(files)
+  }, [])
 
   // Configure PDF.js worker
   useEffect(() => {
@@ -5225,7 +5230,7 @@ function AppContent() {
                     // Extract file contents for storage if attachedFiles contains AttachedFile objects
                     let fileContentsForSave: Array<{ name: string; content: string; placeholder: string }> = []
                     const attachedFilesToExtract = attachedFiles.filter(
-                      (f): f is AttachedFile => 'file' in f && f.file instanceof File
+                      (f): f is AttachedFile => 'file' in f
                     )
                     if (attachedFilesToExtract.length > 0) {
                       // Extract from File objects
@@ -5235,7 +5240,7 @@ function AppContent() {
                     } else {
                       // Use stored content from StoredAttachedFile objects
                       const storedFiles = attachedFiles.filter(
-                        (f): f is StoredAttachedFile => 'content' in f && !('file' in f)
+                        (f): f is StoredAttachedFile => 'content' in f
                       )
                       fileContentsForSave = storedFiles.map(f => ({
                         name: f.name,
@@ -5305,7 +5310,7 @@ function AppContent() {
                     ;(async () => {
                       let fileContentsForSave: Array<{ name: string; content: string; placeholder: string }> = []
                       const attachedFilesToExtract = attachedFiles.filter(
-                        (f): f is AttachedFile => 'file' in f && f.file instanceof File
+                        (f): f is AttachedFile => 'file' in f
                       )
                       if (attachedFilesToExtract.length > 0) {
                         // Extract from File objects (async)
@@ -5313,7 +5318,7 @@ function AppContent() {
                       } else {
                         // Use stored content from StoredAttachedFile objects (synchronous)
                         const storedFiles = attachedFiles.filter(
-                          (f): f is StoredAttachedFile => 'content' in f && !('file' in f)
+                          (f): f is StoredAttachedFile => 'content' in f
                         )
                         fileContentsForSave = storedFiles.map(f => ({
                           name: f.name,
