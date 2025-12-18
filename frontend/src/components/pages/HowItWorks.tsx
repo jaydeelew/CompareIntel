@@ -115,6 +115,15 @@ export const HowItWorks: React.FC = () => {
                   questions to complex coding tasks or creative writing challenges.
                 </p>
                 <p>
+                  <strong>Attach files (optional):</strong> You can attach documents, code files, or
+                  text files to provide context for your comparison. Simply drag and drop files onto
+                  the input area or use the file picker button. Supported formats include PDF, Word
+                  documents (.docx), text files, code files, and more. You can attach multiple files
+                  and mix them with your text in any order. The file contents will be automatically
+                  extracted and included in your comparison, and they'll persist across conversation
+                  sessions so you can ask follow-up questions about your documents later.
+                </p>
+                <p>
                   <strong>Tips for effective prompts:</strong>
                 </p>
                 <ul>
@@ -122,6 +131,7 @@ export const HowItWorks: React.FC = () => {
                   <li>Include relevant context or constraints</li>
                   <li>Specify the format you'd like for the response</li>
                   <li>For code tasks, mention the programming language</li>
+                  <li>When using files, reference them in your prompt (e.g., "Summarize this document" or "What are the key points in the attached file?")</li>
                 </ul>
               </div>
             </div>

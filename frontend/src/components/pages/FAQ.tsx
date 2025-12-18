@@ -175,6 +175,38 @@ const faqData = [
     ),
   },
   {
+    id: 'file-attachments',
+    question: 'Can I attach files to my comparisons?',
+    answer: (
+      <>
+        <p>
+          Yes! CompareIntel supports file attachments, allowing you to include documents, code files,
+          and text files in your comparisons. You can attach files in two ways:
+        </p>
+        <ul>
+          <li>
+            <strong>Drag and drop:</strong> Simply drag files from your computer onto the input area
+          </li>
+          <li>
+            <strong>File picker:</strong> Click the file attachment button to browse and select files
+          </li>
+        </ul>
+        <p>
+          Supported file formats include PDF documents, Word documents (.docx, .doc), text files,
+          code files, markdown files, and more. You can attach multiple files to a single
+          comparison and arrange them in any order with your text. The file contents are
+          automatically extracted and included when sending your prompt to the AI models.
+        </p>
+        <p>
+          <strong>Persistent file context:</strong> Attached files persist across conversation
+          sessions, so you can close your browser and return later to ask follow-up questions about
+          your documents. The file contents remain available for the models to reference in
+          subsequent conversation turns.
+        </p>
+      </>
+    ),
+  },
+  {
     id: 'data-security',
     question: 'Is my data secure on CompareIntel?',
     answer: (

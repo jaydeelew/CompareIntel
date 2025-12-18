@@ -282,6 +282,15 @@ export const Features: React.FC = () => {
                 <strong>Additional Formats:</strong> Support for markdown, code files, and other
                 common document types to fit your specific use case.
               </li>
+              <li>
+                <strong>Multiple Files:</strong> Attach multiple files to a single comparison, either
+                via file picker or drag and drop, and arrange them in any order with your text.
+              </li>
+              <li>
+                <strong>Persistent File Context:</strong> Attached files persist across conversation
+                sessions, allowing you to ask follow-up questions about your documents even after
+                closing and reopening your browser.
+              </li>
             </ul>
           </section>
 
