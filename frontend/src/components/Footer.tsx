@@ -13,7 +13,7 @@ export const Footer: React.FC = () => {
     <footer
       style={{
         textAlign: 'center',
-        padding: '20px 20px 16px',
+        padding: '20px 20px 22px',
         marginTop: 0,
         color: '#6b7280',
         fontSize: '14px',
