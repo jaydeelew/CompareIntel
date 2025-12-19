@@ -148,6 +148,102 @@
   max-width: 100%;
 }
 
+/* Tabbed layout for mobile screens - hidden on desktop */
+.results-tabs-container {
+  display: none;
+}
+
+.results-section-tabbed .results-tabs-container {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  gap: 0;
+}
+
+.results-tabs-header {
+  display: flex;
+  flex-direction: row;
+  gap: 0.5rem;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0.5rem 0;
+  margin-bottom: 1rem;
+  border-bottom: 2px solid var(--border-color);
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-color) transparent;
+  -webkit-overflow-scrolling: touch;
+}
+
+.results-tabs-header::-webkit-scrollbar {
+  height: 4px;
+}
+
+.results-tabs-header::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.results-tabs-header::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 2px;
+}
+
+.results-tab-button {
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 0.75rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  position: relative;
+  outline: none;
+  box-shadow: none;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+  min-width: fit-content;
+}
+
+.results-tab-button:hover {
+  color: var(--text-primary);
+  background: var(--bg-hover);
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+}
+
+.results-tab-button.active {
+  color: var(--primary-color);
+  border-bottom-color: var(--primary-color);
+  background: none;
+  font-weight: 600;
+}
+
+.results-tab-button.active:hover {
+  color: var(--primary-color);
+  background: var(--bg-hover);
+}
+
+.results-tab-name {
+  display: inline-block;
+}
+
+.results-tab-error-indicator {
+  font-size: 0.875rem;
+  color: var(--error-color);
+  line-height: 1;
+}
+
+.results-tab-content {
+  width: 100%;
+}
+
+.results-section-tabbed .results-grid {
+  display: none;
+}
+
 .result-card {
   background: var(--bg-primary);
   border: 1px solid var(--border-color);
@@ -1710,6 +1806,35 @@
     overflow-x: hidden;
     width: 100%;
   }
+
+  /* Tabbed layout styles for mobile */
+  .results-tabs-container {
+    display: flex !important;
+    flex-direction: column;
+    width: 100%;
+    margin-bottom: 1rem;
+  }
+
+  .results-tabs-header {
+    display: flex;
+    flex-direction: row;
+    gap: 0.5rem;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 0.5rem 0;
+    border-bottom: 2px solid var(--border-color);
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-color) transparent;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .results-tab-button {
+    padding: 0.625rem 0.875rem;
+    font-size: 0.8125rem;
+  }
+
+  /* In tabbed mode, cards are controlled by inline styles from React */
+  /* This ensures only the active card is visible */
 
   .results-metadata {
     flex-direction: column;

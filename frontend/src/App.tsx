@@ -766,6 +766,39 @@ function AppContent() {
     return () => window.removeEventListener('resize', handleResize)
   }, [])
 
+  // Detect when screen is small enough to show tabs (same breakpoint as CSS: 768px)
+  const [isMobileLayout, setIsMobileLayout] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return false
+    return window.innerWidth <= 768
+  })
+
+  useEffect(() => {
+    const handleResize = () => setIsMobileLayout(window.innerWidth <= 768)
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
+
+  // State for active tab in mobile view (index of the visible card)
+  const [activeTabIndex, setActiveTabIndex] = useState<number>(0)
+
+  // Get visible conversations for tab logic
+  const visibleConversations = useMemo(() => {
+    return conversations.filter(
+      conv =>
+        conv &&
+        conv.modelId &&
+        selectedModels.includes(conv.modelId) &&
+        !closedCards.has(conv.modelId)
+    )
+  }, [conversations, selectedModels, closedCards])
+
+  // Reset active tab index if it's out of bounds
+  useEffect(() => {
+    if (activeTabIndex >= visibleConversations.length && visibleConversations.length > 0) {
+      setActiveTabIndex(0)
+    }
+  }, [activeTabIndex, visibleConversations.length])
+
   // Detect when screen is small enough that "chars" would wrap in result cards
   const [isSmallLayout, setIsSmallLayout] = useState<boolean>(() => {
     if (typeof window === 'undefined') return false
@@ -6856,8 +6889,8 @@ function AppContent() {
                   >
                     <h2 style={{ margin: 0 }}>Comparison Results</h2>
                     <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
-                      {/* Scroll Lock Toggle - Only show when multiple models are running */}
-                      {conversations.length > 1 && (
+                      {/* Scroll Lock Toggle - Only show when multiple models are running and not on mobile */}
+                      {conversations.length > 1 && !isMobileLayout && (
                         <button
                           onClick={() => {
                             setIsScrollLocked(!isScrollLocked)
@@ -6955,6 +6988,9 @@ function AppContent() {
                             cursor: 'pointer',
                             transition: 'all 0.2s ease',
                             fontWeight: '500',
+                            whiteSpace: 'normal',
+                            lineHeight: '1.4',
+                            textAlign: 'center',
                           }}
                           onMouseOver={e => {
                             e.currentTarget.style.background = 'var(--primary-hover)'
@@ -6965,7 +7001,8 @@ function AppContent() {
                             e.currentTarget.style.borderColor = 'var(--primary-color)'
                           }}
                         >
-                          Show All Results ({closedCards.size} hidden)
+                          <span style={{ whiteSpace: 'nowrap' }}>Show All Results</span>{' '}
+                          <span style={{ whiteSpace: 'nowrap' }}>({closedCards.size} hidden)</span>
                         </button>
                       )}
                     </div>
@@ -7065,16 +7102,48 @@ function AppContent() {
                     </div>
                   )}
 
-                  <div className="results-grid">
-                    {conversations
-                      .filter(
-                        conv =>
-                          conv &&
-                          conv.modelId &&
-                          selectedModels.includes(conv.modelId) &&
-                          !closedCards.has(conv.modelId)
-                      )
-                      .map(conversation => {
+                  {/* Tabbed layout for mobile with multiple cards */}
+                  {isMobileLayout && visibleConversations.length > 1 && (
+                    <div className="results-tabs-container">
+                      <div className="results-tabs-header">
+                        {visibleConversations.map((conversation, index) => {
+                          const model = allModels.find(m => m.id === conversation.modelId)
+                          const isActive = index === activeTabIndex
+                          const latestMsg = conversation.messages[conversation.messages.length - 1]
+                          const hasError = isErrorMessage(latestMsg?.content)
+
+                          return (
+                            <button
+                              key={conversation.modelId}
+                              className={`results-tab-button ${isActive ? 'active' : ''}`}
+                              onClick={() => setActiveTabIndex(index)}
+                              aria-label={`View results for ${model?.name || conversation.modelId}`}
+                              aria-selected={isActive}
+                              role="tab"
+                            >
+                              <span className="results-tab-name">{model?.name || conversation.modelId}</span>
+                              {hasError && (
+                                <span className="results-tab-error-indicator" aria-label="Error">
+                                  ⚠
+                                </span>
+                              )}
+                            </button>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  <div className={`results-grid ${isMobileLayout && visibleConversations.length > 1 ? 'results-grid-tabbed' : ''}`}>
+                      {conversations
+                        .filter(
+                          conv =>
+                            conv &&
+                            conv.modelId &&
+                            selectedModels.includes(conv.modelId) &&
+                            !closedCards.has(conv.modelId)
+                        )
+                        .map(conversation => {
                         // Safety check for conversation data
                         if (
                           !conversation ||
@@ -7102,8 +7171,18 @@ function AppContent() {
                         const isError = hasBackendError || hasErrorMessage || isEmptyContent
                         const safeId = getSafeId(conversation.modelId)
 
+                        // Determine if this is the active card in tabbed mode
+                        const conversationIndex = visibleConversations.findIndex(c => c.modelId === conversation.modelId)
+                        const isActiveCard = isMobileLayout && visibleConversations.length > 1 && conversationIndex === activeTabIndex
+
                         return (
-                          <div key={conversation.modelId} className="result-card conversation-card">
+                          <div 
+                            key={conversation.modelId} 
+                            className="result-card conversation-card"
+                            style={isMobileLayout && visibleConversations.length > 1 ? {
+                              display: isActiveCard ? 'block' : 'none'
+                            } : undefined}
+                          >
                             <div className="result-header">
                               <div className="result-header-top">
                                 <h3>{model?.name || conversation.modelId}</h3>

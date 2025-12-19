@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 
 import { RESULT_TAB } from '../../types'
 import type { ModelConversation, ActiveResultTabs, ResultTab } from '../../types'
@@ -73,6 +73,40 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
     conv => selectedModels.includes(conv.modelId) && !closedCards.has(conv.modelId)
   )
 
+  // Detect when screen is small enough to show tabs (same breakpoint as CSS: 768px)
+  const [isMobileLayout, setIsMobileLayout] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return false
+    return window.innerWidth <= 768
+  })
+
+  useEffect(() => {
+    const handleResize = () => setIsMobileLayout(window.innerWidth <= 768)
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
+
+  // State for active tab in mobile view (index of the visible card)
+  const [activeTabIndex, setActiveTabIndex] = useState<number>(0)
+
+  // Reset active tab index if it's out of bounds
+  useEffect(() => {
+    if (activeTabIndex >= visibleConversations.length && visibleConversations.length > 0) {
+      setActiveTabIndex(0)
+    }
+  }, [activeTabIndex, visibleConversations.length])
+
+  // Debug logging (can be removed later)
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[ResultsDisplay] Component rendered:', {
+        isMobileLayout,
+        visibleConversationsCount: visibleConversations.length,
+        windowWidth: typeof window !== 'undefined' ? window.innerWidth : 'N/A',
+        willShowTabs: isMobileLayout && visibleConversations.length > 1
+      })
+    }
+  }, [isMobileLayout, visibleConversations.length])
+
   if (visibleConversations.length === 0) {
     return null
   }
@@ -92,6 +126,85 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
     }
   }
 
+  // Render tabs UI for mobile layout
+  if (isMobileLayout && visibleConversations.length > 1) {
+    const activeConversation = visibleConversations[activeTabIndex]
+    const activeModel = allModels.find(m => m.id === activeConversation.modelId)
+    const latestMessage = activeConversation.messages[activeConversation.messages.length - 1]
+    const isError = isErrorMessage(latestMessage?.content)
+    const activeTab = activeResultTabs[activeConversation.modelId] || RESULT_TAB.FORMATTED
+
+    return (
+      <section className={`results-section results-section-tabbed ${className}`.trim()}>
+        {metadata && (
+          <div className="response-metadata">
+            <div className="metadata-item">
+              <span className="metadata-label">Models Completed:</span>
+              <span className="metadata-value success">{metadata.models_completed}</span>
+            </div>
+            {metadata.models_failed > 0 && (
+              <div className="metadata-item">
+                <span className="metadata-label">Models Failed:</span>
+                <span className="metadata-value failed">{metadata.models_failed}</span>
+              </div>
+            )}
+            {processingTime && (
+              <div className="metadata-item">
+                <span className="metadata-label">Processing Time:</span>
+                <span className="metadata-value">{formatProcessingTime(processingTime)}</span>
+              </div>
+            )}
+          </div>
+        )}
+
+        <div className="results-tabs-container">
+          <div className="results-tabs-header">
+            {visibleConversations.map((conversation, index) => {
+              const model = allModels.find(m => m.id === conversation.modelId)
+              const isActive = index === activeTabIndex
+              const latestMsg = conversation.messages[conversation.messages.length - 1]
+              const hasError = isErrorMessage(latestMsg?.content)
+
+              return (
+                <button
+                  key={conversation.modelId}
+                  className={`results-tab-button ${isActive ? 'active' : ''}`}
+                  onClick={() => setActiveTabIndex(index)}
+                  aria-label={`View results for ${model?.name || conversation.modelId}`}
+                  aria-selected={isActive}
+                  role="tab"
+                >
+                  <span className="results-tab-name">{model?.name || conversation.modelId}</span>
+                  {hasError && (
+                    <span className="results-tab-error-indicator" aria-label="Error">
+                      ⚠
+                    </span>
+                  )}
+                </button>
+              )
+            })}
+          </div>
+
+          <div className="results-tab-content">
+            <ResultCard
+              key={activeConversation.modelId}
+              modelId={activeConversation.modelId}
+              model={activeModel}
+              messages={activeConversation.messages}
+              activeTab={activeTab}
+              isError={isError}
+              onScreenshot={onScreenshot}
+              onCopyResponse={onCopyResponse}
+              onClose={onCloseCard}
+              onSwitchTab={onSwitchTab}
+            />
+          </div>
+        </div>
+      </section>
+    )
+  }
+
+  // Render grid layout for desktop or single card
   return (
     <section className={`results-section ${className}`.trim()}>
       {metadata && (
