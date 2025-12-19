@@ -218,7 +218,7 @@ export const About: React.FC = () => {
           <section className="seo-section cta-section">
             <h2>Start Comparing Today</h2>
             <p>
-              Join thousands of users who trust CompareIntel to help them find the best AI models
+              Join users who trust CompareIntel to help them find the best AI models
               for their needs. Whether you're comparing GPT-4 vs Claude, evaluating Gemini against
               Llama, or testing any combination of 50+ models, CompareIntel makes it easy.
             </p>
