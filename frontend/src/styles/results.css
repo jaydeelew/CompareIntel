@@ -2056,30 +2056,6 @@
   }
 }
 
-/* Mobile landscape mode - MUST BE LAST to override all other styles */
-@media (max-width: 768px) and (orientation: landscape) {
-  .results-grid {
-    grid-template-columns: repeat(2, 1fr) !important;
-    gap: 0.75rem !important;
-  }
-
-  .result-card {
-    width: 100% !important;
-    max-width: 100% !important;
-  }
-}
-
-@media (max-width: 480px) and (orientation: landscape) {
-  .results-grid {
-    grid-template-columns: repeat(2, 1fr) !important;
-    gap: 0.5rem !important;
-  }
-
-  .result-card {
-    width: 100% !important;
-    max-width: 100% !important;
-  }
-}
 
 /* Tier Selector Styles */
 .tier-selector-container {
