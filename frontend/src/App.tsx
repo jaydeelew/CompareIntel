@@ -424,7 +424,6 @@ function AppContent() {
   const animationTimeoutRef = useRef<number | null>(null)
   const [isModelsHidden, setIsModelsHidden] = useState(false)
   const [hidePremiumModels, setHidePremiumModels] = useState(true)
-  const [isMetadataCollapsed, setIsMetadataCollapsed] = useState(false)
   const [modelErrors, setModelErrors] = useState<{ [key: string]: boolean }>({})
   const [anonymousCreditsRemaining, setAnonymousCreditsRemaining] = useState<number | null>(null)
   const [creditBalance, setCreditBalance] = useState<CreditBalance | null>(null)
@@ -745,23 +744,6 @@ function AppContent() {
 
   useEffect(() => {
     const handleResize = () => setIsWideLayout(window.innerWidth > 1000)
-    window.addEventListener('resize', handleResize)
-    return () => window.removeEventListener('resize', handleResize)
-  }, [])
-
-  // Auto-collapse metadata section when screen size triggers toggle layout (<= 1200px)
-  useEffect(() => {
-    const handleResize = () => {
-      if (window.innerWidth <= 1200) {
-        setIsMetadataCollapsed(true)
-      } else {
-        setIsMetadataCollapsed(false)
-      }
-    }
-
-    // Set initial state
-    handleResize()
-
     window.addEventListener('resize', handleResize)
     return () => window.removeEventListener('resize', handleResize)
   }, [])
@@ -7007,100 +6989,6 @@ function AppContent() {
                       )}
                     </div>
                   </div>
-
-                  {/* Metadata */}
-                  {response && (
-                    <div className={`results-metadata ${isMetadataCollapsed ? 'collapsed' : ''}`}>
-                      <div className="metadata-header">
-                        {isMetadataCollapsed && (
-                          <span className="metadata-details-text" style={{ marginRight: 'auto' }}>
-                            Details...
-                          </span>
-                        )}
-                        <button
-                          className="metadata-toggle-arrow"
-                          onClick={e => {
-                            e.stopPropagation()
-                            setIsMetadataCollapsed(!isMetadataCollapsed)
-                          }}
-                          style={{
-                            padding: '0.5rem',
-                            fontSize: '1.25rem',
-                            border: 'none',
-                            outline: 'none',
-                            boxShadow: 'none',
-                            background: 'transparent',
-                            color: 'var(--primary-color)',
-                            borderRadius: '6px',
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            width: '36px',
-                            height: '36px',
-                            fontWeight: 'bold',
-                          }}
-                          title={isMetadataCollapsed ? 'Show details' : 'Hide details'}
-                        >
-                          {isMetadataCollapsed ? '▼' : '▲'}
-                        </button>
-                      </div>
-                      {!isMetadataCollapsed && (
-                        <div className="metadata-items">
-                          <div className="metadata-item">
-                            <span className="metadata-label">Input Length:</span>
-                            <span className="metadata-value">
-                              {response.metadata.input_length} characters
-                            </span>
-                          </div>
-                          <div className="metadata-item">
-                            <span className="metadata-label">Models Successful:</span>
-                            <span
-                              className={`metadata-value ${response.metadata.models_successful > 0 ? 'successful' : ''}`}
-                            >
-                              {response.metadata.models_successful}/
-                              {response.metadata.models_requested}
-                            </span>
-                          </div>
-                          {Object.keys(response.results).length > 0 && (
-                            <div className="metadata-item">
-                              <span className="metadata-label">Results Visible:</span>
-                              <span className="metadata-value">
-                                {Object.keys(response.results).length - closedCards.size}/
-                                {Object.keys(response.results).length}
-                              </span>
-                            </div>
-                          )}
-                          {response.metadata.models_failed > 0 && (
-                            <div className="metadata-item">
-                              <span className="metadata-label">Models Failed:</span>
-                              <span className="metadata-value failed">
-                                {response.metadata.models_failed}
-                              </span>
-                            </div>
-                          )}
-                          {processingTime && (
-                            <div className="metadata-item">
-                              <span className="metadata-label">Processing Time:</span>
-                              <span className="metadata-value">
-                                {(() => {
-                                  if (processingTime < 1000) {
-                                    return `${processingTime}ms`
-                                  } else if (processingTime < 60000) {
-                                    return `${(processingTime / 1000).toFixed(1)}s`
-                                  } else {
-                                    const minutes = Math.floor(processingTime / 60000)
-                                    const seconds = Math.floor((processingTime % 60000) / 1000)
-                                    return `${minutes}m ${seconds}s`
-                                  }
-                                })()}
-                              </span>
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  )}
 
                   {/* Tabbed layout for mobile with multiple cards */}
                   {isMobileLayout && visibleConversations.length > 1 && (
