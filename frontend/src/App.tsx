@@ -375,7 +375,6 @@ function AppContent() {
     setError,
     response,
     setResponse,
-    processingTime,
     setProcessingTime,
     conversations,
     setConversations,
