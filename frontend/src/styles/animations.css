@@ -335,3 +335,35 @@
 .breakout-fade-in {
   animation: fadeIn 0.3s ease-out forwards;
 }
+
+/* Notification slide-in animation from right */
+@keyframes notificationSlideIn {
+  0% {
+    transform: translateX(calc(100% + 48px));
+    opacity: 0;
+  }
+  100% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* Notification slide-out animation to right */
+@keyframes notificationSlideOut {
+  0% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(calc(100% + 48px));
+    opacity: 0;
+  }
+}
+
+.notification-slide-in {
+  animation: notificationSlideIn 0.35s ease-out forwards;
+}
+
+.notification-slide-out {
+  animation: notificationSlideOut 0.25s ease-in forwards;
+}

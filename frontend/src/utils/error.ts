@@ -117,19 +117,13 @@ export function showNotification(
   notif.style.backdropFilter = 'blur(16px)'
   notif.style.border = '1px solid rgba(255, 255, 255, 0.2)'
   notif.style.pointerEvents = 'none'
-  notif.style.transform = 'translateX(100%) scale(0.9)'
-  notif.style.transition = 'all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)'
-  notif.style.opacity = '0'
   notif.style.maxWidth = '400px'
   notif.style.minWidth = '280px'
 
-  document.body.appendChild(notif)
+  // Use CSS animation class for reliable slide-in effect
+  notif.classList.add('notification-slide-in')
 
-  // Animate in
-  requestAnimationFrame(() => {
-    notif.style.transform = 'translateX(0) scale(1)'
-    notif.style.opacity = '1'
-  })
+  document.body.appendChild(notif)
 
   let timeoutId: ReturnType<typeof setTimeout> | null = null
   let removed = false
@@ -192,10 +186,10 @@ export function showNotification(
       // Remove instantly without animation when manually called
       notif.remove()
     } else {
-      // Use animation when automatically removed after timeout
-      notif.style.transform = 'translateX(100%) scale(0.9)'
-      notif.style.opacity = '0'
-      setTimeout(() => notif.remove(), 400)
+      // Use CSS animation class for slide-out effect
+      notif.classList.remove('notification-slide-in')
+      notif.classList.add('notification-slide-out')
+      setTimeout(() => notif.remove(), 300)
     }
   }
 
