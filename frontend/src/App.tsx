@@ -433,7 +433,7 @@ function AppContent() {
   const [creditWarningDismissible, setCreditWarningDismissible] = useState(false)
 
   // Track which models have already been broken out from the current conversation
-  const [alreadyBrokenOutModels, setAlreadyBrokenOutModels] = useState<Set<string>>(new Set())
+  const [_alreadyBrokenOutModels, setAlreadyBrokenOutModels] = useState<Set<string>>(new Set())
   
   // Track breakout transition phase for smooth animations
   // 'idle' = normal state, 'fading-out' = old cards fading out, 'hidden' = waiting to show new card, 'fading-in' = new card fading in
@@ -2114,9 +2114,9 @@ function AppContent() {
           }
           
           // Also check success field from stored messages if available (from API)
-          const modelStoredMessages = conversationData.messages.filter(
+          const modelStoredMessages = conversationData?.messages?.filter(
             msg => msg.role === 'assistant' && msg.model_id && String(msg.model_id) === String(modelId)
-          )
+          ) || []
           if (modelStoredMessages.length > 0) {
             const latestStoredMessage = modelStoredMessages[modelStoredMessages.length - 1]
             // If success field exists and is false, mark as failed
@@ -3973,7 +3973,7 @@ function AppContent() {
 
         // Extract the conversation data
         breakoutConversationId = String(breakoutConversation.id)
-        breakoutMessages = breakoutConversation.messages.map((msg, idx) => ({
+        breakoutMessages = breakoutConversation.messages.map((msg) => ({
           id: createMessageId(`${breakoutConversation.id}-${msg.id}`),
           type: msg.role as 'user' | 'assistant',
           content: msg.content,

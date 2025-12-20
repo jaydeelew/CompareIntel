@@ -36,6 +36,7 @@ export type {
   ModelConversation,
   ConversationSummary,
   ConversationRound,
+  ConversationType,
 } from './conversation'
 
 // Model types
