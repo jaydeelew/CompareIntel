@@ -977,7 +977,7 @@
 /* Modern Loading Section */
 .loading-section {
   text-align: center;
-  padding: 1.5rem 1rem;
+  padding: 0.5rem 1rem;
   background: var(--bg-primary);
   border-radius: var(--radius-xl);
   border: 1px solid var(--border-color);
@@ -985,7 +985,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.25rem;
   max-width: 1400px;
   margin: 0 auto;
   width: 100%;
@@ -995,7 +995,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.125rem;
   overflow: visible;
 }
 
