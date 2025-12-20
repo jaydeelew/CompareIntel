@@ -119,6 +119,12 @@ export const Features: React.FC = () => {
                 <strong>Response Metrics:</strong> Track response time and token usage for each
                 model to understand performance characteristics.
               </li>
+              <li>
+                <strong>Scroll Lock Feature:</strong> When comparing multiple models, enable scroll
+                lock to synchronize scrolling across all model result panels. This allows you to
+                scroll through all responses simultaneously, making it easier to compare responses
+                side-by-side as you read through longer outputs.
+              </li>
             </ul>
           </section>
 
