@@ -200,6 +200,61 @@ export const HowItWorks: React.FC = () => {
                 </p>
               </div>
             </div>
+
+            <div className="step-card">
+              <div className="step-number">6</div>
+              <div className="step-content">
+                <h3>Break Out Individual Models</h3>
+                <p>
+                  During a multi-model comparison, you might find that one model stands out and you
+                  want to focus your conversation on just that model. CompareIntel's breakout
+                  feature makes this easy:
+                </p>
+                <ul>
+                  <li>
+                    <strong>Look for the breakout button:</strong> In any multi-model comparison,
+                    you'll see a breakout button (↗) in the top-right corner of each model's
+                    response card.
+                  </li>
+                  <li>
+                    <strong>Click to break out:</strong> Click the breakout button on the model you
+                    want to continue with. This instantly creates a new, separate conversation with
+                    just that model.
+                  </li>
+                  <li>
+                    <strong>Seamless transition:</strong> The breakout conversation includes all
+                    previous messages from the original comparison—both your prompts and that model's
+                    responses—so you can continue seamlessly without losing any context.
+                  </li>
+                  <li>
+                    <strong>Independent exploration:</strong> The breakout conversation is completely
+                    separate from the original comparison. You can continue chatting with the
+                    breakout model while the original multi-model comparison remains intact in your
+                    history.
+                  </li>
+                  <li>
+                    <strong>Multiple breakouts:</strong> You can create multiple breakout
+                    conversations from the same comparison, even with the same model, allowing you
+                    to explore different conversation paths independently.
+                  </li>
+                  <li>
+                    <strong>Easy identification:</strong> Breakout conversations appear in your
+                    history with a special badge (↗) so you can easily find and return to them.
+                  </li>
+                </ul>
+                <p>
+                  <strong>Example use case:</strong> You compare GPT-4, Claude, and Gemini on a
+                  coding problem. GPT-4 gives the best solution, so you break out with GPT-4 to ask
+                  follow-up questions about optimization and edge cases. Meanwhile, the original
+                  comparison stays in your history for reference.
+                </p>
+                <p>
+                  <strong>Available for everyone:</strong> Breakout conversations work for both
+                  registered users and anonymous users, so everyone can take advantage of this
+                  feature.
+                </p>
+              </div>
+            </div>
           </section>
 
           <section className="seo-section">

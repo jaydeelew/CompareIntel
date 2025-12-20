@@ -175,6 +175,65 @@ const faqData = [
     ),
   },
   {
+    id: 'breakout-conversations',
+    question: 'What are breakout conversations and how do they work?',
+    answer: (
+      <>
+        <p>
+          Breakout conversations allow you to continue a conversation with just one model from a
+          multi-model comparison. This is perfect when you've compared multiple models and found one
+          that particularly stands out.
+        </p>
+        <p>
+          <strong>How to use breakout conversations:</strong>
+        </p>
+        <ul>
+          <li>
+            During any multi-model comparison, look for the breakout button (↗) in the top-right
+            corner of each model's response card
+          </li>
+          <li>
+            Click the breakout button on the model you want to continue with—this instantly creates
+            a new, separate conversation with just that model
+          </li>
+          <li>
+            The breakout conversation includes all previous messages from the original comparison
+            (both your prompts and that model's responses), so you can continue seamlessly without
+            losing context
+          </li>
+          <li>
+            The breakout conversation is completely independent—you can continue chatting with that
+            model while the original multi-model comparison remains intact in your history
+          </li>
+        </ul>
+        <p>
+          <strong>Key benefits:</strong>
+        </p>
+        <ul>
+          <li>
+            Focus your conversation on the model that's working best for your specific needs
+          </li>
+          <li>
+            Create multiple breakout conversations from the same comparison, even with the same
+            model, to explore different conversation paths
+          </li>
+          <li>
+            Easily identify breakout conversations in your history—they appear with a special badge
+            (↗)
+          </li>
+          <li>
+            Available for both registered and anonymous users
+          </li>
+        </ul>
+        <p>
+          <strong>Example:</strong> You compare GPT-4, Claude, and Gemini on a coding problem.
+          GPT-4 gives the best solution, so you break out with GPT-4 to ask follow-up questions
+          about optimization. The original comparison stays in your history for reference.
+        </p>
+      </>
+    ),
+  },
+  {
     id: 'file-attachments',
     question: 'Can I attach files to my comparisons?',
     answer: (

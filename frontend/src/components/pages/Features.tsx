@@ -230,6 +230,54 @@ export const Features: React.FC = () => {
           </section>
 
           <section className="seo-section">
+            <h2>Breakout Conversations</h2>
+            <p>
+              Sometimes during a multi-model comparison, you'll find that one model stands out and
+              you want to continue the conversation with just that model. CompareIntel's breakout
+              feature lets you seamlessly transition from a multi-model comparison to a focused
+              one-on-one conversation:
+            </p>
+            <ul className="seo-list">
+              <li>
+                <strong>One-Click Breakout:</strong> Click the breakout button (↗) on any model's
+                response card during a multi-model comparison to instantly create a separate
+                conversation with just that model.
+              </li>
+              <li>
+                <strong>Preserved History:</strong> The breakout conversation includes all previous
+                messages from the original comparison—both your prompts and that model's
+                responses—so you can continue seamlessly without losing context.
+              </li>
+              <li>
+                <strong>Independent Conversations:</strong> Breakout conversations are completely
+                separate from the original comparison. You can continue chatting with the breakout
+                model while the original multi-model comparison remains intact in your history.
+              </li>
+              <li>
+                <strong>Multiple Breakouts:</strong> You can create multiple breakout conversations
+                from the same comparison, even with the same model, allowing you to explore
+                different conversation paths independently.
+              </li>
+              <li>
+                <strong>Works for Everyone:</strong> Breakout conversations work for both
+                registered users and anonymous users, so everyone can take advantage of this
+                powerful feature.
+              </li>
+              <li>
+                <strong>Easy Access:</strong> All your breakout conversations appear in your
+                conversation history with a special badge (↗) so you can easily identify and return
+                to them later.
+              </li>
+            </ul>
+            <p>
+              This feature is perfect for when you've compared multiple models and found one that
+              particularly resonates with your needs. Instead of continuing with all models, you
+              can focus your conversation on the model that's working best for your specific use
+              case.
+            </p>
+          </section>
+
+          <section className="seo-section">
             <h2>Flexible Access Tiers</h2>
             <p>CompareIntel offers flexible access options to fit your needs:</p>
             <div className="pricing-overview">
