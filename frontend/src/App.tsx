@@ -434,6 +434,10 @@ function AppContent() {
 
   // Track which models have already been broken out from the current conversation
   const [alreadyBrokenOutModels, setAlreadyBrokenOutModels] = useState<Set<string>>(new Set())
+  
+  // Track breakout transition phase for smooth animations
+  // 'idle' = normal state, 'fading-out' = old cards fading out, 'hidden' = waiting to show new card, 'fading-in' = new card fading in
+  const [breakoutPhase, setBreakoutPhase] = useState<'idle' | 'fading-out' | 'hidden' | 'fading-in'>('idle')
 
   // Handler to save current model selection
   const handleSaveModelSelection = useCallback(
@@ -3910,6 +3914,18 @@ function AppContent() {
     }
 
     try {
+      // Phase 1: Fade out old cards
+      setBreakoutPhase('fading-out')
+
+      // Wait for fade-out animation to complete (300ms)
+      await new Promise(resolve => setTimeout(resolve, 300))
+
+      // Phase 2: Hide everything while we update state
+      setBreakoutPhase('hidden')
+
+      // Scroll to top instantly while screen is blank (user won't see the scroll)
+      window.scrollTo({ top: 0, behavior: 'instant' })
+
       // Call the backend to create a breakout conversation
       const breakoutConversation = await createBreakoutConversation({
         parent_conversation_id: parseInt(conversationId, 10),
@@ -3949,15 +3965,23 @@ function AppContent() {
       setError(null)
       setIsModelsHidden(true) // Hide models section in breakout mode
 
-      // Scroll to top to show the input area
-      window.scrollTo({ top: 0, behavior: 'smooth' })
+      // Wait a brief moment for DOM to update with the new card (still hidden)
+      await new Promise(resolve => setTimeout(resolve, 50))
 
-      // Focus the textarea after scroll completes
+      // Phase 3: Fade in the new card
+      setBreakoutPhase('fading-in')
+
+      // Clear the phase after animation completes
+      setTimeout(() => {
+        setBreakoutPhase('idle')
+      }, 300)
+
+      // Focus the textarea after fade-in animation completes
       setTimeout(() => {
         if (textareaRef.current) {
           textareaRef.current.focus()
         }
-      }, 650)
+      }, 350)
 
       // Show success notification (extended duration: 5 seconds instead of default 3)
       const model = allModels.find(m => m.id === modelId)
@@ -3973,6 +3997,7 @@ function AppContent() {
     } catch (err) {
       console.error('Failed to create breakout conversation:', err)
       setError('Failed to break out conversation. Please try again.')
+      setBreakoutPhase('idle') // Reset phase on error
     }
   }
 
@@ -7234,10 +7259,16 @@ function AppContent() {
                         const conversationIndex = visibleConversations.findIndex(c => c.modelId === conversation.modelId)
                         const isActiveCard = isMobileLayout && visibleConversations.length > 1 && conversationIndex === activeTabIndex
 
+                        // Determine transition classes for smooth breakout animation
+                        const transitionClass = 
+                          breakoutPhase === 'fading-out' ? 'breakout-fade-out' :
+                          breakoutPhase === 'hidden' ? 'breakout-hidden' :
+                          breakoutPhase === 'fading-in' ? 'breakout-fade-in' : ''
+                        
                         return (
                           <div 
                             key={conversation.modelId} 
-                            className="result-card conversation-card"
+                            className={`result-card conversation-card ${transitionClass}`.trim()}
                             style={isMobileLayout && visibleConversations.length > 1 ? {
                               display: isActiveCard ? 'block' : 'none'
                             } : undefined}
