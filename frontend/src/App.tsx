@@ -7319,37 +7319,6 @@ function AppContent() {
                                       <rect x="3" y="14" width="7" height="7" />
                                     </svg>
                                   </button>
-                                  {/* Breakout button - only show for multi-model comparisons, authenticated users, models not already broken out, and models that haven't failed */}
-                                  {isAuthenticated &&
-                                    visibleConversations.length > 1 &&
-                                    !alreadyBrokenOutModels.has(conversation.modelId) &&
-                                    !isError && (
-                                      <button
-                                        className="breakout-card-btn"
-                                        onClick={e => {
-                                          handleBreakout(conversation.modelId)
-                                          e.currentTarget.blur()
-                                        }}
-                                        title="Continue conversation with this model only"
-                                        aria-label={`Break out conversation with ${model?.name || conversation.modelId}`}
-                                      >
-                                      <svg
-                                        width="16"
-                                        height="16"
-                                        viewBox="0 0 24 24"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        strokeWidth="2"
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                      >
-                                        {/* Arrow breaking out of a box icon */}
-                                        <path d="M7 17L17 7" />
-                                        <path d="M7 7h10v10" />
-                                        <path d="M3 12v8a1 1 0 0 0 1 1h8" />
-                                      </svg>
-                                    </button>
-                                  )}
                                   <button
                                     className="close-card-btn"
                                     onClick={() => closeResultCard(conversation.modelId)}
@@ -7370,6 +7339,37 @@ function AppContent() {
                                       <line x1="1" y1="1" x2="23" y2="23" />
                                     </svg>
                                   </button>
+                                  {/* Breakout button - only show for multi-model comparisons, authenticated users, models not already broken out, and models that haven't failed */}
+                                  {isAuthenticated &&
+                                    visibleConversations.length > 1 &&
+                                    !alreadyBrokenOutModels.has(conversation.modelId) &&
+                                    !isError && (
+                                      <button
+                                        className="breakout-card-btn"
+                                        onClick={e => {
+                                          handleBreakout(conversation.modelId)
+                                          e.currentTarget.blur()
+                                        }}
+                                        title="Continue with this model only"
+                                        aria-label={`Break out conversation with ${model?.name || conversation.modelId}`}
+                                      >
+                                      <svg
+                                        width="16"
+                                        height="16"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        strokeWidth="2"
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                      >
+                                        {/* Arrow breaking out of a box icon */}
+                                        <path d="M7 17L17 7" />
+                                        <path d="M7 7h10v10" />
+                                        <path d="M3 12v8a1 1 0 0 0 1 1h8" />
+                                      </svg>
+                                    </button>
+                                  )}
                                 </div>
                               </div>
                               <div className="result-header-bottom">

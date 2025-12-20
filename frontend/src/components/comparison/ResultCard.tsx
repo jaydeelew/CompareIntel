@@ -160,33 +160,6 @@ export const ResultCard: React.FC<ResultCardProps> = ({
                 </svg>
               </button>
             )}
-            {showBreakoutButton && onBreakout && !isError && (
-              <button
-                className="breakout-card-btn"
-                onClick={e => {
-                  onBreakout(modelId)
-                  e.currentTarget.blur()
-                }}
-                title="Continue conversation with this model only"
-                aria-label={`Break out conversation with ${model?.name || modelId}`}
-              >
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  {/* Arrow breaking out of a box icon */}
-                  <path d="M7 17L17 7" />
-                  <path d="M7 7h10v10" />
-                  <path d="M3 12v8a1 1 0 0 0 1 1h8" />
-                </svg>
-              </button>
-            )}
             {onClose && (
               <button
                 className="close-card-btn"
@@ -206,6 +179,33 @@ export const ResultCard: React.FC<ResultCardProps> = ({
                 >
                   <path d="M18 6L6 18" />
                   <path d="M6 6l12 12" />
+                </svg>
+              </button>
+            )}
+            {showBreakoutButton && onBreakout && !isError && (
+              <button
+                className="breakout-card-btn"
+                onClick={e => {
+                  onBreakout(modelId)
+                  e.currentTarget.blur()
+                }}
+                title="Continue with this model only"
+                aria-label={`Break out conversation with ${model?.name || modelId}`}
+              >
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  {/* Arrow breaking out of a box icon */}
+                  <path d="M7 17L17 7" />
+                  <path d="M7 7h10v10" />
+                  <path d="M3 12v8a1 1 0 0 0 1 1h8" />
                 </svg>
               </button>
             )}
