@@ -46,7 +46,10 @@ export interface UseConversationHistoryReturn {
     modelsUsed: string[],
     conversationsToSave: ModelConversation[],
     isUpdate?: boolean,
-    fileContents?: Array<{ name: string; content: string; placeholder: string }>
+    fileContents?: Array<{ name: string; content: string; placeholder: string }>,
+    conversationType?: 'comparison' | 'breakout',
+    parentConversationId?: string | null,
+    breakoutModelId?: string | null
   ) => string
   deleteConversation: (summary: ConversationSummary, e: React.MouseEvent) => Promise<void>
   loadConversationFromAPI: (conversationId: ConversationId) => Promise<ModelConversation[] | null>
@@ -103,7 +106,10 @@ export function useConversationHistory({
       modelsUsed: string[],
       conversationsToSave: ModelConversation[],
       isUpdate: boolean = false,
-      fileContents?: Array<{ name: string; content: string; placeholder: string }>
+      fileContents?: Array<{ name: string; content: string; placeholder: string }>,
+      conversationType: 'comparison' | 'breakout' = 'comparison',
+      parentConversationId?: string | null,
+      breakoutModelId?: string | null
     ): string => {
       try {
         const history = loadHistoryFromLocalStorage()
@@ -168,16 +174,34 @@ export function useConversationHistory({
         }
 
         // Create or update conversation summary
+        // When updating, preserve existing breakout fields unless explicitly changing conversation type
+        const isChangingConversationType = existingConversation && 
+          (parentConversationId !== undefined || breakoutModelId !== undefined)
+        
         const conversationSummary: ConversationSummary = existingConversation
           ? {
               ...existingConversation,
               message_count: totalMessages,
+              // Preserve existing conversation_type unless explicitly changing it (creating breakout)
+              conversation_type: isChangingConversationType 
+                ? conversationType 
+                : (existingConversation.conversation_type || conversationType),
+              // Only update parent_conversation_id and breakout_model_id if explicitly provided
+              parent_conversation_id: parentConversationId !== undefined 
+                ? (parentConversationId ? parseInt(parentConversationId, 10) : null)
+                : existingConversation.parent_conversation_id,
+              breakout_model_id: breakoutModelId !== undefined
+                ? (breakoutModelId ? createModelId(breakoutModelId) : null)
+                : existingConversation.breakout_model_id,
               // Keep original created_at for existing conversations
             }
           : {
               id: createConversationId(conversationId),
               input_data: inputData,
               models_used: modelsUsed.map(id => createModelId(id)),
+              conversation_type: conversationType,
+              parent_conversation_id: parentConversationId ? parseInt(parentConversationId, 10) : null,
+              breakout_model_id: breakoutModelId ? createModelId(breakoutModelId) : null,
               created_at: new Date().toISOString(),
               message_count: totalMessages,
             }
@@ -186,19 +210,27 @@ export function useConversationHistory({
         let updatedHistory: ConversationSummary[]
         if (isUpdate && existingConversation) {
           // Update existing entry in place
+          // Compare IDs as strings to handle both ConversationId branded types and raw strings
           updatedHistory = history.map(conv =>
-            conv.id === conversationId ? conversationSummary : conv
+            String(conv.id) === String(conversationId) ? conversationSummary : conv
           )
         } else {
           // Remove any existing conversation with the same input and models (to prevent duplicates)
-          const filteredHistory = history.filter(
-            conv =>
-              !(
-                conv.input_data === inputData &&
-                JSON.stringify([...conv.models_used].sort()) ===
-                  JSON.stringify([...modelsUsed].sort())
-              )
-          )
+          // For breakout conversations, allow multiple breakouts with the same model from the same parent
+          // Each breakout gets a unique ID (timestamp-based) so they can diverge independently
+          const filteredHistory = history.filter(conv => {
+            // For breakout conversations, don't filter - allow multiple breakouts with same model/parent
+            if (conversationType === 'breakout') {
+              // Keep all conversations - each breakout is unique even if same model/parent
+              return true
+            }
+            // For regular comparisons, check input_data and models_used to prevent duplicates
+            return !(
+              conv.input_data === inputData &&
+              JSON.stringify([...conv.models_used].sort()) ===
+                JSON.stringify([...modelsUsed].sort())
+            )
+          })
 
           // For new conversations: add the new one and limit to 2 most recent after sorting
           // When user has A & B and runs C, comparison C appears at top and A is deleted
@@ -283,6 +315,9 @@ export function useConversationHistory({
           JSON.stringify({
             input_data: inputData, // Always keep first query as input_data (with placeholders)
             models_used: modelsUsed,
+            conversation_type: conversationType,
+            parent_conversation_id: parentConversationId || null,
+            breakout_model_id: breakoutModelId || null,
             created_at: existingData?.created_at || conversationSummary.created_at,
             messages: conversationMessages,
             file_contents: fileContents || [], // Store extracted file contents separately

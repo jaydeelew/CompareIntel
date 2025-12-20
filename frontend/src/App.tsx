@@ -1834,12 +1834,47 @@ function AppContent() {
   const loadConversationFromLocalStorage = useCallback(
     (
       id: string
-    ): { input_data: string; models_used: string[]; messages: StoredMessage[]; file_contents?: Array<{ name: string; content: string; placeholder: string }> } | null => {
+    ): {
+      input_data: string
+      models_used: string[]
+      messages: StoredMessage[]
+      file_contents?: Array<{ name: string; content: string; placeholder: string }>
+      conversation_type?: 'comparison' | 'breakout'
+      parent_conversation_id?: string | null
+      breakout_model_id?: string | null
+      already_broken_out_models?: string[]
+    } | null => {
       try {
         const stored = localStorage.getItem(`compareintel_conversation_${id}`)
         if (stored) {
           const parsed = JSON.parse(stored)
-          return parsed
+          
+          // Calculate already_broken_out_models for anonymous users
+          // Only check if this is a comparison (not a breakout itself)
+          const already_broken_out_models: string[] = []
+          if (parsed.conversation_type !== 'breakout') {
+            // Load all conversations from history to find breakouts
+            const historyJson = localStorage.getItem('compareintel_conversation_history')
+            if (historyJson) {
+              const history = JSON.parse(historyJson) as ConversationSummary[]
+              // Compare parent_conversation_id (number) with conversation id (string timestamp)
+              const conversationIdNum = parseInt(id, 10)
+              const existingBreakouts = history.filter(
+                conv =>
+                  conv.parent_conversation_id === conversationIdNum &&
+                  conv.conversation_type === 'breakout' &&
+                  conv.breakout_model_id
+              )
+              already_broken_out_models.push(
+                ...existingBreakouts.map(conv => String(conv.breakout_model_id)).filter(Boolean)
+              )
+            }
+          }
+          
+          return {
+            ...parsed,
+            already_broken_out_models,
+          }
         } else {
           console.warn('No conversation found in localStorage for id:', id)
         }
@@ -3900,12 +3935,6 @@ function AppContent() {
    * This creates a new conversation with only the selected model's messages
    */
   const handleBreakout = async (modelId: string) => {
-    // Only allow breakout for authenticated users
-    if (!isAuthenticated) {
-      setError('Please sign in to break out a model into a separate conversation')
-      return
-    }
-
     // Get the current conversation ID
     const conversationId = currentVisibleComparisonId
     if (!conversationId) {
@@ -3926,32 +3955,86 @@ function AppContent() {
       // Scroll to top instantly while screen is blank (user won't see the scroll)
       window.scrollTo({ top: 0, behavior: 'instant' })
 
-      // Call the backend to create a breakout conversation
-      const breakoutConversation = await createBreakoutConversation({
-        parent_conversation_id: parseInt(conversationId, 10),
-        model_id: modelId,
-      })
+      let breakoutConversationId: string
+      let breakoutMessages: ConversationMessage[]
 
-      // Clear cache for conversations endpoint to ensure fresh data
-      apiClient.deleteCache('GET:/conversations')
+      if (isAuthenticated) {
+        // Authenticated users: create breakout via API
+        const breakoutConversation = await createBreakoutConversation({
+          parent_conversation_id: parseInt(conversationId, 10),
+          model_id: modelId,
+        })
 
-      // Reload history to include the new breakout conversation
-      await loadHistoryFromAPI()
+        // Clear cache for conversations endpoint to ensure fresh data
+        apiClient.deleteCache('GET:/conversations')
 
-      // Extract the conversation data and set up the UI
-      const messages = breakoutConversation.messages.map((msg, idx) => ({
-        id: createMessageId(`${breakoutConversation.id}-${msg.id}`),
-        type: msg.role as 'user' | 'assistant',
-        content: msg.content,
-        timestamp: msg.created_at,
-        input_tokens: msg.input_tokens,
-        output_tokens: msg.output_tokens,
-      }))
+        // Reload history to include the new breakout conversation
+        await loadHistoryFromAPI()
+
+        // Extract the conversation data
+        breakoutConversationId = String(breakoutConversation.id)
+        breakoutMessages = breakoutConversation.messages.map((msg, idx) => ({
+          id: createMessageId(`${breakoutConversation.id}-${msg.id}`),
+          type: msg.role as 'user' | 'assistant',
+          content: msg.content,
+          timestamp: msg.created_at,
+          input_tokens: msg.input_tokens,
+          output_tokens: msg.output_tokens,
+        }))
+      } else {
+        // Anonymous users: create breakout in localStorage
+        // Load the parent conversation
+        const parentData = loadConversationFromLocalStorage(conversationId)
+        if (!parentData) {
+          setError('Failed to load parent conversation')
+          setBreakoutPhase('idle')
+          return
+        }
+
+        // Filter messages to only include user messages and assistant messages from the breakout model
+        const filteredMessages: StoredMessage[] = parentData.messages.filter(
+          msg => msg.role === 'user' || (msg.role === 'assistant' && msg.model_id === modelId)
+        )
+
+        // Create breakout conversation ID
+        breakoutConversationId = Date.now().toString()
+
+        // Convert to ConversationMessage format
+        breakoutMessages = filteredMessages.map((msg, idx) => ({
+          id: createMessageId(`${breakoutConversationId}-${idx}`),
+          type: msg.role as 'user' | 'assistant',
+          content: msg.content,
+          timestamp: msg.created_at || new Date().toISOString(),
+          input_tokens: msg.input_tokens,
+          output_tokens: msg.output_tokens,
+        }))
+
+        // Save breakout conversation to localStorage
+        const breakoutModelConversationForStorage: ModelConversation = {
+          modelId: createModelId(modelId),
+          messages: breakoutMessages,
+        }
+
+        saveConversationToLocalStorage(
+          parentData.input_data,
+          [modelId],
+          [breakoutModelConversationForStorage],
+          false, // isUpdate
+          parentData.file_contents,
+          'breakout',
+          conversationId,
+          modelId
+        )
+
+        // Reload history to include the new breakout conversation
+        const reloadedHistory = loadHistoryFromLocalStorage()
+        setConversationHistory(reloadedHistory)
+      }
 
       // Set up the breakout conversation UI
       const breakoutModelConversation: ModelConversation = {
         modelId: createModelId(modelId),
-        messages,
+        messages: breakoutMessages,
       }
 
       // Clear the current comparison state and set up breakout mode
@@ -3960,10 +4043,15 @@ function AppContent() {
       setOriginalSelectedModels([modelId])
       setClosedCards(new Set())
       setIsFollowUpMode(true)
-      setCurrentVisibleComparisonId(String(breakoutConversation.id))
+      setCurrentVisibleComparisonId(breakoutConversationId)
       setInput('') // Clear input for new follow-up
       setError(null)
       setIsModelsHidden(true) // Hide models section in breakout mode
+
+      // Track this model as broken out (for informational purposes)
+      // Note: Users can still create additional breakouts with the same model
+      // Convert to string to match the format from API/localStorage
+      setAlreadyBrokenOutModels(prev => new Set(prev).add(String(modelId)))
 
       // Wait a brief moment for DOM to update with the new card (still hidden)
       await new Promise(resolve => setTimeout(resolve, 50))
@@ -7370,10 +7458,8 @@ function AppContent() {
                                       <line x1="1" y1="1" x2="23" y2="23" />
                                     </svg>
                                   </button>
-                                  {/* Breakout button - only show for multi-model comparisons, authenticated users, models not already broken out, and models that haven't failed */}
-                                  {isAuthenticated &&
-                                    visibleConversations.length > 1 &&
-                                    !alreadyBrokenOutModels.has(conversation.modelId) &&
+                                  {/* Breakout button - only show for multi-model comparisons and models that haven't failed */}
+                                  {visibleConversations.length > 1 &&
                                     !isError && (
                                       <button
                                         className="breakout-card-btn"

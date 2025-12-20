@@ -77,24 +77,32 @@ export const HowItWorks: React.FC = () => {
                 </p>
                 <ul>
                   <li>
-                    <strong>GPT-4o & GPT-4</strong> - OpenAI's flagship models for general-purpose
-                    tasks
+                    <strong>GPT-5.1, GPT-5.1-Codex & GPT-5</strong> - OpenAI's latest frontier-grade
+                    models with improved reasoning, code quality, and specialized coding capabilities
                   </li>
                   <li>
-                    <strong>Claude 3.5 Sonnet</strong> - Anthropic's best balance of speed and
-                    capability
+                    <strong>GPT-4o & o3</strong> - OpenAI's multimodal model and powerful reasoning
+                    model across domains
                   </li>
                   <li>
-                    <strong>Claude 3 Opus</strong> - Top-tier performance for complex reasoning
+                    <strong>Claude Opus 4.5 & Claude Sonnet 4.5</strong> - Anthropic's frontier
+                    reasoning models optimized for complex workflows and coding
                   </li>
                   <li>
-                    <strong>Gemini Pro</strong> - Google's advanced multimodal AI
+                    <strong>Gemini 3 Pro Preview & Gemini 2.5 Pro</strong> - Google's flagship
+                    multimodal models for advanced reasoning and STEM tasks
                   </li>
                   <li>
-                    <strong>Llama 3.1</strong> - Meta's powerful open-source model
+                    <strong>Grok 4 & Grok 4 Fast</strong> - xAI's latest reasoning and multimodal
+                    models with SOTA cost-efficiency
                   </li>
                   <li>
-                    <strong>Mistral Large</strong> - European AI with strong multilingual support
+                    <strong>Llama 4 Maverick & Llama 4 Scout</strong> - Meta's latest high-capacity
+                    multimodal MoE models
+                  </li>
+                  <li>
+                    <strong>Mistral Large</strong> - Mistral AI's flagship model with strong
+                    multilingual support
                   </li>
                 </ul>
                 <p>
