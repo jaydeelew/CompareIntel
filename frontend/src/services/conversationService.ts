@@ -5,9 +5,10 @@
  * - Listing conversations
  * - Getting conversation details
  * - Deleting conversations
+ * - Creating breakout conversations
  */
 
-import type { ConversationSummary, ConversationId } from '../types'
+import type { ConversationSummary, ConversationId, ConversationType } from '../types'
 
 import { apiClient } from './api/client'
 
@@ -19,6 +20,10 @@ export interface ConversationDetail {
   title: string | null
   input_data: string
   models_used: string[]
+  conversation_type?: ConversationType
+  parent_conversation_id?: number | null
+  breakout_model_id?: string | null
+  already_broken_out_models?: string[]
   created_at: string
   messages: ConversationMessage[]
 }
@@ -36,6 +41,14 @@ export interface ConversationMessage {
   success: boolean
   processing_time_ms: number | null
   created_at: string
+}
+
+/**
+ * Request for creating a breakout conversation
+ */
+export interface BreakoutConversationRequest {
+  parent_conversation_id: number
+  model_id: string
 }
 
 /**
@@ -70,4 +83,18 @@ export async function getConversation(conversationId: ConversationId): Promise<C
  */
 export async function deleteConversation(conversationId: ConversationId): Promise<void> {
   await apiClient.delete(`/conversations/${conversationId}`)
+}
+
+/**
+ * Create a breakout conversation from a multi-model comparison
+ *
+ * @param request - Breakout conversation request with parent ID and model ID
+ * @returns Promise resolving to the new breakout conversation details
+ * @throws {ApiError} If creation fails or parent conversation not found
+ */
+export async function createBreakoutConversation(
+  request: BreakoutConversationRequest
+): Promise<ConversationDetail> {
+  const response = await apiClient.post<ConversationDetail>('/conversations/breakout', request)
+  return response.data
 }

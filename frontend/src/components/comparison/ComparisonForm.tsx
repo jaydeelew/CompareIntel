@@ -1456,12 +1456,19 @@ export const ComparisonForm = memo<ComparisonFormProps>(
                               >
                                 <div className="history-item-content">
                                   <div className="history-item-prompt">
+                                    {summary.conversation_type === 'breakout' && (
+                                      <span className="history-item-breakout-badge" title="Breakout conversation">
+                                        ↗
+                                      </span>
+                                    )}
                                     {truncatePrompt(summary.input_data)}
                                   </div>
                                   <div className="history-item-meta">
                                     <span className="history-item-models">
-                                      {summary.models_used.length} model
-                                      {summary.models_used.length !== 1 ? 's' : ''}
+                                      {summary.conversation_type === 'breakout' 
+                                        ? '1 model (breakout)'
+                                        : `${summary.models_used.length} model${summary.models_used.length !== 1 ? 's' : ''}`
+                                      }
                                     </span>
                                     <span className="history-item-date">
                                       {formatDate(summary.created_at)}

@@ -346,6 +346,36 @@
   transform: scale(0.95);
 }
 
+/* Breakout button - for breaking out a model from a multi-model comparison */
+.breakout-card-btn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: var(--radius-sm);
+  transition: all 0.2s ease;
+  line-height: 1;
+  width: 28px;
+  height: 28px;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.breakout-card-btn:hover {
+  background: var(--accent-color);
+  color: white;
+  transform: scale(1.1);
+}
+
+.breakout-card-btn:active {
+  transform: scale(0.95);
+}
+
 .output-length {
   font-size: 0.75rem;
   color: var(--text-muted);
@@ -2687,6 +2717,20 @@ button.nav-button-primary {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/* Breakout badge for history items */
+.history-item-breakout-badge {
+  display: inline-block;
+  background: linear-gradient(135deg, var(--accent-color) 0%, #0284c7 100%);
+  color: white;
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 0.15rem 0.35rem;
+  border-radius: var(--radius-sm);
+  margin-right: 0.5rem;
+  vertical-align: middle;
+  line-height: 1;
 }
 
 .history-item-meta {

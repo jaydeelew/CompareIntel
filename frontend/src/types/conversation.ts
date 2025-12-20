@@ -63,6 +63,8 @@ export interface StoredMessage {
   input_tokens?: number | null
   /** Output tokens for assistant messages (from OpenRouter API) */
   output_tokens?: number | null
+  /** Success flag (true if message was successful, false if failed) - only available from API */
+  success?: boolean
 }
 
 /**
@@ -76,6 +78,16 @@ export interface ModelConversation {
 }
 
 /**
+ * Conversation type for distinguishing comparisons from breakouts
+ */
+export const CONVERSATION_TYPE = {
+  COMPARISON: 'comparison',
+  BREAKOUT: 'breakout',
+} as const
+
+export type ConversationType = (typeof CONVERSATION_TYPE)[keyof typeof CONVERSATION_TYPE]
+
+/**
  * Summary of a conversation (used in history)
  */
 export interface ConversationSummary {
@@ -85,6 +97,12 @@ export interface ConversationSummary {
   input_data: string
   /** Array of model IDs used in this conversation */
   models_used: ModelId[]
+  /** Type of conversation: 'comparison' or 'breakout' */
+  conversation_type?: ConversationType
+  /** ID of parent comparison (for breakout conversations) */
+  parent_conversation_id?: number | null
+  /** Model ID that was broken out (for breakout conversations) */
+  breakout_model_id?: ModelId | null
   /** ISO timestamp when the conversation was created */
   created_at: string
   /** Optional count of messages in the conversation */

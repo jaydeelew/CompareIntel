@@ -36,6 +36,8 @@ export interface ResultsDisplayProps {
   onCloseCard?: (modelId: string) => void
   /** Callback to switch result tab */
   onSwitchTab?: (modelId: string, tab: ResultTab) => void
+  /** Callback to break out a model into a separate conversation */
+  onBreakout?: (modelId: string) => void
   /** Custom className */
   className?: string
 }
@@ -67,6 +69,7 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
   onCopyResponse,
   onCloseCard,
   onSwitchTab,
+  onBreakout,
   className = '',
 }) => {
   const visibleConversations = conversations.filter(
@@ -197,6 +200,8 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
               onCopyResponse={onCopyResponse}
               onClose={onCloseCard}
               onSwitchTab={onSwitchTab}
+              onBreakout={onBreakout}
+              showBreakoutButton={visibleConversations.length > 1 && !isError}
             />
           </div>
         </div>
@@ -247,6 +252,8 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
               onCopyResponse={onCopyResponse}
               onClose={onCloseCard}
               onSwitchTab={onSwitchTab}
+              onBreakout={onBreakout}
+              showBreakoutButton={visibleConversations.length > 1 && !isError}
             />
           )
         })}

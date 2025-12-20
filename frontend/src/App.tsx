@@ -54,7 +54,7 @@ import {
   resetRateLimit,
   compareStream,
 } from './services/compareService'
-import { getConversation } from './services/conversationService'
+import { getConversation, createBreakoutConversation } from './services/conversationService'
 import { getCreditBalance } from './services/creditService'
 import type { CreditBalance } from './services/creditService'
 import { getAvailableModels } from './services/modelsService'
@@ -431,6 +431,9 @@ function AppContent() {
     'low' | 'insufficient' | 'none' | null
   >(null)
   const [creditWarningDismissible, setCreditWarningDismissible] = useState(false)
+
+  // Track which models have already been broken out from the current conversation
+  const [alreadyBrokenOutModels, setAlreadyBrokenOutModels] = useState<Set<string>>(new Set())
 
   // Handler to save current model selection
   const handleSaveModelSelection = useCallback(
@@ -1878,6 +1881,10 @@ function AppContent() {
             if (msg.output_tokens !== undefined && msg.output_tokens !== null) {
               storedMessage.output_tokens = msg.output_tokens
             }
+            // Preserve success field from API response
+            if (msg.success !== undefined) {
+              storedMessage.success = msg.success
+            }
             return storedMessage
           }),
         }
@@ -1902,6 +1909,7 @@ function AppContent() {
         models_used: string[]
         messages: StoredMessage[]
         file_contents?: Array<{ name: string; content: string; placeholder: string }>
+        already_broken_out_models?: string[]
       } | null = null
 
       if (isAuthenticated && typeof summary.id === 'number') {
@@ -1917,6 +1925,13 @@ function AppContent() {
 
       // Store models_used in a local variable to satisfy TypeScript null checks in callbacks
       const modelsUsed = conversationData.models_used
+
+      // Store already broken out models (only for authenticated users, from API)
+      if (conversationData.already_broken_out_models) {
+        setAlreadyBrokenOutModels(new Set(conversationData.already_broken_out_models))
+      } else {
+        setAlreadyBrokenOutModels(new Set())
+      }
 
       // Group messages by model_id
       const messagesByModel: { [key: string]: ConversationMessage[] } = {}
@@ -2024,6 +2039,55 @@ function AppContent() {
         modelId: createModelId(modelId),
         messages: messagesByModel[modelId] || [],
       }))
+
+      // Detect and mark failed models when loading from history
+      // This ensures the status indicator shows "FAIL" for failed models
+      const loadedModelErrors: { [key: string]: boolean } = {}
+      
+      // Check each model that was used in the conversation
+      modelsUsed.forEach((modelId: string) => {
+        const createdModelId = createModelId(modelId)
+        const conv = loadedConversations.find(c => c.modelId === createdModelId)
+        
+        if (!conv) {
+          // Model was in models_used but has no conversation - it failed
+          loadedModelErrors[createdModelId] = true
+          return
+        }
+        
+        // Check if model has any assistant messages
+        const assistantMessages = conv.messages.filter(msg => msg.type === 'assistant')
+        
+        // For authenticated users: if model is in models_used but has no assistant messages, it failed
+        // (failed messages are not saved to database for authenticated users)
+        if (assistantMessages.length === 0) {
+          loadedModelErrors[createdModelId] = true
+          return
+        }
+        
+        // Check the latest assistant message for errors
+        const latestMessage = assistantMessages[assistantMessages.length - 1]
+        if (latestMessage) {
+          // Check if message content is an error message
+          if (isErrorMessage(latestMessage.content)) {
+            loadedModelErrors[createdModelId] = true
+            return
+          }
+          
+          // Also check success field from stored messages if available (from API)
+          const modelStoredMessages = conversationData.messages.filter(
+            msg => msg.role === 'assistant' && msg.model_id && String(msg.model_id) === String(modelId)
+          )
+          if (modelStoredMessages.length > 0) {
+            const latestStoredMessage = modelStoredMessages[modelStoredMessages.length - 1]
+            // If success field exists and is false, mark as failed
+            if (latestStoredMessage.success === false) {
+              loadedModelErrors[createdModelId] = true
+            }
+          }
+        }
+      })
+      setModelErrors(loadedModelErrors)
 
       // Set state
       setConversations(loadedConversations)
@@ -3827,6 +3891,91 @@ function AppContent() {
     setAttachedFiles([])
   }
 
+  /**
+   * Handle breaking out a model from a multi-model comparison into its own conversation
+   * This creates a new conversation with only the selected model's messages
+   */
+  const handleBreakout = async (modelId: string) => {
+    // Only allow breakout for authenticated users
+    if (!isAuthenticated) {
+      setError('Please sign in to break out a model into a separate conversation')
+      return
+    }
+
+    // Get the current conversation ID
+    const conversationId = currentVisibleComparisonId
+    if (!conversationId) {
+      setError('No active conversation to break out from')
+      return
+    }
+
+    try {
+      // Call the backend to create a breakout conversation
+      const breakoutConversation = await createBreakoutConversation({
+        parent_conversation_id: parseInt(conversationId, 10),
+        model_id: modelId,
+      })
+
+      // Clear cache for conversations endpoint to ensure fresh data
+      apiClient.deleteCache('GET:/conversations')
+
+      // Reload history to include the new breakout conversation
+      await loadHistoryFromAPI()
+
+      // Extract the conversation data and set up the UI
+      const messages = breakoutConversation.messages.map((msg, idx) => ({
+        id: createMessageId(`${breakoutConversation.id}-${msg.id}`),
+        type: msg.role as 'user' | 'assistant',
+        content: msg.content,
+        timestamp: msg.created_at,
+        input_tokens: msg.input_tokens,
+        output_tokens: msg.output_tokens,
+      }))
+
+      // Set up the breakout conversation UI
+      const breakoutModelConversation: ModelConversation = {
+        modelId: createModelId(modelId),
+        messages,
+      }
+
+      // Clear the current comparison state and set up breakout mode
+      setConversations([breakoutModelConversation])
+      setSelectedModels([modelId])
+      setOriginalSelectedModels([modelId])
+      setClosedCards(new Set())
+      setIsFollowUpMode(true)
+      setCurrentVisibleComparisonId(String(breakoutConversation.id))
+      setInput('') // Clear input for new follow-up
+      setError(null)
+      setIsModelsHidden(true) // Hide models section in breakout mode
+
+      // Scroll to top to show the input area
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+
+      // Focus the textarea after scroll completes
+      setTimeout(() => {
+        if (textareaRef.current) {
+          textareaRef.current.focus()
+        }
+      }, 650)
+
+      // Show success notification (extended duration: 5 seconds instead of default 3)
+      const model = allModels.find(m => m.id === modelId)
+      const notification = showNotification(
+        `Broke out conversation with ${model?.name || modelId}. You can now continue the conversation with this model only.`,
+        'success'
+      )
+      // Clear the default 3-second timeout and manually remove after 5 seconds
+      notification.clearAutoRemove()
+      setTimeout(() => {
+        notification()
+      }, 5000)
+    } catch (err) {
+      console.error('Failed to create breakout conversation:', err)
+      setError('Failed to break out conversation. Please try again.')
+    }
+  }
+
   // Function to scroll all conversation content areas to the last user message
   const scrollConversationsToBottom = () => {
     // Use a small delay to ensure DOM has updated
@@ -4046,6 +4195,8 @@ function AppContent() {
       // Clear the currently visible comparison ID so the previous one will appear in history
       // This allows the previously visible comparison to show in the dropdown when user starts a new one
       setCurrentVisibleComparisonId(null)
+      // Clear already broken out models for new comparison
+      setAlreadyBrokenOutModels(new Set())
 
       setOriginalSelectedModels([...selectedModels])
 
@@ -4107,10 +4258,31 @@ function AppContent() {
     }> = []
 
     if (isFollowUpMode && conversations.length > 0) {
-      // Get all conversations for selected models
-      const selectedConversations = conversations.filter(
-        conv => selectedModels.includes(conv.modelId) && conv.messages.length > 0
-      )
+      // Get all conversations for selected models, excluding failed models
+      // Failed models should not participate in follow-up conversations
+      const selectedConversations = conversations.filter(conv => {
+        // Must be in selected models
+        if (!selectedModels.includes(conv.modelId)) return false
+        
+        // Check if this model failed (using modelErrors state set when loading from history)
+        if (modelErrors[conv.modelId] === true) {
+          return false // Exclude failed models
+        }
+        
+        // Must have assistant messages (if no assistant messages, model failed)
+        const assistantMessages = conv.messages.filter(msg => msg.type === 'assistant')
+        if (assistantMessages.length === 0) {
+          return false // Exclude models with no assistant messages (they failed)
+        }
+        
+        // Check if latest assistant message is an error
+        const latestMessage = assistantMessages[assistantMessages.length - 1]
+        if (latestMessage && isErrorMessage(latestMessage.content)) {
+          return false // Exclude failed models
+        }
+        
+        return true
+      })
       
       if (selectedConversations.length > 0) {
         // Collect all messages from all selected conversations
@@ -7147,6 +7319,37 @@ function AppContent() {
                                       <rect x="3" y="14" width="7" height="7" />
                                     </svg>
                                   </button>
+                                  {/* Breakout button - only show for multi-model comparisons, authenticated users, models not already broken out, and models that haven't failed */}
+                                  {isAuthenticated &&
+                                    visibleConversations.length > 1 &&
+                                    !alreadyBrokenOutModels.has(conversation.modelId) &&
+                                    !isError && (
+                                      <button
+                                        className="breakout-card-btn"
+                                        onClick={e => {
+                                          handleBreakout(conversation.modelId)
+                                          e.currentTarget.blur()
+                                        }}
+                                        title="Continue conversation with this model only"
+                                        aria-label={`Break out conversation with ${model?.name || conversation.modelId}`}
+                                      >
+                                      <svg
+                                        width="16"
+                                        height="16"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        strokeWidth="2"
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                      >
+                                        {/* Arrow breaking out of a box icon */}
+                                        <path d="M7 17L17 7" />
+                                        <path d="M7 7h10v10" />
+                                        <path d="M3 12v8a1 1 0 0 0 1 1h8" />
+                                      </svg>
+                                    </button>
+                                  )}
                                   <button
                                     className="close-card-btn"
                                     onClick={() => closeResultCard(conversation.modelId)}

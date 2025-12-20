@@ -125,6 +125,11 @@ class Conversation(Base):
     input_data = Column(Text, nullable=False)  # The prompt/input
     models_used = Column(Text, nullable=False)  # JSON array of model IDs
 
+    # Breakout conversation support
+    conversation_type = Column(String(20), default="comparison", nullable=False)  # 'comparison' or 'breakout'
+    parent_conversation_id = Column(Integer, ForeignKey("conversations.id", ondelete="SET NULL"), nullable=True, index=True)
+    breakout_model_id = Column(String(255), nullable=True)  # The specific model that was broken out (for breakout type)
+
     # Timestamps
     created_at = Column(DateTime, default=func.now(), index=True)
     updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
@@ -132,6 +137,7 @@ class Conversation(Base):
     # Relationships
     user = relationship("User", back_populates="conversations")
     messages = relationship("ConversationMessage", back_populates="conversation", cascade="all, delete-orphan")
+    parent_conversation = relationship("Conversation", remote_side=[id], backref="breakout_conversations")
 
 
 class ConversationMessage(Base):
@@ -337,9 +343,7 @@ class UsageLogMonthlyAggregate(Base):
     created_at = Column(DateTime, default=func.now())
     updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
 
-    __table_args__ = (
-        UniqueConstraint('year', 'month', name='uq_usage_log_monthly_year_month'),
-    )
+    __table_args__ = (UniqueConstraint("year", "month", name="uq_usage_log_monthly_year_month"),)
 
 
 class AppSettings(Base):

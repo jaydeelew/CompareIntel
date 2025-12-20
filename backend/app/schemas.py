@@ -16,15 +16,9 @@ from datetime import datetime, date
 
 class UserRegister(BaseModel):
     """Schema for user registration request."""
-    
+
     model_config = ConfigDict(
-        json_schema_extra={
-            "example": {
-                "email": "user@example.com",
-                "password": "SecurePass123!",
-                "recaptcha_token": "03AGdBq24..."
-            }
-        }
+        json_schema_extra={"example": {"email": "user@example.com", "password": "SecurePass123!", "recaptcha_token": "03AGdBq24..."}}
     )
 
     email: EmailStr
@@ -50,15 +44,8 @@ class UserRegister(BaseModel):
 
 class UserLogin(BaseModel):
     """Schema for user login request."""
-    
-    model_config = ConfigDict(
-        json_schema_extra={
-            "example": {
-                "email": "user@example.com",
-                "password": "SecurePass123!"
-            }
-        }
-    )
+
+    model_config = ConfigDict(json_schema_extra={"example": {"email": "user@example.com", "password": "SecurePass123!"}})
 
     email: EmailStr
     password: str
@@ -93,13 +80,13 @@ class UserResponse(BaseModel):
 
 class TokenResponse(BaseModel):
     """Schema for authentication token response."""
-    
+
     model_config = ConfigDict(
         json_schema_extra={
             "example": {
                 "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
                 "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-                "token_type": "bearer"
+                "token_type": "bearer",
             }
         }
     )
@@ -174,9 +161,7 @@ class PasswordReset(BaseModel):
 class SubscriptionUpdate(BaseModel):
     """Schema for updating subscription."""
 
-    tier: Literal["free", "starter", "starter_plus", "pro", "pro_plus"] = Field(
-        ..., description="Subscription tier"
-    )
+    tier: Literal["free", "starter", "starter_plus", "pro", "pro_plus"] = Field(..., description="Subscription tier")
     period: Literal["monthly", "yearly"] = Field(..., description="Billing period")
 
 
@@ -276,6 +261,9 @@ class ConversationListItem(BaseModel):
     title: Optional[str]
     input_data: str
     models_used: List[str]
+    conversation_type: str = Field(default="comparison", description="Type of conversation: 'comparison' or 'breakout'")
+    parent_conversation_id: Optional[int] = Field(None, description="ID of parent comparison (for breakout conversations)")
+    breakout_model_id: Optional[str] = Field(None, description="Model ID that was broken out (for breakout conversations)")
     created_at: datetime
     message_count: int
 
@@ -312,6 +300,9 @@ class ConversationSummary(BaseModel):
     id: int
     input_data: str
     models_used: List[str]
+    conversation_type: str = Field(default="comparison", description="Type of conversation: 'comparison' or 'breakout'")
+    parent_conversation_id: Optional[int] = Field(None, description="ID of parent comparison (for breakout conversations)")
+    breakout_model_id: Optional[str] = Field(None, description="Model ID that was broken out (for breakout conversations)")
     created_at: datetime
     message_count: int
 
@@ -325,10 +316,26 @@ class ConversationDetail(BaseModel):
     title: Optional[str]
     input_data: str
     models_used: List[str]
+    conversation_type: str = Field(default="comparison", description="Type of conversation: 'comparison' or 'breakout'")
+    parent_conversation_id: Optional[int] = Field(None, description="ID of parent comparison (for breakout conversations)")
+    breakout_model_id: Optional[str] = Field(None, description="Model ID that was broken out (for breakout conversations)")
+    already_broken_out_models: List[str] = Field(
+        default_factory=list,
+        description="List of model IDs that have already been broken out from this conversation",
+    )
     created_at: datetime
     messages: List[ConversationMessage]
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class BreakoutConversationCreate(BaseModel):
+    """Schema for creating a breakout conversation from a comparison."""
+
+    parent_conversation_id: int = Field(..., description="ID of the original comparison conversation")
+    model_id: str = Field(..., description="Model ID to break out into a separate conversation")
+
+    model_config = ConfigDict(json_schema_extra={"example": {"parent_conversation_id": 123, "model_id": "openai/gpt-4o"}})
 
 
 # ============================================================================
@@ -447,19 +454,19 @@ class VisitorAnalyticsResponse(BaseModel):
     total_unique_visitors: int  # Unique IPs all time
     total_unique_devices: int  # Unique browser fingerprints all time
     total_comparisons: int  # Total usage log entries
-    
+
     # Time-based unique visitors
     unique_visitors_today: int
     unique_visitors_this_week: int
     unique_visitors_this_month: int
-    
+
     # Authenticated vs anonymous breakdown
     authenticated_visitors: int  # Visitors with user_id
     anonymous_visitors: int  # Visitors without user_id
-    
+
     # Daily breakdown (last 30 days)
     daily_breakdown: List[Dict[str, Any]]  # [{date, unique_visitors, total_comparisons}]
-    
+
     # Recent activity
     comparisons_today: int
     comparisons_this_week: int

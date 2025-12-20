@@ -36,6 +36,10 @@ export interface ResultCardProps {
   onClose?: (modelId: string) => void
   /** Callback to switch result tab */
   onSwitchTab?: (modelId: string, tab: ResultTab) => void
+  /** Callback to break out this model into a separate conversation */
+  onBreakout?: (modelId: string) => void
+  /** Whether to show the breakout button (only show in multi-model comparisons) */
+  showBreakoutButton?: boolean
   /** Custom className */
   className?: string
 }
@@ -64,6 +68,8 @@ export const ResultCard: React.FC<ResultCardProps> = ({
   onCopyResponse,
   onClose,
   onSwitchTab,
+  onBreakout,
+  showBreakoutButton = false,
   className = '',
 }) => {
   // Safety check for messages array
@@ -151,6 +157,33 @@ export const ResultCard: React.FC<ResultCardProps> = ({
                 >
                   <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
                   <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                </svg>
+              </button>
+            )}
+            {showBreakoutButton && onBreakout && !isError && (
+              <button
+                className="breakout-card-btn"
+                onClick={e => {
+                  onBreakout(modelId)
+                  e.currentTarget.blur()
+                }}
+                title="Continue conversation with this model only"
+                aria-label={`Break out conversation with ${model?.name || modelId}`}
+              >
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  {/* Arrow breaking out of a box icon */}
+                  <path d="M7 17L17 7" />
+                  <path d="M7 7h10v10" />
+                  <path d="M3 12v8a1 1 0 0 0 1 1h8" />
                 </svg>
               </button>
             )}
