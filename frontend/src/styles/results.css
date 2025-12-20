@@ -2728,7 +2728,7 @@ button.nav-button-primary {
   font-weight: 600;
   padding: 0.15rem 0.35rem;
   border-radius: var(--radius-sm);
-  margin-right: 0.5rem;
+  margin-left: 0.5rem;
   vertical-align: middle;
   line-height: 1;
 }

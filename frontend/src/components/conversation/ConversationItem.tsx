@@ -66,7 +66,11 @@ export const ConversationItem: React.FC<ConversationItemProps> = ({
       <div className="history-prompt">{truncatePrompt(conversation.input_data, 100)}</div>
       <div className="history-meta">
         <span className="history-date">{formatDate(conversation.created_at)}</span>
-        <span className="history-models">{conversation.models_used.length} models</span>
+        <span className="history-models">
+          {conversation.models_used.length === 1
+            ? conversation.models_used[0].split('/').pop() || conversation.models_used[0]
+            : `${conversation.models_used.length} models`}
+        </span>
       </div>
     </div>
   )
