@@ -56,7 +56,12 @@ export const PrivacyPolicy: React.FC = () => {
               </li>
               <li>
                 <strong>Prompts and Queries:</strong> The prompts you submit to compare AI models
-                are processed by our Service and the respective AI providers.
+                are sent directly to the respective AI providers (such as OpenAI, Anthropic, Google,
+                etc.) to generate responses. CompareIntel acts solely as a pass-through service and
+                does not access, analyze, train on, or use your prompts or AI model responses for any
+                purpose other than displaying them back to you. While conversation history may be
+                stored to enable conversation features, this data is only accessible to you and is
+                not used by CompareIntel for any other purpose.
               </li>
               <li>
                 <strong>Communications:</strong> If you contact us for support or feedback, we
@@ -91,12 +96,15 @@ export const PrivacyPolicy: React.FC = () => {
             <p>We use the information we collect for the following purposes:</p>
             <ul className="seo-list">
               <li>
-                <strong>Provide the Service:</strong> To process your prompts and deliver AI model
-                responses, maintain your account, and enable the core functionality of CompareIntel.
+                <strong>Provide the Service:</strong> To facilitate sending your prompts to AI
+                providers and delivering AI model responses back to you, maintain your account, and
+                enable the core functionality of CompareIntel. CompareIntel does not access or use
+                the content of your prompts or responses.
               </li>
               <li>
                 <strong>Improve the Service:</strong> To understand how users interact with our
-                platform and make improvements to features and user experience.
+                platform and make improvements to features and user experience. This analysis does
+                not include access to your prompts or AI model responses.
               </li>
               <li>
                 <strong>Security:</strong> To detect, prevent, and address technical issues, fraud,
@@ -121,14 +129,16 @@ export const PrivacyPolicy: React.FC = () => {
             </p>
             <ul className="seo-list">
               <li>
-                <strong>AI Providers:</strong> Your prompts are sent to the AI model providers you
+                <strong>AI Providers:</strong> Your prompts are sent directly to the AI model providers you
                 select (such as OpenAI, Anthropic, Google, etc.) in order to generate responses.
                 Each provider has its own privacy policy governing their handling of this data.
+                CompareIntel does not access, analyze, or use your prompts or responses.
               </li>
               <li>
                 <strong>Service Providers:</strong> We may share information with third-party
                 vendors who assist in operating our Service, such as hosting providers and analytics
-                services.
+                services. However, your prompts and AI model responses are never shared with these
+                service providers.
               </li>
               <li>
                 <strong>Legal Requirements:</strong> We may disclose information if required by law,
@@ -154,8 +164,9 @@ export const PrivacyPolicy: React.FC = () => {
               </li>
               <li>
                 <strong>Conversation History:</strong> Your prompts and AI responses may be retained
-                to enable conversation history features. You can delete your conversation history at
-                any time.
+                solely to enable conversation history features for your use. This data is only
+                accessible to you and is not used by CompareIntel for any other purpose. You can
+                delete your conversation history at any time.
               </li>
               <li>
                 <strong>Usage Data:</strong> Aggregated and anonymized usage data may be retained
