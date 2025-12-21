@@ -18,6 +18,7 @@ const __dirname = dirname(__filename);
 
 const PUBLIC_DIR = join(__dirname, '..', 'public');
 const SOURCE_SVG = join(PUBLIC_DIR, 'CI_Icon.svg');
+const WINDOWS_SVG = join(PUBLIC_DIR, 'CI_favicon_tab.svg'); // Lighter colors for Windows
 
 // Favicon sizes (standard + apple-touch)
 const FAVICON_SIZES = [16, 32, 180, 192, 512];
@@ -25,21 +26,25 @@ const FAVICON_SIZES = [16, 32, 180, 192, 512];
 // Maskable icon sizes (for PWA)
 const MASKABLE_SIZES = [48, 72, 96, 128, 192, 384, 512];
 
-// Read the SVG source
+// Windows-specific icon sizes (for taskbar)
+const WINDOWS_SIZES = [192, 512];
+
+// Read the SVG sources
 const svgContent = readFileSync(SOURCE_SVG, 'utf-8');
+const windowsSvgContent = readFileSync(WINDOWS_SVG, 'utf-8');
 
 /**
  * Generate a PNG from SVG at specified size
  */
 async function generatePNG(size, outputPath, options = {}) {
-  const { padding = 0, background = { r: 0, g: 0, b: 0, alpha: 0 } } = options;
+  const { padding = 0, background = { r: 0, g: 0, b: 0, alpha: 0 }, sourceSvg = svgContent } = options;
 
   // Calculate inner size after padding
   const innerSize = Math.round(size * (1 - padding * 2));
   const paddingPx = Math.round(size * padding);
 
   // Render SVG to buffer at inner size
-  const buffer = await sharp(Buffer.from(svgContent))
+  const buffer = await sharp(Buffer.from(sourceSvg))
     .resize(innerSize, innerSize, {
       fit: 'contain',
       background: { r: 0, g: 0, b: 0, alpha: 0 }
@@ -61,7 +66,7 @@ async function generatePNG(size, outputPath, options = {}) {
       .png()
       .toFile(outputPath);
   } else {
-    await sharp(Buffer.from(svgContent))
+    await sharp(Buffer.from(sourceSvg))
       .resize(size, size, {
         fit: 'contain',
         background: { r: 0, g: 0, b: 0, alpha: 0 }
@@ -108,19 +113,33 @@ async function main() {
     process.exit(1);
   }
 
-  // Generate standard favicons (transparent background)
-  console.log('📁 Generating favicons...');
-  for (const size of FAVICON_SIZES) {
-    const filename = size === 512 ? 'CI_favicon_512x512.png' :
-      size === 192 ? 'CI_favicon_192x192.png' :
-        size === 180 ? 'CI_favicon_180x180.png' :
-          size === 32 ? 'CI_favicon_32x32.png' :
-            'CI_favicon_16x16.png';
-    await generatePNG(size, join(PUBLIC_DIR, filename));
+  if (!existsSync(WINDOWS_SVG)) {
+    console.error(`❌ Windows SVG not found: ${WINDOWS_SVG}`);
+    process.exit(1);
   }
 
-  // Generate base CI_favicon.png (512x512)
-  await generatePNG(512, join(PUBLIC_DIR, 'CI_favicon.png'));
+  // Generate standard favicons (transparent background)
+  // Note: 192x192 and 512x512 are generated separately with lighter colors for Windows
+  // 16x16, 32x32, and 180x180 use lighter colors for better browser tab visibility
+  console.log('📁 Generating favicons...');
+  for (const size of FAVICON_SIZES) {
+    // Skip 192 and 512 - these will be generated with lighter colors for Windows
+    if (size === 192 || size === 512) continue;
+    
+    const filename = size === 180 ? 'CI_favicon_180x180.png' :
+      size === 32 ? 'CI_favicon_32x32.png' :
+        'CI_favicon_16x16.png';
+    // Use lighter colors for browser favicons (16x16, 32x32) and Apple touch icon (180x180)
+    // for better visibility in browser tabs and consistency with SVG favicon
+    await generatePNG(size, join(PUBLIC_DIR, filename), {
+      sourceSvg: windowsSvgContent
+    });
+  }
+
+  // Generate base CI_favicon.png (512x512) - using lighter colors for Windows compatibility
+  await generatePNG(512, join(PUBLIC_DIR, 'CI_favicon.png'), {
+    sourceSvg: windowsSvgContent
+  });
 
   // Generate maskable icons (with 20% padding for safe zone)
   // Android's maskable icon safe zone is the inner 80% (circle with 40% radius)
@@ -140,6 +159,16 @@ async function main() {
     padding: 0.2,
     background: { r: 255, g: 255, b: 255, alpha: 1 }
   });
+
+  // Generate Windows-specific icons (lighter colors for taskbar)
+  // These are used in PWA manifest and Windows tile, so they need lighter colors for visibility
+  console.log('\n📁 Generating Windows taskbar icons (lighter colors)...');
+  for (const size of WINDOWS_SIZES) {
+    const filename = size === 512 ? 'CI_favicon_512x512.png' : 'CI_favicon_192x192.png';
+    await generatePNG(size, join(PUBLIC_DIR, filename), {
+      sourceSvg: windowsSvgContent
+    });
+  }
 
   // Generate favicon.ico
   console.log('\n📁 Generating favicon.ico...');
