@@ -184,19 +184,26 @@ export const HowItWorks: React.FC = () => {
               <div className="step-content">
                 <h3>Continue Conversations</h3>
                 <p>
-                  Found a model that gave a good initial response? You can continue the conversation
-                  with that specific model to explore further. Each model maintains its conversation
-                  context, allowing you to:
+                  Want to ask follow-up questions or dive deeper? You can continue the conversation
+                  with all selected models. When you send a follow-up message, it goes to all models
+                  in your comparison simultaneously. Each model maintains its own independent conversation
+                  context (receiving only its own previous responses, not other models' responses),
+                  allowing you to:
                 </p>
                 <ul>
-                  <li>Ask follow-up questions to clarify or expand on responses</li>
-                  <li>Request modifications or improvements</li>
-                  <li>Test how well models maintain context over multiple turns</li>
-                  <li>Dive deeper into specific topics</li>
+                  <li>Ask follow-up questions that all models respond to simultaneously</li>
+                  <li>Request modifications or improvements from each model</li>
+                  <li>Test how well each model maintains context over multiple turns</li>
+                  <li>Compare how different models handle follow-up questions</li>
                 </ul>
                 <p>
                   Your conversation history is saved, so you can return to previous sessions at any
                   time.
+                </p>
+                <p>
+                  <strong>Want to continue with just one model?</strong> If you found a model that
+                  gave a particularly good response and want to focus your conversation on just that
+                  model, use the breakout feature described in Step 6 below.
                 </p>
               </div>
             </div>
