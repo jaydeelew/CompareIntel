@@ -79,3 +79,16 @@ export {
   imageAttrsToHtml,
 } from './image'
 export type { ImageOptimizationOptions } from './image'
+
+// Export utilities
+export {
+  exportToMarkdown,
+  exportToJSON,
+  exportToHTML,
+  exportToPDF,
+  downloadMarkdown,
+  downloadJSON,
+  downloadHTML,
+  downloadFile,
+} from './export'
+export type { ComparisonExportData } from './export'

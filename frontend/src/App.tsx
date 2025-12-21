@@ -77,7 +77,12 @@ import {
   formatTime,
   formatNumber,
   formatConversationMessage,
+  exportToPDF,
+  downloadMarkdown,
+  downloadJSON,
+  downloadHTML,
 } from './utils'
+import type { ComparisonExportData } from './utils'
 import { isErrorMessage } from './utils/error'
 
 function AppContent() {
@@ -438,6 +443,10 @@ function AppContent() {
   // Track breakout transition phase for smooth animations
   // 'idle' = normal state, 'fading-out' = old cards fading out, 'hidden' = waiting to show new card, 'fading-in' = new card fading in
   const [breakoutPhase, setBreakoutPhase] = useState<'idle' | 'fading-out' | 'hidden' | 'fading-in'>('idle')
+
+  // Export functionality state
+  const [showExportMenu, setShowExportMenu] = useState(false)
+  const exportMenuRef = useRef<HTMLDivElement>(null)
 
   // Handler to save current model selection
   const handleSaveModelSelection = useCallback(
@@ -3902,6 +3911,61 @@ function AppContent() {
     }, 650) // Wait for scroll to complete
   }
 
+  // Handle export functionality
+  const handleExport = async (format: 'pdf' | 'markdown' | 'json' | 'html') => {
+    setShowExportMenu(false)
+
+    // Build export data from current conversations
+    const exportData: ComparisonExportData = {
+      prompt: getFirstUserMessage()?.content || input || 'Comparison',
+      timestamp: new Date().toISOString(),
+      conversations: conversations,
+      models: Object.fromEntries(
+        Object.values(modelsByProvider)
+          .flat()
+          .map(model => [model.id, model])
+      ),
+      metadata: response?.metadata,
+    }
+
+    try {
+      if (format === 'pdf') {
+        showNotification('Generating PDF...', 'info')
+        await exportToPDF(exportData)
+        showNotification('PDF downloaded successfully!', 'success')
+      } else if (format === 'markdown') {
+        downloadMarkdown(exportData)
+        showNotification('Markdown downloaded successfully!', 'success')
+      } else if (format === 'json') {
+        downloadJSON(exportData)
+        showNotification('JSON downloaded successfully!', 'success')
+      } else if (format === 'html') {
+        downloadHTML(exportData)
+        showNotification('HTML downloaded successfully!', 'success')
+      }
+    } catch (err) {
+      console.error('Export error:', err)
+      showNotification('Failed to export. Please try again.', 'error')
+    }
+  }
+
+  // Close export menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (exportMenuRef.current && !exportMenuRef.current.contains(event.target as Node)) {
+        setShowExportMenu(false)
+      }
+    }
+
+    if (showExportMenu) {
+      document.addEventListener('mousedown', handleClickOutside)
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [showExportMenu])
+
   const handleContinueConversation = () => {
     if (!input.trim()) {
       setError('Please enter a follow-up question or code')
@@ -7241,6 +7305,115 @@ function AppContent() {
                           Follow up
                         </button>
                       )}
+
+                      {/* Export Dropdown */}
+                      <div className="export-dropdown-container" ref={exportMenuRef}>
+                        <button
+                          onClick={() => setShowExportMenu(!showExportMenu)}
+                          className="follow-up-button export-dropdown-trigger"
+                          title="Export comparison"
+                          aria-expanded={showExportMenu}
+                          aria-haspopup="true"
+                        >
+                          <svg
+                            width="16"
+                            height="16"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                            <polyline points="7 10 12 15 17 10" />
+                            <line x1="12" y1="15" x2="12" y2="3" />
+                          </svg>
+                          <span>Export</span>
+                          <svg
+                            className={`export-dropdown-arrow ${showExportMenu ? 'open' : ''}`}
+                            width="12"
+                            height="12"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <polyline points="6 9 12 15 18 9" />
+                          </svg>
+                        </button>
+                        {showExportMenu && (
+                          <div className="export-dropdown-menu" role="menu">
+                            <button
+                              onClick={() => handleExport('pdf')}
+                              className="export-dropdown-item"
+                              role="menuitem"
+                            >
+                              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                                <polyline points="14 2 14 8 20 8" />
+                                <path d="M9 13h6" />
+                                <path d="M9 17h6" />
+                              </svg>
+                              <div className="export-dropdown-item-content">
+                                <span className="export-dropdown-item-title">PDF</span>
+                                <span className="export-dropdown-item-desc">Best for sharing & printing</span>
+                              </div>
+                            </button>
+                            <button
+                              onClick={() => handleExport('markdown')}
+                              className="export-dropdown-item"
+                              role="menuitem"
+                            >
+                              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                                <polyline points="14 2 14 8 20 8" />
+                                <path d="M12 18v-6" />
+                                <path d="M9 15l3-3 3 3" />
+                              </svg>
+                              <div className="export-dropdown-item-content">
+                                <span className="export-dropdown-item-title">Markdown</span>
+                                <span className="export-dropdown-item-desc">For docs & note apps</span>
+                              </div>
+                            </button>
+                            <button
+                              onClick={() => handleExport('html')}
+                              className="export-dropdown-item"
+                              role="menuitem"
+                            >
+                              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <polyline points="16 18 22 12 16 6" />
+                                <polyline points="8 6 2 12 8 18" />
+                              </svg>
+                              <div className="export-dropdown-item-content">
+                                <span className="export-dropdown-item-title">HTML</span>
+                                <span className="export-dropdown-item-desc">Standalone web page</span>
+                              </div>
+                            </button>
+                            <button
+                              onClick={() => handleExport('json')}
+                              className="export-dropdown-item"
+                              role="menuitem"
+                            >
+                              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                                <polyline points="14 2 14 8 20 8" />
+                                <path d="M8 13h2" />
+                                <path d="M8 17h2" />
+                                <path d="M14 13h2" />
+                                <path d="M14 17h2" />
+                              </svg>
+                              <div className="export-dropdown-item-content">
+                                <span className="export-dropdown-item-title">JSON</span>
+                                <span className="export-dropdown-item-desc">For developers & APIs</span>
+                              </div>
+                            </button>
+                          </div>
+                        )}
+                      </div>
+
                       {closedCards.size > 0 && (
                         <button
                           onClick={showAllResults}
