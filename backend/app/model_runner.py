@@ -309,6 +309,13 @@ MODELS_BY_PROVIDER = {
     ],
     "Meta": [
         {
+            "id": "meta-llama/llama-3.1-405b-instruct",
+            "name": "Llama 3.1 405B Instruct",
+            "description": 'The highly anticipated 400B class of Llama3 is here!',
+            "category": "Language",
+            "provider": "Meta",
+        },
+        {
             "id": "meta-llama/llama-4-maverick",
             "name": "Llama 4 Maverick",
             "description": "Llama 4 Maverick 17B Instruct (128E) is a high-capacity multimodal language model from Meta, built on a mixture-of-experts (MoE) architecture with 128 experts and 17 billion active parameters per forward pass (400B total).",
@@ -320,13 +327,6 @@ MODELS_BY_PROVIDER = {
             "name": "Llama 4 Scout",
             "description": "Llama 4 Scout 17B Instruct (16E) is a mixture-of-experts (MoE) language model developed by Meta, activating 17 billion parameters out of a total of 109B.",
             "category": "Multimodal",
-            "provider": "Meta",
-        },
-        {
-            "id": "meta-llama/llama-3.1-405b-instruct",
-            "name": "Llama 3.1 405B Instruct",
-            "description": 'The highly anticipated 400B class of Llama3 is here!',
-            "category": "Language",
             "provider": "Meta",
         },
     ],
