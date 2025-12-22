@@ -180,8 +180,6 @@ export function exportToJSON(data: ComparisonExportData): string {
             role: msg.type,
             content: msg.content,
             timestamp: msg.timestamp,
-            input_tokens: msg.input_tokens ?? null,
-            output_tokens: msg.output_tokens ?? null,
           })),
         })),
         metadata: data.metadata,
