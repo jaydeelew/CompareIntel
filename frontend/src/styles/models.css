@@ -2309,6 +2309,10 @@
   color: #f59e0b;
 }
 
+.model-badge.premium {
+  font-size: 0.87rem;
+}
+
 /* Small screen adjustments for provider count indicator */
 @media (max-width: 350px) {
   .provider-count {
