@@ -116,7 +116,7 @@ export function exportToMarkdown(data: ComparisonExportData): string {
 
     conv.messages.forEach(msg => {
       if (msg.type === 'user') {
-        md += `#### 💬 User\n\n`
+        md += `#### 👤 User\n\n`
       } else {
         md += `#### 🤖 Assistant\n\n`
       }
