@@ -176,9 +176,12 @@ export function exportToJSON(data: ComparisonExportData): string {
           model_name: data.models[conv.modelId]?.name || conv.modelId,
           provider: data.models[conv.modelId]?.provider || 'Unknown',
           messages: conv.messages.map(msg => ({
+            id: msg.id,
             role: msg.type,
             content: msg.content,
             timestamp: msg.timestamp,
+            input_tokens: msg.input_tokens ?? null,
+            output_tokens: msg.output_tokens ?? null,
           })),
         })),
         metadata: data.metadata,
