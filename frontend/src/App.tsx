@@ -133,7 +133,10 @@ function AppContent() {
   // Saved model selections hook for storing/loading named model selection groups
   // Pass user ID to store selections per user (registered users use their ID, anonymous users get a generated ID)
   // Pass subscription tier to enforce tier-based limits on saved selections
-  const savedSelectionsHook = useSavedModelSelections(user?.id, user?.subscription_tier ?? 'anonymous')
+  const savedSelectionsHook = useSavedModelSelections(
+    user?.id,
+    user?.subscription_tier ?? 'anonymous'
+  )
   const {
     savedSelections: savedModelSelections,
     saveSelection: saveModelSelection,
@@ -148,7 +151,7 @@ function AppContent() {
 
   // File attachments state (can be AttachedFile for new uploads or StoredAttachedFile for loaded history)
   const [attachedFiles, setAttachedFilesState] = useState<(AttachedFile | StoredAttachedFile)[]>([])
-  
+
   // Wrapper function to match ComparisonForm's expected signature
   const setAttachedFiles = useCallback((files: (AttachedFile | StoredAttachedFile)[]) => {
     setAttachedFilesState(files)
@@ -276,18 +279,18 @@ function AppContent() {
       // - User input before files: Please review [file: test.txt]
       // - Mixed: [file: file1.txt] Review this [file: file2.txt] and this
       // - Multiple files: [file: file1.txt] [file: file2.txt]
-      
+
       // Replace each placeholder with explicit file markers and content
       // Format: [FILE: filename] followed by content, then [/FILE: filename]
       // This makes it very clear to the model what is file content vs user input
       let result = userInput
-      
+
       // Process files in the order they appear in the input (by finding placeholders)
       // Use a more robust replacement that handles multiple occurrences
       files.forEach(attachedFile => {
         const placeholder = attachedFile.placeholder
         const content = fileContentMap.get(placeholder)
-        
+
         if (content) {
           // Replace placeholder with explicit file markers and content
           // Use clear markers that the model can easily distinguish:
@@ -305,7 +308,7 @@ function AppContent() {
 
       // Clean up excessive newlines (more than 2 consecutive) while preserving structure
       result = result.replace(/\n{3,}/g, '\n\n')
-      
+
       return result.trim()
     },
     [extractTextFromPDF, extractTextFromDOCX]
@@ -313,7 +316,9 @@ function AppContent() {
 
   // Helper function to extract file content from AttachedFile[] for storage
   const extractFileContentForStorage = useCallback(
-    async (files: AttachedFile[]): Promise<Array<{ name: string; content: string; placeholder: string }>> => {
+    async (
+      files: AttachedFile[]
+    ): Promise<Array<{ name: string; content: string; placeholder: string }>> => {
       const extractedFiles: Array<{ name: string; content: string; placeholder: string }> = []
 
       for (const attachedFile of files) {
@@ -427,7 +432,7 @@ function AppContent() {
   const [isAnimatingTextarea, setIsAnimatingTextarea] = useState(false)
   const animationTimeoutRef = useRef<number | null>(null)
   const [isModelsHidden, setIsModelsHidden] = useState(false)
-  const [hidePremiumModels, setHidePremiumModels] = useState(true)
+  const [hidePremiumModels, setHidePremiumModels] = useState(false)
   const [modelErrors, setModelErrors] = useState<{ [key: string]: boolean }>({})
   const [anonymousCreditsRemaining, setAnonymousCreditsRemaining] = useState<number | null>(null)
   const [creditBalance, setCreditBalance] = useState<CreditBalance | null>(null)
@@ -439,10 +444,12 @@ function AppContent() {
 
   // Track which models have already been broken out from the current conversation
   const [_alreadyBrokenOutModels, setAlreadyBrokenOutModels] = useState<Set<string>>(new Set())
-  
+
   // Track breakout transition phase for smooth animations
   // 'idle' = normal state, 'fading-out' = old cards fading out, 'hidden' = waiting to show new card, 'fading-in' = new card fading in
-  const [breakoutPhase, setBreakoutPhase] = useState<'idle' | 'fading-out' | 'hidden' | 'fading-in'>('idle')
+  const [breakoutPhase, setBreakoutPhase] = useState<
+    'idle' | 'fading-out' | 'hidden' | 'fading-in'
+  >('idle')
 
   // Export functionality state
   const [showExportMenu, setShowExportMenu] = useState(false)
@@ -492,7 +499,7 @@ function AppContent() {
         setOpenDropdowns(prev => {
           const newSet = new Set(prev)
           let hasChanges = false
-          
+
           // First, collapse any open dropdowns that don't have selected models
           for (const provider of prev) {
             const providerModels = modelsByProvider[provider]
@@ -501,7 +508,7 @@ function AppContent() {
               const hasSelectedModels = providerModels.some(model =>
                 limitedModelIds.includes(String(model.id))
               )
-              
+
               // If dropdown is open but provider has no selected models, collapse it
               if (!hasSelectedModels) {
                 newSet.delete(provider)
@@ -509,7 +516,7 @@ function AppContent() {
               }
             }
           }
-          
+
           // Then, expand dropdowns for providers that have selected models
           for (const [provider, providerModels] of Object.entries(modelsByProvider)) {
             if (providerModels) {
@@ -517,7 +524,7 @@ function AppContent() {
               const hasSelectedModels = providerModels.some(model =>
                 limitedModelIds.includes(String(model.id))
               )
-              
+
               // If provider has selected models and dropdown is not already open, expand it
               if (hasSelectedModels && !newSet.has(provider)) {
                 newSet.add(provider)
@@ -525,7 +532,7 @@ function AppContent() {
               }
             }
           }
-          
+
           return hasChanges ? newSet : prev
         })
 
@@ -1857,7 +1864,7 @@ function AppContent() {
         const stored = localStorage.getItem(`compareintel_conversation_${id}`)
         if (stored) {
           const parsed = JSON.parse(stored)
-          
+
           // Calculate already_broken_out_models for anonymous users
           // Only check if this is a comparison (not a breakout itself)
           const already_broken_out_models: string[] = []
@@ -1879,7 +1886,7 @@ function AppContent() {
               )
             }
           }
-          
+
           return {
             ...parsed,
             already_broken_out_models,
@@ -2091,28 +2098,28 @@ function AppContent() {
       // Detect and mark failed models when loading from history
       // This ensures the status indicator shows "FAIL" for failed models
       const loadedModelErrors: { [key: string]: boolean } = {}
-      
+
       // Check each model that was used in the conversation
       modelsUsed.forEach((modelId: string) => {
         const createdModelId = createModelId(modelId)
         const conv = loadedConversations.find(c => c.modelId === createdModelId)
-        
+
         if (!conv) {
           // Model was in models_used but has no conversation - it failed
           loadedModelErrors[createdModelId] = true
           return
         }
-        
+
         // Check if model has any assistant messages
         const assistantMessages = conv.messages.filter(msg => msg.type === 'assistant')
-        
+
         // For authenticated users: if model is in models_used but has no assistant messages, it failed
         // (failed messages are not saved to database for authenticated users)
         if (assistantMessages.length === 0) {
           loadedModelErrors[createdModelId] = true
           return
         }
-        
+
         // Check the latest assistant message for errors
         const latestMessage = assistantMessages[assistantMessages.length - 1]
         if (latestMessage) {
@@ -2121,11 +2128,13 @@ function AppContent() {
             loadedModelErrors[createdModelId] = true
             return
           }
-          
+
           // Also check success field from stored messages if available (from API)
-          const modelStoredMessages = conversationData?.messages?.filter(
-            msg => msg.role === 'assistant' && msg.model_id && String(msg.model_id) === String(modelId)
-          ) || []
+          const modelStoredMessages =
+            conversationData?.messages?.filter(
+              msg =>
+                msg.role === 'assistant' && msg.model_id && String(msg.model_id) === String(modelId)
+            ) || []
           if (modelStoredMessages.length > 0) {
             const latestStoredMessage = modelStoredMessages[modelStoredMessages.length - 1]
             // If success field exists and is false, mark as failed
@@ -3931,7 +3940,9 @@ function AppContent() {
     try {
       if (format === 'pdf') {
         const notification = showNotification('Generating PDF...', 'success')
-        notification.setIcon('<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>')
+        notification.setIcon(
+          '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>'
+        )
         await exportToPDF(exportData)
         showNotification('PDF downloaded successfully!', 'success')
       } else if (format === 'markdown') {
@@ -4038,7 +4049,7 @@ function AppContent() {
 
         // Extract the conversation data
         breakoutConversationId = String(breakoutConversation.id)
-        breakoutMessages = breakoutConversation.messages.map((msg) => ({
+        breakoutMessages = breakoutConversation.messages.map(msg => ({
           id: createMessageId(`${breakoutConversation.id}-${msg.id}`),
           type: msg.role as 'user' | 'assistant',
           content: msg.content,
@@ -4441,27 +4452,27 @@ function AppContent() {
       const selectedConversations = conversations.filter(conv => {
         // Must be in selected models
         if (!selectedModels.includes(conv.modelId)) return false
-        
+
         // Check if this model failed (using modelErrors state set when loading from history)
         if (modelErrors[conv.modelId] === true) {
           return false // Exclude failed models
         }
-        
+
         // Must have assistant messages (if no assistant messages, model failed)
         const assistantMessages = conv.messages.filter(msg => msg.type === 'assistant')
         if (assistantMessages.length === 0) {
           return false // Exclude models with no assistant messages (they failed)
         }
-        
+
         // Check if latest assistant message is an error
         const latestMessage = assistantMessages[assistantMessages.length - 1]
         if (latestMessage && isErrorMessage(latestMessage.content)) {
           return false // Exclude failed models
         }
-        
+
         return true
       })
-      
+
       if (selectedConversations.length > 0) {
         // Collect all messages from all selected conversations
         const allMessages: Array<{
@@ -4701,19 +4712,19 @@ function AppContent() {
       resetStreamingTimeout()
 
       // Expand file contents before submission
-    let expandedInput = input
-    if (attachedFiles.length > 0) {
-      try {
-        expandedInput = await expandFiles(attachedFiles, input)
-      } catch (error) {
-        console.error('Error expanding files:', error)
-        setError('Failed to process attached files. Please try again.')
-        setIsLoading(false)
-        return
+      let expandedInput = input
+      if (attachedFiles.length > 0) {
+        try {
+          expandedInput = await expandFiles(attachedFiles, input)
+        } catch (error) {
+          console.error('Error expanding files:', error)
+          setError('Failed to process attached files. Please try again.')
+          setIsLoading(false)
+          return
+        }
       }
-    }
 
-    // Use service for streaming request
+      // Use service for streaming request
       // Include accurate token count from frontend if available (avoids duplicate calculation on backend)
       // Include timezone for credit reset timing (auto-detect from browser)
       const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone
@@ -5592,7 +5603,11 @@ function AppContent() {
                   if (firstUserMessage) {
                     const inputData = firstUserMessage.content
                     // Extract file contents for storage if attachedFiles contains AttachedFile objects
-                    let fileContentsForSave: Array<{ name: string; content: string; placeholder: string }> = []
+                    let fileContentsForSave: Array<{
+                      name: string
+                      content: string
+                      placeholder: string
+                    }> = []
                     const attachedFilesToExtract = attachedFiles.filter(
                       (f): f is AttachedFile => 'file' in f
                     )
@@ -5672,13 +5687,18 @@ function AppContent() {
                     const inputData = firstUserMessage.content
                     // Extract file contents for storage if attachedFiles contains AttachedFile objects
                     ;(async () => {
-                      let fileContentsForSave: Array<{ name: string; content: string; placeholder: string }> = []
+                      let fileContentsForSave: Array<{
+                        name: string
+                        content: string
+                        placeholder: string
+                      }> = []
                       const attachedFilesToExtract = attachedFiles.filter(
                         (f): f is AttachedFile => 'file' in f
                       )
                       if (attachedFilesToExtract.length > 0) {
                         // Extract from File objects (async)
-                        fileContentsForSave = await extractFileContentForStorage(attachedFilesToExtract)
+                        fileContentsForSave =
+                          await extractFileContentForStorage(attachedFilesToExtract)
                       } else {
                         // Use stored content from StoredAttachedFile objects (synchronous)
                         const storedFiles = attachedFiles.filter(
@@ -5956,13 +5976,18 @@ function AppContent() {
                   const inputData = firstUserMessage.content
                   // Extract file contents for storage if attachedFiles contains AttachedFile objects
                   ;(async () => {
-                    let fileContentsForSave: Array<{ name: string; content: string; placeholder: string }> = []
+                    let fileContentsForSave: Array<{
+                      name: string
+                      content: string
+                      placeholder: string
+                    }> = []
                     const attachedFilesToExtract = attachedFiles.filter(
                       (f): f is AttachedFile => 'file' in f && f.file instanceof File
                     )
                     if (attachedFilesToExtract.length > 0) {
                       // Extract from File objects (async)
-                      fileContentsForSave = await extractFileContentForStorage(attachedFilesToExtract)
+                      fileContentsForSave =
+                        await extractFileContentForStorage(attachedFilesToExtract)
                     } else {
                       // Use stored content from StoredAttachedFile objects (synchronous)
                       const storedFiles = attachedFiles.filter(
@@ -7353,7 +7378,14 @@ function AppContent() {
                               role="menuitem"
                               title="Best for sharing & printing"
                             >
-                              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                              <svg
+                                width="18"
+                                height="18"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                              >
                                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
                                 <polyline points="14 2 14 8 20 8" />
                                 <path d="M9 13h6" />
@@ -7369,7 +7401,14 @@ function AppContent() {
                               role="menuitem"
                               title="For docs & note apps"
                             >
-                              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                              <svg
+                                width="18"
+                                height="18"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                              >
                                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
                                 <polyline points="14 2 14 8 20 8" />
                                 <path d="M12 18v-6" />
@@ -7385,7 +7424,14 @@ function AppContent() {
                               role="menuitem"
                               title="Standalone web page"
                             >
-                              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                              <svg
+                                width="18"
+                                height="18"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                              >
                                 <polyline points="16 18 22 12 16 6" />
                                 <polyline points="8 6 2 12 8 18" />
                               </svg>
@@ -7399,7 +7445,14 @@ function AppContent() {
                               role="menuitem"
                               title="For developers & APIs"
                             >
-                              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                              <svg
+                                width="18"
+                                height="18"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                              >
                                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
                                 <polyline points="14 2 14 8 20 8" />
                                 <path d="M8 13h2" />
@@ -7467,7 +7520,9 @@ function AppContent() {
                               aria-selected={isActive}
                               role="tab"
                             >
-                              <span className="results-tab-name">{model?.name || conversation.modelId}</span>
+                              <span className="results-tab-name">
+                                {model?.name || conversation.modelId}
+                              </span>
                               {hasError && (
                                 <span className="results-tab-error-indicator" aria-label="Error">
                                   ⚠
@@ -7480,16 +7535,18 @@ function AppContent() {
                     </div>
                   )}
 
-                  <div className={`results-grid ${isMobileLayout && visibleConversations.length > 1 ? 'results-grid-tabbed' : ''}`}>
-                      {conversations
-                        .filter(
-                          conv =>
-                            conv &&
-                            conv.modelId &&
-                            selectedModels.includes(conv.modelId) &&
-                            !closedCards.has(conv.modelId)
-                        )
-                        .map(conversation => {
+                  <div
+                    className={`results-grid ${isMobileLayout && visibleConversations.length > 1 ? 'results-grid-tabbed' : ''}`}
+                  >
+                    {conversations
+                      .filter(
+                        conv =>
+                          conv &&
+                          conv.modelId &&
+                          selectedModels.includes(conv.modelId) &&
+                          !closedCards.has(conv.modelId)
+                      )
+                      .map(conversation => {
                         // Safety check for conversation data
                         if (
                           !conversation ||
@@ -7518,22 +7575,35 @@ function AppContent() {
                         const safeId = getSafeId(conversation.modelId)
 
                         // Determine if this is the active card in tabbed mode
-                        const conversationIndex = visibleConversations.findIndex(c => c.modelId === conversation.modelId)
-                        const isActiveCard = isMobileLayout && visibleConversations.length > 1 && conversationIndex === activeTabIndex
+                        const conversationIndex = visibleConversations.findIndex(
+                          c => c.modelId === conversation.modelId
+                        )
+                        const isActiveCard =
+                          isMobileLayout &&
+                          visibleConversations.length > 1 &&
+                          conversationIndex === activeTabIndex
 
                         // Determine transition classes for smooth breakout animation
-                        const transitionClass = 
-                          breakoutPhase === 'fading-out' ? 'breakout-fade-out' :
-                          breakoutPhase === 'hidden' ? 'breakout-hidden' :
-                          breakoutPhase === 'fading-in' ? 'breakout-fade-in' : ''
-                        
+                        const transitionClass =
+                          breakoutPhase === 'fading-out'
+                            ? 'breakout-fade-out'
+                            : breakoutPhase === 'hidden'
+                              ? 'breakout-hidden'
+                              : breakoutPhase === 'fading-in'
+                                ? 'breakout-fade-in'
+                                : ''
+
                         return (
-                          <div 
-                            key={conversation.modelId} 
+                          <div
+                            key={conversation.modelId}
                             className={`result-card conversation-card ${transitionClass}`.trim()}
-                            style={isMobileLayout && visibleConversations.length > 1 ? {
-                              display: isActiveCard ? 'block' : 'none'
-                            } : undefined}
+                            style={
+                              isMobileLayout && visibleConversations.length > 1
+                                ? {
+                                    display: isActiveCard ? 'block' : 'none',
+                                  }
+                                : undefined
+                            }
                           >
                             <div className="result-header">
                               <div className="result-header-top">
@@ -7633,17 +7703,16 @@ function AppContent() {
                                     </svg>
                                   </button>
                                   {/* Breakout button - only show for multi-model comparisons and models that haven't failed */}
-                                  {visibleConversations.length > 1 &&
-                                    !isError && (
-                                      <button
-                                        className="breakout-card-btn"
-                                        onClick={e => {
-                                          handleBreakout(conversation.modelId)
-                                          e.currentTarget.blur()
-                                        }}
-                                        title="Continue with this model only"
-                                        aria-label={`Break out conversation with ${model?.name || conversation.modelId}`}
-                                      >
+                                  {visibleConversations.length > 1 && !isError && (
+                                    <button
+                                      className="breakout-card-btn"
+                                      onClick={e => {
+                                        handleBreakout(conversation.modelId)
+                                        e.currentTarget.blur()
+                                      }}
+                                      title="Continue with this model only"
+                                      aria-label={`Break out conversation with ${model?.name || conversation.modelId}`}
+                                    >
                                       <svg
                                         width="16"
                                         height="16"
