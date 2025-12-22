@@ -1,3 +1,6 @@
+import mammoth from 'mammoth'
+import * as pdfjsLib from 'pdfjs-dist'
+import pdfjsWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?url'
 import {
   useState,
   useEffect,
@@ -9,9 +12,6 @@ import {
   Suspense,
 } from 'react'
 import { Routes, Route, useNavigate, useLocation } from 'react-router-dom'
-import mammoth from 'mammoth'
-import * as pdfjsLib from 'pdfjs-dist'
-import pdfjsWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?url'
 
 // Import all CSS modules directly (better for Vite than CSS @import)
 import './styles/variables.css'
@@ -3930,7 +3930,7 @@ function AppContent() {
 
     try {
       if (format === 'pdf') {
-        showNotification('Generating PDF...', 'info')
+        showNotification('Generating PDF...', 'success')
         await exportToPDF(exportData)
         showNotification('PDF downloaded successfully!', 'success')
       } else if (format === 'markdown') {
