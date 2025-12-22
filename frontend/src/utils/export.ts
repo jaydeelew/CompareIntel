@@ -542,7 +542,7 @@ function formatContentForPDF(content: string): string {
       return `<p>${trimmed.replace(/\n/g, '<br>')}</p>`
     })
     .filter(p => p)
-    .join('\n')
+    .join('')
 
   return processed
 }
