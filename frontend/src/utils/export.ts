@@ -554,10 +554,9 @@ function formatContentForPDF(content: string): string {
  */
 export async function exportToPDF(data: ComparisonExportData): Promise<void> {
   // Dynamically import PDF libraries to reduce bundle size
-  // @ts-expect-error - jspdf and html2canvas are dynamically imported and may not have type definitions
   const [{ default: jsPDF }, { default: html2canvas }] = await Promise.all([
-    import('jspdf'),
-    import('html2canvas'),
+    import('jspdf') as Promise<{ default: any }>,
+    import('html2canvas') as Promise<{ default: any }>,
   ])
 
   // Create a temporary iframe to completely isolate PDF rendering from main page
