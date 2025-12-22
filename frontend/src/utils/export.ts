@@ -61,12 +61,11 @@ function generateFilename(prompt: string, extension: string): string {
   // Ensure prompt is a string
   const promptStr = typeof prompt === 'string' ? prompt : String(prompt || 'comparison')
   const sanitized = promptStr
-    .slice(0, 50)
+    .slice(0, 30)
     .replace(/[^a-zA-Z0-9\s]/g, '')
     .replace(/\s+/g, '_')
     .toLowerCase()
-  const timestamp = new Date().toISOString().slice(0, 10)
-  return `compareintel_${sanitized || 'comparison'}_${timestamp}.${extension}`
+  return `${sanitized || 'comparison'}.${extension}`
 }
 
 /**
