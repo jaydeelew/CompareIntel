@@ -211,6 +211,46 @@ export const HowItWorks: React.FC = () => {
             <div className="step-card">
               <div className="step-number">6</div>
               <div className="step-content">
+                <h3>Export Your Comparisons</h3>
+                <p>
+                  Once you've completed your comparison, CompareIntel makes it easy to save and share
+                  your results. Click the "Export" button above your comparison results to access
+                  multiple export options:
+                </p>
+                <ul>
+                  <li>
+                    <strong>PDF Export:</strong> Generate a professional PDF document with all model
+                    responses, perfect for sharing, printing, or archiving. The PDF includes proper
+                    formatting for code blocks, LaTeX equations, and markdown content.
+                  </li>
+                  <li>
+                    <strong>Markdown Export:</strong> Export your comparison as a Markdown file (.md)
+                    that preserves all formatting. Ideal for documentation, note-taking apps, or
+                    version control systems. The export includes user and assistant message indicators
+                    for easy reading.
+                  </li>
+                  <li>
+                    <strong>HTML Export:</strong> Create a standalone HTML file that can be opened in
+                    any browser or shared via email. Includes all styling and formatting for a
+                    complete viewing experience without needing CompareIntel.
+                  </li>
+                  <li>
+                    <strong>JSON Export:</strong> Export raw data in JSON format for developers or
+                    API integration. Includes all conversation data, model metadata, and comparison
+                    statistics in a structured format.
+                  </li>
+                </ul>
+                <p>
+                  All export formats include the original prompt, all model responses, model
+                  metadata (name and provider), response statistics, and comparison metadata. The
+                  filename is automatically generated from your prompt for easy identification.
+                </p>
+              </div>
+            </div>
+
+            <div className="step-card">
+              <div className="step-number">7</div>
+              <div className="step-content">
                 <h3>Break Out Individual Models</h3>
                 <p>
                   During a multi-model comparison, you might find that one model stands out and you

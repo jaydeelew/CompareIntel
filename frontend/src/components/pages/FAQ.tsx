@@ -234,6 +234,44 @@ const faqData = [
     ),
   },
   {
+    id: 'export-comparisons',
+    question: 'Can I export my comparisons?',
+    answer: (
+      <>
+        <p>
+          Yes! CompareIntel offers multiple export options to save and share your comparisons:
+        </p>
+        <ul>
+          <li>
+            <strong>PDF Export:</strong> Generate a professional PDF document with all model
+            responses, perfect for sharing, printing, or archiving. Includes proper formatting for
+            code blocks, LaTeX equations, and markdown content.
+          </li>
+          <li>
+            <strong>Markdown Export:</strong> Export your comparison as a Markdown file (.md) that
+            preserves all formatting. Ideal for documentation, note-taking apps, or version control
+            systems. Includes user and assistant message indicators for easy reading.
+          </li>
+          <li>
+            <strong>HTML Export:</strong> Create a standalone HTML file that can be opened in any
+            browser or shared via email. Includes all styling and formatting for a complete viewing
+            experience.
+          </li>
+          <li>
+            <strong>JSON Export:</strong> Export raw data in JSON format for developers or API
+            integration. Includes all conversation data, model metadata, and comparison statistics.
+          </li>
+        </ul>
+        <p>
+          All export formats include the original prompt, all model responses, model metadata (name
+          and provider), response statistics, and comparison metadata. To export, simply click the
+          "Export" button above your comparison results and select your preferred format. The
+          filename is automatically generated from your prompt for easy identification.
+        </p>
+      </>
+    ),
+  },
+  {
     id: 'file-attachments',
     question: 'Can I attach files to my comparisons?',
     answer: (

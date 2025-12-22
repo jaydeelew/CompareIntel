@@ -406,6 +406,30 @@ export const Features: React.FC = () => {
                 <strong>One-Click Copying:</strong> Each response panel includes convenient copy
                 buttons for quick access to both formatted and raw output options.
               </li>
+              <li>
+                <strong>Export Complete Comparisons:</strong> Export your entire comparison session
+                in multiple formats. Choose from PDF for sharing and printing, Markdown for
+                documentation and note-taking apps, HTML for standalone web pages, or JSON for
+                developers and API integration. Each export includes all model responses, the original
+                prompt, model metadata, and comparison statistics.
+              </li>
+              <li>
+                <strong>Professional PDF Exports:</strong> Generate beautifully formatted PDF
+                documents with all model responses, complete with proper formatting for code blocks,
+                LaTeX equations, and markdown. Perfect for reports, presentations, or archival
+                purposes.
+              </li>
+              <li>
+                <strong>Developer-Friendly Formats:</strong> Export to Markdown or JSON for easy
+                integration into documentation workflows, version control systems, or custom
+                applications. Markdown exports preserve all formatting and are compatible with most
+                documentation platforms.
+              </li>
+              <li>
+                <strong>Standalone HTML Exports:</strong> Create self-contained HTML files that can
+                be opened in any browser, shared via email, or hosted on a website. Includes all
+                styling and formatting for a complete viewing experience.
+              </li>
             </ul>
           </section>
 
