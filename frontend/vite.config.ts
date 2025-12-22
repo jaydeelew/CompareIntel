@@ -266,6 +266,8 @@ export default defineConfig({
     cssMinify: true,
     // Optimize chunk splitting
     rollupOptions: {
+      // Externalize dynamically imported modules that aren't bundled
+      external: ['jspdf', 'html2canvas'],
       output: {
         // Ensure JS files have content hashes for better caching
         entryFileNames: 'assets/[name].[hash].js',

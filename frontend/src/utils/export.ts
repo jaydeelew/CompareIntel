@@ -554,15 +554,14 @@ function formatContentForPDF(content: string): string {
  */
 export async function exportToPDF(data: ComparisonExportData): Promise<void> {
   // Dynamically import PDF libraries to reduce bundle size
+  // These are externalized in vite.config.ts to prevent bundling
   // @ts-ignore - jspdf module may not have type definitions
-  const jspdfPromise = import('jspdf')
-  // @ts-ignore - html2canvas module may not have type definitions
-  const html2canvasPromise = import('html2canvas')
+  const jspdfModule = await import('jspdf')
+  // @ts-ignore - html2canvas module may not have type definitions  
+  const html2canvasModule = await import('html2canvas')
   
-  const [{ default: jsPDF }, { default: html2canvas }] = await Promise.all([
-    jspdfPromise,
-    html2canvasPromise,
-  ])
+  const jsPDF = jspdfModule.default
+  const html2canvas = html2canvasModule.default
 
   // Create a temporary iframe to completely isolate PDF rendering from main page
   const iframe = document.createElement('iframe')
