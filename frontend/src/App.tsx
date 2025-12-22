@@ -7073,7 +7073,12 @@ function AppContent() {
                                               {isRestricted && (
                                                 <span
                                                   className="model-badge premium"
-                                                  title="Premium model - upgrade required"
+                                                  title={
+                                                    userTier === 'anonymous' &&
+                                                    model.tier_access === 'free'
+                                                      ? "Click 'Sign Up' above"
+                                                      : 'Premium model - register and upgrade'
+                                                  }
                                                 >
                                                   <svg
                                                     width="14"
@@ -7100,7 +7105,10 @@ function AppContent() {
                                                     />
                                                     <path d="M7 11V7a5 5 0 0 1 10 0v4" />
                                                   </svg>
-                                                  Premium
+                                                  {userTier === 'anonymous' &&
+                                                  model.tier_access === 'free'
+                                                    ? 'With free registration'
+                                                    : 'Premium'}
                                                 </span>
                                               )}
                                               {isFollowUpMode &&

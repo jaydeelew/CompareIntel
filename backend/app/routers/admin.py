@@ -1660,14 +1660,22 @@ async def add_model(
         raise HTTPException(status_code=400, detail="Invalid model ID format. Expected: provider/model-name")
     
     provider_name = model_id.split('/')[0]
-    # Capitalize provider name (e.g., "x-ai" -> "xAI", "openai" -> "OpenAI")
-    provider_name = provider_name.replace('-', ' ').title().replace(' ', '')
-    if provider_name.lower() == "xai":
-        provider_name = "xAI"
-    elif provider_name.lower() == "openai":
-        provider_name = "OpenAI"
-    elif provider_name.lower() == "meta-llama":
+    original_provider = provider_name  # Save original for special case checks
+    
+    # Check for special cases BEFORE transformation
+    if original_provider.lower() == "meta-llama":
         provider_name = "Meta"
+    elif original_provider.lower() == "x-ai":
+        provider_name = "xAI"
+    elif original_provider.lower() == "openai":
+        provider_name = "OpenAI"
+    else:
+        # Capitalize provider name (e.g., "x-ai" -> "xAI", "openai" -> "OpenAI")
+        provider_name = provider_name.replace('-', ' ').title().replace(' ', '')
+        if provider_name.lower() == "xai":
+            provider_name = "xAI"
+        elif provider_name.lower() == "openai":
+            provider_name = "OpenAI"
     
     # Get model name - use a formatted version of the model ID
     model_name = model_id.split('/')[-1]
@@ -1998,13 +2006,21 @@ async def add_model_stream(
                 return
             
             provider_name = model_id.split('/')[0]
-            provider_name = provider_name.replace('-', ' ').title().replace(' ', '')
-            if provider_name.lower() == "xai":
-                provider_name = "xAI"
-            elif provider_name.lower() == "openai":
-                provider_name = "OpenAI"
-            elif provider_name.lower() == "meta-llama":
+            original_provider = provider_name  # Save original for special case checks
+            
+            # Check for special cases BEFORE transformation
+            if original_provider.lower() == "meta-llama":
                 provider_name = "Meta"
+            elif original_provider.lower() == "x-ai":
+                provider_name = "xAI"
+            elif original_provider.lower() == "openai":
+                provider_name = "OpenAI"
+            else:
+                provider_name = provider_name.replace('-', ' ').title().replace(' ', '')
+                if provider_name.lower() == "xai":
+                    provider_name = "xAI"
+                elif provider_name.lower() == "openai":
+                    provider_name = "OpenAI"
             
             model_name = model_id.split('/')[-1]
             model_name = model_name.replace('-', ' ').replace('_', ' ').title()

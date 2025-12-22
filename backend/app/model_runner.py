@@ -55,10 +55,7 @@ ANONYMOUS_TIER_MODELS = {
     # DeepSeek - Very affordable models (~$0.14-$0.55/M avg)
     "deepseek/deepseek-chat-v3.1",  # ~$0.27 input, $1.10 output = ~$0.69/M avg - borderline, keep in anon
     "deepseek/deepseek-v3.2-exp",  # Similar pricing
-    # Meta - Free/open models (~$0.12-$0.30/M)
-    "meta-llama/llama-3.3-70b-instruct:free",  # Free variant
-    "meta-llama/llama-3.3-70b-instruct",  # ~$0.12 input, $0.30 output = ~$0.21/M avg
-    # Microsoft - Efficient models (~$0.07-$0.14/M)
+    # Meta - Free/open models (~$0.12-$0.30/M)    # Microsoft - Efficient models (~$0.07-$0.14/M)
     "microsoft/phi-4",  # ~$0.07 input, $0.14 output = ~$0.11/M avg
     # Google - Flash models (~$0.15-$0.60/M)
     "google/gemini-2.0-flash-001",
@@ -179,8 +176,8 @@ MODELS_BY_PROVIDER = {
     "Anthropic": [
         {
             "id": "anthropic/claude-3.5-haiku",
-            "name": "Claude 3.5 Haiku",
-            "description": "Claude 3.5 Haiku features offers enhanced capabilities in speed, coding accuracy, and tool use.",
+            "name": "Claude Haiku 3.5",
+            "description": "Claude Haiku 3.5 features offers enhanced capabilities in speed, coding accuracy, and tool use.",
             "category": "Language",
             "provider": "Anthropic",
         },
@@ -192,6 +189,20 @@ MODELS_BY_PROVIDER = {
             "provider": "Anthropic",
         },
         {
+            "id": "anthropic/claude-3.7-sonnet",
+            "name": "Claude Sonnet 3.7",
+            "description": "Claude 3.7 Sonnet is an advanced large language model with improved reasoning, coding, and problem-solving capabilities.",
+            "category": "Language/Reasoning",
+            "provider": "Anthropic",
+        },
+        {
+            "id": "anthropic/claude-sonnet-4",
+            "name": "Claude Sonnet 4",
+            "description": "Claude Sonnet 4 significantly enhances the capabilities of its predecessor, Sonnet 3.7, excelling in both coding and reasoning tasks with improved precision and controllability.",
+            "category": "Language",
+            "provider": "Anthropic",
+        },
+        {
             "id": "anthropic/claude-sonnet-4.5",
             "name": "Claude Sonnet 4.5",
             "description": "Claude Sonnet 4.5 is Anthropic's most advanced Sonnet model to date, optimized for real-world agents and coding workflows.",
@@ -199,16 +210,9 @@ MODELS_BY_PROVIDER = {
             "provider": "Anthropic",
         },
         {
-            "id": "anthropic/claude-sonnet-4",
-            "name": "Claude 4 Sonnet",
-            "description": "Claude Sonnet 4 significantly enhances the capabilities of its predecessor, Sonnet 3.7, excelling in both coding and reasoning tasks with improved precision and controllability.",
-            "category": "Language",
-            "provider": "Anthropic",
-        },
-        {
-            "id": "anthropic/claude-opus-4.5",
-            "name": "Claude Opus 4.5",
-            "description": "Claude Opus 4.5 is Anthropic's frontier reasoning model optimized for complex software engineering, agentic workflows, and long-horizon computer use.",
+            "id": "anthropic/claude-opus-4",
+            "name": "Claude Opus 4",
+            "description": "Claude Opus 4 is benchmarked as the world's best coding model, at time of release, bringing sustained performance on complex, long-running tasks and agent workflows.",
             "category": "Language",
             "provider": "Anthropic",
         },
@@ -220,17 +224,10 @@ MODELS_BY_PROVIDER = {
             "provider": "Anthropic",
         },
         {
-            "id": "anthropic/claude-opus-4",
-            "name": "Claude Opus 4",
-            "description": "Claude Opus 4 is benchmarked as the world's best coding model, at time of release, bringing sustained performance on complex, long-running tasks and agent workflows.",
+            "id": "anthropic/claude-opus-4.5",
+            "name": "Claude Opus 4.5",
+            "description": "Claude Opus 4.5 is Anthropic's frontier reasoning model optimized for complex software engineering, agentic workflows, and long-horizon computer use.",
             "category": "Language",
-            "provider": "Anthropic",
-        },
-        {
-            "id": "anthropic/claude-3.7-sonnet",
-            "name": "Claude 3.7 Sonnet",
-            "description": "Claude 3.7 Sonnet is an advanced large language model with improved reasoning, coding, and problem-solving capabilities.",
-            "category": "Language/Reasoning",
             "provider": "Anthropic",
         },
     ],
@@ -312,20 +309,6 @@ MODELS_BY_PROVIDER = {
     ],
     "Meta": [
         {
-            "id": "meta-llama/llama-3.3-70b-instruct:free",
-            "name": "Llama 3.3 70B Instruct (Free)",
-            "description": "The Meta Llama 3.3 multilingual large language model (LLM) is a pretrained and instruction tuned generative model in 70B (text in/text out).",
-            "category": "Code/Language",
-            "provider": "Meta",
-        },
-        {
-            "id": "meta-llama/llama-3.3-70b-instruct",
-            "name": "Llama 3.3 70B Instruct",
-            "description": "The Meta Llama 3.3 multilingual large language model (LLM) is a pretrained and instruction tuned generative model in 70B (text in/text out).",
-            "category": "Code/Language",
-            "provider": "Meta",
-        },
-        {
             "id": "meta-llama/llama-4-maverick",
             "name": "Llama 4 Maverick",
             "description": "Llama 4 Maverick 17B Instruct (128E) is a high-capacity multimodal language model from Meta, built on a mixture-of-experts (MoE) architecture with 128 experts and 17 billion active parameters per forward pass (400B total).",
@@ -337,6 +320,13 @@ MODELS_BY_PROVIDER = {
             "name": "Llama 4 Scout",
             "description": "Llama 4 Scout 17B Instruct (16E) is a mixture-of-experts (MoE) language model developed by Meta, activating 17 billion parameters out of a total of 109B.",
             "category": "Multimodal",
+            "provider": "Meta",
+        },
+        {
+            "id": "meta-llama/llama-3.1-405b-instruct",
+            "name": "Llama 3.1 405B Instruct",
+            "description": 'The highly anticipated 400B class of Llama3 is here!',
+            "category": "Language",
             "provider": "Meta",
         },
     ],
@@ -460,24 +450,10 @@ MODELS_BY_PROVIDER = {
             "provider": "OpenAI",
         },
         {
-            "id": "openai/gpt-5.1",
-            "name": "GPT-5.1",
-            "description": "GPT-5.1 is the latest frontier-grade model in the GPT-5 series, offering stronger general-purpose reasoning, improved instruction adherence, and a more natural conversational style compared to GPT-5.",
+            "id": "openai/gpt-4o",
+            "name": "GPT-4o",
+            "description": 'GPT-4o ("o" for "omni") is OpenAI\'s latest AI model, supporting both text and image inputs with text outputs.',
             "category": "Language",
-            "provider": "OpenAI",
-        },
-        {
-            "id": "openai/gpt-5.1-chat",
-            "name": "GPT-5.1 Chat",
-            "description": "GPT-5.1 Chat (AKA Instant is the fast, lightweight member of the 5.1 family, optimized for low-latency chat while retaining strong general intelligence.",
-            "category": "Language",
-            "provider": "OpenAI",
-        },
-        {
-            "id": "openai/gpt-5.1-codex",
-            "name": "GPT-5.1-Codex",
-            "description": "GPT-5.1-Codex is a specialized version of GPT-5.1 optimized for software engineering and coding workflows.",
-            "category": "Code",
             "provider": "OpenAI",
         },
         {
@@ -502,10 +478,24 @@ MODELS_BY_PROVIDER = {
             "provider": "OpenAI",
         },
         {
-            "id": "openai/gpt-4o",
-            "name": "GPT-4o",
-            "description": 'GPT-4o ("o" for "omni") is OpenAI\'s latest AI model, supporting both text and image inputs with text outputs.',
+            "id": "openai/gpt-5.1",
+            "name": "GPT-5.1",
+            "description": "GPT-5.1 is the latest frontier-grade model in the GPT-5 series, offering stronger general-purpose reasoning, improved instruction adherence, and a more natural conversational style compared to GPT-5.",
             "category": "Language",
+            "provider": "OpenAI",
+        },
+        {
+            "id": "openai/gpt-5.1-chat",
+            "name": "GPT-5.1 Chat",
+            "description": "GPT-5.1 Chat (AKA Instant is the fast, lightweight member of the 5.1 family, optimized for low-latency chat while retaining strong general intelligence.",
+            "category": "Language",
+            "provider": "OpenAI",
+        },
+        {
+            "id": "openai/gpt-5.1-codex",
+            "name": "GPT-5.1-Codex",
+            "description": "GPT-5.1-Codex is a specialized version of GPT-5.1 optimized for software engineering and coding workflows.",
+            "category": "Code",
             "provider": "OpenAI",
         },
     ],
@@ -532,27 +522,6 @@ MODELS_BY_PROVIDER = {
             "provider": "Qwen",
         },
         {
-            "id": "qwen/qwen3-vl-235b-a22b-thinking",
-            "name": "Qwen3 VL 235B A22B Thinking",
-            "description": "Qwen3-VL-235B-A22B Thinking is a multimodal model that unifies strong text generation with visual understanding across images and video.",
-            "category": "Multimodal/Reasoning",
-            "provider": "Qwen",
-        },
-        {
-            "id": "qwen/qwen3-next-80b-a3b-thinking",
-            "name": "Qwen3 Next 80B A3B Thinking",
-            "description": "Qwen3-Next-80B-A3B-Thinking is a reasoning-first chat model in the Qwen3-Next line that outputs structured \"thinking\" traces by default.",
-            "category": "Language/Reasoning",
-            "provider": "Qwen",
-        },
-        {
-            "id": "qwen/qwen3-max",
-            "name": "Qwen3 Max",
-            "description": "Qwen3-Max is an updated release built on the Qwen3 series, offering major improvements in reasoning, instruction following, multilingual support, and long-tail knowledge coverage compared to the January 2025 version.",
-            "category": "Language",
-            "provider": "Qwen",
-        },
-        {
             "id": "qwen/qwen3-coder-plus",
             "name": "Qwen3 Coder Plus",
             "description": "Qwen3 Coder Plus is Alibaba's proprietary version of the Open Source Qwen3 Coder 480B A35B.",
@@ -570,6 +539,27 @@ MODELS_BY_PROVIDER = {
             "id": "qwen/qwen3-235b-a22b",
             "name": "Qwen3 235B A22B",
             "description": "Qwen3-235B-A22B is a 235B parameter mixture-of-experts (MoE) model developed by Qwen, activating 22B parameters per forward pass.",
+            "category": "Language",
+            "provider": "Qwen",
+        },
+        {
+            "id": "qwen/qwen3-vl-235b-a22b-thinking",
+            "name": "Qwen3 VL 235B A22B Thinking",
+            "description": "Qwen3-VL-235B-A22B Thinking is a multimodal model that unifies strong text generation with visual understanding across images and video.",
+            "category": "Multimodal/Reasoning",
+            "provider": "Qwen",
+        },
+        {
+            "id": "qwen/qwen3-next-80b-a3b-thinking",
+            "name": "Qwen3 Next 80B A3B Thinking",
+            "description": "Qwen3-Next-80B-A3B-Thinking is a reasoning-first chat model in the Qwen3-Next line that outputs structured \"thinking\" traces by default.",
+            "category": "Language/Reasoning",
+            "provider": "Qwen",
+        },
+        {
+            "id": "qwen/qwen3-max",
+            "name": "Qwen3 Max",
+            "description": "Qwen3-Max is an updated release built on the Qwen3 series, offering major improvements in reasoning, instruction following, multilingual support, and long-tail knowledge coverage compared to the January 2025 version.",
             "category": "Language",
             "provider": "Qwen",
         },
@@ -597,19 +587,19 @@ MODELS_BY_PROVIDER = {
             "provider": "xAI",
         },
         {
+            "id": "x-ai/grok-4",
+            "name": "Grok 4",
+            "description": "Grok 4 is xAI's latest reasoning model with a 256k context window.",
+            "category": "Language",
+            "provider": "xAI",
+        },
+        {
             "id": "x-ai/grok-5",
             "name": "Grok 5 (Coming Soon)",
             "description": "xAI's upcoming Grok 5 model expected by end of 2025. This model is not yet available for selection.",
             "category": "Language",
             "provider": "xAI",
             "available": False,
-        },
-        {
-            "id": "x-ai/grok-4",
-            "name": "Grok 4",
-            "description": "Grok 4 is xAI's latest reasoning model with a 256k context window.",
-            "category": "Language",
-            "provider": "xAI",
         },
     ],
 }
