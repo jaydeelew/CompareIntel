@@ -7059,11 +7059,6 @@ function AppContent() {
                                         <label
                                           key={model.id}
                                           className={`model-option ${isSelected ? 'selected' : ''} ${isDisabled ? 'disabled' : ''} ${isRestricted ? 'restricted' : ''}`}
-                                          title={
-                                            isRestricted
-                                              ? `Upgrade to ${userTier === 'anonymous' ? 'a free account' : 'a paid tier'} to access this model`
-                                              : undefined
-                                          }
                                         >
                                           <input
                                             type="checkbox"
