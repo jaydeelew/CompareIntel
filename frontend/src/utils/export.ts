@@ -554,9 +554,14 @@ function formatContentForPDF(content: string): string {
  */
 export async function exportToPDF(data: ComparisonExportData): Promise<void> {
   // Dynamically import PDF libraries to reduce bundle size
+  // @ts-ignore - jspdf module may not have type definitions
+  const jspdfPromise = import('jspdf')
+  // @ts-ignore - html2canvas module may not have type definitions
+  const html2canvasPromise = import('html2canvas')
+  
   const [{ default: jsPDF }, { default: html2canvas }] = await Promise.all([
-    import('jspdf') as Promise<{ default: any }>,
-    import('html2canvas') as Promise<{ default: any }>,
+    jspdfPromise,
+    html2canvasPromise,
   ])
 
   // Create a temporary iframe to completely isolate PDF rendering from main page
