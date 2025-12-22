@@ -7350,6 +7350,7 @@ function AppContent() {
                               onClick={() => handleExport('pdf')}
                               className="export-dropdown-item"
                               role="menuitem"
+                              title="Best for sharing & printing"
                             >
                               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
@@ -7359,13 +7360,13 @@ function AppContent() {
                               </svg>
                               <div className="export-dropdown-item-content">
                                 <span className="export-dropdown-item-title">PDF</span>
-                                <span className="export-dropdown-item-desc">Best for sharing & printing</span>
                               </div>
                             </button>
                             <button
                               onClick={() => handleExport('markdown')}
                               className="export-dropdown-item"
                               role="menuitem"
+                              title="For docs & note apps"
                             >
                               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
@@ -7375,13 +7376,13 @@ function AppContent() {
                               </svg>
                               <div className="export-dropdown-item-content">
                                 <span className="export-dropdown-item-title">Markdown</span>
-                                <span className="export-dropdown-item-desc">For docs & note apps</span>
                               </div>
                             </button>
                             <button
                               onClick={() => handleExport('html')}
                               className="export-dropdown-item"
                               role="menuitem"
+                              title="Standalone web page"
                             >
                               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                                 <polyline points="16 18 22 12 16 6" />
@@ -7389,13 +7390,13 @@ function AppContent() {
                               </svg>
                               <div className="export-dropdown-item-content">
                                 <span className="export-dropdown-item-title">HTML</span>
-                                <span className="export-dropdown-item-desc">Standalone web page</span>
                               </div>
                             </button>
                             <button
                               onClick={() => handleExport('json')}
                               className="export-dropdown-item"
                               role="menuitem"
+                              title="For developers & APIs"
                             >
                               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
@@ -7407,7 +7408,6 @@ function AppContent() {
                               </svg>
                               <div className="export-dropdown-item-content">
                                 <span className="export-dropdown-item-title">JSON</span>
-                                <span className="export-dropdown-item-desc">For developers & APIs</span>
                               </div>
                             </button>
                           </div>

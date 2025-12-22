@@ -3312,7 +3312,7 @@ button.nav-button-primary {
   position: absolute;
   top: calc(100% + 8px);
   right: 0;
-  min-width: 260px;
+  min-width: 160px;
   background: var(--bg-primary);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-lg);
@@ -3393,7 +3393,7 @@ button.nav-button-primary {
 /* Mobile responsive */
 @media (max-width: 640px) {
   .export-dropdown-menu {
-    min-width: 220px;
+    min-width: 140px;
     right: -1rem;
   }
 
