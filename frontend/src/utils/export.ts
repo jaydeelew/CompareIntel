@@ -662,7 +662,18 @@ export function exportToHTML(data: ComparisonExportData): string {
         padding: 20px;
         margin: 20px 0;
       }
-      .prompt-label { font-size: 12px; font-weight: 600; color: #475569; text-transform: uppercase; margin-bottom: 10px; letter-spacing: 0.5px; }
+      .prompt-label { 
+        font-size: 12px; 
+        font-weight: 600; 
+        color: #475569; 
+        text-transform: uppercase; 
+        margin-bottom: 10px; 
+        letter-spacing: 0.5px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .prompt-label svg { flex-shrink: 0; }
       .prompt-text { font-size: 15px; color: #1e293b; white-space: pre-wrap; }
       table { width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 13px; }
       th { background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); color: white; font-weight: 600; text-align: left; padding: 12px 16px; }
@@ -672,11 +683,25 @@ export function exportToHTML(data: ComparisonExportData): string {
       tr:last-child td:first-child { border-radius: 0 0 0 8px; }
       tr:last-child td:last-child { border-radius: 0 0 8px 0; }
       tr:hover td { background: #f8fafc; }
-      .status-success { color: #059669; font-weight: 500; }
-      .status-failed { color: #dc2626; font-weight: 500; }
+      .status-success { 
+        color: #059669; 
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .status-failed { 
+        color: #dc2626; 
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .status-success svg,
+      .status-failed svg { flex-shrink: 0; }
       .model-section { margin: 28px 0; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); }
       .model-header {
-        background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+        background: linear-gradient(135deg, #0ea5e9 0%, #4ec5ff 100%);
         color: white;
         padding: 16px 20px;
         font-weight: 600;
@@ -687,8 +712,39 @@ export function exportToHTML(data: ComparisonExportData): string {
       .message:last-child { border-radius: 0 0 12px 12px; }
       .message-user { background: #eff6ff; }
       .message-assistant { background: #ffffff; }
-      .message-label { font-size: 11px; font-weight: 600; color: #64748b; text-transform: uppercase; margin-bottom: 8px; letter-spacing: 0.5px; }
-      .message-content { font-size: 14px; white-space: pre-wrap; word-wrap: break-word; line-height: 1.7; }
+      .message-label { 
+        font-size: 11px; 
+        font-weight: 600; 
+        color: #64748b; 
+        text-transform: uppercase; 
+        margin-bottom: 8px; 
+        letter-spacing: 0.5px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .message-label svg { flex-shrink: 0; }
+      .message-content { 
+        font-size: 14px; 
+        white-space: pre-wrap; 
+        word-wrap: break-word; 
+        line-height: 1.7;
+      }
+      .message-content p { margin: 0.5em 0; }
+      .message-content p:first-child { margin-top: 0; }
+      .message-content p:last-child { margin-bottom: 0; }
+      .message-content ul, .message-content ol { margin: 0.5em 0; padding-left: 1.5em; }
+      .message-content li { margin: 0.25em 0; }
+      .message-content h1, .message-content h2, .message-content h3, .message-content h4 { margin: 0.75em 0 0.5em; font-weight: 600; }
+      .message-content h1 { font-size: 1.5em; }
+      .message-content h2 { font-size: 1.3em; }
+      .message-content h3 { font-size: 1.1em; }
+      .message-content blockquote { margin: 0.5em 0; padding-left: 1em; border-left: 3px solid #e2e8f0; color: #64748b; }
+      .message-content table { width: 100%; border-collapse: collapse; margin: 0.5em 0; }
+      .message-content table th, .message-content table td { padding: 6px 8px; border: 1px solid #e2e8f0; }
+      .message-content table th { background: #f1f5f9; font-weight: 600; }
+      .katex { font-size: 1.1em; }
+      .katex-display { margin: 1em 0; }
       .footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid #e2e8f0; font-size: 12px; color: #94a3b8; text-align: center; }
       .footer a { color: #3b82f6; text-decoration: none; }
       .footer a:hover { text-decoration: underline; }
@@ -696,6 +752,7 @@ export function exportToHTML(data: ComparisonExportData): string {
       code { background: #f1f5f9; padding: 3px 8px; border-radius: 4px; font-family: 'Monaco', 'Menlo', 'Consolas', monospace; font-size: 13px; color: #be185d; }
       pre code { background: none; padding: 0; color: inherit; }
     </style>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" crossorigin="anonymous" />
   `
 
   let html = `<!DOCTYPE html>
@@ -711,18 +768,18 @@ export function exportToHTML(data: ComparisonExportData): string {
 
   // Header
   html += `<div class="header">`
-  html += `<h1>🤖 CompareIntel</h1>`
+  html += `<h1>CompareIntel</h1>`
   html += `<div class="date">${formatExportDate(timestamp)}</div>`
   html += `</div>`
 
   // Prompt
   html += `<div class="prompt-box">`
-  html += `<div class="prompt-label">📝 Prompt</div>`
+  html += `<div class="prompt-label">${getIconSVG('file-text', 14, '#475569')} Prompt</div>`
   html += `<div class="prompt-text">${escapeHtml(prompt)}</div>`
   html += `</div>`
 
   // Summary table
-  html += `<h2>📊 Models Compared</h2>`
+  html += `<h2>Models Compared</h2>`
   html += `<table>`
   html += `<tr><th>Model</th><th>Provider</th><th>Status</th><th>Response Length</th></tr>`
 
@@ -735,7 +792,7 @@ export function exportToHTML(data: ComparisonExportData): string {
     html += `<tr>`
     html += `<td><strong>${escapeHtml(model?.name || conv.modelId)}</strong></td>`
     html += `<td>${escapeHtml(model?.provider || 'Unknown')}</td>`
-    html += `<td class="${isError ? 'status-failed' : 'status-success'}">${isError ? '❌ Failed' : '✅ Success'}</td>`
+    html += `<td class="${isError ? 'status-failed' : 'status-success'}">${isError ? getIconSVG('x-circle', 16, '#dc2626') + ' Failed' : getIconSVG('check-circle', 16, '#059669') + ' Success'}</td>`
     html += `<td>${charCount.toLocaleString()} characters</td>`
     html += `</tr>`
   })
@@ -743,7 +800,7 @@ export function exportToHTML(data: ComparisonExportData): string {
   html += `</table>`
 
   // Model responses
-  html += `<h2>💬 Responses</h2>`
+  html += `<h2>Responses</h2>`
 
   conversations.forEach(conv => {
     const model = models[conv.modelId]
@@ -751,13 +808,13 @@ export function exportToHTML(data: ComparisonExportData): string {
     html += `<div class="model-section">`
     html += `<div class="model-header">`
     html += `${escapeHtml(model?.name || conv.modelId)}`
-    html += `<span class="model-provider">— ${escapeHtml(model?.provider || 'Unknown')}</span>`
+    html += `<span class="model-provider"> — ${escapeHtml(model?.provider || 'Unknown')}</span>`
     html += `</div>`
 
     conv.messages.forEach(msg => {
       const isUser = msg.type === 'user'
       html += `<div class="message ${isUser ? 'message-user' : 'message-assistant'}">`
-      html += `<div class="message-label">${isUser ? '👤 User' : '🤖 Assistant'}</div>`
+      html += `<div class="message-label">${isUser ? getIconSVG('user', 14, '#64748b') + ' User' : getIconSVG('bot', 14, '#64748b') + ' Assistant'}</div>`
       html += `<div class="message-content">${formatContentForHTML(msg.content)}</div>`
       html += `</div>`
     })
@@ -767,7 +824,7 @@ export function exportToHTML(data: ComparisonExportData): string {
 
   // Metadata
   if (metadata) {
-    html += `<h2>📈 Comparison Details</h2>`
+    html += `<h2>Comparison Details</h2>`
     html += `<table>`
     html += `<tr><th>Metric</th><th>Value</th></tr>`
     html += `<tr><td>Models Requested</td><td>${metadata.models_requested}</td></tr>`
@@ -797,27 +854,11 @@ export function exportToHTML(data: ComparisonExportData): string {
 }
 
 /**
- * Format content for HTML display with basic markdown support
+ * Format content for HTML display with LaTeX and markdown support (same as PDF)
  */
 function formatContentForHTML(content: string): string {
-  let formatted = escapeHtml(content)
-
-  // Convert code blocks
-  formatted = formatted.replace(/```(\w*)\n([\s\S]*?)```/g, '<pre><code>$2</code></pre>')
-
-  // Convert inline code
-  formatted = formatted.replace(/`([^`]+)`/g, '<code>$1</code>')
-
-  // Convert bold
-  formatted = formatted.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
-
-  // Convert italic
-  formatted = formatted.replace(/\*([^*]+)\*/g, '<em>$1</em>')
-
-  // Convert line breaks
-  formatted = formatted.replace(/\n/g, '<br>')
-
-  return formatted
+  // Use the same formatting function as PDF for consistency
+  return formatContentForPDF(content)
 }
 
 /**
