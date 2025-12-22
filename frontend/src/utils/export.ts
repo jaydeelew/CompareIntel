@@ -461,25 +461,25 @@ function safeRenderKatex(latex: string, displayMode: boolean): string {
 function formatContentForPDF(content: string): string {
   // Extract code blocks first to preserve them
   const codeBlocks: string[] = []
-  let processed = content.replace(/```(\w*)\n([\s\S]*?)```/g, (match, lang, code) => {
+  let processed = content.replace(/```(\w*)\n([\s\S]*?)```/g, (_match, _lang, code) => {
     const placeholder = `__CODE_BLOCK_${codeBlocks.length}__`
     codeBlocks.push(`<pre><code>${escapeHtml(code)}</code></pre>`)
     return placeholder
   })
 
   // Process display math ($$...$$ or \[...\])
-  processed = processed.replace(/\$\$([^$]+?)\$\$/gs, (match, math) => {
+  processed = processed.replace(/\$\$([^$]+?)\$\$/gs, (_match, math) => {
     return safeRenderKatex(math, true)
   })
-  processed = processed.replace(/\\\[\s*([\s\S]*?)\s*\\\]/g, (match, math) => {
+  processed = processed.replace(/\\\[\s*([\s\S]*?)\s*\\\]/g, (_match, math) => {
     return safeRenderKatex(math, true)
   })
 
   // Process inline math ($...$ or \(...\))
-  processed = processed.replace(/(?<!\$)\$([^$\n]+?)\$(?!\$)/g, (match, math) => {
+  processed = processed.replace(/(?<!\$)\$([^$\n]+?)\$(?!\$)/g, (_match, math) => {
     return safeRenderKatex(math, false)
   })
-  processed = processed.replace(/\\\(\s*([\s\S]*?)\s*\\\)/g, (match, math) => {
+  processed = processed.replace(/\\\(\s*([\s\S]*?)\s*\\\)/g, (_match, math) => {
     return safeRenderKatex(math, false)
   })
 
@@ -499,7 +499,7 @@ function formatContentForPDF(content: string): string {
   // First, mark unordered list items
   processed = processed.replace(/^[\*\-\+] (.+)$/gm, '<li data-list-type="ul">$1</li>')
   // Then mark ordered list items (only if not already marked)
-  processed = processed.replace(/^(\d+)\. (.+)$/gm, (match, num, content) => {
+  processed = processed.replace(/^(\d+)\. (.+)$/gm, (match, _num, content) => {
     // Check if this line already has a list item
     if (!match.includes('<li')) {
       return `<li data-list-type="ol">${content}</li>`
@@ -554,6 +554,7 @@ function formatContentForPDF(content: string): string {
  */
 export async function exportToPDF(data: ComparisonExportData): Promise<void> {
   // Dynamically import PDF libraries to reduce bundle size
+  // @ts-expect-error - jspdf and html2canvas are dynamically imported and may not have type definitions
   const [{ default: jsPDF }, { default: html2canvas }] = await Promise.all([
     import('jspdf'),
     import('html2canvas'),
