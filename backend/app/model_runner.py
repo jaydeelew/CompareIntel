@@ -450,6 +450,20 @@ MODELS_BY_PROVIDER = {
             "provider": "OpenAI",
         },
         {
+            "id": "openai/gpt-5.2-pro",
+            "name": "Gpt 5.2 Pro",
+            "description": 'GPT-5.2 Pro is OpenAI’s most advanced model, offering major improvements in agentic coding and long context performance over GPT-5 Pro.',
+            "category": "Language",
+            "provider": "OpenAI",
+        },
+        {
+            "id": "openai/gpt-5.2-chat",
+            "name": "Gpt 5.2 Chat",
+            "description": 'GPT-5.2 Chat (AKA Instant) is the fast, lightweight member of the 5.2 family, optimized for low-latency chat while retaining strong general intelligence.',
+            "category": "Language",
+            "provider": "OpenAI",
+        },
+        {
             "id": "openai/gpt-5.2",
             "name": "Gpt 5.2",
             "description": 'GPT-5.2 is the latest frontier-grade model in the GPT-5 series, offering stronger agentic and long context perfomance compared to GPT-5.1.',

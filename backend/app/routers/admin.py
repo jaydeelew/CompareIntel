@@ -1628,6 +1628,82 @@ async def validate_model(
         }
 
 
+def get_model_tier(model_id: str) -> int:
+    """
+    Get the tier classification for a model.
+    Returns: 0 for anonymous-tier, 1 for free-tier, 2 for paid-tier
+    """
+    if model_id in ANONYMOUS_TIER_MODELS:
+        return 0  # anonymous-tier
+    elif model_id in FREE_TIER_MODELS:
+        return 1  # free-tier
+    else:
+        return 2  # paid-tier
+
+
+def extract_version_number(model_name: str) -> tuple:
+    """
+    Extract version numbers from model name for sorting.
+    Returns a tuple of (major, minor, patch) version numbers.
+    Handles cases like:
+    - "GPT-5.1-Codex" -> (5, 1, 0)
+    - "GPT-5 Nano" -> (5, 0, 0)
+    - "Gemini 3 Pro Preview" -> (3, 0, 0)
+    - "Gemini 2.5 Flash" -> (2, 5, 0)
+    
+    Returns (0, 0, 0) if no version number is found.
+    """
+    # Try to find version patterns like "5.1", "3", "2.5", etc.
+    # Look for patterns like: number.number or just number
+    version_patterns = [
+        r'(\d+)\.(\d+)\.(\d+)',  # e.g., "3.2.1"
+        r'(\d+)\.(\d+)',          # e.g., "5.1", "2.5"
+        r'(\d+)',                  # e.g., "3", "5"
+    ]
+    
+    for pattern in version_patterns:
+        match = re.search(pattern, model_name)
+        if match:
+            groups = match.groups()
+            if len(groups) == 3:
+                return (int(groups[0]), int(groups[1]), int(groups[2]))
+            elif len(groups) == 2:
+                return (int(groups[0]), int(groups[1]), 0)
+            elif len(groups) == 1:
+                return (int(groups[0]), 0, 0)
+    
+    # No version number found
+    return (0, 0, 0)
+
+
+def sort_models_by_tier_and_version(models: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    """
+    Sort models by tier (anonymous first, free second, paid third) and within each tier
+    by version number in ascending order (oldest first, newest last).
+    
+    Args:
+        models: List of model dictionaries with "id" and "name" keys
+        
+    Returns:
+        Sorted list of models
+    """
+    def sort_key(model: Dict[str, Any]) -> tuple:
+        model_id = model.get("id", "")
+        model_name = model.get("name", "")
+        
+        # First sort by tier (0=anonymous, 1=free, 2=paid)
+        tier = get_model_tier(model_id)
+        
+        # Then sort by version number within the tier
+        version = extract_version_number(model_name)
+        
+        # Return tuple for sorting: (tier, version_tuple, model_name)
+        # Using model_name as final tiebreaker for consistent ordering
+        return (tier, version, model_name)
+    
+    return sorted(models, key=sort_key)
+
+
 @router.post("/models/add")
 async def add_model(
     request: Request,
@@ -1760,8 +1836,8 @@ async def add_model(
             
             existing_models.append(new_model_dict)
             
-            # Sort models by name in decreasing alphanumeric order (Z->A, 9->0)
-            existing_models.sort(key=lambda x: x["name"], reverse=True)
+            # Sort models by tier (anonymous first, free second, paid third) and within each tier by version number (ascending - oldest first, newest last)
+            existing_models = sort_models_by_tier_and_version(existing_models)
             
             # Find the provider's list in the file using bracket counting
             # This handles brackets inside strings correctly (e.g., descriptions with [feature])
@@ -2085,7 +2161,8 @@ async def add_model_stream(
                     "provider": provider_name,
                 }
                 existing_models.append(new_model_dict)
-                existing_models.sort(key=lambda x: x["name"], reverse=True)
+                # Sort models by tier (anonymous first, free second, paid third) and within each tier by version number (ascending - oldest first, newest last)
+                existing_models = sort_models_by_tier_and_version(existing_models)
                 
                 # Find the provider's list using bracket counting (handles brackets in strings)
                 bounds = find_provider_list_bounds(content, provider_name)
