@@ -28,12 +28,10 @@ The backend optimization focuses on four key areas:
 
 ### Database Indexes
 
-**Added:** Database migration for performance indexes on frequently queried columns:
+**Added:** Database indexes for performance optimization on frequently queried columns:
 - Composite indexes for common query patterns
 - Indexes on foreign keys and date columns
 - Optimized for user_id + created_at queries
-
-**Location:** `backend/alembic/versions/add_performance_indexes.py`
 
 **Impact:**
 - Faster lookups for user conversations

@@ -80,14 +80,14 @@ async def lifespan(app: FastAPI):
         # Log configuration (with masked secrets)
         log_configuration()
 
-        # Initialize database tables (only in development - production uses Alembic migrations)
+        # Initialize database tables
         environment = os.getenv("ENVIRONMENT", "development")
         if environment != "production":
             logger.info("Initializing database tables (development mode)...")
             Base.metadata.create_all(bind=engine, checkfirst=True)
             logger.info("Database initialization complete")
         else:
-            logger.info("Skipping create_all in production (using Alembic migrations)")
+            logger.info("Skipping create_all in production (tables should already exist)")
 
         # Preload model token limits from OpenRouter
         logger.info("Preloading model token limits...")

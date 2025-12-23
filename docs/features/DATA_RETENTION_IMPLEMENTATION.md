@@ -56,8 +56,8 @@ REST API for manual cleanup:
 - Requires admin authentication
 - Logs admin actions
 
-#### 4. **Database Migration** (`backend/alembic/versions/add_usage_log_monthly_aggregate_table.py`)
-Creates the aggregate table with:
+#### 4. **Database Table**
+The aggregate table is created with:
 - Unique constraint on (year, month)
 - Indexes on year, month, and id
 - All necessary aggregate columns
@@ -358,13 +358,7 @@ SELECT MIN(created_at) FROM usage_logs;
 
 ### For Existing Deployments
 
-1. **Run Migration**
-   ```bash
-   cd backend
-   alembic upgrade head
-   ```
-
-2. **Verify Table Created**
+1. **Verify Table Created**
    ```sql
    SELECT * FROM usage_log_monthly_aggregates LIMIT 1;
    ```

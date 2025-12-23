@@ -1,3 +1,3 @@
 # Database migration scripts directory
-# Manual migration scripts have been removed - use Alembic migrations instead
+# Migration scripts have been removed - database schema is managed via SQLAlchemy models
 

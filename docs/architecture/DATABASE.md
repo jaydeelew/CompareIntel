@@ -290,27 +290,9 @@ Global application settings (single row table).
 
 ---
 
-## Database Migrations
+## Database Schema Management
 
-CompareIntel uses Alembic for database migrations.
-
-### Running Migrations
-
-```bash
-# Create a new migration
-cd backend
-alembic revision --autogenerate -m "Description"
-
-# Apply migrations
-alembic upgrade head
-
-# Rollback migration
-alembic downgrade -1
-```
-
-### Migration Files
-
-Located in `backend/alembic/versions/`
+Database tables are created automatically using SQLAlchemy's `Base.metadata.create_all()` in development mode. In production, tables should already exist or be created manually.
 
 ---
 

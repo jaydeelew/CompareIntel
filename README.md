@@ -66,7 +66,6 @@ The platform integrates with [OpenRouter](https://openrouter.ai/) to access mode
 | **FastAPI** | Python web framework |
 | **Pydantic v2** | Data validation and settings |
 | **SQLAlchemy 2** | ORM |
-| **Alembic** | Database migrations |
 | **PostgreSQL 15** | Production database |
 | **OpenAI SDK** | OpenRouter API client |
 | **Tiktoken** | Token counting |
@@ -158,9 +157,6 @@ source venv/bin/activate  # On Windows: venv\Scripts\activate
 # Install dependencies
 pip install -r requirements-dev.txt
 
-# Run database migrations
-alembic upgrade head
-
 # Start development server
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
@@ -203,7 +199,6 @@ CompareIntel/
 │   │   ├── model_runner.py   # OpenRouter API integration
 │   │   ├── rate_limiting.py  # Usage limits
 │   │   └── schemas.py        # Pydantic schemas
-│   ├── alembic/              # Database migrations
 │   ├── tests/                # Backend tests
 │   └── requirements.txt
 │
