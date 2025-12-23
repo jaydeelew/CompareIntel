@@ -63,7 +63,7 @@ ANONYMOUS_TIER_MODELS = {
     "openai/gpt-oss-120b",  # Auto-classified based on pricing,
     "x-ai/grok-code-fast-1",
     "x-ai/grok-4-fast",
-    "meta-llama/llama-3.1-405b-instruct:free",  # Auto-classified based on pricing
+    "meta-llama/llama-3.1-405b-instruct:free",  # Auto-classified based on pricing,    "meta-llama/llama-3.3-70b-instruct",  # Auto-classified based on pricing
 }
 
 # List of model IDs available to free (registered) users
@@ -280,16 +280,16 @@ MODELS_BY_PROVIDER = {
     ],
     "Google": [
         {
-            "id": "google/gemini-2.5-flash",
-            "name": "Gemini 2.5 Flash",
-            "description": "Google's fast, cost-efficient model with built-in thinking capabilities for reasoning, coding, and math tasks.",
+            "id": "google/gemini-2.0-flash-001",
+            "name": "Gemini 2.0 Flash",
+            "description": 'A high-speed model with significantly faster time-to-first-token while maintaining Pro-level quality.',
             "category": "Language",
             "provider": "Google",
         },
         {
-            "id": "google/gemini-2.0-flash-001",
-            "name": "Gemini 2.0 Flash",
-            "description": "A high-speed model with significantly faster time-to-first-token while maintaining Pro-level quality.",
+            "id": "google/gemini-2.5-flash",
+            "name": "Gemini 2.5 Flash",
+            "description": "Google's fast, cost-efficient model with built-in thinking capabilities for reasoning, coding, and math tasks.",
             "category": "Language",
             "provider": "Google",
         },
@@ -301,6 +301,13 @@ MODELS_BY_PROVIDER = {
             "provider": "Google",
         },
         {
+            "id": "google/gemini-3-flash-preview",
+            "name": "Gemini 3 Flash Preview",
+            "description": 'Gemini 3 Flash Preview is a high speed, high value thinking model designed for agentic workflows, multi turn chat, and coding assistance.',
+            "category": "Language",
+            "provider": "Google",
+        },
+        {
             "id": "google/gemini-3-pro-preview",
             "name": "Gemini 3 Pro Preview",
             "description": "Google's flagship multimodal model with 1M-token context for text, image, video, audio, and code tasks.",
@@ -308,8 +315,7 @@ MODELS_BY_PROVIDER = {
             "provider": "Google",
         },
     ],
-    "Meta": [
-        {
+    "Meta": [        {
             "id": "meta-llama/llama-3.1-405b-instruct:free",
             "name": "Llama 3.1 405B Instruct:Free",
             "description": "Meta's largest open-source model (405B) with strong multilingual, coding, and reasoning capabilities.",
@@ -317,16 +323,23 @@ MODELS_BY_PROVIDER = {
             "provider": "Meta",
         },
         {
+            "id": "meta-llama/llama-3.3-70b-instruct",
+            "name": "Llama 3.3 70B Instruct",
+            "description": 'The Meta Llama 3.3 multilingual large language model (LLM) is a pretrained and instruction tuned generative model in 70B.',
+            "category": "Language",
+            "provider": "Meta",
+        },
+        {
             "id": "meta-llama/llama-4-scout",
             "name": "Llama 4 Scout",
-            "description": "A 109B MoE model (17B active) optimized for efficient multimodal understanding and generation tasks.",
+            "description": 'A 109B MoE model (17B active) optimized for efficient multimodal understanding and generation tasks.',
             "category": "Multimodal",
             "provider": "Meta",
         },
         {
             "id": "meta-llama/llama-4-maverick",
             "name": "Llama 4 Maverick",
-            "description": "A high-capacity 400B MoE model (17B active, 128 experts) for complex multimodal reasoning and generation.",
+            "description": 'A high-capacity 400B MoE model (17B active, 128 experts) for complex multimodal reasoning and generation.',
             "category": "Multimodal",
             "provider": "Meta",
         },
