@@ -45,20 +45,20 @@ export const HowItWorks: React.FC = () => {
               <div className="step-content">
                 <h3>Get Started (Account Optional)</h3>
                 <p>
-                  You can start using CompareIntel right away without an account! Unregistered users 
-                  can get familiar with the platform by accessing a handful of models. This is perfect 
-                  for trying out AI model comparison and seeing how it works.
+                  You can start using CompareIntel right away without an account! Unregistered users
+                  can get familiar with the platform by accessing a handful of models. This is
+                  perfect for trying out AI model comparison and seeing how it works.
                 </p>
                 <p>
-                  For access to more models and additional credits, sign up for a free account using 
-                  your email address. Registration is quick and free—no credit card required. Free 
-                  registered users receive twice the credits of unregistered users, giving you plenty 
-                  of room to explore different AI models.
+                  For access to more models and additional credits, sign up for a free account using
+                  your email address. Registration is quick and free—no credit card required. Free
+                  registered users receive twice the credits of unregistered users, giving you
+                  plenty of room to explore different AI models.
                 </p>
                 <p>
-                  <strong>Paid tiers will be available soon</strong> that unlock all of the latest and 
-                  greatest premium AI models, giving you access to the most advanced capabilities as 
-                  soon as they're released.
+                  <strong>Paid tiers will be available soon</strong> that unlock all of the latest
+                  and greatest premium AI models, giving you access to the most advanced
+                  capabilities as soon as they're released.
                 </p>
                 <p>
                   After registering, you'll receive a verification email. Click the link to verify
@@ -72,13 +72,65 @@ export const HowItWorks: React.FC = () => {
               <div className="step-content">
                 <h3>Select Your AI Models</h3>
                 <p>
-                  Browse our library of over 50 AI models from leading providers. You can select any
-                  combination of models to compare. Popular choices include:
+                  Browse our library of over 50 AI models from leading providers. Model availability
+                  varies by subscription tier:
+                </p>
+
+                <h4>Available to Anonymous and Free Tier Users</h4>
+                <p>
+                  Anonymous (unregistered) and Free tier users have access to a curated selection of
+                  high-quality models perfect for getting started with AI comparison:
+                </p>
+                <ul>
+                  <li>
+                    <strong>OpenAI:</strong> GPT-5 Mini, GPT-5 Nano, GPT-5.1-Codex Mini, O3 Mini,
+                    GPT-OSS-120B
+                  </li>
+                  <li>
+                    <strong>Anthropic:</strong> Claude 3.5 Haiku, Claude Haiku 4.5
+                  </li>
+                  <li>
+                    <strong>Google:</strong> Gemini 2.0 Flash, Gemini 2.5 Flash
+                  </li>
+                  <li>
+                    <strong>Meta:</strong> Llama 3.1 405B (free), Llama 3.3 70B, Llama 4 Scout,
+                    Llama 4 Maverick
+                  </li>
+                  <li>
+                    <strong>DeepSeek:</strong> DeepSeek Chat v3.1, DeepSeek v3.2 Exp, DeepSeek R1
+                  </li>
+                  <li>
+                    <strong>Mistral:</strong> Mistral Small 3.2, Mistral Medium 3.1, Devstral Small,
+                    Devstral Medium
+                  </li>
+                  <li>
+                    <strong>Microsoft:</strong> Phi-4, Phi-4 Reasoning Plus, WizardLM-2 8x22B
+                  </li>
+                  <li>
+                    <strong>xAI:</strong> Grok 4 Fast, Grok Code Fast, Grok 3 Mini
+                  </li>
+                  <li>
+                    <strong>Cohere:</strong> Command R7B, Command R Plus
+                  </li>
+                  <li>
+                    <strong>Qwen:</strong> Qwen3 Coder Flash, Qwen3 30B, Qwen3 Next 80B
+                  </li>
+                </ul>
+                <p>
+                  Free tier users have access to all anonymous tier models plus additional mid-level
+                  models, giving you a great selection to explore AI capabilities.
+                </p>
+
+                <h4>Premium Models (Coming Soon for Paid Subscriptions)</h4>
+                <p>
+                  <strong>Premium models will be available to paid subscription users soon.</strong>{' '}
+                  These include the latest frontier-grade models from leading providers:
                 </p>
                 <ul>
                   <li>
                     <strong>GPT-5.1, GPT-5.1-Codex & GPT-5</strong> - OpenAI's latest frontier-grade
-                    models with improved reasoning, code quality, and specialized coding capabilities
+                    models with improved reasoning, code quality, and specialized coding
+                    capabilities
                   </li>
                   <li>
                     <strong>GPT-4o & o3</strong> - OpenAI's multimodal model and powerful reasoning
@@ -93,12 +145,7 @@ export const HowItWorks: React.FC = () => {
                     multimodal models for advanced reasoning and STEM tasks
                   </li>
                   <li>
-                    <strong>Grok 4 & Grok 4 Fast</strong> - xAI's latest reasoning and multimodal
-                    models with SOTA cost-efficiency
-                  </li>
-                  <li>
-                    <strong>Llama 4 Maverick & Llama 4 Scout</strong> - Meta's latest high-capacity
-                    multimodal MoE models
+                    <strong>Grok 4</strong> - xAI's latest reasoning and multimodal model
                   </li>
                   <li>
                     <strong>Mistral Large</strong> - Mistral AI's flagship model with strong
@@ -106,18 +153,24 @@ export const HowItWorks: React.FC = () => {
                   </li>
                 </ul>
                 <p>
-                  Click on each model you want to include in your comparison. Unregistered and Free-tier
-                  users can select up to 3 models at a time. Paid tiers will allow the simultaneous
-                  selection and comparison of more models.
+                  Paid subscriptions will unlock access to all premium models as soon as they're
+                  released, ensuring you always have access to the most advanced AI capabilities.
+                </p>
+
+                <p>
+                  Click on each model you want to include in your comparison. Unregistered and
+                  Free-tier users can select up to 3 models at a time. Paid tiers will allow the
+                  simultaneous selection and comparison of more models.
                 </p>
                 <p>
-                  <strong>Save your favorite model combinations:</strong> Once you've selected your models,
-                  you can save this combination with a custom name for quick access later. Saved selections
-                  persist across sessions, so you can quickly load your preferred model combinations
-                  without manually selecting them each time. Unregistered users can save up to 2 selections,
-                  free accounts can save up to 3, and paid tiers offer even more saved selections. This
-                  feature works great for different use cases—save one selection for coding tasks, another
-                  for creative writing, and another for data analysis.
+                  <strong>Save your favorite model combinations:</strong> Once you've selected your
+                  models, you can save this combination with a custom name for quick access later.
+                  Saved selections persist across sessions, so you can quickly load your preferred
+                  model combinations without manually selecting them each time. Unregistered users
+                  can save up to 2 selections, free accounts can save up to 3, and paid tiers offer
+                  even more saved selections. This feature works great for different use cases—save
+                  one selection for coding tasks, another for creative writing, and another for data
+                  analysis.
                 </p>
               </div>
             </div>
@@ -148,7 +201,10 @@ export const HowItWorks: React.FC = () => {
                   <li>Include relevant context or constraints</li>
                   <li>Specify the format you'd like for the response</li>
                   <li>For code tasks, mention the programming language</li>
-                  <li>When using files, reference them in your prompt (e.g., "Summarize this document" or "What are the key points in the attached file?")</li>
+                  <li>
+                    When using files, reference them in your prompt (e.g., "Summarize this document"
+                    or "What are the key points in the attached file?")
+                  </li>
                 </ul>
               </div>
             </div>
@@ -186,9 +242,9 @@ export const HowItWorks: React.FC = () => {
                 <p>
                   Want to ask follow-up questions or dive deeper? You can continue the conversation
                   with all selected models. When you send a follow-up message, it goes to all models
-                  in your comparison simultaneously. Each model maintains its own independent conversation
-                  context (receiving only its own previous responses, not other models' responses),
-                  allowing you to:
+                  in your comparison simultaneously. Each model maintains its own independent
+                  conversation context (receiving only its own previous responses, not other models'
+                  responses), allowing you to:
                 </p>
                 <ul>
                   <li>Ask follow-up questions that all models respond to simultaneously</li>
@@ -213,9 +269,9 @@ export const HowItWorks: React.FC = () => {
               <div className="step-content">
                 <h3>Export Your Comparisons</h3>
                 <p>
-                  Once you've completed your comparison, CompareIntel makes it easy to save and share
-                  your results. Click the "Export" button above your comparison results to access
-                  multiple export options:
+                  Once you've completed your comparison, CompareIntel makes it easy to save and
+                  share your results. Click the "Export" button above your comparison results to
+                  access multiple export options:
                 </p>
                 <ul>
                   <li>
@@ -224,14 +280,14 @@ export const HowItWorks: React.FC = () => {
                     formatting for code blocks, LaTeX equations, and markdown content.
                   </li>
                   <li>
-                    <strong>Markdown Export:</strong> Export your comparison as a Markdown file (.md)
-                    that preserves all formatting. Ideal for documentation, note-taking apps, or
-                    version control systems. The export includes user and assistant message indicators
-                    for easy reading.
+                    <strong>Markdown Export:</strong> Export your comparison as a Markdown file
+                    (.md) that preserves all formatting. Ideal for documentation, note-taking apps,
+                    or version control systems. The export includes user and assistant message
+                    indicators for easy reading.
                   </li>
                   <li>
-                    <strong>HTML Export:</strong> Create a standalone HTML file that can be opened in
-                    any browser or shared via email. Includes all styling and formatting for a
+                    <strong>HTML Export:</strong> Create a standalone HTML file that can be opened
+                    in any browser or shared via email. Includes all styling and formatting for a
                     complete viewing experience without needing CompareIntel.
                   </li>
                   <li>
@@ -270,14 +326,14 @@ export const HowItWorks: React.FC = () => {
                   </li>
                   <li>
                     <strong>Seamless transition:</strong> The breakout conversation includes all
-                    previous messages from the original comparison—both your prompts and that model's
-                    responses—so you can continue seamlessly without losing any context.
+                    previous messages from the original comparison—both your prompts and that
+                    model's responses—so you can continue seamlessly without losing any context.
                   </li>
                   <li>
-                    <strong>Independent exploration:</strong> The breakout conversation is completely
-                    separate from the original comparison. You can continue chatting with the
-                    breakout model while the original multi-model comparison remains intact in your
-                    history.
+                    <strong>Independent exploration:</strong> The breakout conversation is
+                    completely separate from the original comparison. You can continue chatting with
+                    the breakout model while the original multi-model comparison remains intact in
+                    your history.
                   </li>
                   <li>
                     <strong>Multiple breakouts:</strong> You can create multiple breakout
