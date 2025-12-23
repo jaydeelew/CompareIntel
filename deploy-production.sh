@@ -3,7 +3,7 @@
 # ============================================================================
 # CompareIntel Production Deployment Script
 # ============================================================================
-# This script handles database migrations, dependency checks, and deployment
+# This script handles dependency checks and deployment
 # for the CompareIntel application on Ubuntu/PostgreSQL production servers.
 #
 # All Python dependencies and execution happen inside Docker containers.
@@ -12,9 +12,8 @@
 # Available Commands:
 #   check        - Check system requirements and SSL certificates
 #   backup       - Create database backup only (PostgreSQL pg_dump)
-#   migrate      - Apply database migrations only (via Docker)
-#   build        - Build and deploy without git pull or migrations
-#   deploy       - Full deployment with git pull (migrations run separately via 'migrate')
+#   build        - Build and deploy without git pull
+#   deploy       - Full deployment with git pull
 #   quick-deploy - Deploy local fixes without git pull
 #   rollback     - Rollback to previous version
 #   restart      - Restart all services
@@ -38,7 +37,6 @@ PROJECT_DIR="/home/ubuntu/CompareIntel"
 BACKUP_DIR="/home/ubuntu/backups"
 LOG_FILE="/home/ubuntu/compareintel-deploy.log"
 ENV_FILE="$PROJECT_DIR/backend/.env"
-MIGRATIONS_DIR="$PROJECT_DIR/backend/scripts/migrations"
 
 # Function to log messages
 log() {
@@ -258,44 +256,6 @@ check_ssl_certificates() {
     else
         log_success "SSL certificate is valid for $DAYS_UNTIL_EXPIRY more days"
     fi
-}
-
-# Function to apply database migrations (via Docker)
-apply_database_migrations() {
-    log "Applying database migrations via Docker..."
-    
-    cd "$PROJECT_DIR"
-    
-    # Ensure backend container is running
-    if ! docker compose -f docker-compose.ssl.yml ps --services --filter "status=running" 2>/dev/null | grep -q "backend"; then
-        log_error "Backend container is not running. Please run 'build' or 'deploy' first."
-        exit 1
-    fi
-    
-    # Wait a moment for the container to be fully ready
-    log "Waiting for backend container to be ready..."
-    sleep 5
-    
-    # Run each migration script inside the Docker container
-    # All dependencies are already installed in the container
-    MIGRATION_SCRIPTS=(
-        "add_credits_columns.py"
-        "add_message_tokens_columns.py"
-        "add_timezone_column.py"
-        "migrate_app_settings.py"
-    )
-    
-    for script in "${MIGRATION_SCRIPTS[@]}"; do
-        SCRIPT_PATH="/app/scripts/migrations/$script"
-        log "Running migration: $script"
-        if docker compose -f docker-compose.ssl.yml exec -T backend python3 "$SCRIPT_PATH" 2>&1; then
-            log_success "Migration $script completed"
-        else
-            log_warning "Migration $script had issues (may already be applied)"
-        fi
-    done
-    
-    log_success "All database migrations completed"
 }
 
 # Function to pull latest code
@@ -532,18 +492,6 @@ main() {
             backup_database
             log_success "Backup completed"
             ;;
-        "migrate")
-            backup_database
-            # For standalone migrate command, ensure containers are running
-            cd "$PROJECT_DIR"
-            if ! docker compose -f docker-compose.ssl.yml ps --services --filter "status=running" 2>/dev/null | grep -q "backend"; then
-                log "Starting backend container for migrations..."
-                docker compose -f docker-compose.ssl.yml up -d backend
-                sleep 10
-            fi
-            apply_database_migrations
-            log_success "Database migration completed"
-            ;;
         "build")
             build_and_deploy
             log_success "Build and deploy completed"
@@ -554,12 +502,10 @@ main() {
             backup_database
             pull_latest_code
             build_and_deploy
-            # Note: Migrations are NOT run automatically. Run 'migrate' separately if needed.
             verify_deployment
             show_status
             echo ""
             log_success "=== Deployment completed successfully! ==="
-            log_warning "Remember: Run './deploy-production.sh migrate' separately if database migrations are needed"
             ;;
         "quick-deploy")
             # Quick deploy: skip git pull (useful for hotfixes already on server)
@@ -589,14 +535,13 @@ main() {
             log_success "Services restarted"
             ;;
         *)
-            echo "Usage: $0 {check|backup|migrate|build|deploy|quick-deploy|rollback|restart|status|logs}"
+            echo "Usage: $0 {check|backup|build|deploy|quick-deploy|rollback|restart|status|logs}"
             echo ""
             echo "Commands:"
             echo "  check        - Check system requirements and SSL certificates"
             echo "  backup       - Create database backup only (PostgreSQL pg_dump)"
-            echo "  migrate      - Apply database migrations only (via Docker)"
-            echo "  build        - Build and deploy without git pull or migrations"
-            echo "  deploy       - Full deployment with git pull (migrations run separately)"
+            echo "  build        - Build and deploy without git pull"
+            echo "  deploy       - Full deployment with git pull"
             echo "  quick-deploy - Deploy without git pull (for hotfixes)"
             echo "  rollback     - Rollback to previous version"
             echo "  restart      - Restart all services"
@@ -605,11 +550,6 @@ main() {
             echo ""
             echo "Note: All Python dependencies are managed inside Docker containers."
             echo "      No virtual environment (venv) is used on the host."
-            echo ""
-            echo "Migration Workflow:"
-            echo "  If your deployment requires database migrations, run migrations first:"
-            echo "    1. ./deploy-production.sh migrate   (applies migrations)"
-            echo "    2. ./deploy-production.sh deploy    (deploys code)"
             exit 1
             ;;
     esac

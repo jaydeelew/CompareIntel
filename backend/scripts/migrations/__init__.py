@@ -1,3 +1,3 @@
-# Database migration scripts for CompareIntel
-# These scripts are idempotent and safe to run multiple times
+# Database migration scripts directory
+# Manual migration scripts have been removed - use Alembic migrations instead
 
