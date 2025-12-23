@@ -1624,27 +1624,24 @@ async def get_conversations(
     # Return exactly display_limit conversations (no longer need +1 since we don't filter in frontend)
     return_limit = display_limit
 
-    # Get all conversations to check if cleanup is needed
-    all_conversations = (
-        db.query(Conversation).filter(Conversation.user_id == current_user.id).order_by(Conversation.created_at.desc()).all()
-    )
-
-    # Clean up any conversations beyond the limit (in case deletion left extra conversations)
-    if len(all_conversations) > display_limit:
-        conversations_to_delete = all_conversations[display_limit:]
-        deleted_count = len(conversations_to_delete)
-        for conv_to_delete in conversations_to_delete:
-            db.delete(conv_to_delete)
-        db.commit()
-
-    # Get user's conversations ordered by created_at DESC, limited to display_limit
+    # Get user's conversations ordered by created_at DESC, limited to display_limit + 1
+    # We fetch one extra to check if cleanup is needed, avoiding a separate full query
     conversations = (
         db.query(Conversation)
         .filter(Conversation.user_id == current_user.id)
         .order_by(Conversation.created_at.desc())
-        .limit(return_limit)
+        .limit(return_limit + 1)
         .all()
     )
+
+    # Clean up any conversations beyond the limit (in case deletion left extra conversations)
+    if len(conversations) > display_limit:
+        conversations_to_delete = conversations[display_limit:]
+        for conv_to_delete in conversations_to_delete:
+            db.delete(conv_to_delete)
+        db.commit()
+        # Keep only the limited conversations
+        conversations = conversations[:display_limit]
 
     # OPTIMIZATION: Get message counts in a single query instead of N+1 queries
     # This dramatically improves performance when there are many conversations

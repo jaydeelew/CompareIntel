@@ -175,24 +175,31 @@ export function useConversationHistory({
 
         // Create or update conversation summary
         // When updating, preserve existing breakout fields unless explicitly changing conversation type
-        const isChangingConversationType = existingConversation && 
+        const isChangingConversationType =
+          existingConversation &&
           (parentConversationId !== undefined || breakoutModelId !== undefined)
-        
+
         const conversationSummary: ConversationSummary = existingConversation
           ? {
               ...existingConversation,
               message_count: totalMessages,
               // Preserve existing conversation_type unless explicitly changing it (creating breakout)
-              conversation_type: isChangingConversationType 
-                ? conversationType 
-                : (existingConversation.conversation_type || conversationType),
+              conversation_type: isChangingConversationType
+                ? conversationType
+                : existingConversation.conversation_type || conversationType,
               // Only update parent_conversation_id and breakout_model_id if explicitly provided
-              parent_conversation_id: parentConversationId !== undefined 
-                ? (parentConversationId ? parseInt(parentConversationId, 10) : null)
-                : existingConversation.parent_conversation_id,
-              breakout_model_id: breakoutModelId !== undefined
-                ? (breakoutModelId ? createModelId(breakoutModelId) : null)
-                : existingConversation.breakout_model_id,
+              parent_conversation_id:
+                parentConversationId !== undefined
+                  ? parentConversationId
+                    ? parseInt(parentConversationId, 10)
+                    : null
+                  : existingConversation.parent_conversation_id,
+              breakout_model_id:
+                breakoutModelId !== undefined
+                  ? breakoutModelId
+                    ? createModelId(breakoutModelId)
+                    : null
+                  : existingConversation.breakout_model_id,
               // Keep original created_at for existing conversations
             }
           : {
@@ -200,7 +207,9 @@ export function useConversationHistory({
               input_data: inputData,
               models_used: modelsUsed.map(id => createModelId(id)),
               conversation_type: conversationType,
-              parent_conversation_id: parentConversationId ? parseInt(parentConversationId, 10) : null,
+              parent_conversation_id: parentConversationId
+                ? parseInt(parentConversationId, 10)
+                : null,
               breakout_model_id: breakoutModelId ? createModelId(breakoutModelId) : null,
               created_at: new Date().toISOString(),
               message_count: totalMessages,
@@ -527,6 +536,8 @@ export function useConversationHistory({
       if (isAuthenticated) {
         loadHistoryFromAPI()
       } else {
+        // For anonymous users, localStorage is synchronous - ensure loading state is false
+        setIsLoadingHistory(false)
         const history = loadHistoryFromLocalStorage()
         setConversationHistory(history)
       }
