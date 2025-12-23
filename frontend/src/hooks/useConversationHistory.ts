@@ -559,35 +559,149 @@ export function useConversationHistory({
         return
       }
 
+      console.log('[syncHistoryAfterComparison] Starting sync:', {
+        inputData: inputData.substring(0, 50) + '...',
+        selectedModels,
+        selectedModelsCount: selectedModels.length,
+      })
+
       // Clear cache for conversations endpoint to force fresh data
       apiClient.deleteCache('GET:/conversations')
 
-      // Reload history from API (backend has already saved the conversation)
-      await loadHistoryFromAPI()
+      // Helper function to normalize model IDs for comparison
+      const normalizeModels = (models: string[]): string[] => {
+        return [...models].sort().map(m => m.trim().toLowerCase())
+      }
 
-      // Find the newly saved comparison and set it as active
-      // Use a small delay to ensure conversationHistory state is updated
-      setTimeout(() => {
-        setConversationHistory(currentHistory => {
-          // Find matching conversation in history (should be the most recent one)
-          const matchingConversation = currentHistory.find((summary: ConversationSummary) => {
-            const modelsMatch =
-              JSON.stringify([...summary.models_used].sort()) ===
-              JSON.stringify([...selectedModels].sort())
-            const inputMatches = summary.input_data === inputData
-            return modelsMatch && inputMatches
+      // Helper function to fetch and find the matching conversation
+      const fetchAndFindConversation = async (): Promise<ConversationSummary | null> => {
+        const data = await getConversations()
+
+        console.log('[syncHistoryAfterComparison] Fetched conversations:', {
+          count: Array.isArray(data) ? data.length : 0,
+          conversations: Array.isArray(data)
+            ? data.map(c => ({
+                id: c.id,
+                input_data: c.input_data?.substring(0, 50) + '...',
+                models_used: c.models_used,
+              }))
+            : [],
+        })
+
+        // Format the data to ensure consistency
+        const formattedData: ConversationSummary[] = Array.isArray(data)
+          ? data.map(item => {
+              const summary: ConversationSummary = {
+                ...item,
+                created_at:
+                  typeof item.created_at === 'string'
+                    ? item.created_at
+                    : new Date(item.created_at).toISOString(),
+                models_used: Array.isArray(item.models_used) ? item.models_used : [],
+              }
+              return summary
+            })
+          : []
+
+        // Update state with the fresh data
+        setConversationHistory(formattedData)
+
+        // Normalize selected models for comparison
+        const normalizedSelectedModels = normalizeModels(selectedModels)
+
+        // Find the newly saved comparison and set it as active
+        // Match by models and input_data to find the conversation we just created
+        // Use more lenient matching to handle potential format differences
+        const matchingConversation = formattedData.find((summary: ConversationSummary) => {
+          // Normalize models from API response
+          const normalizedSummaryModels = normalizeModels(
+            Array.isArray(summary.models_used) ? summary.models_used : []
+          )
+
+          // Compare normalized model arrays
+          const modelsMatch =
+            JSON.stringify(normalizedSummaryModels) === JSON.stringify(normalizedSelectedModels)
+
+          // Compare input data (exact match required)
+          const inputMatches = summary.input_data === inputData
+
+          if (modelsMatch && inputMatches) {
+            console.log('[syncHistoryAfterComparison] Found matching conversation:', {
+              id: summary.id,
+              input_data: summary.input_data?.substring(0, 50) + '...',
+              models_used: summary.models_used,
+            })
+          }
+
+          return modelsMatch && inputMatches
+        })
+
+        if (!matchingConversation) {
+          console.warn('[syncHistoryAfterComparison] No matching conversation found:', {
+            searchedInput: inputData.substring(0, 50) + '...',
+            searchedModels: selectedModels,
+            normalizedSearchedModels: normalizedSelectedModels,
+            availableConversations: formattedData.map(c => ({
+              id: c.id,
+              input_data: c.input_data?.substring(0, 50) + '...',
+              models_used: c.models_used,
+              normalizedModels: normalizeModels(Array.isArray(c.models_used) ? c.models_used : []),
+            })),
           })
+        }
+
+        return matchingConversation || null
+      }
+
+      // Try to find the conversation with retries (in case backend is still saving)
+      const maxRetries = 5 // Increased retries
+      const retryDelay = 800 // Increased delay to give backend more time
+
+      for (let attempt = 0; attempt < maxRetries; attempt++) {
+        try {
+          const matchingConversation = await fetchAndFindConversation()
 
           if (matchingConversation) {
             // Clear cache for this specific conversation to ensure fresh data on reload
             apiClient.deleteCache(`GET:/conversations/${matchingConversation.id}`)
             // Set this as the active comparison so it shows as highlighted in dropdown
             setCurrentVisibleComparisonId(String(matchingConversation.id))
+            console.log(
+              '[syncHistoryAfterComparison] Successfully synced conversation:',
+              matchingConversation.id
+            )
+            return // Success - found the conversation
           }
 
-          return currentHistory // Return unchanged
-        })
-      }, 100)
+          // If not found and we have retries left, wait and try again
+          if (attempt < maxRetries - 1) {
+            console.log(
+              `[syncHistoryAfterComparison] Conversation not found, retrying in ${retryDelay}ms (attempt ${attempt + 1}/${maxRetries})`
+            )
+            await new Promise(resolve => setTimeout(resolve, retryDelay))
+          } else {
+            console.warn(
+              '[syncHistoryAfterComparison] Exhausted all retries, conversation not found'
+            )
+          }
+        } catch (error) {
+          // If fetch fails, log and try again if retries remain
+          console.error(
+            `[syncHistoryAfterComparison] Failed to sync (attempt ${attempt + 1}/${maxRetries}):`,
+            error
+          )
+          if (attempt === maxRetries - 1) {
+            // Last attempt failed, fall back to loadHistoryFromAPI
+            console.error(
+              '[syncHistoryAfterComparison] All retries failed, falling back to loadHistoryFromAPI'
+            )
+            await loadHistoryFromAPI()
+          } else {
+            // Wait before retrying
+            await new Promise(resolve => setTimeout(resolve, retryDelay))
+          }
+        }
+      }
     },
     [isAuthenticated, loadHistoryFromAPI]
   )

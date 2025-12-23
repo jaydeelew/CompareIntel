@@ -421,6 +421,7 @@ function AppContent() {
   const hasScrolledToResultsOnFirstChunkRef = useRef<boolean>(false) // Track if we've scrolled to results section on first streaming chunk
   const justLoadedFromHistoryRef = useRef<boolean>(false) // Track if we just loaded conversations from history
   const isScrollingToTopFromHistoryRef = useRef<boolean>(false) // Track if we're currently scrolling to top from history (prevents scroll sync)
+  const lastSubmittedInputRef = useRef<string>('') // Store the expanded input that was sent to backend for matching
   const [modelsByProvider, setModelsByProvider] = useState<ModelsByProvider>({})
   const [isLoadingModels, setIsLoadingModels] = useState(true)
   const [openDropdowns, setOpenDropdowns] = useState<Set<string>>(new Set())
@@ -4724,6 +4725,9 @@ function AppContent() {
         }
       }
 
+      // Store the expanded input for later use in history matching
+      lastSubmittedInputRef.current = expandedInput
+
       // Use service for streaming request
       // Include accurate token count from frontend if available (avoids duplicate calculation on backend)
       // Include timezone for credit reset timing (auto-detect from browser)
@@ -5650,13 +5654,16 @@ function AppContent() {
           } else if (isAuthenticated && !isFollowUpMode) {
             // For registered users, reload history from API after stream completes
             // Backend already saved the conversation, we just need to refresh the list
+            // Use a shorter delay since syncHistoryAfterComparison has retry logic
             setTimeout(async () => {
-              // Get the first user message to find the matching conversation
-              const firstUserMessage = getFirstUserMessage()
-              if (firstUserMessage) {
-                await syncHistoryAfterComparison(firstUserMessage.content, selectedModels)
+              // Use the expanded input that was actually sent to the backend for matching
+              // This ensures we match against exactly what was stored in the database
+              const inputToMatch =
+                lastSubmittedInputRef.current || getFirstUserMessage()?.content || input
+              if (inputToMatch) {
+                await syncHistoryAfterComparison(inputToMatch, selectedModels)
               }
-            }, 1500) // Give backend more time to finish saving (background task
+            }, 500) // Initial delay - syncHistoryAfterComparison will retry if needed
           } else if (!isAuthenticated && isFollowUpMode) {
             // Save follow-up updates after stream completes (anonymous users)
             setTimeout(() => {
@@ -5733,13 +5740,16 @@ function AppContent() {
           } else if (isAuthenticated && isFollowUpMode) {
             // For registered users, reload history from API after follow-up completes
             // Backend already saved the conversation update, we just need to refresh the list
+            // Use a shorter delay since syncHistoryAfterComparison has retry logic
             setTimeout(async () => {
-              // Get the first user message to find the matching conversation
-              const firstUserMessage = getFirstUserMessage()
-              if (firstUserMessage) {
-                await syncHistoryAfterComparison(firstUserMessage.content, selectedModels)
+              // Use the expanded input that was actually sent to the backend for matching
+              // This ensures we match against exactly what was stored in the database
+              const inputToMatch =
+                lastSubmittedInputRef.current || getFirstUserMessage()?.content || input
+              if (inputToMatch) {
+                await syncHistoryAfterComparison(inputToMatch, selectedModels)
               }
-            }, 1500) // Give backend more time to finish saving (background task)
+            }, 500) // Initial delay - syncHistoryAfterComparison will retry if needed
           }
         }
       }
@@ -6017,12 +6027,16 @@ function AppContent() {
             })
           } else if (isAuthenticated && !isFollowUpMode) {
             // For registered users, reload history from API
+            // Use a shorter delay since syncHistoryAfterComparison has retry logic
             setTimeout(async () => {
-              const firstUserMessage = getFirstUserMessage()
-              if (firstUserMessage) {
-                await syncHistoryAfterComparison(firstUserMessage.content, selectedModels)
+              // Use the expanded input that was actually sent to the backend for matching
+              // This ensures we match against exactly what was stored in the database
+              const inputToMatch =
+                lastSubmittedInputRef.current || getFirstUserMessage()?.content || input
+              if (inputToMatch) {
+                await syncHistoryAfterComparison(inputToMatch, selectedModels)
               }
-            }, 1500)
+            }, 500) // Initial delay - syncHistoryAfterComparison will retry if needed
           }
         }, 200)
       }
