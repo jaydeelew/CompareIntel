@@ -155,35 +155,37 @@ def main():
         # Note: SQLite has limited ALTER TABLE support, so we skip FK constraints for SQLite
         if is_postgresql:
             print("\nChecking foreign key constraints...")
-            # Check if FK constraint exists (this is a simplified check)
-            # In production, you might want more robust constraint checking
+            # Check if FK constraint exists
             try:
-                result = conn.execute(text("""
-                    SELECT COUNT(*) FROM information_schema.table_constraints 
-                    WHERE table_name = 'conversations' 
-                    AND constraint_name = 'conversations_parent_conversation_id_fkey'
-                """))
-                if result.scalar() == 0:
-                    print("Adding foreign key constraint for parent_conversation_id...")
-                    trans = conn.begin()
-                    try:
-                        conn.execute(text("""
+                # Use a fresh connection for the FK constraint check/addition
+                # to avoid transaction conflicts
+                fk_conn = engine.connect()
+                try:
+                    result = fk_conn.execute(text("""
+                        SELECT COUNT(*) FROM information_schema.table_constraints 
+                        WHERE table_name = 'conversations' 
+                        AND constraint_name = 'conversations_parent_conversation_id_fkey'
+                    """))
+                    if result.scalar() == 0:
+                        print("Adding foreign key constraint for parent_conversation_id...")
+                        # DDL statements in PostgreSQL auto-commit, so no transaction needed
+                        fk_conn.execute(text("""
                             ALTER TABLE conversations 
                             ADD CONSTRAINT conversations_parent_conversation_id_fkey 
                             FOREIGN KEY (parent_conversation_id) 
                             REFERENCES conversations(id) 
                             ON DELETE SET NULL
                         """))
-                        trans.commit()
+                        # Explicitly commit to ensure it's applied
+                        fk_conn.commit()
                         print("✓ Added foreign key constraint")
-                    except Exception as e:
-                        trans.rollback()
-                        raise
-                else:
-                    print("✓ Foreign key constraint already exists")
+                    else:
+                        print("✓ Foreign key constraint already exists")
+                finally:
+                    fk_conn.close()
             except Exception as e:
                 print(f"Note: Could not add foreign key constraint: {e}")
-                print("(This is okay if it already exists)")
+                print("(This is okay if it already exists or if there are existing invalid references)")
         
         print()
         print("=" * 60)
