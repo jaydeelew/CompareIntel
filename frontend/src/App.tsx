@@ -7077,7 +7077,7 @@ function AppContent() {
                                                     userTier === 'anonymous' &&
                                                     model.tier_access === 'free'
                                                       ? "Click 'Sign Up' above"
-                                                      : 'Premium model - register and upgrade'
+                                                      : 'Premium model - upgrade after registration'
                                                   }
                                                 >
                                                   <svg
