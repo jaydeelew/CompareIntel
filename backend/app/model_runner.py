@@ -66,7 +66,8 @@ ANONYMOUS_TIER_MODELS = {
     "meta-llama/llama-3.1-405b-instruct:free",  # Auto-classified based on pricing,    "meta-llama/llama-3.3-70b-instruct",  # Auto-classified based on pricing,
     "xiaomi/mimo-v2-flash:free",  # Auto-classified based on pricing,
     "mistralai/devstral-2512:free",  # Auto-classified based on pricing,
-    "kwaipilot/kat-coder-pro:free",  # Auto-classified based on pricing
+    "kwaipilot/kat-coder-pro:free",  # Auto-classified based on pricing,
+    "openai/gpt-4o-mini",  # Auto-classified based on pricing
 }
 
 # List of model IDs available to free (registered) users
@@ -496,6 +497,13 @@ MODELS_BY_PROVIDER = {
             "id": "openai/gpt-4o",
             "name": "GPT-4o",
             "description": 'An omnimodal model supporting text and image inputs with fast, intelligent multimodal responses.',
+            "category": "Language",
+            "provider": "OpenAI",
+        },
+        {
+            "id": "openai/gpt-4o-mini",
+            "name": "Gpt 4O Mini",
+            "description": "GPT-4o mini is OpenAI's newest model after [GPT-4 Omni](/models/openai/gpt-4o), supporting both text and image inputs with text outputs.",
             "category": "Language",
             "provider": "OpenAI",
         },
