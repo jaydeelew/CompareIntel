@@ -529,6 +529,13 @@ MODELS_BY_PROVIDER = {
             "provider": "OpenAI",
         },
         {
+            "id": "openai/gpt-5.1-codex-max",
+            "name": "Gpt 5.1 Codex Max",
+            "description": 'GPT-5.1-Codex-Max is OpenAI’s latest agentic coding model, designed for long-running, high-context software development tasks.',
+            "category": "Language",
+            "provider": "OpenAI",
+        },
+        {
             "id": "openai/gpt-5.2",
             "name": "Gpt 5.2",
             "description": 'GPT-5.2 is the latest frontier-grade model in the GPT-5 series, offering stronger agentic and long context perfomance compared to GPT-5.1.',
