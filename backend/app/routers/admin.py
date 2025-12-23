@@ -1572,7 +1572,7 @@ async def validate_model(
             lambda: client.chat.completions.create(
                 model=model_id,
                 messages=[{"role": "user", "content": "Hi"}],
-                max_tokens=5,
+                max_tokens=16,  # Minimum required by OpenAI API (OpenRouter uses OpenAI's API)
                 timeout=10,
             )
         )
