@@ -6706,31 +6706,7 @@ function AppContent() {
                             }
                           >
                             {hidePremiumModels ? (
-                              /* Eye icon (show) */
-                              <svg
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                xmlns="http://www.w3.org/2000/svg"
-                                aria-hidden="true"
-                                preserveAspectRatio="xMidYMid meet"
-                              >
-                                <path
-                                  d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"
-                                  strokeWidth="1"
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                />
-                                <circle
-                                  cx="12"
-                                  cy="12"
-                                  r="3"
-                                  strokeWidth="1"
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                />
-                              </svg>
-                            ) : (
-                              /* Eye-off icon (hide) */
+                              /* Eye-off icon (hiding premium models) */
                               <svg
                                 viewBox="0 0 24 24"
                                 fill="none"
@@ -6749,6 +6725,30 @@ function AppContent() {
                                   y1="1"
                                   x2="23"
                                   y2="23"
+                                  strokeWidth="1"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                />
+                              </svg>
+                            ) : (
+                              /* Eye icon (showing all models) */
+                              <svg
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                xmlns="http://www.w3.org/2000/svg"
+                                aria-hidden="true"
+                                preserveAspectRatio="xMidYMid meet"
+                              >
+                                <path
+                                  d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"
+                                  strokeWidth="1"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                />
+                                <circle
+                                  cx="12"
+                                  cy="12"
+                                  r="3"
                                   strokeWidth="1"
                                   strokeLinecap="round"
                                   strokeLinejoin="round"
