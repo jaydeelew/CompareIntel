@@ -1713,7 +1713,18 @@ async def add_model(
 ):
     """
     Add a new model to model_runner.py and set up its renderer config.
+    Only available in development environment.
     """
+    import os
+    
+    # Prevent adding models in production
+    is_development = os.environ.get("ENVIRONMENT") == "development"
+    if not is_development:
+        raise HTTPException(
+            status_code=403,
+            detail="Adding models is only available in development environment. Please add models via development and deploy to production."
+        )
+    
     model_id = req.model_id.strip()
     
     if not model_id:
@@ -2014,7 +2025,16 @@ async def add_model_stream(
     """
     Add a new model to model_runner.py and set up its renderer config with progress streaming.
     Uses Server-Sent Events (SSE) to stream progress updates to the frontend.
+    Only available in development environment.
     """
+    import os
+    
+    # Prevent adding models in production
+    is_development = os.environ.get("ENVIRONMENT") == "development"
+    if not is_development:
+        async def error_stream():
+            yield f"data: {json.dumps({'type': 'error', 'message': 'Adding models is only available in development environment. Please add models via development and deploy to production.'})}\n\n"
+        return StreamingResponse(error_stream(), media_type="text/event-stream")
     
     async def generate_progress_stream():
         model_id = req.model_id.strip()
@@ -2602,7 +2622,18 @@ async def delete_model(
 ):
     """
     Delete a model from model_runner.py and remove its renderer config.
+    Only available in development environment.
     """
+    import os
+    
+    # Prevent deleting models in production
+    is_development = os.environ.get("ENVIRONMENT") == "development"
+    if not is_development:
+        raise HTTPException(
+            status_code=403,
+            detail="Deleting models is only available in development environment. Please delete models via development and deploy to production."
+        )
+    
     model_id = req.model_id.strip()
     
     if not model_id:

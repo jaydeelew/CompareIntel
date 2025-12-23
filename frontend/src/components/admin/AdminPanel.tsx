@@ -94,6 +94,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
   const location = useLocation()
   const navigate = useNavigate()
   const [stats, setStats] = useState<AdminStats | null>(null)
+  const isDevelopment = import.meta.env.DEV
   // Persist activeTab in sessionStorage to survive remounts
   const getInitialTab = (): AdminTab => {
     if (typeof window !== 'undefined') {
@@ -1454,89 +1455,110 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
             </button>
           </div>
 
-          {/* Add Model Section */}
-          <div
-            style={{
-              marginBottom: '2rem',
-              padding: '1.5rem',
-              background: 'var(--bg-secondary)',
-              borderRadius: 'var(--radius-lg)',
-              border: '1px solid var(--border-color)',
-            }}
-          >
-            <h3 style={{ marginTop: 0, marginBottom: '1rem', color: 'var(--text-primary)' }}>
-              Add New Model
-            </h3>
-            <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
-              <div style={{ flex: 1 }}>
-                <input
-                  type="text"
-                  placeholder="Enter model ID (e.g., x-ai/grok-4.1-fast)"
-                  value={newModelId}
-                  onChange={e => {
-                    setNewModelId(e.target.value)
-                    setModelError(null)
-                    setModelSuccess(null)
-                  }}
-                  onKeyDown={e => {
-                    if (e.key === 'Enter' && !addingModel) {
-                      handleAddModel()
-                    }
-                  }}
+          {/* Add Model Section - Only in Development */}
+          {isDevelopment && (
+            <div
+              style={{
+                marginBottom: '2rem',
+                padding: '1.5rem',
+                background: 'var(--bg-secondary)',
+                borderRadius: 'var(--radius-lg)',
+                border: '1px solid var(--border-color)',
+              }}
+            >
+              <h3 style={{ marginTop: 0, marginBottom: '1rem', color: 'var(--text-primary)' }}>
+                Add New Model
+              </h3>
+              <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
+                <div style={{ flex: 1 }}>
+                  <input
+                    type="text"
+                    placeholder="Enter model ID (e.g., x-ai/grok-4.1-fast)"
+                    value={newModelId}
+                    onChange={e => {
+                      setNewModelId(e.target.value)
+                      setModelError(null)
+                      setModelSuccess(null)
+                    }}
+                    onKeyDown={e => {
+                      if (e.key === 'Enter' && !addingModel) {
+                        handleAddModel()
+                      }
+                    }}
+                    style={{
+                      width: '100%',
+                      padding: '0.75rem',
+                      borderRadius: 'var(--radius-md)',
+                      border: '1px solid var(--border-color)',
+                      background: 'var(--bg-primary)',
+                      color: 'var(--text-primary)',
+                      fontSize: '1rem',
+                    }}
+                    disabled={addingModel}
+                  />
+                  {modelError && (
+                    <div
+                      style={{
+                        marginTop: '0.5rem',
+                        color: 'var(--error-color)',
+                        fontSize: '0.875rem',
+                      }}
+                    >
+                      {modelError}
+                    </div>
+                  )}
+                  {modelSuccess && (
+                    <div
+                      style={{
+                        marginTop: '0.5rem',
+                        color: 'var(--success-color)',
+                        fontSize: '0.875rem',
+                      }}
+                    >
+                      {modelSuccess}
+                    </div>
+                  )}
+                </div>
+                <button
+                  onClick={handleAddModel}
+                  disabled={addingModel || !newModelId.trim()}
                   style={{
-                    width: '100%',
-                    padding: '0.75rem',
+                    padding: '0.75rem 1.5rem',
                     borderRadius: 'var(--radius-md)',
-                    border: '1px solid var(--border-color)',
-                    background: 'var(--bg-primary)',
-                    color: 'var(--text-primary)',
-                    fontSize: '1rem',
+                    border: 'none',
+                    background: addingModel
+                      ? 'var(--bg-tertiary)'
+                      : 'linear-gradient(135deg, var(--primary-color), var(--accent-color))',
+                    color: 'white',
+                    fontWeight: 600,
+                    cursor: addingModel || !newModelId.trim() ? 'not-allowed' : 'pointer',
+                    opacity: addingModel || !newModelId.trim() ? 0.6 : 1,
                   }}
-                  disabled={addingModel}
-                />
-                {modelError && (
-                  <div
-                    style={{
-                      marginTop: '0.5rem',
-                      color: 'var(--error-color)',
-                      fontSize: '0.875rem',
-                    }}
-                  >
-                    {modelError}
-                  </div>
-                )}
-                {modelSuccess && (
-                  <div
-                    style={{
-                      marginTop: '0.5rem',
-                      color: 'var(--success-color)',
-                      fontSize: '0.875rem',
-                    }}
-                  >
-                    {modelSuccess}
-                  </div>
-                )}
+                >
+                  {addingModel ? 'Adding...' : 'Add Model'}
+                </button>
               </div>
-              <button
-                onClick={handleAddModel}
-                disabled={addingModel || !newModelId.trim()}
-                style={{
-                  padding: '0.75rem 1.5rem',
-                  borderRadius: 'var(--radius-md)',
-                  border: 'none',
-                  background: addingModel
-                    ? 'var(--bg-tertiary)'
-                    : 'linear-gradient(135deg, var(--primary-color), var(--accent-color))',
-                  color: 'white',
-                  fontWeight: 600,
-                  cursor: addingModel || !newModelId.trim() ? 'not-allowed' : 'pointer',
-                  opacity: addingModel || !newModelId.trim() ? 0.6 : 1,
-                }}
-              >
-                {addingModel ? 'Adding...' : 'Add Model'}
-              </button>
             </div>
-          </div>
+          )}
+
+          {/* Info message in production */}
+          {!isDevelopment && (
+            <div
+              style={{
+                marginBottom: '2rem',
+                padding: '1.5rem',
+                background: 'var(--bg-secondary)',
+                borderRadius: 'var(--radius-lg)',
+                border: '1px solid var(--border-color)',
+                color: 'var(--text-secondary)',
+              }}
+            >
+              <p style={{ margin: 0 }}>
+                Model management (add/delete) is only available in development environment. Models
+                should be added via development and deployed to production.
+              </p>
+            </div>
+          )}
 
           {/* Models List by Provider */}
           {modelsLoading ? (
@@ -1629,24 +1651,27 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                             {model.id}
                           </div>
                         </div>
-                        <button
-                          onClick={() => {
-                            setModelToDelete({ id: model.id, name: model.name })
-                            setShowDeleteConfirm(true)
-                          }}
-                          style={{
-                            padding: '0.5rem 1rem',
-                            borderRadius: 'var(--radius-md)',
-                            border: 'none',
-                            background: 'var(--error-color)',
-                            color: 'white',
-                            fontWeight: 600,
-                            cursor: 'pointer',
-                            fontSize: '0.875rem',
-                          }}
-                        >
-                          Delete
-                        </button>
+                        {/* Only show delete button in development */}
+                        {isDevelopment && (
+                          <button
+                            onClick={() => {
+                              setModelToDelete({ id: model.id, name: model.name })
+                              setShowDeleteConfirm(true)
+                            }}
+                            style={{
+                              padding: '0.5rem 1rem',
+                              borderRadius: 'var(--radius-md)',
+                              border: 'none',
+                              background: 'var(--error-color)',
+                              color: 'white',
+                              fontWeight: 600,
+                              cursor: 'pointer',
+                              fontSize: '0.875rem',
+                            }}
+                          >
+                            Delete
+                          </button>
+                        )}
                       </div>
                     ))}
                   </div>
