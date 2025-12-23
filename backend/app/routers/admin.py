@@ -1802,11 +1802,22 @@ async def add_model(
             
             # Get existing providers from file content (not in-memory dict which may be stale)
             existing_providers = extract_providers_from_content(content)
-            # Sort providers alphabetically (case-insensitive)
+            # Sort providers alphabetically (case-insensitive) to ensure correct insertion position
             all_providers_sorted = sorted(existing_providers + [provider_name], key=lambda x: x.lower())
             new_provider_index = all_providers_sorted.index(provider_name)
             
-            if new_provider_index == len(all_providers_sorted) - 1:
+            # Find the insertion position based on alphabetical order
+            if new_provider_index == 0:
+                # New provider comes first alphabetically - insert at the beginning
+                mbp_start_pattern = r'MODELS_BY_PROVIDER\s*=\s*\{'
+                mbp_start_match = re.search(mbp_start_pattern, content)
+                if mbp_start_match:
+                    insert_pos = mbp_start_match.end()  # Position after opening brace
+                    new_provider_section = f'\n    {new_provider_section},\n'
+                    content = content[:insert_pos] + new_provider_section + content[insert_pos:]
+                else:
+                    raise HTTPException(status_code=500, detail="Could not find MODELS_BY_PROVIDER structure")
+            elif new_provider_index == len(all_providers_sorted) - 1:
                 # New provider comes last alphabetically - insert before closing brace
                 closing_brace_pos = find_models_by_provider_end(content)
                 if closing_brace_pos > 0:
@@ -1819,7 +1830,7 @@ async def add_model(
                 else:
                     raise HTTPException(status_code=500, detail="Could not find MODELS_BY_PROVIDER structure")
             else:
-                # Find the provider that should come after the new one
+                # Find the provider that should come after the new one (alphabetically)
                 next_provider = all_providers_sorted[new_provider_index + 1]
                 next_provider_bounds = find_provider_list_bounds(content, next_provider)
                 if next_provider_bounds:

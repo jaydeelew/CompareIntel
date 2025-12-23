@@ -235,7 +235,6 @@ MODELS_BY_PROVIDER = {
             "provider": "Anthropic",
         },
     ],
-
     "Cohere": [
         {
             "id": "cohere/command-r7b-12-2024",
@@ -259,7 +258,6 @@ MODELS_BY_PROVIDER = {
             "provider": "Cohere",
         },
     ],
-
     "DeepSeek": [
         {
             "id": "deepseek/deepseek-chat-v3.1",
@@ -283,7 +281,6 @@ MODELS_BY_PROVIDER = {
             "provider": "DeepSeek",
         },
     ],
-
     "Google": [
         {
             "id": "google/gemini-2.0-flash-001",
@@ -321,7 +318,15 @@ MODELS_BY_PROVIDER = {
             "provider": "Google",
         },
     ],
-
+    "Kwaipilot": [
+        {
+            "id": "kwaipilot/kat-coder-pro:free",
+            "name": "Kat Coder Pro:Free",
+            "description": "KAT-Coder-Pro V1 is KwaiKAT's most advanced agentic coding model in the KAT-Coder series.",
+            "category": "Language",
+            "provider": "Kwaipilot",
+        },
+    ],
     "Meta": [
         {
             "id": "meta-llama/llama-3.1-405b-instruct:free",
@@ -359,7 +364,6 @@ MODELS_BY_PROVIDER = {
             "provider": "Meta",
         },
     ],
-
     "Microsoft": [
         {
             "id": "microsoft/phi-4",
@@ -383,7 +387,6 @@ MODELS_BY_PROVIDER = {
             "provider": "Microsoft",
         },
     ],
-
     "Minimax": [
         {
             "id": "minimax/minimax-m2",
@@ -393,7 +396,6 @@ MODELS_BY_PROVIDER = {
             "provider": "Minimax",
         },
     ],
-
     "Mistral": [
         {
             "id": "mistralai/devstral-medium",
@@ -438,7 +440,15 @@ MODELS_BY_PROVIDER = {
             "provider": "Mistral",
         },
     ],
-
+    "Mistralai": [
+        {
+            "id": "mistralai/devstral-2512:free",
+            "name": "Devstral 2512:Free",
+            "description": 'Devstral 2 is a state-of-the-art open-source model by Mistral AI specializing in agentic coding.',
+            "category": "Language",
+            "provider": "Mistralai",
+        },
+    ],
     "OpenAI": [
         {
             "id": "openai/gpt-oss-120b",
@@ -560,7 +570,6 @@ MODELS_BY_PROVIDER = {
             "provider": "OpenAI",
         },
     ],
-
     "Qwen": [
         {
             "id": "qwen/qwen3-30b-a3b-instruct-2507",
@@ -626,7 +635,6 @@ MODELS_BY_PROVIDER = {
             "provider": "Qwen",
         },
     ],
-
     "xAI": [
         {
             "id": "x-ai/grok-code-fast-1",
@@ -665,7 +673,6 @@ MODELS_BY_PROVIDER = {
             "available": False,
         },
     ],
-
     "Xiaomi": [
         {
             "id": "xiaomi/mimo-v2-flash:free",
@@ -674,28 +681,9 @@ MODELS_BY_PROVIDER = {
             "category": "Language",
             "provider": "Xiaomi",
         },
-    ],
-
-    "Mistralai": [
-        {
-            "id": "mistralai/devstral-2512:free",
-            "name": "Devstral 2512:Free",
-            "description": 'Devstral 2 is a state-of-the-art open-source model by Mistral AI specializing in agentic coding.',
-            "category": "Language",
-            "provider": "Mistralai",
-        },
-    ],
-
-    "Kwaipilot": [
-        {
-            "id": "kwaipilot/kat-coder-pro:free",
-            "name": "Kat Coder Pro:Free",
-            "description": "KAT-Coder-Pro V1 is KwaiKAT's most advanced agentic coding model in the KAT-Coder series.",
-            "category": "Language",
-            "provider": "Kwaipilot",
-        },
-    ],
+    ]
 }
+
 
 # Flatten the models for backward compatibility
 OPENROUTER_MODELS = []
