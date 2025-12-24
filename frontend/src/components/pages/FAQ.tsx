@@ -73,17 +73,16 @@ const faqData = [
       <>
         <p>
           Yes! CompareIntel offers free access options. <strong>Unregistered users</strong> can get
-          familiar with the platform by accessing a handful of models—no account required. For
-          access to more models and additional credits, you can{' '}
-          <strong>sign up for a free account</strong>
-          with daily credits. No credit card is required to sign up.
+          familiar with the platform with 50 credits per day—no account required. For access to more
+          models and additional credits, you can <strong>sign up for a free account</strong>
+          which provides 100 credits per day (twice the amount for unregistered users). No credit
+          card is required to sign up.
         </p>
         <p>
-          Free registered users receive twice the credits of unregistered users, giving you more
-          opportunities to explore different AI models.{' '}
-          <strong>Paid tiers will be available soon</strong>
-          that unlock all of the latest and greatest premium AI models, with higher limits and
-          priority access to new models.
+          <strong>Paid subscription tiers are available</strong> for users who need more credits and
+          access to premium AI models. Paid tiers include Starter ($9.95/month), Starter+
+          ($19.95/month), Pro ($39.95/month), and Pro+ ($79.95/month), each with increasing credit
+          allocations, more models per comparison, and more conversation history storage.
         </p>
       </>
     ),
@@ -92,14 +91,32 @@ const faqData = [
     id: 'how-does-it-work',
     question: 'How does CompareIntel work?',
     answer: (
-      <ol>
-        <li>Create a free account on CompareIntel</li>
-        <li>Select the AI models you want to compare from our library of 50+ models</li>
-        <li>Enter your prompt or question in the input field</li>
-        <li>Click "Compare" to send your prompt to all selected models simultaneously</li>
-        <li>Watch as responses stream in real-time from each model</li>
-        <li>Compare the results side-by-side to determine which model performs best</li>
-      </ol>
+      <>
+        <p>Using CompareIntel is straightforward:</p>
+        <ol>
+          <li>
+            You can start immediately without an account, or create a free account for more credits
+            and features
+          </li>
+          <li>
+            Select the AI models you want to compare from our library of 50+ models (up to 3 models
+            for free users, more for paid tiers)
+          </li>
+          <li>
+            Enter your prompt or question in the input field—you can also attach files like PDFs or
+            documents
+          </li>
+          <li>Click "Compare" to send your prompt to all selected models simultaneously</li>
+          <li>Watch as responses stream in real-time from each model, appearing token-by-token</li>
+          <li>
+            Compare the results side-by-side to determine which model performs best for your needs
+          </li>
+          <li>
+            Ask follow-up questions to continue the conversation, or export your comparison in PDF,
+            Markdown, HTML, or JSON format
+          </li>
+        </ol>
+      </>
     ),
   },
   {
@@ -210,9 +227,7 @@ const faqData = [
           <strong>Key benefits:</strong>
         </p>
         <ul>
-          <li>
-            Focus your conversation on the model that's working best for your specific needs
-          </li>
+          <li>Focus your conversation on the model that's working best for your specific needs</li>
           <li>
             Create multiple breakout conversations from the same comparison, even with the same
             model, to explore different conversation paths
@@ -221,14 +236,12 @@ const faqData = [
             Easily identify breakout conversations in your history—they appear with a special badge
             (↗)
           </li>
-          <li>
-            Available for both registered and anonymous users
-          </li>
+          <li>Available for both registered and anonymous users</li>
         </ul>
         <p>
-          <strong>Example:</strong> You compare GPT-4, Claude, and Gemini on a coding problem.
-          GPT-4 gives the best solution, so you break out with GPT-4 to ask follow-up questions
-          about optimization. The original comparison stays in your history for reference.
+          <strong>Example:</strong> You compare GPT-4, Claude, and Gemini on a coding problem. GPT-4
+          gives the best solution, so you break out with GPT-4 to ask follow-up questions about
+          optimization. The original comparison stays in your history for reference.
         </p>
       </>
     ),
@@ -238,9 +251,7 @@ const faqData = [
     question: 'Can I export my comparisons?',
     answer: (
       <>
-        <p>
-          Yes! CompareIntel offers multiple export options to save and share your comparisons:
-        </p>
+        <p>Yes! CompareIntel offers multiple export options to save and share your comparisons:</p>
         <ul>
           <li>
             <strong>PDF Export:</strong> Generate a professional PDF document with all model
@@ -277,22 +288,23 @@ const faqData = [
     answer: (
       <>
         <p>
-          Yes! CompareIntel supports file attachments, allowing you to include documents, code files,
-          and text files in your comparisons. You can attach files in two ways:
+          Yes! CompareIntel supports file attachments, allowing you to include documents, code
+          files, and text files in your comparisons. You can attach files in two ways:
         </p>
         <ul>
           <li>
             <strong>Drag and drop:</strong> Simply drag files from your computer onto the input area
           </li>
           <li>
-            <strong>File picker:</strong> Click the file attachment button to browse and select files
+            <strong>File picker:</strong> Click the file attachment button to browse and select
+            files
           </li>
         </ul>
         <p>
           Supported file formats include PDF documents, Word documents (.docx, .doc), text files,
-          code files, markdown files, and more. You can attach multiple files to a single
-          comparison and arrange them in any order with your text. The file contents are
-          automatically extracted and included when sending your prompt to the AI models.
+          code files, markdown files, and more. You can attach multiple files to a single comparison
+          and arrange them in any order with your text. The file contents are automatically
+          extracted and included when sending your prompt to the AI models.
         </p>
         <p>
           <strong>Persistent file context:</strong> Attached files persist across conversation
@@ -381,18 +393,373 @@ const faqData = [
         <p>
           No, you can start using CompareIntel without an account!{' '}
           <strong>Unregistered users</strong>
-          can get familiar with the platform by accessing a handful of models. This is perfect for
-          trying out AI model comparison and seeing how it works.
+          receive 50 credits per day and can compare up to 3 models at once. Your conversation
+          history is saved locally in your browser. This is perfect for trying out AI model
+          comparison and seeing how it works.
         </p>
         <p>
-          However, <strong>signing up for a free account</strong> gives you access to more models
-          and twice the credits of unregistered users. A free account also allows us to save your
-          conversation history and provide a secure, personalized experience. Registration is quick
-          and only requires an email address—no credit card needed.
+          However, <strong>signing up for a free account</strong> gives you 100 credits per day
+          (twice the amount for unregistered users) and access to more models. A free account also
+          saves your conversation history in the cloud, allowing you to access it from any device.
+          Registration is quick and only requires an email address—no credit card needed.
         </p>
         <p>
-          <strong>Paid tiers will be available soon</strong> that unlock all of the latest and
-          greatest premium AI models for users who need access to the most advanced capabilities.
+          <strong>Paid subscription tiers are available</strong> that unlock access to all premium
+          AI models, higher credit allocations (monthly instead of daily), more models per
+          comparison (up to 12 for Pro+), and more conversation history storage (up to 80
+          conversations for Pro+).
+        </p>
+      </>
+    ),
+  },
+  {
+    id: 'credits-system',
+    question: 'How does the credits system work?',
+    answer: (
+      <>
+        <p>
+          CompareIntel uses a credit-based system to track usage. Credits are calculated based on
+          token usage:
+        </p>
+        <ul>
+          <li>
+            <strong>1 credit = 1,000 effective tokens</strong>
+          </li>
+          <li>
+            <strong>Effective tokens = input_tokens + (output_tokens × 2.5)</strong>
+          </li>
+          <li>
+            On average, a comparison uses about 5 credits (varies based on prompt length and
+            response size)
+          </li>
+        </ul>
+        <p>
+          <strong>Free tiers:</strong> Anonymous users receive 50 credits per day, and free
+          registered users receive 100 credits per day. Credits reset daily at midnight.
+        </p>
+        <p>
+          <strong>Paid tiers:</strong> Monthly credit allocations range from 1,200 credits (Starter)
+          to 10,000 credits (Pro+). Credits reset monthly on your billing date. Paid tiers can also
+          purchase additional credits if needed.
+        </p>
+        <p>
+          You can always check your credit balance in your account dashboard. Credits are only used
+          when you successfully complete a comparison—if a comparison fails, no credits are
+          deducted.
+        </p>
+      </>
+    ),
+  },
+  {
+    id: 'subscription-tiers',
+    question: 'What are the different subscription tiers and their limits?',
+    answer: (
+      <>
+        <p>CompareIntel offers several subscription tiers to meet different needs:</p>
+        <ul>
+          <li>
+            <strong>Anonymous (Free):</strong> 50 credits/day, 3 models per comparison, 2 saved
+            conversations, 2 saved model selections
+          </li>
+          <li>
+            <strong>Free:</strong> 100 credits/day, 3 models per comparison, 3 saved conversations,
+            3 saved model selections
+          </li>
+          <li>
+            <strong>Starter ($9.95/month):</strong> 1,200 credits/month, 6 models per comparison, 10
+            saved conversations, 5 saved model selections, access to all premium models
+          </li>
+          <li>
+            <strong>Starter+ ($19.95/month):</strong> 2,500 credits/month, 6 models per comparison,
+            20 saved conversations, 10 saved model selections, access to all premium models
+          </li>
+          <li>
+            <strong>Pro ($39.95/month):</strong> 5,000 credits/month, 9 models per comparison, 40
+            saved conversations, 15 saved model selections, access to all premium models
+          </li>
+          <li>
+            <strong>Pro+ ($79.95/month):</strong> 10,000 credits/month, 12 models per comparison, 80
+            saved conversations, 20 saved model selections, access to all premium models
+          </li>
+        </ul>
+        <p>
+          All paid tiers include access to premium AI models that aren't available to free users.
+          Paid tiers also allow purchasing additional credits beyond your monthly allocation if
+          needed.
+        </p>
+      </>
+    ),
+  },
+  {
+    id: 'saved-selections',
+    question: 'Can I save my favorite model combinations?',
+    answer: (
+      <>
+        <p>
+          Yes! CompareIntel allows you to save named groups of models for quick access. This feature
+          is perfect for organizing different model combinations by use case.
+        </p>
+        <p>
+          <strong>How it works:</strong>
+        </p>
+        <ul>
+          <li>
+            After selecting your models, click "Save Selection" and give it a custom name (up to 50
+            characters)
+          </li>
+          <li>Your saved selections are stored locally and persist across sessions</li>
+          <li>
+            Load any saved selection with a single click to instantly restore your preferred model
+            combination
+          </li>
+          <li>You can rename or delete saved selections as your needs change</li>
+        </ul>
+        <p>
+          <strong>Limits by tier:</strong> Anonymous users can save up to 2 selections, free users
+          can save 3, and paid tiers can save up to 20 selections (Pro+). This feature works great
+          for different use cases—save one selection for coding tasks, another for creative writing,
+          and another for data analysis.
+        </p>
+      </>
+    ),
+  },
+  {
+    id: 'conversation-history-limits',
+    question: 'How many conversations can I save?',
+    answer: (
+      <>
+        <p>
+          Conversation history limits vary by subscription tier. Each conversation (whether it's a
+          single comparison or includes follow-up questions) counts as one conversation:
+        </p>
+        <ul>
+          <li>
+            <strong>Anonymous:</strong> 2 conversations (stored locally in your browser)
+          </li>
+          <li>
+            <strong>Free:</strong> 3 conversations (stored in the cloud, accessible from any device)
+          </li>
+          <li>
+            <strong>Starter:</strong> 10 conversations
+          </li>
+          <li>
+            <strong>Starter+:</strong> 20 conversations
+          </li>
+          <li>
+            <strong>Pro:</strong> 40 conversations
+          </li>
+          <li>
+            <strong>Pro+:</strong> 80 conversations
+          </li>
+        </ul>
+        <p>
+          When you reach your limit, the oldest conversations are automatically removed to make room
+          for new ones. You can also manually delete conversations you no longer need. For
+          registered users, conversations are stored in the cloud and accessible from any device.
+          Anonymous users' conversations are stored locally in their browser.
+        </p>
+      </>
+    ),
+  },
+  {
+    id: 'extended-mode',
+    question: 'What is extended mode and when is it used?',
+    answer: (
+      <>
+        <p>
+          Extended mode automatically activates for longer conversations and provides increased
+          capacity for both input and output:
+        </p>
+        <ul>
+          <li>
+            <strong>Standard mode:</strong> Up to 5,000 characters input and 4,000 tokens output per
+            model
+          </li>
+          <li>
+            <strong>Extended mode:</strong> Up to 15,000 characters input and 8,192 tokens output
+            per model
+          </li>
+        </ul>
+        <p>
+          Extended mode is automatically enabled when you have longer conversations (typically after
+          several follow-up questions). There are no separate limits for extended mode—it simply
+          uses your regular credits. The system automatically manages context to ensure optimal
+          performance and prevent context overflow.
+        </p>
+        <p>
+          Extended mode is particularly useful for complex tasks that require more context, such as
+          analyzing long documents, having detailed technical discussions, or working through
+          multi-step problems.
+        </p>
+      </>
+    ),
+  },
+  {
+    id: 'models-per-comparison',
+    question: 'How many models can I compare at once?',
+    answer: (
+      <>
+        <p>
+          The number of models you can compare simultaneously depends on your subscription tier:
+        </p>
+        <ul>
+          <li>
+            <strong>Anonymous and Free:</strong> Up to 3 models per comparison
+          </li>
+          <li>
+            <strong>Starter and Starter+:</strong> Up to 6 models per comparison
+          </li>
+          <li>
+            <strong>Pro:</strong> Up to 9 models per comparison
+          </li>
+          <li>
+            <strong>Pro+:</strong> Up to 12 models per comparison
+          </li>
+        </ul>
+        <p>
+          You can select any combination of available models up to your tier's limit. All selected
+          models receive the same prompt simultaneously, and you'll see their responses stream in
+          real-time side-by-side for easy comparison.
+        </p>
+      </>
+    ),
+  },
+  {
+    id: 'real-time-streaming',
+    question: 'How does real-time streaming work?',
+    answer: (
+      <p>
+        CompareIntel uses Server-Sent Events (SSE) to stream responses from AI models in real-time.
+        This means you see responses appear token-by-token as the models generate them, rather than
+        waiting for the complete response. Each model's response streams independently, so you can
+        start reading one model's answer while others are still generating. This provides a much
+        faster and more interactive experience compared to waiting for complete responses. Streaming
+        works for all models and all conversation types, including follow-up questions.
+      </p>
+    ),
+  },
+  {
+    id: 'markdown-support',
+    question: 'Does CompareIntel support Markdown formatting?',
+    answer: (
+      <p>
+        Yes! CompareIntel fully supports Markdown formatting in AI responses. This includes
+        headings, lists (ordered and unordered), bold and italic text, links, tables, code blocks,
+        blockquotes, and more. All Markdown is rendered properly in the interface, making it easy to
+        read formatted responses. When you export comparisons, Markdown formatting is preserved in
+        Markdown and HTML exports, and converted to appropriate formatting in PDF exports.
+      </p>
+    ),
+  },
+  {
+    id: 'credit-reset',
+    question: 'When do my credits reset?',
+    answer: (
+      <>
+        <p>Credit reset timing depends on your subscription tier:</p>
+        <ul>
+          <li>
+            <strong>Anonymous and Free tiers:</strong> Credits reset daily at midnight in your local
+            timezone
+          </li>
+          <li>
+            <strong>Paid tiers (Starter, Starter+, Pro, Pro+):</strong> Credits reset monthly on
+            your billing date
+          </li>
+        </ul>
+        <p>
+          You can always check your current credit balance and when credits will reset next in your
+          account dashboard. Unused credits don't roll over—free tier users get a fresh allocation
+          each day, and paid tier users get a fresh allocation each month.
+        </p>
+      </>
+    ),
+  },
+  {
+    id: 'premium-models',
+    question: 'What are premium AI models and which tier includes them?',
+    answer: (
+      <>
+        <p>
+          Premium AI models are the latest and most advanced models from providers like OpenAI,
+          Anthropic, Google, and others. These models typically have higher capabilities but also
+          higher costs.
+        </p>
+        <p>
+          <strong>Free and Anonymous tiers:</strong> Access to a selection of free-tier models,
+          which are still powerful and capable for most use cases.
+        </p>
+        <p>
+          <strong>All Paid Tiers (Starter and above):</strong> Full access to all premium AI models,
+          including the latest GPT-4 models, Claude 3.5 Sonnet, Claude 3 Opus, Gemini Ultra, and
+          other advanced models as they're released. Paid tiers ensure you always have access to the
+          most cutting-edge AI technology available.
+        </p>
+      </>
+    ),
+  },
+  {
+    id: 'browser-fingerprinting',
+    question: 'How does CompareIntel track usage for anonymous users?',
+    answer: (
+      <p>
+        For anonymous (unregistered) users, CompareIntel uses browser fingerprinting to track usage
+        and enforce rate limits. This creates a unique identifier based on your browser's
+        characteristics (like screen resolution, installed fonts, and other
+        non-personally-identifiable information) combined with your IP address. This allows us to
+        provide a consistent experience and prevent abuse while maintaining your privacy. The
+        fingerprint is hashed and cannot be used to identify you personally. If you want a more
+        persistent experience with cloud-saved history, we recommend creating a free account.
+      </p>
+    ),
+  },
+  {
+    id: 'error-handling',
+    question: 'What happens if a model fails or returns an error?',
+    answer: (
+      <>
+        <p>If a model fails to respond or returns an error during a comparison:</p>
+        <ul>
+          <li>The error message is displayed in that model's response card</li>
+          <li>Other models' responses continue to stream normally</li>
+          <li>No credits are deducted for failed model responses</li>
+          <li>You can retry the comparison or continue with the successful models</li>
+        </ul>
+        <p>
+          Common error scenarios include model rate limits, temporary service outages, or invalid
+          requests. If you encounter persistent errors, try again in a few moments or select
+          different models. If problems continue, contact support.
+        </p>
+      </>
+    ),
+  },
+  {
+    id: 'context-management',
+    question: 'How does CompareIntel manage conversation context?',
+    answer: (
+      <>
+        <p>
+          CompareIntel intelligently manages conversation context to ensure optimal performance:
+        </p>
+        <ul>
+          <li>
+            Each model in a multi-model comparison maintains its own independent conversation
+            history
+          </li>
+          <li>Models only see their own previous responses, not other models' responses</li>
+          <li>
+            For very long conversations (20+ messages), the system automatically keeps the most
+            recent messages while preserving important context
+          </li>
+          <li>
+            Context is preserved across follow-up questions, allowing for natural multi-turn
+            conversations
+          </li>
+        </ul>
+        <p>
+          This ensures fair comparisons where each model responds independently, and prevents
+          context overflow that could degrade response quality. The system automatically handles
+          context management transparently—you don't need to worry about it.
         </p>
       </>
     ),
@@ -494,9 +861,10 @@ export const FAQ: React.FC = () => {
             <h2>Ready to Compare AI Models?</h2>
             <p>
               Start comparing GPT-4, Claude, Gemini, Llama, and 50+ other AI models today.
-              Unregistered users can get familiar with a handful of models, or sign up for a free
-              account to access more models and receive twice the credits—no credit card required.
-              Paid tiers coming soon for premium AI models.
+              Unregistered users can get started immediately with 50 credits per day, or sign up for
+              a free account to receive 100 credits per day—no credit card required. Paid
+              subscription tiers are available for users who need more credits, access to premium
+              models, and higher limits.
             </p>
             <Link to="/" className="cta-button">
               Start Comparing Free
