@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
 
 interface CapabilityTileProps {
   id: string
@@ -39,8 +39,26 @@ interface HeroProps {
  * Hero - Main hero section with title, capabilities, and comparison form
  */
 export function Hero({ visibleTooltip, onCapabilityTileTap, children }: HeroProps) {
+  const [showFlash, setShowFlash] = useState(false)
+
+  // Handle capability tile tap with flash animation
+  const handleTileTap = (tileId: string) => {
+    // Trigger flash animation
+    setShowFlash(true)
+    // Hide flash after animation completes (less than 1 second)
+    setTimeout(() => {
+      setShowFlash(false)
+    }, 800)
+    // Call original handler
+    onCapabilityTileTap(tileId)
+  }
+
   return (
     <div className="hero-section">
+      {/* Flash logo background */}
+      <div className={`hero-logo-flash ${showFlash ? 'active' : ''}`}>
+        <img src="/CI_favicon.svg" alt="" className="hero-flash-logo-img" />
+      </div>
       <div className="hero-content">
         <h1 className="hero-title">
           <span className="hero-title-first-line">Compare AI Models</span>{' '}
@@ -74,7 +92,7 @@ export function Hero({ visibleTooltip, onCapabilityTileTap, children }: HeroProp
             description="Compare conversational responses"
             tooltipText="Natural Language: Compare conversational responses"
             isVisible={visibleTooltip === 'natural-language'}
-            onTap={onCapabilityTileTap}
+            onTap={handleTileTap}
           />
 
           <CapabilityTile
@@ -98,7 +116,7 @@ export function Hero({ visibleTooltip, onCapabilityTileTap, children }: HeroProp
             description="Evaluate programming capabilities"
             tooltipText="Code Generation: Evaluate programming capabilities"
             isVisible={visibleTooltip === 'code-generation'}
-            onTap={onCapabilityTileTap}
+            onTap={handleTileTap}
           />
 
           <CapabilityTile
@@ -121,7 +139,7 @@ export function Hero({ visibleTooltip, onCapabilityTileTap, children }: HeroProp
             description="Render math equations beautifully"
             tooltipText="Formatted Math: Render mathematical equations beautifully"
             isVisible={visibleTooltip === 'formatted-math'}
-            onTap={onCapabilityTileTap}
+            onTap={handleTileTap}
           />
         </div>
 

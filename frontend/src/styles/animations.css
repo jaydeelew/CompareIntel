@@ -367,3 +367,27 @@
 .notification-slide-out {
   animation: notificationSlideOut 0.25s ease-in forwards;
 }
+
+/* Hero logo flash animation */
+@keyframes logoFlash {
+  0% {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  20% {
+    opacity: 0.6;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.4;
+    transform: scale(1.05);
+  }
+  80% {
+    opacity: 0.2;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+}
