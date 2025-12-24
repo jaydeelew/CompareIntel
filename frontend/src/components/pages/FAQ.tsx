@@ -57,13 +57,40 @@ const faqData = [
     id: 'how-many-models',
     question: 'How many AI models can I compare?',
     answer: (
-      <p>
-        CompareIntel provides access to a wide range of the latest AI models from leading providers
-        including OpenAI (GPT-4, GPT-4o), Anthropic (Claude 3.5 Sonnet, Claude 3 Opus), Google
-        (Gemini Pro, Gemini Ultra), Meta (Llama 3), Mistral AI, and many more. We continuously add
-        new models as they're released, so you always have access to the newest AI technology. You
-        can select any combination of models to compare in a single query.
-      </p>
+      <>
+        <p>
+          CompareIntel provides access to 50+ of the latest AI models from leading providers
+          including OpenAI (GPT-4, GPT-4o), Anthropic (Claude 3.5 Sonnet, Claude 3 Opus), Google
+          (Gemini Pro, Gemini Ultra), Meta (Llama 3), Mistral AI, and many more. We continuously add
+          new models as they're released, so you always have access to the newest AI technology.
+        </p>
+        <p>
+          <strong>
+            How many models you can compare simultaneously depends on your subscription tier:
+          </strong>
+        </p>
+        <ul>
+          <li>
+            <strong>Anonymous and Free tiers:</strong> Up to 3 models per comparison
+          </li>
+          <li>
+            <strong>Starter and Starter+ tiers:</strong> Up to 6 models per comparison
+          </li>
+          <li>
+            <strong>Pro tier:</strong> Up to 9 models per comparison
+          </li>
+          <li>
+            <strong>Pro+ tier:</strong> Up to 12 models per comparison
+          </li>
+        </ul>
+        <p>
+          You can select any combination of available models up to your tier's limit. Free and
+          anonymous users have access to a selection of free-tier models, while paid tiers unlock
+          access to all premium AI models. This tiered approach ensures everyone can use
+          CompareIntel while providing clear upgrade paths for users who need to compare more models
+          simultaneously or access premium models.
+        </p>
+      </>
     ),
   },
   {
@@ -600,26 +627,49 @@ const faqData = [
     answer: (
       <>
         <p>
-          The number of models you can compare simultaneously depends on your subscription tier:
+          CompareIntel uses a tiered system that determines how many AI models you can compare
+          simultaneously in a single comparison. The number of models you can select increases with
+          each subscription tier:
         </p>
         <ul>
           <li>
-            <strong>Anonymous and Free:</strong> Up to 3 models per comparison
+            <strong>Anonymous (Unregistered) and Free:</strong> Up to 3 models per comparison. This
+            tier is perfect for trying out CompareIntel and comparing a few models side-by-side.
+            Anonymous users get 50 credits per day, while free registered users get 100 credits per
+            day.
           </li>
           <li>
-            <strong>Starter and Starter+:</strong> Up to 6 models per comparison
+            <strong>Starter ($9.95/month) and Starter+ ($19.95/month):</strong> Up to 6 models per
+            comparison. These paid tiers unlock the ability to compare more models simultaneously,
+            giving you access to all premium AI models, monthly credit allocations (1,200 credits
+            for Starter, 2,500 for Starter+), and more saved conversations.
           </li>
           <li>
-            <strong>Pro:</strong> Up to 9 models per comparison
+            <strong>Pro ($39.95/month):</strong> Up to 9 models per comparison. The Pro tier
+            provides 5,000 credits per month and allows you to compare nearly double the number of
+            models compared to free tiers, making it ideal for power users who need comprehensive
+            model comparisons.
           </li>
           <li>
-            <strong>Pro+:</strong> Up to 12 models per comparison
+            <strong>Pro+ ($79.95/month):</strong> Up to 12 models per comparison. The highest tier
+            allows you to compare the maximum number of models simultaneously, with 10,000 credits
+            per month and the most generous limits for saved conversations and model selections.
           </li>
         </ul>
         <p>
-          You can select any combination of available models up to your tier's limit. All selected
-          models receive the same prompt simultaneously, and you'll see their responses stream in
-          real-time side-by-side for easy comparison.
+          <strong>How it works:</strong> When you select models for a comparison, CompareIntel
+          enforces your tier's model limit. You can choose any combination of available models up to
+          your tier's maximum. All selected models receive the same prompt simultaneously, and
+          you'll see their responses stream in real-time side-by-side for easy comparison. If you
+          try to select more models than your tier allows, CompareIntel will notify you of the
+          limit.
+        </p>
+        <p>
+          <strong>Upgrading your tier:</strong> Higher tiers not only increase the number of models
+          you can compare at once, but also provide more credits, access to premium models, more
+          saved conversations, and more saved model selections. This tiered approach ensures that
+          free users can fully experience CompareIntel while providing clear upgrade paths for users
+          who need more capacity.
         </p>
       </>
     ),
