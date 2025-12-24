@@ -466,6 +466,13 @@ MODELS_BY_PROVIDER = {
             "provider": "OpenAI",
         },
         {
+            "id": "openai/gpt-4o-mini",
+            "name": "Gpt 4o Mini",
+            "description": "GPT-4o mini is OpenAI's newest model after [GPT-4 Omni](/models/openai/gpt-4o), supporting both text and image inputs with text outputs.",
+            "category": "Language",
+            "provider": "OpenAI",
+        },
+        {
             "id": "openai/gpt-5-mini",
             "name": "GPT-5 Mini",
             "description": 'A compact GPT-5 variant designed for efficient, lighter-weight reasoning and general tasks.',
@@ -497,13 +504,6 @@ MODELS_BY_PROVIDER = {
             "id": "openai/gpt-4o",
             "name": "GPT-4o",
             "description": 'An omnimodal model supporting text and image inputs with fast, intelligent multimodal responses.',
-            "category": "Language",
-            "provider": "OpenAI",
-        },
-        {
-            "id": "openai/gpt-4o-mini",
-            "name": "Gpt 4O Mini",
-            "description": "GPT-4o mini is OpenAI's newest model after [GPT-4 Omni](/models/openai/gpt-4o), supporting both text and image inputs with text outputs.",
             "category": "Language",
             "provider": "OpenAI",
         },

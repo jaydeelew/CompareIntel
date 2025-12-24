@@ -962,12 +962,6 @@
     max-height: 400px;
   }
 
-  .message-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.25rem;
-  }
-
   .message-content {
     margin-left: 0;
     margin-top: 0.5rem;
