@@ -166,9 +166,9 @@ export const ComparisonForm = memo<ComparisonFormProps>(
     // Speech recognition hook
     const handleSpeechResult = useCallback(
       (transcript: string) => {
-        setInput(prev => prev + (prev ? ' ' : '') + transcript)
+        setInput(input + (input ? ' ' : '') + transcript)
       },
-      [setInput]
+      [setInput, input]
     )
 
     const {
