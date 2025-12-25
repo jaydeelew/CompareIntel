@@ -645,7 +645,7 @@ async def speech_to_text(
     except ImportError:
         raise HTTPException(
             status_code=500,
-            detail="AssemblyAI library is not installed. Please install it with: pip install assemblyai>=1.0.0"
+            detail="AssemblyAI library is not installed. Please install it with: pip install assemblyai>=0.48.0"
         )
     except Exception as e:
         error_message = str(e)
