@@ -5,7 +5,7 @@ This module contains the main application endpoints like /models, /compare-strea
 that are used by the frontend for the core AI comparison functionality.
 """
 
-from fastapi import APIRouter, Request, Depends, HTTPException, status, BackgroundTasks, Body
+from fastapi import APIRouter, Request, Depends, HTTPException, status, BackgroundTasks, Body, File, UploadFile
 from fastapi.responses import StreamingResponse, JSONResponse
 from pydantic import BaseModel, ConfigDict
 from typing import Optional, Dict, Any, Union
@@ -16,6 +16,7 @@ from datetime import datetime, timezone, timedelta
 import asyncio
 import json
 import os
+import tempfile
 
 from ..model_runner import (
     OPENROUTER_MODELS,
@@ -502,6 +503,150 @@ async def estimate_tokens(
         total_input_tokens=total_input_tokens,
         model_id=req.model_id,
     )
+
+
+class SpeechToTextResponse(BaseModel):
+    """Response model for speech-to-text endpoint"""
+    transcript: str
+    model_config = ConfigDict(json_schema_extra={"example": {"transcript": "Hello, this is a test."}})
+
+
+@router.post("/speech-to-text", response_model=SpeechToTextResponse)
+async def speech_to_text(
+    audio: UploadFile = File(...),
+    current_user: Optional[User] = Depends(get_current_user),
+):
+    """
+    Transcribe audio to text using OpenAI Whisper API.
+    
+    Accepts audio files in webm, mp4, ogg, or wav format.
+    Returns transcribed text.
+    
+    Requires OPENAI_API_KEY to be set in environment variables.
+    This endpoint is used as a fallback for browsers that don't support
+    the native Web Speech API (e.g., Firefox).
+    
+    Browser support:
+    - Chrome/Edge/Safari: Use native Web Speech API (no backend call needed)
+    - Firefox/Others: Use this endpoint with MediaRecorder API
+    """
+    # Check if OpenAI API key is configured
+    if not settings.openai_api_key:
+        raise HTTPException(
+            status_code=503,
+            detail="Speech-to-text is not available. OPENAI_API_KEY is not configured. "
+                   "Please set OPENAI_API_KEY in your environment variables to enable this feature."
+        )
+    
+    # Validate file type
+    allowed_types = [
+        'audio/webm',
+        'audio/mp4',
+        'audio/ogg',
+        'audio/wav',
+        'audio/x-wav',
+        'audio/mpeg',
+        'audio/mp3',
+    ]
+    
+    # Also check filename extension as fallback
+    filename_lower = audio.filename.lower() if audio.filename else ''
+    allowed_extensions = ['.webm', '.mp4', '.ogg', '.wav', '.mp3', '.mpeg']
+    
+    if audio.content_type not in allowed_types and not any(
+        filename_lower.endswith(ext) for ext in allowed_extensions
+    ):
+        raise HTTPException(
+            status_code=400,
+            detail=f"Unsupported audio format. Allowed types: {', '.join(allowed_types)}. "
+                   f"Received: {audio.content_type or 'unknown'}"
+        )
+    
+    # Validate file size (max 25MB for Whisper API)
+    MAX_FILE_SIZE = 25 * 1024 * 1024  # 25MB
+    audio_content = await audio.read()
+    
+    if len(audio_content) > MAX_FILE_SIZE:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Audio file too large. Maximum size is 25MB. Received: {len(audio_content) / 1024 / 1024:.2f}MB"
+        )
+    
+    if len(audio_content) == 0:
+        raise HTTPException(
+            status_code=400,
+            detail="Audio file is empty"
+        )
+    
+    # Save uploaded file temporarily
+    tmp_path = None
+    try:
+        # Determine file extension from content type or filename
+        file_ext = '.webm'  # default
+        if audio.content_type:
+            if 'mp4' in audio.content_type or 'mpeg' in audio.content_type:
+                file_ext = '.mp4'
+            elif 'ogg' in audio.content_type:
+                file_ext = '.ogg'
+            elif 'wav' in audio.content_type:
+                file_ext = '.wav'
+        elif filename_lower:
+            for ext in allowed_extensions:
+                if filename_lower.endswith(ext):
+                    file_ext = ext
+                    break
+        
+        # Create temporary file
+        with tempfile.NamedTemporaryFile(delete=False, suffix=file_ext) as tmp_file:
+            tmp_file.write(audio_content)
+            tmp_path = tmp_file.name
+        
+        # Use OpenAI Whisper API for transcription
+        try:
+            from openai import OpenAI
+            
+            client = OpenAI(api_key=settings.openai_api_key)
+            
+            with open(tmp_path, 'rb') as audio_file:
+                transcript = client.audio.transcriptions.create(
+                    model="whisper-1",
+                    file=audio_file,
+                    language="en"  # Optional: specify language for better accuracy
+                )
+            
+            return SpeechToTextResponse(transcript=transcript.text)
+            
+        except ImportError:
+            raise HTTPException(
+                status_code=500,
+                detail="OpenAI library is not installed. Please install it with: pip install openai>=1.0.0"
+            )
+        except Exception as e:
+            error_message = str(e)
+            # Provide more helpful error messages
+            if "Invalid API key" in error_message or "authentication" in error_message.lower():
+                raise HTTPException(
+                    status_code=401,
+                    detail="Invalid OpenAI API key. Please check your OPENAI_API_KEY configuration."
+                )
+            elif "file format" in error_message.lower() or "unsupported" in error_message.lower():
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Unsupported audio format or corrupted file: {error_message}"
+                )
+            else:
+                raise HTTPException(
+                    status_code=500,
+                    detail=f"Transcription failed: {error_message}"
+                )
+    
+    finally:
+        # Clean up temp file
+        if tmp_path and os.path.exists(tmp_path):
+            try:
+                os.unlink(tmp_path)
+            except Exception:
+                pass  # Ignore cleanup errors
 
 
 @router.post("/compare-stream")

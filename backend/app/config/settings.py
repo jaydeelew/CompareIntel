@@ -38,6 +38,9 @@ class Settings(BaseSettings):
     
     # API Keys
     openrouter_api_key: str
+    # OpenAI API key (Optional - for Whisper speech-to-text)
+    # If not set, speech-to-text endpoint will return an error
+    openai_api_key: Optional[str] = None
     
     # reCAPTCHA v3 (Optional - for registration protection)
     recaptcha_secret_key: Optional[str] = None

@@ -1,7 +1,7 @@
 import React, { memo, useEffect, useCallback, useMemo, useState, useRef } from 'react'
 
 import { getConversationLimit } from '../../config/constants'
-import { useDebounce } from '../../hooks/useDebounce'
+import { useDebounce, useSpeechRecognition } from '../../hooks'
 import type { SavedModelSelection } from '../../hooks/useSavedModelSelections'
 import { estimateTokens } from '../../services/compareService'
 import type { User, ConversationSummary, ModelConversation } from '../../types'
@@ -86,7 +86,10 @@ interface ComparisonFormProps {
   attachedFiles: (AttachedFile | StoredAttachedFile)[]
   setAttachedFiles: (files: (AttachedFile | StoredAttachedFile)[]) => void
   // Callback to expand files for token counting (takes files and userInput, returns expanded string)
-  onExpandFiles?: (files: (AttachedFile | StoredAttachedFile)[], userInput: string) => Promise<string>
+  onExpandFiles?: (
+    files: (AttachedFile | StoredAttachedFile)[],
+    userInput: string
+  ) => Promise<string>
 }
 
 /**
@@ -159,6 +162,30 @@ export const ComparisonForm = memo<ComparisonFormProps>(
     const abortControllerRef = useRef<AbortController | null>(null)
     const fileInputRef = useRef<HTMLInputElement | null>(null)
     const [isDraggingOver, setIsDraggingOver] = useState(false)
+
+    // Speech recognition hook
+    const handleSpeechResult = useCallback(
+      (transcript: string) => {
+        setInput(prev => prev + (prev ? ' ' : '') + transcript)
+      },
+      [setInput]
+    )
+
+    const {
+      isListening: isSpeechListening,
+      isSupported: isSpeechSupported,
+      startListening: startSpeechListening,
+      stopListening: stopSpeechListening,
+      error: speechError,
+      browserSupport: speechBrowserSupport,
+    } = useSpeechRecognition(handleSpeechResult)
+
+    // Show notification if speech recognition error occurs
+    useEffect(() => {
+      if (speechError) {
+        showNotification(speechError, 'error')
+      }
+    }, [speechError])
 
     // Debounce input for API calls (only call API when user pauses typing)
     const debouncedInput = useDebounce(input, 600) // 600ms delay
@@ -266,7 +293,15 @@ export const ComparisonForm = memo<ComparisonFormProps>(
       return () => {
         controller.abort()
       }
-    }, [debouncedInput, attachedFiles, isFollowUpMode, selectedModels, conversations, onAccurateTokenCountChange, onExpandFiles])
+    }, [
+      debouncedInput,
+      attachedFiles,
+      isFollowUpMode,
+      selectedModels,
+      conversations,
+      onAccurateTokenCountChange,
+      onExpandFiles,
+    ])
 
     // Calculate token usage and percentage remaining for follow-up mode
     // Uses backend model-specific token estimators when available
@@ -534,7 +569,6 @@ export const ComparisonForm = memo<ComparisonFormProps>(
     }, [
       selectedModels,
       input,
-      attachedFiles,
       modelsByProvider,
       isFollowUpMode,
       conversations,
@@ -915,10 +949,10 @@ export const ComparisonForm = memo<ComparisonFormProps>(
         try {
           // Create a unique ID for this file
           const fileId = `file-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
-          
+
           // Create placeholder text
           const placeholder = `[file: ${file.name}]`
-          
+
           // Create attached file object
           const attachedFile: AttachedFile = {
             id: fileId,
@@ -937,18 +971,19 @@ export const ComparisonForm = memo<ComparisonFormProps>(
             const end = textarea.selectionEnd
             const textBefore = input.substring(0, start)
             const textAfter = input.substring(end)
-            
+
             // Add separator if needed
             const separatorBefore = textBefore.trim() && !textBefore.endsWith('\n') ? '\n\n' : ''
             const separatorAfter = textAfter.trim() && !textAfter.startsWith('\n') ? '\n\n' : ''
-            
+
             const newInput = textBefore + separatorBefore + placeholder + separatorAfter + textAfter
             setInput(newInput)
-            
+
             // Set cursor position after placeholder
             setTimeout(() => {
               if (textareaRef.current) {
-                const newCursorPos = start + separatorBefore.length + placeholder.length + separatorAfter.length
+                const newCursorPos =
+                  start + separatorBefore.length + placeholder.length + separatorAfter.length
                 textareaRef.current.setSelectionRange(newCursorPos, newCursorPos)
               }
             }, 0)
@@ -964,10 +999,18 @@ export const ComparisonForm = memo<ComparisonFormProps>(
           if (fileName.endsWith('.pdf')) fileType = 'PDF file'
           else if (fileName.endsWith('.docx')) fileType = 'DOCX file'
           else if (fileName.endsWith('.py')) fileType = 'Python file'
-          else if (fileName.endsWith('.js') || fileName.endsWith('.jsx')) fileType = 'JavaScript file'
-          else if (fileName.endsWith('.ts') || fileName.endsWith('.tsx')) fileType = 'TypeScript file'
+          else if (fileName.endsWith('.js') || fileName.endsWith('.jsx'))
+            fileType = 'JavaScript file'
+          else if (fileName.endsWith('.ts') || fileName.endsWith('.tsx'))
+            fileType = 'TypeScript file'
           else if (fileName.endsWith('.java')) fileType = 'Java file'
-          else if (fileName.endsWith('.cpp') || fileName.endsWith('.cc') || fileName.endsWith('.cxx') || fileName.endsWith('.c')) fileType = 'C/C++ file'
+          else if (
+            fileName.endsWith('.cpp') ||
+            fileName.endsWith('.cc') ||
+            fileName.endsWith('.cxx') ||
+            fileName.endsWith('.c')
+          )
+            fileType = 'C/C++ file'
           else if (fileName.endsWith('.cs')) fileType = 'C# file'
           else if (fileName.endsWith('.rb')) fileType = 'Ruby file'
           else if (fileName.endsWith('.go')) fileType = 'Go file'
@@ -978,7 +1021,8 @@ export const ComparisonForm = memo<ComparisonFormProps>(
           else if (fileName.endsWith('.css')) fileType = 'CSS file'
           else if (fileName.endsWith('.json')) fileType = 'JSON file'
           else if (fileName.endsWith('.xml')) fileType = 'XML file'
-          else if (fileName.endsWith('.md') || fileName.endsWith('.markdown')) fileType = 'Markdown file'
+          else if (fileName.endsWith('.md') || fileName.endsWith('.markdown'))
+            fileType = 'Markdown file'
           else if (fileName.endsWith('.yaml') || fileName.endsWith('.yml')) fileType = 'YAML file'
           else if (fileName.endsWith('.sql')) fileType = 'SQL file'
           else if (fileName.endsWith('.txt')) fileType = 'text file'
@@ -1350,6 +1394,47 @@ export const ComparisonForm = memo<ComparisonFormProps>(
                   />
                 </svg>
               </button>
+              {/* Voice input button */}
+              {isSpeechSupported && (
+                <button
+                  type="button"
+                  onClick={() =>
+                    isSpeechListening ? stopSpeechListening() : startSpeechListening()
+                  }
+                  className={`textarea-icon-button voice-button ${isSpeechListening ? 'active' : ''}`}
+                  title={
+                    isSpeechListening
+                      ? 'Stop recording'
+                      : speechBrowserSupport === 'native'
+                        ? 'Start voice input (browser)'
+                        : 'Start voice input (server)'
+                  }
+                  disabled={isLoading}
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                    style={{ width: '20px', height: '20px', display: 'block' }}
+                  >
+                    <path
+                      d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      fill={isSpeechListening ? 'currentColor' : 'none'}
+                    />
+                    <path
+                      d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v4M8 23h8"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </button>
+              )}
               <button
                 onClick={isFollowUpMode ? onContinueConversation : onSubmitClick}
                 disabled={isLoading || creditsRemaining <= 0}
@@ -1458,7 +1543,10 @@ export const ComparisonForm = memo<ComparisonFormProps>(
                                   <div className="history-item-prompt">
                                     {truncatePrompt(summary.input_data)}
                                     {summary.conversation_type === 'breakout' && (
-                                      <span className="history-item-breakout-badge" title="Breakout conversation">
+                                      <span
+                                        className="history-item-breakout-badge"
+                                        title="Breakout conversation"
+                                      >
                                         ↗
                                       </span>
                                     )}
@@ -1466,7 +1554,8 @@ export const ComparisonForm = memo<ComparisonFormProps>(
                                   <div className="history-item-meta">
                                     <span className="history-item-models">
                                       {summary.models_used.length === 1
-                                        ? summary.models_used[0].split('/').pop() || summary.models_used[0]
+                                        ? summary.models_used[0].split('/').pop() ||
+                                          summary.models_used[0]
                                         : `${summary.models_used.length} models`}
                                     </span>
                                     <span className="history-item-date">
@@ -1670,57 +1759,57 @@ export const ComparisonForm = memo<ComparisonFormProps>(
                   <div className="saved-selections-list">
                     {savedModelSelections.length === 0 ? (
                       <div className="saved-selections-empty">
-                        No saved selections yet. Save your current model selection to quickly load it
-                        later!
+                        No saved selections yet. Save your current model selection to quickly load
+                        it later!
                       </div>
                     ) : (
                       savedModelSelections.map(selection => (
-                      <div key={selection.id} className="saved-selection-item">
-                        <div
-                          className="saved-selection-info"
-                          onClick={() => {
-                            if (isFollowUpMode) {
+                        <div key={selection.id} className="saved-selection-item">
+                          <div
+                            className="saved-selection-info"
+                            onClick={() => {
+                              if (isFollowUpMode) {
+                                showNotification(
+                                  'Cannot load saved selections during follow-up mode',
+                                  'error'
+                                )
+                                return
+                              }
+                              onLoadModelSelection(selection.id)
+                              setShowSavedSelectionsDropdown(false)
                               showNotification(
-                                'Cannot load saved selections during follow-up mode',
-                                'error'
+                                `Loaded "${selection.name}" (${selection.modelIds.length} model${selection.modelIds.length !== 1 ? 's' : ''})`,
+                                'success'
                               )
-                              return
+                            }}
+                            title={
+                              isFollowUpMode
+                                ? 'Cannot load selections during follow-up mode'
+                                : `Click to load "${selection.name}"`
                             }
-                            onLoadModelSelection(selection.id)
-                            setShowSavedSelectionsDropdown(false)
-                            showNotification(
-                              `Loaded "${selection.name}" (${selection.modelIds.length} model${selection.modelIds.length !== 1 ? 's' : ''})`,
-                              'success'
-                            )
-                          }}
-                          title={
-                            isFollowUpMode
-                              ? 'Cannot load selections during follow-up mode'
-                              : `Click to load "${selection.name}"`
-                          }
-                          style={{ cursor: isFollowUpMode ? 'not-allowed' : 'pointer' }}
-                        >
-                          <div className="saved-selection-name">{selection.name}</div>
-                          <div className="saved-selection-meta">
-                            {selection.modelIds.length} model
-                            {selection.modelIds.length !== 1 ? 's' : ''}
+                            style={{ cursor: isFollowUpMode ? 'not-allowed' : 'pointer' }}
+                          >
+                            <div className="saved-selection-name">{selection.name}</div>
+                            <div className="saved-selection-meta">
+                              {selection.modelIds.length} model
+                              {selection.modelIds.length !== 1 ? 's' : ''}
+                            </div>
                           </div>
+                          <button
+                            type="button"
+                            className="saved-selection-delete"
+                            onClick={e => {
+                              e.stopPropagation()
+                              onDeleteModelSelection(selection.id)
+                              showNotification(`Deleted "${selection.name}"`, 'success')
+                            }}
+                            title={`Delete "${selection.name}"`}
+                          >
+                            ×
+                          </button>
                         </div>
-                        <button
-                          type="button"
-                          className="saved-selection-delete"
-                          onClick={e => {
-                            e.stopPropagation()
-                            onDeleteModelSelection(selection.id)
-                            showNotification(`Deleted "${selection.name}"`, 'success')
-                          }}
-                          title={`Delete "${selection.name}"`}
-                        >
-                          ×
-                        </button>
-                      </div>
-                    ))
-                  )}
+                      ))
+                    )}
                   </div>
                 </div>
               </div>
