@@ -619,14 +619,20 @@ async def speech_to_text(
         # Create transcriber
         transcriber = aai.Transcriber()
         
-        # Configure transcription settings for better accuracy and speed
+        # Configure transcription settings optimized for speed and accuracy
+        # Use "nano" model for fastest transcription (or "best" for accuracy)
+        # Available models: "nano", "best", "universal", "slam_1"
         config = aai.TranscriptionConfig(
             language_code="en",  # Specify English for better accuracy
             punctuate=True,  # Add punctuation
             format_text=True,  # Format text (capitalization, etc.)
+            speech_model="nano",  # Use nano model for fastest transcription
+            # Boost domain-specific terms for better accuracy
+            word_boost=["AI", "model", "compare", "comparison", "prompt", "input", "response", "output"],
+            boost_param="high",  # High boost for word_boost terms
         )
         
-        # Transcribe the audio file
+        # Transcribe the audio file (async for better performance)
         transcript = transcriber.transcribe(
             tmp_path,
             config=config

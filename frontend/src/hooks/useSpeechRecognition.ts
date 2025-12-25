@@ -122,64 +122,118 @@ export function useSpeechRecognition(
     if (!hasMediaRecorderSupport) return
 
     try {
-      // Request microphone access
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      // Request microphone access with optimized audio constraints
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+          sampleRate: 16000, // Optimize for speech recognition (16kHz is standard)
+          channelCount: 1, // Mono for smaller file size
+        },
+      })
       streamRef.current = stream
 
-      // Determine best MIME type
-      let mimeType = 'audio/webm'
-      if (!MediaRecorder.isTypeSupported('audio/webm')) {
-        if (MediaRecorder.isTypeSupported('audio/mp4')) {
+      // Determine best MIME type (prefer webm with opus codec for better compression)
+      let mimeType = 'audio/webm;codecs=opus'
+      if (!MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) {
+        if (MediaRecorder.isTypeSupported('audio/webm')) {
+          mimeType = 'audio/webm'
+        } else if (MediaRecorder.isTypeSupported('audio/mp4')) {
           mimeType = 'audio/mp4'
         } else if (MediaRecorder.isTypeSupported('audio/ogg')) {
           mimeType = 'audio/ogg'
         } else {
-          // Fallback to default
           mimeType = ''
         }
       }
 
-      // Create MediaRecorder
+      // Create MediaRecorder with optimized settings
       const mediaRecorder = new MediaRecorder(stream, {
         mimeType: mimeType || undefined,
+        audioBitsPerSecond: 16000, // Lower bitrate = smaller files = faster upload
       })
 
       audioChunksRef.current = []
+      let accumulatedTranscript = ''
+      let isProcessing = false
+      let lastChunkTime = 0
 
-      mediaRecorder.ondataavailable = event => {
+      // Function to send audio chunk for transcription
+      const sendAudioChunk = async (audioBlob: Blob): Promise<string | null> => {
+        if (isProcessing || audioBlob.size === 0) return null
+
+        isProcessing = true
+        try {
+          const formData = new FormData()
+          formData.append('audio', audioBlob, 'chunk.webm')
+
+          const apiUrl = import.meta.env.VITE_API_URL || '/api'
+          const response = await fetch(`${apiUrl}/speech-to-text`, {
+            method: 'POST',
+            body: formData,
+          })
+
+          if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}))
+            throw new Error(errorData.detail || 'Transcription failed.')
+          }
+
+          const data = await response.json()
+          return data.transcript || null
+        } catch (err) {
+          console.error('Chunk transcription error:', err)
+          return null
+        } finally {
+          isProcessing = false
+        }
+      }
+
+      // Send chunks every 2 seconds for faster response
+      const CHUNK_INTERVAL = 2000 // 2 seconds
+      const MIN_CHUNK_SIZE = 1000 // Minimum 1KB to avoid sending tiny chunks
+
+      mediaRecorder.ondataavailable = async event => {
         if (event.data.size > 0) {
           audioChunksRef.current.push(event.data)
+
+          // Send chunk every 2 seconds for faster transcription
+          const now = Date.now()
+          if (now - lastChunkTime >= CHUNK_INTERVAL && event.data.size >= MIN_CHUNK_SIZE) {
+            lastChunkTime = now
+
+            // Send the current chunk immediately
+            const transcript = await sendAudioChunk(event.data)
+            if (transcript && transcript.trim()) {
+              // Use the latest transcript (it contains the full context)
+              accumulatedTranscript = transcript
+              // Send partial result immediately for better UX
+              onResult(transcript)
+            }
+          }
         }
       }
 
       mediaRecorder.onstop = async () => {
         setIsListening(false)
 
-        // Send audio to backend for transcription
+        // Send final audio chunk if there's remaining data
+        // Only send if we don't already have a recent transcript
         const audioBlob = new Blob(audioChunksRef.current, {
           type: mediaRecorder.mimeType || 'audio/webm',
         })
 
-        // Only send if we have audio data
-        if (audioBlob.size > 0) {
+        // If we have accumulated transcript from chunks, use it (it's already the latest)
+        // Otherwise, send the full recording as fallback
+        if (accumulatedTranscript) {
+          // We already have the latest transcript from chunks
+          // No need to send again - it's already been sent via onResult
+        } else if (audioBlob.size > 0) {
+          // If we didn't get any partial results, send the full recording
           try {
-            const formData = new FormData()
-            formData.append('audio', audioBlob, 'recording.webm')
-
-            const apiUrl = import.meta.env.VITE_API_URL || '/api'
-            const response = await fetch(`${apiUrl}/speech-to-text`, {
-              method: 'POST',
-              body: formData,
-            })
-
-            if (!response.ok) {
-              const errorData = await response.json().catch(() => ({}))
-              throw new Error(errorData.detail || 'Transcription failed. Please try again.')
-            }
-
-            const data = await response.json()
-            if (data.transcript) {
-              onResult(data.transcript)
+            const finalTranscript = await sendAudioChunk(audioBlob)
+            if (finalTranscript && finalTranscript.trim()) {
+              onResult(finalTranscript)
             } else {
               setError('No transcription received. Please try again.')
             }
@@ -187,7 +241,7 @@ export function useSpeechRecognition(
             const errorMessage =
               err instanceof Error ? err.message : 'Failed to transcribe audio. Please try again.'
             setError(errorMessage)
-            console.error('Transcription error:', err)
+            console.error('Final transcription error:', err)
           }
         }
 
@@ -197,19 +251,23 @@ export function useSpeechRecognition(
           streamRef.current = null
         }
         audioChunksRef.current = []
+        accumulatedTranscript = ''
+        lastChunkTime = 0
       }
 
       mediaRecorderRef.current = mediaRecorder
       setIsListening(true)
       setError(null)
-      mediaRecorder.start()
+      // Start recording with 2-second chunks for faster transcription
+      mediaRecorder.start(CHUNK_INTERVAL)
 
-      // Auto-stop after 30 seconds to prevent very long recordings
+      // Auto-stop after 15 seconds to prevent very long recordings
+      // Reduced from 30s for faster response
       autoStopTimeoutRef.current = setTimeout(() => {
         if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
-          stopListeningRef.current?.()
+          stopListening()
         }
-      }, 30000)
+      }, 15000)
     } catch (err) {
       const errorMessage =
         err instanceof Error && err.name === 'NotAllowedError'
