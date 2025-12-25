@@ -8,8 +8,11 @@
 
 import React, { useEffect, useLayoutEffect, useRef } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
-import { Footer } from './Footer'
+
+import { updatePageMeta } from '../utils/pageMeta'
 import { updatePageTitle } from '../utils/pageTitles'
+
+import { Footer } from './Footer'
 
 export const Layout: React.FC = () => {
   const { pathname } = useLocation()
@@ -17,9 +20,10 @@ export const Layout: React.FC = () => {
   const timeoutRefs = useRef<NodeJS.Timeout[]>([])
   const rafRef = useRef<number | null>(null)
 
-  // Set initial page title on mount
+  // Set initial page title and meta tags on mount
   useEffect(() => {
     updatePageTitle(pathname)
+    updatePageMeta(pathname)
   }, []) // Only run on mount
 
   // Disable browser's automatic scroll restoration on mount
@@ -36,15 +40,17 @@ export const Layout: React.FC = () => {
     if (appContainer) {
       appContainer.scrollTop = 0
     }
-    
+
     // Scroll window/document as fallback
     window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
     document.documentElement.scrollTop = 0
     document.body.scrollTop = 0
-    
+
     // Also try scrolling any other scrollable containers
-    const scrollableContainers = document.querySelectorAll('[style*="overflow"], [style*="overflow-y"]')
-    scrollableContainers.forEach((container) => {
+    const scrollableContainers = document.querySelectorAll(
+      '[style*="overflow"], [style*="overflow-y"]'
+    )
+    scrollableContainers.forEach(container => {
       const el = container as HTMLElement
       if (el.scrollTop !== undefined) {
         el.scrollTop = 0
@@ -52,12 +58,14 @@ export const Layout: React.FC = () => {
     })
   }
 
-  // Update page title and scroll to top on route change - immediate attempt
+  // Update page title, meta tags, and scroll to top on route change - immediate attempt
   useLayoutEffect(() => {
     if (prevPathnameRef.current !== pathname) {
       prevPathnameRef.current = pathname
       // Update page title immediately (synchronously before paint)
       updatePageTitle(pathname)
+      // Update page meta tags immediately (synchronously before paint)
+      updatePageMeta(pathname)
       // Scroll immediately (synchronously before paint)
       scrollToTop()
     }
@@ -72,11 +80,11 @@ export const Layout: React.FC = () => {
     }
     timeoutRefs.current.forEach(timeout => clearTimeout(timeout))
     timeoutRefs.current = []
-    
+
     // Use requestAnimationFrame for the first attempt (after paint)
     rafRef.current = requestAnimationFrame(() => {
       scrollToTop()
-      
+
       // Additional attempts with small delays to catch late renders
       timeoutRefs.current.push(setTimeout(() => scrollToTop(), 0))
       timeoutRefs.current.push(setTimeout(() => scrollToTop(), 10))
