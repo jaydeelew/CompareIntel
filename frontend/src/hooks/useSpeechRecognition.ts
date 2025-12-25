@@ -41,6 +41,7 @@ export function useSpeechRecognition(
   const audioChunksRef = useRef<Blob[]>([])
   const streamRef = useRef<MediaStream | null>(null)
   const autoStopTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const chunkSendIntervalRef = useRef<NodeJS.Timeout | null>(null)
   const stopListeningRef = useRef<(() => void) | null>(null)
 
   // Check for native Web Speech API support
@@ -157,16 +158,35 @@ export function useSpeechRecognition(
       audioChunksRef.current = []
       let accumulatedTranscript = ''
       let isProcessing = false
-      let lastChunkTime = 0
+      let lastSendTime = 0
 
-      // Function to send audio chunk for transcription
-      const sendAudioChunk = async (audioBlob: Blob): Promise<string | null> => {
-        if (isProcessing || audioBlob.size === 0) return null
+      // Function to send accumulated audio chunks for transcription
+      const sendAudioChunks = async (chunks: Blob[]): Promise<string | null> => {
+        if (isProcessing || chunks.length === 0) return null
+
+        // Create a complete audio blob from accumulated chunks
+        const audioBlob = new Blob(chunks, {
+          type: mediaRecorder.mimeType || 'audio/webm',
+        })
+
+        if (audioBlob.size < 1000) {
+          // Too small, skip
+          return null
+        }
 
         isProcessing = true
         try {
           const formData = new FormData()
-          formData.append('audio', audioBlob, 'chunk.webm')
+          // Use proper file extension based on MIME type
+          const fileExtension = mediaRecorder.mimeType?.includes('webm')
+            ? 'webm'
+            : mediaRecorder.mimeType?.includes('mp4')
+              ? 'mp4'
+              : mediaRecorder.mimeType?.includes('ogg')
+                ? 'ogg'
+                : 'webm'
+
+          formData.append('audio', audioBlob, `recording.${fileExtension}`)
 
           const apiUrl = import.meta.env.VITE_API_URL || '/api'
           const response = await fetch(`${apiUrl}/speech-to-text`, {
@@ -189,21 +209,33 @@ export function useSpeechRecognition(
         }
       }
 
-      // Send chunks every 2 seconds for faster response
-      const CHUNK_INTERVAL = 2000 // 2 seconds
-      const MIN_CHUNK_SIZE = 1000 // Minimum 1KB to avoid sending tiny chunks
+      // Send accumulated chunks every 3 seconds for faster response
+      const CHUNK_SEND_INTERVAL = 3000 // 3 seconds
+      const MIN_CHUNK_SIZE = 2000 // Minimum 2KB to ensure valid audio
 
-      mediaRecorder.ondataavailable = async event => {
+      mediaRecorder.ondataavailable = event => {
         if (event.data.size > 0) {
           audioChunksRef.current.push(event.data)
+        }
+      }
 
-          // Send chunk every 2 seconds for faster transcription
-          const now = Date.now()
-          if (now - lastChunkTime >= CHUNK_INTERVAL && event.data.size >= MIN_CHUNK_SIZE) {
-            lastChunkTime = now
+      // Set up interval to send accumulated chunks periodically
+      chunkSendIntervalRef.current = setInterval(async () => {
+        if (
+          audioChunksRef.current.length > 0 &&
+          !isProcessing &&
+          Date.now() - lastSendTime >= CHUNK_SEND_INTERVAL
+        ) {
+          // Calculate total size of accumulated chunks
+          const totalSize = audioChunksRef.current.reduce((sum, chunk) => sum + chunk.size, 0)
 
-            // Send the current chunk immediately
-            const transcript = await sendAudioChunk(event.data)
+          if (totalSize >= MIN_CHUNK_SIZE) {
+            lastSendTime = Date.now()
+
+            // Send accumulated chunks (copy array to avoid mutation during send)
+            const chunksToSend = [...audioChunksRef.current]
+            const transcript = await sendAudioChunks(chunksToSend)
+
             if (transcript && transcript.trim()) {
               // Use the latest transcript (it contains the full context)
               accumulatedTranscript = transcript
@@ -212,13 +244,18 @@ export function useSpeechRecognition(
             }
           }
         }
-      }
+      }, CHUNK_SEND_INTERVAL)
 
       mediaRecorder.onstop = async () => {
         setIsListening(false)
 
+        // Clear the interval
+        if (chunkSendIntervalRef.current) {
+          clearInterval(chunkSendIntervalRef.current)
+          chunkSendIntervalRef.current = null
+        }
+
         // Send final audio chunk if there's remaining data
-        // Only send if we don't already have a recent transcript
         const audioBlob = new Blob(audioChunksRef.current, {
           type: mediaRecorder.mimeType || 'audio/webm',
         })
@@ -228,10 +265,10 @@ export function useSpeechRecognition(
         if (accumulatedTranscript) {
           // We already have the latest transcript from chunks
           // No need to send again - it's already been sent via onResult
-        } else if (audioBlob.size > 0) {
+        } else if (audioBlob.size >= 1000) {
           // If we didn't get any partial results, send the full recording
           try {
-            const finalTranscript = await sendAudioChunk(audioBlob)
+            const finalTranscript = await sendAudioChunks(audioChunksRef.current)
             if (finalTranscript && finalTranscript.trim()) {
               onResult(finalTranscript)
             } else {
@@ -252,14 +289,15 @@ export function useSpeechRecognition(
         }
         audioChunksRef.current = []
         accumulatedTranscript = ''
-        lastChunkTime = 0
+        lastSendTime = 0
       }
 
       mediaRecorderRef.current = mediaRecorder
       setIsListening(true)
       setError(null)
-      // Start recording with 2-second chunks for faster transcription
-      mediaRecorder.start(CHUNK_INTERVAL)
+      lastSendTime = Date.now()
+      // Start recording - chunks will be sent via interval, not via timeslice
+      mediaRecorder.start()
 
       // Auto-stop after 15 seconds to prevent very long recordings
       // Reduced from 30s for faster response
@@ -300,6 +338,12 @@ export function useSpeechRecognition(
     if (autoStopTimeoutRef.current) {
       clearTimeout(autoStopTimeoutRef.current)
       autoStopTimeoutRef.current = null
+    }
+
+    // Clear chunk send interval
+    if (chunkSendIntervalRef.current) {
+      clearInterval(chunkSendIntervalRef.current)
+      chunkSendIntervalRef.current = null
     }
 
     // Stop native recognition
