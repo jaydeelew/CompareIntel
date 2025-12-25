@@ -517,25 +517,32 @@ async def speech_to_text(
     current_user: Optional[User] = Depends(get_current_user),
 ):
     """
-    Transcribe audio to text using OpenAI Whisper API.
+    Transcribe audio to text using AssemblyAI API.
     
-    Accepts audio files in webm, mp4, ogg, or wav format.
+    Accepts audio files in webm, mp4, ogg, wav, or mp3 format.
     Returns transcribed text.
     
-    Requires OPENAI_API_KEY to be set in environment variables.
+    Requires ASSEMBLYAI_API_KEY to be set in environment variables.
     This endpoint is used as a fallback for browsers that don't support
     the native Web Speech API (e.g., Firefox).
     
     Browser support:
     - Chrome/Edge/Safari: Use native Web Speech API (no backend call needed)
     - Firefox/Others: Use this endpoint with MediaRecorder API
+    
+    AssemblyAI offers:
+    - Faster transcription (2-3x faster than Whisper)
+    - Better accuracy
+    - Free tier: $50 credits (~185 hours)
+    - Cost: $0.27/hour (pre-recorded) or $0.15/hour (streaming)
     """
-    # Check if OpenAI API key is configured
-    if not settings.openai_api_key:
+    # Check if AssemblyAI API key is configured
+    if not settings.assemblyai_api_key:
         raise HTTPException(
             status_code=503,
-            detail="Speech-to-text is not available. OPENAI_API_KEY is not configured. "
-                   "Please set OPENAI_API_KEY in your environment variables to enable this feature."
+            detail="Speech-to-text is not available. ASSEMBLYAI_API_KEY is not configured. "
+                   "Please set ASSEMBLYAI_API_KEY in your environment variables to enable this feature. "
+                   "Get your free API key at: https://www.assemblyai.com/"
         )
     
     # Validate file type
@@ -562,14 +569,14 @@ async def speech_to_text(
                    f"Received: {audio.content_type or 'unknown'}"
         )
     
-    # Validate file size (max 25MB for Whisper API)
-    MAX_FILE_SIZE = 25 * 1024 * 1024  # 25MB
+    # Validate file size (max 2GB for AssemblyAI, but we'll limit to 100MB for practical reasons)
+    MAX_FILE_SIZE = 100 * 1024 * 1024  # 100MB
     audio_content = await audio.read()
     
     if len(audio_content) > MAX_FILE_SIZE:
         raise HTTPException(
             status_code=400,
-            detail=f"Audio file too large. Maximum size is 25MB. Received: {len(audio_content) / 1024 / 1024:.2f}MB"
+            detail=f"Audio file too large. Maximum size is 100MB. Received: {len(audio_content) / 1024 / 1024:.2f}MB"
         )
     
     if len(audio_content) == 0:
@@ -578,7 +585,7 @@ async def speech_to_text(
             detail="Audio file is empty"
         )
     
-    # Save uploaded file temporarily
+    # Save uploaded file temporarily for AssemblyAI
     tmp_path = None
     try:
         # Determine file extension from content type or filename
@@ -590,6 +597,8 @@ async def speech_to_text(
                 file_ext = '.ogg'
             elif 'wav' in audio.content_type:
                 file_ext = '.wav'
+            elif 'mp3' in audio.content_type:
+                file_ext = '.mp3'
         elif filename_lower:
             for ext in allowed_extensions:
                 if filename_lower.endswith(ext):
@@ -601,44 +610,63 @@ async def speech_to_text(
             tmp_file.write(audio_content)
             tmp_path = tmp_file.name
         
-        # Use OpenAI Whisper API for transcription
-        try:
-            from openai import OpenAI
-            
-            client = OpenAI(api_key=settings.openai_api_key)
-            
-            with open(tmp_path, 'rb') as audio_file:
-                transcript = client.audio.transcriptions.create(
-                    model="whisper-1",
-                    file=audio_file,
-                    language="en"  # Optional: specify language for better accuracy
-                )
-            
-            return SpeechToTextResponse(transcript=transcript.text)
-            
-        except ImportError:
+        # Use AssemblyAI API for transcription
+        import assemblyai as aai
+        
+        # Configure AssemblyAI
+        aai.settings.api_key = settings.assemblyai_api_key
+        
+        # Create transcriber
+        transcriber = aai.Transcriber()
+        
+        # Configure transcription settings for better accuracy and speed
+        config = aai.TranscriptionConfig(
+            language_code="en",  # Specify English for better accuracy
+            punctuate=True,  # Add punctuation
+            format_text=True,  # Format text (capitalization, etc.)
+        )
+        
+        # Transcribe the audio file
+        transcript = transcriber.transcribe(
+            tmp_path,
+            config=config
+        )
+        
+        # Check if transcription was successful
+        if transcript.status == aai.TranscriptStatus.error:
             raise HTTPException(
                 status_code=500,
-                detail="OpenAI library is not installed. Please install it with: pip install openai>=1.0.0"
+                detail=f"Transcription failed: {transcript.error}"
             )
-        except Exception as e:
-            error_message = str(e)
-            # Provide more helpful error messages
-            if "Invalid API key" in error_message or "authentication" in error_message.lower():
-                raise HTTPException(
-                    status_code=401,
-                    detail="Invalid OpenAI API key. Please check your OPENAI_API_KEY configuration."
-                )
-            elif "file format" in error_message.lower() or "unsupported" in error_message.lower():
-                raise HTTPException(
-                    status_code=400,
-                    detail=f"Unsupported audio format or corrupted file: {error_message}"
-                )
-            else:
-                raise HTTPException(
-                    status_code=500,
-                    detail=f"Transcription failed: {error_message}"
-                )
+        
+        # Return transcribed text
+        return SpeechToTextResponse(transcript=transcript.text)
+        
+    except ImportError:
+        raise HTTPException(
+            status_code=500,
+            detail="AssemblyAI library is not installed. Please install it with: pip install assemblyai>=1.0.0"
+        )
+    except Exception as e:
+        error_message = str(e)
+        error_type = type(e).__name__
+        
+        # Handle AssemblyAI-specific errors
+        if "AuthenticationError" in error_type or "authentication" in error_message.lower() or "api key" in error_message.lower():
+            raise HTTPException(
+                status_code=401,
+                detail="Invalid AssemblyAI API key. Please check your ASSEMBLYAI_API_KEY configuration."
+            )
+        elif "TranscriptionError" in error_type or "file format" in error_message.lower() or "unsupported" in error_message.lower():
+            raise HTTPException(
+                status_code=400,
+                detail=f"Transcription error or unsupported audio format: {error_message}"
+            )
+        else:
+            raise HTTPException(
+                status_code=500,
+                detail=f"Transcription failed: {error_message}"
+            )
     
     finally:
         # Clean up temp file

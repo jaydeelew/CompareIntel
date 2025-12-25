@@ -51,6 +51,7 @@ anthropic>=0.18.0     # Anthropic Claude tokenizer (free, no API key needed)
 transformers>=4.35.0  # Hugging Face tokenizers for Meta, Mistral, DeepSeek, Qwen
 sentencepiece>=0.1.99 # Required by some tokenizers (e.g., Llama, Qwen)
 requests>=2.25.0      # HTTP client for utility scripts
+assemblyai>=1.0.0     # AssemblyAI speech-to-text API (faster and cheaper than Whisper)
 
 # ============================================================================
 # Authentication & Security
