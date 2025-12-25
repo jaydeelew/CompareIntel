@@ -41,6 +41,7 @@ export function useSpeechRecognition(
   const audioChunksRef = useRef<Blob[]>([])
   const streamRef = useRef<MediaStream | null>(null)
   const autoStopTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const stopListeningRef = useRef<(() => void) | null>(null)
 
   // Check for native Web Speech API support
   const hasNativeSupport =
@@ -206,7 +207,7 @@ export function useSpeechRecognition(
       // Auto-stop after 30 seconds to prevent very long recordings
       autoStopTimeoutRef.current = setTimeout(() => {
         if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
-          stopListening()
+          stopListeningRef.current?.()
         }
       }, 30000)
     } catch (err) {
@@ -221,7 +222,7 @@ export function useSpeechRecognition(
       setIsListening(false)
       console.error('Microphone access error:', err)
     }
-  }, [hasMediaRecorderSupport, onResult, stopListening])
+  }, [hasMediaRecorderSupport, onResult])
 
   const startListening = useCallback(() => {
     if (!isSupported) {
@@ -271,6 +272,11 @@ export function useSpeechRecognition(
 
     setIsListening(false)
   }, [])
+
+  // Keep stopListening ref in sync
+  useEffect(() => {
+    stopListeningRef.current = stopListening
+  }, [stopListening])
 
   // Cleanup on unmount
   useEffect(() => {
