@@ -38,10 +38,6 @@ class Settings(BaseSettings):
     
     # API Keys
     openrouter_api_key: str
-    # AssemblyAI API key (Optional - for speech-to-text)
-    # If not set, speech-to-text endpoint will return an error
-    # Get your free API key at: https://www.assemblyai.com/
-    assemblyai_api_key: Optional[str] = None
     
     # reCAPTCHA v3 (Optional - for registration protection)
     recaptcha_secret_key: Optional[str] = None

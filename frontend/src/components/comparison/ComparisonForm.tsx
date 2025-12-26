@@ -1452,21 +1452,15 @@ export const ComparisonForm = memo<ComparisonFormProps>(
                   />
                 </svg>
               </button>
-              {/* Voice input button */}
-              {isSpeechSupported && (
+              {/* Voice input button - only shown for Chromium-based browsers */}
+              {isSpeechSupported && speechBrowserSupport === 'native' && (
                 <button
                   type="button"
                   onClick={() =>
                     isSpeechListening ? stopSpeechListening() : startSpeechListening()
                   }
                   className={`textarea-icon-button voice-button ${isSpeechListening ? 'active' : ''}`}
-                  title={
-                    isSpeechListening
-                      ? 'Stop recording'
-                      : speechBrowserSupport === 'native'
-                        ? 'Start voice input (browser)'
-                        : 'Start voice input (server)'
-                  }
+                  title={isSpeechListening ? 'Stop recording' : 'Start voice input'}
                   disabled={isLoading}
                 >
                   <svg
