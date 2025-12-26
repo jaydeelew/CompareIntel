@@ -47,6 +47,8 @@ export function useSpeechRecognition(
   const accumulatedFinalTranscriptRef = useRef<string>('')
   const silenceTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const lastSentFinalIndexRef = useRef<number>(0)
+  // Ref for Firefox/fallback: track last sent transcript to extract incremental updates
+  const lastSentTranscriptRef = useRef<string>('')
 
   // Check for native Web Speech API support
   const hasNativeSupport =
@@ -229,6 +231,8 @@ export function useSpeechRecognition(
       let accumulatedTranscript = ''
       let isProcessing = false
       let lastSendTime = 0
+      // Reset last sent transcript when starting (for incremental updates)
+      lastSentTranscriptRef.current = ''
 
       // Function to send accumulated audio chunks for transcription
       const sendAudioChunks = async (chunks: Blob[]): Promise<string | null> => {
@@ -307,10 +311,37 @@ export function useSpeechRecognition(
             const transcript = await sendAudioChunks(chunksToSend)
 
             if (transcript && transcript.trim()) {
-              // Use the latest transcript (it contains the full context)
-              accumulatedTranscript = transcript
-              // Send partial result immediately for better UX
-              onResult(transcript)
+              // Extract incremental update from full transcript
+              // Backend returns full transcript, but we only want to send the new part
+              const lastSent = lastSentTranscriptRef.current
+              let incrementalTranscript = transcript.trim()
+
+              // If we have a previous transcript, extract only the new part
+              if (lastSent) {
+                const lastSentLower = lastSent.toLowerCase().trim()
+                const transcriptLower = incrementalTranscript.toLowerCase().trim()
+
+                // Check if the new transcript starts with the previous one (common case)
+                if (transcriptLower.startsWith(lastSentLower)) {
+                  // Extract the new part after the previous transcript
+                  incrementalTranscript = incrementalTranscript.slice(lastSent.length).trim()
+                } else {
+                  // If transcript doesn't start with previous, it might be a replacement
+                  // In this case, send the full transcript but mark it appropriately
+                  // For now, we'll treat it as a full replacement and let the callback handle it
+                  incrementalTranscript = transcript.trim()
+                }
+              }
+
+              // Only send if there's new content
+              if (incrementalTranscript) {
+                // Update accumulated transcript with full transcript
+                accumulatedTranscript = transcript.trim()
+                // Update last sent to the full transcript (for next comparison)
+                lastSentTranscriptRef.current = transcript.trim()
+                // Send only the incremental part to append
+                onResult(incrementalTranscript)
+              }
             }
           }
         }
@@ -330,17 +361,47 @@ export function useSpeechRecognition(
           type: mediaRecorder.mimeType || 'audio/webm',
         })
 
-        // If we have accumulated transcript from chunks, use it (it's already the latest)
+        // If we have accumulated transcript from chunks, ensure final part is sent
         // Otherwise, send the full recording as fallback
         if (accumulatedTranscript) {
-          // We already have the latest transcript from chunks
-          // No need to send again - it's already been sent via onResult
+          // Check if there's any remaining part that hasn't been sent
+          const lastSent = lastSentTranscriptRef.current
+          const accumulatedLower = accumulatedTranscript.toLowerCase().trim()
+          const lastSentLower = lastSent.toLowerCase().trim()
+
+          // If accumulated is longer than last sent, send the remaining part
+          if (!lastSentLower || !accumulatedLower.startsWith(lastSentLower)) {
+            // If they don't match, send the full accumulated (shouldn't happen normally)
+            const remainingPart = accumulatedTranscript.trim()
+            if (remainingPart) {
+              lastSentTranscriptRef.current = accumulatedTranscript.trim()
+              onResult(remainingPart)
+            }
+          }
         } else if (audioBlob.size >= 1000) {
           // If we didn't get any partial results, send the full recording
           try {
             const finalTranscript = await sendAudioChunks(audioChunksRef.current)
             if (finalTranscript && finalTranscript.trim()) {
-              onResult(finalTranscript)
+              // Extract incremental update if we have previous transcript
+              const lastSent = lastSentTranscriptRef.current
+              let incrementalTranscript = finalTranscript.trim()
+
+              if (lastSent) {
+                const lastSentLower = lastSent.toLowerCase().trim()
+                const transcriptLower = incrementalTranscript.toLowerCase().trim()
+
+                if (transcriptLower.startsWith(lastSentLower)) {
+                  incrementalTranscript = incrementalTranscript.slice(lastSent.length).trim()
+                }
+              }
+
+              if (incrementalTranscript) {
+                lastSentTranscriptRef.current = finalTranscript.trim()
+                onResult(incrementalTranscript)
+              } else {
+                setError('No new transcription received. Please try again.')
+              }
             } else {
               setError('No transcription received. Please try again.')
             }
@@ -360,6 +421,8 @@ export function useSpeechRecognition(
         audioChunksRef.current = []
         accumulatedTranscript = ''
         lastSendTime = 0
+        // Reset last sent transcript ref
+        lastSentTranscriptRef.current = ''
       }
 
       mediaRecorderRef.current = mediaRecorder
@@ -447,6 +510,9 @@ export function useSpeechRecognition(
       streamRef.current.getTracks().forEach(track => track.stop())
       streamRef.current = null
     }
+
+    // Reset Firefox fallback transcript tracking
+    lastSentTranscriptRef.current = ''
 
     setIsListening(false)
   }, [])
