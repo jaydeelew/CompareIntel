@@ -43,6 +43,10 @@ export function useSpeechRecognition(
   const autoStopTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const chunkSendIntervalRef = useRef<NodeJS.Timeout | null>(null)
   const stopListeningRef = useRef<(() => void) | null>(null)
+  // Refs for Chromium-based browser speech recognition improvements
+  const accumulatedFinalTranscriptRef = useRef<string>('')
+  const silenceTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const lastSentFinalIndexRef = useRef<number>(0)
 
   // Check for native Web Speech API support
   const hasNativeSupport =
@@ -73,26 +77,83 @@ export function useSpeechRecognition(
       recognition.interimResults = true
       recognition.lang = 'en-US'
 
+      // Reset accumulated transcript when starting
+      accumulatedFinalTranscriptRef.current = ''
+      lastSentFinalIndexRef.current = 0
+
       recognition.onstart = () => {
         setIsListening(true)
         setError(null)
+        accumulatedFinalTranscriptRef.current = ''
+        lastSentFinalIndexRef.current = 0
       }
 
       recognition.onresult = event => {
-        let finalTranscript = ''
+        // Clear any existing silence timeout since we got a result
+        if (silenceTimeoutRef.current) {
+          clearTimeout(silenceTimeoutRef.current)
+          silenceTimeoutRef.current = null
+        }
 
+        let newFinalTranscript = ''
+        let interimTranscript = ''
+
+        // Process all results from resultIndex onwards
         for (let i = event.resultIndex; i < event.results.length; i++) {
+          const transcript = event.results[i][0].transcript
+
           if (event.results[i].isFinal) {
-            finalTranscript += event.results[i][0].transcript + ' '
+            // Accumulate final results
+            accumulatedFinalTranscriptRef.current += transcript + ' '
+            newFinalTranscript += transcript + ' '
+          } else {
+            // Collect interim results for real-time display
+            interimTranscript += transcript
           }
         }
 
-        if (finalTranscript) {
-          onResult(finalTranscript.trim())
+        // Handle final results - send only the new final part (incremental)
+        if (newFinalTranscript) {
+          // Send only the new final transcript segment to append
+          onResult(newFinalTranscript.trim())
         }
+
+        // Handle interim results - send accumulated final + interim for real-time feedback
+        // This provides immediate visual feedback like mobile does
+        if (interimTranscript) {
+          const fullDisplayTranscript = accumulatedFinalTranscriptRef.current + interimTranscript
+          onResult(fullDisplayTranscript.trim())
+        }
+
+        // Set up silence detection timeout (2 seconds of no results = pause)
+        // This mimics mobile behavior where recording stops after pause
+        silenceTimeoutRef.current = setTimeout(() => {
+          // If we have accumulated final transcript, ensure it's sent
+          if (accumulatedFinalTranscriptRef.current.trim()) {
+            // The final transcript should already be sent, but ensure it's finalized
+            const finalText = accumulatedFinalTranscriptRef.current.trim()
+            if (finalText) {
+              onResult(finalText)
+            }
+          }
+          // Stop recognition after pause (like mobile does)
+          if (recognitionRef.current) {
+            try {
+              recognitionRef.current.stop()
+            } catch (_err) {
+              // Ignore errors when stopping (may already be stopped)
+            }
+          }
+        }, 2000) // 2 seconds of silence
       }
 
       recognition.onerror = event => {
+        // Clear silence timeout on error
+        if (silenceTimeoutRef.current) {
+          clearTimeout(silenceTimeoutRef.current)
+          silenceTimeoutRef.current = null
+        }
+
         const errorMessage =
           event.error === 'no-speech'
             ? 'No speech detected. Please try again.'
@@ -107,7 +168,16 @@ export function useSpeechRecognition(
       }
 
       recognition.onend = () => {
+        // Clear silence timeout
+        if (silenceTimeoutRef.current) {
+          clearTimeout(silenceTimeoutRef.current)
+          silenceTimeoutRef.current = null
+        }
+
         setIsListening(false)
+        // Reset accumulated transcript when ending
+        accumulatedFinalTranscriptRef.current = ''
+        lastSentFinalIndexRef.current = 0
       }
 
       recognitionRef.current = recognition
@@ -303,7 +373,7 @@ export function useSpeechRecognition(
       // Reduced from 30s for faster response
       autoStopTimeoutRef.current = setTimeout(() => {
         if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
-          stopListening()
+          stopListeningRef.current?.()
         }
       }, 15000)
     } catch (err) {
@@ -338,6 +408,12 @@ export function useSpeechRecognition(
     if (autoStopTimeoutRef.current) {
       clearTimeout(autoStopTimeoutRef.current)
       autoStopTimeoutRef.current = null
+    }
+
+    // Clear silence timeout (for Chromium-based browsers)
+    if (silenceTimeoutRef.current) {
+      clearTimeout(silenceTimeoutRef.current)
+      silenceTimeoutRef.current = null
     }
 
     // Clear chunk send interval

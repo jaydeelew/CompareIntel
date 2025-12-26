@@ -162,13 +162,47 @@ export const ComparisonForm = memo<ComparisonFormProps>(
     const abortControllerRef = useRef<AbortController | null>(null)
     const fileInputRef = useRef<HTMLInputElement | null>(null)
     const [isDraggingOver, setIsDraggingOver] = useState(false)
+    // Track speech recognition state: base input when speech started, accumulated final results, and last displayed result
+    const baseInputWhenSpeechStartedRef = useRef<string>('')
+    const accumulatedFinalRef = useRef<string>('')
+    const lastDisplayedRef = useRef<string>('')
 
     // Speech recognition hook
+    // Use functional update to avoid stale closures and preserve existing content (including attached files)
     const handleSpeechResult = useCallback(
       (transcript: string) => {
-        setInput(input + (input ? ' ' : '') + transcript)
+        setInput(_prevInput => {
+          const accumulatedFinal = accumulatedFinalRef.current
+          const transcriptLower = transcript.toLowerCase().trim()
+          const accumulatedFinalLower = accumulatedFinal.toLowerCase().trim()
+
+          // Determine if this is an interim result (full: accumulated + interim) or final result (incremental)
+          // Interim results start with accumulated final content
+          // Final results are incremental segments that should be appended to accumulated final
+          const isInterim =
+            accumulatedFinalLower && transcriptLower.startsWith(accumulatedFinalLower)
+
+          if (isInterim) {
+            // Interim result: full transcript (accumulated final + interim)
+            // Update the displayed result, always appending to the base input
+            lastDisplayedRef.current = transcript
+            const baseInput = baseInputWhenSpeechStartedRef.current
+            return baseInput + (baseInput && transcript ? ' ' : '') + transcript
+          } else {
+            // Final result: incremental new segment
+            // Append to accumulated final, then update display
+            accumulatedFinalRef.current = (accumulatedFinal + ' ' + transcript).trim()
+            lastDisplayedRef.current = accumulatedFinalRef.current
+            const baseInput = baseInputWhenSpeechStartedRef.current
+            return (
+              baseInput +
+              (baseInput && accumulatedFinalRef.current ? ' ' : '') +
+              accumulatedFinalRef.current
+            )
+          }
+        })
       },
-      [setInput, input]
+      [setInput]
     )
 
     const {
@@ -186,6 +220,32 @@ export const ComparisonForm = memo<ComparisonFormProps>(
         showNotification(speechError, 'error')
       }
     }, [speechError])
+
+    // Track current input value in a ref for efficient access
+    const currentInputRef = useRef<string>(input)
+    useEffect(() => {
+      currentInputRef.current = input
+    }, [input])
+
+    // Capture base input when speech starts and reset refs when speech stops
+    const prevIsListeningRef = useRef<boolean>(false)
+    useEffect(() => {
+      const wasListening = prevIsListeningRef.current
+      prevIsListeningRef.current = isSpeechListening
+
+      if (isSpeechListening && !wasListening) {
+        // Speech just started - capture the current input as the base
+        // This preserves any existing text and attached file content
+        baseInputWhenSpeechStartedRef.current = currentInputRef.current
+        accumulatedFinalRef.current = ''
+        lastDisplayedRef.current = ''
+      } else if (!isSpeechListening && wasListening) {
+        // Speech just stopped - reset all refs
+        baseInputWhenSpeechStartedRef.current = ''
+        accumulatedFinalRef.current = ''
+        lastDisplayedRef.current = ''
+      }
+    }, [isSpeechListening])
 
     // Debounce input for API calls (only call API when user pauses typing)
     const debouncedInput = useDebounce(input, 600) // 600ms delay
