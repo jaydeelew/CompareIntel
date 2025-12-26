@@ -168,39 +168,37 @@ export const ComparisonForm = memo<ComparisonFormProps>(
     const lastDisplayedRef = useRef<string>('')
 
     // Speech recognition hook
-    // Use functional update to avoid stale closures and preserve existing content (including attached files)
+    // Preserve existing content (including attached files) by using baseInputWhenSpeechStartedRef
     const handleSpeechResult = useCallback(
       (transcript: string) => {
-        setInput(_prevInput => {
-          const accumulatedFinal = accumulatedFinalRef.current
-          const transcriptLower = transcript.toLowerCase().trim()
-          const accumulatedFinalLower = accumulatedFinal.toLowerCase().trim()
+        const accumulatedFinal = accumulatedFinalRef.current
+        const transcriptLower = transcript.toLowerCase().trim()
+        const accumulatedFinalLower = accumulatedFinal.toLowerCase().trim()
 
-          // Determine if this is an interim result (full: accumulated + interim) or final result (incremental)
-          // Interim results start with accumulated final content
-          // Final results are incremental segments that should be appended to accumulated final
-          const isInterim =
-            accumulatedFinalLower && transcriptLower.startsWith(accumulatedFinalLower)
+        // Determine if this is an interim result (full: accumulated + interim) or final result (incremental)
+        // Interim results start with accumulated final content
+        // Final results are incremental segments that should be appended to accumulated final
+        const isInterim = accumulatedFinalLower && transcriptLower.startsWith(accumulatedFinalLower)
 
-          if (isInterim) {
-            // Interim result: full transcript (accumulated final + interim)
-            // Update the displayed result, always appending to the base input
-            lastDisplayedRef.current = transcript
-            const baseInput = baseInputWhenSpeechStartedRef.current
-            return baseInput + (baseInput && transcript ? ' ' : '') + transcript
-          } else {
-            // Final result: incremental new segment
-            // Append to accumulated final, then update display
-            accumulatedFinalRef.current = (accumulatedFinal + ' ' + transcript).trim()
-            lastDisplayedRef.current = accumulatedFinalRef.current
-            const baseInput = baseInputWhenSpeechStartedRef.current
-            return (
-              baseInput +
-              (baseInput && accumulatedFinalRef.current ? ' ' : '') +
-              accumulatedFinalRef.current
-            )
-          }
-        })
+        let newInput: string
+        if (isInterim) {
+          // Interim result: full transcript (accumulated final + interim)
+          // Update the displayed result, always appending to the base input
+          lastDisplayedRef.current = transcript
+          const baseInput = baseInputWhenSpeechStartedRef.current
+          newInput = baseInput + (baseInput && transcript ? ' ' : '') + transcript
+        } else {
+          // Final result: incremental new segment
+          // Append to accumulated final, then update display
+          accumulatedFinalRef.current = (accumulatedFinal + ' ' + transcript).trim()
+          lastDisplayedRef.current = accumulatedFinalRef.current
+          const baseInput = baseInputWhenSpeechStartedRef.current
+          newInput =
+            baseInput +
+            (baseInput && accumulatedFinalRef.current ? ' ' : '') +
+            accumulatedFinalRef.current
+        }
+        setInput(newInput)
       },
       [setInput]
     )
