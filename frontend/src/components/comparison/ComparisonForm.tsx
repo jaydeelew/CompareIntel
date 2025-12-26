@@ -164,16 +164,48 @@ export const ComparisonForm = memo<ComparisonFormProps>(
     const [isDraggingOver, setIsDraggingOver] = useState(false)
     // Track base input when speech started to preserve existing content
     const baseInputWhenSpeechStartedRef = useRef<string>('')
+    // For mobile: accumulate final results since hook sends incremental results
+    const mobileAccumulatedFinalRef = useRef<string>('')
+
+    // Detect mobile device
+    const isMobile =
+      typeof navigator !== 'undefined' &&
+      /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
 
     // Speech recognition hook
-    // The hook now sends the full transcript each time, so we just append it to base input
+    // Mobile: Hook sends incremental results, consumer accumulates
+    // Desktop: Hook sends full transcript, consumer just displays it
     const handleSpeechResult = useCallback(
-      (transcript: string, _isFinal: boolean) => {
+      (transcript: string, isFinal: boolean) => {
         const baseInput = baseInputWhenSpeechStartedRef.current
-        const newInput = baseInput + (baseInput && transcript ? ' ' : '') + transcript
-        setInput(newInput)
+
+        if (isMobile) {
+          // MOBILE: Stock behavior - accumulate final results
+          if (isFinal) {
+            // Add to accumulated finals
+            mobileAccumulatedFinalRef.current = (
+              mobileAccumulatedFinalRef.current +
+              ' ' +
+              transcript
+            ).trim()
+            const newInput =
+              baseInput +
+              (baseInput && mobileAccumulatedFinalRef.current ? ' ' : '') +
+              mobileAccumulatedFinalRef.current
+            setInput(newInput)
+          } else {
+            // Interim: show accumulated finals + current interim
+            const fullTranscript = (mobileAccumulatedFinalRef.current + ' ' + transcript).trim()
+            const newInput = baseInput + (baseInput && fullTranscript ? ' ' : '') + fullTranscript
+            setInput(newInput)
+          }
+        } else {
+          // DESKTOP: Hook already sends full transcript
+          const newInput = baseInput + (baseInput && transcript ? ' ' : '') + transcript
+          setInput(newInput)
+        }
       },
-      [setInput]
+      [setInput, isMobile]
     )
 
     const {
@@ -198,7 +230,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
       currentInputRef.current = input
     }, [input])
 
-    // Capture base input when speech starts and reset ref when speech stops
+    // Capture base input when speech starts and reset refs when speech stops
     const prevIsListeningRef = useRef<boolean>(false)
     useEffect(() => {
       const wasListening = prevIsListeningRef.current
@@ -208,9 +240,11 @@ export const ComparisonForm = memo<ComparisonFormProps>(
         // Speech just started - capture the current input as the base
         // This preserves any existing text and attached file content
         baseInputWhenSpeechStartedRef.current = currentInputRef.current
+        mobileAccumulatedFinalRef.current = ''
       } else if (!isSpeechListening && wasListening) {
-        // Speech just stopped - reset base input ref
+        // Speech just stopped - reset refs
         baseInputWhenSpeechStartedRef.current = ''
+        mobileAccumulatedFinalRef.current = ''
       }
     }, [isSpeechListening])
 

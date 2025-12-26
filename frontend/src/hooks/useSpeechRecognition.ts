@@ -4,6 +4,9 @@
  * Uses native Web Speech API (Chrome/Edge/Safari)
  * Only supports browsers with native Web Speech API support
  *
+ * Mobile: Uses stock/vanilla Web Speech API behavior
+ * Desktop: Uses custom handling to deal with pause/resume issues
+ *
  * @example
  * ```typescript
  * const { isListening, isSupported, startListening, stopListening, error } =
@@ -30,12 +33,21 @@ export interface UseSpeechRecognitionReturn {
   browserSupport: 'native' | 'none'
 }
 
+// Detect if running on mobile device
+function isMobileDevice(): boolean {
+  if (typeof window === 'undefined' || typeof navigator === 'undefined') {
+    return false
+  }
+  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+}
+
 export function useSpeechRecognition(
   onResult: (transcript: string, isFinal: boolean) => void
 ): UseSpeechRecognitionReturn {
   const [isListening, setIsListening] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const recognitionRef = useRef<SpeechRecognition | null>(null)
+  const isMobile = isMobileDevice()
 
   // Check for native Web Speech API support (Chromium-based browsers)
   const hasNativeSupport =
@@ -66,28 +78,44 @@ export function useSpeechRecognition(
         setError(null)
       }
 
-      recognition.onresult = event => {
-        let finalTranscript = ''
-        let interimTranscript = ''
+      if (isMobile) {
+        // MOBILE: Stock/vanilla Web Speech API behavior
+        // Just pass through whatever the API gives us directly
+        recognition.onresult = event => {
+          const result = event.results[event.resultIndex]
+          const transcript = result[0].transcript
+          const isFinal = result.isFinal
 
-        // Build full transcript from ALL results (not just from resultIndex)
-        // This handles API resets correctly after pauses
-        for (let i = 0; i < event.results.length; i++) {
-          const transcript = event.results[i][0].transcript
-
-          if (event.results[i].isFinal) {
-            finalTranscript += transcript
-          } else {
-            interimTranscript += transcript
+          if (transcript.trim()) {
+            onResult(transcript.trim(), isFinal)
           }
         }
+      } else {
+        // DESKTOP: Custom handling for pause/resume issues
+        // Build full transcript from ALL results to handle API resets
+        recognition.onresult = event => {
+          let finalTranscript = ''
+          let interimTranscript = ''
 
-        // Always send the full transcript (final + interim)
-        const fullTranscript = (finalTranscript + interimTranscript).trim()
-        const isAllFinal = interimTranscript === '' && finalTranscript !== ''
+          // Build full transcript from ALL results (not just from resultIndex)
+          // This handles API resets correctly after pauses on desktop
+          for (let i = 0; i < event.results.length; i++) {
+            const transcript = event.results[i][0].transcript
 
-        if (fullTranscript) {
-          onResult(fullTranscript, isAllFinal)
+            if (event.results[i].isFinal) {
+              finalTranscript += transcript
+            } else {
+              interimTranscript += transcript
+            }
+          }
+
+          // Always send the full transcript (final + interim)
+          const fullTranscript = (finalTranscript + interimTranscript).trim()
+          const isAllFinal = interimTranscript === '' && finalTranscript !== ''
+
+          if (fullTranscript) {
+            onResult(fullTranscript, isAllFinal)
+          }
         }
       }
 
@@ -115,7 +143,7 @@ export function useSpeechRecognition(
       setError('Failed to start speech recognition')
       setIsListening(false)
     }
-  }, [isSupported, onResult])
+  }, [isSupported, isMobile, onResult])
 
   const stopListening = useCallback(() => {
     if (recognitionRef.current) {
