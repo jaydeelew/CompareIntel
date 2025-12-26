@@ -7,8 +7,8 @@
  * @example
  * ```typescript
  * const { isListening, isSupported, startListening, stopListening, error } =
- *   useSpeechRecognition((transcript) => {
- *     setInput(prev => prev + ' ' + transcript)
+ *   useSpeechRecognition((transcript, isFinal) => {
+ *     setInput(baseInput + ' ' + transcript)
  *   })
  * ```
  */
@@ -31,12 +31,11 @@ export interface UseSpeechRecognitionReturn {
 }
 
 export function useSpeechRecognition(
-  onResult: (transcript: string) => void
+  onResult: (transcript: string, isFinal: boolean) => void
 ): UseSpeechRecognitionReturn {
   const [isListening, setIsListening] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const recognitionRef = useRef<SpeechRecognition | null>(null)
-  const accumulatedFinalRef = useRef<string>('')
 
   // Check for native Web Speech API support (Chromium-based browsers)
   const hasNativeSupport =
@@ -62,42 +61,33 @@ export function useSpeechRecognition(
       recognition.interimResults = true
       recognition.lang = 'en-US'
 
-      // Reset accumulated final transcript when starting
-      accumulatedFinalRef.current = ''
-
       recognition.onstart = () => {
         setIsListening(true)
         setError(null)
-        accumulatedFinalRef.current = ''
       }
 
       recognition.onresult = event => {
+        let finalTranscript = ''
         let interimTranscript = ''
-        let newFinalTranscript = ''
 
-        // Process all results from resultIndex onwards
-        for (let i = event.resultIndex; i < event.results.length; i++) {
+        // Build full transcript from ALL results (not just from resultIndex)
+        // This handles API resets correctly after pauses
+        for (let i = 0; i < event.results.length; i++) {
           const transcript = event.results[i][0].transcript
 
           if (event.results[i].isFinal) {
-            // Accumulate final results
-            accumulatedFinalRef.current += transcript + ' '
-            newFinalTranscript += transcript + ' '
+            finalTranscript += transcript
           } else {
-            // Collect interim results
             interimTranscript += transcript
           }
         }
 
-        // Send final results incrementally (only the new part)
-        if (newFinalTranscript.trim()) {
-          onResult(newFinalTranscript.trim())
-        }
+        // Always send the full transcript (final + interim)
+        const fullTranscript = (finalTranscript + interimTranscript).trim()
+        const isAllFinal = interimTranscript === '' && finalTranscript !== ''
 
-        // Send interim results with accumulated final for real-time display
-        if (interimTranscript.trim()) {
-          const fullTranscript = (accumulatedFinalRef.current + interimTranscript).trim()
-          onResult(fullTranscript)
+        if (fullTranscript) {
+          onResult(fullTranscript, isAllFinal)
         }
       }
 
@@ -117,7 +107,6 @@ export function useSpeechRecognition(
 
       recognition.onend = () => {
         setIsListening(false)
-        accumulatedFinalRef.current = ''
       }
 
       recognitionRef.current = recognition
