@@ -4,8 +4,8 @@
  * Uses native Web Speech API (Chrome/Edge/Safari)
  * Only supports browsers with native Web Speech API support
  *
- * Mobile: Uses stock/vanilla Web Speech API behavior
- * Desktop: Uses custom handling to deal with pause/resume issues
+ * Mobile: Stock/vanilla - non-continuous, just final results
+ * Desktop: Custom handling with continuous mode for pause/resume
  *
  * @example
  * ```typescript
@@ -31,6 +31,8 @@ export interface UseSpeechRecognitionReturn {
   error: string | null
   /** Browser support type: 'native' (Web Speech API) or 'none' */
   browserSupport: 'native' | 'none'
+  /** Whether running on mobile */
+  isMobile: boolean
 }
 
 // Detect if running on mobile device
@@ -69,8 +71,16 @@ export function useSpeechRecognition(
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
       const recognition = new SpeechRecognition()
 
-      recognition.continuous = true
-      recognition.interimResults = true
+      if (isMobile) {
+        // MOBILE: Stock/vanilla - non-continuous mode
+        // Stops automatically after user finishes speaking
+        recognition.continuous = false
+        recognition.interimResults = false
+      } else {
+        // DESKTOP: Continuous mode with interim results
+        recognition.continuous = true
+        recognition.interimResults = true
+      }
       recognition.lang = 'en-US'
 
       recognition.onstart = () => {
@@ -79,15 +89,13 @@ export function useSpeechRecognition(
       }
 
       if (isMobile) {
-        // MOBILE: Stock/vanilla Web Speech API behavior
-        // Just pass through whatever the API gives us directly
+        // MOBILE: Stock/vanilla - just send the final result
         recognition.onresult = event => {
-          const result = event.results[event.resultIndex]
+          const result = event.results[0]
           const transcript = result[0].transcript
-          const isFinal = result.isFinal
 
           if (transcript.trim()) {
-            onResult(transcript.trim(), isFinal)
+            onResult(transcript.trim(), true)
           }
         }
       } else {
@@ -172,5 +180,6 @@ export function useSpeechRecognition(
     stopListening,
     error,
     browserSupport,
+    isMobile,
   }
 }
