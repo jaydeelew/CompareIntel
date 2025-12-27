@@ -1068,10 +1068,7 @@
     border-bottom: none !important;
     margin-bottom: -1px;
     /* Overlap slightly to eliminate any visible line */
-    height: 40px !important;
-    /* Fixed height on mobile - prevent auto-expand */
-    max-height: 40px !important;
-    /* Prevent height increase */
+    /* Allow auto-expand up to 3 lines on mobile */
     /* Left padding: 1.4375rem (23px) to align with chevron icon
        Calculation: actions area left padding (1rem = 16px) + button offset (32px - 18px) / 2 = 7px = 23px total */
     padding: 0.5rem 1rem 0.5rem 1.4375rem !important;

@@ -642,7 +642,8 @@ export const ComparisonForm = memo<ComparisonFormProps>(
     const tokenUsagePercentage = tokenUsagePercentageInfo.percentage
 
     // Auto-expand textarea based on content (like ChatGPT)
-    // Scrollable after 5 lines (6th line triggers scrolling)
+    // Desktop: Scrollable after 5 lines (6th line triggers scrolling)
+    // Mobile: Scrollable after 3 lines (4th line triggers scrolling)
     const adjustTextareaHeight = useCallback(() => {
       if (!textareaRef.current) return
 
@@ -651,35 +652,27 @@ export const ComparisonForm = memo<ComparisonFormProps>(
       // Check if we're on mobile viewport (max-width: 768px)
       const isMobile = window.innerWidth <= 768
 
-      // On mobile, keep height fixed at min-height and enable scrolling
-      if (isMobile) {
-        const computedStyle = window.getComputedStyle(textarea)
-        const cssMinHeight = parseFloat(computedStyle.minHeight) || 40
-        textarea.style.height = `${cssMinHeight}px`
-        textarea.style.overflowY = 'auto'
-        return
-      }
-
       // Reset height to auto to get the correct scrollHeight
       textarea.style.height = 'auto'
 
-      // Calculate height for exactly 5 lines of text
+      // Calculate height based on line count
       const computedStyle = window.getComputedStyle(textarea)
       const fontSize = parseFloat(computedStyle.fontSize)
-      const lineHeight = parseFloat(computedStyle.lineHeight) || fontSize * 1.6
+      const lineHeight = parseFloat(computedStyle.lineHeight) || fontSize * (isMobile ? 1.25 : 1.6)
       const paddingTop = parseFloat(computedStyle.paddingTop)
       const paddingBottom = parseFloat(computedStyle.paddingBottom)
 
       // Get CSS min-height value to respect it (important for responsive design)
-      const cssMinHeight = parseFloat(computedStyle.minHeight) || 0
+      const cssMinHeight = parseFloat(computedStyle.minHeight) || (isMobile ? 40 : 0)
 
-      // Calculate height for exactly 5 lines of text content
+      // Calculate height for lines of text (3 lines on mobile, 5 lines on desktop)
       const lineHeightPx = lineHeight
-      const fiveLinesHeight = lineHeightPx * 5 // Height for 5 lines of text
+      const maxLines = isMobile ? 3 : 5
+      const maxLinesHeight = lineHeightPx * maxLines
 
-      // maxHeight = 5 lines + top padding + bottom padding
-      // This ensures exactly 5 lines are visible before scrolling starts
-      const maxHeight = fiveLinesHeight + paddingTop + paddingBottom
+      // maxHeight = max lines + top padding + bottom padding
+      // This ensures exactly max lines are visible before scrolling starts
+      const maxHeight = maxLinesHeight + paddingTop + paddingBottom
 
       // Use the maximum of calculated minHeight and CSS min-height to respect responsive design
       const calculatedMinHeight = lineHeightPx + paddingTop + paddingBottom
@@ -694,14 +687,14 @@ export const ComparisonForm = memo<ComparisonFormProps>(
         // Force empty textarea to match action area height exactly
         newHeight = cssMinHeight
       } else {
-        // Set height to maxHeight (5 lines) when content exceeds it, otherwise grow with content
+        // Set height to maxHeight (max lines) when content exceeds it, otherwise grow with content
         // But ensure it's at least the CSS min-height
         newHeight = Math.min(Math.max(scrollHeight, minHeight), maxHeight)
       }
 
       textarea.style.height = `${newHeight}px`
 
-      // Enable scrolling when 6th line is needed (content exceeds 5 lines)
+      // Enable scrolling when content exceeds max lines
       if (scrollHeight > maxHeight) {
         textarea.style.overflowY = 'auto'
       } else {
@@ -711,13 +704,37 @@ export const ComparisonForm = memo<ComparisonFormProps>(
       }
     }, [input, textareaRef])
 
+    // Auto-scroll textarea to keep current line visible (especially for mobile voice input)
+    const scrollToCurrentLine = useCallback(() => {
+      if (!textareaRef.current) return
+
+      const textarea = textareaRef.current
+      const isMobile = window.innerWidth <= 768
+
+      // Only auto-scroll on mobile during voice input
+      if (!isMobile) return
+
+      // During voice input, scroll to the end of the text (where new text is being added)
+      // This ensures the latest transcribed text is always visible
+      if (textarea.scrollHeight > textarea.clientHeight) {
+        textarea.scrollTop = textarea.scrollHeight - textarea.clientHeight
+      }
+    }, [textareaRef])
+
     // Adjust height when input changes
     useEffect(() => {
       // Use requestAnimationFrame to ensure DOM is updated
       requestAnimationFrame(() => {
         adjustTextareaHeight()
+        // Auto-scroll on mobile during voice input
+        if (isSpeechListening) {
+          // Use double requestAnimationFrame to ensure height adjustment is complete
+          requestAnimationFrame(() => {
+            scrollToCurrentLine()
+          })
+        }
       })
-    }, [input, adjustTextareaHeight])
+    }, [input, adjustTextareaHeight, isSpeechListening, scrollToCurrentLine])
 
     // Adjust height on window resize - ensure it recalculates after media query changes
     useEffect(() => {
