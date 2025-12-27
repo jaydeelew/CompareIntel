@@ -162,31 +162,39 @@ export const ComparisonForm = memo<ComparisonFormProps>(
     const abortControllerRef = useRef<AbortController | null>(null)
     const fileInputRef = useRef<HTMLInputElement | null>(null)
     const [isDraggingOver, setIsDraggingOver] = useState(false)
-    // Track base input when speech started to preserve existing content (desktop only)
+    // Track base input when speech started to preserve existing content
     const baseInputWhenSpeechStartedRef = useRef<string>('')
+    // For mobile: track input before current speech session started
+    const mobileBaseInputRef = useRef<string>('')
 
     // Speech recognition hook
-    // Mobile: Stock behavior - non-continuous, just appends final result to current input
+    // Mobile: Non-continuous with interim results for real-time display
     // Desktop: Continuous mode, hook sends full transcript, append to base input
     const handleSpeechResult = useCallback(
-      (transcript: string, _isFinal: boolean) => {
-        // Get base input for desktop (captured when speech started)
-        const baseInput = baseInputWhenSpeechStartedRef.current
-
-        // Detect mobile: on mobile, baseInput won't be set because we don't use continuous mode
-        // and the effect that captures baseInput only matters for desktop
+      (transcript: string, isFinal: boolean) => {
+        // Detect mobile
         const isMobileMode =
           typeof navigator !== 'undefined' &&
           /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
 
         if (isMobileMode) {
-          // MOBILE: Just append transcript to current input
-          // Non-continuous mode means each tap is independent
-          const currentInput = currentInputRef.current
-          const newInput = currentInput + (currentInput && transcript ? ' ' : '') + transcript
-          setInput(newInput)
+          // MOBILE: Show interim results in real-time, add final results permanently
+          const mobileBase = mobileBaseInputRef.current
+
+          if (isFinal) {
+            // Final result: add to input permanently
+            const newInput = mobileBase + (mobileBase && transcript ? ' ' : '') + transcript
+            setInput(newInput)
+            // Update the base for next speech session
+            mobileBaseInputRef.current = newInput
+          } else {
+            // Interim result: show temporarily (will be replaced by next interim or final)
+            const newInput = mobileBase + (mobileBase && transcript ? ' ' : '') + transcript
+            setInput(newInput)
+          }
         } else {
           // DESKTOP: Hook sends full transcript, append to base input
+          const baseInput = baseInputWhenSpeechStartedRef.current
           const newInput = baseInput + (baseInput && transcript ? ' ' : '') + transcript
           setInput(newInput)
         }
@@ -214,21 +222,29 @@ export const ComparisonForm = memo<ComparisonFormProps>(
     const currentInputRef = useRef<string>(input)
     useEffect(() => {
       currentInputRef.current = input
-    }, [input])
+      // When not listening, keep mobile base in sync with actual input
+      // (in case user types or clears input between speech sessions)
+      if (!isSpeechListening) {
+        mobileBaseInputRef.current = input
+      }
+    }, [input, isSpeechListening])
 
-    // Capture base input when speech starts and reset ref when speech stops (desktop only)
+    // Capture base input when speech starts and reset ref when speech stops
     const prevIsListeningRef = useRef<boolean>(false)
     useEffect(() => {
       const wasListening = prevIsListeningRef.current
       prevIsListeningRef.current = isSpeechListening
 
       if (isSpeechListening && !wasListening) {
-        // Speech just started - capture the current input as the base (for desktop)
+        // Speech just started - capture the current input as the base
         // This preserves any existing text and attached file content
-        baseInputWhenSpeechStartedRef.current = currentInputRef.current
+        const currentInput = currentInputRef.current
+        baseInputWhenSpeechStartedRef.current = currentInput // for desktop
+        mobileBaseInputRef.current = currentInput // for mobile
       } else if (!isSpeechListening && wasListening) {
-        // Speech just stopped - reset base input ref
+        // Speech just stopped - reset desktop ref only
         baseInputWhenSpeechStartedRef.current = ''
+        // mobileBaseInputRef is kept in sync via the effect above
       }
     }, [isSpeechListening])
 

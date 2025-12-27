@@ -72,10 +72,10 @@ export function useSpeechRecognition(
       const recognition = new SpeechRecognition()
 
       if (isMobile) {
-        // MOBILE: Stock/vanilla - non-continuous mode
+        // MOBILE: Non-continuous mode with interim results for real-time display
         // Stops automatically after user finishes speaking
         recognition.continuous = false
-        recognition.interimResults = false
+        recognition.interimResults = true
       } else {
         // DESKTOP: Continuous mode with interim results
         recognition.continuous = true
@@ -89,13 +89,16 @@ export function useSpeechRecognition(
       }
 
       if (isMobile) {
-        // MOBILE: Stock/vanilla - just send the final result
+        // MOBILE: Send interim and final results for real-time display
+        // But recognition stops automatically after speech ends (non-continuous)
         recognition.onresult = event => {
-          const result = event.results[0]
+          // Get the latest result
+          const result = event.results[event.results.length - 1]
           const transcript = result[0].transcript
+          const isFinal = result.isFinal
 
           if (transcript.trim()) {
-            onResult(transcript.trim(), true)
+            onResult(transcript.trim(), isFinal)
           }
         }
       } else {
