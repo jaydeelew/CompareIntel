@@ -17,6 +17,7 @@ import asyncio
 import json
 import os
 import tempfile
+import logging
 
 from ..model_runner import (
     OPENROUTER_MODELS,
@@ -59,6 +60,9 @@ from ..rate_limiting import (
 )
 
 router = APIRouter(tags=["API"])
+
+# Logger for this module
+logger = logging.getLogger(__name__)
 
 # In-memory storage for model performance tracking
 # This is shared with main.py via import
@@ -605,8 +609,7 @@ async def compare_stream(
         if not subscription_tier or subscription_tier not in ["free", "starter", "starter_plus", "pro", "pro_plus"]:
             # Log unexpected tier value for debugging
             if settings.environment == "development":
-                logger = logging.getLogger(__name__)
-                logger.warning(
+                logging.getLogger(__name__).warning(
                     f"User {current_user.id} ({current_user.email}) has unexpected subscription_tier: {subscription_tier}. "
                     f"Defaulting to 'free' tier."
                 )
@@ -620,8 +623,7 @@ async def compare_stream(
         
         # Log authentication failure for debugging (only in development)
         if settings.environment == "development" and token_present:
-            logger = logging.getLogger(__name__)
-            logger.warning(
+            logging.getLogger(__name__).warning(
                 f"Authentication failed for /compare-stream request. "
                 f"Token present: {token_present}, "
                 f"User agent: {request.headers.get('user-agent', 'unknown')}, "
@@ -787,9 +789,13 @@ async def compare_stream(
     # IMPORTANT: Also store whether user exists to prevent anonymous mock mode for authenticated users
     user_id = current_user.id if current_user else None
     has_authenticated_user = current_user is not None
+    
+    # Capture logger in local variable for use in nested function
+    _logger = logger
 
     async def generate_stream():
         """
+        Generate streaming response for all models.
         Generator function that yields SSE-formatted events.
         Streams responses from all requested models concurrently for maximum performance.
 
@@ -800,6 +806,15 @@ async def compare_stream(
         - Non-blocking I/O throughout
         """
         nonlocal credits_remaining  # Allow updating outer scope variable
+
+        # Log web search request status
+        if req.enable_web_search:
+            _logger.info(
+                f"Web search requested for comparison with models: {req.models}. "
+                f"Will check each model's capability and search provider availability."
+            )
+        else:
+            _logger.debug(f"Web search not requested for this comparison")
 
         # Capture settings values in local variables to avoid closure issues with nested functions
         model_inactivity_timeout = settings.model_inactivity_timeout
@@ -930,6 +945,8 @@ async def compare_stream(
                     enable_web_search_for_model = False
                     search_provider_instance = None
                     
+                    _logger.debug(f"Processing model {model_id}, enable_web_search={req.enable_web_search}")
+                    
                     if req.enable_web_search:
                         # Check if this model supports web search
                         model_supports_web_search = False
@@ -946,6 +963,20 @@ async def compare_stream(
                             search_provider_instance = SearchProviderFactory.get_active_provider(db)
                             if search_provider_instance:
                                 enable_web_search_for_model = True
+                                _logger.info(
+                                    f"Web search enabled for model {model_id}: "
+                                    f"provider={search_provider_instance.get_provider_name()}"
+                                )
+                            else:
+                                _logger.warning(
+                                    f"Web search requested for model {model_id} but no active search provider configured. "
+                                    f"Check AppSettings.active_search_provider and ensure API keys are set."
+                                )
+                        else:
+                            _logger.debug(
+                                f"Web search requested but model {model_id} does not support web search "
+                                f"(supports_web_search=False in model definition)"
+                            )
                     
                     # Run synchronous streaming in a thread, push chunks to queue as they arrive
                     loop = asyncio.get_event_loop()
@@ -1013,6 +1044,10 @@ async def compare_stream(
 
                         except Exception as e:
                             error_msg = f"Error: {str(e)[:100]}"
+                            _logger.error(
+                                f"Error streaming model {model_id}: {str(e)}",
+                                exc_info=True
+                            )
                             # Push error as chunk
                             asyncio.run_coroutine_threadsafe(
                                 chunk_queue.put({"type": "chunk", "model": model_id, "content": error_msg}),

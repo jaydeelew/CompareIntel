@@ -5,7 +5,6 @@ Provides secure cookie setting and reading functions for JWT tokens.
 """
 
 from fastapi import Response
-from datetime import datetime, timedelta
 from typing import Optional
 from ..config import settings
 
@@ -110,13 +109,6 @@ def get_token_from_cookies(request) -> Optional[str]:
         Access token string if found, None otherwise
     """
     token = request.cookies.get(ACCESS_TOKEN_COOKIE)
-    # Debug logging for development
-    if settings.environment == "development":
-        all_cookies = dict(request.cookies)
-        cookie_names = list(all_cookies.keys())
-        print(f"[COOKIE DEBUG] Request to {request.url.path}")
-        print(f"[COOKIE DEBUG] Cookies received: {cookie_names}")
-        print(f"[COOKIE DEBUG] access_token present: {token is not None}")
     return token
 
 
