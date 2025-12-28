@@ -621,6 +621,48 @@ async def compare_stream(
         # Check if there's a token present but authentication failed (helps diagnose auth issues)
         token_present = get_token_from_cookies(request) is not None
         
+        # If token is present but authentication failed, try to get user info from token for better error message
+        # This helps diagnose cases where user thinks they're logged in but session expired
+        if token_present:
+            from ..auth import verify_token
+            token = get_token_from_cookies(request)
+            payload = verify_token(token, token_type="access") if token else None
+            if payload:
+                user_id_from_token = payload.get("sub")
+                if user_id_from_token:
+                    try:
+                        user_from_token = db.query(User).filter(User.id == int(user_id_from_token)).first()
+                        if user_from_token and user_from_token.is_active:
+                            # User exists and is active, but get_current_user failed - likely token issue
+                            # Use their actual tier for validation, but log the auth failure
+                            subscription_tier = user_from_token.subscription_tier
+                            if subscription_tier and subscription_tier in ["free", "starter", "starter_plus", "pro", "pro_plus"]:
+                                tier_model_limit = get_model_limit(subscription_tier)
+                                tier_name = subscription_tier
+                                # Log this case for debugging
+                                logging.getLogger(__name__).warning(
+                                    f"Authentication dependency failed but token valid for user {user_from_token.id} "
+                                    f"({user_from_token.email}), tier: {subscription_tier}. Using tier from token."
+                                )
+                            else:
+                                tier_model_limit = ANONYMOUS_MODEL_LIMIT
+                                tier_name = "anonymous"
+                        else:
+                            tier_model_limit = ANONYMOUS_MODEL_LIMIT
+                            tier_name = "anonymous"
+                    except (ValueError, TypeError):
+                        tier_model_limit = ANONYMOUS_MODEL_LIMIT
+                        tier_name = "anonymous"
+                else:
+                    tier_model_limit = ANONYMOUS_MODEL_LIMIT
+                    tier_name = "anonymous"
+            else:
+                tier_model_limit = ANONYMOUS_MODEL_LIMIT
+                tier_name = "anonymous"
+        else:
+            tier_model_limit = ANONYMOUS_MODEL_LIMIT
+            tier_name = "anonymous"
+        
         # Log authentication failure for debugging (only in development)
         if settings.environment == "development" and token_present:
             logging.getLogger(__name__).warning(
@@ -629,9 +671,6 @@ async def compare_stream(
                 f"User agent: {request.headers.get('user-agent', 'unknown')}, "
                 f"Cookies: {list(request.cookies.keys())}"
             )
-        
-        tier_model_limit = ANONYMOUS_MODEL_LIMIT  # Anonymous users model limit from configuration
-        tier_name = "anonymous"
 
     # Validate model access based on tier (check if restricted models are selected)
     restricted_models = [model_id for model_id in req.models if not is_model_available_for_tier(model_id, tier_name)]
@@ -1592,7 +1631,9 @@ async def compare_stream(
                         # Save assistant messages for each successful model
                         messages_saved = 0
                         for model_id, content in results_dict.items():
-                            if not content.startswith("Error:"):
+                            # Skip error messages and empty content (which can happen on timeout)
+                            # Empty content violates schema validation (min_length=1)
+                            if not content.startswith("Error:") and content and content.strip():
                                 # Get output tokens from usage_data_dict if available
                                 output_tokens = None
                                 if model_id in usage_data_dict:
@@ -1610,6 +1651,9 @@ async def compare_stream(
                                 )
                                 conv_db.add(assistant_msg)
                                 messages_saved += 1
+                            elif not content or not content.strip():
+                                # Log empty content cases for debugging (timeouts, etc.)
+                                print(f"[WARNING] Skipping empty content for model {model_id} in conversation {conversation.id}")
 
                         conv_db.commit()
                         print(f"[DEBUG] Conversation saved successfully for user_id: {user_id}, messages_saved: {messages_saved}")

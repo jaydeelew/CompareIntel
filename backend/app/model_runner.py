@@ -1706,9 +1706,10 @@ def call_openrouter_streaming(
                                     search_thread = threading.Thread(target=run_search, daemon=True)
                                     search_thread.start()
                                     
-                                    # Yield keepalives every 10 seconds while waiting for search to complete
+                                    # Yield keepalives every 5 seconds while waiting for search to complete
                                     # This ensures frontend timeout is reset during long search operations
-                                    KEEPALIVE_INTERVAL = 10.0  # Send keepalive every 10 seconds
+                                    # Use 5 seconds to match ACTIVE_STREAMING_WINDOW in frontend
+                                    KEEPALIVE_INTERVAL = 5.0  # Send keepalive every 5 seconds
                                     search_start_time = time.time()
                                     
                                     try:
@@ -1817,6 +1818,10 @@ def call_openrouter_streaming(
                             })
                         
                         # Continue conversation with search results
+                        # Yield keepalive before making continuation API call to reset frontend timeout
+                        # Gemini 3 Pro Preview can take time to start streaming after receiving tool results
+                        yield " "
+                        
                         # Make another API call with updated messages
                         api_params_continue = {
                             "model": model_id,
