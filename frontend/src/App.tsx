@@ -151,6 +151,7 @@ function AppContent() {
 
   // File attachments state (can be AttachedFile for new uploads or StoredAttachedFile for loaded history)
   const [attachedFiles, setAttachedFilesState] = useState<(AttachedFile | StoredAttachedFile)[]>([])
+  const [webSearchEnabled, setWebSearchEnabled] = useState(false)
 
   // Wrapper function to match ComparisonForm's expected signature
   const setAttachedFiles = useCallback((files: (AttachedFile | StoredAttachedFile)[]) => {
@@ -4740,6 +4741,7 @@ function AppContent() {
         conversation_id: conversationId || undefined, // Only include if not null
         estimated_input_tokens: accurateInputTokens || undefined, // Include accurate count if available
         timezone: userTimezone, // Auto-detect timezone from browser
+        enable_web_search: webSearchEnabled || false, // Enable web search if toggle is on
       })
 
       if (!stream) {
@@ -6588,6 +6590,8 @@ function AppContent() {
                   attachedFiles={attachedFiles}
                   setAttachedFiles={setAttachedFiles}
                   onExpandFiles={expandFiles}
+                  webSearchEnabled={webSearchEnabled}
+                  onWebSearchEnabledChange={setWebSearchEnabled}
                 />
               </ErrorBoundary>
             </Hero>
@@ -7074,13 +7078,6 @@ function AppContent() {
                                           key={model.id}
                                           className={`model-option ${isSelected ? 'selected' : ''} ${isDisabled ? 'disabled' : ''} ${isRestricted ? 'restricted' : ''}`}
                                         >
-                                          <input
-                                            type="checkbox"
-                                            checked={isSelected}
-                                            disabled={isDisabled}
-                                            onChange={handleModelClick}
-                                            className={`model-checkbox ${isFollowUpMode && !isSelected && wasOriginallySelected ? 'follow-up-deselected' : ''}`}
-                                          />
                                           <div className="model-info">
                                             <h4>
                                               {model.name}
@@ -7140,6 +7137,66 @@ function AppContent() {
                                             </h4>
                                             <p>{model.description}</p>
                                           </div>
+                                          <div
+                                            style={{
+                                              display: 'flex',
+                                              alignItems: 'center',
+                                              gap: '0.375rem',
+                                              flexShrink: 0,
+                                            }}
+                                          >
+                                            {model.supports_web_search && (
+                                              <span
+                                                className="web-search-indicator"
+                                                title="This model can access the Internet"
+                                                style={{
+                                                  display: 'inline-flex',
+                                                  alignItems: 'center',
+                                                  justifyContent: 'center',
+                                                  width: '16px',
+                                                  height: '16px',
+                                                  opacity: isSelected ? 1 : 0.6,
+                                                  transition: 'opacity 0.2s',
+                                                  margin: 0,
+                                                  flexShrink: 0,
+                                                }}
+                                              >
+                                                <svg
+                                                  width="16"
+                                                  height="16"
+                                                  viewBox="0 0 24 24"
+                                                  fill="none"
+                                                  stroke={
+                                                    isSelected ? 'currentColor' : 'currentColor'
+                                                  }
+                                                  strokeWidth="2"
+                                                  strokeLinecap="round"
+                                                  strokeLinejoin="round"
+                                                  style={{
+                                                    color: isSelected
+                                                      ? 'var(--primary-color, #007bff)'
+                                                      : 'var(--text-secondary, #666)',
+                                                    display: 'block',
+                                                  }}
+                                                >
+                                                  <circle cx="12" cy="12" r="10" />
+                                                  <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+                                                </svg>
+                                              </span>
+                                            )}
+                                            <input
+                                              type="checkbox"
+                                              checked={isSelected}
+                                              disabled={isDisabled}
+                                              onChange={handleModelClick}
+                                              className={`model-checkbox ${isFollowUpMode && !isSelected && wasOriginallySelected ? 'follow-up-deselected' : ''}`}
+                                              style={{
+                                                margin: 0,
+                                                width: '16px',
+                                                height: '16px',
+                                              }}
+                                            />
+                                          </div>
                                         </label>
                                       )
                                     })}
@@ -7162,6 +7219,35 @@ function AppContent() {
                                   <div key={modelId} className="selected-model-card">
                                     <div className="selected-model-header">
                                       <h4>{model.name}</h4>
+                                      {model.supports_web_search && (
+                                        <span
+                                          className="web-search-indicator"
+                                          title="This model can access the Internet"
+                                          style={{
+                                            display: 'inline-flex',
+                                            alignItems: 'center',
+                                            marginLeft: '0.5rem',
+                                            opacity: 1,
+                                          }}
+                                        >
+                                          <svg
+                                            width="16"
+                                            height="16"
+                                            viewBox="0 0 24 24"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            strokeWidth="2"
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            style={{
+                                              color: 'var(--primary-color, #007bff)',
+                                            }}
+                                          >
+                                            <circle cx="12" cy="12" r="10" />
+                                            <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+                                          </svg>
+                                        </span>
+                                      )}
                                       <button
                                         className="remove-model-btn"
                                         onClick={() => handleModelToggle(modelId)}

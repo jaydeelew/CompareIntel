@@ -1349,6 +1349,15 @@ class DeleteModelRequest(BaseModel):
     model_id: str
 
 
+class SetActiveSearchProviderRequest(BaseModel):
+    provider: str
+
+
+class TestSearchProviderRequest(BaseModel):
+    provider: str
+    query: str
+
+
 async def fetch_model_data_from_openrouter(model_id: str) -> Optional[Dict[str, Any]]:
     """
     Fetch model data from OpenRouter's Models API.
@@ -1776,6 +1785,11 @@ async def add_model(
     if not model_description:
         model_description = f"{provider_name}'s {model_name} model"
     
+    # Check for tool calling support (required for web search)
+    from ..services.model_capability import get_capability_service
+    capability_service = get_capability_service()
+    supports_web_search = await capability_service.check_tool_calling_support(model_id)
+    
     # Add model to model_runner.py
     model_runner_path = Path(__file__).parent.parent / "model_runner.py"
     
@@ -1798,7 +1812,8 @@ async def add_model(
         if not provider_found:
             # Create new provider section - insert in alphabetical order
             escaped_description = repr(model_description)
-            new_provider_section = f'"{provider_name}": [\n        {{\n            "id": "{model_id}",\n            "name": "{model_name}",\n            "description": {escaped_description},\n            "category": "Language",\n            "provider": "{provider_name}",\n        }},\n    ]'
+            supports_web_search_str = "True" if supports_web_search else "False"
+            new_provider_section = f'"{provider_name}": [\n        {{\n            "id": "{model_id}",\n            "name": "{model_name}",\n            "description": {escaped_description},\n            "category": "Language",\n            "provider": "{provider_name}",\n            "supports_web_search": {supports_web_search_str},\n        }},\n    ]'
             
             # Get existing providers from file content (not in-memory dict which may be stale)
             existing_providers = extract_providers_from_content(content)
@@ -1852,6 +1867,7 @@ async def add_model(
                 "description": model_description,  # Store as string, will format with repr when writing
                 "category": "Language",
                 "provider": provider_name,
+                "supports_web_search": supports_web_search,
             }
             if hasattr(req, 'available') and not req.available:
                 new_model_dict["available"] = False
@@ -1877,6 +1893,8 @@ async def add_model(
                         f'            "category": "{model["category"]}",',
                         f'            "provider": "{model["provider"]}",'
                     ]
+                    if "supports_web_search" in model:
+                        model_lines.append(f'            "supports_web_search": {model["supports_web_search"]},')
                     if "available" in model:
                         model_lines.append(f'            "available": {model["available"]},')
                     model_lines.append("        },")
@@ -2014,6 +2032,7 @@ async def add_model(
             "success": True,
             "model_id": model_id,
             "provider": provider_name,
+            "supports_web_search": supports_web_search,
             "message": f"Model {model_id} added successfully"
         }
         
@@ -2866,3 +2885,217 @@ async def delete_model(
             status_code=500,
             detail=f"Error deleting model: {str(e)}"
         )
+
+
+# ============================================================================
+# Search Provider Management Endpoints
+# ============================================================================
+
+@router.get("/search-providers")
+async def get_search_providers(
+    current_user: User = Depends(require_admin_role("admin")),
+    db: Session = Depends(get_db),
+):
+    """
+    Get list of all available search providers and current active one.
+    Returns is_development flag to indicate if changes are allowed.
+    """
+    import os
+    from ..search.factory import SearchProviderFactory
+    
+    is_development = os.environ.get("ENVIRONMENT") == "development"
+    
+    # Get current active provider from database
+    app_settings = db.query(AppSettings).first()
+    active_provider = app_settings.active_search_provider if app_settings else None
+    
+    # Get available providers (those with API keys configured)
+    available_providers = SearchProviderFactory.get_available_providers()
+    
+    # Build provider list with status
+    providers = []
+    for provider_name in ["brave", "tavily"]:
+        is_configured = provider_name in available_providers
+        is_active = provider_name == active_provider
+        
+        providers.append({
+            "name": provider_name,
+            "display_name": provider_name.capitalize(),
+            "is_configured": is_configured,
+            "is_active": is_active,
+        })
+    
+    return {
+        "providers": providers,
+        "active_provider": active_provider,
+        "is_development": is_development,
+    }
+
+
+@router.post("/search-providers/set-active")
+async def set_active_search_provider(
+    request: Request,
+    req: SetActiveSearchProviderRequest,
+    current_user: User = Depends(require_admin_role("admin")),
+    db: Session = Depends(get_db),
+):
+    """
+    Set the active search provider.
+    Development-only: Check ENVIRONMENT == "development"
+    """
+    import os
+    from ..search.factory import SearchProviderFactory
+    
+    provider = req.provider
+    
+    # Check if in development mode
+    is_development = os.environ.get("ENVIRONMENT") == "development"
+    if not is_development:
+        raise HTTPException(
+            status_code=403,
+            detail="Search provider changes are only available in development environment. Please configure providers via development and deploy to production."
+        )
+    
+    # Validate provider name
+    if provider not in ["brave", "tavily"]:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid provider: {provider}. Supported providers: brave, tavily"
+        )
+    
+    # Check if API key is configured
+    available_providers = SearchProviderFactory.get_available_providers()
+    if provider not in available_providers:
+        raise HTTPException(
+            status_code=400,
+            detail=f"API key not configured for provider: {provider}. Please add the API key to backend/.env file."
+        )
+    
+    # Get or create AppSettings
+    app_settings = db.query(AppSettings).first()
+    if not app_settings:
+        app_settings = AppSettings()
+        db.add(app_settings)
+    
+    # Update active provider
+    app_settings.active_search_provider = provider
+    db.commit()
+    
+    # Log admin action
+    log_admin_action(
+        db=db,
+        admin_user=current_user,
+        action_type="set_active_search_provider",
+        action_description=f"Set active search provider to {provider}",
+        target_user_id=None,
+        details={"provider": provider},
+        request=request,
+    )
+    
+    return {
+        "success": True,
+        "active_provider": provider,
+        "message": f"Active search provider set to {provider}"
+    }
+
+
+@router.get("/search-providers/test")
+async def test_search_provider(
+    current_user: User = Depends(require_admin_role("admin")),
+    db: Session = Depends(get_db),
+):
+    """
+    Test the currently active search provider with a sample query.
+    Available in both development and production (read-only operation).
+    """
+    from ..search.factory import SearchProviderFactory
+    
+    # Get active provider
+    provider = SearchProviderFactory.get_active_provider(db)
+    if not provider:
+        raise HTTPException(
+            status_code=400,
+            detail="No active search provider configured"
+        )
+    
+    # Test with sample query
+    try:
+        results = await provider.search("test query", max_results=3)
+        return {
+            "success": True,
+            "provider": provider.get_provider_name(),
+            "results_count": len(results),
+            "results": [
+                {
+                    "title": r.title,
+                    "url": r.url,
+                    "snippet": r.snippet,
+                    "source": r.source,
+                }
+                for r in results
+            ]
+        }
+    except Exception as e:
+        return {
+            "success": False,
+            "provider": provider.get_provider_name(),
+            "error": str(e)
+        }
+
+
+@router.post("/search-providers/test-provider")
+async def test_specific_search_provider(
+    request: Request,
+    req: TestSearchProviderRequest,
+    current_user: User = Depends(require_admin_role("admin")),
+    db: Session = Depends(get_db),
+):
+    """
+    Test a specific search provider with a custom query.
+    Available in both development and production (read-only operation).
+    """
+    from ..search.factory import SearchProviderFactory
+    
+    provider_name = req.provider
+    query = req.query
+    
+    # Validate provider name
+    if provider_name not in ["brave", "tavily"]:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid provider: {provider_name}. Supported providers: brave, tavily"
+        )
+    
+    # Get provider instance
+    provider = SearchProviderFactory.get_provider(provider_name, db)
+    if not provider:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Provider {provider_name} is not available (API key not configured)"
+        )
+    
+    # Test with provided query
+    try:
+        results = await provider.search(query, max_results=5)
+        return {
+            "success": True,
+            "provider": provider_name,
+            "query": query,
+            "results_count": len(results),
+            "results": [
+                {
+                    "title": r.title,
+                    "url": r.url,
+                    "snippet": r.snippet,
+                    "source": r.source,
+                }
+                for r in results
+            ]
+        }
+    except Exception as e:
+        return {
+            "success": False,
+            "provider": provider_name,
+            "query": query,
+            "error": str(e)
+        }

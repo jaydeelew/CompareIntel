@@ -357,6 +357,11 @@ class AppSettings(Base):
     # Mock mode settings
     anonymous_mock_mode_enabled = Column(Boolean, default=False)  # Enable mock mode for all anonymous users
 
+    # Web search provider settings
+    active_search_provider = Column(String(50), default=None)  # e.g., "brave", "tavily"
+    search_provider_config = Column(Text, default=None)  # JSON string for provider-specific config
+    web_search_enabled = Column(Boolean, default=False)  # Global enable/disable flag
+
     # Timestamps
     created_at = Column(DateTime, default=func.now())
     updated_at = Column(DateTime, default=func.now(), onupdate=func.now())

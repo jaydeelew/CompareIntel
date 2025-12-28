@@ -90,6 +90,10 @@ interface ComparisonFormProps {
     files: (AttachedFile | StoredAttachedFile)[],
     userInput: string
   ) => Promise<string>
+
+  // Web search
+  webSearchEnabled?: boolean
+  onWebSearchEnabledChange?: (enabled: boolean) => void
 }
 
 /**
@@ -142,7 +146,33 @@ export const ComparisonForm = memo<ComparisonFormProps>(
     attachedFiles,
     setAttachedFiles,
     onExpandFiles,
+    webSearchEnabled: webSearchEnabledProp,
+    onWebSearchEnabledChange,
   }) => {
+    // Internal state for web search if not controlled via props
+    const [webSearchEnabledInternal, setWebSearchEnabledInternal] = useState(false)
+    const webSearchEnabled =
+      webSearchEnabledProp !== undefined ? webSearchEnabledProp : webSearchEnabledInternal
+    const setWebSearchEnabled = onWebSearchEnabledChange || setWebSearchEnabledInternal
+
+    // Calculate which selected models support web search
+    const selectedModelsWithWebSearch = useMemo(() => {
+      return selectedModels.filter(modelId => {
+        const modelIdStr = String(modelId)
+        for (const providerModels of Object.values(modelsByProvider)) {
+          const model = providerModels.find(m => String(m.id) === modelIdStr)
+          if (model && model.supports_web_search) {
+            return true
+          }
+        }
+        return false
+      })
+    }, [selectedModels, modelsByProvider])
+
+    // Check if web search can be enabled (provider configured and models support it)
+    // Note: We'll need to check provider status from API, but for now assume it can be enabled
+    // if models support it
+    const canEnableWebSearch = selectedModelsWithWebSearch.length > 0
     const messageCount = conversations.length > 0 ? conversations[0]?.messages.length || 0 : 0
 
     // State for saved model selections UI
@@ -1500,6 +1530,48 @@ export const ComparisonForm = memo<ComparisonFormProps>(
                     <path
                       d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v4M8 23h8"
                       stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </button>
+              )}
+              {/* Enable Web Access Toggle - styled like voice button */}
+              {canEnableWebSearch && (
+                <button
+                  type="button"
+                  onClick={() => setWebSearchEnabled(!webSearchEnabled)}
+                  className={`textarea-icon-button web-search-button ${webSearchEnabled ? 'active' : ''}`}
+                  title={
+                    webSearchEnabled
+                      ? 'Web search enabled - selected models can search the internet'
+                      : 'Enable web search for capable models'
+                  }
+                  disabled={!canEnableWebSearch || isLoading}
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                    style={{
+                      width: '20px',
+                      height: '20px',
+                    }}
+                  >
+                    <circle
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke={webSearchEnabled ? 'white' : 'currentColor'}
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      fill="none"
+                    />
+                    <path
+                      d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"
+                      stroke={webSearchEnabled ? 'white' : 'currentColor'}
                       strokeWidth="2"
                       strokeLinecap="round"
                       strokeLinejoin="round"

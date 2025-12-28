@@ -29,6 +29,8 @@ export interface Model {
   max_input_tokens?: number
   /** Maximum output tokens (accurate, from model tokenizer) */
   max_output_tokens?: number
+  /** Whether the model supports web search via function calling */
+  supports_web_search?: boolean
 }
 
 /**

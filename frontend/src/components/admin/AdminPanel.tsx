@@ -6,6 +6,12 @@ import {
   getAppSettings,
   toggleAnonymousMockMode as toggleAnonymousMockModeService,
   type AppSettings,
+  getSearchProviders,
+  setActiveSearchProvider,
+  testSearchProvider,
+  testSearchProviderWithQuery,
+  type SearchProvidersResponse,
+  type SearchProviderTestResult,
 } from '../../services/adminService'
 import type { AvailableModelsResponse } from '../../services/modelsService'
 import type { Model } from '../../types/models'
@@ -86,7 +92,7 @@ interface AdminPanelProps {
   onClose?: () => void
 }
 
-type AdminTab = 'users' | 'models' | 'logs' | 'analytics'
+type AdminTab = 'users' | 'models' | 'logs' | 'analytics' | 'search-providers'
 
 const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
   const { user, refreshUser, logout } = useAuth()
@@ -99,7 +105,10 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
   const getInitialTab = (): AdminTab => {
     if (typeof window !== 'undefined') {
       const savedTab = sessionStorage.getItem('adminPanel_activeTab')
-      if (savedTab && ['users', 'models', 'logs', 'analytics'].includes(savedTab)) {
+      if (
+        savedTab &&
+        ['users', 'models', 'logs', 'analytics', 'search-providers'].includes(savedTab)
+      ) {
         return savedTab as AdminTab
       }
     }
@@ -297,6 +306,13 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
   const [modelSuccess, setModelSuccess] = useState<string | null>(null)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [modelToDelete, setModelToDelete] = useState<{ id: string; name: string } | null>(null)
+
+  // Search providers state
+  const [searchProviders, setSearchProviders] = useState<SearchProvidersResponse | null>(null)
+  const [searchProvidersLoading, setSearchProvidersLoading] = useState(false)
+  const [testingProvider, setTestingProvider] = useState(false)
+  const [testQuery, setTestQuery] = useState('test query')
+  const [testResult, setTestResult] = useState<SearchProviderTestResult | null>(null)
   const [deletingModel, setDeletingModel] = useState(false)
 
   const fetchStats = useCallback(async () => {
@@ -426,6 +442,60 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
       fetchVisitorAnalytics()
     }
   }, [activeTab, user?.is_admin, fetchVisitorAnalytics])
+
+  const fetchSearchProviders = useCallback(async () => {
+    try {
+      setSearchProvidersLoading(true)
+      const data = await getSearchProviders()
+      setSearchProviders(data)
+    } catch (err) {
+      console.error('Error fetching search providers:', err)
+      setError(err instanceof Error ? err.message : 'Failed to fetch search providers')
+    } finally {
+      setSearchProvidersLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (activeTab === 'search-providers' && user?.is_admin) {
+      fetchSearchProviders()
+    }
+  }, [activeTab, user?.is_admin, fetchSearchProviders])
+
+  const handleSetActiveProvider = async (provider: string) => {
+    try {
+      await setActiveSearchProvider(provider)
+      await fetchSearchProviders()
+      setModelSuccess(`Active search provider set to ${provider}`)
+      setTimeout(() => setModelSuccess(null), 5000)
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to set active provider'
+      setModelError(errorMessage)
+      setTimeout(() => setModelError(null), 5000)
+    }
+  }
+
+  const handleTestProvider = async (provider?: string, query?: string) => {
+    try {
+      setTestingProvider(true)
+      setTestResult(null)
+      let result: SearchProviderTestResult
+      if (provider && query) {
+        result = await testSearchProviderWithQuery(provider, query)
+      } else {
+        result = await testSearchProvider()
+      }
+      setTestResult(result)
+    } catch (err) {
+      setTestResult({
+        success: false,
+        provider: provider || 'unknown',
+        error: err instanceof Error ? err.message : 'Failed to test provider',
+      })
+    } finally {
+      setTestingProvider(false)
+    }
+  }
 
   const fetchModels = useCallback(async () => {
     try {
@@ -1429,6 +1499,31 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
           <span className="admin-tab-text-desktop">Visitor Analytics</span>
           <span className="admin-tab-text-mobile">Analytics</span>
         </button>
+        <button
+          className={`admin-tab ${activeTab === 'search-providers' ? 'active' : ''}`}
+          onClick={() => {
+            // Prevent tab switching during model operations
+            if (!isModelOperationRef.current && !addingModel && !deletingModel) {
+              setActiveTab('search-providers')
+            }
+          }}
+          disabled={isModelOperationRef.current || addingModel || deletingModel}
+        >
+          <svg
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <circle cx="11" cy="11" r="8" />
+            <path d="m21 21-4.35-4.35" />
+          </svg>
+          Search Providers
+        </button>
       </div>
 
       {/* Models Section */}
@@ -2274,6 +2369,353 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                   </table>
                 </div>
               </div>
+            </>
+          )}
+        </div>
+      )}
+
+      {/* Search Providers Section */}
+      {activeTab === 'search-providers' && (
+        <div className="search-providers-management">
+          <div className="search-providers-management-header">
+            <h2>Search Providers</h2>
+            <button
+              className="refresh-providers-btn"
+              onClick={fetchSearchProviders}
+              disabled={searchProvidersLoading}
+            >
+              {searchProvidersLoading ? (
+                <>
+                  <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+                  </svg>
+                  Loading...
+                </>
+              ) : (
+                <>
+                  <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
+                    <path d="M21 3v5h-5M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" />
+                    <path d="M8 16H3v5" />
+                  </svg>
+                  Refresh
+                </>
+              )}
+            </button>
+          </div>
+
+          {searchProvidersLoading && !searchProviders && (
+            <div className="loading-message">
+              <p>Loading search providers...</p>
+            </div>
+          )}
+
+          {searchProviders && (
+            <>
+              {/* Production Read-Only Banner */}
+              {!searchProviders.is_development && (
+                <div
+                  className="info-banner"
+                  style={{
+                    padding: '1rem',
+                    marginBottom: '1.5rem',
+                    background: 'var(--bg-warning, #fff3cd)',
+                    border: '1px solid var(--border-warning, #ffc107)',
+                    borderRadius: 'var(--radius-md, 8px)',
+                    color: 'var(--text-warning, #856404)',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <svg
+                      width="20"
+                      height="20"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <circle cx="12" cy="12" r="10" />
+                      <line x1="12" y1="8" x2="12" y2="12" />
+                      <line x1="12" y1="16" x2="12.01" y2="16" />
+                    </svg>
+                    <strong>Read-Only Mode:</strong> Search provider configuration is read-only in
+                    production. Changes must be made in development and deployed to production.
+                  </div>
+                </div>
+              )}
+
+              {/* Providers List */}
+              <div className="providers-list">
+                {searchProviders.providers.map(provider => (
+                  <div
+                    key={provider.name}
+                    className="provider-card"
+                    style={{
+                      padding: '1.5rem',
+                      marginBottom: '1rem',
+                      background: 'var(--bg-secondary)',
+                      border: '1px solid var(--border-color)',
+                      borderRadius: 'var(--radius-lg)',
+                      opacity: !searchProviders.is_development && !provider.is_active ? 0.6 : 1,
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        marginBottom: '1rem',
+                      }}
+                    >
+                      <div>
+                        <h3
+                          style={{
+                            margin: 0,
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.5rem',
+                          }}
+                        >
+                          {provider.display_name}
+                          {provider.is_active && (
+                            <span
+                              style={{
+                                padding: '0.25rem 0.5rem',
+                                background: 'var(--success-color, #28a745)',
+                                color: 'white',
+                                borderRadius: 'var(--radius-sm)',
+                                fontSize: '0.75rem',
+                                fontWeight: 'bold',
+                              }}
+                            >
+                              Active
+                            </span>
+                          )}
+                        </h3>
+                        <p style={{ margin: '0.5rem 0 0 0', color: 'var(--text-secondary)' }}>
+                          {provider.is_configured ? (
+                            <span style={{ color: 'var(--success-color, #28a745)' }}>
+                              ✓ API key configured
+                            </span>
+                          ) : (
+                            <span style={{ color: 'var(--error-color, #dc3545)' }}>
+                              ✗ API key not configured
+                            </span>
+                          )}
+                        </p>
+                      </div>
+                      <div style={{ display: 'flex', gap: '0.5rem' }}>
+                        {searchProviders.is_development && (
+                          <button
+                            onClick={() => handleSetActiveProvider(provider.name)}
+                            disabled={!provider.is_configured || provider.is_active}
+                            className="set-active-btn"
+                            style={{
+                              padding: '0.5rem 1rem',
+                              background:
+                                provider.is_active || !provider.is_configured
+                                  ? 'var(--bg-disabled)'
+                                  : 'var(--primary-color)',
+                              color: 'white',
+                              border: 'none',
+                              borderRadius: 'var(--radius-md)',
+                              cursor:
+                                provider.is_active || !provider.is_configured
+                                  ? 'not-allowed'
+                                  : 'pointer',
+                              opacity: provider.is_active || !provider.is_configured ? 0.6 : 1,
+                            }}
+                            title={
+                              provider.is_active
+                                ? 'Already active'
+                                : !provider.is_configured
+                                  ? 'API key not configured'
+                                  : 'Set as active provider'
+                            }
+                          >
+                            {provider.is_active ? 'Active' : 'Set Active'}
+                          </button>
+                        )}
+                        {!searchProviders.is_development && (
+                          <button
+                            disabled
+                            className="set-active-btn"
+                            style={{
+                              padding: '0.5rem 1rem',
+                              background: 'var(--bg-disabled)',
+                              color: 'var(--text-disabled)',
+                              border: 'none',
+                              borderRadius: 'var(--radius-md)',
+                              cursor: 'not-allowed',
+                              opacity: 0.6,
+                            }}
+                            title="Only available in development mode"
+                          >
+                            Set Active
+                          </button>
+                        )}
+                        <button
+                          onClick={() => handleTestProvider(provider.name, testQuery)}
+                          disabled={!provider.is_configured || testingProvider}
+                          className="test-provider-btn"
+                          style={{
+                            padding: '0.5rem 1rem',
+                            background: provider.is_configured
+                              ? 'var(--primary-color)'
+                              : 'var(--bg-disabled)',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: 'var(--radius-md)',
+                            cursor: provider.is_configured ? 'pointer' : 'not-allowed',
+                            opacity: provider.is_configured ? 1 : 0.6,
+                          }}
+                          title={
+                            provider.is_configured ? 'Test provider' : 'API key not configured'
+                          }
+                        >
+                          Test
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Test Query Input */}
+                    {provider.is_configured && (
+                      <div style={{ marginTop: '1rem', display: 'flex', gap: '0.5rem' }}>
+                        <input
+                          type="text"
+                          value={testQuery}
+                          onChange={e => setTestQuery(e.target.value)}
+                          placeholder="Enter test query..."
+                          style={{
+                            flex: 1,
+                            padding: '0.5rem',
+                            border: '1px solid var(--border-color)',
+                            borderRadius: 'var(--radius-md)',
+                          }}
+                        />
+                        <button
+                          onClick={() => handleTestProvider(provider.name, testQuery)}
+                          disabled={testingProvider || !testQuery.trim()}
+                          style={{
+                            padding: '0.5rem 1rem',
+                            background: 'var(--primary-color)',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: 'var(--radius-md)',
+                            cursor:
+                              testingProvider || !testQuery.trim() ? 'not-allowed' : 'pointer',
+                            opacity: testingProvider || !testQuery.trim() ? 0.6 : 1,
+                          }}
+                        >
+                          Test Query
+                        </button>
+                      </div>
+                    )}
+
+                    {/* Test Results */}
+                    {testResult && testResult.provider === provider.name && (
+                      <div
+                        style={{
+                          marginTop: '1rem',
+                          padding: '1rem',
+                          background: testResult.success
+                            ? 'var(--bg-success, #d4edda)'
+                            : 'var(--bg-error, #f8d7da)',
+                          border: `1px solid ${testResult.success ? 'var(--success-color, #28a745)' : 'var(--error-color, #dc3545)'}`,
+                          borderRadius: 'var(--radius-md)',
+                        }}
+                      >
+                        {testResult.success ? (
+                          <>
+                            <p
+                              style={{
+                                margin: 0,
+                                fontWeight: 'bold',
+                                color: 'var(--success-color, #28a745)',
+                              }}
+                            >
+                              ✓ Test successful - {testResult.results_count} results found
+                            </p>
+                            {testResult.results && testResult.results.length > 0 && (
+                              <div style={{ marginTop: '0.5rem' }}>
+                                {testResult.results.slice(0, 3).map((result, idx) => (
+                                  <div
+                                    key={idx}
+                                    style={{
+                                      marginTop: '0.5rem',
+                                      padding: '0.5rem',
+                                      background: 'white',
+                                      borderRadius: 'var(--radius-sm)',
+                                    }}
+                                  >
+                                    <a
+                                      href={result.url}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      style={{ fontWeight: 'bold', color: 'var(--primary-color)' }}
+                                    >
+                                      {result.title}
+                                    </a>
+                                    <p
+                                      style={{
+                                        margin: '0.25rem 0 0 0',
+                                        fontSize: '0.9rem',
+                                        color: '#666',
+                                      }}
+                                    >
+                                      {result.snippet}
+                                    </p>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </>
+                        ) : (
+                          <p style={{ margin: 0, color: 'var(--error-color, #dc3545)' }}>
+                            ✗ Test failed: {testResult.error || 'Unknown error'}
+                          </p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              {/* Current Active Provider Info */}
+              {searchProviders.active_provider && (
+                <div
+                  style={{
+                    marginTop: '1.5rem',
+                    padding: '1rem',
+                    background: 'var(--bg-info, #d1ecf1)',
+                    border: '1px solid var(--info-color, #17a2b8)',
+                    borderRadius: 'var(--radius-md)',
+                    color: 'var(--text-info, #0c5460)',
+                  }}
+                >
+                  <strong>Current Active Provider:</strong> {searchProviders.active_provider}
+                </div>
+              )}
             </>
           )}
         </div>

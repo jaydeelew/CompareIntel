@@ -39,6 +39,10 @@ class Settings(BaseSettings):
     # API Keys
     openrouter_api_key: str
     
+    # Search Provider API Keys (Optional)
+    brave_search_api_key: Optional[str] = None
+    tavily_api_key: Optional[str] = None
+    
     # reCAPTCHA v3 (Optional - for registration protection)
     recaptcha_secret_key: Optional[str] = None
     

@@ -360,3 +360,98 @@ export async function zeroAnonymousUsage(): Promise<{ message: string }> {
   const response = await apiClient.post<{ message: string }>('/admin/settings/zero-anonymous-usage')
   return response.data
 }
+
+/**
+ * Search provider information
+ */
+export interface SearchProvider {
+  name: string
+  display_name: string
+  is_configured: boolean
+  is_active: boolean
+}
+
+/**
+ * Search provider test result
+ */
+export interface SearchProviderTestResult {
+  success: boolean
+  provider: string
+  query?: string
+  results_count?: number
+  results?: Array<{
+    title: string
+    url: string
+    snippet: string
+    source: string
+  }>
+  error?: string
+}
+
+/**
+ * Search providers response
+ */
+export interface SearchProvidersResponse {
+  providers: SearchProvider[]
+  active_provider: string | null
+  is_development: boolean
+}
+
+/**
+ * Get list of search providers and current active one
+ *
+ * @returns Promise resolving to search providers information
+ * @throws {ApiError} If the request fails
+ */
+export async function getSearchProviders(): Promise<SearchProvidersResponse> {
+  const response = await apiClient.get<SearchProvidersResponse>('/admin/search-providers')
+  return response.data
+}
+
+/**
+ * Set the active search provider
+ *
+ * @param provider - Provider name ("brave" or "tavily")
+ * @returns Promise resolving to success message
+ * @throws {ApiError} If setting fails (may throw 403 in production)
+ */
+export async function setActiveSearchProvider(
+  provider: string
+): Promise<{ success: boolean; active_provider: string; message: string }> {
+  const response = await apiClient.post<{
+    success: boolean
+    active_provider: string
+    message: string
+  }>('/admin/search-providers/set-active', { provider })
+  return response.data
+}
+
+/**
+ * Test the currently active search provider
+ *
+ * @returns Promise resolving to test results
+ * @throws {ApiError} If the request fails
+ */
+export async function testSearchProvider(): Promise<SearchProviderTestResult> {
+  const response = await apiClient.get<SearchProviderTestResult>('/admin/search-providers/test')
+  return response.data
+}
+
+/**
+ * Test a specific search provider with a custom query
+ *
+ * @param provider - Provider name ("brave" or "tavily")
+ * @param query - Search query to test
+ * @returns Promise resolving to test results
+ * @throws {ApiError} If the request fails
+ */
+export async function testSearchProviderWithQuery(
+  provider: string,
+  query: string
+): Promise<SearchProviderTestResult> {
+  const response = await apiClient.post<SearchProviderTestResult>(
+    '/admin/search-providers/test-provider',
+    { provider, query }
+  )
+  return response.data
+}

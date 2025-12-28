@@ -835,6 +835,205 @@
   box-shadow: none;
 }
 
+.submit-button {
+  background: white;
+  border: 2px solid #9ca3af;
+  color: #9ca3af;
+  box-sizing: border-box;
+  transition: all 0.3s ease;
+  transform-origin: center center;
+  position: relative;
+}
+
+.submit-button svg {
+  filter: none;
+  display: block;
+  margin: 0;
+  padding: 0;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  transform-origin: center center;
+  pointer-events: none;
+}
+
+.submit-button:hover:not(:disabled) {
+  background: white;
+  border-color: rgba(59, 130, 246, 0.6);
+  color: rgba(59, 130, 246, 0.9);
+  transform: translateY(-2px) scale(1.05);
+  box-shadow:
+    0 8px 24px rgba(37, 99, 235, 0.3),
+    0 4px 16px rgba(37, 99, 235, 0.2);
+}
+
+.submit-button:hover:not(:disabled) svg {
+  transform: translate(-50%, -50%);
+}
+
+.submit-button:hover:not(:disabled)::before {
+  opacity: 0;
+}
+
+.submit-button:active:not(:disabled) {
+  background: white;
+  border-color: rgba(59, 130, 246, 0.7);
+  color: rgba(59, 130, 246, 1);
+  transform: translateY(-1px) scale(1.02);
+  box-shadow:
+    0 4px 16px rgba(37, 99, 235, 0.3),
+    0 2px 8px rgba(37, 99, 235, 0.2);
+}
+
+.submit-button:active:not(:disabled) svg {
+  transform: translate(-50%, -50%);
+}
+
+.submit-button:focus,
+.submit-button:focus-visible {
+  outline: none !important;
+  border-color: #9ca3af;
+  box-shadow: none;
+}
+
+.submit-button:disabled {
+  background: white;
+  border-color: #9ca3af;
+  color: #9ca3af;
+  opacity: 0.5;
+  cursor: default;
+  transform: none;
+  box-shadow: none;
+}
+
+.submit-button.not-ready {
+  background: #9ca3af;
+  border-color: #9ca3af;
+  color: white;
+}
+
+.submit-button.not-ready:hover:not(:disabled) {
+  background: #9ca3af;
+  border-color: #9ca3af;
+  color: white;
+  transform: none;
+  box-shadow: none;
+}
+
+.web-search-button {
+  background: white;
+  border: 2px solid #9ca3af;
+  color: #9ca3af;
+  box-sizing: border-box;
+  transition: all 0.3s ease;
+  transform-origin: center center;
+  position: relative;
+}
+
+.web-search-button svg {
+  filter: none;
+  display: block;
+  margin: 0;
+  padding: 0;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  transform-origin: center center;
+  pointer-events: none;
+}
+
+.web-search-button:hover:not(:disabled) {
+  background: white;
+  border-color: rgba(59, 130, 246, 0.6);
+  color: rgba(59, 130, 246, 0.9);
+  transform: translateY(-2px) scale(1.05);
+  box-shadow:
+    0 8px 24px rgba(37, 99, 235, 0.3),
+    0 4px 16px rgba(37, 99, 235, 0.2);
+}
+
+.web-search-button:hover:not(:disabled) svg {
+  transform: translate(-50%, -50%);
+}
+
+.web-search-button:hover:not(:disabled)::before {
+  opacity: 0;
+}
+
+.web-search-button:active:not(:disabled) {
+  background: white;
+  border-color: rgba(59, 130, 246, 0.7);
+  color: rgba(59, 130, 246, 1);
+  transform: translateY(-1px) scale(1.02);
+  box-shadow:
+    0 4px 16px rgba(37, 99, 235, 0.3),
+    0 2px 8px rgba(37, 99, 235, 0.2);
+}
+
+.web-search-button:active:not(:disabled) svg {
+  transform: translate(-50%, -50%);
+}
+
+.web-search-button.active {
+  background: rgba(59, 130, 246, 0.9);
+  border-color: rgba(59, 130, 246, 0.6);
+  color: white;
+  box-shadow:
+    0 4px 16px rgba(59, 130, 246, 0.4),
+    0 2px 8px rgba(59, 130, 246, 0.2);
+}
+
+.web-search-button.active:hover:not(:disabled) {
+  background: rgba(59, 130, 246, 1);
+  border-color: rgba(59, 130, 246, 0.7);
+  color: white;
+  transform: translateY(-2px) scale(1.05);
+  box-shadow:
+    0 8px 24px rgba(59, 130, 246, 0.5),
+    0 4px 16px rgba(59, 130, 246, 0.3);
+}
+
+.web-search-button.active:hover:not(:disabled) svg {
+  transform: translate(-50%, -50%);
+}
+
+.web-search-button.active svg {
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
+}
+
+.web-search-button.active svg circle,
+.web-search-button.active svg path {
+  stroke: white;
+}
+
+.web-search-button:focus,
+.web-search-button:focus-visible {
+  outline: none !important;
+  border-color: #9ca3af;
+  box-shadow: none;
+}
+
+.web-search-button.active:focus,
+.web-search-button.active:focus-visible {
+  border-color: #3b82f6;
+  box-shadow:
+    0 4px 16px rgba(59, 130, 246, 0.4),
+    0 2px 8px rgba(59, 130, 246, 0.2),
+    0 0 0 3px rgba(59, 130, 246, 0.3);
+}
+
+.web-search-button:disabled {
+  background: white;
+  border-color: #9ca3af;
+  color: #9ca3af;
+  opacity: 0.5;
+  cursor: default;
+  transform: none;
+  box-shadow: none;
+}
+
 .note-icon svg {
   width: 18px;
   height: 18px;

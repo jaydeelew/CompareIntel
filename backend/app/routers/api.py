@@ -26,6 +26,7 @@ from ..model_runner import (
     TokenUsage,
     estimate_token_count,
 )
+from ..search.factory import SearchProviderFactory
 from ..models import (
     User,
     UsageLog,
@@ -92,6 +93,7 @@ class CompareRequest(BaseModel):
     conversation_id: Optional[int] = None  # Optional conversation ID for follow-ups (most reliable matching)
     estimated_input_tokens: Optional[int] = None  # Optional: Accurate token count from frontend (from /estimate-tokens endpoint)
     timezone: Optional[str] = None  # Optional: IANA timezone string (e.g., "America/Chicago") for credit reset timing
+    enable_web_search: bool = False  # Optional: Enable web search tool for models that support it
 
     model_config = ConfigDict(
         json_schema_extra={
@@ -591,22 +593,55 @@ async def compare_stream(
             detail=f"Your input is too long for one or more of the selected models. The maximum input length is approximately {max_chars:,} characters, but your input is approximately {approx_chars:,} characters.{problem_models_text} Please shorten your input or select different models that support longer inputs.",
         )
 
+    # Import utilities needed for tier checking
+    from ..model_runner import is_model_available_for_tier
+    from ..utils.cookies import get_token_from_cookies
+    import logging
+    
     # Determine model limit based on user tier
     if current_user:
-        tier_model_limit = get_model_limit(current_user.subscription_tier)
-        tier_name = current_user.subscription_tier
+        # Ensure subscription_tier is set and valid
+        subscription_tier = current_user.subscription_tier
+        if not subscription_tier or subscription_tier not in ["free", "starter", "starter_plus", "pro", "pro_plus"]:
+            # Log unexpected tier value for debugging
+            if settings.environment == "development":
+                logger = logging.getLogger(__name__)
+                logger.warning(
+                    f"User {current_user.id} ({current_user.email}) has unexpected subscription_tier: {subscription_tier}. "
+                    f"Defaulting to 'free' tier."
+                )
+            subscription_tier = "free"  # Default to free tier if invalid
+        
+        tier_model_limit = get_model_limit(subscription_tier)
+        tier_name = subscription_tier
     else:
+        # Check if there's a token present but authentication failed (helps diagnose auth issues)
+        token_present = get_token_from_cookies(request) is not None
+        
+        # Log authentication failure for debugging (only in development)
+        if settings.environment == "development" and token_present:
+            logger = logging.getLogger(__name__)
+            logger.warning(
+                f"Authentication failed for /compare-stream request. "
+                f"Token present: {token_present}, "
+                f"User agent: {request.headers.get('user-agent', 'unknown')}, "
+                f"Cookies: {list(request.cookies.keys())}"
+            )
+        
         tier_model_limit = ANONYMOUS_MODEL_LIMIT  # Anonymous users model limit from configuration
         tier_name = "anonymous"
 
     # Validate model access based on tier (check if restricted models are selected)
-    from ..model_runner import is_model_available_for_tier
-
     restricted_models = [model_id for model_id in req.models if not is_model_available_for_tier(model_id, tier_name)]
     if restricted_models:
         upgrade_message = ""
         if tier_name == "anonymous":
-            upgrade_message = " Sign up for a free account or upgrade to a paid tier to access premium models."
+            # Check if there's a token present - if so, authentication may have failed
+            token_present = get_token_from_cookies(request) is not None
+            if token_present:
+                upgrade_message = " It appears you are signed in, but authentication failed. Please try refreshing the page or logging in again. If the issue persists, your session may have expired."
+            else:
+                upgrade_message = " Sign up for a free account or upgrade to a paid tier to access premium models."
         elif tier_name == "free":
             upgrade_message = " Upgrade to Starter ($9.95/month) or higher to access all premium models."
         else:
@@ -890,6 +925,28 @@ async def compare_stream(
                 chunk_count = 0
 
                 try:
+                    # Check if web search should be enabled for this model
+                    # Do this BEFORE entering thread pool to avoid database session thread-safety issues
+                    enable_web_search_for_model = False
+                    search_provider_instance = None
+                    
+                    if req.enable_web_search:
+                        # Check if this model supports web search
+                        model_supports_web_search = False
+                        for provider_models in MODELS_BY_PROVIDER.values():
+                            for model in provider_models:
+                                if model["id"] == model_id and model.get("supports_web_search"):
+                                    model_supports_web_search = True
+                                    break
+                            if model_supports_web_search:
+                                break
+                        
+                        if model_supports_web_search:
+                            # Get search provider from database (must be done in async context, not thread pool)
+                            search_provider_instance = SearchProviderFactory.get_active_provider(db)
+                            if search_provider_instance:
+                                enable_web_search_for_model = True
+                    
                     # Run synchronous streaming in a thread, push chunks to queue as they arrive
                     loop = asyncio.get_event_loop()
 
@@ -917,7 +974,7 @@ async def compare_stream(
                                         # Include if model_id matches, or if model_id is None (legacy support)
                                         if msg.model_id is None or msg.model_id == model_id:
                                             filtered_history.append(msg)
-
+                            
                             # Manually iterate generator to capture return value (TokenUsage)
                             gen = call_openrouter_streaming(
                                 req.input_data,
@@ -926,6 +983,8 @@ async def compare_stream(
                                 use_mock,
                                 max_tokens_override=effective_max_tokens,
                                 credits_limited=credits_limited,
+                                enable_web_search=enable_web_search_for_model,
+                                search_provider=search_provider_instance,
                             )
 
                             try:

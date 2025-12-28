@@ -31,6 +31,38 @@ from .cache import cache
 # Import configuration
 from .config import settings
 
+
+def normalize_spacing_after_punctuation(text: str, previous_chunk: str = "") -> str:
+    """
+    Normalize spacing after punctuation marks, including cross-chunk boundaries.
+    
+    Fixes issues where tokens are concatenated without spaces after punctuation,
+    e.g., "data.Based" -> "data. Based"
+    
+    Also handles cross-chunk boundaries where punctuation is at the end of the previous
+    chunk and a letter starts the current chunk, e.g.:
+    - Previous chunk: "...you."
+    - Current chunk: "Based..."
+    - Result: " Based..." (space prepended)
+    
+    Args:
+        text: Text to normalize
+        previous_chunk: Previous chunk content (used to check cross-chunk boundaries)
+        
+    Returns:
+        Text with proper spacing after punctuation
+    """
+    # Check if we need to add space at the start due to previous chunk ending with punctuation
+    if previous_chunk and text and len(previous_chunk) > 0:
+        last_char = previous_chunk[-1]
+        first_char = text[0]
+        # If previous chunk ends with punctuation and current starts with letter, prepend space
+        if last_char in '.!?' and first_char.isalpha():
+            text = ' ' + text
+    
+    # Add space after punctuation marks if followed by a letter (within this chunk)
+    return re.sub(r'([.!?])([A-Za-z])', r'\1 \2', text)
+
 logger = logging.getLogger(__name__)
 
 OPENROUTER_API_KEY = settings.openrouter_api_key
@@ -185,6 +217,7 @@ MODELS_BY_PROVIDER = {
             "description": 'A fast, efficient model optimized for speed, coding accuracy, and tool use at low cost.',
             "category": "Language",
             "provider": "Anthropic",
+            "supports_web_search": True,  # Supports tool use
         },
         {
             "id": "anthropic/claude-haiku-4.5",
@@ -192,6 +225,7 @@ MODELS_BY_PROVIDER = {
             "description": "Anthropic's fastest model delivering near-frontier intelligence with minimal latency and cost.",
             "category": "Language",
             "provider": "Anthropic",
+            "supports_web_search": True,  # All Claude models support function calling
         },
         {
             "id": "anthropic/claude-3.7-sonnet",
@@ -199,6 +233,7 @@ MODELS_BY_PROVIDER = {
             "description": 'An advanced model with hybrid extended thinking capabilities for complex reasoning and coding tasks.',
             "category": "Language/Reasoning",
             "provider": "Anthropic",
+            "supports_web_search": True,
         },
         {
             "id": "anthropic/claude-opus-4",
@@ -206,6 +241,7 @@ MODELS_BY_PROVIDER = {
             "description": 'A frontier coding model with sustained performance on complex, long-running agentic tasks.',
             "category": "Language",
             "provider": "Anthropic",
+            "supports_web_search": True,
         },
         {
             "id": "anthropic/claude-sonnet-4",
@@ -213,6 +249,7 @@ MODELS_BY_PROVIDER = {
             "description": 'A high-performance model excelling in coding, reasoning, and instruction-following with improved precision.',
             "category": "Language",
             "provider": "Anthropic",
+            "supports_web_search": True,  # All Claude models support function calling
         },
         {
             "id": "anthropic/claude-opus-4.1",
@@ -220,6 +257,7 @@ MODELS_BY_PROVIDER = {
             "description": 'An updated flagship model with enhanced coding, reasoning, and multi-step agentic capabilities.',
             "category": "Language/Code",
             "provider": "Anthropic",
+            "supports_web_search": True,  # All Claude models support function calling
         },
         {
             "id": "anthropic/claude-opus-4.5",
@@ -227,6 +265,7 @@ MODELS_BY_PROVIDER = {
             "description": "Anthropic's most capable model for complex software engineering and long-horizon computer use tasks.",
             "category": "Language",
             "provider": "Anthropic",
+            "supports_web_search": True,  # All Claude models support function calling
         },
         {
             "id": "anthropic/claude-sonnet-4.5",
@@ -234,6 +273,7 @@ MODELS_BY_PROVIDER = {
             "description": "Anthropic's most advanced Sonnet optimized for real-world agentic workflows and coding tasks.",
             "category": "Language",
             "provider": "Anthropic",
+            "supports_web_search": True,  # All Claude models support function calling
         },
     ],
     "Cohere": [
@@ -243,6 +283,7 @@ MODELS_BY_PROVIDER = {
             "description": 'A compact 7B model optimized for fast, efficient responses in conversational and RAG applications.',
             "category": "Language",
             "provider": "Cohere",
+            "supports_web_search": False,
         },
         {
             "id": "cohere/command-r-plus-08-2024",
@@ -250,6 +291,7 @@ MODELS_BY_PROVIDER = {
             "description": 'An enterprise-grade model with 50% higher throughput for complex reasoning and generation tasks.',
             "category": "Language/Reasoning",
             "provider": "Cohere",
+            "supports_web_search": False,
         },
         {
             "id": "cohere/command-a",
@@ -257,6 +299,7 @@ MODELS_BY_PROVIDER = {
             "description": 'An open-weights 111B model with 256k context excelling in agentic, multilingual, and coding tasks.',
             "category": "Language",
             "provider": "Cohere",
+            "supports_web_search": True,  # Agentic model - supports function calling
         },
     ],
     "DeepSeek": [
@@ -266,6 +309,7 @@ MODELS_BY_PROVIDER = {
             "description": 'A 671B hybrid MoE model (37B active) supporting both thinking and non-thinking modes for versatile reasoning.',
             "category": "Language/Reasoning",
             "provider": "DeepSeek",
+            "supports_web_search": False,
         },
         {
             "id": "deepseek/deepseek-v3.2-exp",
@@ -273,6 +317,7 @@ MODELS_BY_PROVIDER = {
             "description": 'An experimental model with enhanced reasoning and coding capabilities bridging V3.1 and future architectures.',
             "category": "Language/Reasoning",
             "provider": "DeepSeek",
+            "supports_web_search": False,
         },
         {
             "id": "deepseek/deepseek-r1",
@@ -280,6 +325,7 @@ MODELS_BY_PROVIDER = {
             "description": 'An open-source reasoning model matching OpenAI o1 performance with fully transparent chain-of-thought.',
             "category": "Reasoning",
             "provider": "DeepSeek",
+            "supports_web_search": False,
         },
     ],
     "Google": [
@@ -289,6 +335,7 @@ MODELS_BY_PROVIDER = {
             "description": 'A high-speed model with significantly faster time-to-first-token while maintaining Pro-level quality.',
             "category": "Language",
             "provider": "Google",
+            "supports_web_search": True,  # All Gemini models support function calling
         },
         {
             "id": "google/gemini-2.5-flash",
@@ -296,6 +343,7 @@ MODELS_BY_PROVIDER = {
             "description": "Google's fast, cost-efficient model with built-in thinking capabilities for reasoning, coding, and math tasks.",
             "category": "Language",
             "provider": "Google",
+            "supports_web_search": True,  # All Gemini models support function calling
         },
         {
             "id": "google/gemini-2.5-pro",
@@ -303,6 +351,7 @@ MODELS_BY_PROVIDER = {
             "description": "Google's most capable model excelling in complex reasoning, coding, mathematics, and scientific analysis.",
             "category": "Language",
             "provider": "Google",
+            "supports_web_search": True,
         },
         {
             "id": "google/gemini-3-flash-preview",
@@ -310,6 +359,7 @@ MODELS_BY_PROVIDER = {
             "description": 'Gemini 3 Flash Preview is a high speed, high value thinking model designed for agentic workflows, multi turn chat, and coding assistance.',
             "category": "Language",
             "provider": "Google",
+            "supports_web_search": True,  # All Gemini models support function calling
         },
         {
             "id": "google/gemini-3-pro-preview",
@@ -317,6 +367,7 @@ MODELS_BY_PROVIDER = {
             "description": "Google's flagship multimodal model with 1M-token context for text, image, video, audio, and code tasks.",
             "category": "Language",
             "provider": "Google",
+            "supports_web_search": True,  # All Gemini models support function calling
         },
     ],
     "Kwaipilot": [
@@ -326,6 +377,7 @@ MODELS_BY_PROVIDER = {
             "description": "KAT-Coder-Pro V1 is KwaiKAT's most advanced agentic coding model in the KAT-Coder series.",
             "category": "Language",
             "provider": "Kwaipilot",
+            "supports_web_search": True,  # Agentic coding model - supports function calling
         },
     ],
     "Meta": [
@@ -335,6 +387,7 @@ MODELS_BY_PROVIDER = {
             "description": "Meta's largest open-source model (405B) with strong multilingual, coding, and reasoning capabilities.",
             "category": "Language",
             "provider": "Meta",
+            "supports_web_search": False,
         },
         {
             "id": "meta-llama/llama-4-maverick",
@@ -342,6 +395,7 @@ MODELS_BY_PROVIDER = {
             "description": 'A high-capacity 400B MoE model (17B active, 128 experts) for complex multimodal reasoning and generation.',
             "category": "Multimodal",
             "provider": "Meta",
+            "supports_web_search": False,
         },
         {
             "id": "meta-llama/llama-4-scout",
@@ -349,6 +403,7 @@ MODELS_BY_PROVIDER = {
             "description": 'A 109B MoE model (17B active) optimized for efficient multimodal understanding and generation tasks.',
             "category": "Multimodal",
             "provider": "Meta",
+            "supports_web_search": False,
         },
         {
             "id": "meta-llama/llama-3.1-405b-instruct",
@@ -356,6 +411,7 @@ MODELS_BY_PROVIDER = {
             "description": "Meta's flagship 405B open-source model excelling in multilingual understanding, coding, and instruction-following.",
             "category": "Language",
             "provider": "Meta",
+            "supports_web_search": False,
         },
         {
             "id": "meta-llama/llama-3.3-70b-instruct",
@@ -363,6 +419,7 @@ MODELS_BY_PROVIDER = {
             "description": 'The Meta Llama 3.3 multilingual large language model (LLM) is a pretrained and instruction tuned generative model in 70B.',
             "category": "Language",
             "provider": "Meta",
+            "supports_web_search": False,
         },
     ],
     "Microsoft": [
@@ -372,6 +429,7 @@ MODELS_BY_PROVIDER = {
             "description": 'A compact 14B model excelling in complex reasoning while operating efficiently with limited resources.',
             "category": "Language/Reasoning",
             "provider": "Microsoft",
+            "supports_web_search": False,
         },
         {
             "id": "microsoft/wizardlm-2-8x22b",
@@ -379,6 +437,7 @@ MODELS_BY_PROVIDER = {
             "description": "Microsoft's advanced MoE model with strong performance across reasoning, coding, and creative tasks.",
             "category": "Language/Reasoning",
             "provider": "Microsoft",
+            "supports_web_search": False,
         },
         {
             "id": "microsoft/phi-4-reasoning-plus",
@@ -386,6 +445,7 @@ MODELS_BY_PROVIDER = {
             "description": 'An enhanced 14B model with reinforcement learning fine-tuning for improved math, science, and code reasoning.',
             "category": "Reasoning",
             "provider": "Microsoft",
+            "supports_web_search": False,
         },
     ],
     "Minimax": [
@@ -395,6 +455,7 @@ MODELS_BY_PROVIDER = {
             "description": 'A compact, high-efficiency model optimized for end-to-end coding and agentic workflow automation.',
             "category": "Language",
             "provider": "Minimax",
+            "supports_web_search": False,
         },
     ],
     "Mistral": [
@@ -404,6 +465,7 @@ MODELS_BY_PROVIDER = {
             "description": 'A high-performance model for code generation and agentic reasoning in complex development workflows.',
             "category": "Code",
             "provider": "Mistral",
+            "supports_web_search": True,  # Agentic model - supports function calling
         },
         {
             "id": "mistralai/devstral-small",
@@ -411,6 +473,7 @@ MODELS_BY_PROVIDER = {
             "description": 'A 24B open-weight model specialized for software engineering agents and autonomous coding tasks.',
             "category": "Code",
             "provider": "Mistral",
+            "supports_web_search": True,  # Agentic model - supports function calling
         },
         {
             "id": "mistralai/mistral-medium-3.1",
@@ -418,6 +481,7 @@ MODELS_BY_PROVIDER = {
             "description": 'An enterprise-grade model delivering frontier-level capabilities at significantly reduced operational cost.',
             "category": "Language",
             "provider": "Mistral",
+            "supports_web_search": True,  # Mistral Medium supports function calling
         },
         {
             "id": "mistralai/mistral-small-3.2-24b-instruct",
@@ -425,6 +489,7 @@ MODELS_BY_PROVIDER = {
             "description": 'A 24B multimodal model optimized for instruction-following, function calling, and vision tasks.',
             "category": "Multimodal",
             "provider": "Mistral",
+            "supports_web_search": True,
         },
         {
             "id": "mistralai/mistral-large",
@@ -432,6 +497,7 @@ MODELS_BY_PROVIDER = {
             "description": "Mistral's flagship model with strong multilingual, coding, reasoning, and function-calling capabilities.",
             "category": "Language/Reasoning",
             "provider": "Mistral",
+            "supports_web_search": True,
         },
         {
             "id": "mistralai/codestral-2508",
@@ -439,6 +505,7 @@ MODELS_BY_PROVIDER = {
             "description": "Mistral's specialized coding model with state-of-the-art performance on code generation and completion.",
             "category": "Code",
             "provider": "Mistral",
+            "supports_web_search": False,
         },
     ],
     "Mistralai": [
@@ -448,6 +515,7 @@ MODELS_BY_PROVIDER = {
             "description": 'Devstral 2 is a state-of-the-art open-source model by Mistral AI specializing in agentic coding.',
             "category": "Language",
             "provider": "Mistralai",
+            "supports_web_search": True,  # Agentic coding model - supports function calling
         },
     ],
     "OpenAI": [
@@ -457,6 +525,7 @@ MODELS_BY_PROVIDER = {
             "description": 'An open-weight 117B MoE model designed for high-reasoning, agentic, and general-purpose production tasks.',
             "category": "Language",
             "provider": "OpenAI",
+            "supports_web_search": False,
         },
         {
             "id": "openai/o3-mini",
@@ -464,6 +533,7 @@ MODELS_BY_PROVIDER = {
             "description": 'A cost-efficient reasoning model optimized for STEM tasks, excelling in science, mathematics, and coding.',
             "category": "Reasoning",
             "provider": "OpenAI",
+            "supports_web_search": False,
         },
         {
             "id": "openai/gpt-4o-mini",
@@ -471,6 +541,7 @@ MODELS_BY_PROVIDER = {
             "description": "GPT-4o mini is OpenAI's newest model after [GPT-4 Omni](/models/openai/gpt-4o), supporting both text and image inputs with text outputs.",
             "category": "Language",
             "provider": "OpenAI",
+            "supports_web_search": True,  # All GPT-4o+ models support function calling
         },
         {
             "id": "openai/gpt-5-mini",
@@ -478,6 +549,7 @@ MODELS_BY_PROVIDER = {
             "description": 'A compact GPT-5 variant designed for efficient, lighter-weight reasoning and general tasks.',
             "category": "Language",
             "provider": "OpenAI",
+            "supports_web_search": True,  # All GPT-5 models support function calling
         },
         {
             "id": "openai/gpt-5-nano",
@@ -485,6 +557,7 @@ MODELS_BY_PROVIDER = {
             "description": 'The smallest GPT-5 variant optimized for ultra-low latency developer tools and rapid interactions.',
             "category": "Language",
             "provider": "OpenAI",
+            "supports_web_search": True,  # All GPT-5 models support function calling
         },
         {
             "id": "openai/gpt-5.1-codex-mini",
@@ -492,6 +565,7 @@ MODELS_BY_PROVIDER = {
             "description": 'A compact, fast coding model for efficient code generation and software development tasks.',
             "category": "Code",
             "provider": "OpenAI",
+            "supports_web_search": True,  # All GPT-5 models support function calling
         },
         {
             "id": "openai/o3",
@@ -499,6 +573,7 @@ MODELS_BY_PROVIDER = {
             "description": "OpenAI's advanced reasoning model with state-of-the-art performance across math, science, and coding benchmarks.",
             "category": "Reasoning",
             "provider": "OpenAI",
+            "supports_web_search": False,
         },
         {
             "id": "openai/gpt-4o",
@@ -506,6 +581,7 @@ MODELS_BY_PROVIDER = {
             "description": 'An omnimodal model supporting text and image inputs with fast, intelligent multimodal responses.',
             "category": "Language",
             "provider": "OpenAI",
+            "supports_web_search": True,
         },
         {
             "id": "openai/gpt-5",
@@ -513,6 +589,7 @@ MODELS_BY_PROVIDER = {
             "description": "OpenAI's most advanced model with major improvements in reasoning, code quality, and user experience.",
             "category": "Language",
             "provider": "OpenAI",
+            "supports_web_search": True,
         },
         {
             "id": "openai/gpt-5-chat",
@@ -520,6 +597,7 @@ MODELS_BY_PROVIDER = {
             "description": 'A GPT-5 variant optimized for natural, multimodal, and context-aware enterprise conversations.',
             "category": "Language",
             "provider": "OpenAI",
+            "supports_web_search": True,  # All GPT-5 models support function calling
         },
         {
             "id": "openai/gpt-5-codex",
@@ -527,6 +605,7 @@ MODELS_BY_PROVIDER = {
             "description": 'A specialized GPT-5 variant optimized for software engineering, code generation, and development workflows.',
             "category": "Code",
             "provider": "OpenAI",
+            "supports_web_search": True,  # All GPT-5 models support function calling
         },
         {
             "id": "openai/gpt-5.1",
@@ -534,6 +613,7 @@ MODELS_BY_PROVIDER = {
             "description": 'The latest frontier model with stronger reasoning, improved instruction adherence, and natural conversation.',
             "category": "Language",
             "provider": "OpenAI",
+            "supports_web_search": True,  # All GPT-5 models support function calling
         },
         {
             "id": "openai/gpt-5.1-chat",
@@ -541,6 +621,7 @@ MODELS_BY_PROVIDER = {
             "description": 'A fast, lightweight model optimized for low-latency chat while retaining strong general intelligence.',
             "category": "Language",
             "provider": "OpenAI",
+            "supports_web_search": True,  # All GPT-5 models support function calling
         },
         {
             "id": "openai/gpt-5.1-codex",
@@ -548,13 +629,15 @@ MODELS_BY_PROVIDER = {
             "description": 'The most capable GPT-5.1 variant specialized for advanced software engineering and coding workflows.',
             "category": "Code",
             "provider": "OpenAI",
+            "supports_web_search": True,  # All GPT-5 models support function calling
         },
         {
             "id": "openai/gpt-5.1-codex-max",
             "name": "Gpt 5.1 Codex Max",
-            "description": 'GPT-5.1-Codex-Max is OpenAI’s latest agentic coding model, designed for long-running, high-context software development tasks.',
+            "description": "GPT-5.1-Codex-Max is OpenAI's latest agentic coding model, designed for long-running, high-context software development tasks.",
             "category": "Language",
             "provider": "OpenAI",
+            "supports_web_search": True,  # All GPT-5 models support function calling
         },
         {
             "id": "openai/gpt-5.2",
@@ -562,6 +645,7 @@ MODELS_BY_PROVIDER = {
             "description": 'GPT-5.2 is the latest frontier-grade model in the GPT-5 series, offering stronger agentic and long context perfomance compared to GPT-5.1.',
             "category": "Language",
             "provider": "OpenAI",
+            "supports_web_search": True,  # All GPT-5 models support function calling
         },
         {
             "id": "openai/gpt-5.2-chat",
@@ -569,13 +653,15 @@ MODELS_BY_PROVIDER = {
             "description": 'GPT-5.2 Chat (AKA Instant) is the fast, lightweight member of the 5.2 family, optimized for low-latency chat while retaining strong general intelligence.',
             "category": "Language",
             "provider": "OpenAI",
+            "supports_web_search": True,  # All GPT-5 models support function calling
         },
         {
             "id": "openai/gpt-5.2-pro",
             "name": "Gpt 5.2 Pro",
-            "description": 'GPT-5.2 Pro is OpenAI’s most advanced model, offering major improvements in agentic coding and long context performance over GPT-5 Pro.',
+            "description": "GPT-5.2 Pro is OpenAI's most advanced model, offering major improvements in agentic coding and long context performance over GPT-5 Pro.",
             "category": "Language",
             "provider": "OpenAI",
+            "supports_web_search": True,  # All GPT-5 models support function calling
         },
     ],
     "Qwen": [
@@ -585,6 +671,7 @@ MODELS_BY_PROVIDER = {
             "description": 'A 30.5B MoE model with 3.3B active parameters for efficient instruction-following and chat.',
             "category": "Language",
             "provider": "Qwen",
+            "supports_web_search": False,
         },
         {
             "id": "qwen/qwen3-coder-flash",
@@ -592,6 +679,7 @@ MODELS_BY_PROVIDER = {
             "description": 'A fast, cost-efficient coding model optimized for rapid code generation and completion tasks.',
             "category": "Code",
             "provider": "Qwen",
+            "supports_web_search": False,
         },
         {
             "id": "qwen/qwen3-next-80b-a3b-instruct",
@@ -599,6 +687,7 @@ MODELS_BY_PROVIDER = {
             "description": 'An 80B MoE instruction-tuned model optimized for fast, stable responses without thinking traces.',
             "category": "Language",
             "provider": "Qwen",
+            "supports_web_search": False,
         },
         {
             "id": "qwen/qwen3-235b-a22b",
@@ -606,6 +695,7 @@ MODELS_BY_PROVIDER = {
             "description": 'A 235B MoE model (22B active) with strong reasoning, coding, and multilingual capabilities.',
             "category": "Language",
             "provider": "Qwen",
+            "supports_web_search": False,
         },
         {
             "id": "qwen/qwen3-coder",
@@ -613,6 +703,7 @@ MODELS_BY_PROVIDER = {
             "description": 'A 480B MoE model (35B active) achieving state-of-the-art code generation and agentic coding performance.',
             "category": "Code",
             "provider": "Qwen",
+            "supports_web_search": True,  # Agentic coding model - supports function calling
         },
         {
             "id": "qwen/qwen3-coder-plus",
@@ -620,6 +711,7 @@ MODELS_BY_PROVIDER = {
             "description": "Alibaba's proprietary coding model with enhanced performance for complex development tasks.",
             "category": "Code",
             "provider": "Qwen",
+            "supports_web_search": False,
         },
         {
             "id": "qwen/qwen3-max",
@@ -627,6 +719,7 @@ MODELS_BY_PROVIDER = {
             "description": "Qwen's most capable model with strong reasoning, instruction-following, and multilingual abilities.",
             "category": "Language",
             "provider": "Qwen",
+            "supports_web_search": False,
         },
         {
             "id": "qwen/qwen3-next-80b-a3b-thinking",
@@ -634,6 +727,7 @@ MODELS_BY_PROVIDER = {
             "description": 'A reasoning-first model with structured chain-of-thought traces for complex problem-solving.',
             "category": "Language/Reasoning",
             "provider": "Qwen",
+            "supports_web_search": False,
         },
         {
             "id": "qwen/qwen3-vl-235b-a22b-thinking",
@@ -641,6 +735,7 @@ MODELS_BY_PROVIDER = {
             "description": 'A multimodal reasoning model unifying text generation with visual understanding across images and video.',
             "category": "Multimodal/Reasoning",
             "provider": "Qwen",
+            "supports_web_search": False,
         },
     ],
     "xAI": [
@@ -650,6 +745,7 @@ MODELS_BY_PROVIDER = {
             "description": 'A speedy, economical reasoning model optimized for agentic coding and development tasks.',
             "category": "Language",
             "provider": "xAI",
+            "supports_web_search": True,  # Agentic coding model - supports function calling
         },
         {
             "id": "x-ai/grok-4-fast",
@@ -657,6 +753,7 @@ MODELS_BY_PROVIDER = {
             "description": 'A cost-efficient multimodal model with 2M token context for fast, large-scale processing.',
             "category": "Language",
             "provider": "xAI",
+            "supports_web_search": False,
         },
         {
             "id": "x-ai/grok-3-mini",
@@ -664,6 +761,7 @@ MODELS_BY_PROVIDER = {
             "description": 'A lightweight reasoning model with chain-of-thought capabilities for efficient problem-solving.',
             "category": "Language",
             "provider": "xAI",
+            "supports_web_search": False,
         },
         {
             "id": "x-ai/grok-4",
@@ -671,6 +769,7 @@ MODELS_BY_PROVIDER = {
             "description": "xAI's flagship reasoning model with 256k context for complex analysis and generation tasks.",
             "category": "Language",
             "provider": "xAI",
+            "supports_web_search": False,
         },
         {
             "id": "x-ai/grok-5",
@@ -679,6 +778,7 @@ MODELS_BY_PROVIDER = {
             "category": "Language",
             "provider": "xAI",
             "available": False,
+            "supports_web_search": False,
         },
     ],
     "Xiaomi": [
@@ -688,6 +788,7 @@ MODELS_BY_PROVIDER = {
             "description": 'MiMo-V2-Flash is an open-source foundation language model developed by Xiaomi.',
             "category": "Language",
             "provider": "Xiaomi",
+            "supports_web_search": False,
         },
     ]
 }
@@ -699,6 +800,25 @@ for provider, models in MODELS_BY_PROVIDER.items():
     OPENROUTER_MODELS.extend(models)
 
 client = OpenAI(api_key=OPENROUTER_API_KEY, base_url="https://openrouter.ai/api/v1")
+
+# Web search tool definition (for future tool calling integration)
+WEB_SEARCH_TOOL = {
+    "type": "function",
+    "function": {
+        "name": "search_web",
+        "description": "Search the internet for current information",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "query": {
+                    "type": "string",
+                    "description": "The search query to find information on the internet"
+                }
+            },
+            "required": ["query"]
+        }
+    }
+}
 
 # In-memory cache for model token limits
 # These limits are relatively static and only change when models are added/updated
@@ -1314,6 +1434,8 @@ def call_openrouter_streaming(
     use_mock: bool = False,
     max_tokens_override: Optional[int] = None,
     credits_limited: bool = False,
+    enable_web_search: bool = False,
+    search_provider: Optional[Any] = None,  # SearchProvider instance
 ) -> Generator[Any, None, Optional[TokenUsage]]:
     """
     Stream OpenRouter responses token-by-token for faster perceived response time.
@@ -1333,6 +1455,8 @@ def call_openrouter_streaming(
         use_mock: If True, return mock responses instead of calling API (admin testing feature)
         max_tokens_override: Optional override for max output tokens (uses model limit if not provided)
         credits_limited: If True, indicates max_tokens_override was reduced due to low credits
+        enable_web_search: If True, enable web search tool calling for models that support it
+        search_provider: Optional SearchProvider instance for executing web searches
 
     Yields:
         str: Content chunks as they arrive
@@ -1367,6 +1491,11 @@ def call_openrouter_streaming(
     # Add the current prompt as user message
     messages.append({"role": "user", "content": prompt})
 
+    # Prepare tools if web search is enabled
+    tools = None
+    if enable_web_search and search_provider:
+        tools = [WEB_SEARCH_TOOL]
+
     # Use override if provided (for multi-model comparisons to avoid truncation)
     # Otherwise, use model's maximum capability
     if max_tokens_override is not None:
@@ -1381,42 +1510,272 @@ def call_openrouter_streaming(
 
     while retry_count <= max_retries:
             try:
+                # Prepare API call parameters
+                api_params = {
+                    "model": model_id,
+                    "messages": messages,
+                    "timeout": settings.individual_model_timeout,
+                    "max_tokens": max_tokens,
+                    "stream": True,  # Enable streaming!
+                }
+                
+                # Add tools if web search is enabled
+                if tools:
+                    api_params["tools"] = tools
+                    api_params["tool_choice"] = "auto"  # Let model decide when to use tools
+                
                 # Enable streaming
-                response = client.chat.completions.create(
-                    model=model_id,
-                    messages=messages,
-                    timeout=settings.individual_model_timeout,
-                    max_tokens=max_tokens,
-                    stream=True,  # Enable streaming!
-                )
+                response = client.chat.completions.create(**api_params)
 
                 full_content = ""
                 finish_reason = None
                 usage_data = None
+                tool_calls_accumulated = {}  # Dict to accumulate tool calls by index
+                previous_content_chunk = ""  # Track previous chunk for cross-boundary spacing
 
                 # Iterate through chunks as they arrive
                 for chunk in response:
                     if chunk.choices and len(chunk.choices) > 0:
                         delta = chunk.choices[0].delta
 
-                        # Yield content chunks as they arrive
+                        # Handle tool calls (for web search) - accumulate across chunks
+                        if hasattr(delta, "tool_calls") and delta.tool_calls:
+                            for tool_call_delta in delta.tool_calls:
+                                idx = tool_call_delta.index
+                                
+                                # Initialize tool call structure if needed
+                                if idx not in tool_calls_accumulated:
+                                    tool_calls_accumulated[idx] = {
+                                        "id": "",
+                                        "type": "function",
+                                        "function": {"name": "", "arguments": ""}
+                                    }
+                                
+                                tc = tool_calls_accumulated[idx]
+                                
+                                # Update tool call ID
+                                if hasattr(tool_call_delta, "id") and tool_call_delta.id:
+                                    tc["id"] = tool_call_delta.id
+                                
+                                # Update function name and arguments
+                                if hasattr(tool_call_delta, "function"):
+                                    if hasattr(tool_call_delta.function, "name") and tool_call_delta.function.name:
+                                        tc["function"]["name"] = tool_call_delta.function.name
+                                    if hasattr(tool_call_delta.function, "arguments") and tool_call_delta.function.arguments:
+                                        tc["function"]["arguments"] += tool_call_delta.function.arguments
+
+                        # Yield content chunks as they arrive with spacing normalization
                         if hasattr(delta, "content") and delta.content:
-                            content_chunk = delta.content
+                            raw_chunk = delta.content
+                            
+                            # Debug logging for chunks containing punctuation followed by letters (only in development)
+                            if settings.environment == "development":
+                                # Check if this chunk has the pattern "punctuation+letter" within it
+                                import re
+                                pattern_matches = re.findall(r'([.!?])([A-Za-z])', raw_chunk)
+                                if pattern_matches:
+                                    logger.debug(f"[CHUNK PATTERN] Found {len(pattern_matches)} punctuation+letter patterns in chunk: {repr(raw_chunk[:50])}")
+                                
+                                # Check cross-chunk boundary
+                                if previous_content_chunk:
+                                    prev_last = previous_content_chunk[-1] if previous_content_chunk else ""
+                                    curr_first = raw_chunk[0] if raw_chunk else ""
+                                    if prev_last in '.!?' and curr_first.isalpha():
+                                        logger.debug(f"[CROSS-CHUNK] Previous ends with '{prev_last}', current starts with '{curr_first}' - Will add space")
+                            
+                            content_chunk = normalize_spacing_after_punctuation(raw_chunk, previous_content_chunk)
                             full_content += content_chunk
                             yield content_chunk
+                            previous_content_chunk = raw_chunk  # Store raw chunk for next iteration
 
                         # Capture finish reason from last chunk
                         if chunk.choices[0].finish_reason:
                             finish_reason = chunk.choices[0].finish_reason
 
                     # Extract usage data from chunk if available
-                    # OpenRouter/OpenAI streaming responses include usage in the final chunk
                     if hasattr(chunk, "usage") and chunk.usage:
                         usage = chunk.usage
                         prompt_tokens = getattr(usage, "prompt_tokens", 0)
                         completion_tokens = getattr(usage, "completion_tokens", 0)
                         if prompt_tokens > 0 or completion_tokens > 0:
                             usage_data = calculate_token_usage(prompt_tokens, completion_tokens)
+
+                # Handle tool calls after streaming completes
+                # Support recursive tool calls (model may make multiple tool calls in sequence)
+                max_tool_call_iterations = 5  # Prevent infinite loops
+                tool_call_iteration = 0
+                last_chunk = None
+                
+                while finish_reason == "tool_calls" and tool_calls_accumulated and search_provider and tool_call_iteration < max_tool_call_iterations:
+                    tool_call_iteration += 1
+                    
+                    # Execute all tool calls
+                    tool_call_messages = []
+                    tool_results = []
+                    
+                    for idx, tool_call in sorted(tool_calls_accumulated.items()):
+                        if tool_call["function"]["name"] == "search_web":
+                            try:
+                                import json
+                                # Parse arguments
+                                args = json.loads(tool_call["function"]["arguments"])
+                                search_query = args.get("query", "")
+                                
+                                if search_query:
+                                    # Execute search
+                                    # Since we're in a thread pool (no event loop), use asyncio.run()
+                                    # to properly create and manage an event loop for the async search
+                                    import asyncio
+                                    logger.info(f"Executing web search for query: {search_query}")
+                                    try:
+                                        search_results = asyncio.run(
+                                            search_provider.search(search_query, max_results=5)
+                                        )
+                                        logger.info(f"Web search completed successfully, found {len(search_results)} results")
+                                    except Exception as search_exec_error:
+                                        logger.error(f"Error during web search execution: {search_exec_error}", exc_info=True)
+                                        raise
+                                    
+                                    # Format search results for the model
+                                    results_text = "Web search results:\n\n"
+                                    for i, result in enumerate(search_results, 1):
+                                        results_text += f"{i}. {result.title}\n"
+                                        results_text += f"   URL: {result.url}\n"
+                                        results_text += f"   {result.snippet}\n\n"
+                                    
+                                    # Store tool call and result
+                                    tool_call_messages.append({
+                                        "id": tool_call["id"],
+                                        "type": "function",
+                                        "function": {
+                                            "name": "search_web",
+                                            "arguments": tool_call["function"]["arguments"]
+                                        }
+                                    })
+                                    tool_results.append({
+                                        "tool_call_id": tool_call["id"],
+                                        "content": results_text
+                                    })
+                            except Exception as e:
+                                logger.error(f"Error executing web search tool: {e}")
+                                tool_call_messages.append({
+                                    "id": tool_call["id"],
+                                    "type": "function",
+                                    "function": {
+                                        "name": "search_web",
+                                        "arguments": tool_call["function"]["arguments"]
+                                    }
+                                })
+                                tool_results.append({
+                                    "tool_call_id": tool_call["id"],
+                                    "content": f"Error performing web search: {str(e)}"
+                                })
+                    
+                    # Add tool calls and results to messages
+                    if tool_call_messages:
+                        messages.append({
+                            "role": "assistant",
+                            "content": None,
+                            "tool_calls": tool_call_messages
+                        })
+                        
+                        for result in tool_results:
+                            messages.append({
+                                "role": "tool",
+                                "tool_call_id": result["tool_call_id"],
+                                "content": result["content"]
+                            })
+                        
+                        # Continue conversation with search results
+                        # Make another API call with updated messages
+                        api_params_continue = {
+                            "model": model_id,
+                            "messages": messages,
+                            "timeout": settings.individual_model_timeout,
+                            "max_tokens": max_tokens,
+                            "stream": True,
+                        }
+                        
+                        if tools:
+                            api_params_continue["tools"] = tools
+                            api_params_continue["tool_choice"] = "auto"
+                        
+                        response_continue = client.chat.completions.create(**api_params_continue)
+                        
+                        # Reset for continuation response
+                        tool_calls_accumulated = {}
+                        finish_reason = None
+                        # Initialize with the last chunk from previous response to handle cross-boundary spacing
+                        previous_content_chunk_continue = previous_content_chunk if previous_content_chunk else ""
+                        
+                        # Stream the continuation response
+                        for chunk in response_continue:
+                            last_chunk = chunk  # Store last chunk for usage data
+                            if chunk.choices and len(chunk.choices) > 0:
+                                delta = chunk.choices[0].delta
+                                
+                                # Handle tool calls in continuation (recursive)
+                                if hasattr(delta, "tool_calls") and delta.tool_calls:
+                                    for tool_call_delta in delta.tool_calls:
+                                        idx = tool_call_delta.index
+                                        
+                                        if idx not in tool_calls_accumulated:
+                                            tool_calls_accumulated[idx] = {
+                                                "id": "",
+                                                "type": "function",
+                                                "function": {"name": "", "arguments": ""}
+                                            }
+                                        
+                                        tc = tool_calls_accumulated[idx]
+                                        
+                                        if hasattr(tool_call_delta, "id") and tool_call_delta.id:
+                                            tc["id"] = tool_call_delta.id
+                                        
+                                        if hasattr(tool_call_delta, "function"):
+                                            if hasattr(tool_call_delta.function, "name") and tool_call_delta.function.name:
+                                                tc["function"]["name"] = tool_call_delta.function.name
+                                            if hasattr(tool_call_delta.function, "arguments") and tool_call_delta.function.arguments:
+                                                tc["function"]["arguments"] += tool_call_delta.function.arguments
+                                
+                                # Yield content chunks with spacing normalization
+                                if hasattr(delta, "content") and delta.content:
+                                    raw_chunk = delta.content
+                                    content_chunk = normalize_spacing_after_punctuation(raw_chunk, previous_content_chunk_continue)
+                                    
+                                    # Debug logging for spacing issues (only in development)
+                                    if settings.environment == "development" and previous_content_chunk_continue:
+                                        prev_last = previous_content_chunk_continue[-1] if previous_content_chunk_continue else ""
+                                        curr_first = raw_chunk[0] if raw_chunk else ""
+                                        if prev_last in '.!?' and curr_first.isalpha() and raw_chunk != content_chunk:
+                                            logger.debug(f"[SPACING FIX] Added space between '{prev_last}' and '{curr_first}' - Before: '{raw_chunk[:20]}' After: '{content_chunk[:20]}'")
+                                    
+                                    full_content += content_chunk
+                                    yield content_chunk
+                                    previous_content_chunk_continue = raw_chunk  # Store raw chunk for next iteration
+                                
+                                # Capture finish reason from last chunk
+                                if chunk.choices[0].finish_reason:
+                                    finish_reason = chunk.choices[0].finish_reason
+                            
+                            # Extract usage data from chunk if available
+                            if hasattr(chunk, "usage") and chunk.usage:
+                                usage = chunk.usage
+                                prompt_tokens = getattr(usage, "prompt_tokens", 0)
+                                completion_tokens = getattr(usage, "completion_tokens", 0)
+                                if prompt_tokens > 0 or completion_tokens > 0:
+                                    usage_data = calculate_token_usage(prompt_tokens, completion_tokens)
+                        
+                        # Break if no more tool calls needed
+                        if finish_reason != "tool_calls" or not tool_calls_accumulated:
+                            break
+                
+                # Extract usage data from last chunk if available (from continuation response)
+                if last_chunk and hasattr(last_chunk, "usage") and last_chunk.usage:
+                    usage = last_chunk.usage
+                    prompt_tokens = getattr(usage, "prompt_tokens", 0)
+                    completion_tokens = getattr(usage, "completion_tokens", 0)
+                    if prompt_tokens > 0 or completion_tokens > 0:
+                        usage_data = calculate_token_usage(prompt_tokens, completion_tokens)
 
                 # After streaming completes, handle finish_reason warnings
                 if finish_reason == "length":

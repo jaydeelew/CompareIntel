@@ -500,7 +500,7 @@
   border-color: #fff;
 }
 
-.model-checkbox {
+.model-card .model-checkbox {
   width: 18px;
   height: 18px;
   position: absolute;
@@ -519,13 +519,13 @@
   place-content: center;
 }
 
-.model-checkbox:checked {
+.model-card .model-checkbox:checked {
   background-color: #2563eb;
   /* Accent color when checked */
   border-color: #2563eb;
 }
 
-.model-checkbox:checked::after {
+.model-card .model-checkbox:checked::after {
   content: '';
   position: absolute;
   top: 50%;
