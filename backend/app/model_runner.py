@@ -28,6 +28,7 @@ from datetime import datetime
 from .mock_responses import stream_mock_response, get_mock_response
 from .types import ConnectionQualityDict
 from .cache import cache
+from .search.rate_limiter import get_rate_limiter
 
 # Import configuration
 from .config import settings
@@ -1628,9 +1629,16 @@ def call_openrouter_streaming(
 
                 # Handle tool calls after streaming completes
                 # Support recursive tool calls (model may make multiple tool calls in sequence)
+                # NOTE: Some models (like Gemini 2.0 Flash) may make more aggressive tool calls,
+                # which can exhaust search API rate limits when multiple models run in parallel.
+                # The rate limiter below coordinates search requests across all concurrent models.
                 max_tool_call_iterations = 5  # Prevent infinite loops
                 tool_call_iteration = 0
                 last_chunk = None
+                
+                # Get rate limiter for coordinating search requests across models
+                # This prevents API rate limit exhaustion when multiple models make concurrent searches
+                rate_limiter = get_rate_limiter()
                 
                 while finish_reason == "tool_calls" and tool_calls_accumulated and search_provider and tool_call_iteration < max_tool_call_iterations:
                     tool_call_iteration += 1
@@ -1648,17 +1656,46 @@ def call_openrouter_streaming(
                                 search_query = args.get("query", "")
                                 
                                 if search_query:
-                                    # Execute search
+                                    # Execute search with rate limiting
                                     # Since we're in a thread pool (no event loop), use asyncio.run()
                                     # to properly create and manage an event loop for the async search
                                     import asyncio
-                                    logger.info(f"Executing web search for query: {search_query}")
+                                    logger.info(f"Executing web search for query: {search_query} (model: {model_id}, iteration: {tool_call_iteration})")
+                                    
+                                    async def execute_search_with_rate_limit():
+                                        """Execute search with rate limiting."""
+                                        try:
+                                            # Acquire rate limiter permission (waits if necessary)
+                                            # This coordinates search requests across all concurrent models
+                                            await rate_limiter.acquire()
+                                            try:
+                                                # Execute the actual search
+                                                search_results = await search_provider.search(search_query, max_results=5)
+                                                return search_results
+                                            finally:
+                                                # Release concurrent slot after search completes
+                                                rate_limiter.release()
+                                        except Exception as e:
+                                            # Release concurrent slot on error
+                                            rate_limiter.release()
+                                            raise
+                                    
                                     try:
-                                        search_results = asyncio.run(
-                                            search_provider.search(search_query, max_results=5)
-                                        )
+                                        search_results = asyncio.run(execute_search_with_rate_limit())
                                         logger.info(f"Web search completed successfully, found {len(search_results)} results")
                                     except Exception as search_exec_error:
+                                        error_msg = str(search_exec_error)
+                                        # Check if this is a rate limit error
+                                        if "rate limit" in error_msg.lower() or "429" in error_msg:
+                                            logger.warning(
+                                                f"Search API rate limit hit for model {model_id}. "
+                                                f"This may occur when multiple models make concurrent search requests."
+                                            )
+                                            # Provide a helpful error message to the model
+                                            raise Exception(
+                                                f"Search API rate limit exceeded. Please try again in a moment. "
+                                                f"Error: {error_msg}"
+                                            )
                                         logger.error(f"Error during web search execution: {search_exec_error}", exc_info=True)
                                         raise
                                     
