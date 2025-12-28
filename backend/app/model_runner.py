@@ -14,7 +14,7 @@ Key Features:
 - Connection quality tracking
 """
 
-from openai import OpenAI  # type: ignore[import-untyped]
+from openai import OpenAI, APIError  # type: ignore[import-untyped]
 import concurrent.futures
 from typing import Dict, List, Any, Optional, Generator, NamedTuple
 import time
@@ -24,6 +24,7 @@ from decimal import Decimal
 import httpx  # type: ignore[import-untyped]
 import logging
 import threading
+from datetime import datetime
 from .mock_responses import stream_mock_response, get_mock_response
 from .types import ConnectionQualityDict
 from .cache import cache
@@ -1476,10 +1477,19 @@ def call_openrouter_streaming(
 
     # Add a minimal system message only to encourage complete thoughts
     if not conversation_history:
+        system_content = "Provide complete responses. Finish your thoughts and explanations fully."
+        
+        # If web search is enabled, include current date/time context so models know what "today" means
+        if enable_web_search:
+            current_datetime = datetime.now()
+            current_date_str = current_datetime.strftime("%A, %B %d, %Y")
+            current_time_str = current_datetime.strftime("%I:%M %p %Z")
+            system_content += f"\n\nCurrent date and time: {current_date_str} at {current_time_str}. When referring to 'today' or 'now', use this date and time."
+        
         messages.append(
             {
                 "role": "system",
-                "content": "Provide complete responses. Finish your thoughts and explanations fully.",
+                "content": system_content,
             }
         )
 
@@ -1532,11 +1542,19 @@ def call_openrouter_streaming(
                 usage_data = None
                 tool_calls_accumulated = {}  # Dict to accumulate tool calls by index
                 previous_content_chunk = ""  # Track previous chunk for cross-boundary spacing
+                reasoning_details = None  # Capture reasoning details for Gemini models
 
                 # Iterate through chunks as they arrive
                 for chunk in response:
                     if chunk.choices and len(chunk.choices) > 0:
                         delta = chunk.choices[0].delta
+
+                        # Capture reasoning_details if present (required for Gemini models)
+                        # Reasoning details may be in delta or in the chunk itself
+                        if hasattr(delta, "reasoning_details") and delta.reasoning_details:
+                            reasoning_details = delta.reasoning_details
+                        elif hasattr(chunk.choices[0], "reasoning_details") and chunk.choices[0].reasoning_details:
+                            reasoning_details = chunk.choices[0].reasoning_details
 
                         # Handle tool calls (for web search) - accumulate across chunks
                         if hasattr(delta, "tool_calls") and delta.tool_calls:
@@ -1591,6 +1609,10 @@ def call_openrouter_streaming(
                         # Capture finish reason from last chunk
                         if chunk.choices[0].finish_reason:
                             finish_reason = chunk.choices[0].finish_reason
+                            
+                            # Also check the choice object itself for reasoning_details (may be in final chunk)
+                            if hasattr(chunk.choices[0], "reasoning_details") and chunk.choices[0].reasoning_details:
+                                reasoning_details = chunk.choices[0].reasoning_details
 
                     # Extract usage data from chunk if available
                     if hasattr(chunk, "usage") and chunk.usage:
@@ -1599,6 +1621,10 @@ def call_openrouter_streaming(
                         completion_tokens = getattr(usage, "completion_tokens", 0)
                         if prompt_tokens > 0 or completion_tokens > 0:
                             usage_data = calculate_token_usage(prompt_tokens, completion_tokens)
+                    
+                    # Check response object itself for reasoning_details (may be set after streaming)
+                    if hasattr(response, "reasoning_details") and response.reasoning_details:
+                        reasoning_details = response.reasoning_details
 
                 # Handle tool calls after streaming completes
                 # Support recursive tool calls (model may make multiple tool calls in sequence)
@@ -1637,7 +1663,12 @@ def call_openrouter_streaming(
                                         raise
                                     
                                     # Format search results for the model
-                                    results_text = "Web search results:\n\n"
+                                    # Include current date/time context so models know what "today" means
+                                    current_datetime = datetime.now()
+                                    current_date_str = current_datetime.strftime("%A, %B %d, %Y")
+                                    current_time_str = current_datetime.strftime("%I:%M %p %Z")
+                                    
+                                    results_text = f"Web search results (current date: {current_date_str} at {current_time_str}):\n\n"
                                     for i, result in enumerate(search_results, 1):
                                         results_text += f"{i}. {result.title}\n"
                                         results_text += f"   URL: {result.url}\n"
@@ -1673,11 +1704,19 @@ def call_openrouter_streaming(
                     
                     # Add tool calls and results to messages
                     if tool_call_messages:
-                        messages.append({
+                        # Create assistant message with tool calls
+                        assistant_message = {
                             "role": "assistant",
                             "content": None,
                             "tool_calls": tool_call_messages
-                        })
+                        }
+                        
+                        # IMPORTANT: For Gemini models, we must preserve reasoning_details in the assistant message
+                        # This is required for tool calls to work correctly with Gemini models
+                        if reasoning_details is not None:
+                            assistant_message["reasoning_details"] = reasoning_details
+                        
+                        messages.append(assistant_message)
                         
                         for result in tool_results:
                             messages.append({
@@ -1705,6 +1744,7 @@ def call_openrouter_streaming(
                         # Reset for continuation response
                         tool_calls_accumulated = {}
                         finish_reason = None
+                        reasoning_details_continue = None  # Track reasoning details in continuation
                         # Initialize with the last chunk from previous response to handle cross-boundary spacing
                         previous_content_chunk_continue = previous_content_chunk if previous_content_chunk else ""
                         
@@ -1713,6 +1753,12 @@ def call_openrouter_streaming(
                             last_chunk = chunk  # Store last chunk for usage data
                             if chunk.choices and len(chunk.choices) > 0:
                                 delta = chunk.choices[0].delta
+                                
+                                # Capture reasoning_details from continuation response (for recursive tool calls)
+                                if hasattr(delta, "reasoning_details") and delta.reasoning_details:
+                                    reasoning_details_continue = delta.reasoning_details
+                                elif hasattr(chunk.choices[0], "reasoning_details") and chunk.choices[0].reasoning_details:
+                                    reasoning_details_continue = chunk.choices[0].reasoning_details
                                 
                                 # Handle tool calls in continuation (recursive)
                                 if hasattr(delta, "tool_calls") and delta.tool_calls:
@@ -1765,6 +1811,10 @@ def call_openrouter_streaming(
                                 if prompt_tokens > 0 or completion_tokens > 0:
                                     usage_data = calculate_token_usage(prompt_tokens, completion_tokens)
                         
+                        # Update reasoning_details for next iteration (if we have recursive tool calls)
+                        if reasoning_details_continue is not None:
+                            reasoning_details = reasoning_details_continue
+                        
                         # Break if no more tool calls needed
                         if finish_reason != "tool_calls" or not tool_calls_accumulated:
                             break
@@ -1793,8 +1843,61 @@ def call_openrouter_streaming(
                 error_str = str(e).lower()
                 error_message = str(e)
                 
+                # Extract structured error information from OpenAI APIError
+                status_code = None
+                parsed_error_message = None
+                
+                if isinstance(e, APIError):
+                    status_code = e.status_code
+                    # Try to extract meaningful error message from response body
+                    try:
+                        if hasattr(e, 'body') and e.body:
+                            import json
+                            if isinstance(e.body, dict):
+                                error_body = e.body
+                            elif isinstance(e.body, str):
+                                error_body = json.loads(e.body)
+                            else:
+                                error_body = {}
+                            
+                            # Extract error message from structured response
+                            if 'error' in error_body:
+                                error_obj = error_body['error']
+                                if isinstance(error_obj, dict):
+                                    parsed_error_message = error_obj.get('message', str(e))
+                                    # Check metadata for additional context
+                                    if 'metadata' in error_obj and isinstance(error_obj['metadata'], dict):
+                                        raw_error = error_obj['metadata'].get('raw', '')
+                                        if raw_error:
+                                            if isinstance(raw_error, str):
+                                                # Use raw error if it's a string
+                                                parsed_error_message = raw_error
+                                            elif isinstance(raw_error, dict):
+                                                # If raw is a dict, try to extract a message from it
+                                                raw_msg = raw_error.get('message') or raw_error.get('error') or str(raw_error)
+                                                if raw_msg and isinstance(raw_msg, str):
+                                                    parsed_error_message = raw_msg
+                                    # If we still don't have a good message, use the error message
+                                    if not parsed_error_message or parsed_error_message == str(e):
+                                        parsed_error_message = error_obj.get('message', str(e))
+                                else:
+                                    parsed_error_message = str(error_obj)
+                            else:
+                                parsed_error_message = str(e)
+                    except (json.JSONDecodeError, AttributeError, KeyError):
+                        # Fall back to exception message if parsing fails
+                        parsed_error_message = str(e)
+                else:
+                    parsed_error_message = str(e)
+                
+                # Use parsed message if available, otherwise use original
+                if parsed_error_message:
+                    error_message = parsed_error_message
+                    error_str = parsed_error_message.lower()
+                
                 # Check for 402 error related to max_tokens (OpenRouter credit/token limit issue)
                 is_402_max_tokens_error = (
+                    status_code == 402 or
                     "402" in error_message or 
                     "payment required" in error_str or
                     ("requires more credits" in error_str and "max_tokens" in error_str)
@@ -1813,19 +1916,36 @@ def call_openrouter_streaming(
                         retry_count += 1
                         continue  # Retry with reduced max_tokens
                 
-                # If not a retryable 402 error, or retries exhausted, yield error
-                if "timeout" in error_str:
-                    yield f"Error: Timeout ({settings.individual_model_timeout}s)"
-                elif "rate limit" in error_str or "429" in error_str:
-                    yield f"Error: Rate limited"
-                elif "not found" in error_str or "404" in error_str:
-                    yield f"Error: Model not available"
-                elif "unauthorized" in error_str or "401" in error_str:
+                # Handle specific HTTP status codes
+                if status_code == 400:
+                    # 400 Bad Request - always prioritize showing the actual parsed error message
+                    # This gives users the most accurate information about what went wrong
+                    if parsed_error_message and parsed_error_message != str(e):
+                        # We have a parsed error message from the provider - use it (most informative)
+                        clean_message = parsed_error_message[:200] if len(parsed_error_message) > 200 else parsed_error_message
+                        yield f"Error: {clean_message}"
+                    elif "provider returned error" in error_str:
+                        # Generic provider error - show the actual error message if available
+                        clean_message = error_message[:200] if len(error_message) > 200 else error_message
+                        yield f"Error: {clean_message}"
+                    else:
+                        # Generic 400 error - show the actual error message
+                        clean_message = error_message[:200] if len(error_message) > 200 else error_message
+                        yield f"Error: Invalid request - {clean_message}"
+                elif status_code == 401 or "unauthorized" in error_str or "401" in error_str:
                     yield f"Error: Authentication failed"
+                elif status_code == 404 or "not found" in error_str or "404" in error_str:
+                    yield f"Error: Model not available"
+                elif status_code == 429 or "rate limit" in error_str or "429" in error_str:
+                    yield f"Error: Rate limited"
+                elif "timeout" in error_str:
+                    yield f"Error: Timeout ({settings.individual_model_timeout}s)"
                 elif is_402_max_tokens_error:
                     yield f"Error: This request requires more credits or fewer max_tokens. Please try with a shorter prompt or reduce the number of models."
                 else:
-                    yield f"Error: {str(e)[:100]}"
+                    # Generic error - use parsed message if available, limit length
+                    clean_message = error_message[:200] if len(error_message) > 200 else error_message
+                    yield f"Error: {clean_message}"
                 # Return None for usage data on error
                 return None
 

@@ -80,13 +80,21 @@ class ModelCapabilityService:
             # Check for function calling support indicators
             # OpenRouter models may have different fields indicating function calling
             # Common indicators:
-            # - "function_calling": true
-            # - "tools": true
-            # - "function_calling" in "context_length" or similar
+            # - "function_calling": true (top-level)
+            # - "tools" or "tool_choice" in supported_parameters (most reliable)
+            # - "tools": true in top_picks
+            # - "function_calling" in supported_features
             
             # Check top-level function_calling field
             if model_data.get("function_calling") is True:
                 return True
+            
+            # Check supported_parameters - this is the most reliable indicator
+            # Models that support tools will have "tools" and/or "tool_choice" in this list
+            supported_parameters = model_data.get("supported_parameters", [])
+            if isinstance(supported_parameters, list):
+                if "tools" in supported_parameters or "tool_choice" in supported_parameters:
+                    return True
             
             # Check in top_picks or other metadata
             top_picks = model_data.get("top_picks", {})
