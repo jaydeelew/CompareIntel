@@ -1656,10 +1656,15 @@ def call_openrouter_streaming(
                                 search_query = args.get("query", "")
                                 
                                 if search_query:
-                                    # Execute search with rate limiting
+                                    # Yield keepalive chunk before websearch to reset frontend timeout
+                                    # This prevents timeout during websearch execution which can take several seconds
+                                    yield " "
+                                    
+                                    # Execute search with rate limiting and periodic keepalives
                                     # Since we're in a thread pool (no event loop), use asyncio.run()
                                     # to properly create and manage an event loop for the async search
                                     import asyncio
+                                    import queue
                                     logger.info(f"Executing web search for query: {search_query} (model: {model_id}, iteration: {tool_call_iteration})")
                                     
                                     async def execute_search_with_rate_limit():
@@ -1680,10 +1685,59 @@ def call_openrouter_streaming(
                                             rate_limiter.release()
                                             raise
                                     
+                                    # Use threading to run search in background and yield keepalives periodically
+                                    # This prevents frontend timeout during long search operations
+                                    import queue
+                                    search_queue = queue.Queue()
+                                    search_exception = None
+                                    search_results = None
+                                    
+                                    def run_search():
+                                        """Run search in thread and put result in queue."""
+                                        nonlocal search_exception
+                                        try:
+                                            result = asyncio.run(execute_search_with_rate_limit())
+                                            search_queue.put(("success", result))
+                                        except Exception as e:
+                                            search_exception = e
+                                            search_queue.put(("error", None))
+                                    
+                                    # Start search in background thread
+                                    search_thread = threading.Thread(target=run_search, daemon=True)
+                                    search_thread.start()
+                                    
+                                    # Yield keepalives every 10 seconds while waiting for search to complete
+                                    # This ensures frontend timeout is reset during long search operations
+                                    KEEPALIVE_INTERVAL = 10.0  # Send keepalive every 10 seconds
+                                    search_start_time = time.time()
+                                    
                                     try:
-                                        search_results = asyncio.run(execute_search_with_rate_limit())
-                                        logger.info(f"Web search completed successfully, found {len(search_results)} results")
+                                        while True:
+                                            try:
+                                                # Check if search completed (non-blocking)
+                                                result_type, result_data = search_queue.get(timeout=KEEPALIVE_INTERVAL)
+                                                
+                                                if result_type == "success":
+                                                    search_results = result_data
+                                                    logger.info(f"Web search completed successfully, found {len(search_results)} results")
+                                                    # Yield keepalive chunk after websearch to reset frontend timeout
+                                                    yield " "
+                                                    break
+                                                else:
+                                                    # Error occurred in search thread
+                                                    raise search_exception
+                                            except queue.Empty:
+                                                # Search still running - yield keepalive to reset frontend timeout
+                                                elapsed = time.time() - search_start_time
+                                                logger.debug(f"Web search still running after {elapsed:.1f}s, sending keepalive")
+                                                yield " "
+                                        
+                                        # Search completed successfully, search_results is set
                                     except Exception as search_exec_error:
+                                        # Wait for thread to finish before handling error
+                                        search_thread.join(timeout=1.0)
+                                        if search_exception:
+                                            search_exec_error = search_exception
                                         error_msg = str(search_exec_error)
                                         # Check if this is a rate limit error
                                         if "rate limit" in error_msg.lower() or "429" in error_msg:
