@@ -25,6 +25,7 @@ import httpx  # type: ignore[import-untyped]
 import logging
 import threading
 from datetime import datetime
+from bs4 import BeautifulSoup  # type: ignore[import-untyped]
 from .mock_responses import stream_mock_response, get_mock_response
 from .types import ConnectionQualityDict
 from .cache import cache
@@ -833,6 +834,79 @@ WEB_SEARCH_TOOL = {
     }
 }
 
+# URL fetching tool definition - allows models to fetch actual webpage content
+FETCH_URL_TOOL = {
+    "type": "function",
+    "function": {
+        "name": "fetch_url",
+        "description": "Fetch and extract the actual content from a webpage URL. Use this tool when you need accurate, up-to-date information from a specific webpage, especially after receiving search results. This tool retrieves the full text content from the webpage, which is more reliable than search result snippets. You should use this tool when: (1) Search snippets seem outdated or incomplete, (2) You need detailed information from a specific source, (3) The information is time-sensitive (weather, news, stocks, etc.), (4) Multiple search results conflict and you need to verify the actual content. The tool will extract the main text content from the webpage, excluding navigation, ads, and other non-content elements.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "url": {
+                    "type": "string",
+                    "description": "The full URL of the webpage to fetch content from (must start with http:// or https://)"
+                }
+            },
+            "required": ["url"]
+        }
+    }
+}
+
+async def fetch_url_content(url: str, max_length: int = 10000) -> str:
+    """
+    Fetch and extract text content from a webpage URL.
+    
+    Args:
+        url: The URL to fetch content from
+        max_length: Maximum length of extracted content (characters)
+        
+    Returns:
+        Extracted text content from the webpage
+        
+    Raises:
+        Exception: If fetching or parsing fails
+    """
+    try:
+        # Validate URL format
+        if not url.startswith(("http://", "https://")):
+            raise ValueError(f"Invalid URL format: {url}. URL must start with http:// or https://")
+        
+        # Fetch webpage with timeout and user agent
+        async with httpx.AsyncClient(timeout=15.0, follow_redirects=True) as client:
+            headers = {
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+            }
+            response = await client.get(url, headers=headers)
+            response.raise_for_status()
+            
+            # Parse HTML content
+            soup = BeautifulSoup(response.text, "html.parser")
+            
+            # Remove script and style elements
+            for script in soup(["script", "style", "nav", "header", "footer", "aside"]):
+                script.decompose()
+            
+            # Extract text content
+            text = soup.get_text(separator=" ", strip=True)
+            
+            # Clean up whitespace
+            text = re.sub(r"\s+", " ", text)
+            
+            # Truncate if too long
+            if len(text) > max_length:
+                text = text[:max_length] + "... [content truncated]"
+            
+            return text.strip()
+            
+    except httpx.HTTPStatusError as e:
+        raise Exception(f"HTTP error {e.response.status_code} when fetching URL: {str(e)}")
+    except httpx.RequestError as e:
+        raise Exception(f"Network error when fetching URL: {str(e)}")
+    except Exception as e:
+        raise Exception(f"Error fetching URL content: {str(e)}")
+
+
 # In-memory cache for model token limits
 # These limits are relatively static and only change when models are added/updated
 # Cache is populated on application startup and when models are added via admin panel
@@ -1498,7 +1572,7 @@ def call_openrouter_streaming(
             current_date_str = current_datetime.strftime("%A, %B %d, %Y")
             current_time_str = current_datetime.strftime("%I:%M %p %Z")
             system_content += f"\n\nCurrent date and time: {current_date_str} at {current_time_str}. When referring to 'today' or 'now', use this date and time."
-            system_content += "\n\nYou have access to a web search tool (search_web) that allows you to search the internet for current information. CRITICAL: For any question requiring real-time, current, or up-to-date information (such as current weather, recent news, current events, live data, stock prices, sports scores, or any information that changes over time), you MUST use the search_web tool. You are NOT allowed to provide information about current events, weather, news, or any time-sensitive data without first using the search_web tool. Do not fabricate, guess, or cite sources you have not actually checked through the search tool. If you have not used the search_web tool, you cannot provide current information - you must use the tool first.\n\nIMPORTANT WARNING ABOUT SEARCH RESULT SNIPPETS: The search results you receive will include snippets (short text summaries) from search engines. These snippets are often OUTDATED, INCOMPLETE, or INACCURATE, especially for time-sensitive information like weather forecasts, stock prices, sports scores, or breaking news. Snippets are generated by search engines and may not reflect the current state of the actual webpage. When providing information based on search results:\n- Treat snippets as preliminary summaries only, not definitive facts\n- For time-sensitive queries (weather, stocks, sports, news), be especially cautious about snippet accuracy\n- If multiple results conflict, prioritize authoritative sources (official weather services, financial exchanges, official news sites)\n- If a snippet seems inconsistent with what you'd expect for current information, indicate uncertainty\n- When possible, prefer results from known authoritative sources over generic snippets"
+            system_content += "\n\nYou have access to two web tools:\n1. search_web - Search the internet for current information\n2. fetch_url - Fetch actual content from a specific webpage URL\n\nCRITICAL: For any question requiring real-time, current, or up-to-date information (such as current weather, recent news, current events, live data, stock prices, sports scores, or any information that changes over time), you MUST use the search_web tool first. You are NOT allowed to provide information about current events, weather, news, or any time-sensitive data without first using the search_web tool. Do not fabricate, guess, or cite sources you have not actually checked through the search tool. If you have not used the search_web tool, you cannot provide current information - you must use the tool first.\n\nIMPORTANT WARNING ABOUT SEARCH RESULT SNIPPETS: The search results you receive will include snippets (short text summaries) from search engines. These snippets are often OUTDATED, INCOMPLETE, or INACCURATE, especially for time-sensitive information like weather forecasts, stock prices, sports scores, or breaking news. Snippets are generated by search engines and may not reflect the current state of the actual webpage.\n\nWHEN TO USE fetch_url: After receiving search results, use the fetch_url tool to get accurate, up-to-date content from specific webpages when:\n- Search snippets seem outdated, incomplete, or inaccurate\n- You need detailed information from a specific authoritative source\n- The information is time-sensitive (weather, news, stocks, etc.)\n- Multiple search results conflict and you need to verify actual content\n- You need more detailed information than what the snippet provides\n\nThe fetch_url tool retrieves the actual webpage content, which is much more reliable than snippets. Always prefer using fetch_url for critical or time-sensitive information rather than relying solely on snippets."
         
         messages.append(
             {
@@ -1518,7 +1592,7 @@ def call_openrouter_streaming(
     # Prepare tools if web search is enabled
     tools = None
     if enable_web_search and search_provider:
-        tools = [WEB_SEARCH_TOOL]
+        tools = [WEB_SEARCH_TOOL, FETCH_URL_TOOL]
 
     # Use override if provided (for multi-model comparisons to avoid truncation)
     # Otherwise, use model's maximum capability
@@ -1895,6 +1969,124 @@ def call_openrouter_streaming(
                                     tool_results.append({
                                         "tool_call_id": tool_call["id"],
                                         "content": f"Error performing web search: {str(e)}"
+                                    })
+                        elif tool_call["function"]["name"] == "fetch_url":
+                            try:
+                                import json
+                                import asyncio
+                                # Parse arguments
+                                args = json.loads(tool_call["function"]["arguments"])
+                                url = args.get("url", "")
+                                
+                                if url:
+                                    # Yield keepalive chunk before URL fetch to reset frontend timeout
+                                    yield " "
+                                    
+                                    logger.info(f"Fetching URL content: {url} (model: {model_id}, iteration: {tool_call_iteration})")
+                                    
+                                    # Execute URL fetch with rate limiting
+                                    async def execute_url_fetch():
+                                        """Execute URL fetch with rate limiting."""
+                                        try:
+                                            # Acquire rate limiter permission (waits if necessary)
+                                            await rate_limiter.acquire()
+                                            try:
+                                                # Execute the actual URL fetch
+                                                content = await fetch_url_content(url)
+                                                return content
+                                            finally:
+                                                # Release concurrent slot after fetch completes
+                                                rate_limiter.release()
+                                        except Exception as e:
+                                            # Release concurrent slot on error
+                                            rate_limiter.release()
+                                            raise
+                                    
+                                    # Use threading to run fetch in background and yield keepalives periodically
+                                    import queue
+                                    fetch_queue = queue.Queue()
+                                    fetch_exception = None
+                                    url_content = None
+                                    
+                                    def run_fetch():
+                                        """Run URL fetch in thread and put result in queue."""
+                                        nonlocal fetch_exception
+                                        try:
+                                            result = asyncio.run(execute_url_fetch())
+                                            fetch_queue.put(("success", result))
+                                        except Exception as e:
+                                            fetch_exception = e
+                                            fetch_queue.put(("error", None))
+                                    
+                                    # Start fetch in background thread
+                                    fetch_thread = threading.Thread(target=run_fetch, daemon=True)
+                                    fetch_thread.start()
+                                    
+                                    # Yield keepalives every 5 seconds while waiting for fetch to complete
+                                    KEEPALIVE_INTERVAL = 5.0
+                                    fetch_start_time = time.time()
+                                    
+                                    try:
+                                        while True:
+                                            try:
+                                                # Check if fetch completed (non-blocking)
+                                                result_type, result_data = fetch_queue.get(timeout=KEEPALIVE_INTERVAL)
+                                                
+                                                if result_type == "success":
+                                                    url_content = result_data
+                                                    logger.info(f"URL fetch completed successfully for {url}")
+                                                    # Yield keepalive chunk after fetch to reset frontend timeout
+                                                    yield " "
+                                                    break
+                                                else:
+                                                    # Error occurred in fetch thread
+                                                    raise fetch_exception
+                                            except queue.Empty:
+                                                # Fetch still running - yield keepalive to reset frontend timeout
+                                                yield " "
+                                        
+                                        # Fetch completed successfully, url_content is set
+                                    except Exception as fetch_exec_error:
+                                        # Wait for thread to finish before handling error
+                                        fetch_thread.join(timeout=1.0)
+                                        if fetch_exception:
+                                            fetch_exec_error = fetch_exception
+                                        error_msg = str(fetch_exec_error)
+                                        logger.error(f"Error during URL fetch execution: {fetch_exec_error}", exc_info=True)
+                                        raise
+                                    
+                                    # Format URL content for the model
+                                    content_text = f"Content fetched from {url}:\n\n{url_content}\n\n[End of content from {url}]"
+                                    
+                                    # Store tool call and result (only if tool call ID is valid)
+                                    if tool_call["id"] and tool_call["id"].strip():
+                                        tool_call_messages.append({
+                                            "id": tool_call["id"],
+                                            "type": "function",
+                                            "function": {
+                                                "name": "fetch_url",
+                                                "arguments": tool_call["function"]["arguments"]
+                                            }
+                                        })
+                                        tool_results.append({
+                                            "tool_call_id": tool_call["id"],
+                                            "content": content_text
+                                        })
+                            except Exception as e:
+                                logger.error(f"Error executing fetch_url tool: {e}")
+                                # Only add error result if tool call ID is valid
+                                if tool_call["id"] and tool_call["id"].strip():
+                                    tool_call_messages.append({
+                                        "id": tool_call["id"],
+                                        "type": "function",
+                                        "function": {
+                                            "name": "fetch_url",
+                                            "arguments": tool_call["function"]["arguments"]
+                                        }
+                                    })
+                                    tool_results.append({
+                                        "tool_call_id": tool_call["id"],
+                                        "content": f"Error fetching URL content: {str(e)}"
                                     })
                     
                     # Add tool calls and results to messages

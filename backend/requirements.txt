@@ -41,6 +41,7 @@ anyio>=3.6.0,<4.0.0      # Async compatibility layer
 sniffio>=1.3.0           # Async library detection
 idna>=3.0.0              # Internationalized domain names
 httpx>=0.27.0            # Async HTTP client (for reCAPTCHA verification)
+beautifulsoup4>=4.12.0   # HTML parsing for URL content fetching
 
 # ============================================================================
 # API Clients & Tokenizers
