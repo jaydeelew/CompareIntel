@@ -4788,16 +4788,19 @@ function AppContent() {
       // For follow-ups, filter out failed models - they should not participate
       const modelsToUse = isFollowUpMode ? getSuccessfulModels(selectedModels) : selectedModels
 
-      const stream = await compareStream({
-        input_data: expandedInput, // Use expanded input with file contents
-        models: modelsToUse,
-        conversation_history: apiConversationHistory,
-        browser_fingerprint: browserFingerprint,
-        conversation_id: conversationId || undefined, // Only include if not null
-        estimated_input_tokens: accurateInputTokens || undefined, // Include accurate count if available
-        timezone: userTimezone, // Auto-detect timezone from browser
-        enable_web_search: webSearchEnabled || false, // Enable web search if toggle is on
-      })
+      const stream = await compareStream(
+        {
+          input_data: expandedInput, // Use expanded input with file contents
+          models: modelsToUse,
+          conversation_history: apiConversationHistory,
+          browser_fingerprint: browserFingerprint,
+          conversation_id: conversationId || undefined, // Only include if not null
+          estimated_input_tokens: accurateInputTokens || undefined, // Include accurate count if available
+          timezone: userTimezone, // Auto-detect timezone from browser
+          enable_web_search: webSearchEnabled || false, // Enable web search if toggle is on
+        },
+        controller.signal
+      )
 
       if (!stream) {
         throw new Error('Failed to start streaming comparison')
@@ -4844,12 +4847,25 @@ function AppContent() {
           let buffer = ''
 
           while (true) {
+            // Check if request was cancelled - stop processing immediately
+            if (controller.signal.aborted || userCancelledRef.current) {
+              // Cancel the reader to stop the stream
+              reader.cancel()
+              break
+            }
+
             const { done, value } = await reader.read()
 
             if (done) break
 
             // If we already have an error, stop processing new chunks but continue to save what we have
             if (streamError) {
+              break
+            }
+
+            // Check cancellation again after read (in case it was cancelled during the read)
+            if (controller.signal.aborted || userCancelledRef.current) {
+              reader.cancel()
               break
             }
 
@@ -4866,6 +4882,12 @@ function AppContent() {
             let shouldUpdate = false
 
             for (const message of messages) {
+              // Check cancellation before processing each message
+              if (controller.signal.aborted || userCancelledRef.current) {
+                reader.cancel()
+                break
+              }
+
               if (!message.trim() || !message.startsWith('data: ')) continue
 
               try {
@@ -6079,7 +6101,18 @@ function AppContent() {
         }, 200)
       }
 
-      if (err instanceof Error && err.name === 'AbortError') {
+      // Handle cancellation errors (both AbortError from fetch and CancellationError from API client)
+      if (
+        (err instanceof Error && err.name === 'AbortError') ||
+        (err instanceof Error && err.name === 'CancellationError')
+      ) {
+        // Check if this was a user cancellation (not a timeout)
+        if (userCancelledRef.current) {
+          // User cancelled - show cancellation message
+          setError('Model comparison cancelled by user.')
+          return
+        }
+
         // Handle timeout: mark incomplete models as failed and format successful ones
         // Note: event.model uses raw model ID format (same as selectedModels)
         // Add safety checks to prevent crashes

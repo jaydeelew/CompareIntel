@@ -73,13 +73,15 @@ export interface ModelStats {
  * processStreamEvents() helper to process with callbacks.
  *
  * @param payload - Comparison request payload
+ * @param signal - Optional AbortSignal for cancelling the request
  * @returns Promise resolving to the readable stream
  * @throws {ApiError} If the request fails
  */
 export async function compareStream(
-  payload: CompareRequestPayload
+  payload: CompareRequestPayload,
+  signal?: AbortSignal
 ): Promise<ReadableStream<Uint8Array> | null> {
-  return apiClient.stream('/compare-stream', payload)
+  return apiClient.stream('/compare-stream', payload, { signal })
 }
 
 /**
