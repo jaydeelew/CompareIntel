@@ -808,13 +808,13 @@ WEB_SEARCH_TOOL = {
     "type": "function",
     "function": {
         "name": "search_web",
-        "description": "Search the internet for current information",
+        "description": "Search the internet for current, real-time information. Use this tool when you need up-to-date information such as current weather, recent news, current events, live data, or any information that changes over time. Always use this tool instead of stating that you cannot provide real-time information.",
         "parameters": {
             "type": "object",
             "properties": {
                 "query": {
                     "type": "string",
-                    "description": "The search query to find information on the internet"
+                    "description": "The search query to find current information on the internet"
                 }
             },
             "required": ["query"]
@@ -1486,6 +1486,7 @@ def call_openrouter_streaming(
             current_date_str = current_datetime.strftime("%A, %B %d, %Y")
             current_time_str = current_datetime.strftime("%I:%M %p %Z")
             system_content += f"\n\nCurrent date and time: {current_date_str} at {current_time_str}. When referring to 'today' or 'now', use this date and time."
+            system_content += "\n\nYou have access to a web search tool (search_web) that allows you to search the internet for current information. When you need real-time or current information (such as current weather, recent news, current events, or up-to-date data), you should use the search_web tool to retrieve this information rather than stating that you cannot provide it."
         
         messages.append(
             {
