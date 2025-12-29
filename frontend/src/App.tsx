@@ -3879,7 +3879,41 @@ function AppContent() {
     setClosedCards(new Set())
   }
 
-  // Helper function to check if follow-up should be disabled based on model selection changes
+  // Helper function to check if a model failed
+  // Handles both raw model IDs (from selectedModels) and formatted model IDs (from conversations)
+  const isModelFailed = (modelId: string): boolean => {
+    const formattedModelId = createModelId(modelId)
+
+    // Check if model has error flag (check both raw and formatted IDs)
+    if (modelErrors[modelId] === true || modelErrors[formattedModelId] === true) {
+      return true
+    }
+
+    // Check if model has a conversation with error
+    // Conversations use formatted model IDs, so check both formats
+    const conversation = conversations.find(
+      conv => conv.modelId === modelId || conv.modelId === formattedModelId
+    )
+    if (conversation) {
+      const assistantMessages = conversation.messages.filter(msg => msg.type === 'assistant')
+      if (assistantMessages.length === 0) {
+        return true // No assistant messages means model failed
+      }
+      const latestMessage = assistantMessages[assistantMessages.length - 1]
+      if (latestMessage && isErrorMessage(latestMessage.content)) {
+        return true // Latest message is an error
+      }
+    }
+
+    return false
+  }
+
+  // Helper function to get successful models (models that didn't fail)
+  const getSuccessfulModels = (models: string[]): string[] => {
+    return models.filter(modelId => !isModelFailed(modelId))
+  }
+
+  // Helper function to check if follow-up should be disabled based on model selection changes or all models failed
   const isFollowUpDisabled = () => {
     if (originalSelectedModels.length === 0) {
       return false // No original comparison yet, so follow-up is not applicable
@@ -3889,8 +3923,17 @@ function AppContent() {
     const hasNewModels = selectedModels.some(model => !originalSelectedModels.includes(model))
 
     // If new models were added, disable follow-up
-    // If only models were deselected (subset of original), allow follow-up
-    return hasNewModels
+    if (hasNewModels) {
+      return true
+    }
+
+    // Check if all models failed - if so, disable follow-up
+    const successfulModels = getSuccessfulModels(originalSelectedModels)
+    if (successfulModels.length === 0) {
+      return true // All models failed, hide Follow Up button
+    }
+
+    return false
   }
 
   const handleFollowUp = () => {
@@ -4466,26 +4509,17 @@ function AppContent() {
     }> = []
 
     if (isFollowUpMode && conversations.length > 0) {
-      // Get all conversations for selected models, excluding failed models
+      // Filter out failed models from selectedModels for follow-up requests
       // Failed models should not participate in follow-up conversations
+      const successfulSelectedModels = getSuccessfulModels(selectedModels)
+
+      // Get all conversations for successful selected models, excluding failed models
       const selectedConversations = conversations.filter(conv => {
-        // Must be in selected models
-        if (!selectedModels.includes(conv.modelId)) return false
+        // Must be in successful selected models (failed models already filtered out)
+        if (!successfulSelectedModels.includes(conv.modelId)) return false
 
-        // Check if this model failed (using modelErrors state set when loading from history)
-        if (modelErrors[conv.modelId] === true) {
-          return false // Exclude failed models
-        }
-
-        // Must have assistant messages (if no assistant messages, model failed)
-        const assistantMessages = conv.messages.filter(msg => msg.type === 'assistant')
-        if (assistantMessages.length === 0) {
-          return false // Exclude models with no assistant messages (they failed)
-        }
-
-        // Check if latest assistant message is an error
-        const latestMessage = assistantMessages[assistantMessages.length - 1]
-        if (latestMessage && isErrorMessage(latestMessage.content)) {
+        // Double-check using helper function (should already be filtered, but be safe)
+        if (isModelFailed(conv.modelId)) {
           return false // Exclude failed models
         }
 
@@ -4750,9 +4784,13 @@ function AppContent() {
       // Include accurate token count from frontend if available (avoids duplicate calculation on backend)
       // Include timezone for credit reset timing (auto-detect from browser)
       const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone
+
+      // For follow-ups, filter out failed models - they should not participate
+      const modelsToUse = isFollowUpMode ? getSuccessfulModels(selectedModels) : selectedModels
+
       const stream = await compareStream({
         input_data: expandedInput, // Use expanded input with file contents
-        models: selectedModels,
+        models: modelsToUse,
         conversation_history: apiConversationHistory,
         browser_fingerprint: browserFingerprint,
         conversation_id: conversationId || undefined, // Only include if not null
