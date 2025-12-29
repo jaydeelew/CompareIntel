@@ -7712,18 +7712,32 @@ function AppContent() {
                           conversation.messages[conversation.messages.length - 1]
                         const content = latestMessage?.content || ''
                         // Check for error: backend error flag OR error message in content OR empty content after completion (timeout)
-                        const hasBackendError = modelErrors[conversation.modelId] === true
+                        // Check both formatted and raw model ID formats (backend uses raw, conversations use formatted)
+                        // Find the raw model ID that corresponds to this formatted conversation.modelId
+                        const rawModelId = selectedModels?.find(
+                          m => createModelId(m) === conversation.modelId
+                        )
+                        // Check modelErrors with both formats (backend stores raw, but check both for safety)
+                        const hasBackendError =
+                          (rawModelId && modelErrors[rawModelId] === true) ||
+                          modelErrors[conversation.modelId] === true
                         const hasErrorMessage = isErrorMessage(content)
                         // Consider empty content an error if:
                         // 1. Model has completed (has entry in modelErrors) - normal completion case
                         // 2. Model hasn't completed but loading is done (timeout case) - mark as failed
-                        const modelHasCompleted = conversation.modelId in modelErrors
+                        const modelHasCompleted =
+                          (rawModelId && rawModelId in modelErrors) ||
+                          conversation.modelId in modelErrors
                         const isLoadingDone = !isLoading // If not loading, stream has ended (either completed or timed out)
                         const isEmptyContent =
                           content.trim().length === 0 &&
                           latestMessage?.type === 'assistant' &&
                           (modelHasCompleted || isLoadingDone)
                         const isError = hasBackendError || hasErrorMessage || isEmptyContent
+                        // Determine status: PROCESS during streaming, SUCCESS/FAIL when completed
+                        const isProcessing = !modelHasCompleted && isLoading
+                        const statusText = isProcessing ? 'Process' : isError ? 'Failed' : 'Success'
+                        const statusClass = isProcessing ? 'process' : isError ? 'error' : 'success'
                         const safeId = getSafeId(conversation.modelId)
 
                         // Determine if this is the active card in tabbed mode
@@ -7914,9 +7928,7 @@ function AppContent() {
                                     Raw
                                   </button>
                                 </div>
-                                <span className={`status ${isError ? 'error' : 'success'}`}>
-                                  {isError ? 'Failed' : 'Success'}
-                                </span>
+                                <span className={`status ${statusClass}`}>{statusText}</span>
                               </div>
                             </div>
                             <div

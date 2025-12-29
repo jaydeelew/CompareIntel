@@ -28,6 +28,8 @@ export interface ResultCardProps {
   activeTab?: ResultTab
   /** Whether the result is an error */
   isError?: boolean
+  /** Whether the model is still processing/streaming */
+  isProcessing?: boolean
   /** Callback to screenshot/copy formatted history */
   onScreenshot?: (modelId: string) => void
   /** Callback to copy raw history */
@@ -64,6 +66,7 @@ export const ResultCard: React.FC<ResultCardProps> = ({
   messages,
   activeTab = RESULT_TAB.FORMATTED,
   isError = false,
+  isProcessing = false,
   onScreenshot,
   onCopyResponse,
   onClose,
@@ -79,6 +82,10 @@ export const ResultCard: React.FC<ResultCardProps> = ({
 
   // Fallback error detection: check the message content directly if isError prop is not set correctly
   const hasError = isError || isErrorMessage(latestMessage?.content)
+
+  // Determine status: PROCESS during streaming, SUCCESS/FAIL when completed
+  const statusText = isProcessing ? 'Process' : hasError ? 'Failed' : 'Success'
+  const statusClass = isProcessing ? 'process' : hasError ? 'error' : 'success'
 
   // Detect when screen is small enough that "chars" would wrap
   const [isSmallLayout, setIsSmallLayout] = useState<boolean>(() => {
@@ -235,9 +242,7 @@ export const ResultCard: React.FC<ResultCardProps> = ({
               Raw
             </button>
           </div>
-          <span className={`status ${hasError ? 'error' : 'success'}`}>
-            {hasError ? 'Failed' : 'Success'}
-          </span>
+          <span className={`status ${statusClass}`}>{statusText}</span>
         </div>
       </div>
       <div className="conversation-content" id={`conversation-content-${safeId}`}>

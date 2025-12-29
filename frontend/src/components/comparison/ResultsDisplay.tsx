@@ -28,6 +28,8 @@ export interface ResultsDisplayProps {
     models_failed: number
     total_tokens_used: number
   }
+  /** Whether models are still processing (keyed by model ID) */
+  modelProcessingStates?: Record<string, boolean>
   /** Callback to screenshot/copy formatted history */
   onScreenshot?: (modelId: string) => void
   /** Callback to copy raw history */
@@ -65,6 +67,7 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
   activeResultTabs,
   processingTime,
   metadata,
+  modelProcessingStates = {},
   onScreenshot,
   onCopyResponse,
   onCloseCard,
@@ -184,6 +187,7 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
               messages={activeConversation.messages}
               activeTab={activeTab}
               isError={isError}
+              isProcessing={modelProcessingStates[activeConversation.modelId] || false}
               onScreenshot={onScreenshot}
               onCopyResponse={onCopyResponse}
               onClose={onCloseCard}
@@ -236,6 +240,7 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
               messages={conversation.messages}
               activeTab={activeTab}
               isError={isError}
+              isProcessing={modelProcessingStates[conversation.modelId] || false}
               onScreenshot={onScreenshot}
               onCopyResponse={onCopyResponse}
               onClose={onCloseCard}
