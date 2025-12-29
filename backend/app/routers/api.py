@@ -17,6 +17,7 @@ import asyncio
 import json
 import os
 import tempfile
+import time
 import logging
 
 from ..model_runner import (
@@ -1202,26 +1203,9 @@ async def compare_stream(
                             )
                             return error_msg, True, None  # error_msg, is_error, usage_data
 
-                    # Run streaming in executor with inactivity timeout
-                    # Use a timeout shorter than the frontend's 60-second timeout
-                    # This ensures the backend completes (and can deduct credits) before frontend aborts
-                    try:
-                        full_content, is_error, usage_data = await asyncio.wait_for(
-                            loop.run_in_executor(None, process_stream_to_queue),
-                            timeout=model_inactivity_timeout,  # 55 seconds (displays as "1 minute" to users)
-                        )
-                    except asyncio.TimeoutError:
-                        # Model didn't respond within the inactivity timeout
-                        # Display "1 minute" to users (actual timeout is 55s with 5s buffer before frontend's 60s)
-                        error_msg = "Error: Model timed out after 1 minute of inactivity"
-                        # Push timeout error as chunk
-                        await chunk_queue.put({"type": "chunk", "model": model_id, "content": error_msg})
-                        return {
-                            "model": model_id,
-                            "content": error_msg,
-                            "error": True,
-                            "usage": None,
-                        }
+                    # Run streaming in executor without timeout
+                    # Timeout is handled in the chunk processing loop based on inactivity
+                    full_content, is_error, usage_data = await loop.run_in_executor(None, process_stream_to_queue)
 
                     # Clean the final accumulated content (unless it's an error)
                     if not is_error:
@@ -1296,17 +1280,67 @@ async def compare_stream(
 
             # Create tasks for all models to run concurrently
             tasks = [asyncio.create_task(stream_single_model(model_id)) for model_id in req.models]
+            
+            # Map tasks to model IDs for inactivity timeout tracking
+            task_to_model = {task: model_id for task, model_id in zip(tasks, req.models)}
 
             # Process chunks and completed tasks concurrently
             pending_tasks = set(tasks)
+            
+            # Track last activity time per model for inactivity timeout
+            # Activity is defined as receiving chunks or keepalives
+            model_last_activity = {model_id: time.time() for model_id in req.models}
 
             while pending_tasks or not chunk_queue.empty():
                 # Process chunks FIRST to ensure immediate streaming, especially for web search continuations
                 # This prioritizes streaming responsiveness over task completion processing
                 chunks_processed = False
+                current_time = time.time()
+                
+                # Check for inactivity timeout before processing chunks
+                # Timeout if no chunks/keepalives received for inactivity period
+                timed_out_tasks = set()
+                for task in list(pending_tasks):
+                    if task.done():
+                        continue
+                    model_id = task_to_model.get(task)
+                    if model_id and model_id in model_last_activity:
+                        time_since_activity = current_time - model_last_activity[model_id]
+                        if time_since_activity > model_inactivity_timeout:
+                            # Model has been inactive for too long - cancel task and mark as timeout
+                            _logger.warning(
+                                f"Model {model_id} timed out after {model_inactivity_timeout}s of inactivity "
+                                f"(last activity: {time_since_activity:.1f}s ago)"
+                            )
+                            # Cancel the task
+                            task.cancel()
+                            timed_out_tasks.add(task)
+                            # Push timeout error as chunk
+                            await chunk_queue.put({
+                                "type": "chunk",
+                                "model": model_id,
+                                "content": "Error: Model timed out after 1 minute of inactivity"
+                            })
+                            # Mark task as done with error result
+                            results_dict[model_id] = "Error: Model timed out after 1 minute of inactivity"
+                            model_stats[model_id]["failure"] += 1
+                            failed_models += 1
+                            yield f"data: {json.dumps({'model': model_id, 'type': 'done', 'error': True})}\n\n"
+                            # Remove from activity tracking
+                            if model_id in model_last_activity:
+                                del model_last_activity[model_id]
+                
+                # Remove timed out tasks from pending
+                pending_tasks -= timed_out_tasks
+                
                 while not chunk_queue.empty():
                     try:
                         chunk_data = await asyncio.wait_for(chunk_queue.get(), timeout=0.001)
+
+                        # Update last activity time for this model when we receive chunks or keepalives
+                        chunk_model_id = chunk_data.get("model")
+                        if chunk_model_id:
+                            model_last_activity[chunk_model_id] = time.time()
 
                         if chunk_data["type"] == "chunk":
                             # Don't clean chunks during streaming - preserves whitespace
@@ -1330,8 +1364,24 @@ async def compare_stream(
 
                 # Process completed tasks
                 for task in done_tasks:
-                    result = await task
-                    model_id = result["model"]
+                    model_id = task_to_model.get(task)
+                    if not model_id:
+                        continue
+                    
+                    # Handle cancelled tasks (timeout)
+                    if task.cancelled():
+                        # Task was cancelled due to timeout - already handled above
+                        continue
+                    
+                    try:
+                        result = await task
+                    except asyncio.CancelledError:
+                        # Task was cancelled - already handled above
+                        continue
+                    
+                    result_model_id = result.get("model")
+                    if result_model_id:
+                        model_id = result_model_id
 
                     # Update statistics
                     if result["error"]:
