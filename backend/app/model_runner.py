@@ -293,7 +293,7 @@ MODELS_BY_PROVIDER = {
             "description": 'An enterprise-grade model with 50% higher throughput for complex reasoning and generation tasks.',
             "category": "Language/Reasoning",
             "provider": "Cohere",
-            "supports_web_search": False,
+            "supports_web_search": True,  # Supports function calling
         },
         {
             "id": "cohere/command-a",
@@ -301,7 +301,7 @@ MODELS_BY_PROVIDER = {
             "description": 'An open-weights 111B model with 256k context excelling in agentic, multilingual, and coding tasks.',
             "category": "Language",
             "provider": "Cohere",
-            "supports_web_search": True,  # Agentic model - supports function calling
+            "supports_web_search": False,  # Does not support function calling
         },
     ],
     "DeepSeek": [
@@ -311,7 +311,7 @@ MODELS_BY_PROVIDER = {
             "description": 'A 671B hybrid MoE model (37B active) supporting both thinking and non-thinking modes for versatile reasoning.',
             "category": "Language/Reasoning",
             "provider": "DeepSeek",
-            "supports_web_search": False,
+            "supports_web_search": True,  # Supports function calling
         },
         {
             "id": "deepseek/deepseek-v3.2-exp",
@@ -319,7 +319,7 @@ MODELS_BY_PROVIDER = {
             "description": 'An experimental model with enhanced reasoning and coding capabilities bridging V3.1 and future architectures.',
             "category": "Language/Reasoning",
             "provider": "DeepSeek",
-            "supports_web_search": False,
+            "supports_web_search": True,  # Supports function calling
         },
         {
             "id": "deepseek/deepseek-r1",
@@ -327,7 +327,7 @@ MODELS_BY_PROVIDER = {
             "description": 'An open-source reasoning model matching OpenAI o1 performance with fully transparent chain-of-thought.',
             "category": "Reasoning",
             "provider": "DeepSeek",
-            "supports_web_search": False,
+            "supports_web_search": True,  # Supports function calling
         },
     ],
     "Google": [
@@ -397,7 +397,7 @@ MODELS_BY_PROVIDER = {
             "description": 'A high-capacity 400B MoE model (17B active, 128 experts) for complex multimodal reasoning and generation.',
             "category": "Multimodal",
             "provider": "Meta",
-            "supports_web_search": False,
+            "supports_web_search": True,  # Supports function calling
         },
         {
             "id": "meta-llama/llama-4-scout",
@@ -405,7 +405,7 @@ MODELS_BY_PROVIDER = {
             "description": 'A 109B MoE model (17B active) optimized for efficient multimodal understanding and generation tasks.',
             "category": "Multimodal",
             "provider": "Meta",
-            "supports_web_search": False,
+            "supports_web_search": True,  # Supports function calling
         },
         {
             "id": "meta-llama/llama-3.1-405b-instruct",
@@ -413,7 +413,7 @@ MODELS_BY_PROVIDER = {
             "description": "Meta's flagship 405B open-source model excelling in multilingual understanding, coding, and instruction-following.",
             "category": "Language",
             "provider": "Meta",
-            "supports_web_search": False,
+            "supports_web_search": True,  # Supports function calling
         },
         {
             "id": "meta-llama/llama-3.3-70b-instruct",
@@ -421,7 +421,7 @@ MODELS_BY_PROVIDER = {
             "description": 'The Meta Llama 3.3 multilingual large language model (LLM) is a pretrained and instruction tuned generative model in 70B.',
             "category": "Language",
             "provider": "Meta",
-            "supports_web_search": False,
+            "supports_web_search": True,  # Supports function calling
         },
     ],
     "Microsoft": [
@@ -457,7 +457,7 @@ MODELS_BY_PROVIDER = {
             "description": 'A compact, high-efficiency model optimized for end-to-end coding and agentic workflow automation.',
             "category": "Language",
             "provider": "Minimax",
-            "supports_web_search": False,
+            "supports_web_search": True,  # Supports function calling
         },
     ],
     "Mistral": [
@@ -507,7 +507,7 @@ MODELS_BY_PROVIDER = {
             "description": "Mistral's specialized coding model with state-of-the-art performance on code generation and completion.",
             "category": "Code",
             "provider": "Mistral",
-            "supports_web_search": False,
+            "supports_web_search": True,  # Supports function calling
         },
     ],
     "Mistralai": [
@@ -527,7 +527,7 @@ MODELS_BY_PROVIDER = {
             "description": 'An open-weight 117B MoE model designed for high-reasoning, agentic, and general-purpose production tasks.',
             "category": "Language",
             "provider": "OpenAI",
-            "supports_web_search": False,
+            "supports_web_search": True,  # Supports function calling
         },
         {
             "id": "openai/o3-mini",
@@ -535,7 +535,7 @@ MODELS_BY_PROVIDER = {
             "description": 'A cost-efficient reasoning model optimized for STEM tasks, excelling in science, mathematics, and coding.',
             "category": "Reasoning",
             "provider": "OpenAI",
-            "supports_web_search": False,
+            "supports_web_search": True,  # Supports function calling
         },
         {
             "id": "openai/gpt-4o-mini",
@@ -575,7 +575,7 @@ MODELS_BY_PROVIDER = {
             "description": "OpenAI's advanced reasoning model with state-of-the-art performance across math, science, and coding benchmarks.",
             "category": "Reasoning",
             "provider": "OpenAI",
-            "supports_web_search": False,
+            "supports_web_search": True,  # Supports function calling
         },
         {
             "id": "openai/gpt-4o",
@@ -599,7 +599,7 @@ MODELS_BY_PROVIDER = {
             "description": 'A GPT-5 variant optimized for natural, multimodal, and context-aware enterprise conversations.',
             "category": "Language",
             "provider": "OpenAI",
-            "supports_web_search": True,  # All GPT-5 models support function calling
+            "supports_web_search": False,  # OpenRouter API confirms this model does NOT support function/tool calling
         },
         {
             "id": "openai/gpt-5-codex",
@@ -673,7 +673,7 @@ MODELS_BY_PROVIDER = {
             "description": 'A 30.5B MoE model with 3.3B active parameters for efficient instruction-following and chat.',
             "category": "Language",
             "provider": "Qwen",
-            "supports_web_search": False,
+            "supports_web_search": True,  # Supports function calling
         },
         {
             "id": "qwen/qwen3-coder-flash",
@@ -681,7 +681,7 @@ MODELS_BY_PROVIDER = {
             "description": 'A fast, cost-efficient coding model optimized for rapid code generation and completion tasks.',
             "category": "Code",
             "provider": "Qwen",
-            "supports_web_search": False,
+            "supports_web_search": True,  # Supports function calling
         },
         {
             "id": "qwen/qwen3-next-80b-a3b-instruct",
@@ -689,7 +689,7 @@ MODELS_BY_PROVIDER = {
             "description": 'An 80B MoE instruction-tuned model optimized for fast, stable responses without thinking traces.',
             "category": "Language",
             "provider": "Qwen",
-            "supports_web_search": False,
+            "supports_web_search": True,  # Supports function calling
         },
         {
             "id": "qwen/qwen3-235b-a22b",
@@ -697,7 +697,7 @@ MODELS_BY_PROVIDER = {
             "description": 'A 235B MoE model (22B active) with strong reasoning, coding, and multilingual capabilities.',
             "category": "Language",
             "provider": "Qwen",
-            "supports_web_search": False,
+            "supports_web_search": True,  # Supports function calling
         },
         {
             "id": "qwen/qwen3-coder",
@@ -713,7 +713,7 @@ MODELS_BY_PROVIDER = {
             "description": "Alibaba's proprietary coding model with enhanced performance for complex development tasks.",
             "category": "Code",
             "provider": "Qwen",
-            "supports_web_search": False,
+            "supports_web_search": True,  # Supports function calling
         },
         {
             "id": "qwen/qwen3-max",
@@ -721,7 +721,7 @@ MODELS_BY_PROVIDER = {
             "description": "Qwen's most capable model with strong reasoning, instruction-following, and multilingual abilities.",
             "category": "Language",
             "provider": "Qwen",
-            "supports_web_search": False,
+            "supports_web_search": True,  # Supports function calling
         },
         {
             "id": "qwen/qwen3-next-80b-a3b-thinking",
@@ -729,7 +729,7 @@ MODELS_BY_PROVIDER = {
             "description": 'A reasoning-first model with structured chain-of-thought traces for complex problem-solving.',
             "category": "Language/Reasoning",
             "provider": "Qwen",
-            "supports_web_search": False,
+            "supports_web_search": True,  # Supports function calling
         },
         {
             "id": "qwen/qwen3-vl-235b-a22b-thinking",
@@ -737,7 +737,7 @@ MODELS_BY_PROVIDER = {
             "description": 'A multimodal reasoning model unifying text generation with visual understanding across images and video.',
             "category": "Multimodal/Reasoning",
             "provider": "Qwen",
-            "supports_web_search": False,
+            "supports_web_search": True,  # Supports function calling
         },
     ],
     "xAI": [
@@ -755,7 +755,7 @@ MODELS_BY_PROVIDER = {
             "description": 'A cost-efficient multimodal model with 2M token context for fast, large-scale processing.',
             "category": "Language",
             "provider": "xAI",
-            "supports_web_search": False,
+            "supports_web_search": True,  # Supports function calling
         },
         {
             "id": "x-ai/grok-3-mini",
@@ -763,7 +763,7 @@ MODELS_BY_PROVIDER = {
             "description": 'A lightweight reasoning model with chain-of-thought capabilities for efficient problem-solving.',
             "category": "Language",
             "provider": "xAI",
-            "supports_web_search": False,
+            "supports_web_search": True,  # Supports function calling
         },
         {
             "id": "x-ai/grok-4",
@@ -771,7 +771,7 @@ MODELS_BY_PROVIDER = {
             "description": "xAI's flagship reasoning model with 256k context for complex analysis and generation tasks.",
             "category": "Language",
             "provider": "xAI",
-            "supports_web_search": False,
+            "supports_web_search": True,  # Supports function calling
         },
         {
             "id": "x-ai/grok-5",
@@ -790,7 +790,7 @@ MODELS_BY_PROVIDER = {
             "description": 'MiMo-V2-Flash is an open-source foundation language model developed by Xiaomi.',
             "category": "Language",
             "provider": "Xiaomi",
-            "supports_web_search": False,
+            "supports_web_search": True,  # Supports function calling
         },
     ]
 }
@@ -802,6 +802,17 @@ for provider, models in MODELS_BY_PROVIDER.items():
     OPENROUTER_MODELS.extend(models)
 
 client = OpenAI(api_key=OPENROUTER_API_KEY, base_url="https://openrouter.ai/api/v1")
+
+# Client with headers for tool calling (required by OpenRouter for provider routing)
+# OpenRouter requires HTTP-Referer and X-Title headers when using tools
+client_with_tool_headers = OpenAI(
+    api_key=OPENROUTER_API_KEY,
+    base_url="https://openrouter.ai/api/v1",
+    default_headers={
+        "HTTP-Referer": "https://compareintel.com",
+        "X-Title": "CompareIntel",
+    }
+)
 
 # Web search tool definition (for future tool calling integration)
 WEB_SEARCH_TOOL = {
@@ -1535,10 +1546,42 @@ def call_openrouter_streaming(
                 # Add tools if web search is enabled
                 if tools:
                     api_params["tools"] = tools
-                    api_params["tool_choice"] = "auto"  # Let model decide when to use tools
+                    # Some models (like GPT-5 Chat) may not support tool_choice parameter
+                    # Try without tool_choice first - models will use tools automatically if supported
+                    # Only add tool_choice if explicitly needed (some models require it)
+                    # For now, omit tool_choice to avoid 404 errors with certain models
+                    # api_params["tool_choice"] = "auto"  # Commented out - causes 404 for GPT-5 Chat
                 
                 # Enable streaming
-                response = client.chat.completions.create(**api_params)
+                # Use client with tool headers when tools are enabled (required by OpenRouter for provider routing)
+                # OpenRouter needs HTTP-Referer and X-Title headers to route to providers that support tool calling
+                try:
+                    if tools:
+                        # Try using extra_headers parameter first (if supported by SDK)
+                        # Fall back to client_with_tool_headers if extra_headers doesn't work
+                        try:
+                            response = client.chat.completions.create(
+                                **api_params,
+                                extra_headers={
+                                    "HTTP-Referer": "https://compareintel.com",
+                                    "X-Title": "CompareIntel",
+                                }
+                            )
+                        except TypeError:
+                            # extra_headers not supported, use client with default headers
+                            response = client_with_tool_headers.chat.completions.create(**api_params)
+                    else:
+                        response = client.chat.completions.create(**api_params)
+                except Exception as api_error:
+                    # Log warning if we get a 404 with tools (model may not support tool calling)
+                    error_str = str(api_error).lower()
+                    if ("404" in error_str or "not found" in error_str) and tools:
+                        logger.warning(
+                            f"Model {model_id} returned 404 when tools were included. "
+                            f"This may indicate the model doesn't support tool calling through OpenRouter. "
+                            f"Error: {api_error}"
+                        )
+                    raise
 
                 full_content = ""
                 finish_reason = None
@@ -1616,6 +1659,34 @@ def call_openrouter_streaming(
                                     full_content += content_chunk
                                     yield content_chunk
                                     previous_content_chunk = message_content
+                            
+                            # Also check message.tool_calls in final chunk (some models like GPT-5 Chat return tool_calls here)
+                            # This handles cases where tool_calls are only in the final chunk's message object
+                            if hasattr(message, "tool_calls") and message.tool_calls:
+                                for tool_call in message.tool_calls:
+                                    idx = tool_call.index if hasattr(tool_call, "index") else len(tool_calls_accumulated)
+                                    
+                                    # Initialize tool call structure if needed
+                                    if idx not in tool_calls_accumulated:
+                                        tool_calls_accumulated[idx] = {
+                                            "id": "",
+                                            "type": "function",
+                                            "function": {"name": "", "arguments": ""}
+                                        }
+                                    
+                                    tc = tool_calls_accumulated[idx]
+                                    
+                                    # Update tool call ID (prefer message tool_call ID as it's complete)
+                                    if hasattr(tool_call, "id") and tool_call.id:
+                                        tc["id"] = tool_call.id
+                                    
+                                    # Update function name and arguments (prefer message tool_call as it's complete)
+                                    if hasattr(tool_call, "function"):
+                                        if hasattr(tool_call.function, "name") and tool_call.function.name:
+                                            tc["function"]["name"] = tool_call.function.name
+                                        if hasattr(tool_call.function, "arguments") and tool_call.function.arguments:
+                                            # For message tool_calls, arguments are complete, not incremental
+                                            tc["function"]["arguments"] = tool_call.function.arguments
 
                         # Capture finish reason from last chunk
                         if chunk.choices[0].finish_reason:
@@ -1662,6 +1733,21 @@ def call_openrouter_streaming(
                     tool_results = []
                     
                     for idx, tool_call in sorted(tool_calls_accumulated.items()):
+                        # Validate tool call has required fields before processing
+                        if not tool_call.get("id") or not tool_call["id"].strip():
+                            logger.warning(
+                                f"Model {model_id} returned tool call with empty ID at index {idx}, skipping. "
+                                f"Tool call: {tool_call}"
+                            )
+                            continue
+                        
+                        if not tool_call.get("function", {}).get("name"):
+                            logger.warning(
+                                f"Model {model_id} returned tool call with empty function name at index {idx}, skipping. "
+                                f"Tool call: {tool_call}"
+                            )
+                            continue
+                        
                         if tool_call["function"]["name"] == "search_web":
                             try:
                                 import json
@@ -1779,7 +1865,24 @@ def call_openrouter_streaming(
                                         results_text += f"   URL: {result.url}\n"
                                         results_text += f"   {result.snippet}\n\n"
                                     
-                                    # Store tool call and result
+                                    # Store tool call and result (only if tool call ID is valid)
+                                    if tool_call["id"] and tool_call["id"].strip():
+                                        tool_call_messages.append({
+                                            "id": tool_call["id"],
+                                            "type": "function",
+                                            "function": {
+                                                "name": "search_web",
+                                                "arguments": tool_call["function"]["arguments"]
+                                            }
+                                        })
+                                        tool_results.append({
+                                            "tool_call_id": tool_call["id"],
+                                            "content": results_text
+                                        })
+                            except Exception as e:
+                                logger.error(f"Error executing web search tool: {e}")
+                                # Only add error result if tool call ID is valid
+                                if tool_call["id"] and tool_call["id"].strip():
                                     tool_call_messages.append({
                                         "id": tool_call["id"],
                                         "type": "function",
@@ -1790,30 +1893,38 @@ def call_openrouter_streaming(
                                     })
                                     tool_results.append({
                                         "tool_call_id": tool_call["id"],
-                                        "content": results_text
+                                        "content": f"Error performing web search: {str(e)}"
                                     })
-                            except Exception as e:
-                                logger.error(f"Error executing web search tool: {e}")
-                                tool_call_messages.append({
-                                    "id": tool_call["id"],
-                                    "type": "function",
-                                    "function": {
-                                        "name": "search_web",
-                                        "arguments": tool_call["function"]["arguments"]
-                                    }
-                                })
-                                tool_results.append({
-                                    "tool_call_id": tool_call["id"],
-                                    "content": f"Error performing web search: {str(e)}"
-                                })
                     
                     # Add tool calls and results to messages
                     if tool_call_messages:
+                        # Validate that all tool calls have IDs before proceeding
+                        # Filter out any tool calls with empty IDs (should not happen, but safety check)
+                        valid_tool_call_messages = []
+                        for tc_msg in tool_call_messages:
+                            if tc_msg.get("id") and tc_msg["id"].strip():
+                                valid_tool_call_messages.append(tc_msg)
+                            else:
+                                logger.warning(
+                                    f"Model {model_id} returned tool call with empty ID, skipping. "
+                                    f"Tool call: {tc_msg}"
+                                )
+                        
+                        if not valid_tool_call_messages:
+                            logger.error(
+                                f"Model {model_id} returned tool calls but none had valid IDs. "
+                                f"Original tool calls: {tool_call_messages}"
+                            )
+                            # Skip tool call handling if no valid tool calls
+                            break
+                        
                         # Create assistant message with tool calls
+                        # For OpenAI API, when tool_calls are present, content should be omitted or empty string
+                        # Using empty string instead of None to avoid potential API validation issues
                         assistant_message = {
                             "role": "assistant",
-                            "content": None,
-                            "tool_calls": tool_call_messages
+                            "content": "",  # Empty string instead of None for better API compatibility
+                            "tool_calls": valid_tool_call_messages
                         }
                         
                         # IMPORTANT: For Gemini models, we must preserve reasoning_details in the assistant message
@@ -1846,9 +1957,36 @@ def call_openrouter_streaming(
                         
                         if tools:
                             api_params_continue["tools"] = tools
-                            api_params_continue["tool_choice"] = "auto"
+                            # Omit tool_choice for continuation requests too (same reason as above)
+                            # api_params_continue["tool_choice"] = "auto"
                         
-                        response_continue = client.chat.completions.create(**api_params_continue)
+                        try:
+                            # Use client with tool headers when tools are enabled (required by OpenRouter for provider routing)
+                            if tools:
+                                # Try using extra_headers parameter first (if supported by SDK)
+                                # Fall back to client_with_tool_headers if extra_headers doesn't work
+                                try:
+                                    response_continue = client.chat.completions.create(
+                                        **api_params_continue,
+                                        extra_headers={
+                                            "HTTP-Referer": "https://compareintel.com",
+                                            "X-Title": "CompareIntel",
+                                        }
+                                    )
+                                except TypeError:
+                                    # extra_headers not supported, use client with default headers
+                                    response_continue = client_with_tool_headers.chat.completions.create(**api_params_continue)
+                            else:
+                                response_continue = client.chat.completions.create(**api_params_continue)
+                        except Exception as api_error:
+                            # Log warning if we get a 404 with tools (model may not support tool calling)
+                            error_str = str(api_error).lower()
+                            if ("404" in error_str or "not found" in error_str) and tools:
+                                logger.warning(
+                                    f"Model {model_id} returned 404 when tools were included in continuation. "
+                                    f"Error: {api_error}"
+                                )
+                            raise
                         
                         # Reset for continuation response
                         tool_calls_accumulated = {}
@@ -1925,6 +2063,34 @@ def call_openrouter_streaming(
                                             full_content += content_chunk
                                             yield content_chunk
                                             previous_content_chunk_continue = message_content
+                                    
+                                    # Also check message.tool_calls in final chunk (some models like GPT-5 Chat return tool_calls here)
+                                    # This handles cases where tool_calls are only in the final chunk's message object
+                                    if hasattr(message, "tool_calls") and message.tool_calls:
+                                        for tool_call in message.tool_calls:
+                                            idx = tool_call.index if hasattr(tool_call, "index") else len(tool_calls_accumulated)
+                                            
+                                            # Initialize tool call structure if needed
+                                            if idx not in tool_calls_accumulated:
+                                                tool_calls_accumulated[idx] = {
+                                                    "id": "",
+                                                    "type": "function",
+                                                    "function": {"name": "", "arguments": ""}
+                                                }
+                                            
+                                            tc = tool_calls_accumulated[idx]
+                                            
+                                            # Update tool call ID (prefer message tool_call ID as it's complete)
+                                            if hasattr(tool_call, "id") and tool_call.id:
+                                                tc["id"] = tool_call.id
+                                            
+                                            # Update function name and arguments (prefer message tool_call as it's complete)
+                                            if hasattr(tool_call, "function"):
+                                                if hasattr(tool_call.function, "name") and tool_call.function.name:
+                                                    tc["function"]["name"] = tool_call.function.name
+                                                if hasattr(tool_call.function, "arguments") and tool_call.function.arguments:
+                                                    # For message tool_calls, arguments are complete, not incremental
+                                                    tc["function"]["arguments"] = tool_call.function.arguments
                                 
                                 # Capture finish reason from last chunk
                                 if chunk.choices[0].finish_reason:
