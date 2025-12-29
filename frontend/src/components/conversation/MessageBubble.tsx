@@ -60,8 +60,9 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
     }
   }
 
-  // Ensure content is always a string
-  const safeContent = content || ''
+  // Ensure content is always a string and trim leading/trailing whitespace
+  // This prevents horizontal scrollbars caused by leading spaces
+  const safeContent = (content || '').trim()
 
   return (
     <div key={id} className={`conversation-message ${type || 'assistant'} ${className}`.trim()}>

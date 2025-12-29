@@ -620,40 +620,102 @@ async def compare_stream(
     else:
         # Check if there's a token present but authentication failed (helps diagnose auth issues)
         token_present = get_token_from_cookies(request) is not None
+        tier_recovered_from_token = False
         
         # If token is present but authentication failed, try to get user info from token for better error message
         # This helps diagnose cases where user thinks they're logged in but session expired
+        # This can happen after code changes/restarts when the frontend still has a valid token
+        # but the backend dependency system hasn't properly authenticated
         if token_present:
             from ..auth import verify_token
+            try:
+                import jwt
+                from jwt.exceptions import ExpiredSignatureError, DecodeError
+            except ImportError:
+                jwt = None
+            
             token = get_token_from_cookies(request)
-            payload = verify_token(token, token_type="access") if token else None
-            if payload:
-                user_id_from_token = payload.get("sub")
-                if user_id_from_token:
-                    try:
-                        user_from_token = db.query(User).filter(User.id == int(user_id_from_token)).first()
-                        if user_from_token and user_from_token.is_active:
-                            # User exists and is active, but get_current_user failed - likely token issue
-                            # Use their actual tier for validation, but log the auth failure
-                            subscription_tier = user_from_token.subscription_tier
-                            if subscription_tier and subscription_tier in ["free", "starter", "starter_plus", "pro", "pro_plus"]:
-                                tier_model_limit = get_model_limit(subscription_tier)
-                                tier_name = subscription_tier
-                                # Log this case for debugging
-                                logging.getLogger(__name__).warning(
-                                    f"Authentication dependency failed but token valid for user {user_from_token.id} "
-                                    f"({user_from_token.email}), tier: {subscription_tier}. Using tier from token."
-                                )
-                            else:
+            if token:
+                try:
+                    # Try to verify token - this will fail if expired or invalid
+                    payload = verify_token(token, token_type="access")
+                    
+                    if payload:
+                        user_id_from_token = payload.get("sub")
+                        if user_id_from_token:
+                            try:
+                                user_id_int = int(user_id_from_token)
+                                # Refresh user from database to ensure we have latest tier info
+                                # Use a fresh query to avoid stale session issues
+                                user_from_token = db.query(User).filter(User.id == user_id_int).first()
+                                
+                                if user_from_token:
+                                    # Refresh the user object to get latest data
+                                    db.refresh(user_from_token)
+                                    
+                                    if user_from_token.is_active:
+                                        # User exists and is active, but get_current_user failed
+                                        # This can happen after code changes when dependency system has issues
+                                        # Use their actual tier for validation
+                                        subscription_tier = user_from_token.subscription_tier
+                                        
+                                        # Handle all valid tiers including pro_plus
+                                        valid_tiers = ["free", "starter", "starter_plus", "pro", "pro_plus"]
+                                        if subscription_tier and subscription_tier in valid_tiers:
+                                            tier_model_limit = get_model_limit(subscription_tier)
+                                            tier_name = subscription_tier
+                                            tier_recovered_from_token = True
+                                            
+                                            # Log this recovery for debugging
+                                            logger.warning(
+                                                f"[AUTH RECOVERY] Authentication dependency failed but recovered tier from token. "
+                                                f"User: {user_from_token.id} ({user_from_token.email}), "
+                                                f"Tier: {subscription_tier}. This may indicate a session/dependency issue."
+                                            )
+                                        else:
+                                            logger.warning(
+                                                f"[AUTH] User {user_from_token.id} has invalid tier: {subscription_tier}"
+                                            )
+                                            tier_model_limit = ANONYMOUS_MODEL_LIMIT
+                                            tier_name = "anonymous"
+                                    else:
+                                        logger.warning(
+                                            f"[AUTH] User {user_from_token.id} found but account is inactive"
+                                        )
+                                        tier_model_limit = ANONYMOUS_MODEL_LIMIT
+                                        tier_name = "anonymous"
+                                else:
+                                    logger.warning(
+                                        f"[AUTH] Token contains user_id {user_id_int} but user not found in database"
+                                    )
+                                    tier_model_limit = ANONYMOUS_MODEL_LIMIT
+                                    tier_name = "anonymous"
+                            except (ValueError, TypeError) as e:
+                                logger.warning(f"[AUTH] Invalid user_id format in token: {e}")
                                 tier_model_limit = ANONYMOUS_MODEL_LIMIT
                                 tier_name = "anonymous"
                         else:
+                            logger.warning("[AUTH] Token payload missing 'sub' field")
                             tier_model_limit = ANONYMOUS_MODEL_LIMIT
                             tier_name = "anonymous"
-                    except (ValueError, TypeError):
+                    else:
+                        # Token verification failed - likely expired or invalid
+                        # Try to decode without verification to get user info for better error message
+                        if jwt:
+                            try:
+                                unverified_payload = jwt.decode(token, options={"verify_signature": False})
+                                user_id_from_token = unverified_payload.get("sub")
+                                if user_id_from_token:
+                                    logger.warning(
+                                        f"[AUTH] Token verification failed (likely expired) for user_id: {user_id_from_token}. "
+                                        f"User should refresh their session."
+                                    )
+                            except Exception:
+                                pass
                         tier_model_limit = ANONYMOUS_MODEL_LIMIT
                         tier_name = "anonymous"
-                else:
+                except Exception as e:
+                    logger.error(f"[AUTH] Unexpected error during token recovery: {e}")
                     tier_model_limit = ANONYMOUS_MODEL_LIMIT
                     tier_name = "anonymous"
             else:
@@ -663,13 +725,13 @@ async def compare_stream(
             tier_model_limit = ANONYMOUS_MODEL_LIMIT
             tier_name = "anonymous"
         
-        # Log authentication failure for debugging (only in development)
-        if settings.environment == "development" and token_present:
-            logging.getLogger(__name__).warning(
-                f"Authentication failed for /compare-stream request. "
+        # Log authentication failure for debugging
+        if not tier_recovered_from_token:
+            logger.warning(
+                f"[AUTH] Authentication failed for /compare-stream request. "
                 f"Token present: {token_present}, "
-                f"User agent: {request.headers.get('user-agent', 'unknown')}, "
-                f"Cookies: {list(request.cookies.keys())}"
+                f"Tier recovered: {tier_recovered_from_token}, "
+                f"Final tier: {tier_name}"
             )
 
     # Validate model access based on tier (check if restricted models are selected)
@@ -852,7 +914,6 @@ async def compare_stream(
                 f"Web search requested for comparison with models: {req.models}. "
                 f"Will check each model's capability and search provider availability."
             )
-        else:
 
         # Capture settings values in local variables to avoid closure issues with nested functions
         model_inactivity_timeout = settings.model_inactivity_timeout
@@ -1009,7 +1070,6 @@ async def compare_stream(
                                     f"Web search requested for model {model_id} but no active search provider configured. "
                                     f"Check AppSettings.active_search_provider and ensure API keys are set."
                                 )
-                        else:
                     
                     # Run synchronous streaming in a thread, push chunks to queue as they arrive
                     loop = asyncio.get_event_loop()
@@ -1023,6 +1083,11 @@ async def compare_stream(
                         content = ""
                         count = 0
                         usage_data = None
+                        # Track state to detect keepalive chunks
+                        # Keepalive chunks come as isolated single spaces during tool call handling
+                        # They appear when content accumulation is paused (between content phases)
+                        last_chunk_was_keepalive = False
+                        consecutive_keepalive_count = 0  # Track consecutive keepalive chunks
                         try:
                             # Filter conversation history for this specific model:
                             # - Include all user messages (shared context)
@@ -1054,21 +1119,70 @@ async def compare_stream(
                             try:
                                 while True:
                                     chunk = next(gen)
-                                    content += chunk
-                                    count += 1
+                                    
+                                    # Detect keepalive chunks (single space) used during web search operations
+                                    # Keepalive chunks are sent during tool call handling (before/during/after web search)
+                                    # They come as isolated single spaces when content accumulation is paused.
+                                    #
+                                    # Detection strategy:
+                                    # 1. Keepalive chunks are always isolated single spaces (" ")
+                                    # 2. They come when content accumulation is paused (during tool call handling)
+                                    # 3. They may come before content starts OR between content phases
+                                    # 4. Multiple keepalive chunks can come in sequence (every 5 seconds during web search)
+                                    #
+                                    # We detect them by checking:
+                                    # - Single space chunk
+                                    # - Content is empty OR content ends with whitespace/newline (between phases)
+                                    # - If content exists, it should end with whitespace (not mid-word)
+                                    # - Consecutive keepalive chunks are more likely to be keepalive
+                                    is_keepalive = False
+                                    if chunk == " ":
+                                        # Check if this looks like a keepalive chunk
+                                        if len(content) == 0:
+                                            # No content yet - definitely a keepalive
+                                            is_keepalive = True
+                                        elif content.rstrip() != content:
+                                            # Content ends with whitespace - likely between content phases
+                                            # This is a keepalive chunk during tool call handling
+                                            is_keepalive = True
+                                        elif last_chunk_was_keepalive:
+                                            # Previous chunk was keepalive - this is likely also keepalive
+                                            # (keepalive chunks come in sequence during web search)
+                                            is_keepalive = True
+                                    
+                                    if is_keepalive:
+                                        # Push keepalive event instead of content chunk
+                                        # DO NOT add to content - this prevents character counter inflation
+                                        last_chunk_was_keepalive = True
+                                        consecutive_keepalive_count += 1
+                                        asyncio.run_coroutine_threadsafe(
+                                            chunk_queue.put(
+                                                {
+                                                    "type": "keepalive",
+                                                    "model": model_id,
+                                                }
+                                            ),
+                                            loop,
+                                        )
+                                    else:
+                                        # Normal content chunk - add to content and queue
+                                        last_chunk_was_keepalive = False
+                                        consecutive_keepalive_count = 0
+                                        content += chunk
+                                        count += 1
 
-                                    # Push chunk to async queue (thread-safe)
-                                    asyncio.run_coroutine_threadsafe(
-                                        chunk_queue.put(
-                                            {
-                                                "type": "chunk",
-                                                "model": model_id,
-                                                "content": chunk,
-                                                "chunk_count": count,
-                                            }
-                                        ),
-                                        loop,
-                                    )
+                                        # Push chunk to async queue (thread-safe)
+                                        asyncio.run_coroutine_threadsafe(
+                                            chunk_queue.put(
+                                                {
+                                                    "type": "chunk",
+                                                    "model": model_id,
+                                                    "content": chunk,
+                                                    "chunk_count": count,
+                                                }
+                                            ),
+                                            loop,
+                                        )
                             except StopIteration as e:
                                 # Generator return value is in e.value
                                 usage_data = e.value
@@ -1187,10 +1301,28 @@ async def compare_stream(
             pending_tasks = set(tasks)
 
             while pending_tasks or not chunk_queue.empty():
-                # Wait for either a chunk or a task completion
-                done_tasks = set()
+                # Process chunks FIRST to ensure immediate streaming, especially for web search continuations
+                # This prioritizes streaming responsiveness over task completion processing
+                chunks_processed = False
+                while not chunk_queue.empty():
+                    try:
+                        chunk_data = await asyncio.wait_for(chunk_queue.get(), timeout=0.001)
+
+                        if chunk_data["type"] == "chunk":
+                            # Don't clean chunks during streaming - preserves whitespace
+                            yield f"data: {json.dumps({'model': chunk_data['model'], 'type': 'chunk', 'content': chunk_data['content']})}\n\n"
+                            chunks_processed = True
+                        elif chunk_data["type"] == "keepalive":
+                            # Send keepalive event to reset frontend timeout without adding to content
+                            # This prevents timeout during long operations (like web search) without
+                            # incrementing the character counter
+                            yield f"data: {json.dumps({'model': chunk_data['model'], 'type': 'keepalive'})}\n\n"
+                            chunks_processed = True
+                    except asyncio.TimeoutError:
+                        break
 
                 # Check for completed tasks without blocking
+                done_tasks = set()
                 for task in list(pending_tasks):
                     if task.done():
                         done_tasks.add(task)
@@ -1224,20 +1356,14 @@ async def compare_stream(
                     # Send done event for this model
                     yield f"data: {json.dumps({'model': model_id, 'type': 'done', 'error': result['error']})}\n\n"
 
-                # Process available chunks from queue
-                while not chunk_queue.empty():
-                    try:
-                        chunk_data = await asyncio.wait_for(chunk_queue.get(), timeout=0.001)
-
-                        if chunk_data["type"] == "chunk":
-                            # Don't clean chunks during streaming - preserves whitespace
-                            yield f"data: {json.dumps({'model': chunk_data['model'], 'type': 'chunk', 'content': chunk_data['content']})}\n\n"
-                    except asyncio.TimeoutError:
-                        break
-
-                # Small yield to prevent tight loop and allow other operations
-                if pending_tasks:
+                # Only sleep if we didn't process any chunks and there are pending tasks
+                # This ensures chunks are sent immediately without delay
+                if pending_tasks and not chunks_processed:
                     await asyncio.sleep(0.01)  # 10ms yield
+                elif chunks_processed:
+                    # If we processed chunks, yield control briefly to allow other tasks to run
+                    # but don't sleep - this keeps streaming responsive
+                    await asyncio.sleep(0)  # Yield control without sleeping
 
             # Calculate credits used - only for successful models
             # Use actual token usage data from successful model responses

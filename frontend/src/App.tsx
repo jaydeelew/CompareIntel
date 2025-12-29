@@ -2321,10 +2321,19 @@ function AppContent() {
     currentVisibleComparisonId,
   ])
 
+  // Track which conversation IDs we've already attempted to load token counts for
+  // This prevents infinite loops when updating conversations state
+  const processedConversationIdsRef = useRef<Set<string | number>>(new Set())
+
   // Reload conversations with token counts when currentVisibleComparisonId is set after a comparison completes
   // This ensures token counts are available for the token-usage-indicator in follow-up mode
   useEffect(() => {
     if (!currentVisibleComparisonId || conversations.length === 0) {
+      return
+    }
+
+    // Check if we've already processed this conversation ID
+    if (processedConversationIdsRef.current.has(currentVisibleComparisonId)) {
       return
     }
 
@@ -2337,8 +2346,9 @@ function AppContent() {
       )
     )
 
-    // If conversations already have token counts, no need to reload
+    // If conversations already have token counts, mark as processed and return
     if (hasTokenCounts) {
+      processedConversationIdsRef.current.add(currentVisibleComparisonId)
       return
     }
 
@@ -2360,6 +2370,9 @@ function AppContent() {
       if (isNaN(conversationId)) {
         return
       }
+
+      // Mark this conversation ID as being processed to prevent duplicate requests
+      processedConversationIdsRef.current.add(currentVisibleComparisonId)
 
       // Use a small delay to ensure backend has finished saving
       const timeoutId = setTimeout(async () => {
@@ -2457,6 +2470,9 @@ function AppContent() {
         clearTimeout(timeoutId)
       }
     } else {
+      // Mark this conversation ID as being processed to prevent duplicate requests
+      processedConversationIdsRef.current.add(currentVisibleComparisonId)
+
       // For anonymous users, reload from localStorage and estimate tokens if missing
       const timeoutId = setTimeout(() => {
         try {
@@ -2580,13 +2596,14 @@ function AppContent() {
         clearTimeout(timeoutId)
       }
     }
+    // Only depend on currentVisibleComparisonId and isAuthenticated to avoid infinite loops
+    // The conversations dependency was causing re-renders when we update conversations with token counts
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     currentVisibleComparisonId,
     isAuthenticated,
-    conversations,
     loadConversationFromAPI,
     loadConversationFromLocalStorage,
-    setConversations,
   ])
 
   // Close dropdown when clicking outside
@@ -4870,6 +4887,15 @@ function AppContent() {
 
                     // Try up to 4 times with increasing delays
                     trySetup(1, 4)
+                  }
+                } else if (event.type === 'keepalive') {
+                  // Keepalive event - reset timeout but don't add to content
+                  // This prevents timeout during long operations (like web search) without
+                  // incrementing the character counter
+                  if (event.model) {
+                    modelLastChunkTimes[event.model] = Date.now()
+                    resetStreamingTimeout()
+                    // Don't set shouldUpdate - no UI change needed for keepalive
                   }
                 } else if (event.type === 'done') {
                   // Model completed - track it and record completion time
@@ -7846,6 +7872,8 @@ function AppContent() {
                                 const messageId = message.id || `msg-${msgIndex}`
                                 const messageSafeId = getSafeId(messageId)
                                 const messageContentId = `message-content-${safeId}-${messageSafeId}`
+                                // Trim leading/trailing whitespace to prevent horizontal scrollbars
+                                const trimmedContent = (message.content || '').trim()
                                 return (
                                   <div
                                     key={messageId}
@@ -7920,7 +7948,7 @@ function AppContent() {
                                             handleCopyMessage(
                                               conversation.modelId,
                                               messageId,
-                                              message.content || ''
+                                              trimmedContent
                                             )
                                             e.currentTarget.blur()
                                           }}
@@ -7962,7 +7990,7 @@ function AppContent() {
                                         <Suspense
                                           fallback={
                                             <pre className="result-output raw-output">
-                                              {message.content || ''}
+                                              {trimmedContent}
                                             </pre>
                                           }
                                         >
@@ -7970,13 +7998,13 @@ function AppContent() {
                                             className="result-output"
                                             modelId={conversation.modelId}
                                           >
-                                            {message.content || ''}
+                                            {trimmedContent}
                                           </LatexRenderer>
                                         </Suspense>
                                       ) : (
                                         /* Raw text for immediate streaming display */
                                         <pre className="result-output raw-output">
-                                          {message.content || ''}
+                                          {trimmedContent}
                                         </pre>
                                       )}
                                     </div>

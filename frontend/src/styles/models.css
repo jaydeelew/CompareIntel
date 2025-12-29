@@ -131,7 +131,8 @@
 /* Provider count without selected models - matches models-count-indicator */
 .provider-count.empty {
   background: #f3f4f6;
-  color: #374151; /* Improved contrast: darker gray for better accessibility (was #6b7280) */
+  color: #374151;
+  /* Improved contrast: darker gray for better accessibility (was #6b7280) */
   border: 1px solid #e5e7eb;
 }
 
@@ -908,7 +909,8 @@
   border: 1px solid var(--border-color);
   margin-left: 0.5rem;
   position: relative;
-  overflow: visible;
+  overflow-x: hidden;
+  overflow-y: visible;
   word-wrap: break-word;
   overflow-wrap: break-word;
   hyphens: auto;
@@ -938,8 +940,16 @@
   max-width: 100%;
   flex: 1;
   width: 100%;
-  overflow: visible;
+  overflow-x: hidden;
+  overflow-y: visible;
   font-size: 1.125rem;
+}
+
+.message-content .raw-output {
+  overflow-x: hidden;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 /* Animation for new messages */
@@ -2122,7 +2132,8 @@
 
 .models-count-indicator.empty {
   background: #f3f4f6;
-  color: #374151; /* Improved contrast: darker gray for better accessibility (was #6b7280) */
+  color: #374151;
+  /* Improved contrast: darker gray for better accessibility (was #6b7280) */
   border: 1px solid #e5e7eb;
   border-radius: 8px !important;
 }

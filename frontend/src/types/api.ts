@@ -14,6 +14,7 @@ import type { StoredMessage } from './conversation'
 export const STREAM_EVENT_TYPE = {
   START: 'start',
   CHUNK: 'chunk',
+  KEEPALIVE: 'keepalive', // Keepalive event to reset timeout without adding to content
   DONE: 'done',
   COMPLETE: 'complete',
   ERROR: 'error',

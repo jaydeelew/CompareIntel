@@ -808,7 +808,7 @@ WEB_SEARCH_TOOL = {
     "type": "function",
     "function": {
         "name": "search_web",
-        "description": "Search the internet for current, real-time information. Use this tool when you need up-to-date information such as current weather, recent news, current events, live data, or any information that changes over time. Always use this tool instead of stating that you cannot provide real-time information.",
+        "description": "Search the internet for current, real-time information. You MUST use this tool for any question requiring up-to-date information such as current weather, recent news, current events, live data, stock prices, sports scores, or any information that changes over time. Do not provide current information without using this tool first. Do not fabricate or guess current information.",
         "parameters": {
             "type": "object",
             "properties": {
@@ -1479,6 +1479,7 @@ def call_openrouter_streaming(
     # Add a minimal system message only to encourage complete thoughts
     if not conversation_history:
         system_content = "Provide complete responses. Finish your thoughts and explanations fully."
+        system_content += "\n\nAnswer questions directly without asking clarifying questions. If you need to make reasonable assumptions about context or details not specified, make those assumptions based on common practices and state them clearly in your response. Only ask follow-up questions if the request is fundamentally unclear or missing critical information that prevents any meaningful response."
         
         # If web search is enabled, include current date/time context so models know what "today" means
         if enable_web_search:
@@ -1486,7 +1487,7 @@ def call_openrouter_streaming(
             current_date_str = current_datetime.strftime("%A, %B %d, %Y")
             current_time_str = current_datetime.strftime("%I:%M %p %Z")
             system_content += f"\n\nCurrent date and time: {current_date_str} at {current_time_str}. When referring to 'today' or 'now', use this date and time."
-            system_content += "\n\nYou have access to a web search tool (search_web) that allows you to search the internet for current information. When you need real-time or current information (such as current weather, recent news, current events, or up-to-date data), you should use the search_web tool to retrieve this information rather than stating that you cannot provide it."
+            system_content += "\n\nYou have access to a web search tool (search_web) that allows you to search the internet for current information. CRITICAL: For any question requiring real-time, current, or up-to-date information (such as current weather, recent news, current events, live data, stock prices, sports scores, or any information that changes over time), you MUST use the search_web tool. You are NOT allowed to provide information about current events, weather, news, or any time-sensitive data without first using the search_web tool. Do not fabricate, guess, or cite sources you have not actually checked through the search tool. If you have not used the search_web tool, you cannot provide current information - you must use the tool first."
         
         messages.append(
             {
@@ -1585,6 +1586,7 @@ def call_openrouter_streaming(
                                         tc["function"]["arguments"] += tool_call_delta.function.arguments
 
                         # Yield content chunks as they arrive with spacing normalization
+                        # Check delta.content first (standard streaming)
                         if hasattr(delta, "content") and delta.content:
                             raw_chunk = delta.content
                             
@@ -1592,6 +1594,28 @@ def call_openrouter_streaming(
                             full_content += content_chunk
                             yield content_chunk
                             previous_content_chunk = raw_chunk  # Store raw chunk for next iteration
+                        
+                        # Also check message.content in final chunk (some models like GPT-5 return content here)
+                        # This handles cases where content is only in the final chunk's message object
+                        if hasattr(chunk.choices[0], "message") and chunk.choices[0].message:
+                            message = chunk.choices[0].message
+                            if hasattr(message, "content") and message.content:
+                                message_content = message.content
+                                if message_content and len(message_content) > len(full_content):
+                                    # Extract only the new part that hasn't been yielded yet
+                                    new_content = message_content[len(full_content):]
+                                    if new_content:
+                                        content_chunk = normalize_spacing_after_punctuation(new_content, previous_content_chunk)
+                                        full_content += content_chunk
+                                        yield content_chunk
+                                        previous_content_chunk = new_content
+                                elif message_content and not full_content:
+                                    # If we haven't yielded any content yet, yield the entire message content
+                                    # This handles cases where GPT-5 models return all content in the final chunk
+                                    content_chunk = normalize_spacing_after_punctuation(message_content, previous_content_chunk)
+                                    full_content += content_chunk
+                                    yield content_chunk
+                                    previous_content_chunk = message_content
 
                         # Capture finish reason from last chunk
                         if chunk.choices[0].finish_reason:
@@ -1628,6 +1652,10 @@ def call_openrouter_streaming(
                 
                 while finish_reason == "tool_calls" and tool_calls_accumulated and search_provider and tool_call_iteration < max_tool_call_iterations:
                     tool_call_iteration += 1
+                    
+                    # Yield keepalive at start of each iteration to prevent timeout
+                    # This is especially important for slower models that take longer to process tool calls
+                    yield " "
                     
                     # Execute all tool calls
                     tool_call_messages = []
@@ -1865,6 +1893,7 @@ def call_openrouter_streaming(
                                                 tc["function"]["arguments"] += tool_call_delta.function.arguments
                                 
                                 # Yield content chunks with spacing normalization
+                                # Check delta.content first (standard streaming)
                                 if hasattr(delta, "content") and delta.content:
                                     raw_chunk = delta.content
                                     content_chunk = normalize_spacing_after_punctuation(raw_chunk, previous_content_chunk_continue)
@@ -1872,6 +1901,30 @@ def call_openrouter_streaming(
                                     full_content += content_chunk
                                     yield content_chunk
                                     previous_content_chunk_continue = raw_chunk  # Store raw chunk for next iteration
+                                
+                                # Also check message.content in final chunk (some models like GPT-5 return content here)
+                                # This handles cases where content is only in the final chunk's message object
+                                if hasattr(chunk.choices[0], "message") and chunk.choices[0].message:
+                                    message = chunk.choices[0].message
+                                    if hasattr(message, "content") and message.content:
+                                        # Only yield if we haven't already yielded this content via delta
+                                        # Check if this is new content by comparing with what we've accumulated
+                                        message_content = message.content
+                                        if message_content and len(message_content) > len(full_content):
+                                            # Extract only the new part that hasn't been yielded yet
+                                            new_content = message_content[len(full_content):]
+                                            if new_content:
+                                                content_chunk = normalize_spacing_after_punctuation(new_content, previous_content_chunk_continue)
+                                                full_content += content_chunk
+                                                yield content_chunk
+                                                previous_content_chunk_continue = new_content
+                                        elif message_content and not full_content:
+                                            # If we haven't yielded any content yet, yield the entire message content
+                                            # This handles cases where GPT-5 models return all content in the final chunk
+                                            content_chunk = normalize_spacing_after_punctuation(message_content, previous_content_chunk_continue)
+                                            full_content += content_chunk
+                                            yield content_chunk
+                                            previous_content_chunk_continue = message_content
                                 
                                 # Capture finish reason from last chunk
                                 if chunk.choices[0].finish_reason:
