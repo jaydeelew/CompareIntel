@@ -5757,10 +5757,14 @@ function AppContent() {
           input_length: input.length,
           models_requested: selectedModels.length,
           models_successful: Object.keys(streamingResults).filter(
-            modelId => !isErrorMessage(streamingResults[modelId])
+            modelId =>
+              !isErrorMessage(streamingResults[modelId]) &&
+              (streamingResults[modelId] || '').trim().length > 0
           ).length,
-          models_failed: Object.keys(streamingResults).filter(modelId =>
-            isErrorMessage(streamingResults[modelId])
+          models_failed: Object.keys(streamingResults).filter(
+            modelId =>
+              isErrorMessage(streamingResults[modelId]) ||
+              (streamingResults[modelId] || '').trim().length === 0
           ).length,
           timestamp: new Date().toISOString(),
           processing_time_ms: Date.now() - startTime,
@@ -6281,6 +6285,16 @@ function AppContent() {
         // This ensures history entries are created when credits were used
         try {
           savePartialResultsOnError()
+          // Preserve input if all models failed (timeout counts as failure)
+          const successfulCount = Object.keys(streamingResults).filter(
+            modelId =>
+              !isErrorMessage(streamingResults[modelId]) &&
+              (streamingResults[modelId] || '').trim().length > 0
+          ).length
+          // Only clear input if at least one model succeeded before timeout
+          if (successfulCount === 0) {
+            // Input is preserved - don't clear it so user can retry
+          }
         } catch (saveError) {
           console.error('Error saving partial results on timeout:', saveError)
         }
@@ -6315,14 +6329,17 @@ function AppContent() {
         setError('Unable to connect to the server. Please check if the backend is running.')
         // Save partial results even on connection error
         savePartialResultsOnError()
+        // Preserve input if all models failed - input is preserved by default (not cleared)
       } else if (err instanceof Error) {
         setError(err.message || 'An unexpected error occurred')
         // Save partial results even on unexpected error
         savePartialResultsOnError()
+        // Preserve input if all models failed - input is preserved by default (not cleared)
       } else {
         setError('An unexpected error occurred')
         // Save partial results even on unknown error
         savePartialResultsOnError()
+        // Preserve input if all models failed - input is preserved by default (not cleared)
       }
     } finally {
       // Clean up timeout if it still exists
