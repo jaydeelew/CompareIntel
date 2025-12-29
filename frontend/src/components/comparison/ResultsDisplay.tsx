@@ -98,18 +98,6 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
     }
   }, [activeTabIndex, visibleConversations.length])
 
-  // Debug logging (can be removed later)
-  useEffect(() => {
-    if (process.env.NODE_ENV === 'development') {
-      console.log('[ResultsDisplay] Component rendered:', {
-        isMobileLayout,
-        visibleConversationsCount: visibleConversations.length,
-        windowWidth: typeof window !== 'undefined' ? window.innerWidth : 'N/A',
-        willShowTabs: isMobileLayout && visibleConversations.length > 1
-      })
-    }
-  }, [isMobileLayout, visibleConversations.length])
-
   if (visibleConversations.length === 0) {
     return null
   }

@@ -853,7 +853,6 @@ async def compare_stream(
                 f"Will check each model's capability and search provider availability."
             )
         else:
-            _logger.debug(f"Web search not requested for this comparison")
 
         # Capture settings values in local variables to avoid closure issues with nested functions
         model_inactivity_timeout = settings.model_inactivity_timeout
@@ -984,7 +983,6 @@ async def compare_stream(
                     enable_web_search_for_model = False
                     search_provider_instance = None
                     
-                    _logger.debug(f"Processing model {model_id}, enable_web_search={req.enable_web_search}")
                     
                     if req.enable_web_search:
                         # Check if this model supports web search
@@ -1012,10 +1010,6 @@ async def compare_stream(
                                     f"Check AppSettings.active_search_provider and ensure API keys are set."
                                 )
                         else:
-                            _logger.debug(
-                                f"Web search requested but model {model_id} does not support web search "
-                                f"(supports_web_search=False in model definition)"
-                            )
                     
                     # Run synchronous streaming in a thread, push chunks to queue as they arrive
                     loop = asyncio.get_event_loop()
@@ -1319,9 +1313,6 @@ async def compare_stream(
                             ip_credits_remaining,
                             (fingerprint_credits_remaining if req.browser_fingerprint else ip_credits_remaining),
                         )
-                        print(
-                            f"[DEBUG] Anonymous credits after deduction - IP: {ip_credits_remaining}, FP: {fingerprint_credits_remaining if req.browser_fingerprint else 'N/A'}, Final: {credits_remaining}, Actual: {actual_credits_used}, Charged: {total_credits_used}, Successful models: {successful_models}"
-                        )
                 except Exception as e:
                     # Handle any exception during credit deduction
                     print(f"[ERROR] Credit deduction failed: {e}")
@@ -1344,8 +1335,6 @@ async def compare_stream(
                     credit_db.close()
             else:
                 # No successful models - no credits deducted
-                if successful_models == 0 and failed_models > 0:
-                    print(f"[DEBUG] All models failed - no credits deducted. Failed: {failed_models}")
                 # Even if no credits were deducted, refresh credits_remaining for anonymous users
                 # (in case of any other state changes, though this shouldn't normally happen)
                 if not user_id:
@@ -1371,23 +1360,15 @@ async def compare_stream(
                 if req.browser_fingerprint:
                     fp_identifier = f"fp:{req.browser_fingerprint}"
                     _, fingerprint_credits_remaining, _ = check_anonymous_credits(fp_identifier, Decimal(0), user_timezone)
-                credits_remaining = min(
-                    ip_credits_remaining,
-                    (fingerprint_credits_remaining if req.browser_fingerprint else ip_credits_remaining),
-                )
-                print(
-                    f"[DEBUG] Final credits_remaining refresh before metadata - IP: {ip_credits_remaining}, FP: {fingerprint_credits_remaining if req.browser_fingerprint else 'N/A'}, Final: {credits_remaining}, Successful models: {successful_models}, Credits charged: {total_credits_used}"
-                )
+                    credits_remaining = min(
+                        ip_credits_remaining,
+                        (fingerprint_credits_remaining if req.browser_fingerprint else ip_credits_remaining),
+                    )
 
             # Calculate processing time
             processing_time_ms = int((datetime.now() - start_time).total_seconds() * 1000)
 
             # Build metadata including credit information
-            # Debug: Log credits_remaining before including in metadata
-            if not user_id:
-                print(
-                    f"[DEBUG] Building metadata for anonymous user - credits_remaining: {credits_remaining}, actual_credits: {actual_credits_used}, charged_credits: {total_credits_used}, successful_models: {successful_models}, failed_models: {failed_models}"
-                )
             metadata = {
                 "input_length": len(req.input_data),
                 "models_requested": len(req.models),
@@ -1433,9 +1414,6 @@ async def compare_stream(
             try:
                 log_db.add(usage_log)
                 log_db.commit()
-                print(
-                    f"[DEBUG] UsageLog committed to database - actual_credits: {actual_credits_used}, charged_credits: {total_credits_used}, user_id: {user_id}, ip: {client_ip}, fp: {req.browser_fingerprint[:20] if req.browser_fingerprint else 'None'}"
-                )
             except Exception as e:
                 print(f"[ERROR] Failed to commit UsageLog: {e}")
                 log_db.rollback()
@@ -1444,11 +1422,8 @@ async def compare_stream(
 
             # Save conversation to database for authenticated users
             if user_id and successful_models > 0:
-                print(f"[DEBUG] Will save conversation for user_id: {user_id}, successful_models: {successful_models}")
-
                 def save_conversation_to_db():
                     """Save conversation and messages to database."""
-                    print(f"[DEBUG] save_conversation_to_db started for user_id: {user_id}")
                     conv_db = SessionLocal()
                     try:
                         # Determine if this is a follow-up or new conversation
@@ -1652,11 +1627,10 @@ async def compare_stream(
                                 conv_db.add(assistant_msg)
                                 messages_saved += 1
                             elif not content or not content.strip():
-                                # Log empty content cases for debugging (timeouts, etc.)
-                                print(f"[WARNING] Skipping empty content for model {model_id} in conversation {conversation.id}")
+                                # Skip empty content (timeouts, etc.)
+                                pass
 
                         conv_db.commit()
-                        print(f"[DEBUG] Conversation saved successfully for user_id: {user_id}, messages_saved: {messages_saved}")
 
                         # Enforce tier-based conversation limits
                         # Store exactly display_limit conversations (no longer need +1 since we don't filter in frontend)
@@ -2075,14 +2049,6 @@ async def get_credit_balance(
         credits_remaining = min(
             ip_credits_remaining,
             fingerprint_credits_remaining if fingerprint else ip_credits_remaining,
-        )
-
-        print(
-            f"[DEBUG] get_credit_balance (from DB) - IP: {client_ip}, Fingerprint: {fingerprint[:20] if fingerprint else 'None'}..."
-        )
-        print(f"[DEBUG] DB Credits used - IP: {ip_credits_used}, FP: {fp_credits_used if fingerprint else 'N/A'}")
-        print(
-            f"[DEBUG] Credits remaining - IP: {ip_credits_remaining}, FP: {fingerprint_credits_remaining if fingerprint else 'N/A'}, Final: {credits_remaining}"
         )
 
         return {

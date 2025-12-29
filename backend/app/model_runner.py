@@ -1588,21 +1588,6 @@ def call_openrouter_streaming(
                         if hasattr(delta, "content") and delta.content:
                             raw_chunk = delta.content
                             
-                            # Debug logging for chunks containing punctuation followed by letters (only in development)
-                            if settings.environment == "development":
-                                # Check if this chunk has the pattern "punctuation+letter" within it
-                                import re
-                                pattern_matches = re.findall(r'([.!?])([A-Za-z])', raw_chunk)
-                                if pattern_matches:
-                                    logger.debug(f"[CHUNK PATTERN] Found {len(pattern_matches)} punctuation+letter patterns in chunk: {repr(raw_chunk[:50])}")
-                                
-                                # Check cross-chunk boundary
-                                if previous_content_chunk:
-                                    prev_last = previous_content_chunk[-1] if previous_content_chunk else ""
-                                    curr_first = raw_chunk[0] if raw_chunk else ""
-                                    if prev_last in '.!?' and curr_first.isalpha():
-                                        logger.debug(f"[CROSS-CHUNK] Previous ends with '{prev_last}', current starts with '{curr_first}' - Will add space")
-                            
                             content_chunk = normalize_spacing_after_punctuation(raw_chunk, previous_content_chunk)
                             full_content += content_chunk
                             yield content_chunk
@@ -1731,7 +1716,6 @@ def call_openrouter_streaming(
                                             except queue.Empty:
                                                 # Search still running - yield keepalive to reset frontend timeout
                                                 elapsed = time.time() - search_start_time
-                                                logger.debug(f"Web search still running after {elapsed:.1f}s, sending keepalive")
                                                 yield " "
                                         
                                         # Search completed successfully, search_results is set
@@ -1884,13 +1868,6 @@ def call_openrouter_streaming(
                                 if hasattr(delta, "content") and delta.content:
                                     raw_chunk = delta.content
                                     content_chunk = normalize_spacing_after_punctuation(raw_chunk, previous_content_chunk_continue)
-                                    
-                                    # Debug logging for spacing issues (only in development)
-                                    if settings.environment == "development" and previous_content_chunk_continue:
-                                        prev_last = previous_content_chunk_continue[-1] if previous_content_chunk_continue else ""
-                                        curr_first = raw_chunk[0] if raw_chunk else ""
-                                        if prev_last in '.!?' and curr_first.isalpha() and raw_chunk != content_chunk:
-                                            logger.debug(f"[SPACING FIX] Added space between '{prev_last}' and '{curr_first}' - Before: '{raw_chunk[:20]}' After: '{content_chunk[:20]}'")
                                     
                                     full_content += content_chunk
                                     yield content_chunk

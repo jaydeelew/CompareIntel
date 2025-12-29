@@ -2509,21 +2509,6 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({ children, className = '',
     // This handles edge cases where placeholders might have been missed
     const remainingPlaceholders = processed.match(/⟨⟨MDPH\d+⟩⟩/g)
     if (remainingPlaceholders && remainingPlaceholders.length > 0) {
-      console.warn(
-        `[processMarkdown] WARNING: Found ${remainingPlaceholders.length} unrecovered placeholders:`,
-        remainingPlaceholders
-      )
-      // Log the context around each placeholder for debugging
-      remainingPlaceholders.forEach(ph => {
-        const index = processed.indexOf(ph)
-        if (index !== -1) {
-          const context = processed.substring(
-            Math.max(0, index - 50),
-            Math.min(processed.length, index + ph.length + 50)
-          )
-          console.warn(`[processMarkdown] Context: ...${context}...`)
-        }
-      })
       // Remove unrecovered placeholders to prevent them from appearing in output
       processed = processed.replace(/⟨⟨MDPH\d+⟩⟩/g, '')
     }
@@ -3206,7 +3191,15 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({ children, className = '',
       // Helper functions (cleanMalformedContent, extractDisplayMath, etc.) are pure functions
       // defined in the component scope and don't need to be in dependencies
     },
-    [config]
+    [
+      config,
+      cleanMalformedContent,
+      extractDisplayMath,
+      extractInlineMath,
+      processMarkdown,
+      processMarkdownLists,
+      renderMathContent,
+    ]
   )
 
   // ============================================================================

@@ -4974,15 +4974,6 @@ function AppContent() {
                   setProcessingTime(endTime - startTime)
                   shouldUpdate = true
 
-                  // Debug: Log metadata for anonymous users
-                  if (!isAuthenticated && streamingMetadata) {
-                    console.log('[DEBUG] Received streaming metadata:', {
-                      credits_used: streamingMetadata.credits_used,
-                      credits_remaining: streamingMetadata.credits_remaining,
-                      metadata: streamingMetadata,
-                    })
-                  }
-
                   // Refresh credit balance if credits were used OR if credits_remaining is provided
                   // Check for credits_remaining first (more reliable indicator)
                   if (
@@ -5082,10 +5073,6 @@ function AppContent() {
                       // For anonymous users, refresh credit balance from API
                       // Use credits_remaining from metadata for immediate update (most accurate - calculated right after deduction)
                       if (streamingMetadata.credits_remaining !== undefined) {
-                        console.log(
-                          '[DEBUG] Updating anonymous credits from metadata:',
-                          streamingMetadata.credits_remaining
-                        )
                         const metadataCreditsRemaining = streamingMetadata.credits_remaining
                         // Update anonymousCreditsRemaining state immediately - this is the primary source for anonymous users
                         setAnonymousCreditsRemaining(metadataCreditsRemaining)
@@ -5100,13 +5087,6 @@ function AppContent() {
                           period_type: 'daily',
                           subscription_tier: 'anonymous',
                         })
-
-                        console.log(
-                          '[DEBUG] State updated - anonymousCreditsRemaining:',
-                          metadataCreditsRemaining,
-                          'creditBalance.credits_remaining:',
-                          metadataCreditsRemaining
-                        )
 
                         const remainingPercent =
                           allocated > 0 ? (metadataCreditsRemaining / allocated) * 100 : 100
@@ -5157,24 +5137,12 @@ function AppContent() {
                                 ...balance,
                                 credits_remaining: metadataCreditsRemaining, // Keep metadata value
                               })
-                            } else {
-                              console.log(
-                                '[DEBUG] API credits_remaining differs from metadata, keeping metadata value:',
-                                {
-                                  api: balance.credits_remaining,
-                                  metadata: metadataCreditsRemaining,
-                                }
-                              )
                             }
                           })
                           .catch(error =>
                             console.error('Failed to refresh anonymous credit balance:', error)
                           )
                       } else {
-                        console.warn(
-                          '[DEBUG] streamingMetadata.credits_remaining is undefined!',
-                          streamingMetadata
-                        )
                         // Fallback: get from API if metadata not available
                         getCreditBalance(browserFingerprint)
                           .then(balance => {
