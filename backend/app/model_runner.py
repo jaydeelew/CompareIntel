@@ -2262,9 +2262,11 @@ def call_openrouter_streaming(
                             "tool_calls": final_valid_tool_call_messages
                         }
                         
-                        # IMPORTANT: For Gemini models, we must preserve reasoning_details in the assistant message
-                        # This is required for tool calls to work correctly with Gemini models
-                        if reasoning_details is not None:
+                        # IMPORTANT: Only Gemini models require reasoning_details to be echoed back.
+                        # For OpenAI models, reasoning_details may contain items with "rs_..." IDs; re-sending the same
+                        # reasoning_details across multiple tool-call iterations can trigger:
+                        #   "Duplicate item found with id rs_..."
+                        if reasoning_details is not None and str(model_id).startswith("google/gemini"):
                             assistant_message["reasoning_details"] = reasoning_details
                         
                         # ULTIMATE FIX: Before adding assistant message, do one final check to ensure
