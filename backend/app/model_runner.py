@@ -2457,11 +2457,25 @@ def call_openrouter_streaming(
                             if msg.get("role") == "tool" and msg.get("tool_call_id"):
                                 all_tool_result_ids_in_messages.append(msg["tool_call_id"])
                         
+                        # Log detailed message structure for debugging
+                        message_structure = []
+                        for i, msg in enumerate(messages):
+                            msg_info = {"index": i, "role": msg.get("role")}
+                            if msg.get("role") == "assistant" and msg.get("tool_calls"):
+                                msg_info["tool_calls_count"] = len(msg["tool_calls"])
+                                msg_info["tool_call_ids"] = [tc.get("id") for tc in msg["tool_calls"] if tc.get("id")]
+                                msg_info["tool_call_functions"] = [tc.get("function", {}).get("name") for tc in msg["tool_calls"]]
+                            elif msg.get("role") == "tool":
+                                msg_info["tool_call_id"] = msg.get("tool_call_id")
+                                msg_info["content_length"] = len(msg.get("content", ""))
+                            message_structure.append(msg_info)
+                        
                         logger.info(
                             f"Making continuation API call for model {model_id} (iteration {tool_call_iteration}). "
                             f"Total messages: {len(messages)}, Tool call IDs: {all_tc_ids_in_final_messages}, "
                             f"Tool result IDs: {all_tool_result_ids_in_messages}"
                         )
+                        logger.debug(f"Message structure: {message_structure}")
                         
                         # Final validation: Check for duplicate tool result IDs
                         tool_result_id_counts = {}
@@ -2490,6 +2504,49 @@ def call_openrouter_streaming(
                             messages = fixed_messages_tool_results
                             logger.info(f"Fixed messages array by removing {len(duplicate_tool_result_ids)} duplicate tool result IDs.")
                         
+                        # ONE MORE CHECK: Verify the entire messages array structure is valid
+                        # Check for any duplicate message content that might cause resource ID conflicts
+                        assistant_messages_with_tools = []
+                        for msg in messages:
+                            if msg.get("role") == "assistant" and msg.get("tool_calls"):
+                                assistant_messages_with_tools.append(msg)
+                        
+                        # Check if we have multiple assistant messages with identical tool_calls (would cause rs_ conflicts)
+                        tool_calls_signatures = []
+                        for msg in assistant_messages_with_tools:
+                            # Create a signature based on tool call IDs and function names
+                            signature = tuple(sorted([
+                                (tc.get("id"), tc.get("function", {}).get("name"))
+                                for tc in msg.get("tool_calls", [])
+                                if tc.get("id")
+                            ]))
+                            tool_calls_signatures.append(signature)
+                        
+                        duplicate_signatures = [sig for sig in tool_calls_signatures if tool_calls_signatures.count(sig) > 1]
+                        if duplicate_signatures:
+                            logger.error(
+                                f"CRITICAL: Found {len(set(duplicate_signatures))} assistant messages with identical tool_calls signatures. "
+                                f"This will cause 'rs_' resource ID conflicts. Signatures: {set(duplicate_signatures)}"
+                            )
+                        
+                        # Check for duplicate tool result content (API provider might generate rs_ IDs based on content hash)
+                        tool_result_contents = {}
+                        for msg in messages:
+                            if msg.get("role") == "tool" and msg.get("tool_call_id") and msg.get("content"):
+                                result_id = msg["tool_call_id"]
+                                content = msg["content"]
+                                # Create a hash of the content to detect duplicates
+                                content_hash = hash(content[:1000])  # Hash first 1000 chars to detect similar content
+                                if content_hash in tool_result_contents:
+                                    existing_id = tool_result_contents[content_hash]
+                                    logger.warning(
+                                        f"Found tool result with similar content hash. "
+                                        f"Current tool_call_id: {result_id}, Previous tool_call_id: {existing_id}. "
+                                        f"This might cause rs_ resource ID conflicts."
+                                    )
+                                else:
+                                    tool_result_contents[content_hash] = result_id
+                        
                         api_params_continue = {
                             "model": model_id,
                             "messages": messages,
@@ -2498,8 +2555,17 @@ def call_openrouter_streaming(
                             "stream": True,
                         }
                         
-                        if tools:
+                        # IMPORTANT: Only include tools parameter if this is the first iteration
+                        # In continuation requests, the tools are already defined in the conversation context
+                        # Including tools again might cause the API provider to generate duplicate resource IDs (rs_)
+                        if tools and tool_call_iteration == 1:
                             api_params_continue["tools"] = tools
+                            logger.debug(f"Including tools parameter in continuation request (iteration {tool_call_iteration})")
+                        elif tools and tool_call_iteration > 1:
+                            logger.debug(
+                                f"Omitting tools parameter in continuation request (iteration {tool_call_iteration}) "
+                                f"to avoid potential rs_ resource ID conflicts. Tools are already in conversation context."
+                            )
                             # Omit tool_choice for continuation requests too (same reason as above)
                             # api_params_continue["tool_choice"] = "auto"
                         
