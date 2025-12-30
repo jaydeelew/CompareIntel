@@ -1629,6 +1629,7 @@ def call_openrouter_streaming(
                 finish_reason = None
                 usage_data = None
                 tool_calls_accumulated = {}  # Dict to accumulate tool calls by index
+                tool_call_ids_seen = set()  # Track tool call IDs to prevent duplicates across indices
                 reasoning_details = None  # Capture reasoning details for Gemini models
 
                 # Iterate through chunks as they arrive
@@ -1648,6 +1649,18 @@ def call_openrouter_streaming(
                             for tool_call_delta in delta.tool_calls:
                                 idx = tool_call_delta.index
                                 
+                                # Get tool call ID if present
+                                tool_call_id_from_delta = ""
+                                if hasattr(tool_call_delta, "id") and tool_call_delta.id:
+                                    tool_call_id_from_delta = tool_call_delta.id
+                                
+                                # Skip if this tool call ID was already seen (prevent duplicates across indices)
+                                if tool_call_id_from_delta and tool_call_id_from_delta in tool_call_ids_seen:
+                                    logger.warning(
+                                        f"Model {model_id} returned duplicate tool call ID '{tool_call_id_from_delta}' at index {idx} in streaming delta, skipping duplicate."
+                                    )
+                                    continue
+                                
                                 # Initialize tool call structure if needed
                                 if idx not in tool_calls_accumulated:
                                     tool_calls_accumulated[idx] = {
@@ -1659,8 +1672,9 @@ def call_openrouter_streaming(
                                 tc = tool_calls_accumulated[idx]
                                 
                                 # Update tool call ID
-                                if hasattr(tool_call_delta, "id") and tool_call_delta.id:
-                                    tc["id"] = tool_call_delta.id
+                                if tool_call_id_from_delta:
+                                    tc["id"] = tool_call_id_from_delta
+                                    tool_call_ids_seen.add(tool_call_id_from_delta)
                                 
                                 # Update function name and arguments
                                 if hasattr(tool_call_delta, "function"):
@@ -1702,6 +1716,18 @@ def call_openrouter_streaming(
                                 for tool_call in message.tool_calls:
                                     idx = tool_call.index if hasattr(tool_call, "index") else len(tool_calls_accumulated)
                                     
+                                    # Get tool call ID if present
+                                    tool_call_id_from_message = ""
+                                    if hasattr(tool_call, "id") and tool_call.id:
+                                        tool_call_id_from_message = tool_call.id
+                                    
+                                    # Skip if this tool call ID was already seen (prevent duplicates across indices)
+                                    if tool_call_id_from_message and tool_call_id_from_message in tool_call_ids_seen:
+                                        logger.warning(
+                                            f"Model {model_id} returned duplicate tool call ID '{tool_call_id_from_message}' at index {idx} in message.tool_calls, skipping duplicate."
+                                        )
+                                        continue
+                                    
                                     # Initialize tool call structure if needed
                                     if idx not in tool_calls_accumulated:
                                         tool_calls_accumulated[idx] = {
@@ -1713,8 +1739,9 @@ def call_openrouter_streaming(
                                     tc = tool_calls_accumulated[idx]
                                     
                                     # Update tool call ID (prefer message tool_call ID as it's complete)
-                                    if hasattr(tool_call, "id") and tool_call.id:
-                                        tc["id"] = tool_call.id
+                                    if tool_call_id_from_message:
+                                        tc["id"] = tool_call_id_from_message
+                                        tool_call_ids_seen.add(tool_call_id_from_message)
                                     
                                     # Update function name and arguments (prefer message tool_call as it's complete)
                                     if hasattr(tool_call, "function"):
@@ -2066,21 +2093,52 @@ def call_openrouter_streaming(
                     
                     # Add tool calls and results to messages
                     if tool_call_messages:
+                        # Collect all existing tool call IDs from previous messages to prevent duplicates
+                        # This prevents "Duplicate item found with id" errors when the same tool call ID
+                        # appears across multiple iterations of the tool call loop
+                        existing_tool_call_ids = set()
+                        for msg in messages:
+                            if msg.get("role") == "assistant" and msg.get("tool_calls"):
+                                for tc in msg["tool_calls"]:
+                                    if tc.get("id"):
+                                        existing_tool_call_ids.add(tc["id"])
+                        
                         # Validate that all tool calls have IDs before proceeding
                         # Filter out any tool calls with empty IDs (should not happen, but safety check)
+                        # Also filter out duplicates that already exist in the messages array
                         valid_tool_call_messages = []
+                        seen_in_batch = set()  # Track IDs within this batch to prevent duplicates
                         for tc_msg in tool_call_messages:
-                            if tc_msg.get("id") and tc_msg["id"].strip():
-                                valid_tool_call_messages.append(tc_msg)
-                            else:
+                            tc_id = tc_msg.get("id", "").strip() if tc_msg.get("id") else ""
+                            
+                            if not tc_id:
                                 logger.warning(
                                     f"Model {model_id} returned tool call with empty ID, skipping. "
                                     f"Tool call: {tc_msg}"
                                 )
+                                continue
+                            
+                            # Skip if this tool call ID already exists in messages from previous iterations
+                            if tc_id in existing_tool_call_ids:
+                                logger.warning(
+                                    f"Model {model_id} returned tool call with ID '{tc_id}' that already exists in messages, skipping duplicate. "
+                                    f"This can occur when the same tool call appears across multiple iterations."
+                                )
+                                continue
+                            
+                            # Skip if this tool call ID already seen in this batch
+                            if tc_id in seen_in_batch:
+                                logger.warning(
+                                    f"Model {model_id} returned duplicate tool call ID '{tc_id}' within the same batch, skipping duplicate."
+                                )
+                                continue
+                            
+                            seen_in_batch.add(tc_id)
+                            valid_tool_call_messages.append(tc_msg)
                         
                         if not valid_tool_call_messages:
                             logger.error(
-                                f"Model {model_id} returned tool calls but none had valid IDs. "
+                                f"Model {model_id} returned tool calls but none had valid IDs after deduplication. "
                                 f"Original tool calls: {tool_call_messages}"
                             )
                             # Skip tool call handling if no valid tool calls
@@ -2102,12 +2160,27 @@ def call_openrouter_streaming(
                         
                         messages.append(assistant_message)
                         
+                        # Deduplicate tool results by tool_call_id to prevent duplicates
+                        # Collect existing tool_call_ids from tool messages
+                        existing_tool_result_ids = set()
+                        for msg in messages:
+                            if msg.get("role") == "tool" and msg.get("tool_call_id"):
+                                existing_tool_result_ids.add(msg["tool_call_id"])
+                        
+                        # Only add tool results that don't already exist in messages
                         for result in tool_results:
-                            messages.append({
-                                "role": "tool",
-                                "tool_call_id": result["tool_call_id"],
-                                "content": result["content"]
-                            })
+                            result_id = result.get("tool_call_id", "").strip() if result.get("tool_call_id") else ""
+                            if result_id and result_id not in existing_tool_result_ids:
+                                messages.append({
+                                    "role": "tool",
+                                    "tool_call_id": result_id,
+                                    "content": result["content"]
+                                })
+                                existing_tool_result_ids.add(result_id)
+                            elif result_id in existing_tool_result_ids:
+                                logger.warning(
+                                    f"Model {model_id} returned tool result with duplicate tool_call_id '{result_id}', skipping duplicate."
+                                )
                         
                         # Continue conversation with search results
                         # Yield keepalive before making continuation API call to reset frontend timeout
@@ -2158,6 +2231,7 @@ def call_openrouter_streaming(
                         
                         # Reset for continuation response
                         tool_calls_accumulated = {}
+                        tool_call_ids_seen = set()  # Reset ID tracking for continuation
                         finish_reason = None
                         reasoning_details_continue = None  # Track reasoning details in continuation
                         
@@ -2178,6 +2252,18 @@ def call_openrouter_streaming(
                                     for tool_call_delta in delta.tool_calls:
                                         idx = tool_call_delta.index
                                         
+                                        # Get tool call ID if present
+                                        tool_call_id_from_delta = ""
+                                        if hasattr(tool_call_delta, "id") and tool_call_delta.id:
+                                            tool_call_id_from_delta = tool_call_delta.id
+                                        
+                                        # Skip if this tool call ID was already seen (prevent duplicates across indices)
+                                        if tool_call_id_from_delta and tool_call_id_from_delta in tool_call_ids_seen:
+                                            logger.warning(
+                                                f"Model {model_id} returned duplicate tool call ID '{tool_call_id_from_delta}' at index {idx} in continuation delta, skipping duplicate."
+                                            )
+                                            continue
+                                        
                                         if idx not in tool_calls_accumulated:
                                             tool_calls_accumulated[idx] = {
                                                 "id": "",
@@ -2187,8 +2273,9 @@ def call_openrouter_streaming(
                                         
                                         tc = tool_calls_accumulated[idx]
                                         
-                                        if hasattr(tool_call_delta, "id") and tool_call_delta.id:
-                                            tc["id"] = tool_call_delta.id
+                                        if tool_call_id_from_delta:
+                                            tc["id"] = tool_call_id_from_delta
+                                            tool_call_ids_seen.add(tool_call_id_from_delta)
                                         
                                         if hasattr(tool_call_delta, "function"):
                                             if hasattr(tool_call_delta.function, "name") and tool_call_delta.function.name:
@@ -2231,6 +2318,18 @@ def call_openrouter_streaming(
                                         for tool_call in message.tool_calls:
                                             idx = tool_call.index if hasattr(tool_call, "index") else len(tool_calls_accumulated)
                                             
+                                            # Get tool call ID if present
+                                            tool_call_id_from_message = ""
+                                            if hasattr(tool_call, "id") and tool_call.id:
+                                                tool_call_id_from_message = tool_call.id
+                                            
+                                            # Skip if this tool call ID was already seen (prevent duplicates across indices)
+                                            if tool_call_id_from_message and tool_call_id_from_message in tool_call_ids_seen:
+                                                logger.warning(
+                                                    f"Model {model_id} returned duplicate tool call ID '{tool_call_id_from_message}' at index {idx} in continuation message.tool_calls, skipping duplicate."
+                                                )
+                                                continue
+                                            
                                             # Initialize tool call structure if needed
                                             if idx not in tool_calls_accumulated:
                                                 tool_calls_accumulated[idx] = {
@@ -2242,8 +2341,9 @@ def call_openrouter_streaming(
                                             tc = tool_calls_accumulated[idx]
                                             
                                             # Update tool call ID (prefer message tool_call ID as it's complete)
-                                            if hasattr(tool_call, "id") and tool_call.id:
-                                                tc["id"] = tool_call.id
+                                            if tool_call_id_from_message:
+                                                tc["id"] = tool_call_id_from_message
+                                                tool_call_ids_seen.add(tool_call_id_from_message)
                                             
                                             # Update function name and arguments (prefer message tool_call as it's complete)
                                             if hasattr(tool_call, "function"):
