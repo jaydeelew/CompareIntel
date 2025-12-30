@@ -2265,7 +2265,41 @@ def call_openrouter_streaming(
                         if reasoning_details is not None:
                             assistant_message["reasoning_details"] = reasoning_details
                         
-                        messages.append(assistant_message)
+                        # ULTIMATE FIX: Before adding assistant message, do one final check to ensure
+                        # none of the tool call IDs in this message already exist in messages array
+                        # This is the last line of defense against duplicate tool call IDs
+                        all_existing_ids = set()
+                        for msg in messages:
+                            if msg.get("role") == "assistant" and msg.get("tool_calls"):
+                                for tc in msg["tool_calls"]:
+                                    if tc.get("id"):
+                                        all_existing_ids.add(tc["id"])
+                        
+                        # Filter out any tool calls that would create duplicates
+                        truly_unique_tool_calls = []
+                        for tc in assistant_message["tool_calls"]:
+                            tc_id = tc.get("id", "").strip() if tc.get("id") else ""
+                            if tc_id and tc_id not in all_existing_ids:
+                                truly_unique_tool_calls.append(tc)
+                                all_existing_ids.add(tc_id)  # Track it so we don't add it twice in this same message
+                            elif tc_id in all_existing_ids:
+                                logger.error(
+                                    f"CRITICAL: Prevented adding duplicate tool call ID '{tc_id}' to messages array. "
+                                    f"This ID already exists in a previous assistant message."
+                                )
+                        
+                        # Only add the assistant message if it has unique tool calls
+                        if truly_unique_tool_calls:
+                            assistant_message["tool_calls"] = truly_unique_tool_calls
+                            messages.append(assistant_message)
+                            logger.info(f"Added assistant message with {len(truly_unique_tool_calls)} unique tool calls to messages array.")
+                        else:
+                            logger.error(
+                                f"CRITICAL: Skipping assistant message because all tool calls were duplicates. "
+                                f"This should not happen - breaking out of tool call loop."
+                            )
+                            # Break out of the tool call loop since we have nothing new to add
+                            break
                         
                         # Deduplicate tool results by tool_call_id to prevent duplicates
                         # Collect existing tool_call_ids from tool messages
