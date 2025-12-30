@@ -1806,6 +1806,12 @@ def call_openrouter_streaming(
                 while finish_reason == "tool_calls" and tool_calls_accumulated and search_provider and tool_call_iteration < max_tool_call_iterations:
                     tool_call_iteration += 1
                     
+                    # Log iteration for debugging
+                    logger.info(
+                        f"Processing tool calls iteration {tool_call_iteration} for model {model_id}. "
+                        f"Tool calls accumulated: {len(tool_calls_accumulated)}"
+                    )
+                    
                     # Yield keepalive at start of each iteration to prevent timeout
                     # This is especially important for slower models that take longer to process tool calls
                     yield " "
@@ -1886,6 +1892,41 @@ def call_openrouter_streaming(
                                 # Parse arguments
                                 args = json.loads(tool_call["function"]["arguments"])
                                 search_query = args.get("query", "")
+                                
+                                # Check if this is a redundant search (same query as before)
+                                # This helps prevent infinite loops where model keeps searching for the same thing
+                                previous_searches = []
+                                for msg in messages:
+                                    if msg.get("role") == "assistant" and msg.get("tool_calls"):
+                                        for tc in msg["tool_calls"]:
+                                            if tc.get("function", {}).get("name") == "search_web":
+                                                try:
+                                                    prev_args = json.loads(tc.get("function", {}).get("arguments", "{}"))
+                                                    prev_query = prev_args.get("query", "")
+                                                    if prev_query:
+                                                        previous_searches.append(prev_query.lower().strip())
+                                                except:
+                                                    pass
+                                
+                                if search_query and search_query.lower().strip() in previous_searches:
+                                    logger.warning(
+                                        f"Model {model_id} attempted redundant search with query '{search_query}' "
+                                        f"(already searched in previous iteration). Providing message instead of re-executing."
+                                    )
+                                    # Provide a message indicating the search was already done
+                                    tool_call_messages.append({
+                                        "id": tool_call_id,
+                                        "type": "function",
+                                        "function": {
+                                            "name": "search_web",
+                                            "arguments": tool_call["function"]["arguments"]
+                                        }
+                                    })
+                                    tool_results.append({
+                                        "tool_call_id": tool_call_id,
+                                        "content": f"⚠️ This search query ('{search_query}') was already executed in a previous step. Please review the search results you already received and provide your answer based on that information. Making the same search again will not provide new information."
+                                    })
+                                    continue
                                 
                                 if search_query:
                                     # Yield keepalive chunk before websearch to reset frontend timeout
@@ -1999,6 +2040,9 @@ def call_openrouter_streaming(
                                         results_text += f"{i}. {result.title}\n"
                                         results_text += f"   URL: {result.url}\n"
                                         results_text += f"   Snippet (may be outdated): {result.snippet}\n\n"
+                                    
+                                    # Add instruction to help model know when to stop and provide answer
+                                    results_text += "\n💡 INSTRUCTION: You now have search results. If you have enough information to answer the user's question, provide your answer now. Only make additional tool calls (like fetch_url) if you need more specific details that aren't in the search results above."
                                     
                                     # Store tool call and result (tool call ID already validated above)
                                     # Final check: ensure this ID isn't already in tool_call_messages
@@ -2128,7 +2172,7 @@ def call_openrouter_streaming(
                                         raise
                                     
                                     # Format URL content for the model
-                                    content_text = f"Content fetched from {url}:\n\n{url_content}\n\n[End of content from {url}]"
+                                    content_text = f"Content fetched from {url}:\n\n{url_content}\n\n[End of content from {url}]\n\n💡 INSTRUCTION: You now have the webpage content above. If this contains enough information to answer the user's question, provide your answer now. Only make additional tool calls if you absolutely need information from another source."
                                     
                                     # Store tool call and result (tool call ID already validated above)
                                     # Final check: ensure this ID isn't already in tool_call_messages
