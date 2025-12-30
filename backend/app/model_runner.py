@@ -1841,7 +1841,7 @@ def call_openrouter_streaming(
                         
                         if not already_added:
                             deduplicated_tool_calls[idx] = tool_call
-                            all_tool_call_ids_ever_seen.add(tool_call_id)
+                            # DON'T add to all_tool_call_ids_ever_seen here - wait until we actually process it
                     
                     # Now process the deduplicated tool calls
                     tool_call_messages = []
@@ -1866,8 +1866,10 @@ def call_openrouter_streaming(
                             )
                             continue
                         
-                        # Mark as processed
+                        # Mark as processed and add to global tracker
+                        # This is where we actually add IDs to all_tool_call_ids_ever_seen (not during accumulation)
                         processed_ids_this_iteration.add(tool_call_id)
+                        all_tool_call_ids_ever_seen.add(tool_call_id)
                         
                         # Double-check it's not already in tool_call_messages (safety)
                         already_in_messages = any(tc.get("id", "").strip() == tool_call_id for tc in tool_call_messages if tc.get("id"))
