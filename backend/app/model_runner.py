@@ -2443,6 +2443,53 @@ def call_openrouter_streaming(
                             logger.info(f"Emergency fix applied - messages array rebuilt with unique tool calls only.")
                         
                         # Make another API call with updated messages
+                        # Log all tool call IDs in messages for debugging
+                        all_tc_ids_in_final_messages = []
+                        for msg in messages:
+                            if msg.get("role") == "assistant" and msg.get("tool_calls"):
+                                for tc in msg["tool_calls"]:
+                                    if tc.get("id"):
+                                        all_tc_ids_in_final_messages.append(tc["id"])
+                        
+                        # Also log tool result IDs for debugging
+                        all_tool_result_ids_in_messages = []
+                        for msg in messages:
+                            if msg.get("role") == "tool" and msg.get("tool_call_id"):
+                                all_tool_result_ids_in_messages.append(msg["tool_call_id"])
+                        
+                        logger.info(
+                            f"Making continuation API call for model {model_id} (iteration {tool_call_iteration}). "
+                            f"Total messages: {len(messages)}, Tool call IDs: {all_tc_ids_in_final_messages}, "
+                            f"Tool result IDs: {all_tool_result_ids_in_messages}"
+                        )
+                        
+                        # Final validation: Check for duplicate tool result IDs
+                        tool_result_id_counts = {}
+                        for result_id in all_tool_result_ids_in_messages:
+                            tool_result_id_counts[result_id] = tool_result_id_counts.get(result_id, 0) + 1
+                        
+                        duplicate_tool_result_ids = [rid for rid, count in tool_result_id_counts.items() if count > 1]
+                        if duplicate_tool_result_ids:
+                            logger.error(
+                                f"CRITICAL: Found duplicate tool result IDs before API call: {duplicate_tool_result_ids}. "
+                                f"This will cause 'rs_' resource ID conflicts. Attempting to fix."
+                            )
+                            # Remove duplicate tool results, keeping only the first occurrence
+                            fixed_messages_tool_results = []
+                            seen_tool_result_ids = set()
+                            for msg in messages:
+                                if msg.get("role") == "tool" and msg.get("tool_call_id"):
+                                    result_id = msg["tool_call_id"]
+                                    if result_id not in seen_tool_result_ids:
+                                        seen_tool_result_ids.add(result_id)
+                                        fixed_messages_tool_results.append(msg)
+                                    else:
+                                        logger.warning(f"Removing duplicate tool result with tool_call_id '{result_id}'")
+                                else:
+                                    fixed_messages_tool_results.append(msg)
+                            messages = fixed_messages_tool_results
+                            logger.info(f"Fixed messages array by removing {len(duplicate_tool_result_ids)} duplicate tool result IDs.")
+                        
                         api_params_continue = {
                             "model": model_id,
                             "messages": messages,
@@ -2475,9 +2522,31 @@ def call_openrouter_streaming(
                             else:
                                 response_continue = client.chat.completions.create(**api_params_continue)
                         except Exception as api_error:
+                            # Log detailed error information for debugging
+                            error_str = str(api_error)
+                            error_str_lower = error_str.lower()
+                            
+                            # Log the full error and messages structure for debugging
+                            logger.error(
+                                f"API error for model {model_id} continuation (iteration {tool_call_iteration}): {error_str}"
+                            )
+                            
+                            # Log tool call IDs that were sent
+                            logger.error(
+                                f"Tool call IDs that were sent in continuation request: {all_tc_ids_in_final_messages}"
+                            )
+                            
+                            # Check if this is a duplicate ID error
+                            if "duplicate" in error_str_lower or "rs_" in error_str:
+                                logger.error(
+                                    f"DUPLICATE ID ERROR DETECTED: Model {model_id} returned duplicate ID error. "
+                                    f"Error: {error_str}. "
+                                    f"Tool call IDs sent: {all_tc_ids_in_final_messages}. "
+                                    f"This suggests duplicates are still reaching the API despite all our checks."
+                                )
+                            
                             # Log warning if we get a 404 with tools (model may not support tool calling)
-                            error_str = str(api_error).lower()
-                            if ("404" in error_str or "not found" in error_str) and tools:
+                            if ("404" in error_str_lower or "not found" in error_str_lower) and tools:
                                 logger.warning(
                                     f"Model {model_id} returned 404 when tools were included in continuation. "
                                     f"Error: {api_error}"
