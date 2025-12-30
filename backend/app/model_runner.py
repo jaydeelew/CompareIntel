@@ -2230,13 +2230,19 @@ def call_openrouter_streaming(
                         final_valid_tool_call_messages = []
                         for tc_msg in valid_tool_call_messages:
                             tc_id = tc_msg.get("id", "").strip() if tc_msg.get("id") else ""
-                            if tc_id and tc_id not in final_tool_call_ids:
+                            if not tc_id:
+                                # Keep entries without IDs (they'll be validated by API)
+                                final_valid_tool_call_messages.append(tc_msg)
+                                continue
+                            
+                            if tc_id not in final_tool_call_ids:
                                 final_tool_call_ids.add(tc_id)
                                 final_valid_tool_call_messages.append(tc_msg)
-                            elif tc_id in final_tool_call_ids:
+                            else:
                                 logger.error(
                                     f"CRITICAL: Model {model_id} duplicate tool call ID '{tc_id}' detected in final validation, removing duplicate. "
-                                    f"This should not happen - there may be a bug in the deduplication logic."
+                                    f"This should not happen - there may be a bug in the deduplication logic. "
+                                    f"valid_tool_call_messages had {len(valid_tool_call_messages)} items, final_valid has {len(final_valid_tool_call_messages)}."
                                 )
                         
                         if not final_valid_tool_call_messages:
@@ -2268,30 +2274,52 @@ def call_openrouter_streaming(
                         for msg in messages:
                             if msg.get("role") == "assistant" and msg.get("tool_calls"):
                                 for tc in msg["tool_calls"]:
-                                    if tc.get("id"):
-                                        all_existing_ids.add(tc["id"])
+                                    tc_id = tc.get("id", "").strip() if tc.get("id") else ""
+                                    if tc_id:
+                                        all_existing_ids.add(tc_id)
                         
-                        # Filter out any tool calls that would create duplicates
+                        # Also check for duplicates WITHIN this message itself
+                        seen_in_this_message = set()
                         truly_unique_tool_calls = []
                         for tc in assistant_message["tool_calls"]:
                             tc_id = tc.get("id", "").strip() if tc.get("id") else ""
-                            if tc_id and tc_id not in all_existing_ids:
+                            if not tc_id:
+                                # Keep entries without IDs (they'll be validated by API)
                                 truly_unique_tool_calls.append(tc)
-                                all_existing_ids.add(tc_id)  # Track it so we don't add it twice in this same message
-                            elif tc_id in all_existing_ids:
+                                continue
+                            
+                            # Check if this ID already exists in previous messages
+                            if tc_id in all_existing_ids:
                                 logger.error(
                                     f"CRITICAL: Prevented adding duplicate tool call ID '{tc_id}' to messages array. "
                                     f"This ID already exists in a previous assistant message."
                                 )
+                                continue
+                            
+                            # Check if this ID already exists in this same message
+                            if tc_id in seen_in_this_message:
+                                logger.error(
+                                    f"CRITICAL: Prevented adding duplicate tool call ID '{tc_id}' within the same assistant message. "
+                                    f"This should have been caught earlier."
+                                )
+                                continue
+                            
+                            seen_in_this_message.add(tc_id)
+                            all_existing_ids.add(tc_id)  # Track it so we don't add it twice
+                            truly_unique_tool_calls.append(tc)
                         
                         # Only add the assistant message if it has unique tool calls
                         if truly_unique_tool_calls:
                             assistant_message["tool_calls"] = truly_unique_tool_calls
                             messages.append(assistant_message)
-                            logger.info(f"Added assistant message with {len(truly_unique_tool_calls)} unique tool calls to messages array.")
+                            logger.info(
+                                f"Added assistant message with {len(truly_unique_tool_calls)} unique tool calls to messages array. "
+                                f"Tool call IDs: {[tc.get('id') for tc in truly_unique_tool_calls if tc.get('id')]}"
+                            )
                         else:
                             logger.error(
                                 f"CRITICAL: Skipping assistant message because all tool calls were duplicates. "
+                                f"Original had {len(assistant_message['tool_calls'])} tool calls. "
                                 f"This should not happen - breaking out of tool call loop."
                             )
                             # Break out of the tool call loop since we have nothing new to add
@@ -2378,6 +2406,41 @@ def call_openrouter_streaming(
                             
                             messages = fixed_messages
                             logger.info(f"Fixed messages array by removing {len(duplicate_ids)} duplicate tool call IDs.")
+                        
+                        # ONE MORE FINAL CHECK: Verify no duplicates exist before API call
+                        # This is the absolute last check before sending to API
+                        final_check_ids = []
+                        for msg in messages:
+                            if msg.get("role") == "assistant" and msg.get("tool_calls"):
+                                for tc in msg["tool_calls"]:
+                                    if tc.get("id"):
+                                        final_check_ids.append(tc["id"])
+                        
+                        final_check_duplicates = [id for id in final_check_ids if final_check_ids.count(id) > 1]
+                        if final_check_duplicates:
+                            logger.error(
+                                f"CRITICAL: Found {len(set(final_check_duplicates))} duplicate tool call IDs after all fixes: {set(final_check_duplicates)}. "
+                                f"This is a serious bug - attempting emergency fix."
+                            )
+                            # Emergency fix: rebuild messages array with only unique tool calls
+                            emergency_fixed_messages = []
+                            emergency_seen_ids = set()
+                            for msg in messages:
+                                if msg.get("role") == "assistant" and msg.get("tool_calls"):
+                                    emergency_unique_tcs = []
+                                    for tc in msg["tool_calls"]:
+                                        tc_id = tc.get("id", "").strip() if tc.get("id") else ""
+                                        if tc_id and tc_id not in emergency_seen_ids:
+                                            emergency_seen_ids.add(tc_id)
+                                            emergency_unique_tcs.append(tc)
+                                    if emergency_unique_tcs:
+                                        emergency_msg = msg.copy()
+                                        emergency_msg["tool_calls"] = emergency_unique_tcs
+                                        emergency_fixed_messages.append(emergency_msg)
+                                else:
+                                    emergency_fixed_messages.append(msg)
+                            messages = emergency_fixed_messages
+                            logger.info(f"Emergency fix applied - messages array rebuilt with unique tool calls only.")
                         
                         # Make another API call with updated messages
                         api_params_continue = {
