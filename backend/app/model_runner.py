@@ -1846,6 +1846,7 @@ def call_openrouter_streaming(
                     # Now process the deduplicated tool calls
                     tool_call_messages = []
                     tool_results = []
+                    processed_ids_this_iteration = set()  # Track IDs we've processed in this iteration
                     
                     for idx, tool_call in sorted(deduplicated_tool_calls.items()):
                         # Validate tool call has required fields before processing
@@ -1858,7 +1859,17 @@ def call_openrouter_streaming(
                         
                         tool_call_id = tool_call["id"].strip()
                         
-                        # Check if we've already added this ID to tool_call_messages in this batch
+                        # Skip if we've already processed this ID in this iteration
+                        if tool_call_id in processed_ids_this_iteration:
+                            logger.warning(
+                                f"Model {model_id} duplicate tool call ID '{tool_call_id}' already processed in this iteration, skipping."
+                            )
+                            continue
+                        
+                        # Mark as processed
+                        processed_ids_this_iteration.add(tool_call_id)
+                        
+                        # Double-check it's not already in tool_call_messages (safety)
                         already_in_messages = any(tc.get("id", "").strip() == tool_call_id for tc in tool_call_messages if tc.get("id"))
                         if already_in_messages:
                             logger.warning(
@@ -1994,6 +2005,29 @@ def call_openrouter_streaming(
                                         results_text += f"   Snippet (may be outdated): {result.snippet}\n\n"
                                     
                                     # Store tool call and result (tool call ID already validated above)
+                                    # Final check: ensure this ID isn't already in tool_call_messages
+                                    if not any(tc.get("id", "").strip() == tool_call_id for tc in tool_call_messages if tc.get("id")):
+                                        tool_call_messages.append({
+                                            "id": tool_call_id,
+                                            "type": "function",
+                                            "function": {
+                                                "name": "search_web",
+                                                "arguments": tool_call["function"]["arguments"]
+                                            }
+                                        })
+                                        tool_results.append({
+                                            "tool_call_id": tool_call_id,
+                                            "content": results_text
+                                        })
+                                    else:
+                                        logger.warning(
+                                            f"Model {model_id} attempted to add duplicate tool call ID '{tool_call_id}' (search_web success) to tool_call_messages, skipping."
+                                        )
+                            except Exception as e:
+                                logger.error(f"Error executing web search tool: {e}")
+                                # Add error result (tool call ID already validated above)
+                                # Final check: ensure this ID isn't already in tool_call_messages
+                                if not any(tc.get("id", "").strip() == tool_call_id for tc in tool_call_messages if tc.get("id")):
                                     tool_call_messages.append({
                                         "id": tool_call_id,
                                         "type": "function",
@@ -2004,23 +2038,12 @@ def call_openrouter_streaming(
                                     })
                                     tool_results.append({
                                         "tool_call_id": tool_call_id,
-                                        "content": results_text
+                                        "content": f"Error performing web search: {str(e)}"
                                     })
-                            except Exception as e:
-                                logger.error(f"Error executing web search tool: {e}")
-                                # Add error result (tool call ID already validated above)
-                                tool_call_messages.append({
-                                    "id": tool_call_id,
-                                    "type": "function",
-                                    "function": {
-                                        "name": "search_web",
-                                        "arguments": tool_call["function"]["arguments"]
-                                    }
-                                })
-                                tool_results.append({
-                                    "tool_call_id": tool_call_id,
-                                    "content": f"Error performing web search: {str(e)}"
-                                })
+                                else:
+                                    logger.warning(
+                                        f"Model {model_id} attempted to add duplicate tool call ID '{tool_call_id}' (error case) to tool_call_messages, skipping."
+                                    )
                         elif tool_call["function"]["name"] == "fetch_url":
                             try:
                                 import json
@@ -2112,6 +2135,29 @@ def call_openrouter_streaming(
                                     content_text = f"Content fetched from {url}:\n\n{url_content}\n\n[End of content from {url}]"
                                     
                                     # Store tool call and result (tool call ID already validated above)
+                                    # Final check: ensure this ID isn't already in tool_call_messages
+                                    if not any(tc.get("id", "").strip() == tool_call_id for tc in tool_call_messages if tc.get("id")):
+                                        tool_call_messages.append({
+                                            "id": tool_call_id,
+                                            "type": "function",
+                                            "function": {
+                                                "name": "fetch_url",
+                                                "arguments": tool_call["function"]["arguments"]
+                                            }
+                                        })
+                                        tool_results.append({
+                                            "tool_call_id": tool_call_id,
+                                            "content": content_text
+                                        })
+                                    else:
+                                        logger.warning(
+                                            f"Model {model_id} attempted to add duplicate tool call ID '{tool_call_id}' (fetch_url) to tool_call_messages, skipping."
+                                        )
+                            except Exception as e:
+                                logger.error(f"Error executing fetch_url tool: {e}")
+                                # Add error result (tool call ID already validated above)
+                                # Final check: ensure this ID isn't already in tool_call_messages
+                                if not any(tc.get("id", "").strip() == tool_call_id for tc in tool_call_messages if tc.get("id")):
                                     tool_call_messages.append({
                                         "id": tool_call_id,
                                         "type": "function",
@@ -2122,23 +2168,12 @@ def call_openrouter_streaming(
                                     })
                                     tool_results.append({
                                         "tool_call_id": tool_call_id,
-                                        "content": content_text
+                                        "content": f"Error fetching URL content: {str(e)}"
                                     })
-                            except Exception as e:
-                                logger.error(f"Error executing fetch_url tool: {e}")
-                                # Add error result (tool call ID already validated above)
-                                tool_call_messages.append({
-                                    "id": tool_call_id,
-                                    "type": "function",
-                                    "function": {
-                                        "name": "fetch_url",
-                                        "arguments": tool_call["function"]["arguments"]
-                                    }
-                                })
-                                tool_results.append({
-                                    "tool_call_id": tool_call_id,
-                                    "content": f"Error fetching URL content: {str(e)}"
-                                })
+                                else:
+                                    logger.warning(
+                                        f"Model {model_id} attempted to add duplicate tool call ID '{tool_call_id}' (fetch_url error) to tool_call_messages, skipping."
+                                    )
                     
                     # Add tool calls and results to messages
                     if tool_call_messages:
