@@ -1813,7 +1813,10 @@ def call_openrouter_streaming(
                     # Execute all tool calls
                     # First, deduplicate tool_calls_accumulated by ID (simplest approach)
                     # This ensures we only process each unique tool call ID once, regardless of index
+                    # NOTE: We don't check all_tool_call_ids_ever_seen here because IDs are added to it during accumulation
+                    # We only check if we've already added this ID to deduplicated_tool_calls in this pass
                     deduplicated_tool_calls = {}
+                    seen_ids_in_dedup = set()  # Track IDs we've added to deduplicated_tool_calls in this pass
                     for idx, tool_call in tool_calls_accumulated.items():
                         tool_call_id = tool_call.get("id", "").strip() if tool_call.get("id") else ""
                         
@@ -1822,26 +1825,17 @@ def call_openrouter_streaming(
                             deduplicated_tool_calls[idx] = tool_call
                             continue
                         
-                        # If we've seen this ID before, skip this entry
-                        if tool_call_id in all_tool_call_ids_ever_seen:
+                        # Check if we already have this ID in deduplicated_tool_calls (within this deduplication pass)
+                        if tool_call_id in seen_ids_in_dedup:
                             logger.warning(
                                 f"Model {model_id} returned duplicate tool call ID '{tool_call_id}' at index {idx} in tool_calls_accumulated, skipping duplicate."
                             )
                             continue
                         
-                        # Check if we already have this ID in deduplicated_tool_calls
-                        already_added = False
-                        for existing_idx, existing_tc in deduplicated_tool_calls.items():
-                            if existing_tc.get("id", "").strip() == tool_call_id:
-                                already_added = True
-                                logger.warning(
-                                    f"Model {model_id} returned duplicate tool call ID '{tool_call_id}' at index {idx} (already have at index {existing_idx}), skipping duplicate."
-                                )
-                                break
-                        
-                        if not already_added:
-                            deduplicated_tool_calls[idx] = tool_call
-                            # DON'T add to all_tool_call_ids_ever_seen here - wait until we actually process it
+                        # Add to deduplicated_tool_calls and track it
+                        deduplicated_tool_calls[idx] = tool_call
+                        seen_ids_in_dedup.add(tool_call_id)
+                        # DON'T add to all_tool_call_ids_ever_seen here - wait until we actually process it
                     
                     # Now process the deduplicated tool calls
                     tool_call_messages = []
