@@ -1811,11 +1811,43 @@ def call_openrouter_streaming(
                     yield " "
                     
                     # Execute all tool calls
+                    # First, deduplicate tool_calls_accumulated by ID (simplest approach)
+                    # This ensures we only process each unique tool call ID once, regardless of index
+                    deduplicated_tool_calls = {}
+                    for idx, tool_call in tool_calls_accumulated.items():
+                        tool_call_id = tool_call.get("id", "").strip() if tool_call.get("id") else ""
+                        
+                        if not tool_call_id:
+                            # Keep entries without IDs (they'll be validated later)
+                            deduplicated_tool_calls[idx] = tool_call
+                            continue
+                        
+                        # If we've seen this ID before, skip this entry
+                        if tool_call_id in all_tool_call_ids_ever_seen:
+                            logger.warning(
+                                f"Model {model_id} returned duplicate tool call ID '{tool_call_id}' at index {idx} in tool_calls_accumulated, skipping duplicate."
+                            )
+                            continue
+                        
+                        # Check if we already have this ID in deduplicated_tool_calls
+                        already_added = False
+                        for existing_idx, existing_tc in deduplicated_tool_calls.items():
+                            if existing_tc.get("id", "").strip() == tool_call_id:
+                                already_added = True
+                                logger.warning(
+                                    f"Model {model_id} returned duplicate tool call ID '{tool_call_id}' at index {idx} (already have at index {existing_idx}), skipping duplicate."
+                                )
+                                break
+                        
+                        if not already_added:
+                            deduplicated_tool_calls[idx] = tool_call
+                            all_tool_call_ids_ever_seen.add(tool_call_id)
+                    
+                    # Now process the deduplicated tool calls
                     tool_call_messages = []
                     tool_results = []
-                    # Note: all_tool_call_ids_ever_seen already tracks IDs, but we'll double-check here too
                     
-                    for idx, tool_call in sorted(tool_calls_accumulated.items()):
+                    for idx, tool_call in sorted(deduplicated_tool_calls.items()):
                         # Validate tool call has required fields before processing
                         if not tool_call.get("id") or not tool_call["id"].strip():
                             logger.warning(
@@ -1826,16 +1858,13 @@ def call_openrouter_streaming(
                         
                         tool_call_id = tool_call["id"].strip()
                         
-                        # Skip if this ID was already seen anywhere in the conversation (safety check)
-                        if tool_call_id in all_tool_call_ids_ever_seen:
+                        # Check if we've already added this ID to tool_call_messages in this batch
+                        already_in_messages = any(tc.get("id", "").strip() == tool_call_id for tc in tool_call_messages if tc.get("id"))
+                        if already_in_messages:
                             logger.warning(
-                                f"Model {model_id} returned duplicate tool call ID '{tool_call_id}' at index {idx}, skipping duplicate. "
-                                f"This should have been caught during accumulation, but catching it here as safety check."
+                                f"Model {model_id} duplicate tool call ID '{tool_call_id}' already in tool_call_messages, skipping."
                             )
                             continue
-                        
-                        # Add to global tracker
-                        all_tool_call_ids_ever_seen.add(tool_call_id)
                         
                         if not tool_call.get("function", {}).get("name"):
                             logger.warning(
