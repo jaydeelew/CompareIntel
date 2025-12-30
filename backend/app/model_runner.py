@@ -34,38 +34,6 @@ from .search.rate_limiter import get_rate_limiter
 # Import configuration
 from .config import settings
 
-
-def normalize_spacing_after_punctuation(text: str, previous_chunk: str = "") -> str:
-    """
-    Normalize spacing after punctuation marks, including cross-chunk boundaries.
-    
-    Fixes issues where tokens are concatenated without spaces after punctuation,
-    e.g., "data.Based" -> "data. Based"
-    
-    Also handles cross-chunk boundaries where punctuation is at the end of the previous
-    chunk and a letter starts the current chunk, e.g.:
-    - Previous chunk: "...you."
-    - Current chunk: "Based..."
-    - Result: " Based..." (space prepended)
-    
-    Args:
-        text: Text to normalize
-        previous_chunk: Previous chunk content (used to check cross-chunk boundaries)
-        
-    Returns:
-        Text with proper spacing after punctuation
-    """
-    # Check if we need to add space at the start due to previous chunk ending with punctuation
-    if previous_chunk and text and len(previous_chunk) > 0:
-        last_char = previous_chunk[-1]
-        first_char = text[0]
-        # If previous chunk ends with punctuation and current starts with letter, prepend space
-        if last_char in '.!?' and first_char.isalpha():
-            text = ' ' + text
-    
-    # Add space after punctuation marks if followed by a letter (within this chunk)
-    return re.sub(r'([.!?])([A-Za-z])', r'\1 \2', text)
-
 logger = logging.getLogger(__name__)
 
 OPENROUTER_API_KEY = settings.openrouter_api_key
@@ -1661,7 +1629,6 @@ def call_openrouter_streaming(
                 finish_reason = None
                 usage_data = None
                 tool_calls_accumulated = {}  # Dict to accumulate tool calls by index
-                previous_content_chunk = ""  # Track previous chunk for cross-boundary spacing
                 reasoning_details = None  # Capture reasoning details for Gemini models
 
                 # Iterate through chunks as they arrive
@@ -1702,15 +1669,12 @@ def call_openrouter_streaming(
                                     if hasattr(tool_call_delta.function, "arguments") and tool_call_delta.function.arguments:
                                         tc["function"]["arguments"] += tool_call_delta.function.arguments
 
-                        # Yield content chunks as they arrive with spacing normalization
+                        # Yield content chunks as they arrive
                         # Check delta.content first (standard streaming)
                         if hasattr(delta, "content") and delta.content:
-                            raw_chunk = delta.content
-                            
-                            content_chunk = normalize_spacing_after_punctuation(raw_chunk, previous_content_chunk)
+                            content_chunk = delta.content
                             full_content += content_chunk
                             yield content_chunk
-                            previous_content_chunk = raw_chunk  # Store raw chunk for next iteration
                         
                         # Also check message.content in final chunk (some models like GPT-5 return content here)
                         # This handles cases where content is only in the final chunk's message object
@@ -1722,17 +1686,15 @@ def call_openrouter_streaming(
                                     # Extract only the new part that hasn't been yielded yet
                                     new_content = message_content[len(full_content):]
                                     if new_content:
-                                        content_chunk = normalize_spacing_after_punctuation(new_content, previous_content_chunk)
+                                        content_chunk = new_content
                                         full_content += content_chunk
                                         yield content_chunk
-                                        previous_content_chunk = new_content
                                 elif message_content and not full_content:
                                     # If we haven't yielded any content yet, yield the entire message content
                                     # This handles cases where GPT-5 models return all content in the final chunk
-                                    content_chunk = normalize_spacing_after_punctuation(message_content, previous_content_chunk)
+                                    content_chunk = message_content
                                     full_content += content_chunk
                                     yield content_chunk
-                                    previous_content_chunk = message_content
                             
                             # Also check message.tool_calls in final chunk (some models like GPT-5 Chat return tool_calls here)
                             # This handles cases where tool_calls are only in the final chunk's message object
@@ -2189,8 +2151,6 @@ def call_openrouter_streaming(
                         tool_calls_accumulated = {}
                         finish_reason = None
                         reasoning_details_continue = None  # Track reasoning details in continuation
-                        # Initialize with the last chunk from previous response to handle cross-boundary spacing
-                        previous_content_chunk_continue = previous_content_chunk if previous_content_chunk else ""
                         
                         # Stream the continuation response
                         for chunk in response_continue:
@@ -2227,15 +2187,12 @@ def call_openrouter_streaming(
                                             if hasattr(tool_call_delta.function, "arguments") and tool_call_delta.function.arguments:
                                                 tc["function"]["arguments"] += tool_call_delta.function.arguments
                                 
-                                # Yield content chunks with spacing normalization
+                                # Yield content chunks
                                 # Check delta.content first (standard streaming)
                                 if hasattr(delta, "content") and delta.content:
-                                    raw_chunk = delta.content
-                                    content_chunk = normalize_spacing_after_punctuation(raw_chunk, previous_content_chunk_continue)
-                                    
+                                    content_chunk = delta.content
                                     full_content += content_chunk
                                     yield content_chunk
-                                    previous_content_chunk_continue = raw_chunk  # Store raw chunk for next iteration
                                 
                                 # Also check message.content in final chunk (some models like GPT-5 return content here)
                                 # This handles cases where content is only in the final chunk's message object
@@ -2249,17 +2206,15 @@ def call_openrouter_streaming(
                                             # Extract only the new part that hasn't been yielded yet
                                             new_content = message_content[len(full_content):]
                                             if new_content:
-                                                content_chunk = normalize_spacing_after_punctuation(new_content, previous_content_chunk_continue)
+                                                content_chunk = new_content
                                                 full_content += content_chunk
                                                 yield content_chunk
-                                                previous_content_chunk_continue = new_content
                                         elif message_content and not full_content:
                                             # If we haven't yielded any content yet, yield the entire message content
                                             # This handles cases where GPT-5 models return all content in the final chunk
-                                            content_chunk = normalize_spacing_after_punctuation(message_content, previous_content_chunk_continue)
+                                            content_chunk = message_content
                                             full_content += content_chunk
                                             yield content_chunk
-                                            previous_content_chunk_continue = message_content
                                     
                                     # Also check message.tool_calls in final chunk (some models like GPT-5 Chat return tool_calls here)
                                     # This handles cases where tool_calls are only in the final chunk's message object
