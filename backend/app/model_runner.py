@@ -1767,6 +1767,7 @@ def call_openrouter_streaming(
                     # Execute all tool calls
                     tool_call_messages = []
                     tool_results = []
+                    processed_tool_call_ids = set()  # Track processed IDs to prevent duplicates
                     
                     for idx, tool_call in sorted(tool_calls_accumulated.items()):
                         # Validate tool call has required fields before processing
@@ -1776,6 +1777,18 @@ def call_openrouter_streaming(
                                 f"Tool call: {tool_call}"
                             )
                             continue
+                        
+                        tool_call_id = tool_call["id"].strip()
+                        
+                        # Skip duplicate tool call IDs (prevent "Duplicate item found with id" error)
+                        if tool_call_id in processed_tool_call_ids:
+                            logger.warning(
+                                f"Model {model_id} returned duplicate tool call ID '{tool_call_id}' at index {idx}, skipping duplicate. "
+                                f"This can occur when the model returns the same tool call multiple times."
+                            )
+                            continue
+                        
+                        processed_tool_call_ids.add(tool_call_id)
                         
                         if not tool_call.get("function", {}).get("name"):
                             logger.warning(
@@ -1904,26 +1917,9 @@ def call_openrouter_streaming(
                                         results_text += f"   URL: {result.url}\n"
                                         results_text += f"   Snippet (may be outdated): {result.snippet}\n\n"
                                     
-                                    # Store tool call and result (only if tool call ID is valid)
-                                    if tool_call["id"] and tool_call["id"].strip():
-                                        tool_call_messages.append({
-                                            "id": tool_call["id"],
-                                            "type": "function",
-                                            "function": {
-                                                "name": "search_web",
-                                                "arguments": tool_call["function"]["arguments"]
-                                            }
-                                        })
-                                        tool_results.append({
-                                            "tool_call_id": tool_call["id"],
-                                            "content": results_text
-                                        })
-                            except Exception as e:
-                                logger.error(f"Error executing web search tool: {e}")
-                                # Only add error result if tool call ID is valid
-                                if tool_call["id"] and tool_call["id"].strip():
+                                    # Store tool call and result (tool call ID already validated above)
                                     tool_call_messages.append({
-                                        "id": tool_call["id"],
+                                        "id": tool_call_id,
                                         "type": "function",
                                         "function": {
                                             "name": "search_web",
@@ -1931,9 +1927,24 @@ def call_openrouter_streaming(
                                         }
                                     })
                                     tool_results.append({
-                                        "tool_call_id": tool_call["id"],
-                                        "content": f"Error performing web search: {str(e)}"
+                                        "tool_call_id": tool_call_id,
+                                        "content": results_text
                                     })
+                            except Exception as e:
+                                logger.error(f"Error executing web search tool: {e}")
+                                # Add error result (tool call ID already validated above)
+                                tool_call_messages.append({
+                                    "id": tool_call_id,
+                                    "type": "function",
+                                    "function": {
+                                        "name": "search_web",
+                                        "arguments": tool_call["function"]["arguments"]
+                                    }
+                                })
+                                tool_results.append({
+                                    "tool_call_id": tool_call_id,
+                                    "content": f"Error performing web search: {str(e)}"
+                                })
                         elif tool_call["function"]["name"] == "fetch_url":
                             try:
                                 import json
@@ -2024,26 +2035,9 @@ def call_openrouter_streaming(
                                     # Format URL content for the model
                                     content_text = f"Content fetched from {url}:\n\n{url_content}\n\n[End of content from {url}]"
                                     
-                                    # Store tool call and result (only if tool call ID is valid)
-                                    if tool_call["id"] and tool_call["id"].strip():
-                                        tool_call_messages.append({
-                                            "id": tool_call["id"],
-                                            "type": "function",
-                                            "function": {
-                                                "name": "fetch_url",
-                                                "arguments": tool_call["function"]["arguments"]
-                                            }
-                                        })
-                                        tool_results.append({
-                                            "tool_call_id": tool_call["id"],
-                                            "content": content_text
-                                        })
-                            except Exception as e:
-                                logger.error(f"Error executing fetch_url tool: {e}")
-                                # Only add error result if tool call ID is valid
-                                if tool_call["id"] and tool_call["id"].strip():
+                                    # Store tool call and result (tool call ID already validated above)
                                     tool_call_messages.append({
-                                        "id": tool_call["id"],
+                                        "id": tool_call_id,
                                         "type": "function",
                                         "function": {
                                             "name": "fetch_url",
@@ -2051,9 +2045,24 @@ def call_openrouter_streaming(
                                         }
                                     })
                                     tool_results.append({
-                                        "tool_call_id": tool_call["id"],
-                                        "content": f"Error fetching URL content: {str(e)}"
+                                        "tool_call_id": tool_call_id,
+                                        "content": content_text
                                     })
+                            except Exception as e:
+                                logger.error(f"Error executing fetch_url tool: {e}")
+                                # Add error result (tool call ID already validated above)
+                                tool_call_messages.append({
+                                    "id": tool_call_id,
+                                    "type": "function",
+                                    "function": {
+                                        "name": "fetch_url",
+                                        "arguments": tool_call["function"]["arguments"]
+                                    }
+                                })
+                                tool_results.append({
+                                    "tool_call_id": tool_call_id,
+                                    "content": f"Error fetching URL content: {str(e)}"
+                                })
                     
                     # Add tool calls and results to messages
                     if tool_call_messages:
