@@ -1795,8 +1795,10 @@ def call_openrouter_streaming(
                 # NOTE: Some models (like Gemini 2.0 Flash) may make more aggressive tool calls,
                 # which can exhaust search API rate limits when multiple models run in parallel.
                 # The rate limiter below coordinates search requests across all concurrent models.
-                max_tool_call_iterations = 5  # Prevent infinite loops
+                max_tool_call_iterations = 3  # Prevent infinite loops - reduced to encourage faster answers
                 tool_call_iteration = 0
+                total_tool_calls_made = 0  # Track total tool calls across all iterations
+                max_total_tool_calls = 10  # Hard limit on total tool calls to prevent excessive looping
                 last_chunk = None
                 
                 # Get rate limiter for coordinating search requests across models
@@ -1811,6 +1813,13 @@ def call_openrouter_streaming(
                         f"Processing tool calls iteration {tool_call_iteration} for model {model_id}. "
                         f"Tool calls accumulated: {len(tool_calls_accumulated)}"
                     )
+                    
+                    # If we're on the last iteration, add a forceful instruction to stop
+                    if tool_call_iteration >= max_tool_call_iterations:
+                        logger.warning(
+                            f"Model {model_id} reached max tool call iterations ({max_tool_call_iterations}). "
+                            f"This is the final iteration - model must provide answer now."
+                        )
                     
                     # Yield keepalive at start of each iteration to prevent timeout
                     # This is especially important for slower models that take longer to process tool calls
@@ -2042,7 +2051,7 @@ def call_openrouter_streaming(
                                         results_text += f"   Snippet (may be outdated): {result.snippet}\n\n"
                                     
                                     # Add instruction to help model know when to stop and provide answer
-                                    results_text += "\n💡 INSTRUCTION: You now have search results. If you have enough information to answer the user's question, provide your answer now. Only make additional tool calls (like fetch_url) if you need more specific details that aren't in the search results above."
+                                    results_text += "\n\n💡 CRITICAL INSTRUCTION: You now have search results. **STOP making tool calls and provide your answer immediately** if the search results contain enough information to answer the user's question. Only use fetch_url if the search results are completely insufficient AND you absolutely need specific details from a webpage. Most questions can be answered from search results alone - do not over-fetch URLs."
                                     
                                     # Store tool call and result (tool call ID already validated above)
                                     # Final check: ensure this ID isn't already in tool_call_messages
@@ -2091,6 +2100,44 @@ def call_openrouter_streaming(
                                 # Parse arguments
                                 args = json.loads(tool_call["function"]["arguments"])
                                 url = args.get("url", "")
+                                
+                                # Check if this URL was already fetched (prevent redundant fetches)
+                                previous_urls = []
+                                for msg in messages:
+                                    if msg.get("role") == "assistant" and msg.get("tool_calls"):
+                                        for tc in msg["tool_calls"]:
+                                            if tc.get("function", {}).get("name") == "fetch_url":
+                                                try:
+                                                    prev_args = json.loads(tc.get("function", {}).get("arguments", "{}"))
+                                                    prev_url = prev_args.get("url", "")
+                                                    if prev_url:
+                                                        # Normalize URL (remove query params for comparison)
+                                                        prev_url_normalized = prev_url.split("?")[0].lower().strip()
+                                                        previous_urls.append(prev_url_normalized)
+                                                except:
+                                                    pass
+                                
+                                if url:
+                                    url_normalized = url.split("?")[0].lower().strip()
+                                    if url_normalized in previous_urls:
+                                        logger.warning(
+                                            f"Model {model_id} attempted redundant URL fetch: '{url}' "
+                                            f"(already fetched in previous iteration). Providing message instead."
+                                        )
+                                        # Provide a message indicating the URL was already fetched
+                                        tool_call_messages.append({
+                                            "id": tool_call_id,
+                                            "type": "function",
+                                            "function": {
+                                                "name": "fetch_url",
+                                                "arguments": tool_call["function"]["arguments"]
+                                            }
+                                        })
+                                        tool_results.append({
+                                            "tool_call_id": tool_call_id,
+                                            "content": f"⚠️ This URL ('{url}') was already fetched in a previous step. The content from that fetch is already available in the conversation. Please review the previously fetched content and provide your answer based on that information. Fetching the same URL again will not provide new information."
+                                        })
+                                        continue
                                 
                                 if url:
                                     # Yield keepalive chunk before URL fetch to reset frontend timeout
@@ -2172,7 +2219,7 @@ def call_openrouter_streaming(
                                         raise
                                     
                                     # Format URL content for the model
-                                    content_text = f"Content fetched from {url}:\n\n{url_content}\n\n[End of content from {url}]\n\n💡 INSTRUCTION: You now have the webpage content above. If this contains enough information to answer the user's question, provide your answer now. Only make additional tool calls if you absolutely need information from another source."
+                                    content_text = f"Content fetched from {url}:\n\n{url_content}\n\n[End of content from {url}]\n\n💡 CRITICAL INSTRUCTION: You now have webpage content above. **STOP making tool calls immediately and provide your answer now.** You have sufficient information - do not fetch more URLs or make more searches. Answer the user's question based on the content you have."
                                     
                                     # Store tool call and result (tool call ID already validated above)
                                     # Final check: ensure this ID isn't already in tool_call_messages
@@ -2356,10 +2403,26 @@ def call_openrouter_streaming(
                         
                         # Only add the assistant message if it has unique tool calls
                         if truly_unique_tool_calls:
+                            # Count total tool calls and check if we've exceeded the limit
+                            total_tool_calls_made += len(truly_unique_tool_calls)
+                            if total_tool_calls_made > max_total_tool_calls:
+                                logger.warning(
+                                    f"Model {model_id} exceeded max total tool calls ({max_total_tool_calls}). "
+                                    f"Total tool calls made: {total_tool_calls_made}. "
+                                    f"Breaking out of tool call loop to prevent excessive looping."
+                                )
+                                # Add a message telling the model to stop and provide an answer
+                                messages.append({
+                                    "role": "user",
+                                    "content": "🚨 STOP: You have made too many tool calls. Please provide your answer now based on the information you have already gathered. Do not make any more tool calls."
+                                })
+                                break
+                            
                             assistant_message["tool_calls"] = truly_unique_tool_calls
                             messages.append(assistant_message)
                             logger.info(
                                 f"Added assistant message with {len(truly_unique_tool_calls)} unique tool calls to messages array. "
+                                f"Total tool calls made so far: {total_tool_calls_made}/{max_total_tool_calls}. "
                                 f"Tool call IDs: {[tc.get('id') for tc in truly_unique_tool_calls if tc.get('id')]}"
                             )
                         else:
@@ -2382,6 +2445,11 @@ def call_openrouter_streaming(
                         for result in tool_results:
                             result_id = result.get("tool_call_id", "").strip() if result.get("tool_call_id") else ""
                             if result_id and result_id not in existing_tool_result_ids:
+                                # If this is the last iteration, add a forceful stop instruction
+                                if tool_call_iteration >= max_tool_call_iterations:
+                                    original_content = result.get("content", "")
+                                    result["content"] = original_content + "\n\n🚨 FINAL ITERATION: This is your last chance to make tool calls. You MUST provide your answer in the next response. Do not make any more tool calls - answer the user's question now based on all the information you have received."
+                                
                                 messages.append({
                                     "role": "tool",
                                     "tool_call_id": result_id,
