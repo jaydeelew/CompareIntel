@@ -1630,6 +1630,7 @@ def call_openrouter_streaming(
                 usage_data = None
                 tool_calls_accumulated = {}  # Dict to accumulate tool calls by index
                 tool_call_ids_seen = set()  # Track tool call IDs to prevent duplicates across indices
+                all_tool_call_ids_ever_seen = set()  # Track ALL tool call IDs across entire conversation (never reset)
                 reasoning_details = None  # Capture reasoning details for Gemini models
 
                 # Iterate through chunks as they arrive
@@ -1654,10 +1655,19 @@ def call_openrouter_streaming(
                                 if hasattr(tool_call_delta, "id") and tool_call_delta.id:
                                     tool_call_id_from_delta = tool_call_delta.id
                                 
-                                # Skip if this tool call ID was already seen (prevent duplicates across indices)
+                                # Skip if this tool call ID was already seen anywhere (prevent duplicates)
+                                if tool_call_id_from_delta:
+                                    if tool_call_id_from_delta in all_tool_call_ids_ever_seen:
+                                        logger.warning(
+                                            f"Model {model_id} returned duplicate tool call ID '{tool_call_id_from_delta}' at index {idx} in streaming delta, skipping duplicate."
+                                        )
+                                        continue
+                                    all_tool_call_ids_ever_seen.add(tool_call_id_from_delta)
+                                
+                                # Also check local set for this batch
                                 if tool_call_id_from_delta and tool_call_id_from_delta in tool_call_ids_seen:
                                     logger.warning(
-                                        f"Model {model_id} returned duplicate tool call ID '{tool_call_id_from_delta}' at index {idx} in streaming delta, skipping duplicate."
+                                        f"Model {model_id} returned duplicate tool call ID '{tool_call_id_from_delta}' at index {idx} in streaming delta (local duplicate), skipping."
                                     )
                                     continue
                                 
@@ -1721,10 +1731,19 @@ def call_openrouter_streaming(
                                     if hasattr(tool_call, "id") and tool_call.id:
                                         tool_call_id_from_message = tool_call.id
                                     
-                                    # Skip if this tool call ID was already seen (prevent duplicates across indices)
+                                    # Skip if this tool call ID was already seen anywhere (prevent duplicates)
+                                    if tool_call_id_from_message:
+                                        if tool_call_id_from_message in all_tool_call_ids_ever_seen:
+                                            logger.warning(
+                                                f"Model {model_id} returned duplicate tool call ID '{tool_call_id_from_message}' at index {idx} in message.tool_calls, skipping duplicate."
+                                            )
+                                            continue
+                                        all_tool_call_ids_ever_seen.add(tool_call_id_from_message)
+                                    
+                                    # Also check local set for this batch
                                     if tool_call_id_from_message and tool_call_id_from_message in tool_call_ids_seen:
                                         logger.warning(
-                                            f"Model {model_id} returned duplicate tool call ID '{tool_call_id_from_message}' at index {idx} in message.tool_calls, skipping duplicate."
+                                            f"Model {model_id} returned duplicate tool call ID '{tool_call_id_from_message}' at index {idx} in message.tool_calls (local duplicate), skipping."
                                         )
                                         continue
                                     
@@ -1794,7 +1813,7 @@ def call_openrouter_streaming(
                     # Execute all tool calls
                     tool_call_messages = []
                     tool_results = []
-                    processed_tool_call_ids = set()  # Track processed IDs to prevent duplicates
+                    # Note: all_tool_call_ids_ever_seen already tracks IDs, but we'll double-check here too
                     
                     for idx, tool_call in sorted(tool_calls_accumulated.items()):
                         # Validate tool call has required fields before processing
@@ -1807,15 +1826,16 @@ def call_openrouter_streaming(
                         
                         tool_call_id = tool_call["id"].strip()
                         
-                        # Skip duplicate tool call IDs (prevent "Duplicate item found with id" error)
-                        if tool_call_id in processed_tool_call_ids:
+                        # Skip if this ID was already seen anywhere in the conversation (safety check)
+                        if tool_call_id in all_tool_call_ids_ever_seen:
                             logger.warning(
                                 f"Model {model_id} returned duplicate tool call ID '{tool_call_id}' at index {idx}, skipping duplicate. "
-                                f"This can occur when the model returns the same tool call multiple times."
+                                f"This should have been caught during accumulation, but catching it here as safety check."
                             )
                             continue
                         
-                        processed_tool_call_ids.add(tool_call_id)
+                        # Add to global tracker
+                        all_tool_call_ids_ever_seen.add(tool_call_id)
                         
                         if not tool_call.get("function", {}).get("name"):
                             logger.warning(
@@ -2307,9 +2327,10 @@ def call_openrouter_streaming(
                                 )
                             raise
                         
-                        # Reset for continuation response
+                        # Reset for continuation response (but keep all_tool_call_ids_ever_seen - never reset it)
                         tool_calls_accumulated = {}
-                        tool_call_ids_seen = set()  # Reset ID tracking for continuation
+                        tool_call_ids_seen = set()  # Reset ID tracking for continuation batch
+                        # NOTE: all_tool_call_ids_ever_seen is NOT reset - it tracks IDs across all iterations
                         finish_reason = None
                         reasoning_details_continue = None  # Track reasoning details in continuation
                         
@@ -2335,10 +2356,19 @@ def call_openrouter_streaming(
                                         if hasattr(tool_call_delta, "id") and tool_call_delta.id:
                                             tool_call_id_from_delta = tool_call_delta.id
                                         
-                                        # Skip if this tool call ID was already seen (prevent duplicates across indices)
+                                        # Skip if this tool call ID was already seen anywhere (prevent duplicates)
+                                        if tool_call_id_from_delta:
+                                            if tool_call_id_from_delta in all_tool_call_ids_ever_seen:
+                                                logger.warning(
+                                                    f"Model {model_id} returned duplicate tool call ID '{tool_call_id_from_delta}' at index {idx} in continuation delta, skipping duplicate."
+                                                )
+                                                continue
+                                            all_tool_call_ids_ever_seen.add(tool_call_id_from_delta)
+                                        
+                                        # Also check local set for this batch
                                         if tool_call_id_from_delta and tool_call_id_from_delta in tool_call_ids_seen:
                                             logger.warning(
-                                                f"Model {model_id} returned duplicate tool call ID '{tool_call_id_from_delta}' at index {idx} in continuation delta, skipping duplicate."
+                                                f"Model {model_id} returned duplicate tool call ID '{tool_call_id_from_delta}' at index {idx} in continuation delta (local duplicate), skipping."
                                             )
                                             continue
                                         
@@ -2401,10 +2431,19 @@ def call_openrouter_streaming(
                                             if hasattr(tool_call, "id") and tool_call.id:
                                                 tool_call_id_from_message = tool_call.id
                                             
-                                            # Skip if this tool call ID was already seen (prevent duplicates across indices)
+                                            # Skip if this tool call ID was already seen anywhere (prevent duplicates)
+                                            if tool_call_id_from_message:
+                                                if tool_call_id_from_message in all_tool_call_ids_ever_seen:
+                                                    logger.warning(
+                                                        f"Model {model_id} returned duplicate tool call ID '{tool_call_id_from_message}' at index {idx} in continuation message.tool_calls, skipping duplicate."
+                                                    )
+                                                    continue
+                                                all_tool_call_ids_ever_seen.add(tool_call_id_from_message)
+                                            
+                                            # Also check local set for this batch
                                             if tool_call_id_from_message and tool_call_id_from_message in tool_call_ids_seen:
                                                 logger.warning(
-                                                    f"Model {model_id} returned duplicate tool call ID '{tool_call_id_from_message}' at index {idx} in continuation message.tool_calls, skipping duplicate."
+                                                    f"Model {model_id} returned duplicate tool call ID '{tool_call_id_from_message}' at index {idx} in continuation message.tool_calls (local duplicate), skipping."
                                                 )
                                                 continue
                                             
