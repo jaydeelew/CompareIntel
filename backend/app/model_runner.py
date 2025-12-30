@@ -2144,13 +2144,36 @@ def call_openrouter_streaming(
                             # Skip tool call handling if no valid tool calls
                             break
                         
+                        # Final deduplication check: ensure no duplicate IDs in valid_tool_call_messages
+                        # This is a safety net in case duplicates somehow got through
+                        final_tool_call_ids = set()
+                        final_valid_tool_call_messages = []
+                        for tc_msg in valid_tool_call_messages:
+                            tc_id = tc_msg.get("id", "").strip() if tc_msg.get("id") else ""
+                            if tc_id and tc_id not in final_tool_call_ids:
+                                final_tool_call_ids.add(tc_id)
+                                final_valid_tool_call_messages.append(tc_msg)
+                            elif tc_id in final_tool_call_ids:
+                                logger.error(
+                                    f"CRITICAL: Model {model_id} duplicate tool call ID '{tc_id}' detected in final validation, removing duplicate. "
+                                    f"This should not happen - there may be a bug in the deduplication logic."
+                                )
+                        
+                        if not final_valid_tool_call_messages:
+                            logger.error(
+                                f"Model {model_id} returned tool calls but all were filtered out during final deduplication. "
+                                f"Original tool calls: {tool_call_messages}"
+                            )
+                            # Skip tool call handling if no valid tool calls
+                            break
+                        
                         # Create assistant message with tool calls
                         # For OpenAI API, when tool_calls are present, content should be omitted or empty string
                         # Using empty string instead of None to avoid potential API validation issues
                         assistant_message = {
                             "role": "assistant",
                             "content": "",  # Empty string instead of None for better API compatibility
-                            "tool_calls": valid_tool_call_messages
+                            "tool_calls": final_valid_tool_call_messages
                         }
                         
                         # IMPORTANT: For Gemini models, we must preserve reasoning_details in the assistant message
@@ -2186,6 +2209,61 @@ def call_openrouter_streaming(
                         # Yield keepalive before making continuation API call to reset frontend timeout
                         # Gemini 3 Pro Preview can take time to start streaming after receiving tool results
                         yield " "
+                        
+                        # Final validation: check entire messages array for duplicate tool call IDs
+                        # This is a last safety check before sending to API
+                        all_tool_call_ids_in_messages = []
+                        for msg in messages:
+                            if msg.get("role") == "assistant" and msg.get("tool_calls"):
+                                for tc in msg["tool_calls"]:
+                                    if tc.get("id"):
+                                        all_tool_call_ids_in_messages.append(tc["id"])
+                        
+                        # Check for duplicates
+                        seen_ids = set()
+                        duplicate_ids = []
+                        for tc_id in all_tool_call_ids_in_messages:
+                            if tc_id in seen_ids:
+                                duplicate_ids.append(tc_id)
+                            else:
+                                seen_ids.add(tc_id)
+                        
+                        if duplicate_ids:
+                            logger.error(
+                                f"CRITICAL: Model {model_id} messages array contains duplicate tool call IDs before API call: {duplicate_ids}. "
+                                f"This should have been caught earlier. Attempting to fix by removing duplicates from messages."
+                            )
+                            # Remove duplicates by keeping only the first occurrence of each tool call ID
+                            fixed_messages = []
+                            tool_call_ids_added = set()
+                            for msg in messages:
+                                if msg.get("role") == "assistant" and msg.get("tool_calls"):
+                                    # Filter out duplicate tool calls
+                                    unique_tool_calls = []
+                                    for tc in msg["tool_calls"]:
+                                        tc_id = tc.get("id", "").strip() if tc.get("id") else ""
+                                        if tc_id and tc_id not in tool_call_ids_added:
+                                            tool_call_ids_added.add(tc_id)
+                                            unique_tool_calls.append(tc)
+                                        elif tc_id in tool_call_ids_added:
+                                            logger.warning(
+                                                f"Removing duplicate tool call ID '{tc_id}' from assistant message before API call."
+                                            )
+                                    
+                                    if unique_tool_calls:
+                                        # Create new message with deduplicated tool calls
+                                        fixed_msg = msg.copy()
+                                        fixed_msg["tool_calls"] = unique_tool_calls
+                                        fixed_messages.append(fixed_msg)
+                                    else:
+                                        # Skip assistant message if all tool calls were duplicates
+                                        logger.warning(f"Skipping assistant message with all duplicate tool calls.")
+                                else:
+                                    # Keep non-assistant messages as-is
+                                    fixed_messages.append(msg)
+                            
+                            messages = fixed_messages
+                            logger.info(f"Fixed messages array by removing {len(duplicate_ids)} duplicate tool call IDs.")
                         
                         # Make another API call with updated messages
                         api_params_continue = {
