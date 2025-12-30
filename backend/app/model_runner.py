@@ -1907,9 +1907,11 @@ def call_openrouter_streaming(
                                                 yield " "
                                         
                                         # Search completed successfully, search_results is set
+                                        # Ensure thread is properly joined to clean up resources
+                                        search_thread.join(timeout=5.0)
                                     except Exception as search_exec_error:
                                         # Wait for thread to finish before handling error
-                                        search_thread.join(timeout=1.0)
+                                        search_thread.join(timeout=5.0)
                                         if search_exception:
                                             search_exec_error = search_exception
                                         error_msg = str(search_exec_error)
@@ -2046,9 +2048,11 @@ def call_openrouter_streaming(
                                                 yield " "
                                         
                                         # Fetch completed successfully, url_content is set
+                                        # Ensure thread is properly joined to clean up resources
+                                        fetch_thread.join(timeout=5.0)
                                     except Exception as fetch_exec_error:
                                         # Wait for thread to finish before handling error
-                                        fetch_thread.join(timeout=1.0)
+                                        fetch_thread.join(timeout=5.0)
                                         if fetch_exception:
                                             fetch_exec_error = fetch_exception
                                         error_msg = str(fetch_exec_error)
