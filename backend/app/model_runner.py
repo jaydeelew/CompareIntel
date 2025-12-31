@@ -1795,7 +1795,7 @@ def call_openrouter_streaming(
                 # NOTE: Some models (like Gemini 2.0 Flash) may make more aggressive tool calls,
                 # which can exhaust search API rate limits when multiple models run in parallel.
                 # The rate limiter below coordinates search requests across all concurrent models.
-                max_tool_call_iterations = 3  # Prevent infinite loops - reduced to encourage faster answers
+                max_tool_call_iterations = 4  # Prevent infinite loops - allows more iterations for complex queries
                 tool_call_iteration = 0
                 total_tool_calls_made = 0  # Track total tool calls across all iterations
                 max_total_tool_calls = 10  # Hard limit on total tool calls to prevent excessive looping
