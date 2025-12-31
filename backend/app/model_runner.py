@@ -2344,11 +2344,12 @@ def call_openrouter_streaming(
                             break
                         
                         # Create assistant message with tool calls
-                        # For OpenAI API, when tool_calls are present, content should be omitted or empty string
-                        # Using empty string instead of None to avoid potential API validation issues
+                        # IMPORTANT: Preserve text content if model generated text before tool calls
+                        # This ensures the model remembers what it said when continuing
+                        # For OpenAI API, when tool_calls are present, content can be included if text was generated
                         assistant_message = {
                             "role": "assistant",
-                            "content": "",  # Empty string instead of None for better API compatibility
+                            "content": full_content if full_content else "",  # Preserve text content that was streamed
                             "tool_calls": final_valid_tool_call_messages
                         }
                         
@@ -2965,6 +2966,101 @@ def call_openrouter_streaming(
                     completion_tokens = getattr(usage, "completion_tokens", 0)
                     if prompt_tokens > 0 or completion_tokens > 0:
                         usage_data = calculate_token_usage(prompt_tokens, completion_tokens)
+
+                # Check if the last assistant message had text content that suggests an incomplete response
+                # Common patterns: ends with ":", "Let me", "I'll", etc.
+                # This handles cases where models generate explanatory text before tool calls but don't complete
+                if messages and len(messages) > 0:
+                    # Find the last assistant message
+                    last_assistant_msg = None
+                    for msg in reversed(messages):
+                        if msg.get("role") == "assistant":
+                            last_assistant_msg = msg
+                            break
+                    
+                    if last_assistant_msg:
+                        last_assistant_content = last_assistant_msg.get("content", "")
+                        if last_assistant_content and isinstance(last_assistant_content, str):
+                            # Check for incomplete response patterns
+                            # These patterns indicate the model started to explain what it will do but didn't complete
+                            incomplete_patterns = [
+                                "let me get",
+                                "let me try",
+                                "let me check",
+                                "i'll check",
+                                "i'll get",
+                                "i'll try",
+                            ]
+                            content_lower = last_assistant_content.lower().strip()
+                            ends_with_colon = content_lower.endswith(":")
+                            # Check if content starts with incomplete pattern (strong indicator)
+                            starts_with_incomplete = any(content_lower.startswith(pattern) for pattern in incomplete_patterns)
+                            # Check if last sentence contains incomplete pattern (more specific than checking entire content)
+                            last_sentence = content_lower.split(".")[-1].strip() if "." in content_lower else content_lower
+                            last_sentence_incomplete = any(pattern in last_sentence for pattern in incomplete_patterns)
+                            
+                            # If response looks incomplete (ends with colon, starts with incomplete phrase, or last sentence has incomplete phrase),
+                            # and we're not in a tool call loop, force a completion call
+                            if (ends_with_colon or starts_with_incomplete or last_sentence_incomplete) and finish_reason != "tool_calls":
+                                logger.info(
+                                    f"Model {model_id} generated potentially incomplete response: '{last_assistant_content[:100]}...' "
+                                    f"Detected incomplete pattern. Forcing completion."
+                                )
+                                
+                                # Add a user message asking for completion
+                                messages.append({
+                                    "role": "user",
+                                    "content": "Please complete your response. Provide the answer to the user's question."
+                                })
+                                
+                                # Make completion call WITHOUT tools
+                                try:
+                                    completion_response = client.chat.completions.create(
+                                        model=model_id,
+                                        messages=messages,
+                                        timeout=settings.individual_model_timeout,
+                                        max_tokens=max_tokens,
+                                        stream=True,
+                                        # No tools parameter - force model to complete the answer
+                                    )
+                                    
+                                    # Stream the completion response
+                                    for chunk in completion_response:
+                                        last_chunk = chunk
+                                        if chunk.choices and len(chunk.choices) > 0:
+                                            delta = chunk.choices[0].delta
+                                            
+                                            if hasattr(delta, "content") and delta.content:
+                                                content_chunk = delta.content
+                                                full_content += content_chunk
+                                                yield content_chunk
+                                            
+                                            # Also check message.content in final chunk
+                                            if hasattr(chunk.choices[0], "message") and chunk.choices[0].message:
+                                                message = chunk.choices[0].message
+                                                if hasattr(message, "content") and message.content:
+                                                    message_content = message.content
+                                                    if message_content and len(message_content) > len(full_content):
+                                                        new_content = message_content[len(full_content):]
+                                                        if new_content:
+                                                            full_content += new_content
+                                                            yield new_content
+                                                    elif message_content and not full_content:
+                                                        full_content += message_content
+                                                        yield message_content
+                                            
+                                            if chunk.choices[0].finish_reason:
+                                                finish_reason = chunk.choices[0].finish_reason
+                                        
+                                        if hasattr(chunk, "usage") and chunk.usage:
+                                            usage = chunk.usage
+                                            prompt_tokens = getattr(usage, "prompt_tokens", 0)
+                                            completion_tokens = getattr(usage, "completion_tokens", 0)
+                                            if prompt_tokens > 0 or completion_tokens > 0:
+                                                usage_data = calculate_token_usage(prompt_tokens, completion_tokens)
+                                except Exception as completion_error:
+                                    logger.error(f"Error in incomplete response completion call for model {model_id}: {completion_error}")
+                                    # Don't raise - we've already provided some response
 
                 # After streaming completes, handle finish_reason warnings
                 if finish_reason == "length":
