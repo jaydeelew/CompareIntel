@@ -2447,7 +2447,7 @@ def call_openrouter_streaming(
                                 # If this is the last iteration, add a forceful stop instruction
                                 if tool_call_iteration >= max_tool_call_iterations:
                                     original_content = result.get("content", "")
-                                    result["content"] = original_content + "\n\n🚨 FINAL ITERATION: This is your last chance to make tool calls. You MUST provide your answer in the next response. Do not make any more tool calls - answer the user's question now based on all the information you have received."
+                                    result["content"] = original_content + "\n\nPlease provide your answer now based on the information above."
                                 
                                 messages.append({
                                     "role": "tool",
@@ -2894,6 +2894,69 @@ def call_openrouter_streaming(
                         # Break if no more tool calls needed
                         if finish_reason != "tool_calls" or not tool_calls_accumulated:
                             break
+                
+                # If loop exited due to max iterations but model wanted more tool calls, 
+                # make a final call WITHOUT tools to force the model to provide an answer
+                if finish_reason == "tool_calls" and tool_call_iteration >= max_tool_call_iterations:
+                    logger.info(
+                        f"Model {model_id} hit max tool call iterations ({max_tool_call_iterations}) "
+                        f"but still wanted to make tool calls. Making final completion call without tools."
+                    )
+                    
+                    # Add a user message asking for final answer
+                    messages.append({
+                        "role": "user",
+                        "content": "Please provide your answer now based on all the information you have gathered. Do not search for more information."
+                    })
+                    
+                    # Make final API call WITHOUT tools to force completion
+                    try:
+                        final_response = client.chat.completions.create(
+                            model=model_id,
+                            messages=messages,
+                            timeout=settings.individual_model_timeout,
+                            max_tokens=max_tokens,
+                            stream=True,
+                            # No tools parameter - force model to answer
+                        )
+                        
+                        # Stream the final response
+                        for chunk in final_response:
+                            last_chunk = chunk
+                            if chunk.choices and len(chunk.choices) > 0:
+                                delta = chunk.choices[0].delta
+                                
+                                if hasattr(delta, "content") and delta.content:
+                                    content_chunk = delta.content
+                                    full_content += content_chunk
+                                    yield content_chunk
+                                
+                                # Also check message.content in final chunk
+                                if hasattr(chunk.choices[0], "message") and chunk.choices[0].message:
+                                    message = chunk.choices[0].message
+                                    if hasattr(message, "content") and message.content:
+                                        message_content = message.content
+                                        if message_content and len(message_content) > len(full_content):
+                                            new_content = message_content[len(full_content):]
+                                            if new_content:
+                                                full_content += new_content
+                                                yield new_content
+                                        elif message_content and not full_content:
+                                            full_content += message_content
+                                            yield message_content
+                                
+                                if chunk.choices[0].finish_reason:
+                                    finish_reason = chunk.choices[0].finish_reason
+                            
+                            if hasattr(chunk, "usage") and chunk.usage:
+                                usage = chunk.usage
+                                prompt_tokens = getattr(usage, "prompt_tokens", 0)
+                                completion_tokens = getattr(usage, "completion_tokens", 0)
+                                if prompt_tokens > 0 or completion_tokens > 0:
+                                    usage_data = calculate_token_usage(prompt_tokens, completion_tokens)
+                    except Exception as final_error:
+                        logger.error(f"Error in final completion call for model {model_id}: {final_error}")
+                        # Don't raise - we've already provided some response
                 
                 # Extract usage data from last chunk if available (from continuation response)
                 if last_chunk and hasattr(last_chunk, "usage") and last_chunk.usage:
