@@ -1232,6 +1232,56 @@ def _get_huggingface_tokenizer(model_id: str) -> Optional[Any]:
         return _tokenizer_cache.get(hf_model_name)
 
 
+def detect_repetition(content: str, window_size: int = 200, ngram_size: int = 4, repetition_threshold: int = 3) -> bool:
+    """
+    Detect if content contains repetitive patterns that indicate a looping response.
+    
+    Uses n-gram analysis on a sliding window to detect when the model is repeating
+    the same sequences of words/tokens.
+    
+    Args:
+        content: The content to analyze
+        window_size: Size of sliding window in characters (default: 200)
+        ngram_size: Size of n-grams to check (default: 4 words)
+        repetition_threshold: Number of times an n-gram must repeat to trigger (default: 3)
+    
+    Returns:
+        True if repetition is detected, False otherwise
+    """
+    if len(content) < window_size:
+        return False
+    
+    # Get the last window_size characters
+    recent_content = content[-window_size:]
+    
+    # Split into words (tokens)
+    words = recent_content.split()
+    
+    if len(words) < ngram_size * repetition_threshold:
+        return False
+    
+    # Generate n-grams and count frequencies
+    ngrams = {}
+    for i in range(len(words) - ngram_size + 1):
+        ngram = tuple(words[i:i + ngram_size])
+        ngrams[ngram] = ngrams.get(ngram, 0) + 1
+    
+    # Check if any n-gram appears too many times
+    for ngram, count in ngrams.items():
+        if count >= repetition_threshold:
+            # Additional check: ensure it's not just common words
+            # Skip if all words in n-gram are very short (likely common words)
+            if all(len(word) <= 2 for word in ngram):
+                continue
+            logger.warning(
+                f"Repetition detected: n-gram '{' '.join(ngram)}' appears {count} times "
+                f"in last {window_size} characters"
+            )
+            return True
+    
+    return False
+
+
 def clean_model_response(text: str) -> str:
     """
     Lightweight cleanup for model responses.
@@ -1583,6 +1633,8 @@ def call_openrouter_streaming(
                     "timeout": settings.individual_model_timeout,
                     "max_tokens": max_tokens,
                     "stream": True,  # Enable streaming!
+                    "frequency_penalty": 0.7,  # Reduce token repetition (0.0-2.0, higher = less repetition)
+                    "presence_penalty": 0.5,  # Reduce topic/concept repetition (0.0-2.0, higher = less repetition)
                 }
                 
                 # Add tools if web search is enabled
@@ -1698,6 +1750,19 @@ def call_openrouter_streaming(
                         if hasattr(delta, "content") and delta.content:
                             content_chunk = delta.content
                             full_content += content_chunk
+                            
+                            # Check for repetition in streaming content
+                            # Only check if we have enough content (avoid false positives early)
+                            if len(full_content) > 150:
+                                if detect_repetition(full_content):
+                                    logger.warning(
+                                        f"Model {model_id} detected repetition in streaming response. "
+                                        f"Stopping stream early to prevent looping."
+                                    )
+                                    yield "\n\n⚠️ Response stopped - detected repetitive content."
+                                    finish_reason = "length"  # Mark as length-limited to prevent further processing
+                                    break
+                            
                             yield content_chunk
                         
                         # Also check message.content in final chunk (some models like GPT-5 return content here)
@@ -1712,12 +1777,36 @@ def call_openrouter_streaming(
                                     if new_content:
                                         content_chunk = new_content
                                         full_content += content_chunk
+                                        
+                                        # Check for repetition
+                                        if len(full_content) > 150:
+                                            if detect_repetition(full_content):
+                                                logger.warning(
+                                                    f"Model {model_id} detected repetition in streaming response. "
+                                                    f"Stopping stream early to prevent looping."
+                                                )
+                                                yield "\n\n⚠️ Response stopped - detected repetitive content."
+                                                finish_reason = "length"
+                                                break
+                                        
                                         yield content_chunk
                                 elif message_content and not full_content:
                                     # If we haven't yielded any content yet, yield the entire message content
                                     # This handles cases where GPT-5 models return all content in the final chunk
                                     content_chunk = message_content
                                     full_content += content_chunk
+                                    
+                                    # Check for repetition
+                                    if len(full_content) > 150:
+                                        if detect_repetition(full_content):
+                                            logger.warning(
+                                                f"Model {model_id} detected repetition in streaming response. "
+                                                f"Stopping stream early to prevent looping."
+                                            )
+                                            yield "\n\n⚠️ Response stopped - detected repetitive content."
+                                            finish_reason = "length"
+                                            break
+                                    
                                     yield content_chunk
                             
                             # Also check message.tool_calls in final chunk (some models like GPT-5 Chat return tool_calls here)
@@ -2667,6 +2756,8 @@ def call_openrouter_streaming(
                             "timeout": settings.individual_model_timeout,
                             "max_tokens": max_tokens,
                             "stream": True,
+                            "frequency_penalty": 0.7,  # Reduce token repetition (0.0-2.0, higher = less repetition)
+                            "presence_penalty": 0.5,  # Reduce topic/concept repetition (0.0-2.0, higher = less repetition)
                         }
                         
                         # IMPORTANT: Only include tools parameter if this is the first iteration
@@ -2802,6 +2893,18 @@ def call_openrouter_streaming(
                                 if hasattr(delta, "content") and delta.content:
                                     content_chunk = delta.content
                                     full_content += content_chunk
+                                    
+                                    # Check for repetition in continuation streaming
+                                    if len(full_content) > 150:
+                                        if detect_repetition(full_content):
+                                            logger.warning(
+                                                f"Model {model_id} detected repetition in continuation streaming response. "
+                                                f"Stopping stream early to prevent looping."
+                                            )
+                                            yield "\n\n⚠️ Response stopped - detected repetitive content."
+                                            finish_reason = "length"
+                                            break
+                                    
                                     yield content_chunk
                                 
                                 # Also check message.content in final chunk (some models like GPT-5 return content here)
@@ -2818,12 +2921,36 @@ def call_openrouter_streaming(
                                             if new_content:
                                                 content_chunk = new_content
                                                 full_content += content_chunk
+                                                
+                                                # Check for repetition
+                                                if len(full_content) > 150:
+                                                    if detect_repetition(full_content):
+                                                        logger.warning(
+                                                            f"Model {model_id} detected repetition in continuation streaming response. "
+                                                            f"Stopping stream early to prevent looping."
+                                                        )
+                                                        yield "\n\n⚠️ Response stopped - detected repetitive content."
+                                                        finish_reason = "length"
+                                                        break
+                                                
                                                 yield content_chunk
                                         elif message_content and not full_content:
                                             # If we haven't yielded any content yet, yield the entire message content
                                             # This handles cases where GPT-5 models return all content in the final chunk
                                             content_chunk = message_content
                                             full_content += content_chunk
+                                            
+                                            # Check for repetition
+                                            if len(full_content) > 150:
+                                                if detect_repetition(full_content):
+                                                    logger.warning(
+                                                        f"Model {model_id} detected repetition in continuation streaming response. "
+                                                        f"Stopping stream early to prevent looping."
+                                                    )
+                                                    yield "\n\n⚠️ Response stopped - detected repetitive content."
+                                                    finish_reason = "length"
+                                                    break
+                                            
                                             yield content_chunk
                                     
                                     # Also check message.tool_calls in final chunk (some models like GPT-5 Chat return tool_calls here)
@@ -2918,6 +3045,8 @@ def call_openrouter_streaming(
                             timeout=settings.individual_model_timeout,
                             max_tokens=max_tokens,
                             stream=True,
+                            frequency_penalty=0.7,  # Reduce token repetition
+                            presence_penalty=0.5,  # Reduce topic repetition
                             # No tools parameter - force model to answer
                         )
                         
@@ -2930,6 +3059,18 @@ def call_openrouter_streaming(
                                 if hasattr(delta, "content") and delta.content:
                                     content_chunk = delta.content
                                     full_content += content_chunk
+                                    
+                                    # Check for repetition
+                                    if len(full_content) > 150:
+                                        if detect_repetition(full_content):
+                                            logger.warning(
+                                                f"Model {model_id} detected repetition in final completion response. "
+                                                f"Stopping stream early to prevent looping."
+                                            )
+                                            yield "\n\n⚠️ Response stopped - detected repetitive content."
+                                            finish_reason = "length"
+                                            break
+                                    
                                     yield content_chunk
                                 
                                 # Also check message.content in final chunk
@@ -2941,9 +3082,33 @@ def call_openrouter_streaming(
                                             new_content = message_content[len(full_content):]
                                             if new_content:
                                                 full_content += new_content
+                                                
+                                                # Check for repetition
+                                                if len(full_content) > 150:
+                                                    if detect_repetition(full_content):
+                                                        logger.warning(
+                                                            f"Model {model_id} detected repetition in final completion response. "
+                                                            f"Stopping stream early to prevent looping."
+                                                        )
+                                                        yield "\n\n⚠️ Response stopped - detected repetitive content."
+                                                        finish_reason = "length"
+                                                        break
+                                                
                                                 yield new_content
                                         elif message_content and not full_content:
                                             full_content += message_content
+                                            
+                                            # Check for repetition
+                                            if len(full_content) > 150:
+                                                if detect_repetition(full_content):
+                                                    logger.warning(
+                                                        f"Model {model_id} detected repetition in final completion response. "
+                                                        f"Stopping stream early to prevent looping."
+                                                    )
+                                                    yield "\n\n⚠️ Response stopped - detected repetitive content."
+                                                    finish_reason = "length"
+                                                    break
+                                            
                                             yield message_content
                                 
                                 if chunk.choices[0].finish_reason:
@@ -3021,6 +3186,8 @@ def call_openrouter_streaming(
                                         timeout=settings.individual_model_timeout,
                                         max_tokens=max_tokens,
                                         stream=True,
+                                        frequency_penalty=0.7,  # Reduce token repetition
+                                        presence_penalty=0.5,  # Reduce topic repetition
                                         # No tools parameter - force model to complete the answer
                                     )
                                     
@@ -3033,6 +3200,18 @@ def call_openrouter_streaming(
                                             if hasattr(delta, "content") and delta.content:
                                                 content_chunk = delta.content
                                                 full_content += content_chunk
+                                                
+                                                # Check for repetition
+                                                if len(full_content) > 150:
+                                                    if detect_repetition(full_content):
+                                                        logger.warning(
+                                                            f"Model {model_id} detected repetition in incomplete response completion. "
+                                                            f"Stopping stream early to prevent looping."
+                                                        )
+                                                        yield "\n\n⚠️ Response stopped - detected repetitive content."
+                                                        finish_reason = "length"
+                                                        break
+                                                
                                                 yield content_chunk
                                             
                                             # Also check message.content in final chunk
@@ -3044,9 +3223,33 @@ def call_openrouter_streaming(
                                                         new_content = message_content[len(full_content):]
                                                         if new_content:
                                                             full_content += new_content
+                                                            
+                                                            # Check for repetition
+                                                            if len(full_content) > 150:
+                                                                if detect_repetition(full_content):
+                                                                    logger.warning(
+                                                                        f"Model {model_id} detected repetition in incomplete response completion. "
+                                                                        f"Stopping stream early to prevent looping."
+                                                                    )
+                                                                    yield "\n\n⚠️ Response stopped - detected repetitive content."
+                                                                    finish_reason = "length"
+                                                                    break
+                                                            
                                                             yield new_content
                                                     elif message_content and not full_content:
                                                         full_content += message_content
+                                                        
+                                                        # Check for repetition
+                                                        if len(full_content) > 150:
+                                                            if detect_repetition(full_content):
+                                                                logger.warning(
+                                                                    f"Model {model_id} detected repetition in incomplete response completion. "
+                                                                    f"Stopping stream early to prevent looping."
+                                                                )
+                                                                yield "\n\n⚠️ Response stopped - detected repetitive content."
+                                                                finish_reason = "length"
+                                                                break
+                                                        
                                                         yield message_content
                                             
                                             if chunk.choices[0].finish_reason:
