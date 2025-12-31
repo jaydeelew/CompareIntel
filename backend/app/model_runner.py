@@ -2051,7 +2051,7 @@ def call_openrouter_streaming(
                                         results_text += f"   Snippet (may be outdated): {result.snippet}\n\n"
                                     
                                     # Add instruction to help model know when to stop and provide answer
-                                    results_text += "\n\n💡 CRITICAL INSTRUCTION: You now have search results. **STOP making tool calls and provide your answer immediately** if the search results contain enough information to answer the user's question. Only use fetch_url if the search results are completely insufficient AND you absolutely need specific details from a webpage. Most questions can be answered from search results alone - do not over-fetch URLs."
+                                    results_text += "\n\n💡 CRITICAL INSTRUCTION: You now have search results. **DO NOT use snippets as your final answer source** - snippets are unreliable summaries. For accurate responses, especially for time-sensitive information (weather, stocks, news, current events), you MUST use the fetch_url tool to retrieve actual webpage content. Only provide an answer directly from snippets if: (1) The query is NOT time-sensitive, (2) Multiple snippets from authoritative sources agree, AND (3) The information is general knowledge that doesn't change frequently. When in doubt, use fetch_url for accuracy."
                                     
                                     # Store tool call and result (tool call ID already validated above)
                                     # Final check: ensure this ID isn't already in tool_call_messages
