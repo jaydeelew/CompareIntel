@@ -2430,40 +2430,6 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
 
           {searchProviders && (
             <>
-              {/* Production Read-Only Banner */}
-              {!searchProviders.is_development && (
-                <div
-                  className="info-banner"
-                  style={{
-                    padding: '1rem',
-                    marginBottom: '1.5rem',
-                    background: 'var(--bg-warning, #fff3cd)',
-                    border: '1px solid var(--border-warning, #ffc107)',
-                    borderRadius: 'var(--radius-md, 8px)',
-                    color: 'var(--text-warning, #856404)',
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <svg
-                      width="20"
-                      height="20"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <circle cx="12" cy="12" r="10" />
-                      <line x1="12" y1="8" x2="12" y2="12" />
-                      <line x1="12" y1="16" x2="12.01" y2="16" />
-                    </svg>
-                    <strong>Read-Only Mode:</strong> Search provider configuration is read-only in
-                    production. Changes must be made in development and deployed to production.
-                  </div>
-                </div>
-              )}
-
               {/* Providers List */}
               <div className="providers-list">
                 {searchProviders.providers.map(provider => (
@@ -2525,55 +2491,35 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                         </p>
                       </div>
                       <div style={{ display: 'flex', gap: '0.5rem' }}>
-                        {searchProviders.is_development && (
-                          <button
-                            onClick={() => handleSetActiveProvider(provider.name)}
-                            disabled={!provider.is_configured || provider.is_active}
-                            className="set-active-btn"
-                            style={{
-                              padding: '0.5rem 1rem',
-                              background:
-                                provider.is_active || !provider.is_configured
-                                  ? 'var(--bg-disabled)'
-                                  : 'var(--primary-color)',
-                              color: 'white',
-                              border: 'none',
-                              borderRadius: 'var(--radius-md)',
-                              cursor:
-                                provider.is_active || !provider.is_configured
-                                  ? 'not-allowed'
-                                  : 'pointer',
-                              opacity: provider.is_active || !provider.is_configured ? 0.6 : 1,
-                            }}
-                            title={
-                              provider.is_active
-                                ? 'Already active'
-                                : !provider.is_configured
-                                  ? 'API key not configured'
-                                  : 'Set as active provider'
-                            }
-                          >
-                            {provider.is_active ? 'Active' : 'Set Active'}
-                          </button>
-                        )}
-                        {!searchProviders.is_development && (
-                          <button
-                            disabled
-                            className="set-active-btn"
-                            style={{
-                              padding: '0.5rem 1rem',
-                              background: 'var(--bg-disabled)',
-                              color: 'var(--text-disabled)',
-                              border: 'none',
-                              borderRadius: 'var(--radius-md)',
-                              cursor: 'not-allowed',
-                              opacity: 0.6,
-                            }}
-                            title="Only available in development mode"
-                          >
-                            Set Active
-                          </button>
-                        )}
+                        <button
+                          onClick={() => handleSetActiveProvider(provider.name)}
+                          disabled={!provider.is_configured || provider.is_active}
+                          className="set-active-btn"
+                          style={{
+                            padding: '0.5rem 1rem',
+                            background:
+                              provider.is_active || !provider.is_configured
+                                ? 'var(--bg-disabled)'
+                                : 'var(--primary-color)',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: 'var(--radius-md)',
+                            cursor:
+                              provider.is_active || !provider.is_configured
+                                ? 'not-allowed'
+                                : 'pointer',
+                            opacity: provider.is_active || !provider.is_configured ? 0.6 : 1,
+                          }}
+                          title={
+                            provider.is_active
+                              ? 'Already active'
+                              : !provider.is_configured
+                                ? 'API key not configured'
+                                : 'Set as active provider'
+                          }
+                        >
+                          {provider.is_active ? 'Active' : 'Set Active'}
+                        </button>
                         <button
                           onClick={() => handleTestProvider(provider.name, testQuery)}
                           disabled={!provider.is_configured || testingProvider}

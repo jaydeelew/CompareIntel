@@ -2928,7 +2928,7 @@ async def get_search_providers(
 ):
     """
     Get list of all available search providers and current active one.
-    Returns is_development flag to indicate if changes are allowed.
+    Returns is_development flag for informational purposes (changes are allowed in all environments).
     """
     import os
     from ..search.factory import SearchProviderFactory
@@ -2971,20 +2971,11 @@ async def set_active_search_provider(
 ):
     """
     Set the active search provider.
-    Development-only: Check ENVIRONMENT == "development"
+    Available in both development and production environments.
     """
-    import os
     from ..search.factory import SearchProviderFactory
     
     provider = req.provider
-    
-    # Check if in development mode
-    is_development = os.environ.get("ENVIRONMENT") == "development"
-    if not is_development:
-        raise HTTPException(
-            status_code=403,
-            detail="Search provider changes are only available in development environment. Please configure providers via development and deploy to production."
-        )
     
     # Validate provider name
     if provider not in ["brave", "tavily"]:
