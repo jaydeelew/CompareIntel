@@ -1640,7 +1640,12 @@ def call_openrouter_streaming(
         
         # Add location context if available
         if user_location:
-            system_content += f"\n\nUser location: {user_location}. When providing location-specific information (weather, local events, time zones, regional details, etc.), use this location as context."
+            if location_source == "ip_based":
+                # IP-based location is approximate - let model know
+                system_content += f"\n\nUser approximate location (based on IP): {user_location}. Note: IP-based location may be inaccurate (e.g., VPN, carrier routing, corporate networks). When providing location-specific information (weather, local events, etc.), use this as approximate context, but acknowledge uncertainty if asked directly about location."
+            else:
+                # User-provided location is accurate (browser geolocation or manual entry)
+                system_content += f"\n\nUser location: {user_location}. When providing location-specific information (weather, local events, time zones, regional details, etc.), use this location as context."
         
         # If web search is enabled, include current date/time context so models know what "today" means
         if enable_web_search:
@@ -1664,7 +1669,7 @@ def call_openrouter_streaming(
             if user_timezone:
                 system_content_parts.append(f"User timezone: {user_timezone}")
             if user_location:
-                if location_source == "ip_based":
+                if location_source and location_source == "ip_based":
                     system_content_parts.append(f"User approximate location (IP-based, may be inaccurate): {user_location}")
                 else:
                     system_content_parts.append(f"User location: {user_location}")
