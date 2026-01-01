@@ -92,6 +92,12 @@ async def lifespan(app: FastAPI):
         # Preload model token limits from OpenRouter
         logger.info("Preloading model token limits...")
         preload_model_token_limits()
+        
+        # Initialize search rate limiter early to ensure it's ready and logs are visible
+        logger.info("Initializing search rate limiter...")
+        from .search.rate_limiter import get_rate_limiter
+        rate_limiter = get_rate_limiter()  # This will log initialization details
+        logger.info("Search rate limiter initialized successfully")
 
         logger.info("Application startup complete")
     except ValueError as e:

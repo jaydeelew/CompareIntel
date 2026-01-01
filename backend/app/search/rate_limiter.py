@@ -15,6 +15,7 @@ import asyncio
 import hashlib
 import json
 import logging
+import os
 import time
 import threading
 from typing import Optional, Dict, Any, Tuple
@@ -210,6 +211,11 @@ class SearchRateLimiter:
                     # We can proceed - acquire slot and record request
                     self._concurrent_counts[provider_name] += 1
                     request_times.append(now)
+                    logger.info(
+                        f"Acquired search rate limiter slot for {provider_name} "
+                        f"({len(request_times)}/{config.max_requests_per_minute} requests in window, "
+                        f"{self._concurrent_counts[provider_name]}/{config.max_concurrent} concurrent)"
+                    )
                     break
             
             # Wait before checking again
@@ -302,12 +308,17 @@ def get_rate_limiter() -> SearchRateLimiter:
                     default_delay_between_requests=settings.search_delay_between_requests,
                     provider_configs=provider_configs
                 )
-                logger.info(
-                    f"Initialized search rate limiter: "
+                worker_count = os.getenv('GUNICORN_WORKERS', '4')
+                total_capacity = settings.search_rate_limit_per_minute * int(worker_count)
+                logger.warning(
+                    f"🔧 Initialized search rate limiter (per-worker): "
                     f"{settings.search_rate_limit_per_minute} req/min, "
                     f"{settings.search_max_concurrent} concurrent, "
                     f"{settings.search_delay_between_requests}s delay. "
-                    f"Cache: {'enabled' if settings.search_cache_enabled else 'disabled'}"
+                    f"Cache: {'enabled' if settings.search_cache_enabled else 'disabled'}. "
+                    f"⚠️ WARNING: Each Gunicorn worker ({worker_count} workers) has its own rate limiter instance. "
+                    f"Total capacity across all workers: ~{total_capacity} req/min. "
+                    f"Consider using Redis for distributed rate limiting in production."
                 )
     return _global_rate_limiter
 
