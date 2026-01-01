@@ -1585,6 +1585,8 @@ def call_openrouter_streaming(
     credits_limited: bool = False,
     enable_web_search: bool = False,
     search_provider: Optional[Any] = None,  # SearchProvider instance
+    user_timezone: Optional[str] = None,  # Optional: IANA timezone string (e.g., "America/Chicago")
+    user_location: Optional[str] = None,  # Optional: Location string (e.g., "New York, NY, USA")
 ) -> Generator[Any, None, Optional[TokenUsage]]:
     """
     Stream OpenRouter responses token-by-token for faster perceived response time.
@@ -1627,6 +1629,14 @@ def call_openrouter_streaming(
     if not conversation_history:
         system_content = "Provide complete responses. Finish your thoughts and explanations fully."
         system_content += "\n\nAnswer questions directly without asking clarifying questions. If you need to make reasonable assumptions about context or details not specified, make those assumptions based on common practices and state them clearly in your response. Only ask follow-up questions if the request is fundamentally unclear or missing critical information that prevents any meaningful response."
+        
+        # Add timezone context if available
+        if user_timezone:
+            system_content += f"\n\nUser timezone: {user_timezone}. When providing time-sensitive information or referring to times, use this timezone as context."
+        
+        # Add location context if available
+        if user_location:
+            system_content += f"\n\nUser location: {user_location}. When providing location-specific information (weather, local events, time zones, regional details, etc.), use this location as context."
         
         # If web search is enabled, include current date/time context so models know what "today" means
         if enable_web_search:

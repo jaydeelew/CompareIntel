@@ -178,6 +178,40 @@ def get_client_ip(request: Request) -> str:
     return "unknown"
 
 
+async def get_location_from_ip(ip_address: str) -> Optional[str]:
+    """
+    Get approximate location from IP address using a geolocation service.
+    Returns location string like "New York, NY, USA" or None if unavailable.
+    
+    Uses ip-api.com free tier (45 requests/minute, no API key required).
+    Falls back gracefully if service is unavailable.
+    """
+    if not ip_address or ip_address == "unknown":
+        return None
+    
+    try:
+        import httpx
+        async with httpx.AsyncClient(timeout=2.0) as client:
+            # Use ip-api.com free tier (no API key required, 45 req/min)
+            response = await client.get(
+                f"http://ip-api.com/json/{ip_address}",
+                params={"fields": "city,regionName,country"}
+            )
+            if response.status_code == 200:
+                data = response.json()
+                if data.get("status") == "success":
+                    city = data.get("city", "")
+                    region = data.get("regionName", "")
+                    country = data.get("country", "")
+                    parts = [p for p in [city, region, country] if p]
+                    return ", ".join(parts) if parts else None
+    except Exception:
+        # Fail silently - location is optional and shouldn't break the request
+        pass
+    
+    return None
+
+
 def get_timezone_from_request(req: CompareRequest, current_user: Optional[User] = None, db: Optional[Session] = None) -> str:
     """
     Get timezone from request, user preferences, or default to UTC.
@@ -796,6 +830,10 @@ async def compare_stream(
             current_user.preferences.timezone = user_timezone
             db.commit()
 
+    # Get location from IP address (for model context)
+    # Only detect if not provided by user (req.location would be added to CompareRequest if needed)
+    user_location = await get_location_from_ip(client_ip)
+
     is_overage = False
     overage_charge = 0.0
     credits_remaining = 0
@@ -1115,6 +1153,8 @@ async def compare_stream(
                                 credits_limited=credits_limited,
                                 enable_web_search=enable_web_search_for_model,
                                 search_provider=search_provider_instance,
+                                user_timezone=user_timezone,
+                                user_location=user_location,
                             )
 
                             try:
