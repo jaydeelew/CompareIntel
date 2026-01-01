@@ -3325,7 +3325,10 @@ function AppContent() {
               const parts = [city, region, country].filter(Boolean)
               if (parts.length > 0) {
                 const location = parts.join(', ')
+                console.log('[Geolocation] Successfully detected location:', location)
                 setUserLocation(location)
+              } else {
+                console.debug('[Geolocation] Reverse geocoding returned no location parts')
               }
             }
           } catch (error) {
@@ -4825,6 +4828,13 @@ function AppContent() {
 
       // For follow-ups, filter out failed models - they should not participate
       const modelsToUse = isFollowUpMode ? getSuccessfulModels(selectedModels) : selectedModels
+
+      // Debug: Log location being sent
+      if (userLocation) {
+        console.log('[API Request] Sending user location:', userLocation)
+      } else {
+        console.debug('[API Request] No user location available (will use IP-based fallback)')
+      }
 
       const stream = await compareStream(
         {

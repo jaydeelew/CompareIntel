@@ -1640,12 +1640,13 @@ def call_openrouter_streaming(
         
         # Add location context if available
         if user_location:
+            logger.debug(f"[Model Runner] Adding location to system message: user_location={user_location}, location_source={location_source}")
             if location_source and location_source == "ip_based":
                 # IP-based location is approximate - let model know
                 system_content += f"\n\nUser approximate location (based on IP): {user_location}. Note: IP-based location may be inaccurate (e.g., VPN, carrier routing, corporate networks). When providing location-specific information (weather, local events, etc.), use this as approximate context, but acknowledge uncertainty if asked directly about location."
             else:
                 # User-provided location is accurate (browser geolocation or manual entry)
-                system_content += f"\n\nUser location: {user_location}. When providing location-specific information (weather, local events, time zones, regional details, etc.), use this location as context."
+                system_content += f"\n\nUser location: {user_location}. When providing location-specific information (weather, local events, time zones, regional details, etc.), use this location as context. If asked about your location, you can share this information."
         
         # If web search is enabled, include current date/time context so models know what "today" means
         if enable_web_search:
@@ -1672,10 +1673,11 @@ def call_openrouter_streaming(
                 if location_source and location_source == "ip_based":
                     system_content_parts.append(f"User approximate location (IP-based, may be inaccurate): {user_location}")
                 else:
-                    system_content_parts.append(f"User location: {user_location}")
+                    system_content_parts.append(f"User location: {user_location}. If asked about your location, you can share this information.")
             
             if system_content_parts:
                 system_content = ". ".join(system_content_parts) + ". Use this information when providing location or time-sensitive context."
+                logger.debug(f"[Model Runner] Adding system message for follow-up with location: user_location={user_location}, location_source={location_source}")
                 messages.append(
                     {
                         "role": "system",

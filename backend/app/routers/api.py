@@ -848,6 +848,9 @@ async def compare_stream(
         user_location = req.location.strip()
         location_source = "user_provided"
         print(f"[API] Using user-provided location: {user_location}")
+        logger.info(f"[API] Received location from frontend: '{req.location}', processed as: '{user_location}'")
+    else:
+        logger.debug(f"[API] No location in request body. req.location = {req.location}")
     else:
         # Fallback to IP-based geolocation (less accurate, approximate)
         ip_location = await get_location_from_ip(client_ip)
