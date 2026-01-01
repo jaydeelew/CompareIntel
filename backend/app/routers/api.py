@@ -98,6 +98,7 @@ class CompareRequest(BaseModel):
     conversation_id: Optional[int] = None  # Optional conversation ID for follow-ups (most reliable matching)
     estimated_input_tokens: Optional[int] = None  # Optional: Accurate token count from frontend (from /estimate-tokens endpoint)
     timezone: Optional[str] = None  # Optional: IANA timezone string (e.g., "America/Chicago") for credit reset timing
+    location: Optional[str] = None  # Optional: User-provided location (e.g., "Granbury, TX, USA") - most accurate, takes priority over IP-based detection
     enable_web_search: bool = False  # Optional: Enable web search tool for models that support it
 
     model_config = ConfigDict(
@@ -1167,6 +1168,7 @@ async def compare_stream(
                                 search_provider=search_provider_instance,
                                 user_timezone=user_timezone,
                                 user_location=user_location,
+                                location_source=location_source,
                             )
 
                             try:

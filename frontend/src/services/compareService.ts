@@ -23,6 +23,7 @@ export interface CompareRequestPayload {
   conversation_id?: number
   estimated_input_tokens?: number // Optional: Accurate token count from /estimate-tokens endpoint
   timezone?: string // Optional: IANA timezone string (e.g., "America/Chicago") for credit reset timing
+  location?: string // Optional: User-provided location (e.g., "Granbury, TX, USA") - most accurate, takes priority over IP-based detection
   enable_web_search?: boolean // Optional: Enable web search tool for models that support it
 }
 

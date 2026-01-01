@@ -1587,6 +1587,7 @@ def call_openrouter_streaming(
     search_provider: Optional[Any] = None,  # SearchProvider instance
     user_timezone: Optional[str] = None,  # Optional: IANA timezone string (e.g., "America/Chicago")
     user_location: Optional[str] = None,  # Optional: Location string (e.g., "New York, NY, USA")
+    location_source: Optional[str] = None,  # Optional: Source of location - "user_provided" (accurate) or "ip_based" (approximate)
 ) -> Generator[Any, None, Optional[TokenUsage]]:
     """
     Stream OpenRouter responses token-by-token for faster perceived response time.
@@ -1608,6 +1609,9 @@ def call_openrouter_streaming(
         credits_limited: If True, indicates max_tokens_override was reduced due to low credits
         enable_web_search: If True, enable web search tool calling for models that support it
         search_provider: Optional SearchProvider instance for executing web searches
+        user_timezone: Optional IANA timezone string (e.g., "America/Chicago") for context
+        user_location: Optional location string (e.g., "New York, NY, USA") for context
+        location_source: Optional source of location - "user_provided" (accurate) or "ip_based" (approximate)
 
     Yields:
         str: Content chunks as they arrive
@@ -1656,19 +1660,23 @@ def call_openrouter_streaming(
         # For follow-up conversations, still include location/timezone context
         # This ensures models have access to this information even in follow-up messages
         if user_timezone or user_location:
-            system_content = ""
+            system_content_parts = []
             if user_timezone:
-                system_content += f"User timezone: {user_timezone}. "
+                system_content_parts.append(f"User timezone: {user_timezone}")
             if user_location:
-                system_content += f"User location: {user_location}. "
-            system_content += "Use this information when providing location or time-sensitive context."
+                if location_source == "ip_based":
+                    system_content_parts.append(f"User approximate location (IP-based, may be inaccurate): {user_location}")
+                else:
+                    system_content_parts.append(f"User location: {user_location}")
             
-            messages.append(
-                {
-                    "role": "system",
-                    "content": system_content,
-                }
-            )
+            if system_content_parts:
+                system_content = ". ".join(system_content_parts) + ". Use this information when providing location or time-sensitive context."
+                messages.append(
+                    {
+                        "role": "system",
+                        "content": system_content,
+                    }
+                )
 
     # Add conversation history if provided
     if conversation_history:

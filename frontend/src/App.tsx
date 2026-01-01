@@ -153,6 +153,9 @@ function AppContent() {
   const [attachedFiles, setAttachedFilesState] = useState<(AttachedFile | StoredAttachedFile)[]>([])
   const [webSearchEnabled, setWebSearchEnabled] = useState(false)
 
+  // User location state (for accurate location context)
+  const [userLocation, _setUserLocation] = useState<string | null>(null)
+
   // Wrapper function to match ComparisonForm's expected signature
   const setAttachedFiles = useCallback((files: (AttachedFile | StoredAttachedFile)[]) => {
     setAttachedFilesState(files)
@@ -4797,6 +4800,7 @@ function AppContent() {
           conversation_id: conversationId || undefined, // Only include if not null
           estimated_input_tokens: accurateInputTokens || undefined, // Include accurate count if available
           timezone: userTimezone, // Auto-detect timezone from browser
+          location: userLocation || undefined, // User-provided location (browser geolocation) - most accurate
           enable_web_search: webSearchEnabled || false, // Enable web search if toggle is on
         },
         controller.signal
