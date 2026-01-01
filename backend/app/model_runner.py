@@ -1641,10 +1641,11 @@ def call_openrouter_streaming(
                 if tools:
                     api_params["tools"] = tools
                     # Some models (like GPT-5 Chat) may not support tool_choice parameter
-                    # Try without tool_choice first - models will use tools automatically if supported
-                    # Only add tool_choice if explicitly needed (some models require it)
-                    # For now, omit tool_choice to avoid 404 errors with certain models
-                    # api_params["tool_choice"] = "auto"  # Commented out - causes 404 for GPT-5 Chat
+                    # However, Mistral models (including Devstral) require tool_choice to actually use tools
+                    # Enable tool_choice for Mistral models, but omit for models that don't support it
+                    if model_id.startswith("mistralai/"):
+                        api_params["tool_choice"] = "auto"
+                    # For other models, omit tool_choice to avoid 404 errors (they'll use tools automatically if supported)
                 
                 # Enable streaming
                 # Use client with tool headers when tools are enabled (required by OpenRouter for provider routing)
