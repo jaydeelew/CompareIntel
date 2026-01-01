@@ -118,7 +118,14 @@ def get_db() -> Generator[Session, None, None]:
             logger.warning(f"[DB] Session creation took {db_duration:.3f}s")
         yield db
     except Exception as e:
-        # Log database connection errors
+        # Don't log HTTPException as database errors - these are normal FastAPI exceptions
+        # (e.g., authentication errors) that should be handled by FastAPI's exception handlers
+        from fastapi import HTTPException
+        if isinstance(e, HTTPException):
+            # Re-raise HTTPException without logging - FastAPI will handle it
+            raise
+        
+        # Log actual database connection errors
         logger.error(f"[DB] Failed to create database session: {type(e).__name__}: {str(e)}")
         # Re-raise the exception so FastAPI can handle it properly
         raise
