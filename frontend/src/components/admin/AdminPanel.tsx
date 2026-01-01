@@ -464,11 +464,14 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
 
   const handleSetActiveProvider = async (provider: string) => {
     try {
-      await setActiveSearchProvider(provider)
+      console.log('[AdminPanel] Setting active provider:', provider)
+      const result = await setActiveSearchProvider(provider)
+      console.log('[AdminPanel] Provider set successfully:', result)
       await fetchSearchProviders()
       setModelSuccess(`Active search provider set to ${provider}`)
       setTimeout(() => setModelSuccess(null), 5000)
     } catch (err) {
+      console.error('[AdminPanel] Error setting active provider:', err)
       const errorMessage = err instanceof Error ? err.message : 'Failed to set active provider'
       setModelError(errorMessage)
       setTimeout(() => setModelError(null), 5000)
@@ -2428,6 +2431,38 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
             </div>
           )}
 
+          {/* Error and Success Messages */}
+          {modelError && (
+            <div
+              style={{
+                marginBottom: '1rem',
+                padding: '0.75rem 1rem',
+                background: 'var(--error-bg, #fee)',
+                border: '1px solid var(--error-color, #dc3545)',
+                borderRadius: 'var(--radius-md)',
+                color: 'var(--error-color, #dc3545)',
+                fontSize: '0.875rem',
+              }}
+            >
+              {modelError}
+            </div>
+          )}
+          {modelSuccess && (
+            <div
+              style={{
+                marginBottom: '1rem',
+                padding: '0.75rem 1rem',
+                background: 'var(--success-bg, #efe)',
+                border: '1px solid var(--success-color, #28a745)',
+                borderRadius: 'var(--radius-md)',
+                color: 'var(--success-color, #28a745)',
+                fontSize: '0.875rem',
+              }}
+            >
+              {modelSuccess}
+            </div>
+          )}
+
           {searchProviders && (
             <>
               {/* Providers List */}
@@ -2493,32 +2528,51 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                       <div style={{ display: 'flex', gap: '0.5rem' }}>
                         <button
                           onClick={() => handleSetActiveProvider(provider.name)}
-                          disabled={!provider.is_configured || provider.is_active}
+                          disabled={
+                            !provider.is_configured ||
+                            provider.is_active ||
+                            settingActiveProvider === provider.name
+                          }
                           className="set-active-btn"
                           style={{
                             padding: '0.5rem 1rem',
                             background:
-                              provider.is_active || !provider.is_configured
+                              provider.is_active ||
+                              !provider.is_configured ||
+                              settingActiveProvider === provider.name
                                 ? 'var(--bg-disabled)'
                                 : 'var(--primary-color)',
                             color: 'white',
                             border: 'none',
                             borderRadius: 'var(--radius-md)',
                             cursor:
-                              provider.is_active || !provider.is_configured
+                              provider.is_active ||
+                              !provider.is_configured ||
+                              settingActiveProvider === provider.name
                                 ? 'not-allowed'
                                 : 'pointer',
-                            opacity: provider.is_active || !provider.is_configured ? 0.6 : 1,
+                            opacity:
+                              provider.is_active ||
+                              !provider.is_configured ||
+                              settingActiveProvider === provider.name
+                                ? 0.6
+                                : 1,
                           }}
                           title={
                             provider.is_active
                               ? 'Already active'
                               : !provider.is_configured
                                 ? 'API key not configured'
-                                : 'Set as active provider'
+                                : settingActiveProvider === provider.name
+                                  ? 'Setting active provider...'
+                                  : 'Set as active provider'
                           }
                         >
-                          {provider.is_active ? 'Active' : 'Set Active'}
+                          {settingActiveProvider === provider.name
+                            ? 'Setting...'
+                            : provider.is_active
+                              ? 'Active'
+                              : 'Set Active'}
                         </button>
                         <button
                           onClick={() => handleTestProvider(provider.name, testQuery)}
