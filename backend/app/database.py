@@ -51,6 +51,10 @@ if is_postgresql:
         max_overflow=20,  # Additional connections allowed beyond pool_size
         pool_pre_ping=True,  # Verify connections before using them (prevents stale connections)
         pool_recycle=3600,  # Recycle connections after 1 hour
+        pool_timeout=30,  # Wait up to 30 seconds for a connection from the pool
+        connect_args={
+            "connect_timeout": 10,  # Wait up to 10 seconds to establish connection
+        },
         echo=False,  # Set to True for SQL query logging during development
     )
 elif is_sqlite:
@@ -102,19 +106,33 @@ def get_db() -> Generator[Session, None, None]:
         Session: Database session
     """
     import time
+    import logging
+    
+    logger = logging.getLogger(__name__)
     db_start = time.time()
+    db = None
     try:
         db = SessionLocal()
         db_duration = time.time() - db_start
         if db_duration > 0.1:  # Log if session creation takes more than 100ms
-            print(f"[DB] Session creation took {db_duration:.3f}s")
+            logger.warning(f"[DB] Session creation took {db_duration:.3f}s")
         yield db
+    except Exception as e:
+        # Log database connection errors
+        logger.error(f"[DB] Failed to create database session: {type(e).__name__}: {str(e)}")
+        # Re-raise the exception so FastAPI can handle it properly
+        raise
     finally:
-        close_start = time.time()
-        db.close()
-        close_duration = time.time() - close_start
-        if close_duration > 0.1:  # Log if closing takes more than 100ms
-            print(f"[DB] Session close took {close_duration:.3f}s")
+        if db is not None:
+            try:
+                close_start = time.time()
+                db.close()
+                close_duration = time.time() - close_start
+                if close_duration > 0.1:  # Log if closing takes more than 100ms
+                    logger.warning(f"[DB] Session close took {close_duration:.3f}s")
+            except Exception as e:
+                # Log errors during session close, but don't raise
+                logger.error(f"[DB] Error closing database session: {type(e).__name__}: {str(e)}")
 
 
 def init_db() -> None:

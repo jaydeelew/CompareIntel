@@ -165,17 +165,38 @@ async def global_exception_handler(request: Request, exc: Exception):
         raise exc
 
     import traceback
+    from sqlalchemy.exc import OperationalError, DatabaseError, DisconnectionError
 
     error_type = type(exc).__name__
     error_message = str(exc)
     traceback_str = traceback.format_exc()
 
+    # Check if this is a database connection error
+    is_db_error = isinstance(exc, (OperationalError, DatabaseError, DisconnectionError))
+    
     # Log the error
-    logger.error(f"Unhandled exception: {error_type}: {error_message}")
-    logger.error(f"Traceback:\n{traceback_str}")
+    if is_db_error:
+        logger.error(f"Database connection error: {error_type}: {error_message}")
+    else:
+        logger.error(f"Unhandled exception: {error_type}: {error_message}")
+        logger.error(f"Traceback:\n{traceback_str}")
 
-    # Return JSON error response
-    return JSONResponse(status_code=500, content={"detail": f"Internal server error: {error_message}", "error_type": error_type})
+    # Return appropriate error response
+    if is_db_error:
+        # Return 503 Service Unavailable for database errors (more appropriate than 500)
+        return JSONResponse(
+            status_code=503,
+            content={
+                "detail": "Database service temporarily unavailable. Please try again later.",
+                "error_type": error_type
+            }
+        )
+    else:
+        # Return JSON error response for other errors
+        return JSONResponse(
+            status_code=500,
+            content={"detail": f"Internal server error: {error_message}", "error_type": error_type}
+        )
 
 
 # Include routers AFTER middleware

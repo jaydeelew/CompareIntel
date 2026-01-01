@@ -1629,6 +1629,9 @@ def call_openrouter_streaming(
     # Build messages array - use standard format like official AI providers
     messages = []
 
+    # Debug logging for location/timezone
+    logger.debug(f"[Model Runner] call_openrouter_streaming called with: user_timezone={user_timezone}, user_location={user_location}, location_source={location_source}, has_history={bool(conversation_history)}")
+
     # Add a minimal system message only to encourage complete thoughts
     if not conversation_history:
         system_content = "Provide complete responses. Finish your thoughts and explanations fully."

@@ -3321,7 +3321,9 @@ function AppContent() {
               const data = await response.json()
               const city = data.city || ''
               const region = data.principalSubdivision || ''
-              const country = data.countryName || ''
+              // Clean up country name - remove "(the)" suffix if present
+              let country = data.countryName || ''
+              country = country.replace(/\s*\(the\)\s*$/i, '').trim()
               const parts = [city, region, country].filter(Boolean)
               if (parts.length > 0) {
                 const location = parts.join(', ')
