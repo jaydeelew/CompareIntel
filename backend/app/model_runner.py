@@ -783,18 +783,62 @@ client_with_tool_headers = OpenAI(
     }
 )
 
+# Helper function to detect if a query is time-sensitive and requires web search
+def is_time_sensitive_query(prompt: str) -> bool:
+    """
+    Detect if a query is time-sensitive and requires web search.
+    
+    Args:
+        prompt: The user's prompt/question
+        
+    Returns:
+        True if the query appears to be time-sensitive, False otherwise
+    """
+    prompt_lower = prompt.lower()
+    
+    # Time-sensitive keywords
+    time_sensitive_keywords = [
+        "today", "now", "current", "latest", "recent", "live", "right now",
+        "what is", "what's", "how is", "how's", "weather", "temperature",
+        "news", "score", "price", "stock", "forecast", "prediction",
+        "happening", "going on", "update", "status", "condition"
+    ]
+    
+    # Check for time-sensitive patterns
+    has_time_keyword = any(keyword in prompt_lower for keyword in time_sensitive_keywords)
+    
+    # Check for specific time-sensitive question patterns
+    time_sensitive_patterns = [
+        r"\bweather\b.*\btoday\b",
+        r"\bcurrent\b.*\bweather\b",
+        r"\bwhat.*\bweather\b",
+        r"\bhow.*\bweather\b",
+        r"\bweather.*\blike\b",
+        r"\bnews\b.*\btoday\b",
+        r"\bcurrent\b.*\bnews\b",
+        r"\blatest\b.*\bnews\b",
+        r"\bstock\b.*\bprice\b",
+        r"\bcurrent\b.*\bprice\b",
+        r"\bscore\b.*\btoday\b",
+        r"\blive\b.*\bscore\b",
+    ]
+    
+    has_time_pattern = any(re.search(pattern, prompt_lower) for pattern in time_sensitive_patterns)
+    
+    return has_time_keyword or has_time_pattern
+
 # Web search tool definition (for future tool calling integration)
 WEB_SEARCH_TOOL = {
     "type": "function",
     "function": {
         "name": "search_web",
-        "description": "Search the internet for current, real-time information. Use this tool for questions about current weather, recent news, current events, live data, stock prices, sports scores, or any time-sensitive information. After receiving results, provide a complete answer to the user's question.",
+        "description": "MANDATORY: Search the internet for current, real-time information. You MUST use this tool for questions about current weather, recent news, current events, live data, stock prices, sports scores, or any time-sensitive information. Never guess or fabricate current information - always search first. After receiving results, you MUST cite the source URL/service name and timestamp in your response. If search fails or returns no results, explicitly state this rather than providing generic information.",
         "parameters": {
             "type": "object",
             "properties": {
                 "query": {
                     "type": "string",
-                    "description": "The search query to find current information on the internet"
+                    "description": "The search query to find current information on the internet. Use specific, time-sensitive queries (e.g., 'weather Granbury TX today' or 'current weather Granbury Texas January 1 2026')."
                 }
             },
             "required": ["query"]
@@ -2133,14 +2177,36 @@ def call_openrouter_streaming(
                                     current_date_str = current_datetime.strftime("%A, %B %d, %Y")
                                     current_time_str = current_datetime.strftime("%I:%M %p %Z")
                                     
-                                    results_text = f"Search results (current date: {current_date_str} at {current_time_str}):\n\n"
-                                    for i, result in enumerate(search_results, 1):
-                                        results_text += f"{i}. {result.title}\n"
-                                        results_text += f"   URL: {result.url}\n"
-                                        results_text += f"   {result.snippet}\n\n"
-                                    
-                                    # Add instruction to help model provide a complete answer
-                                    results_text += "\nBased on these results, provide a complete answer to the user's question. If you need more detailed information from a specific source, use fetch_url. Keep your response natural - don't mention technical search details to the user."
+                                    # Handle empty search results
+                                    if not search_results or len(search_results) == 0:
+                                        results_text = f"⚠️ SEARCH RETURNED NO RESULTS\n\n"
+                                        results_text += f"Search query: '{search_query}'\n"
+                                        results_text += f"Search executed at: {current_date_str} at {current_time_str}\n\n"
+                                        results_text += "IMPORTANT: The search returned no results. You MUST explicitly state this to the user. Do NOT fabricate information or provide generic/historical data without clearly stating that current data is unavailable. Consider:\n"
+                                        results_text += "1. Trying an alternative search query with different keywords\n"
+                                        results_text += "2. Explicitly telling the user that current information could not be found\n"
+                                        results_text += "3. If you provide historical/average data, clearly label it as such (e.g., 'I was unable to find current weather data, but typically in January...')"
+                                    else:
+                                        results_text = f"✅ SEARCH SUCCESSFUL - {len(search_results)} result(s) found\n\n"
+                                        results_text += f"Search query: '{search_query}'\n"
+                                        results_text += f"Search executed at: {current_date_str} at {current_time_str}\n"
+                                        results_text += f"Search provider: {search_provider.get_provider_name() if hasattr(search_provider, 'get_provider_name') else 'Unknown'}\n\n"
+                                        results_text += "Results:\n"
+                                        for i, result in enumerate(search_results, 1):
+                                            results_text += f"{i}. {result.title}\n"
+                                            results_text += f"   URL: {result.url}\n"
+                                            # Include source if available
+                                            if hasattr(result, 'source') and result.source:
+                                                results_text += f"   Source: {result.source}\n"
+                                            results_text += f"   {result.snippet}\n\n"
+                                        
+                                        # Add instruction to help model provide a complete answer with source citation
+                                        results_text += "\nCRITICAL: Based on these results, provide a complete answer to the user's question. You MUST:\n"
+                                        results_text += "1. Cite the specific source URL or service name (e.g., 'According to Weather.com' or 'From https://weather.com/...')\n"
+                                        results_text += "2. Include the timestamp/data freshness when available\n"
+                                        results_text += "3. Distinguish between current data and historical/average data\n"
+                                        results_text += "4. If you need more detailed information from a specific source, use fetch_url\n"
+                                        results_text += "5. Keep your response natural and user-friendly - cite sources clearly but don't mention technical search details"
                                     
                                     # Store tool call and result (tool call ID already validated above)
                                     # Final check: ensure this ID isn't already in tool_call_messages
@@ -2163,6 +2229,30 @@ def call_openrouter_streaming(
                                         )
                             except Exception as e:
                                 logger.error(f"Error executing web search tool: {e}")
+                                error_msg = str(e)
+                                current_datetime = datetime.now()
+                                current_date_str = current_datetime.strftime("%A, %B %d, %Y")
+                                current_time_str = current_datetime.strftime("%I:%M %p %Z")
+                                
+                                # Create detailed error message with retry suggestions
+                                error_content = f"❌ SEARCH FAILED\n\n"
+                                error_content += f"Search query: '{search_query}'\n"
+                                error_content += f"Search attempted at: {current_date_str} at {current_time_str}\n"
+                                error_content += f"Error: {error_msg}\n\n"
+                                error_content += "IMPORTANT: The web search failed. You MUST explicitly state this to the user. Do NOT fabricate information or provide generic/historical data without clearly stating that the search failed.\n\n"
+                                error_content += "OPTIONS:\n"
+                                error_content += "1. Try an alternative search query with different keywords or phrasing\n"
+                                error_content += "2. Explicitly tell the user that the search failed and current information could not be retrieved\n"
+                                error_content += "3. If you provide historical/average data as a fallback, clearly label it as such (e.g., 'I was unable to retrieve current weather data due to a search error, but typically in January...')\n\n"
+                                
+                                # Add retry suggestions based on error type
+                                if "rate limit" in error_msg.lower() or "429" in error_msg:
+                                    error_content += "NOTE: This appears to be a rate limit error. You may want to wait a moment and try again with a slightly modified query."
+                                elif "timeout" in error_msg.lower():
+                                    error_content += "NOTE: The search timed out. Try a more specific or shorter query."
+                                else:
+                                    error_content += "NOTE: Consider trying a different search query or being more specific in your search terms."
+                                
                                 # Add error result (tool call ID already validated above)
                                 # Final check: ensure this ID isn't already in tool_call_messages
                                 if not any(tc.get("id", "").strip() == tool_call_id for tc in tool_call_messages if tc.get("id")):
@@ -2176,7 +2266,7 @@ def call_openrouter_streaming(
                                     })
                                     tool_results.append({
                                         "tool_call_id": tool_call_id,
-                                        "content": f"Error performing web search: {str(e)}"
+                                        "content": error_content
                                     })
                                 else:
                                     logger.warning(
@@ -3032,10 +3122,26 @@ def call_openrouter_streaming(
                         f"but still wanted to make tool calls. Making final completion call without tools."
                     )
                     
-                    # Add a user message asking for final answer
+                    # Add a user message asking for final answer with validation requirements
+                    validation_note = ""
+                    # Check if any search tools were used
+                    search_tools_used = False
+                    for msg in messages:
+                        if msg.get("role") == "assistant" and msg.get("tool_calls"):
+                            for tc in msg["tool_calls"]:
+                                if tc.get("function", {}).get("name") == "search_web":
+                                    search_tools_used = True
+                                    break
+                            if search_tools_used:
+                                break
+                    
+                    # If no search tools were used but query is time-sensitive, add validation note
+                    if enable_web_search and not search_tools_used and is_time_sensitive_query(prompt):
+                        validation_note = " IMPORTANT: If you did not use search_web for this time-sensitive query, please explicitly state that you were unable to retrieve current information and that any data provided is historical or estimated, not current."
+                    
                     messages.append({
                         "role": "user",
-                        "content": "Please provide your answer now based on all the information you have gathered. Do not search for more information."
+                        "content": f"Please provide your answer now based on all the information you have gathered. Do not search for more information.{validation_note}"
                     })
                     
                     # Make final API call WITHOUT tools to force completion
