@@ -1805,6 +1805,7 @@ def call_openrouter_streaming(
                                         f"Stopping stream early to prevent looping."
                                     )
                                     yield "\n\n⚠️ Response stopped - detected repetitive content."
+                                    repetition_detected = True  # Mark that repetition was detected
                                     finish_reason = "length"  # Mark as length-limited to prevent further processing
                                     break
                             
@@ -1849,6 +1850,7 @@ def call_openrouter_streaming(
                                                 f"Stopping stream early to prevent looping."
                                             )
                                             yield "\n\n⚠️ Response stopped - detected repetitive content."
+                                            repetition_detected = True  # Mark that repetition was detected
                                             finish_reason = "length"
                                             break
                                     
@@ -2993,6 +2995,7 @@ def call_openrouter_streaming(
                                                 f"Stopping stream early to prevent looping."
                                             )
                                             yield "\n\n⚠️ Response stopped - detected repetitive content."
+                                            repetition_detected = True  # Mark that repetition was detected
                                             finish_reason = "length"
                                             break
                                     
@@ -3039,6 +3042,7 @@ def call_openrouter_streaming(
                                                         f"Stopping stream early to prevent looping."
                                                     )
                                                     yield "\n\n⚠️ Response stopped - detected repetitive content."
+                                                    repetition_detected = True  # Mark that repetition was detected
                                                     finish_reason = "length"
                                                     break
                                             
@@ -3175,6 +3179,7 @@ def call_openrouter_streaming(
                                                 f"Stopping stream early to prevent looping."
                                             )
                                             yield "\n\n⚠️ Response stopped - detected repetitive content."
+                                            repetition_detected = True  # Mark that repetition was detected
                                             finish_reason = "length"
                                             break
                                     
@@ -3198,6 +3203,7 @@ def call_openrouter_streaming(
                                                             f"Stopping stream early to prevent looping."
                                                         )
                                                         yield "\n\n⚠️ Response stopped - detected repetitive content."
+                                                        repetition_detected = True  # Mark that repetition was detected
                                                         finish_reason = "length"
                                                         break
                                                 
@@ -3213,6 +3219,7 @@ def call_openrouter_streaming(
                                                         f"Stopping stream early to prevent looping."
                                                     )
                                                     yield "\n\n⚠️ Response stopped - detected repetitive content."
+                                                    repetition_detected = True  # Mark that repetition was detected
                                                     finish_reason = "length"
                                                     break
                                             
@@ -3316,6 +3323,7 @@ def call_openrouter_streaming(
                                                             f"Stopping stream early to prevent looping."
                                                         )
                                                         yield "\n\n⚠️ Response stopped - detected repetitive content."
+                                                        repetition_detected = True  # Mark that repetition was detected
                                                         finish_reason = "length"
                                                         break
                                                 
@@ -3339,6 +3347,7 @@ def call_openrouter_streaming(
                                                                         f"Stopping stream early to prevent looping."
                                                                     )
                                                                     yield "\n\n⚠️ Response stopped - detected repetitive content."
+                                                                    repetition_detected = True  # Mark that repetition was detected
                                                                     finish_reason = "length"
                                                                     break
                                                             
@@ -3354,6 +3363,7 @@ def call_openrouter_streaming(
                                                                     f"Stopping stream early to prevent looping."
                                                                 )
                                                                 yield "\n\n⚠️ Response stopped - detected repetitive content."
+                                                                repetition_detected = True  # Mark that repetition was detected
                                                                 finish_reason = "length"
                                                                 break
                                                         
@@ -3373,7 +3383,8 @@ def call_openrouter_streaming(
                                     # Don't raise - we've already provided some response
 
                 # After streaming completes, handle finish_reason warnings
-                if finish_reason == "length":
+                # Only show "maximum output length" warning if it wasn't due to repetition detection
+                if finish_reason == "length" and not repetition_detected:
                     if credits_limited:
                         yield "\n\n⚠️ Response stopped - credits exhausted."
                     else:
