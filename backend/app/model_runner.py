@@ -3286,7 +3286,11 @@ def call_openrouter_streaming(
                 parsed_error_message = None
                 
                 if isinstance(e, APIError):
-                    status_code = e.status_code
+                    # Safely extract status_code - APIError may have it directly or via response
+                    if hasattr(e, 'status_code'):
+                        status_code = e.status_code
+                    elif hasattr(e, 'response') and hasattr(e.response, 'status_code'):
+                        status_code = e.response.status_code
                     # Try to extract meaningful error message from response body
                     try:
                         if hasattr(e, 'body') and e.body:
