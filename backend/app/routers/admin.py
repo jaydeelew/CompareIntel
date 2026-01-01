@@ -439,8 +439,26 @@ async def update_user(
     if user_data.role:
         user.is_admin = user_data.role in ["moderator", "admin", "super_admin"]
 
+    # Check if subscription tier changed
+    tier_changed = (
+        "subscription_tier" in update_data
+        and original_values.get("subscription_tier") != update_data.get("subscription_tier")
+    )
+
     db.commit()
     db.refresh(user)
+
+    # If tier changed, allocate credits based on new tier and reset usage to zero
+    if tier_changed:
+        tier = user.subscription_tier or "free"
+        if tier in MONTHLY_CREDIT_ALLOCATIONS:
+            # Paid tier: allocate monthly credits (this also resets usage to 0)
+            allocate_monthly_credits(user_id, tier, db)
+            db.refresh(user)
+        elif tier in DAILY_CREDIT_LIMITS:
+            # Free tier: reset daily credits (this also resets usage to 0)
+            reset_daily_credits(user_id, tier, db, force=True)  # Admin change bypasses abuse prevention
+            db.refresh(user)
 
     # Ensure usage is reset if it's a new day
     ensure_usage_reset(user, db)
@@ -883,6 +901,18 @@ async def change_user_tier(
 
     db.commit()
     db.refresh(user)
+
+    # Allocate credits based on new tier and reset usage to zero
+    # This ensures users get the correct credit allotment for their new tier
+    tier = user.subscription_tier or "free"
+    if tier in MONTHLY_CREDIT_ALLOCATIONS:
+        # Paid tier: allocate monthly credits (this also resets usage to 0)
+        allocate_monthly_credits(user_id, tier, db)
+        db.refresh(user)
+    elif tier in DAILY_CREDIT_LIMITS:
+        # Free tier: reset daily credits (this also resets usage to 0)
+        reset_daily_credits(user_id, tier, db, force=True)  # Admin change bypasses abuse prevention
+        db.refresh(user)
 
     # Ensure usage is reset if it's a new day
     ensure_usage_reset(user, db)
