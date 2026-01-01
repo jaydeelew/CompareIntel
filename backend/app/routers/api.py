@@ -189,6 +189,10 @@ async def get_location_from_ip(ip_address: str) -> Optional[str]:
     if not ip_address or ip_address == "unknown":
         return None
     
+    # Skip localhost/private IPs (won't have valid geolocation)
+    if ip_address.startswith("127.") or ip_address.startswith("192.168.") or ip_address.startswith("10.") or ip_address == "::1":
+        return None
+    
     try:
         import httpx
         async with httpx.AsyncClient(timeout=2.0) as client:
@@ -204,9 +208,13 @@ async def get_location_from_ip(ip_address: str) -> Optional[str]:
                     region = data.get("regionName", "")
                     country = data.get("country", "")
                     parts = [p for p in [city, region, country] if p]
-                    return ", ".join(parts) if parts else None
-    except Exception:
-        # Fail silently - location is optional and shouldn't break the request
+                    location_str = ", ".join(parts) if parts else None
+                    if location_str:
+                        return location_str
+    except Exception as e:
+        # Log error in development for debugging, but don't break the request
+        if settings.environment == "development":
+            logging.getLogger(__name__).debug(f"Geolocation lookup failed for IP {ip_address}: {e}")
         pass
     
     return None
@@ -833,6 +841,10 @@ async def compare_stream(
     # Get location from IP address (for model context)
     # Only detect if not provided by user (req.location would be added to CompareRequest if needed)
     user_location = await get_location_from_ip(client_ip)
+    if user_location:
+        print(f"[API] Detected user location from IP {client_ip}: {user_location}")
+    else:
+        print(f"[API] Could not detect location from IP {client_ip} (may be localhost, VPN, or service unavailable)")
 
     is_overage = False
     overage_charge = 0.0

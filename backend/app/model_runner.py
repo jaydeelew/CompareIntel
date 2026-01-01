@@ -1652,6 +1652,23 @@ def call_openrouter_streaming(
                 "content": system_content,
             }
         )
+    else:
+        # For follow-up conversations, still include location/timezone context
+        # This ensures models have access to this information even in follow-up messages
+        if user_timezone or user_location:
+            system_content = ""
+            if user_timezone:
+                system_content += f"User timezone: {user_timezone}. "
+            if user_location:
+                system_content += f"User location: {user_location}. "
+            system_content += "Use this information when providing location or time-sensitive context."
+            
+            messages.append(
+                {
+                    "role": "system",
+                    "content": system_content,
+                }
+            )
 
     # Add conversation history if provided
     if conversation_history:
