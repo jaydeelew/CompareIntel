@@ -839,13 +839,24 @@ async def compare_stream(
             current_user.preferences.timezone = user_timezone
             db.commit()
 
-    # Get location from IP address (for model context)
-    # Only detect if not provided by user (req.location would be added to CompareRequest if needed)
-    user_location = await get_location_from_ip(client_ip)
-    if user_location:
-        print(f"[API] Detected user location from IP {client_ip}: {user_location}")
+    # Get location - prioritize user-provided location over IP-based detection
+    user_location = None
+    location_source = None  # Track where location came from: "user_provided", "ip_based", or None
+    
+    if req.location and req.location.strip():
+        # User provided location explicitly (most accurate - browser geolocation or manual entry)
+        user_location = req.location.strip()
+        location_source = "user_provided"
+        print(f"[API] Using user-provided location: {user_location}")
     else:
-        print(f"[API] Could not detect location from IP {client_ip} (may be localhost, VPN, or service unavailable)")
+        # Fallback to IP-based geolocation (less accurate, approximate)
+        ip_location = await get_location_from_ip(client_ip)
+        if ip_location:
+            user_location = ip_location
+            location_source = "ip_based"
+            print(f"[API] Detected approximate location from IP {client_ip}: {user_location} (IP-based location may be inaccurate)")
+        else:
+            print(f"[API] Could not detect location from IP {client_ip} (may be localhost, VPN, or service unavailable)")
 
     is_overage = False
     overage_charge = 0.0

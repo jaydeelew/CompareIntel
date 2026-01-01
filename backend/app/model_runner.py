@@ -1640,7 +1640,7 @@ def call_openrouter_streaming(
         
         # Add location context if available
         if user_location:
-            if location_source == "ip_based":
+            if location_source and location_source == "ip_based":
                 # IP-based location is approximate - let model know
                 system_content += f"\n\nUser approximate location (based on IP): {user_location}. Note: IP-based location may be inaccurate (e.g., VPN, carrier routing, corporate networks). When providing location-specific information (weather, local events, etc.), use this as approximate context, but acknowledge uncertainty if asked directly about location."
             else:

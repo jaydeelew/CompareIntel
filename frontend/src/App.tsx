@@ -154,7 +154,7 @@ function AppContent() {
   const [webSearchEnabled, setWebSearchEnabled] = useState(false)
 
   // User location state (for accurate location context)
-  const [userLocation, _setUserLocation] = useState<string | null>(null)
+  const [userLocation, setUserLocation] = useState<string | null>(null)
 
   // Wrapper function to match ComparisonForm's expected signature
   const setAttachedFiles = useCallback((files: (AttachedFile | StoredAttachedFile)[]) => {
@@ -3306,6 +3306,41 @@ function AppContent() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [input, error])
+
+  // Detect user location using browser geolocation API (most accurate)
+  useEffect(() => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        async position => {
+          try {
+            // Reverse geocode coordinates to location string
+            const response = await fetch(
+              `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${position.coords.latitude}&longitude=${position.coords.longitude}&localityLanguage=en`
+            )
+            if (response.ok) {
+              const data = await response.json()
+              const city = data.city || ''
+              const region = data.principalSubdivision || ''
+              const country = data.countryName || ''
+              const parts = [city, region, country].filter(Boolean)
+              if (parts.length > 0) {
+                const location = parts.join(', ')
+                setUserLocation(location)
+              }
+            }
+          } catch (error) {
+            // Silently fail - will fallback to IP-based location on backend
+            console.debug('Failed to get location from coordinates:', error)
+          }
+        },
+        error => {
+          // User denied permission or error - will fallback to IP-based location on backend
+          console.debug('Geolocation not available:', error.message)
+        },
+        { timeout: 5000, enableHighAccuracy: false }
+      )
+    }
+  }, [])
 
   // Load usage data and fetch models on component mount
   useEffect(() => {
