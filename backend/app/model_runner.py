@@ -2089,8 +2089,8 @@ def call_openrouter_streaming(
                                     yield " "
                                     
                                     # Execute search with rate limiting and periodic keepalives
-                                    # Since we're in a thread pool (no event loop), use asyncio.run()
-                                    # to properly create and manage an event loop for the async search
+                                    # Since we're in a thread pool (no event loop), create a new event loop
+                                    # and properly clean it up to avoid semaphore leaks
                                     import asyncio
                                     import queue
                                     logger.info(f"Executing web search for query: {search_query} (model: {model_id}, iteration: {tool_call_iteration})")
@@ -2123,12 +2123,29 @@ def call_openrouter_streaming(
                                     def run_search():
                                         """Run search in thread and put result in queue."""
                                         nonlocal search_exception
+                                        # Create a new event loop for this thread to avoid semaphore leaks
+                                        loop = asyncio.new_event_loop()
+                                        asyncio.set_event_loop(loop)
                                         try:
-                                            result = asyncio.run(execute_search_with_rate_limit())
+                                            result = loop.run_until_complete(execute_search_with_rate_limit())
                                             search_queue.put(("success", result))
                                         except Exception as e:
                                             search_exception = e
                                             search_queue.put(("error", None))
+                                        finally:
+                                            # Properly close the event loop to prevent resource leaks
+                                            try:
+                                                # Cancel any pending tasks
+                                                pending = asyncio.all_tasks(loop)
+                                                for task in pending:
+                                                    task.cancel()
+                                                # Wait for tasks to complete cancellation
+                                                if pending:
+                                                    loop.run_until_complete(asyncio.gather(*pending, return_exceptions=True))
+                                            except Exception:
+                                                pass
+                                            finally:
+                                                loop.close()
                                     
                                     # Start search in background thread
                                     search_thread = threading.Thread(target=run_search, daemon=True)
@@ -2363,12 +2380,29 @@ def call_openrouter_streaming(
                                     def run_fetch():
                                         """Run URL fetch in thread and put result in queue."""
                                         nonlocal fetch_exception
+                                        # Create a new event loop for this thread to avoid semaphore leaks
+                                        loop = asyncio.new_event_loop()
+                                        asyncio.set_event_loop(loop)
                                         try:
-                                            result = asyncio.run(execute_url_fetch())
+                                            result = loop.run_until_complete(execute_url_fetch())
                                             fetch_queue.put(("success", result))
                                         except Exception as e:
                                             fetch_exception = e
                                             fetch_queue.put(("error", None))
+                                        finally:
+                                            # Properly close the event loop to prevent resource leaks
+                                            try:
+                                                # Cancel any pending tasks
+                                                pending = asyncio.all_tasks(loop)
+                                                for task in pending:
+                                                    task.cancel()
+                                                # Wait for tasks to complete cancellation
+                                                if pending:
+                                                    loop.run_until_complete(asyncio.gather(*pending, return_exceptions=True))
+                                            except Exception:
+                                                pass
+                                            finally:
+                                                loop.close()
                                     
                                     # Start fetch in background thread
                                     fetch_thread = threading.Thread(target=run_fetch, daemon=True)
