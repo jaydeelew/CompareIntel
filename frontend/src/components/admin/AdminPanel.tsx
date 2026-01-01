@@ -311,6 +311,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
   const [searchProviders, setSearchProviders] = useState<SearchProvidersResponse | null>(null)
   const [searchProvidersLoading, setSearchProvidersLoading] = useState(false)
   const [testingProvider, setTestingProvider] = useState(false)
+  const [settingActiveProvider, setSettingActiveProvider] = useState<string | null>(null)
   const [testQuery, setTestQuery] = useState('test query')
   const [testResult, setTestResult] = useState<SearchProviderTestResult | null>(null)
   const [deletingModel, setDeletingModel] = useState(false)
@@ -464,6 +465,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
 
   const handleSetActiveProvider = async (provider: string) => {
     try {
+      setSettingActiveProvider(provider)
       console.log('[AdminPanel] Setting active provider:', provider)
       const result = await setActiveSearchProvider(provider)
       console.log('[AdminPanel] Provider set successfully:', result)
@@ -475,6 +477,8 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
       const errorMessage = err instanceof Error ? err.message : 'Failed to set active provider'
       setModelError(errorMessage)
       setTimeout(() => setModelError(null), 5000)
+    } finally {
+      setSettingActiveProvider(null)
     }
   }
 
