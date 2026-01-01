@@ -131,16 +131,36 @@ def _calculate_wait_time(
     attempt: int,
     config: RetryConfig
 ) -> float:
-    """Calculate wait time with exponential backoff and jitter."""
+    """
+    Calculate wait time with exponential backoff and jitter.
+    
+    Respects Retry-After header if provided, otherwise uses exponential backoff.
+    Always adds jitter to prevent thundering herd problems.
+    """
     if retry_after:
         try:
+            # Retry-After can be either seconds (integer) or HTTP date
+            # Try parsing as seconds first
             wait_time = float(retry_after)
+            # Ensure it's within reasonable bounds
+            wait_time = min(max(wait_time, config.initial_delay), config.max_delay)
         except (ValueError, TypeError):
+            # If not a number, try parsing as HTTP date (RFC 7231)
+            # For simplicity, fall back to exponential backoff if date parsing fails
             wait_time = min(config.initial_delay * (2 ** attempt), config.max_delay)
     else:
+        # No Retry-After header, use exponential backoff
         wait_time = min(config.initial_delay * (2 ** attempt), config.max_delay)
     
-    # Add random jitter
+    # Add random jitter to prevent synchronized retries across multiple models
+    # Jitter helps distribute retry attempts over time
     jitter = wait_time * config.jitter_factor * random.random()
-    return wait_time + jitter
+    final_wait = wait_time + jitter
+    
+    logger.debug(
+        f"Calculated wait time: {final_wait:.2f}s "
+        f"(base: {wait_time:.2f}s, jitter: {jitter:.2f}s, attempt: {attempt + 1})"
+    )
+    
+    return final_wait
 

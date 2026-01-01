@@ -77,6 +77,23 @@ class Settings(BaseSettings):
     # User-facing message displays "1 minute" for cleaner UX.
     model_inactivity_timeout: int = 55
     
+    # Search Rate Limiter Configuration
+    # These settings control rate limiting for search API requests across all providers
+    # Can be overridden via environment variables for provider-specific tuning
+    
+    # Default rate limits (applied to all providers unless provider-specific limits are set)
+    search_rate_limit_per_minute: int = 20  # Conservative default to avoid hitting API limits
+    search_max_concurrent: int = 3  # Reduced from 5 to prevent bursts
+    search_delay_between_requests: float = 1.0  # Increased from 0.5s to space out requests
+    
+    # Provider-specific rate limits (optional, falls back to defaults above)
+    # Format: JSON string like '{"brave": {"max_requests_per_minute": 15, "max_concurrent": 2}}'
+    search_provider_rate_limits: Optional[str] = None
+    
+    # Search result cache configuration
+    search_cache_enabled: bool = True  # Enable request deduplication/caching
+    search_cache_ttl_seconds: int = 300  # Cache results for 5 minutes
+    
     # Pydantic Settings v2 configuration
     model_config = SettingsConfigDict(
         env_file=".env",

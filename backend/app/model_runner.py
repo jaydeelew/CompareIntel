@@ -2131,21 +2131,38 @@ def call_openrouter_streaming(
                                     logger.info(f"Executing web search for query: {search_query} (model: {model_id}, iteration: {tool_call_iteration})")
                                     
                                     async def execute_search_with_rate_limit():
-                                        """Execute search with rate limiting."""
+                                        """Execute search with rate limiting and caching."""
+                                        # Get provider name for provider-specific rate limiting
+                                        provider_name = search_provider.get_provider_name() if hasattr(search_provider, 'get_provider_name') else "default"
+                                        
+                                        # Check cache first for request deduplication
+                                        cached_results = rate_limiter.cache.get(provider_name, search_query)
+                                        if cached_results is not None:
+                                            logger.info(
+                                                f"Using cached search results for query: {search_query[:50]}... "
+                                                f"(model: {model_id}, provider: {provider_name})"
+                                            )
+                                            return cached_results
+                                        
                                         try:
                                             # Acquire rate limiter permission (waits if necessary)
                                             # This coordinates search requests across all concurrent models
-                                            await rate_limiter.acquire()
+                                            # Uses provider-specific limits if configured
+                                            await rate_limiter.acquire(provider_name)
                                             try:
                                                 # Execute the actual search
                                                 search_results = await search_provider.search(search_query, max_results=5)
+                                                
+                                                # Cache successful results for future requests
+                                                rate_limiter.cache.set(provider_name, search_query, search_results)
+                                                
                                                 return search_results
                                             finally:
                                                 # Release concurrent slot after search completes
-                                                rate_limiter.release()
+                                                rate_limiter.release(provider_name)
                                         except Exception as e:
                                             # Release concurrent slot on error
-                                            rate_limiter.release()
+                                            rate_limiter.release(provider_name)
                                             raise
                                     
                                     # Use threading to run search in background and yield keepalives periodically
@@ -2221,19 +2238,34 @@ def call_openrouter_streaming(
                                         if search_exception:
                                             search_exec_error = search_exception
                                         error_msg = str(search_exec_error)
+                                        
                                         # Check if this is a rate limit error
                                         if "rate limit" in error_msg.lower() or "429" in error_msg:
-                                            logger.warning(
-                                                f"Search API rate limit hit for model {model_id}. "
-                                                f"This may occur when multiple models make concurrent search requests."
-                                            )
-                                            # Provide a helpful error message to the model
-                                            raise Exception(
-                                                f"Search API rate limit exceeded. Please try again in a moment. "
-                                                f"Error: {error_msg}"
-                                            )
-                                        logger.error(f"Error during web search execution: {search_exec_error}", exc_info=True)
-                                        raise
+                                            provider_name = search_provider.get_provider_name() if hasattr(search_provider, 'get_provider_name') else "default"
+                                            
+                                            # Try to use cached results as graceful degradation
+                                            cached_results = rate_limiter.cache.get(provider_name, search_query)
+                                            if cached_results is not None:
+                                                logger.info(
+                                                    f"Search API rate limit hit for model {model_id}, "
+                                                    f"using cached results as fallback (provider: {provider_name})"
+                                                )
+                                                search_results = cached_results
+                                                # Continue with cached results instead of raising error
+                                            else:
+                                                logger.warning(
+                                                    f"Search API rate limit hit for model {model_id}. "
+                                                    f"This may occur when multiple models make concurrent search requests. "
+                                                    f"No cached results available."
+                                                )
+                                                # Provide a helpful error message to the model
+                                                raise Exception(
+                                                    f"Search API rate limit exceeded. Please try again in a moment. "
+                                                    f"Error: {error_msg}"
+                                                )
+                                        else:
+                                            logger.error(f"Error during web search execution: {search_exec_error}", exc_info=True)
+                                            raise
                                     
                                     # Format search results for the model
                                     # Include current date/time context so models know what "today" means
