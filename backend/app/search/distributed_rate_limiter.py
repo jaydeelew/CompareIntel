@@ -330,9 +330,22 @@ class RedisRateLimiter:
         """Release concurrent slot."""
         concurrent_key = f"{self.key_prefix}:concurrent"
         try:
-            await self.redis.decr(concurrent_key)
+            # Get current value before decrementing for logging
+            current_value = await self.redis.get(concurrent_key)
+            current_value = int(current_value) if current_value else 0
+            
+            # Decrement the counter
+            new_value = await self.redis.decr(concurrent_key)
+            
+            logger.debug(
+                f"Redis release for {self.provider_name}: "
+                f"counter {current_value} -> {new_value} (key: {concurrent_key})"
+            )
         except Exception as e:
-            logger.warning(f"Redis release error: {e}")
+            logger.warning(
+                f"Redis release error for {self.provider_name}: {e}",
+                exc_info=True
+            )
             # Don't raise - release is best-effort
 
 
@@ -640,9 +653,14 @@ class DistributedSearchRateLimiter:
         # Always update in-memory state immediately (sync)
         lock, _, _, _ = self._get_provider_state(provider_name)
         with lock:
+            old_count = self._concurrent_counts[provider_name]
             self._concurrent_counts[provider_name] = max(
                 0,
                 self._concurrent_counts[provider_name] - 1
+            )
+            logger.debug(
+                f"Released rate limiter slot for {provider_name} "
+                f"(in-memory: {old_count} -> {self._concurrent_counts[provider_name]})"
             )
         
         # Try Redis release asynchronously (fire-and-forget, best effort)
@@ -661,17 +679,43 @@ class DistributedSearchRateLimiter:
                                     self._get_provider_config(provider_name)
                                 )
                                 await redis_limiter.release()
+                                logger.debug(
+                                    f"✅ Redis release completed for {provider_name}"
+                                )
+                            else:
+                                logger.warning(
+                                    f"⚠️ Redis connection failed during release for {provider_name}"
+                                )
                         except Exception as e:
-                            logger.debug(f"Redis release error (non-critical): {e}")
+                            logger.warning(
+                                f"Redis release error for {provider_name} (non-critical): {e}",
+                                exc_info=True
+                            )
                     
                     # Schedule but don't await (fire-and-forget)
-                    loop.create_task(_async_release())
+                    task = loop.create_task(_async_release())
+                    # Add error callback to catch any unhandled exceptions
+                    def handle_task_exception(task):
+                        try:
+                            task.result()  # This will raise if task failed
+                        except Exception as e:
+                            logger.warning(
+                                f"Redis release task failed for {provider_name}: {e}",
+                                exc_info=True
+                            )
+                    task.add_done_callback(handle_task_exception)
                 except RuntimeError:
                     # No running event loop, can't do async operation
                     # This is fine - in-memory state was already updated
-                    pass
+                    logger.debug(
+                        f"No event loop available for Redis release of {provider_name}, "
+                        f"in-memory state updated"
+                    )
             except Exception as e:
-                logger.debug(f"Could not schedule async Redis release: {e}")
+                logger.warning(
+                    f"Could not schedule async Redis release for {provider_name}: {e}",
+                    exc_info=True
+                )
     
     def record_success(self, provider_name: str, response_time: float):
         """Record successful API call for adaptive rate limiting."""
