@@ -34,6 +34,9 @@ except ImportError:
 
 from ..config.settings import settings
 
+# Import cache from the original rate limiter
+from .rate_limiter import SearchResultCache
+
 logger = logging.getLogger(__name__)
 
 
@@ -311,6 +314,8 @@ class DistributedSearchRateLimiter:
         self._rate_limit_events: Dict[str, int] = {}
         
         # Cache for request deduplication (shared with in-memory limiter)
+        # Import here to avoid circular import with rate_limiter.py
+        from .rate_limiter import SearchResultCache
         self.cache = SearchResultCache(ttl_seconds=settings.search_cache_ttl_seconds)
     
     def _init_redis(self, redis_url: str):
