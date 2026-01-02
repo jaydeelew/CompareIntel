@@ -27,10 +27,12 @@ from enum import Enum
 
 try:
     import redis.asyncio as aioredis
+    import redis  # Synchronous Redis client for release operations
     REDIS_AVAILABLE = True
 except ImportError:
     REDIS_AVAILABLE = False
     aioredis = None
+    redis = None
 
 from ..config.settings import settings
 
@@ -705,17 +707,31 @@ class DistributedSearchRateLimiter:
                             )
                     task.add_done_callback(handle_task_exception)
                 except RuntimeError:
-                    # No running event loop, can't do async operation
-                    # This is fine - in-memory state was already updated
+                    # No running event loop, use synchronous Redis client as fallback
                     logger.warning(
                         f"⚠️ No event loop available for Redis release of {provider_name}, "
-                        f"in-memory state updated (Redis counter may not decrement)"
+                        f"using synchronous Redis client fallback"
                     )
+                    try:
+                        self._release_redis_sync(provider_name)
+                    except Exception as sync_error:
+                        logger.warning(
+                            f"Synchronous Redis release failed for {provider_name}: {sync_error}",
+                            exc_info=True
+                        )
             except Exception as e:
                 logger.warning(
-                    f"Could not schedule async Redis release for {provider_name}: {e}",
+                    f"Could not schedule async Redis release for {provider_name}: {e}. "
+                    f"Trying synchronous fallback.",
                     exc_info=True
                 )
+                try:
+                    self._release_redis_sync(provider_name)
+                except Exception as sync_error:
+                    logger.warning(
+                        f"Synchronous Redis release fallback also failed for {provider_name}: {sync_error}",
+                        exc_info=True
+                    )
     
     def record_success(self, provider_name: str, response_time: float):
         """Record successful API call for adaptive rate limiting."""
