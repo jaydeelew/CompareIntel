@@ -439,23 +439,68 @@ class DistributedSearchRateLimiter:
             self.redis_client = None
     
     async def _ensure_redis_connection(self) -> bool:
-        """Ensure Redis connection is working, test if needed."""
-        if not self.use_redis or not self.redis_client:
+        """Ensure Redis connection is working, recreate client if event loop mismatch."""
+        if not self.use_redis:
             return False
         
-        # Test connection if not yet verified
-        if not self._redis_connection_verified:
+        # If client exists, try to use it
+        if self.redis_client is not None:
+            # Test if client works in current event loop
+            if not self._redis_connection_verified:
+                try:
+                    await asyncio.wait_for(self.redis_client.ping(), timeout=2.0)
+                    self._redis_connection_verified = True
+                    logger.info("✅ Redis connection verified")
+                    return True
+                except (RuntimeError, AttributeError, Exception) as e:
+                    # Event loop mismatch or connection issue - recreate client
+                    error_msg = str(e).lower()
+                    if "different loop" in error_msg or "attached to a different" in error_msg:
+                        logger.debug(f"Redis client event loop mismatch detected, recreating client")
+                    else:
+                        logger.debug(f"Redis connection test failed, will recreate: {e}")
+                    
+                    # Close old client
+                    try:
+                        await self.redis_client.aclose()
+                    except Exception:
+                        pass
+                    self.redis_client = None
+                    self._redis_connection_verified = False
+            else:
+                # Already verified, should work
+                return True
+        
+        # Create or recreate Redis client for current event loop
+        if self.redis_client is None and self._redis_url:
             try:
+                self.redis_client = aioredis.from_url(
+                    self._redis_url,
+                    encoding="utf-8",
+                    decode_responses=True,
+                    socket_connect_timeout=5,
+                    socket_timeout=5,
+                    retry_on_timeout=True,
+                    health_check_interval=30
+                )
+                # Test connection
                 await asyncio.wait_for(self.redis_client.ping(), timeout=2.0)
                 self._redis_connection_verified = True
                 logger.info("✅ Redis connection verified")
+                return True
             except Exception as e:
-                logger.warning(f"Redis connection test failed: {e}. Falling back to in-memory.")
+                logger.warning(f"Redis connection failed: {e}. Falling back to in-memory.")
                 self.use_redis = False
                 self._redis_connection_verified = False
+                if self.redis_client:
+                    try:
+                        await self.redis_client.aclose()
+                    except Exception:
+                        pass
+                    self.redis_client = None
                 return False
         
-        return True
+        return False
     
     def _get_provider_config(self, provider_name: str) -> ProviderRateLimitConfig:
         """Get configuration for provider."""
@@ -514,11 +559,8 @@ class DistributedSearchRateLimiter:
                             )
         
         # Try Redis first if available
-        if self.use_redis and self.redis_client:
+        if await self._ensure_redis_connection():
             try:
-                # Test connection on first use
-                await self.redis_client.ping()
-                
                 redis_limiter = RedisRateLimiter(
                     self.redis_client,
                     provider_name,
@@ -530,6 +572,9 @@ class DistributedSearchRateLimiter:
                     lock, bucket, request_times, _ = self._get_provider_state(provider_name)
                     with lock:
                         request_times.append(time.time())
+                    logger.debug(
+                        f"✅ Acquired rate limiter slot for {provider_name} via Redis"
+                    )
                     if config.delay_between_requests > 0:
                         await asyncio.sleep(config.delay_between_requests)
                     return
@@ -544,6 +589,7 @@ class DistributedSearchRateLimiter:
             except Exception as e:
                 logger.warning(f"Redis error ({e}), falling back to in-memory rate limiting")
                 self.use_redis = False
+                self._redis_connection_verified = False
                 # Continue to in-memory fallback
         
         # In-memory fallback (token bucket + sliding window)
