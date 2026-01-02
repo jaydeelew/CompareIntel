@@ -534,37 +534,52 @@ class DistributedSearchRateLimiter:
         
         # Try Redis first if available
         if await self._ensure_redis_connection():
-            try:
-                redis_limiter = RedisRateLimiter(
-                    self.redis_client,
-                    provider_name,
-                    config
+            # Replace recursion with a loop to prevent stack overflow
+            max_retries = 100  # Prevent infinite loops
+            retry_count = 0
+            
+            while retry_count < max_retries:
+                try:
+                    redis_limiter = RedisRateLimiter(
+                        self.redis_client,
+                        provider_name,
+                        config
+                    )
+                    success, wait_time = await redis_limiter.acquire()
+                    if success:
+                        # Also update local state for monitoring
+                        lock, bucket, request_times, _ = self._get_provider_state(provider_name)
+                        with lock:
+                            request_times.append(time.time())
+                        logger.debug(
+                            f"✅ Acquired rate limiter slot for {provider_name} via Redis "
+                            f"(retry {retry_count})"
+                        )
+                        if config.delay_between_requests > 0:
+                            await asyncio.sleep(config.delay_between_requests)
+                        return
+                    else:
+                        # Rate limit reached - wait and retry in loop (not recursively)
+                        logger.warning(
+                            f"⏸️ Redis rate limit reached for {provider_name}. "
+                            f"Waiting {wait_time:.2f}s (retry {retry_count}/{max_retries})"
+                        )
+                        await asyncio.sleep(wait_time)
+                        retry_count += 1
+                        # Continue loop to retry (instead of recursive call)
+                        continue
+                except Exception as e:
+                    logger.warning(f"Redis error ({e}), falling back to in-memory rate limiting")
+                    self.use_redis = False
+                    self._redis_connection_verified = False
+                    break  # Exit loop and fall back to in-memory
+            
+            if retry_count >= max_retries:
+                logger.error(
+                    f"Max retries ({max_retries}) exceeded for {provider_name}. "
+                    f"Falling back to in-memory rate limiting."
                 )
-                success, wait_time = await redis_limiter.acquire()
-                if success:
-                    # Also update local state for monitoring
-                    lock, bucket, request_times, _ = self._get_provider_state(provider_name)
-                    with lock:
-                        request_times.append(time.time())
-                    logger.debug(
-                        f"✅ Acquired rate limiter slot for {provider_name} via Redis"
-                    )
-                    if config.delay_between_requests > 0:
-                        await asyncio.sleep(config.delay_between_requests)
-                    return
-                else:
-                    logger.warning(
-                        f"⏸️ Redis rate limit reached for {provider_name}. "
-                        f"Waiting {wait_time:.2f}s"
-                    )
-                    await asyncio.sleep(wait_time)
-                    # Retry
-                    return await self.acquire(provider_name)
-            except Exception as e:
-                logger.warning(f"Redis error ({e}), falling back to in-memory rate limiting")
                 self.use_redis = False
-                self._redis_connection_verified = False
-                # Continue to in-memory fallback
         
         # In-memory fallback (token bucket + sliding window)
         lock, bucket, request_times, concurrent_count_ref = self._get_provider_state(provider_name)
