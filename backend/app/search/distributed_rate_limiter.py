@@ -211,26 +211,25 @@ class RedisRateLimiter:
     local concurrent_limit = tonumber(ARGV[2])
     local expire_seconds = tonumber(ARGV[3])
     
-    -- Get current counts
-    local minute_count = redis.call('GET', minute_key)
-    local concurrent_count = redis.call('GET', concurrent_key)
-    
-    minute_count = minute_count and tonumber(minute_count) or 0
-    concurrent_count = concurrent_count and tonumber(concurrent_count) or 0
-    
-    -- Check limits BEFORE incrementing (atomic check)
-    if minute_count >= minute_limit then
-        return {0, minute_count, concurrent_count}  -- Rate limit exceeded
-    end
-    
-    if concurrent_count >= concurrent_limit then
-        return {0, minute_count, concurrent_count}  -- Concurrent limit exceeded
-    end
-    
-    -- Increment counters atomically
-    minute_count = redis.call('INCR', minute_key)
+    -- Increment counters first (atomic operation)
+    local minute_count = redis.call('INCR', minute_key)
     redis.call('EXPIRE', minute_key, expire_seconds)
-    concurrent_count = redis.call('INCR', concurrent_key)
+    local concurrent_count = redis.call('INCR', concurrent_key)
+    
+    -- Check limits AFTER incrementing (prevents race conditions)
+    if minute_count > minute_limit then
+        -- Exceeded limit, decrement and return failure
+        redis.call('DECR', minute_key)
+        redis.call('DECR', concurrent_key)
+        return {0, minute_count - 1, concurrent_count - 1}  -- Rate limit exceeded
+    end
+    
+    if concurrent_count > concurrent_limit then
+        -- Exceeded limit, decrement and return failure
+        redis.call('DECR', minute_key)
+        redis.call('DECR', concurrent_key)
+        return {0, minute_count - 1, concurrent_count - 1}  -- Concurrent limit exceeded
+    end
     
     return {1, minute_count, concurrent_count}  -- Success
     """
