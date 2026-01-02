@@ -200,7 +200,40 @@ class CircuitBreaker:
 
 
 class RedisRateLimiter:
-    """Redis-based distributed rate limiter."""
+    """Redis-based distributed rate limiter with atomic operations."""
+    
+    # Lua script for atomic rate limit check and increment
+    # This ensures no race conditions between workers
+    ACQUIRE_SCRIPT = """
+    local minute_key = KEYS[1]
+    local concurrent_key = KEYS[2]
+    local minute_limit = tonumber(ARGV[1])
+    local concurrent_limit = tonumber(ARGV[2])
+    local expire_seconds = tonumber(ARGV[3])
+    
+    -- Get current counts
+    local minute_count = redis.call('GET', minute_key)
+    local concurrent_count = redis.call('GET', concurrent_key)
+    
+    minute_count = minute_count and tonumber(minute_count) or 0
+    concurrent_count = concurrent_count and tonumber(concurrent_count) or 0
+    
+    -- Check limits BEFORE incrementing (atomic check)
+    if minute_count >= minute_limit then
+        return {0, minute_count, concurrent_count}  -- Rate limit exceeded
+    end
+    
+    if concurrent_count >= concurrent_limit then
+        return {0, minute_count, concurrent_count}  -- Concurrent limit exceeded
+    end
+    
+    -- Increment counters atomically
+    minute_count = redis.call('INCR', minute_key)
+    redis.call('EXPIRE', minute_key, expire_seconds)
+    concurrent_count = redis.call('INCR', concurrent_key)
+    
+    return {1, minute_count, concurrent_count}  -- Success
+    """
     
     def __init__(self, redis_client: Any, provider_name: str, config: ProviderRateLimitConfig):
         """
@@ -215,10 +248,21 @@ class RedisRateLimiter:
         self.provider_name = provider_name
         self.config = config
         self.key_prefix = f"rate_limit:{provider_name}"
+        # Load Lua script once for efficiency
+        self._acquire_script_sha = None
+    
+    async def _ensure_script_loaded(self):
+        """Ensure Lua script is loaded in Redis."""
+        if self._acquire_script_sha is None:
+            try:
+                self._acquire_script_sha = await self.redis.script_load(self.ACQUIRE_SCRIPT)
+            except Exception as e:
+                logger.warning(f"Failed to load Lua script, using EVAL: {e}")
+                self._acquire_script_sha = None
     
     async def acquire(self) -> Tuple[bool, float]:
         """
-        Try to acquire permission for a request.
+        Try to acquire permission for a request atomically.
         
         Returns:
             Tuple of (success, wait_time_seconds)
@@ -227,37 +271,88 @@ class RedisRateLimiter:
         minute_key = f"{self.key_prefix}:minute:{int(now // 60)}"
         concurrent_key = f"{self.key_prefix}:concurrent"
         
-        pipe = self.redis.pipeline()
-        
-        # Check per-minute limit
-        pipe.incr(minute_key)
-        pipe.expire(minute_key, 60)
-        
-        # Check concurrent limit
-        pipe.incr(concurrent_key)
-        
-        results = await pipe.execute()
-        minute_count = results[0]
-        concurrent_count = results[2]
-        
-        # Check limits
-        if minute_count > self.config.max_requests_per_minute:
-            await self.redis.decr(minute_key)
-            await self.redis.decr(concurrent_key)
-            wait_time = 60 - (now % 60) + 0.1
-            return False, wait_time
-        
-        if concurrent_count > self.config.max_concurrent:
-            await self.redis.decr(minute_key)
-            await self.redis.decr(concurrent_key)
-            return False, 0.1  # Retry quickly
-        
-        return True, 0.0
+        try:
+            await self._ensure_script_loaded()
+            
+            # Use Lua script for atomic check-and-increment
+            if self._acquire_script_sha:
+                # Use EVALSHA for better performance
+                result = await self.redis.evalsha(
+                    self._acquire_script_sha,
+                    2,  # Number of keys
+                    minute_key,
+                    concurrent_key,
+                    str(self.config.max_requests_per_minute),
+                    str(self.config.max_concurrent),
+                    "60"  # Expire seconds
+                )
+            else:
+                # Fallback to EVAL if script loading failed
+                result = await self.redis.eval(
+                    self.ACQUIRE_SCRIPT,
+                    2,  # Number of keys
+                    minute_key,
+                    concurrent_key,
+                    str(self.config.max_requests_per_minute),
+                    str(self.config.max_concurrent),
+                    "60"  # Expire seconds
+                )
+            
+            success = result[0] == 1
+            minute_count = result[1]
+            concurrent_count = result[2]
+            
+            if not success:
+                # Calculate wait time
+                if minute_count >= self.config.max_requests_per_minute:
+                    wait_time = 60 - (now % 60) + 0.1
+                else:
+                    wait_time = 0.1  # Retry quickly for concurrent limit
+                return False, wait_time
+            
+            return True, 0.0
+            
+        except Exception as e:
+            logger.error(f"Redis acquire error: {e}")
+            # Fallback: try simple increment and check (non-atomic but better than nothing)
+            try:
+                pipe = self.redis.pipeline()
+                pipe.get(minute_key)
+                pipe.get(concurrent_key)
+                pipe.incr(minute_key)
+                pipe.expire(minute_key, 60)
+                pipe.incr(concurrent_key)
+                results = await pipe.execute()
+                
+                # results[0] = minute_count (before increment), results[1] = concurrent_count (before increment)
+                # results[2] = minute_count (after increment), results[3] = expire result, results[4] = concurrent_count (after increment)
+                minute_count_after = results[2] or 1
+                concurrent_count_after = results[4] or 1
+                
+                if minute_count_after > self.config.max_requests_per_minute:
+                    await self.redis.decr(minute_key)
+                    await self.redis.decr(concurrent_key)
+                    wait_time = 60 - (now % 60) + 0.1
+                    return False, wait_time
+                
+                if concurrent_count_after > self.config.max_concurrent:
+                    await self.redis.decr(minute_key)
+                    await self.redis.decr(concurrent_key)
+                    return False, 0.1
+                
+                return True, 0.0
+            except Exception as e2:
+                logger.error(f"Redis fallback acquire also failed: {e2}")
+                raise
     
     async def release(self):
         """Release concurrent slot."""
         concurrent_key = f"{self.key_prefix}:concurrent"
-        await self.redis.decr(concurrent_key)
+        try:
+            await self.redis.decr(concurrent_key)
+        except Exception as e:
+            logger.warning(f"Redis release error: {e}")
+            # Don't raise - release is best-effort
 
 
 class DistributedSearchRateLimiter:
@@ -292,6 +387,8 @@ class DistributedSearchRateLimiter:
         self.redis_client = None
         self.use_redis = False
         self._redis_lock = threading.Lock()
+        self._redis_url = redis_url
+        self._redis_connection_verified = False
         
         if redis_url and REDIS_AVAILABLE:
             try:
@@ -319,35 +416,46 @@ class DistributedSearchRateLimiter:
         self.cache = SearchResultCache(ttl_seconds=settings.search_cache_ttl_seconds)
     
     def _init_redis(self, redis_url: str):
-        """Initialize Redis connection."""
+        """Initialize Redis connection (sync, connection tested on first async use)."""
         if not REDIS_AVAILABLE:
             return
         
         try:
+            # Create Redis client - connection will be tested on first async use
             self.redis_client = aioredis.from_url(
                 redis_url,
                 encoding="utf-8",
                 decode_responses=True,
-                socket_connect_timeout=2,
-                socket_timeout=2,
-                retry_on_timeout=True
+                socket_connect_timeout=5,
+                socket_timeout=5,
+                retry_on_timeout=True,
+                health_check_interval=30
             )
-            # Test connection
-            asyncio.create_task(self._test_redis())
             self.use_redis = True
-            logger.info("✅ Redis connected - using distributed rate limiting")
+            logger.info("✅ Redis client created - will test connection on first use")
         except Exception as e:
-            logger.warning(f"Redis connection failed: {e}. Using in-memory fallback.")
+            logger.warning(f"Redis client creation failed: {e}. Using in-memory fallback.")
             self.use_redis = False
+            self.redis_client = None
     
-    async def _test_redis(self):
-        """Test Redis connection."""
-        try:
-            await self.redis_client.ping()
-            logger.info("Redis connection verified")
-        except Exception as e:
-            logger.error(f"Redis connection test failed: {e}")
-            self.use_redis = False
+    async def _ensure_redis_connection(self) -> bool:
+        """Ensure Redis connection is working, test if needed."""
+        if not self.use_redis or not self.redis_client:
+            return False
+        
+        # Test connection if not yet verified
+        if not self._redis_connection_verified:
+            try:
+                await asyncio.wait_for(self.redis_client.ping(), timeout=2.0)
+                self._redis_connection_verified = True
+                logger.info("✅ Redis connection verified")
+            except Exception as e:
+                logger.warning(f"Redis connection test failed: {e}. Falling back to in-memory.")
+                self.use_redis = False
+                self._redis_connection_verified = False
+                return False
+        
+        return True
     
     def _get_provider_config(self, provider_name: str) -> ProviderRateLimitConfig:
         """Get configuration for provider."""
@@ -488,24 +596,47 @@ class DistributedSearchRateLimiter:
             await asyncio.sleep(config.delay_between_requests)
     
     def release(self, provider_name: str = "default"):
-        """Release concurrent slot."""
-        if self.use_redis and self.redis_client:
-            try:
-                redis_limiter = RedisRateLimiter(
-                    self.redis_client,
-                    provider_name,
-                    self._get_provider_config(provider_name)
-                )
-                asyncio.create_task(redis_limiter.release())
-            except Exception:
-                pass  # Fall through to in-memory
+        """
+        Release concurrent slot (synchronous for compatibility).
         
+        This method is synchronous for compatibility with the old rate limiter interface.
+        Redis release is handled asynchronously in the background when possible.
+        """
+        # Always update in-memory state immediately (sync)
         lock, _, _, _ = self._get_provider_state(provider_name)
         with lock:
             self._concurrent_counts[provider_name] = max(
                 0,
                 self._concurrent_counts[provider_name] - 1
             )
+        
+        # Try Redis release asynchronously (fire-and-forget, best effort)
+        if self.use_redis and self.redis_client:
+            try:
+                # Try to get the current event loop
+                try:
+                    loop = asyncio.get_running_loop()
+                    # We're in an async context, schedule the release
+                    async def _async_release():
+                        try:
+                            if await self._ensure_redis_connection():
+                                redis_limiter = RedisRateLimiter(
+                                    self.redis_client,
+                                    provider_name,
+                                    self._get_provider_config(provider_name)
+                                )
+                                await redis_limiter.release()
+                        except Exception as e:
+                            logger.debug(f"Redis release error (non-critical): {e}")
+                    
+                    # Schedule but don't await (fire-and-forget)
+                    loop.create_task(_async_release())
+                except RuntimeError:
+                    # No running event loop, can't do async operation
+                    # This is fine - in-memory state was already updated
+                    pass
+            except Exception as e:
+                logger.debug(f"Could not schedule async Redis release: {e}")
     
     def record_success(self, provider_name: str, response_time: float):
         """Record successful API call for adaptive rate limiting."""
