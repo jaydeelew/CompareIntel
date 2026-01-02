@@ -495,6 +495,48 @@ class DistributedSearchRateLimiter:
         """Get configuration for provider."""
         return self.provider_configs.get(provider_name, self.default_config)
     
+    def _release_redis_sync(self, provider_name: str):
+        """Release Redis counter synchronously (for use when no event loop available or in threads)."""
+        if not self._redis_url or not REDIS_AVAILABLE or redis is None:
+            logger.warning(
+                f"Cannot use synchronous Redis release for {provider_name}: "
+                f"redis_url={bool(self._redis_url)}, REDIS_AVAILABLE={REDIS_AVAILABLE}, redis={redis is not None}"
+            )
+            return
+        
+        try:
+            # Parse Redis URL to get connection details
+            from urllib.parse import urlparse
+            parsed = urlparse(self._redis_url)
+            
+            # Create synchronous Redis client
+            sync_client = redis.Redis(
+                host=parsed.hostname or 'localhost',
+                port=parsed.port or 6379,
+                db=int(parsed.path.lstrip('/')) if parsed.path else 0,
+                decode_responses=True,
+                socket_connect_timeout=2,
+                socket_timeout=2
+            )
+            
+            # Decrement the concurrent counter
+            concurrent_key = f"rate_limit:{provider_name}:concurrent"
+            current_value = sync_client.get(concurrent_key)
+            current_value = int(current_value) if current_value else 0
+            new_value = sync_client.decr(concurrent_key)
+            
+            logger.warning(
+                f"🔓 Synchronous Redis release for {provider_name}: "
+                f"counter {current_value} -> {new_value} (key: {concurrent_key})"
+            )
+            
+            sync_client.close()
+        except Exception as e:
+            logger.warning(
+                f"Synchronous Redis release error for {provider_name}: {e}",
+                exc_info=True
+            )
+    
     def _get_provider_state(self, provider_name: str) -> Tuple[threading.Lock, TokenBucket, deque, int]:
         """Get or create state for provider."""
         if provider_name not in self._locks:
@@ -665,73 +707,108 @@ class DistributedSearchRateLimiter:
                 f"(in-memory: {old_count} -> {self._concurrent_counts[provider_name]})"
             )
         
-        # Try Redis release asynchronously (fire-and-forget, best effort)
-        if self.use_redis and self.redis_client:
-            try:
-                # Try to get the current event loop
-                try:
-                    loop = asyncio.get_running_loop()
-                    # We're in an async context, schedule the release
-                    async def _async_release():
-                        try:
-                            if await self._ensure_redis_connection():
-                                redis_limiter = RedisRateLimiter(
-                                    self.redis_client,
-                                    provider_name,
-                                    self._get_provider_config(provider_name)
-                                )
-                                await redis_limiter.release()
-                                logger.warning(
-                                    f"✅ Redis release completed for {provider_name}"
-                                )
-                            else:
-                                logger.warning(
-                                    f"⚠️ Redis connection failed during release for {provider_name}"
-                                )
-                        except Exception as e:
-                            logger.warning(
-                                f"Redis release error for {provider_name} (non-critical): {e}",
-                                exc_info=True
-                            )
-                    
-                    # Schedule but don't await (fire-and-forget)
-                    task = loop.create_task(_async_release())
-                    # Add error callback to catch any unhandled exceptions
-                    def handle_task_exception(task):
-                        try:
-                            task.result()  # This will raise if task failed
-                        except Exception as e:
-                            logger.warning(
-                                f"Redis release task failed for {provider_name}: {e}",
-                                exc_info=True
-                            )
-                    task.add_done_callback(handle_task_exception)
-                except RuntimeError:
-                    # No running event loop, use synchronous Redis client as fallback
-                    logger.warning(
-                        f"⚠️ No event loop available for Redis release of {provider_name}, "
-                        f"using synchronous Redis client fallback"
-                    )
-                    try:
-                        self._release_redis_sync(provider_name)
-                    except Exception as sync_error:
-                        logger.warning(
-                            f"Synchronous Redis release failed for {provider_name}: {sync_error}",
-                            exc_info=True
-                        )
-            except Exception as e:
+        # Try Redis release - use synchronous method when called from thread context
+        # (which is common when release() is called from finally blocks in background threads)
+        # Always try Redis release if we have a URL, even if use_redis is False (might have failed during acquire)
+        if self._redis_url and REDIS_AVAILABLE:
+            # Check if we're in a thread (threading.current_thread() != threading.main_thread())
+            # or if there's no reliable event loop - use synchronous release for reliability
+            import threading as threading_module
+            current_thread = threading_module.current_thread()
+            is_main_thread = current_thread == threading_module.main_thread()
+            
+            # Use synchronous release when:
+            # 1. Not in main thread (background thread)
+            # 2. No event loop available
+            # 3. Or as a reliable fallback
+            use_sync = not is_main_thread
+            
+            if use_sync:
+                # Use synchronous Redis client for thread contexts
                 logger.warning(
-                    f"Could not schedule async Redis release for {provider_name}: {e}. "
-                    f"Trying synchronous fallback.",
-                    exc_info=True
+                    f"🔓 Using synchronous Redis release for {provider_name} "
+                    f"(thread: {current_thread.name})"
                 )
                 try:
                     self._release_redis_sync(provider_name)
                 except Exception as sync_error:
                     logger.warning(
-                        f"Synchronous Redis release fallback also failed for {provider_name}: {sync_error}",
+                        f"Synchronous Redis release failed for {provider_name}: {sync_error}",
                         exc_info=True
                     )
+            else:
+                # Try async release in main thread
+                try:
+                    # Try to get the current event loop
+                    try:
+                        loop = asyncio.get_running_loop()
+                        # We're in an async context, schedule the release
+                        async def _async_release():
+                            try:
+                                if await self._ensure_redis_connection():
+                                    redis_limiter = RedisRateLimiter(
+                                        self.redis_client,
+                                        provider_name,
+                                        self._get_provider_config(provider_name)
+                                    )
+                                    await redis_limiter.release()
+                                    logger.warning(
+                                        f"✅ Redis release completed for {provider_name}"
+                                    )
+                                else:
+                                    logger.warning(
+                                        f"⚠️ Redis connection failed during release for {provider_name}"
+                                    )
+                            except Exception as e:
+                                logger.warning(
+                                    f"Redis release error for {provider_name} (non-critical): {e}",
+                                    exc_info=True
+                                )
+                        
+                        # Schedule but don't await (fire-and-forget)
+                        task = loop.create_task(_async_release())
+                        # Add error callback to catch any unhandled exceptions
+                        def handle_task_exception(task):
+                            try:
+                                task.result()  # This will raise if task failed
+                            except Exception as e:
+                                logger.warning(
+                                    f"Redis release task failed for {provider_name}: {e}. "
+                                    f"Falling back to synchronous release.",
+                                    exc_info=True
+                                )
+                                # Fallback to synchronous if async fails
+                                try:
+                                    self._release_redis_sync(provider_name)
+                                except Exception:
+                                    pass
+                        task.add_done_callback(handle_task_exception)
+                    except RuntimeError:
+                        # No running event loop, use synchronous Redis client as fallback
+                        logger.warning(
+                            f"⚠️ No event loop available for Redis release of {provider_name}, "
+                            f"using synchronous Redis client fallback"
+                        )
+                        try:
+                            self._release_redis_sync(provider_name)
+                        except Exception as sync_error:
+                            logger.warning(
+                                f"Synchronous Redis release failed for {provider_name}: {sync_error}",
+                                exc_info=True
+                            )
+                except Exception as e:
+                    logger.warning(
+                        f"Could not schedule async Redis release for {provider_name}: {e}. "
+                        f"Trying synchronous fallback.",
+                        exc_info=True
+                    )
+                    try:
+                        self._release_redis_sync(provider_name)
+                    except Exception as sync_error:
+                        logger.warning(
+                            f"Synchronous Redis release fallback also failed for {provider_name}: {sync_error}",
+                            exc_info=True
+                        )
     
     def record_success(self, provider_name: str, response_time: float):
         """Record successful API call for adaptive rate limiting."""
