@@ -252,13 +252,10 @@ class RedisRateLimiter:
         self._acquire_script_sha = None
     
     async def _ensure_script_loaded(self):
-        """Ensure Lua script is loaded in Redis."""
-        if self._acquire_script_sha is None:
-            try:
-                self._acquire_script_sha = await self.redis.script_load(self.ACQUIRE_SCRIPT)
-            except Exception as e:
-                logger.warning(f"Failed to load Lua script, using EVAL: {e}")
-                self._acquire_script_sha = None
+        """Ensure Lua script is loaded in Redis (skipped - using EVAL directly to avoid event loop issues)."""
+        # Skip script loading optimization - use EVAL directly to avoid event loop mismatches
+        # The performance difference is minimal and this avoids complex event loop handling
+        self._acquire_script_sha = None
     
     async def acquire(self) -> Tuple[bool, float]:
         """
@@ -272,31 +269,16 @@ class RedisRateLimiter:
         concurrent_key = f"{self.key_prefix}:concurrent"
         
         try:
-            await self._ensure_script_loaded()
-            
-            # Use Lua script for atomic check-and-increment
-            if self._acquire_script_sha:
-                # Use EVALSHA for better performance
-                result = await self.redis.evalsha(
-                    self._acquire_script_sha,
-                    2,  # Number of keys
-                    minute_key,
-                    concurrent_key,
-                    str(self.config.max_requests_per_minute),
-                    str(self.config.max_concurrent),
-                    "60"  # Expire seconds
-                )
-            else:
-                # Fallback to EVAL if script loading failed
-                result = await self.redis.eval(
-                    self.ACQUIRE_SCRIPT,
-                    2,  # Number of keys
-                    minute_key,
-                    concurrent_key,
-                    str(self.config.max_requests_per_minute),
-                    str(self.config.max_concurrent),
-                    "60"  # Expire seconds
-                )
+            # Use EVAL directly (skipping script loading to avoid event loop issues)
+            result = await self.redis.eval(
+                self.ACQUIRE_SCRIPT,
+                2,  # Number of keys
+                minute_key,
+                concurrent_key,
+                str(self.config.max_requests_per_minute),
+                str(self.config.max_concurrent),
+                "60"  # Expire seconds
+            )
             
             success = result[0] == 1
             minute_count = result[1]
