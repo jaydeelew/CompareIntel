@@ -2263,6 +2263,7 @@ def call_openrouter_streaming(
                                     # This ensures frontend timeout is reset during long search operations
                                     # Use 5 seconds to match ACTIVE_STREAMING_WINDOW in frontend
                                     KEEPALIVE_INTERVAL = 5.0  # Send keepalive every 5 seconds
+                                    SEARCH_TIMEOUT = 120.0  # Maximum time to wait for search (2 minutes)
                                     search_start_time = time.time()
                                     
                                     try:
@@ -2281,8 +2282,24 @@ def call_openrouter_streaming(
                                                     # Error occurred in search thread
                                                     raise search_exception
                                             except queue.Empty:
-                                                # Search still running - yield keepalive to reset frontend timeout
+                                                # Search still running - check for timeout
                                                 elapsed = time.time() - search_start_time
+                                                if elapsed > SEARCH_TIMEOUT:
+                                                    # Search timed out - release rate limiter and raise error
+                                                    provider_name = search_provider.get_provider_name() if hasattr(search_provider, 'get_provider_name') else "default"
+                                                    logger.warning(
+                                                        f"⏱️ Search timeout after {elapsed:.1f}s for {provider_name} "
+                                                        f"(model: {model_id}), releasing rate limiter slot"
+                                                    )
+                                                    try:
+                                                        rate_limiter.release(provider_name)
+                                                    except Exception as release_error:
+                                                        logger.error(
+                                                            f"Failed to release rate limiter on timeout: {release_error}",
+                                                            exc_info=True
+                                                        )
+                                                    raise Exception(f"Search timed out after {SEARCH_TIMEOUT}s")
+                                                # Yield keepalive to reset frontend timeout
                                                 yield " "
                                         
                                         # Search completed successfully, search_results is set
@@ -2295,10 +2312,23 @@ def call_openrouter_streaming(
                                             search_exec_error = search_exception
                                         error_msg = str(search_exec_error)
                                         
+                                        # CRITICAL: Release rate limiter slot even on error/timeout
+                                        # This ensures the counter doesn't get stuck if search fails
+                                        try:
+                                            provider_name = search_provider.get_provider_name() if hasattr(search_provider, 'get_provider_name') else "default"
+                                            logger.warning(
+                                                f"🔓 Releasing rate limiter slot for {provider_name} "
+                                                f"due to search error/timeout (model: {model_id})"
+                                            )
+                                            rate_limiter.release(provider_name)
+                                        except Exception as release_error:
+                                            logger.error(
+                                                f"Failed to release rate limiter slot: {release_error}",
+                                                exc_info=True
+                                            )
+                                        
                                         # Check if this is a rate limit error
                                         if "rate limit" in error_msg.lower() or "429" in error_msg:
-                                            provider_name = search_provider.get_provider_name() if hasattr(search_provider, 'get_provider_name') else "default"
-                                            
                                             # Try to use cached results as graceful degradation
                                             cached_results = rate_limiter.cache.get(provider_name, search_query)
                                             if cached_results is not None:
