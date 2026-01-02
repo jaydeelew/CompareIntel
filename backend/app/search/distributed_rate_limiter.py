@@ -421,68 +421,61 @@ class DistributedSearchRateLimiter:
             self.redis_client = None
     
     async def _ensure_redis_connection(self) -> bool:
-        """Ensure Redis connection is working, recreate client if event loop mismatch."""
-        if not self.use_redis:
+        """Ensure Redis connection is working, create fresh client for current event loop."""
+        if not self.use_redis or not self._redis_url:
             return False
         
-        # If client exists, try to use it
-        if self.redis_client is not None:
-            # Test if client works in current event loop
-            if not self._redis_connection_verified:
-                try:
-                    await asyncio.wait_for(self.redis_client.ping(), timeout=2.0)
-                    self._redis_connection_verified = True
-                    logger.info("✅ Redis connection verified")
-                    return True
-                except (RuntimeError, AttributeError, Exception) as e:
-                    # Event loop mismatch or connection issue - recreate client
-                    error_msg = str(e).lower()
-                    if "different loop" in error_msg or "attached to a different" in error_msg:
-                        logger.debug(f"Redis client event loop mismatch detected, recreating client")
-                    else:
-                        logger.debug(f"Redis connection test failed, will recreate: {e}")
-                    
-                    # Close old client
-                    try:
-                        await self.redis_client.aclose()
-                    except Exception:
-                        pass
-                    self.redis_client = None
-                    self._redis_connection_verified = False
-            else:
-                # Already verified, should work
-                return True
+        # Get current event loop
+        try:
+            current_loop = asyncio.get_running_loop()
+            loop_id = id(current_loop)
+        except RuntimeError:
+            # No running loop
+            return False
         
-        # Create or recreate Redis client for current event loop
-        if self.redis_client is None and self._redis_url:
+        # Check if we have a client for this event loop
+        # Store clients per event loop to avoid cross-loop issues
+        if not hasattr(self, '_redis_clients_by_loop'):
+            self._redis_clients_by_loop = {}
+        
+        # Get or create client for current event loop
+        if loop_id in self._redis_clients_by_loop:
+            client = self._redis_clients_by_loop[loop_id]
+            # Quick test to ensure it still works
             try:
-                self.redis_client = aioredis.from_url(
-                    self._redis_url,
-                    encoding="utf-8",
-                    decode_responses=True,
-                    socket_connect_timeout=5,
-                    socket_timeout=5,
-                    retry_on_timeout=True,
-                    health_check_interval=30
-                )
-                # Test connection
-                await asyncio.wait_for(self.redis_client.ping(), timeout=2.0)
-                self._redis_connection_verified = True
-                logger.info("✅ Redis connection verified")
+                await asyncio.wait_for(client.ping(), timeout=1.0)
+                self.redis_client = client  # Set for compatibility
                 return True
-            except Exception as e:
-                logger.warning(f"Redis connection failed: {e}. Falling back to in-memory.")
-                self.use_redis = False
-                self._redis_connection_verified = False
-                if self.redis_client:
-                    try:
-                        await self.redis_client.aclose()
-                    except Exception:
-                        pass
-                    self.redis_client = None
-                return False
+            except Exception:
+                # Client doesn't work, remove it and recreate
+                try:
+                    await client.aclose()
+                except Exception:
+                    pass
+                del self._redis_clients_by_loop[loop_id]
         
-        return False
+        # Create fresh client for current event loop
+        try:
+            client = aioredis.from_url(
+                self._redis_url,
+                encoding="utf-8",
+                decode_responses=True,
+                socket_connect_timeout=5,
+                socket_timeout=5,
+                retry_on_timeout=True,
+                health_check_interval=30
+            )
+            # Test connection
+            await asyncio.wait_for(client.ping(), timeout=2.0)
+            self._redis_clients_by_loop[loop_id] = client
+            self.redis_client = client  # Set for compatibility
+            if not self._redis_connection_verified:
+                logger.info("✅ Redis connection verified")
+                self._redis_connection_verified = True
+            return True
+        except Exception as e:
+            logger.warning(f"Redis connection failed: {e}. Falling back to in-memory.")
+            return False
     
     def _get_provider_config(self, provider_name: str) -> ProviderRateLimitConfig:
         """Get configuration for provider."""
