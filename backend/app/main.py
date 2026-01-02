@@ -58,6 +58,10 @@ logging.basicConfig(
     datefmt="%Y-%m-%d %H:%M:%S",
 )
 
+# Set INFO level for search-related modules even in production (critical for rate limiting debugging)
+logging.getLogger("app.search").setLevel(logging.INFO)
+logging.getLogger("app.model_runner").setLevel(logging.INFO if settings.environment == "development" else logging.WARNING)
+
 # Get logger for this module
 logger = logging.getLogger(__name__)
 

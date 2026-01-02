@@ -2135,22 +2135,22 @@ def call_openrouter_streaming(
                                         # Get provider name for provider-specific rate limiting
                                         provider_name = search_provider.get_provider_name() if hasattr(search_provider, 'get_provider_name') else "default"
                                         
-                                        logger.info(
-                                            f"Preparing search request for '{search_query[:50]}...' "
+                                        logger.warning(
+                                            f"🔍 Preparing search request for '{search_query[:50]}...' "
                                             f"(model: {model_id}, provider: {provider_name})"
                                         )
                                         
                                         # Check cache first for request deduplication
                                         cached_results = rate_limiter.cache.get(provider_name, search_query)
                                         if cached_results is not None:
-                                            logger.info(
+                                            logger.warning(
                                                 f"✅ Cache HIT - Using cached search results for query: {search_query[:50]}... "
                                                 f"(model: {model_id}, provider: {provider_name})"
                                             )
                                             return cached_results
                                         
-                                        logger.info(
-                                            f"Cache MISS - Acquiring rate limiter slot for {provider_name} "
+                                        logger.warning(
+                                            f"❌ Cache MISS - Acquiring rate limiter slot for {provider_name} "
                                             f"(model: {model_id})"
                                         )
                                         
@@ -2159,16 +2159,16 @@ def call_openrouter_streaming(
                                             # This coordinates search requests across all concurrent models
                                             # Uses provider-specific limits if configured
                                             await rate_limiter.acquire(provider_name)
-                                            logger.info(
-                                                f"Rate limiter slot acquired, executing search for '{search_query[:50]}...' "
+                                            logger.warning(
+                                                f"🚀 Rate limiter slot acquired, executing search for '{search_query[:50]}...' "
                                                 f"(model: {model_id}, provider: {provider_name})"
                                             )
                                             try:
                                                 # Execute the actual search
                                                 search_results = await search_provider.search(search_query, max_results=5)
                                                 
-                                                logger.info(
-                                                    f"Search completed successfully, caching results for '{search_query[:50]}...' "
+                                                logger.warning(
+                                                    f"✅ Search completed successfully, caching results for '{search_query[:50]}...' "
                                                     f"(model: {model_id}, provider: {provider_name}, results: {len(search_results)})"
                                                 )
                                                 

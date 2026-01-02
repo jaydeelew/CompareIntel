@@ -202,17 +202,22 @@ class SearchRateLimiter:
                     # Calculate wait time until oldest request expires
                     oldest_request_time = request_times[0]
                     wait_time = 60 - (now - oldest_request_time) + 0.1  # Add small buffer
-                    logger.info(
-                        f"Search rate limit reached for {provider_name} "
+                    
+                    # Track rate limit events for monitoring
+                    self._rate_limit_events[provider_name] = self._rate_limit_events.get(provider_name, 0) + 1
+                    
+                    logger.warning(
+                        f"⏸️ Search rate limit reached for {provider_name} "
                         f"({len(request_times)}/{config.max_requests_per_minute}). "
-                        f"Waiting {wait_time:.2f}s before next request."
+                        f"Waiting {wait_time:.2f}s before next request. "
+                        f"(Total rate limit hits for {provider_name}: {self._rate_limit_events[provider_name]})"
                     )
                 else:
                     # We can proceed - acquire slot and record request
                     self._concurrent_counts[provider_name] += 1
                     request_times.append(now)
-                    logger.info(
-                        f"Acquired search rate limiter slot for {provider_name} "
+                    logger.warning(
+                        f"✅ Acquired search rate limiter slot for {provider_name} "
                         f"({len(request_times)}/{config.max_requests_per_minute} requests in window, "
                         f"{self._concurrent_counts[provider_name]}/{config.max_concurrent} concurrent)"
                     )
