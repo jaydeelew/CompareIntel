@@ -1,4 +1,18 @@
 services:
+  redis:
+    image: redis:7-alpine
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_data:/data
+    networks:
+      - compareintel-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+
   backend:
     build:
       context: ./backend
@@ -9,6 +23,9 @@ services:
       - PYTHONPATH=/app
     env_file:
       - ./backend/.env
+    depends_on:
+      redis:
+        condition: service_healthy
     networks:
       - compareintel-network
 
@@ -52,3 +69,6 @@ services:
 networks:
   compareintel-network:
     driver: bridge
+
+volumes:
+  redis_data:

@@ -1,4 +1,18 @@
 services:
+  redis:
+    image: redis:7-alpine
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_data:/data
+    networks:
+      - compareintel-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+
   postgres:
     image: postgres:15-alpine
     environment:
@@ -32,6 +46,8 @@ services:
       - ./backend/.env
     depends_on:
       postgres:
+        condition: service_healthy
+      redis:
         condition: service_healthy
     networks:
       - compareintel-network
@@ -71,3 +87,4 @@ networks:
 
 volumes:
   postgres_data:
+  redis_data:
