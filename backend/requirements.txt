@@ -76,3 +76,8 @@ pydantic[email]>=2.0.0   # Email validation
 # Timezone Support
 # ============================================================================
 pytz>=2024.1             # Timezone handling for credit resets
+
+# ============================================================================
+# Distributed Rate Limiting (Optional - for multi-worker deployments)
+# ============================================================================
+redis>=5.0.0             # Redis client for distributed rate limiting (optional)

@@ -82,12 +82,13 @@ class Settings(BaseSettings):
     # Can be overridden via environment variables for provider-specific tuning
     
     # Default rate limits (applied to all providers unless provider-specific limits are set)
-    # NOTE: Each Gunicorn worker has its own rate limiter instance.
+    # NOTE: With Redis disabled, each Gunicorn worker has its own rate limiter instance.
     # With 4 workers, total capacity = 4 * search_rate_limit_per_minute
-    # Set conservatively to account for multiple workers (default: 5 req/min per worker = 20 total with 4 workers)
-    search_rate_limit_per_minute: int = 5  # Per-worker limit (conservative to account for multiple workers)
-    search_max_concurrent: int = 2  # Reduced to prevent bursts across workers
-    search_delay_between_requests: float = 2.0  # Increased delay to space out requests more
+    # Set conservatively to account for multiple workers (default: 3 req/min per worker = 12 total with 4 workers)
+    # With Redis enabled, these limits apply globally across all workers
+    search_rate_limit_per_minute: int = 3  # Per-worker limit (or global if Redis enabled)
+    search_max_concurrent: int = 2  # Reduced to prevent bursts
+    search_delay_between_requests: float = 3.0  # Increased delay to space out requests more
     
     # Provider-specific rate limits (optional, falls back to defaults above)
     # Format: JSON string like '{"brave": {"max_requests_per_minute": 15, "max_concurrent": 2}}'
@@ -96,6 +97,13 @@ class Settings(BaseSettings):
     # Search result cache configuration
     search_cache_enabled: bool = True  # Enable request deduplication/caching
     search_cache_ttl_seconds: int = 300  # Cache results for 5 minutes
+    
+    # Redis configuration for distributed rate limiting (optional)
+    redis_url: Optional[str] = None  # e.g., "redis://localhost:6379/0"
+    redis_enabled: bool = False  # Set to True to enable Redis-based distributed rate limiting
+    
+    # Circuit breaker configuration
+    search_circuit_breaker_enabled: bool = True  # Enable circuit breaker for API failures
     
     # Pydantic Settings v2 configuration
     model_config = SettingsConfigDict(

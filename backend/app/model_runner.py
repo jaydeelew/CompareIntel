@@ -2131,9 +2131,15 @@ def call_openrouter_streaming(
                                     logger.info(f"Executing web search for query: {search_query} (model: {model_id}, iteration: {tool_call_iteration})")
                                     
                                     async def execute_search_with_rate_limit():
-                                        """Execute search with rate limiting and caching."""
-                                        # Get provider name for provider-specific rate limiting
-                                        provider_name = search_provider.get_provider_name() if hasattr(search_provider, 'get_provider_name') else "default"
+                                        """Execute search with rate limiting, caching, and circuit breaker."""
+                                        # Get provider name - ensure we always get the correct provider
+                                        if search_provider and hasattr(search_provider, 'get_provider_name'):
+                                            provider_name = search_provider.get_provider_name()
+                                        else:
+                                            # Fallback: try to infer from search_provider type
+                                            provider_name = type(search_provider).__name__.lower().replace('searchprovider', '').replace('provider', '')
+                                            if not provider_name or provider_name == 'none':
+                                                provider_name = "default"
                                         
                                         logger.warning(
                                             f"🔍 Preparing search request for '{search_query[:50]}...' "
@@ -2141,19 +2147,23 @@ def call_openrouter_streaming(
                                         )
                                         
                                         # Check cache first for request deduplication
-                                        cached_results = rate_limiter.cache.get(provider_name, search_query)
-                                        if cached_results is not None:
-                                            logger.warning(
-                                                f"✅ Cache HIT - Using cached search results for query: {search_query[:50]}... "
-                                                f"(model: {model_id}, provider: {provider_name})"
-                                            )
-                                            return cached_results
+                                        # Handle both old and new rate limiter interfaces
+                                        cache = getattr(rate_limiter, 'cache', None)
+                                        if cache:
+                                            cached_results = cache.get(provider_name, search_query)
+                                            if cached_results is not None:
+                                                logger.warning(
+                                                    f"✅ Cache HIT - Using cached search results for query: {search_query[:50]}... "
+                                                    f"(model: {model_id}, provider: {provider_name})"
+                                                )
+                                                return cached_results
                                         
                                         logger.warning(
                                             f"❌ Cache MISS - Acquiring rate limiter slot for {provider_name} "
                                             f"(model: {model_id})"
                                         )
                                         
+                                        search_start_time = time.time()
                                         try:
                                             # Acquire rate limiter permission (waits if necessary)
                                             # This coordinates search requests across all concurrent models
@@ -2167,13 +2177,20 @@ def call_openrouter_streaming(
                                                 # Execute the actual search
                                                 search_results = await search_provider.search(search_query, max_results=5)
                                                 
+                                                # Record success for circuit breaker and adaptive rate limiting
+                                                response_time = time.time() - search_start_time
+                                                if hasattr(rate_limiter, 'record_success'):
+                                                    rate_limiter.record_success(provider_name, response_time)
+                                                
                                                 logger.warning(
                                                     f"✅ Search completed successfully, caching results for '{search_query[:50]}...' "
-                                                    f"(model: {model_id}, provider: {provider_name}, results: {len(search_results)})"
+                                                    f"(model: {model_id}, provider: {provider_name}, results: {len(search_results)}, "
+                                                    f"response_time: {response_time:.2f}s)"
                                                 )
                                                 
                                                 # Cache successful results for future requests
-                                                rate_limiter.cache.set(provider_name, search_query, search_results)
+                                                if cache:
+                                                    cache.set(provider_name, search_query, search_results)
                                                 
                                                 return search_results
                                             finally:
@@ -2186,8 +2203,15 @@ def call_openrouter_streaming(
                                         except Exception as e:
                                             # Release concurrent slot on error
                                             rate_limiter.release(provider_name)
+                                            
+                                            # Record failure for circuit breaker
+                                            error_msg = str(e).lower()
+                                            if hasattr(rate_limiter, 'record_failure'):
+                                                error_type = "rate_limit" if "rate limit" in error_msg or "429" in error_msg else "error"
+                                                rate_limiter.record_failure(provider_name, error_type)
+                                            
                                             logger.error(
-                                                f"Error during search execution for '{search_query[:50]}...' "
+                                                f"❌ Error during search execution for '{search_query[:50]}...' "
                                                 f"(model: {model_id}, provider: {provider_name}): {e}",
                                                 exc_info=True
                                             )

@@ -300,12 +300,54 @@ _global_rate_limiter: Optional[SearchRateLimiter] = None
 _global_rate_limiter_lock = threading.Lock()
 
 
-def get_rate_limiter() -> SearchRateLimiter:
-    """Get the global search rate limiter instance (thread-safe)."""
+def get_rate_limiter():
+    """
+    Get the global search rate limiter instance (thread-safe).
+    
+    Returns distributed rate limiter if Redis is enabled, otherwise in-memory.
+    """
     global _global_rate_limiter
     if _global_rate_limiter is None:
         with _global_rate_limiter_lock:
             if _global_rate_limiter is None:
+                # Try to use distributed rate limiter if Redis is enabled
+                if settings.redis_enabled and settings.redis_url:
+                    try:
+                        from .distributed_rate_limiter import (
+                            DistributedSearchRateLimiter,
+                            ProviderRateLimitConfig
+                        )
+                        
+                        provider_configs = _parse_provider_configs_distributed()
+                        default_config = ProviderRateLimitConfig(
+                            max_requests_per_minute=settings.search_rate_limit_per_minute,
+                            max_concurrent=settings.search_max_concurrent,
+                            delay_between_requests=settings.search_delay_between_requests
+                        )
+                        
+                        _global_rate_limiter = DistributedSearchRateLimiter(
+                            default_config=default_config,
+                            provider_configs=provider_configs,
+                            redis_url=settings.redis_url,
+                            enable_circuit_breaker=settings.search_circuit_breaker_enabled
+                        )
+                        
+                        logger.warning(
+                            f"🚀 Initialized DISTRIBUTED search rate limiter with Redis: "
+                            f"{settings.search_rate_limit_per_minute} req/min, "
+                            f"{settings.search_max_concurrent} concurrent, "
+                            f"{settings.search_delay_between_requests}s delay. "
+                            f"Cache: {'enabled' if settings.search_cache_enabled else 'disabled'}. "
+                            f"Circuit breaker: {'enabled' if settings.search_circuit_breaker_enabled else 'disabled'}."
+                        )
+                        return _global_rate_limiter
+                    except Exception as e:
+                        logger.warning(
+                            f"Failed to initialize distributed rate limiter: {e}. "
+                            f"Falling back to in-memory rate limiter."
+                        )
+                
+                # Fallback to in-memory rate limiter
                 provider_configs = _parse_provider_configs()
                 _global_rate_limiter = SearchRateLimiter(
                     default_max_requests_per_minute=settings.search_rate_limit_per_minute,
@@ -316,16 +358,42 @@ def get_rate_limiter() -> SearchRateLimiter:
                 worker_count = os.getenv('GUNICORN_WORKERS', '4')
                 total_capacity = settings.search_rate_limit_per_minute * int(worker_count)
                 logger.warning(
-                    f"🔧 Initialized search rate limiter (per-worker): "
+                    f"🔧 Initialized search rate limiter (per-worker, in-memory): "
                     f"{settings.search_rate_limit_per_minute} req/min, "
                     f"{settings.search_max_concurrent} concurrent, "
                     f"{settings.search_delay_between_requests}s delay. "
                     f"Cache: {'enabled' if settings.search_cache_enabled else 'disabled'}. "
                     f"⚠️ WARNING: Each Gunicorn worker ({worker_count} workers) has its own rate limiter instance. "
                     f"Total capacity across all workers: ~{total_capacity} req/min. "
-                    f"Consider using Redis for distributed rate limiting in production."
+                    f"Enable Redis (REDIS_ENABLED=true, REDIS_URL=...) for distributed rate limiting."
                 )
     return _global_rate_limiter
+
+
+def _parse_provider_configs_distributed() -> Dict[str, Any]:
+    """Parse provider configs for distributed rate limiter."""
+    from .distributed_rate_limiter import ProviderRateLimitConfig
+    
+    if not settings.search_provider_rate_limits:
+        return {}
+    
+    try:
+        config_dict = json.loads(settings.search_provider_rate_limits)
+        provider_configs = {}
+        
+        for provider_name, config in config_dict.items():
+            provider_configs[provider_name] = ProviderRateLimitConfig(
+                max_requests_per_minute=config.get("max_requests_per_minute", settings.search_rate_limit_per_minute),
+                max_concurrent=config.get("max_concurrent", settings.search_max_concurrent),
+                delay_between_requests=config.get("delay_between_requests", settings.search_delay_between_requests),
+                bucket_capacity=config.get("bucket_capacity"),
+                refill_rate=config.get("refill_rate")
+            )
+        
+        return provider_configs
+    except (json.JSONDecodeError, KeyError, TypeError) as e:
+        logger.warning(f"Failed to parse provider rate limit config: {e}. Using defaults.")
+        return {}
 
 
 def reset_rate_limiter() -> None:
