@@ -525,7 +525,7 @@ class DistributedSearchRateLimiter:
             current_value = int(current_value) if current_value else 0
             new_value = sync_client.decr(concurrent_key)
             
-            logger.warning(
+            logger.debug(
                 f"🔓 Synchronous Redis release for {provider_name}: "
                 f"counter {current_value} -> {new_value} (key: {concurrent_key})"
             )
@@ -702,7 +702,7 @@ class DistributedSearchRateLimiter:
                 0,
                 self._concurrent_counts[provider_name] - 1
             )
-            logger.warning(
+            logger.debug(
                 f"🔓 Released rate limiter slot for {provider_name} "
                 f"(in-memory: {old_count} -> {self._concurrent_counts[provider_name]})"
             )
@@ -752,7 +752,7 @@ class DistributedSearchRateLimiter:
                                         self._get_provider_config(provider_name)
                                     )
                                     await redis_limiter.release()
-                                    logger.warning(
+                                    logger.debug(
                                         f"✅ Redis release completed for {provider_name}"
                                     )
                                 else:
