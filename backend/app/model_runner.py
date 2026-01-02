@@ -2195,9 +2195,13 @@ def call_openrouter_streaming(
                                                 return search_results
                                             finally:
                                                 # Release concurrent slot after search completes
+                                                logger.warning(
+                                                    f"🔓 Releasing rate limiter slot for {provider_name} "
+                                                    f"(model: {model_id})"
+                                                )
                                                 rate_limiter.release(provider_name)
-                                                logger.debug(
-                                                    f"Released rate limiter slot for {provider_name} "
+                                                logger.warning(
+                                                    f"✅ Rate limiter release() called for {provider_name} "
                                                     f"(model: {model_id})"
                                                 )
                                         except Exception as e:

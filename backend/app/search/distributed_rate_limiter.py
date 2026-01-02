@@ -658,8 +658,8 @@ class DistributedSearchRateLimiter:
                 0,
                 self._concurrent_counts[provider_name] - 1
             )
-            logger.debug(
-                f"Released rate limiter slot for {provider_name} "
+            logger.warning(
+                f"🔓 Released rate limiter slot for {provider_name} "
                 f"(in-memory: {old_count} -> {self._concurrent_counts[provider_name]})"
             )
         
@@ -679,7 +679,7 @@ class DistributedSearchRateLimiter:
                                     self._get_provider_config(provider_name)
                                 )
                                 await redis_limiter.release()
-                                logger.debug(
+                                logger.warning(
                                     f"✅ Redis release completed for {provider_name}"
                                 )
                             else:
@@ -707,9 +707,9 @@ class DistributedSearchRateLimiter:
                 except RuntimeError:
                     # No running event loop, can't do async operation
                     # This is fine - in-memory state was already updated
-                    logger.debug(
-                        f"No event loop available for Redis release of {provider_name}, "
-                        f"in-memory state updated"
+                    logger.warning(
+                        f"⚠️ No event loop available for Redis release of {provider_name}, "
+                        f"in-memory state updated (Redis counter may not decrement)"
                     )
             except Exception as e:
                 logger.warning(
