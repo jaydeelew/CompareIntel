@@ -94,9 +94,11 @@ def validate_config() -> None:
         if settings.mail_port is not None and (settings.mail_port < 1 or settings.mail_port > 65535):
             errors.append(f"MAIL_PORT must be between 1 and 65535, got: {settings.mail_port}")
     else:
-        # Partial email configuration
-        partial_email = any(field is not None and field != "" for field in email_fields)
-        if partial_email:
+        # Partial email configuration - only warn if multiple fields are set
+        # (indicating an attempt to configure email) but not all required fields
+        # If only MAIL_FROM is set, it's likely just a default value, so don't warn
+        configured_fields = [field for field in email_fields if field is not None and field != ""]
+        if len(configured_fields) > 1:
             warnings.append(
                 "Email configuration is partially set. "
                 "All email fields (MAIL_USERNAME, MAIL_PASSWORD, MAIL_FROM, MAIL_SERVER) "
