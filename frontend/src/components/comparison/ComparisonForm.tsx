@@ -1579,7 +1579,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
                   className={`textarea-icon-button web-search-button ${webSearchEnabled ? 'active' : ''}`}
                   title={
                     webSearchEnabled
-                      ? 'Web search enabled - selected models can search the internet'
+                      ? 'Web search enabled - selected models can search the Internet'
                       : 'Enable web search for capable models'
                   }
                   disabled={!canEnableWebSearch || isLoading}

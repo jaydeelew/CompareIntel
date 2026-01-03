@@ -189,7 +189,7 @@ export const HowItWorks: React.FC = () => {
                   require current, real-time information—such as weather, news, stock prices, or
                   recent events—you can enable web search for supported models. Look for the web
                   search toggle button (🌐) in the input area. When enabled, models that support web
-                  search will automatically search the internet for current information and cite
+                  search will automatically search the Internet for current information and cite
                   their sources. This is perfect for time-sensitive queries that go beyond what's in
                   the model's training data. Note that web search is only available for models that
                   support this capability (indicated by a 🌐 icon next to the model name).
@@ -217,7 +217,7 @@ export const HowItWorks: React.FC = () => {
                   </li>
                   <li>
                     For current information queries, enable web search to get real-time data from
-                    the internet
+                    the Internet
                   </li>
                 </ul>
               </div>
@@ -437,7 +437,7 @@ export const HowItWorks: React.FC = () => {
                 <h3>🔍 Real-Time Information</h3>
                 <p>
                   Use web search to compare how different models gather and synthesize current
-                  information from the internet. Perfect for questions about recent news, weather,
+                  information from the Internet. Perfect for questions about recent news, weather,
                   stock prices, sports scores, or any time-sensitive data that requires up-to-date
                   information.
                 </p>

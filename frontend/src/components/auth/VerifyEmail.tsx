@@ -148,7 +148,7 @@ export const VerifyEmail: React.FC<VerifyEmailProps> = ({
           setStatus('error')
           setMessage(
             isNetworkError
-              ? 'Unable to connect to the server. Please check your internet connection and try again.'
+              ? 'Unable to connect to the server. Please check your Internet connection and try again.'
               : 'Failed to verify email. Please try again later.'
           )
           // Trigger error banner animation

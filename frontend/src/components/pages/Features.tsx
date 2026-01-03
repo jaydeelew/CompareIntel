@@ -466,7 +466,7 @@ export const Features: React.FC = () => {
             <h2>Web Search Integration</h2>
             <p>
               CompareIntel now supports web search capabilities for compatible AI models, enabling
-              them to access real-time information from the internet. This powerful feature allows
+              them to access real-time information from the Internet. This powerful feature allows
               models to search the web and fetch current data, making them capable of answering
               time-sensitive questions with up-to-date information.
             </p>
@@ -474,7 +474,7 @@ export const Features: React.FC = () => {
             <div className="feature-detail">
               <h3>Real-Time Information Access</h3>
               <p>
-                When web search is enabled, supported models can search the internet for current
+                When web search is enabled, supported models can search the Internet for current
                 information, including:
               </p>
               <ul className="seo-list">

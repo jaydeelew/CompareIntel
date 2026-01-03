@@ -820,7 +820,7 @@ const faqData = [
     answer: (
       <>
         <p>
-          Web search is a powerful feature that allows compatible AI models to search the internet
+          Web search is a powerful feature that allows compatible AI models to search the Internet
           for real-time, current information. This enables models to answer questions about recent
           events, current data, and time-sensitive information that goes beyond their training data.
         </p>
@@ -847,7 +847,7 @@ const faqData = [
         </p>
         <ul>
           <li>
-            <strong>Search the internet:</strong> Models can search for current information on any
+            <strong>Search the Internet:</strong> Models can search for current information on any
             topic
           </li>
           <li>
@@ -888,7 +888,7 @@ const faqData = [
           </li>
           <li>
             Web search may add a few seconds to response time as models fetch information from the
-            internet
+            Internet
           </li>
           <li>
             If web search fails or returns no results, models will explicitly state this rather than

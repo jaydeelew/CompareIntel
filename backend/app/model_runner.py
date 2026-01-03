@@ -832,13 +832,13 @@ WEB_SEARCH_TOOL = {
     "type": "function",
     "function": {
         "name": "search_web",
-        "description": "MANDATORY: Search the internet for current, real-time information. You MUST use this tool for questions about current weather, recent news, current events, live data, stock prices, sports scores, or any time-sensitive information. Never guess or fabricate current information - always search first. After receiving results, you MUST cite the source URL/service name and timestamp in your response. If search fails or returns no results, explicitly state this rather than providing generic information.",
+        "description": "MANDATORY: Search the Internet for current, real-time information. You MUST use this tool for questions about current weather, recent news, current events, live data, stock prices, sports scores, or any time-sensitive information. Never guess or fabricate current information - always search first. After receiving results, you MUST cite the source URL/service name and timestamp in your response. If search fails or returns no results, explicitly state this rather than providing generic information.",
         "parameters": {
             "type": "object",
             "properties": {
                 "query": {
                     "type": "string",
-                    "description": "The search query to find current information on the internet. Use specific, time-sensitive queries (e.g., 'weather Granbury TX today' or 'current weather Granbury Texas January 1 2026')."
+                    "description": "The search query to find current information on the Internet. Use specific, time-sensitive queries (e.g., 'weather Granbury TX today' or 'current weather Granbury Texas January 1 2026')."
                 }
             },
             "required": ["query"]

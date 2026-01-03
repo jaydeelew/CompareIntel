@@ -158,7 +158,7 @@ export const About: React.FC = () => {
                 <h3>Web Search Integration</h3>
                 <p>
                   Enable web search for supported models to access real-time information from the
-                  internet. Perfect for current events, weather, news, stock prices, and any
+                  Internet. Perfect for current events, weather, news, stock prices, and any
                   time-sensitive queries.
                 </p>
               </div>
