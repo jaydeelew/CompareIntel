@@ -777,6 +777,11 @@
   box-shadow: var(--shadow-md);
 }
 
+/* Icon-only circular button: no transform on hover to keep icon stable */
+.follow-up-button:not(:has(span)):hover {
+  transform: none;
+}
+
 .follow-up-button:disabled {
   background: #94a3b8;
   cursor: not-allowed;
