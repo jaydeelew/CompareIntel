@@ -197,6 +197,18 @@ export const ComparisonForm = memo<ComparisonFormProps>(
     // For mobile: track input before current speech session started
     const mobileBaseInputRef = useRef<string>('')
 
+    // Detect mobile layout for history dropdown height calculation
+    const [isMobileLayout, setIsMobileLayout] = useState<boolean>(() => {
+      if (typeof window === 'undefined') return false
+      return window.innerWidth <= 640 // Match CSS breakpoint
+    })
+
+    useEffect(() => {
+      const handleResize = () => setIsMobileLayout(window.innerWidth <= 640)
+      window.addEventListener('resize', handleResize)
+      return () => window.removeEventListener('resize', handleResize)
+    }, [])
+
     // Speech recognition hook
     // Mobile: Non-continuous with interim results for real-time display
     // Desktop: Continuous mode, hook sends full transcript, append to base input
@@ -1654,14 +1666,18 @@ export const ComparisonForm = memo<ComparisonFormProps>(
               // Only calculate max height when there are entries to show
               // Each entry: 1rem top padding (16px) + content (~23px prompt + 8px margin + ~15px meta) + 1rem bottom padding (16px) ≈ 78px
               // Plus borders between items (1px each)
-              // Notification height: ~70px (margin-top 8px + padding-top 8px + 2 lines of text ~41px + padding-bottom 8px + some buffer)
+              // Notification height: ~70px desktop (margin-top 8px + padding-top 8px + 2 lines of text ~41px + padding-bottom 8px + some buffer)
+              // Mobile: ~130px (flex column layout takes more vertical space: 2 lines + gap + padding + margin + extra buffer for visibility)
               const getMaxHeight = () => {
                 // If no entries, return undefined to allow natural height
                 if (conversationHistory.length === 0) {
                   return undefined
                 }
 
-                const notificationHeight = shouldShowNotification ? 70 : 0
+                // Increase notification height estimate for mobile due to flex column layout and extra padding
+                // Mobile needs more space: 2 lines of text (~50px) + gap (6px) + padding-top (12px) + padding-bottom (16px) + margin-top (12px) + margin-bottom (16px) + content padding (32px) + buffer (30px) ≈ 174px
+                // Using 150px to be safe while accounting for all spacing
+                const notificationHeight = shouldShowNotification ? (isMobileLayout ? 150 : 70) : 0
 
                 if (maxVisibleEntries === 2) {
                   // Anonymous tier: 2 entries max

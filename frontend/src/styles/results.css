@@ -2916,6 +2916,31 @@ button.nav-button-primary {
     display: block;
     text-align: center;
   }
+
+  /* Ensure signup prompt is fully visible in mobile by adding bottom padding */
+  /* Override the no-scrollbar padding removal to ensure message is visible */
+  .history-inline-list-content {
+    padding-bottom: 2rem !important;
+  }
+
+  /* Ensure signup prompt itself has proper spacing in mobile */
+  .history-signup-prompt {
+    margin-top: 0.75rem;
+    margin-bottom: 1rem;
+    padding-top: 0.75rem;
+    padding-bottom: 1rem;
+  }
+
+  /* Ensure the signup message has proper line spacing in mobile flex column layout */
+  .history-signup-message {
+    gap: 0.375rem;
+    line-height: 1.6;
+  }
+
+  /* Ensure signup lines have proper spacing */
+  .history-signup-line {
+    line-height: 1.6;
+  }
 }
 
 /* ============================================
