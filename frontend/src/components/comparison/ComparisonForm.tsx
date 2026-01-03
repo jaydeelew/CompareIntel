@@ -1674,10 +1674,10 @@ export const ComparisonForm = memo<ComparisonFormProps>(
                   return undefined
                 }
 
-                // Increase notification height estimate for mobile due to flex column layout and extra padding
-                // Mobile needs more space: 2 lines of text (~50px) + gap (6px) + padding-top (12px) + padding-bottom (16px) + margin-top (12px) + margin-bottom (16px) + content padding (32px) + buffer (30px) ≈ 174px
-                // Using 150px to be safe while accounting for all spacing
-                const notificationHeight = shouldShowNotification ? (isMobileLayout ? 150 : 70) : 0
+                // Increase notification height estimate for mobile due to flex column layout
+                // Mobile needs space: 2 lines of text (~50px) + gap (6px) + padding-top (8px) + padding-bottom (4px) + margin-top (8px) + margin-bottom (4px) + content padding (8px) + buffer (5px) ≈ 93px
+                // Using 95px to account for spacing while minimizing white space
+                const notificationHeight = shouldShowNotification ? (isMobileLayout ? 95 : 70) : 0
 
                 if (maxVisibleEntries === 2) {
                   // Anonymous tier: 2 entries max

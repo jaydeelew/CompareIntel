@@ -2923,17 +2923,17 @@ button.nav-button-primary {
     padding-bottom: 0 !important;
   }
 
-  /* Add extra padding when scrollable (signup prompt is present) to ensure message visibility */
+  /* Add minimal padding when scrollable (signup prompt is present) to ensure message visibility */
   .history-inline-list.scrollable .history-inline-list-content {
-    padding-bottom: 2rem !important;
+    padding-bottom: 0.5rem !important;
   }
 
-  /* Ensure signup prompt itself has proper spacing in mobile */
+  /* Ensure signup prompt itself has minimal spacing in mobile */
   .history-signup-prompt {
-    margin-top: 0.75rem;
-    margin-bottom: 1rem;
-    padding-top: 0.75rem;
-    padding-bottom: 1rem;
+    margin-top: 0.5rem;
+    margin-bottom: 0.25rem;
+    padding-top: 0.5rem;
+    padding-bottom: 0.25rem;
   }
 
   /* Ensure the signup message has proper line spacing in mobile flex column layout */
