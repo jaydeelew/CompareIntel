@@ -94,8 +94,7 @@ const safeRenderKatex = (
     }
 
     return katex.renderToString(cleanLatex, options)
-  } catch (error) {
-    console.warn('KaTeX rendering error:', error, 'Input:', latex.substring(0, 100))
+  } catch {
     // Return formatted fallback
     const style = displayMode
       ? 'display: block; border: 1px solid #ccc; padding: 8px; margin: 8px 0; background: #f9f9f9;'
@@ -974,19 +973,8 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({ children, className = '',
     // Debug: Check for ordered list patterns in input
     const olPattern = /^\d+\.\s+/gm
     const olMatches = processed.match(olPattern)
-    console.log(
-      `[processMarkdownLists] Input has ${olMatches ? olMatches.length : 0} potential OL items`
-    )
     if (olMatches && olMatches.length > 0) {
-      console.log('[processMarkdownLists] Sample matches:', olMatches.slice(0, 5))
-      // Show context around first match
-      const firstMatchIndex = processed.search(olPattern)
-      if (firstMatchIndex >= 0) {
-        console.log(
-          '[processMarkdownLists] Context around first match:',
-          processed.substring(Math.max(0, firstMatchIndex - 50), firstMatchIndex + 150)
-        )
-      }
+      // Process ordered list items
     }
 
     // Helper function to process list content (math and markdown formatting)
@@ -1066,15 +1054,11 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({ children, className = '',
     // Ordered lists - simpler approach
     // First, match just the list item line with its content
     // Allow one or more spaces after the period, match any non-empty content
-    let matchCount = 0
     processed = processed.replace(/^(\s*)(\d+)\.\s+(.+?)$/gm, (_match, indent, num, content) => {
-      matchCount++
       const level = indent.length
-      console.log(`[OL Match] Found item ${num}: "${content}"`)
       const processedContent = processListContent(content)
       return `__OL_${level}_${num}__${processedContent}__/OL__`
     })
-    console.log(`[processMarkdownLists] Total OL items found: ${matchCount}`)
 
     // Then, find indented lines that follow list items and incorporate them
     // Match pattern: list placeholder followed by blank lines and truly indented content (3+ spaces)
@@ -1970,21 +1954,15 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({ children, className = '',
     // IMPORTANT: Protect full list placeholder patterns FIRST (before inline math)
     // This ensures that inline math placeholders INSIDE lists are preserved as part of the list block
     // Pattern: __UL_X__content__/UL__ or __OL_X_Y__content__/OL__ or __TASK_X__content__/TASK__
-    let listPlaceholderCount = 0
     processed = processed.replace(
       /(__UL_\d+__[\s\S]*?__\/UL__|__OL_\d+_\d+__[\s\S]*?__\/OL__|__TASK_(checked|unchecked)__[\s\S]*?__\/TASK__)/g,
       match => {
         const placeholder = `⟨⟨MDPH${placeholderCounter}⟩⟩`
         placeholderMap.set(placeholder, match)
-        if (match.startsWith('__OL_')) {
-          listPlaceholderCount++
-          console.log(`[processMarkdown] Protecting OL placeholder: ${match.substring(0, 80)}...`)
-        }
         placeholderCounter++
         return placeholder
       }
     )
-    console.log(`[processMarkdown] Protected ${listPlaceholderCount} OL placeholders`)
 
     // Protect inline math placeholders (outside of lists)
     // These use __INLINE_MATH_X__ format which would be matched by bold regex
@@ -2204,18 +2182,6 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({ children, className = '',
         (looksLikeEquation && !isSimpleVariable)
 
       if (shouldRenderAsMath) {
-        // DEBUG: Log detection
-        console.log('[LatexRenderer] Detected math in backticks:', {
-          original: content,
-          trimmed: trimmedContent,
-          hasSuperscripts,
-          hasMathOperators,
-          hasMathSymbols,
-          definitelyMathWithSuperscripts,
-          definitelyMath,
-          probablyMath,
-        })
-
         // Content inside backticks may not have been processed by fixLatexIssues
         // So we need to convert Unicode to LaTeX, but be careful to avoid double conversion
         let mathContent = content.replace(/\$/g, '').trim()
@@ -2288,47 +2254,17 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({ children, className = '',
         if (mathContent) {
           try {
             const rendered = safeRenderKatex(mathContent, false, config.katexOptions)
-            console.log('[LatexRenderer] Successfully rendered math:', {
-              original: content,
-              converted: mathContent,
-              rendered: rendered.substring(0, 100) + '...',
-            })
             return rendered
-          } catch (e) {
+          } catch {
             // If math rendering fails, fall back to code
-            console.error('[LatexRenderer] Math rendering failed:', {
-              original: content,
-              converted: mathContent,
-              error: e,
-            })
             return `<code class="inline-code">${content}</code>`
           }
         } else {
-          console.warn(
-            '[LatexRenderer] mathContent is empty after processing, falling back to code:',
-            {
-              original: content,
-              trimmed: trimmedContent,
-            }
-          )
           return `<code class="inline-code">${content}</code>`
         }
       }
 
       // Otherwise, render as regular inline code
-      // DEBUG: Log when math is NOT detected
-      if (hasMathOperators || hasMathSymbols || hasSuperscripts) {
-        console.warn('[LatexRenderer] Math-like content NOT detected as math:', {
-          original: content,
-          trimmed: trimmedContent,
-          hasSuperscripts,
-          hasMathOperators,
-          hasMathSymbols,
-          hasMathLikeContent,
-          isSimpleVariable,
-          shouldRenderAsMath,
-        })
-      }
       return `<code class="inline-code">${content}</code>`
     })
 
@@ -2462,7 +2398,6 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({ children, className = '',
 
     // Restore protected placeholders after all markdown processing
     // Use simple string replacement for reliability (placeholders are unique)
-    let restoredOLCount = 0
     // Sort placeholders by index (descending) to avoid conflicts when restoring
     const sortedPlaceholders = Array.from(placeholderMap.entries()).sort((a, b) => {
       // Extract numeric index from placeholder (e.g., "⟨⟨MDPH5⟩⟩" -> 5)
@@ -2474,36 +2409,10 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({ children, className = '',
     })
 
     sortedPlaceholders.forEach(([placeholder, original]) => {
-      // Use split/join for reliable replacement that handles all special characters
-      const beforeLength = processed.length
-      const countBefore = (
-        processed.match(new RegExp(placeholder.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g')) || []
-      ).length
-
-      if (original.startsWith('__OL_')) {
-        restoredOLCount++
-        console.log(
-          `[processMarkdown] Restoring OL - Placeholder: "${placeholder}" found ${countBefore} times`
-        )
-        if (countBefore === 0) {
-          console.log(`[processMarkdown] ERROR: Placeholder not found in processed text!`)
-          console.log(`[processMarkdown] Sample of processed text:`, processed.substring(0, 200))
-        }
-      }
-
       // Escape the placeholder for regex replacement
       const escapedPlaceholder = placeholder.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
       processed = processed.replace(new RegExp(escapedPlaceholder, 'g'), original)
-
-      const afterLength = processed.length
-      if (original.startsWith('__OL_') && afterLength === beforeLength && countBefore > 0) {
-        console.log(
-          `[processMarkdown] WARNING: No change in length after restoration - placeholder not replaced!`
-        )
-      }
     })
-    console.log(`[processMarkdown] Restored ${restoredOLCount} OL placeholders`)
-    console.log(`[processMarkdown] Output contains __OL_: ${processed.includes('__OL_')}`)
 
     // Final safety check: remove any remaining placeholders that weren't restored
     // This handles edge cases where placeholders might have been missed
@@ -2539,17 +2448,7 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({ children, className = '',
    * Stage 8: Convert markdown list placeholders to HTML
    */
   const convertListsToHTML = (text: string): string => {
-    console.log('[convertListsToHTML] Input has __OL_:', text.includes('__OL_'))
-    console.log('[convertListsToHTML] Input has ⟨⟨MDPH:', text.includes('⟨⟨MDPH'))
     if (text.includes('⟨⟨MDPH')) {
-      const mdphIndex = text.indexOf('⟨⟨MDPH')
-      console.log(
-        '[convertListsToHTML] Sample with MDPH:',
-        text.substring(mdphIndex - 50, mdphIndex + 100)
-      )
-      console.warn(
-        '[convertListsToHTML] ERROR: Found unrecovered placeholders! These should have been restored in processMarkdown.'
-      )
       // Remove any remaining placeholders to prevent them from appearing in output
       // This is a safety fallback - ideally these should never reach this stage
       text = text.replace(/⟨⟨MDPH\d+⟩⟩/g, '')
@@ -3182,7 +3081,6 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({ children, className = '',
 
         return processed
       } catch (error) {
-        console.error('❌ Critical error in renderLatex:', error)
         return `<div style="color: red; padding: 10px; border: 1px solid red;">
                 <strong>Rendering Error:</strong> ${error instanceof Error ? error.message : String(error)}
                 <pre style="margin-top: 10px; padding: 10px; background: #f5f5f5;">${text.substring(0, 500)}</pre>
@@ -3246,8 +3144,8 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({ children, className = '',
 
   // Load KaTeX CSS dynamically on component mount (only once)
   useEffect(() => {
-    loadKatexCss().catch(error => {
-      console.warn('Failed to load KaTeX CSS:', error)
+    loadKatexCss().catch(() => {
+      // Silently handle KaTeX CSS loading errors
     })
   }, [])
 
@@ -3269,8 +3167,8 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({ children, className = '',
       onLoad: () => {
         setPrismLoaded(true)
       },
-      onError: error => {
-        console.warn('Failed to load Prism.js:', error)
+      onError: () => {
+        // Silently handle Prism.js loading errors
       },
     })
   }, [detectedLanguages])
@@ -3294,8 +3192,8 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({ children, className = '',
         if (codeElements.length > 0) {
           Prism.highlightAllUnder(contentRef.current)
         }
-      } catch (error) {
-        console.warn('Prism.js highlighting failed:', error)
+      } catch {
+        // Silently handle Prism highlighting errors
       }
     }
 
@@ -3306,7 +3204,6 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({ children, className = '',
 
   // Early return check - must be after all hooks
   if (!isValidChildren) {
-    console.error('LatexRenderer: children must be a string, got:', typeof children)
     return <div>Invalid content</div>
   }
 

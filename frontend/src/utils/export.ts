@@ -8,10 +8,11 @@
  * - JSON (.json) - For developers and APIs
  */
 
+import katex from 'katex'
+
+import type { ComparisonMetadata } from '../types/comparison'
 import type { ModelConversation } from '../types/conversation'
 import type { Model } from '../types/models'
-import type { ComparisonMetadata } from '../types/comparison'
-import katex from 'katex'
 
 /**
  * Data structure for exporting a comparison
@@ -192,10 +193,14 @@ export function exportToJSON(data: ComparisonExportData): string {
 /**
  * Generate SVG icon HTML (lucide-react style)
  */
-function getIconSVG(iconName: 'user' | 'bot' | 'check-circle' | 'x-circle' | 'file-text', size: number = 14, color: string = 'currentColor'): string {
+function getIconSVG(
+  iconName: 'user' | 'bot' | 'check-circle' | 'x-circle' | 'file-text',
+  size: number = 14,
+  color: string = 'currentColor'
+): string {
   const icons: Record<string, string> = {
-    'user': `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`,
-    'bot': `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="10" rx="2" ry="2"/><path d="M12 11v-6a4 4 0 0 0-8 0v6"/><path d="M12 11v-6a4 4 0 0 1 8 0v6"/><path d="M7 15h10"/></svg>`,
+    user: `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`,
+    bot: `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="10" rx="2" ry="2"/><path d="M12 11v-6a4 4 0 0 0-8 0v6"/><path d="M12 11v-6a4 4 0 0 1 8 0v6"/><path d="M7 15h10"/></svg>`,
     'check-circle': `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>`,
     'x-circle': `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>`,
     'file-text': `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>`,
@@ -429,9 +434,12 @@ function escapeHtml(text: string | null | undefined): string {
  */
 function safeRenderKatex(latex: string, displayMode: boolean): string {
   try {
-    const cleanLatex = latex.trim().replace(/<[^>]*>/g, '').replace(/style="[^"]*"/g, '')
+    const cleanLatex = latex
+      .trim()
+      .replace(/<[^>]*>/g, '')
+      .replace(/style="[^"]*"/g, '')
     if (!cleanLatex) return ''
-    
+
     const options = {
       throwOnError: false,
       strict: false,
@@ -444,9 +452,9 @@ function safeRenderKatex(latex: string, displayMode: boolean): string {
       maxExpand: 1000,
       displayMode,
     }
-    
+
     return katex.renderToString(cleanLatex, options)
-  } catch (error) {
+  } catch {
     // Return formatted fallback
     const style = displayMode
       ? 'display: block; border: 1px solid #ccc; padding: 8px; margin: 8px 0; background: #f9f9f9;'
@@ -497,7 +505,7 @@ function formatContentForPDF(content: string): string {
 
   // Process lists - need to handle both ordered and unordered
   // First, mark unordered list items
-  processed = processed.replace(/^[\*\-\+] (.+)$/gm, '<li data-list-type="ul">$1</li>')
+  processed = processed.replace(/^[*\-+] (.+)$/gm, '<li data-list-type="ul">$1</li>')
   // Then mark ordered list items (only if not already marked)
   processed = processed.replace(/^(\d+)\. (.+)$/gm, (match, _num, content) => {
     // Check if this line already has a list item
@@ -506,9 +514,9 @@ function formatContentForPDF(content: string): string {
     }
     return match
   })
-  
+
   // Group consecutive list items by type
-  processed = processed.replace(/(<li data-list-type="(ul|ol)">.*?<\/li>\n?)+/g, (match) => {
+  processed = processed.replace(/(<li data-list-type="(ul|ol)">.*?<\/li>\n?)+/g, match => {
     const listType = match.includes('data-list-type="ul"') ? 'ul' : 'ol'
     const cleaned = match.replace(/data-list-type="(ul|ol)"/g, '')
     return `<${listType}>${cleaned}</${listType}>`
@@ -555,11 +563,11 @@ function formatContentForPDF(content: string): string {
 export async function exportToPDF(data: ComparisonExportData): Promise<void> {
   // Dynamically import PDF libraries to reduce bundle size
   // These are externalized in vite.config.ts to prevent bundling
-  // @ts-ignore - jspdf module may not have type definitions
+  // @ts-expect-error - jspdf module may not have type definitions
   const jspdfModule = await import('jspdf')
-  // @ts-ignore - html2canvas module may not have type definitions  
+  // @ts-expect-error - html2canvas module may not have type definitions
   const html2canvasModule = await import('html2canvas')
-  
+
   const jsPDF = jspdfModule.default
   const html2canvas = html2canvasModule.default
 
@@ -580,7 +588,7 @@ export async function exportToPDF(data: ComparisonExportData): Promise<void> {
   document.body.appendChild(iframe)
 
   // Wait for iframe to load
-  await new Promise<void>((resolve) => {
+  await new Promise<void>(resolve => {
     if (iframe.contentDocument?.readyState === 'complete') {
       resolve()
     } else {
@@ -906,4 +914,3 @@ export function downloadHTML(data: ComparisonExportData): void {
   const filename = generateFilename(data.prompt, 'html')
   downloadFile(content, filename, 'text/html;charset=utf-8')
 }
-
