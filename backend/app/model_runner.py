@@ -2082,9 +2082,15 @@ def call_openrouter_streaming(
                             search_query = ""
                             try:
                                 import json
+                                # Validate arguments exist and are not empty
+                                arguments_str = tool_call["function"].get("arguments", "")
+                                if not arguments_str or not arguments_str.strip():
+                                    raise ValueError("Tool call arguments are missing or empty. Please provide a 'query' parameter in the arguments.")
                                 # Parse arguments
-                                args = json.loads(tool_call["function"]["arguments"])
+                                args = json.loads(arguments_str)
                                 search_query = args.get("query", "")
+                                if not search_query:
+                                    raise ValueError("Search query is missing or empty. Please provide a 'query' parameter with a valid search term.")
                                 
                                 # Check if this is a redundant search (same query as before)
                                 # This helps prevent infinite loops where model keeps searching for the same thing
@@ -2464,9 +2470,15 @@ def call_openrouter_streaming(
                             try:
                                 import json
                                 import asyncio
+                                # Validate arguments exist and are not empty
+                                arguments_str = tool_call["function"].get("arguments", "")
+                                if not arguments_str or not arguments_str.strip():
+                                    raise ValueError("Tool call arguments are missing or empty. Please provide a 'url' parameter in the arguments.")
                                 # Parse arguments
-                                args = json.loads(tool_call["function"]["arguments"])
+                                args = json.loads(arguments_str)
                                 url = args.get("url", "")
+                                if not url:
+                                    raise ValueError("URL is missing or empty. Please provide a 'url' parameter with a valid URL.")
                                 
                                 # Check if this URL was already fetched (prevent redundant fetches)
                                 previous_urls = []
