@@ -332,7 +332,7 @@ def get_rate_limiter():
                             enable_circuit_breaker=settings.search_circuit_breaker_enabled
                         )
                         
-                        logger.warning(
+                        logger.info(
                             f"🚀 Initialized DISTRIBUTED search rate limiter with Redis: "
                             f"{settings.search_rate_limit_per_minute} req/min, "
                             f"{settings.search_max_concurrent} concurrent, "
