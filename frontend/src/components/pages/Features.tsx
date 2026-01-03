@@ -176,31 +176,35 @@ export const Features: React.FC = () => {
             <h2>Saved Model Selections</h2>
             <p>
               Save time by storing your favorite model combinations for quick access. CompareIntel's
-              saved selections feature lets you create named groups of models that you use frequently:
+              saved selections feature lets you create named groups of models that you use
+              frequently:
             </p>
             <ul className="seo-list">
               <li>
-                <strong>Save Any Combination:</strong> After selecting your models, save the combination
-                with a custom name (up to 50 characters). Perfect for organizing selections by use case
-                like "Coding Models", "Creative Writing", or "Data Analysis".
+                <strong>Save Any Combination:</strong> After selecting your models, save the
+                combination with a custom name (up to 50 characters). Perfect for organizing
+                selections by use case like "Coding Models", "Creative Writing", or "Data Analysis".
               </li>
               <li>
-                <strong>Quick Loading:</strong> Load any saved selection with a single click to instantly
-                restore your preferred model combination without manually selecting each model again.
+                <strong>Quick Loading:</strong> Load any saved selection with a single click to
+                instantly restore your preferred model combination without manually selecting each
+                model again.
               </li>
               <li>
-                <strong>Manage Your Selections:</strong> Rename or delete saved selections as your needs
-                change. Each selection shows how many models it contains and when it was last updated.
+                <strong>Manage Your Selections:</strong> Rename or delete saved selections as your
+                needs change. Each selection shows how many models it contains and when it was last
+                updated.
               </li>
               <li>
-                <strong>Tier-Based Limits:</strong> The number of saved selections you can store depends
-                on your account tier. Unregistered users can save up to 2 selections, free accounts get
-                3, and paid tiers offer even more (up to 20 for Pro+ users).
+                <strong>Tier-Based Limits:</strong> The number of saved selections you can store
+                depends on your account tier. Unregistered users can save up to 2 selections, free
+                accounts get 3, and paid tiers offer even more (up to 20 for Pro+ users).
               </li>
               <li>
-                <strong>Persistent Storage:</strong> Your saved selections are stored locally in your
-                browser and persist across sessions. Registered users' selections are tied to their
-                account, while anonymous users' selections are preserved using a persistent anonymous ID.
+                <strong>Persistent Storage:</strong> Your saved selections are stored locally in
+                your browser and persist across sessions. Registered users' selections are tied to
+                their account, while anonymous users' selections are preserved using a persistent
+                anonymous ID.
               </li>
             </ul>
           </section>
@@ -259,9 +263,8 @@ export const Features: React.FC = () => {
                 different conversation paths independently.
               </li>
               <li>
-                <strong>Works for Everyone:</strong> Breakout conversations work for both
-                registered users and anonymous users, so everyone can take advantage of this
-                powerful feature.
+                <strong>Works for Everyone:</strong> Breakout conversations work for both registered
+                users and anonymous users, so everyone can take advantage of this powerful feature.
               </li>
               <li>
                 <strong>Easy Access:</strong> All your breakout conversations appear in your
@@ -271,9 +274,8 @@ export const Features: React.FC = () => {
             </ul>
             <p>
               This feature is perfect for when you've compared multiple models and found one that
-              particularly resonates with your needs. Instead of continuing with all models, you
-              can focus your conversation on the model that's working best for your specific use
-              case.
+              particularly resonates with your needs. Instead of continuing with all models, you can
+              focus your conversation on the model that's working best for your specific use case.
             </p>
           </section>
 
@@ -370,8 +372,9 @@ export const Features: React.FC = () => {
                 common document types to fit your specific use case.
               </li>
               <li>
-                <strong>Multiple Files:</strong> Attach multiple files to a single comparison, either
-                via file picker or drag and drop, and arrange them in any order with your text.
+                <strong>Multiple Files:</strong> Attach multiple files to a single comparison,
+                either via file picker or drag and drop, and arrange them in any order with your
+                text.
               </li>
               <li>
                 <strong>Persistent File Context:</strong> Attached files persist across conversation
@@ -410,8 +413,8 @@ export const Features: React.FC = () => {
                 <strong>Export Complete Comparisons:</strong> Export your entire comparison session
                 in multiple formats. Choose from PDF for sharing and printing, Markdown for
                 documentation and note-taking apps, HTML for standalone web pages, or JSON for
-                developers and API integration. Each export includes all model responses, the original
-                prompt, model metadata, and comparison statistics.
+                developers and API integration. Each export includes all model responses, the
+                original prompt, model metadata, and comparison statistics.
               </li>
               <li>
                 <strong>Professional PDF Exports:</strong> Generate beautifully formatted PDF
@@ -457,6 +460,103 @@ export const Features: React.FC = () => {
                 control over your information.
               </li>
             </ul>
+          </section>
+
+          <section className="seo-section">
+            <h2>Web Search Integration</h2>
+            <p>
+              CompareIntel now supports web search capabilities for compatible AI models, enabling
+              them to access real-time information from the internet. This powerful feature allows
+              models to search the web and fetch current data, making them capable of answering
+              time-sensitive questions with up-to-date information.
+            </p>
+
+            <div className="feature-detail">
+              <h3>Real-Time Information Access</h3>
+              <p>
+                When web search is enabled, supported models can search the internet for current
+                information, including:
+              </p>
+              <ul className="seo-list">
+                <li>
+                  <strong>Current Events & News:</strong> Get the latest news, recent developments,
+                  and current events from around the world
+                </li>
+                <li>
+                  <strong>Weather Information:</strong> Access real-time weather data for any
+                  location, including forecasts and current conditions
+                </li>
+                <li>
+                  <strong>Stock Prices & Financial Data:</strong> Get up-to-date stock prices,
+                  market data, and financial information
+                </li>
+                <li>
+                  <strong>Sports Scores:</strong> Check live scores, game results, and sports
+                  statistics
+                </li>
+                <li>
+                  <strong>Time-Sensitive Queries:</strong> Answer questions that require current
+                  information rather than training data
+                </li>
+              </ul>
+            </div>
+
+            <div className="feature-detail">
+              <h3>How It Works</h3>
+              <p>
+                Web search is easy to use and seamlessly integrated into your comparison workflow:
+              </p>
+              <ul className="seo-list">
+                <li>
+                  <strong>Toggle Web Search:</strong> Enable web search using the toggle button in
+                  the input area before sending your prompt
+                </li>
+                <li>
+                  <strong>Model Support:</strong> Only models that support web search will use this
+                  capability—look for the web search indicator (🌐) next to model names
+                </li>
+                <li>
+                  <strong>Automatic Search:</strong> When enabled, models automatically search the
+                  web when they encounter questions requiring current information
+                </li>
+                <li>
+                  <strong>Source Citations:</strong> Models cite their sources and include
+                  timestamps, so you know where information comes from
+                </li>
+                <li>
+                  <strong>URL Fetching:</strong> Models can fetch detailed content from specific web
+                  pages when needed for comprehensive answers
+                </li>
+              </ul>
+            </div>
+
+            <div className="feature-detail">
+              <h3>Use Cases</h3>
+              <p>Web search is particularly useful for:</p>
+              <ul className="seo-list">
+                <li>
+                  Research tasks requiring current information that wasn't in the model's training
+                  data
+                </li>
+                <li>Questions about recent events, product releases, or breaking news</li>
+                <li>
+                  Location-specific queries like local weather, business hours, or regional
+                  information
+                </li>
+                <li>
+                  Comparing how different models handle real-time information gathering and
+                  synthesis
+                </li>
+                <li>Tasks that benefit from combining AI reasoning with current web data</li>
+              </ul>
+            </div>
+
+            <p>
+              <strong>Note:</strong> Web search requires a configured search provider and is only
+              available for models that support this capability. The feature is automatically
+              disabled if no search provider is configured or if none of your selected models
+              support web search.
+            </p>
           </section>
 
           <section className="seo-section">

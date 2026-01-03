@@ -185,6 +185,16 @@ export const HowItWorks: React.FC = () => {
                   questions to complex coding tasks or creative writing challenges.
                 </p>
                 <p>
+                  <strong>Enable web search (optional):</strong> If you're asking questions that
+                  require current, real-time information—such as weather, news, stock prices, or
+                  recent events—you can enable web search for supported models. Look for the web
+                  search toggle button (🌐) in the input area. When enabled, models that support web
+                  search will automatically search the internet for current information and cite
+                  their sources. This is perfect for time-sensitive queries that go beyond what's in
+                  the model's training data. Note that web search is only available for models that
+                  support this capability (indicated by a 🌐 icon next to the model name).
+                </p>
+                <p>
                   <strong>Attach files (optional):</strong> You can attach documents, code files, or
                   text files to provide context for your comparison. Simply drag and drop files onto
                   the input area or use the file picker button. Supported formats include PDF, Word
@@ -204,6 +214,10 @@ export const HowItWorks: React.FC = () => {
                   <li>
                     When using files, reference them in your prompt (e.g., "Summarize this document"
                     or "What are the key points in the attached file?")
+                  </li>
+                  <li>
+                    For current information queries, enable web search to get real-time data from
+                    the internet
                   </li>
                 </ul>
               </div>
@@ -416,6 +430,16 @@ export const HowItWorks: React.FC = () => {
                   Test multilingual capabilities by comparing translations, language understanding,
                   and content generation in different languages. Some models excel in specific
                   language pairs or regions.
+                </p>
+              </div>
+
+              <div className="use-case-card">
+                <h3>🔍 Real-Time Information</h3>
+                <p>
+                  Use web search to compare how different models gather and synthesize current
+                  information from the internet. Perfect for questions about recent news, weather,
+                  stock prices, sports scores, or any time-sensitive data that requires up-to-date
+                  information.
                 </p>
               </div>
             </div>

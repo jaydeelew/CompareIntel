@@ -814,6 +814,95 @@ const faqData = [
       </>
     ),
   },
+  {
+    id: 'web-search',
+    question: 'What is web search and how does it work?',
+    answer: (
+      <>
+        <p>
+          Web search is a powerful feature that allows compatible AI models to search the internet
+          for real-time, current information. This enables models to answer questions about recent
+          events, current data, and time-sensitive information that goes beyond their training data.
+        </p>
+        <p>
+          <strong>How to enable web search:</strong>
+        </p>
+        <ul>
+          <li>
+            Look for the web search toggle button (🌐) in the input area, next to the file
+            attachment button
+          </li>
+          <li>Click the toggle to enable web search before sending your prompt</li>
+          <li>
+            Web search is only available when you have at least one model selected that supports
+            this capability
+          </li>
+          <li>
+            Models that support web search are marked with a 🌐 icon next to their name in the model
+            selection area
+          </li>
+        </ul>
+        <p>
+          <strong>What web search can do:</strong>
+        </p>
+        <ul>
+          <li>
+            <strong>Search the internet:</strong> Models can search for current information on any
+            topic
+          </li>
+          <li>
+            <strong>Fetch webpage content:</strong> Models can retrieve detailed content from
+            specific URLs when needed
+          </li>
+          <li>
+            <strong>Cite sources:</strong> Models include source URLs and timestamps in their
+            responses, so you know where information comes from
+          </li>
+          <li>
+            <strong>Real-time data:</strong> Access current weather, news, stock prices, sports
+            scores, and other time-sensitive information
+          </li>
+        </ul>
+        <p>
+          <strong>Best use cases for web search:</strong>
+        </p>
+        <ul>
+          <li>Questions about recent news or current events</li>
+          <li>Weather forecasts and current conditions for specific locations</li>
+          <li>Stock prices and financial market data</li>
+          <li>Sports scores and game results</li>
+          <li>Product information, release dates, or availability</li>
+          <li>Any query requiring information more recent than the model's training data</li>
+        </ul>
+        <p>
+          <strong>Important notes:</strong>
+        </p>
+        <ul>
+          <li>Web search requires a configured search provider (configured by administrators)</li>
+          <li>
+            Not all models support web search—only models with the 🌐 indicator can use this feature
+          </li>
+          <li>
+            When web search is enabled, models automatically decide when to search based on your
+            question
+          </li>
+          <li>
+            Web search may add a few seconds to response time as models fetch information from the
+            internet
+          </li>
+          <li>
+            If web search fails or returns no results, models will explicitly state this rather than
+            providing generic information
+          </li>
+        </ul>
+        <p>
+          Web search is perfect for comparing how different models gather, evaluate, and synthesize
+          current information from the web, making CompareIntel ideal for research tasks that
+          require up-to-date data.
+        </p>
+      </>
+    ),
+  },
 ]
 
 // Generate FAQ structured data for SEO
