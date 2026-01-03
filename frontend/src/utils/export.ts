@@ -563,9 +563,7 @@ function formatContentForPDF(content: string): string {
 export async function exportToPDF(data: ComparisonExportData): Promise<void> {
   // Dynamically import PDF libraries to reduce bundle size
   // These are externalized in vite.config.ts to prevent bundling
-  // @ts-expect-error - jspdf module may not have type definitions
   const jspdfModule = await import('jspdf')
-  // @ts-expect-error - html2canvas module may not have type definitions
   const html2canvasModule = await import('html2canvas')
 
   const jsPDF = jspdfModule.default
