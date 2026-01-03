@@ -2458,6 +2458,9 @@ def call_openrouter_streaming(
                                         f"Model {model_id} attempted to add duplicate tool call ID '{tool_call_id}' (error case) to tool_call_messages, skipping."
                                     )
                         elif tool_call["function"]["name"] == "fetch_url":
+                            # Initialize url before try block to ensure it's always defined
+                            # even if an exception occurs during JSON parsing
+                            url = ""
                             try:
                                 import json
                                 import asyncio
