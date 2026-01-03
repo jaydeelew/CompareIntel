@@ -7474,265 +7474,498 @@ function AppContent() {
                   <div
                     style={{
                       display: 'flex',
+                      flexDirection: 'row',
                       alignItems: 'center',
                       justifyContent: 'space-between',
                       marginBottom: '1.5rem',
+                      gap: '0.75rem',
                     }}
                   >
                     <h2 style={{ margin: 0 }}>Comparison Results</h2>
-                    <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
-                      {/* Scroll Lock Toggle - Only show when multiple models are running and not on mobile */}
-                      {conversations.length > 1 && !isMobileLayout && (
-                        <button
-                          onClick={() => {
-                            setIsScrollLocked(!isScrollLocked)
-                          }}
-                          style={{
-                            padding: '0.5rem 0.75rem',
-                            fontSize: '0.875rem',
-                            border:
-                              '1px solid ' + (isScrollLocked ? 'var(--primary-color)' : '#cccccc'),
-                            background: isScrollLocked ? 'var(--primary-color)' : 'transparent',
-                            color: isScrollLocked ? 'white' : '#666',
-                            borderRadius: 'var(--radius-md)',
-                            cursor: 'pointer',
-                            transition: 'all 0.2s ease',
-                            fontWeight: '500',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '0.5rem',
-                            outline: 'none',
-                          }}
-                          title={
-                            isScrollLocked
-                              ? 'Unlock scrolling - Each card scrolls independently'
-                              : 'Lock scrolling - All cards scroll together'
-                          }
-                          onMouseOver={e => {
-                            if (!isScrollLocked) {
-                              e.currentTarget.style.borderColor = '#999'
-                              e.currentTarget.style.color = '#333'
-                            }
-                          }}
-                          onMouseOut={e => {
-                            if (!isScrollLocked) {
-                              e.currentTarget.style.borderColor = '#cccccc'
-                              e.currentTarget.style.color = '#666'
-                            }
-                          }}
-                        >
-                          <span>Scroll</span>
-                          {isScrollLocked ? (
-                            <svg
-                              width="16"
-                              height="16"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
+                    <div
+                      style={{
+                        display: 'flex',
+                        gap: isMobileLayout ? '0.5rem' : '0.75rem',
+                        alignItems: 'center',
+                        flexWrap: 'nowrap',
+                      }}
+                    >
+                      {/* Desktop: Scroll Lock, Follow up, Export */}
+                      {!isMobileLayout && (
+                        <>
+                          {/* Scroll Lock Toggle - Only show when multiple models are running */}
+                          {conversations.length > 1 && (
+                            <button
+                              onClick={() => {
+                                setIsScrollLocked(!isScrollLocked)
+                              }}
+                              style={{
+                                padding: '0.5rem 0.75rem',
+                                fontSize: '0.875rem',
+                                border:
+                                  '1px solid ' +
+                                  (isScrollLocked ? 'var(--primary-color)' : '#cccccc'),
+                                background: isScrollLocked ? 'var(--primary-color)' : 'transparent',
+                                color: isScrollLocked ? 'white' : '#666',
+                                borderRadius: 'var(--radius-md)',
+                                cursor: 'pointer',
+                                transition: 'all 0.2s ease',
+                                fontWeight: '500',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '0.5rem',
+                                outline: 'none',
+                              }}
+                              title={
+                                isScrollLocked
+                                  ? 'Unlock scrolling - Each card scrolls independently'
+                                  : 'Lock scrolling - All cards scroll together'
+                              }
+                              onMouseOver={e => {
+                                if (!isScrollLocked) {
+                                  e.currentTarget.style.borderColor = '#999'
+                                  e.currentTarget.style.color = '#333'
+                                }
+                              }}
+                              onMouseOut={e => {
+                                if (!isScrollLocked) {
+                                  e.currentTarget.style.borderColor = '#cccccc'
+                                  e.currentTarget.style.color = '#666'
+                                }
+                              }}
                             >
-                              <rect x="5" y="11" width="14" height="10" rx="2" ry="2" />
-                              <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                            </svg>
-                          ) : (
-                            <svg
-                              width="16"
-                              height="16"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            >
-                              <rect x="5" y="11" width="14" height="10" rx="2" ry="2" />
-                              <line x1="7" y1="11" x2="7" y2="7" />
-                            </svg>
+                              <span>Scroll</span>
+                              {isScrollLocked ? (
+                                <svg
+                                  width="16"
+                                  height="16"
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  strokeWidth="2"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                >
+                                  <rect x="5" y="11" width="14" height="10" rx="2" ry="2" />
+                                  <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                                </svg>
+                              ) : (
+                                <svg
+                                  width="16"
+                                  height="16"
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  strokeWidth="2"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                >
+                                  <rect x="5" y="11" width="14" height="10" rx="2" ry="2" />
+                                  <line x1="7" y1="11" x2="7" y2="7" />
+                                </svg>
+                              )}
+                            </button>
                           )}
-                        </button>
-                      )}
-                      {!isFollowUpMode && (
-                        <button
-                          onClick={handleFollowUp}
-                          className="follow-up-button"
-                          title={
-                            isFollowUpDisabled()
-                              ? 'Cannot follow up when new models are selected. You can follow up if you only deselect models from the original comparison.'
-                              : 'Ask a follow-up question'
-                          }
-                          disabled={isFollowUpDisabled()}
-                        >
-                          Follow up
-                        </button>
-                      )}
+                          {!isFollowUpMode && (
+                            <button
+                              onClick={handleFollowUp}
+                              className="follow-up-button"
+                              title={
+                                isFollowUpDisabled()
+                                  ? 'Cannot follow up when new models are selected. You can follow up if you only deselect models from the original comparison.'
+                                  : 'Ask a follow-up question'
+                              }
+                              disabled={isFollowUpDisabled()}
+                            >
+                              Follow up
+                            </button>
+                          )}
 
-                      {/* Export Dropdown */}
-                      <div className="export-dropdown-container" ref={exportMenuRef}>
-                        <button
-                          onClick={() => setShowExportMenu(!showExportMenu)}
-                          className="follow-up-button export-dropdown-trigger"
-                          title="Export comparison"
-                          aria-expanded={showExportMenu}
-                          aria-haspopup="true"
-                        >
-                          <svg
-                            width="16"
-                            height="16"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          >
-                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                            <polyline points="7 10 12 15 17 10" />
-                            <line x1="12" y1="15" x2="12" y2="3" />
-                          </svg>
-                          <span>Export</span>
-                          <svg
-                            className={`export-dropdown-arrow ${showExportMenu ? 'open' : ''}`}
-                            width="12"
-                            height="12"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          >
-                            <polyline points="6 9 12 15 18 9" />
-                          </svg>
-                        </button>
-                        {showExportMenu && (
-                          <div className="export-dropdown-menu" role="menu">
+                          {/* Export Dropdown for desktop */}
+                          <div className="export-dropdown-container" ref={exportMenuRef}>
                             <button
-                              onClick={() => handleExport('pdf')}
-                              className="export-dropdown-item"
-                              role="menuitem"
-                              title="Best for sharing & printing"
+                              onClick={() => setShowExportMenu(!showExportMenu)}
+                              className="follow-up-button export-dropdown-trigger"
+                              title="Export comparison"
+                              aria-expanded={showExportMenu}
+                              aria-haspopup="true"
                             >
                               <svg
-                                width="18"
-                                height="18"
+                                width="16"
+                                height="16"
                                 viewBox="0 0 24 24"
                                 fill="none"
                                 stroke="currentColor"
                                 strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
                               >
-                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                                <polyline points="14 2 14 8 20 8" />
-                                <path d="M9 13h6" />
-                                <path d="M9 17h6" />
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                                <polyline points="7 10 12 15 17 10" />
+                                <line x1="12" y1="15" x2="12" y2="3" />
                               </svg>
-                              <div className="export-dropdown-item-content">
-                                <span className="export-dropdown-item-title">PDF</span>
-                              </div>
-                            </button>
-                            <button
-                              onClick={() => handleExport('markdown')}
-                              className="export-dropdown-item"
-                              role="menuitem"
-                              title="For docs & note apps"
-                            >
+                              <span>Export</span>
                               <svg
-                                width="18"
-                                height="18"
+                                className={`export-dropdown-arrow ${showExportMenu ? 'open' : ''}`}
+                                width="12"
+                                height="12"
                                 viewBox="0 0 24 24"
                                 fill="none"
                                 stroke="currentColor"
                                 strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
                               >
-                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                                <polyline points="14 2 14 8 20 8" />
-                                <path d="M12 18v-6" />
-                                <path d="M9 15l3-3 3 3" />
+                                <polyline points="6 9 12 15 18 9" />
                               </svg>
-                              <div className="export-dropdown-item-content">
-                                <span className="export-dropdown-item-title">Markdown</span>
-                              </div>
                             </button>
-                            <button
-                              onClick={() => handleExport('html')}
-                              className="export-dropdown-item"
-                              role="menuitem"
-                              title="Standalone web page"
-                            >
-                              <svg
-                                width="18"
-                                height="18"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                              >
-                                <polyline points="16 18 22 12 16 6" />
-                                <polyline points="8 6 2 12 8 18" />
-                              </svg>
-                              <div className="export-dropdown-item-content">
-                                <span className="export-dropdown-item-title">HTML</span>
+                            {showExportMenu && (
+                              <div className="export-dropdown-menu" role="menu">
+                                <button
+                                  onClick={() => handleExport('pdf')}
+                                  className="export-dropdown-item"
+                                  role="menuitem"
+                                  title="Best for sharing & printing"
+                                >
+                                  <svg
+                                    width="18"
+                                    height="18"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="2"
+                                  >
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                                    <polyline points="14 2 14 8 20 8" />
+                                    <path d="M9 13h6" />
+                                    <path d="M9 17h6" />
+                                  </svg>
+                                  <div className="export-dropdown-item-content">
+                                    <span className="export-dropdown-item-title">PDF</span>
+                                  </div>
+                                </button>
+                                <button
+                                  onClick={() => handleExport('markdown')}
+                                  className="export-dropdown-item"
+                                  role="menuitem"
+                                  title="For docs & note apps"
+                                >
+                                  <svg
+                                    width="18"
+                                    height="18"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="2"
+                                  >
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                                    <polyline points="14 2 14 8 20 8" />
+                                    <path d="M12 18v-6" />
+                                    <path d="M9 15l3-3 3 3" />
+                                  </svg>
+                                  <div className="export-dropdown-item-content">
+                                    <span className="export-dropdown-item-title">Markdown</span>
+                                  </div>
+                                </button>
+                                <button
+                                  onClick={() => handleExport('html')}
+                                  className="export-dropdown-item"
+                                  role="menuitem"
+                                  title="Standalone web page"
+                                >
+                                  <svg
+                                    width="18"
+                                    height="18"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="2"
+                                  >
+                                    <polyline points="16 18 22 12 16 6" />
+                                    <polyline points="8 6 2 12 8 18" />
+                                  </svg>
+                                  <div className="export-dropdown-item-content">
+                                    <span className="export-dropdown-item-title">HTML</span>
+                                  </div>
+                                </button>
+                                <button
+                                  onClick={() => handleExport('json')}
+                                  className="export-dropdown-item"
+                                  role="menuitem"
+                                  title="For developers & APIs"
+                                >
+                                  <svg
+                                    width="18"
+                                    height="18"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="2"
+                                  >
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                                    <polyline points="14 2 14 8 20 8" />
+                                    <path d="M8 13h2" />
+                                    <path d="M8 17h2" />
+                                    <path d="M14 13h2" />
+                                    <path d="M14 17h2" />
+                                  </svg>
+                                  <div className="export-dropdown-item-content">
+                                    <span className="export-dropdown-item-title">JSON</span>
+                                  </div>
+                                </button>
                               </div>
-                            </button>
-                            <button
-                              onClick={() => handleExport('json')}
-                              className="export-dropdown-item"
-                              role="menuitem"
-                              title="For developers & APIs"
-                            >
-                              <svg
-                                width="18"
-                                height="18"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                              >
-                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                                <polyline points="14 2 14 8 20 8" />
-                                <path d="M8 13h2" />
-                                <path d="M8 17h2" />
-                                <path d="M14 13h2" />
-                                <path d="M14 17h2" />
-                              </svg>
-                              <div className="export-dropdown-item-content">
-                                <span className="export-dropdown-item-title">JSON</span>
-                              </div>
-                            </button>
+                            )}
                           </div>
-                        )}
-                      </div>
 
-                      {closedCards.size > 0 && (
-                        <button
-                          onClick={showAllResults}
-                          style={{
-                            padding: '0.5rem 1rem',
-                            fontSize: '0.875rem',
-                            border: '1px solid var(--primary-color)',
-                            background: 'var(--primary-color)',
-                            color: 'white',
-                            borderRadius: 'var(--radius-md)',
-                            cursor: 'pointer',
-                            transition: 'all 0.2s ease',
-                            fontWeight: '500',
-                            whiteSpace: 'normal',
-                            lineHeight: '1.4',
-                            textAlign: 'center',
-                          }}
-                          onMouseOver={e => {
-                            e.currentTarget.style.background = 'var(--primary-hover)'
-                            e.currentTarget.style.borderColor = 'var(--primary-hover)'
-                          }}
-                          onMouseOut={e => {
-                            e.currentTarget.style.background = 'var(--primary-color)'
-                            e.currentTarget.style.borderColor = 'var(--primary-color)'
-                          }}
-                        >
-                          <span style={{ whiteSpace: 'nowrap' }}>Show All Results</span>{' '}
-                          <span style={{ whiteSpace: 'nowrap' }}>({closedCards.size} hidden)</span>
-                        </button>
+                          {/* Show all results button for desktop */}
+                          {closedCards.size > 0 && (
+                            <button
+                              onClick={showAllResults}
+                              style={{
+                                padding: '0.5rem 1rem',
+                                fontSize: '0.875rem',
+                                border: '1px solid var(--primary-color)',
+                                background: 'var(--primary-color)',
+                                color: 'white',
+                                borderRadius: 'var(--radius-md)',
+                                cursor: 'pointer',
+                                transition: 'all 0.2s ease',
+                                fontWeight: '500',
+                                whiteSpace: 'normal',
+                                lineHeight: '1.4',
+                                textAlign: 'center',
+                              }}
+                              onMouseOver={e => {
+                                e.currentTarget.style.background = 'var(--primary-hover)'
+                                e.currentTarget.style.borderColor = 'var(--primary-hover)'
+                              }}
+                              onMouseOut={e => {
+                                e.currentTarget.style.background = 'var(--primary-color)'
+                                e.currentTarget.style.borderColor = 'var(--primary-color)'
+                              }}
+                            >
+                              <span style={{ whiteSpace: 'nowrap' }}>Show All Results</span>{' '}
+                              <span style={{ whiteSpace: 'nowrap' }}>
+                                ({closedCards.size} hidden)
+                              </span>
+                            </button>
+                          )}
+                        </>
+                      )}
+
+                      {/* Mobile: Icon-only buttons on same line */}
+                      {isMobileLayout && (
+                        <>
+                          {/* Follow up button - icon only */}
+                          {!isFollowUpMode && (
+                            <button
+                              onClick={handleFollowUp}
+                              className="follow-up-button"
+                              title={
+                                isFollowUpDisabled()
+                                  ? 'Cannot follow up when new models are selected. You can follow up if you only deselect models from the original comparison.'
+                                  : 'Ask a follow-up question'
+                              }
+                              disabled={isFollowUpDisabled()}
+                              style={{
+                                padding: '0.5rem',
+                                minWidth: '36px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                              }}
+                            >
+                              <svg
+                                width="18"
+                                height="18"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              >
+                                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                                <line x1="9" y1="10" x2="15" y2="10" />
+                                <line x1="12" y1="7" x2="12" y2="13" />
+                              </svg>
+                            </button>
+                          )}
+
+                          {/* Export Dropdown - icon only */}
+                          <div className="export-dropdown-container" ref={exportMenuRef}>
+                            <button
+                              onClick={() => setShowExportMenu(!showExportMenu)}
+                              className="follow-up-button export-dropdown-trigger"
+                              title="Export comparison"
+                              aria-expanded={showExportMenu}
+                              aria-haspopup="true"
+                              style={{
+                                padding: '0.5rem',
+                                minWidth: '36px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                              }}
+                            >
+                              <svg
+                                width="18"
+                                height="18"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              >
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                                <polyline points="7 10 12 15 17 10" />
+                                <line x1="12" y1="15" x2="12" y2="3" />
+                              </svg>
+                            </button>
+                            {showExportMenu && (
+                              <div className="export-dropdown-menu" role="menu">
+                                <button
+                                  onClick={() => handleExport('pdf')}
+                                  className="export-dropdown-item"
+                                  role="menuitem"
+                                  title="Best for sharing & printing"
+                                >
+                                  <svg
+                                    width="18"
+                                    height="18"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="2"
+                                  >
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                                    <polyline points="14 2 14 8 20 8" />
+                                    <path d="M9 13h6" />
+                                    <path d="M9 17h6" />
+                                  </svg>
+                                  <div className="export-dropdown-item-content">
+                                    <span className="export-dropdown-item-title">PDF</span>
+                                  </div>
+                                </button>
+                                <button
+                                  onClick={() => handleExport('markdown')}
+                                  className="export-dropdown-item"
+                                  role="menuitem"
+                                  title="For docs & note apps"
+                                >
+                                  <svg
+                                    width="18"
+                                    height="18"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="2"
+                                  >
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                                    <polyline points="14 2 14 8 20 8" />
+                                    <path d="M12 18v-6" />
+                                    <path d="M9 15l3-3 3 3" />
+                                  </svg>
+                                  <div className="export-dropdown-item-content">
+                                    <span className="export-dropdown-item-title">Markdown</span>
+                                  </div>
+                                </button>
+                                <button
+                                  onClick={() => handleExport('html')}
+                                  className="export-dropdown-item"
+                                  role="menuitem"
+                                  title="Standalone web page"
+                                >
+                                  <svg
+                                    width="18"
+                                    height="18"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="2"
+                                  >
+                                    <polyline points="16 18 22 12 16 6" />
+                                    <polyline points="8 6 2 12 8 18" />
+                                  </svg>
+                                  <div className="export-dropdown-item-content">
+                                    <span className="export-dropdown-item-title">HTML</span>
+                                  </div>
+                                </button>
+                                <button
+                                  onClick={() => handleExport('json')}
+                                  className="export-dropdown-item"
+                                  role="menuitem"
+                                  title="For developers & APIs"
+                                >
+                                  <svg
+                                    width="18"
+                                    height="18"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="2"
+                                  >
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                                    <polyline points="14 2 14 8 20 8" />
+                                    <path d="M8 13h2" />
+                                    <path d="M8 17h2" />
+                                    <path d="M14 13h2" />
+                                    <path d="M14 17h2" />
+                                  </svg>
+                                  <div className="export-dropdown-item-content">
+                                    <span className="export-dropdown-item-title">JSON</span>
+                                  </div>
+                                </button>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Show all results button - icon only */}
+                          {closedCards.size > 0 && (
+                            <button
+                              onClick={showAllResults}
+                              title={`Show all results (${closedCards.size} hidden)`}
+                              style={{
+                                padding: '0.5rem',
+                                minWidth: '36px',
+                                fontSize: '0.875rem',
+                                border: '1px solid var(--primary-color)',
+                                background: 'var(--primary-color)',
+                                color: 'white',
+                                borderRadius: 'var(--radius-md)',
+                                cursor: 'pointer',
+                                transition: 'all 0.2s ease',
+                                fontWeight: '500',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                              }}
+                              onMouseOver={e => {
+                                e.currentTarget.style.background = 'var(--primary-hover)'
+                                e.currentTarget.style.borderColor = 'var(--primary-hover)'
+                              }}
+                              onMouseOut={e => {
+                                e.currentTarget.style.background = 'var(--primary-color)'
+                                e.currentTarget.style.borderColor = 'var(--primary-color)'
+                              }}
+                            >
+                              <svg
+                                width="18"
+                                height="18"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              >
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                                <circle cx="12" cy="12" r="3" />
+                              </svg>
+                            </button>
+                          )}
+                        </>
                       )}
                     </div>
                   </div>
