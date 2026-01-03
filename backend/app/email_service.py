@@ -126,7 +126,7 @@ async def send_verification_email(email: EmailStr, token: str) -> None:
           </div>
           <div class="footer">
             <p>Need help? Contact us at <a href="mailto:support@compareintel.com" style="color: #0ea5e9;">support@compareintel.com</a></p>
-            <p>&copy; 2025 CompareIntel. All rights reserved.</p>
+            <p>&copy; 2026 CompareIntel. All rights reserved.</p>
           </div>
         </div>
       </body>
@@ -238,7 +238,7 @@ async def send_password_reset_email(email: EmailStr, token: str) -> None:
           </div>
           <div class="footer">
             <p>Need help? Contact us at <a href="mailto:support@compareintel.com" style="color: #0ea5e9;">support@compareintel.com</a></p>
-            <p>&copy; 2025 CompareIntel. All rights reserved.</p>
+            <p>&copy; 2026 CompareIntel. All rights reserved.</p>
           </div>
         </div>
       </body>
@@ -415,7 +415,7 @@ async def send_subscription_confirmation_email(email: EmailStr, tier: str, perio
           </div>
           <div class="footer">
             <p>Need help? Contact us at <a href="mailto:support@compareintel.com" style="color: #0ea5e9;">support@compareintel.com</a></p>
-            <p>&copy; 2025 CompareIntel. All rights reserved.</p>
+            <p>&copy; 2026 CompareIntel. All rights reserved.</p>
           </div>
         </div>
       </body>
@@ -531,7 +531,7 @@ async def send_usage_limit_warning_email(email: EmailStr, usage_count: int, dail
           </div>
           <div class="footer">
             <p>Need help? Contact us at <a href="mailto:support@compareintel.com" style="color: #0ea5e9;">support@compareintel.com</a></p>
-            <p>&copy; 2025 CompareIntel. All rights reserved.</p>
+            <p>&copy; 2026 CompareIntel. All rights reserved.</p>
           </div>
         </div>
       </body>
@@ -722,7 +722,7 @@ async def send_model_availability_report(check_results: Dict[str, Any]) -> None:
           </div>
           <div class="footer">
             <p>CompareIntel Model Availability Monitor</p>
-            <p>&copy; 2025 CompareIntel. All rights reserved.</p>
+            <p>&copy; 2026 CompareIntel. All rights reserved.</p>
           </div>
         </div>
       </body>

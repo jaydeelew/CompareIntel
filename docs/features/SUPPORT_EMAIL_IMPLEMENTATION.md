@@ -18,7 +18,7 @@ Added support email to the footer of all email templates:
 **Footer Text:**
 ```
 Need help? Contact us at support@compareintel.com
-© 2025 CompareIntel. All rights reserved.
+© 2026 CompareIntel. All rights reserved.
 ```
 
 ### 2. Frontend Footer Component (`frontend/src/components/Footer.tsx`)
@@ -30,7 +30,7 @@ Created a new reusable Footer component that displays:
 **Footer Text:**
 ```
 Need help or have feedback? support@compareintel.com
-© 2025 CompareIntel. All rights reserved.
+© 2026 CompareIntel. All rights reserved.
 ```
 
 **Features:**

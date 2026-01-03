@@ -77,7 +77,7 @@ export const Footer: React.FC = () => {
 
       {/* Copyright */}
       <p style={{ margin: '8px 0', fontSize: '12px', color: '#4b5563' }}>
-        © 2025 CompareIntel. All rights reserved.
+        © 2026 CompareIntel. All rights reserved.
       </p>
     </footer>
   )
