@@ -2917,9 +2917,14 @@ button.nav-button-primary {
     text-align: center;
   }
 
-  /* Ensure signup prompt is fully visible in mobile by adding bottom padding */
-  /* Override the no-scrollbar padding removal to ensure message is visible */
-  .history-inline-list-content {
+  /* Match desktop behavior: no extra padding when no-scrollbar (no signup prompt) */
+  /* Only add extra padding when signup prompt is present (scrollable class) */
+  .history-inline-list.no-scrollbar .history-inline-list-content {
+    padding-bottom: 0 !important;
+  }
+
+  /* Add extra padding when scrollable (signup prompt is present) to ensure message visibility */
+  .history-inline-list.scrollable .history-inline-list-content {
     padding-bottom: 2rem !important;
   }
 
