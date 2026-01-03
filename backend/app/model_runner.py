@@ -2077,6 +2077,9 @@ def call_openrouter_streaming(
                             continue
                         
                         if tool_call["function"]["name"] == "search_web":
+                            # Initialize search_query before try block to ensure it's always defined
+                            # even if an exception occurs during JSON parsing
+                            search_query = ""
                             try:
                                 import json
                                 # Parse arguments
