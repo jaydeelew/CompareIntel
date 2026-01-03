@@ -1238,6 +1238,28 @@ export const ComparisonForm = memo<ComparisonFormProps>(
       e.currentTarget.blur()
     }, [])
 
+    // Detect Android to use file explorer instead of media picker
+    // On Android, specific accept attributes (especially text/*) can trigger
+    // the camera/images dialog instead of the file explorer. Since we validate
+    // files client-side anyway, using */* on Android forces the file explorer
+    // to open, which is the desired behavior for text/code/document files.
+    const isAndroid = useMemo(() => {
+      if (typeof navigator === 'undefined') return false
+      return /Android/i.test(navigator.userAgent)
+    }, [])
+
+    // File accept attribute: use */* on Android to force file explorer,
+    // otherwise use specific types for better UX on other platforms
+    const fileAcceptAttribute = useMemo(() => {
+      if (isAndroid) {
+        // On Android, use */* to open file explorer instead of media picker
+        // File validation will still happen via isTextOrCodeFile function
+        return '*/*'
+      }
+      // On other platforms, use specific file types for better UX
+      return '.txt,.md,.markdown,.json,.xml,.html,.htm,.css,.js,.jsx,.ts,.tsx,.py,.java,.c,.cpp,.cc,.cxx,.h,.hpp,.cs,.rb,.go,.rs,.swift,.kt,.php,.sh,.bash,.zsh,.fish,.yaml,.yml,.toml,.ini,.cfg,.conf,.log,.csv,.sql,.r,.R,.m,.pl,.pm,.lua,.scala,.clj,.cljs,.hs,.elm,.ex,.exs,.dart,.vue,.svelte,.astro,.graphql,.gql,.dockerfile,.env,.gitignore,.gitattributes,.editorconfig,.eslintrc,.prettierrc,.babelrc,.webpack,.rollup,.vite,.makefile,.cmake,.gradle,.maven,.pom,.sbt,.build,.lock,.lockfile,.package,.requirements,.pip,.conda,.dockerignore,.npmignore,.yarnignore,.eslintignore,.prettierignore,.pdf,.docx,.doc,.rtf,.odt,text/*,application/json,application/javascript,application/xml,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/msword,application/rtf,application/vnd.oasis.opendocument.text'
+    }, [isAndroid])
+
     return (
       <>
         <div
@@ -1396,7 +1418,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
               <input
                 ref={fileInputRef}
                 type="file"
-                accept=".txt,.md,.markdown,.json,.xml,.html,.htm,.css,.js,.jsx,.ts,.tsx,.py,.java,.c,.cpp,.cc,.cxx,.h,.hpp,.cs,.rb,.go,.rs,.swift,.kt,.php,.sh,.bash,.zsh,.fish,.yaml,.yml,.toml,.ini,.cfg,.conf,.log,.csv,.sql,.r,.R,.m,.pl,.pm,.lua,.scala,.clj,.cljs,.hs,.elm,.ex,.exs,.dart,.vue,.svelte,.astro,.graphql,.gql,.dockerfile,.env,.gitignore,.gitattributes,.editorconfig,.eslintrc,.prettierrc,.babelrc,.webpack,.rollup,.vite,.makefile,.cmake,.gradle,.maven,.pom,.sbt,.build,.lock,.lockfile,.package,.requirements,.pip,.conda,.dockerignore,.npmignore,.yarnignore,.eslintignore,.prettierignore,.pdf,.docx,.doc,.rtf,.odt,text/*,application/json,application/javascript,application/xml,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/msword,application/rtf,application/vnd.oasis.opendocument.text"
+                accept={fileAcceptAttribute}
                 style={{ display: 'none' }}
                 onChange={handleFileUpload}
               />
