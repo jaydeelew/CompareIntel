@@ -1,8 +1,8 @@
 # E2E Tests
 
-This directory contains end-to-end tests for CompareIntel using Playwright.
+This directory contains comprehensive end-to-end tests for CompareIntel using Playwright.
 
-**📚 For comprehensive E2E testing documentation, see: [Frontend Testing Guide](../../docs/testing/FRONTEND_TESTING.md#e2e-testing-with-playwright)**
+**📚 For complete E2E testing documentation, see: [Frontend Testing Guide](../../docs/testing/FRONTEND_TESTING.md#e2e-testing-with-playwright)**
 
 ## Quick Start
 
@@ -15,7 +15,30 @@ npm run test:e2e:ui
 
 # Run E2E tests in headed mode (see browser)
 npm run test:e2e:headed
+
+# Run specific E2E test file
+npx playwright test e2e/auth.spec.ts
+npx playwright test e2e/websearch.spec.ts
 ```
 
-For detailed information on writing E2E tests, Playwright configuration, and best practices, see the [Frontend Testing Guide](../../docs/testing/FRONTEND_TESTING.md).
+## Test Files
 
+- **`auth.spec.ts`**: User registration → verification → login flow
+- **`comparison.spec.ts`**: Anonymous user flow and rate limit handling
+- **`conversation.spec.ts`**: Conversation management (create, view, delete)
+- **`admin.spec.ts`**: Admin user management functionality
+- **`websearch.spec.ts`**: Web search feature testing (enable, search execution, results display)
+- **`footer-navigation.spec.ts`**: Footer navigation and links
+
+## E2E Test Coverage
+
+Current E2E test coverage includes:
+
+- ✅ User authentication flows
+- ✅ Model comparison workflows
+- ✅ Web search functionality
+- ✅ Conversation history management
+- ✅ Admin panel operations
+- ✅ Navigation and routing
+
+For detailed information on writing E2E tests, Playwright configuration, and best practices, see the [Frontend Testing Guide](../../docs/testing/FRONTEND_TESTING.md).

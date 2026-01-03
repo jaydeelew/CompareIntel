@@ -382,3 +382,38 @@ export function createMockStreamEvents(
 
   return events
 }
+
+/**
+ * Web search result interface
+ */
+export interface WebSearchResult {
+  title: string
+  url: string
+  snippet: string
+  source: string
+}
+
+/**
+ * Create a mock web search result
+ */
+export function createMockWebSearchResult(overrides?: Partial<WebSearchResult>): WebSearchResult {
+  return {
+    title: overrides?.title || `Search Result ${Date.now()}`,
+    url: overrides?.url || `https://example.com/result-${Date.now()}`,
+    snippet: overrides?.snippet || `This is a search result snippet for testing purposes.`,
+    source: overrides?.source || 'brave',
+  }
+}
+
+/**
+ * Create multiple mock web search results
+ */
+export function createMockWebSearchResults(count: number = 5): WebSearchResult[] {
+  return Array.from({ length: count }, (_, i) =>
+    createMockWebSearchResult({
+      title: `Search Result ${i + 1}`,
+      url: `https://example.com/result-${i + 1}`,
+      snippet: `Snippet for result ${i + 1}`,
+    })
+  )
+}

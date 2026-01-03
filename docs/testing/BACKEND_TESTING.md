@@ -1,6 +1,6 @@
 # Backend Testing Guide
 
-This comprehensive guide covers all aspects of testing the CompareIntel backend, including setup, running tests, writing new tests, and best practices.
+Comprehensive guide for testing the CompareIntel backend, covering setup, running tests, writing new tests, and best practices.
 
 ## Table of Contents
 
@@ -12,7 +12,7 @@ This comprehensive guide covers all aspects of testing the CompareIntel backend,
 6. [Writing Tests](#writing-tests)
 7. [Test Fixtures](#test-fixtures)
 8. [Test Factories](#test-factories)
-9. [Testing Workflows](#testing-workflows)
+9. [Testing Major Features](#testing-major-features)
 10. [Best Practices](#best-practices)
 11. [Troubleshooting](#troubleshooting)
 
@@ -26,9 +26,18 @@ The backend test suite uses **pytest** with async support for FastAPI testing. T
 
 ### Test Coverage Goals
 
-- Target: **70%+ coverage** for all backend code
-- Critical paths: Authentication, rate limiting, comparison endpoints, model runner
-- Edge cases: Error handling, boundary conditions, invalid inputs
+- **Target**: 70%+ coverage for all backend code
+- **Critical Paths**: Authentication, rate limiting, comparison endpoints, model runner, web search
+- **Edge Cases**: Error handling, boundary conditions, invalid inputs, network failures
+
+### Testing Framework Stack
+
+- **pytest** 8.0+ - Test runner
+- **pytest-asyncio** - Async test support
+- **pytest-cov** - Coverage reporting
+- **pytest-mock** - Mocking utilities
+- **httpx** - FastAPI test client
+- **pytest-timeout** - Test timeout management
 
 ## Test Structure
 
@@ -36,7 +45,7 @@ The backend test suite uses **pytest** with async support for FastAPI testing. T
 backend/tests/
 ├── __init__.py
 ├── conftest.py              # Shared fixtures and test configuration
-├── factories.py              # Test data factories
+├── factories.py             # Test data factories
 ├── unit/                    # Unit tests
 │   ├── test_auth.py
 │   ├── test_auth_edge_cases.py
@@ -44,12 +53,15 @@ backend/tests/
 │   ├── test_rate_limiting_edge_cases.py
 │   ├── test_model_runner.py
 │   ├── test_model_runner_edge_cases.py
-│   └── test_utils.py
+│   ├── test_utils.py
+│   └── test_search_providers.py      # Web search tests
 ├── integration/             # Integration tests
 │   ├── test_api.py
 │   ├── test_comparison.py
 │   ├── test_comparison_edge_cases.py
-│   └── test_admin.py
+│   ├── test_admin.py
+│   ├── test_websearch.py              # Web search integration tests
+│   └── test_file_upload.py            # File upload tests
 └── e2e/                     # End-to-end tests
     └── test_workflows.py
 ```
@@ -113,14 +125,8 @@ pytest -q
 # Very quiet (no progress dots)
 pytest -qq
 
-# No traceback
-pytest --tb=no
-
 # One-line traceback
 pytest --tb=line
-
-# Disable warnings
-pytest --disable-warnings
 
 # Recommended quiet command
 pytest -q --tb=line --disable-warnings
@@ -154,9 +160,6 @@ pytest --cov=app --cov-report=html
 
 # Generate multiple report formats
 pytest --cov=app --cov-report=html --cov-report=xml --cov-report=term-missing
-
-# View coverage without running tests
-# (coverage data must exist from previous run)
 ```
 
 ## Test Configuration
@@ -253,45 +256,6 @@ def test_api_endpoint(authenticated_client):
     
     assert response.status_code == 200
     assert response.json()["status"] == "success"
-```
-
-### E2E Test Example
-
-```python
-import pytest
-
-@pytest.mark.e2e
-class TestUserWorkflow:
-    """Test complete user workflow."""
-    
-    def test_user_registration_to_comparison(self, client, db_session):
-        """Test user registration → verification → comparison flow."""
-        # Step 1: Register user
-        register_response = client.post(
-            "/api/auth/register",
-            json={
-                "email": "test@example.com",
-                "password": "SecurePassword123!",
-                "full_name": "Test User"
-            }
-        )
-        assert register_response.status_code == 201
-        
-        # Step 2: Verify email (mock verification)
-        # ... verification logic
-        
-        # Step 3: Login
-        login_response = client.post(
-            "/api/auth/login",
-            json={
-                "email": "test@example.com",
-                "password": "SecurePassword123!"
-            }
-        )
-        assert login_response.status_code == 200
-        
-        # Step 4: Make comparison request
-        # ... comparison logic
 ```
 
 ### Testing Async Functions
@@ -427,6 +391,7 @@ from tests.factories import (
     create_usage_log,
     generate_compare_request,
     generate_model_response,
+    create_app_settings,  # For web search configuration
 )
 
 def test_example(db_session):
@@ -440,144 +405,276 @@ def test_example(db_session):
     )
 ```
 
-## Testing Workflows
+## Testing Major Features
 
-### Workflow 1: Writing a New Unit Test
+### 1. Authentication Testing
 
-1. **Identify what to test**
-   - Function or module to test
-   - Expected behavior and edge cases
+**Location**: `tests/unit/test_auth.py`, `tests/unit/test_auth_edge_cases.py`
 
-2. **Create test file** (if it doesn't exist)
-   ```bash
-   touch backend/tests/unit/test_my_feature.py
-   ```
+**Coverage**:
+- User registration with email verification
+- Login/logout flows
+- Token refresh
+- Password reset
+- Email verification
+- Token expiration and validation
+- Password strength validation
+- Edge cases (malformed tokens, expired tokens, etc.)
 
-3. **Write test structure**
-   ```python
-   import pytest
-   from app.my_module import my_function
-   
-   @pytest.mark.unit
-   class TestMyFeature:
-       def test_basic_case(self):
-           # Arrange
-           input_data = "test"
-           
-           # Act
-           result = my_function(input_data)
-           
-           # Assert
-           assert result == expected
-       
-       def test_edge_case(self):
-           # Test edge case
-           pass
-   ```
+**Example**:
+```python
+@pytest.mark.unit
+def test_user_registration(client, db_session):
+    """Test user registration flow."""
+    response = client.post(
+        "/api/auth/register",
+        json={
+            "email": "test@example.com",
+            "password": "SecurePassword123!",
+            "full_name": "Test User"
+        }
+    )
+    assert response.status_code == 201
+    assert response.json()["email"] == "test@example.com"
+```
 
-4. **Run test**
-   ```bash
-   pytest tests/unit/test_my_feature.py -v
-   ```
+### 2. Model Comparison Testing
 
-5. **Verify coverage**
-   ```bash
-   pytest tests/unit/test_my_feature.py --cov=app.my_module --cov-report=term-missing
-   ```
+**Location**: `tests/integration/test_comparison.py`, `tests/integration/test_comparison_edge_cases.py`
 
-### Workflow 2: Writing a New Integration Test
+**Coverage**:
+- Streaming comparison requests
+- Multiple model selection
+- Token estimation
+- Rate limiting enforcement
+- Credit deduction
+- Conversation history integration
+- Error handling (API failures, timeouts)
+- Edge cases (empty input, invalid models, etc.)
 
-1. **Identify endpoint to test**
-   - API endpoint
-   - Request/response format
-   - Authentication requirements
+**Example**:
+```python
+@pytest.mark.integration
+def test_comparison_streaming(authenticated_client):
+    """Test streaming comparison endpoint."""
+    client, user, token, _ = authenticated_client
+    
+    response = client.post(
+        "/api/compare-stream",
+        headers={"Authorization": f"Bearer {token}"},
+        json={
+            "input_data": "What is AI?",
+            "models": ["openai/gpt-4", "anthropic/claude-3.5-sonnet"]
+        },
+        stream=True
+    )
+    assert response.status_code == 200
+```
 
-2. **Create or update test file**
-   ```bash
-   touch backend/tests/integration/test_my_endpoint.py
-   ```
+### 3. Web Search Testing
 
-3. **Write test**
-   ```python
-   import pytest
-   
-   @pytest.mark.integration
-   def test_my_endpoint(authenticated_client):
-       client, user, token, _ = authenticated_client
-       
-       response = client.post(
-           "/api/my-endpoint",
-           headers={"Authorization": f"Bearer {token}"},
-           json={"data": "test"}
-       )
-       
-       assert response.status_code == 200
-       assert "result" in response.json()
-   ```
+**Location**: `tests/unit/test_search_providers.py`, `tests/integration/test_websearch.py`
 
-4. **Run test**
-   ```bash
-   pytest tests/integration/test_my_endpoint.py -v
-   ```
+**Coverage**:
+- Search provider initialization
+- Search query execution
+- Search result formatting
+- Provider availability checking
+- Search provider factory
+- Web search integration with model comparison
+- Tool calling for web search-enabled models
+- Error handling (API failures, rate limits)
+- URL fetching functionality
 
-### Workflow 3: Testing Edge Cases
+**Example**:
+```python
+@pytest.mark.unit
+async def test_search_provider_search():
+    """Test search provider search functionality."""
+    from app.search.brave import BraveSearchProvider
+    from unittest.mock import AsyncMock, patch
+    
+    provider = BraveSearchProvider("test_api_key")
+    
+    with patch('httpx.AsyncClient.get') as mock_get:
+        mock_get.return_value = AsyncMock(
+            status_code=200,
+            json=AsyncMock(return_value={
+                "web": {
+                    "results": [
+                        {
+                            "title": "Test Result",
+                            "url": "https://example.com",
+                            "description": "Test description"
+                        }
+                    ]
+                }
+            })
+        )
+        
+        results = await provider.search("test query")
+        assert len(results) > 0
+        assert results[0].title == "Test Result"
+```
 
-1. **Identify edge cases**
-   - Empty inputs
-   - Very long inputs
-   - Invalid formats
-   - Boundary conditions
-   - Error scenarios
+### 4. Rate Limiting Testing
 
-2. **Create edge case test file**
-   ```bash
-   touch backend/tests/unit/test_my_feature_edge_cases.py
-   ```
+**Location**: `tests/unit/test_rate_limiting.py`, `tests/unit/test_rate_limiting_edge_cases.py`
 
-3. **Write comprehensive edge case tests**
-   ```python
-   @pytest.mark.unit
-   class TestMyFeatureEdgeCases:
-       def test_empty_input(self):
-           result = my_function("")
-           assert result is None or result == ""
-       
-       def test_very_long_input(self):
-           long_input = "x" * 10000
-           result = my_function(long_input)
-           assert len(result) <= MAX_LENGTH
-       
-       def test_invalid_format(self):
-           with pytest.raises(ValueError):
-               my_function("invalid")
-   ```
+**Coverage**:
+- Per-user rate limiting
+- Anonymous rate limiting
+- Tier-based limits
+- Credit-based rate limiting
+- Usage tracking
+- Reset mechanisms
+- Boundary conditions
+- Concurrent access
 
-### Workflow 4: Running Tests Before Committing
+**Example**:
+```python
+@pytest.mark.unit
+def test_rate_limit_enforcement(db_session):
+    """Test rate limit enforcement."""
+    user = create_free_user(db_session)
+    
+    # Make requests up to limit
+    for _ in range(3):  # Free tier limit
+        assert check_user_credits(user.id, db_session) is True
+        deduct_user_credits(user.id, 1, db_session)
+    
+    # Next request should fail
+    assert check_user_credits(user.id, db_session) is False
+```
 
-1. **Run all tests**
-   ```bash
-   pytest
-   ```
+### 5. Credit System Testing
 
-2. **Check coverage**
-   ```bash
-   pytest --cov=app --cov-report=term-missing
-   ```
+**Location**: `tests/integration/test_api.py`
 
-3. **Run specific test category**
-   ```bash
-   pytest tests/unit/ -v
-   ```
+**Coverage**:
+- Credit allocation (daily/monthly)
+- Credit deduction
+- Credit balance queries
+- Credit reset mechanisms
+- Overage handling
+- Tier-based credit limits
 
-4. **Fix any failures**
-   - Read error messages
-   - Check test output
-   - Fix code or test as needed
+**Example**:
+```python
+@pytest.mark.integration
+def test_credit_deduction(authenticated_client, db_session):
+    """Test credit deduction on comparison."""
+    client, user, token, _ = authenticated_client
+    
+    initial_credits = get_user_credits(user.id, db_session)
+    
+    # Make comparison request
+    response = client.post(
+        "/api/compare-stream",
+        headers={"Authorization": f"Bearer {token}"},
+        json={
+            "input_data": "Test",
+            "models": ["openai/gpt-4"]
+        }
+    )
+    
+    # Verify credits were deducted
+    final_credits = get_user_credits(user.id, db_session)
+    assert final_credits < initial_credits
+```
 
-5. **Re-run tests**
-   ```bash
-   pytest -x  # Stop on first failure for quick feedback
-   ```
+### 6. File Upload Testing
+
+**Location**: `tests/integration/test_file_upload.py`
+
+**Coverage**:
+- PDF file upload and parsing
+- DOCX file upload and parsing
+- File size validation
+- File type validation
+- Text extraction
+- Error handling (invalid files, corrupted files)
+
+**Example**:
+```python
+@pytest.mark.integration
+def test_file_upload(authenticated_client):
+    """Test file upload functionality."""
+    client, user, token, _ = authenticated_client
+    
+    # Create test file
+    test_file = io.BytesIO(b"Test file content")
+    test_file.name = "test.txt"
+    
+    response = client.post(
+        "/api/upload-file",
+        headers={"Authorization": f"Bearer {token}"},
+        files={"file": test_file}
+    )
+    
+    assert response.status_code == 200
+    assert "extracted_text" in response.json()
+```
+
+### 7. Conversation History Testing
+
+**Location**: `tests/integration/test_api.py`
+
+**Coverage**:
+- Creating conversations
+- Retrieving conversation list
+- Retrieving conversation details
+- Deleting conversations
+- Conversation message storage
+- Per-model conversation tracking
+
+**Example**:
+```python
+@pytest.mark.integration
+def test_conversation_creation(authenticated_client, db_session):
+    """Test conversation creation."""
+    client, user, token, _ = authenticated_client
+    
+    response = client.post(
+        "/api/conversations",
+        headers={"Authorization": f"Bearer {token}"},
+        json={
+            "title": "Test Conversation",
+            "input_data": "Test prompt"
+        }
+    )
+    
+    assert response.status_code == 201
+    assert response.json()["title"] == "Test Conversation"
+```
+
+### 8. Admin Functionality Testing
+
+**Location**: `tests/integration/test_admin.py`
+
+**Coverage**:
+- User management (list, update, delete)
+- Role management
+- Mock mode toggling
+- App settings management
+- Admin action logging
+- Statistics endpoints
+
+**Example**:
+```python
+@pytest.mark.integration
+def test_admin_user_list(authenticated_client_admin):
+    """Test admin user listing."""
+    client, admin, token, _ = authenticated_client_admin
+    
+    response = client.get(
+        "/api/admin/users",
+        headers={"Authorization": f"Bearer {token}"}
+    )
+    
+    assert response.status_code == 200
+    assert "users" in response.json()
+```
 
 ## Best Practices
 
@@ -713,4 +810,3 @@ def test_example(db_session):
 **Test Framework**: pytest 8.0+  
 **Coverage Tool**: pytest-cov  
 **Target Coverage**: 70%+
-

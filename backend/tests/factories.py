@@ -606,6 +606,7 @@ def create_admin_action_log(
 def create_app_settings(
     db: Session,
     anonymous_mock_mode_enabled: bool = False,
+    active_search_provider: Optional[str] = None,
 ) -> AppSettings:
     """
     Create or update app settings.
@@ -616,6 +617,7 @@ def create_app_settings(
     Args:
         db: Database session
         anonymous_mock_mode_enabled: Enable mock mode for anonymous users (default: False)
+        active_search_provider: Active search provider name (default: None)
         
     Returns:
         AppSettings instance
@@ -624,12 +626,15 @@ def create_app_settings(
     
     if settings:
         settings.anonymous_mock_mode_enabled = anonymous_mock_mode_enabled
+        if active_search_provider is not None:
+            settings.active_search_provider = active_search_provider
         db.commit()
         db.refresh(settings)
     else:
         settings = AppSettings(
             id=1,
             anonymous_mock_mode_enabled=anonymous_mock_mode_enabled,
+            active_search_provider=active_search_provider,
         )
         db.add(settings)
         db.commit()
@@ -650,6 +655,7 @@ def generate_compare_request(
     browser_fingerprint: Optional[str] = None,
     tier: str = "standard",
     conversation_id: Optional[int] = None,
+    enable_web_search: bool = False,
 ) -> Dict[str, Any]:
     """
     Generate a mock compare request payload.
@@ -800,4 +806,53 @@ def generate_user_response(user: User) -> Dict[str, Any]:
         "mock_mode_enabled": user.mock_mode_enabled,
         "created_at": user.created_at.isoformat() if user.created_at else None,
     }
+
+
+def generate_search_result(
+    title: Optional[str] = None,
+    url: Optional[str] = None,
+    snippet: Optional[str] = None,
+    source: str = "brave",
+) -> Dict[str, Any]:
+    """
+    Generate a mock search result.
+    
+    Args:
+        title: Result title (default: generated)
+        url: Result URL (default: generated)
+        snippet: Result snippet (default: generated)
+        source: Result source/provider (default: "brave")
+        
+    Returns:
+        Search result dictionary
+    """
+    if title is None:
+        title = fake.sentence(nb_words=5)
+    
+    if url is None:
+        url = fake.url()
+    
+    if snippet is None:
+        snippet = fake.text(max_nb_chars=200)
+    
+    return {
+        "title": title,
+        "url": url,
+        "snippet": snippet,
+        "source": source,
+    }
+
+
+def generate_search_results(count: int = 5, source: str = "brave") -> List[Dict[str, Any]]:
+    """
+    Generate multiple mock search results.
+    
+    Args:
+        count: Number of results to generate (default: 5)
+        source: Result source/provider (default: "brave")
+        
+    Returns:
+        List of search result dictionaries
+    """
+    return [generate_search_result(source=source) for _ in range(count)]
 

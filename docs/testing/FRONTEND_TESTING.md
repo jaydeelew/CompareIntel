@@ -1,6 +1,6 @@
 # Frontend Testing Guide
 
-This comprehensive guide covers all aspects of testing the CompareIntel frontend, including unit tests, integration tests, E2E tests, setup, running tests, writing new tests, and best practices.
+Comprehensive guide for testing the CompareIntel frontend, including unit tests, integration tests, E2E tests, setup, running tests, writing new tests, and best practices.
 
 ## Table of Contents
 
@@ -12,7 +12,7 @@ This comprehensive guide covers all aspects of testing the CompareIntel frontend
 6. [Writing Tests](#writing-tests)
 7. [Test Utilities](#test-utilities)
 8. [E2E Testing with Playwright](#e2e-testing-with-playwright)
-9. [Testing Workflows](#testing-workflows)
+9. [Testing Major Features](#testing-major-features)
 10. [Best Practices](#best-practices)
 11. [Troubleshooting](#troubleshooting)
 
@@ -26,9 +26,19 @@ The frontend test suite uses multiple testing tools:
 
 ### Test Coverage Goals
 
-- Target: **70%+ coverage** for all frontend code
-- Critical paths: Components, hooks, services, user interactions
-- Edge cases: Error handling, loading states, empty states, boundary conditions
+- **Target**: 70%+ coverage for all frontend code
+- **Critical Paths**: Components, hooks, services, user interactions, web search
+- **Edge Cases**: Error handling, loading states, empty states, boundary conditions
+
+### Testing Framework Stack
+
+- **Vitest** 2.0+ - Fast test runner (Jest-compatible)
+- **@testing-library/react** - React component testing
+- **@testing-library/jest-dom** - DOM matchers
+- **@testing-library/user-event** - User interaction simulation
+- **@playwright/test** - E2E browser testing
+- **@vitest/ui** - Interactive test UI
+- **@vitest/coverage-v8** - Coverage reporting
 
 ## Test Structure
 
@@ -36,24 +46,44 @@ The frontend test suite uses multiple testing tools:
 frontend/
 ├── src/
 │   └── __tests__/              # Unit and integration tests
-│       ├── setup.ts            # Vitest setup and global configuration
-│       ├── vitest.d.ts         # TypeScript type definitions
+│       ├── setup.ts             # Vitest setup and global configuration
+│       ├── vitest.d.ts          # TypeScript type definitions
 │       ├── components/         # Component tests
 │       │   ├── comparison/
+│       │   │   ├── ComparisonForm.test.tsx
+│       │   │   └── ResultCard.test.tsx
 │       │   ├── conversation/
-│       │   └── layout/
+│       │   │   ├── MessageBubble.test.tsx
+│       │   │   └── ConversationItem.test.tsx
+│       │   └── shared/
+│       │       ├── Button.test.tsx
+│       │       ├── Input.test.tsx
+│       │       └── LoadingSpinner.test.tsx
 │       ├── hooks/              # Custom hook tests
+│       │   ├── useModelComparison.test.ts
+│       │   ├── useModelComparison.edge-cases.test.ts
+│       │   ├── useModelSelection.test.ts
+│       │   ├── useRateLimitStatus.test.ts
+│       │   └── useWebSearch.test.ts          # Web search hook tests
 │       ├── services/           # Service layer tests
-│       └── utils/              # Test utilities and helpers
-│           ├── test-utils.tsx   # Custom render functions
-│           ├── test-factories.ts # Mock data factories
-│           ├── mock-api-responses.ts # API response mocks
-│           └── mock-services.ts # Service mocks
+│       │   ├── compareService.test.ts
+│       │   ├── compareService.edge-cases.test.ts
+│       │   ├── authService.test.ts
+│       │   ├── adminService.test.ts
+│       │   └── webSearchService.test.ts     # Web search service tests
+│       ├── utils/              # Test utilities and helpers
+│       │   ├── test-utils.tsx   # Custom render functions
+│       │   ├── test-factories.ts # Mock data factories
+│       │   ├── mock-api-responses.ts # API response mocks
+│       │   └── mock-services.ts # Service mocks
+│       └── config/             # Configuration tests
+│           └── rendererConfigs.test.ts
 └── e2e/                        # E2E tests with Playwright
     ├── auth.spec.ts
     ├── comparison.spec.ts
     ├── conversation.spec.ts
     ├── admin.spec.ts
+    ├── websearch.spec.ts       # Web search E2E tests
     └── SELECTOR_GUIDE.md
 ```
 
@@ -382,12 +412,14 @@ import {
   createMockAdminUser,
   createMockCompareResponse,
   createMockModel,
+  createMockWebSearchResult,  // Web search mock data
 } from '@/__tests__/utils';
 
 const user = createMockUser({ subscription_tier: 'premium' });
 const admin = createMockAdminUser();
 const response = createMockCompareResponse(['gpt-4', 'claude-3']);
-const model = createMockModel({ id: 'gpt-4', name: 'GPT-4' });
+const model = createMockModel({ id: 'gpt-4', name: 'GPT-4', supports_web_search: true });
+const searchResult = createMockWebSearchResult({ query: 'test query' });
 ```
 
 **Available Factories:**
@@ -396,6 +428,7 @@ const model = createMockModel({ id: 'gpt-4', name: 'GPT-4' });
 - `createMockConversationMessage`, `createMockStoredMessage`
 - `createMockCompareResponse`, `createMockRateLimitStatus`
 - `createMockStreamEvent`, `createMockStreamEvents`
+- `createMockWebSearchResult`, `createMockWebSearchResults` - Web search mocks
 - And more...
 
 ### Mock API Responses
@@ -403,12 +436,13 @@ const model = createMockModel({ id: 'gpt-4', name: 'GPT-4' });
 Mock response data for all endpoints:
 
 ```typescript
-import { mockCompareResponse, mockLoginResponse } from '@/__tests__/utils';
+import { mockCompareResponse, mockLoginResponse, mockWebSearchResponse } from '@/__tests__/utils';
 
 const compareResponse = mockCompareResponse(payload, {
   metadata: customMetadata,
 });
 const loginResponse = mockLoginResponse({ email: 'user@example.com' });
+const webSearchResponse = mockWebSearchResponse({ query: 'test query' });
 ```
 
 ### Mock Services
@@ -417,11 +451,15 @@ Mock service implementations:
 
 ```typescript
 import { vi } from 'vitest';
-import { mockCompare, mockGetRateLimitStatus } from '@/__tests__/utils';
+import { mockCompare, mockGetRateLimitStatus, mockWebSearch } from '@/__tests__/utils';
 
 vi.mock('../../services/compareService', () => ({
   compare: mockCompare,
   getRateLimitStatus: mockGetRateLimitStatus,
+}));
+
+vi.mock('../../services/webSearchService', () => ({
+  search: mockWebSearch,
 }));
 ```
 
@@ -512,6 +550,7 @@ test('complex workflow', async ({ page }) => {
 - **`comparison.spec.ts`**: Anonymous user flow and rate limit handling
 - **`conversation.spec.ts`**: Conversation management (create, view, delete)
 - **`admin.spec.ts`**: Admin user management functionality
+- **`websearch.spec.ts`**: Web search feature testing (enable, search execution, results display)
 
 ### E2E Best Practices
 
@@ -521,169 +560,213 @@ test('complex workflow', async ({ page }) => {
 4. **Keep tests independent**: Each test should run in isolation
 5. **Use test fixtures**: For authenticated state, use Playwright fixtures
 
-## Testing Workflows
+## Testing Major Features
 
-### Workflow 1: Writing a New Component Test
+### 1. Model Comparison Testing
 
-1. **Identify component to test**
-   - Component file location
-   - Props and state
-   - User interactions
+**Location**: `src/__tests__/components/comparison/`, `src/__tests__/hooks/useModelComparison.test.ts`
 
-2. **Create test file**
-   ```bash
-   touch frontend/src/__tests__/components/MyComponent.test.tsx
-   ```
+**Coverage**:
+- Comparison form rendering
+- Model selection
+- Input validation
+- Streaming response handling
+- Result card display
+- Error handling
+- Loading states
+- Token estimation
 
-3. **Write test structure**
-   ```typescript
-   import { describe, it, expect } from 'vitest';
-   import { render, screen } from '@testing-library/react';
-   import { renderWithProviders } from '@/__tests__/utils';
-   import MyComponent from '../components/MyComponent';
+**Example**:
+```typescript
+describe('ComparisonForm', () => {
+  it('should render comparison form', () => {
+    renderWithProviders(<ComparisonForm />);
+    expect(screen.getByPlaceholderText(/enter your prompt/i)).toBeInTheDocument();
+  });
 
-   describe('MyComponent', () => {
-     it('should render correctly', () => {
-       render(<MyComponent />);
-       expect(screen.getByText('Hello')).toBeInTheDocument();
-     });
-   });
-   ```
+  it('should handle model selection', async () => {
+    const { user } = renderWithProviders(<ComparisonForm />);
+    const modelCheckbox = screen.getByLabelText('GPT-4');
+    await user.click(modelCheckbox);
+    expect(modelCheckbox).toBeChecked();
+  });
+});
+```
 
-4. **Run test**
-   ```bash
-   npm run test MyComponent
-   ```
+### 2. Web Search Testing
 
-5. **Add more test cases**
-   - User interactions
-   - Edge cases
-   - Error states
-   - Loading states
+**Location**: `src/__tests__/hooks/useWebSearch.test.ts`, `src/__tests__/services/webSearchService.test.ts`, `e2e/websearch.spec.ts`
 
-### Workflow 2: Writing a New Hook Test
+**Coverage**:
+- Web search toggle functionality
+- Web search enabled state management
+- Search provider availability checking
+- Model web search capability detection
+- Search execution during comparison
+- Search result display
+- Error handling (provider unavailable, search failures)
+- Integration with comparison flow
 
-1. **Identify hook to test**
-   - Hook file location
-   - Return values
-   - Side effects
+**Example**:
+```typescript
+describe('useWebSearch', () => {
+  it('should toggle web search enabled state', () => {
+    const { result } = renderHook(() => useWebSearch());
+    
+    expect(result.current.enabled).toBe(false);
+    
+    act(() => {
+      result.current.toggle();
+    });
+    
+    expect(result.current.enabled).toBe(true);
+  });
 
-2. **Create test file**
-   ```bash
-   touch frontend/src/__tests__/hooks/useMyHook.test.ts
-   ```
+  it('should check if models support web search', () => {
+    const { result } = renderHook(() => useWebSearch());
+    
+    const models = [
+      { id: 'gpt-4', supports_web_search: true },
+      { id: 'claude-3', supports_web_search: false },
+    ];
+    
+    expect(result.current.hasWebSearchSupport(models)).toBe(true);
+  });
+});
+```
 
-3. **Write test**
-   ```typescript
-   import { describe, it, expect } from 'vitest';
-   import { renderHook, act } from '@testing-library/react';
-   import { useMyHook } from '../hooks/useMyHook';
+### 3. Authentication Testing
 
-   describe('useMyHook', () => {
-     it('should return initial state', () => {
-       const { result } = renderHook(() => useMyHook());
-       expect(result.current.value).toBe(0);
-     });
-   });
-   ```
+**Location**: `src/__tests__/services/authService.test.ts`, `e2e/auth.spec.ts`
 
-4. **Run test**
-   ```bash
-   npm run test useMyHook
-   ```
+**Coverage**:
+- Login flow
+- Registration flow
+- Logout functionality
+- Token refresh
+- Password reset
+- Email verification
+- Protected route handling
 
-### Workflow 3: Writing a New Service Test
+**Example**:
+```typescript
+describe('authService', () => {
+  it('should login user', async () => {
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        access_token: 'token',
+        refresh_token: 'refresh',
+      }),
+    });
 
-1. **Identify service to test**
-   - Service file location
-   - API endpoints
-   - Request/response format
+    const result = await authService.login('test@example.com', 'password');
+    expect(result.access_token).toBe('token');
+  });
+});
+```
 
-2. **Create test file**
-   ```bash
-   touch frontend/src/__tests__/services/myService.test.ts
-   ```
+### 4. Conversation History Testing
 
-3. **Write test with mocks**
-   ```typescript
-   import { describe, it, expect, vi, beforeEach } from 'vitest';
-   import { myService } from '../services/myService';
+**Location**: `src/__tests__/hooks/useConversationHistory.test.ts`, `src/__tests__/services/conversationService.test.ts`
 
-   describe('myService', () => {
-     beforeEach(() => {
-       vi.clearAllMocks();
-     });
+**Coverage**:
+- Conversation list retrieval
+- Conversation creation
+- Conversation deletion
+- Per-model conversation tracking
+- Conversation message storage
+- Follow-up question handling
 
-     it('should fetch data', async () => {
-       global.fetch = vi.fn().mockResolvedValue({
-         ok: true,
-         json: async () => ({ data: 'test' }),
-       });
+**Example**:
+```typescript
+describe('useConversationHistory', () => {
+  it('should load conversation history', async () => {
+    const { result, waitForNextUpdate } = renderHook(() => useConversationHistory('gpt-4'));
+    
+    await waitForNextUpdate();
+    
+    expect(result.current.conversations).toHaveLength(2);
+  });
+});
+```
 
-       const result = await myService.fetchData();
-       expect(result.data).toBe('test');
-     });
-   });
-   ```
+### 5. Rate Limiting Testing
 
-4. **Run test**
-   ```bash
-   npm run test myService
-   ```
+**Location**: `src/__tests__/hooks/useRateLimitStatus.test.ts`
 
-### Workflow 4: Writing a New E2E Test
+**Coverage**:
+- Rate limit status fetching
+- Credit balance display
+- Rate limit warnings
+- Over-limit handling
+- Reset time display
 
-1. **Identify user flow to test**
-   - User journey
-   - Key interactions
-   - Expected outcomes
+**Example**:
+```typescript
+describe('useRateLimitStatus', () => {
+  it('should fetch rate limit status', async () => {
+    const { result, waitForNextUpdate } = renderHook(() => useRateLimitStatus());
+    
+    await waitForNextUpdate();
+    
+    expect(result.current.creditsRemaining).toBeGreaterThan(0);
+  });
+});
+```
 
-2. **Create test file**
-   ```bash
-   touch frontend/e2e/my-feature.spec.ts
-   ```
+### 6. File Upload Testing
 
-3. **Write E2E test**
-   ```typescript
-   import { test, expect } from '@playwright/test';
+**Location**: `src/__tests__/components/comparison/ComparisonForm.test.tsx`
 
-   test('user can complete workflow', async ({ page }) => {
-     await page.goto('/');
-     // Test implementation
-   });
-   ```
+**Coverage**:
+- File selection
+- File type validation
+- File size validation
+- File content extraction
+- File display in input
+- File removal
 
-4. **Run E2E test**
-   ```bash
-   npm run test:e2e my-feature
-   ```
+**Example**:
+```typescript
+describe('File Upload', () => {
+  it('should handle file selection', async () => {
+    const { user } = renderWithProviders(<ComparisonForm />);
+    const fileInput = screen.getByLabelText(/upload file/i);
+    
+    const file = new File(['test content'], 'test.txt', { type: 'text/plain' });
+    await user.upload(fileInput, file);
+    
+    expect(screen.getByText('test.txt')).toBeInTheDocument();
+  });
+});
+```
 
-### Workflow 5: Running Tests Before Committing
+### 7. Admin Panel Testing
 
-1. **Run unit/integration tests**
-   ```bash
-   npm run test:run
-   ```
+**Location**: `src/__tests__/services/adminService.test.ts`, `e2e/admin.spec.ts`
 
-2. **Check coverage**
-   ```bash
-   npm run test:coverage
-   ```
+**Coverage**:
+- User list retrieval
+- User update functionality
+- Role management
+- Mock mode toggling
+- Statistics display
 
-3. **Run E2E tests** (optional, slower)
-   ```bash
-   npm run test:e2e
-   ```
+**Example**:
+```typescript
+describe('adminService', () => {
+  it('should fetch user list', async () => {
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ users: [] }),
+    });
 
-4. **Fix any failures**
-   - Read error messages
-   - Check test output
-   - Fix code or test as needed
-
-5. **Re-run tests**
-   ```bash
-   npm run test:run
-   ```
+    const result = await adminService.getUsers();
+    expect(result.users).toBeDefined();
+  });
+});
+```
 
 ## Best Practices
 
@@ -860,4 +943,3 @@ screen.getByClassName('btn-primary');
 **E2E Framework**: Playwright  
 **Coverage Tool**: @vitest/coverage-v8  
 **Target Coverage**: 70%+
-
