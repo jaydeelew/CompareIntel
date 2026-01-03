@@ -1796,7 +1796,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
                                   </span>
                                   <span className="history-signup-line">
                                     {' '}
-                                    Upgrade to Starter for 10 saved comparisons or Pro for 50!
+                                    Upgrade to save more comparisons!
                                   </span>
                                 </div>
                               </div>
