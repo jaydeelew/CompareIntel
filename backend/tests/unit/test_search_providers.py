@@ -45,7 +45,7 @@ class TestBraveSearchProvider:
         """Test provider initialization."""
         provider = BraveSearchProvider("test_api_key")
         assert provider.api_key == "test_api_key"
-        assert provider.base_url == "https://api.search.brave.com/res/v1/web/search"
+        assert provider.BASE_URL == "https://api.search.brave.com/res/v1/web/search"
     
     def test_get_provider_name(self):
         """Test getting provider name."""
@@ -84,11 +84,11 @@ class TestBraveSearchProvider:
             }
         }
         
-        with patch('httpx.AsyncClient.get') as mock_get:
-            mock_get.return_value = AsyncMock(
-                status_code=200,
-                json=AsyncMock(return_value=mock_response)
-            )
+        with patch('httpx.AsyncClient.get', new_callable=AsyncMock) as mock_get:
+            mock_response_obj = MagicMock()
+            mock_response_obj.status_code = 200
+            mock_response_obj.json.return_value = mock_response
+            mock_get.return_value = mock_response_obj
             
             results = await provider.search("test query", max_results=5)
             
@@ -96,7 +96,7 @@ class TestBraveSearchProvider:
             assert results[0].title == "Test Result 1"
             assert results[0].url == "https://example.com/1"
             assert results[0].snippet == "Test description 1"
-            assert results[0].source == "brave"
+            assert results[0].source == "Brave Search"
     
     @pytest.mark.asyncio
     async def test_search_with_custom_max_results(self):
@@ -112,11 +112,11 @@ class TestBraveSearchProvider:
             }
         }
         
-        with patch('httpx.AsyncClient.get') as mock_get:
-            mock_get.return_value = AsyncMock(
-                status_code=200,
-                json=AsyncMock(return_value=mock_response)
-            )
+        with patch('httpx.AsyncClient.get', new_callable=AsyncMock) as mock_get:
+            mock_response_obj = MagicMock()
+            mock_response_obj.status_code = 200
+            mock_response_obj.json.return_value = mock_response
+            mock_get.return_value = mock_response_obj
             
             results = await provider.search("test query", max_results=3)
             
@@ -127,11 +127,12 @@ class TestBraveSearchProvider:
         """Test search with API error."""
         provider = BraveSearchProvider("test_api_key")
         
-        with patch('httpx.AsyncClient.get') as mock_get:
-            mock_get.return_value = AsyncMock(
-                status_code=500,
-                json=AsyncMock(return_value={"error": "Internal server error"})
-            )
+        with patch('httpx.AsyncClient.get', new_callable=AsyncMock) as mock_get:
+            mock_response_obj = MagicMock()
+            mock_response_obj.status_code = 500
+            mock_response_obj.json.return_value = {"error": "Internal server error"}
+            mock_response_obj.raise_for_status.side_effect = Exception("API error")
+            mock_get.return_value = mock_response_obj
             
             with pytest.raises(Exception):
                 await provider.search("test query")
@@ -158,11 +159,11 @@ class TestBraveSearchProvider:
             }
         }
         
-        with patch('httpx.AsyncClient.get') as mock_get:
-            mock_get.return_value = AsyncMock(
-                status_code=200,
-                json=AsyncMock(return_value=mock_response)
-            )
+        with patch('httpx.AsyncClient.get', new_callable=AsyncMock) as mock_get:
+            mock_response_obj = MagicMock()
+            mock_response_obj.status_code = 200
+            mock_response_obj.json.return_value = mock_response
+            mock_get.return_value = mock_response_obj
             
             results = await provider.search("test query")
             
@@ -184,11 +185,11 @@ class TestBraveSearchProvider:
             }
         }
         
-        with patch('httpx.AsyncClient.get') as mock_get:
-            mock_get.return_value = AsyncMock(
-                status_code=200,
-                json=AsyncMock(return_value=mock_response)
-            )
+        with patch('httpx.AsyncClient.get', new_callable=AsyncMock) as mock_get:
+            mock_response_obj = MagicMock()
+            mock_response_obj.status_code = 200
+            mock_response_obj.json.return_value = mock_response
+            mock_get.return_value = mock_response_obj
             
             results = await provider.search("test query")
             
