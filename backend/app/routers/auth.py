@@ -307,6 +307,10 @@ async def login(user_data: UserLogin, request: Request, db: Session = Depends(ge
         # Clear failed attempts on successful login
         clear_login_attempts(client_ip)
 
+        # Update last_access timestamp
+        user.last_access = datetime.utcnow()
+        db.commit()
+
         # Create tokens
         print(f"[LOGIN] Creating tokens...")
         token_start = time.time()

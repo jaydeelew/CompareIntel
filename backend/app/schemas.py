@@ -361,6 +361,7 @@ class AdminUserResponse(BaseModel):
     mock_mode_enabled: Optional[bool] = False  # Testing feature for admins
     created_at: datetime
     updated_at: Optional[datetime] = None
+    last_access: Optional[datetime] = None  # Last time user accessed the website
 
     model_config = ConfigDict(from_attributes=True)
 

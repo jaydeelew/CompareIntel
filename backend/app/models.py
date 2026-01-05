@@ -66,6 +66,7 @@ class User(Base):
     # Timestamps
     created_at = Column(DateTime, default=func.now())
     updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
+    last_access = Column(DateTime)  # Last time user accessed the website
 
     # Relationships
     preferences = relationship("UserPreference", back_populates="user", cascade="all, delete-orphan", uselist=False)

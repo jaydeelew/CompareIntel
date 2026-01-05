@@ -34,6 +34,7 @@ interface AdminUser {
   mock_mode_enabled: boolean
   created_at: string
   updated_at: string
+  last_access?: string | null
 }
 
 interface AdminStats {
@@ -2915,6 +2916,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                       <th>Verified</th>
                       <th>Credits</th>
                       <th>Created</th>
+                      <th>Last Access</th>
                       <th>Actions</th>
                     </tr>
                   </thead>
@@ -3016,6 +3018,23 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                               return `${month}/${day}/${year}`
                             })()}
                           </span>
+                        </td>
+                        <td>
+                          {userRow.last_access ? (
+                            <span title={new Date(userRow.last_access).toLocaleString()}>
+                              {(() => {
+                                const date = new Date(userRow.last_access)
+                                const month = String(date.getMonth() + 1).padStart(2, '0')
+                                const day = String(date.getDate()).padStart(2, '0')
+                                const year = date.getFullYear()
+                                const hours = String(date.getHours()).padStart(2, '0')
+                                const minutes = String(date.getMinutes()).padStart(2, '0')
+                                return `${month}/${day}/${year} ${hours}:${minutes}`
+                              })()}
+                            </span>
+                          ) : (
+                            <span style={{ color: '#999', fontStyle: 'italic' }}>Never</span>
+                          )}
                         </td>
                         <td>
                           <div className="action-buttons">
@@ -3182,6 +3201,32 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                           const year = date.getFullYear()
                           return `${month}/${day}/${year}`
                         })()}
+                      </span>
+                    </div>
+
+                    <div className="user-card-row">
+                      <span className="user-card-label">Last Access</span>
+                      <span
+                        className="user-card-value"
+                        title={
+                          userRow.last_access
+                            ? new Date(userRow.last_access).toLocaleString()
+                            : 'Never'
+                        }
+                      >
+                        {userRow.last_access ? (
+                          (() => {
+                            const date = new Date(userRow.last_access)
+                            const month = String(date.getMonth() + 1).padStart(2, '0')
+                            const day = String(date.getDate()).padStart(2, '0')
+                            const year = date.getFullYear()
+                            const hours = String(date.getHours()).padStart(2, '0')
+                            const minutes = String(date.getMinutes()).padStart(2, '0')
+                            return `${month}/${day}/${year} ${hours}:${minutes}`
+                          })()
+                        ) : (
+                          <span style={{ color: '#999', fontStyle: 'italic' }}>Never</span>
+                        )}
                       </span>
                     </div>
 
