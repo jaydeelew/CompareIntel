@@ -267,8 +267,24 @@ class TestAllTierCredits:
     
     def test_free_tier_exceeds_credits(self, db_session, test_user_free):
         """Test free tier credit limit enforcement."""
-        # Deduct all credits to exceed limit
+        # Ensure credits are allocated first
+        from app.credit_manager import ensure_credits_allocated
+        from datetime import datetime, timedelta, timezone
+        ensure_credits_allocated(test_user_free.id, db_session)
         db_session.refresh(test_user_free)
+        
+        # Ensure credits_reset_at is set far enough in the future to prevent reset during test
+        now_utc = datetime.now(timezone.utc)
+        reset_at = test_user_free.credits_reset_at
+        # Handle timezone-naive datetimes from SQLite
+        if reset_at and reset_at.tzinfo is None:
+            reset_at = reset_at.replace(tzinfo=timezone.utc)
+        if not test_user_free.credits_reset_at or (reset_at and reset_at <= now_utc):
+            test_user_free.credits_reset_at = now_utc + timedelta(days=1)
+            db_session.commit()
+            db_session.refresh(test_user_free)
+        
+        # Deduct all credits to exceed limit
         allocated = test_user_free.monthly_credits_allocated or DAILY_CREDIT_LIMITS.get("free", 100)
         deduct_user_credits(test_user_free, Decimal(allocated), None, db_session, "Test: Exhaust credits")
         db_session.refresh(test_user_free)
@@ -281,8 +297,24 @@ class TestAllTierCredits:
     
     def test_starter_tier_exceeds_credits(self, db_session, test_user_starter):
         """Test starter tier credit limit enforcement."""
-        # Deduct all credits
+        # Ensure credits are allocated first
+        from app.credit_manager import ensure_credits_allocated
+        from datetime import datetime, timedelta, timezone
+        ensure_credits_allocated(test_user_starter.id, db_session)
         db_session.refresh(test_user_starter)
+        
+        # Ensure credits_reset_at is set far enough in the future to prevent reset during test
+        now_utc = datetime.now(timezone.utc)
+        reset_at = test_user_starter.credits_reset_at
+        # Handle timezone-naive datetimes from SQLite
+        if reset_at and reset_at.tzinfo is None:
+            reset_at = reset_at.replace(tzinfo=timezone.utc)
+        if not test_user_starter.credits_reset_at or (reset_at and reset_at <= now_utc):
+            test_user_starter.credits_reset_at = now_utc + timedelta(days=30)
+            db_session.commit()
+            db_session.refresh(test_user_starter)
+        
+        # Deduct all credits
         allocated = test_user_starter.monthly_credits_allocated or MONTHLY_CREDIT_ALLOCATIONS.get("starter", 1200)
         deduct_user_credits(test_user_starter, Decimal(allocated), None, db_session, "Test: Exhaust credits")
         db_session.refresh(test_user_starter)

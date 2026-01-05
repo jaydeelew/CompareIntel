@@ -51,7 +51,23 @@ class TestUserCreditBoundaries:
     
     def test_credits_one_below_limit(self, db_session, test_user_free):
         """Test credit checking one below limit."""
+        # Ensure credits are allocated first
+        from app.credit_manager import ensure_credits_allocated
+        from datetime import datetime, timedelta, timezone
+        ensure_credits_allocated(test_user_free.id, db_session)
         db_session.refresh(test_user_free)
+        
+        # Ensure credits_reset_at is set far enough in the future to prevent reset during test
+        now_utc = datetime.now(timezone.utc)
+        reset_at = test_user_free.credits_reset_at
+        # Handle timezone-naive datetimes from SQLite
+        if reset_at and reset_at.tzinfo is None:
+            reset_at = reset_at.replace(tzinfo=timezone.utc)
+        if not test_user_free.credits_reset_at or (reset_at and reset_at <= now_utc):
+            test_user_free.credits_reset_at = now_utc + timedelta(days=1)
+            db_session.commit()
+            db_session.refresh(test_user_free)
+        
         allocated = test_user_free.monthly_credits_allocated or DAILY_CREDIT_LIMITS.get("free", 100)
         
         # Deduct almost all credits, leaving 1
@@ -67,7 +83,23 @@ class TestUserCreditBoundaries:
     
     def test_credits_one_above_limit(self, db_session, test_user_free):
         """Test credit checking one above limit."""
+        # Ensure credits are allocated first
+        from app.credit_manager import ensure_credits_allocated
+        from datetime import datetime, timedelta, timezone
+        ensure_credits_allocated(test_user_free.id, db_session)
         db_session.refresh(test_user_free)
+        
+        # Ensure credits_reset_at is set far enough in the future to prevent reset during test
+        now_utc = datetime.now(timezone.utc)
+        reset_at = test_user_free.credits_reset_at
+        # Handle timezone-naive datetimes from SQLite
+        if reset_at and reset_at.tzinfo is None:
+            reset_at = reset_at.replace(tzinfo=timezone.utc)
+        if not test_user_free.credits_reset_at or (reset_at and reset_at <= now_utc):
+            test_user_free.credits_reset_at = now_utc + timedelta(days=1)
+            db_session.commit()
+            db_session.refresh(test_user_free)
+        
         allocated = test_user_free.monthly_credits_allocated or DAILY_CREDIT_LIMITS.get("free", 100)
         
         # Deduct all credits plus 1 (should cap at allocated)
@@ -123,7 +155,23 @@ class TestCreditReset:
     
     def test_no_reset_same_day(self, db_session, test_user_free):
         """Test that credits don't reset on same day."""
+        # Ensure credits are allocated first
+        from app.credit_manager import ensure_credits_allocated
+        from datetime import datetime, timedelta, timezone
+        ensure_credits_allocated(test_user_free.id, db_session)
         db_session.refresh(test_user_free)
+        
+        # Ensure credits_reset_at is set far enough in the future to prevent reset during test
+        now_utc = datetime.now(timezone.utc)
+        reset_at = test_user_free.credits_reset_at
+        # Handle timezone-naive datetimes from SQLite
+        if reset_at and reset_at.tzinfo is None:
+            reset_at = reset_at.replace(tzinfo=timezone.utc)
+        if not test_user_free.credits_reset_at or (reset_at and reset_at <= now_utc):
+            test_user_free.credits_reset_at = now_utc + timedelta(days=1)
+            db_session.commit()
+            db_session.refresh(test_user_free)
+        
         allocated = test_user_free.monthly_credits_allocated or DAILY_CREDIT_LIMITS.get("free", 100)
         
         # Deduct some credits
@@ -210,20 +258,46 @@ class TestAnonymousCreditBoundaries:
     
     def test_anonymous_one_below_limit(self, db_session):
         """Test anonymous user one below limit."""
+        from app.rate_limiting import anonymous_rate_limit_storage
+        from app.models import UsageLog
+        
         identifier = "ip:192.168.1.2"
+        ip_address = "192.168.1.2"
         allocated = DAILY_CREDIT_LIMITS.get("unregistered", 50)  # Use "unregistered" key
         
+        # Clear any existing UsageLog entries for this IP to ensure clean state
+        db_session.query(UsageLog).filter(
+            UsageLog.user_id.is_(None),
+            UsageLog.ip_address == ip_address
+        ).delete()
+        db_session.commit()
+        
+        # Clear any existing state for this identifier
+        if identifier in anonymous_rate_limit_storage:
+            anonymous_rate_limit_storage[identifier]["count"] = 0
+            anonymous_rate_limit_storage[identifier]["date"] = None
+            anonymous_rate_limit_storage[identifier].pop("_admin_reset", None)
+        
         # Initialize anonymous user by checking credits first (this sets up the storage)
-        check_anonymous_credits(identifier, Decimal("0"), db_session)
+        # Don't pass db to avoid syncing from potentially stale DB data
+        check_anonymous_credits(identifier, Decimal("0"), db=None)
+        
+        # Verify initial state - should have full allocation
+        _, initial_remaining, _ = check_anonymous_credits(identifier, Decimal("0"), db=None)
+        assert initial_remaining == allocated, f"Expected {allocated} credits, got {initial_remaining}"
         
         # Deduct almost all credits, leaving 1
         deduct_anonymous_credits(identifier, Decimal(allocated - 1))
         
+        # Verify count is correct before checking
+        assert anonymous_rate_limit_storage[identifier]["count"] == allocated - 1, \
+            f"Expected count={allocated - 1}, got {anonymous_rate_limit_storage[identifier]['count']}"
+        
         is_allowed, credits_remaining, credits_allocated = check_anonymous_credits(
-            identifier, Decimal("1"), db_session
+            identifier, Decimal("1"), db=None  # Don't sync to avoid resetting
         )
-        assert is_allowed is True
-        assert credits_remaining == 1
+        assert is_allowed is True, f"Expected allowed=True, got {is_allowed}, remaining={credits_remaining}, used={anonymous_rate_limit_storage[identifier]['count']}"
+        assert credits_remaining == 1, f"Expected 1 credit remaining, got {credits_remaining}"
         assert credits_allocated == allocated
     
     def test_anonymous_reset_on_new_day(self):

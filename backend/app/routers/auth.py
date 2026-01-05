@@ -237,8 +237,11 @@ async def register(user_data: UserRegister, background_tasks: BackgroundTasks, d
         }
 
         # Create response with cookies
+        # Return dict and let FastAPI handle status code from decorator
+        response_data = {"access_token": access_token, "refresh_token": refresh_token, "token_type": "bearer", "user": user_dict}
         response = JSONResponse(
-            content={"access_token": access_token, "refresh_token": refresh_token, "token_type": "bearer", "user": user_dict}
+            content=response_data,
+            status_code=status.HTTP_201_CREATED
         )
         set_auth_cookies(response, access_token, refresh_token)
         return response
@@ -348,10 +351,13 @@ async def refresh_token(request: Request, token_data: Optional[RefreshTokenReque
     - Returns new access token and refresh token in cookies
     """
     try:
-        # Try to get refresh token from cookies first, fallback to request body
-        refresh_token_value = get_refresh_token_from_cookies(request)
-        if not refresh_token_value and token_data:
+        # Prioritize request body token if provided (for explicit testing/API usage)
+        # Otherwise fall back to cookies (for browser-based usage)
+        refresh_token_value = None
+        if token_data and token_data.refresh_token:
             refresh_token_value = token_data.refresh_token
+        else:
+            refresh_token_value = get_refresh_token_from_cookies(request)
 
         if not refresh_token_value:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Refresh token required")

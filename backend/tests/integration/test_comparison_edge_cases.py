@@ -26,7 +26,7 @@ class TestComparisonStreamingEdgeCases:
             "/api/compare-stream",
             json={
                 "input_data": "",
-                "models": ["gpt-4"],
+                "models": ["anthropic/claude-3.5-haiku"],  # Free tier model
             },
         )
         assert response.status_code == status.HTTP_400_BAD_REQUEST

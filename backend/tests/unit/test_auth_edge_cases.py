@@ -85,21 +85,25 @@ class TestTokenEdgeCases:
         """Test that access token cannot be used as refresh token."""
         client, user, access_token, refresh_token = authenticated_client
         
+        # Clear any cookies that might have been set
+        client.cookies.clear()
+        
         # Try to use access token as refresh token
         response = client.post(
             "/api/auth/refresh",
             json={"refresh_token": access_token}
         )
-        assert response.status_code == status.HTTP_401_UNAUTHORIZED
+        assert response.status_code == status.HTTP_401_UNAUTHORIZED, f"Expected 401, got {response.status_code}. Response: {response.text}"
     
     def test_refresh_token_as_access_token(self, client, authenticated_client):
         """Test that refresh token cannot be used as access token."""
         client, user, access_token, refresh_token = authenticated_client
         
-        # Try to use refresh token as access token
+        # Clear any cookies and set wrong token type in header
+        client.cookies.clear()
         client.headers = {"Authorization": f"Bearer {refresh_token}"}
         response = client.get("/api/auth/me")
-        assert response.status_code == status.HTTP_401_UNAUTHORIZED
+        assert response.status_code == status.HTTP_401_UNAUTHORIZED, f"Expected 401, got {response.status_code}. Response: {response.text}"
     
     def test_token_with_invalid_user_id(self, client):
         """Test token with non-existent user ID."""

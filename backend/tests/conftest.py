@@ -44,7 +44,7 @@ email_service_mock.EMAIL_CONFIGURED = False
 sys.modules['app.email_service'] = email_service_mock
 
 # Now import app - email_service will use the mock
-from app.main import app
+from app.main import app as fastapi_app  # Rename to avoid conflict with app module
 from app.database import Base, get_db
 from app.models import User, UsageLog
 
@@ -78,6 +78,11 @@ test_engine = create_engine(
 # Create test session factory
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=test_engine)
 
+# Patch SessionLocal in app.database to use test engine for any direct SessionLocal() calls in app code
+# This ensures that when app code creates fresh sessions (like in api.py), they use the test database
+import app.database
+app.database.SessionLocal = TestingSessionLocal
+
 
 @pytest.fixture(scope="function")
 def db_session():
@@ -95,7 +100,13 @@ def db_session():
             db_session.add(user)
             db_session.commit()
     """
-    # Create all tables
+    # Import all models to ensure they're registered with Base.metadata
+    from app import models  # noqa: F401
+    
+    # Drop all tables first to ensure clean state
+    Base.metadata.drop_all(bind=test_engine)
+    
+    # Create all tables with all columns
     Base.metadata.create_all(bind=test_engine)
     
     # Create a new session
@@ -124,13 +135,13 @@ def client(db_session):
         finally:
             pass
     
-    app.dependency_overrides[get_db] = override_get_db
+    fastapi_app.dependency_overrides[get_db] = override_get_db
     
-    with TestClient(app) as test_client:
+    with TestClient(fastapi_app) as test_client:
         yield test_client
     
     # Clean up dependency override
-    app.dependency_overrides.clear()
+    fastapi_app.dependency_overrides.clear()
 
 
 # ============================================================================
