@@ -37,7 +37,7 @@ export function useModelSelection({
   // Get max models based on user tier
   const maxModelsLimit = useMemo(() => {
     if (!isAuthenticated || !user) {
-      return getModelLimit('anonymous')
+      return getModelLimit('unregistered')
     }
     return getModelLimit(user.subscription_tier)
   }, [isAuthenticated, user])

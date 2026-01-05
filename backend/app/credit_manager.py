@@ -272,7 +272,7 @@ def reset_daily_credits(user_id: int, tier: str, db: Session, force: bool = Fals
 
     Args:
         user_id: User ID
-        tier: Subscription tier (should be 'anonymous' or 'free')
+        tier: Subscription tier (should be 'unregistered' or 'free')
         db: Database session
         force: If True, bypass abuse prevention check (for admin resets)
     """

@@ -300,8 +300,8 @@ def check_anonymous_credits(identifier: str, required_credits: Decimal, timezone
             if not user_data.get("first_seen"):
                 user_data["first_seen"] = datetime.now(timezone.utc)
 
-    # Get daily credit limit for anonymous users
-    credits_allocated = DAILY_CREDIT_LIMITS.get("anonymous", 50)
+    # Get daily credit limit for unregistered users
+    credits_allocated = DAILY_CREDIT_LIMITS.get("unregistered", 50)
     credits_used = user_data["count"]
     credits_remaining = max(0, credits_allocated - credits_used)
 
@@ -372,8 +372,8 @@ def deduct_anonymous_credits(identifier: str, credits: Decimal, timezone_str: st
     # Use ceiling to ensure we always deduct at least 1 credit for any usage
     credits_int = int(credits.quantize(Decimal('1'), rounding=ROUND_CEILING))
     
-    # Get allocated amount for anonymous users (50 credits)
-    allocated = DAILY_CREDIT_LIMITS.get("anonymous", 50)
+    # Get allocated amount for unregistered users (50 credits)
+    allocated = DAILY_CREDIT_LIMITS.get("unregistered", 50)
     
     # Cap credits at allocated amount (zero out, don't go negative)
     new_count = user_data["count"] + credits_int
@@ -444,7 +444,7 @@ def get_anonymous_usage_stats(identifier: str, timezone_str: str = "UTC") -> Usa
     timezone_str = _validate_timezone(timezone_str)
     
     # Get credit-based stats
-    credits_allocated = DAILY_CREDIT_LIMITS.get("anonymous", 50)
+    credits_allocated = DAILY_CREDIT_LIMITS.get("unregistered", 50)
     today = _get_local_date(timezone_str)
     user_data = anonymous_rate_limit_storage[identifier]
     
@@ -489,7 +489,7 @@ def get_anonymous_usage_stats(identifier: str, timezone_str: str = "UTC") -> Usa
         "daily_usage": current_count,
         "daily_limit": daily_limit,
         "remaining_usage": remaining,
-        "subscription_tier": "anonymous",
+        "subscription_tier": "unregistered",
         "usage_reset_date": today,  # Use timezone-aware date
     }
 

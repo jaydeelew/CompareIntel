@@ -76,12 +76,12 @@ MODEL_LIMITS: Dict[str, int] = {tier: config["model_limit"] for tier, config in 
 
 
 # ============================================================================
-# Anonymous User Limits
+# Unregistered User Limits
 # ============================================================================
-# Limits for unregistered (anonymous) users
+# Limits for unregistered users
 
-ANONYMOUS_DAILY_LIMIT: int = 10  # Model responses per day for anonymous users (legacy, use credits instead)
-ANONYMOUS_MODEL_LIMIT: int = 3  # Maximum models per comparison for anonymous users
+ANONYMOUS_DAILY_LIMIT: int = 10  # Model responses per day for unregistered users (legacy, use credits instead)
+ANONYMOUS_MODEL_LIMIT: int = 3  # Maximum models per comparison for unregistered users
 
 
 # ============================================================================
@@ -91,7 +91,7 @@ ANONYMOUS_MODEL_LIMIT: int = 3  # Maximum models per comparison for anonymous us
 # Each conversation (with or without follow-ups) counts as 1 conversation
 
 CONVERSATION_LIMITS: Dict[str, int] = {
-    "anonymous": 2,
+    "unregistered": 2,
     "free": 3,
     "starter": 10,
     "starter_plus": 20,
@@ -110,7 +110,7 @@ CONVERSATION_LIMITS: Dict[str, int] = {
 
 # Daily credit limits for free tiers (resets daily)
 DAILY_CREDIT_LIMITS: Dict[str, int] = {
-    "anonymous": 50,  # 50 credits/day (~10 exchanges/day)
+    "unregistered": 50,  # 50 credits/day (~10 exchanges/day)
     "free": 100,  # 100 credits/day (~20 exchanges/day)
 }
 
@@ -124,7 +124,7 @@ MONTHLY_CREDIT_ALLOCATIONS: Dict[str, int] = {
 
 # Subscription pricing (monthly)
 TIER_PRICING: Dict[str, float] = {
-    "anonymous": 0.0,
+    "unregistered": 0.0,
     "free": 0.0,
     "starter": 9.95,
     "starter_plus": 19.95,

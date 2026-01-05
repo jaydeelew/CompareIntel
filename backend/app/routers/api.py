@@ -292,8 +292,8 @@ async def get_available_models(
     Get list of all AI models with tier_access field indicating availability.
 
     - Returns ALL models from model_runner.py
-    - Models are marked with tier_access field ('anonymous', 'free', or 'paid')
-    - Frontend displays locked models as disabled/restricted for anonymous and free tiers
+    - Models are marked with tier_access field ('unregistered', 'free', or 'paid')
+    - Frontend displays locked models as disabled/restricted for unregistered and free tiers
     - Backend still validates model access when making API calls
 
     OPTIMIZATION: Uses caching since model list is static data.
@@ -305,7 +305,7 @@ async def get_available_models(
     if current_user:
         tier = current_user.subscription_tier or "free"
     else:
-        tier = "anonymous"
+        tier = "unregistered"
 
     def get_models():
         from ..model_runner import get_model_token_limits_from_openrouter
@@ -721,7 +721,7 @@ async def compare_stream(
                                                 f"[AUTH] User {user_from_token.id} has invalid tier: {subscription_tier}"
                                             )
                                             tier_model_limit = ANONYMOUS_MODEL_LIMIT
-                                            tier_name = "anonymous"
+                                            tier_name = "unregistered"
                                     else:
                                         logger.warning(
                                             f"[AUTH] User {user_from_token.id} found but account is inactive"
@@ -782,7 +782,7 @@ async def compare_stream(
     restricted_models = [model_id for model_id in req.models if not is_model_available_for_tier(model_id, tier_name)]
     if restricted_models:
         upgrade_message = ""
-        if tier_name == "anonymous":
+        if tier_name == "unregistered":
             # Check if there's a token present - if so, authentication may have failed
             token_present = get_token_from_cookies(request) is not None
             if token_present:
@@ -802,7 +802,7 @@ async def compare_stream(
     # Enforce tier-specific model limit
     if len(req.models) > tier_model_limit:
         upgrade_message = ""
-        if tier_name == "anonymous":
+        if tier_name == "unregistered":
             free_model_limit = get_model_limit("free")
             upgrade_message = f" Sign up for a free account to compare up to {free_model_limit} models."
         elif tier_name == "free":
@@ -887,7 +887,7 @@ async def compare_stream(
         # This allows one final comparison that zeros out credits, then blocks subsequent requests
         if credits_remaining == 0:
             tier_name = current_user.subscription_tier or "free"
-            if tier_name in ["anonymous", "free"]:
+            if tier_name in ["unregistered", "free"]:
                 error_msg = (
                     f"You've run out of credits. Credits will reset to {DAILY_CREDIT_LIMITS.get(tier_name, 50)} tomorrow, "
                     f"or sign-up for a free account to get more credits, more models, and more history!"
@@ -2179,7 +2179,7 @@ async def get_credit_balance(
     else:
         # Anonymous user - calculate credits from database (persists across server restarts)
         client_ip = get_client_ip(request) if request else "unknown"
-        credits_allocated = DAILY_CREDIT_LIMITS.get("anonymous", 50)
+        credits_allocated = DAILY_CREDIT_LIMITS.get("unregistered", 50)
 
         # Get timezone from query parameter or header, default to UTC
         import pytz
@@ -2300,7 +2300,7 @@ async def get_credit_balance(
             "credits_used_today": credits_allocated - credits_remaining,
             "credits_remaining": credits_remaining,
             "period_type": "daily",
-            "subscription_tier": "anonymous",
+            "subscription_tier": "unregistered",
         }
 
 

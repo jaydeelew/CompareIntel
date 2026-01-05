@@ -121,6 +121,8 @@ export const UserMenu: React.FC = () => {
         return 'Starter'
       case 'starter_plus':
         return 'Starter+'
+      case 'unregistered':
+        return 'Unregistered'
       default:
         return 'Free'
     }

@@ -1645,19 +1645,19 @@ export const ComparisonForm = memo<ComparisonFormProps>(
           {showHistoryDropdown &&
             (() => {
               // Check if notification should be shown
-              const userTier = isAuthenticated ? user?.subscription_tier || 'free' : 'anonymous'
+              const userTier = isAuthenticated ? user?.subscription_tier || 'free' : 'unregistered'
               const tierLimit = getConversationLimit(userTier)
               const shouldShowNotification =
-                (userTier === 'anonymous' || userTier === 'free') &&
+                (userTier === 'unregistered' || userTier === 'free') &&
                 conversationHistory.length >= tierLimit
 
               // Determine max visible entries for dropdown display
               // Anonymous: 2, Free: 3, Paid: 3 (with scrolling)
-              const maxVisibleEntries = userTier === 'anonymous' ? 2 : 3
+              const maxVisibleEntries = userTier === 'unregistered' ? 2 : 3
 
               // For paid tiers, show scrolling when there are more than 3 entries
               // For anonymous/free, hide scrollbar when at or below limit
-              const isPaidTier = userTier !== 'anonymous' && userTier !== 'free'
+              const isPaidTier = userTier !== 'unregistered' && userTier !== 'free'
               const shouldHideScrollbar =
                 !isPaidTier &&
                 conversationHistory.length <= maxVisibleEntries &&
@@ -1680,7 +1680,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
                 const notificationHeight = shouldShowNotification ? (isMobileLayout ? 95 : 70) : 0
 
                 if (maxVisibleEntries === 2) {
-                  // Anonymous tier: 2 entries max
+                  // Unregistered tier: 2 entries max
                   return `${165 + notificationHeight}px`
                 }
                 // Free/Paid tiers: 3 entries max visible
@@ -1759,10 +1759,10 @@ export const ComparisonForm = memo<ComparisonFormProps>(
                         {(() => {
                           const userTier = isAuthenticated
                             ? user?.subscription_tier || 'free'
-                            : 'anonymous'
+                            : 'unregistered'
                           const tierLimit = getConversationLimit(userTier)
 
-                          if (userTier !== 'anonymous' && userTier !== 'free') {
+                          if (userTier !== 'unregistered' && userTier !== 'free') {
                             return null
                           }
 

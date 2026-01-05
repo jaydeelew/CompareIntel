@@ -2744,7 +2744,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                       textAlign: 'center',
                     }}
                   >
-                    Anonymous Tier Mock Mode
+                    Unregistered Tier Mock Mode
                   </h3>
                   <button
                     onClick={toggleAnonymousMockMode}

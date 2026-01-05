@@ -135,7 +135,7 @@ function AppContent() {
   // Pass subscription tier to enforce tier-based limits on saved selections
   const savedSelectionsHook = useSavedModelSelections(
     user?.id,
-    user?.subscription_tier ?? 'anonymous'
+    user?.subscription_tier ?? 'unregistered'
   )
   const {
     savedSelections: savedModelSelections,
@@ -660,7 +660,7 @@ function AppContent() {
     ): string => {
       if (type === 'none') {
         // No Credits scenario
-        if (tier === 'anonymous') {
+        if (tier === 'unregistered') {
           return "You've run out of credits. Credits will reset to 50 tomorrow, or sign-up for a free account to get more credits, more models, and more history!"
         } else if (tier === 'free') {
           return "You've run out of credits. Credits will reset to 100 tomorrow, or upgrade your plan for more credits, more models, and more history!"
@@ -689,7 +689,7 @@ function AppContent() {
         return `This comparison is estimated to take ${estimatedCredits?.toFixed(1) || 'X'} credits and you have ${Math.round(creditsRemaining)} credits remaining. The model responses may be truncated. If possible, try selecting less models or shorten your input.`
       } else {
         // Low Credits scenario
-        if (tier === 'anonymous') {
+        if (tier === 'unregistered') {
           return `You have ${Math.round(creditsRemaining)} credits left for today. Credits will reset to 50 tomorrow, or sign-up for a free account to get more credits, more models, and more history!`
         } else if (tier === 'free') {
           return `You have ${Math.round(creditsRemaining)} credits left for today. Credits will reset to 100 tomorrow, or upgrade your plan for more credits, more models, and more history!`
@@ -3662,7 +3662,7 @@ function AppContent() {
     const providerModels = modelsByProvider[provider] || []
 
     // Determine user tier and filter out restricted models
-    const userTier = isAuthenticated ? user?.subscription_tier || 'free' : 'anonymous'
+    const userTier = isAuthenticated ? user?.subscription_tier || 'free' : 'unregistered'
     const isPaidTier = ['starter', 'starter_plus', 'pro', 'pro_plus'].includes(userTier)
 
     // Filter out unavailable models (where available === false) and restricted models based on tier
@@ -3676,11 +3676,11 @@ function AppContent() {
       if (isPaidTier) {
         // Paid tiers have access to all models
         return true
-      } else if (userTier === 'anonymous') {
-        // Anonymous tier only has access to anonymous-tier models
-        return model.tier_access === 'anonymous'
+      } else if (userTier === 'unregistered') {
+        // Unregistered tier only has access to unregistered-tier models
+        return model.tier_access === 'unregistered'
       } else if (userTier === 'free') {
-        // Free tier has access to anonymous and free-tier models
+        // Free tier has access to unregistered and free-tier models
         return model.tier_access !== 'paid'
       }
 
@@ -3754,7 +3754,7 @@ function AppContent() {
 
     // Show warning if not all models could be selected due to tier limit
     if (couldNotSelectAll && !allProviderModelsSelected && !isFollowUpMode) {
-      const tierName = !isAuthenticated ? 'Anonymous' : user?.subscription_tier || 'free'
+      const tierName = !isAuthenticated ? 'Unregistered' : user?.subscription_tier || 'free'
       setError(
         `Your ${tierName} tier allows a maximum of ${maxModelsLimit} models per comparison. Not all available models from ${provider} could be selected.`
       )
@@ -3860,9 +3860,9 @@ function AppContent() {
 
       // Check limit before adding (only in normal mode)
       if (selectedModels.length >= maxModelsLimit) {
-        const tierName = !isAuthenticated ? 'Anonymous' : user?.subscription_tier || 'free'
+        const tierName = !isAuthenticated ? 'Unregistered' : user?.subscription_tier || 'free'
         const upgradeMsg =
-          tierName === 'Anonymous'
+          tierName === 'Unregistered'
             ? ' Sign up for a free account to get 3 models.'
             : tierName === 'free'
               ? ' Upgrade to Starter for 6 models or Pro for 9 models.'
@@ -4371,7 +4371,7 @@ function AppContent() {
     }
 
     // Check if user has credits before submitting
-    const userTier = isAuthenticated ? user?.subscription_tier || 'free' : 'anonymous'
+    const userTier = isAuthenticated ? user?.subscription_tier || 'free' : 'unregistered'
     const creditsAllocated =
       creditBalance?.credits_allocated ??
       (isAuthenticated && user
@@ -4399,7 +4399,7 @@ function AppContent() {
         setIsFollowUpMode(false)
       }
       const tierName = user?.subscription_tier || 'free'
-      if (tierName === 'anonymous' || tierName === 'free') {
+      if (tierName === 'unregistered' || tierName === 'free') {
         setError(
           "You've run out of credits. Credits will reset tomorrow, or sign-up for a free account to get more credits!"
         )
@@ -5159,9 +5159,9 @@ function AppContent() {
                               ? (balance.credits_remaining / balance.credits_allocated) * 100
                               : 100
                           const periodType =
-                            userTier === 'anonymous' || userTier === 'free' ? 'daily' : 'monthly'
+                            userTier === 'unregistered' || userTier === 'free' ? 'daily' : 'monthly'
                           const lowCreditThreshold =
-                            userTier === 'anonymous' || userTier === 'free' ? 20 : 10
+                            userTier === 'unregistered' || userTier === 'free' ? 20 : 10
 
                           if (balance.credits_remaining <= 0) {
                             // Exit follow-up mode when credits run out
@@ -5216,19 +5216,19 @@ function AppContent() {
 
                         // Update creditBalance immediately with metadata value to keep them in sync
                         const allocated =
-                          creditBalance?.credits_allocated ?? getDailyCreditLimit('anonymous')
+                          creditBalance?.credits_allocated ?? getDailyCreditLimit('unregistered')
                         setCreditBalance({
                           credits_allocated: allocated,
                           credits_used_today: allocated - metadataCreditsRemaining,
                           credits_remaining: metadataCreditsRemaining,
                           period_type: 'daily',
-                          subscription_tier: 'anonymous',
+                          subscription_tier: 'unregistered',
                         })
 
                         const remainingPercent =
                           allocated > 0 ? (metadataCreditsRemaining / allocated) * 100 : 100
                         // Update credit warnings based on new balance
-                        const userTier = 'anonymous'
+                        const userTier = 'unregistered'
                         const periodType = 'daily'
                         const lowCreditThreshold = 20
 
@@ -5286,7 +5286,7 @@ function AppContent() {
                             setAnonymousCreditsRemaining(balance.credits_remaining)
                             setCreditBalance(balance)
                             // Update credit warnings based on new balance
-                            const userTier = 'anonymous'
+                            const userTier = 'unregistered'
                             const periodType = 'daily'
                             const remainingPercent =
                               balance.credits_allocated > 0
@@ -6484,7 +6484,7 @@ function AppContent() {
   // Calculate credits remaining (reusable across components)
   // This is used to disable submit button and exit follow-up mode when credits run out
   const creditsRemaining = useMemo(() => {
-    const userTier = isAuthenticated ? user?.subscription_tier || 'free' : 'anonymous'
+    const userTier = isAuthenticated ? user?.subscription_tier || 'free' : 'unregistered'
 
     // Get credit information (if available)
     // Prefer creditBalance if available (more up-to-date after model calls)
@@ -6501,7 +6501,7 @@ function AppContent() {
         return anonymousCreditsRemaining
       } else if (
         creditBalance?.credits_remaining !== undefined &&
-        creditBalance?.subscription_tier === 'anonymous'
+        creditBalance?.subscription_tier === 'unregistered'
       ) {
         // Only use creditBalance if it's for anonymous users (prevent using authenticated user's balance)
         return creditBalance.credits_remaining
@@ -6542,7 +6542,7 @@ function AppContent() {
       return
     }
 
-    const userTier = isAuthenticated ? user?.subscription_tier || 'free' : 'anonymous'
+    const userTier = isAuthenticated ? user?.subscription_tier || 'free' : 'unregistered'
 
     // Only use creditBalance if it matches the current user's tier to prevent cross-contamination
     const resetDate =
@@ -6738,9 +6738,9 @@ function AppContent() {
                     onClick={() => {
                       const userTier = isAuthenticated
                         ? user?.subscription_tier || 'free'
-                        : 'anonymous'
+                        : 'unregistered'
                       const periodType =
-                        userTier === 'anonymous' || userTier === 'free' ? 'daily' : 'monthly'
+                        userTier === 'unregistered' || userTier === 'free' ? 'daily' : 'monthly'
                       dismissLowCreditWarning(userTier, periodType, creditBalance.credits_reset_at)
                     }}
                     style={{
@@ -6803,7 +6803,7 @@ function AppContent() {
                         ? 'You can deselect models or reselect previously selected ones (minimum 1 model required)'
                         : `Choose up to ${maxModelsLimit} models${
                             !isAuthenticated
-                              ? ' (Anonymous Tier)'
+                              ? ' (Unregistered Tier)'
                               : user?.subscription_tier
                                 ? (() => {
                                     const parts = user.subscription_tier
@@ -6838,9 +6838,9 @@ function AppContent() {
                       {(() => {
                         const userTier = isAuthenticated
                           ? user?.subscription_tier || 'free'
-                          : 'anonymous'
+                          : 'unregistered'
                         const showHidePremiumToggle =
-                          userTier === 'anonymous' || userTier === 'free'
+                          userTier === 'unregistered' || userTier === 'free'
                         if (!showHidePremiumToggle) return null
                         return (
                           <button
@@ -7040,7 +7040,7 @@ function AppContent() {
                             // Determine user tier for filtering
                             const userTier = isAuthenticated
                               ? user?.subscription_tier || 'free'
-                              : 'anonymous'
+                              : 'unregistered'
                             const isPaidTier = [
                               'starter',
                               'starter_plus',
@@ -7053,8 +7053,8 @@ function AppContent() {
                             const visibleModels = hidePremiumModels
                               ? models.filter(model => {
                                   if (isPaidTier) return true // Paid tiers see all
-                                  if (userTier === 'anonymous') {
-                                    return model.tier_access === 'anonymous'
+                                  if (userTier === 'unregistered') {
+                                    return model.tier_access === 'unregistered'
                                   }
                                   // Free tier
                                   return model.tier_access !== 'paid'
@@ -7173,18 +7173,18 @@ function AppContent() {
                                         if (isPaidTier) {
                                           // Paid tiers have access to all models
                                           isRestricted = false
-                                        } else if (userTier === 'anonymous') {
-                                          // Anonymous tier only has access to anonymous-tier models
-                                          isRestricted = model.tier_access !== 'anonymous'
+                                        } else if (userTier === 'unregistered') {
+                                          // Unregistered tier only has access to unregistered-tier models
+                                          isRestricted = model.tier_access !== 'unregistered'
                                         } else if (userTier === 'free') {
-                                          // Free tier has access to anonymous and free-tier models
+                                          // Free tier has access to unregistered and free-tier models
                                           isRestricted = model.tier_access === 'paid'
                                         }
                                       }
 
                                       const requiresUpgrade =
                                         isRestricted &&
-                                        (userTier === 'anonymous' || userTier === 'free')
+                                        (userTier === 'unregistered' || userTier === 'free')
 
                                       const isDisabled =
                                         isUnavailable ||
@@ -7218,7 +7218,7 @@ function AppContent() {
                                                 <span
                                                   className="model-badge premium"
                                                   title={
-                                                    userTier === 'anonymous' &&
+                                                    userTier === 'unregistered' &&
                                                     model.tier_access === 'free'
                                                       ? "Click 'Sign Up' above"
                                                       : 'Premium model - upgrade after registration'
@@ -7249,7 +7249,7 @@ function AppContent() {
                                                     />
                                                     <path d="M7 11V7a5 5 0 0 1 10 0v4" />
                                                   </svg>
-                                                  {userTier === 'anonymous' &&
+                                                  {userTier === 'unregistered' &&
                                                   model.tier_access === 'free'
                                                     ? 'With free registration'
                                                     : 'Premium'}

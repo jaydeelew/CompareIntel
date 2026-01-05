@@ -102,11 +102,11 @@ function saveToStorage(storageKey: string, selections: SavedModelSelection[]): v
 /**
  * Hook for managing saved model selections
  * @param userId - The user ID (number for registered users, undefined for anonymous)
- * @param tier - The subscription tier (defaults to 'anonymous' if not provided)
+ * @param tier - The subscription tier (defaults to 'unregistered' if not provided)
  */
 export function useSavedModelSelections(
   userId: number | undefined,
-  tier: SubscriptionTier = 'anonymous'
+  tier: SubscriptionTier = 'unregistered'
 ): UseSavedModelSelectionsReturn {
   const [savedSelections, setSavedSelections] = useState<SavedModelSelection[]>([])
 

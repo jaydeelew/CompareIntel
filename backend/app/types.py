@@ -13,7 +13,7 @@ from datetime import datetime, date
 # Subscription Tier Types
 # ============================================================================
 
-SubscriptionTier = Literal["free", "starter", "starter_plus", "pro", "pro_plus", "anonymous"]
+SubscriptionTier = Literal["free", "starter", "starter_plus", "pro", "pro_plus", "unregistered"]
 SubscriptionStatus = Literal["active", "cancelled", "expired"]
 SubscriptionPeriod = Literal["monthly", "yearly"]
 UserRole = Literal["user", "moderator", "admin", "super_admin"]

@@ -42,12 +42,12 @@ OPENROUTER_API_KEY = settings.openrouter_api_key
 # Model Tier Classification System
 # ============================================================================
 # Models are classified into three tiers based on OpenRouter pricing:
-# - "anonymous": Budget models < $0.50/M tokens (available to unregistered users)
+# - "unregistered": Budget models < $0.50/M tokens (available to unregistered users)
 # - "free": Mid-level models $0.50-$3.00/M tokens (available to registered free users)
 # - "paid": Premium models >= $3.00/M tokens (requires paid subscription)
 # All paid tiers (Starter, Starter+, Pro, Pro+) have access to ALL models
 
-# List of model IDs available to anonymous (unregistered) users
+# List of model IDs available to unregistered users
 # Classification criteria: Models costing < $0.50 per million tokens (input+output average)
 # Generally includes: models with ":free" suffix, nano/mini versions, budget options
 ANONYMOUS_TIER_MODELS = {
@@ -108,7 +108,7 @@ FREE_TIER_MODELS = ANONYMOUS_TIER_MODELS.union(
         # xAI
         "x-ai/grok-3-mini",  # Auto-classified based on pricing
         # When adding new models, classify based on OpenRouter pricing:
-        # - Anonymous tier: Models costing < $0.50 per million tokens
+        # - Unregistered tier: Models costing < $0.50 per million tokens
         # - Free tier: Models costing $0.50 - $3.00 per million tokens
         # - Paid tier: Models costing >= $3.00 per million tokens
     }
@@ -121,7 +121,7 @@ def is_model_available_for_tier(model_id: str, tier: str) -> bool:
 
     Args:
         model_id: Model identifier (e.g., "openai/gpt-5.1")
-        tier: Subscription tier ("anonymous", "free", "starter", "starter_plus", "pro", "pro_plus")
+        tier: Subscription tier ("unregistered", "free", "starter", "starter_plus", "pro", "pro_plus")
 
     Returns:
         True if model is available for the tier, False otherwise
@@ -130,11 +130,11 @@ def is_model_available_for_tier(model_id: str, tier: str) -> bool:
     if tier in ["starter", "starter_plus", "pro", "pro_plus"]:
         return True
 
-    # Anonymous tier only has access to anonymous-tier models (most basic/budget)
-    if tier == "anonymous":
+    # Unregistered tier only has access to unregistered-tier models (most basic/budget)
+    if tier == "unregistered":
         return model_id in ANONYMOUS_TIER_MODELS
 
-    # Free tier (registered users) has access to free-tier models (anonymous + mid-level)
+    # Free tier (registered users) has access to free-tier models (unregistered + mid-level)
     if tier == "free":
         return model_id in FREE_TIER_MODELS
 
@@ -148,7 +148,7 @@ def filter_models_by_tier(models: List[Dict[str, Any]], tier: str) -> List[Dict[
 
     This function now returns ALL models from model_runner.py, marking them with
     tier_access to indicate which tier they're available for. The frontend will
-    display locked models as disabled/restricted for anonymous and free tiers.
+    display locked models as disabled/restricted for unregistered and free tiers.
 
     Args:
         models: List of model dictionaries
@@ -168,7 +168,7 @@ def filter_models_by_tier(models: List[Dict[str, Any]], tier: str) -> List[Dict[
 
         # Set tier_access based on model classification
         if model_id in ANONYMOUS_TIER_MODELS:
-            model_with_access["tier_access"] = "anonymous"
+            model_with_access["tier_access"] = "unregistered"
         elif model_id in FREE_TIER_MODELS:
             model_with_access["tier_access"] = "free"
         else:

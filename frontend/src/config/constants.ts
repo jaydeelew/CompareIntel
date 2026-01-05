@@ -9,11 +9,11 @@
  */
 
 // ============================================================================
-// Anonymous User Limits
+// Unregistered User Limits
 // ============================================================================
-// Limits for unregistered (anonymous) users
+// Limits for unregistered users
 
-/** Maximum models per comparison for anonymous users */
+/** Maximum models per comparison for unregistered users */
 export const ANONYMOUS_MODEL_LIMIT = 3
 
 // Extended tier usage tracking removed - extended mode is now unlimited (only limited by credits)
@@ -24,7 +24,7 @@ export const ANONYMOUS_MODEL_LIMIT = 3
 // Maximum number of models that can be selected per comparison
 
 export const MODEL_LIMITS = {
-  anonymous: 3,
+  unregistered: 3,
   free: 3,
   starter: 6,
   starter_plus: 6,
@@ -38,7 +38,7 @@ export const MODEL_LIMITS = {
 // Daily model response limits (model responses per day, not comparisons)
 
 export const DAILY_LIMITS = {
-  anonymous: 10,
+  unregistered: 10,
   free: 20,
   starter: 50,
   starter_plus: 100,
@@ -53,7 +53,7 @@ export const DAILY_LIMITS = {
 // Each conversation (with or without follow-ups) counts as 1 conversation
 
 export const CONVERSATION_LIMITS = {
-  anonymous: 2,
+  unregistered: 2,
   free: 3,
   starter: 10,
   starter_plus: 20,
@@ -67,7 +67,7 @@ export const CONVERSATION_LIMITS = {
 // Maximum number of saved model selections per subscription tier
 
 export const SAVED_MODEL_SELECTION_LIMITS = {
-  anonymous: 2,
+  unregistered: 2,
   free: 3,
   starter: 5,
   starter_plus: 10,
@@ -84,7 +84,7 @@ export const SAVED_MODEL_SELECTION_LIMITS = {
 
 // Daily credit limits for free tiers (resets daily)
 export const DAILY_CREDIT_LIMITS = {
-  anonymous: 50, // 50 credits/day (~10 exchanges/day)
+  unregistered: 50, // 50 credits/day (~10 exchanges/day)
   free: 100, // 100 credits/day (~20 exchanges/day)
 } as const
 
@@ -98,7 +98,7 @@ export const MONTHLY_CREDIT_ALLOCATIONS = {
 
 // Subscription pricing (monthly)
 export const TIER_PRICING = {
-  anonymous: 0.0,
+  unregistered: 0.0,
   free: 0.0,
   starter: 9.95,
   starter_plus: 19.95,
@@ -127,7 +127,7 @@ export type SubscriptionTier = keyof typeof MODEL_LIMITS
  * @returns Maximum number of models allowed per comparison
  */
 export function getModelLimit(tier: SubscriptionTier | string): number {
-  return MODEL_LIMITS[tier as SubscriptionTier] ?? MODEL_LIMITS.anonymous
+  return MODEL_LIMITS[tier as SubscriptionTier] ?? MODEL_LIMITS.unregistered
 }
 
 /**
@@ -137,7 +137,7 @@ export function getModelLimit(tier: SubscriptionTier | string): number {
  * @returns Daily limit for model responses
  */
 export function getDailyLimit(tier: SubscriptionTier | string): number {
-  return DAILY_LIMITS[tier as SubscriptionTier] ?? DAILY_LIMITS.anonymous
+  return DAILY_LIMITS[tier as SubscriptionTier] ?? DAILY_LIMITS.unregistered
 }
 
 /**
@@ -147,7 +147,7 @@ export function getDailyLimit(tier: SubscriptionTier | string): number {
  * @returns Maximum number of conversations stored (each conversation counts as 1)
  */
 export function getConversationLimit(tier: SubscriptionTier | string): number {
-  return CONVERSATION_LIMITS[tier as SubscriptionTier] ?? CONVERSATION_LIMITS.anonymous
+  return CONVERSATION_LIMITS[tier as SubscriptionTier] ?? CONVERSATION_LIMITS.unregistered
 }
 
 /**
@@ -157,11 +157,14 @@ export function getConversationLimit(tier: SubscriptionTier | string): number {
  * @returns Maximum number of saved model selections allowed
  */
 export function getSavedModelSelectionLimit(tier: SubscriptionTier | string): number {
-  return SAVED_MODEL_SELECTION_LIMITS[tier as SubscriptionTier] ?? SAVED_MODEL_SELECTION_LIMITS.anonymous
+  return (
+    SAVED_MODEL_SELECTION_LIMITS[tier as SubscriptionTier] ??
+    SAVED_MODEL_SELECTION_LIMITS.unregistered
+  )
 }
 
 /**
- * Get daily credit limit for a given subscription tier (for free/anonymous tiers).
+ * Get daily credit limit for a given subscription tier (for free/unregistered tiers).
  *
  * @param tier - Subscription tier name
  * @returns Daily credit limit (0 if not a daily-reset tier)
@@ -182,7 +185,7 @@ export function getMonthlyCreditAllocation(tier: SubscriptionTier | string): num
 
 /**
  * Get credit allocation for a given subscription tier.
- * Returns daily limit for free/anonymous, monthly allocation for paid tiers.
+ * Returns daily limit for free/unregistered, monthly allocation for paid tiers.
  *
  * @param tier - Subscription tier name
  * @returns Credit allocation for the tier

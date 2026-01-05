@@ -126,8 +126,8 @@ def validate_config() -> None:
     for tier in SUBSCRIPTION_CONFIG.keys():
         if tier not in CONVERSATION_LIMITS:
             warnings.append(f"CONVERSATION_LIMITS missing tier: {tier}")
-    if "anonymous" not in CONVERSATION_LIMITS:
-        warnings.append("CONVERSATION_LIMITS missing 'anonymous' tier")
+    if "unregistered" not in CONVERSATION_LIMITS:
+        warnings.append("CONVERSATION_LIMITS missing 'unregistered' tier")
     
     # ========================================================================
     # Performance Settings

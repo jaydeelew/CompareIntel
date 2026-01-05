@@ -23,8 +23,8 @@ export interface Model {
   provider: string
   /** Whether the model is currently available for selection */
   available?: boolean
-  /** Tier access level: 'anonymous', 'free', or 'paid' */
-  tier_access?: 'anonymous' | 'free' | 'paid'
+  /** Tier access level: 'unregistered', 'free', or 'paid' */
+  tier_access?: 'unregistered' | 'free' | 'paid'
   /** Maximum input tokens (accurate, from model tokenizer) */
   max_input_tokens?: number
   /** Maximum output tokens (accurate, from model tokenizer) */

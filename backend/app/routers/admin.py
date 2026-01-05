@@ -1517,7 +1517,7 @@ async def classify_model_by_pricing(model_id: str, model_data: Optional[Dict[str
         model_data: Optional model data from OpenRouter (will fetch if not provided)
         
     Returns:
-        Tier classification: "anonymous", "free", or "paid"
+        Tier classification: "unregistered", "free", or "paid"
     """
     # If model_data not provided, fetch it
     if model_data is None:
@@ -1534,9 +1534,9 @@ async def classify_model_by_pricing(model_id: str, model_data: Optional[Dict[str
     if avg_cost is None:
         # Fallback: use naming patterns to classify
         model_name_lower = model_id.lower()
-        # Anonymous: only truly free variants (cost $0)
+        # Unregistered: only truly free variants (cost $0)
         if ":free" in model_name_lower:
-            return "anonymous"
+            return "unregistered"
         # Free tier: budget/efficient model variants (typically $0.50-$3.00/M)
         elif any(pattern in model_name_lower for pattern in ["-mini", "-nano", "-small", "-flash", "-fast", "-medium"]):
             return "free"
@@ -1545,11 +1545,11 @@ async def classify_model_by_pricing(model_id: str, model_data: Optional[Dict[str
             return "paid"
     
     # Classify based on pricing thresholds
-    # Anonymous tier: < $0.50/M - most budget models (free variants, nano/mini)
+    # Unregistered tier: < $0.50/M - most budget models (free variants, nano/mini)
     # Free tier: $0.50 - $3.00/M - mid-level models for registered users
     # Paid tier: >= $3.00/M - premium models for subscribers
     if avg_cost < 0.5:
-        return "anonymous"
+        return "unregistered"
     elif avg_cost < 3.0:
         return "free"
     else:
@@ -1952,7 +1952,7 @@ async def add_model(
             content = f.read()
         
         # Add model to appropriate tier set(s)
-        if tier_classification == "anonymous":
+        if tier_classification == "unregistered":
             # Add to ANONYMOUS_TIER_MODELS
             # Pattern must match up to the closing brace, but stop before FREE_TIER_MODELS definition
             anonymous_pattern = r'(ANONYMOUS_TIER_MODELS\s*=\s*\{)(.*?)(\n\})'
@@ -2300,7 +2300,7 @@ async def add_model_stream(
                 content = f.read()
             
             # Add model to appropriate tier set(s)
-            if tier_classification == "anonymous":
+            if tier_classification == "unregistered":
                 # Add to ANONYMOUS_TIER_MODELS
                 # Pattern must match up to the closing brace, explicitly stopping before FREE_TIER_MODELS
                 anonymous_pattern = r'(ANONYMOUS_TIER_MODELS\s*=\s*\{)(.*?)(\n\}\s*\n\s*# List of model IDs available to free)'
