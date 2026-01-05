@@ -39,7 +39,9 @@ describe('compareService', () => {
 
       const result = await compareService.compareStream(payload)
 
-      expect(apiClient.stream).toHaveBeenCalledWith('/compare-stream', payload)
+      expect(apiClient.stream).toHaveBeenCalledWith('/compare-stream', payload, {
+        signal: undefined,
+      })
       expect(result).toBe(mockStream)
     })
 
@@ -167,7 +169,14 @@ describe('compareService', () => {
 
       const result = await compareService.getRateLimitStatus()
 
-      expect(apiClient.get).toHaveBeenCalledWith('/rate-limit-status')
+      // getRateLimitStatus now includes timezone parameter and cache options
+      expect(apiClient.get).toHaveBeenCalledWith(
+        expect.stringMatching(/^\/rate-limit-status\?timezone=/),
+        expect.objectContaining({
+          cacheTTL: 30000,
+          _cacheKey: expect.stringMatching(/^GET:\/rate-limit-status\?timezone=/),
+        })
+      )
       expect(result).toEqual(mockStatus)
     })
 
@@ -178,8 +187,21 @@ describe('compareService', () => {
 
       const result = await compareService.getRateLimitStatus(fingerprint)
 
+      // getRateLimitStatus now includes timezone parameter and cache options
       expect(apiClient.get).toHaveBeenCalledWith(
-        `/rate-limit-status?fingerprint=${encodeURIComponent(fingerprint)}`
+        expect.stringMatching(
+          new RegExp(
+            `^/rate-limit-status\\?fingerprint=${encodeURIComponent(fingerprint)}&timezone=`
+          )
+        ),
+        expect.objectContaining({
+          cacheTTL: 30000,
+          _cacheKey: expect.stringMatching(
+            new RegExp(
+              `^GET:/rate-limit-status\\?fingerprint=${encodeURIComponent(fingerprint)}&timezone=`
+            )
+          ),
+        })
       )
       expect(result).toEqual(mockStatus)
     })
@@ -203,7 +225,11 @@ describe('compareService', () => {
 
       const result = await compareService.getAnonymousMockModeStatus()
 
-      expect(apiClient.get).toHaveBeenCalledWith('/anonymous-mock-mode-status')
+      // getAnonymousMockModeStatus now includes cache options
+      expect(apiClient.get).toHaveBeenCalledWith('/anonymous-mock-mode-status', {
+        cacheTTL: 300000,
+        _cacheKey: 'GET:/anonymous-mock-mode-status',
+      })
       expect(result).toEqual(mockStatus)
     })
   })

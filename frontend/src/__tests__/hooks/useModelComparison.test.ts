@@ -25,7 +25,6 @@ describe('useModelComparison', () => {
       const { result } = renderHook(() => useModelComparison())
 
       expect(result.current.input).toBe('')
-      expect(result.current.isExtendedMode).toBe(false)
       expect(result.current.isLoading).toBe(false)
       expect(result.current.error).toBe(null)
       expect(result.current.response).toBe(null)
@@ -78,19 +77,8 @@ describe('useModelComparison', () => {
     })
   })
 
-  describe('extended mode', () => {
-    it('should allow toggling extended mode', () => {
-      const { result } = renderHook(() => useModelComparison())
-
-      expect(result.current.isExtendedMode).toBe(false)
-
-      act(() => {
-        result.current.setIsExtendedMode(true)
-      })
-
-      expect(result.current.isExtendedMode).toBe(true)
-    })
-  })
+  // Note: Extended mode functionality was removed from useModelComparison hook
+  // Extended mode is now managed directly in App.tsx
 
   describe('loading state', () => {
     it('should allow setting loading state', () => {

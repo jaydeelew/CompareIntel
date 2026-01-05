@@ -376,33 +376,8 @@ describe('useModelComparison - Edge Cases', () => {
     })
   })
 
-  describe('Extended Mode Edge Cases', () => {
-    it('should handle rapid extended mode toggles', () => {
-      const { result } = renderHook(() => useModelComparison())
-
-      act(() => {
-        result.current.setIsExtendedMode(true)
-        result.current.setIsExtendedMode(false)
-        result.current.setIsExtendedMode(true)
-      })
-
-      expect(result.current.isExtendedMode).toBe(true)
-    })
-
-    it('should handle extended mode with existing response', () => {
-      const { result } = renderHook(() => useModelComparison())
-
-      const mockResponse = createMockCompareResponse([createModelId('gpt-4')])
-
-      act(() => {
-        result.current.setResponse(mockResponse)
-        result.current.setIsExtendedMode(true)
-      })
-
-      expect(result.current.isExtendedMode).toBe(true)
-      expect(result.current.response).toEqual(mockResponse)
-    })
-  })
+  // Note: Extended mode functionality was removed from useModelComparison hook
+  // Extended mode is now managed directly in App.tsx
 
   describe('Follow-up Mode Edge Cases', () => {
     it('should handle rapid follow-up mode toggles', () => {

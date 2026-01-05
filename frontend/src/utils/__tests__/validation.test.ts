@@ -36,7 +36,8 @@ describe('validation utilities', () => {
     })
 
     it('should handle empty string', () => {
-      expect(getSafeId('')).toBe('')
+      // getSafeId now returns 'unknown' for empty/invalid strings as a safety measure
+      expect(getSafeId('')).toBe('unknown')
     })
   })
 

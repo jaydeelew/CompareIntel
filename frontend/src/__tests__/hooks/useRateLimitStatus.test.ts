@@ -36,7 +36,6 @@ describe('useRateLimitStatus', () => {
       )
 
       expect(result.current.usageCount).toBe(0)
-      expect(result.current.extendedUsageCount).toBe(0)
       expect(result.current.rateLimitStatus).toBe(null)
     })
 
@@ -160,49 +159,12 @@ describe('useRateLimitStatus', () => {
 
       await waitFor(() => {
         expect(result.current.usageCount).toBe(0)
-      })
-
-      // Should remove old localStorage entry
-      expect(localStorage.getItem('compareintel_usage')).toBeNull()
-    })
-
-    it('should load extended usage count from localStorage', async () => {
-      const today = new Date().toDateString()
-      localStorage.setItem('compareintel_extended_usage', JSON.stringify({ count: 2, date: today }))
-
-      const { result } = renderHook(() =>
-        useRateLimitStatus({
-          isAuthenticated: false,
-          browserFingerprint: 'test-fingerprint',
-        })
-      )
-
-      await waitFor(() => {
-        expect(result.current.extendedUsageCount).toBe(2)
+        // Should remove old localStorage entry when date is different
+        expect(localStorage.getItem('compareintel_usage')).toBeNull()
       })
     })
 
-    it('should reset extended usage count if date is different', async () => {
-      const yesterday = new Date()
-      yesterday.setDate(yesterday.getDate() - 1)
-      localStorage.setItem(
-        'compareintel_extended_usage',
-        JSON.stringify({ count: 3, date: yesterday.toDateString() })
-      )
-
-      const { result } = renderHook(() =>
-        useRateLimitStatus({
-          isAuthenticated: false,
-          browserFingerprint: 'test-fingerprint',
-        })
-      )
-
-      await waitFor(() => {
-        expect(result.current.extendedUsageCount).toBe(0)
-      })
-
-      expect(localStorage.getItem('compareintel_extended_usage')).toBeNull()
-    })
+    // Note: Extended usage count tests removed - functionality was removed from useRateLimitStatus hook
 
     it('should handle invalid localStorage data gracefully', async () => {
       localStorage.setItem('compareintel_usage', 'invalid-json')
@@ -261,22 +223,8 @@ describe('useRateLimitStatus', () => {
     })
   })
 
-  describe('setExtendedUsageCount', () => {
-    it('should allow setting extended usage count', async () => {
-      const { result } = renderHook(() =>
-        useRateLimitStatus({
-          isAuthenticated: false,
-          browserFingerprint: 'test-fingerprint',
-        })
-      )
-
-      act(() => {
-        result.current.setExtendedUsageCount(2)
-      })
-
-      expect(result.current.extendedUsageCount).toBe(2)
-    })
-  })
+  // Note: Extended usage count functionality was removed from useRateLimitStatus hook
+  // The hook now only tracks regular usage count
 
   describe('fetchRateLimitStatus', () => {
     it('should allow manual fetching', async () => {

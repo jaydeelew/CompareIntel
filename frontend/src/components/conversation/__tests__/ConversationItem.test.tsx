@@ -55,7 +55,8 @@ describe('ConversationItem', () => {
         models_used: [createModelId('gpt-4')],
       })
       render(<ConversationItem conversation={singleModelConversation} />)
-      expect(screen.getByText(/1 models/i)).toBeInTheDocument()
+      // For single model, ConversationItem displays the model name instead of "1 models"
+      expect(screen.getByText('gpt-4')).toBeInTheDocument()
     })
   })
 

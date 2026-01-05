@@ -51,7 +51,11 @@ describe('modelsService', () => {
 
       const result = await modelsService.getAvailableModels()
 
-      expect(apiClient.get).toHaveBeenCalledWith('/models')
+      // getAvailableModels now includes cache options
+      expect(apiClient.get).toHaveBeenCalledWith('/models', {
+        cacheTTL: 600000,
+        _cacheKey: 'GET:/models',
+      })
       expect(result).toEqual(mockResponse)
     })
 
@@ -75,7 +79,11 @@ describe('modelsService', () => {
 
       const result = await modelsService.getModelsByProvider()
 
-      expect(apiClient.get).toHaveBeenCalledWith('/models')
+      // getModelsByProvider now includes cache options
+      expect(apiClient.get).toHaveBeenCalledWith('/models', {
+        cacheTTL: 600000,
+        _cacheKey: 'GET:/models',
+      })
       expect(result).toEqual(mockModelsByProvider)
     })
 
