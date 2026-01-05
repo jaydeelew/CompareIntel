@@ -18,26 +18,29 @@ class TestUserRegistration:
     
     def test_register_new_user(self, client, db_session):
         """Test successful user registration."""
-        response = client.post(
-            "/api/auth/register",
-            json={
-                "email": "newuser@example.com",
-                "password": "SecurePassword123!",
-            },
-        )
-        assert response.status_code == status.HTTP_201_CREATED
-        data = response.json()
-        assert "access_token" in data
-        assert "user" in data
-        assert "id" in data["user"]
-        assert data["user"]["email"] == "newuser@example.com"
-        assert "password" not in data  # Password should not be in response
-        assert "password" not in data.get("user", {})  # Password should not be in user object either
-        
-        # Verify user was created in database
-        user = db_session.query(User).filter(User.email == "newuser@example.com").first()
-        assert user is not None
-        assert user.is_verified is False  # Should not be verified initially
+        # Mock reCAPTCHA verification to always pass in tests
+        from unittest.mock import patch
+        with patch('app.routers.auth.verify_recaptcha', return_value=True):
+            response = client.post(
+                "/api/auth/register",
+                json={
+                    "email": "newuser@example.com",
+                    "password": "SecurePassword123!",
+                },
+            )
+            assert response.status_code == status.HTTP_201_CREATED
+            data = response.json()
+            assert "access_token" in data
+            assert "user" in data
+            assert "id" in data["user"]
+            assert data["user"]["email"] == "newuser@example.com"
+            assert "password" not in data  # Password should not be in response
+            assert "password" not in data.get("user", {})  # Password should not be in user object either
+            
+            # Verify user was created in database
+            user = db_session.query(User).filter(User.email == "newuser@example.com").first()
+            assert user is not None
+            assert user.is_verified is False  # Should not be verified initially
     
     def test_register_duplicate_email(self, client, test_user):
         """Test registration with existing email fails."""
@@ -164,9 +167,9 @@ class TestTokenRefresh:
     
     def test_refresh_token_unauthorized(self, client):
         """Test token refresh without valid refresh token."""
-        # Test with missing refresh_token (422 validation error)
+        # Test with missing refresh_token (401 unauthorized - endpoint returns 401 for missing token)
         response = client.post("/api/auth/refresh")
-        assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+        assert response.status_code == status.HTTP_401_UNAUTHORIZED
         
         # Test with invalid refresh_token (401 unauthorized)
         response = client.post(

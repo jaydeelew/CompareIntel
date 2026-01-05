@@ -124,8 +124,9 @@ def verify_token(token: str, token_type: str = "access") -> Optional[Dict[str, A
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
 
-        # Verify token type
-        if payload.get("type") != token_type:
+        # Verify token type - tokens must have a type field and it must match
+        token_type_in_payload = payload.get("type")
+        if token_type_in_payload is None or token_type_in_payload != token_type:
             return None
 
         return payload

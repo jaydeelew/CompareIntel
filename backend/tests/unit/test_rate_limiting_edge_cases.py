@@ -31,7 +31,11 @@ class TestUserCreditBoundaries:
     
     def test_credits_at_exact_limit(self, db_session, test_user_free):
         """Test credit checking at exact limit."""
+        # Ensure credits are allocated first
+        from app.credit_manager import ensure_credits_allocated
+        ensure_credits_allocated(test_user_free.id, db_session)
         db_session.refresh(test_user_free)
+        
         allocated = test_user_free.monthly_credits_allocated or DAILY_CREDIT_LIMITS.get("free", 100)
         
         # Deduct all credits
@@ -150,7 +154,11 @@ class TestDeductCredits:
     
     def test_deduct_by_multiple(self, db_session, test_user_free):
         """Test deducting credits by multiple."""
+        # Ensure credits are allocated first
+        from app.credit_manager import ensure_credits_allocated
+        ensure_credits_allocated(test_user_free.id, db_session)
         db_session.refresh(test_user_free)
+        
         initial_used = test_user_free.credits_used_this_period or 0
         
         deduct_user_credits(test_user_free, Decimal("10"), None, db_session, "Test: Multiple credits")
@@ -203,9 +211,12 @@ class TestAnonymousCreditBoundaries:
     def test_anonymous_one_below_limit(self, db_session):
         """Test anonymous user one below limit."""
         identifier = "ip:192.168.1.2"
-        allocated = DAILY_CREDIT_LIMITS.get("anonymous", 50)
+        allocated = DAILY_CREDIT_LIMITS.get("unregistered", 50)  # Use "unregistered" key
         
-        # Deduct almost all credits
+        # Initialize anonymous user by checking credits first (this sets up the storage)
+        check_anonymous_credits(identifier, Decimal("0"), db_session)
+        
+        # Deduct almost all credits, leaving 1
         deduct_anonymous_credits(identifier, Decimal(allocated - 1))
         
         is_allowed, credits_remaining, credits_allocated = check_anonymous_credits(
@@ -241,10 +252,9 @@ class TestUsageStats:
     
     def test_usage_stats_at_limit(self, test_user_free):
         """Test usage stats when at credit limit."""
-        from app.credit_manager import ensure_credits_allocated
-        from app.models import get_db
+        from app.rate_limiting import get_user_usage_stats
         
-        # This test would need a db session, so we'll test the structure instead
+        # Test the structure of usage stats
         stats = get_user_usage_stats(test_user_free)
         assert "credits_allocated" in stats
         assert "credits_used_this_period" in stats

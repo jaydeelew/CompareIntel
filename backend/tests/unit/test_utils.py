@@ -150,15 +150,23 @@ class TestErrorHandling:
 class TestConstants:
     """Tests for application constants."""
     
-    def test_extended_tier_limits_exist(self):
-        """Test that extended tier limits are properly defined."""
-        from app.config import EXTENDED_TIER_LIMITS
+    def test_credit_limits_exist(self):
+        """Test that credit limits are properly defined."""
+        from app.config.constants import DAILY_CREDIT_LIMITS, MONTHLY_CREDIT_ALLOCATIONS
         
-        assert isinstance(EXTENDED_TIER_LIMITS, dict)
-        # EXTENDED_TIER_LIMITS contains subscription tiers: anonymous, free, starter, etc.
-        expected_keys = ["anonymous", "free"]
-        for key in expected_keys:
-            assert key in EXTENDED_TIER_LIMITS, f"EXTENDED_TIER_LIMITS missing subscription tier: {key}"
-            assert isinstance(EXTENDED_TIER_LIMITS[key], int)
-            assert EXTENDED_TIER_LIMITS[key] > 0
+        assert isinstance(DAILY_CREDIT_LIMITS, dict)
+        assert isinstance(MONTHLY_CREDIT_ALLOCATIONS, dict)
+        # DAILY_CREDIT_LIMITS contains free tiers: unregistered, free
+        expected_daily_keys = ["unregistered", "free"]
+        for key in expected_daily_keys:
+            assert key in DAILY_CREDIT_LIMITS, f"DAILY_CREDIT_LIMITS missing subscription tier: {key}"
+            assert isinstance(DAILY_CREDIT_LIMITS[key], int)
+            assert DAILY_CREDIT_LIMITS[key] > 0
+        
+        # MONTHLY_CREDIT_ALLOCATIONS contains paid tiers: starter, starter_plus, pro, pro_plus
+        expected_monthly_keys = ["starter", "starter_plus", "pro", "pro_plus"]
+        for key in expected_monthly_keys:
+            assert key in MONTHLY_CREDIT_ALLOCATIONS, f"MONTHLY_CREDIT_ALLOCATIONS missing subscription tier: {key}"
+            assert isinstance(MONTHLY_CREDIT_ALLOCATIONS[key], int)
+            assert MONTHLY_CREDIT_ALLOCATIONS[key] > 0
 

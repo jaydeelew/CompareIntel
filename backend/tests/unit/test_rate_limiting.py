@@ -55,8 +55,12 @@ class TestUserCreditLimiting:
     
     def test_credits_exceeded(self, db_session, test_user):
         """Test credit limit when user has exceeded their credits."""
-        # Deduct all credits to exceed limit
+        # Ensure credits are allocated first
+        from app.credit_manager import ensure_credits_allocated
+        ensure_credits_allocated(test_user.id, db_session)
         db_session.refresh(test_user)
+        
+        # Deduct all credits to exceed limit
         allocated = test_user.monthly_credits_allocated or 100
         deduct_user_credits(test_user, Decimal(allocated), None, db_session, "Test: Exhaust credits")
         db_session.refresh(test_user)
@@ -291,8 +295,12 @@ class TestAllTierCredits:
     
     def test_pro_tier_exceeds_credits(self, db_session, test_user_pro):
         """Test pro tier credit limit enforcement."""
-        # Deduct all credits
+        # Ensure credits are allocated first
+        from app.credit_manager import ensure_credits_allocated
+        ensure_credits_allocated(test_user_pro.id, db_session)
         db_session.refresh(test_user_pro)
+        
+        # Deduct all credits
         allocated = test_user_pro.monthly_credits_allocated or MONTHLY_CREDIT_ALLOCATIONS.get("pro", 5000)
         deduct_user_credits(test_user_pro, Decimal(allocated), None, db_session, "Test: Exhaust credits")
         db_session.refresh(test_user_pro)
