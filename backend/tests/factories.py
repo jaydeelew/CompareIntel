@@ -53,10 +53,14 @@ def create_user(
     is_active: bool = True,
     role: UserRole = "user",
     is_admin: bool = False,
-    daily_usage_count: int = 0,
-    daily_extended_usage: int = 0,
     monthly_overage_count: int = 0,
     mock_mode_enabled: bool = False,
+    monthly_credits_allocated: Optional[int] = None,
+    credits_used_this_period: int = 0,
+    total_credits_used: int = 0,
+    billing_period_start: Optional[datetime] = None,
+    billing_period_end: Optional[datetime] = None,
+    credits_reset_at: Optional[datetime] = None,
     **kwargs,
 ) -> User:
     """
@@ -73,10 +77,14 @@ def create_user(
         is_active: Whether account is active (default: True)
         role: User role (default: "user")
         is_admin: Whether user is admin (default: False)
-        daily_usage_count: Daily usage count (default: 0)
-        daily_extended_usage: Daily extended usage count (default: 0)
         monthly_overage_count: Monthly overage count (default: 0)
         mock_mode_enabled: Whether mock mode is enabled (default: False)
+        monthly_credits_allocated: Monthly credits allocated (default: None, will be set based on tier)
+        credits_used_this_period: Credits used in current period (default: 0)
+        total_credits_used: Lifetime total credits used (default: 0)
+        billing_period_start: Start of billing period (default: None)
+        billing_period_end: End of billing period (default: None)
+        credits_reset_at: When credits reset (default: None)
         **kwargs: Additional User model attributes
         
     Returns:
@@ -104,13 +112,15 @@ def create_user(
         is_active=is_active,
         role=role,
         is_admin=is_admin,
-        daily_usage_count=daily_usage_count,
-        daily_extended_usage=daily_extended_usage,
         monthly_overage_count=monthly_overage_count,
         mock_mode_enabled=mock_mode_enabled,
-        usage_reset_date=date.today(),
-        extended_usage_reset_date=date.today(),
         overage_reset_date=date.today(),
+        monthly_credits_allocated=monthly_credits_allocated,
+        credits_used_this_period=credits_used_this_period,
+        total_credits_used=total_credits_used,
+        billing_period_start=billing_period_start,
+        billing_period_end=billing_period_end,
+        credits_reset_at=credits_reset_at,
         **kwargs,
     )
     
@@ -667,6 +677,7 @@ def generate_compare_request(
         browser_fingerprint: Browser fingerprint (default: generated)
         tier: Response tier (default: "standard")
         conversation_id: Conversation ID (default: None)
+        enable_web_search: Enable web search for models (default: False)
         
     Returns:
         Compare request dictionary
@@ -800,10 +811,14 @@ def generate_user_response(user: User) -> Dict[str, Any]:
         "subscription_tier": user.subscription_tier,
         "subscription_status": user.subscription_status,
         "subscription_period": user.subscription_period,
-        "daily_usage_count": user.daily_usage_count,
-        "daily_extended_usage": user.daily_extended_usage,
         "monthly_overage_count": user.monthly_overage_count,
         "mock_mode_enabled": user.mock_mode_enabled,
+        "monthly_credits_allocated": user.monthly_credits_allocated,
+        "credits_used_this_period": user.credits_used_this_period,
+        "total_credits_used": user.total_credits_used,
+        "billing_period_start": user.billing_period_start.isoformat() if user.billing_period_start else None,
+        "billing_period_end": user.billing_period_end.isoformat() if user.billing_period_end else None,
+        "credits_reset_at": user.credits_reset_at.isoformat() if user.credits_reset_at else None,
         "created_at": user.created_at.isoformat() if user.created_at else None,
     }
 

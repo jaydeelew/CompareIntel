@@ -288,7 +288,7 @@ class TestAdminUserActions:
     def test_reset_user_usage(self, client, test_user_admin, test_user, db_session):
         """Test resetting user usage."""
         # Set some usage
-        test_user.daily_usage_count = 10
+        test_user.credits_used_this_period = 10
         db_session.commit()
         
         # Login as admin
@@ -311,7 +311,7 @@ class TestAdminUserActions:
         
         if response.status_code == status.HTTP_200_OK:
             db_session.refresh(test_user)
-            assert test_user.daily_usage_count == 0
+            assert test_user.credits_used_this_period == 0
     
     def test_toggle_mock_mode(self, client, test_user_admin, test_user):
         """Test toggling user mock mode."""
