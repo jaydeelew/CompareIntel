@@ -154,6 +154,7 @@ jobs:
       
       - name: Run E2E tests
         working-directory: ./frontend
+        timeout-minutes: 60
         run: npm run test:e2e
         env:
           CI: true
