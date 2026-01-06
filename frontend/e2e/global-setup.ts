@@ -76,8 +76,11 @@ async function globalSetup(config: FullConfig) {
         console.log('Admin user does not exist. Attempting to register...')
         const signUpButton = page.getByTestId('nav-sign-up-button')
         if (await signUpButton.isVisible({ timeout: 2000 }).catch(() => false)) {
-          await signUpButton.click()
-          await page.waitForSelector('[data-testid="auth-modal"], .auth-modal', { timeout: 5000 })
+          // Wait for any existing modals to close first
+          await page.waitForTimeout(500)
+          // Use force click to bypass overlay interception
+          await signUpButton.click({ force: true, timeout: 5000 })
+          await page.waitForSelector('[data-testid="auth-modal"], .auth-modal', { timeout: 10000 })
 
           const emailInput = page.locator('input[type="email"]').first()
           await emailInput.fill(ADMIN_EMAIL)
@@ -128,8 +131,11 @@ async function globalSetup(config: FullConfig) {
         console.log('Test user does not exist. Attempting to register...')
         const signUpButton = page.getByTestId('nav-sign-up-button')
         if (await signUpButton.isVisible({ timeout: 2000 }).catch(() => false)) {
-          await signUpButton.click()
-          await page.waitForSelector('[data-testid="auth-modal"], .auth-modal', { timeout: 5000 })
+          // Wait for any existing modals to close first
+          await page.waitForTimeout(500)
+          // Use force click to bypass overlay interception
+          await signUpButton.click({ force: true, timeout: 5000 })
+          await page.waitForSelector('[data-testid="auth-modal"], .auth-modal', { timeout: 10000 })
 
           const emailInput = page.locator('input[type="email"]').first()
           await emailInput.fill(TEST_USER_EMAIL)
