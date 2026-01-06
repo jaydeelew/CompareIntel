@@ -41,4 +41,11 @@ Current E2E test coverage includes:
 - ✅ Admin panel operations
 - ✅ Navigation and routing
 
+## Documentation
+
+- **[Fixtures Guide](./FIXTURES.md)** - Complete guide to using test fixtures (authentication, navigation, test data, API helpers)
+- **[Setup Guide](./SETUP.md)** - Test environment setup and configuration
+- **[Selector Guide](./SELECTOR_GUIDE.md)** - Best practices for selecting elements in tests
+- **[Frontend Testing Guide](../../docs/testing/FRONTEND_TESTING.md)** - Complete E2E testing documentation
+
 For detailed information on writing E2E tests, Playwright configuration, and best practices, see the [Frontend Testing Guide](../../docs/testing/FRONTEND_TESTING.md).

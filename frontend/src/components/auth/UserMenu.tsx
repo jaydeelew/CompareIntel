@@ -144,6 +144,7 @@ export const UserMenu: React.FC = () => {
         onClick={() => setIsOpen(!isOpen)}
         aria-expanded={isOpen}
         aria-haspopup="true"
+        data-testid="user-menu-button"
       >
         {user.email.charAt(0).toUpperCase()}
       </button>
@@ -340,6 +341,7 @@ export const UserMenu: React.FC = () => {
               logout()
               setIsOpen(false)
             }}
+            data-testid="logout-button"
           >
             <span className="menu-icon">
               <svg

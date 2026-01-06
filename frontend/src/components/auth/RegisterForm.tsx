@@ -375,7 +375,12 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
           </div>
         </div>
 
-        <button type="submit" className="auth-submit-btn" disabled={isLoading}>
+        <button
+          type="submit"
+          className="auth-submit-btn"
+          disabled={isLoading}
+          data-testid="register-submit-button"
+        >
           {isLoading ? 'Creating account...' : 'Create Account'}
         </button>
       </form>

@@ -1,3 +1,5 @@
+import path from 'path';
+
 import { defineConfig, devices } from '@playwright/test';
 
 /**
@@ -7,6 +9,9 @@ import { defineConfig, devices } from '@playwright/test';
  */
 export default defineConfig({
   testDir: './e2e',
+  
+  /* Global setup runs once before all tests */
+  globalSetup: './e2e/global-setup.ts',
   
   /* Run tests in files in parallel */
   fullyParallel: true,
@@ -69,10 +74,29 @@ export default defineConfig({
   ],
 
   /* Run your local dev server before starting the tests */
-  webServer: {
-    command: 'npm run dev',
-    url: 'http://localhost:5173',
-    reuseExistingServer: true,
-    timeout: 120 * 1000,
-  },
+  webServer: [
+    {
+      command: 'npm run dev',
+      url: 'http://localhost:5173',
+      reuseExistingServer: !process.env.CI,
+      timeout: 120 * 1000,
+      cwd: path.resolve(__dirname),
+    },
+    {
+      command: 'python -m uvicorn app.main:app --host 127.0.0.1 --port 8000',
+      url: 'http://localhost:8000/docs',
+      reuseExistingServer: !process.env.CI,
+      timeout: 120 * 1000,
+      cwd: path.resolve(__dirname, '../backend'),
+      env: {
+        SECRET_KEY: process.env.SECRET_KEY || 'test-secret-key-for-e2e-testing-only-32chars',
+        OPENROUTER_API_KEY: process.env.OPENROUTER_API_KEY || 'test-api-key-for-e2e-testing-only',
+        ENVIRONMENT: 'development',
+        DATABASE_URL: process.env.DATABASE_URL || 'sqlite:///./test-e2e.db',
+        MAIL_USERNAME: '',
+        MAIL_PASSWORD: '',
+        MAIL_FROM: '',
+      },
+    },
+  ],
 });

@@ -28,12 +28,12 @@ test.describe('Conversation Management', () => {
 
     if (!isLoggedIn) {
       // Login (simplified - in real tests, use fixtures)
-      const loginButton = page.getByRole('button', { name: /login|sign in/i })
+      const loginButton = page.getByTestId('nav-sign-in-button')
       if (await loginButton.isVisible({ timeout: 2000 })) {
         await loginButton.click()
         await page.fill('input[type="email"]', testEmail)
         await page.fill('input[type="password"]', testPassword)
-        await page.getByRole('button', { name: /login|sign in/i }).click()
+        await page.getByTestId('login-submit-button').click()
         await page.waitForLoadState('networkidle')
       }
     }
