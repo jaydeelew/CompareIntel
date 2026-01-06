@@ -52,14 +52,32 @@ pip install -r requirements.txt
 You can override default test credentials via environment variables:
 
 ```bash
-export TEST_USER_EMAIL="test-user@example.com"
-export TEST_USER_PASSWORD="TestPassword123!"
-export ADMIN_EMAIL="admin@example.com"
-export ADMIN_PASSWORD="AdminPassword123!"
+# Test User Credentials (tier-based users)
+# Note: TEST_USER_EMAIL/TEST_USER_PASSWORD are legacy variables for backward compatibility
+# Prefer using tier-specific variables (TEST_FREE_EMAIL, etc.)
+export TEST_FREE_EMAIL="free@test.com"
+export TEST_FREE_PASSWORD="Test12345678/"
+export TEST_STARTER_EMAIL="starter@test.com"
+export TEST_STARTER_PASSWORD="Test12345678/"
+export TEST_STARTER_PLUS_EMAIL="starter_plus@test.com"
+export TEST_STARTER_PLUS_PASSWORD="Test12345678/"
+export TEST_PRO_EMAIL="pro@test.com"
+export TEST_PRO_PASSWORD="Test12345678/"
+export TEST_PRO_PLUS_EMAIL="pro_plus@test.com"
+export TEST_PRO_PLUS_PASSWORD="Test12345678/"
+
+# Admin Credentials
+export ADMIN_EMAIL="jaydeelew@gmail.com"
+export ADMIN_PASSWORD="sf*88323?ddpdRRl"
+
+# Other Configuration
 export SECRET_KEY="your-secret-key-32-chars-minimum"
 export OPENROUTER_API_KEY="your-api-key"
 export DATABASE_URL="sqlite:///./test-e2e.db"
 ```
+
+<｜tool▁calls▁begin｜><｜tool▁call▁begin｜>
+read_file
 
 ## How Tests Work
 
@@ -146,7 +164,11 @@ test('User can do something', async ({ authenticatedPage }) => {
 
 ## Test Data
 
-- **Test User**: `test-user@example.com` / `TestPassword123!`
-- **Admin User**: `admin@example.com` / `AdminPassword123!`
+- **Admin User**: `jaydeelew@gmail.com` / `sf*88323?ddpdRRl`
+- **Free Tier User**: `free@test.com` / `Test12345678/`
+- **Starter Tier User**: `starter@test.com` / `Test12345678/`
+- **Starter+ Tier User**: `starter_plus@test.com` / `Test12345678/`
+- **Pro Tier User**: `pro@test.com` / `Test12345678/`
+- **Pro+ Tier User**: `pro_plus@test.com` / `Test12345678/`
 
 These can be overridden via environment variables (see above).

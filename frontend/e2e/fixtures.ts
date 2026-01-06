@@ -29,32 +29,32 @@ import { test as base, expect, Page, BrowserContext } from '@playwright/test'
 // Test credentials (can be overridden via environment variables)
 const TEST_CREDENTIALS = {
   free: {
-    email: process.env.TEST_FREE_EMAIL || 'test-free@example.com',
-    password: process.env.TEST_FREE_PASSWORD || 'TestPassword123!',
+    email: process.env.TEST_FREE_EMAIL || 'free@test.com',
+    password: process.env.TEST_FREE_PASSWORD || 'Test12345678/',
   },
   starter: {
-    email: process.env.TEST_STARTER_EMAIL || 'test-starter@example.com',
-    password: process.env.TEST_STARTER_PASSWORD || 'TestPassword123!',
+    email: process.env.TEST_STARTER_EMAIL || 'starter@test.com',
+    password: process.env.TEST_STARTER_PASSWORD || 'Test12345678/',
   },
   starterPlus: {
-    email: process.env.TEST_STARTER_PLUS_EMAIL || 'test-starter-plus@example.com',
-    password: process.env.TEST_STARTER_PLUS_PASSWORD || 'TestPassword123!',
+    email: process.env.TEST_STARTER_PLUS_EMAIL || 'starter_plus@test.com',
+    password: process.env.TEST_STARTER_PLUS_PASSWORD || 'Test12345678/',
   },
   pro: {
-    email: process.env.TEST_PRO_EMAIL || 'test-pro@example.com',
-    password: process.env.TEST_PRO_PASSWORD || 'TestPassword123!',
+    email: process.env.TEST_PRO_EMAIL || 'pro@test.com',
+    password: process.env.TEST_PRO_PASSWORD || 'Test12345678/',
   },
   proPlus: {
-    email: process.env.TEST_PRO_PLUS_EMAIL || 'test-pro-plus@example.com',
-    password: process.env.TEST_PRO_PLUS_PASSWORD || 'TestPassword123!',
+    email: process.env.TEST_PRO_PLUS_EMAIL || 'pro_plus@test.com',
+    password: process.env.TEST_PRO_PLUS_PASSWORD || 'Test12345678/',
   },
   admin: {
-    email: process.env.ADMIN_EMAIL || 'admin@example.com',
-    password: process.env.ADMIN_PASSWORD || 'AdminPassword123!',
+    email: process.env.ADMIN_EMAIL || 'jaydeelew@gmail.com',
+    password: process.env.ADMIN_PASSWORD || 'sf*88323?ddpdRRl',
   },
   moderator: {
-    email: process.env.MODERATOR_EMAIL || 'moderator@example.com',
-    password: process.env.MODERATOR_PASSWORD || 'ModeratorPassword123!',
+    email: process.env.MODERATOR_EMAIL || 'moderator@test.com',
+    password: process.env.MODERATOR_PASSWORD || 'Test12345678/',
   },
 }
 

@@ -175,18 +175,38 @@ async def global_exception_handler(request: Request, exc: Exception):
         raise exc
 
     import traceback
-    from sqlalchemy.exc import OperationalError, DatabaseError, DisconnectionError
+    from sqlalchemy.exc import OperationalError, DatabaseError, DisconnectionError, SQLAlchemyError
 
     error_type = type(exc).__name__
     error_message = str(exc)
     traceback_str = traceback.format_exc()
 
     # Check if this is a database connection error
-    is_db_error = isinstance(exc, (OperationalError, DatabaseError, DisconnectionError))
+    # Check both the exception itself and its __cause__ and __context__ for SQLAlchemy errors
+    is_db_error = isinstance(exc, (OperationalError, DatabaseError, DisconnectionError, SQLAlchemyError))
+    if not is_db_error:
+        # Check exception chain for database errors
+        cause = getattr(exc, '__cause__', None)
+        context = getattr(exc, '__context__', None)
+        if cause and isinstance(cause, (OperationalError, DatabaseError, DisconnectionError, SQLAlchemyError)):
+            is_db_error = True
+        elif context and isinstance(context, (OperationalError, DatabaseError, DisconnectionError, SQLAlchemyError)):
+            is_db_error = True
+    
+    # Also check error message for common database error patterns
+    if not is_db_error:
+        error_lower = error_message.lower()
+        db_error_patterns = [
+            'database', 'sqlite', 'postgresql', 'connection', 'operational',
+            'no such table', 'unable to open', 'database is locked', 'disk i/o error'
+        ]
+        if any(pattern in error_lower for pattern in db_error_patterns):
+            is_db_error = True
     
     # Log the error
     if is_db_error:
         logger.error(f"Database connection error: {error_type}: {error_message}")
+        logger.error(f"Full traceback:\n{traceback_str}")
     else:
         logger.error(f"Unhandled exception: {error_type}: {error_message}")
         logger.error(f"Traceback:\n{traceback_str}")

@@ -12,8 +12,8 @@ import { test, expect } from '@playwright/test'
 
 test.describe('Admin User Management', () => {
   // Admin credentials (should be set up in test environment)
-  const adminEmail = process.env.ADMIN_EMAIL || 'admin@example.com'
-  const adminPassword = process.env.ADMIN_PASSWORD || 'AdminPassword123!'
+  const adminEmail = process.env.ADMIN_EMAIL || 'jaydeelew@gmail.com'
+  const adminPassword = process.env.ADMIN_PASSWORD || 'sf*88323?ddpdRRl'
 
   test.beforeEach(async ({ page, context }) => {
     // Clear any existing state
@@ -67,7 +67,17 @@ test.describe('Admin User Management', () => {
       const errorMessage = page.locator('.auth-error')
       if (await errorMessage.isVisible({ timeout: 2000 }).catch(() => false)) {
         const errorText = await errorMessage.textContent()
-        throw new Error(`Login failed: ${errorText}`)
+        throw new Error(
+          `Login failed: ${errorText}\n` +
+            `\nPossible causes:\n` +
+            `1. Admin user doesn't exist or password is incorrect\n` +
+            `2. Admin user exists but doesn't have admin role set\n` +
+            `3. Admin user exists but email is not verified\n` +
+            `\nTo fix:\n` +
+            `- Run backend script: python backend/create_admin_user.py\n` +
+            `- Or set user role="admin" and is_admin=true in database\n` +
+            `- Ensure user email is verified (is_verified=true)`
+        )
       }
 
       // Wait for auth modal to close (login successful)
@@ -195,7 +205,7 @@ test.describe('Admin User Management', () => {
       const newUserEmail = `newuser-${timestamp}@example.com`
 
       await page.fill('input[name="email"], input[type="email"]', newUserEmail)
-      await page.fill('input[name="password"], input[type="password"]', 'TestPassword123!')
+      await page.fill('input[name="password"], input[type="password"]', 'Test12345678/')
 
       // Select subscription tier if available
       const tierSelect = page.locator('select[name*="tier"], select[id*="tier"]')

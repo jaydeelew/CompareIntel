@@ -404,10 +404,32 @@ Create a `.env.test` file or use environment variables:
 
 ```bash
 # .env.test
-ADMIN_EMAIL=admin@test.com
-ADMIN_PASSWORD=TestAdmin123!
-TEST_USER_EMAIL=test@example.com
-TEST_USER_PASSWORD=TestPassword123!
+ADMIN_EMAIL=jaydeelew@gmail.com
+ADMIN_PASSWORD=sf*88323?ddpdRRl
+
+# Tier-based user credentials (preferred)
+TEST_FREE_EMAIL=free@test.com
+TEST_FREE_PASSWORD=Test12345678/
+TEST_STARTER_EMAIL=starter@test.com
+TEST_STARTER_PASSWORD=Test12345678/
+TEST_STARTER_PLUS_EMAIL=starter_plus@test.com
+TEST_STARTER_PLUS_PASSWORD=Test12345678/
+TEST_PRO_EMAIL=pro@test.com
+TEST_PRO_PASSWORD=Test12345678/
+TEST_PRO_PLUS_EMAIL=pro_plus@test.com
+TEST_PRO_PLUS_PASSWORD=Test12345678/
+
+# Legacy variables (for backward compatibility, prefer tier-specific above)
+TEST_USER_EMAIL=free@test.com  # Falls back to TEST_FREE_EMAIL if not set
+TEST_USER_PASSWORD=Test12345678/  # Falls back to TEST_FREE_PASSWORD if not set
+TEST_STARTER_EMAIL=starter@test.com
+TEST_STARTER_PASSWORD=Test12345678/
+TEST_STARTER_PLUS_EMAIL=starter_plus@test.com
+TEST_STARTER_PLUS_PASSWORD=Test12345678/
+TEST_PRO_EMAIL=pro@test.com
+TEST_PRO_PASSWORD=Test12345678/
+TEST_PRO_PLUS_EMAIL=pro_plus@test.com
+TEST_PRO_PLUS_PASSWORD=Test12345678/
 ```
 
 #### 3.2 Update Test Files to Use Environment Variables
@@ -428,8 +450,8 @@ const testPassword = process.env.TEST_USER_PASSWORD || 'TestPassword123!'
 
 ```typescript
 // Before:
-const adminEmail = process.env.ADMIN_EMAIL || 'admin@example.com'
-const adminPassword = process.env.ADMIN_PASSWORD || 'AdminPassword123!'
+const adminEmail = process.env.ADMIN_EMAIL || 'jaydeelew@gmail.com'
+const adminPassword = process.env.ADMIN_PASSWORD || 'sf*88323?ddpdRRl'
 
 // After (already correct, but ensure .env.test is loaded):
 // Make sure playwright.config.ts loads .env.test
@@ -470,12 +492,10 @@ export const test = base.extend<TestFixtures>({
     // Login logic here
     await page.goto('/')
     await page.getByTestId('nav-sign-in-button').click()
-    await page
-      .getByTestId('login-email-input')
-      .fill(process.env.TEST_USER_EMAIL || 'test@example.com')
+    await page.getByTestId('login-email-input').fill(process.env.TEST_USER_EMAIL || 'free@test.com')
     await page
       .getByTestId('login-password-input')
-      .fill(process.env.TEST_USER_PASSWORD || 'TestPassword123!')
+      .fill(process.env.TEST_USER_PASSWORD || 'Test12345678/')
     await page.getByTestId('login-submit-button').click()
     await page.waitForLoadState('networkidle')
 
@@ -487,10 +507,12 @@ export const test = base.extend<TestFixtures>({
     // Admin login logic here
     await page.goto('/')
     await page.getByTestId('nav-sign-in-button').click()
-    await page.getByTestId('login-email-input').fill(process.env.ADMIN_EMAIL || 'admin@example.com')
+    await page
+      .getByTestId('login-email-input')
+      .fill(process.env.ADMIN_EMAIL || 'jaydeelew@gmail.com')
     await page
       .getByTestId('login-password-input')
-      .fill(process.env.ADMIN_PASSWORD || 'AdminPassword123!')
+      .fill(process.env.ADMIN_PASSWORD || 'sf*88323?ddpdRRl')
     await page.getByTestId('login-submit-button').click()
     await page.waitForLoadState('networkidle')
 

@@ -19,24 +19,56 @@ from .config import settings
 # Handle both running from project root and backend directory
 
 # Determine the correct database path for SQLite fallback
+# Use absolute paths to avoid issues with working directory changes
 current_dir = os.path.dirname(os.path.abspath(__file__))
 backend_dir = os.path.dirname(current_dir)
 project_root = os.path.dirname(backend_dir)
 
-# Determine working directory to choose correct relative path
-# Database is now stored in backend/data/ directory for clean project structure
-cwd = os.getcwd()
-if cwd.endswith(os.sep + "backend") or cwd.endswith("/backend"):
-    # Running from backend directory
-    default_db_path = "sqlite:///./data/compareintel.db"
-else:
-    # Running from project root or other location
-    default_db_path = "sqlite:///./backend/data/compareintel.db"
+# Database is stored in backend/data/ directory for clean project structure
+# Use absolute path to avoid issues with working directory
+db_dir = os.path.join(backend_dir, "data")
+os.makedirs(db_dir, exist_ok=True)  # Ensure directory exists
+db_file = os.path.join(db_dir, "compareintel.db")
+default_db_path = f"sqlite:///{db_file}"
 
 # Use database URL from settings, with fallback to default SQLite path
 # Only use default if settings still has the old default path
 old_default = "sqlite:///./compareintel.db"
 DATABASE_URL = settings.database_url if settings.database_url != old_default else default_db_path
+
+# Convert relative SQLite paths to absolute paths for reliability
+if DATABASE_URL.startswith("sqlite:///./"):
+    # Relative path - convert to absolute
+    relative_path = DATABASE_URL.replace("sqlite:///./", "")
+    if not os.path.isabs(relative_path):
+        # Resolve relative to backend directory
+        abs_path = os.path.abspath(os.path.join(backend_dir, relative_path))
+        DATABASE_URL = f"sqlite:///{abs_path}"
+        # Ensure directory exists
+        db_dir = os.path.dirname(abs_path)
+        os.makedirs(db_dir, exist_ok=True)
+elif DATABASE_URL.startswith("sqlite:///"):
+    # Already absolute or using 3 slashes, ensure directory exists
+    db_path = DATABASE_URL.replace("sqlite:///", "")
+    if os.path.isabs(db_path):
+        db_dir = os.path.dirname(db_path)
+        os.makedirs(db_dir, exist_ok=True)
+
+# Log the database URL being used (mask password if present)
+import logging
+db_logger = logging.getLogger(__name__)
+if "postgresql" in DATABASE_URL:
+    # Mask password in PostgreSQL URL
+    masked_url = DATABASE_URL
+    if "@" in masked_url:
+        parts = masked_url.split("@")
+        if ":" in parts[0]:
+            user_pass = parts[0].split(":")
+            if len(user_pass) > 1:
+                masked_url = f"{user_pass[0]}:****@{parts[1]}"
+    db_logger.info(f"[DB] Using database: {masked_url}")
+else:
+    db_logger.info(f"[DB] Using database: {DATABASE_URL}")
 
 # Create SQLAlchemy engine with optimized connection pooling
 # Connection pooling improves performance by reusing database connections
@@ -59,11 +91,17 @@ if is_postgresql:
     )
 elif is_sqlite:
     # SQLite: Use check_same_thread=False for async compatibility
-    # Connection pooling is less critical for SQLite but still helps
+    # SQLite doesn't need connection pooling - use NullPool to avoid locking issues
+    # Connection pooling with SQLite can cause "database is locked" errors
+    # Add timeout to handle concurrent access better
+    from sqlalchemy.pool import NullPool
     engine = create_engine(
         DATABASE_URL,
-        connect_args={"check_same_thread": False},  # Allow multi-threaded access
-        pool_pre_ping=True,  # Verify connections before using them
+        connect_args={
+            "check_same_thread": False,  # Allow multi-threaded access
+            "timeout": 20.0,  # Wait up to 20 seconds for database lock
+        },
+        poolclass=NullPool,  # No connection pooling for SQLite to avoid locking issues
         echo=False,  # Set to True for SQL query logging during development
     )
 else:
@@ -74,15 +112,22 @@ else:
         echo=False,
     )
 
-# Enable foreign keys for SQLite (required for CASCADE deletes to work)
+# Enable foreign keys and optimize SQLite settings for better concurrency
 # SQLite disables foreign key constraints by default, so we must enable them
 # on every connection for CASCADE deletes to function properly
+# WAL mode improves concurrent read/write performance
 if "sqlite" in DATABASE_URL:
     @event.listens_for(engine, "connect")
     def set_sqlite_pragma(dbapi_conn, connection_record):
-        """Enable foreign key constraints for SQLite connections."""
+        """Configure SQLite connection with optimal settings."""
         cursor = dbapi_conn.cursor()
+        # Enable foreign keys (required for CASCADE deletes)
         cursor.execute("PRAGMA foreign_keys=ON")
+        # Use WAL mode for better concurrent access
+        cursor.execute("PRAGMA journal_mode=WAL")
+        # Optimize for better performance
+        cursor.execute("PRAGMA synchronous=NORMAL")
+        cursor.execute("PRAGMA busy_timeout=20000")  # 20 second timeout
         cursor.close()
 
 # Create session factory
@@ -125,8 +170,10 @@ def get_db() -> Generator[Session, None, None]:
             # Re-raise HTTPException without logging - FastAPI will handle it
             raise
         
-        # Log actual database connection errors
+        # Log actual database connection errors with full details
+        import traceback
         logger.error(f"[DB] Failed to create database session: {type(e).__name__}: {str(e)}")
+        logger.error(f"[DB] Traceback: {traceback.format_exc()}")
         # Re-raise the exception so FastAPI can handle it properly
         raise
     finally:

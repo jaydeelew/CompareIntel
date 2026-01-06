@@ -215,12 +215,15 @@ def test_user_admin(db_session):
     """
     Create an admin test user.
     
-    Password: "secret" (backward compatibility)
+    Uses credentials from environment or defaults to test admin credentials.
     """
+    import os
+    admin_email = os.getenv("ADMIN_EMAIL", "jaydeelew@gmail.com")
+    admin_password = os.getenv("ADMIN_PASSWORD", "sf*88323?ddpdRRl")
     return create_admin_user(
         db_session,
-        email="admin@example.com",
-        password="secret",  # Keep backward compatibility
+        email=admin_email,
+        password=admin_password,
         role="admin",
     )
 
