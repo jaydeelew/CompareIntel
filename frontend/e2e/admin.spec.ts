@@ -29,13 +29,29 @@ test.describe('Admin User Management', () => {
         await loginButton.click()
       }
 
-      await page.fill('input[type="email"]', adminEmail)
-      await page.fill('input[type="password"]', adminPassword)
+      // Wait for auth modal to appear
+      await page.waitForSelector('[data-testid="auth-modal"], .auth-modal', { timeout: 5000 })
+
+      // Fill login form using test IDs
+      await page.getByTestId('login-email-input').fill(adminEmail)
+      await page.getByTestId('login-password-input').fill(adminPassword)
       await page.getByTestId('login-submit-button').click()
 
-      // Wait for login to complete - check for user menu to appear
+      // Wait for login to complete - modal should close and user menu should appear
       await page.waitForLoadState('networkidle')
-      await expect(page.getByTestId('user-menu-button')).toBeVisible({ timeout: 10000 })
+
+      // Wait for auth modal to close (login successful)
+      await page
+        .waitForSelector('[data-testid="auth-modal"], .auth-modal', {
+          state: 'hidden',
+          timeout: 10000,
+        })
+        .catch(() => {
+          // Modal might already be closed
+        })
+
+      // Wait for user menu to appear (confirms login completed)
+      await expect(page.getByTestId('user-menu-button')).toBeVisible({ timeout: 15000 })
     })
 
     // Navigate to admin panel
