@@ -35,10 +35,40 @@ test.describe('Admin User Management', () => {
       // Fill login form using test IDs
       await page.getByTestId('login-email-input').fill(adminEmail)
       await page.getByTestId('login-password-input').fill(adminPassword)
-      await page.getByTestId('login-submit-button').click()
 
-      // Wait for login to complete - modal should close and user menu should appear
+      // Click submit and wait for login request to complete
+      const loginResponsePromise = page
+        .waitForResponse(
+          response => response.url().includes('/auth/login') && response.status() === 200,
+          { timeout: 10000 }
+        )
+        .catch(() => {
+          // Response might have already completed or failed
+        })
+
+      await page.getByTestId('login-submit-button').click()
+      await loginResponsePromise
+
+      // Wait for user data fetch request (auth/me) to complete
+      // This is what actually loads the user object needed for UserMenu to render
+      await page
+        .waitForResponse(
+          response => response.url().includes('/auth/me') && response.status() === 200,
+          { timeout: 10000 }
+        )
+        .catch(() => {
+          // Response might have already completed
+        })
+
+      // Wait for login to complete - check for error messages first
       await page.waitForLoadState('networkidle')
+
+      // Check if there's an error message (login failed)
+      const errorMessage = page.locator('.auth-error')
+      if (await errorMessage.isVisible({ timeout: 2000 }).catch(() => false)) {
+        const errorText = await errorMessage.textContent()
+        throw new Error(`Login failed: ${errorText}`)
+      }
 
       // Wait for auth modal to close (login successful)
       await page
@@ -50,8 +80,19 @@ test.describe('Admin User Management', () => {
           // Modal might already be closed
         })
 
-      // Wait for user menu to appear (confirms login completed)
-      await expect(page.getByTestId('user-menu-button')).toBeVisible({ timeout: 15000 })
+      // Wait for sign-in button to disappear (confirms we're authenticated)
+      await page
+        .waitForSelector('[data-testid="nav-sign-in-button"]', {
+          state: 'hidden',
+          timeout: 10000,
+        })
+        .catch(() => {
+          // Button might already be hidden
+        })
+
+      // Wait for user menu to appear (confirms user data is loaded)
+      // This might take time as fetchCurrentUser() is called after login
+      await expect(page.getByTestId('user-menu-button')).toBeVisible({ timeout: 20000 })
     })
 
     // Navigate to admin panel
