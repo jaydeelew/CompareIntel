@@ -72,15 +72,15 @@ backend/tests/
 
 ```bash
 cd backend
-pip install -r requirements.txt
+pip install -r requirements-dev.txt
 ```
 
-Required testing packages (already in requirements.txt):
+Required testing packages (included in requirements-dev.txt):
 - `pytest>=8.0.0`
 - `pytest-asyncio>=0.23.0`
 - `pytest-cov>=5.0.0`
 - `pytest-mock>=3.14.0`
-- `httpx>=0.27.0` (for FastAPI testing)
+- `httpx>=0.27.0` (for FastAPI testing - also in production requirements)
 - `pytest-timeout>=2.3.0`
 
 ### Environment Setup
