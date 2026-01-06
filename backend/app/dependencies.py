@@ -71,9 +71,18 @@ def get_current_user(
         return None
 
     # Update last_access timestamp (only update if more than 1 minute has passed to avoid excessive writes)
-    if user.last_access is None or (datetime.now(UTC) - user.last_access).total_seconds() > 60:
-        user.last_access = datetime.now(UTC)
+    now = datetime.now(UTC)
+    if user.last_access is None:
+        user.last_access = now
         db.commit()
+    else:
+        # Normalize last_access to UTC-aware if it's naive (for SQLite compatibility)
+        last_access = user.last_access
+        if last_access.tzinfo is None:
+            last_access = last_access.replace(tzinfo=UTC)
+        if (now - last_access).total_seconds() > 60:
+            user.last_access = now
+            db.commit()
 
     return user
 
@@ -133,9 +142,18 @@ def get_current_user_required(
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="User account is inactive")
 
     # Update last_access timestamp (only update if more than 1 minute has passed to avoid excessive writes)
-    if user.last_access is None or (datetime.now(UTC) - user.last_access).total_seconds() > 60:
-        user.last_access = datetime.now(UTC)
+    now = datetime.now(UTC)
+    if user.last_access is None:
+        user.last_access = now
         db.commit()
+    else:
+        # Normalize last_access to UTC-aware if it's naive (for SQLite compatibility)
+        last_access = user.last_access
+        if last_access.tzinfo is None:
+            last_access = last_access.replace(tzinfo=UTC)
+        if (now - last_access).total_seconds() > 60:
+            user.last_access = now
+            db.commit()
 
     return user
 
