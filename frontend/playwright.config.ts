@@ -1,6 +1,11 @@
 import path from 'path';
+import { fileURLToPath } from 'url';
 
 import { defineConfig, devices } from '@playwright/test';
+
+// ES module equivalent of __dirname
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 /**
  * Playwright E2E Test Configuration
