@@ -62,7 +62,7 @@ class TestUserRegistration:
                 "password": "SecurePassword123!",
             },
         )
-        assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
     
     def test_register_weak_password(self, client):
         """Test registration with weak password."""
@@ -73,7 +73,7 @@ class TestUserRegistration:
                 "password": "123",  # Too short
             },
         )
-        assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
 
 
 class TestUserLogin:
@@ -187,7 +187,7 @@ class TestEmailVerification:
         from app.models import User
         from app.auth import generate_verification_token
         from passlib.context import CryptContext
-        from datetime import datetime, timedelta
+        from datetime import datetime, timedelta, UTC
         
         pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
         token = generate_verification_token()
@@ -196,7 +196,7 @@ class TestEmailVerification:
             password_hash=pwd_context.hash("password123"),
             is_verified=False,
             verification_token=token,
-            verification_token_expires=datetime.utcnow() + timedelta(hours=24),
+            verification_token_expires=datetime.now(UTC) + timedelta(hours=24),
         )
         db_session.add(user)
         db_session.commit()
@@ -228,7 +228,7 @@ class TestEmailVerification:
         from app.models import User
         from app.auth import generate_verification_token
         from passlib.context import CryptContext
-        from datetime import datetime, timedelta
+        from datetime import datetime, timedelta, UTC
         
         pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
         token = generate_verification_token()
@@ -237,7 +237,7 @@ class TestEmailVerification:
             password_hash=pwd_context.hash("password123"),
             is_verified=False,
             verification_token=token,
-            verification_token_expires=datetime.utcnow() - timedelta(hours=1),  # Expired
+            verification_token_expires=datetime.now(UTC) - timedelta(hours=1),  # Expired
         )
         db_session.add(user)
         db_session.commit()
@@ -311,7 +311,7 @@ class TestPasswordReset:
         from app.models import User
         from app.auth import generate_verification_token
         from passlib.context import CryptContext
-        from datetime import datetime, timedelta
+        from datetime import datetime, timedelta, UTC
         
         pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
         reset_token = generate_verification_token()
@@ -319,7 +319,7 @@ class TestPasswordReset:
             email="reset@example.com",
             password_hash=pwd_context.hash("oldpassword"),
             reset_token=reset_token,
-            reset_token_expires=datetime.utcnow() + timedelta(hours=1),
+            reset_token_expires=datetime.now(UTC) + timedelta(hours=1),
         )
         db_session.add(user)
         db_session.commit()
@@ -356,7 +356,7 @@ class TestPasswordReset:
         from app.models import User
         from app.auth import generate_verification_token
         from passlib.context import CryptContext
-        from datetime import datetime, timedelta
+        from datetime import datetime, timedelta, UTC
         
         pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
         reset_token = generate_verification_token()
@@ -364,7 +364,7 @@ class TestPasswordReset:
             email="expired_reset@example.com",
             password_hash=pwd_context.hash("oldpassword"),
             reset_token=reset_token,
-            reset_token_expires=datetime.utcnow() - timedelta(hours=1),  # Expired
+            reset_token_expires=datetime.now(UTC) - timedelta(hours=1),  # Expired
         )
         db_session.add(user)
         db_session.commit()

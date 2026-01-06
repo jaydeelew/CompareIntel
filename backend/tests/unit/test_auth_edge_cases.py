@@ -314,7 +314,7 @@ class TestAuthEdgeCases:
                 "password": "password123"
             }
         )
-        assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
     
     def test_login_with_empty_password(self, client, test_user):
         """Test login with empty password."""
@@ -326,7 +326,7 @@ class TestAuthEdgeCases:
             }
         )
         # Empty password may fail validation (422) or authentication (401) depending on implementation
-        assert response.status_code in [status.HTTP_422_UNPROCESSABLE_ENTITY, status.HTTP_401_UNAUTHORIZED]
+        assert response.status_code in [status.HTTP_422_UNPROCESSABLE_CONTENT, status.HTTP_401_UNAUTHORIZED]
     
     def test_register_with_empty_fields(self, client):
         """Test registration with empty fields."""
@@ -337,7 +337,7 @@ class TestAuthEdgeCases:
                 "password": ""
             }
         )
-        assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
     
     def test_register_with_very_long_email(self, client):
         """Test registration with very long email."""
@@ -351,7 +351,7 @@ class TestAuthEdgeCases:
         )
         # Should fail validation (email too long)
         assert response.status_code in [
-            status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status.HTTP_422_UNPROCESSABLE_CONTENT,
             status.HTTP_400_BAD_REQUEST
         ]
     
@@ -367,7 +367,7 @@ class TestAuthEdgeCases:
         # Should be handled safely (either rejected or sanitized)
         assert response.status_code in [
             status.HTTP_201_CREATED,
-            status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status.HTTP_422_UNPROCESSABLE_CONTENT,
             status.HTTP_400_BAD_REQUEST
         ]
     
@@ -383,7 +383,7 @@ class TestAuthEdgeCases:
         # Should be handled safely
         assert response.status_code in [
             status.HTTP_201_CREATED,
-            status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status.HTTP_422_UNPROCESSABLE_CONTENT,
             status.HTTP_400_BAD_REQUEST
         ]
 

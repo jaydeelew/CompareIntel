@@ -9,7 +9,7 @@ from fastapi import Depends, HTTPException, status, Request
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 from typing import Optional, Callable
-from datetime import datetime
+from datetime import datetime, UTC
 from .database import get_db
 from .models import User
 from .auth import verify_token
@@ -71,8 +71,8 @@ def get_current_user(
         return None
 
     # Update last_access timestamp (only update if more than 1 minute has passed to avoid excessive writes)
-    if user.last_access is None or (datetime.utcnow() - user.last_access).total_seconds() > 60:
-        user.last_access = datetime.utcnow()
+    if user.last_access is None or (datetime.now(UTC) - user.last_access).total_seconds() > 60:
+        user.last_access = datetime.now(UTC)
         db.commit()
 
     return user
@@ -133,8 +133,8 @@ def get_current_user_required(
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="User account is inactive")
 
     # Update last_access timestamp (only update if more than 1 minute has passed to avoid excessive writes)
-    if user.last_access is None or (datetime.utcnow() - user.last_access).total_seconds() > 60:
-        user.last_access = datetime.utcnow()
+    if user.last_access is None or (datetime.now(UTC) - user.last_access).total_seconds() > 60:
+        user.last_access = datetime.now(UTC)
         db.commit()
 
     return user

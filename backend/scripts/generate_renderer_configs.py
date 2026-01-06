@@ -19,7 +19,7 @@ import sys
 import argparse
 from pathlib import Path
 from typing import Dict, List, Optional, Any
-from datetime import datetime
+from datetime import datetime, UTC
 
 # Add parent directory to path to import script modules
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -166,7 +166,7 @@ class ConfigGenerator:
             "katexOptions": katex_options,
             "codeBlockPreservation": code_block_preservation,
             "metadata": {
-                "createdAt": datetime.utcnow().isoformat() + "Z",
+                "createdAt": datetime.now(UTC).isoformat() + "Z",
                 "needsManualReview": analysis.get("needs_manual_review", False),
             },
         }

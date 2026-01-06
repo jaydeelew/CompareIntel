@@ -9,7 +9,7 @@ the database migration. It's safer than manually updating the database.
 import os
 import sys
 import getpass
-from datetime import datetime
+from datetime import datetime, UTC
 
 # Load environment variables from .env file
 from dotenv import load_dotenv
@@ -142,7 +142,7 @@ def create_admin_user():
             subscription_period="monthly",
             is_active=True,
             is_verified=True,  # Admin users are auto-verified
-            subscription_start_date=datetime.utcnow(),
+            subscription_start_date=datetime.now(UTC),
         )
 
         db.add(user)

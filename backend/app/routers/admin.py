@@ -11,7 +11,7 @@ from fastapi.responses import JSONResponse, StreamingResponse
 from sqlalchemy.orm import Session
 from sqlalchemy import func, desc, and_
 from typing import List, Optional, Dict, Any
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta, UTC
 import json
 import httpx
 import asyncio
@@ -120,11 +120,11 @@ async def get_admin_stats(
         users_by_role[role] = count
 
     # Recent registrations (last 7 days)
-    week_ago = datetime.utcnow() - timedelta(days=7)
+    week_ago = datetime.now(UTC) - timedelta(days=7)
     recent_registrations = db.query(User).filter(User.created_at >= week_ago).count()
 
     # Usage stats for today
-    today = datetime.utcnow().date()
+    today = datetime.now(UTC).date()
     # Legacy: daily_usage_count removed - use credits instead
     # Calculate total credits used today (approximate usage metric)
     total_usage_today = (
@@ -157,7 +157,7 @@ async def get_visitor_analytics(
 ):
     """Get visitor analytics statistics."""
 
-    now = datetime.utcnow()
+    now = datetime.now(UTC)
     today_start = datetime.combine(now.date(), datetime.min.time())
     week_ago = now - timedelta(days=7)
     month_ago = now - timedelta(days=30)
@@ -622,7 +622,7 @@ async def send_user_verification(
     from ..auth import generate_verification_token
 
     user.verification_token = generate_verification_token()
-    user.verification_token_expires = datetime.utcnow() + timedelta(hours=24)
+    user.verification_token_expires = datetime.now(UTC) + timedelta(hours=24)
     db.commit()
 
     # Send verification email

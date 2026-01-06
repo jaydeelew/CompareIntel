@@ -69,7 +69,7 @@ class TestErrorHandling:
         )
         # Should return 422 if validation fails
         assert response.status_code in [
-            status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status.HTTP_422_UNPROCESSABLE_CONTENT,
             status.HTTP_400_BAD_REQUEST
         ]
 

@@ -8,7 +8,7 @@ user registration, login, email verification, and password resets.
 from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks, Request, Response
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, UTC
 from typing import Dict, Optional
 from collections import defaultdict
 import os
@@ -68,7 +68,7 @@ def check_login_rate_limit(client_ip: str) -> None:
 
     Raises HTTPException if rate limit exceeded.
     """
-    now = datetime.utcnow()
+    now = datetime.now(UTC)
 
     # Clean old attempts outside lockout window
     failed_login_attempts[client_ip] = [
@@ -89,7 +89,7 @@ def check_login_rate_limit(client_ip: str) -> None:
 
 def record_failed_login(client_ip: str) -> None:
     """Record a failed login attempt for the given IP."""
-    failed_login_attempts[client_ip].append(datetime.utcnow())
+    failed_login_attempts[client_ip].append(datetime.now(UTC))
 
 
 def clear_login_attempts(client_ip: str) -> None:
@@ -193,7 +193,7 @@ async def register(user_data: UserRegister, background_tasks: BackgroundTasks, d
             email=user_data.email,
             password_hash=get_password_hash(user_data.password),
             verification_token=verification_token,
-            verification_token_expires=datetime.utcnow() + timedelta(hours=24),
+            verification_token_expires=datetime.now(UTC) + timedelta(hours=24),
             subscription_tier="free",
             subscription_status="active",
         )
@@ -311,7 +311,7 @@ async def login(user_data: UserLogin, request: Request, db: Session = Depends(ge
         clear_login_attempts(client_ip)
 
         # Update last_access timestamp
-        user.last_access = datetime.utcnow()
+        user.last_access = datetime.now(UTC)
         db.commit()
 
         # Create tokens
@@ -411,7 +411,7 @@ async def verify_email(verification: EmailVerification, db: Session = Depends(ge
 
     user = (
         db.query(User)
-        .filter(User.verification_token == verification.token, User.verification_token_expires > datetime.utcnow())
+        .filter(User.verification_token == verification.token, User.verification_token_expires > datetime.now(UTC))
         .first()
     )
 
@@ -452,7 +452,7 @@ async def resend_verification(request: ResendVerificationRequest, background_tas
         # Calculate time since last token generation
         # We use token expiry as a proxy for when the last resend was requested
         # Token expires in 24 hours, so if it's recent, check the creation time
-        time_since_last_request = datetime.utcnow() - (user.verification_token_expires - timedelta(hours=24))
+        time_since_last_request = datetime.now(UTC) - (user.verification_token_expires - timedelta(hours=24))
 
         if time_since_last_request.total_seconds() < 60:
             remaining_seconds = int(60 - time_since_last_request.total_seconds())
@@ -464,7 +464,7 @@ async def resend_verification(request: ResendVerificationRequest, background_tas
     # Generate new token
     verification_token = generate_verification_token()
     user.verification_token = verification_token
-    user.verification_token_expires = datetime.utcnow() + timedelta(hours=24)
+    user.verification_token_expires = datetime.now(UTC) + timedelta(hours=24)
     db.commit()
 
     # In development, await the email function to see console output immediately
@@ -501,7 +501,7 @@ async def forgot_password(request: PasswordResetRequest, background_tasks: Backg
     # Generate reset token
     reset_token = generate_verification_token()
     user.reset_token = reset_token
-    user.reset_token_expires = datetime.utcnow() + timedelta(hours=1)
+    user.reset_token_expires = datetime.now(UTC) + timedelta(hours=1)
     db.commit()
 
     # In development, await the email function to see console output immediately
@@ -529,7 +529,7 @@ async def reset_password(reset: PasswordReset, db: Session = Depends(get_db)):
     - Updates password
     - Clears reset token
     """
-    user = db.query(User).filter(User.reset_token == reset.token, User.reset_token_expires > datetime.utcnow()).first()
+    user = db.query(User).filter(User.reset_token == reset.token, User.reset_token_expires > datetime.now(UTC)).first()
 
     if not user:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid or expired reset token")

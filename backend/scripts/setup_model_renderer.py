@@ -19,7 +19,7 @@ import asyncio
 from pathlib import Path
 from typing import Dict, List, Optional, Any, Set
 from collections import defaultdict
-from datetime import datetime
+from datetime import datetime, UTC
 import time
 
 # Add parent directory to path to import app modules
@@ -415,7 +415,7 @@ class ModelRendererSetup:
             "katexOptions": katex_options,
             "codeBlockPreservation": code_block_preservation,
             "metadata": {
-                "createdAt": datetime.utcnow().isoformat() + "Z",
+                "createdAt": datetime.now(UTC).isoformat() + "Z",
                 "needsManualReview": analysis.get("needs_manual_review", False),
             },
         }
