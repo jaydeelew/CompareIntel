@@ -1,0 +1,107 @@
+============================= test session starts ==============================
+platform linux -- Python 3.12.3, pytest-9.0.2, pluggy-1.6.0 -- /home/dan_wsl/jaydeelew/CompareIntel/backend/venv/bin/python3
+cachedir: .pytest_cache
+rootdir: /home/dan_wsl/jaydeelew/CompareIntel/backend
+configfile: pyproject.toml
+plugins: asyncio-1.3.0, mock-3.15.1, anyio-3.7.1, cov-7.0.0, timeout-2.4.0, Faker-39.0.0
+asyncio: mode=Mode.AUTO, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+timeout: 300.0s
+timeout method: thread
+timeout func_only: False
+collecting ... collected 42 items
+
+tests/integration/test_admin.py::TestAdminAuthentication::test_admin_endpoint_requires_admin PASSED [  2%]
+tests/integration/test_admin.py::TestAdminAuthentication::test_admin_endpoint_with_admin_user PASSED [  4%]
+tests/integration/test_admin.py::TestUserManagement::test_list_users PASSED [  7%]
+tests/integration/test_admin.py::TestUserManagement::test_get_user_by_id PASSED [  9%]
+tests/integration/test_admin.py::TestUserManagement::test_update_user_tier PASSED [ 11%]
+tests/integration/test_admin.py::TestSystemConfiguration::test_get_system_stats PASSED [ 14%]
+tests/integration/test_admin.py::TestSystemConfiguration::test_get_usage_logs PASSED [ 16%]
+tests/integration/test_admin.py::TestAdminUserCRUD::test_create_user PASSED [ 19%]
+tests/integration/test_admin.py::TestAdminUserCRUD::test_update_user PASSED [ 21%]
+tests/integration/test_admin.py::TestAdminUserCRUD::test_delete_user PASSED [ 23%]
+tests/integration/test_admin.py::TestAdminUserCRUD::test_get_nonexistent_user PASSED [ 26%]
+tests/integration/test_admin.py::TestAdminUserActions::test_toggle_user_active PASSED [ 28%]
+tests/integration/test_admin.py::TestAdminUserActions::test_reset_user_usage PASSED [ 30%]
+tests/integration/test_admin.py::TestAdminUserActions::test_toggle_mock_mode PASSED [ 33%]
+tests/integration/test_admin.py::TestAdminStats::test_get_admin_stats_structure PASSED [ 35%]
+tests/integration/test_admin.py::TestAdminStats::test_admin_stats_with_multiple_users PASSED [ 38%]
+tests/integration/test_admin.py::TestAdminPagination::test_list_users_pagination PASSED [ 40%]
+tests/integration/test_admin.py::TestAdminPagination::test_list_users_search PASSED [ 42%]
+tests/integration/test_admin.py::TestAdminPagination::test_list_users_filter_by_tier PASSED [ 45%]
+tests/integration/test_admin.py::TestAdminRolePermissions::test_moderator_cannot_create_users PASSED [ 47%]
+tests/integration/test_admin.py::TestAdminRolePermissions::test_super_admin_permissions PASSED [ 50%]
+tests/integration/test_api.py::TestHealthCheck::test_health_check PASSED [ 52%]
+tests/integration/test_api.py::TestAPIEndpoints::test_root_endpoint PASSED [ 54%]
+tests/integration/test_api.py::TestAPIEndpoints::test_api_docs PASSED    [ 57%]
+tests/integration/test_api.py::TestCORS::test_cors_headers PASSED        [ 59%]
+tests/integration/test_api.py::TestErrorHandling::test_404_not_found PASSED [ 61%]
+tests/integration/test_api.py::TestErrorHandling::test_422_validation_error PASSED [ 64%]
+tests/integration/test_comparison.py::TestModelSelection::test_get_available_models PASSED [ 66%]
+tests/integration/test_comparison.py::TestStreamingResponse::test_streaming_endpoint PASSED [ 69%]
+tests/integration/test_comparison.py::TestStreamingComparison::test_streaming_basic PASSED [ 71%]
+tests/integration/test_comparison.py::TestStreamingComparison::test_streaming_multiple_models PASSED [ 73%]
+tests/integration/test_comparison.py::TestStreamingComparison::test_streaming_empty_input PASSED [ 76%]
+tests/integration/test_comparison.py::TestStreamingComparison::test_streaming_rate_limit PASSED [ 78%]
+tests/integration/test_comparison_edge_cases.py::TestComparisonStreamingEdgeCases::test_streaming_empty_input PASSED [ 80%]
+tests/integration/test_comparison_edge_cases.py::TestComparisonStreamingEdgeCases::test_streaming_no_models PASSED [ 83%]
+tests/integration/test_websearch.py::TestWebSearchIntegration::test_comparison_with_web_search_enabled PASSED [ 85%]
+tests/integration/test_websearch.py::TestWebSearchIntegration::test_comparison_with_web_search_disabled PASSED [ 88%]
+tests/integration/test_websearch.py::TestWebSearchIntegration::test_web_search_without_provider_configured PASSED [ 90%]
+tests/integration/test_websearch.py::TestWebSearchIntegration::test_web_search_with_model_not_supporting PASSED [ 92%]
+tests/integration/test_websearch.py::TestWebSearchIntegration::test_web_search_error_handling PASSED [ 95%]
+tests/integration/test_websearch.py::TestWebSearchConfiguration::test_search_provider_configuration PASSED [ 97%]
+tests/integration/test_websearch.py::TestWebSearchConfiguration::test_search_provider_availability_check PASSED [100%]
+
+=============================== warnings summary ===============================
+tests/integration/test_websearch.py::TestWebSearchIntegration::test_web_search_with_model_not_supporting
+  <frozen importlib._bootstrap>:488: DeprecationWarning: builtin type SwigPyPacked has no __module__ attribute
+
+tests/integration/test_websearch.py::TestWebSearchIntegration::test_web_search_with_model_not_supporting
+  <frozen importlib._bootstrap>:488: DeprecationWarning: builtin type SwigPyObject has no __module__ attribute
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+================================ tests coverage ================================
+_______________ coverage: platform linux, python 3.12.3-final-0 ________________
+
+Name                                     Stmts   Miss  Cover   Missing
+----------------------------------------------------------------------
+app/auth.py                                 72     26    64%   45-47, 66-67, 84, 122, 130, 133-142, 152, 165-182
+app/cache.py                                88     54    39%   36-43, 52-53, 57, 61-68, 88-111, 130-140, 145-146, 161, 175-176, 192-202, 207-209
+app/config/__init__.py                      14      5    64%   71-78
+app/config/constants.py                     12      0   100%
+app/config/helpers.py                       12      6    50%   41-56, 69
+app/config/settings.py                      42      2    95%   21, 62
+app/config/validation.py                   108     48    56%   46, 51, 57, 66, 68, 86-95, 102, 112, 123, 128, 130, 136, 138, 145, 147, 157, 166, 168, 177-178, 181-182, 199, 224-233, 245-250
+app/credit_manager.py                      156     62    60%   44, 64-69, 104, 114-116, 151, 176-186, 200-204, 243-263, 281, 285, 290, 329-355, 379, 409, 424-427, 440-449
+app/data_retention.py                      104    104     0%   9-253
+app/database.py                             63     33    48%   34, 48, 71, 108-142, 150-152, 161-163
+app/dependencies.py                        100     33    67%   47, 55, 59, 63-64, 68, 71, 76-77, 84-85, 118, 121, 126, 130, 134-135, 139, 142, 147-148, 155-156, 172, 186-199, 222
+app/email_service.py                       126    126     0%   8-743
+app/main.py                                135     44    67%   94, 107-115, 131, 174-206, 227-241, 286-292, 297-302
+app/middleware/__init__.py                   0      0   100%
+app/middleware/profiling.py                 25      0   100%
+app/mock_responses.py                        9      5    44%   123, 136-141
+app/model_runner.py                       1459   1211    17%   131, 135, 142, 164, 797-828, 882-919, 956-958, 989-996, 1012-1039, 1068-1071, 1090-1093, 1112, 1121, 1136, 1154, 1233-1238, 1255, 1270-1275, 1295-1326, 1339, 1370, 1385, 1411, 1432-1447, 1454-1456, 1484-1486, 1500-1504, 1533-1550, 1562-1576, 1624-1627, 1646-1652, 1671-1684, 1693-1694, 1710, 1736, 1756, 1763, 1770-3611, 3625-3626, 3633-3636, 3640-3659, 3662-3666, 3684-3692, 3698-3709, 3712-3723, 3755-3792, 3797-3833
+app/models.py                              188      1    99%   85
+app/rate_limiting.py                       192    160    17%   59, 79-83, 96-98, 111-116, 132-137, 161-174, 213-318, 333-382, 399-414, 444-483, 510-513, 523, 539-540, 553-554, 567-568, 581, 591
+app/routers/__init__.py                      0      0   100%
+app/routers/admin.py                      1311   1061    19%   79-80, 83-84, 160-256, 292, 298, 361, 413, 417, 440, 458-461, 495-496, 500-501, 530-531, 534-535, 549-550, 558-567, 580-602, 614-644, 658-696, 710, 714, 760, 771-774, 784-786, 827, 834, 876-931, 944-988, 1015-1067, 1091-1163, 1208-1227, 1272-1298, 1309-1322, 1332-1343, 1351-1371, 1402-1424, 1438-1456, 1469-1503, 1523-1556, 1566, 1582-1663, 1675-1680, 1697-1715, 1729-1743, 1757-2072, 2090-2673, 2687-2914, 2933-2958, 2976-3016, 3032-3060, 3078-3117
+app/routers/api.py                        1027    674    34%   168, 173, 179, 191, 195, 208-219, 245-259, 265-269, 277-284, 306, 362-386, 405-448, 454-466, 483-512, 538-550, 605, 613-639, 655-660, 666-774, 784-797, 804-817, 833-840, 848-851, 858-860, 895-903, 915-949, 1016-1017, 1020-1031, 1047, 1066-1087, 1163-1171, 1210-1220, 1225-1227, 1261-1272, 1282, 1314-1331, 1340-1347, 1379-1399, 1417-1424, 1437, 1442, 1446-1448, 1460-1470, 1490-1504, 1514-1579, 1585-1591, 1601-1607, 1661-1663, 1669-1932, 1936-1965, 1976-2047, 2057-2122, 2158-2298, 2319-2358, 2374-2394, 2411-2502
+app/routers/auth.py                        280    186    34%   60, 80-84, 92, 112-160, 175-255, 290-292, 301-303, 306-308, 332-342, 353-398, 410-428, 441-483, 495-520, 532-542, 548, 562-564, 576-579, 590-591
+app/routers/dev.py                          92     92     0%   8-266
+app/schemas.py                             271     34    87%   32-42, 143-153, 212-214, 236-238, 290-292, 384, 386, 388, 390, 393
+app/search/__init__.py                       5      0   100%
+app/search/base.py                          19      3    84%   41, 51, 61
+app/search/brave.py                         46     27    41%   34-36, 52-100, 104, 112, 116-118
+app/search/distributed_rate_limiter.py     410    318    22%   32-35, 91-95, 107-122, 126-138, 146-151, 155-164, 168-181, 185-201, 248-253, 259, 268-329, 333-347, 392-393, 417, 432-435, 439-492, 496, 500-535, 542-557, 570-688, 698-808, 815-819, 823-828, 833-856
+app/search/factory.py                       45     13    71%   37-38, 44-48, 51-52, 57-62, 77
+app/search/rate_limiter.py                 167    112    33%   53-54, 63-79, 83-93, 97-103, 107-108, 135-154, 158, 162-169, 184-237, 241-243, 252-273, 278-295, 344-360, 380-396, 402-405
+app/search/retry.py                         68     57    16%   33-40, 62-126, 140-165
+app/types.py                                94      0   100%
+app/utils/cookies.py                        21      4    81%   78-90, 125
+----------------------------------------------------------------------
+TOTAL                                     6761   4501    33%
+Coverage HTML written to dir htmlcov
+Coverage XML written to file coverage.xml
+======================= 42 passed, 2 warnings in 41.07s ========================

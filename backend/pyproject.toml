@@ -110,5 +110,11 @@ filterwarnings = [
     # This is a known issue in passlib 1.7.4 that will be fixed in future versions
     # The warning doesn't affect functionality until Python 3.13
     "ignore::DeprecationWarning:passlib.utils",
+    # Suppress SWIG-related deprecation warnings from SQLAlchemy or other dependencies
+    # These warnings come from SWIG-compiled extensions and are third-party library issues
+    # They don't affect functionality and will be resolved when dependencies are updated
+    "ignore:builtin type SwigPyPacked has no __module__ attribute:DeprecationWarning",
+    "ignore:builtin type SwigPyObject has no __module__ attribute:DeprecationWarning",
+    "ignore:builtin type swigvarlink has no __module__ attribute:DeprecationWarning",
 ]
 
