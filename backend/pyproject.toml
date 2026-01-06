@@ -105,4 +105,10 @@ markers = [
 ]
 timeout = 300
 timeout_method = "thread"
+filterwarnings = [
+    # Suppress passlib deprecation warning about 'crypt' module (third-party library issue)
+    # This is a known issue in passlib 1.7.4 that will be fixed in future versions
+    # The warning doesn't affect functionality until Python 3.13
+    "ignore::DeprecationWarning:passlib.utils",
+]
 
