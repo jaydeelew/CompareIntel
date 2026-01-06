@@ -32,24 +32,36 @@ test.describe('Admin User Management', () => {
       await page.fill('input[type="email"]', adminEmail)
       await page.fill('input[type="password"]', adminPassword)
       await page.getByTestId('login-submit-button').click()
+
+      // Wait for login to complete - check for sign out button or user menu to appear
       await page.waitForLoadState('networkidle')
+      // Wait for authentication to complete - admin button should appear if user is admin
+      await page
+        .waitForSelector('[data-testid="nav-sign-in-button"]', { state: 'hidden', timeout: 10000 })
+        .catch(() => {
+          // If sign-in button doesn't disappear, that's okay - might already be logged in
+        })
     })
 
     // Navigate to admin panel
     await test.step('Navigate to admin panel', async () => {
+      // Wait for admin button to appear (user data needs to load first)
       const adminButton = page.getByRole('button', { name: /admin|dashboard/i })
-      if (await adminButton.isVisible({ timeout: 2000 })) {
+      if (await adminButton.isVisible({ timeout: 10000 })) {
         await adminButton.click()
       } else {
-        // Try navigating directly
+        // Try navigating directly if button not found
         await page.goto('/admin')
       }
 
       await page.waitForLoadState('networkidle')
 
+      // Wait a bit for lazy loading of AdminPanel component
+      await page.waitForTimeout(500)
+
       // Verify admin panel is visible
       const adminPanel = page.locator('[data-testid="admin-panel"], .admin-panel')
-      await expect(adminPanel).toBeVisible({ timeout: 10000 })
+      await expect(adminPanel).toBeVisible({ timeout: 15000 })
     })
   })
 

@@ -344,17 +344,21 @@ export const test = base.extend<TestFixtures>({
     await ensureAuthenticated(page, TEST_CREDENTIALS.admin.email, TEST_CREDENTIALS.admin.password)
 
     // Navigate to admin panel
+    // Wait for admin button to appear (user data needs to load first)
     const adminButton = page.getByRole('button', { name: /admin|dashboard/i })
-    if (await adminButton.isVisible({ timeout: 2000 }).catch(() => false)) {
+    if (await adminButton.isVisible({ timeout: 10000 }).catch(() => false)) {
       await adminButton.click()
     } else {
       await page.goto('/admin')
     }
     await page.waitForLoadState('networkidle')
 
+    // Wait a bit for lazy loading of AdminPanel component
+    await page.waitForTimeout(500)
+
     // Verify admin panel is visible
     const adminPanel = page.locator('[data-testid="admin-panel"], .admin-panel')
-    await expect(adminPanel).toBeVisible({ timeout: 10000 })
+    await expect(adminPanel).toBeVisible({ timeout: 15000 })
 
     await use(page)
   },

@@ -65,6 +65,7 @@ export function Navigation({
                   className="admin-avatar-button"
                   onClick={() => handleViewChange(actualCurrentView === 'admin' ? 'main' : 'admin')}
                   title={actualCurrentView === 'admin' ? 'Back to Main App' : 'Admin Panel'}
+                  aria-label={actualCurrentView === 'admin' ? 'Back to Main App' : 'Admin Panel'}
                 >
                   <svg
                     width="18"

@@ -1277,14 +1277,14 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
 
   if (loading) {
     return (
-      <div className="admin-panel">
+      <div className="admin-panel" data-testid="admin-panel">
         <div className="loading-message">Loading admin panel...</div>
       </div>
     )
   }
 
   return (
-    <div className="admin-panel" ref={adminPanelRef}>
+    <div className="admin-panel" data-testid="admin-panel" ref={adminPanelRef}>
       <div className="admin-header">
         <div className="admin-header-content">
           {onClose && (
