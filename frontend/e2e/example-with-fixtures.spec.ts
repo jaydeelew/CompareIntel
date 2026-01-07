@@ -103,7 +103,8 @@ test.describe('Page Navigation Examples', () => {
   test('About page loads correctly', async ({ aboutPage }) => {
     // aboutPage is already on /about
     await expect(aboutPage).toHaveURL(/\/about/)
-    await expect(aboutPage.locator('h1, h2')).toContainText(/about/i)
+    // Use first() to avoid strict mode violation - check the main heading
+    await expect(aboutPage.locator('h1').first()).toContainText(/about/i)
   })
 
   test('FAQ page has content', async ({ faqPage }) => {

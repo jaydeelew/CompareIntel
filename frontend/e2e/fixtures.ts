@@ -106,6 +106,13 @@ async function loginUser(
 
     if (waitForNavigation) {
       await page.waitForLoadState('networkidle')
+      // Wait for auth modal to close
+      await page
+        .waitForSelector('[data-testid="auth-modal"], .auth-modal', {
+          state: 'hidden',
+          timeout: 10000,
+        })
+        .catch(() => {})
     }
 
     // Verify login succeeded
@@ -161,6 +168,13 @@ async function registerUser(
 
     if (waitForNavigation) {
       await page.waitForLoadState('networkidle')
+      // Wait for auth modal to close
+      await page
+        .waitForSelector('[data-testid="auth-modal"], .auth-modal', {
+          state: 'hidden',
+          timeout: 10000,
+        })
+        .catch(() => {})
     }
 
     // Verify registration succeeded (user menu should be visible)
@@ -202,10 +216,27 @@ async function clearAuthState(context: BrowserContext): Promise<void> {
   // Clear localStorage and sessionStorage
   const pages = context.pages()
   for (const page of pages) {
-    await page.evaluate(() => {
-      localStorage.clear()
-      sessionStorage.clear()
-    })
+    try {
+      await page.evaluate(() => {
+        try {
+          localStorage.clear()
+          sessionStorage.clear()
+        } catch (e) {
+          // Ignore SecurityError - may happen on some pages (e.g., about:blank)
+          if (e instanceof Error && e.name !== 'SecurityError') {
+            throw e
+          }
+        }
+      })
+    } catch (e) {
+      // Ignore errors when clearing storage - page might be closed or inaccessible
+      if (
+        e instanceof Error &&
+        !e.message.includes('Target page, context or browser has been closed')
+      ) {
+        console.warn('Warning: Could not clear storage:', e.message)
+      }
+    }
   }
 }
 

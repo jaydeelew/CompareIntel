@@ -50,14 +50,19 @@ test.describe('Authentication Flow', () => {
       // Wait for registration to complete
       await page.waitForLoadState('networkidle')
 
-      // Verify user is logged in (check for user email or profile indicator)
-      await expect(page.getByText(testEmail, { exact: false })).toBeVisible({ timeout: 10000 })
+      // Verify user is logged in (check for user menu button instead of email text)
+      // The email might not be visible in the UI, but the user menu button should appear
+      await expect(page.getByTestId('user-menu-button')).toBeVisible({ timeout: 10000 })
     })
 
     // Step 2: Verify email (if verification is required)
     await test.step('Verify email', async () => {
       // Check if verification banner/modal is shown
-      const verificationBanner = page.getByText(/verify|verification/i)
+      // Use first() to avoid strict mode violation - prefer banner/alert elements
+      const verificationBanner = page
+        .locator('[role="alert"], .alert, .banner, [class*="verification"], [class*="verify"]')
+        .filter({ hasText: /verify|verification/i })
+        .first()
 
       if (await verificationBanner.isVisible({ timeout: 5000 })) {
         // In development, we might need to manually verify or use a test token
@@ -114,8 +119,11 @@ test.describe('Authentication Flow', () => {
   })
 
   test('User login flow', async ({ page }) => {
-    // This test assumes a user already exists
-    // In a real scenario, you'd create the user first or use a test fixture
+    // Use a test user that should exist from global setup
+    const existingTestEmail =
+      process.env.TEST_FREE_EMAIL || process.env.TEST_USER_EMAIL || 'free@test.com'
+    const existingTestPassword =
+      process.env.TEST_FREE_PASSWORD || process.env.TEST_USER_PASSWORD || 'Test12345678/'
 
     await test.step('Login with credentials', async () => {
       // Click login button using data-testid
@@ -125,31 +133,52 @@ test.describe('Authentication Flow', () => {
       await page.waitForSelector('[data-testid="auth-modal"], .auth-modal', { timeout: 5000 })
 
       // Fill login form using data-testid
-      await page.getByTestId('login-email-input').fill(testEmail)
-      await page.getByTestId('login-password-input').fill(testPassword)
+      await page.getByTestId('login-email-input').fill(existingTestEmail)
+      await page.getByTestId('login-password-input').fill(existingTestPassword)
 
       // Submit login using data-testid
       await page.getByTestId('login-submit-button').click()
 
-      // Wait for login to complete
+      // Wait for login to complete and modal to close
       await page.waitForLoadState('networkidle')
 
-      // Verify user is logged in
-      await expect(page.getByText(testEmail, { exact: false })).toBeVisible({ timeout: 10000 })
+      // Wait for auth modal to disappear
+      await page
+        .waitForSelector('[data-testid="auth-modal"], .auth-modal', {
+          state: 'hidden',
+          timeout: 10000,
+        })
+        .catch(() => {})
+
+      // Verify user is logged in (check for user menu button instead of email text)
+      await expect(page.getByTestId('user-menu-button')).toBeVisible({ timeout: 10000 })
     })
   })
 
   test('User logout flow', async ({ page }) => {
-    // First, login (you might want to use a test fixture for this)
-    // For now, we'll assume user is already logged in
+    // First, login using test credentials
+    const existingTestEmail =
+      process.env.TEST_FREE_EMAIL || process.env.TEST_USER_EMAIL || 'free@test.com'
+    const existingTestPassword =
+      process.env.TEST_FREE_PASSWORD || process.env.TEST_USER_PASSWORD || 'Test12345678/'
+
+    await test.step('Login first', async () => {
+      await page.getByTestId('nav-sign-in-button').click()
+      await page.waitForSelector('[data-testid="auth-modal"], .auth-modal', { timeout: 5000 })
+      await page.getByTestId('login-email-input').fill(existingTestEmail)
+      await page.getByTestId('login-password-input').fill(existingTestPassword)
+      await page.getByTestId('login-submit-button').click()
+      await page.waitForLoadState('networkidle')
+      await page
+        .waitForSelector('[data-testid="auth-modal"], .auth-modal', {
+          state: 'hidden',
+          timeout: 10000,
+        })
+        .catch(() => {})
+      await expect(page.getByTestId('user-menu-button')).toBeVisible({ timeout: 10000 })
+    })
 
     await test.step('Logout', async () => {
-      // Find logout button (usually in user menu or header)
-      const userMenu = page.getByRole('button', { name: /user|profile|account/i })
-      if (await userMenu.isVisible({ timeout: 2000 })) {
-        await userMenu.click()
-      }
-
       // Open user menu first
       const userMenuButton = page.getByTestId('user-menu-button')
       await userMenuButton.click()
@@ -159,8 +188,11 @@ test.describe('Authentication Flow', () => {
       const logoutButton = page.getByTestId('logout-button')
       await logoutButton.click()
 
-      // Verify user is logged out
-      await expect(page.getByRole('button', { name: /login|sign in/i })).toBeVisible({
+      // Wait for logout to complete
+      await page.waitForLoadState('networkidle')
+
+      // Verify user is logged out - check that login button is visible
+      await expect(page.getByTestId('nav-sign-in-button')).toBeVisible({
         timeout: 5000,
       })
     })

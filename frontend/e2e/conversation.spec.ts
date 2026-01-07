@@ -22,19 +22,36 @@ test.describe('Conversation Management', () => {
     await page.goto('/')
     await page.waitForLoadState('networkidle')
 
-    // Check if already logged in
-    const userMenu = page.getByRole('button', { name: /user|profile|account/i })
-    const isLoggedIn = await userMenu.isVisible({ timeout: 2000 })
+    // Check if already logged in by looking for user menu button
+    const userMenuButton = page.getByTestId('user-menu-button')
+    const isLoggedIn = await userMenuButton.isVisible({ timeout: 2000 }).catch(() => false)
 
     if (!isLoggedIn) {
       // Login (simplified - in real tests, use fixtures)
       const loginButton = page.getByTestId('nav-sign-in-button')
       if (await loginButton.isVisible({ timeout: 2000 })) {
         await loginButton.click()
-        await page.fill('input[type="email"]', testEmail)
-        await page.fill('input[type="password"]', testPassword)
+
+        // Wait for auth modal to appear
+        await page.waitForSelector('[data-testid="auth-modal"], .auth-modal', { timeout: 5000 })
+
+        await page.getByTestId('login-email-input').fill(testEmail)
+        await page.getByTestId('login-password-input').fill(testPassword)
         await page.getByTestId('login-submit-button').click()
+
+        // Wait for login to complete and modal to close
         await page.waitForLoadState('networkidle')
+
+        // Wait for auth modal to disappear
+        await page
+          .waitForSelector('[data-testid="auth-modal"], .auth-modal', {
+            state: 'hidden',
+            timeout: 10000,
+          })
+          .catch(() => {})
+
+        // Verify we're logged in
+        await expect(userMenuButton).toBeVisible({ timeout: 10000 })
       }
     }
   })
@@ -54,8 +71,21 @@ test.describe('Conversation Management', () => {
         await modelCheckboxes.first().check()
       }
 
-      // Submit comparison
-      const compareButton = page.getByRole('button', { name: /compare|submit|run/i })
+      // Submit comparison - ensure auth modal is not blocking
+      // Wait for any auth modal to close if it appeared
+      const authModal = page.locator('[data-testid="auth-modal"], .auth-modal')
+      if (await authModal.isVisible({ timeout: 1000 }).catch(() => false)) {
+        // Close modal if it's blocking
+        const closeButton = authModal.getByRole('button', { name: /close|×/i }).first()
+        if (await closeButton.isVisible({ timeout: 1000 }).catch(() => false)) {
+          await closeButton.click()
+          await page.waitForTimeout(300)
+        }
+      }
+
+      const compareButton = page
+        .getByTestId('comparison-submit-button')
+        .or(page.getByRole('button', { name: /compare|submit|run/i }))
       await compareButton.click()
 
       // Wait for results
@@ -82,6 +112,16 @@ test.describe('Conversation Management', () => {
 
   test('View conversation history', async ({ page }) => {
     await test.step('Open conversation history', async () => {
+      // Wait for any auth modal to close if it appeared
+      const authModal = page.locator('[data-testid="auth-modal"], .auth-modal')
+      if (await authModal.isVisible({ timeout: 1000 }).catch(() => false)) {
+        const closeButton = authModal.getByRole('button', { name: /close|×/i }).first()
+        if (await closeButton.isVisible({ timeout: 1000 }).catch(() => false)) {
+          await closeButton.click()
+          await page.waitForTimeout(300)
+        }
+      }
+
       // Look for conversation history button/sidebar
       const historyButton = page.getByRole('button', { name: /history|conversations|saved/i })
 
@@ -115,6 +155,16 @@ test.describe('Conversation Management', () => {
 
   test('Load previous conversation', async ({ page }) => {
     await test.step('Open conversation history', async () => {
+      // Wait for any auth modal to close if it appeared
+      const authModal = page.locator('[data-testid="auth-modal"], .auth-modal')
+      if (await authModal.isVisible({ timeout: 1000 }).catch(() => false)) {
+        const closeButton = authModal.getByRole('button', { name: /close|×/i }).first()
+        if (await closeButton.isVisible({ timeout: 1000 }).catch(() => false)) {
+          await closeButton.click()
+          await page.waitForTimeout(300)
+        }
+      }
+
       const historyButton = page.getByRole('button', { name: /history|conversations/i })
       if (await historyButton.isVisible({ timeout: 2000 })) {
         await historyButton.click()
@@ -145,6 +195,16 @@ test.describe('Conversation Management', () => {
 
   test('Delete conversation', async ({ page }) => {
     await test.step('Open conversation history', async () => {
+      // Wait for any auth modal to close if it appeared
+      const authModal = page.locator('[data-testid="auth-modal"], .auth-modal')
+      if (await authModal.isVisible({ timeout: 1000 }).catch(() => false)) {
+        const closeButton = authModal.getByRole('button', { name: /close|×/i }).first()
+        if (await closeButton.isVisible({ timeout: 1000 }).catch(() => false)) {
+          await closeButton.click()
+          await page.waitForTimeout(300)
+        }
+      }
+
       const historyButton = page.getByRole('button', { name: /history|conversations/i })
       if (await historyButton.isVisible({ timeout: 2000 })) {
         await historyButton.click()
@@ -187,6 +247,16 @@ test.describe('Conversation Management', () => {
 
   test('Continue conversation with follow-up', async ({ page }) => {
     await test.step('Load existing conversation', async () => {
+      // Wait for any auth modal to close if it appeared
+      const authModal = page.locator('[data-testid="auth-modal"], .auth-modal')
+      if (await authModal.isVisible({ timeout: 1000 }).catch(() => false)) {
+        const closeButton = authModal.getByRole('button', { name: /close|×/i }).first()
+        if (await closeButton.isVisible({ timeout: 1000 }).catch(() => false)) {
+          await closeButton.click()
+          await page.waitForTimeout(300)
+        }
+      }
+
       const historyButton = page.getByRole('button', { name: /history|conversations/i })
       if (await historyButton.isVisible({ timeout: 2000 })) {
         await historyButton.click()
