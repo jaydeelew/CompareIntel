@@ -33,8 +33,12 @@ Frontend: Visit http://localhost:5173 (should show the app)
 # Stop servers:
 # Option 1: Press Ctrl+C in each terminal (if you have the terminals open)
 # Option 2: Kill by port number (if terminals are closed)
-lsof -ti:8000 | xargs kill -9  # Kill backend
-lsof -ti:5173 | xargs kill -9  # Kill frontend
+lsof -ti:8000 | xargs -r kill -9  # Kill backend (xargs -r prevents error if no process found)
+lsof -ti:5173 | xargs -r kill -9  # Kill frontend (xargs -r prevents error if no process found)
+
+# Alternative (more verbose but works on all systems):
+# kill -9 $(lsof -ti:8000) 2>/dev/null || echo "Backend not running on port 8000"
+# kill -9 $(lsof -ti:5173) 2>/dev/null || echo "Frontend not running on port 5173"
 ```
 
 **Access:** http://localhost:5173  
