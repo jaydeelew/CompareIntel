@@ -78,13 +78,19 @@ frontend/
 │       │   └── mock-services.ts # Service mocks
 │       └── config/             # Configuration tests
 │           └── rendererConfigs.test.ts
-└── e2e/                        # E2E tests with Playwright
-    ├── auth.spec.ts
-    ├── comparison.spec.ts
-    ├── conversation.spec.ts
-    ├── admin.spec.ts
-    ├── websearch.spec.ts       # Web search E2E tests
-    └── SELECTOR_GUIDE.md
+└── e2e/                        # E2E tests with Playwright (organized by user journey)
+    ├── 01-anonymous-user-journey.spec.ts    # First-time visitor experience
+    ├── 02-registration-onboarding.spec.ts    # Registration and login flows
+    ├── 03-authenticated-comparison.spec.ts   # Core comparison functionality
+    ├── 04-conversation-management.spec.ts    # Conversation history and management
+    ├── 05-advanced-features.spec.ts          # Web search, file uploads, saved selections
+    ├── 06-navigation-content.spec.ts         # Navigation and SEO pages
+    ├── 07-admin-functionality.spec.ts       # Admin panel and user management
+    ├── fixtures.ts                           # Test fixtures (auth, navigation, etc.)
+    ├── global-setup.ts                      # Global test setup
+    ├── README.md                            # E2E test documentation
+    ├── SELECTOR_GUIDE.md                    # Selector best practices
+    └── SETUP.md                             # E2E setup guide
 ```
 
 ## Setup and Prerequisites
@@ -154,7 +160,12 @@ npm run test:e2e:ui
 npm run test:e2e:headed
 
 # Run specific E2E test file
-npx playwright test e2e/auth.spec.ts
+npx playwright test e2e/01-anonymous-user-journey.spec.ts
+npx playwright test e2e/03-authenticated-comparison.spec.ts
+
+# Run tests matching pattern
+npx playwright test e2e/ --grep "registration"
+npx playwright test e2e/ --grep "admin"
 
 # Run tests in specific browser
 npx playwright test --project=chromium
@@ -475,90 +486,157 @@ beforeEach(() => {
 
 ## E2E Testing with Playwright
 
+> **Note**: E2E tests were restructured in January 2025 to focus on **user journeys** rather than technical features. Tests are now organized by user workflows (anonymous → registered → advanced features) for better maintainability and user-centric testing. See `frontend/e2e/TEST_RESTRUCTURE_SUMMARY.md` for details.
+
 ### Writing E2E Tests
 
-```typescript
-import { test, expect } from '@playwright/test';
+E2E tests are written from a **user experience perspective**, focusing on real user workflows:
 
-test('user can register and login', async ({ page }) => {
-  // Navigate to registration page
-  await page.goto('/register');
+```typescript
+import { test, expect } from './fixtures'; // Use fixtures for authenticated state
+
+// Example: Anonymous user journey
+test('Anonymous user can perform a comparison', async ({ page }) => {
+  await page.goto('/');
+  await page.waitForLoadState('networkidle');
   
-  // Fill registration form
-  await page.fill('[data-testid="register-email-input"]', 'test@example.com');
-  await page.fill('[data-testid="register-password-input"]', 'Password123!');
-  await page.fill('[data-testid="register-name-input"]', 'Test User');
+  // Enter comparison prompt
+  const inputField = page.getByTestId('comparison-input-textarea');
+  await inputField.fill('What is artificial intelligence?');
   
-  // Submit form
-  await page.click('[data-testid="register-submit-button"]');
+  // Select models (anonymous users limited to 3)
+  const modelCheckboxes = page.locator('input[type="checkbox"]');
+  const modelsToSelect = Math.min(3, await modelCheckboxes.count());
+  for (let i = 0; i < modelsToSelect; i++) {
+    await modelCheckboxes.nth(i).check();
+  }
   
-  // Wait for redirect
-  await page.waitForURL('/login');
+  // Submit comparison
+  await page.getByTestId('comparison-submit-button').click();
   
-  // Login
-  await page.fill('[data-testid="login-email-input"]', 'test@example.com');
-  await page.fill('[data-testid="login-password-input"]', 'Password123!');
-  await page.click('[data-testid="login-submit-button"]');
+  // Wait for results
+  const results = page.locator('[data-testid^="result-card-"], .result-card');
+  await expect(results.first()).toBeVisible({ timeout: 30000 });
+});
+
+// Example: Using fixtures for authenticated tests
+test('User can perform a complete comparison', async ({ authenticatedPage }) => {
+  // authenticatedPage is already logged in and ready
+  const inputField = authenticatedPage.getByTestId('comparison-input-textarea');
+  await inputField.fill('Explain machine learning.');
   
-  // Verify login success
-  await expect(page.getByText('Welcome')).toBeVisible();
+  // Select multiple models
+  const modelCheckboxes = authenticatedPage.locator('input[type="checkbox"]');
+  await modelCheckboxes.first().check();
+  
+  // Submit and verify results
+  await authenticatedPage.getByTestId('comparison-submit-button').click();
+  const results = authenticatedPage.locator('.result-card');
+  await expect(results.first()).toBeVisible({ timeout: 30000 });
 });
 ```
 
 ### E2E Test Structure
 
+Tests are organized by user journey with clear, descriptive test names:
+
 ```typescript
-import { test, expect } from '@playwright/test';
+import { test, expect } from './fixtures';
 
-test.describe('Comparison Feature', () => {
-  test.beforeEach(async ({ page }) => {
-    // Setup before each test
-    await page.goto('/');
-  });
+test.describe('Authenticated User Comparison Flow', () => {
+  test('User can perform a complete comparison', async ({ authenticatedPage }) => {
+    await test.step('Enter comparison prompt', async () => {
+      const inputField = authenticatedPage.getByTestId('comparison-input-textarea');
+      await inputField.fill('What are the key differences between supervised and unsupervised learning?');
+    });
 
-  test('should create comparison', async ({ page }) => {
-    // Test implementation
-  });
+    await test.step('Select multiple models', async () => {
+      const modelCheckboxes = authenticatedPage.locator('input[type="checkbox"]');
+      await modelCheckboxes.first().check();
+      await modelCheckboxes.nth(1).check();
+    });
 
-  test('should handle errors', async ({ page }) => {
-    // Test error scenarios
+    await test.step('Submit and verify results', async () => {
+      await authenticatedPage.getByTestId('comparison-submit-button').click();
+      const results = authenticatedPage.locator('.result-card');
+      await expect(results.first()).toBeVisible({ timeout: 30000 });
+    });
   });
 });
 ```
 
 ### Using Test Steps
 
+Break complex user workflows into logical steps:
+
 ```typescript
-test('complex workflow', async ({ page }) => {
-  await test.step('Navigate to page', async () => {
-    await page.goto('/comparison');
+test('User can register and perform first comparison', async ({ page }) => {
+  await test.step('Register new account', async () => {
+    await page.goto('/');
+    await page.getByTestId('nav-sign-up-button').click();
+    await page.waitForSelector('[data-testid="auth-modal"]');
+    await page.locator('input[type="email"]').first().fill('test@example.com');
+    await page.locator('input[type="password"]').first().fill('Password123!');
+    await page.getByTestId('register-submit-button').click();
+    await expect(page.getByTestId('user-menu-button')).toBeVisible({ timeout: 10000 });
   });
 
-  await test.step('Fill form', async () => {
-    await page.fill('[data-testid="input"]', 'test');
-  });
-
-  await test.step('Submit', async () => {
-    await page.click('[data-testid="submit"]');
+  await test.step('Perform first comparison', async () => {
+    const inputField = page.getByTestId('comparison-input-textarea');
+    await inputField.fill('What is Python?');
+    await page.locator('input[type="checkbox"]').first().check();
+    await page.getByTestId('comparison-submit-button').click();
+    const results = page.locator('.result-card');
+    await expect(results.first()).toBeVisible({ timeout: 30000 });
   });
 });
 ```
 
-### E2E Test Files
+### E2E Test Files (User Journey Focused)
 
-- **`auth.spec.ts`**: User registration → verification → comparison flow
-- **`comparison.spec.ts`**: Anonymous user flow and rate limit handling
-- **`conversation.spec.ts`**: Conversation management (create, view, delete)
-- **`admin.spec.ts`**: Admin user management functionality
-- **`websearch.spec.ts`**: Web search feature testing (enable, search execution, results display)
+Tests are organized by user journey and real-world workflows:
+
+- **`01-anonymous-user-journey.spec.ts`**: First-time visitor experience, anonymous comparisons, rate limits, sign-up prompts
+- **`02-registration-onboarding.spec.ts`**: User registration, email verification, login/logout flows, first comparison
+- **`03-authenticated-comparison.spec.ts`**: Core comparison functionality, model selection, streaming results, follow-up conversations
+- **`04-conversation-management.spec.ts`**: Conversation history, saving, loading, deleting, continuing conversations
+- **`05-advanced-features.spec.ts`**: Web search functionality, file uploads, saved model selections, model filtering
+- **`06-navigation-content.spec.ts`**: Footer navigation, SEO content pages, scroll behavior, consistent navigation
+- **`07-admin-functionality.spec.ts`**: Admin panel access, user management, filtering, statistics, user CRUD operations
+
+### E2E Test Fixtures
+
+The `fixtures.ts` file provides reusable test fixtures:
+
+- **Authentication Fixtures**: `authenticatedPage`, `adminPage`, `freeTierPage`, `proTierPage`, etc.
+- **Navigation Fixtures**: `comparisonPage`, `adminPanelPage`, `aboutPage`, etc.
+- **Test Data Helpers**: `testData.generateEmail()`, `testData.generatePassword()`, etc.
+- **API Helpers**: `apiHelpers.waitForApiCall()`, `apiHelpers.mockApiResponse()`
+
+**Example Usage**:
+```typescript
+import { test, expect } from './fixtures';
+
+test('User can perform comparison', async ({ authenticatedPage }) => {
+  // authenticatedPage is already logged in
+  const inputField = authenticatedPage.getByTestId('comparison-input-textarea');
+  await inputField.fill('Test prompt');
+  // ... rest of test
+});
+```
 
 ### E2E Best Practices
 
-1. **Use data-testid attributes**: Add `data-testid` to key UI elements
-2. **Wait for network idle**: Use `await page.waitForLoadState('networkidle')` after navigation
-3. **Meaningful test names**: Describe what the test verifies
-4. **Keep tests independent**: Each test should run in isolation
-5. **Use test fixtures**: For authenticated state, use Playwright fixtures
+1. **User-Centric Approach**: Write tests from the user's perspective, focusing on what users see and do
+2. **Use data-testid attributes**: Add `data-testid` to key UI elements for stable selectors
+3. **Wait for network idle**: Use `await page.waitForLoadState('networkidle')` after navigation
+4. **Meaningful test names**: Describe what the test verifies from a user perspective
+5. **Keep tests independent**: Each test should run in isolation
+6. **Use test fixtures**: Leverage fixtures from `fixtures.ts` for authenticated state and common scenarios
+7. **Organize by user journey**: Group tests by user workflows rather than technical features
+8. **Graceful error handling**: Handle cases where features might not be available (e.g., backend not running)
+9. **Use test steps**: Break complex workflows into logical steps using `test.step()`
+10. **Prefer semantic selectors**: Use `getByRole`, `getByText`, `getByLabelText` when possible, fallback to `data-testid`
 
 ## Testing Major Features
 
@@ -595,7 +673,7 @@ describe('ComparisonForm', () => {
 
 ### 2. Web Search Testing
 
-**Location**: `src/__tests__/hooks/useWebSearch.test.ts`, `src/__tests__/services/webSearchService.test.ts`, `e2e/websearch.spec.ts`
+**Location**: `src/__tests__/hooks/useWebSearch.test.ts`, `src/__tests__/services/webSearchService.test.ts`, `e2e/05-advanced-features.spec.ts`
 
 **Coverage**:
 - Web search toggle functionality
@@ -637,7 +715,7 @@ describe('useWebSearch', () => {
 
 ### 3. Authentication Testing
 
-**Location**: `src/__tests__/services/authService.test.ts`, `e2e/auth.spec.ts`
+**Location**: `src/__tests__/services/authService.test.ts`, `e2e/02-registration-onboarding.spec.ts`
 
 **Coverage**:
 - Login flow
@@ -668,7 +746,7 @@ describe('authService', () => {
 
 ### 4. Conversation History Testing
 
-**Location**: `src/__tests__/hooks/useConversationHistory.test.ts`, `src/__tests__/services/conversationService.test.ts`
+**Location**: `src/__tests__/hooks/useConversationHistory.test.ts`, `src/__tests__/services/conversationService.test.ts`, `e2e/04-conversation-management.spec.ts`
 
 **Coverage**:
 - Conversation list retrieval
@@ -744,7 +822,7 @@ describe('File Upload', () => {
 
 ### 7. Admin Panel Testing
 
-**Location**: `src/__tests__/services/adminService.test.ts`, `e2e/admin.spec.ts`
+**Location**: `src/__tests__/services/adminService.test.ts`, `e2e/07-admin-functionality.spec.ts`
 
 **Coverage**:
 - User list retrieval
@@ -831,11 +909,14 @@ screen.getByClassName('btn-primary');
 
 ### 8. E2E Test Best Practices
 
-- Use `data-testid` attributes for stable selectors
-- Wait for network idle after navigation
-- Keep tests independent
-- Use test fixtures for authenticated state
-- Test critical user flows, not everything
+- **User-Centric**: Write tests from the user's perspective, focusing on workflows
+- **Use fixtures**: Leverage `fixtures.ts` for authenticated state (`authenticatedPage`, `adminPage`, etc.)
+- **Stable selectors**: Use `data-testid` attributes for key elements, fallback to semantic selectors
+- **Wait for network idle**: Use `await page.waitForLoadState('networkidle')` after navigation
+- **Keep tests independent**: Each test should run in isolation
+- **Test critical flows**: Focus on user journeys, not every technical detail
+- **Organize by journey**: Group tests by user workflows (anonymous → registered → advanced)
+- **Graceful handling**: Handle cases where features might not be available
 
 ## Troubleshooting
 
