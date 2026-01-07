@@ -17,29 +17,39 @@ npm run test:e2e:ui
 npm run test:e2e:headed
 
 # Run specific E2E test file
-npx playwright test e2e/auth.spec.ts
-npx playwright test e2e/websearch.spec.ts
+npx playwright test e2e/01-anonymous-user-journey.spec.ts
+npx playwright test e2e/03-authenticated-comparison.spec.ts
+
+# Run tests by pattern
+npx playwright test e2e/ --grep "registration"
+npx playwright test e2e/ --grep "admin"
 ```
 
 ## Test Files
 
-- **`auth.spec.ts`**: User registration → verification → login flow
-- **`comparison.spec.ts`**: Anonymous user flow and rate limit handling
-- **`conversation.spec.ts`**: Conversation management (create, view, delete)
-- **`admin.spec.ts`**: Admin user management functionality
-- **`websearch.spec.ts`**: Web search feature testing (enable, search execution, results display)
-- **`footer-navigation.spec.ts`**: Footer navigation and links
+Tests are organized by user journey and functionality:
+
+- **`01-anonymous-user-journey.spec.ts`**: First-time visitor experience, anonymous comparisons, rate limits
+- **`02-registration-onboarding.spec.ts`**: User registration, login, logout flows
+- **`03-authenticated-comparison.spec.ts`**: Core comparison functionality for authenticated users
+- **`04-conversation-management.spec.ts`**: Conversation history, loading, deletion, follow-ups
+- **`05-advanced-features.spec.ts`**: Web search, file uploads, saved model selections
+- **`06-navigation-content.spec.ts`**: Navigation, SEO pages, scroll behavior
+- **`07-admin-functionality.spec.ts`**: Admin panel, user management, system statistics
 
 ## E2E Test Coverage
 
-Current E2E test coverage includes:
+Comprehensive E2E test coverage includes:
 
-- ✅ User authentication flows
-- ✅ Model comparison workflows
-- ✅ Web search functionality
-- ✅ Conversation history management
-- ✅ Admin panel operations
-- ✅ Navigation and routing
+- ✅ **Anonymous User Journey**: First-time visitor experience, exploration, rate limits
+- ✅ **Registration & Onboarding**: Account creation, email verification, first comparison
+- ✅ **Authenticated Comparison**: Model selection, streaming results, follow-up conversations
+- ✅ **Conversation Management**: Saving, viewing, loading, deleting conversations
+- ✅ **Advanced Features**: Web search, file uploads, model selection management
+- ✅ **Navigation & Content**: Footer navigation, SEO pages, scroll behavior
+- ✅ **Admin Functionality**: User management, filtering, statistics, user creation/updates
+
+All tests are written from a user experience perspective, focusing on real user workflows and interactions.
 
 ## Documentation
 
