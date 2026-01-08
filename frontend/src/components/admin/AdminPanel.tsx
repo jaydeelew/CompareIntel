@@ -95,6 +95,34 @@ interface AdminPanelProps {
 
 type AdminTab = 'users' | 'models' | 'logs' | 'analytics' | 'search-providers'
 
+/**
+ * Formats a UTC date string to Central Standard Time in 12-hour format with am/pm
+ */
+const formatDateToCST = (utcDateString: string): string => {
+  const date = new Date(utcDateString)
+
+  // Use Intl.DateTimeFormat to format in Central Time
+  const formatter = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/Chicago',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true,
+  })
+
+  const parts = formatter.formatToParts(date)
+  const month = parts.find(p => p.type === 'month')?.value || ''
+  const day = parts.find(p => p.type === 'day')?.value || ''
+  const year = parts.find(p => p.type === 'year')?.value || ''
+  const hour = parts.find(p => p.type === 'hour')?.value || ''
+  const minute = parts.find(p => p.type === 'minute')?.value || ''
+  const dayPeriod = (parts.find(p => p.type === 'dayPeriod')?.value || '').toLowerCase()
+
+  return `${month}/${day}/${year} ${hour}:${minute} ${dayPeriod}`
+}
+
 const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
   const { user, refreshUser, logout } = useAuth()
   const getAuthHeaders = useAuthHeaders()
@@ -3021,16 +3049,8 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                         </td>
                         <td>
                           {userRow.last_access ? (
-                            <span title={new Date(userRow.last_access).toLocaleString()}>
-                              {(() => {
-                                const date = new Date(userRow.last_access)
-                                const month = String(date.getMonth() + 1).padStart(2, '0')
-                                const day = String(date.getDate()).padStart(2, '0')
-                                const year = date.getFullYear()
-                                const hours = String(date.getHours()).padStart(2, '0')
-                                const minutes = String(date.getMinutes()).padStart(2, '0')
-                                return `${month}/${day}/${year} ${hours}:${minutes}`
-                              })()}
+                            <span title={formatDateToCST(userRow.last_access)}>
+                              {formatDateToCST(userRow.last_access)}
                             </span>
                           ) : (
                             <span style={{ color: '#999', fontStyle: 'italic' }}>Never</span>
@@ -3208,22 +3228,10 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                       <span className="user-card-label">Last Access</span>
                       <span
                         className="user-card-value"
-                        title={
-                          userRow.last_access
-                            ? new Date(userRow.last_access).toLocaleString()
-                            : 'Never'
-                        }
+                        title={userRow.last_access ? formatDateToCST(userRow.last_access) : 'Never'}
                       >
                         {userRow.last_access ? (
-                          (() => {
-                            const date = new Date(userRow.last_access)
-                            const month = String(date.getMonth() + 1).padStart(2, '0')
-                            const day = String(date.getDate()).padStart(2, '0')
-                            const year = date.getFullYear()
-                            const hours = String(date.getHours()).padStart(2, '0')
-                            const minutes = String(date.getMinutes()).padStart(2, '0')
-                            return `${month}/${day}/${year} ${hours}:${minutes}`
-                          })()
+                          formatDateToCST(userRow.last_access)
                         ) : (
                           <span style={{ color: '#999', fontStyle: 'italic' }}>Never</span>
                         )}
