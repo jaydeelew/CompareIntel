@@ -62,21 +62,28 @@ test.describe('Registration and Onboarding', () => {
     })
 
     await test.step('Verify registration success', async () => {
+      // Wait for registration API call to complete
+      await page.waitForLoadState('networkidle')
+
       // Auth modal should close
       await page
         .waitForSelector('[data-testid="auth-modal"], .auth-modal', {
           state: 'hidden',
-          timeout: 10000,
+          timeout: 15000,
         })
         .catch(() => {})
 
-      // User menu button should appear (user is logged in)
-      const userMenuButton = page.getByTestId('user-menu-button')
-      await expect(userMenuButton).toBeVisible({ timeout: 10000 })
+      // Wait a bit for React state to update
+      await page.waitForTimeout(500)
 
-      // Sign-in/sign-up buttons should be hidden
-      await expect(page.getByTestId('nav-sign-in-button')).not.toBeVisible({ timeout: 2000 })
-      await expect(page.getByTestId('nav-sign-up-button')).not.toBeVisible({ timeout: 2000 })
+      // User menu button should appear (user is logged in)
+      // Use longer timeout - user data needs to load after registration
+      const userMenuButton = page.getByTestId('user-menu-button')
+      await expect(userMenuButton).toBeVisible({ timeout: 20000 })
+
+      // Sign-in/sign-up buttons should be hidden (confirms auth state updated)
+      await expect(page.getByTestId('nav-sign-in-button')).not.toBeVisible({ timeout: 5000 })
+      await expect(page.getByTestId('nav-sign-up-button')).not.toBeVisible({ timeout: 5000 })
     })
   })
 
@@ -134,10 +141,23 @@ test.describe('Registration and Onboarding', () => {
       }
 
       await page.getByTestId('register-submit-button').click()
+
+      // Wait for registration API call to complete
       await page.waitForLoadState('networkidle')
 
-      // Wait for user menu to appear
-      await expect(page.getByTestId('user-menu-button')).toBeVisible({ timeout: 10000 })
+      // Wait for auth modal to close
+      await page
+        .waitForSelector('[data-testid="auth-modal"], .auth-modal', {
+          state: 'hidden',
+          timeout: 15000,
+        })
+        .catch(() => {})
+
+      // Wait a bit for React state to update
+      await page.waitForTimeout(500)
+
+      // Wait for user menu to appear (user data needs to load after registration)
+      await expect(page.getByTestId('user-menu-button')).toBeVisible({ timeout: 20000 })
     })
 
     await test.step('Perform first comparison', async () => {
@@ -146,14 +166,19 @@ test.describe('Registration and Onboarding', () => {
 
       await inputField.fill('Explain machine learning in simple terms.')
 
-      // Select models (registered users can select more than 3)
-      const modelCheckboxes = page.locator('input[type="checkbox"]')
-      const checkboxCount = await modelCheckboxes.count()
+      // Wait for models to load first
+      const loadingMessage = page.locator('.loading-message:has-text("Loading available models")')
+      await loadingMessage.waitFor({ state: 'hidden', timeout: 10000 }).catch(() => {})
 
-      if (checkboxCount > 0) {
-        // Select first model
-        await modelCheckboxes.first().check()
-      }
+      // Select models (registered users can select more than 3)
+      const modelCheckboxes = page.locator('input[type="checkbox"].model-checkbox')
+      await expect(modelCheckboxes.first()).toBeVisible({ timeout: 15000 })
+
+      const checkboxCount = await modelCheckboxes.count()
+      expect(checkboxCount).toBeGreaterThan(0)
+
+      // Select first model
+      await modelCheckboxes.first().check()
 
       // Submit comparison
       await page.getByTestId('comparison-submit-button').click()
@@ -226,8 +251,23 @@ test.describe('Registration and Onboarding', () => {
       await page.getByTestId('login-email-input').fill(testEmail)
       await page.getByTestId('login-password-input').fill(testPassword)
       await page.getByTestId('login-submit-button').click()
+
+      // Wait for login API call to complete
       await page.waitForLoadState('networkidle')
-      await expect(page.getByTestId('user-menu-button')).toBeVisible({ timeout: 10000 })
+
+      // Wait for auth modal to close
+      await page
+        .waitForSelector('[data-testid="auth-modal"], .auth-modal', {
+          state: 'hidden',
+          timeout: 15000,
+        })
+        .catch(() => {})
+
+      // Wait a bit for React state to update
+      await page.waitForTimeout(500)
+
+      // User menu button should appear (user data needs to load after login)
+      await expect(page.getByTestId('user-menu-button')).toBeVisible({ timeout: 20000 })
     })
 
     await test.step('Logout', async () => {

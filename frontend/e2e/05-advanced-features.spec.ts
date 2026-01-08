@@ -13,14 +13,21 @@ import { test, expect } from './fixtures'
 test.describe('Advanced Features', () => {
   test('User can enable web search for supported models', async ({ authenticatedPage }) => {
     await test.step('Select models that support web search', async () => {
-      const modelCheckboxes = authenticatedPage.locator('input[type="checkbox"]')
-      const checkboxCount = await modelCheckboxes.count()
+      // Wait for models to load first
+      const loadingMessage = authenticatedPage.locator(
+        '.loading-message:has-text("Loading available models")'
+      )
+      await loadingMessage.waitFor({ state: 'hidden', timeout: 10000 }).catch(() => {})
 
-      if (checkboxCount > 0) {
-        // Select first model
-        await modelCheckboxes.first().check()
-        await authenticatedPage.waitForTimeout(500)
-      }
+      const modelCheckboxes = authenticatedPage.locator('input[type="checkbox"].model-checkbox')
+      await expect(modelCheckboxes.first()).toBeVisible({ timeout: 15000 })
+
+      const checkboxCount = await modelCheckboxes.count()
+      expect(checkboxCount).toBeGreaterThan(0)
+
+      // Select first model
+      await modelCheckboxes.first().check()
+      await authenticatedPage.waitForTimeout(500)
     })
 
     await test.step('Web search toggle appears', async () => {
@@ -111,8 +118,17 @@ test.describe('Advanced Features', () => {
 
   test('User can save model selections', async ({ authenticatedPage }) => {
     await test.step('Select models', async () => {
-      const modelCheckboxes = authenticatedPage.locator('input[type="checkbox"]')
+      // Wait for models to load first
+      const loadingMessage = authenticatedPage.locator(
+        '.loading-message:has-text("Loading available models")'
+      )
+      await loadingMessage.waitFor({ state: 'hidden', timeout: 10000 }).catch(() => {})
+
+      const modelCheckboxes = authenticatedPage.locator('input[type="checkbox"].model-checkbox')
+      await expect(modelCheckboxes.first()).toBeVisible({ timeout: 15000 })
+
       const checkboxCount = await modelCheckboxes.count()
+      expect(checkboxCount).toBeGreaterThan(0)
 
       if (checkboxCount >= 2) {
         await modelCheckboxes.nth(0).check()
@@ -192,8 +208,19 @@ test.describe('Advanced Features', () => {
             await selectionItems.first().click()
             await authenticatedPage.waitForLoadState('networkidle')
 
+            // Wait for models to load first
+            const loadingMessage = authenticatedPage.locator(
+              '.loading-message:has-text("Loading available models")'
+            )
+            await loadingMessage.waitFor({ state: 'hidden', timeout: 10000 }).catch(() => {})
+
             // Models should be selected
-            const modelCheckboxes = authenticatedPage.locator('input[type="checkbox"]:checked')
+            const modelCheckboxes = authenticatedPage.locator(
+              'input[type="checkbox"].model-checkbox:checked'
+            )
+            await expect(modelCheckboxes.first())
+              .toBeVisible({ timeout: 15000 })
+              .catch(() => {})
             const checkedCount = await modelCheckboxes.count()
             expect(checkedCount).toBeGreaterThan(0)
           }

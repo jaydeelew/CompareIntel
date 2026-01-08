@@ -17,7 +17,15 @@ test.describe('Conversation Management', () => {
       const inputField = authenticatedPage.getByTestId('comparison-input-textarea')
       await inputField.fill('What is machine learning?')
 
-      const modelCheckboxes = authenticatedPage.locator('input[type="checkbox"]')
+      // Wait for models to load first
+      const loadingMessage = authenticatedPage.locator(
+        '.loading-message:has-text("Loading available models")'
+      )
+      await loadingMessage.waitFor({ state: 'hidden', timeout: 10000 }).catch(() => {})
+
+      const modelCheckboxes = authenticatedPage.locator('input[type="checkbox"].model-checkbox')
+      await expect(modelCheckboxes.first()).toBeVisible({ timeout: 15000 })
+
       if ((await modelCheckboxes.count()) > 0) {
         await modelCheckboxes.first().check()
       }
@@ -41,13 +49,17 @@ test.describe('Conversation Management', () => {
       await authenticatedPage.waitForTimeout(2000)
 
       // Check if history dropdown or indicator appears
+      // History toggle button has class "history-toggle-button" and title "Load previous conversations"
       const historyButton = authenticatedPage.locator(
-        'button[class*="history"], ' + '[data-testid*="history"], ' + 'button[title*="history"]'
+        'button.history-toggle-button, ' +
+          'button[class*="history"], ' +
+          'button[title*="history"], ' +
+          'button[title*="conversation"]'
       )
 
       const hasHistoryButton = await historyButton
         .first()
-        .isVisible({ timeout: 2000 })
+        .isVisible({ timeout: 5000 })
         .catch(() => false)
 
       if (hasHistoryButton) {
@@ -59,37 +71,51 @@ test.describe('Conversation Management', () => {
   test('User can view conversation history', async ({ authenticatedPage }) => {
     await test.step('Open conversation history', async () => {
       // Look for history toggle button (usually near the input area)
+      // History toggle button has class "history-toggle-button" and title "Load previous conversations"
       const historyButton = authenticatedPage.locator(
-        'button[class*="history"], ' +
-          '[data-testid*="history"], ' +
+        'button.history-toggle-button, ' +
+          'button[class*="history"], ' +
           'button[title*="history"], ' +
           'button[title*="conversation"]'
       )
 
-      if (
-        await historyButton
-          .first()
-          .isVisible({ timeout: 2000 })
-          .catch(() => false)
-      ) {
+      const buttonVisible = await historyButton
+        .first()
+        .isVisible({ timeout: 5000 })
+        .catch(() => false)
+
+      if (buttonVisible) {
         await historyButton.first().click()
         await authenticatedPage.waitForTimeout(500)
 
         // History dropdown/list should appear
+        // Actual class is "history-inline-list" (not conversation-history or conversations-list)
         const historyList = authenticatedPage.locator(
-          '[data-testid*="conversation-history"], ' +
+          '.history-inline-list, ' +
+            '[data-testid*="conversation-history"], ' +
             '.conversation-history, ' +
             '.conversations-list, ' +
-            '[class*="history-dropdown"]'
+            '[class*="history-dropdown"], ' +
+            '[class*="history-inline"]'
         )
 
-        await expect(historyList.first()).toBeVisible({ timeout: 3000 })
+        await expect(historyList.first()).toBeVisible({ timeout: 5000 })
+      } else {
+        // If history button is not visible, skip this test step
+        test.info().annotations.push({
+          type: 'note',
+          description: 'History button not found - may not be available for this user tier',
+        })
       }
     })
 
     await test.step('Conversations are listed', async () => {
+      // History items use class "history-item" (also may have "conversation-item")
       const conversationItems = authenticatedPage.locator(
-        '[data-testid*="conversation-item"], ' + '.conversation-item, ' + '[class*="conversation"]'
+        '.history-item, ' +
+          '[data-testid*="conversation-item"], ' +
+          '.conversation-item, ' +
+          '[class*="history-item"]'
       )
 
       const itemCount = await conversationItems.count()
@@ -98,9 +124,14 @@ test.describe('Conversation Management', () => {
         // At least one conversation should be visible
         await expect(conversationItems.first()).toBeVisible()
       } else {
-        // Or empty state message
-        const emptyState = authenticatedPage.getByText(/no conversations|empty|get started/i)
-        const hasEmptyState = await emptyState.isVisible({ timeout: 2000 }).catch(() => false)
+        // Or empty state message (class is "history-empty")
+        const emptyState = authenticatedPage
+          .locator('.history-empty, [class*="history-empty"]')
+          .or(authenticatedPage.getByText(/no conversations|empty|get started/i))
+        const hasEmptyState = await emptyState
+          .first()
+          .isVisible({ timeout: 2000 })
+          .catch(() => false)
 
         // Either conversations or empty state should be present
         expect(itemCount > 0 || hasEmptyState).toBe(true)
@@ -111,23 +142,31 @@ test.describe('Conversation Management', () => {
   test('User can load a previous conversation', async ({ authenticatedPage }) => {
     await test.step('Open history', async () => {
       const historyButton = authenticatedPage.locator(
-        'button[class*="history"], [data-testid*="history"]'
+        'button.history-toggle-button, button[class*="history"], [data-testid*="history"]'
       )
 
-      if (
-        await historyButton
-          .first()
-          .isVisible({ timeout: 2000 })
-          .catch(() => false)
-      ) {
+      const buttonVisible = await historyButton
+        .first()
+        .isVisible({ timeout: 5000 })
+        .catch(() => false)
+
+      if (buttonVisible) {
         await historyButton.first().click()
         await authenticatedPage.waitForTimeout(500)
+
+        // Wait for history list to appear
+        await authenticatedPage
+          .locator('.history-inline-list')
+          .first()
+          .isVisible({ timeout: 3000 })
+          .catch(() => {})
       }
     })
 
     await test.step('Click on a conversation', async () => {
+      // History items use class "history-item"
       const conversationItems = authenticatedPage.locator(
-        '[data-testid*="conversation-item"], .conversation-item'
+        '.history-item, [data-testid*="conversation-item"], .conversation-item'
       )
 
       const itemCount = await conversationItems.count()
@@ -138,7 +177,7 @@ test.describe('Conversation Management', () => {
         await authenticatedPage.waitForLoadState('networkidle')
 
         // Conversation should load
-        await authenticatedPage.waitForTimeout(1000)
+        await authenticatedPage.waitForTimeout(2000)
 
         // Results should be visible
         const results = authenticatedPage.locator(
@@ -147,7 +186,7 @@ test.describe('Conversation Management', () => {
 
         const hasResults = await results
           .first()
-          .isVisible({ timeout: 5000 })
+          .isVisible({ timeout: 10000 })
           .catch(() => false)
 
         if (hasResults) {
@@ -162,7 +201,15 @@ test.describe('Conversation Management', () => {
       const inputField = authenticatedPage.getByTestId('comparison-input-textarea')
       await inputField.fill('Test conversation to delete')
 
-      const modelCheckboxes = authenticatedPage.locator('input[type="checkbox"]')
+      // Wait for models to load first
+      const loadingMessage = authenticatedPage.locator(
+        '.loading-message:has-text("Loading available models")'
+      )
+      await loadingMessage.waitFor({ state: 'hidden', timeout: 10000 }).catch(() => {})
+
+      const modelCheckboxes = authenticatedPage.locator('input[type="checkbox"].model-checkbox')
+      await expect(modelCheckboxes.first()).toBeVisible({ timeout: 15000 })
+
       if ((await modelCheckboxes.count()) > 0) {
         await modelCheckboxes.first().check()
       }
@@ -176,20 +223,27 @@ test.describe('Conversation Management', () => {
 
     await test.step('Open history and delete conversation', async () => {
       const historyButton = authenticatedPage.locator(
-        'button[class*="history"], [data-testid*="history"]'
+        'button.history-toggle-button, button[class*="history"], [data-testid*="history"]'
       )
 
-      if (
-        await historyButton
-          .first()
-          .isVisible({ timeout: 2000 })
-          .catch(() => false)
-      ) {
+      const buttonVisible = await historyButton
+        .first()
+        .isVisible({ timeout: 5000 })
+        .catch(() => false)
+
+      if (buttonVisible) {
         await historyButton.first().click()
         await authenticatedPage.waitForTimeout(500)
 
+        // Wait for history list to appear
+        await authenticatedPage
+          .locator('.history-inline-list')
+          .first()
+          .isVisible({ timeout: 3000 })
+          .catch(() => {})
+
         const conversationItems = authenticatedPage.locator(
-          '[data-testid*="conversation-item"], .conversation-item'
+          '.history-item, [data-testid*="conversation-item"], .conversation-item'
         )
 
         const initialCount = await conversationItems.count()
@@ -242,26 +296,34 @@ test.describe('Conversation Management', () => {
   test('User can continue existing conversation', async ({ authenticatedPage }) => {
     await test.step('Load existing conversation', async () => {
       const historyButton = authenticatedPage.locator(
-        'button[class*="history"], [data-testid*="history"]'
+        'button.history-toggle-button, button[class*="history"], [data-testid*="history"]'
       )
 
-      if (
-        await historyButton
-          .first()
-          .isVisible({ timeout: 2000 })
-          .catch(() => false)
-      ) {
+      const buttonVisible = await historyButton
+        .first()
+        .isVisible({ timeout: 5000 })
+        .catch(() => false)
+
+      if (buttonVisible) {
         await historyButton.first().click()
         await authenticatedPage.waitForTimeout(500)
 
+        // Wait for history list to appear
+        await authenticatedPage
+          .locator('.history-inline-list')
+          .first()
+          .isVisible({ timeout: 3000 })
+          .catch(() => {})
+
         const conversationItems = authenticatedPage.locator(
-          '[data-testid*="conversation-item"], .conversation-item'
+          '.history-item, [data-testid*="conversation-item"], .conversation-item'
         )
 
-        if ((await conversationItems.count()) > 0) {
+        const itemCount = await conversationItems.count()
+        if (itemCount > 0) {
           await conversationItems.first().click()
           await authenticatedPage.waitForLoadState('networkidle')
-          await authenticatedPage.waitForTimeout(1000)
+          await authenticatedPage.waitForTimeout(2000)
         }
       }
     })
@@ -277,14 +339,27 @@ test.describe('Conversation Management', () => {
       await authenticatedPage.getByTestId('comparison-submit-button').click()
       await authenticatedPage.waitForLoadState('networkidle')
 
-      // Wait for follow-up response
-      await authenticatedPage.waitForTimeout(3000)
-
-      // Verify new response appears
+      // Wait for follow-up response to stream in
+      // Result cards use class "result-card conversation-card" (no data-testid)
       const results = authenticatedPage.locator(
-        '[data-testid^="result-card-"], .result-card, .model-response'
+        '.result-card, ' +
+          '.conversation-card, ' +
+          '[data-testid^="result-card-"], ' +
+          '.model-response'
       )
 
+      // Wait for at least one result card to be visible
+      await expect(results.first())
+        .toBeVisible({ timeout: 30000 })
+        .catch(() => {
+          // If results don't appear, check if backend is running
+          test.info().annotations.push({
+            type: 'note',
+            description: 'Follow-up results may not have appeared - backend may not be running',
+          })
+        })
+
+      // Verify new response appears
       const resultCount = await results.count()
       expect(resultCount).toBeGreaterThan(0)
     })

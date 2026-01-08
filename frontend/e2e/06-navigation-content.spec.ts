@@ -28,9 +28,11 @@ test.describe('Navigation and Content Pages', () => {
 
     expect(page.url()).toContain('/about')
 
-    // Page should have content
-    const mainContent = page.locator('main, .main-content, [role="main"]')
-    await expect(mainContent.first()).toBeVisible()
+    // Page should have content (SEO pages use article.seo-page-content)
+    const mainContent = page.locator(
+      'main, .main-content, [role="main"], article.seo-page-content, .seo-page-content, article'
+    )
+    await expect(mainContent.first()).toBeVisible({ timeout: 10000 })
 
     // Page should load at the top
     const scrollY = await page.evaluate(() => window.scrollY)
@@ -83,9 +85,11 @@ test.describe('Navigation and Content Pages', () => {
 
     expect(page.url()).toContain('/how-it-works')
 
-    // Content should be visible
-    const mainContent = page.locator('main, .main-content')
-    await expect(mainContent.first()).toBeVisible()
+    // Content should be visible (SEO pages use article.seo-page-content)
+    const mainContent = page.locator(
+      'main, .main-content, [role="main"], article.seo-page-content, .seo-page-content, article'
+    )
+    await expect(mainContent.first()).toBeVisible({ timeout: 10000 })
   })
 
   test('User can navigate to Privacy Policy', async ({ page }) => {
@@ -202,13 +206,13 @@ test.describe('Navigation and Content Pages', () => {
       await page.goto(pagePath)
       await page.waitForLoadState('networkidle')
 
-      // Navigation should be visible
-      const nav = page.locator('header, .navbar, nav')
-      await expect(nav.first()).toBeVisible()
+      // Navigation should be visible (header.app-header contains nav.navbar)
+      const nav = page.locator('header.app-header, .navbar, nav, header')
+      await expect(nav.first()).toBeVisible({ timeout: 10000 })
 
-      // Logo/brand should be visible
-      const logo = page.locator('.brand-logo, .logo-icon')
-      await expect(logo.first()).toBeVisible({ timeout: 2000 })
+      // Logo/brand should be visible (.brand-logo contains .logo-icon)
+      const logo = page.locator('.brand-logo, .logo-icon, img.logo-icon')
+      await expect(logo.first()).toBeVisible({ timeout: 10000 })
     }
   })
 })

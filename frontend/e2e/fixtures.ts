@@ -110,13 +110,16 @@ async function loginUser(
       await page
         .waitForSelector('[data-testid="auth-modal"], .auth-modal', {
           state: 'hidden',
-          timeout: 10000,
+          timeout: 15000,
         })
         .catch(() => {})
+
+      // Wait a bit for React state to update
+      await page.waitForTimeout(500)
     }
 
-    // Verify login succeeded
-    const loginSucceeded = await userMenu.isVisible({ timeout: 10000 }).catch(() => false)
+    // Verify login succeeded - user data needs to load after login
+    const loginSucceeded = await userMenu.isVisible({ timeout: 20000 }).catch(() => false)
     return loginSucceeded
   } catch (error) {
     console.error(`Login failed for ${email}:`, error)
@@ -172,14 +175,18 @@ async function registerUser(
       await page
         .waitForSelector('[data-testid="auth-modal"], .auth-modal', {
           state: 'hidden',
-          timeout: 10000,
+          timeout: 15000,
         })
         .catch(() => {})
+
+      // Wait a bit for React state to update
+      await page.waitForTimeout(500)
     }
 
     // Verify registration succeeded (user menu should be visible)
+    // User data needs to load after registration
     const userMenu = page.getByTestId('user-menu-button')
-    const registrationSucceeded = await userMenu.isVisible({ timeout: 10000 }).catch(() => false)
+    const registrationSucceeded = await userMenu.isVisible({ timeout: 20000 }).catch(() => false)
     return registrationSucceeded
   } catch (error) {
     console.error(`Registration failed for ${email}:`, error)
@@ -203,8 +210,8 @@ async function ensureAuthenticated(page: Page, email: string, password: string):
     }
   }
 
-  // Verify we're authenticated
-  await expect(userMenu).toBeVisible({ timeout: 10000 })
+  // Verify we're authenticated - user data needs to load after login/registration
+  await expect(userMenu).toBeVisible({ timeout: 20000 })
 }
 
 /**

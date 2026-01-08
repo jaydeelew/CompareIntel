@@ -44,16 +44,18 @@ test.describe('Anonymous User Journey', () => {
     })
 
     await test.step('Model selection is visible', async () => {
-      // Models should be visible (could be in a grid, list, or dropdown)
-      const modelSelectors = page.locator(
-        'input[type="checkbox"][name*="model"], ' +
-          '[data-testid*="model"], ' +
-          '.model-card, ' +
-          '[class*="model-selector"]'
-      )
+      // Wait for models to load - check for loading message to disappear or checkboxes to appear
+      const loadingMessage = page.locator('.loading-message:has-text("Loading available models")')
+      await loadingMessage.waitFor({ state: 'hidden', timeout: 10000 }).catch(() => {
+        // Loading message might not exist or already be gone, continue
+      })
 
-      // At least some model selection UI should be present
-      const modelCount = await modelSelectors.count()
+      // Wait for model checkboxes to appear (they're inside model cards)
+      const modelCheckboxes = page.locator('input[type="checkbox"].model-checkbox')
+      await expect(modelCheckboxes.first()).toBeVisible({ timeout: 15000 })
+
+      // Verify at least some model selection UI is present
+      const modelCount = await modelCheckboxes.count()
       expect(modelCount).toBeGreaterThan(0)
     })
   })
@@ -69,21 +71,28 @@ test.describe('Anonymous User Journey', () => {
     })
 
     await test.step('Select models (within anonymous limit)', async () => {
+      // Wait for models to load first
+      const loadingMessage = page.locator('.loading-message:has-text("Loading available models")')
+      await loadingMessage.waitFor({ state: 'hidden', timeout: 10000 }).catch(() => {
+        // Loading message might not exist or already be gone, continue
+      })
+
       // Anonymous users can select up to 3 models
-      const modelCheckboxes = page.locator('input[type="checkbox"]')
+      const modelCheckboxes = page.locator('input[type="checkbox"].model-checkbox')
+      await expect(modelCheckboxes.first()).toBeVisible({ timeout: 15000 })
+
       const checkboxCount = await modelCheckboxes.count()
+      expect(checkboxCount).toBeGreaterThan(0)
 
-      if (checkboxCount > 0) {
-        // Select up to 3 models
-        const modelsToSelect = Math.min(3, checkboxCount)
-        for (let i = 0; i < modelsToSelect; i++) {
-          await modelCheckboxes.nth(i).check()
-        }
+      // Select up to 3 models
+      const modelsToSelect = Math.min(3, checkboxCount)
+      for (let i = 0; i < modelsToSelect; i++) {
+        await modelCheckboxes.nth(i).check()
+      }
 
-        // Verify models are selected
-        for (let i = 0; i < modelsToSelect; i++) {
-          await expect(modelCheckboxes.nth(i)).toBeChecked()
-        }
+      // Verify models are selected
+      for (let i = 0; i < modelsToSelect; i++) {
+        await expect(modelCheckboxes.nth(i)).toBeChecked()
       }
     })
 
@@ -177,8 +186,17 @@ test.describe('Anonymous User Journey', () => {
   })
 
   test('Anonymous user cannot select more than 3 models', async ({ page }) => {
-    const modelCheckboxes = page.locator('input[type="checkbox"]')
+    // Wait for models to load first
+    const loadingMessage = page.locator('.loading-message:has-text("Loading available models")')
+    await loadingMessage.waitFor({ state: 'hidden', timeout: 10000 }).catch(() => {
+      // Loading message might not exist or already be gone, continue
+    })
+
+    const modelCheckboxes = page.locator('input[type="checkbox"].model-checkbox')
+    await expect(modelCheckboxes.first()).toBeVisible({ timeout: 15000 })
+
     const checkboxCount = await modelCheckboxes.count()
+    expect(checkboxCount).toBeGreaterThan(0)
 
     if (checkboxCount > 3) {
       // Select first 3 models
@@ -240,9 +258,11 @@ test.describe('Anonymous User Journey', () => {
           // Verify we're on the correct page
           expect(page.url()).toContain(pageInfo.path)
 
-          // Page should have content
-          const mainContent = page.locator('main, .main-content, [role="main"]')
-          await expect(mainContent.first()).toBeVisible()
+          // Page should have content (SEO pages use article.seo-page-content)
+          const mainContent = page.locator(
+            'main, .main-content, [role="main"], article.seo-page-content, .seo-page-content, article'
+          )
+          await expect(mainContent.first()).toBeVisible({ timeout: 10000 })
         }
       })
     }
@@ -250,7 +270,13 @@ test.describe('Anonymous User Journey', () => {
 
   test('Anonymous user sees clear value proposition', async ({ page }) => {
     // Check for key messaging about the platform
-    const valueProps = [/compare.*models/i, /ai.*comparison/i, /side.*side/i, /real.*time/i]
+    // Note: Homepage uses "concurrent" instead of "real-time" in hero section
+    const valueProps = [
+      /compare.*models/i,
+      /ai.*comparison/i,
+      /side.*side/i,
+      /(real.*time|concurrent)/i, // Accept either "real-time" or "concurrent"
+    ]
 
     const pageContent = await page.textContent('body')
 
