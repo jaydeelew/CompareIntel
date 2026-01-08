@@ -25,9 +25,7 @@ sys.path.insert(0, str(backend_dir))
 from dotenv import load_dotenv
 
 # Try multiple .env locations (development scenarios)
-project_root = backend_dir.parent.resolve()
 env_paths = [
-    project_root / ".env",
     backend_dir / ".env",
     Path("/app/.env"),  # Docker container path
 ]

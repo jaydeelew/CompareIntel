@@ -10,10 +10,12 @@ import os
 import sys
 import getpass
 from datetime import datetime, UTC
+from pathlib import Path
 
 # Load environment variables from .env file
 from dotenv import load_dotenv
-load_dotenv()
+backend_dir = Path(__file__).parent.resolve()
+load_dotenv(backend_dir / ".env")
 
 # Add the backend directory to the Python path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))

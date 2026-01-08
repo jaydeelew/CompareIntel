@@ -12,13 +12,10 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 # Load environment variables from .env file
-# Handle both running from project root and backend directory
+# Only load from backend/.env (not project root)
 env_path = Path(__file__).parent.parent.parent / ".env"
 if env_path.exists():
     load_dotenv(env_path)
-else:
-    # Fallback to parent directory
-    load_dotenv(Path(__file__).parent.parent.parent.parent / ".env")
 
 
 class Settings(BaseSettings):

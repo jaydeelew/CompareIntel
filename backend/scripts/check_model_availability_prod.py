@@ -21,7 +21,6 @@ import asyncio
 # Determine script location and set up paths
 SCRIPT_DIR = Path(__file__).parent.resolve()
 BACKEND_DIR = SCRIPT_DIR.parent.resolve()
-PROJECT_ROOT = BACKEND_DIR.parent.resolve()
 
 # Add backend directory to Python path
 sys.path.insert(0, str(BACKEND_DIR))
@@ -33,7 +32,6 @@ from dotenv import load_dotenv
 
 # Try multiple .env locations (development scenarios)
 env_paths = [
-    PROJECT_ROOT / ".env",
     BACKEND_DIR / ".env",
     Path("/app/.env"),  # Docker container path
 ]
