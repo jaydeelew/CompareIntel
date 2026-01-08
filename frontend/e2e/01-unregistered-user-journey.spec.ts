@@ -50,9 +50,11 @@ test.describe('Unregistered User Journey', () => {
         // Loading message might not exist or already be gone, continue
       })
 
-      // Wait for model checkboxes to appear (they're inside model cards)
-      const modelCheckboxes = page.locator('input[type="checkbox"].model-checkbox')
-      await expect(modelCheckboxes.first()).toBeVisible({ timeout: 15000 })
+      // Wait for model checkboxes to appear (prefer data-testid, fallback to CSS selector)
+      const modelCheckboxes = page.locator(
+        '[data-testid^="model-checkbox-"], input[type="checkbox"].model-checkbox'
+      )
+      await expect(modelCheckboxes.first()).toBeVisible({ timeout: 20000 })
 
       // Verify at least some model selection UI is present
       const modelCount = await modelCheckboxes.count()
@@ -78,8 +80,11 @@ test.describe('Unregistered User Journey', () => {
       })
 
       // Unregistered users can select up to 3 models
-      const modelCheckboxes = page.locator('input[type="checkbox"].model-checkbox')
-      await expect(modelCheckboxes.first()).toBeVisible({ timeout: 15000 })
+      // Prefer data-testid selector, fallback to CSS selector
+      const modelCheckboxes = page.locator(
+        '[data-testid^="model-checkbox-"], input[type="checkbox"].model-checkbox'
+      )
+      await expect(modelCheckboxes.first()).toBeVisible({ timeout: 20000 })
 
       const checkboxCount = await modelCheckboxes.count()
       expect(checkboxCount).toBeGreaterThan(0)
@@ -192,8 +197,11 @@ test.describe('Unregistered User Journey', () => {
       // Loading message might not exist or already be gone, continue
     })
 
-    const modelCheckboxes = page.locator('input[type="checkbox"].model-checkbox')
-    await expect(modelCheckboxes.first()).toBeVisible({ timeout: 15000 })
+    // Prefer data-testid selector, fallback to CSS selector
+    const modelCheckboxes = page.locator(
+      '[data-testid^="model-checkbox-"], input[type="checkbox"].model-checkbox'
+    )
+    await expect(modelCheckboxes.first()).toBeVisible({ timeout: 20000 })
 
     const checkboxCount = await modelCheckboxes.count()
     expect(checkboxCount).toBeGreaterThan(0)

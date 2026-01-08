@@ -7323,6 +7323,7 @@ function AppContent() {
                                               disabled={isDisabled}
                                               onChange={handleModelClick}
                                               className={`model-checkbox ${isFollowUpMode && !isSelected && wasOriginallySelected ? 'follow-up-deselected' : ''}`}
+                                              data-testid={`model-checkbox-${model.id}`}
                                               style={{
                                                 margin: 0,
                                                 width: '16px',

@@ -33,7 +33,9 @@ test.describe('Authenticated User Comparison Flow', () => {
         // Loading message might not exist or already be gone, continue
       })
 
-      const modelCheckboxes = authenticatedPage.locator('input[type="checkbox"].model-checkbox')
+      const modelCheckboxes = authenticatedPage.locator(
+        '[data-testid^="model-checkbox-"], input[type="checkbox"].model-checkbox'
+      )
       await expect(modelCheckboxes.first()).toBeVisible({ timeout: 15000 })
 
       const checkboxCount = await modelCheckboxes.count()
@@ -94,7 +96,9 @@ test.describe('Authenticated User Comparison Flow', () => {
       )
       await loadingMessage.waitFor({ state: 'hidden', timeout: 10000 }).catch(() => {})
 
-      const modelCheckboxes = authenticatedPage.locator('input[type="checkbox"].model-checkbox')
+      const modelCheckboxes = authenticatedPage.locator(
+        '[data-testid^="model-checkbox-"], input[type="checkbox"].model-checkbox'
+      )
       await expect(modelCheckboxes.first()).toBeVisible({ timeout: 15000 })
 
       if ((await modelCheckboxes.count()) > 0) {
@@ -168,7 +172,9 @@ test.describe('Authenticated User Comparison Flow', () => {
       )
       await loadingMessage.waitFor({ state: 'hidden', timeout: 10000 }).catch(() => {})
 
-      const modelCheckboxes = authenticatedPage.locator('input[type="checkbox"].model-checkbox')
+      const modelCheckboxes = authenticatedPage.locator(
+        '[data-testid^="model-checkbox-"], input[type="checkbox"].model-checkbox'
+      )
       await expect(modelCheckboxes.first()).toBeVisible({ timeout: 15000 })
 
       if ((await modelCheckboxes.count()) > 0) {
@@ -234,7 +240,9 @@ test.describe('Authenticated User Comparison Flow', () => {
     await loadingMessage.waitFor({ state: 'hidden', timeout: 10000 }).catch(() => {})
 
     await test.step('Select first set of models', async () => {
-      const modelCheckboxes = authenticatedPage.locator('input[type="checkbox"].model-checkbox')
+      const modelCheckboxes = authenticatedPage.locator(
+        '[data-testid^="model-checkbox-"], input[type="checkbox"].model-checkbox'
+      )
       await expect(modelCheckboxes.first()).toBeVisible({ timeout: 15000 })
 
       const checkboxCount = await modelCheckboxes.count()
@@ -251,7 +259,9 @@ test.describe('Authenticated User Comparison Flow', () => {
     })
 
     await test.step('Change model selection', async () => {
-      const modelCheckboxes = authenticatedPage.locator('input[type="checkbox"].model-checkbox')
+      const modelCheckboxes = authenticatedPage.locator(
+        '[data-testid^="model-checkbox-"], input[type="checkbox"].model-checkbox'
+      )
       const checkboxCount = await modelCheckboxes.count()
 
       if (checkboxCount >= 3) {
@@ -276,7 +286,9 @@ test.describe('Authenticated User Comparison Flow', () => {
       )
       await loadingMessage.waitFor({ state: 'hidden', timeout: 10000 }).catch(() => {})
 
-      const modelCheckboxes = authenticatedPage.locator('input[type="checkbox"].model-checkbox')
+      const modelCheckboxes = authenticatedPage.locator(
+        '[data-testid^="model-checkbox-"], input[type="checkbox"].model-checkbox'
+      )
       await expect(modelCheckboxes.first()).toBeVisible({ timeout: 15000 })
 
       if ((await modelCheckboxes.count()) > 0) {

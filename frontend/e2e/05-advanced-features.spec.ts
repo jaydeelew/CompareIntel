@@ -19,7 +19,9 @@ test.describe('Advanced Features', () => {
       )
       await loadingMessage.waitFor({ state: 'hidden', timeout: 10000 }).catch(() => {})
 
-      const modelCheckboxes = authenticatedPage.locator('input[type="checkbox"].model-checkbox')
+      const modelCheckboxes = authenticatedPage.locator(
+        '[data-testid^="model-checkbox-"], input[type="checkbox"].model-checkbox'
+      )
       await expect(modelCheckboxes.first()).toBeVisible({ timeout: 15000 })
 
       const checkboxCount = await modelCheckboxes.count()
@@ -124,7 +126,9 @@ test.describe('Advanced Features', () => {
       )
       await loadingMessage.waitFor({ state: 'hidden', timeout: 10000 }).catch(() => {})
 
-      const modelCheckboxes = authenticatedPage.locator('input[type="checkbox"].model-checkbox')
+      const modelCheckboxes = authenticatedPage.locator(
+        '[data-testid^="model-checkbox-"], input[type="checkbox"].model-checkbox'
+      )
       await expect(modelCheckboxes.first()).toBeVisible({ timeout: 15000 })
 
       const checkboxCount = await modelCheckboxes.count()
@@ -216,7 +220,7 @@ test.describe('Advanced Features', () => {
 
             // Models should be selected
             const modelCheckboxes = authenticatedPage.locator(
-              'input[type="checkbox"].model-checkbox:checked'
+              '[data-testid^="model-checkbox-"]:checked, input[type="checkbox"].model-checkbox:checked'
             )
             await expect(modelCheckboxes.first())
               .toBeVisible({ timeout: 15000 })

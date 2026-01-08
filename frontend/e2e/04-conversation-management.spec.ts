@@ -23,7 +23,9 @@ test.describe('Conversation Management', () => {
       )
       await loadingMessage.waitFor({ state: 'hidden', timeout: 10000 }).catch(() => {})
 
-      const modelCheckboxes = authenticatedPage.locator('input[type="checkbox"].model-checkbox')
+      const modelCheckboxes = authenticatedPage.locator(
+        '[data-testid^="model-checkbox-"], input[type="checkbox"].model-checkbox'
+      )
       await expect(modelCheckboxes.first()).toBeVisible({ timeout: 15000 })
 
       if ((await modelCheckboxes.count()) > 0) {
@@ -207,7 +209,9 @@ test.describe('Conversation Management', () => {
       )
       await loadingMessage.waitFor({ state: 'hidden', timeout: 10000 }).catch(() => {})
 
-      const modelCheckboxes = authenticatedPage.locator('input[type="checkbox"].model-checkbox')
+      const modelCheckboxes = authenticatedPage.locator(
+        '[data-testid^="model-checkbox-"], input[type="checkbox"].model-checkbox'
+      )
       await expect(modelCheckboxes.first()).toBeVisible({ timeout: 15000 })
 
       if ((await modelCheckboxes.count()) > 0) {

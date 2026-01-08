@@ -73,11 +73,9 @@ test.describe('Registration and Onboarding', () => {
         })
         .catch(() => {})
 
-      // Wait a bit for React state to update
-      await page.waitForTimeout(500)
-
       // User menu button should appear (user is logged in)
       // Use longer timeout - user data needs to load after registration
+      // Wait for user menu to appear instead of using waitForTimeout
       const userMenuButton = page.getByTestId('user-menu-button')
       await expect(userMenuButton).toBeVisible({ timeout: 20000 })
 
@@ -171,7 +169,9 @@ test.describe('Registration and Onboarding', () => {
       await loadingMessage.waitFor({ state: 'hidden', timeout: 10000 }).catch(() => {})
 
       // Select models (registered users can select more than 3)
-      const modelCheckboxes = page.locator('input[type="checkbox"].model-checkbox')
+      const modelCheckboxes = page.locator(
+        '[data-testid^="model-checkbox-"], input[type="checkbox"].model-checkbox'
+      )
       await expect(modelCheckboxes.first()).toBeVisible({ timeout: 15000 })
 
       const checkboxCount = await modelCheckboxes.count()

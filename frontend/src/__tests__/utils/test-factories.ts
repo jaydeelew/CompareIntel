@@ -118,13 +118,17 @@ export function createMockModelsByProvider(
   return result
 }
 
+// Counter to ensure unique message IDs in tests
+let messageIdCounter = 0
+
 /**
  * Create a mock ConversationMessage
  */
 export function createMockConversationMessage(
   overrides?: Partial<ConversationMessage>
 ): ConversationMessage {
-  const id = overrides?.id || createMessageId(`msg-${Date.now()}`)
+  // Use counter + timestamp to ensure uniqueness even when called rapidly
+  const id = overrides?.id || createMessageId(`msg-${Date.now()}-${++messageIdCounter}`)
   return {
     id,
     type: overrides?.type || 'user',

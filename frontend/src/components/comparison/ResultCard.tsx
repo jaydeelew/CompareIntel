@@ -246,16 +246,20 @@ export const ResultCard: React.FC<ResultCardProps> = ({
         </div>
       </div>
       <div className="conversation-content" id={`conversation-content-${safeId}`}>
-        {safeMessages.map((message, index) => (
-          <MessageBubble
-            key={message.id ? String(message.id) : `msg-${index}`}
-            id={message.id ? String(message.id) : `msg-${index}`}
-            type={message.type || 'assistant'}
-            content={message.content || ''}
-            timestamp={message.timestamp || new Date().toISOString()}
-            activeTab={activeTab}
-          />
-        ))}
+        {safeMessages.map((message, index) => {
+          // Ensure unique key by combining message ID with index
+          const uniqueKey = message.id ? `${String(message.id)}-${index}` : `msg-${index}`
+          return (
+            <MessageBubble
+              key={uniqueKey}
+              id={message.id ? String(message.id) : `msg-${index}`}
+              type={message.type || 'assistant'}
+              content={message.content || ''}
+              timestamp={message.timestamp || new Date().toISOString()}
+              activeTab={activeTab}
+            />
+          )
+        })}
       </div>
     </div>
   )
