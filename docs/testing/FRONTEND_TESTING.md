@@ -90,7 +90,7 @@ frontend/
 │       └── config/             # Configuration tests
 │           └── rendererConfigs.test.ts
 └── e2e/                        # E2E tests with Playwright (organized by user journey)
-    ├── 01-anonymous-user-journey.spec.ts    # First-time visitor experience
+    ├── 01-unregistered-user-journey.spec.ts    # First-time visitor experience
     ├── 02-registration-onboarding.spec.ts    # Registration and login flows
     ├── 03-authenticated-comparison.spec.ts   # Core comparison functionality
     ├── 04-conversation-management.spec.ts    # Conversation history and management
@@ -294,7 +294,7 @@ npm run test:e2e:ui
 npm run test:e2e:headed
 
 # Run specific E2E test file
-npx playwright test e2e/01-anonymous-user-journey.spec.ts
+npx playwright test e2e/01-unregistered-user-journey.spec.ts
 npx playwright test e2e/03-authenticated-comparison.spec.ts
 
 # Run tests matching pattern
@@ -620,7 +620,7 @@ beforeEach(() => {
 
 ## E2E Testing with Playwright
 
-> **Note**: E2E tests were restructured in January 2025 to focus on **user journeys** rather than technical features. Tests are now organized by user workflows (anonymous → registered → advanced features) for better maintainability and user-centric testing.
+> **Note**: E2E tests were restructured in January 2025 to focus on **user journeys** rather than technical features. Tests are now organized by user workflows (unregistered → registered → advanced features) for better maintainability and user-centric testing.
 
 ### Writing E2E Tests
 
@@ -629,8 +629,8 @@ E2E tests are written from a **user experience perspective**, focusing on real u
 ```typescript
 import { test, expect } from './fixtures'; // Use fixtures for authenticated state
 
-// Example: Anonymous user journey
-test('Anonymous user can perform a comparison', async ({ page }) => {
+// Example: Unregistered user journey
+test('Unregistered user can perform a comparison', async ({ page }) => {
   await page.goto('/');
   await page.waitForLoadState('networkidle');
   
@@ -638,7 +638,7 @@ test('Anonymous user can perform a comparison', async ({ page }) => {
   const inputField = page.getByTestId('comparison-input-textarea');
   await inputField.fill('What is artificial intelligence?');
   
-  // Select models (anonymous users limited to 3)
+  // Select models (unregistered users limited to 3)
   const modelCheckboxes = page.locator('input[type="checkbox"]');
   const modelsToSelect = Math.min(3, await modelCheckboxes.count());
   for (let i = 0; i < modelsToSelect; i++) {
@@ -730,7 +730,7 @@ test('User can register and perform first comparison', async ({ page }) => {
 
 Tests are organized by user journey and real-world workflows:
 
-- **`01-anonymous-user-journey.spec.ts`**: First-time visitor experience, anonymous comparisons, rate limits, sign-up prompts
+- **`01-unregistered-user-journey.spec.ts`**: First-time visitor experience, unregistered comparisons, rate limits, sign-up prompts
 - **`02-registration-onboarding.spec.ts`**: User registration, email verification, login/logout flows, first comparison
 - **`03-authenticated-comparison.spec.ts`**: Core comparison functionality, model selection, streaming results, follow-up conversations
 - **`04-conversation-management.spec.ts`**: Conversation history, saving, loading, deleting, continuing conversations
@@ -810,14 +810,14 @@ test('Authenticated test', async ({ authenticatedPage }) => {
 });
 ```
 
-**Anonymous User Fixture**
+**Unregistered User Fixture**
 
 ```typescript
-// Anonymous (unauthenticated) user
-test('Anonymous test', async ({ anonymousPage }) => {
+// Unregistered (unauthenticated) user
+test('Unregistered test', async ({ unregisteredPage }) => {
   // All cookies and storage cleared
   // No user menu visible
-  const signUpButton = anonymousPage.getByTestId('nav-sign-up-button')
+  const signUpButton = unregisteredPage.getByTestId('nav-sign-up-button')
   await expect(signUpButton).toBeVisible()
 });
 ```
@@ -948,17 +948,17 @@ test('Admin can view user list', async ({ adminPage }) => {
 });
 ```
 
-**Example 3: Testing Anonymous User Flow**
+**Example 3: Testing Unregistered User Flow**
 
 ```typescript
 import { test, expect } from './fixtures';
 
-test('Anonymous user sees sign up prompt', async ({ anonymousPage }) => {
-  // Already anonymous (no auth)
-  const signUpButton = anonymousPage.getByTestId('nav-sign-up-button')
+test('Unregistered user sees sign up prompt', async ({ unregisteredPage }) => {
+  // Already unregistered (no auth)
+  const signUpButton = unregisteredPage.getByTestId('nav-sign-up-button')
   await expect(signUpButton).toBeVisible()
 
-  const comparisonInput = anonymousPage.getByTestId('comparison-input-textarea')
+  const comparisonInput = unregisteredPage.getByTestId('comparison-input-textarea')
   await expect(comparisonInput).toBeVisible()
 });
 ```
@@ -1005,7 +1005,7 @@ test('User can perform comparison', async ({ comparisonPage, testData }) => {
 1. **Use the most specific fixture**: If you need a pro tier user, use `proTierPage` instead of `authenticatedPage`
 2. **Combine fixtures**: Use `testData` and `apiHelpers` with authentication fixtures
 3. **Don't duplicate setup**: If a fixture already does what you need, use it instead of writing custom setup
-4. **Use anonymous fixture**: Use `anonymousPage` when testing unauthenticated flows
+4. **Use unregistered fixture**: Use `unregisteredPage` when testing unauthenticated flows
 5. **Override credentials**: Use environment variables for CI/CD or different test environments
 
 #### Fixture Troubleshooting
@@ -1637,7 +1637,7 @@ screen.getByClassName('btn-primary');
 - **Wait for network idle**: Use `await page.waitForLoadState('networkidle')` after navigation
 - **Keep tests independent**: Each test should run in isolation
 - **Test critical flows**: Focus on user journeys, not every technical detail
-- **Organize by journey**: Group tests by user workflows (anonymous → registered → advanced)
+- **Organize by journey**: Group tests by user workflows (unregistered → registered → advanced)
 - **Graceful handling**: Handle cases where features might not be available
 
 ## Troubleshooting

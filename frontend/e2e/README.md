@@ -19,7 +19,7 @@ npm run test:e2e:ui
 npm run test:e2e:headed
 
 # Run specific E2E test file
-npx playwright test e2e/01-anonymous-user-journey.spec.ts
+npx playwright test e2e/01-unregistered-user-journey.spec.ts
 npx playwright test e2e/03-authenticated-comparison.spec.ts
 
 # Run tests by pattern
@@ -31,7 +31,7 @@ npx playwright test e2e/ --grep "admin"
 
 Tests are organized by user journey and functionality:
 
-- **`01-anonymous-user-journey.spec.ts`**: First-time visitor experience, anonymous comparisons, rate limits
+- **`01-unregistered-user-journey.spec.ts`**: First-time visitor experience, unregistered comparisons, rate limits
 - **`02-registration-onboarding.spec.ts`**: User registration, login, logout flows
 - **`03-authenticated-comparison.spec.ts`**: Core comparison functionality for authenticated users
 - **`04-conversation-management.spec.ts`**: Conversation history, loading, deletion, follow-ups
@@ -43,7 +43,7 @@ Tests are organized by user journey and functionality:
 
 Comprehensive E2E test coverage includes:
 
-- ✅ **Anonymous User Journey**: First-time visitor experience, exploration, rate limits
+- ✅ **Unregistered User Journey**: First-time visitor experience, exploration, rate limits
 - ✅ **Registration & Onboarding**: Account creation, email verification, first comparison
 - ✅ **Authenticated Comparison**: Model selection, streaming results, follow-up conversations
 - ✅ **Conversation Management**: Saving, viewing, loading, deleting conversations

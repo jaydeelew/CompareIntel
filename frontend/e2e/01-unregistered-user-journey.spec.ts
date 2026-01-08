@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test'
 
 /**
- * E2E Tests: Anonymous User Journey
+ * E2E Tests: Unregistered User Journey
  *
  * Tests the complete first-time visitor experience:
  * - Landing on homepage
@@ -11,7 +11,7 @@ import { test, expect } from '@playwright/test'
  * - Sign-up prompts
  */
 
-test.describe('Anonymous User Journey', () => {
+test.describe('Unregistered User Journey', () => {
   test.beforeEach(async ({ page, context }) => {
     // Clear all authentication state
     await context.clearCookies()
@@ -60,7 +60,7 @@ test.describe('Anonymous User Journey', () => {
     })
   })
 
-  test('Anonymous user can perform a comparison', async ({ page }) => {
+  test('Unregistered user can perform a comparison', async ({ page }) => {
     await test.step('Enter a prompt', async () => {
       const inputField = page.getByTestId('comparison-input-textarea')
       await inputField.fill('What is artificial intelligence?')
@@ -70,14 +70,14 @@ test.describe('Anonymous User Journey', () => {
       expect(value).toBe('What is artificial intelligence?')
     })
 
-    await test.step('Select models (within anonymous limit)', async () => {
+    await test.step('Select models (within unregistered limit)', async () => {
       // Wait for models to load first
       const loadingMessage = page.locator('.loading-message:has-text("Loading available models")')
       await loadingMessage.waitFor({ state: 'hidden', timeout: 10000 }).catch(() => {
         // Loading message might not exist or already be gone, continue
       })
 
-      // Anonymous users can select up to 3 models
+      // Unregistered users can select up to 3 models
       const modelCheckboxes = page.locator('input[type="checkbox"].model-checkbox')
       await expect(modelCheckboxes.first()).toBeVisible({ timeout: 15000 })
 
@@ -144,7 +144,7 @@ test.describe('Anonymous User Journey', () => {
     })
   })
 
-  test('Anonymous user sees rate limit information', async ({ page }) => {
+  test('Unregistered user sees rate limit information', async ({ page }) => {
     // Look for rate limit indicator or usage information
     const rateLimitIndicator = page.locator(
       '[data-testid="rate-limit-status"], ' +
@@ -165,7 +165,7 @@ test.describe('Anonymous User Journey', () => {
     }
   })
 
-  test('Anonymous user is prompted to sign up', async ({ page }) => {
+  test('Unregistered user is prompted to sign up', async ({ page }) => {
     // Sign-up prompts can appear in various places:
     // - Navigation button (always visible)
     // - Banner/alert after using features
@@ -185,7 +185,7 @@ test.describe('Anonymous User Journey', () => {
     expect(promptCount).toBeGreaterThanOrEqual(0)
   })
 
-  test('Anonymous user cannot select more than 3 models', async ({ page }) => {
+  test('Unregistered user cannot select more than 3 models', async ({ page }) => {
     // Wait for models to load first
     const loadingMessage = page.locator('.loading-message:has-text("Loading available models")')
     await loadingMessage.waitFor({ state: 'hidden', timeout: 10000 }).catch(() => {
@@ -238,7 +238,7 @@ test.describe('Anonymous User Journey', () => {
     }
   })
 
-  test('Anonymous user can navigate to information pages', async ({ page }) => {
+  test('Unregistered user can navigate to information pages', async ({ page }) => {
     const infoPages = [
       { name: 'About', path: '/about' },
       { name: 'Features', path: '/features' },
@@ -268,7 +268,7 @@ test.describe('Anonymous User Journey', () => {
     }
   })
 
-  test('Anonymous user sees clear value proposition', async ({ page }) => {
+  test('Unregistered user sees clear value proposition', async ({ page }) => {
     // Check for key messaging about the platform
     // Note: Homepage uses "concurrent" instead of "real-time" in hero section
     const valueProps = [

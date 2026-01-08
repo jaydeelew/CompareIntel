@@ -268,8 +268,8 @@ interface TestFixtures {
   moderatorPage: Page
   authenticatedPage: Page // Generic authenticated user (free tier)
 
-  // Anonymous/Unauthenticated
-  anonymousPage: Page
+  // Unregistered/Unauthenticated
+  unregisteredPage: Page
 
   // Page Navigation Fixtures
   comparisonPage: Page
@@ -428,19 +428,19 @@ export const test = base.extend<TestFixtures>({
   },
 
   // ==========================================================================
-  // Anonymous/Unauthenticated Fixtures
+  // Unregistered/Unauthenticated Fixtures
   // ==========================================================================
 
   /**
-   * Anonymous (unauthenticated) user page
+   * Unregistered (unauthenticated) user page
    * All cookies and storage cleared
    */
-  anonymousPage: async ({ page, context }, use) => {
+  unregisteredPage: async ({ page, context }, use) => {
     await clearAuthState(context)
     await page.goto('/')
     await page.waitForLoadState('networkidle')
 
-    // Verify we're anonymous (no user menu)
+    // Verify we're unregistered (no user menu)
     const userMenu = page.getByTestId('user-menu-button')
     await expect(userMenu).not.toBeVisible({ timeout: 2000 })
 

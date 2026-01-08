@@ -80,14 +80,14 @@ test('Authenticated test', async ({ authenticatedPage }) => {
 })
 ```
 
-### Anonymous User Fixture
+### Unregistered User Fixture
 
 ```typescript
-// Anonymous (unauthenticated) user
-test('Anonymous test', async ({ anonymousPage }) => {
+// Unregistered (unauthenticated) user
+test('Unregistered test', async ({ unregisteredPage }) => {
   // All cookies and storage cleared
   // No user menu visible
-  const signUpButton = anonymousPage.getByTestId('nav-sign-up-button')
+  const signUpButton = unregisteredPage.getByTestId('nav-sign-up-button')
   await expect(signUpButton).toBeVisible()
 })
 ```
@@ -245,17 +245,17 @@ test('Admin can view user list', async ({ adminPage }) => {
 })
 ```
 
-### Example 3: Testing Anonymous User Flow
+### Example 3: Testing Unregistered User Flow
 
 ```typescript
 import { test, expect } from './fixtures'
 
-test('Anonymous user sees sign up prompt', async ({ anonymousPage }) => {
-  // Already anonymous (no auth)
-  const signUpButton = anonymousPage.getByTestId('nav-sign-up-button')
+test('Unregistered user sees sign up prompt', async ({ unregisteredPage }) => {
+  // Already unregistered (no auth)
+  const signUpButton = unregisteredPage.getByTestId('nav-sign-up-button')
   await expect(signUpButton).toBeVisible()
 
-  const comparisonInput = anonymousPage.getByTestId('comparison-input-textarea')
+  const comparisonInput = unregisteredPage.getByTestId('comparison-input-textarea')
   await expect(comparisonInput).toBeVisible()
 })
 ```
@@ -302,7 +302,7 @@ test('User can perform comparison', async ({ comparisonPage, testData }) => {
 1. **Use the most specific fixture**: If you need a pro tier user, use `proTierPage` instead of `authenticatedPage`
 2. **Combine fixtures**: Use `testData` and `apiHelpers` with authentication fixtures
 3. **Don't duplicate setup**: If a fixture already does what you need, use it instead of writing custom setup
-4. **Use anonymous fixture**: Use `anonymousPage` when testing unauthenticated flows
+4. **Use unregistered fixture**: Use `unregisteredPage` when testing unauthenticated flows
 5. **Override credentials**: Use environment variables for CI/CD or different test environments
 
 ## Troubleshooting

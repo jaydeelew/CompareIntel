@@ -9,7 +9,7 @@ The E2E tests have been completely restructured to focus on **user experience an
 ### Old Structure (Removed)
 
 - `auth.spec.ts` - Mixed technical/auth tests
-- `comparison.spec.ts` - Anonymous user tests only
+- `comparison.spec.ts` - Unregistered user tests only
 - `conversation.spec.ts` - Basic conversation tests
 - `admin.spec.ts` - Admin tests with fragile selectors
 - `websearch.spec.ts` - Web search tests
@@ -18,10 +18,10 @@ The E2E tests have been completely restructured to focus on **user experience an
 
 ### New Structure (User Journey Focused)
 
-1. **`01-anonymous-user-journey.spec.ts`**
+1. **`01-unregistered-user-journey.spec.ts`**
    - First-time visitor experience
    - Exploring the platform
-   - Performing anonymous comparisons
+   - Performing unregistered comparisons
    - Rate limit awareness
    - Sign-up prompts
 
@@ -74,7 +74,7 @@ The E2E tests have been completely restructured to focus on **user experience an
 ### 2. Better Organization
 
 - Tests grouped by user journey
-- Logical flow from anonymous → registered → advanced features
+- Logical flow from unregistered → registered → advanced features
 - Easy to find tests for specific functionality
 
 ### 3. Robust Selectors
@@ -85,7 +85,7 @@ The E2E tests have been completely restructured to focus on **user experience an
 
 ### 4. Comprehensive Coverage
 
-- Anonymous user experience
+- Unregistered user experience
 - Registration and onboarding
 - Core comparison features
 - Conversation management
