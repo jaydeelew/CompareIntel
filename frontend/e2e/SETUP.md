@@ -1,5 +1,11 @@
 # E2E Test Setup Guide
 
+> **📚 For complete E2E setup documentation, see: [Frontend Testing Guide - E2E Test Setup](../../docs/testing/FRONTEND_TESTING.md#e2e-test-setup)**
+
+This guide provides a quick reference for E2E test setup. For comprehensive documentation with detailed requirements, troubleshooting, and configuration options, see the main [Frontend Testing Guide](../../docs/testing/FRONTEND_TESTING.md).
+
+---
+
 This document explains how the E2E tests are configured and what's required for them to run successfully.
 
 ## Test Configuration

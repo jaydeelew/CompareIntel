@@ -4,6 +4,8 @@ This directory contains comprehensive end-to-end tests for CompareIntel using Pl
 
 **📚 For complete E2E testing documentation, see: [Frontend Testing Guide](../../docs/testing/FRONTEND_TESTING.md#e2e-testing-with-playwright)**
 
+> **Note:** The E2E-specific guides (`FIXTURES.md`, `SETUP.md`, `SELECTOR_GUIDE.md`) are quick references. For comprehensive documentation, see the main [Frontend Testing Guide](../../docs/testing/FRONTEND_TESTING.md).
+
 ## Quick Start
 
 ```bash
@@ -53,9 +55,16 @@ All tests are written from a user experience perspective, focusing on real user 
 
 ## Documentation
 
-- **[Fixtures Guide](./FIXTURES.md)** - Complete guide to using test fixtures (authentication, navigation, test data, API helpers)
-- **[Setup Guide](./SETUP.md)** - Test environment setup and configuration
-- **[Selector Guide](./SELECTOR_GUIDE.md)** - Best practices for selecting elements in tests
-- **[Frontend Testing Guide](../../docs/testing/FRONTEND_TESTING.md)** - Complete E2E testing documentation
+- **[Frontend Testing Guide](../../docs/testing/FRONTEND_TESTING.md)** - **Complete E2E testing documentation** (recommended)
+  - [E2E Test Setup](../../docs/testing/FRONTEND_TESTING.md#e2e-test-setup) - Setup and configuration
+  - [E2E Test Fixtures](../../docs/testing/FRONTEND_TESTING.md#e2e-test-fixtures) - Comprehensive fixture guide
+  - [E2E Test Selectors](../../docs/testing/FRONTEND_TESTING.md#e2e-test-selectors) - Selector best practices
+  - [E2E Best Practices](../../docs/testing/FRONTEND_TESTING.md#e2e-best-practices) - Testing guidelines
+
+**Quick Reference Guides** (see main doc for comprehensive info):
+
+- **[Fixtures Guide](./FIXTURES.md)** - Quick reference for test fixtures
+- **[Setup Guide](./SETUP.md)** - Quick reference for test setup
+- **[Selector Guide](./SELECTOR_GUIDE.md)** - Quick reference for selectors
 
 For detailed information on writing E2E tests, Playwright configuration, and best practices, see the [Frontend Testing Guide](../../docs/testing/FRONTEND_TESTING.md).

@@ -1,5 +1,11 @@
 # E2E Test Selector Guide
 
+> **📚 For complete selector documentation, see: [Frontend Testing Guide - E2E Test Selectors](../../docs/testing/FRONTEND_TESTING.md#e2e-test-selectors)**
+
+This guide provides a quick reference for adding `data-testid` attributes and using selectors in tests. For comprehensive documentation with detailed examples, best practices, and troubleshooting, see the main [Frontend Testing Guide](../../docs/testing/FRONTEND_TESTING.md).
+
+---
+
 This guide walks you through adding `data-testid` attributes to your UI components and updating the E2E tests to use them.
 
 ## Why Use data-testid?

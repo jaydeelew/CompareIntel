@@ -7,11 +7,22 @@ Comprehensive guide for testing the CompareIntel frontend, including unit tests,
 1. [Overview](#overview)
 2. [Test Structure](#test-structure)
 3. [Setup and Prerequisites](#setup-and-prerequisites)
+   - [Install Dependencies](#install-dependencies)
+   - [Install Playwright Browsers](#install-playwright-browsers)
+   - [Environment Setup](#environment-setup)
+   - [E2E Test Setup](#e2e-test-setup)
 4. [Running Tests](#running-tests)
 5. [Test Configuration](#test-configuration)
 6. [Writing Tests](#writing-tests)
 7. [Test Utilities](#test-utilities)
 8. [E2E Testing with Playwright](#e2e-testing-with-playwright)
+   - [Writing E2E Tests](#writing-e2e-tests)
+   - [E2E Test Structure](#e2e-test-structure)
+   - [Using Test Steps](#using-test-steps)
+   - [E2E Test Files](#e2e-test-files)
+   - [E2E Test Fixtures](#e2e-test-fixtures)
+   - [E2E Test Selectors](#e2e-test-selectors)
+   - [E2E Best Practices](#e2e-best-practices)
 9. [Testing Major Features](#testing-major-features)
 10. [Best Practices](#best-practices)
 11. [Troubleshooting](#troubleshooting)
@@ -88,9 +99,10 @@ frontend/
     ├── 07-admin-functionality.spec.ts       # Admin panel and user management
     ├── fixtures.ts                           # Test fixtures (auth, navigation, etc.)
     ├── global-setup.ts                      # Global test setup
-    ├── README.md                            # E2E test documentation
-    ├── SELECTOR_GUIDE.md                    # Selector best practices
-    └── SETUP.md                             # E2E setup guide
+    ├── README.md                            # E2E test quick reference
+    ├── FIXTURES.md                          # Fixtures quick reference (see main doc for details)
+    ├── SELECTOR_GUIDE.md                    # Selector quick reference (see main doc for details)
+    └── SETUP.md                             # Setup quick reference (see main doc for details)
 ```
 
 ## Setup and Prerequisites
@@ -121,7 +133,129 @@ npx playwright install
 
 ### Environment Setup
 
-No additional environment setup required - tests work out of the box!
+No additional environment setup required for unit/integration tests - they work out of the box!
+
+### E2E Test Setup
+
+E2E tests require additional setup to run the frontend and backend servers. The Playwright configuration automatically handles this, but understanding the setup is helpful for troubleshooting.
+
+#### Playwright Configuration
+
+The Playwright configuration (`playwright.config.ts`) automatically:
+
+1. **Starts the frontend dev server** on `http://localhost:5173`
+2. **Starts the backend server** on `http://localhost:8000`
+3. **Runs global setup** to create test users if needed
+4. **Configures test environment** with proper timeouts and retries
+
+#### Global Setup
+
+The `global-setup.ts` file runs once before all tests to:
+
+- Wait for backend to be ready
+- Create test users (admin and regular users) if they don't exist
+- Set up any required test data
+
+#### Requirements
+
+**1. Python 3.11+ Installed**
+
+The backend server requires Python. Verify installation:
+
+```bash
+python3 --version  # Should be 3.11 or higher
+```
+
+**2. Backend Dependencies**
+
+Backend dependencies should be installed:
+
+```bash
+cd backend
+pip install -r requirements.txt
+```
+
+**3. Environment Variables (Optional)**
+
+You can override default test credentials via environment variables:
+
+```bash
+# Test User Credentials (tier-based users)
+export TEST_FREE_EMAIL="free@test.com"
+export TEST_FREE_PASSWORD="Test12345678/"
+export TEST_STARTER_EMAIL="starter@test.com"
+export TEST_STARTER_PASSWORD="Test12345678/"
+export TEST_STARTER_PLUS_EMAIL="starter_plus@test.com"
+export TEST_STARTER_PLUS_PASSWORD="Test12345678/"
+export TEST_PRO_EMAIL="pro@test.com"
+export TEST_PRO_PASSWORD="Test12345678/"
+export TEST_PRO_PLUS_EMAIL="pro_plus@test.com"
+export TEST_PRO_PLUS_PASSWORD="Test12345678/"
+
+# Admin Credentials
+export ADMIN_EMAIL="admin@example.com"
+export ADMIN_PASSWORD="AdminPassword123!"
+
+# Base URL (if different from default)
+export PLAYWRIGHT_BASE_URL="http://localhost:3000"
+```
+
+#### How E2E Tests Work
+
+1. **Playwright starts both servers** (frontend and backend) automatically
+2. **Global setup runs** to ensure test users exist
+3. **Tests execute** using fixtures or manual login
+4. **Servers shut down** automatically after tests complete
+
+#### Common E2E Setup Issues
+
+**Backend Not Starting**
+
+**Symptom**: Comparison/websearch tests fail with timeout errors
+
+**Solution**:
+- Ensure Python 3.11+ is installed and in PATH
+- Ensure backend dependencies are installed
+- Check that port 8000 is not already in use
+
+**Test Users Don't Exist**
+
+**Symptom**: Authentication tests fail
+
+**Solution**:
+- Global setup should create users automatically
+- If it fails, users can be created manually via registration in tests
+- Admin role must be set manually in backend (users created via registration are regular users)
+
+**Port Conflicts**
+
+**Symptom**: Tests fail to start servers
+
+**Solution**:
+- Stop any existing servers on ports 5173 (frontend) or 8000 (backend)
+- Or set `reuseExistingServer: true` in config (already set for local development)
+
+#### Manual Setup (If Needed)
+
+If automatic setup fails, you can manually:
+
+1. **Start backend**:
+   ```bash
+   cd backend
+   python -m uvicorn app.main:app --host 127.0.0.1 --port 8000
+   ```
+
+2. **Start frontend** (in another terminal):
+   ```bash
+   cd frontend
+   npm run dev
+   ```
+
+3. **Run tests**:
+   ```bash
+   cd frontend
+   npm run test:e2e
+   ```
 
 ## Running Tests
 
@@ -486,7 +620,7 @@ beforeEach(() => {
 
 ## E2E Testing with Playwright
 
-> **Note**: E2E tests were restructured in January 2025 to focus on **user journeys** rather than technical features. Tests are now organized by user workflows (anonymous → registered → advanced features) for better maintainability and user-centric testing. See `frontend/e2e/TEST_RESTRUCTURE_SUMMARY.md` for details.
+> **Note**: E2E tests were restructured in January 2025 to focus on **user journeys** rather than technical features. Tests are now organized by user workflows (anonymous → registered → advanced features) for better maintainability and user-centric testing.
 
 ### Writing E2E Tests
 
@@ -606,33 +740,621 @@ Tests are organized by user journey and real-world workflows:
 
 ### E2E Test Fixtures
 
-The `fixtures.ts` file provides reusable test fixtures:
+Fixtures provide reusable setup code that prepares your test environment. Instead of writing login/navigation code in every test, you use fixtures that handle this automatically.
 
-- **Authentication Fixtures**: `authenticatedPage`, `adminPage`, `freeTierPage`, `proTierPage`, etc.
-- **Navigation Fixtures**: `comparisonPage`, `adminPanelPage`, `aboutPage`, etc.
-- **Test Data Helpers**: `testData.generateEmail()`, `testData.generatePassword()`, etc.
-- **API Helpers**: `apiHelpers.waitForApiCall()`, `apiHelpers.mockApiResponse()`
+The `fixtures.ts` file provides comprehensive test fixtures for common scenarios. Import fixtures in your tests:
 
-**Example Usage**:
 ```typescript
 import { test, expect } from './fixtures';
 
-test('User can perform comparison', async ({ authenticatedPage }) => {
-  // authenticatedPage is already logged in
-  const inputField = authenticatedPage.getByTestId('comparison-input-textarea');
-  await inputField.fill('Test prompt');
+test('My test', async ({ freeTierPage }) => {
+  // freeTierPage is already logged in as a free tier user
+  await freeTierPage.getByTestId('comparison-input-textarea').fill('Test input')
+});
+```
+
+#### Authentication Fixtures
+
+**Subscription Tier Fixtures**
+
+Use these when you need to test tier-specific functionality:
+
+```typescript
+// Free tier user (default registered user)
+test('Free tier test', async ({ freeTierPage }) => {
+  // Already logged in as free tier user
+});
+
+// Starter tier user
+test('Starter tier test', async ({ starterTierPage }) => {
+  // Already logged in as starter tier user
+  // Note: User must be upgraded to starter tier in backend/admin
+});
+
+// Starter Plus tier user
+test('Starter Plus tier test', async ({ starterPlusTierPage }) => {
+  // Already logged in as starter_plus tier user
+});
+
+// Pro tier user
+test('Pro tier test', async ({ proTierPage }) => {
+  // Already logged in as pro tier user
+});
+
+// Pro Plus tier user
+test('Pro Plus tier test', async ({ proPlusTierPage }) => {
+  // Already logged in as pro_plus tier user
+});
+```
+
+**User Role Fixtures**
+
+```typescript
+// Admin user (already on admin panel)
+test('Admin test', async ({ adminPage }) => {
+  // Already logged in as admin and on /admin page
+  const userList = adminPage.locator('[data-testid="user-list"]')
+  await expect(userList).toBeVisible()
+});
+
+// Moderator user
+test('Moderator test', async ({ moderatorPage }) => {
+  // Already logged in as moderator
+  // Note: User must have moderator role set in backend/admin
+});
+
+// Generic authenticated user (free tier)
+test('Authenticated test', async ({ authenticatedPage }) => {
+  // Already logged in as free tier user
+  // Use when tier doesn't matter
+});
+```
+
+**Anonymous User Fixture**
+
+```typescript
+// Anonymous (unauthenticated) user
+test('Anonymous test', async ({ anonymousPage }) => {
+  // All cookies and storage cleared
+  // No user menu visible
+  const signUpButton = anonymousPage.getByTestId('nav-sign-up-button')
+  await expect(signUpButton).toBeVisible()
+});
+```
+
+#### Page Navigation Fixtures
+
+Use these when you need to start on a specific page:
+
+```typescript
+// Comparison page (home page with form ready)
+test('Comparison test', async ({ comparisonPage }) => {
+  // Already on / with comparison form visible
+  await comparisonPage.getByTestId('comparison-input-textarea').fill('Test')
+});
+
+// Admin panel page
+test('Admin panel test', async ({ adminPanelPage }) => {
+  // Already on /admin as admin user
+});
+
+// Content pages
+test('About page test', async ({ aboutPage }) => {
+  // Already on /about
+});
+
+test('FAQ page test', async ({ faqPage }) => {
+  // Already on /faq
+});
+
+test('Features page test', async ({ featuresPage }) => {
+  // Already on /features
+});
+
+test('Privacy page test', async ({ privacyPage }) => {
+  // Already on /privacy-policy
+});
+
+test('Terms page test', async ({ termsPage }) => {
+  // Already on /terms-of-service
+});
+```
+
+#### Test Data Helpers
+
+Generate test data dynamically:
+
+```typescript
+test('Test with generated data', async ({ page, testData }) => {
+  const email = testData.generateEmail('user')
+  // email = "user-1234567890-1234@example.com"
+
+  const password = testData.generatePassword()
+  // password = "TestPassword123!"
+
+  const comparisonInput = testData.generateComparisonInput()
+  // Random comparison prompt from predefined list
+});
+```
+
+#### API Helpers
+
+Wait for API calls or mock responses:
+
+```typescript
+test('Test with API wait', async ({ page, apiHelpers }) => {
+  // Wait for a specific API call to complete
+  await apiHelpers.waitForApiCall('/api/compare-stream', 30000)
+
+  // Or wait for a pattern
+  await apiHelpers.waitForApiCall(/\/api\/models/, 10000)
+});
+
+test('Test with mocked API', async ({ page, apiHelpers }) => {
+  // Mock an API response
+  await apiHelpers.mockApiResponse('/api/models', {
+    models: [{ id: 'test-model', name: 'Test Model' }],
+  })
+
+  // Now API calls to /api/models will return mocked data
+});
+```
+
+#### Combining Fixtures
+
+You can use multiple fixtures in a single test:
+
+```typescript
+test('Complex test', async ({ freeTierPage, testData, apiHelpers }) => {
+  // freeTierPage is already logged in
+  const input = testData.generateComparisonInput()
+
+  await apiHelpers.waitForApiCall('/api/compare-stream')
+  await freeTierPage.getByTestId('comparison-input-textarea').fill(input)
   // ... rest of test
 });
 ```
 
+#### Fixture Examples
+
+**Example 1: Testing Free Tier Limits**
+
+```typescript
+import { test, expect } from './fixtures';
+
+test('Free tier has 3 model limit', async ({ freeTierPage }) => {
+  // Already logged in as free tier user
+  const modelCheckboxes = freeTierPage.locator('input[type="checkbox"]')
+  const count = await modelCheckboxes.count()
+
+  // Free tier can select up to 3 models
+  expect(count).toBeLessThanOrEqual(3)
+});
+```
+
+**Example 2: Testing Admin Functionality**
+
+```typescript
+import { test, expect } from './fixtures';
+
+test('Admin can view user list', async ({ adminPage }) => {
+  // Already on admin panel
+  const userList = adminPage.locator('[data-testid="user-list"]')
+  await expect(userList).toBeVisible()
+
+  const userRows = adminPage.locator('tbody tr')
+  const count = await userRows.count()
+  expect(count).toBeGreaterThan(0)
+});
+```
+
+**Example 3: Testing Anonymous User Flow**
+
+```typescript
+import { test, expect } from './fixtures';
+
+test('Anonymous user sees sign up prompt', async ({ anonymousPage }) => {
+  // Already anonymous (no auth)
+  const signUpButton = anonymousPage.getByTestId('nav-sign-up-button')
+  await expect(signUpButton).toBeVisible()
+
+  const comparisonInput = anonymousPage.getByTestId('comparison-input-textarea')
+  await expect(comparisonInput).toBeVisible()
+});
+```
+
+**Example 4: Testing with Generated Data**
+
+```typescript
+import { test, expect } from './fixtures';
+
+test('User can register with unique email', async ({ page, testData }) => {
+  const uniqueEmail = testData.generateEmail('newuser')
+
+  await page.goto('/')
+  await page.getByTestId('nav-sign-up-button').click()
+  await page.locator('input[type="email"]').first().fill(uniqueEmail)
+  await page.locator('input[type="password"]').first().fill(testData.generatePassword())
+  await page.getByTestId('register-submit-button').click()
+
+  // Verify registration succeeded
+  await expect(page.getByTestId('user-menu-button')).toBeVisible({ timeout: 10000 })
+});
+```
+
+**Example 5: Testing Comparison Flow**
+
+```typescript
+import { test, expect } from './fixtures';
+
+test('User can perform comparison', async ({ comparisonPage, testData }) => {
+  // Already on comparison page
+  const input = testData.generateComparisonInput()
+
+  await comparisonPage.getByTestId('comparison-input-textarea').fill(input)
+  await comparisonPage.getByRole('button', { name: /compare|submit/i }).click()
+
+  // Wait for results
+  const results = comparisonPage.locator('[data-testid^="result-card-"]')
+  await expect(results.first()).toBeVisible({ timeout: 60000 })
+});
+```
+
+#### Fixture Best Practices
+
+1. **Use the most specific fixture**: If you need a pro tier user, use `proTierPage` instead of `authenticatedPage`
+2. **Combine fixtures**: Use `testData` and `apiHelpers` with authentication fixtures
+3. **Don't duplicate setup**: If a fixture already does what you need, use it instead of writing custom setup
+4. **Use anonymous fixture**: Use `anonymousPage` when testing unauthenticated flows
+5. **Override credentials**: Use environment variables for CI/CD or different test environments
+
+#### Fixture Troubleshooting
+
+**Fixture fails to authenticate**
+
+- Check that test users exist in the database
+- Verify backend is running
+- Check environment variables if using custom credentials
+- Look at browser console for errors
+
+**Tier-specific fixtures don't work**
+
+- Ensure users are upgraded to the correct tier in backend/admin
+- Check that tier upgrade was successful
+- Verify user's `subscription_tier` field in database
+
+**Admin fixture fails**
+
+- Ensure admin user exists with `is_admin=true` and `role='admin'`
+- Verify admin user can access `/admin` route
+- Check backend logs for authorization errors
+
+### E2E Test Selectors
+
+`data-testid` attributes provide stable selectors that don't break when CSS classes change. This guide explains how to add `data-testid` attributes to components and use them in tests.
+
+#### Why Use data-testid?
+
+`data-testid` attributes provide:
+
+- **Stable selectors** that don't break when CSS classes change
+- **Clear intent** - explicitly marked for testing
+- **Better maintainability** - easier to find and update test selectors
+
+#### Adding data-testid Attributes
+
+Add `data-testid` attributes to key UI elements. Here are examples for common components:
+
+**Navigation Buttons**
+
+```tsx
+// File: frontend/src/components/layout/Navigation.tsx
+<button
+  className="nav-button-text"
+  onClick={onSignInClick}
+  data-testid="nav-sign-in-button"
+>
+  Sign In
+</button>
+<button
+  className="nav-button-primary"
+  onClick={onSignUpClick}
+  data-testid="nav-sign-up-button"
+>
+  Sign Up
+</button>
+```
+
+**Auth Modal**
+
+```tsx
+// File: frontend/src/components/auth/AuthModal.tsx
+<div className="auth-modal-overlay" data-testid="auth-modal-overlay">
+  <div className="auth-modal" data-testid="auth-modal">
+    <button
+      className="auth-modal-close"
+      onClick={handleClose}
+      aria-label="Close"
+      data-testid="auth-modal-close"
+    >
+      ×
+    </button>
+  </div>
+</div>
+```
+
+**Login Form**
+
+```tsx
+// File: frontend/src/components/auth/LoginForm.tsx
+<input
+  id="email"
+  type="email"
+  value={email}
+  onChange={(e) => setEmail(e.target.value)}
+  placeholder="your@email.com"
+  required
+  autoComplete="email"
+  disabled={isLoading}
+  data-testid="login-email-input"
+/>
+
+<input
+  id="password"
+  type={showPassword ? 'text' : 'password'}
+  value={password}
+  onChange={(e) => setPassword(e.target.value)}
+  placeholder="Password"
+  required
+  autoComplete="current-password"
+  disabled={isLoading}
+  data-testid="login-password-input"
+/>
+
+<button
+  type="submit"
+  className="auth-submit-button"
+  disabled={isLoading}
+  data-testid="login-submit-button"
+>
+  {isLoading ? 'Signing in...' : 'Sign In'}
+</button>
+```
+
+**Register Form**
+
+```tsx
+// File: frontend/src/components/auth/RegisterForm.tsx
+<input
+  id="register-email"
+  type="email"
+  value={email}
+  onChange={(e) => setEmail(e.target.value)}
+  placeholder="your@email.com"
+  required
+  autoComplete="email"
+  disabled={isLoading}
+  data-testid="register-email-input"
+/>
+
+<input
+  id="register-password"
+  type={showPassword ? 'text' : 'password'}
+  value={password}
+  onChange={handlePasswordChange}
+  placeholder="Password"
+  required
+  autoComplete="new-password"
+  disabled={isLoading}
+  data-testid="register-password-input"
+/>
+
+<input
+  id="register-confirm-password"
+  type={showConfirmPassword ? 'text' : 'password'}
+  value={confirmPassword}
+  onChange={(e) => setConfirmPassword(e.target.value)}
+  placeholder="Confirm Password"
+  required
+  autoComplete="new-password"
+  disabled={isLoading}
+  data-testid="register-confirm-password-input"
+/>
+
+<button
+  type="submit"
+  className="auth-submit-button"
+  disabled={isLoading}
+  data-testid="register-submit-button"
+>
+  {isLoading ? 'Creating account...' : 'Create Account'}
+</button>
+```
+
+**Comparison Form**
+
+```tsx
+// File: frontend/src/components/comparison/ComparisonForm.tsx
+<textarea
+  ref={textareaRef}
+  value={input}
+  onChange={(e) => setInput(e.target.value)}
+  placeholder="Let's get started..."
+  className="hero-input-textarea"
+  rows={1}
+  data-testid="comparison-input-textarea"
+/>
+
+<button
+  onClick={onSubmitClick}
+  disabled={/* ... */}
+  className="textarea-icon-button submit-button"
+  data-testid="comparison-submit-button"
+>
+  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M7 14l5-5 5 5" stroke="currentColor" strokeWidth="2" />
+  </svg>
+</button>
+```
+
+**Model Selection**
+
+```tsx
+// File: frontend/src/App.tsx
+<input
+  type="checkbox"
+  checked={isSelected}
+  disabled={isDisabled}
+  onChange={() => !isDisabled && handleModelToggle(model.id)}
+  className="model-checkbox"
+  data-testid={`model-checkbox-${model.id}`}
+/>
+
+<button
+  className="provider-header"
+  onClick={() => toggleDropdown(provider)}
+  data-testid={`provider-dropdown-${provider}`}
+>
+  {/* ... */}
+</button>
+```
+
+**Results Display**
+
+```tsx
+// File: frontend/src/App.tsx (where results are rendered)
+<div
+  className="model-card"
+  data-testid={`result-card-${modelId}`}
+>
+  {/* ... */}
+</div>
+```
+
+**User Menu**
+
+```tsx
+// File: frontend/src/components/layout/UserMenu.tsx
+<button
+  className="user-menu-button"
+  onClick={handleMenuToggle}
+  data-testid="user-menu-button"
+>
+  {/* ... */}
+</button>
+
+<button
+  onClick={handleLogout}
+  data-testid="logout-button"
+>
+  Logout
+</button>
+```
+
+#### Using Selectors in Tests
+
+Update E2E tests to use `data-testid` attributes:
+
+**Before (fragile selectors):**
+
+```typescript
+const signUpButton = page.getByRole('button', { name: /sign up|register|create account/i })
+await signUpButton.click()
+
+await page.fill('input[type="email"]', testEmail)
+await page.fill('input[type="password"]', testPassword)
+```
+
+**After (stable selectors):**
+
+```typescript
+const signUpButton = page.getByTestId('nav-sign-up-button')
+await signUpButton.click()
+
+await page.getByTestId('register-email-input').fill(testEmail)
+await page.getByTestId('register-password-input').fill(testPassword)
+await page.getByTestId('register-confirm-password-input').fill(testPassword)
+await page.getByTestId('register-submit-button').click()
+```
+
+**Comparison Test Example:**
+
+```typescript
+// Before:
+const inputField = page.locator('textarea, input[type="text"]').first()
+await inputField.fill(testInput)
+
+const modelCheckboxes = page.locator('input[type="checkbox"]')
+await modelCheckboxes.first().check()
+
+const compareButton = page.getByRole('button', { name: /compare|submit|run/i })
+await compareButton.click()
+
+// After:
+await page.getByTestId('comparison-input-textarea').fill(testInput)
+
+// Option 1: Select by specific model ID
+await page.getByTestId('model-checkbox-openai/gpt-4').check()
+
+// Option 2: Select first available model checkbox
+const firstCheckbox = page.locator('[data-testid^="model-checkbox-"]').first()
+await firstCheckbox.check()
+
+await page.getByTestId('comparison-submit-button').click()
+
+// Wait for results
+await expect(page.locator('[data-testid^="result-card-"]').first()).toBeVisible({ timeout: 30000 })
+```
+
+#### Quick Reference: Common Selectors
+
+| Element                 | data-testid                 | Usage in Tests                                    |
+| ----------------------- | --------------------------- | ------------------------------------------------- |
+| Sign In Button          | `nav-sign-in-button`        | `page.getByTestId('nav-sign-in-button')`          |
+| Sign Up Button          | `nav-sign-up-button`        | `page.getByTestId('nav-sign-up-button')`          |
+| Login Email Input       | `login-email-input`         | `page.getByTestId('login-email-input')`           |
+| Login Password Input    | `login-password-input`      | `page.getByTestId('login-password-input')`        |
+| Login Submit            | `login-submit-button`       | `page.getByTestId('login-submit-button')`         |
+| Register Email Input    | `register-email-input`      | `page.getByTestId('register-email-input')`        |
+| Register Password Input | `register-password-input`   | `page.getByTestId('register-password-input')`     |
+| Register Submit         | `register-submit-button`    | `page.getByTestId('register-submit-button')`      |
+| Comparison Textarea     | `comparison-input-textarea` | `page.getByTestId('comparison-input-textarea')`   |
+| Comparison Submit       | `comparison-submit-button`  | `page.getByTestId('comparison-submit-button')`    |
+| Model Checkbox          | `model-checkbox-{modelId}`  | `page.getByTestId('model-checkbox-openai/gpt-4')` |
+| Result Card             | `result-card-{modelId}`     | `page.getByTestId('result-card-openai/gpt-4')`    |
+| User Menu               | `user-menu-button`          | `page.getByTestId('user-menu-button')`            |
+| Logout Button           | `logout-button`             | `page.getByTestId('logout-button')`               |
+
+#### Selector Best Practices
+
+1. **Use descriptive names**: `comparison-input-textarea` is better than `input-1`
+2. **Include context**: `login-email-input` is better than `email-input`
+3. **Be consistent**: Use kebab-case for all `data-testid` values
+4. **Don't overuse**: Only add `data-testid` to elements that tests actually need to interact with
+5. **Prefer semantic selectors first**: Use `getByRole`, `getByText`, `getByLabelText` when possible, fallback to `data-testid`
+6. **Document**: Keep selector guide updated as you add new test IDs
+
+#### Testing Your Selector Changes
+
+1. **Add data-testid attributes** to components
+2. **Update test selectors** to use `getByTestId()`
+3. **Run tests** to verify:
+   ```bash
+   npm run test:e2e
+   ```
+4. **Fix any issues** - if selectors don't work, check:
+   - Is the `data-testid` attribute correctly added?
+   - Is the element visible when the test runs?
+   - Are there timing issues (add `await page.waitForLoadState('networkidle')`)?
+
 ### E2E Best Practices
 
 1. **User-Centric Approach**: Write tests from the user's perspective, focusing on what users see and do
-2. **Use data-testid attributes**: Add `data-testid` to key UI elements for stable selectors
+2. **Use data-testid attributes**: Add `data-testid` to key UI elements for stable selectors (see [E2E Test Selectors](#e2e-test-selectors) section)
 3. **Wait for network idle**: Use `await page.waitForLoadState('networkidle')` after navigation
 4. **Meaningful test names**: Describe what the test verifies from a user perspective
 5. **Keep tests independent**: Each test should run in isolation
-6. **Use test fixtures**: Leverage fixtures from `fixtures.ts` for authenticated state and common scenarios
+6. **Use test fixtures**: Leverage fixtures from `fixtures.ts` for authenticated state and common scenarios (see [E2E Test Fixtures](#e2e-test-fixtures) section)
 7. **Organize by user journey**: Group tests by user workflows rather than technical features
 8. **Graceful error handling**: Handle cases where features might not be available (e.g., backend not running)
 9. **Use test steps**: Break complex workflows into logical steps using `test.step()`

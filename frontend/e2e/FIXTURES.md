@@ -1,5 +1,11 @@
 # E2E Test Fixtures Guide
 
+> **📚 For complete fixture documentation, see: [Frontend Testing Guide - E2E Test Fixtures](../../docs/testing/FRONTEND_TESTING.md#e2e-test-fixtures)**
+
+This guide provides a quick reference for using test fixtures. For comprehensive documentation with detailed examples, troubleshooting, and best practices, see the main [Frontend Testing Guide](../../docs/testing/FRONTEND_TESTING.md).
+
+---
+
 This guide explains how to use the comprehensive test fixtures available for CompareIntel E2E tests.
 
 ## Overview
