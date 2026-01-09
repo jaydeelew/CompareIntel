@@ -4395,25 +4395,8 @@ function AppContent() {
       return
     }
 
-    if (selectedModels.length === 0) {
-      setError('Please select at least one model below to compare responses')
-      // Scroll to the models section to help the user
-      window.setTimeout(() => {
-        const modelsSection = document.querySelector('.models-section')
-        if (modelsSection) {
-          modelsSection.scrollIntoView({
-            behavior: 'smooth',
-            block: 'start',
-          })
-        }
-      }, 100)
-      return
-    }
-
-    if (!input.trim()) {
-      setError('Please enter some text to compare')
-      return
-    }
+    // Note: Validation for empty input and no models selected is now handled
+    // by disabling the submit button, so those checks are no longer needed here.
 
     // Check if user has credits before submitting
     const userTier = isAuthenticated ? user?.subscription_tier || 'free' : 'unregistered'
