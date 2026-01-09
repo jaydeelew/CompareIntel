@@ -63,6 +63,7 @@ export default defineConfig({
 
   /* Configure projects for major browsers */
   projects: [
+    // Desktop browsers
     {
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
@@ -80,15 +81,49 @@ export default defineConfig({
     //   use: { ...devices['Desktop Safari'] },
     // },
 
-    /* Test against mobile viewports. */
-    // {
-    //   name: 'Mobile Chrome',
-    //   use: { ...devices['Pixel 5'] },
-    // },
-    // {
-    //   name: 'Mobile Safari',
-    //   use: { ...devices['iPhone 12'] },
-    // },
+    // Mobile - iOS Devices
+    {
+      name: 'Mobile Safari - iPhone SE',
+      use: { ...devices['iPhone SE'] },
+    },
+    {
+      name: 'Mobile Safari - iPhone 12',
+      use: { ...devices['iPhone 12'] },
+    },
+    {
+      name: 'Mobile Safari - iPhone 13 Pro',
+      use: { ...devices['iPhone 13 Pro'] },
+    },
+    {
+      name: 'Mobile Safari - iPhone 14 Pro Max',
+      use: { ...devices['iPhone 14 Pro Max'] },
+    },
+    {
+      name: 'Mobile Safari - iPad Mini',
+      use: { ...devices['iPad Mini'] },
+    },
+    {
+      name: 'Mobile Safari - iPad Pro',
+      use: { ...devices['iPad Pro'] },
+    },
+
+    // Mobile - Android Devices
+    {
+      name: 'Mobile Chrome - Pixel 5',
+      use: { ...devices['Pixel 5'] },
+    },
+    {
+      name: 'Mobile Chrome - Pixel 7',
+      use: { ...devices['Pixel 7'] },
+    },
+    {
+      name: 'Mobile Chrome - Galaxy S21',
+      use: { ...devices['Galaxy S21'] },
+    },
+    {
+      name: 'Mobile Chrome - Galaxy Tab S4',
+      use: { ...devices['Galaxy Tab S4'] },
+    },
   ],
 
   /* Run your local dev server before starting the tests */

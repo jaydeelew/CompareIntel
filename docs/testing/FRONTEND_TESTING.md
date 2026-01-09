@@ -304,6 +304,17 @@ npx playwright test e2e/ --grep "admin"
 # Run tests in specific browser
 npx playwright test --project=chromium
 npx playwright test --project=firefox
+
+# Run mobile tests
+npm run test:e2e:mobile              # Run on iPhone 12 and Pixel 5
+npm run test:e2e:mobile:ios           # Run only iOS tests
+npm run test:e2e:mobile:android       # Run only Android tests
+npm run test:e2e:mobile:all          # Run all mobile platform tests
+
+# Run tests on specific mobile device
+npx playwright test --project="Mobile Safari - iPhone 12"
+npx playwright test --project="Mobile Chrome - Pixel 5"
+npx playwright test --project="Mobile Safari - iPad Pro"
 ```
 
 ### Advanced Vitest Options
@@ -737,6 +748,7 @@ Tests are organized by user journey and real-world workflows:
 - **`05-advanced-features.spec.ts`**: Web search functionality, file uploads, saved model selections, model filtering
 - **`06-navigation-content.spec.ts`**: Footer navigation, SEO content pages, scroll behavior, consistent navigation
 - **`07-admin-functionality.spec.ts`**: Admin panel access, user management, filtering, statistics, user CRUD operations
+- **`08-mobile-platforms.spec.ts`**: Mobile-specific functionality, touch interactions, responsive design, mobile navigation
 
 ### E2E Test Fixtures
 
@@ -1359,6 +1371,173 @@ await expect(page.locator('[data-testid^="result-card-"]').first()).toBeVisible(
 8. **Graceful error handling**: Handle cases where features might not be available (e.g., backend not running)
 9. **Use test steps**: Break complex workflows into logical steps using `test.step()`
 10. **Prefer semantic selectors**: Use `getByRole`, `getByText`, `getByLabelText` when possible, fallback to `data-testid`
+
+### Mobile Testing
+
+Playwright supports comprehensive mobile device testing through device emulation. All E2E tests automatically run on configured mobile devices, ensuring your application works correctly on iOS and Android platforms.
+
+#### Mobile Device Configuration
+
+Mobile devices are configured in `playwright.config.ts`:
+
+**iOS Devices:**
+- iPhone SE (smallest iPhone)
+- iPhone 12 (standard iPhone)
+- iPhone 13 Pro (Pro iPhone)
+- iPhone 14 Pro Max (large iPhone)
+- iPad Mini (small iPad)
+- iPad Pro (large iPad)
+
+**Android Devices:**
+- Pixel 5 (standard Android phone)
+- Pixel 7 (larger Android phone)
+- Galaxy S21 (Samsung phone)
+- Galaxy Tab S4 (Android tablet)
+
+#### Running Mobile Tests
+
+```bash
+# Run all tests (including mobile devices)
+npm run test:e2e
+
+# Run only mobile tests (iPhone 12 and Pixel 5)
+npm run test:e2e:mobile
+
+# Run only iOS tests
+npm run test:e2e:mobile:ios
+
+# Run only Android tests
+npm run test:e2e:mobile:android
+
+# Run mobile-specific test suite
+npm run test:e2e:mobile:all
+
+# Run on specific device
+npx playwright test --project="Mobile Safari - iPhone 12"
+npx playwright test --project="Mobile Chrome - Pixel 5"
+npx playwright test --project="Mobile Safari - iPad Pro"
+```
+
+#### Mobile-Specific Test Suite
+
+The `08-mobile-platforms.spec.ts` file contains comprehensive mobile-specific tests covering:
+
+- **Touch Interactions**: Tap, swipe, and gesture support
+- **Mobile Navigation**: Mobile menus, hamburger menus, navigation patterns
+- **Responsive Design**: Viewport adaptation, no horizontal scrolling
+- **Mobile Keyboard**: Keyboard appearance, dismissal, input handling
+- **Touch Targets**: Minimum size requirements (44x44px)
+- **Mobile Forms**: Form interactions optimized for touch
+- **Performance**: Load times and asset loading on mobile
+- **Mobile Comparison Flow**: Complete user journey on mobile devices
+
+#### Mobile Testing Best Practices
+
+1. **Use Touch Interactions**: Prefer `tap()` over `click()` for mobile-specific tests
+   ```typescript
+   // Mobile-friendly
+   await button.tap()
+   
+   // Also works (Playwright converts automatically)
+   await button.click()
+   ```
+
+2. **Check Touch Target Sizes**: Ensure interactive elements are at least 44x44px
+   ```typescript
+   const box = await button.boundingBox()
+   expect(box.width).toBeGreaterThanOrEqual(44)
+   expect(box.height).toBeGreaterThanOrEqual(44)
+   ```
+
+3. **Test Viewport Dimensions**: Verify content adapts to mobile viewports
+   ```typescript
+   const viewport = page.viewportSize()
+   expect(viewport.width).toBeLessThan(1024) // Mobile viewport
+   ```
+
+4. **Handle Mobile Keyboard**: Account for keyboard appearance/disappearance
+   ```typescript
+   await input.tap()
+   await page.waitForTimeout(500) // Wait for keyboard
+   await input.fill('text')
+   await input.blur() // Dismiss keyboard
+   ```
+
+5. **Test Responsive Layout**: Ensure no horizontal scrolling
+   ```typescript
+   const bodyWidth = await page.evaluate(() => document.body.scrollWidth)
+   const viewportWidth = page.viewportSize()!.width
+   expect(bodyWidth).toBeLessThanOrEqual(viewportWidth + 10)
+   ```
+
+6. **Mobile-Specific Selectors**: Some elements may be hidden/shown differently on mobile
+   ```typescript
+   const mobileMenu = page.getByTestId('mobile-menu-button')
+   if (await mobileMenu.isVisible()) {
+     await mobileMenu.tap()
+   }
+   ```
+
+#### Mobile Test Example
+
+```typescript
+import { test, expect } from './fixtures'
+
+test.describe('Mobile Platform Tests', () => {
+  test('Touch interactions work correctly', async ({ page }) => {
+    // Tap navigation button
+    await page.getByTestId('nav-sign-up-button').tap()
+    
+    // Verify modal appears
+    await expect(page.locator('[data-testid="auth-modal"]')).toBeVisible()
+  })
+
+  test('Mobile viewport renders correctly', async ({ page }) => {
+    const viewport = page.viewportSize()
+    expect(viewport.width).toBeLessThan(1024) // Mobile viewport
+    
+    // Content should be visible
+    await expect(page.getByTestId('comparison-input-textarea')).toBeVisible()
+  })
+})
+```
+
+#### Automatic Mobile Testing
+
+All existing E2E tests automatically run on mobile devices. Playwright:
+- Converts `click()` to `tap()` automatically
+- Uses correct viewport sizes for each device
+- Emulates device-specific behaviors (touch, orientation, etc.)
+- Maintains test isolation across devices
+
+#### CI/CD Integration
+
+Mobile tests run automatically in CI/CD pipelines. The GitHub Actions workflow includes mobile device testing:
+
+```yaml
+# Mobile browsers are installed automatically
+- name: Install Playwright browsers
+  run: npx playwright install --with-deps chromium firefox
+  # Mobile emulation doesn't require additional installation
+```
+
+#### Troubleshooting Mobile Tests
+
+**Tests fail on mobile but pass on desktop:**
+- Check touch target sizes (minimum 44x44px)
+- Verify responsive CSS is working
+- Check for mobile-specific UI elements that may be hidden
+- Ensure viewport meta tag is set correctly
+
+**Touch interactions not working:**
+- Use `tap()` explicitly for mobile-specific tests
+- Verify elements are visible and enabled before tapping
+- Add appropriate waits for animations/transitions
+
+**Viewport issues:**
+- Verify `viewportSize` matches expected device dimensions
+- Check for horizontal scrolling (should be minimal)
+- Ensure content adapts to smaller screens
 
 ## Testing Major Features
 
