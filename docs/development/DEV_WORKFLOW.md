@@ -2,6 +2,8 @@
 
 **Important:** SSL certificates must be set up on your AWS EC2 server where `compareintel.com` points, not on your local development machine.
 
+> **📝 Git Workflow**: For information about using feature branches, pull requests, and managing your Git workflow as a solo developer, see [Git Workflow Guide](./GIT_WORKFLOW.md).
+
 ---
 
 ## Four Development Environments
