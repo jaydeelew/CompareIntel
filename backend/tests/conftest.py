@@ -128,6 +128,7 @@ def client(db_session):
     This fixture:
     - Overrides the get_db dependency to use test database
     - Returns a TestClient instance for making API requests
+    - Clears login rate limiting between tests
     """
     def override_get_db():
         try:
@@ -137,11 +138,16 @@ def client(db_session):
     
     fastapi_app.dependency_overrides[get_db] = override_get_db
     
+    # Clear login rate limiting before each test
+    from app.routers.auth import failed_login_attempts
+    failed_login_attempts.clear()
+    
     with TestClient(fastapi_app) as test_client:
         yield test_client
     
-    # Clean up dependency override
+    # Clean up dependency override and rate limiting
     fastapi_app.dependency_overrides.clear()
+    failed_login_attempts.clear()
 
 
 # ============================================================================
@@ -215,15 +221,12 @@ def test_user_admin(db_session):
     """
     Create an admin test user.
     
-    Uses credentials from environment or defaults to test admin credentials.
+    Uses "secret" as password for backward compatibility with existing tests.
     """
-    import os
-    admin_email = os.getenv("ADMIN_EMAIL", "jaydeelew@gmail.com")
-    admin_password = os.getenv("ADMIN_PASSWORD", "sf*88323?ddpdRRl")
     return create_admin_user(
         db_session,
-        email=admin_email,
-        password=admin_password,
+        email="admin@example.com",
+        password="secret",  # Use "secret" for backward compatibility with tests
         role="admin",
     )
 

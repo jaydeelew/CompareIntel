@@ -37,8 +37,10 @@ class TestAdminAuthentication:
                 "password": "secret",
             },
         )
-        assert response.status_code == status.HTTP_200_OK
-        token = response.json()["access_token"]
+        assert response.status_code == status.HTTP_200_OK, f"Login failed: {response.text}"
+        data = response.json()
+        assert "access_token" in data, f"Response missing access_token: {data}"
+        token = data["access_token"]
         
         # Set authorization header
         client.headers = {"Authorization": f"Bearer {token}"}
@@ -65,7 +67,10 @@ class TestUserManagement:
                 "password": "secret",
             },
         )
-        token = response.json()["access_token"]
+        assert response.status_code == status.HTTP_200_OK, f"Login failed: {response.text}"
+        data = response.json()
+        assert "access_token" in data, f"Response missing access_token: {data}"
+        token = data["access_token"]
         client.headers = {"Authorization": f"Bearer {token}"}
         
         response = client.get("/api/admin/users")
@@ -83,7 +88,10 @@ class TestUserManagement:
                 "password": "secret",
             },
         )
-        token = response.json()["access_token"]
+        assert response.status_code == status.HTTP_200_OK, f"Login failed: {response.text}"
+        data = response.json()
+        assert "access_token" in data, f"Response missing access_token: {data}"
+        token = data["access_token"]
         client.headers = {"Authorization": f"Bearer {token}"}
         
         response = client.get(f"/api/admin/users/{test_user.id}")
@@ -101,7 +109,10 @@ class TestUserManagement:
                 "password": "secret",
             },
         )
-        token = response.json()["access_token"]
+        assert response.status_code == status.HTTP_200_OK, f"Login failed: {response.text}"
+        data = response.json()
+        assert "access_token" in data, f"Response missing access_token: {data}"
+        token = data["access_token"]
         client.headers = {"Authorization": f"Bearer {token}"}
     
         response = client.put(
@@ -129,7 +140,10 @@ class TestSystemConfiguration:
                 "password": "secret",
             },
         )
-        token = response.json()["access_token"]
+        assert response.status_code == status.HTTP_200_OK, f"Login failed: {response.text}"
+        data = response.json()
+        assert "access_token" in data, f"Response missing access_token: {data}"
+        token = data["access_token"]
         client.headers = {"Authorization": f"Bearer {token}"}
         
         response = client.get("/api/admin/stats")
@@ -147,7 +161,10 @@ class TestSystemConfiguration:
                 "password": "secret",
             },
         )
-        token = response.json()["access_token"]
+        assert response.status_code == status.HTTP_200_OK, f"Login failed: {response.text}"
+        data = response.json()
+        assert "access_token" in data, f"Response missing access_token: {data}"
+        token = data["access_token"]
         client.headers = {"Authorization": f"Bearer {token}"}
         
         response = client.get("/api/admin/usage-logs")
@@ -169,7 +186,10 @@ class TestAdminUserCRUD:
                 "password": "secret",
             },
         )
-        token = response.json()["access_token"]
+        assert response.status_code == status.HTTP_200_OK, f"Login failed: {response.text}"
+        data = response.json()
+        assert "access_token" in data, f"Response missing access_token: {data}"
+        token = data["access_token"]
         client.headers = {"Authorization": f"Bearer {token}"}
         
         # Create new user
@@ -201,7 +221,10 @@ class TestAdminUserCRUD:
                 "password": "secret",
             },
         )
-        token = response.json()["access_token"]
+        assert response.status_code == status.HTTP_200_OK, f"Login failed: {response.text}"
+        data = response.json()
+        assert "access_token" in data, f"Response missing access_token: {data}"
+        token = data["access_token"]
         client.headers = {"Authorization": f"Bearer {token}"}
         
         # Update user
@@ -233,7 +256,10 @@ class TestAdminUserCRUD:
                 "password": "test_password_123",
             },
         )
-        token = response.json()["access_token"]
+        assert response.status_code == status.HTTP_200_OK, f"Login failed: {response.text}"
+        data = response.json()
+        assert "access_token" in data, f"Response missing access_token: {data}"
+        token = data["access_token"]
         client.headers = {"Authorization": f"Bearer {token}"}
         
         # Delete user
@@ -254,7 +280,10 @@ class TestAdminUserCRUD:
                 "password": "secret",
             },
         )
-        token = response.json()["access_token"]
+        assert response.status_code == status.HTTP_200_OK, f"Login failed: {response.text}"
+        data = response.json()
+        assert "access_token" in data, f"Response missing access_token: {data}"
+        token = data["access_token"]
         client.headers = {"Authorization": f"Bearer {token}"}
         
         # Try to get non-existent user
@@ -275,7 +304,10 @@ class TestAdminUserActions:
                 "password": "secret",
             },
         )
-        token = response.json()["access_token"]
+        assert response.status_code == status.HTTP_200_OK, f"Login failed: {response.text}"
+        data = response.json()
+        assert "access_token" in data, f"Response missing access_token: {data}"
+        token = data["access_token"]
         client.headers = {"Authorization": f"Bearer {token}"}
         
         # Toggle active status
@@ -299,7 +331,10 @@ class TestAdminUserActions:
                 "password": "secret",
             },
         )
-        token = response.json()["access_token"]
+        assert response.status_code == status.HTTP_200_OK, f"Login failed: {response.text}"
+        data = response.json()
+        assert "access_token" in data, f"Response missing access_token: {data}"
+        token = data["access_token"]
         client.headers = {"Authorization": f"Bearer {token}"}
         
         # Reset usage
@@ -323,7 +358,10 @@ class TestAdminUserActions:
                 "password": "secret",
             },
         )
-        token = response.json()["access_token"]
+        assert response.status_code == status.HTTP_200_OK, f"Login failed: {response.text}"
+        data = response.json()
+        assert "access_token" in data, f"Response missing access_token: {data}"
+        token = data["access_token"]
         client.headers = {"Authorization": f"Bearer {token}"}
         
         # Toggle mock mode
@@ -372,7 +410,10 @@ class TestAdminStats:
                 "password": "secret",
             },
         )
-        token = response.json()["access_token"]
+        assert response.status_code == status.HTTP_200_OK, f"Login failed: {response.text}"
+        data = response.json()
+        assert "access_token" in data, f"Response missing access_token: {data}"
+        token = data["access_token"]
         client.headers = {"Authorization": f"Bearer {token}"}
         
         # Get stats
@@ -462,7 +503,10 @@ class TestAdminRolePermissions:
                 "password": "test_password_123",
             },
         )
-        token = response.json()["access_token"]
+        assert response.status_code == status.HTTP_200_OK, f"Login failed: {response.text}"
+        data = response.json()
+        assert "access_token" in data, f"Response missing access_token: {data}"
+        token = data["access_token"]
         client.headers = {"Authorization": f"Bearer {token}"}
         
         # Try to create user (should fail)
