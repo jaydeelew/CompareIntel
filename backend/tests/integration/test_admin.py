@@ -9,6 +9,45 @@ Tests cover:
 """
 import pytest
 from fastapi import status
+from fastapi.testclient import TestClient
+
+
+def login_as_admin(client: TestClient, admin_email: str, password: str = "secret") -> str:
+    """
+    Helper function to login as admin user.
+    
+    Args:
+        client: TestClient instance
+        admin_email: Admin user email
+        password: Admin user password (default: "secret")
+        
+    Returns:
+        access_token string
+        
+    Raises:
+        AssertionError if login fails
+    """
+    # Clear rate limiting before login attempt
+    from app.routers.auth import failed_login_attempts
+    failed_login_attempts.clear()
+    
+    # Login as admin
+    response = client.post(
+        "/api/auth/login",
+        json={
+            "email": admin_email,
+            "password": password,
+        },
+    )
+    assert response.status_code == status.HTTP_200_OK, f"Login failed: {response.text} (status: {response.status_code})"
+    data = response.json()
+    assert "access_token" in data, f"Response missing access_token: {data}"
+    token = data["access_token"]
+    
+    # Set authorization header
+    client.headers = {"Authorization": f"Bearer {token}"}
+    
+    return token
 
 
 class TestAdminAuthentication:
@@ -27,23 +66,14 @@ class TestAdminAuthentication:
             status.HTTP_404_NOT_FOUND,
         ]
     
-    def test_admin_endpoint_with_admin_user(self, client, test_user_admin):
+    def test_admin_endpoint_with_admin_user(self, client, test_user_admin, db_session):
         """Test admin endpoints with admin user."""
-        # Login as admin
-        response = client.post(
-            "/api/auth/login",
-            json={
-                "email": test_user_admin.email,
-                "password": "secret",
-            },
-        )
-        assert response.status_code == status.HTTP_200_OK, f"Login failed: {response.text}"
-        data = response.json()
-        assert "access_token" in data, f"Response missing access_token: {data}"
-        token = data["access_token"]
+        # Ensure user exists and is active
+        db_session.refresh(test_user_admin)
+        assert test_user_admin.is_active, "Admin user should be active"
         
-        # Set authorization header
-        client.headers = {"Authorization": f"Bearer {token}"}
+        # Login as admin using helper
+        login_as_admin(client, test_user_admin.email)
         
         # Try to access admin endpoint
         response = client.get("/api/admin/users")
@@ -59,19 +89,8 @@ class TestUserManagement:
     
     def test_list_users(self, client, test_user_admin):
         """Test listing all users."""
-        # Login as admin
-        response = client.post(
-            "/api/auth/login",
-            json={
-                "email": test_user_admin.email,
-                "password": "secret",
-            },
-        )
-        assert response.status_code == status.HTTP_200_OK, f"Login failed: {response.text}"
-        data = response.json()
-        assert "access_token" in data, f"Response missing access_token: {data}"
-        token = data["access_token"]
-        client.headers = {"Authorization": f"Bearer {token}"}
+        # Login as admin using helper
+        login_as_admin(client, test_user_admin.email)
         
         response = client.get("/api/admin/users")
         if response.status_code == status.HTTP_200_OK:
@@ -80,19 +99,8 @@ class TestUserManagement:
     
     def test_get_user_by_id(self, client, test_user_admin, test_user):
         """Test getting a specific user by ID."""
-        # Login as admin
-        response = client.post(
-            "/api/auth/login",
-            json={
-                "email": test_user_admin.email,
-                "password": "secret",
-            },
-        )
-        assert response.status_code == status.HTTP_200_OK, f"Login failed: {response.text}"
-        data = response.json()
-        assert "access_token" in data, f"Response missing access_token: {data}"
-        token = data["access_token"]
-        client.headers = {"Authorization": f"Bearer {token}"}
+        # Login as admin using helper
+        login_as_admin(client, test_user_admin.email)
         
         response = client.get(f"/api/admin/users/{test_user.id}")
         if response.status_code == status.HTTP_200_OK:
@@ -101,19 +109,8 @@ class TestUserManagement:
     
     def test_update_user_tier(self, client, test_user_admin, test_user):
         """Test updating user subscription tier."""
-        # Login as admin
-        response = client.post(
-            "/api/auth/login",
-            json={
-                "email": test_user_admin.email,
-                "password": "secret",
-            },
-        )
-        assert response.status_code == status.HTTP_200_OK, f"Login failed: {response.text}"
-        data = response.json()
-        assert "access_token" in data, f"Response missing access_token: {data}"
-        token = data["access_token"]
-        client.headers = {"Authorization": f"Bearer {token}"}
+        # Login as admin using helper
+        login_as_admin(client, test_user_admin.email)
     
         response = client.put(
             f"/api/admin/users/{test_user.id}",
@@ -132,19 +129,8 @@ class TestSystemConfiguration:
     
     def test_get_system_stats(self, client, test_user_admin):
         """Test getting system statistics."""
-        # Login as admin
-        response = client.post(
-            "/api/auth/login",
-            json={
-                "email": test_user_admin.email,
-                "password": "secret",
-            },
-        )
-        assert response.status_code == status.HTTP_200_OK, f"Login failed: {response.text}"
-        data = response.json()
-        assert "access_token" in data, f"Response missing access_token: {data}"
-        token = data["access_token"]
-        client.headers = {"Authorization": f"Bearer {token}"}
+        # Login as admin using helper
+        login_as_admin(client, test_user_admin.email)
         
         response = client.get("/api/admin/stats")
         if response.status_code == status.HTTP_200_OK:
@@ -153,19 +139,8 @@ class TestSystemConfiguration:
     
     def test_get_usage_logs(self, client, test_user_admin):
         """Test getting usage logs."""
-        # Login as admin
-        response = client.post(
-            "/api/auth/login",
-            json={
-                "email": test_user_admin.email,
-                "password": "secret",
-            },
-        )
-        assert response.status_code == status.HTTP_200_OK, f"Login failed: {response.text}"
-        data = response.json()
-        assert "access_token" in data, f"Response missing access_token: {data}"
-        token = data["access_token"]
-        client.headers = {"Authorization": f"Bearer {token}"}
+        # Login as admin using helper
+        login_as_admin(client, test_user_admin.email)
         
         response = client.get("/api/admin/usage-logs")
         if response.status_code == status.HTTP_200_OK:
@@ -178,19 +153,8 @@ class TestAdminUserCRUD:
     
     def test_create_user(self, client, test_user_admin, db_session):
         """Test admin creating a new user."""
-        # Login as admin
-        response = client.post(
-            "/api/auth/login",
-            json={
-                "email": test_user_admin.email,
-                "password": "secret",
-            },
-        )
-        assert response.status_code == status.HTTP_200_OK, f"Login failed: {response.text}"
-        data = response.json()
-        assert "access_token" in data, f"Response missing access_token: {data}"
-        token = data["access_token"]
-        client.headers = {"Authorization": f"Bearer {token}"}
+        # Login as admin using helper
+        login_as_admin(client, test_user_admin.email)
         
         # Create new user
         response = client.post(
@@ -213,19 +177,8 @@ class TestAdminUserCRUD:
     
     def test_update_user(self, client, test_user_admin, test_user):
         """Test admin updating user."""
-        # Login as admin
-        response = client.post(
-            "/api/auth/login",
-            json={
-                "email": test_user_admin.email,
-                "password": "secret",
-            },
-        )
-        assert response.status_code == status.HTTP_200_OK, f"Login failed: {response.text}"
-        data = response.json()
-        assert "access_token" in data, f"Response missing access_token: {data}"
-        token = data["access_token"]
-        client.headers = {"Authorization": f"Bearer {token}"}
+        # Login as admin using helper
+        login_as_admin(client, test_user_admin.email)
         
         # Update user
         response = client.put(
@@ -248,19 +201,8 @@ class TestAdminUserCRUD:
         # Create a user to delete
         user_to_delete = create_user(db_session, email="delete_me@example.com")
         
-        # Login as super admin
-        response = client.post(
-            "/api/auth/login",
-            json={
-                "email": test_user_super_admin.email,
-                "password": "test_password_123",
-            },
-        )
-        assert response.status_code == status.HTTP_200_OK, f"Login failed: {response.text}"
-        data = response.json()
-        assert "access_token" in data, f"Response missing access_token: {data}"
-        token = data["access_token"]
-        client.headers = {"Authorization": f"Bearer {token}"}
+        # Login as super admin using helper
+        login_as_admin(client, test_user_super_admin.email, password="test_password_123")
         
         # Delete user
         response = client.delete(f"/api/admin/users/{user_to_delete.id}")
@@ -272,19 +214,8 @@ class TestAdminUserCRUD:
     
     def test_get_nonexistent_user(self, client, test_user_admin):
         """Test getting non-existent user."""
-        # Login as admin
-        response = client.post(
-            "/api/auth/login",
-            json={
-                "email": test_user_admin.email,
-                "password": "secret",
-            },
-        )
-        assert response.status_code == status.HTTP_200_OK, f"Login failed: {response.text}"
-        data = response.json()
-        assert "access_token" in data, f"Response missing access_token: {data}"
-        token = data["access_token"]
-        client.headers = {"Authorization": f"Bearer {token}"}
+        # Login as admin using helper
+        login_as_admin(client, test_user_admin.email)
         
         # Try to get non-existent user
         response = client.get("/api/admin/users/99999")
@@ -296,19 +227,8 @@ class TestAdminUserActions:
     
     def test_toggle_user_active(self, client, test_user_admin, test_user):
         """Test toggling user active status."""
-        # Login as admin
-        response = client.post(
-            "/api/auth/login",
-            json={
-                "email": test_user_admin.email,
-                "password": "secret",
-            },
-        )
-        assert response.status_code == status.HTTP_200_OK, f"Login failed: {response.text}"
-        data = response.json()
-        assert "access_token" in data, f"Response missing access_token: {data}"
-        token = data["access_token"]
-        client.headers = {"Authorization": f"Bearer {token}"}
+        # Login as admin using helper
+        login_as_admin(client, test_user_admin.email)
         
         # Toggle active status
         response = client.post(f"/api/admin/users/{test_user.id}/toggle-active")
@@ -323,19 +243,8 @@ class TestAdminUserActions:
         test_user.credits_used_this_period = 10
         db_session.commit()
         
-        # Login as admin
-        response = client.post(
-            "/api/auth/login",
-            json={
-                "email": test_user_admin.email,
-                "password": "secret",
-            },
-        )
-        assert response.status_code == status.HTTP_200_OK, f"Login failed: {response.text}"
-        data = response.json()
-        assert "access_token" in data, f"Response missing access_token: {data}"
-        token = data["access_token"]
-        client.headers = {"Authorization": f"Bearer {token}"}
+        # Login as admin using helper
+        login_as_admin(client, test_user_admin.email)
         
         # Reset usage
         response = client.post(f"/api/admin/users/{test_user.id}/reset-usage")
@@ -350,19 +259,8 @@ class TestAdminUserActions:
     
     def test_toggle_mock_mode(self, client, test_user_admin, test_user):
         """Test toggling user mock mode."""
-        # Login as admin
-        response = client.post(
-            "/api/auth/login",
-            json={
-                "email": test_user_admin.email,
-                "password": "secret",
-            },
-        )
-        assert response.status_code == status.HTTP_200_OK, f"Login failed: {response.text}"
-        data = response.json()
-        assert "access_token" in data, f"Response missing access_token: {data}"
-        token = data["access_token"]
-        client.headers = {"Authorization": f"Bearer {token}"}
+        # Login as admin using helper
+        login_as_admin(client, test_user_admin.email)
         
         # Toggle mock mode
         response = client.post(f"/api/admin/users/{test_user.id}/toggle-mock-mode")
@@ -402,19 +300,8 @@ class TestAdminStats:
         create_starter_user(db_session)
         create_pro_user(db_session)
         
-        # Login as admin
-        response = client.post(
-            "/api/auth/login",
-            json={
-                "email": test_user_admin.email,
-                "password": "secret",
-            },
-        )
-        assert response.status_code == status.HTTP_200_OK, f"Login failed: {response.text}"
-        data = response.json()
-        assert "access_token" in data, f"Response missing access_token: {data}"
-        token = data["access_token"]
-        client.headers = {"Authorization": f"Bearer {token}"}
+        # Login as admin using helper
+        login_as_admin(client, test_user_admin.email)
         
         # Get stats
         response = client.get("/api/admin/stats")
@@ -495,19 +382,8 @@ class TestAdminRolePermissions:
         
         moderator = create_moderator_user(db_session)
         
-        # Login as moderator
-        response = client.post(
-            "/api/auth/login",
-            json={
-                "email": moderator.email,
-                "password": "test_password_123",
-            },
-        )
-        assert response.status_code == status.HTTP_200_OK, f"Login failed: {response.text}"
-        data = response.json()
-        assert "access_token" in data, f"Response missing access_token: {data}"
-        token = data["access_token"]
-        client.headers = {"Authorization": f"Bearer {token}"}
+        # Login as moderator using helper
+        login_as_admin(client, moderator.email, password="test_password_123")
         
         # Try to create user (should fail)
         response = client.post(

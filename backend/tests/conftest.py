@@ -129,6 +129,7 @@ def client(db_session):
     - Overrides the get_db dependency to use test database
     - Returns a TestClient instance for making API requests
     - Clears login rate limiting between tests
+    - Clears API rate limiting (anonymous_rate_limit_storage) between tests
     """
     def override_get_db():
         try:
@@ -142,12 +143,17 @@ def client(db_session):
     from app.routers.auth import failed_login_attempts
     failed_login_attempts.clear()
     
+    # Clear API rate limiting (credit-based) before each test
+    from app.rate_limiting import anonymous_rate_limit_storage
+    anonymous_rate_limit_storage.clear()
+    
     with TestClient(fastapi_app) as test_client:
         yield test_client
     
     # Clean up dependency override and rate limiting
     fastapi_app.dependency_overrides.clear()
     failed_login_attempts.clear()
+    anonymous_rate_limit_storage.clear()
 
 
 # ============================================================================
