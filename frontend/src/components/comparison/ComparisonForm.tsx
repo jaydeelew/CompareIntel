@@ -1615,11 +1615,21 @@ export const ComparisonForm = memo<ComparisonFormProps>(
               </button>
               <button
                 onClick={isFollowUpMode ? onContinueConversation : onSubmitClick}
-                disabled={isLoading || creditsRemaining <= 0}
-                className={`textarea-icon-button submit-button ${!isFollowUpMode && !input.trim() ? 'not-ready' : ''} ${isAnimatingButton ? 'animate-pulse-glow' : ''}`}
+                disabled={
+                  isLoading ||
+                  creditsRemaining <= 0 ||
+                  (!isFollowUpMode && (!input.trim() || selectedModels.length === 0))
+                }
+                className={`textarea-icon-button submit-button ${isAnimatingButton ? 'animate-pulse-glow' : ''}`}
                 title={(() => {
                   if (creditsRemaining <= 0) {
                     return 'You have run out of credits'
+                  }
+                  if (isLoading) {
+                    return 'Submit'
+                  }
+                  if (!isFollowUpMode && (!input.trim() || selectedModels.length === 0)) {
+                    return 'Enter prompt and select models'
                   }
                   if (isFollowUpMode && tokenUsageInfo && tokenUsageInfo.isExceeded) {
                     return 'Input capacity exceeded - inputs may be truncated'
