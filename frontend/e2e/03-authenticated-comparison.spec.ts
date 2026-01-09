@@ -25,13 +25,26 @@ test.describe('Authenticated User Comparison Flow', () => {
     })
 
     await test.step('Select multiple models', async () => {
-      // Wait for models to load first
+      // Wait for loading message to disappear
       const loadingMessage = authenticatedPage.locator(
         '.loading-message:has-text("Loading available models")'
       )
       await loadingMessage.waitFor({ state: 'hidden', timeout: 10000 }).catch(() => {
         // Loading message might not exist or already be gone, continue
       })
+
+      // Expand first provider dropdown if collapsed (checkboxes are inside dropdowns)
+      const providerHeaders = authenticatedPage.locator(
+        '.provider-header, button[class*="provider-header"]'
+      )
+      if ((await providerHeaders.count()) > 0) {
+        const firstProvider = providerHeaders.first()
+        const isExpanded = await firstProvider.getAttribute('aria-expanded')
+        if (isExpanded !== 'true') {
+          await firstProvider.click()
+          await authenticatedPage.waitForTimeout(500)
+        }
+      }
 
       const modelCheckboxes = authenticatedPage.locator(
         '[data-testid^="model-checkbox-"], input[type="checkbox"].model-checkbox'
@@ -41,12 +54,22 @@ test.describe('Authenticated User Comparison Flow', () => {
       const checkboxCount = await modelCheckboxes.count()
       expect(checkboxCount).toBeGreaterThan(0)
 
-      // Select at least 2 models for comparison
-      const modelsToSelect = Math.min(3, checkboxCount)
-      for (let i = 0; i < modelsToSelect; i++) {
-        await modelCheckboxes.nth(i).check()
-        await expect(modelCheckboxes.nth(i)).toBeChecked()
+      // Select at least 2 models for comparison (skip disabled checkboxes)
+      let selectedCount = 0
+      const minToSelect = 2
+      for (let i = 0; i < checkboxCount && selectedCount < minToSelect; i++) {
+        const checkbox = modelCheckboxes.nth(i)
+        await expect(checkbox).toBeVisible({ timeout: 5000 })
+        const isEnabled = await checkbox.isEnabled().catch(() => false)
+        if (isEnabled) {
+          await checkbox.check({ timeout: 10000 })
+          await expect(checkbox).toBeChecked()
+          selectedCount++
+        }
       }
+
+      // Ensure we selected at least the minimum
+      expect(selectedCount).toBeGreaterThanOrEqual(minToSelect)
     })
 
     await test.step('Submit comparison', async () => {
@@ -95,6 +118,19 @@ test.describe('Authenticated User Comparison Flow', () => {
         '.loading-message:has-text("Loading available models")'
       )
       await loadingMessage.waitFor({ state: 'hidden', timeout: 10000 }).catch(() => {})
+
+      // Expand first provider dropdown if collapsed (checkboxes are inside dropdowns)
+      const providerHeaders = authenticatedPage.locator(
+        '.provider-header, button[class*="provider-header"]'
+      )
+      if ((await providerHeaders.count()) > 0) {
+        const firstProvider = providerHeaders.first()
+        const isExpanded = await firstProvider.getAttribute('aria-expanded')
+        if (isExpanded !== 'true') {
+          await firstProvider.click()
+          await authenticatedPage.waitForTimeout(500)
+        }
+      }
 
       const modelCheckboxes = authenticatedPage.locator(
         '[data-testid^="model-checkbox-"], input[type="checkbox"].model-checkbox'
@@ -172,6 +208,19 @@ test.describe('Authenticated User Comparison Flow', () => {
       )
       await loadingMessage.waitFor({ state: 'hidden', timeout: 10000 }).catch(() => {})
 
+      // Expand first provider dropdown if collapsed (checkboxes are inside dropdowns)
+      const providerHeaders = authenticatedPage.locator(
+        '.provider-header, button[class*="provider-header"]'
+      )
+      if ((await providerHeaders.count()) > 0) {
+        const firstProvider = providerHeaders.first()
+        const isExpanded = await firstProvider.getAttribute('aria-expanded')
+        if (isExpanded !== 'true') {
+          await firstProvider.click()
+          await authenticatedPage.waitForTimeout(500)
+        }
+      }
+
       const modelCheckboxes = authenticatedPage.locator(
         '[data-testid^="model-checkbox-"], input[type="checkbox"].model-checkbox'
       )
@@ -239,6 +288,19 @@ test.describe('Authenticated User Comparison Flow', () => {
     )
     await loadingMessage.waitFor({ state: 'hidden', timeout: 10000 }).catch(() => {})
 
+    // Expand first provider dropdown if collapsed (checkboxes are inside dropdowns)
+    const providerHeaders = authenticatedPage.locator(
+      '.provider-header, button[class*="provider-header"]'
+    )
+    if ((await providerHeaders.count()) > 0) {
+      const firstProvider = providerHeaders.first()
+      const isExpanded = await firstProvider.getAttribute('aria-expanded')
+      if (isExpanded !== 'true') {
+        await firstProvider.click()
+        await authenticatedPage.waitForTimeout(500)
+      }
+    }
+
     await test.step('Select first set of models', async () => {
       const modelCheckboxes = authenticatedPage.locator(
         '[data-testid^="model-checkbox-"], input[type="checkbox"].model-checkbox'
@@ -249,12 +311,19 @@ test.describe('Authenticated User Comparison Flow', () => {
       expect(checkboxCount).toBeGreaterThan(0)
 
       if (checkboxCount >= 2) {
-        // Select first two models
-        await modelCheckboxes.nth(0).check()
-        await modelCheckboxes.nth(1).check()
-
-        await expect(modelCheckboxes.nth(0)).toBeChecked()
-        await expect(modelCheckboxes.nth(1)).toBeChecked()
+        // Select first two enabled models
+        let selectedCount = 0
+        for (let i = 0; i < checkboxCount && selectedCount < 2; i++) {
+          const checkbox = modelCheckboxes.nth(i)
+          await expect(checkbox).toBeVisible({ timeout: 5000 })
+          const isEnabled = await checkbox.isEnabled().catch(() => false)
+          if (isEnabled) {
+            await checkbox.check({ timeout: 10000 })
+            await expect(checkbox).toBeChecked()
+            selectedCount++
+          }
+        }
+        expect(selectedCount).toBeGreaterThanOrEqual(2)
       }
     })
 
@@ -265,12 +334,41 @@ test.describe('Authenticated User Comparison Flow', () => {
       const checkboxCount = await modelCheckboxes.count()
 
       if (checkboxCount >= 3) {
-        // Uncheck first, check third
-        await modelCheckboxes.nth(0).uncheck()
-        await modelCheckboxes.nth(2).check()
+        // Find first enabled checkbox to uncheck, and third enabled to check
+        let firstEnabled = -1
+        let thirdEnabled = -1
+        let enabledCount = 0
 
-        await expect(modelCheckboxes.nth(0)).not.toBeChecked()
-        await expect(modelCheckboxes.nth(2)).toBeChecked()
+        for (let i = 0; i < checkboxCount; i++) {
+          const checkbox = modelCheckboxes.nth(i)
+          const isEnabled = await checkbox.isEnabled().catch(() => false)
+          if (isEnabled) {
+            if (firstEnabled === -1) firstEnabled = i
+            enabledCount++
+            if (enabledCount === 3) {
+              thirdEnabled = i
+              break
+            }
+          }
+        }
+
+        if (firstEnabled >= 0 && thirdEnabled >= 0) {
+          const checkbox1 = modelCheckboxes.nth(firstEnabled)
+          const checkbox3 = modelCheckboxes.nth(thirdEnabled)
+          await expect(checkbox1).toBeVisible({ timeout: 5000 })
+          await expect(checkbox3).toBeVisible({ timeout: 5000 })
+
+          // Uncheck first if checked
+          const isChecked1 = await checkbox1.isChecked().catch(() => false)
+          if (isChecked1) {
+            await checkbox1.uncheck({ timeout: 10000 })
+            await expect(checkbox1).not.toBeChecked()
+          }
+
+          // Check third
+          await checkbox3.check({ timeout: 10000 })
+          await expect(checkbox3).toBeChecked()
+        }
       }
     })
   })
@@ -285,6 +383,19 @@ test.describe('Authenticated User Comparison Flow', () => {
         '.loading-message:has-text("Loading available models")'
       )
       await loadingMessage.waitFor({ state: 'hidden', timeout: 10000 }).catch(() => {})
+
+      // Expand first provider dropdown if collapsed (checkboxes are inside dropdowns)
+      const providerHeaders = authenticatedPage.locator(
+        '.provider-header, button[class*="provider-header"]'
+      )
+      if ((await providerHeaders.count()) > 0) {
+        const firstProvider = providerHeaders.first()
+        const isExpanded = await firstProvider.getAttribute('aria-expanded')
+        if (isExpanded !== 'true') {
+          await firstProvider.click()
+          await authenticatedPage.waitForTimeout(500)
+        }
+      }
 
       const modelCheckboxes = authenticatedPage.locator(
         '[data-testid^="model-checkbox-"], input[type="checkbox"].model-checkbox'

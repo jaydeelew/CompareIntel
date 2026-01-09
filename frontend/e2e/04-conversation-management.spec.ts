@@ -23,6 +23,19 @@ test.describe('Conversation Management', () => {
       )
       await loadingMessage.waitFor({ state: 'hidden', timeout: 10000 }).catch(() => {})
 
+      // Expand first provider dropdown if collapsed (checkboxes are inside dropdowns)
+      const providerHeaders = authenticatedPage.locator(
+        '.provider-header, button[class*="provider-header"]'
+      )
+      if ((await providerHeaders.count()) > 0) {
+        const firstProvider = providerHeaders.first()
+        const isExpanded = await firstProvider.getAttribute('aria-expanded')
+        if (isExpanded !== 'true') {
+          await firstProvider.click()
+          await authenticatedPage.waitForTimeout(500)
+        }
+      }
+
       const modelCheckboxes = authenticatedPage.locator(
         '[data-testid^="model-checkbox-"], input[type="checkbox"].model-checkbox'
       )
@@ -208,6 +221,19 @@ test.describe('Conversation Management', () => {
         '.loading-message:has-text("Loading available models")'
       )
       await loadingMessage.waitFor({ state: 'hidden', timeout: 10000 }).catch(() => {})
+
+      // Expand first provider dropdown if collapsed (checkboxes are inside dropdowns)
+      const providerHeaders = authenticatedPage.locator(
+        '.provider-header, button[class*="provider-header"]'
+      )
+      if ((await providerHeaders.count()) > 0) {
+        const firstProvider = providerHeaders.first()
+        const isExpanded = await firstProvider.getAttribute('aria-expanded')
+        if (isExpanded !== 'true') {
+          await firstProvider.click()
+          await authenticatedPage.waitForTimeout(500)
+        }
+      }
 
       const modelCheckboxes = authenticatedPage.locator(
         '[data-testid^="model-checkbox-"], input[type="checkbox"].model-checkbox'

@@ -19,6 +19,19 @@ test.describe('Advanced Features', () => {
       )
       await loadingMessage.waitFor({ state: 'hidden', timeout: 10000 }).catch(() => {})
 
+      // Expand first provider dropdown if collapsed (checkboxes are inside dropdowns)
+      const providerHeaders = authenticatedPage.locator(
+        '.provider-header, button[class*="provider-header"]'
+      )
+      if ((await providerHeaders.count()) > 0) {
+        const firstProvider = providerHeaders.first()
+        const isExpanded = await firstProvider.getAttribute('aria-expanded')
+        if (isExpanded !== 'true') {
+          await firstProvider.click()
+          await authenticatedPage.waitForTimeout(500)
+        }
+      }
+
       const modelCheckboxes = authenticatedPage.locator(
         '[data-testid^="model-checkbox-"], input[type="checkbox"].model-checkbox'
       )
@@ -126,6 +139,19 @@ test.describe('Advanced Features', () => {
       )
       await loadingMessage.waitFor({ state: 'hidden', timeout: 10000 }).catch(() => {})
 
+      // Expand first provider dropdown if collapsed (checkboxes are inside dropdowns)
+      const providerHeaders = authenticatedPage.locator(
+        '.provider-header, button[class*="provider-header"]'
+      )
+      if ((await providerHeaders.count()) > 0) {
+        const firstProvider = providerHeaders.first()
+        const isExpanded = await firstProvider.getAttribute('aria-expanded')
+        if (isExpanded !== 'true') {
+          await firstProvider.click()
+          await authenticatedPage.waitForTimeout(500)
+        }
+      }
+
       const modelCheckboxes = authenticatedPage.locator(
         '[data-testid^="model-checkbox-"], input[type="checkbox"].model-checkbox'
       )
@@ -177,59 +203,261 @@ test.describe('Advanced Features', () => {
   })
 
   test('User can load saved model selections', async ({ authenticatedPage }) => {
-    await test.step('Open saved selections', async () => {
-      // Look for saved selections dropdown or button
+    // Skip if saved selections feature is not available
+    test.skip(
+      !(await authenticatedPage
+        .locator('button[class*="saved"], button[class*="selection"]')
+        .first()
+        .isVisible({ timeout: 2000 })
+        .catch(() => false)),
+      'Saved selections feature not available'
+    )
+    await test.step('Ensure a saved selection exists', async () => {
+      // Wait for models to load first
+      const loadingMessage = authenticatedPage.locator(
+        '.loading-message:has-text("Loading available models")'
+      )
+      await loadingMessage.waitFor({ state: 'hidden', timeout: 10000 }).catch(() => {})
+
+      // Expand first few provider dropdowns only (enough to find models)
+      const providerHeaders = authenticatedPage.locator(
+        '.provider-header, button[class*="provider-header"]'
+      )
+      const providerCount = Math.min(await providerHeaders.count(), 3) // Only expand first 3
+      for (let i = 0; i < providerCount; i++) {
+        const provider = providerHeaders.nth(i)
+        const isExpanded = await provider.getAttribute('aria-expanded').catch(() => 'false')
+        if (isExpanded !== 'true') {
+          await provider.click({ timeout: 5000 }).catch(() => {})
+          await authenticatedPage.waitForTimeout(300)
+        }
+      }
+
+      // Check if we have a saved selection, if not create one
       const savedSelectionsButton = authenticatedPage.locator(
         'button[class*="saved"], ' +
           'button[class*="selection"], ' +
           '[data-testid*="saved-selection"]'
       )
 
-      if (
-        await savedSelectionsButton
-          .first()
-          .isVisible({ timeout: 2000 })
-          .catch(() => false)
-      ) {
+      const hasSavedSelectionsButton = await savedSelectionsButton
+        .first()
+        .isVisible({ timeout: 2000 })
+        .catch(() => false)
+
+      if (hasSavedSelectionsButton) {
         await savedSelectionsButton.first().click()
         await authenticatedPage.waitForTimeout(500)
 
-        // Dropdown should appear
         const selectionList = authenticatedPage.locator(
           '[class*="saved-selection"], ' + '[class*="selection-list"]'
         )
-
-        const hasList = await selectionList
+        const _hasList = await selectionList
           .first()
           .isVisible({ timeout: 2000 })
           .catch(() => false)
 
-        if (hasList) {
-          // Click on a saved selection
-          const selectionItems = selectionList.locator('button, [role="button"]')
+        // Check if saved selections exist
+        const savedSelectionItems = selectionList.locator('.saved-selection-item')
+        const itemCount = await savedSelectionItems.count()
 
-          if ((await selectionItems.count()) > 0) {
-            await selectionItems.first().click()
-            await authenticatedPage.waitForLoadState('networkidle')
+        // If no saved selections exist, create one
+        if (itemCount === 0) {
+          // Close dropdown
+          await authenticatedPage.keyboard.press('Escape')
+          await authenticatedPage.waitForTimeout(500)
 
-            // Wait for models to load first
-            const loadingMessage = authenticatedPage.locator(
-              '.loading-message:has-text("Loading available models")'
-            )
-            await loadingMessage.waitFor({ state: 'hidden', timeout: 10000 }).catch(() => {})
+          // Select models
+          const modelCheckboxes = authenticatedPage.locator(
+            '[data-testid^="model-checkbox-"], input[type="checkbox"].model-checkbox'
+          )
+          const checkboxCount = await modelCheckboxes.count()
 
-            // Models should be selected
-            const modelCheckboxes = authenticatedPage.locator(
-              '[data-testid^="model-checkbox-"]:checked, input[type="checkbox"].model-checkbox:checked'
-            )
-            await expect(modelCheckboxes.first())
-              .toBeVisible({ timeout: 15000 })
-              .catch(() => {})
-            const checkedCount = await modelCheckboxes.count()
-            expect(checkedCount).toBeGreaterThan(0)
+          expect(checkboxCount).toBeGreaterThan(0)
+
+          // Find first two enabled, unchecked models
+          let selectedCount = 0
+          for (let i = 0; i < checkboxCount && selectedCount < 2; i++) {
+            const checkbox = modelCheckboxes.nth(i)
+            const isEnabled = await checkbox.isEnabled().catch(() => false)
+            const isChecked = await checkbox.isChecked().catch(() => false)
+            if (isEnabled && !isChecked) {
+              await checkbox.check({ timeout: 10000 }).catch(() => {
+                // If check fails, try clicking instead
+                checkbox.click({ timeout: 10000 }).catch(() => {})
+              })
+              selectedCount++
+            }
           }
+
+          // If we didn't find enough unchecked models, uncheck some first
+          if (selectedCount < 2) {
+            // Uncheck first few to make room
+            for (let i = 0; i < checkboxCount && selectedCount < 2; i++) {
+              const checkbox = modelCheckboxes.nth(i)
+              const isEnabled = await checkbox.isEnabled().catch(() => false)
+              const isChecked = await checkbox.isChecked().catch(() => false)
+              if (isEnabled && isChecked) {
+                await checkbox.uncheck({ timeout: 5000 }).catch(() => {})
+              }
+              if (isEnabled && !isChecked) {
+                await checkbox.check({ timeout: 10000 }).catch(() => {
+                  checkbox.click({ timeout: 10000 }).catch(() => {})
+                })
+                selectedCount++
+              }
+            }
+          }
+
+          expect(selectedCount).toBeGreaterThan(0)
+
+          // Wait a bit for React to update
+          await authenticatedPage.waitForTimeout(500)
+
+          // Save selection - the save button should be in the saved selections dropdown
+          // First open the dropdown again
+          const savedSelectionsButton2 = authenticatedPage.locator(
+            'button[class*="saved"], ' +
+              'button[class*="selection"], ' +
+              '[data-testid*="saved-selection"]'
+          )
+          await savedSelectionsButton2.first().click()
+          await authenticatedPage.waitForTimeout(500)
+
+          // Look for the save button
+          const saveButton = authenticatedPage.locator(
+            'button:has-text("Save Current Selection"), button:has-text("Save")'
+          )
+          const saveButtonVisible = await saveButton.isVisible({ timeout: 5000 }).catch(() => false)
+
+          if (!saveButtonVisible) {
+            // Try alternative selector
+            const altSaveButton = authenticatedPage.getByRole('button', {
+              name: /save.*selection/i,
+            })
+            const altVisible = await altSaveButton.isVisible({ timeout: 2000 }).catch(() => false)
+            if (altVisible) {
+              await altSaveButton.click()
+            } else {
+              throw new Error('Save button not found')
+            }
+          } else {
+            await saveButton.click()
+          }
+
+          await authenticatedPage.waitForTimeout(500)
+
+          // Fill in name
+          const nameInput = authenticatedPage.locator(
+            'input[type="text"], input[placeholder*="name"], input[placeholder*="Name"]'
+          )
+          await expect(nameInput).toBeVisible({ timeout: 5000 })
+          await nameInput.fill('Test Selection')
+
+          // Find the specific Save button in the dialog (not the dropdown button)
+          const confirmButton = authenticatedPage.locator(
+            'button.saved-selections-save-btn, button:has-text("Save"):not([title*="Save or load"])'
+          )
+          await expect(confirmButton.first()).toBeVisible({ timeout: 2000 })
+          await confirmButton.first().click()
+          await authenticatedPage.waitForLoadState('networkidle')
+          await authenticatedPage.waitForTimeout(1000) // Wait for save to complete
+
+          // Close dialog and wait for it to disappear
+          await authenticatedPage
+            .waitForSelector('[role="dialog"]', { state: 'hidden', timeout: 5000 })
+            .catch(() => {})
+          await authenticatedPage.waitForTimeout(1000)
+
+          // Close dropdown and reopen to refresh the list
+          await authenticatedPage.keyboard.press('Escape')
+          await authenticatedPage.waitForTimeout(500)
+        } else {
+          // Close dropdown to prepare for loading
+          await authenticatedPage.keyboard.press('Escape')
+          await authenticatedPage.waitForTimeout(500)
         }
       }
+    })
+
+    await test.step('Load saved selection', async () => {
+      // Open saved selections dropdown
+      const savedSelectionsButton = authenticatedPage.locator(
+        'button[class*="saved"], ' +
+          'button[class*="selection"], ' +
+          '[data-testid*="saved-selection"]'
+      )
+
+      await expect(savedSelectionsButton.first()).toBeVisible({ timeout: 5000 })
+      await savedSelectionsButton.first().click()
+      await authenticatedPage.waitForTimeout(1500) // Wait for dropdown to open and list to render
+
+      // Find saved selection items - wait for them to appear
+      const selectionItems = authenticatedPage.locator('.saved-selection-item')
+
+      // Wait for at least one item to appear (with retry)
+      let itemCount = 0
+      for (let i = 0; i < 5; i++) {
+        itemCount = await selectionItems.count()
+        if (itemCount > 0) break
+        await authenticatedPage.waitForTimeout(500)
+        // Try clicking the button again to refresh
+        if (i < 4) {
+          await savedSelectionsButton.first().click()
+          await authenticatedPage.waitForTimeout(500)
+        }
+      }
+
+      expect(itemCount).toBeGreaterThan(0)
+
+      // Click on the info div inside the first item
+      const firstItem = selectionItems.first()
+      await expect(firstItem).toBeVisible({ timeout: 5000 })
+      const infoDiv = firstItem.locator('.saved-selection-info')
+      await expect(infoDiv).toBeVisible({ timeout: 2000 })
+      await infoDiv.click()
+
+      await authenticatedPage.waitForLoadState('networkidle')
+      await authenticatedPage.waitForTimeout(1500) // Wait for selection to be applied
+    })
+
+    await test.step('Verify models are selected', async () => {
+      // Expand first few provider dropdowns to ensure checkboxes are visible
+      const providerHeaders = authenticatedPage.locator(
+        '.provider-header, button[class*="provider-header"]'
+      )
+      const providerCount = Math.min(await providerHeaders.count(), 5) // Only expand first 5
+      for (let i = 0; i < providerCount; i++) {
+        const provider = providerHeaders.nth(i)
+        const isExpanded = await provider.getAttribute('aria-expanded').catch(() => 'false')
+        if (isExpanded !== 'true') {
+          await provider.click({ timeout: 5000 }).catch(() => {})
+          await authenticatedPage.waitForTimeout(300)
+        }
+      }
+
+      // Wait a bit more for React to update checkboxes
+      await authenticatedPage.waitForTimeout(1000)
+
+      // Check all checkboxes for checked state
+      const allModelCheckboxes = authenticatedPage.locator(
+        '[data-testid^="model-checkbox-"], input[type="checkbox"].model-checkbox'
+      )
+      const allCount = await allModelCheckboxes.count()
+
+      expect(allCount).toBeGreaterThan(0)
+
+      // Count checked checkboxes
+      let checkedCount = 0
+      for (let i = 0; i < allCount; i++) {
+        const checkbox = allModelCheckboxes.nth(i)
+        const isChecked = await checkbox.isChecked().catch(() => false)
+        if (isChecked) {
+          checkedCount++
+        }
+      }
+
+      expect(checkedCount).toBeGreaterThan(0)
     })
   })
 

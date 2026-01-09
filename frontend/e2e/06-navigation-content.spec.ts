@@ -17,11 +17,16 @@ test.describe('Navigation and Content Pages', () => {
   })
 
   test('User can navigate to About page', async ({ page }) => {
+    // Scroll to footer to ensure it's visible
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight))
+    await page.waitForTimeout(500)
+
     const footerLink = page.getByLabel('Footer navigation').getByRole('link', {
       name: 'About',
       exact: true,
     })
 
+    await expect(footerLink).toBeVisible({ timeout: 5000 })
     await footerLink.click()
     await page.waitForURL('**/about', { timeout: 5000 })
     await page.waitForLoadState('networkidle')

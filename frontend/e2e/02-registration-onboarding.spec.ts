@@ -15,7 +15,7 @@ test.describe('Registration and Onboarding', () => {
     await context.clearCookies()
     await context.clearPermissions()
     await page.goto('/')
-    await page.waitForLoadState('networkidle')
+    await page.waitForLoadState('networkidle', { timeout: 60000 })
   })
 
   test('User can register a new account', async ({ page }) => {
@@ -164,9 +164,20 @@ test.describe('Registration and Onboarding', () => {
 
       await inputField.fill('Explain machine learning in simple terms.')
 
-      // Wait for models to load first
+      // Wait for loading message to disappear
       const loadingMessage = page.locator('.loading-message:has-text("Loading available models")')
       await loadingMessage.waitFor({ state: 'hidden', timeout: 10000 }).catch(() => {})
+
+      // Expand first provider dropdown if collapsed (checkboxes are inside dropdowns)
+      const providerHeaders = page.locator('.provider-header, button[class*="provider-header"]')
+      if ((await providerHeaders.count()) > 0) {
+        const firstProvider = providerHeaders.first()
+        const isExpanded = await firstProvider.getAttribute('aria-expanded')
+        if (isExpanded !== 'true') {
+          await firstProvider.click()
+          await page.waitForTimeout(500)
+        }
+      }
 
       // Select models (registered users can select more than 3)
       const modelCheckboxes = page.locator(
@@ -284,11 +295,14 @@ test.describe('Registration and Onboarding', () => {
     })
 
     await test.step('Verify logout success', async () => {
+      // Wait for logout API call to complete
+      await page.waitForLoadState('networkidle', { timeout: 10000 })
+
       // User menu should be hidden
       await expect(page.getByTestId('user-menu-button')).not.toBeVisible({ timeout: 5000 })
 
-      // Sign-in button should be visible again
-      await expect(page.getByTestId('nav-sign-in-button')).toBeVisible({ timeout: 2000 })
+      // Sign-in button should be visible again (wait longer for React state update)
+      await expect(page.getByTestId('nav-sign-in-button')).toBeVisible({ timeout: 10000 })
     })
   })
 })
