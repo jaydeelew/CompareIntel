@@ -162,6 +162,65 @@ pytest --cov=app --cov-report=html
 pytest --cov=app --cov-report=html --cov-report=xml --cov-report=term-missing
 ```
 
+## CI/CD Integration
+
+Backend tests run automatically in CI/CD pipelines via GitHub Actions. The test workflow includes comprehensive backend testing with coverage reporting.
+
+**GitHub Actions Workflow:**
+
+The backend tests are part of the **Test Workflow** (`.github/workflows/test-workflow.yml`), which runs:
+- Backend unit tests
+- Backend integration tests
+- Backend E2E tests
+- Coverage reporting and artifact uploads
+
+**When Workflows Trigger:**
+
+- **Push events**: On pushes to `master` or `develop` branches
+- **Pull requests**: On all pull requests
+- **Manual triggers**: Via `workflow_dispatch` (always runs, cannot be skipped)
+
+**Skipping CI/CD Workflows:**
+
+Sometimes you may want to push commits without triggering tests (e.g., documentation updates, minor fixes, work-in-progress commits). You can skip GitHub Actions by including one of these patterns in your commit message:
+
+- `[skip ci]`
+- `[ci skip]`
+- `[no ci]`
+- `[skip actions]`
+- `***NO_CI***`
+
+**Examples:**
+
+```bash
+# Skip CI for documentation updates
+git commit -m "Update API docs [skip ci]"
+git push origin develop
+
+# Skip CI for minor fixes
+git commit -m "Fix typo in comments [no ci]"
+git push origin master
+
+# Skip CI for work-in-progress commits
+git commit -m "WIP: experimental feature [skip actions]"
+git push origin develop
+```
+
+**Notes:**
+
+- Skip patterns are case-sensitive and must match exactly
+- For pull requests, skip patterns are checked in both the PR title and body
+- Manual triggers (`workflow_dispatch`) always run regardless of commit messages
+- If you don't include a skip pattern, workflows will run normally
+- Use skip patterns sparingly - tests help catch issues early
+
+**CI/CD Coverage Reports:**
+
+Coverage reports are automatically generated and uploaded as artifacts in GitHub Actions:
+- HTML coverage report: Available in workflow artifacts
+- XML coverage report: Uploaded to Codecov for tracking
+- Terminal output: Shows coverage summary in workflow logs
+
 ## Test Configuration
 
 Configuration is in `backend/pyproject.toml` under `[tool.pytest.ini_options]`:

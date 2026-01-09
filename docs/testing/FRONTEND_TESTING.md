@@ -1512,6 +1512,63 @@ All existing E2E tests automatically run on mobile devices. Playwright:
 
 #### CI/CD Integration
 
+Tests run automatically in CI/CD pipelines via GitHub Actions. The workflows include comprehensive testing across multiple environments and mobile devices.
+
+**Available Workflows:**
+
+1. **Test Workflow** (`.github/workflows/test-workflow.yml`):
+   - Backend unit, integration, and E2E tests
+   - Frontend unit and integration tests
+   - Frontend E2E tests (including mobile devices)
+   - Coverage reporting and artifact uploads
+
+2. **Frontend Bundle Size Check** (`.github/workflows/frontend-bundle-size.yml`):
+   - Bundle size analysis
+   - Size limit enforcement
+   - PR comments with bundle analysis
+
+**When Workflows Trigger:**
+
+- **Push events**: On pushes to `master` or `develop` branches
+- **Pull requests**: On all pull requests
+- **Manual triggers**: Via `workflow_dispatch` (always runs, cannot be skipped)
+
+**Skipping CI/CD Workflows:**
+
+Sometimes you may want to push commits without triggering tests (e.g., documentation updates, minor fixes, work-in-progress commits). You can skip GitHub Actions by including one of these patterns in your commit message:
+
+- `[skip ci]`
+- `[ci skip]`
+- `[no ci]`
+- `[skip actions]`
+- `***NO_CI***`
+
+**Examples:**
+
+```bash
+# Skip CI for documentation updates
+git commit -m "Update README [skip ci]"
+git push origin develop
+
+# Skip CI for minor fixes
+git commit -m "Fix typo in comments [no ci]"
+git push origin master
+
+# Skip CI for work-in-progress commits
+git commit -m "WIP: experimental feature [skip actions]"
+git push origin develop
+```
+
+**Notes:**
+
+- Skip patterns are case-sensitive and must match exactly
+- For pull requests, skip patterns are checked in both the PR title and body
+- Manual triggers (`workflow_dispatch`) always run regardless of commit messages
+- If you don't include a skip pattern, workflows will run normally
+- Use skip patterns sparingly - tests help catch issues early
+
+**Mobile Testing in CI/CD:**
+
 Mobile tests run automatically in CI/CD pipelines. The GitHub Actions workflow includes mobile device testing:
 
 ```yaml
