@@ -164,6 +164,8 @@ jobs:
           ENVIRONMENT: development
           DATABASE_URL: sqlite:///./test.db
           # Playwright will automatically start both frontend and backend servers via webServer config
+          # Tests run on all configured projects: desktop browsers (Chromium, Firefox) and mobile devices (iOS/Android)
+          # Mobile device emulation uses the same browsers with different viewport/device settings
       
       - name: Upload Playwright test results
         if: always()
@@ -223,6 +225,7 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Frontend E2E Tests" >> $GITHUB_STEP_SUMMARY
           echo "- Status: ${{ needs.frontend-e2e-tests.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Includes desktop browsers (Chromium, Firefox) and mobile devices (iOS/Android)" >> $GITHUB_STEP_SUMMARY
           echo "- Test report available in artifacts" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Artifacts" >> $GITHUB_STEP_SUMMARY
