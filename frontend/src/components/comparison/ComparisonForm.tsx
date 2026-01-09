@@ -1572,47 +1572,47 @@ export const ComparisonForm = memo<ComparisonFormProps>(
                 </button>
               )}
               {/* Enable Web Access Toggle - styled like voice button */}
-              {canEnableWebSearch && (
-                <button
-                  type="button"
-                  onClick={() => setWebSearchEnabled(!webSearchEnabled)}
-                  className={`textarea-icon-button web-search-button ${webSearchEnabled ? 'active' : ''}`}
-                  title={
-                    webSearchEnabled
-                      ? 'Web search enabled - selected models can search the Internet'
-                      : 'Enable web search for capable models'
-                  }
-                  disabled={!canEnableWebSearch || isLoading}
+              <button
+                type="button"
+                onClick={() => setWebSearchEnabled(!webSearchEnabled)}
+                className={`textarea-icon-button web-search-button ${webSearchEnabled ? 'active' : ''}`}
+                title={
+                  !canEnableWebSearch
+                    ? 'Select a web-enabled model'
+                    : webSearchEnabled
+                      ? 'Web search enabled'
+                      : 'Enable web search'
+                }
+                disabled={!canEnableWebSearch || isLoading}
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                  style={{
+                    width: '20px',
+                    height: '20px',
+                  }}
                 >
-                  <svg
-                    viewBox="0 0 24 24"
+                  <circle
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke={webSearchEnabled ? 'white' : 'currentColor'}
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
                     fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                    style={{
-                      width: '20px',
-                      height: '20px',
-                    }}
-                  >
-                    <circle
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke={webSearchEnabled ? 'white' : 'currentColor'}
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      fill="none"
-                    />
-                    <path
-                      d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"
-                      stroke={webSearchEnabled ? 'white' : 'currentColor'}
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                </button>
-              )}
+                  />
+                  <path
+                    d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"
+                    stroke={webSearchEnabled ? 'white' : 'currentColor'}
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </button>
               <button
                 onClick={isFollowUpMode ? onContinueConversation : onSubmitClick}
                 disabled={isLoading || creditsRemaining <= 0}
