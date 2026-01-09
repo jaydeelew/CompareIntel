@@ -727,21 +727,21 @@ async def compare_stream(
                                             f"[AUTH] User {user_from_token.id} found but account is inactive"
                                         )
                                         tier_model_limit = ANONYMOUS_MODEL_LIMIT
-                                        tier_name = "anonymous"
+                                        tier_name = "unregistered"
                                 else:
                                     logger.warning(
                                         f"[AUTH] Token contains user_id {user_id_int} but user not found in database"
                                     )
                                     tier_model_limit = ANONYMOUS_MODEL_LIMIT
-                                    tier_name = "anonymous"
+                                    tier_name = "unregistered"
                             except (ValueError, TypeError) as e:
                                 logger.warning(f"[AUTH] Invalid user_id format in token: {e}")
                                 tier_model_limit = ANONYMOUS_MODEL_LIMIT
-                                tier_name = "anonymous"
+                                tier_name = "unregistered"
                         else:
                             logger.warning("[AUTH] Token payload missing 'sub' field")
                             tier_model_limit = ANONYMOUS_MODEL_LIMIT
-                            tier_name = "anonymous"
+                            tier_name = "unregistered"
                     else:
                         # Token verification failed - likely expired or invalid
                         # Try to decode without verification to get user info for better error message
@@ -757,17 +757,17 @@ async def compare_stream(
                             except Exception:
                                 pass
                         tier_model_limit = ANONYMOUS_MODEL_LIMIT
-                        tier_name = "anonymous"
+                        tier_name = "unregistered"
                 except Exception as e:
                     logger.error(f"[AUTH] Unexpected error during token recovery: {e}")
                     tier_model_limit = ANONYMOUS_MODEL_LIMIT
-                    tier_name = "anonymous"
+                    tier_name = "unregistered"
             else:
                 tier_model_limit = ANONYMOUS_MODEL_LIMIT
-                tier_name = "anonymous"
+                tier_name = "unregistered"
         else:
             tier_model_limit = ANONYMOUS_MODEL_LIMIT
-            tier_name = "anonymous"
+            tier_name = "unregistered"
         
         # Log authentication failure for debugging
         if not tier_recovered_from_token:
@@ -779,44 +779,46 @@ async def compare_stream(
             )
 
     # Validate model access based on tier (check if restricted models are selected)
-    restricted_models = [model_id for model_id in req.models if not is_model_available_for_tier(model_id, tier_name)]
+    # Normalize tier name: "anonymous" should be treated as "unregistered"
+    normalized_tier_name = "unregistered" if tier_name == "anonymous" else tier_name
+    restricted_models = [model_id for model_id in req.models if not is_model_available_for_tier(model_id, normalized_tier_name)]
     if restricted_models:
         upgrade_message = ""
-        if tier_name == "unregistered":
+        if normalized_tier_name == "unregistered":
             # Check if there's a token present - if so, authentication may have failed
             token_present = get_token_from_cookies(request) is not None
             if token_present:
                 upgrade_message = " It appears you are signed in, but authentication failed. Please try refreshing the page or logging in again. If the issue persists, your session may have expired."
             else:
                 upgrade_message = " Sign up for a free account or upgrade to a paid tier to access premium models."
-        elif tier_name == "free":
+        elif normalized_tier_name == "free":
             upgrade_message = " Upgrade to Starter ($9.95/month) or higher to access all premium models."
         else:
             upgrade_message = " This model requires a paid subscription."
 
         raise HTTPException(
             status_code=403,
-            detail=f"The following models are not available for {tier_name} tier: {', '.join(restricted_models)}.{upgrade_message}",
+            detail=f"The following models are not available for {normalized_tier_name} tier: {', '.join(restricted_models)}.{upgrade_message}",
         )
 
     # Enforce tier-specific model limit
     if len(req.models) > tier_model_limit:
         upgrade_message = ""
-        if tier_name == "unregistered":
+        if normalized_tier_name == "unregistered":
             free_model_limit = get_model_limit("free")
             upgrade_message = f" Sign up for a free account to compare up to {free_model_limit} models."
-        elif tier_name == "free":
+        elif normalized_tier_name == "free":
             starter_model_limit = get_model_limit("starter")
             pro_model_limit = get_model_limit("pro")
             upgrade_message = f" Upgrade to Starter for {starter_model_limit} models or Pro for {pro_model_limit} models."
-        elif tier_name in ["starter", "starter_plus"]:
+        elif normalized_tier_name in ["starter", "starter_plus"]:
             pro_model_limit = get_model_limit("pro")
             pro_plus_model_limit = get_model_limit("pro_plus")
             upgrade_message = f" Upgrade to Pro for {pro_model_limit} models or Pro+ for {pro_plus_model_limit} models."
 
         raise HTTPException(
             status_code=400,
-            detail=f"Your {tier_name} tier allows maximum {tier_model_limit} models per comparison. You selected {len(req.models)} models.{upgrade_message}",
+            detail=f"Your {normalized_tier_name} tier allows maximum {tier_model_limit} models per comparison. You selected {len(req.models)} models.{upgrade_message}",
         )
 
     # Get number of models for usage tracking

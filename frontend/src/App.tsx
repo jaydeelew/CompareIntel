@@ -3858,6 +3858,51 @@ function AppContent() {
         return
       }
 
+      // Check if model is restricted for user's tier
+      const userTier = isAuthenticated ? user?.subscription_tier || 'free' : 'unregistered'
+      const isPaidTier = ['starter', 'starter_plus', 'pro', 'pro_plus'].includes(userTier)
+
+      // Find the model in modelsByProvider to check its tier_access
+      let modelInfo = null
+      for (const providerModels of Object.values(modelsByProvider)) {
+        const model = providerModels.find(m => m.id === modelId)
+        if (model) {
+          modelInfo = model
+          break
+        }
+      }
+
+      // Check if model is restricted based on tier
+      if (modelInfo) {
+        let isRestricted = false
+        if (!isPaidTier) {
+          if (userTier === 'unregistered') {
+            // Unregistered tier only has access to unregistered-tier models
+            isRestricted = modelInfo.tier_access !== 'unregistered'
+          } else if (userTier === 'free') {
+            // Free tier has access to unregistered and free-tier models
+            isRestricted = modelInfo.tier_access === 'paid'
+          }
+        }
+
+        if (isRestricted) {
+          const tierName = !isAuthenticated ? 'Unregistered' : user?.subscription_tier || 'free'
+          const upgradeMsg =
+            tierName === 'Unregistered'
+              ? ' Sign up for a free account or upgrade to a paid tier to access premium models.'
+              : tierName === 'free'
+                ? ' Upgrade to Starter ($9.95/month) or higher to access all premium models.'
+                : ' This model requires a paid subscription.'
+          setError(
+            `The model "${modelInfo.name}" is not available for your ${tierName} tier.${upgradeMsg}`
+          )
+          setTimeout(() => {
+            setError(null)
+          }, 10000)
+          return
+        }
+      }
+
       // Check limit before adding (only in normal mode)
       if (selectedModels.length >= maxModelsLimit) {
         const tierName = !isAuthenticated ? 'Unregistered' : user?.subscription_tier || 'free'
