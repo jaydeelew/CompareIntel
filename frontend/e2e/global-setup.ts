@@ -40,6 +40,27 @@ async function globalSetup(config: FullConfig) {
     return
   }
 
+  // Clear rate limiting before starting E2E tests
+  // This prevents rate limiting from accumulating across test runs
+  try {
+    console.log('Clearing rate limiting for E2E tests...')
+    const resetResponse = await fetch(`${backendURL}/api/dev/reset-rate-limit`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ fingerprint: null }),
+    })
+    if (resetResponse.ok) {
+      console.log('Rate limiting cleared successfully')
+    } else {
+      console.warn(
+        'Warning: Could not clear rate limiting (this is OK if endpoint is not available)'
+      )
+    }
+  } catch (error) {
+    console.warn('Warning: Could not clear rate limiting:', error)
+    // Don't fail setup if rate limiting clear fails
+  }
+
   // Test credentials - use tier-specific variables for clarity
   const TEST_USER_EMAIL =
     process.env.TEST_FREE_EMAIL || process.env.TEST_USER_EMAIL || 'free@test.com'
@@ -56,6 +77,20 @@ async function globalSetup(config: FullConfig) {
   try {
     // Try to create admin user via registration
     console.log('Setting up admin user...')
+
+    // Clear rate limiting before admin login attempt
+    try {
+      await fetch(`${backendURL}/api/dev/reset-rate-limit`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fingerprint: null }),
+      }).catch(() => {
+        // Ignore errors - endpoint might not be available
+      })
+    } catch {
+      // Ignore errors - rate limiting clear is best-effort
+    }
+
     await page.goto(`${baseURL}/`)
     await page.waitForLoadState('networkidle')
 
@@ -257,6 +292,20 @@ async function globalSetup(config: FullConfig) {
 
     // Try to create test user
     console.log('Setting up test user...')
+
+    // Clear rate limiting before test user login attempt
+    try {
+      await fetch(`${backendURL}/api/dev/reset-rate-limit`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fingerprint: null }),
+      }).catch(() => {
+        // Ignore errors - endpoint might not be available
+      })
+    } catch {
+      // Ignore errors - rate limiting clear is best-effort
+    }
+
     await page.goto(`${baseURL}/`)
     await page.waitForLoadState('networkidle')
 

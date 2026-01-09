@@ -509,6 +509,11 @@ async def reset_rate_limit_dev(
         if fp_key in anonymous_rate_limit_storage:
             del anonymous_rate_limit_storage[fp_key]
 
+    # Clear login rate limiting for this IP and all IPs (for E2E tests)
+    # E2E tests may use different IPs, so clear everything
+    from ..routers.auth import failed_login_attempts
+    failed_login_attempts.clear()  # Clear all login attempts for E2E tests
+
     return {
         "message": "Rate limits, usage, and conversation history reset successfully",
         "ip_address": client_ip,

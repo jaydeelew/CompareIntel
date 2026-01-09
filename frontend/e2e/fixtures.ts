@@ -84,6 +84,21 @@ async function loginUser(
       return true
     }
 
+    // Clear rate limiting before login attempt (for E2E tests)
+    // This prevents rate limiting from blocking test logins
+    const backendURL = process.env.BACKEND_URL || 'http://localhost:8000'
+    try {
+      await fetch(`${backendURL}/api/dev/reset-rate-limit`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fingerprint: null }),
+      }).catch(() => {
+        // Ignore errors - endpoint might not be available in all environments
+      })
+    } catch {
+      // Ignore errors - rate limiting clear is best-effort
+    }
+
     // Navigate to home if not already there
     if (page.url() !== BASE_URL + '/' && !page.url().startsWith(BASE_URL)) {
       await page.goto('/')
