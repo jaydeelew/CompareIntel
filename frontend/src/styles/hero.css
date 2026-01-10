@@ -958,6 +958,11 @@
   pointer-events: none;
 }
 
+.web-search-button:not(.active) svg circle,
+.web-search-button:not(.active) svg path {
+  stroke: #9ca3af;
+}
+
 .web-search-button:hover:not(:disabled) {
   background: white;
   border-color: rgba(59, 130, 246, 0.6);
@@ -973,8 +978,8 @@
   color: #3b82f6;
 }
 
-.web-search-button:hover:not(:disabled) svg circle,
-.web-search-button:hover:not(:disabled) svg path {
+.web-search-button:hover:not(:disabled):not(.active) svg circle,
+.web-search-button:hover:not(:disabled):not(.active) svg path {
   stroke: #3b82f6;
 }
 
@@ -994,6 +999,11 @@
 
 .web-search-button:active:not(:disabled) svg {
   transform: translate(-50%, -50%);
+}
+
+.web-search-button:active:not(:disabled):not(.active) svg circle,
+.web-search-button:active:not(:disabled):not(.active) svg path {
+  stroke: #3b82f6;
 }
 
 .web-search-button.active {
