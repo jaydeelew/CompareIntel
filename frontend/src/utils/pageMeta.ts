@@ -24,9 +24,9 @@ const PAGE_META: Record<string, PageMeta> = {
     description:
       'Compare AI models side-by-side. Test GPT-5, Claude 4.5, Gemini, Grok 4, Llama 3, and more simultaneously. New models added regularly. Free tier available.',
     canonical: `${BASE_URL}/`,
-    ogTitle: 'CompareIntel - Compare 50+ AI Models Side-by-Side',
+    ogTitle: 'CompareIntel - Compare 65+ AI Models Side-by-Side',
     ogDescription:
-      'Compare GPT-4, Claude 3.5, Gemini, Llama 3, and 50+ AI models side-by-side. Test prompts simultaneously and find the best AI for your needs. Free tier available.',
+      'Compare GPT-5.1, Claude Opus 4.5, Gemini 3 Pro, Llama 4, and 65+ AI models side-by-side. Test prompts simultaneously and find the best AI for your needs. Free tier available.',
     ogImage: DEFAULT_OG_IMAGE,
   },
   '/about': {
@@ -42,11 +42,11 @@ const PAGE_META: Record<string, PageMeta> = {
   '/features': {
     title: 'Features - CompareIntel',
     description:
-      'Explore CompareIntel features: compare 50+ AI models, real-time streaming, LaTeX rendering, syntax highlighting, conversation history, and more.',
+      'Explore CompareIntel features: compare 65+ AI models, real-time streaming, LaTeX rendering, syntax highlighting, conversation history, and more.',
     canonical: `${BASE_URL}/features`,
     ogTitle: 'Features - CompareIntel',
     ogDescription:
-      'Explore CompareIntel features: compare 50+ AI models, real-time streaming, LaTeX rendering, syntax highlighting, conversation history, and more.',
+      'Explore CompareIntel features: compare 65+ AI models, real-time streaming, LaTeX rendering, syntax highlighting, conversation history, and more.',
     ogImage: DEFAULT_OG_IMAGE,
   },
   '/how-it-works': {
