@@ -286,20 +286,23 @@ test.describe('Conversation Management', () => {
           await firstItem.hover()
           await authenticatedPage.waitForTimeout(300)
 
-          // Look for delete button
+          // Look for delete button - it has class "history-item-delete" and contains "×"
           const deleteButton = firstItem.locator(
-            'button[class*="delete"], ' +
+            'button.history-item-delete, ' +
+              'button[class*="delete"], ' +
+              'button:has-text("×"), ' +
               'button[aria-label*="delete"], ' +
               'button[title*="delete"], ' +
               '[data-testid*="delete"]'
           )
 
-          if (
-            await deleteButton
-              .first()
-              .isVisible({ timeout: 2000 })
-              .catch(() => false)
-          ) {
+          // Wait for delete button to be visible (it should be visible without hover)
+          const deleteButtonVisible = await deleteButton
+            .first()
+            .isVisible({ timeout: 3000 })
+            .catch(() => false)
+
+          if (deleteButtonVisible) {
             await deleteButton.first().click()
 
             // Confirm deletion if confirmation dialog appears

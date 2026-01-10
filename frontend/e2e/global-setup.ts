@@ -15,6 +15,9 @@ async function globalSetup(config: FullConfig) {
   const baseURL = config.projects[0].use.baseURL || 'http://localhost:5173'
   const backendURL = process.env.BACKEND_URL || 'http://localhost:8000'
 
+  // Set test environment flag for reCAPTCHA detection
+  process.env.NODE_ENV = 'test'
+
   console.log('Running global setup for E2E tests...')
   console.log(`Frontend URL: ${baseURL}`)
   console.log(`Backend URL: ${backendURL}`)

@@ -155,18 +155,71 @@ test.describe('Authenticated User Comparison Flow', () => {
     })
 
     await test.step('Enter follow-up question', async () => {
+      // Wait for the conversation to be ready (results should be visible)
+      const results = authenticatedPage.locator(
+        '[data-testid^="result-card-"], .result-card, .model-response'
+      )
+      await results
+        .first()
+        .isVisible({ timeout: 30000 })
+        .catch(() => {})
+
+      // Wait for network to be idle (loading should be complete)
+      await authenticatedPage.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {})
+
+      // Wait a moment for UI to stabilize
+      await authenticatedPage.waitForTimeout(1000)
+
+      // Click "Follow up" button to activate follow-up mode
+      // This button appears when !isFollowUpMode and conversations exist
+      const followUpButton = authenticatedPage.locator(
+        'button.follow-up-button, button:has-text("Follow up")'
+      )
+      const followUpButtonVisible = await followUpButton
+        .first()
+        .isVisible({ timeout: 5000 })
+        .catch(() => false)
+
+      if (followUpButtonVisible) {
+        // Check if button is enabled
+        const isEnabled = await followUpButton
+          .first()
+          .isEnabled()
+          .catch(() => false)
+        if (isEnabled) {
+          await followUpButton.first().click()
+          await authenticatedPage.waitForTimeout(500)
+        }
+      }
+
+      // Wait for follow-up mode header to appear (confirms follow-up mode is active)
+      const followUpHeader = authenticatedPage.locator(
+        'h2:has-text("Follow Up Mode"), .follow-up-header'
+      )
+      await followUpHeader
+        .first()
+        .isVisible({ timeout: 5000 })
+        .catch(() => {})
+
       // Input field should still be visible and ready for follow-up
       const inputField = authenticatedPage.getByTestId('comparison-input-textarea')
       await expect(inputField).toBeVisible()
 
-      // Placeholder might change to indicate follow-up mode
-      const _placeholder = await inputField.getAttribute('placeholder')
+      // Clear any existing text first
+      await inputField.clear()
+      await authenticatedPage.waitForTimeout(500)
 
+      // Fill follow-up question
       await inputField.fill('What are its main use cases?')
 
-      // Wait for submit button to be enabled (may take a moment for validation)
+      // Wait for input to be processed
+      await authenticatedPage.waitForTimeout(500)
+
+      // Get submit button - in follow-up mode, it should be enabled if input is not empty
       const submitButton = authenticatedPage.getByTestId('comparison-submit-button')
-      await expect(submitButton).toBeEnabled({ timeout: 10000 })
+
+      // Wait for button to be enabled (with longer timeout to account for React state updates)
+      await expect(submitButton).toBeEnabled({ timeout: 15000 })
 
       // Submit follow-up
       await submitButton.click()

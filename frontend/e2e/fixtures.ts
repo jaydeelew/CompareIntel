@@ -315,6 +315,21 @@ interface TestFixtures {
 
 export const test = base.extend<TestFixtures>({
   // ==========================================================================
+  // Global setup - inject test environment flag
+  // ==========================================================================
+
+  page: async ({ page, context }, use) => {
+    // Inject script to mark this as a test environment (disables reCAPTCHA)
+    // Use context.addInitScript so it runs for all pages in this context
+    await context.addInitScript(() => {
+      window.__TEST_ENV__ = true
+      window.__PLAYWRIGHT__ = true
+      window.__PW_INTERNAL__ = true
+    })
+    await use(page)
+  },
+
+  // ==========================================================================
   // Authentication Fixtures - Subscription Tiers
   // ==========================================================================
 

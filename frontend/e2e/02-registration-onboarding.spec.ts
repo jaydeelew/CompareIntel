@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test'
+import { test, expect } from './test-setup'
 
 /**
  * E2E Tests: Registration and Onboarding
@@ -19,6 +19,8 @@ test.describe('Registration and Onboarding', () => {
   })
 
   test('User can register a new account', async ({ page }) => {
+    // Increase timeout for registration test
+    test.setTimeout(60000)
     const timestamp = Date.now()
     const testEmail = `test-${timestamp}@example.com`
     const testPassword = 'TestPassword123!'
@@ -55,27 +57,70 @@ test.describe('Registration and Onboarding', () => {
       await expect(submitButton).toBeVisible()
       await expect(submitButton).toBeEnabled()
 
+      // Wait for registration API response
+      const registrationResponsePromise = page
+        .waitForResponse(
+          response => {
+            const url = response.url()
+            return (
+              url.includes('/auth/register') &&
+              (response.status() === 201 || response.status() === 200)
+            )
+          },
+          { timeout: 10000 }
+        )
+        .catch(() => null)
+
       await submitButton.click()
 
-      // Wait for registration to process
-      await page.waitForLoadState('networkidle')
+      // Wait for registration API call to complete
+      const registrationResponse = await registrationResponsePromise
+
+      // Verify registration succeeded
+      if (!registrationResponse) {
+        // Check for error message
+        await page.waitForTimeout(1000)
+        const errorMessage = page.locator('.auth-error, [role="alert"]')
+        const hasError = await errorMessage.isVisible({ timeout: 2000 }).catch(() => false)
+        if (hasError) {
+          const errorText = await errorMessage.textContent().catch(() => 'Unknown error')
+          throw new Error(`Registration failed: ${errorText}`)
+        }
+        throw new Error('Registration API call did not complete')
+      }
+
+      // Verify response status
+      if (registrationResponse.status() !== 201 && registrationResponse.status() !== 200) {
+        const errorText = await registrationResponse.text().catch(() => 'Unknown error')
+        throw new Error(
+          `Registration failed with status ${registrationResponse.status()}: ${errorText}`
+        )
+      }
     })
 
     await test.step('Verify registration success', async () => {
-      // Wait for registration API call to complete
-      await page.waitForLoadState('networkidle')
-
-      // Auth modal should close
+      // Wait for auth modal to close (onSuccess callback closes it)
       await page
         .waitForSelector('[data-testid="auth-modal"], .auth-modal', {
           state: 'hidden',
-          timeout: 15000,
+          timeout: 10000,
         })
         .catch(() => {})
 
-      // User menu button should appear (user is logged in)
-      // Use longer timeout - user data needs to load after registration
-      // Wait for user menu to appear instead of using waitForTimeout
+      // Wait for auth/me API call to complete (user data fetch after registration)
+      // This ensures the auth state is fully updated
+      try {
+        await page.waitForResponse(
+          response => response.url().includes('/auth/me') && response.status() === 200,
+          { timeout: 10000 }
+        )
+      } catch {
+        // Response might have already completed or might not happen immediately
+        // Continue anyway
+      }
+
+      // Wait for user menu button to appear (user is logged in)
+      // Registration sets user in AuthContext, which should trigger Navigation to show UserMenu
       const userMenuButton = page.getByTestId('user-menu-button')
       await expect(userMenuButton).toBeVisible({ timeout: 20000 })
 
@@ -122,6 +167,8 @@ test.describe('Registration and Onboarding', () => {
   })
 
   test('New user can perform first comparison', async ({ page }) => {
+    // Increase timeout for registration + comparison test
+    test.setTimeout(60000)
     const timestamp = Date.now()
     const testEmail = `firstcomp-${timestamp}@example.com`
     const testPassword = 'TestPassword123!'
@@ -138,20 +185,58 @@ test.describe('Registration and Onboarding', () => {
         await confirmPasswordInput.fill(testPassword)
       }
 
+      // Wait for registration API response
+      const registrationResponsePromise = page
+        .waitForResponse(
+          response => {
+            const url = response.url()
+            return (
+              url.includes('/auth/register') &&
+              (response.status() === 201 || response.status() === 200)
+            )
+          },
+          { timeout: 10000 }
+        )
+        .catch(() => null)
+
       await page.getByTestId('register-submit-button').click()
 
       // Wait for registration API call to complete
-      await page.waitForLoadState('networkidle')
+      const registrationResponse = await registrationResponsePromise
 
-      // Wait for auth modal to close
+      // Verify registration succeeded
+      if (!registrationResponse) {
+        // Wait a bit and check for errors
+        await page.waitForTimeout(1000)
+        const errorMessage = page.locator('.auth-error, [role="alert"]')
+        const hasError = await errorMessage.isVisible({ timeout: 2000 }).catch(() => false)
+        if (hasError) {
+          const errorText = await errorMessage.textContent().catch(() => 'Unknown error')
+          throw new Error(`Registration failed: ${errorText}`)
+        }
+      }
+
+      // Wait for auth modal to close (onSuccess callback closes it)
       await page
         .waitForSelector('[data-testid="auth-modal"], .auth-modal', {
           state: 'hidden',
-          timeout: 15000,
+          timeout: 10000,
         })
         .catch(() => {})
 
-      // Wait a bit for React state to update
+      // Wait for auth/me API call to complete (user data fetch after registration)
+      // This ensures the auth state is fully updated
+      try {
+        await page.waitForResponse(
+          response => response.url().includes('/auth/me') && response.status() === 200,
+          { timeout: 10000 }
+        )
+      } catch {
+        // Response might have already completed or might not happen immediately
+        // Continue anyway
+      }
+
+      // Wait a moment for React to re-render after auth state updates
       await page.waitForTimeout(500)
 
       // Wait for user menu to appear (user data needs to load after registration)

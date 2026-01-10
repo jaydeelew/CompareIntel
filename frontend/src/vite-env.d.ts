@@ -80,4 +80,13 @@ declare const webkitSpeechRecognition: {
 interface Window {
   SpeechRecognition: typeof SpeechRecognition
   webkitSpeechRecognition: typeof SpeechRecognition
+  // Test environment flags (used by Playwright E2E tests)
+  __TEST_ENV__?: boolean
+  __PLAYWRIGHT__?: boolean
+  __PW_INTERNAL__?: boolean
+}
+
+interface Document {
+  // Test environment flag (used by Playwright E2E tests)
+  __TEST_ENV__?: boolean
 }

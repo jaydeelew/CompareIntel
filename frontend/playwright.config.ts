@@ -60,6 +60,9 @@ export default defineConfig({
     /* Video on failure */
     video: 'retain-on-failure',
   },
+  
+  /* Global setup to inject test environment flag for all tests */
+  globalSetup: './e2e/global-setup.ts',
 
   /* Configure projects for major browsers */
   projects: [
@@ -134,6 +137,10 @@ export default defineConfig({
       reuseExistingServer: !process.env.CI,
       timeout: 120 * 1000,
       cwd: path.resolve(__dirname),
+      env: {
+        // Disable reCAPTCHA in test environment
+        VITE_RECAPTCHA_SITE_KEY: '',
+      },
     },
     {
       command: 'python -m uvicorn app.main:app --host 127.0.0.1 --port 8000',
@@ -149,6 +156,9 @@ export default defineConfig({
         MAIL_USERNAME: '',
         MAIL_PASSWORD: '',
         MAIL_FROM: '',
+        // Disable reCAPTCHA in test environment (empty string means not configured)
+        RECAPTCHA_SECRET_KEY: '',
+        recaptcha_secret_key: '',
       },
     },
   ],
