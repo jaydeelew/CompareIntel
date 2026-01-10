@@ -1,4 +1,17 @@
-import { test, expect } from './fixtures'
+import { test, expect, Locator } from './fixtures'
+
+/**
+ * Helper function to tap or click an element
+ * Uses tap if touch is supported, otherwise falls back to click
+ */
+async function tapOrClick(locator: Locator): Promise<void> {
+  try {
+    await locator.tap()
+  } catch {
+    // Fallback to click if tap is not supported (e.g., desktop browser)
+    await locator.click()
+  }
+}
 
 /**
  * E2E Tests: Mobile Platform Testing
@@ -92,8 +105,13 @@ test.describe('Mobile Platform Tests', () => {
       const signUpButton = page.getByTestId('nav-sign-up-button')
       await expect(signUpButton).toBeVisible()
 
-      // Use tap instead of click for mobile
-      await signUpButton.tap()
+      // Use tap if touch is supported, otherwise use click
+      try {
+        await signUpButton.tap()
+      } catch {
+        // Fallback to click if tap is not supported
+        await signUpButton.click()
+      }
       await page.waitForTimeout(500)
 
       // Auth modal should appear
@@ -103,7 +121,11 @@ test.describe('Mobile Platform Tests', () => {
       // Close modal
       const closeButton = page.locator('[data-testid="auth-modal-close"], .auth-modal-close')
       if (await closeButton.isVisible({ timeout: 2000 }).catch(() => false)) {
-        await closeButton.tap()
+        try {
+          await closeButton.tap()
+        } catch {
+          await closeButton.click()
+        }
       } else {
         // Press escape or click outside
         await page.keyboard.press('Escape')
@@ -114,8 +136,12 @@ test.describe('Mobile Platform Tests', () => {
       const inputField = page.getByTestId('comparison-input-textarea')
       await expect(inputField).toBeVisible()
 
-      // Tap to focus
-      await inputField.tap()
+      // Tap/click to focus
+      try {
+        await inputField.tap()
+      } catch {
+        await inputField.click()
+      }
       await page.waitForTimeout(300)
 
       // Type text
@@ -135,7 +161,7 @@ test.describe('Mobile Platform Tests', () => {
         const firstProvider = providerHeaders.first()
         const isExpanded = await firstProvider.getAttribute('aria-expanded')
         if (isExpanded !== 'true') {
-          await firstProvider.tap()
+          await tapOrClick(firstProvider)
           await page.waitForTimeout(500)
         }
       }
@@ -146,9 +172,9 @@ test.describe('Mobile Platform Tests', () => {
       )
       await expect(modelCheckboxes.first()).toBeVisible({ timeout: 20000 })
 
-      // Tap first checkbox
+      // Tap/click first checkbox
       const firstCheckbox = modelCheckboxes.first()
-      await firstCheckbox.tap()
+      await tapOrClick(firstCheckbox)
       await page.waitForTimeout(300)
 
       // Verify it's checked
@@ -159,7 +185,7 @@ test.describe('Mobile Platform Tests', () => {
   test('Mobile keyboard behavior', async ({ page }) => {
     await test.step('Keyboard appears when input is focused', async () => {
       const inputField = page.getByTestId('comparison-input-textarea')
-      await inputField.tap()
+      await tapOrClick(inputField)
 
       // Wait for keyboard to potentially appear (mobile browsers)
       await page.waitForTimeout(500)
@@ -171,7 +197,7 @@ test.describe('Mobile Platform Tests', () => {
 
     await test.step('Can type with mobile keyboard', async () => {
       const inputField = page.getByTestId('comparison-input-textarea')
-      await inputField.tap()
+      await tapOrClick(inputField)
       await page.waitForTimeout(300)
 
       // Type text
@@ -182,7 +208,7 @@ test.describe('Mobile Platform Tests', () => {
 
     await test.step('Keyboard can be dismissed', async () => {
       const inputField = page.getByTestId('comparison-input-textarea')
-      await inputField.tap()
+      await tapOrClick(inputField)
       await page.waitForTimeout(300)
 
       // Blur the input (simulates keyboard dismissal)
@@ -214,8 +240,8 @@ test.describe('Mobile Platform Tests', () => {
       const userMenuButton = authenticatedPage.getByTestId('user-menu-button')
       await expect(userMenuButton).toBeVisible()
 
-      // Tap to open menu
-      await userMenuButton.tap()
+      // Tap/click to open menu
+      await tapOrClick(userMenuButton)
       await authenticatedPage.waitForTimeout(500)
 
       // Menu should be visible (check for logout button or menu items)
@@ -229,7 +255,7 @@ test.describe('Mobile Platform Tests', () => {
     await test.step('Can perform comparison on mobile', async () => {
       // Enter prompt
       const inputField = page.getByTestId('comparison-input-textarea')
-      await inputField.tap()
+      await tapOrClick(inputField)
       await inputField.fill('What is machine learning?')
 
       // Wait for models to load
@@ -242,7 +268,7 @@ test.describe('Mobile Platform Tests', () => {
         const firstProvider = providerHeaders.first()
         const isExpanded = await firstProvider.getAttribute('aria-expanded')
         if (isExpanded !== 'true') {
-          await firstProvider.tap()
+          await tapOrClick(firstProvider)
           await page.waitForTimeout(500)
         }
       }
@@ -255,14 +281,14 @@ test.describe('Mobile Platform Tests', () => {
 
       const firstCheckbox = modelCheckboxes.first()
       if (await firstCheckbox.isEnabled().catch(() => false)) {
-        await firstCheckbox.tap()
+        await tapOrClick(firstCheckbox)
         await page.waitForTimeout(300)
       }
 
       // Submit comparison
       const submitButton = page.getByTestId('comparison-submit-button')
       await expect(submitButton).toBeVisible()
-      await submitButton.tap()
+      await tapOrClick(submitButton)
 
       // Wait for results (may fail if backend isn't running, which is acceptable)
       const results = page.locator(
@@ -325,27 +351,27 @@ test.describe('Mobile Platform Tests', () => {
       const testPassword = 'TestPassword123!'
 
       // Open registration modal
-      await page.getByTestId('nav-sign-up-button').tap()
+      await tapOrClick(page.getByTestId('nav-sign-up-button'))
       await page.waitForSelector('[data-testid="auth-modal"], .auth-modal', { timeout: 5000 })
 
-      // Fill form using tap and fill
+      // Fill form using tap/click and fill
       const emailInput = page.locator('input[type="email"]').first()
-      await emailInput.tap()
+      await tapOrClick(emailInput)
       await emailInput.fill(testEmail)
 
       const passwordInput = page.locator('input[type="password"]').first()
-      await passwordInput.tap()
+      await tapOrClick(passwordInput)
       await passwordInput.fill(testPassword)
 
       const confirmPasswordInput = page.locator('input[type="password"]').nth(1)
       if (await confirmPasswordInput.isVisible({ timeout: 2000 }).catch(() => false)) {
-        await confirmPasswordInput.tap()
+        await tapOrClick(confirmPasswordInput)
         await confirmPasswordInput.fill(testPassword)
       }
 
       // Submit
       const submitButton = page.getByTestId('register-submit-button')
-      await submitButton.tap()
+      await tapOrClick(submitButton)
 
       // Wait for registration to complete
       await page.waitForLoadState('networkidle')
@@ -371,7 +397,7 @@ test.describe('Mobile Platform Tests', () => {
       // Find footer links
       const aboutLink = page.getByRole('link', { name: /about/i })
       if (await aboutLink.isVisible({ timeout: 2000 }).catch(() => false)) {
-        await aboutLink.tap()
+        await tapOrClick(aboutLink)
         await page.waitForURL('**/about', { timeout: 5000 })
         await page.waitForLoadState('networkidle')
 
@@ -405,7 +431,7 @@ test.describe('Mobile Platform Tests', () => {
         const firstProvider = providerHeaders.first()
         const isExpanded = await firstProvider.getAttribute('aria-expanded')
         if (isExpanded !== 'true') {
-          await firstProvider.tap()
+          await tapOrClick(firstProvider)
           await page.waitForTimeout(500)
         }
       }
@@ -419,12 +445,12 @@ test.describe('Mobile Platform Tests', () => {
       // Select first checkbox
       const firstCheckbox = modelCheckboxes.first()
       if (await firstCheckbox.isEnabled().catch(() => false)) {
-        await firstCheckbox.tap()
+        await tapOrClick(firstCheckbox)
         await page.waitForTimeout(300)
         await expect(firstCheckbox).toBeChecked()
 
         // Deselect
-        await firstCheckbox.tap()
+        await tapOrClick(firstCheckbox)
         await page.waitForTimeout(300)
         await expect(firstCheckbox).not.toBeChecked()
       }

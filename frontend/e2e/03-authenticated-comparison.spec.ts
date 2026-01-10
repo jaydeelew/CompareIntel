@@ -164,8 +164,12 @@ test.describe('Authenticated User Comparison Flow', () => {
 
       await inputField.fill('What are its main use cases?')
 
+      // Wait for submit button to be enabled (may take a moment for validation)
+      const submitButton = authenticatedPage.getByTestId('comparison-submit-button')
+      await expect(submitButton).toBeEnabled({ timeout: 10000 })
+
       // Submit follow-up
-      await authenticatedPage.getByTestId('comparison-submit-button').click()
+      await submitButton.click()
       await authenticatedPage.waitForLoadState('networkidle')
     })
 
@@ -212,7 +216,8 @@ test.describe('Authenticated User Comparison Flow', () => {
       const providerHeaders = authenticatedPage.locator(
         '.provider-header, button[class*="provider-header"]'
       )
-      if ((await providerHeaders.count()) > 0) {
+      const headerCount = await providerHeaders.count()
+      if (headerCount > 0) {
         const firstProvider = providerHeaders.first()
         const isExpanded = await firstProvider.getAttribute('aria-expanded')
         if (isExpanded !== 'true') {
@@ -221,12 +226,22 @@ test.describe('Authenticated User Comparison Flow', () => {
         }
       }
 
+      // Wait for checkboxes to be available
       const modelCheckboxes = authenticatedPage.locator(
         '[data-testid^="model-checkbox-"], input[type="checkbox"].model-checkbox'
       )
-      await expect(modelCheckboxes.first()).toBeVisible({ timeout: 15000 })
 
-      if ((await modelCheckboxes.count()) > 0) {
+      // Wait for at least one checkbox to be visible
+      await expect(modelCheckboxes.first()).toBeVisible({ timeout: 20000 })
+
+      // Wait a bit more for all checkboxes to load
+      await authenticatedPage.waitForTimeout(1000)
+
+      // Now count checkboxes
+      const checkboxCount = await modelCheckboxes.count()
+      expect(checkboxCount).toBeGreaterThan(0)
+
+      if (checkboxCount > 0) {
         await modelCheckboxes.first().check()
       }
 
