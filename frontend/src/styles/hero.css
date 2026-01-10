@@ -704,7 +704,7 @@
   transform: translateY(-2px) scale(1.05);
   box-shadow:
     0 8px 24px rgba(37, 99, 235, 0.3),
-    0 4px 16px rgba(37, 99, 235, 0.2);
+    0 4px 16px rgba(37, 99, 235, 0.2) !important;
 }
 
 .file-upload-button:hover:not(:disabled) svg {
@@ -761,7 +761,7 @@
   transform: translateY(-2px) scale(1.05);
   box-shadow:
     0 8px 24px rgba(37, 99, 235, 0.3),
-    0 4px 16px rgba(37, 99, 235, 0.2);
+    0 4px 16px rgba(37, 99, 235, 0.2) !important;
 }
 
 .voice-button:hover:not(:disabled) svg {
@@ -874,7 +874,7 @@
   transform: translateY(-2px) scale(1.05);
   box-shadow:
     0 8px 24px rgba(37, 99, 235, 0.3),
-    0 4px 16px rgba(37, 99, 235, 0.2);
+    0 4px 16px rgba(37, 99, 235, 0.2) !important;
 }
 
 .submit-button:hover:not(:disabled) svg {
@@ -961,30 +961,7 @@
 .web-search-button:not(.active) svg circle,
 .web-search-button:not(.active) svg path {
   stroke: #9ca3af;
-}
-
-.web-search-button:hover:not(:disabled) {
-  background: white;
-  border-color: rgba(59, 130, 246, 0.6);
-  color: #3b82f6;
-  transform: translateY(-2px) scale(1.05);
-  box-shadow:
-    0 8px 24px rgba(37, 99, 235, 0.3),
-    0 4px 16px rgba(37, 99, 235, 0.2);
-}
-
-.web-search-button:hover:not(:disabled) svg {
-  transform: translate(-50%, -50%);
-  color: #3b82f6;
-}
-
-.web-search-button:hover:not(:disabled):not(.active) svg circle,
-.web-search-button:hover:not(:disabled):not(.active) svg path {
-  stroke: #3b82f6;
-}
-
-.web-search-button:hover:not(:disabled)::before {
-  opacity: 0;
+  transition: stroke 0.3s ease;
 }
 
 .web-search-button:active:not(:disabled) {
@@ -1046,8 +1023,53 @@
 .web-search-button:focus,
 .web-search-button:focus-visible {
   outline: none !important;
-  border-color: #9ca3af;
-  box-shadow: none;
+}
+
+/* Force grey stroke and border for non-active buttons - base state */
+/* This must override focus and active states when button is not active */
+/* Note: hover state is intentionally excluded to allow blue hover effect */
+.web-search-button:not(.active),
+.web-search-button:not(.active):active,
+.web-search-button:not(.active):focus,
+.web-search-button:not(.active):focus-visible {
+  border-color: #9ca3af !important;
+  background: white !important;
+  color: #9ca3af !important;
+  box-shadow: none !important;
+}
+
+.web-search-button:not(.active) svg circle,
+.web-search-button:not(.active) svg path,
+.web-search-button:not(.active):active svg circle,
+.web-search-button:not(.active):active svg path,
+.web-search-button:not(.active):focus svg circle,
+.web-search-button:not(.active):focus svg path {
+  stroke: #9ca3af !important;
+}
+
+/* Hover state for non-active web-search button - must come after base !important rules */
+.web-search-button:hover:not(:disabled):not(.active) {
+  background: white !important;
+  border-color: rgba(59, 130, 246, 0.6) !important;
+  color: #3b82f6 !important;
+  transform: translateY(-2px) scale(1.05);
+  box-shadow:
+    0 8px 24px rgba(37, 99, 235, 0.3),
+    0 4px 16px rgba(37, 99, 235, 0.2) !important;
+}
+
+.web-search-button:hover:not(:disabled):not(.active) svg {
+  transform: translate(-50%, -50%);
+  color: #3b82f6;
+}
+
+.web-search-button:hover:not(:disabled):not(.active) svg circle,
+.web-search-button:hover:not(:disabled):not(.active) svg path {
+  stroke: #3b82f6 !important;
+}
+
+.web-search-button:hover:not(:disabled):not(.active)::before {
+  opacity: 0;
 }
 
 .web-search-button.active:focus,
