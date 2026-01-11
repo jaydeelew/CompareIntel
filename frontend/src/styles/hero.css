@@ -911,7 +911,8 @@
   box-shadow: none;
 }
 
-.submit-button:disabled {
+.submit-button:disabled,
+.submit-button.touch-disabled {
   background: white;
   border-color: #9ca3af;
   color: #9ca3af;
@@ -919,6 +920,20 @@
   cursor: default;
   transform: none;
   box-shadow: none;
+}
+
+/* Prevent hover effects on touch-disabled buttons */
+.submit-button.touch-disabled:hover {
+  background: white;
+  border-color: #9ca3af;
+  color: #9ca3af;
+  opacity: 0.5;
+  transform: none;
+  box-shadow: none;
+}
+
+.submit-button.touch-disabled:hover svg path {
+  stroke: #9ca3af;
 }
 
 .submit-button.not-ready {
@@ -1081,7 +1096,8 @@
     0 0 0 3px rgba(59, 130, 246, 0.3);
 }
 
-.web-search-button:disabled {
+.web-search-button:disabled,
+.web-search-button.touch-disabled {
   background: white;
   border-color: #9ca3af;
   color: #9ca3af;
@@ -1089,6 +1105,21 @@
   cursor: default;
   transform: none;
   box-shadow: none;
+}
+
+/* Prevent hover effects on touch-disabled buttons */
+.web-search-button.touch-disabled:hover {
+  background: white;
+  border-color: #9ca3af;
+  color: #9ca3af;
+  opacity: 0.5;
+  transform: none;
+  box-shadow: none;
+}
+
+.web-search-button.touch-disabled:hover svg circle,
+.web-search-button.touch-disabled:hover svg path {
+  stroke: #9ca3af !important;
 }
 
 .note-icon svg {

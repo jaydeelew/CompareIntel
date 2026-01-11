@@ -1,13 +1,15 @@
 import React, { memo, useEffect, useCallback, useMemo, useState, useRef } from 'react'
 
 import { getConversationLimit } from '../../config/constants'
-import { useDebounce, useSpeechRecognition } from '../../hooks'
+import { useDebounce, useSpeechRecognition, useTouchDevice } from '../../hooks'
 import type { SavedModelSelection } from '../../hooks/useSavedModelSelections'
 import { estimateTokens } from '../../services/compareService'
 import type { User, ConversationSummary, ModelConversation } from '../../types'
 import type { ModelsByProvider } from '../../types/models'
 import { truncatePrompt, formatDate } from '../../utils'
 import { showNotification } from '../../utils/error'
+
+import { DisabledButtonInfoModal } from './DisabledButtonInfoModal'
 
 // File attachment interface
 export interface AttachedFile {
@@ -175,6 +177,58 @@ export const ComparisonForm = memo<ComparisonFormProps>(
     const canEnableWebSearch = selectedModelsWithWebSearch.length > 0
     const messageCount = conversations.length > 0 ? conversations[0]?.messages.length || 0 : 0
 
+    // Detect touch device for showing disabled button info modal
+    const isTouchDevice = useTouchDevice()
+
+    // Handler for disabled button taps on touch devices
+    const handleDisabledButtonTap = useCallback(
+      (button: 'websearch' | 'submit') => {
+        if (!isTouchDevice) return // Only show modal on touch devices
+
+        let message = ''
+        if (button === 'websearch') {
+          if (!canEnableWebSearch) {
+            message =
+              'Web search requires at least one model that supports web search. Select a model with the 🌐 icon in the model selection area to enable this feature.'
+          } else if (isLoading) {
+            message =
+              'Web search cannot be toggled while a comparison is in progress. Please wait for the current comparison to complete.'
+          }
+        } else if (button === 'submit') {
+          if (creditsRemaining <= 0) {
+            message =
+              'You have run out of credits. Please purchase more credits to continue using CompareIntel. You can upgrade your plan from your account settings.'
+          } else if (isLoading) {
+            message =
+              'Please wait for the current comparison to complete before submitting a new one.'
+          } else if (!isFollowUpMode && (!input.trim() || selectedModels.length === 0)) {
+            if (!input.trim() && selectedModels.length === 0) {
+              message =
+                'To submit, please enter a prompt in the text area and select at least one AI model to compare.'
+            } else if (!input.trim()) {
+              message = 'Please enter a prompt in the text area before submitting.'
+            } else {
+              message =
+                'Please select at least one AI model from the model selection area before submitting.'
+            }
+          }
+        }
+
+        if (message) {
+          setDisabledButtonInfo({ button, message })
+        }
+      },
+      [
+        isTouchDevice,
+        canEnableWebSearch,
+        isLoading,
+        creditsRemaining,
+        isFollowUpMode,
+        input,
+        selectedModels.length,
+      ]
+    )
+
     // State for saved model selections UI
     const [showSavedSelectionsDropdown, setShowSavedSelectionsDropdown] = useState(false)
     const [saveSelectionName, setSaveSelectionName] = useState('')
@@ -208,6 +262,12 @@ export const ComparisonForm = memo<ComparisonFormProps>(
       window.addEventListener('resize', handleResize)
       return () => window.removeEventListener('resize', handleResize)
     }, [])
+
+    // State for disabled button info modal
+    const [disabledButtonInfo, setDisabledButtonInfo] = useState<{
+      button: 'websearch' | 'submit' | null
+      message: string
+    }>({ button: null, message: '' })
 
     // Speech recognition hook
     // Mobile: Non-continuous with interim results for real-time display
@@ -1574,8 +1634,18 @@ export const ComparisonForm = memo<ComparisonFormProps>(
               {/* Enable Web Access Toggle - styled like voice button */}
               <button
                 type="button"
-                onClick={() => setWebSearchEnabled(!webSearchEnabled)}
-                className={`textarea-icon-button web-search-button ${webSearchEnabled ? 'active' : ''}`}
+                onClick={() => {
+                  const isDisabled = !canEnableWebSearch || isLoading
+                  if (isDisabled) {
+                    if (isTouchDevice) {
+                      handleDisabledButtonTap('websearch')
+                    }
+                    // On desktop, disabled buttons won't fire onClick, so this is safe
+                    return
+                  }
+                  setWebSearchEnabled(!webSearchEnabled)
+                }}
+                className={`textarea-icon-button web-search-button ${webSearchEnabled ? 'active' : ''} ${(!canEnableWebSearch || isLoading) && isTouchDevice ? 'touch-disabled' : ''}`}
                 title={
                   !canEnableWebSearch
                     ? 'Select a web-enabled model'
@@ -1583,7 +1653,8 @@ export const ComparisonForm = memo<ComparisonFormProps>(
                       ? 'Web search enabled'
                       : 'Enable web search'
                 }
-                disabled={!canEnableWebSearch || isLoading}
+                disabled={!isTouchDevice && (!canEnableWebSearch || isLoading)}
+                aria-disabled={!canEnableWebSearch || isLoading}
               >
                 <svg
                   viewBox="0 0 24 24"
@@ -1612,13 +1683,38 @@ export const ComparisonForm = memo<ComparisonFormProps>(
                 </svg>
               </button>
               <button
-                onClick={isFollowUpMode ? onContinueConversation : onSubmitClick}
+                onClick={() => {
+                  const isDisabled =
+                    isLoading ||
+                    creditsRemaining <= 0 ||
+                    (!isFollowUpMode && (!input.trim() || selectedModels.length === 0))
+                  if (isDisabled) {
+                    if (isTouchDevice) {
+                      handleDisabledButtonTap('submit')
+                    }
+                    // On desktop, disabled buttons won't fire onClick, so this is safe
+                    return
+                  }
+                  if (isFollowUpMode) {
+                    onContinueConversation()
+                  } else {
+                    onSubmitClick()
+                  }
+                }}
                 disabled={
-                  isLoading ||
-                  creditsRemaining <= 0 ||
-                  (!isFollowUpMode && (!input.trim() || selectedModels.length === 0))
+                  !isTouchDevice &&
+                  (isLoading ||
+                    creditsRemaining <= 0 ||
+                    (!isFollowUpMode && (!input.trim() || selectedModels.length === 0)))
                 }
-                className={`textarea-icon-button submit-button ${isAnimatingButton ? 'animate-pulse-glow' : ''}`}
+                className={`textarea-icon-button submit-button ${isAnimatingButton ? 'animate-pulse-glow' : ''} ${
+                  (isLoading ||
+                    creditsRemaining <= 0 ||
+                    (!isFollowUpMode && (!input.trim() || selectedModels.length === 0))) &&
+                  isTouchDevice
+                    ? 'touch-disabled'
+                    : ''
+                }`}
                 title={(() => {
                   if (creditsRemaining <= 0) {
                     return 'You have run out of credits'
@@ -1635,6 +1731,11 @@ export const ComparisonForm = memo<ComparisonFormProps>(
                   return 'Submit'
                 })()}
                 data-testid="comparison-submit-button"
+                aria-disabled={
+                  isLoading ||
+                  creditsRemaining <= 0 ||
+                  (!isFollowUpMode && (!input.trim() || selectedModels.length === 0))
+                }
               >
                 <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <path
@@ -2083,6 +2184,14 @@ export const ComparisonForm = memo<ComparisonFormProps>(
               </>
             )
           })()}
+
+        {/* Disabled Button Info Modal - shown on touch devices when disabled buttons are tapped */}
+        <DisabledButtonInfoModal
+          isOpen={disabledButtonInfo.button !== null}
+          onClose={() => setDisabledButtonInfo({ button: null, message: '' })}
+          buttonType={disabledButtonInfo.button}
+          message={disabledButtonInfo.message}
+        />
       </>
     )
   }
