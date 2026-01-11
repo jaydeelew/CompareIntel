@@ -117,10 +117,34 @@ async function loginUser(
     // Fill login form
     await page.getByTestId('login-email-input').fill(email)
     await page.getByTestId('login-password-input').fill(password)
+
+    // Wait for login API response and auth/me response
+    const loginResponsePromise = page
+      .waitForResponse(
+        response => response.url().includes('/auth/login') && response.status() === 200,
+        { timeout: 10000 }
+      )
+      .catch(() => null)
+
+    const authMeResponsePromise = page
+      .waitForResponse(
+        response => response.url().includes('/auth/me') && response.status() === 200,
+        { timeout: 15000 }
+      )
+      .catch(() => null)
+
     await page.getByTestId('login-submit-button').click()
+
+    // Wait for login API call to complete
+    await loginResponsePromise
 
     if (waitForNavigation) {
       await page.waitForLoadState('networkidle')
+
+      // Wait for auth/me API call to complete (user data fetch after login)
+      // This ensures the auth state is fully updated
+      await authMeResponsePromise
+
       // Wait for auth modal to close
       await page
         .waitForSelector('[data-testid="auth-modal"], .auth-modal', {
@@ -181,11 +205,36 @@ async function registerUser(
       await confirmPasswordInput.fill(password)
     }
 
+    // Wait for registration API response and auth/me response
+    const registerResponsePromise = page
+      .waitForResponse(
+        response =>
+          response.url().includes('/auth/register') &&
+          (response.status() === 201 || response.status() === 200),
+        { timeout: 10000 }
+      )
+      .catch(() => null)
+
+    const authMeResponsePromise = page
+      .waitForResponse(
+        response => response.url().includes('/auth/me') && response.status() === 200,
+        { timeout: 15000 }
+      )
+      .catch(() => null)
+
     // Submit registration
     await page.getByTestId('register-submit-button').click()
 
+    // Wait for registration API call to complete
+    await registerResponsePromise
+
     if (waitForNavigation) {
       await page.waitForLoadState('networkidle')
+
+      // Wait for auth/me API call to complete (user data fetch after registration)
+      // This ensures the auth state is fully updated
+      await authMeResponsePromise
+
       // Wait for auth modal to close
       await page
         .waitForSelector('[data-testid="auth-modal"], .auth-modal', {

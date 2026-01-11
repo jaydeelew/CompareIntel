@@ -139,37 +139,46 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       // Consume the response to ensure it's fully read
       await response.json()
 
-      // Fetch user data - don't fail login if this fails
-      try {
-        const userData = await fetchCurrentUser()
-        if (userData) {
-          setUser(userData)
-        } else {
-          // Retry in background without blocking
-          fetchCurrentUser()
-            .then(userData => {
-              if (userData) {
-                setUser(userData)
-              }
-            })
-            .catch(() => {
-              // Silently fail background retry
-            })
+      // Fetch user data - retry with delays to ensure cookies are available
+      // Cookies may not be immediately available after response, so we retry
+      let userData: User | null = null
+      const maxRetries = 3
+      const retryDelay = 100 // Start with 100ms delay
+
+      for (let attempt = 0; attempt < maxRetries; attempt++) {
+        try {
+          // Add delay before each attempt (cookies need time to be set, especially first attempt)
+          if (attempt > 0) {
+            await new Promise(resolve => setTimeout(resolve, retryDelay * attempt))
+          } else {
+            // Small delay even for first attempt to ensure cookies are set
+            await new Promise(resolve => setTimeout(resolve, 50))
+          }
+
+          userData = await fetchCurrentUser()
+          if (userData) {
+            setUser(userData)
+            break // Success, exit retry loop
+          }
+        } catch (_userFetchError) {
+          // Continue to next retry attempt
+          if (attempt === maxRetries - 1) {
+            // Last attempt failed, retry in background without blocking
+            fetchCurrentUser()
+              .then(backgroundUserData => {
+                if (backgroundUserData) {
+                  setUser(backgroundUserData)
+                }
+              })
+              .catch(() => {
+                // Silently fail background retry
+              })
+          }
         }
-      } catch (_userFetchError) {
-        // User fetch failed, but login is still successful
-        // Retry in background without blocking
-        fetchCurrentUser()
-          .then(userData => {
-            if (userData) {
-              setUser(userData)
-            }
-          })
-          .catch(() => {
-            // Silently fail background retry
-          })
       }
 
+      // If we still don't have user data after retries, set loading to false anyway
+      // The background retry will update user when it succeeds
       setIsLoading(false)
     } catch (error) {
       setIsLoading(false)
