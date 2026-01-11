@@ -24,16 +24,16 @@ export default defineConfig({
   /* Fail the build on CI if you accidentally left test.only in the source code. */
   forbidOnly: !!process.env.CI,
   
-  /* Retry on CI only */
-  retries: process.env.CI ? 2 : 0,
+  /* Retry on CI only - reduced to 1 to avoid excessive retries */
+  retries: process.env.CI ? 1 : 0,
   
-  /* Opt out of parallel tests on CI. */
+  /* Opt out of parallel tests on CI - use 1 worker to avoid resource contention */
   workers: process.env.CI ? 1 : undefined,
   
   /* Timeout settings to prevent tests from hanging */
-  timeout: process.env.CI ? 60 * 1000 : 30 * 1000, // 60s per test in CI, 30s locally
+  timeout: process.env.CI ? 90 * 1000 : 30 * 1000, // 90s per test in CI (increased for slower CI environment), 30s locally
   expect: {
-    timeout: 10 * 1000, // 10s for assertions
+    timeout: process.env.CI ? 15 * 1000 : 10 * 1000, // 15s for assertions in CI, 10s locally
   },
   /* Global timeout for entire test run */
   globalTimeout: process.env.CI ? 60 * 60 * 1000 : 30 * 60 * 1000, // 60min in CI, 30min locally

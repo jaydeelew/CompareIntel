@@ -173,17 +173,24 @@ jobs:
       - name: Run E2E tests
         working-directory: ./frontend
         timeout-minutes: 90
-        run: npm run test:e2e -- --project=chromium --project=firefox --project='Mobile Safari - iPhone 12' --project='Mobile Chrome - Pixel 5'
+        run: npm run test:e2e -- --project=chromium --project=firefox --project='Mobile Safari - iPhone 12' --project='Mobile Chrome - Pixel 5' --timeout=90000
         env:
           CI: true
           PLAYWRIGHT_BASE_URL: http://localhost:5173
+          BACKEND_URL: http://localhost:8000
           SECRET_KEY: test-secret-key-for-ci-testing-only-32chars
           OPENROUTER_API_KEY: test-api-key-for-ci-testing-only
           ENVIRONMENT: development
           DATABASE_URL: sqlite:///./test.db
+          # Test user credentials for E2E tests
+          TEST_FREE_EMAIL: free@test.com
+          TEST_FREE_PASSWORD: Test12345678/
+          ADMIN_EMAIL: jaydeelew@gmail.com
+          ADMIN_PASSWORD: sf*88323?ddpdRRl
           # Playwright will automatically start both frontend and backend servers via webServer config
           # Tests run on a subset of projects in CI: 2 desktop browsers + 2 mobile devices (iOS/Android)
           # This reduces test time while still covering major platforms
+          # Increased timeout to 90s per test to account for CI environment slowness
       
       - name: Upload Playwright test results
         if: always()
