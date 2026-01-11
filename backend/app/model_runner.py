@@ -1015,15 +1015,24 @@ def refresh_model_token_limits(model_id: Optional[str] = None) -> bool:
             return False
 
         if model_id:
-            # Refresh specific model
+            # Refresh specific model - try exact match first
             if model_id in all_models:
                 limits = _extract_token_limits(all_models[model_id])
                 _model_token_limits_cache[model_id] = limits
                 logger.info(f"Refreshed token limits for model: {model_id}")
                 return True
-            else:
-                logger.warning(f"Model {model_id} not found in OpenRouter data")
-                return False
+            # Fallback: if model_id has a suffix (like :free), try the base model_id
+            elif ":" in model_id:
+                base_id = model_id.split(":")[0]
+                if base_id in all_models:
+                    limits = _extract_token_limits(all_models[base_id])
+                    # Cache with both IDs for compatibility
+                    _model_token_limits_cache[base_id] = limits
+                    _model_token_limits_cache[model_id] = limits
+                    logger.info(f"Refreshed token limits for model: {model_id} (using base: {base_id})")
+                    return True
+            logger.warning(f"Model {model_id} not found in OpenRouter data")
+            return False
         else:
             # Refresh all models
             limits_dict = {}
@@ -1076,14 +1085,21 @@ def get_model_token_limits_from_openrouter(model_id: str) -> Optional[Dict[str, 
     Get token limits for a specific model from cached OpenRouter data.
 
     Args:
-        model_id: Model identifier (e.g., "openai/gpt-4")
+        model_id: Model identifier (e.g., "openai/gpt-4" or "meta-llama/llama-3.1-405b-instruct:free")
 
     Returns:
         Dictionary with 'max_input' and 'max_output' keys, or None if not found
     """
-    # Check in-memory cache first
+    # Check in-memory cache first with exact model_id
     if model_id in _model_token_limits_cache:
         return _model_token_limits_cache[model_id]
+    
+    # Fallback: if model_id has a suffix (like :free), try the base model_id
+    # Some models might share token limits (e.g., model and model:free)
+    if ":" in model_id:
+        base_id = model_id.split(":")[0]
+        if base_id in _model_token_limits_cache:
+            return _model_token_limits_cache[base_id]
 
     # If cache is empty, try to preload (shouldn't happen after startup, but handle gracefully)
     if not _model_token_limits_cache:
@@ -1091,6 +1107,11 @@ def get_model_token_limits_from_openrouter(model_id: str) -> Optional[Dict[str, 
         preload_model_token_limits()
         if model_id in _model_token_limits_cache:
             return _model_token_limits_cache[model_id]
+        # Try fallback again after preload
+        if ":" in model_id:
+            base_id = model_id.split(":")[0]
+            if base_id in _model_token_limits_cache:
+                return _model_token_limits_cache[base_id]
 
     # Not found in cache
     return None
@@ -3710,7 +3731,53 @@ def call_openrouter_streaming(
                 elif status_code == 401 or "unauthorized" in error_str or "401" in error_str:
                     yield f"Error: Authentication failed"
                 elif status_code == 404 or "not found" in error_str or "404" in error_str:
-                    yield f"Error: Model not available"
+                    # Extract provider error message if available
+                    provider_error = None
+                    provider_name = None
+                    if isinstance(e, APIError) and hasattr(e, 'body'):
+                        try:
+                            import json
+                            if isinstance(e.body, dict):
+                                error_body = e.body
+                            elif isinstance(e.body, str):
+                                error_body = json.loads(e.body)
+                            else:
+                                error_body = {}
+                            
+                            # Check for provider error in metadata
+                            if 'error' in error_body and isinstance(error_body['error'], dict):
+                                metadata = error_body['error'].get('metadata', {})
+                                if isinstance(metadata, dict):
+                                    provider_error = metadata.get('raw', '')
+                                    provider_name = metadata.get('provider_name', '')
+                        except Exception as parse_err:
+                            logger.debug(f"Failed to parse provider error: {parse_err}")
+                    
+                    # Use parsed_error_message if it contains the raw error (from earlier extraction)
+                    if not provider_error and parsed_error_message:
+                        # Check if parsed_error_message contains the gateway error
+                        if "not configured in the Gateway" in parsed_error_message or "No matching route" in parsed_error_message:
+                            provider_error = parsed_error_message
+                    
+                    # Provide more detailed error message
+                    if provider_error:
+                        # Check if it's a gateway/routing issue
+                        if "not configured in the Gateway" in provider_error or "No matching route" in provider_error:
+                            error_msg = f"Error: Model '{model_id}' is not currently available. "
+                            if provider_name:
+                                error_msg += f"The provider ({provider_name}) may not have this model configured in their gateway. "
+                            else:
+                                error_msg += "The provider may not have this model configured in their gateway. "
+                            error_msg += "This appears in OpenRouter's model list but is not currently routable. Please try again later or use a different model."
+                            yield error_msg
+                        else:
+                            clean_message = provider_error[:200] if len(provider_error) > 200 else provider_error
+                            yield f"Error: Model not available - {clean_message}"
+                    elif parsed_error_message and parsed_error_message != str(e):
+                        clean_message = parsed_error_message[:200] if len(parsed_error_message) > 200 else parsed_error_message
+                        yield f"Error: Model not available - {clean_message}"
+                    else:
+                        yield f"Error: Model not available"
                 elif status_code == 429 or "rate limit" in error_str or "429" in error_str:
                     yield f"Error: Rate limited"
                 elif "timeout" in error_str:
