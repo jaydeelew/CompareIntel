@@ -13,9 +13,10 @@ from dotenv import load_dotenv
 
 # Load environment variables from .env file
 # Only load from backend/.env (not project root)
+# Use override=False to ensure environment variables set by test runners (like Playwright) take precedence
 env_path = Path(__file__).parent.parent.parent / ".env"
 if env_path.exists():
-    load_dotenv(env_path)
+    load_dotenv(env_path, override=False)
 
 
 class Settings(BaseSettings):
@@ -54,6 +55,14 @@ class Settings(BaseSettings):
     @classmethod
     def parse_mail_port(cls, v):
         """Convert empty strings to None for mail_port."""
+        if v == '' or v is None:
+            return None
+        return v
+    
+    @field_validator('recaptcha_secret_key', mode='before')
+    @classmethod
+    def parse_recaptcha_secret_key(cls, v):
+        """Convert empty strings to None for recaptcha_secret_key."""
         if v == '' or v is None:
             return None
         return v

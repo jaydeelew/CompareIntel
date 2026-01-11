@@ -80,6 +80,16 @@ test.describe('Registration and Onboarding', () => {
       if (!registrationResponse) {
         // Check for error message
         await page.waitForTimeout(1000)
+        // Also check for failed network requests
+        const failedRequests = await page.evaluate(() => {
+          return (
+            (window as unknown as { __playwrightFailedRequests?: unknown[] })
+              .__playwrightFailedRequests || []
+          )
+        })
+        if (failedRequests.length > 0) {
+          console.log('Failed requests:', failedRequests)
+        }
         const errorMessage = page.locator('.auth-error, [role="alert"]')
         const hasError = await errorMessage.isVisible({ timeout: 2000 }).catch(() => false)
         if (hasError) {

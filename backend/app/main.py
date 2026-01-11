@@ -23,7 +23,8 @@ from sqlalchemy.orm import Session
 from dotenv import load_dotenv
 
 # Load environment variables from .env file
-load_dotenv(os.path.join(os.path.dirname(__file__), "..", ".env"))
+# Use override=False to ensure environment variables set by test runners (like Playwright) take precedence
+load_dotenv(os.path.join(os.path.dirname(__file__), "..", ".env"), override=False)
 
 # Import authentication modules
 from .database import get_db, Base, engine

@@ -60,9 +60,6 @@ export default defineConfig({
     /* Video on failure */
     video: 'retain-on-failure',
   },
-  
-  /* Global setup to inject test environment flag for all tests */
-  globalSetup: './e2e/global-setup.ts',
 
   /* Configure projects for major browsers */
   projects: [
@@ -156,9 +153,12 @@ export default defineConfig({
         MAIL_USERNAME: '',
         MAIL_PASSWORD: '',
         MAIL_FROM: '',
-        // Disable reCAPTCHA in test environment (empty string means not configured)
+        // Disable reCAPTCHA in test environment - explicitly unset to override .env file
+        // Use a special marker value that will be converted to None by the validator
         RECAPTCHA_SECRET_KEY: '',
         recaptcha_secret_key: '',
+        // Also ensure VITE_RECAPTCHA_SITE_KEY is empty for frontend
+        VITE_RECAPTCHA_SITE_KEY: '',
       },
     },
   ],
