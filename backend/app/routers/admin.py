@@ -1101,7 +1101,7 @@ async def zero_anonymous_usage(
 
     # Reset all anonymous usage entries to 0 credits
     keys_reset = []
-    reset_timestamp = datetime.now(timezone.utc)
+    reset_timestamp = datetime.now(UTC)
     for key in list(anonymous_rate_limit_storage.keys()):
         # Reset all anonymous user entries
         # Keys are formatted as "ip:xxx", "fp:xxx"
@@ -1113,7 +1113,7 @@ async def zero_anonymous_usage(
                 anonymous_rate_limit_storage[key]["count"] = 0
                 # Update date to today in UTC to ensure it's treated as fresh
                 # The date will be updated to the user's timezone on their next request
-                anonymous_rate_limit_storage[key]["date"] = datetime.now(timezone.utc).date().isoformat()
+                anonymous_rate_limit_storage[key]["date"] = datetime.now(UTC).date().isoformat()
                 anonymous_rate_limit_storage[key]["last_reset_at"] = reset_timestamp
                 # Add a flag to prevent sync from overwriting this reset
                 anonymous_rate_limit_storage[key]["_admin_reset"] = True
