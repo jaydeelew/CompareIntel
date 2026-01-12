@@ -68,9 +68,7 @@ ANONYMOUS_TIER_MODELS = {
     "x-ai/grok-4-fast",
     "meta-llama/llama-3.1-405b-instruct:free",  # Auto-classified based on pricing,    "meta-llama/llama-3.3-70b-instruct",  # Auto-classified based on pricing,
     "xiaomi/mimo-v2-flash:free",  # Auto-classified based on pricing,
-    "mistralai/devstral-2512:free",  # Auto-classified based on pricing,
-    "kwaipilot/kat-coder-pro:free",  # Auto-classified based on pricing,
-    "openai/gpt-4o-mini",  # Auto-classified based on pricing
+    "mistralai/devstral-2512:free",  # Auto-classified based on pricing,    "openai/gpt-4o-mini",  # Auto-classified based on pricing
 }
 
 # List of model IDs available to free (registered) users
@@ -341,16 +339,7 @@ MODELS_BY_PROVIDER = {
             "supports_web_search": True,  # All Gemini models support function calling
         },
     ],
-    "Kwaipilot": [
-        {
-            "id": "kwaipilot/kat-coder-pro:free",
-            "name": "Kat Coder Pro:Free",
-            "description": "KAT-Coder-Pro V1 is KwaiKAT's most advanced agentic coding model in the KAT-Coder series.",
-            "category": "Language",
-            "provider": "Kwaipilot",
-            "supports_web_search": True,  # Agentic coding model - supports function calling
-        },
-    ],
+    "Kwaipilot": [    ],
     "Meta": [
         {
             "id": "meta-llama/llama-3.1-405b-instruct:free",
