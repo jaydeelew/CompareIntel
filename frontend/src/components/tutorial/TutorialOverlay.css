@@ -1,0 +1,351 @@
+/* Prevent hero section height changes when tutorial is active */
+/* But allow expansion when dropdowns are visible */
+body:has(.tutorial-backdrop)
+  .hero-section:not(:has(.history-inline-list)):not(:has(.saved-selections-dropdown)),
+.hero-section.tutorial-height-locked:not(:has(.history-inline-list)):not(
+    :has(.saved-selections-dropdown)
+  ) {
+  height: var(--hero-locked-height, auto) !important;
+  max-height: var(--hero-locked-height, auto) !important;
+  min-height: var(--hero-locked-height, auto) !important;
+  box-sizing: border-box !important;
+  contain: layout size style !important;
+}
+
+/* Allow hero section to expand when dropdowns are visible during tutorial */
+body:has(.tutorial-backdrop) .hero-section:has(.history-inline-list),
+body:has(.tutorial-backdrop) .hero-section:has(.saved-selections-dropdown),
+.hero-section.tutorial-height-locked:has(.history-inline-list),
+.hero-section.tutorial-height-locked:has(.saved-selections-dropdown) {
+  height: auto !important;
+  max-height: none !important;
+  min-height: var(--hero-locked-height, auto) !important;
+  padding-bottom: 8rem !important;
+}
+
+/* Backdrop that dims the page */
+.tutorial-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 9998;
+  pointer-events: none;
+  /* Allow clicks to pass through to highlighted elements */
+}
+
+/* Split backdrop sections for creating cutout */
+.tutorial-backdrop-top {
+  bottom: auto;
+}
+
+.tutorial-backdrop-bottom {
+  top: auto;
+  bottom: 0;
+}
+
+.tutorial-backdrop-left {
+  right: auto;
+  bottom: auto;
+}
+
+.tutorial-backdrop-right {
+  left: auto;
+  right: 0;
+  bottom: auto;
+}
+
+/* Ensure textarea container is above backdrop and maintains default styling */
+.textarea-container.tutorial-textarea-active {
+  position: relative;
+  z-index: 9999 !important;
+  /* Ensure it maintains its default colors and is not affected by backdrop */
+  isolation: isolate;
+  /* Prevent any height changes - maintain original dimensions */
+  min-height: unset !important;
+  height: auto !important;
+}
+
+/* Ensure dropdowns are above backdrop during tutorial steps (not dimmed, but no border) */
+.history-inline-list.tutorial-dropdown-active,
+.saved-selections-dropdown.tutorial-dropdown-active {
+  position: relative;
+  z-index: 9999 !important;
+  /* Ensure it maintains its default colors and is not affected by backdrop */
+  isolation: isolate;
+}
+
+/* Ensure parent container is also above backdrop when dropdowns are active */
+.textarea-container.tutorial-dropdown-container-active {
+  position: relative;
+  z-index: 9999 !important;
+  isolation: isolate;
+}
+
+/* Highlight effect on target element */
+.tutorial-highlight {
+  position: relative;
+  z-index: 9999 !important;
+  outline: 3px solid var(--accent-color) !important;
+  outline-offset: 4px !important;
+  box-shadow:
+    0 0 0 4px rgba(14, 165, 233, 0.2),
+    0 0 20px rgba(14, 165, 233, 0.4) !important;
+  border-radius: var(--radius-md) !important;
+  animation: tutorial-pulse 2s ease-in-out infinite;
+  pointer-events: auto !important;
+  /* Ensure highlighted elements are clickable */
+  /* Prevent backdrop dimming */
+  isolation: isolate !important;
+}
+
+/* Special styling for textarea container highlight - match its border-radius */
+.textarea-container.tutorial-highlight {
+  border-radius: 1.5rem !important;
+  /* Ensure it's above backdrop and not dimmed */
+  isolation: isolate !important;
+  position: relative !important;
+  z-index: 9999 !important;
+  /* Force hardware acceleration and create new stacking context */
+  transform: translateZ(0) !important;
+  will-change: transform !important;
+  /* Prevent backdrop dimming by ensuring proper stacking context */
+  mix-blend-mode: normal !important;
+  /* Ensure all children maintain brightness */
+  opacity: 1 !important;
+  filter: none !important;
+  /* Create a solid stacking context to prevent backdrop interference */
+  contain: layout style paint !important;
+}
+
+/* Ensure textarea wrapper and textarea maintain brightness when container is highlighted */
+.textarea-container.tutorial-highlight .textarea-wrapper,
+.textarea-container.tutorial-highlight .hero-input-textarea,
+.textarea-container.tutorial-highlight .textarea-actions-area {
+  /* Ensure these elements maintain their default appearance and are not dimmed */
+  opacity: 1 !important;
+  filter: none !important;
+  mix-blend-mode: normal !important;
+  /* Ensure they're in the same stacking context */
+  position: relative !important;
+  z-index: 1 !important;
+  /* Force hardware acceleration for proper isolation */
+  transform: translateZ(0) !important;
+  /* Prevent any backdrop effects */
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+@keyframes tutorial-pulse {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 4px rgba(14, 165, 233, 0.2),
+      0 0 20px rgba(14, 165, 233, 0.4);
+  }
+
+  50% {
+    box-shadow:
+      0 0 0 6px rgba(14, 165, 233, 0.3),
+      0 0 30px rgba(14, 165, 233, 0.6);
+  }
+}
+
+/* Tooltip bubble */
+.tutorial-tooltip {
+  position: fixed;
+  z-index: 10000;
+  max-width: 360px;
+  min-width: 280px;
+  transform: translate(-50%, 0);
+  pointer-events: auto;
+}
+
+.tutorial-tooltip-top {
+  transform: translate(-50%, -100%);
+}
+
+.tutorial-tooltip-bottom {
+  transform: translate(-50%, 0);
+}
+
+.tutorial-tooltip-left {
+  transform: translate(-100%, -50%);
+}
+
+.tutorial-tooltip-right {
+  transform: translate(0, -50%);
+}
+
+.tutorial-tooltip-content {
+  background: var(--bg-primary);
+  border: 2px solid var(--accent-color);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem;
+  box-shadow: var(--shadow-xl);
+  position: relative;
+}
+
+.tutorial-tooltip-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.tutorial-step-indicator {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.tutorial-close-button {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  line-height: 1;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 0;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  transition: all 0.2s ease;
+}
+
+.tutorial-close-button:hover {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+}
+
+.tutorial-tooltip-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 0.5rem 0;
+}
+
+.tutorial-tooltip-description {
+  font-size: 0.9375rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin: 0 0 1rem 0;
+}
+
+.tutorial-tooltip-actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+}
+
+.tutorial-button {
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-md);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s ease;
+}
+
+.tutorial-button-primary {
+  background: var(--accent-color);
+  color: white;
+}
+
+.tutorial-button-primary:hover:not(:disabled) {
+  background: #0284c7;
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.tutorial-button-primary:disabled {
+  background: var(--bg-tertiary);
+  color: var(--text-muted);
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.tutorial-button-secondary {
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+}
+
+.tutorial-button-secondary:hover {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+}
+
+/* Arrow pointing to target */
+.tutorial-arrow {
+  position: absolute;
+  width: 0;
+  height: 0;
+  border-style: solid;
+}
+
+.tutorial-arrow-top {
+  bottom: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 8px 8px 0 8px;
+  border-color: var(--accent-color) transparent transparent transparent;
+}
+
+.tutorial-arrow-bottom {
+  top: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 0 8px 8px 8px;
+  border-color: transparent transparent var(--accent-color) transparent;
+}
+
+.tutorial-arrow-left {
+  right: -8px;
+  top: 50%;
+  transform: translateY(-50%);
+  border-width: 8px 0 8px 8px;
+  border-color: transparent transparent transparent var(--accent-color);
+}
+
+.tutorial-arrow-right {
+  left: -8px;
+  top: 50%;
+  transform: translateY(-50%);
+  border-width: 8px 8px 8px 0;
+  border-color: transparent var(--accent-color) transparent transparent;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .tutorial-tooltip {
+    max-width: calc(100vw - 2rem);
+    min-width: auto;
+    left: 50% !important;
+    transform: translate(-50%, 0) !important;
+  }
+
+  .tutorial-tooltip-top {
+    transform: translate(-50%, -100%) !important;
+  }
+
+  .tutorial-tooltip-bottom {
+    transform: translate(-50%, 0) !important;
+  }
+
+  .tutorial-tooltip-left,
+  .tutorial-tooltip-right {
+    transform: translate(-50%, 0) !important;
+  }
+
+  .tutorial-arrow {
+    display: none;
+  }
+}

@@ -9,6 +9,7 @@ interface NavigationProps {
   onViewChange?: (view: 'main' | 'admin') => void // Optional for backward compatibility
   onSignInClick: () => void
   onSignUpClick: () => void
+  onTutorialClick?: () => void // Optional tutorial replay handler
 }
 
 /**
@@ -21,6 +22,7 @@ export function Navigation({
   onViewChange,
   onSignInClick,
   onSignUpClick,
+  onTutorialClick,
 }: NavigationProps) {
   const navigate = useNavigate()
   const location = useLocation()
@@ -88,6 +90,16 @@ export function Navigation({
             </>
           ) : (
             <>
+              {onTutorialClick && (
+                <button
+                  className="nav-button-text nav-button-tutorial"
+                  onClick={onTutorialClick}
+                  data-testid="nav-tutorial-button"
+                  title="Replay tutorial"
+                >
+                  Tutorial
+                </button>
+              )}
               <button
                 className="nav-button-text"
                 onClick={onSignInClick}

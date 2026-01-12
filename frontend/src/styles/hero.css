@@ -18,7 +18,8 @@
   display: block;
   transition:
     margin-top 0.5s ease-out,
-    padding-top 0.5s ease-out;
+    padding-top 0.5s ease-out,
+    padding-bottom 0.3s ease-out;
   /* Make the hero full-bleed across the viewport, regardless of parent padding */
   width: 100vw;
   max-width: 100vw;
@@ -26,6 +27,16 @@
   margin-right: calc(50% - 50vw);
   /* Ensure no gap between navbar and hero at any viewport width */
   margin-bottom: 0;
+}
+
+/* Expand hero section when dropdowns are visible */
+.hero-section:has(.history-inline-list),
+.hero-section:has(.saved-selections-dropdown) {
+  padding-bottom: 8rem;
+  transition:
+    margin-top 0.5s ease-out,
+    padding-top 0.5s ease-out,
+    padding-bottom 0.3s ease-out;
 }
 
 .hero-section::before {

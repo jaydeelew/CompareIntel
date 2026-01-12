@@ -36,6 +36,8 @@ import { Navigation, Hero, MockModeBanner, InstallPrompt } from './components/la
 import { About, Features, FAQ, PrivacyPolicy, HowItWorks } from './components/pages'
 import { DoneSelectingCard, ErrorBoundary, LoadingSpinner } from './components/shared'
 import { TermsOfService } from './components/TermsOfService'
+import { TutorialController } from './components/tutorial/TutorialController'
+import { TutorialWelcomeModal } from './components/tutorial/TutorialWelcomeModal'
 import { getCreditAllocation, getDailyCreditLimit } from './config/constants'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
 import {
@@ -45,6 +47,7 @@ import {
   useModelSelection,
   useModelComparison,
   useSavedModelSelections,
+  useTutorial,
 } from './hooks'
 import { apiClient } from './services/api/client'
 import { ApiError, PaymentRequiredError } from './services/api/errors'
@@ -460,12 +463,29 @@ function AppContent() {
   const [showExportMenu, setShowExportMenu] = useState(false)
   const exportMenuRef = useRef<HTMLDivElement>(null)
 
+  // Tutorial state
+  const {
+    tutorialState,
+    startTutorial,
+    skipTutorial,
+    completeStep,
+    resetTutorial: _resetTutorial,
+  } = useTutorial()
+  const [showWelcomeModal, setShowWelcomeModal] = useState(false)
+  const [tutorialHasCompletedComparison, setTutorialHasCompletedComparison] = useState(false)
+  const [tutorialHasBreakout, setTutorialHasBreakout] = useState(false)
+  const [tutorialHasSavedSelection, setTutorialHasSavedSelection] = useState(false)
+
   // Handler to save current model selection
   const handleSaveModelSelection = useCallback(
     (name: string) => {
-      return saveModelSelection(name, selectedModels)
+      const result = saveModelSelection(name, selectedModels)
+      if (result.success && tutorialState.currentStep === 'save-selection') {
+        setTutorialHasSavedSelection(true)
+      }
+      return result
     },
-    [saveModelSelection, selectedModels]
+    [saveModelSelection, selectedModels, tutorialState.currentStep]
   )
 
   // Handler to load a saved model selection
@@ -2216,6 +2236,64 @@ function AppContent() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showHistoryDropdown, isAuthenticated, loadHistoryFromAPI, loadHistoryFromLocalStorage])
 
+  // Check if tutorial should be shown on first visit
+  useEffect(() => {
+    const hasSeenWelcome = localStorage.getItem('compareintel_tutorial_welcome_seen')
+    if (!hasSeenWelcome && !tutorialState.isActive && currentView === 'main') {
+      setShowWelcomeModal(true)
+      localStorage.setItem('compareintel_tutorial_welcome_seen', 'true')
+    }
+  }, [tutorialState.isActive, currentView])
+
+  // Track when comparison completes for tutorial
+  useEffect(() => {
+    const isSubmitStep =
+      tutorialState.currentStep === 'submit-comparison' ||
+      tutorialState.currentStep === 'submit-comparison-2'
+
+    if (isSubmitStep && !isLoading) {
+      // For follow-ups (step 7), check if new assistant messages have been added
+      // For initial comparisons (step 4), check if conversations exist
+      if (tutorialState.currentStep === 'submit-comparison-2' && isFollowUpMode) {
+        // For follow-ups, check if at least one conversation has a new assistant message
+        // This ensures the follow-up responses have actually been received
+        // We check for at least 2 assistant messages (initial + follow-up) in successful conversations
+        const hasFollowUpResponses =
+          conversations.length > 0 &&
+          conversations.some(conv => {
+            const assistantMessages = conv.messages.filter(msg => msg.type === 'assistant')
+            // Should have at least 2 assistant messages (initial + follow-up) with content
+            return (
+              assistantMessages.length >= 2 &&
+              assistantMessages[assistantMessages.length - 1].content.trim().length > 0
+            )
+          })
+        if (hasFollowUpResponses) {
+          setTutorialHasCompletedComparison(true)
+        }
+      } else if (tutorialState.currentStep === 'submit-comparison') {
+        // For initial comparison, just check if conversations exist and loading is done
+        if (conversations.length > 0) {
+          setTutorialHasCompletedComparison(true)
+        }
+      }
+    }
+  }, [conversations, isLoading, tutorialState.currentStep, isFollowUpMode])
+
+  // Reset comparison completion flag when entering step 6 (enter-prompt-2) to allow step 7 to detect completion
+  useEffect(() => {
+    if (tutorialState.currentStep === 'enter-prompt-2') {
+      setTutorialHasCompletedComparison(false)
+    }
+  }, [tutorialState.currentStep])
+
+  // Track breakout creation for tutorial (backup detection)
+  // Primary detection is in handleBreakout function
+  useEffect(() => {
+    // This is a backup - the main tracking happens in handleBreakout
+    // Only use this if handleBreakout doesn't fire (shouldn't happen normally)
+  }, [currentVisibleComparisonId, conversations.length, tutorialState.currentStep])
+
   // Listen for anonymous credits reset event from AdminPanel and refresh credit display
   useEffect(() => {
     const handleAnonymousCreditsReset = async () => {
@@ -2718,7 +2796,19 @@ function AppContent() {
   useEffect(() => {
     // Don't scroll to results if there's an error (e.g., all models failed)
     // The error message scroll will handle centering the error instead
-    if (response && !isFollowUpMode && !hasScrolledToResultsRef.current && !error) {
+    // Also don't scroll when tutorial is active and on 'submit-comparison' or 'follow-up' step - let the tutorial handle scrolling
+    // We check 'submit-comparison' because the step hasn't advanced yet when this effect runs
+    const isTutorialSubmitOrFollowUpStep =
+      tutorialState.isActive &&
+      (tutorialState.currentStep === 'submit-comparison' ||
+        tutorialState.currentStep === 'follow-up')
+    if (
+      response &&
+      !isFollowUpMode &&
+      !hasScrolledToResultsRef.current &&
+      !error &&
+      !isTutorialSubmitOrFollowUpStep
+    ) {
       // Also check if all models failed (even if error state hasn't updated yet)
       const allModelsFailed = response.metadata?.models_successful === 0
       if (allModelsFailed) {
@@ -2742,7 +2832,7 @@ function AppContent() {
       }, 300)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [response, isFollowUpMode, error])
+  }, [response, isFollowUpMode, error, tutorialState.currentStep])
 
   // Scroll all conversation cards to top after formatting is applied (initial comparison only)
   useEffect(() => {
@@ -2788,7 +2878,19 @@ function AppContent() {
 
   // Scroll to results section when conversations are updated (follow-up mode)
   useEffect(() => {
-    if (conversations.length > 0 && isFollowUpMode && !followUpJustActivatedRef.current) {
+    // Don't scroll when tutorial is active and on steps 7-10 - let the tutorial handle scrolling
+    const isTutorialLateStep =
+      tutorialState.isActive &&
+      (tutorialState.currentStep === 'submit-comparison-2' ||
+        tutorialState.currentStep === 'view-follow-up-results' ||
+        tutorialState.currentStep === 'history-dropdown' ||
+        tutorialState.currentStep === 'save-selection')
+    if (
+      conversations.length > 0 &&
+      isFollowUpMode &&
+      !followUpJustActivatedRef.current &&
+      !isTutorialLateStep
+    ) {
       // Scroll to results section after follow-up is submitted
       setTimeout(() => {
         const resultsSection = document.querySelector('.results-section')
@@ -2801,7 +2903,7 @@ function AppContent() {
       }, 400)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [conversations, isFollowUpMode])
+  }, [conversations, isFollowUpMode, tutorialState.currentStep, tutorialState.isActive])
 
   // Immediately hide card when all models are deselected
   useEffect(() => {
@@ -3658,6 +3760,20 @@ function AppContent() {
     setOpenDropdowns(new Set())
   }
 
+  // Helper function to reset app state for a clean tutorial experience
+  const resetAppStateForTutorial = () => {
+    setInput('') // Clear textarea
+    setSelectedModels([]) // Deselect all models
+    setOriginalSelectedModels([]) // Clear original model selections
+    setOpenDropdowns(new Set()) // Collapse all model providers
+    setIsFollowUpMode(false) // Exit follow-up mode
+    setConversations([]) // Clear conversations
+    setResponse(null) // Clear response
+    setError(null) // Clear any errors
+    setClosedCards(new Set()) // Reset closed cards
+    setIsModelsHidden(false) // Show models section
+  }
+
   const toggleAllForProvider = async (provider: string) => {
     const providerModels = modelsByProvider[provider] || []
 
@@ -4308,6 +4424,9 @@ function AppContent() {
       setTimeout(() => {
         notification()
       }, 5000)
+
+      // Breakout tracking removed - step 6 is now enter-prompt-2
+      setTutorialHasBreakout(true)
     } catch (err) {
       console.error('Failed to create breakout conversation:', err)
       setError('Failed to break out conversation. Please try again.')
@@ -4991,7 +5110,12 @@ function AppContent() {
                   shouldUpdate = true
 
                   // Scroll to Comparison Results section on first chunk from first model
-                  if (!hasScrolledToResultsOnFirstChunkRef.current) {
+                  // Skip scroll during tutorial step 4 (submit-comparison) or step 7 (submit-comparison-2) - let tutorial handle scrolling
+                  const isTutorialSubmitStep =
+                    tutorialState.isActive &&
+                    (tutorialState.currentStep === 'submit-comparison' ||
+                      tutorialState.currentStep === 'submit-comparison-2')
+                  if (!hasScrolledToResultsOnFirstChunkRef.current && !isTutorialSubmitStep) {
                     hasScrolledToResultsOnFirstChunkRef.current = true
                     // Use requestAnimationFrame and a small delay to ensure DOM is ready
                     requestAnimationFrame(() => {
@@ -6679,7 +6803,10 @@ function AppContent() {
       ) : (
         <>
           {/* Done Selecting? Floating Card - Fixed position at screen center */}
-          {showDoneSelectingCard && <DoneSelectingCard onDone={handleDoneSelecting} />}
+          {/* Hide during tutorial */}
+          {showDoneSelectingCard && !tutorialState.isActive && (
+            <DoneSelectingCard onDone={handleDoneSelecting} />
+          )}
 
           <Navigation
             isAuthenticated={isAuthenticated}
@@ -6694,6 +6821,14 @@ function AppContent() {
               setAuthModalMode('register')
               setIsAuthModalOpen(true)
             }}
+            onTutorialClick={
+              !isAuthenticated
+                ? () => {
+                    resetAppStateForTutorial() // Reset app state for clean tutorial experience
+                    startTutorial() // Start the tutorial (includes resetting localStorage)
+                  }
+                : undefined
+            }
           />
 
           {/* Email verification banners - placed between header and main content */}
@@ -6753,6 +6888,7 @@ function AppContent() {
                   onExpandFiles={expandFiles}
                   webSearchEnabled={webSearchEnabled}
                   onWebSearchEnabledChange={setWebSearchEnabled}
+                  tutorialStep={tutorialState.currentStep}
                 />
               </ErrorBoundary>
             </Hero>
@@ -7101,6 +7237,7 @@ function AppContent() {
                               <div
                                 key={provider}
                                 className={`provider-dropdown ${hasSelectedModels ? 'has-selected-models' : ''}`}
+                                data-provider-name={provider}
                               >
                                 <button
                                   className="provider-header"
@@ -8447,6 +8584,76 @@ function AppContent() {
 
           {/* Install Prompt - Only show in production */}
           {import.meta.env.PROD && <InstallPrompt />}
+
+          {/* Tutorial Welcome Modal */}
+          {showWelcomeModal && (
+            <TutorialWelcomeModal
+              onStart={() => {
+                setShowWelcomeModal(false)
+                resetAppStateForTutorial() // Reset app state for clean tutorial experience
+                startTutorial()
+              }}
+              onSkip={() => {
+                setShowWelcomeModal(false)
+                skipTutorial()
+              }}
+            />
+          )}
+
+          {/* Tutorial Controller */}
+          {currentView === 'main' &&
+            (() => {
+              // Check if Google provider is expanded
+              const googleProviderExpanded =
+                'Google' in modelsByProvider && openDropdowns.has('Google')
+
+              // Check if both Google models for unregistered users are selected
+              // Models: google/gemini-2.0-flash-001 and google/gemini-2.5-flash
+              const googleModelIds = ['google/gemini-2.0-flash-001', 'google/gemini-2.5-flash']
+              const googleModelsSelected = googleModelIds.every(modelId =>
+                selectedModels.includes(modelId)
+              )
+
+              return (
+                <TutorialController
+                  tutorialState={tutorialState}
+                  completeStep={completeStep}
+                  skipTutorial={skipTutorial}
+                  googleProviderExpanded={googleProviderExpanded}
+                  googleModelsSelected={googleModelsSelected}
+                  hasPromptText={input.trim().length > 0}
+                  hasCompletedComparison={tutorialHasCompletedComparison}
+                  isFollowUpMode={isFollowUpMode}
+                  hasBreakoutConversation={tutorialHasBreakout}
+                  showHistoryDropdown={showHistoryDropdown}
+                  hasSavedSelection={tutorialHasSavedSelection}
+                  onProviderExpanded={() => {
+                    // Step completed, no action needed
+                  }}
+                  onModelsSelected={() => {
+                    // Step completed, no action needed
+                  }}
+                  onPromptEntered={() => {
+                    // Step completed, no action needed
+                  }}
+                  onComparisonComplete={() => {
+                    setTutorialHasCompletedComparison(false)
+                  }}
+                  onFollowUpActivated={() => {
+                    // Reset state if needed
+                  }}
+                  onBreakoutCreated={() => {
+                    setTutorialHasBreakout(false)
+                  }}
+                  onHistoryOpened={() => {
+                    // Reset state if needed
+                  }}
+                  onSelectionSaved={() => {
+                    setTutorialHasSavedSelection(false)
+                  }}
+                />
+              )
+            })()}
         </>
       )}
     </div>

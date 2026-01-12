@@ -3,6 +3,7 @@ import React, { memo, useEffect, useCallback, useMemo, useState, useRef } from '
 import { getConversationLimit } from '../../config/constants'
 import { useDebounce, useSpeechRecognition, useTouchDevice } from '../../hooks'
 import type { SavedModelSelection } from '../../hooks/useSavedModelSelections'
+import type { TutorialStep } from '../../hooks/useTutorial'
 import { estimateTokens } from '../../services/compareService'
 import type { User, ConversationSummary, ModelConversation } from '../../types'
 import type { ModelsByProvider } from '../../types/models'
@@ -96,6 +97,9 @@ interface ComparisonFormProps {
   // Web search
   webSearchEnabled?: boolean
   onWebSearchEnabledChange?: (enabled: boolean) => void
+
+  // Tutorial step - used to block submit button during step 3 (enter-prompt)
+  tutorialStep?: TutorialStep | null
 }
 
 /**
@@ -150,6 +154,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
     onExpandFiles,
     webSearchEnabled: webSearchEnabledProp,
     onWebSearchEnabledChange,
+    tutorialStep,
   }) => {
     // Internal state for web search if not controlled via props
     const [webSearchEnabledInternal, setWebSearchEnabledInternal] = useState(false)
@@ -1684,6 +1689,11 @@ export const ComparisonForm = memo<ComparisonFormProps>(
               </button>
               <button
                 onClick={() => {
+                  // Block submit during tutorial step 3 (enter-prompt) and step 6 (enter-prompt-2)
+                  // User must advance to the next step before submitting
+                  if (tutorialStep === 'enter-prompt' || tutorialStep === 'enter-prompt-2') {
+                    return
+                  }
                   const isDisabled =
                     isLoading ||
                     creditsRemaining <= 0 ||
