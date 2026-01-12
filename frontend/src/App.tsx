@@ -6822,7 +6822,7 @@ function AppContent() {
               setIsAuthModalOpen(true)
             }}
             onTutorialClick={
-              !isAuthenticated
+              !isAuthenticated && !isMobileLayout
                 ? () => {
                     resetAppStateForTutorial() // Reset app state for clean tutorial experience
                     startTutorial() // Start the tutorial (includes resetting localStorage)
@@ -8586,7 +8586,7 @@ function AppContent() {
           {import.meta.env.PROD && <InstallPrompt />}
 
           {/* Tutorial Welcome Modal */}
-          {showWelcomeModal && (
+          {showWelcomeModal && !isMobileLayout && (
             <TutorialWelcomeModal
               onStart={() => {
                 setShowWelcomeModal(false)
@@ -8602,6 +8602,7 @@ function AppContent() {
 
           {/* Tutorial Controller */}
           {currentView === 'main' &&
+            !isMobileLayout &&
             (() => {
               // Check if Google provider is expanded
               const googleProviderExpanded =
