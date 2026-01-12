@@ -151,6 +151,11 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
       setTargetElement(null)
       setHighlightedElements([])
       setIsVisible(false)
+      // Reset all cutout states when tutorial ends to prevent stale values on next run
+      setTextareaCutout(null)
+      setDropdownCutout(null)
+      setButtonCutout(null)
+      setOverlayPosition({ top: 0, left: 0 })
       // Clean up any remaining tutorial classes when tutorial ends
       const textareaContainerActive = document.querySelector(
         '.textarea-container.tutorial-textarea-active'
@@ -193,6 +198,12 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
       console.warn(`No config found for tutorial step: ${step}`)
       return
     }
+
+    // Clear cutout states when entering a new step to ensure fresh calculation
+    // This prevents stale cutout positions from previous steps
+    setTextareaCutout(null)
+    setDropdownCutout(null)
+    setButtonCutout(null)
 
     // Wait for element to be available
     const findElement = () => {
@@ -807,34 +818,92 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
     }
   }, [step])
 
-  // Separate effect to continuously maintain highlight for enter-prompt step
+  // Separate effect to continuously maintain highlight and cutout for enter-prompt step
   // Uses simple interval instead of MutationObserver to avoid performance issues
   useEffect(() => {
     if (step !== 'enter-prompt') return
 
-    const ensureHighlight = () => {
+    const ensureHighlightAndCutout = () => {
       const textareaContainer = document.querySelector('.textarea-container') as HTMLElement
-      if (textareaContainer && !textareaContainer.classList.contains('tutorial-highlight')) {
+      if (textareaContainer) {
+        // Always force add highlight class (remove first to ensure it's applied fresh)
+        // This handles cases where the class might have been removed by other effects
         textareaContainer.classList.add('tutorial-highlight')
         textareaContainer.style.pointerEvents = 'auto'
         textareaContainer.style.position = 'relative'
+        // Ensure textarea-active class is present
+        textareaContainer.classList.add('tutorial-textarea-active')
+        // Ensure cutout is calculated - this handles cases where initial calculation was missed
+        const rect = textareaContainer.getBoundingClientRect()
+        const padding = 8
+        setTextareaCutout({
+          top: rect.top - padding,
+          left: rect.left - padding,
+          width: rect.width + padding * 2,
+          height: rect.height + padding * 2,
+        })
       }
     }
 
-    // Check immediately
-    ensureHighlight()
+    // Run immediately
+    ensureHighlightAndCutout()
 
-    // Check periodically to maintain highlight
-    const interval = setInterval(ensureHighlight, 200)
+    // Also run after a brief delay to handle any cleanup that might run after this effect
+    const initialTimeout = setTimeout(ensureHighlightAndCutout, 50)
+
+    // Check periodically to maintain highlight and cutout
+    const interval = setInterval(ensureHighlightAndCutout, 200)
 
     return () => {
+      clearTimeout(initialTimeout)
       clearInterval(interval)
       // Clean up highlight when leaving this step
       const textareaContainer = document.querySelector('.textarea-container') as HTMLElement
       if (textareaContainer) {
         textareaContainer.classList.remove('tutorial-highlight')
+        textareaContainer.classList.remove('tutorial-textarea-active')
         textareaContainer.style.pointerEvents = ''
         textareaContainer.style.position = ''
+      }
+    }
+  }, [step])
+
+  // Separate effect to continuously maintain cutout for enter-prompt-2 step (no highlight, but needs cutout)
+  // Uses simple interval to ensure cutout is properly calculated
+  useEffect(() => {
+    if (step !== 'enter-prompt-2') return
+
+    const ensureCutout = () => {
+      const textareaContainer = document.querySelector('.textarea-container') as HTMLElement
+      if (textareaContainer) {
+        // Ensure textarea-active class is present
+        if (!textareaContainer.classList.contains('tutorial-textarea-active')) {
+          textareaContainer.classList.add('tutorial-textarea-active')
+        }
+        // Ensure cutout is calculated - this handles cases where initial calculation was missed
+        const rect = textareaContainer.getBoundingClientRect()
+        const padding = 8
+        setTextareaCutout({
+          top: rect.top - padding,
+          left: rect.left - padding,
+          width: rect.width + padding * 2,
+          height: rect.height + padding * 2,
+        })
+      }
+    }
+
+    // Check immediately
+    ensureCutout()
+
+    // Check periodically to maintain cutout
+    const interval = setInterval(ensureCutout, 200)
+
+    return () => {
+      clearInterval(interval)
+      // Clean up when leaving this step
+      const textareaContainer = document.querySelector('.textarea-container') as HTMLElement
+      if (textareaContainer) {
+        textareaContainer.classList.remove('tutorial-textarea-active')
       }
     }
   }, [step])
@@ -864,7 +933,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
       return
     }
 
-    const ensureHighlight = () => {
+    const ensureHighlightAndCutout = () => {
       const resultsSection = document.querySelector('.results-section') as HTMLElement
       const loadingSection = document.querySelector('.loading-section') as HTMLElement
 
@@ -881,13 +950,30 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
         resultsSection.style.pointerEvents = 'auto'
         resultsSection.style.position = 'relative'
       }
+
+      // Also maintain textarea cutout for submit steps (they need the textarea visible)
+      const textareaContainer = document.querySelector('.textarea-container') as HTMLElement
+      if (textareaContainer) {
+        if (!textareaContainer.classList.contains('tutorial-textarea-active')) {
+          textareaContainer.classList.add('tutorial-textarea-active')
+        }
+        // Ensure cutout is calculated
+        const rect = textareaContainer.getBoundingClientRect()
+        const padding = 8
+        setTextareaCutout({
+          top: rect.top - padding,
+          left: rect.left - padding,
+          width: rect.width + padding * 2,
+          height: rect.height + padding * 2,
+        })
+      }
     }
 
     // Check immediately
-    ensureHighlight()
+    ensureHighlightAndCutout()
 
-    // Check periodically to maintain highlight
-    const interval = setInterval(ensureHighlight, 200)
+    // Check periodically to maintain highlight and cutout
+    const interval = setInterval(ensureHighlightAndCutout, 200)
 
     return () => {
       clearInterval(interval)
@@ -903,6 +989,11 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
         loadingSection.classList.remove('tutorial-highlight')
         loadingSection.style.pointerEvents = ''
         loadingSection.style.position = ''
+      }
+      // Clean up textarea active class
+      const textareaContainer = document.querySelector('.textarea-container') as HTMLElement
+      if (textareaContainer) {
+        textareaContainer.classList.remove('tutorial-textarea-active')
       }
     }
   }, [step])

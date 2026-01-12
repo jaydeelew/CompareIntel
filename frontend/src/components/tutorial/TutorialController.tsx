@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 
 import type { TutorialStep, TutorialState } from '../../hooks/useTutorial'
 
@@ -50,6 +50,28 @@ export const TutorialController: React.FC<TutorialControllerProps> = ({
   onHistoryOpened,
   onSelectionSaved,
 }) => {
+  // Track tutorial session to force remount of TutorialOverlay when tutorial restarts
+  const [tutorialSessionKey, setTutorialSessionKey] = useState(0)
+  const previousStepRef = useRef<TutorialStep | null>(null)
+
+  // Increment session key when tutorial restarts (step goes to first step from any other state)
+  // This handles both:
+  // 1. Starting fresh (inactive -> active with first step)
+  // 2. Restarting mid-tutorial (some step -> first step while still active)
+  useEffect(() => {
+    const currentStep = tutorialState.currentStep
+    const previousStep = previousStepRef.current
+
+    // Detect restart: step is now 'expand-provider' AND it wasn't 'expand-provider' before
+    // (or was null before, meaning tutorial just started)
+    if (currentStep === 'expand-provider' && previousStep !== 'expand-provider') {
+      // Tutorial just started or restarted - increment key to force TutorialOverlay remount
+      setTutorialSessionKey(prev => prev + 1)
+    }
+
+    previousStepRef.current = currentStep
+  }, [tutorialState.currentStep])
+
   const previousStateRef = useRef({
     googleProviderExpanded: false,
     googleModelsSelected: false,
@@ -225,6 +247,7 @@ export const TutorialController: React.FC<TutorialControllerProps> = ({
 
   return (
     <TutorialOverlay
+      key={tutorialSessionKey}
       step={tutorialState.currentStep}
       onComplete={handleComplete}
       onSkip={skipTutorial}
