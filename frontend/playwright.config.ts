@@ -74,12 +74,10 @@ export default defineConfig({
       use: { ...devices['Desktop Firefox'] },
     },
 
-    /* WebKit disabled on Ubuntu 20.04 due to frozen browser version */
-    /* Uncomment when running on a newer OS or if you need Safari testing */
-    // {
-    //   name: 'webkit',
-    //   use: { ...devices['Desktop Safari'] },
-    // },
+    {
+      name: 'webkit',
+      use: { ...devices['Desktop Safari'] },
+    },
 
     // Mobile - iOS Devices
     {

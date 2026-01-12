@@ -155,7 +155,7 @@ jobs:
       
       - name: Install Playwright browsers
         working-directory: ./frontend
-        run: npx playwright install --with-deps chromium firefox
+        run: npx playwright install --with-deps chromium firefox webkit
       
       - name: Set up Python (for backend)
         uses: actions/setup-python@v5
@@ -173,7 +173,7 @@ jobs:
       - name: Run E2E tests
         working-directory: ./frontend
         timeout-minutes: 90
-        run: npm run test:e2e -- --project=chromium --project=firefox --project='Mobile Safari - iPhone 12' --project='Mobile Chrome - Pixel 5' --timeout=90000
+        run: npm run test:e2e -- --project=chromium --project=firefox --project=webkit --project='Mobile Safari - iPhone 12' --project='Mobile Chrome - Pixel 5' --timeout=90000
         env:
           CI: true
           PLAYWRIGHT_BASE_URL: http://localhost:5173
@@ -188,7 +188,7 @@ jobs:
           ADMIN_EMAIL: jaydeelew@gmail.com
           ADMIN_PASSWORD: sf*88323?ddpdRRl
           # Playwright will automatically start both frontend and backend servers via webServer config
-          # Tests run on a subset of projects in CI: 2 desktop browsers + 2 mobile devices (iOS/Android)
+          # Tests run on a subset of projects in CI: 3 desktop browsers (Chromium, Firefox, Safari) + 2 mobile devices (iOS/Android)
           # This reduces test time while still covering major platforms
           # Increased timeout to 90s per test to account for CI environment slowness
       
@@ -265,7 +265,7 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Frontend E2E Tests" >> $GITHUB_STEP_SUMMARY
           echo "- Status: ${{ needs.frontend-e2e-tests.result }}" >> $GITHUB_STEP_SUMMARY
-          echo "- Includes desktop browsers (Chromium, Firefox) and mobile devices (iPhone 12, Pixel 5)" >> $GITHUB_STEP_SUMMARY
+          echo "- Includes desktop browsers (Chromium, Firefox, Safari) and mobile devices (iPhone 12, Pixel 5)" >> $GITHUB_STEP_SUMMARY
           if [ -d "./playwright-report" ]; then
             echo "- ✅ Test report available in artifacts" >> $GITHUB_STEP_SUMMARY
           else
