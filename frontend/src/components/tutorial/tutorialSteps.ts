@@ -14,7 +14,7 @@ export const TUTORIAL_STEPS_CONFIG: Record<TutorialStep, StepConfig> = {
   'expand-provider': {
     step: 'expand-provider',
     targetSelector: '.provider-dropdown .provider-header',
-    title: 'Expand Google Provider',
+    title: 'Expand a Provider',
     description: 'Click on the Google provider dropdown to expand it and see available AI models.',
     position: 'top',
   },
