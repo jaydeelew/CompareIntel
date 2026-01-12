@@ -1315,27 +1315,28 @@ export const ComparisonForm = memo<ComparisonFormProps>(
       e.currentTarget.blur()
     }, [])
 
-    // Detect Android to use file explorer instead of media picker
-    // On Android, specific accept attributes (especially text/*) can trigger
-    // the camera/images dialog instead of the file explorer. Since we validate
-    // files client-side anyway, using */* on Android forces the file explorer
-    // to open, which is the desired behavior for text/code/document files.
-    const isAndroid = useMemo(() => {
+    // Detect mobile platforms (Android/iOS) to use file explorer instead of media picker
+    // On mobile browsers, specific accept attributes can trigger the camera/images dialog
+    // instead of the file explorer. Since we validate files client-side anyway, using
+    // document-specific MIME types on mobile forces the file explorer to open.
+    const isMobileDevice = useMemo(() => {
       if (typeof navigator === 'undefined') return false
-      return /Android/i.test(navigator.userAgent)
+      const ua = navigator.userAgent
+      return /Android|iPhone|iPad|iPod/i.test(ua)
     }, [])
 
-    // File accept attribute: use */* on Android to force file explorer,
+    // File accept attribute: use document-specific types on mobile to avoid media picker,
     // otherwise use specific types for better UX on other platforms
     const fileAcceptAttribute = useMemo(() => {
-      if (isAndroid) {
-        // On Android, use */* to open file explorer instead of media picker
+      if (isMobileDevice) {
+        // On mobile (Android/iOS), use document/text MIME types to force file explorer instead of media picker
+        // Explicitly avoid image/*, video/*, and audio/* to prevent camera/gallery options
         // File validation will still happen via isTextOrCodeFile function
-        return '*/*'
+        return 'text/*,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.oasis.opendocument.text,application/rtf,application/json,application/javascript,application/xml,.txt,.md,.markdown,.json,.xml,.html,.htm,.css,.js,.jsx,.ts,.tsx,.py,.java,.c,.cpp,.cc,.cxx,.h,.hpp,.cs,.rb,.go,.rs,.swift,.kt,.php,.sh,.bash,.zsh,.fish,.yaml,.yml,.toml,.ini,.cfg,.conf,.log,.csv,.sql,.r,.R,.m,.pl,.pm,.lua,.scala,.clj,.cljs,.hs,.elm,.ex,.exs,.dart,.vue,.svelte,.astro,.graphql,.gql,.dockerfile,.env,.gitignore,.gitattributes,.editorconfig,.eslintrc,.prettierrc,.babelrc,.webpack,.rollup,.vite,.makefile,.cmake,.gradle,.maven,.pom,.sbt,.build,.lock,.lockfile,.package,.requirements,.pip,.conda,.dockerignore,.npmignore,.yarnignore,.eslintignore,.prettierignore,.pdf,.docx,.doc,.rtf,.odt'
       }
       // On other platforms, use specific file types for better UX
       return '.txt,.md,.markdown,.json,.xml,.html,.htm,.css,.js,.jsx,.ts,.tsx,.py,.java,.c,.cpp,.cc,.cxx,.h,.hpp,.cs,.rb,.go,.rs,.swift,.kt,.php,.sh,.bash,.zsh,.fish,.yaml,.yml,.toml,.ini,.cfg,.conf,.log,.csv,.sql,.r,.R,.m,.pl,.pm,.lua,.scala,.clj,.cljs,.hs,.elm,.ex,.exs,.dart,.vue,.svelte,.astro,.graphql,.gql,.dockerfile,.env,.gitignore,.gitattributes,.editorconfig,.eslintrc,.prettierrc,.babelrc,.webpack,.rollup,.vite,.makefile,.cmake,.gradle,.maven,.pom,.sbt,.build,.lock,.lockfile,.package,.requirements,.pip,.conda,.dockerignore,.npmignore,.yarnignore,.eslintignore,.prettierignore,.pdf,.docx,.doc,.rtf,.odt,text/*,application/json,application/javascript,application/xml,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/msword,application/rtf,application/vnd.oasis.opendocument.text'
-    }, [isAndroid])
+    }, [isMobileDevice])
 
     return (
       <>
@@ -1496,6 +1497,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
                 ref={fileInputRef}
                 type="file"
                 accept={fileAcceptAttribute}
+                capture={isMobileDevice ? false : undefined}
                 style={{ display: 'none' }}
                 onChange={handleFileUpload}
               />
