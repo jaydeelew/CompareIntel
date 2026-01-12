@@ -21,9 +21,9 @@ export const TUTORIAL_STEPS_CONFIG: Record<TutorialStep, StepConfig> = {
   'select-models': {
     step: 'select-models',
     targetSelector: '.provider-dropdown[data-provider-name="Google"]',
-    title: 'Select Google Models',
+    title: 'Select Models',
     description:
-      'Select both available Google models (Gemini 2.0 Flash and Gemini 2.5 Flash) by clicking their checkboxes. These are the two Googe models available to unregistered users.',
+      'Select both available Google models by clicking anywhere on them. These are the two Google models available to unregistered users.',
     position: 'top',
   },
   'enter-prompt': {
