@@ -754,6 +754,16 @@ MODELS_BY_PROVIDER = {
             "supports_web_search": True,  # Supports function calling
         },
     ]
+,
+    "ZAi": [
+        {
+            "id": "z-ai/glm-4.7",
+            "name": "Glm 4.7",
+            "description": 'GLM-4.7 is Z.AI’s latest flagship model, featuring upgrades in two key areas: enhanced programming capabilities and more stable multi-step reasoning/execution.',
+            "category": "Language",
+            "provider": "ZAi",
+        },
+    ],
 }
 
 
