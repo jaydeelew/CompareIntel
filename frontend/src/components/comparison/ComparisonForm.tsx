@@ -1412,6 +1412,10 @@ export const ComparisonForm = memo<ComparisonFormProps>(
               onKeyDown={e => {
                 if (e.key === 'Enter' && !e.shiftKey) {
                   e.preventDefault()
+                  // Don't submit during tutorial steps 3 and 6 - user must click "Done with input" first
+                  if (tutorialStep === 'enter-prompt' || tutorialStep === 'enter-prompt-2') {
+                    return
+                  }
                   if (isFollowUpMode) {
                     onContinueConversation()
                   } else {
