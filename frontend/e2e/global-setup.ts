@@ -1,4 +1,4 @@
-import { chromium, FullConfig } from '@playwright/test'
+import { chromium, FullConfig, Page } from '@playwright/test'
 
 /**
  * Global Setup for E2E Tests
@@ -10,6 +10,68 @@ import { chromium, FullConfig } from '@playwright/test'
  * Note: This assumes the backend is running and accessible.
  * The backend should be started by Playwright's webServer config.
  */
+
+/**
+ * Helper function to dismiss the tutorial overlay if it appears
+ */
+async function dismissTutorialOverlay(page: Page) {
+  try {
+    // Wait a moment for tutorial modal to appear (it may load after page load)
+    await page.waitForTimeout(1000)
+
+    // First, check for the welcome modal (appears first)
+    const welcomeModal = page.locator('.tutorial-welcome-backdrop')
+    const welcomeVisible = await welcomeModal.isVisible({ timeout: 3000 }).catch(() => false)
+
+    if (welcomeVisible) {
+      // Click "Skip for Now" button
+      const skipButton = page.locator(
+        '.tutorial-welcome-button-secondary, button:has-text("Skip for Now")'
+      )
+      const skipVisible = await skipButton.isVisible({ timeout: 2000 }).catch(() => false)
+
+      if (skipVisible) {
+        await skipButton.click({ timeout: 5000 })
+        // Wait for welcome modal to disappear
+        await welcomeModal.waitFor({ state: 'hidden', timeout: 5000 }).catch(() => {})
+        await page.waitForTimeout(500)
+      } else {
+        // Fallback: try pressing Escape
+        await page.keyboard.press('Escape')
+        await page.waitForTimeout(500)
+      }
+    }
+
+    // Then check for the tutorial overlay (appears after welcome modal)
+    const tutorialOverlay = page.locator('.tutorial-backdrop, .tutorial-welcome-backdrop')
+    const overlayVisible = await tutorialOverlay.isVisible({ timeout: 2000 }).catch(() => false)
+
+    if (overlayVisible) {
+      // Try to click the skip/close button in the tutorial overlay
+      const closeButton = page.locator(
+        '.tutorial-close-button, button[aria-label*="Skip"], button[aria-label*="skip"]'
+      )
+      const closeVisible = await closeButton.isVisible({ timeout: 2000 }).catch(() => false)
+
+      if (closeVisible) {
+        await closeButton.click({ timeout: 5000 })
+        // Wait for overlay to disappear
+        await tutorialOverlay.waitFor({ state: 'hidden', timeout: 5000 }).catch(() => {})
+        await page.waitForTimeout(500)
+      } else {
+        // Fallback: try pressing Escape
+        await page.keyboard.press('Escape')
+        await page.waitForTimeout(500)
+      }
+    }
+  } catch (error) {
+    // Ignore errors - tutorial might not be present
+    console.log(
+      'Tutorial overlay dismissal attempted:',
+      error instanceof Error ? error.message : String(error)
+    )
+  }
+}
 
 async function globalSetup(config: FullConfig) {
   const baseURL = config.projects[0].use.baseURL || 'http://localhost:5173'
@@ -96,6 +158,9 @@ async function globalSetup(config: FullConfig) {
 
     await page.goto(`${baseURL}/`)
     await page.waitForLoadState('networkidle')
+
+    // Dismiss tutorial overlay if it appears (blocks interactions)
+    await dismissTutorialOverlay(page)
 
     // Check if admin exists by trying to login
     const loginButton = page.getByTestId('nav-sign-in-button')
@@ -201,6 +266,9 @@ async function globalSetup(config: FullConfig) {
           await context.clearCookies()
           await page.goto(`${baseURL}/`)
           await page.waitForLoadState('networkidle')
+
+          // Dismiss tutorial overlay if it appears (blocks interactions)
+          await dismissTutorialOverlay(page)
 
           const signUpButton = page.getByTestId('nav-sign-up-button')
           if (await signUpButton.isVisible({ timeout: 2000 }).catch(() => false)) {
@@ -312,8 +380,18 @@ async function globalSetup(config: FullConfig) {
     await page.goto(`${baseURL}/`)
     await page.waitForLoadState('networkidle')
 
+    // Dismiss tutorial overlay if it appears (blocks interactions)
+    await dismissTutorialOverlay(page)
+
     // Clear cookies to logout
     await context.clearCookies()
+
+    // Navigate again after clearing cookies
+    await page.goto(`${baseURL}/`)
+    await page.waitForLoadState('networkidle')
+
+    // Dismiss tutorial overlay again after navigation
+    await dismissTutorialOverlay(page)
 
     const testLoginButton = page.getByTestId('nav-sign-in-button')
     if (await testLoginButton.isVisible({ timeout: 2000 }).catch(() => false)) {
@@ -331,29 +409,65 @@ async function globalSetup(config: FullConfig) {
       if (!testUserExists) {
         // Test user doesn't exist, try to register
         console.log('Test user does not exist. Attempting to register...')
-        const signUpButton = page.getByTestId('nav-sign-up-button')
-        if (await signUpButton.isVisible({ timeout: 2000 }).catch(() => false)) {
-          // Wait for any existing modals to close first
-          await page.waitForTimeout(500)
-          // Use force click to bypass overlay interception
-          await signUpButton.click({ force: true, timeout: 5000 })
-          await page.waitForSelector('[data-testid="auth-modal"], .auth-modal', { timeout: 10000 })
+        try {
+          const signUpButton = page.getByTestId('nav-sign-up-button')
+          if (await signUpButton.isVisible({ timeout: 2000 }).catch(() => false)) {
+            // Wait for any existing modals to close first
+            await page.waitForTimeout(500)
+            // Use force click to bypass overlay interception
+            await signUpButton.click({ force: true, timeout: 5000 })
+            await page.waitForSelector('[data-testid="auth-modal"], .auth-modal', {
+              timeout: 10000,
+            })
 
-          const emailInput = page.locator('input[type="email"]').first()
-          await emailInput.fill(TEST_USER_EMAIL)
+            // Wait for the modal to be fully ready
+            await page.waitForTimeout(1000)
 
-          const passwordInput = page.locator('input[type="password"]').first()
-          await passwordInput.fill(TEST_USER_PASSWORD)
+            // Try to find and fill registration form fields
+            // Use test IDs if available, fallback to generic selectors
+            try {
+              await page
+                .getByTestId('register-email-input')
+                .fill(TEST_USER_EMAIL, { timeout: 5000 })
+            } catch {
+              // Fallback to generic email input
+              const emailInput = page.locator('input[type="email"]').first()
+              await emailInput.waitFor({ state: 'visible', timeout: 5000 })
+              await emailInput.fill(TEST_USER_EMAIL)
+            }
 
-          const confirmPasswordInput = page.locator('input[type="password"]').nth(1)
-          if (await confirmPasswordInput.isVisible({ timeout: 2000 }).catch(() => false)) {
-            await confirmPasswordInput.fill(TEST_USER_PASSWORD)
+            try {
+              await page
+                .getByTestId('register-password-input')
+                .fill(TEST_USER_PASSWORD, { timeout: 5000 })
+            } catch {
+              const passwordInput = page.locator('input[type="password"]').first()
+              await passwordInput.fill(TEST_USER_PASSWORD)
+            }
+
+            try {
+              const confirmPasswordInput = page.getByTestId('register-confirm-password-input')
+              if (await confirmPasswordInput.isVisible({ timeout: 2000 }).catch(() => false)) {
+                await confirmPasswordInput.fill(TEST_USER_PASSWORD)
+              }
+            } catch {
+              const confirmPasswordInput = page.locator('input[type="password"]').nth(1)
+              if (await confirmPasswordInput.isVisible({ timeout: 2000 }).catch(() => false)) {
+                await confirmPasswordInput.fill(TEST_USER_PASSWORD)
+              }
+            }
+
+            await page.getByTestId('register-submit-button').click()
+            await page.waitForLoadState('networkidle')
+
+            console.log('Test user registration attempted')
           }
-
-          await page.getByTestId('register-submit-button').click()
-          await page.waitForLoadState('networkidle')
-
-          console.log('Test user registration attempted')
+        } catch (error) {
+          console.log(
+            'Test user registration failed (non-critical):',
+            error instanceof Error ? error.message : String(error)
+          )
+          console.log('Tests will continue - test user may need to be created manually')
         }
       } else {
         console.log('Test user already exists')

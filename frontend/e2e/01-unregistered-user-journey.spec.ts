@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test'
+import { test, expect, type Page } from '@playwright/test'
 
 /**
  * E2E Tests: Unregistered User Journey
@@ -10,6 +10,65 @@ import { test, expect } from '@playwright/test'
  * - Rate limit awareness
  * - Sign-up prompts
  */
+
+/**
+ * Helper function to dismiss the tutorial overlay if it appears
+ */
+async function dismissTutorialOverlay(page: Page) {
+  try {
+    // First, check for the welcome modal (appears first)
+    const welcomeModal = page.locator('.tutorial-welcome-backdrop')
+    const welcomeVisible = await welcomeModal.isVisible({ timeout: 3000 }).catch(() => false)
+
+    if (welcomeVisible) {
+      // Click "Skip for Now" button
+      const skipButton = page.locator(
+        '.tutorial-welcome-button-secondary, button:has-text("Skip for Now")'
+      )
+      const skipVisible = await skipButton.isVisible({ timeout: 2000 }).catch(() => false)
+
+      if (skipVisible) {
+        await skipButton.click({ timeout: 5000 })
+        // Wait for welcome modal to disappear
+        await welcomeModal.waitFor({ state: 'hidden', timeout: 5000 }).catch(() => {})
+        await page.waitForTimeout(500)
+      } else {
+        // Fallback: try pressing Escape
+        await page.keyboard.press('Escape')
+        await page.waitForTimeout(500)
+      }
+    }
+
+    // Then check for the tutorial overlay (appears after welcome modal)
+    const tutorialOverlay = page.locator('.tutorial-backdrop, .tutorial-welcome-backdrop')
+    const overlayVisible = await tutorialOverlay.isVisible({ timeout: 2000 }).catch(() => false)
+
+    if (overlayVisible) {
+      // Try to click the skip/close button in the tutorial overlay
+      const closeButton = page.locator(
+        '.tutorial-close-button, button[aria-label*="Skip"], button[aria-label*="skip"]'
+      )
+      const closeVisible = await closeButton.isVisible({ timeout: 2000 }).catch(() => false)
+
+      if (closeVisible) {
+        await closeButton.click({ timeout: 5000 })
+        // Wait for overlay to disappear
+        await tutorialOverlay.waitFor({ state: 'hidden', timeout: 5000 }).catch(() => {})
+        await page.waitForTimeout(500)
+      } else {
+        // Fallback: try pressing Escape
+        await page.keyboard.press('Escape')
+        await page.waitForTimeout(500)
+      }
+    }
+  } catch (error) {
+    // Ignore errors - tutorial might not be present
+    console.log(
+      'Tutorial overlay dismissal attempted:',
+      error instanceof Error ? error.message : String(error)
+    )
+  }
+}
 
 test.describe('Unregistered User Journey', () => {
   test.beforeEach(async ({ page, context }) => {
@@ -42,6 +101,15 @@ test.describe('Unregistered User Journey', () => {
 
     // Wait for models API to complete
     await modelsResponsePromise
+
+    // Wait a moment for tutorial modal to appear (it may load after page load)
+    await page.waitForTimeout(1000)
+
+    // Dismiss tutorial overlay if it appears (blocks interactions)
+    await dismissTutorialOverlay(page)
+
+    // Wait a bit more to ensure overlay is fully dismissed
+    await page.waitForTimeout(500)
 
     // Log console errors
     page.on('console', msg => {
