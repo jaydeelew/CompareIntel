@@ -68,7 +68,8 @@ ANONYMOUS_TIER_MODELS = {
     "x-ai/grok-4-fast",
     "meta-llama/llama-3.1-405b-instruct:free",  # Auto-classified based on pricing,    "meta-llama/llama-3.3-70b-instruct",  # Auto-classified based on pricing,
     "xiaomi/mimo-v2-flash:free",  # Auto-classified based on pricing,
-    "mistralai/devstral-2512:free",  # Auto-classified based on pricing,    "openai/gpt-4o-mini",  # Auto-classified based on pricing
+    "mistralai/devstral-2512:free",  # Auto-classified based on pricing,    "openai/gpt-4o-mini",  # Auto-classified based on pricing,
+    "x-ai/grok-4.1-fast",  # Auto-classified based on pricing
 }
 
 # List of model IDs available to free (registered) users
@@ -705,7 +706,6 @@ MODELS_BY_PROVIDER = {
             "description": 'A speedy, economical reasoning model optimized for agentic coding and development tasks.',
             "category": "Language",
             "provider": "xAI",
-            "supports_web_search": True,  # Agentic coding model - supports function calling
         },
         {
             "id": "x-ai/grok-4-fast",
@@ -713,7 +713,13 @@ MODELS_BY_PROVIDER = {
             "description": 'A cost-efficient multimodal model with 2M token context for fast, large-scale processing.',
             "category": "Language",
             "provider": "xAI",
-            "supports_web_search": True,  # Supports function calling
+        },
+        {
+            "id": "x-ai/grok-4.1-fast",
+            "name": "Grok 4.1 Fast",
+            "description": "Grok 4.1 Fast is xAI's best agentic tool calling model that shines in real-world use cases like customer support and deep research.",
+            "category": "Language",
+            "provider": "xAI",
         },
         {
             "id": "x-ai/grok-3-mini",
@@ -721,7 +727,6 @@ MODELS_BY_PROVIDER = {
             "description": 'A lightweight reasoning model with chain-of-thought capabilities for efficient problem-solving.',
             "category": "Language",
             "provider": "xAI",
-            "supports_web_search": True,  # Supports function calling
         },
         {
             "id": "x-ai/grok-4",
@@ -729,7 +734,6 @@ MODELS_BY_PROVIDER = {
             "description": "xAI's flagship reasoning model with 256k context for complex analysis and generation tasks.",
             "category": "Language",
             "provider": "xAI",
-            "supports_web_search": True,  # Supports function calling
         },
         {
             "id": "x-ai/grok-5",
@@ -738,7 +742,6 @@ MODELS_BY_PROVIDER = {
             "category": "Language",
             "provider": "xAI",
             "available": False,
-            "supports_web_search": False,
         },
     ],
     "Xiaomi": [
