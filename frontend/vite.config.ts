@@ -203,8 +203,11 @@ export default defineConfig({
             },
           },
         ],
-        // Offline fallback - only show when actually offline
-        navigateFallback: '/offline.html',
+        // SPA navigation fallback - serve index.html for all routes
+        // This allows React Router to handle client-side routing
+        // The offline.html page is precached and will be shown when truly offline
+        // (handled by the app's network detection logic)
+        navigateFallback: '/index.html',
         navigateFallbackDenylist: [
           /^\/api\//,
           /^\/admin/,
@@ -212,7 +215,7 @@ export default defineConfig({
           /^\/reset-password/,
           /^\/sitemap\.xml$/,
           /^\/robots\.txt$/,
-          // Exclude other static files that should be served directly
+          // Exclude static files that should be served directly
           /\.(xml|txt|json|ico|webmanifest)$/i,
         ],
       },
