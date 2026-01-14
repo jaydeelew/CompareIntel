@@ -400,7 +400,7 @@ async def get_rate_limit_status(
     """
     Get current rate limit status for the client.
 
-    Returns different information for authenticated vs anonymous users.
+    Returns different information for authenticated vs unregistered users.
     """
     if current_user:
         # Authenticated user - return subscription-based usage
@@ -414,7 +414,7 @@ async def get_rate_limit_status(
             "subscription_status": current_user.subscription_status,
         }
     else:
-        # Anonymous user - return IP/fingerprint-based usage
+        # Unregistered user - return IP/fingerprint-based usage
         client_ip = get_client_ip(request)
         # Get timezone from query parameter or header, default to UTC
         import pytz
@@ -476,7 +476,7 @@ async def reset_rate_limit_dev(
     """
     DEV ONLY: Reset rate limits, usage counts, and conversation history for the current user.
     For authenticated users: resets database usage and deletes their conversations.
-    For anonymous users: resets IP/fingerprint-based rate limits (client clears localStorage).
+    For unregistered users: resets IP/fingerprint-based rate limits (client clears localStorage).
     This endpoint should be disabled in production!
     """
     # Only allow in development mode
@@ -496,7 +496,7 @@ async def reset_rate_limit_dev(
         deleted_count = db.query(Conversation).filter(Conversation.user_id == current_user.id).delete()
         db.commit()
 
-    # For anonymous users: reset IP-based rate limits
+    # For unregistered users: reset IP-based rate limits
     # (frontend will handle localStorage clearing)
     ip_key = f"ip:{client_ip}"
     if ip_key in anonymous_rate_limit_storage:
@@ -918,9 +918,9 @@ async def compare_stream(
 
         print(f"Authenticated user {current_user.email} - Credits: {credits_remaining}/{credits_allocated}")
     else:
-        # Anonymous user - check credit-based limits
+        # Unregistered user - check credit-based limits
         print(
-            f"[API] Anonymous user - IP: {client_ip}, fingerprint: {req.browser_fingerprint[:20] if req.browser_fingerprint else 'None'}..., timezone: {user_timezone}"
+            f"[API] Unregistered user - IP: {client_ip}, fingerprint: {req.browser_fingerprint[:20] if req.browser_fingerprint else 'None'}..., timezone: {user_timezone}"
         )
 
         # Check IP-based credits (pass Decimal(0) since we don't need estimate for blocking)
@@ -953,7 +953,7 @@ async def compare_stream(
                 ),
             )
 
-        print(f"Anonymous user - IP: {client_ip} - Credits: {credits_remaining}/{credits_allocated}")
+        print(f"Unregistered user - IP: {client_ip} - Credits: {credits_remaining}/{credits_allocated}")
     # --- END CREDIT-BASED RATE LIMITING ---
 
     # Track start time for processing metrics
@@ -1546,7 +1546,7 @@ async def compare_stream(
                             credit_db.refresh(credit_user)
                             credits_remaining = get_user_credits(user_id, credit_db)
                     else:
-                        # Deduct credits for anonymous user
+                        # Deduct credits for unregistered user
                         ip_identifier = f"ip:{client_ip}"
                         deduct_anonymous_credits(ip_identifier, total_credits_used, user_timezone)
                         # Get updated IP credit balance (no db arg - read from memory only)
@@ -1586,7 +1586,7 @@ async def compare_stream(
                     credit_db.close()
             else:
                 # No successful models - no credits deducted
-                # Even if no credits were deducted, refresh credits_remaining for anonymous users
+                # Even if no credits were deducted, refresh credits_remaining for unregistered users
                 # (in case of any other state changes, though this shouldn't normally happen)
                 if not user_id:
                     ip_identifier = f"ip:{client_ip}"
@@ -1603,7 +1603,7 @@ async def compare_stream(
                 # Extended tier usage tracking removed - no longer needed
 
             # Final refresh of credits_remaining right before building metadata to ensure accuracy
-            # This is especially important for anonymous users where credits are stored in memory
+            # This is especially important for unregistered users where credits are stored in memory
             if not user_id and successful_models > 0:
                 ip_identifier = f"ip:{client_ip}"
                 _, ip_credits_remaining, _ = check_anonymous_credits(ip_identifier, Decimal(0), user_timezone)
@@ -2157,10 +2157,10 @@ async def get_credit_balance(
     Get current credit balance and usage statistics.
 
     Returns credit balance, usage, and reset information for the current user.
-    For anonymous users, returns daily credit balance.
+    For unregistered users, returns daily credit balance.
 
     Args:
-        fingerprint: Optional browser fingerprint for anonymous users (to check both IP and fingerprint)
+        fingerprint: Optional browser fingerprint for unregistered users (to check both IP and fingerprint)
     """
     if current_user:
         # Authenticated user
@@ -2184,7 +2184,7 @@ async def get_credit_balance(
             "subscription_tier": stats["subscription_tier"],
         }
     else:
-        # Anonymous user - calculate credits from database (persists across server restarts)
+        # Unregistered user - calculate credits from database (persists across server restarts)
         client_ip = get_client_ip(request) if request else "unknown"
         credits_allocated = DAILY_CREDIT_LIMITS.get("unregistered", 50)
 

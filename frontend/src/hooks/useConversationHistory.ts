@@ -2,7 +2,7 @@
  * Custom hook for managing conversation history
  *
  * Handles loading, saving, and deleting conversation history for both
- * authenticated and anonymous users. Ensures immediate UI updates when
+ * authenticated and unregistered users. Ensures immediate UI updates when
  * conversations are created or deleted.
  */
 
@@ -82,7 +82,7 @@ export function useConversationHistory({
     return limits[tier] || 2
   }, [isAuthenticated, user])
 
-  // Load conversation history from localStorage (anonymous users)
+  // Load conversation history from localStorage (unregistered users)
   const loadHistoryFromLocalStorage = useCallback((): ConversationSummary[] => {
     try {
       const historyJson = localStorage.getItem('compareintel_conversation_history')
@@ -98,7 +98,7 @@ export function useConversationHistory({
     }
   }, [])
 
-  // Save conversation to localStorage (anonymous users)
+  // Save conversation to localStorage (unregistered users)
   // Returns the conversationId of the saved conversation
   const saveConversationToLocalStorage = useCallback(
     (
@@ -253,7 +253,7 @@ export function useConversationHistory({
           (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
         )
 
-        // For anonymous users, save maximum of 2 conversations
+        // For unregistered users, save maximum of 2 conversations
         // When comparison 3 is made, comparison 1 is deleted and comparison 3 appears at the top
         // Keep only the 2 most recent conversations
         const limited = sorted.slice(0, 2)
@@ -404,7 +404,7 @@ export function useConversationHistory({
     }
   }, [isAuthenticated])
 
-  // Delete conversation from API (authenticated users) or localStorage (anonymous users)
+  // Delete conversation from API (authenticated users) or localStorage (unregistered users)
   const deleteConversation = useCallback(
     async (summary: ConversationSummary, e: React.MouseEvent) => {
       e.stopPropagation() // Prevent triggering the loadConversation onClick
@@ -496,7 +496,7 @@ export function useConversationHistory({
     []
   )
 
-  // Load full conversation from localStorage (anonymous users)
+  // Load full conversation from localStorage (unregistered users)
   const loadConversationFromLocalStorage = useCallback(
     (conversationId: string): ModelConversation[] => {
       try {
@@ -536,7 +536,7 @@ export function useConversationHistory({
       if (isAuthenticated) {
         loadHistoryFromAPI()
       } else {
-        // For anonymous users, localStorage is synchronous - ensure loading state is false
+        // For unregistered users, localStorage is synchronous - ensure loading state is false
         setIsLoadingHistory(false)
         const history = loadHistoryFromLocalStorage()
         setConversationHistory(history)
@@ -555,7 +555,7 @@ export function useConversationHistory({
   const syncHistoryAfterComparison = useCallback(
     async (inputData: string, selectedModels: string[]) => {
       if (!isAuthenticated) {
-        // For anonymous users, saveConversationToLocalStorage already updates state immediately
+        // For unregistered users, saveConversationToLocalStorage already updates state immediately
         return
       }
 

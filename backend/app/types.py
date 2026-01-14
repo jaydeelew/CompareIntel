@@ -49,7 +49,7 @@ class ModelInfoDict(TypedDict, total=False):
 
 
 class AnonymousRateLimitData(TypedDict, total=False):
-    """Storage structure for anonymous user rate limiting."""
+    """Storage structure for unregistered user rate limiting."""
     count: int
     date: str
     first_seen: Optional[datetime]

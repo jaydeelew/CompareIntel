@@ -203,8 +203,8 @@ export const Features: React.FC = () => {
               <li>
                 <strong>Persistent Storage:</strong> Your saved selections are stored locally in
                 your browser and persist across sessions. Registered users' selections are tied to
-                their account, while anonymous users' selections are preserved using a persistent
-                anonymous ID.
+                their account, while unregistered users' selections are preserved using a persistent
+                unregistered ID.
               </li>
             </ul>
           </section>
@@ -264,7 +264,8 @@ export const Features: React.FC = () => {
               </li>
               <li>
                 <strong>Works for Everyone:</strong> Breakout conversations work for both registered
-                users and anonymous users, so everyone can take advantage of this powerful feature.
+                users and unregistered users, so everyone can take advantage of this powerful
+                feature.
               </li>
               <li>
                 <strong>Easy Access:</strong> All your breakout conversations appear in your

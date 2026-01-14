@@ -1,13 +1,13 @@
 """
-Hybrid rate limiting for authenticated and anonymous users.
+Hybrid rate limiting for authenticated and unregistered users.
 
 This module provides rate limiting functionality that works with both
-authenticated users (subscription-based limits) and anonymous users
+authenticated users (subscription-based limits) and unregistered users
 (IP/fingerprint-based limits).
 
 CREDITS-BASED SYSTEM:
 - Authenticated users: Credit-based monthly allocations (paid tiers) or daily limits (free tier)
-- Anonymous users: Credit-based daily limits
+- Unregistered users: Credit-based daily limits
 - All rate limiting uses credits instead of model responses
 """
 
@@ -194,10 +194,10 @@ def deduct_user_credits(
 
 def check_anonymous_credits(identifier: str, required_credits: Decimal, timezone_str: str = "UTC", db: Optional[Session] = None) -> Tuple[bool, int, int]:
     """
-    Check if anonymous user has sufficient credits for a request.
+    Check if unregistered user has sufficient credits for a request.
 
     CREDITS-BASED: Replaces check_anonymous_rate_limit() for credit-based system.
-    Uses in-memory storage to track daily credits for anonymous users.
+    Uses in-memory storage to track daily credits for unregistered users.
     If db session is provided, syncs with database first (persists across restarts).
 
     Args:
@@ -234,7 +234,7 @@ def check_anonymous_credits(identifier: str, required_credits: Decimal, timezone
             today_end_utc = (now_local + timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0).astimezone(timezone.utc)
             
             credits_query = db.query(func.sum(UsageLog.credits_used)).filter(
-                UsageLog.user_id.is_(None),  # Anonymous users only
+                UsageLog.user_id.is_(None),  # Unregistered users only
                 UsageLog.ip_address == ip_address,
                 UsageLog.created_at >= today_start_utc,
                 UsageLog.created_at < today_end_utc,
@@ -256,7 +256,7 @@ def check_anonymous_credits(identifier: str, required_credits: Decimal, timezone
             today_end_utc = (now_local + timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0).astimezone(timezone.utc)
             
             credits_query = db.query(func.sum(UsageLog.credits_used)).filter(
-                UsageLog.user_id.is_(None),  # Anonymous users only
+                UsageLog.user_id.is_(None),  # Unregistered users only
                 UsageLog.browser_fingerprint == fingerprint,
                 UsageLog.created_at >= today_start_utc,
                 UsageLog.created_at < today_end_utc,
@@ -320,10 +320,10 @@ def check_anonymous_credits(identifier: str, required_credits: Decimal, timezone
 
 def deduct_anonymous_credits(identifier: str, credits: Decimal, timezone_str: str = "UTC") -> None:
     """
-    Deduct credits from anonymous user's daily balance.
+    Deduct credits from unregistered user's daily balance.
 
     CREDITS-BASED: Replaces increment_anonymous_usage() for credit-based system.
-    Credits are capped at allocated amount (50 for anonymous) - zero out instead of going negative.
+    Credits are capped at allocated amount (50 for unregistered) - zero out instead of going negative.
 
     Args:
         identifier: Unique identifier (e.g., "ip:192.168.1.1" or "fp:xxx")
@@ -428,7 +428,7 @@ def get_user_usage_stats(user: User) -> FullUsageStatsDict:
 
 def get_anonymous_usage_stats(identifier: str, timezone_str: str = "UTC") -> UsageStatsDict:
     """
-    Get usage statistics for anonymous user.
+    Get usage statistics for unregistered user.
 
     CREDITS-BASED: Returns credit-based statistics.
     Legacy model-response fields maintained for backward compatibility in API responses.

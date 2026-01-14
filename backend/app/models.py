@@ -175,7 +175,7 @@ class UsageLog(Base):
     __tablename__ = "usage_logs"
 
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)  # NULL for anonymous users
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)  # NULL for unregistered users
 
     # Request details
     ip_address = Column(String(45))  # IPv4 or IPv6
@@ -356,7 +356,7 @@ class AppSettings(Base):
     id = Column(Integer, primary_key=True, default=1)
 
     # Mock mode settings
-    anonymous_mock_mode_enabled = Column(Boolean, default=False)  # Enable mock mode for all anonymous users
+    anonymous_mock_mode_enabled = Column(Boolean, default=False)  # Enable mock mode for all unregistered users
 
     # Web search provider settings
     active_search_provider = Column(String(50), default=None)  # e.g., "brave", "tavily"

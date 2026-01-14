@@ -5,7 +5,7 @@ interface MockModeBannerProps {
 
 /**
  * MockModeBanner - Displays a banner when mock mode is active
- * Shows different messages for authenticated users vs anonymous users
+ * Shows different messages for authenticated users vs unregistered users
  */
 export function MockModeBanner({ isAnonymous, isDev = false }: MockModeBannerProps) {
   return (

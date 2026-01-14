@@ -102,7 +102,7 @@ describe('useRateLimitStatus', () => {
     })
   })
 
-  describe('anonymous users', () => {
+  describe('unregistered users', () => {
     it('should fetch rate limit status with fingerprint', async () => {
       const mockStatus = createMockRateLimitStatus({
         daily_usage: 3,

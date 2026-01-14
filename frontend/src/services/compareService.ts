@@ -41,7 +41,7 @@ export interface RateLimitStatus {
   monthly_overage_count: number
   reset_time: string
   user_type: 'authenticated' | 'anonymous'
-  // Optional fields for anonymous users
+  // Optional fields for unregistered users
   fingerprint_usage?: number
   fingerprint_remaining?: number
   ip_usage?: number
@@ -197,7 +197,7 @@ export async function processStreamEvents(
  * Uses short-term caching (30 seconds) to prevent duplicate requests
  * while still keeping data relatively fresh.
  *
- * @param fingerprint - Optional browser fingerprint for anonymous users
+ * @param fingerprint - Optional browser fingerprint for unregistered users
  * @returns Promise resolving to rate limit status
  * @throws {ApiError} If the request fails
  */
@@ -253,7 +253,7 @@ export async function getModelStats(): Promise<ModelStats> {
 /**
  * Reset rate limit (development only)
  *
- * @param fingerprint - Optional browser fingerprint for anonymous users
+ * @param fingerprint - Optional browser fingerprint for unregistered users
  * @returns Promise resolving to success status
  * @throws {ApiError} If the request fails
  */

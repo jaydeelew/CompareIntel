@@ -85,7 +85,7 @@ const faqData = [
         </ul>
         <p>
           You can select any combination of available models up to your tier's limit. Free and
-          anonymous users have access to a selection of free-tier models, while paid tiers unlock
+          unregistered users have access to a selection of free-tier models, while paid tiers unlock
           access to all premium AI models. This tiered approach ensures everyone can use
           CompareIntel while providing clear upgrade paths for users who need to compare more models
           simultaneously or access premium models.
@@ -263,7 +263,7 @@ const faqData = [
             Easily identify breakout conversations in your history—they appear with a special badge
             (↗)
           </li>
-          <li>Available for both registered and anonymous users</li>
+          <li>Available for both registered and unregistered users</li>
         </ul>
         <p>
           <strong>Example:</strong> You compare GPT-4, Claude, and Gemini on a coding problem. GPT-4
@@ -461,7 +461,7 @@ const faqData = [
           </li>
         </ul>
         <p>
-          <strong>Free tiers:</strong> Anonymous users receive 50 credits per day, and free
+          <strong>Free tiers:</strong> Unregistered users receive 50 credits per day, and free
           registered users receive 100 credits per day. Credits reset daily at midnight.
         </p>
         <p>
@@ -542,10 +542,10 @@ const faqData = [
           <li>You can rename or delete saved selections as your needs change</li>
         </ul>
         <p>
-          <strong>Limits by tier:</strong> Anonymous users can save up to 2 selections, free users
-          can save 3, and paid tiers can save up to 20 selections (Pro+). This feature works great
-          for different use cases—save one selection for coding tasks, another for creative writing,
-          and another for data analysis.
+          <strong>Limits by tier:</strong> Unregistered users can save up to 2 selections, free
+          users can save 3, and paid tiers can save up to 20 selections (Pro+). This feature works
+          great for different use cases—save one selection for coding tasks, another for creative
+          writing, and another for data analysis.
         </p>
       </>
     ),
@@ -583,7 +583,7 @@ const faqData = [
           When you reach your limit, the oldest conversations are automatically removed to make room
           for new ones. You can also manually delete conversations you no longer need. For
           registered users, conversations are stored in the cloud and accessible from any device.
-          Anonymous users' conversations are stored locally in their browser.
+          Unregistered users' conversations are stored locally in their browser.
         </p>
       </>
     ),
@@ -635,8 +635,8 @@ const faqData = [
           <li>
             <strong>Anonymous (Unregistered) and Free:</strong> Up to 3 models per comparison. This
             tier is perfect for trying out CompareIntel and comparing a few models side-by-side.
-            Anonymous users get 50 credits per day, while free registered users get 100 credits per
-            day.
+            Unregistered users get 50 credits per day, while free registered users get 100 credits
+            per day.
           </li>
           <li>
             <strong>Starter ($9.95/month) and Starter+ ($19.95/month):</strong> Up to 6 models per
@@ -736,7 +736,7 @@ const faqData = [
           higher costs.
         </p>
         <p>
-          <strong>Free and Anonymous tiers:</strong> Access to a selection of free-tier models,
+          <strong>Free and Unregistered tiers:</strong> Access to a selection of free-tier models,
           which are still powerful and capable for most use cases.
         </p>
         <p>
@@ -750,7 +750,7 @@ const faqData = [
   },
   {
     id: 'browser-fingerprinting',
-    question: 'How does CompareIntel track usage for anonymous users?',
+    question: 'How does CompareIntel track usage for unregistered users?',
     answer: (
       <p>
         For anonymous (unregistered) users, CompareIntel uses browser fingerprinting to track usage

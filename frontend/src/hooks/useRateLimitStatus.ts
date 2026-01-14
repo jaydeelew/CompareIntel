@@ -2,7 +2,7 @@
  * Custom hook for managing rate limit status
  *
  * Fetches and tracks rate limit status for both authenticated
- * and anonymous users. Includes usage counts and tier limits.
+ * and unregistered users. Includes usage counts and tier limits.
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react'
@@ -39,7 +39,7 @@ export function useRateLimitStatus({
       setRateLimitStatus(status)
 
       // Update usage counts from backend response to keep them in sync
-      // For anonymous users, backend returns 'fingerprint_usage' or 'ip_usage'
+      // For unregistered users, backend returns 'fingerprint_usage' or 'ip_usage'
       // For authenticated users, backend returns 'daily_usage'
       if (!isAuthenticated) {
         const latestCount = status.fingerprint_usage || status.ip_usage || status.daily_usage || 0
@@ -66,14 +66,14 @@ export function useRateLimitStatus({
     }
   }, [isAuthenticated, browserFingerprint])
 
-  // Load usage counts from localStorage for anonymous users
+  // Load usage counts from localStorage for unregistered users
   // Reset usage counts to 0 when user becomes authenticated
   useEffect(() => {
     if (isAuthenticated) {
       // Clear usage counts for authenticated users - they use user.credits_used_this_period instead
       setUsageCount(0)
     } else {
-      // Only load from localStorage for anonymous users
+      // Only load from localStorage for unregistered users
       const savedUsage = localStorage.getItem('compareintel_usage')
 
       if (savedUsage) {

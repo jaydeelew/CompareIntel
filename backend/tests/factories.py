@@ -363,7 +363,7 @@ def create_usage_log(
     
     Args:
         db: Database session
-        user: User instance (None for anonymous users)
+        user: User instance (None for unregistered users)
         ip_address: IP address (generated if not provided)
         browser_fingerprint: Browser fingerprint hash (generated if not provided)
         models_used: List of model IDs used (default: ["openai/gpt-4"])
@@ -626,7 +626,7 @@ def create_app_settings(
     
     Args:
         db: Database session
-        anonymous_mock_mode_enabled: Enable mock mode for anonymous users (default: False)
+        anonymous_mock_mode_enabled: Enable mock mode for unregistered users (default: False)
         active_search_provider: Active search provider name (default: None)
         
     Returns:

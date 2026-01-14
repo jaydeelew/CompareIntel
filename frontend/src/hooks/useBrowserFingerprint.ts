@@ -1,7 +1,7 @@
 /**
  * Custom hook for managing browser fingerprint
  *
- * Generates and caches a browser fingerprint for anonymous user tracking
+ * Generates and caches a browser fingerprint for unregistered user tracking
  * and rate limiting purposes.
  */
 

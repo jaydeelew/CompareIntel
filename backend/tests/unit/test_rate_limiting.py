@@ -3,7 +3,7 @@ Unit tests for rate limiting functionality.
 
 Tests cover:
 - Credit-based rate limiting for different subscription tiers
-- Anonymous user credit-based rate limiting
+- Unregistered user credit-based rate limiting
 - Credit deduction and checking
 """
 import pytest
@@ -92,10 +92,10 @@ class TestUserCreditLimiting:
 
 
 class TestAnonymousCreditLimiting:
-    """Tests for anonymous user credit-based rate limiting."""
+    """Tests for unregistered user credit-based rate limiting."""
     
     def test_anonymous_credit_check(self, db_session):
-        """Test credit checking for anonymous users."""
+        """Test credit checking for unregistered users."""
         identifier = "ip:192.168.1.1"
         required_credits = Decimal("5")
         is_allowed, credits_remaining, credits_allocated = check_anonymous_credits(
@@ -124,7 +124,7 @@ class TestAnonymousCreditLimiting:
         assert credits_remaining < required_credits
     
     def test_deduct_anonymous_credits(self):
-        """Test deducting anonymous user credits."""
+        """Test deducting unregistered user credits."""
         identifier = "ip:192.168.1.3"
         from app.rate_limiting import anonymous_rate_limit_storage
         

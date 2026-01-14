@@ -46,7 +46,7 @@ deduct_credits(user_id: int, credits: Decimal, usage_log_id: Optional[int], db: 
 # Allocate monthly credits for paid tier
 allocate_monthly_credits(user_id: int, tier: str, db: Session) -> None
 
-# Reset daily credits for free/anonymous tier
+# Reset daily credits for free/unregistered tier
 reset_daily_credits(user_id: int, tier: str, db: Session) -> None
 
 # Get credit usage statistics
@@ -69,10 +69,10 @@ check_user_credits(user: User, required_credits: Decimal, db: Session) -> Tuple[
 # Deduct authenticated user credits
 deduct_user_credits(user: User, credits: Decimal, usage_log_id: Optional[int], db: Session) -> None
 
-# Check anonymous user credits
+# Check unregistered user credits
 check_anonymous_credits(ip_identifier: str, required_credits: Decimal) -> Tuple[bool, int, int]
 
-# Deduct anonymous user credits
+# Deduct unregistered user credits
 deduct_anonymous_credits(ip_identifier: str, credits: Decimal) -> None
 ```
 
@@ -256,13 +256,13 @@ created_at: DateTime          # Transaction timestamp
 
 ## 🔐 Model Access Rules
 
-### Anonymous Tier
-- **Access:** Only `ANONYMOUS_TIER_MODELS` (budget models)
+### Unregistered Tier
+- **Access:** Only `UNREGISTERED_TIER_MODELS` (budget models)
 - **Location:** `backend/app/model_runner.py`
 - **Validation:** Backend returns 403 Forbidden for restricted models
 
 ### Free Tier
-- **Access:** `FREE_TIER_MODELS` (includes anonymous + mid-level models)
+- **Access:** `FREE_TIER_MODELS` (includes unregistered + mid-level models)
 - **Location:** `backend/app/model_runner.py`
 - **Validation:** Backend returns 403 Forbidden for restricted models
 
@@ -326,7 +326,7 @@ Same structure as backend constants, plus helper functions:
 
 ## 🔄 Credit Reset Logic
 
-### Free/Anonymous Tiers
+### Free/Unregistered Tiers
 - **Reset:** Daily at midnight UTC
 - **Function:** `reset_daily_credits()`
 - **Trigger:** Automatic via `check_and_reset_credits_if_needed()`
@@ -343,7 +343,7 @@ Same structure as backend constants, plus helper functions:
 ### Adding a New Model
 1. Add model to `MODELS_BY_PROVIDER` in `model_runner.py`
 2. Classify model:
-   - If cost < $0.50/M tokens → Add to `ANONYMOUS_TIER_MODELS`
+   - If cost < $0.50/M tokens → Add to `UNREGISTERED_TIER_MODELS`
    - If cost < $1/M tokens → Add to `FREE_TIER_MODELS`
    - If cost >= $1/M tokens → Paid-only (no action needed)
 
@@ -371,7 +371,7 @@ Same structure as backend constants, plus helper functions:
 - Check timezone handling (should use UTC)
 
 ### Model Access Issues
-- Verify model is in correct tier set (`FREE_TIER_MODELS` or `ANONYMOUS_TIER_MODELS`)
+- Verify model is in correct tier set (`FREE_TIER_MODELS` or `UNREGISTERED_TIER_MODELS`)
 - Check `is_model_available_for_tier()` function
 - Verify tier name matches exactly (case-sensitive)
 

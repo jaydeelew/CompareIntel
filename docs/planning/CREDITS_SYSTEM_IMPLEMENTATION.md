@@ -63,8 +63,8 @@ Effective tokens = input_tokens + (output_tokens × 2.5)
 
 #### 1. Model Classification System ✅
 - **Location:** `backend/app/model_runner.py`
-- `ANONYMOUS_TIER_MODELS` set (budget models for unregistered users)
-- `FREE_TIER_MODELS` set (includes anonymous + mid-level models for registered free users)
+- `UNREGISTERED_TIER_MODELS` set (budget models for unregistered users)
+- `FREE_TIER_MODELS` set (includes unregistered + mid-level models for registered free users)
 - `is_model_available_for_tier()` function
 - `filter_models_by_tier()` function
 - `/models` endpoint filters by tier
@@ -125,8 +125,8 @@ Effective tokens = input_tokens + (output_tokens × 2.5)
 - **Location:** `backend/app/rate_limiting.py`
 - `check_user_credits()` - Credit-based validation for authenticated users
 - `deduct_user_credits()` - Credit deduction for authenticated users
-- `check_anonymous_credits()` - Credit-based validation for anonymous users
-- `deduct_anonymous_credits()` - Credit deduction for anonymous users
+- `check_anonymous_credits()` - Credit-based validation for unregistered users
+- `deduct_anonymous_credits()` - Credit deduction for unregistered users
 - Updated `get_user_usage_stats()` - Includes credit fields
 - Updated `get_anonymous_usage_stats()` - Includes credit fields
 - Legacy functions maintained for backward compatibility
@@ -227,15 +227,15 @@ Effective tokens = input_tokens + (output_tokens × 2.5)
 
 ### Model Access Restrictions
 
-- **Anonymous/Free Tiers:** Only free-tier models (budget/efficient models)
+- **Unregistered/Free Tiers:** Only free-tier models (budget/efficient models)
 - **Paid Tiers:** All models available (no restrictions)
-- **Classification:** Models classified in `model_runner.py` via `FREE_TIER_MODELS` and `ANONYMOUS_TIER_MODELS` sets
+- **Classification:** Models classified in `model_runner.py` via `FREE_TIER_MODELS` and `UNREGISTERED_TIER_MODELS` sets
 - **Validation:** Backend validates model access in `/compare` and `/compare-stream` endpoints
 - **Error Handling:** Returns 403 Forbidden with upgrade message for restricted models
 
 ### Credit Reset Logic
 
-- **Free/Anonymous Tiers:** Daily reset at midnight UTC
+- **Free/Unregistered Tiers:** Daily reset at midnight UTC
 - **Paid Tiers:** Monthly reset based on `billing_period_start`
 - **Auto-Reset:** `check_and_reset_credits_if_needed()` automatically resets credits when period expires
 - **Allocation:** Credits automatically allocated when user tier changes or period resets
@@ -251,11 +251,11 @@ Effective tokens = input_tokens + (output_tokens × 2.5)
 
 ## 📝 Notes
 
-1. **Model Classification:** When adding new models, classify them in `FREE_TIER_MODELS` or `ANONYMOUS_TIER_MODELS` based on OpenRouter pricing. Premium models (>$1/M tokens) remain paid-only.
+1. **Model Classification:** When adding new models, classify them in `FREE_TIER_MODELS` or `UNREGISTERED_TIER_MODELS` based on OpenRouter pricing. Premium models (>$1/M tokens) remain paid-only.
 
 2. **Credit Allocations:** Current allocations are conservative (100% profit margin). Monitor usage and adjust if needed.
 
-3. **Free Tier Restrictions:** Free/anonymous users can only access free-tier models. This creates clear upgrade incentive.
+3. **Free Tier Restrictions:** Free/unregistered users can only access free-tier models. This creates clear upgrade incentive.
 
 4. **Paid Tiers:** All paid tiers (Starter, Starter+, Pro, Pro+) have access to ALL models - no restrictions.
 

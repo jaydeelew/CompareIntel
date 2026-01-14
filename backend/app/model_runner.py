@@ -50,13 +50,13 @@ OPENROUTER_API_KEY = settings.openrouter_api_key
 # List of model IDs available to unregistered users
 # Classification criteria: Models costing < $0.50 per million tokens (input+output average)
 # Generally includes: models with ":free" suffix, nano/mini versions, budget options
-ANONYMOUS_TIER_MODELS = {
+UNREGISTERED_TIER_MODELS = {
     # Anthropic - OVERRIDING PRICE CLASSIFICATION
     "anthropic/claude-3.5-haiku",
     # Cohere - OVERRIDING PRICE CLASSIFICATION
     "cohere/command-r7b-12-2024",
     # DeepSeek - Very affordable models (~$0.14-$0.55/M avg)
-    "deepseek/deepseek-chat-v3.1",  # ~$0.27 input, $1.10 output = ~$0.69/M avg - borderline, keep in anon
+    "deepseek/deepseek-chat-v3.1",  # ~$0.27 input, $1.10 output = ~$0.69/M avg - borderline, keep in unregistered
     "deepseek/deepseek-v3.2-exp",  # Similar pricing
     # Meta - Free/open models (~$0.12-$0.30/M)    # Microsoft - Efficient models (~$0.07-$0.14/M)
     "microsoft/phi-4",  # ~$0.07 input, $0.14 output = ~$0.11/M avg
@@ -73,10 +73,10 @@ ANONYMOUS_TIER_MODELS = {
 }
 
 # List of model IDs available to free (registered) users
-# Includes all anonymous tier models PLUS mid-level models as an incentive to register
+# Includes all unregistered tier models PLUS mid-level models as an incentive to register
 # Classification criteria: Models costing $0.50 - $3.00 per million tokens (input+output average)
 # Generally includes: small/medium models, "plus" variants, efficient versions
-FREE_TIER_MODELS = ANONYMOUS_TIER_MODELS.union(
+FREE_TIER_MODELS = UNREGISTERED_TIER_MODELS.union(
     {
         # DeepSeek - Reasoning model (~$0.55 input, $2.19 output = ~$1.37/M avg)
         "deepseek/deepseek-r1",
@@ -131,7 +131,7 @@ def is_model_available_for_tier(model_id: str, tier: str) -> bool:
 
     # Unregistered tier only has access to unregistered-tier models (most basic/budget)
     if tier == "unregistered":
-        return model_id in ANONYMOUS_TIER_MODELS
+        return model_id in UNREGISTERED_TIER_MODELS
 
     # Free tier (registered users) has access to free-tier models (unregistered + mid-level)
     if tier == "free":
@@ -166,7 +166,7 @@ def filter_models_by_tier(models: List[Dict[str, Any]], tier: str) -> List[Dict[
         model_with_access = model.copy()
 
         # Set tier_access based on model classification
-        if model_id in ANONYMOUS_TIER_MODELS:
+        if model_id in UNREGISTERED_TIER_MODELS:
             model_with_access["tier_access"] = "unregistered"
         elif model_id in FREE_TIER_MODELS:
             model_with_access["tier_access"] = "free"

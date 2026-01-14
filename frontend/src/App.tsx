@@ -134,7 +134,7 @@ function AppContent() {
   } = modelSelectionHook
 
   // Saved model selections hook for storing/loading named model selection groups
-  // Pass user ID to store selections per user (registered users use their ID, anonymous users get a generated ID)
+  // Pass user ID to store selections per user (registered users use their ID, unregistered users get a generated ID)
   // Pass subscription tier to enforce tier-based limits on saved selections
   const savedSelectionsHook = useSavedModelSelections(
     user?.id,
@@ -1028,10 +1028,10 @@ function AppContent() {
     }
   }, [])
 
-  // Fetch anonymous mock mode setting for anonymous users (development only)
+  // Fetch anonymous mock mode setting for unregistered users (development only)
   useEffect(() => {
     const fetchAnonymousMockModeSetting = async () => {
-      // Only fetch for anonymous users in development mode
+      // Only fetch for unregistered users in development mode
       // Also wait for auth to finish loading to prevent race conditions
       if (isAuthenticated || !import.meta.env.DEV || authLoading) {
         // Reset anonymous mock mode when authenticated or while loading
@@ -1812,7 +1812,7 @@ function AppContent() {
           // Refresh user data to show updated usage from backend
           await refreshUser()
         } else {
-          // Anonymous user: clear localStorage and reset UI state
+          // Unregistered user: clear localStorage and reset UI state
           // Reset usage counts
           setUsageCount(0)
           localStorage.removeItem('compareintel_usage')
@@ -1871,7 +1871,7 @@ function AppContent() {
   // - deleteConversation
   // These functions have been migrated to the hook and are destructured from conversationHistoryHook
 
-  // Load full conversation from localStorage (anonymous users)
+  // Load full conversation from localStorage (unregistered users)
   const loadConversationFromLocalStorage = useCallback(
     (
       id: string
@@ -1890,7 +1890,7 @@ function AppContent() {
         if (stored) {
           const parsed = JSON.parse(stored)
 
-          // Calculate already_broken_out_models for anonymous users
+          // Calculate already_broken_out_models for unregistered users
           // Only check if this is a comparison (not a breakout itself)
           const already_broken_out_models: string[] = []
           if (parsed.conversation_type !== 'breakout') {
@@ -2297,7 +2297,7 @@ function AppContent() {
   // Listen for anonymous credits reset event from AdminPanel and refresh credit display
   useEffect(() => {
     const handleAnonymousCreditsReset = async () => {
-      // Refresh credit balance for anonymous users (history is not affected)
+      // Refresh credit balance for unregistered users (history is not affected)
       if (!isAuthenticated) {
         // Refresh credit balance to reflect the reset
         if (browserFingerprint) {
@@ -2554,7 +2554,7 @@ function AppContent() {
       // Mark this conversation ID as being processed to prevent duplicate requests
       processedConversationIdsRef.current.add(currentVisibleComparisonId)
 
-      // For anonymous users, reload from localStorage and estimate tokens if missing
+      // For unregistered users, reload from localStorage and estimate tokens if missing
       const timeoutId = setTimeout(() => {
         try {
           const conversationData = loadConversationFromLocalStorage(currentVisibleComparisonId)
@@ -2930,7 +2930,7 @@ function AppContent() {
       // Debounce the refresh to avoid too many API calls when user is rapidly selecting models
       const timeoutId = setTimeout(() => {
         if (!isAuthenticated && browserFingerprint) {
-          // For anonymous users, refresh rate limit status (which updates usageCount)
+          // For unregistered users, refresh rate limit status (which updates usageCount)
           fetchRateLimitStatus()
         } else if (isAuthenticated) {
           // For authenticated users, refresh user data (which updates credits)
@@ -3456,7 +3456,7 @@ function AppContent() {
       const fingerprint = await generateBrowserFingerprint()
       setBrowserFingerprint(fingerprint)
 
-      // Sync usage count with backend (only for anonymous users)
+      // Sync usage count with backend (only for unregistered users)
       try {
         if (isAuthenticated && user) {
           // For authenticated users, use credits instead of daily_usage_count
@@ -3673,7 +3673,7 @@ function AppContent() {
     prevUserIdRef.current = currentUserId
   }, [user?.id, setError])
 
-  // Handle authentication state changes (logout and sign-in from anonymous)
+  // Handle authentication state changes (logout and sign-in from unregistered)
   useEffect(() => {
     // Only process transitions if we have a previous state (not initial mount)
     if (prevIsAuthenticatedRef.current === null) {
@@ -3682,13 +3682,13 @@ function AppContent() {
       return
     }
 
-    const wasAnonymous = prevIsAuthenticatedRef.current === false
+    const wasUnregistered = prevIsAuthenticatedRef.current === false
     const isNowAuthenticated = isAuthenticated === true
     const wasAuthenticated = prevIsAuthenticatedRef.current === true
-    const isNowAnonymous = isAuthenticated === false
+    const isNowUnregistered = isAuthenticated === false
 
-    // Clear all state when signing in from anonymous mode
-    if (wasAnonymous && isNowAuthenticated) {
+    // Clear all state when signing in from unregistered mode
+    if (wasUnregistered && isNowAuthenticated) {
       // Clear all prompts, model choices, results, and related state
       setInput('')
       setResponse(null)
@@ -3706,7 +3706,7 @@ function AppContent() {
       setIsModelsHidden(false)
       setIsScrollLocked(false)
       setOpenDropdowns(new Set())
-      // Clear credit state from anonymous session - authenticated users have separate credit tracking
+      // Clear credit state from unregistered session - authenticated users have separate credit tracking
       setCreditBalance(null)
       setAnonymousCreditsRemaining(null)
       // Clear any ongoing requests
@@ -3720,7 +3720,7 @@ function AppContent() {
     }
 
     // Reset page state when user logs out
-    if (wasAuthenticated && isNowAnonymous) {
+    if (wasAuthenticated && isNowUnregistered) {
       // Reset all state to default
       setInput('')
       setResponse(null)
@@ -3731,7 +3731,7 @@ function AppContent() {
       setIsFollowUpMode(false)
       // Clear currently visible comparison ID on logout so saved comparisons appear in history
       setCurrentVisibleComparisonId(null)
-      // Clear credit state from authenticated session - anonymous users have separate credit tracking
+      // Clear credit state from authenticated session - unregistered users have separate credit tracking
       setCreditBalance(null)
       setAnonymousCreditsRemaining(null)
       // Don't reset selectedModels or usage count - let them keep their selections
@@ -4324,7 +4324,7 @@ function AppContent() {
           output_tokens: msg.output_tokens,
         }))
       } else {
-        // Anonymous users: create breakout in localStorage
+        // Unregistered users: create breakout in localStorage
         // Load the parent conversation
         const parentData = loadConversationFromLocalStorage(conversationId)
         if (!parentData) {
@@ -5232,7 +5232,7 @@ function AppContent() {
                               )
                             )
                         } else {
-                          // For anonymous users, ONLY refresh if we haven't already received valid credits from 'complete' event
+                          // For unregistered users, ONLY refresh if we haven't already received valid credits from 'complete' event
                           // The 'complete' event provides the most accurate credits_remaining value calculated right after deduction
                           // This fallback refresh is only needed if the stream was aborted before 'complete' event arrived
                           if (
@@ -5270,7 +5270,7 @@ function AppContent() {
                     streamingMetadata?.credits_used !== undefined
                   ) {
                     if (isAuthenticated) {
-                      // Use credits_remaining from metadata for immediate update (like anonymous users)
+                      // Use credits_remaining from metadata for immediate update (like unregistered users)
                       if (streamingMetadata.credits_remaining !== undefined) {
                         // Update creditBalance immediately with metadata value
                         if (creditBalance) {
@@ -5359,11 +5359,11 @@ function AppContent() {
                           console.error('Failed to refresh user credit balance:', error)
                         )
                     } else {
-                      // For anonymous users, refresh credit balance from API
+                      // For unregistered users, refresh credit balance from API
                       // Use credits_remaining from metadata for immediate update (most accurate - calculated right after deduction)
                       if (streamingMetadata.credits_remaining !== undefined) {
                         const metadataCreditsRemaining = streamingMetadata.credits_remaining
-                        // Update anonymousCreditsRemaining state immediately - this is the primary source for anonymous users
+                        // Update anonymousCreditsRemaining state immediately - this is the primary source for unregistered users
                         setAnonymousCreditsRemaining(metadataCreditsRemaining)
 
                         // Update creditBalance immediately with metadata value to keep them in sync
@@ -5832,7 +5832,7 @@ function AppContent() {
           reader.releaseLock()
 
           // Save conversation to history AFTER stream completes
-          // For anonymous users: save to localStorage
+          // For unregistered users: save to localStorage
           // For registered users: reload from API (backend already saved it)
           if (!isAuthenticated && !isFollowUpMode) {
             // Use a small delay to ensure state is fully updated
@@ -5924,7 +5924,7 @@ function AppContent() {
               }
             }, 500) // Initial delay - syncHistoryAfterComparison will retry if needed
           } else if (!isAuthenticated && isFollowUpMode) {
-            // Save follow-up updates after stream completes (anonymous users)
+            // Save follow-up updates after stream completes (unregistered users)
             setTimeout(() => {
               setConversations(currentConversations => {
                 const conversationsWithMessages = currentConversations.filter(
@@ -6063,7 +6063,7 @@ function AppContent() {
           apiClient.deleteCache(cacheKey)
 
           const data = await getRateLimitStatus(browserFingerprint)
-          // Backend returns 'fingerprint_usage' or 'daily_usage' for anonymous users
+          // Backend returns 'fingerprint_usage' or 'daily_usage' for unregistered users
           const newCount = data.fingerprint_usage || data.daily_usage || 0
           setUsageCount(newCount)
 
@@ -6442,7 +6442,7 @@ function AppContent() {
                 console.error('Failed to refresh credit balance after timeout:', error)
               )
           } else {
-            // For anonymous users, refresh credit balance from API
+            // For unregistered users, refresh credit balance from API
             getCreditBalance(browserFingerprint)
               .then(balance => {
                 setAnonymousCreditsRemaining(balance.credits_remaining)
@@ -6646,16 +6646,16 @@ function AppContent() {
         ? user.monthly_credits_allocated || getCreditAllocation(userTier)
         : getDailyCreditLimit(userTier) || getCreditAllocation(userTier))
 
-    // For anonymous users, prefer anonymousCreditsRemaining if available, then creditBalance
+    // For unregistered users, prefer anonymousCreditsRemaining if available, then creditBalance
     if (!isAuthenticated) {
       if (anonymousCreditsRemaining !== null) {
-        // Use anonymousCreditsRemaining state if available (most up-to-date for anonymous users)
+        // Use anonymousCreditsRemaining state if available (most up-to-date for unregistered users)
         return anonymousCreditsRemaining
       } else if (
         creditBalance?.credits_remaining !== undefined &&
         creditBalance?.subscription_tier === 'unregistered'
       ) {
-        // Only use creditBalance if it's for anonymous users (prevent using authenticated user's balance)
+        // Only use creditBalance if it's for unregistered users (prevent using authenticated user's balance)
         return creditBalance.credits_remaining
       } else {
         // Fallback: calculate from allocated and used
@@ -6702,7 +6702,7 @@ function AppContent() {
       user?.credits_reset_at
 
     // Verify that creditBalance matches current user type before using it
-    // This prevents anonymous user's zero credits from affecting authenticated users
+    // This prevents unregistered user's zero credits from affecting authenticated users
     const creditBalanceMatchesUser = !creditBalance || creditBalance.subscription_tier === userTier
 
     // Only check credits if creditBalance matches current user (or if we're using fallback calculation)

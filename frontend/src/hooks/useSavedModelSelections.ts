@@ -4,9 +4,9 @@
  * Allows users to save, load, and delete named groups of model selections.
  * Persisted to localStorage with tier-based limits on saved selections.
  *
- * Each user (registered or anonymous) has their own independent collection:
+ * Each user (registered or unregistered) has their own independent collection:
  * - Registered users: keyed by their user ID
- * - Anonymous users: keyed by a persistent anonymous ID stored in localStorage
+ * - Unregistered users: keyed by a persistent unregistered ID stored in localStorage
  */
 import { useState, useCallback, useEffect, useMemo } from 'react'
 
@@ -41,8 +41,8 @@ function generateId(): string {
 }
 
 /**
- * Get or create an anonymous user ID
- * This ID persists in localStorage so anonymous users keep their selections
+ * Get or create an unregistered user ID
+ * This ID persists in localStorage so unregistered users keep their selections
  */
 function getAnonymousId(): string {
   try {

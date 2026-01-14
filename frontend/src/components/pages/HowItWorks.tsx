@@ -117,8 +117,8 @@ export const HowItWorks: React.FC = () => {
                   </li>
                 </ul>
                 <p>
-                  Free tier users have access to all anonymous tier models plus additional mid-level
-                  models, giving you a great selection to explore AI capabilities.
+                  Free tier users have access to all unregistered tier models plus additional
+                  mid-level models, giving you a great selection to explore AI capabilities.
                 </p>
 
                 <h4>Premium Models (Coming Soon for Paid Subscriptions)</h4>
@@ -367,7 +367,7 @@ export const HowItWorks: React.FC = () => {
                 </p>
                 <p>
                   <strong>Available for everyone:</strong> Breakout conversations work for both
-                  registered users and anonymous users, so everyone can take advantage of this
+                  registered users and unregistered users, so everyone can take advantage of this
                   feature.
                 </p>
               </div>

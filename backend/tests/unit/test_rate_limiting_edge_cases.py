@@ -4,7 +4,7 @@ Edge case tests for credit-based rate limiting functionality.
 Tests cover:
 - Boundary conditions
 - Reset scenarios
-- Anonymous user edge cases
+- Unregistered user edge cases
 - Concurrent access
 """
 import pytest
@@ -239,10 +239,10 @@ class TestDeductCredits:
 
 
 class TestAnonymousCreditBoundaries:
-    """Tests for anonymous credit boundary conditions."""
+    """Tests for unregistered credit boundary conditions."""
     
     def test_anonymous_at_limit(self, db_session):
-        """Test anonymous user at credit limit."""
+        """Test unregistered user at credit limit."""
         identifier = "ip:192.168.1.1"
         allocated = DAILY_CREDIT_LIMITS.get("anonymous", 50)
         
@@ -257,7 +257,7 @@ class TestAnonymousCreditBoundaries:
         assert credits_allocated == allocated
     
     def test_anonymous_one_below_limit(self, db_session):
-        """Test anonymous user one below limit."""
+        """Test unregistered user one below limit."""
         from app.rate_limiting import anonymous_rate_limit_storage
         from app.models import UsageLog
         
@@ -278,7 +278,7 @@ class TestAnonymousCreditBoundaries:
             anonymous_rate_limit_storage[identifier]["date"] = None
             anonymous_rate_limit_storage[identifier].pop("_admin_reset", None)
         
-        # Initialize anonymous user by checking credits first (this sets up the storage)
+        # Initialize unregistered user by checking credits first (this sets up the storage)
         # Don't pass db to avoid syncing from potentially stale DB data
         check_anonymous_credits(identifier, Decimal("0"), db=None)
         
@@ -301,7 +301,7 @@ class TestAnonymousCreditBoundaries:
         assert credits_allocated == allocated
     
     def test_anonymous_reset_on_new_day(self):
-        """Test anonymous user reset on new day."""
+        """Test unregistered user reset on new day."""
         identifier = "ip:192.168.1.3"
         
         # Set to limit with yesterday's date

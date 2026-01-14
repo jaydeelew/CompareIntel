@@ -14,7 +14,7 @@ export interface CreditBalance {
   credits_allocated: number
   /** Credits used this period (for authenticated users) */
   credits_used_this_period?: number
-  /** Credits used today (for anonymous users) */
+  /** Credits used today (for unregistered users) */
   credits_used_today?: number
   /** Credits remaining */
   credits_remaining: number
@@ -114,7 +114,7 @@ export interface CreditEstimate {
 /**
  * Get current credit balance
  *
- * @param fingerprint - Optional browser fingerprint for anonymous users
+ * @param fingerprint - Optional browser fingerprint for unregistered users
  */
 export async function getCreditBalance(fingerprint?: string): Promise<CreditBalance> {
   // Auto-detect timezone from browser

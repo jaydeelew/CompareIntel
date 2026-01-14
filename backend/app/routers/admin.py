@@ -965,13 +965,13 @@ async def get_app_settings(
     created_at_str = settings.created_at.isoformat() if settings.created_at else None
     updated_at_str = settings.updated_at.isoformat() if settings.updated_at else None
     
-    # Count anonymous users with credits used (development mode only)
-    # These values are only relevant for the anonymous credit reset feature
+    # Count unregistered users with credits used (development mode only)
+    # These values are only relevant for the unregistered credit reset feature
     anonymous_users_with_usage = 0
     anonymous_db_usage_count = 0
     
     if is_development:
-        # Check memory storage for anonymous entries with usage > 0
+        # Check memory storage for unregistered entries with usage > 0
         for key in list(anonymous_rate_limit_storage.keys()):
             if (key.startswith("ip:") or key.startswith("fp:")) and not key.endswith("_extended"):
                 count = anonymous_rate_limit_storage[key].get("count", 0)
@@ -981,7 +981,7 @@ async def get_app_settings(
         # Also check database for anonymous usage logs
         anonymous_db_usage_count = (
             db.query(UsageLog)
-            .filter(UsageLog.user_id.is_(None))  # Anonymous users only
+            .filter(UsageLog.user_id.is_(None))  # Unregistered users only
             .count()
         )
     
@@ -1004,10 +1004,10 @@ async def toggle_anonymous_mock_mode(
     db: Session = Depends(get_db),
 ):
     """
-    Toggle mock mode for anonymous users.
+    Toggle mock mode for unregistered users.
 
-    This is a global setting that affects all anonymous (unregistered) users.
-    When enabled, all anonymous requests will return mock responses instead of
+    This is a global setting that affects all unregistered users.
+    When enabled, all unregistered requests will return mock responses instead of
     calling the OpenRouter API.
 
     Only available in development environment.
@@ -1021,7 +1021,7 @@ async def toggle_anonymous_mock_mode(
     if not is_development:
         raise HTTPException(
             status_code=403,
-            detail="Anonymous mock mode is only available in development environment",
+            detail="Unregistered mock mode is only available in development environment",
         )
 
     from ..cache import invalidate_app_settings_cache
@@ -1051,7 +1051,7 @@ async def toggle_anonymous_mock_mode(
             db=db,
             admin_user=current_user,
             action_type="toggle_anonymous_mock_mode",
-            action_description=f"{'Enabled' if settings.anonymous_mock_mode_enabled else 'Disabled'} anonymous mock mode (dev_mode: {is_development})",
+            action_description=f"{'Enabled' if settings.anonymous_mock_mode_enabled else 'Disabled'} unregistered mock mode (dev_mode: {is_development})",
             target_user_id=None,
             details={
                 "previous_state": previous_state,
@@ -1066,7 +1066,7 @@ async def toggle_anonymous_mock_mode(
 
     return {
         "anonymous_mock_mode_enabled": settings.anonymous_mock_mode_enabled,
-        "message": f"Anonymous mock mode is now {'enabled' if settings.anonymous_mock_mode_enabled else 'disabled'}",
+        "message": f"Unregistered mock mode is now {'enabled' if settings.anonymous_mock_mode_enabled else 'disabled'}",
     }
 
 
@@ -1077,13 +1077,13 @@ async def zero_anonymous_usage(
     db: Session = Depends(get_db),
 ):
     """
-    Reset all anonymous user credits to maximum allocation.
+    Reset all unregistered user credits to maximum allocation.
 
     This resets:
-    - Daily credit usage for all anonymous users (in-memory storage) to 0
-    - ALL UsageLog database entries for anonymous users (to ensure fresh credit tracking)
+    - Daily credit usage for all unregistered users (in-memory storage) to 0
+    - ALL UsageLog database entries for unregistered users (to ensure fresh credit tracking)
 
-    This restores full credits (50/day) for all anonymous users by clearing both
+    This restores full credits (50/day) for all unregistered users by clearing both
     memory and database usage tracking. Comparison history is NOT affected.
 
     Only available in development environment.
@@ -1096,14 +1096,14 @@ async def zero_anonymous_usage(
     if not is_development:
         raise HTTPException(
             status_code=403,
-            detail="Anonymous credit reset is only available in development environment",
+            detail="Unregistered credit reset is only available in development environment",
         )
 
     # Reset all anonymous usage entries to 0 credits
     keys_reset = []
     reset_timestamp = datetime.now(UTC)
     for key in list(anonymous_rate_limit_storage.keys()):
-        # Reset all anonymous user entries
+        # Reset all unregistered user entries
         # Keys are formatted as "ip:xxx", "fp:xxx"
         if key.startswith("ip:") or key.startswith("fp:"):
             # Skip extended keys (no longer used)
@@ -1120,7 +1120,7 @@ async def zero_anonymous_usage(
                 keys_reset.append(key)
                 print(f"[ZERO_USAGE] Reset {key}: count {old_count} -> 0, date={anonymous_rate_limit_storage[key]['date']}, reset_at={reset_timestamp}")
 
-    # Delete ALL UsageLog entries for anonymous users (not just today's)
+    # Delete ALL UsageLog entries for unregistered users (not just today's)
     # This ensures that when memory storage syncs with database, it finds 0 credits used
     # We delete all entries (not just today's) to handle timezone differences:
     # - Entries created in different timezones might fall outside UTC "today"
@@ -1142,14 +1142,14 @@ async def zero_anonymous_usage(
     )
     db.commit()
     
-    print(f"[ZERO_USAGE] Deleted {usage_logs_deleted} UsageLog entries (found {usage_logs_before} total) for ALL anonymous users (not just today, to handle timezone differences)")
+    print(f"[ZERO_USAGE] Deleted {usage_logs_deleted} UsageLog entries (found {usage_logs_before} total) for ALL unregistered users (not just today, to handle timezone differences)")
 
     # Log admin action
     log_admin_action(
         db=db,
         admin_user=current_user,
         action_type="zero_anonymous_usage",
-        action_description=f"Reset anonymous user credits to maximum (reset {len(keys_reset)} memory entries to 0 used, deleted {usage_logs_deleted} usage log entries)",
+        action_description=f"Reset unregistered user credits to maximum (reset {len(keys_reset)} memory entries to 0 used, deleted {usage_logs_deleted} usage log entries)",
         target_user_id=None,
         details={
             "memory_entries_reset": len(keys_reset),
@@ -1237,7 +1237,7 @@ from ..model_runner import (
     MODELS_BY_PROVIDER,
     OPENROUTER_MODELS,
     client,
-    ANONYMOUS_TIER_MODELS,
+    UNREGISTERED_TIER_MODELS,
     FREE_TIER_MODELS,
     refresh_model_token_limits,
 )
@@ -1505,10 +1505,10 @@ def calculate_average_cost_per_million_tokens(model_data: Dict[str, Any]) -> Opt
 
 async def classify_model_by_pricing(model_id: str, model_data: Optional[Dict[str, Any]] = None) -> str:
     """
-    Classify a model into anonymous, free, or paid tier based on OpenRouter pricing.
+    Classify a model into unregistered, free, or paid tier based on OpenRouter pricing.
     
     Classification criteria:
-    - Anonymous tier: Models costing < $0.50 per million tokens (input+output average)
+    - Unregistered tier: Models costing < $0.50 per million tokens (input+output average)
     - Free tier: Models costing $0.50 - $3.00 per million tokens
     - Paid tier: Models costing >= $3.00 per million tokens
     
@@ -1670,10 +1670,10 @@ async def validate_model(
 def get_model_tier(model_id: str) -> int:
     """
     Get the tier classification for a model.
-    Returns: 0 for anonymous-tier, 1 for free-tier, 2 for paid-tier
+    Returns: 0 for unregistered-tier, 1 for free-tier, 2 for paid-tier
     """
-    if model_id in ANONYMOUS_TIER_MODELS:
-        return 0  # anonymous-tier
+    if model_id in UNREGISTERED_TIER_MODELS:
+        return 0  # unregistered-tier
     elif model_id in FREE_TIER_MODELS:
         return 1  # free-tier
     else:
@@ -1953,14 +1953,14 @@ async def add_model(
         
         # Add model to appropriate tier set(s)
         if tier_classification == "unregistered":
-            # Add to ANONYMOUS_TIER_MODELS
+            # Add to UNREGISTERED_TIER_MODELS
             # Pattern must match up to the closing brace, but stop before FREE_TIER_MODELS definition
-            anonymous_pattern = r'(ANONYMOUS_TIER_MODELS\s*=\s*\{)(.*?)(\n\})'
+            anonymous_pattern = r'(UNREGISTERED_TIER_MODELS\s*=\s*\{)(.*?)(\n\})'
             match = re.search(anonymous_pattern, content, re.DOTALL)
             if not match:
                 raise HTTPException(
                     status_code=500,
-                    detail="Could not find ANONYMOUS_TIER_MODELS structure in model_runner.py"
+                    detail="Could not find UNREGISTERED_TIER_MODELS structure in model_runner.py"
                 )
             # Check if model already in set
             if f'"{model_id}"' not in match.group(2):
@@ -1978,8 +1978,8 @@ async def add_model(
                 content = content[:insertion_point] + model_entry + content[insertion_point:]
         elif tier_classification == "free":
             # Add to FREE_TIER_MODELS (which includes anonymous models)
-            # Pattern matches: FREE_TIER_MODELS = ANONYMOUS_TIER_MODELS.union({ ... })
-            free_pattern = r'(FREE_TIER_MODELS\s*=\s*ANONYMOUS_TIER_MODELS\.union\()(\{)(.*?)(\})(\))'
+            # Pattern matches: FREE_TIER_MODELS = UNREGISTERED_TIER_MODELS.union({ ... })
+            free_pattern = r'(FREE_TIER_MODELS\s*=\s*UNREGISTERED_TIER_MODELS\.union\()(\{)(.*?)(\})(\))'
             match = re.search(free_pattern, content, re.DOTALL)
             if match:
                 # Check if model already in set
@@ -2301,17 +2301,17 @@ async def add_model_stream(
             
             # Add model to appropriate tier set(s)
             if tier_classification == "unregistered":
-                # Add to ANONYMOUS_TIER_MODELS
+                # Add to UNREGISTERED_TIER_MODELS
                 # Pattern must match up to the closing brace, explicitly stopping before FREE_TIER_MODELS
-                anonymous_pattern = r'(ANONYMOUS_TIER_MODELS\s*=\s*\{)(.*?)(\n\}\s*\n\s*# List of model IDs available to free)'
+                anonymous_pattern = r'(UNREGISTERED_TIER_MODELS\s*=\s*\{)(.*?)(\n\}\s*\n\s*# List of model IDs available to free)'
                 match = re.search(anonymous_pattern, content, re.DOTALL)
                 if not match:
                     # Fallback to simpler pattern if the above doesn't match
-                    anonymous_pattern = r'(ANONYMOUS_TIER_MODELS\s*=\s*\{)(.*?)(\n\})'
+                    anonymous_pattern = r'(UNREGISTERED_TIER_MODELS\s*=\s*\{)(.*?)(\n\})'
                     match = re.search(anonymous_pattern, content, re.DOTALL)
                 if not match:
                     try:
-                        yield f"data: {json.dumps({'type': 'error', 'message': 'Could not find ANONYMOUS_TIER_MODELS structure in model_runner.py'})}\n\n"
+                        yield f"data: {json.dumps({'type': 'error', 'message': 'Could not find UNREGISTERED_TIER_MODELS structure in model_runner.py'})}\n\n"
                     except (BrokenPipeError, ConnectionResetError, ConnectionAbortedError, OSError,
                             TimeoutError, asyncio.TimeoutError, httpx.ConnectError, httpx.TimeoutException,
                             httpx.NetworkError, httpx.ConnectTimeout, httpx.ReadTimeout):
@@ -2342,8 +2342,8 @@ async def add_model_stream(
                         content = content[:insertion_point] + model_entry + content[insertion_point:]
             elif tier_classification == "free":
                 # Add to FREE_TIER_MODELS (which includes anonymous models)
-                # Pattern matches: FREE_TIER_MODELS = ANONYMOUS_TIER_MODELS.union({ ... })
-                free_pattern = r'(FREE_TIER_MODELS\s*=\s*ANONYMOUS_TIER_MODELS\.union\()(\{)(.*?)(\})(\))'
+                # Pattern matches: FREE_TIER_MODELS = UNREGISTERED_TIER_MODELS.union({ ... })
+                free_pattern = r'(FREE_TIER_MODELS\s*=\s*UNREGISTERED_TIER_MODELS\.union\()(\{)(.*?)(\})(\))'
                 match = re.search(free_pattern, content, re.DOTALL)
                 if match:
                     # Check if model already in set
@@ -2815,9 +2815,9 @@ async def delete_model(
                 detail=f"Failed to remove model {model_id} from model_runner.py. Model entry still present after deletion attempt."
             )
         
-        # Remove model from tier classification sets (ANONYMOUS_TIER_MODELS and FREE_TIER_MODELS)
-        # Remove from ANONYMOUS_TIER_MODELS
-        anonymous_pattern = r'(ANONYMOUS_TIER_MODELS\s*=\s*\{)(.*?)(\s*\})'
+        # Remove model from tier classification sets (UNREGISTERED_TIER_MODELS and FREE_TIER_MODELS)
+        # Remove from UNREGISTERED_TIER_MODELS
+        anonymous_pattern = r'(UNREGISTERED_TIER_MODELS\s*=\s*\{)(.*?)(\s*\})'
         match = re.search(anonymous_pattern, content, re.DOTALL)
         if match:
             anonymous_content = match.group(2)
@@ -2826,8 +2826,8 @@ async def delete_model(
             content = content[:match.start(2)] + anonymous_content + content[match.end(2):]
         
         # Remove from FREE_TIER_MODELS
-        # Pattern matches: FREE_TIER_MODELS = ANONYMOUS_TIER_MODELS.union({ ... })
-        free_pattern = r'(FREE_TIER_MODELS\s*=\s*ANONYMOUS_TIER_MODELS\.union\()(\{)(.*?)(\})(\))'
+        # Pattern matches: FREE_TIER_MODELS = UNREGISTERED_TIER_MODELS.union({ ... })
+        free_pattern = r'(FREE_TIER_MODELS\s*=\s*UNREGISTERED_TIER_MODELS\.union\()(\{)(.*?)(\})(\))'
         match = re.search(free_pattern, content, re.DOTALL)
         if match:
             free_content = match.group(3)  # The content inside the set literal

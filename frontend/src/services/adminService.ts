@@ -82,9 +82,9 @@ export interface AppSettings {
   is_development: boolean
   created_at: string | null
   updated_at: string | null
-  /** Number of anonymous users with credits used (memory storage) */
+  /** Number of unregistered users with credits used (memory storage) */
   anonymous_users_with_usage: number
-  /** Number of anonymous usage log entries in database */
+  /** Number of unregistered usage log entries in database */
   anonymous_db_usage_count: number
 }
 
@@ -348,9 +348,9 @@ export async function toggleAnonymousMockMode(): Promise<AppSettings> {
 }
 
 /**
- * Reset anonymous user credits to maximum allocation
+ * Reset unregistered user credits to maximum allocation
  *
- * Resets all anonymous user credit usage to 0, restoring full credits (50/day).
+ * Resets all unregistered user credit usage to 0, restoring full credits (50/day).
  * Does NOT affect comparison history.
  *
  * @returns Promise resolving to success message

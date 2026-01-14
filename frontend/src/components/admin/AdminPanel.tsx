@@ -2757,7 +2757,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
       {/* Anonymous Settings - Development Only */}
       {appSettings && appSettings.is_development && activeTab === 'users' && (
         <div className="admin-stats" style={{ marginBottom: '2rem' }}>
-          <h2>Anonymous Users (Development Mode Only)</h2>
+          <h2>Unregistered Users (Development Mode Only)</h2>
           <div className="stats-grid">
             <div className="stat-card anonymous-settings-card-wrapper">
               <div className="anonymous-settings-container">
@@ -2778,7 +2778,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                   <button
                     onClick={toggleAnonymousMockMode}
                     className={`mock-mode-btn ${appSettings.anonymous_mock_mode_enabled ? 'enabled' : 'disabled'}`}
-                    title={`Anonymous mock mode is ${appSettings.anonymous_mock_mode_enabled ? 'enabled' : 'disabled'} - ${appSettings.anonymous_mock_mode_enabled ? 'Anonymous users get mock responses' : 'Anonymous users use real API calls'}`}
+                    title={`Unregistered mock mode is ${appSettings.anonymous_mock_mode_enabled ? 'enabled' : 'disabled'} - ${appSettings.anonymous_mock_mode_enabled ? 'Unregistered users get mock responses' : 'Unregistered users use real API calls'}`}
                   >
                     🎭 Anonymous Mock {appSettings.anonymous_mock_mode_enabled ? 'ON' : 'OFF'}
                   </button>
@@ -2792,8 +2792,8 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                     }}
                   >
                     {appSettings.anonymous_mock_mode_enabled
-                      ? 'Anonymous users will receive mock responses'
-                      : 'Anonymous users will use real API calls'}
+                      ? 'Unregistered users will receive mock responses'
+                      : 'Unregistered users will use real API calls'}
                   </p>
                 </div>
 
@@ -2814,7 +2814,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                   <button
                     onClick={zeroAnonymousUsage}
                     className={`mock-mode-btn zero-usage-btn ${creditsReset ? 'credits-reset-green' : ''}`}
-                    title="Reset all anonymous user credits to maximum (50 credits)"
+                    title="Reset all unregistered user credits to maximum (50 credits)"
                   >
                     <svg
                       width="18"
@@ -2842,8 +2842,8 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                     }}
                   >
                     {creditsReset
-                      ? 'All anonymous user credits have been reset to maximum'
-                      : 'Resets all anonymous user credits to 50'}
+                      ? 'All unregistered user credits have been reset to maximum'
+                      : 'Resets all unregistered user credits to 50'}
                   </p>
                 </div>
               </div>

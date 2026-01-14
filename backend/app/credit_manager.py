@@ -139,7 +139,7 @@ def allocate_monthly_credits(user_id: int, tier: str, db: Session) -> None:
     Allocate monthly credits to a user based on their subscription tier.
 
     For paid tiers: Allocates monthly credits and sets billing period.
-    For free/anonymous tiers: Allocates daily credits (handled by reset_daily_credits).
+    For free/unregistered tiers: Allocates daily credits (handled by reset_daily_credits).
 
     Args:
         user_id: User ID
@@ -174,7 +174,7 @@ def allocate_monthly_credits(user_id: int, tier: str, db: Session) -> None:
         db.add(transaction)
         db.commit()
     elif tier in DAILY_CREDIT_LIMITS:
-        # Free/anonymous tiers use daily limits (handled by reset_daily_credits)
+        # Free/unregistered tiers use daily limits (handled by reset_daily_credits)
         credits = DAILY_CREDIT_LIMITS[tier]
         user.monthly_credits_allocated = credits
         user.credits_used_this_period = 0
@@ -265,7 +265,7 @@ def _can_reset_user_credits(user_id: int, db: Session, min_hours_between_resets:
 
 def reset_daily_credits(user_id: int, tier: str, db: Session, force: bool = False) -> None:
     """
-    Reset daily credits for free/anonymous tier users.
+    Reset daily credits for free/unregistered tier users.
 
     Resets credits at midnight in the user's local timezone.
     Includes abuse prevention to prevent multiple resets within a short period.
