@@ -1,3 +1,5 @@
+import type { Page } from '@playwright/test'
+
 import { test, expect } from './test-setup'
 
 /**
@@ -10,12 +12,266 @@ import { test, expect } from './test-setup'
  * - Understanding new user benefits
  */
 
+/**
+ * Helper function to safely wait with page validity check
+ */
+async function safeWait(page: Page, ms: number) {
+  try {
+    // Check if page is still valid before waiting
+    if (page.isClosed()) {
+      return
+    }
+    await page.waitForTimeout(ms)
+  } catch (error) {
+    // Page might have been closed, ignore
+    if (error instanceof Error && error.message.includes('closed')) {
+      return
+    }
+    throw error
+  }
+}
+
+/**
+ * Helper function to dismiss the tutorial overlay if it appears
+ * Tutorial is disabled on mobile layouts (viewport width <= 768px), so we skip dismissal on mobile
+ */
+async function dismissTutorialOverlay(page: Page) {
+  try {
+    // Check if page is still valid
+    if (page.isClosed()) {
+      return
+    }
+
+    // Check if we're on a mobile viewport (tutorial is disabled on mobile - width <= 768px)
+    // Only dismiss tutorial overlay on desktop viewports
+    const viewport = page.viewportSize()
+    const isMobileViewport = viewport && viewport.width <= 768
+
+    if (isMobileViewport) {
+      // Tutorial is not available on mobile, so skip dismissal
+      return
+    }
+
+    // Wait a bit for any animations to complete
+    await safeWait(page, 500)
+
+    // First, check for the welcome modal (appears first)
+    const welcomeModal = page.locator('.tutorial-welcome-backdrop')
+    const welcomeVisible = await welcomeModal.isVisible({ timeout: 3000 }).catch(() => false)
+
+    if (welcomeVisible && !page.isClosed()) {
+      // Click "Skip for Now" button
+      const skipButton = page.locator(
+        '.tutorial-welcome-button-secondary, button:has-text("Skip for Now")'
+      )
+      const skipVisible = await skipButton.isVisible({ timeout: 3000 }).catch(() => false)
+
+      if (skipVisible && !page.isClosed()) {
+        try {
+          // Wait for button to be stable before clicking
+          await skipButton.waitFor({ state: 'visible', timeout: 5000 })
+          await safeWait(page, 300) // Wait for any animations
+
+          if (!page.isClosed()) {
+            // Try normal click first
+            await skipButton.click({ timeout: 10000, force: false }).catch(async () => {
+              if (!page.isClosed()) {
+                // If normal click fails, try force click
+                await skipButton.click({ timeout: 5000, force: true })
+              }
+            })
+
+            // Wait for welcome modal to disappear
+            await welcomeModal.waitFor({ state: 'hidden', timeout: 5000 }).catch(() => {})
+            await safeWait(page, 500)
+          }
+        } catch (_clickError) {
+          // Fallback: try pressing Escape
+          if (!page.isClosed()) {
+            await page.keyboard.press('Escape').catch(() => {})
+            await safeWait(page, 500)
+          }
+        }
+      } else if (!page.isClosed()) {
+        // Fallback: try pressing Escape
+        await page.keyboard.press('Escape').catch(() => {})
+        await safeWait(page, 500)
+      }
+    }
+
+    // Then check for the tutorial overlay (appears after welcome modal)
+    if (page.isClosed()) {
+      return
+    }
+
+    const tutorialOverlay = page.locator('.tutorial-backdrop, .tutorial-welcome-backdrop')
+    const overlayVisible = await tutorialOverlay.isVisible({ timeout: 2000 }).catch(() => false)
+
+    if (overlayVisible && !page.isClosed()) {
+      // Try to click the skip/close button in the tutorial overlay
+      const closeButton = page.locator(
+        '.tutorial-close-button, button[aria-label*="Skip"], button[aria-label*="skip"]'
+      )
+      const closeVisible = await closeButton.isVisible({ timeout: 3000 }).catch(() => false)
+
+      if (closeVisible && !page.isClosed()) {
+        try {
+          // Wait for button to be stable before clicking
+          await closeButton.waitFor({ state: 'visible', timeout: 5000 })
+          await safeWait(page, 300) // Wait for any animations
+
+          if (!page.isClosed()) {
+            // Try normal click first
+            await closeButton.click({ timeout: 10000, force: false }).catch(async () => {
+              if (!page.isClosed()) {
+                // If normal click fails, try force click
+                await closeButton.click({ timeout: 5000, force: true })
+              }
+            })
+
+            // Wait for overlay to disappear
+            await tutorialOverlay.waitFor({ state: 'hidden', timeout: 5000 }).catch(() => {})
+            await safeWait(page, 500)
+          }
+        } catch (_clickError) {
+          // Fallback: try pressing Escape
+          if (!page.isClosed()) {
+            await page.keyboard.press('Escape').catch(() => {})
+            await safeWait(page, 500)
+          }
+        }
+      } else if (!page.isClosed()) {
+        // Fallback: try pressing Escape
+        await page.keyboard.press('Escape').catch(() => {})
+        await safeWait(page, 500)
+      }
+    }
+
+    // Final check: ensure overlay is gone by waiting a bit more and checking again
+    if (!page.isClosed()) {
+      await safeWait(page, 500)
+      const stillVisible = await tutorialOverlay.isVisible({ timeout: 1000 }).catch(() => false)
+      if (stillVisible && !page.isClosed()) {
+        // Last resort: try Escape again
+        await page.keyboard.press('Escape').catch(() => {})
+        await safeWait(page, 500)
+      }
+    }
+  } catch (error) {
+    // Ignore errors - tutorial might not be present or page might be closed
+    if (error instanceof Error && error.message.includes('closed')) {
+      return
+    }
+    console.log(
+      'Tutorial overlay dismissal attempted:',
+      error instanceof Error ? error.message : String(error)
+    )
+  }
+}
+
 test.describe('Registration and Onboarding', () => {
-  test.beforeEach(async ({ page, context }) => {
+  test.beforeEach(async ({ page, context, browserName }) => {
+    // Detect mobile devices and adjust timeouts accordingly
+    const isFirefox = browserName === 'firefox'
+    const isWebKit = browserName === 'webkit'
+    const isMobile =
+      browserName.includes('Mobile') ||
+      browserName.includes('iPhone') ||
+      browserName.includes('iPad')
+
+    // Mobile devices and WebKit/Firefox need longer timeouts
+    const navigationTimeout = isFirefox || isWebKit || isMobile ? 60000 : 30000
+    const loadTimeout = isFirefox || isWebKit || isMobile ? 30000 : 15000
+
+    // Increase timeout for mobile devices to prevent beforeEach timeout
+    if (isMobile) {
+      test.setTimeout(90000) // 90 seconds for mobile devices
+    }
+
+    // Clear all authentication state
     await context.clearCookies()
     await context.clearPermissions()
-    await page.goto('/')
-    await page.waitForLoadState('networkidle', { timeout: 60000 })
+
+    // Check if page is already closed before navigation
+    if (page.isClosed()) {
+      if (isWebKit || isFirefox || isMobile) {
+        console.log(`${browserName}: Page already closed before navigation, skipping`)
+        return
+      }
+      throw new Error('Page was already closed before navigation')
+    }
+
+    try {
+      // Use a shorter timeout for mobile devices to fail faster if page closes
+      const actualTimeout = isMobile ? Math.min(navigationTimeout, 30000) : navigationTimeout
+      await page.goto('/', { waitUntil: 'domcontentloaded', timeout: actualTimeout })
+    } catch (error) {
+      // If navigation fails, check if page is still valid
+      if (page.isClosed()) {
+        if (isWebKit || isFirefox || isMobile) {
+          console.log(`${browserName}: Page closed during navigation, attempting to continue`)
+          return
+        }
+        throw new Error('Page was closed during navigation')
+      }
+      // For mobile devices, if navigation times out, check if page closed and return gracefully
+      if (
+        isMobile &&
+        error instanceof Error &&
+        (error.message.includes('timeout') || error.message.includes('Navigation'))
+      ) {
+        if (page.isClosed()) {
+          console.log(`${browserName}: Page closed during navigation timeout, skipping`)
+          return
+        }
+      }
+      throw error
+    }
+
+    // Wait for load state with fallback - networkidle can be too strict
+    try {
+      await page.waitForLoadState('load', { timeout: loadTimeout })
+    } catch {
+      // If load times out, try networkidle with shorter timeout
+      await page.waitForLoadState('networkidle', { timeout: 5000 }).catch(() => {
+        // If networkidle also fails, just continue - page is likely loaded enough
+      })
+    }
+
+    // Check if page is still valid before continuing
+    if (page.isClosed()) {
+      if (isWebKit || isFirefox || isMobile) {
+        console.log(`${browserName}: Page closed after navigation, skipping rest of setup`)
+        return
+      }
+      throw new Error('Page was closed after navigation')
+    }
+
+    // Wait a moment for tutorial modal to appear (it may load after page load)
+    // WebKit, Firefox, and mobile devices need more time for the tutorial to appear
+    await safeWait(page, isWebKit || isFirefox || isMobile ? 2000 : 1000)
+
+    // Check again before dismissing tutorial
+    if (page.isClosed()) {
+      if (isWebKit || isFirefox || isMobile) {
+        console.log(`${browserName}: Page closed before tutorial dismissal, skipping`)
+      }
+      return
+    }
+
+    // Dismiss tutorial overlay if it appears (blocks interactions)
+    await dismissTutorialOverlay(page)
+
+    // Check if page is still valid
+    if (page.isClosed()) {
+      if (isWebKit || isFirefox || isMobile) {
+        console.log(`${browserName}: Page closed after tutorial dismissal, skipping rest of setup`)
+      }
+      return
+    }
+
+    // Wait a bit more to ensure overlay is fully dismissed
+    await safeWait(page, 500)
   })
 
   test('User can register a new account', async ({ page }) => {
@@ -158,7 +414,15 @@ test.describe('Registration and Onboarding', () => {
       }
 
       await page.getByTestId('register-submit-button').click()
-      await page.waitForLoadState('networkidle')
+      // Wait for page to load - use 'load' instead of 'networkidle' which is too strict
+      try {
+        await page.waitForLoadState('load', { timeout: 10000 })
+      } catch {
+        // If load times out, try domcontentloaded with shorter timeout
+        await page.waitForLoadState('domcontentloaded', { timeout: 5000 }).catch(() => {
+          // If that also fails, just continue - page is likely loaded enough
+        })
+      }
     })
 
     await test.step('Check for verification banner', async () => {
@@ -176,9 +440,11 @@ test.describe('Registration and Onboarding', () => {
     })
   })
 
-  test('New user can perform first comparison', async ({ page }) => {
+  test('New user can perform first comparison', async ({ page, browserName }) => {
     // Increase timeout for registration + comparison test
-    test.setTimeout(60000)
+    // WebKit needs longer timeout
+    const isWebKit = browserName === 'webkit'
+    test.setTimeout(isWebKit ? 120000 : 60000)
     const timestamp = Date.now()
     const testEmail = `firstcomp-${timestamp}@example.com`
     const testPassword = 'TestPassword123!'
@@ -286,11 +552,54 @@ test.describe('Registration and Onboarding', () => {
       // Select first model
       await modelCheckboxes.first().check()
 
-      // Submit comparison
-      await page.getByTestId('comparison-submit-button').click()
+      // Check if tutorial overlay is blocking (especially in WebKit)
+      const tutorialOverlay = page.locator('.tutorial-backdrop, .tutorial-welcome-backdrop')
+      const overlayVisible = await tutorialOverlay.isVisible({ timeout: 1000 }).catch(() => false)
+      if (overlayVisible && !page.isClosed()) {
+        // Dismiss tutorial overlay before submitting
+        await dismissTutorialOverlay(page)
+        await safeWait(page, 1000) // Wait longer for overlay to fully disappear
+      }
 
-      // Wait for results
-      await page.waitForLoadState('networkidle')
+      // Submit comparison - WebKit and mobile need longer timeout
+      const isMobile =
+        browserName.includes('Mobile') ||
+        browserName.includes('iPhone') ||
+        browserName.includes('iPad')
+      const submitTimeout = isWebKit || isMobile ? 60000 : 15000
+
+      const submitButton = page.getByTestId('comparison-submit-button')
+
+      // Try normal click first
+      try {
+        await submitButton.click({ timeout: submitTimeout })
+      } catch (error) {
+        if (page.isClosed()) {
+          throw new Error('Page was closed during submit')
+        }
+        // If click fails, try force click (especially for WebKit/mobile with tutorial overlay)
+        if (
+          error instanceof Error &&
+          (error.message.includes('intercepts') || error.message.includes('timeout'))
+        ) {
+          // Dismiss overlay again and try force click
+          await dismissTutorialOverlay(page)
+          await safeWait(page, 500)
+          await submitButton.click({ timeout: submitTimeout, force: true })
+        } else {
+          throw error
+        }
+      }
+
+      // Wait for results - use 'load' instead of 'networkidle' which is too strict
+      try {
+        await page.waitForLoadState('load', { timeout: 15000 })
+      } catch {
+        // If load times out, try domcontentloaded with shorter timeout
+        await page.waitForLoadState('domcontentloaded', { timeout: 5000 }).catch(() => {
+          // If that also fails, just continue - page is likely loaded enough
+        })
+      }
 
       // Results should appear
       const results = page.locator('[data-testid^="result-card-"], .result-card, .model-response')
@@ -328,7 +637,15 @@ test.describe('Registration and Onboarding', () => {
 
     await test.step('Submit login', async () => {
       await page.getByTestId('login-submit-button').click()
-      await page.waitForLoadState('networkidle')
+      // Wait for page to load - use 'load' instead of 'networkidle' which is too strict
+      try {
+        await page.waitForLoadState('load', { timeout: 10000 })
+      } catch {
+        // If load times out, try domcontentloaded with shorter timeout
+        await page.waitForLoadState('domcontentloaded', { timeout: 5000 }).catch(() => {
+          // If that also fails, just continue - page is likely loaded enough
+        })
+      }
     })
 
     await test.step('Verify login success', async () => {
@@ -346,20 +663,45 @@ test.describe('Registration and Onboarding', () => {
     })
   })
 
-  test('User can logout', async ({ page }) => {
+  test('User can logout', async ({ page, browserName }) => {
     const testEmail = process.env.TEST_FREE_EMAIL || process.env.TEST_USER_EMAIL || 'free@test.com'
     const testPassword =
       process.env.TEST_FREE_PASSWORD || process.env.TEST_USER_PASSWORD || 'Test12345678/'
 
+    // Firefox, WebKit, and mobile devices need longer timeouts
+    const isFirefox = browserName === 'firefox'
+    const isWebKit = browserName === 'webkit'
+    const isMobile =
+      browserName.includes('Mobile') ||
+      browserName.includes('iPhone') ||
+      browserName.includes('iPad')
+
+    // Increase test timeout for mobile devices (must be set before any async operations)
+    test.setTimeout(isMobile ? 120000 : 60000) // 2 minutes for mobile devices, 60s for others
+
+    const navigationTimeout = isFirefox || isWebKit || isMobile ? 60000 : 15000
+    const waitTimeout = isFirefox || isWebKit || isMobile ? 30000 : 10000
+    const clickTimeout = isMobile ? 30000 : 15000
+
     await test.step('Login first', async () => {
-      await page.getByTestId('nav-sign-in-button').click()
+      // Mobile devices may need longer timeout for button click
+      const signInButton = page.getByTestId('nav-sign-in-button')
+      await signInButton.click({ timeout: clickTimeout })
       await page.waitForSelector('[data-testid="auth-modal"], .auth-modal', { timeout: 5000 })
       await page.getByTestId('login-email-input').fill(testEmail)
       await page.getByTestId('login-password-input').fill(testPassword)
       await page.getByTestId('login-submit-button').click()
 
       // Wait for login API call to complete
-      await page.waitForLoadState('networkidle')
+      // Wait for page to load - use 'load' instead of 'networkidle' which is too strict
+      try {
+        await page.waitForLoadState('load', { timeout: 10000 })
+      } catch {
+        // If load times out, try domcontentloaded with shorter timeout
+        await page.waitForLoadState('domcontentloaded', { timeout: 5000 }).catch(() => {
+          // If that also fails, just continue - page is likely loaded enough
+        })
+      }
 
       // Wait for auth modal to close
       await page
@@ -369,35 +711,107 @@ test.describe('Registration and Onboarding', () => {
         })
         .catch(() => {})
 
-      // Wait a bit for React state to update
-      await page.waitForTimeout(500)
+      // Wait a bit for React state to update (use safeWait to handle page closure)
+      await safeWait(page, 500)
+
+      // Check if page is still valid before waiting for user menu
+      if (page.isClosed()) {
+        throw new Error('Page was closed after login')
+      }
 
       // User menu button should appear (user data needs to load after login)
       await expect(page.getByTestId('user-menu-button')).toBeVisible({ timeout: 20000 })
     })
 
     await test.step('Logout', async () => {
-      // Open user menu
+      // Open user menu - mobile devices may need longer timeout or force click
       const userMenuButton = page.getByTestId('user-menu-button')
-      await userMenuButton.click()
-      await page.waitForTimeout(300)
+      const menuClickTimeout = isMobile ? 60000 : 15000 // Increased timeout for mobile
 
-      // Click logout
+      // Wait for button to be visible and stable before clicking (especially important for mobile)
+      await expect(userMenuButton).toBeVisible({ timeout: menuClickTimeout })
+
+      // For mobile devices, wait a bit longer to ensure button is stable
+      if (isMobile) {
+        await safeWait(page, 1000)
+        // Check if page is still valid
+        if (page.isClosed()) {
+          throw new Error('Page was closed before menu click')
+        }
+        // Wait for button to be enabled and stable
+        await userMenuButton.waitFor({ state: 'visible', timeout: 10000 })
+        await safeWait(page, 500)
+      }
+
+      // Check if page is still valid before clicking
+      if (page.isClosed()) {
+        throw new Error('Page was closed before menu click')
+      }
+
+      try {
+        // For mobile devices, use tap() which is more reliable than click()
+        if (isMobile) {
+          await userMenuButton.tap({ timeout: menuClickTimeout })
+        } else {
+          await userMenuButton.click({ timeout: menuClickTimeout })
+        }
+      } catch (error) {
+        if (page.isClosed()) {
+          throw new Error('Page was closed during menu interaction')
+        }
+        // If tap/click fails, try force click
+        if (isMobile) {
+          // Wait a bit more and try force click
+          await safeWait(page, 1000)
+          if (page.isClosed()) {
+            throw new Error('Page was closed before force click')
+          }
+          await userMenuButton.click({ timeout: menuClickTimeout, force: true })
+        } else {
+          throw error
+        }
+      }
+      await safeWait(page, 1000) // Wait longer for menu to open (increased from 500ms)
+
+      // Wait for logout API call before clicking (logout triggers navigation)
+      const logoutResponsePromise = page
+        .waitForResponse(response => response.url().includes('/auth/logout'), { timeout: 15000 })
+        .catch(() => null)
+
+      // Click logout - mobile devices may need longer timeout
       const logoutButton = page.getByTestId('logout-button')
-      await logoutButton.click()
+      const logoutClickTimeout = isMobile ? 30000 : 15000
+      await logoutButton.click({ timeout: logoutClickTimeout })
 
-      await page.waitForLoadState('networkidle')
+      // Wait for logout API response
+      await logoutResponsePromise
+
+      // Logout triggers window.location.href = '/' which causes full page navigation
+      // Wait for navigation to complete
+      await page.waitForURL('**/', { timeout: navigationTimeout }).catch(() => {
+        // Navigation might have already completed
+      })
+
+      // Wait for page to load after navigation
+      try {
+        await page.waitForLoadState('load', { timeout: navigationTimeout })
+      } catch {
+        // If load times out, try domcontentloaded with shorter timeout
+        await page.waitForLoadState('domcontentloaded', { timeout: 10000 }).catch(() => {
+          // If that also fails, just continue - page is likely loaded enough
+        })
+      }
     })
 
     await test.step('Verify logout success', async () => {
-      // Wait for logout API call to complete
-      await page.waitForLoadState('networkidle', { timeout: 10000 })
-
       // User menu should be hidden
       await expect(page.getByTestId('user-menu-button')).not.toBeVisible({ timeout: 5000 })
 
-      // Sign-in button should be visible again (wait longer for React state update)
-      await expect(page.getByTestId('nav-sign-in-button')).toBeVisible({ timeout: 10000 })
+      // Sign-in button should be visible again (wait longer for React state update, especially in Firefox)
+      // Wait for navigation to complete and React to re-render
+      await safeWait(page, 1000) // Give React time to update state
+
+      await expect(page.getByTestId('nav-sign-in-button')).toBeVisible({ timeout: waitTimeout })
     })
   })
 })

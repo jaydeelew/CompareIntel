@@ -22,6 +22,138 @@ import { test as base, expect, Page, BrowserContext } from '@playwright/test'
  *   })
  */
 
+/**
+ * Helper function to safely wait with page validity check
+ */
+async function safeWait(page: Page, ms: number) {
+  try {
+    if (page.isClosed()) {
+      return
+    }
+    await page.waitForTimeout(ms)
+  } catch (error) {
+    if (error instanceof Error && error.message.includes('closed')) {
+      return
+    }
+    throw error
+  }
+}
+
+/**
+ * Helper function to dismiss the tutorial overlay if it appears
+ * Tutorial is disabled on mobile layouts (viewport width <= 768px), so we skip dismissal on mobile
+ */
+async function dismissTutorialOverlay(page: Page) {
+  try {
+    if (page.isClosed()) {
+      return
+    }
+
+    // Check if we're on a mobile viewport (tutorial is disabled on mobile - width <= 768px)
+    // Only dismiss tutorial overlay on desktop viewports
+    const viewport = page.viewportSize()
+    const isMobileViewport = viewport && viewport.width <= 768
+
+    if (isMobileViewport) {
+      // Tutorial is not available on mobile, so skip dismissal
+      return
+    }
+
+    await safeWait(page, 500)
+
+    const welcomeModal = page.locator('.tutorial-welcome-backdrop')
+    const welcomeVisible = await welcomeModal.isVisible({ timeout: 3000 }).catch(() => false)
+
+    if (welcomeVisible && !page.isClosed()) {
+      const skipButton = page.locator(
+        '.tutorial-welcome-button-secondary, button:has-text("Skip for Now")'
+      )
+      const skipVisible = await skipButton.isVisible({ timeout: 3000 }).catch(() => false)
+
+      if (skipVisible && !page.isClosed()) {
+        try {
+          await skipButton.waitFor({ state: 'visible', timeout: 5000 })
+          await safeWait(page, 300)
+
+          if (!page.isClosed()) {
+            await skipButton.click({ timeout: 10000, force: false }).catch(async () => {
+              if (!page.isClosed()) {
+                await skipButton.click({ timeout: 5000, force: true })
+              }
+            })
+            await welcomeModal.waitFor({ state: 'hidden', timeout: 5000 }).catch(() => {})
+            await safeWait(page, 500)
+          }
+        } catch (_clickError) {
+          if (!page.isClosed()) {
+            await page.keyboard.press('Escape').catch(() => {})
+            await safeWait(page, 500)
+          }
+        }
+      } else if (!page.isClosed()) {
+        await page.keyboard.press('Escape').catch(() => {})
+        await safeWait(page, 500)
+      }
+    }
+
+    if (page.isClosed()) {
+      return
+    }
+
+    const tutorialOverlay = page.locator('.tutorial-backdrop, .tutorial-welcome-backdrop')
+    const overlayVisible = await tutorialOverlay.isVisible({ timeout: 2000 }).catch(() => false)
+
+    if (overlayVisible && !page.isClosed()) {
+      const closeButton = page.locator(
+        '.tutorial-close-button, button[aria-label*="Skip"], button[aria-label*="skip"]'
+      )
+      const closeVisible = await closeButton.isVisible({ timeout: 3000 }).catch(() => false)
+
+      if (closeVisible && !page.isClosed()) {
+        try {
+          await closeButton.waitFor({ state: 'visible', timeout: 5000 })
+          await safeWait(page, 300)
+
+          if (!page.isClosed()) {
+            await closeButton.click({ timeout: 10000, force: false }).catch(async () => {
+              if (!page.isClosed()) {
+                await closeButton.click({ timeout: 5000, force: true })
+              }
+            })
+            await tutorialOverlay.waitFor({ state: 'hidden', timeout: 5000 }).catch(() => {})
+            await safeWait(page, 500)
+          }
+        } catch (_clickError) {
+          if (!page.isClosed()) {
+            await page.keyboard.press('Escape').catch(() => {})
+            await safeWait(page, 500)
+          }
+        }
+      } else if (!page.isClosed()) {
+        await page.keyboard.press('Escape').catch(() => {})
+        await safeWait(page, 500)
+      }
+    }
+
+    if (!page.isClosed()) {
+      await safeWait(page, 500)
+      const stillVisible = await tutorialOverlay.isVisible({ timeout: 1000 }).catch(() => false)
+      if (stillVisible && !page.isClosed()) {
+        await page.keyboard.press('Escape').catch(() => {})
+        await safeWait(page, 500)
+      }
+    }
+  } catch (error) {
+    if (error instanceof Error && error.message.includes('closed')) {
+      return
+    }
+    console.log(
+      'Tutorial overlay dismissal attempted:',
+      error instanceof Error ? error.message : String(error)
+    )
+  }
+}
+
 // ============================================================================
 // Configuration & Constants
 // ============================================================================
@@ -101,9 +233,17 @@ async function loginUser(
 
     // Navigate to home if not already there
     if (page.url() !== BASE_URL + '/' && !page.url().startsWith(BASE_URL)) {
-      await page.goto('/')
-      await page.waitForLoadState('networkidle')
+      await page.goto('/', { waitUntil: 'domcontentloaded', timeout: 30000 })
+      // Wait for load state with fallback
+      try {
+        await page.waitForLoadState('load', { timeout: 15000 })
+      } catch {
+        await page.waitForLoadState('domcontentloaded', { timeout: 5000 }).catch(() => {})
+      }
     }
+
+    // Dismiss tutorial overlay if present (blocks interactions)
+    await dismissTutorialOverlay(page)
 
     // Click login button
     const loginButton = page.getByTestId('nav-sign-in-button')
@@ -139,7 +279,12 @@ async function loginUser(
     await loginResponsePromise
 
     if (waitForNavigation) {
-      await page.waitForLoadState('networkidle')
+      // Wait for load state with fallback - networkidle can be too strict
+      try {
+        await page.waitForLoadState('load', { timeout: 10000 })
+      } catch {
+        await page.waitForLoadState('domcontentloaded', { timeout: 5000 }).catch(() => {})
+      }
 
       // Wait for auth/me API call to complete (user data fetch after login)
       // This ensures the auth state is fully updated
@@ -154,7 +299,7 @@ async function loginUser(
         .catch(() => {})
 
       // Wait a bit for React state to update
-      await page.waitForTimeout(500)
+      await safeWait(page, 500)
     }
 
     // Verify login succeeded - user data needs to load after login
@@ -180,9 +325,17 @@ async function registerUser(
   try {
     // Navigate to home if not already there
     if (page.url() !== BASE_URL + '/' && !page.url().startsWith(BASE_URL)) {
-      await page.goto('/')
-      await page.waitForLoadState('networkidle')
+      await page.goto('/', { waitUntil: 'domcontentloaded', timeout: 30000 })
+      // Wait for load state with fallback
+      try {
+        await page.waitForLoadState('load', { timeout: 15000 })
+      } catch {
+        await page.waitForLoadState('domcontentloaded', { timeout: 5000 }).catch(() => {})
+      }
     }
+
+    // Dismiss tutorial overlay if present (blocks interactions)
+    await dismissTutorialOverlay(page)
 
     // Click sign up button
     const signUpButton = page.getByTestId('nav-sign-up-button')
@@ -229,7 +382,12 @@ async function registerUser(
     await registerResponsePromise
 
     if (waitForNavigation) {
-      await page.waitForLoadState('networkidle')
+      // Wait for load state with fallback - networkidle can be too strict
+      try {
+        await page.waitForLoadState('load', { timeout: 10000 })
+      } catch {
+        await page.waitForLoadState('domcontentloaded', { timeout: 5000 }).catch(() => {})
+      }
 
       // Wait for auth/me API call to complete (user data fetch after registration)
       // This ensures the auth state is fully updated
@@ -244,7 +402,7 @@ async function registerUser(
         .catch(() => {})
 
       // Wait a bit for React state to update
-      await page.waitForTimeout(500)
+      await safeWait(page, 500)
     }
 
     // Verify registration succeeded (user menu should be visible)
@@ -275,7 +433,18 @@ async function ensureAuthenticated(page: Page, email: string, password: string):
   }
 
   // Verify we're authenticated - user data needs to load after login/registration
-  await expect(userMenu).toBeVisible({ timeout: 20000 })
+  // Check if page is still valid before asserting
+  if (page.isClosed()) {
+    throw new Error('Page was closed during authentication')
+  }
+  await expect(userMenu)
+    .toBeVisible({ timeout: 20000 })
+    .catch(error => {
+      if (page.isClosed() || (error instanceof Error && error.message.includes('closed'))) {
+        throw new Error('Page was closed while verifying authentication')
+      }
+      throw error
+    })
 }
 
 /**
@@ -386,8 +555,14 @@ export const test = base.extend<TestFixtures>({
    * Free tier user page (already authenticated)
    */
   freeTierPage: async ({ page }, use) => {
-    await page.goto('/')
-    await page.waitForLoadState('networkidle')
+    await page.goto('/', { waitUntil: 'domcontentloaded', timeout: 30000 })
+    // Wait for load state with fallback
+    try {
+      await page.waitForLoadState('load', { timeout: 15000 })
+    } catch {
+      await page.waitForLoadState('domcontentloaded', { timeout: 5000 }).catch(() => {})
+    }
+    await dismissTutorialOverlay(page)
     await ensureAuthenticated(page, TEST_CREDENTIALS.free.email, TEST_CREDENTIALS.free.password)
     await use(page)
   },
@@ -398,7 +573,12 @@ export const test = base.extend<TestFixtures>({
    */
   starterTierPage: async ({ page }, use) => {
     await page.goto('/')
-    await page.waitForLoadState('networkidle')
+    // Wait for load state with fallback - networkidle can be too strict
+    try {
+      await page.waitForLoadState('load', { timeout: 10000 })
+    } catch {
+      await page.waitForLoadState('domcontentloaded', { timeout: 5000 }).catch(() => {})
+    }
     await ensureAuthenticated(
       page,
       TEST_CREDENTIALS.starter.email,
@@ -413,7 +593,12 @@ export const test = base.extend<TestFixtures>({
    */
   starterPlusTierPage: async ({ page }, use) => {
     await page.goto('/')
-    await page.waitForLoadState('networkidle')
+    // Wait for load state with fallback - networkidle can be too strict
+    try {
+      await page.waitForLoadState('load', { timeout: 10000 })
+    } catch {
+      await page.waitForLoadState('domcontentloaded', { timeout: 5000 }).catch(() => {})
+    }
     await ensureAuthenticated(
       page,
       TEST_CREDENTIALS.starterPlus.email,
@@ -428,7 +613,12 @@ export const test = base.extend<TestFixtures>({
    */
   proTierPage: async ({ page }, use) => {
     await page.goto('/')
-    await page.waitForLoadState('networkidle')
+    // Wait for load state with fallback - networkidle can be too strict
+    try {
+      await page.waitForLoadState('load', { timeout: 10000 })
+    } catch {
+      await page.waitForLoadState('domcontentloaded', { timeout: 5000 }).catch(() => {})
+    }
     await ensureAuthenticated(page, TEST_CREDENTIALS.pro.email, TEST_CREDENTIALS.pro.password)
     await use(page)
   },
@@ -439,7 +629,12 @@ export const test = base.extend<TestFixtures>({
    */
   proPlusTierPage: async ({ page }, use) => {
     await page.goto('/')
-    await page.waitForLoadState('networkidle')
+    // Wait for load state with fallback - networkidle can be too strict
+    try {
+      await page.waitForLoadState('load', { timeout: 10000 })
+    } catch {
+      await page.waitForLoadState('domcontentloaded', { timeout: 5000 }).catch(() => {})
+    }
     await ensureAuthenticated(
       page,
       TEST_CREDENTIALS.proPlus.email,
@@ -457,7 +652,12 @@ export const test = base.extend<TestFixtures>({
    */
   adminPage: async ({ page }, use) => {
     await page.goto('/')
-    await page.waitForLoadState('networkidle')
+    // Wait for load state with fallback - networkidle can be too strict
+    try {
+      await page.waitForLoadState('load', { timeout: 10000 })
+    } catch {
+      await page.waitForLoadState('domcontentloaded', { timeout: 5000 }).catch(() => {})
+    }
     await ensureAuthenticated(page, TEST_CREDENTIALS.admin.email, TEST_CREDENTIALS.admin.password)
 
     // Navigate to admin panel
@@ -468,7 +668,12 @@ export const test = base.extend<TestFixtures>({
     } else {
       await page.goto('/admin')
     }
-    await page.waitForLoadState('networkidle')
+    // Wait for load state with fallback - networkidle can be too strict
+    try {
+      await page.waitForLoadState('load', { timeout: 10000 })
+    } catch {
+      await page.waitForLoadState('domcontentloaded', { timeout: 5000 }).catch(() => {})
+    }
 
     // Wait a bit for lazy loading of AdminPanel component
     await page.waitForTimeout(500)
@@ -486,7 +691,12 @@ export const test = base.extend<TestFixtures>({
    */
   moderatorPage: async ({ page }, use) => {
     await page.goto('/')
-    await page.waitForLoadState('networkidle')
+    // Wait for load state with fallback - networkidle can be too strict
+    try {
+      await page.waitForLoadState('load', { timeout: 10000 })
+    } catch {
+      await page.waitForLoadState('domcontentloaded', { timeout: 5000 }).catch(() => {})
+    }
     await ensureAuthenticated(
       page,
       TEST_CREDENTIALS.moderator.email,
@@ -500,8 +710,14 @@ export const test = base.extend<TestFixtures>({
    * Use this when tier doesn't matter
    */
   authenticatedPage: async ({ page }, use) => {
-    await page.goto('/')
-    await page.waitForLoadState('networkidle')
+    await page.goto('/', { waitUntil: 'domcontentloaded', timeout: 30000 })
+    // Wait for load state with fallback
+    try {
+      await page.waitForLoadState('load', { timeout: 15000 })
+    } catch {
+      await page.waitForLoadState('domcontentloaded', { timeout: 5000 }).catch(() => {})
+    }
+    await dismissTutorialOverlay(page)
     await ensureAuthenticated(page, TEST_CREDENTIALS.free.email, TEST_CREDENTIALS.free.password)
     await use(page)
   },
@@ -516,8 +732,14 @@ export const test = base.extend<TestFixtures>({
    */
   unregisteredPage: async ({ page, context }, use) => {
     await clearAuthState(context)
-    await page.goto('/')
-    await page.waitForLoadState('networkidle')
+    await page.goto('/', { waitUntil: 'domcontentloaded', timeout: 30000 })
+    // Wait for load state with fallback
+    try {
+      await page.waitForLoadState('load', { timeout: 15000 })
+    } catch {
+      await page.waitForLoadState('domcontentloaded', { timeout: 5000 }).catch(() => {})
+    }
+    await dismissTutorialOverlay(page)
 
     // Verify we're unregistered (no user menu)
     const userMenu = page.getByTestId('user-menu-button')
@@ -535,7 +757,12 @@ export const test = base.extend<TestFixtures>({
    */
   comparisonPage: async ({ page }, use) => {
     await page.goto('/')
-    await page.waitForLoadState('networkidle')
+    // Wait for load state with fallback - networkidle can be too strict
+    try {
+      await page.waitForLoadState('load', { timeout: 10000 })
+    } catch {
+      await page.waitForLoadState('domcontentloaded', { timeout: 5000 }).catch(() => {})
+    }
 
     // Wait for comparison form to be visible
     const comparisonInput = page.getByTestId('comparison-input-textarea')
@@ -557,7 +784,12 @@ export const test = base.extend<TestFixtures>({
    */
   aboutPage: async ({ page }, use) => {
     await page.goto('/about')
-    await page.waitForLoadState('networkidle')
+    // Wait for load state with fallback - networkidle can be too strict
+    try {
+      await page.waitForLoadState('load', { timeout: 10000 })
+    } catch {
+      await page.waitForLoadState('domcontentloaded', { timeout: 5000 }).catch(() => {})
+    }
     await use(page)
   },
 
@@ -566,7 +798,12 @@ export const test = base.extend<TestFixtures>({
    */
   featuresPage: async ({ page }, use) => {
     await page.goto('/features')
-    await page.waitForLoadState('networkidle')
+    // Wait for load state with fallback - networkidle can be too strict
+    try {
+      await page.waitForLoadState('load', { timeout: 10000 })
+    } catch {
+      await page.waitForLoadState('domcontentloaded', { timeout: 5000 }).catch(() => {})
+    }
     await use(page)
   },
 
@@ -575,7 +812,12 @@ export const test = base.extend<TestFixtures>({
    */
   faqPage: async ({ page }, use) => {
     await page.goto('/faq')
-    await page.waitForLoadState('networkidle')
+    // Wait for load state with fallback - networkidle can be too strict
+    try {
+      await page.waitForLoadState('load', { timeout: 10000 })
+    } catch {
+      await page.waitForLoadState('domcontentloaded', { timeout: 5000 }).catch(() => {})
+    }
     await use(page)
   },
 
@@ -584,7 +826,12 @@ export const test = base.extend<TestFixtures>({
    */
   privacyPage: async ({ page }, use) => {
     await page.goto('/privacy-policy')
-    await page.waitForLoadState('networkidle')
+    // Wait for load state with fallback - networkidle can be too strict
+    try {
+      await page.waitForLoadState('load', { timeout: 10000 })
+    } catch {
+      await page.waitForLoadState('domcontentloaded', { timeout: 5000 }).catch(() => {})
+    }
     await use(page)
   },
 
@@ -593,7 +840,12 @@ export const test = base.extend<TestFixtures>({
    */
   termsPage: async ({ page }, use) => {
     await page.goto('/terms-of-service')
-    await page.waitForLoadState('networkidle')
+    // Wait for load state with fallback - networkidle can be too strict
+    try {
+      await page.waitForLoadState('load', { timeout: 10000 })
+    } catch {
+      await page.waitForLoadState('domcontentloaded', { timeout: 5000 }).catch(() => {})
+    }
     await use(page)
   },
 

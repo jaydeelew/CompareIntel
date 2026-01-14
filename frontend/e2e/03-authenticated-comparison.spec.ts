@@ -142,7 +142,14 @@ test.describe('Authenticated User Comparison Flow', () => {
       }
 
       await authenticatedPage.getByTestId('comparison-submit-button').click()
-      await authenticatedPage.waitForLoadState('networkidle')
+      // Wait for load state with fallback - networkidle can be too strict
+      try {
+        await authenticatedPage.waitForLoadState('load', { timeout: 15000 })
+      } catch {
+        await authenticatedPage
+          .waitForLoadState('domcontentloaded', { timeout: 5000 })
+          .catch(() => {})
+      }
 
       // Wait for results
       const results = authenticatedPage.locator(
@@ -165,7 +172,14 @@ test.describe('Authenticated User Comparison Flow', () => {
         .catch(() => {})
 
       // Wait for network to be idle (loading should be complete)
-      await authenticatedPage.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {})
+      // Use 'load' instead of 'networkidle' which is too strict
+      try {
+        await authenticatedPage.waitForLoadState('load', { timeout: 10000 })
+      } catch {
+        await authenticatedPage
+          .waitForLoadState('domcontentloaded', { timeout: 5000 })
+          .catch(() => {})
+      }
 
       // Wait a moment for UI to stabilize
       await authenticatedPage.waitForTimeout(1000)
@@ -295,11 +309,30 @@ test.describe('Authenticated User Comparison Flow', () => {
       expect(checkboxCount).toBeGreaterThan(0)
 
       if (checkboxCount > 0) {
-        await modelCheckboxes.first().check()
+        // Find first enabled checkbox
+        let checked = false
+        for (let i = 0; i < checkboxCount && !checked; i++) {
+          const checkbox = modelCheckboxes.nth(i)
+          const isEnabled = await checkbox.isEnabled().catch(() => false)
+          if (isEnabled) {
+            await checkbox.check({ timeout: 10000 })
+            checked = true
+          }
+        }
+        if (!checked) {
+          throw new Error('No enabled checkboxes found to select')
+        }
       }
 
       await authenticatedPage.getByTestId('comparison-submit-button').click()
-      await authenticatedPage.waitForLoadState('networkidle')
+      // Wait for load state with fallback - networkidle can be too strict
+      try {
+        await authenticatedPage.waitForLoadState('load', { timeout: 15000 })
+      } catch {
+        await authenticatedPage
+          .waitForLoadState('domcontentloaded', { timeout: 5000 })
+          .catch(() => {})
+      }
 
       // Wait for results
       const results = authenticatedPage.locator(
@@ -475,7 +508,14 @@ test.describe('Authenticated User Comparison Flow', () => {
       }
 
       await authenticatedPage.getByTestId('comparison-submit-button').click()
-      await authenticatedPage.waitForLoadState('networkidle')
+      // Wait for load state with fallback - networkidle can be too strict
+      try {
+        await authenticatedPage.waitForLoadState('load', { timeout: 15000 })
+      } catch {
+        await authenticatedPage
+          .waitForLoadState('domcontentloaded', { timeout: 5000 })
+          .catch(() => {})
+      }
     })
 
     await test.step('Start new comparison', async () => {

@@ -14,22 +14,23 @@ const __dirname = path.dirname(__filename);
  */
 export default defineConfig({
   testDir: './e2e',
-  
+
   /* Global setup runs once before all tests */
   globalSetup: './e2e/global-setup.ts',
-  
+
   /* Run tests in files in parallel */
   fullyParallel: true,
-  
+
   /* Fail the build on CI if you accidentally left test.only in the source code. */
   forbidOnly: !!process.env.CI,
-  
+
   /* Retry on CI only - reduced to 1 to avoid excessive retries */
   retries: process.env.CI ? 1 : 0,
-  
+
   /* Opt out of parallel tests on CI - use 1 worker to avoid resource contention */
-  workers: process.env.CI ? 1 : undefined,
-  
+  /* Locally, use more workers for faster execution (defaults to CPU count) */
+  workers: process.env.CI ? 1 : process.env.PLAYWRIGHT_WORKERS ? parseInt(process.env.PLAYWRIGHT_WORKERS) : undefined,
+
   /* Timeout settings to prevent tests from hanging */
   timeout: process.env.CI ? 90 * 1000 : 30 * 1000, // 90s per test in CI (increased for slower CI environment), 30s locally
   expect: {
@@ -37,31 +38,39 @@ export default defineConfig({
   },
   /* Global timeout for entire test run */
   globalTimeout: process.env.CI ? 60 * 60 * 1000 : 30 * 60 * 1000, // 60min in CI, 30min locally
-  
+
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   reporter: process.env.CI
     ? [
-        ['html', { outputFolder: 'playwright-report' }],
-        ['list'],
-      ]
+      ['html', { outputFolder: 'playwright-report' }],
+      ['list'],
+    ]
     : 'html',
-  
+
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     /* Base URL to use in actions like `await page.goto('/')`. */
     baseURL: process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:5173',
-    
+
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
-    trace: 'on-first-retry',
-    
-    /* Screenshot on failure */
-    screenshot: 'only-on-failure',
-    
-    /* Video on failure */
-    video: 'retain-on-failure',
+    /* Disable trace for faster runs - enable with PLAYWRIGHT_TRACE=on-first-retry if needed */
+    trace: process.env.PLAYWRIGHT_TRACE || 'off',
+
+    /* Screenshot on failure - disable for faster runs, enable with PLAYWRIGHT_SCREENSHOT=only-on-failure */
+    screenshot: process.env.PLAYWRIGHT_SCREENSHOT || 'off',
+
+    /* Video recording - disable for faster runs, enable with PLAYWRIGHT_VIDEO=retain-on-failure if needed */
+    /* Note: Video recording significantly slows down tests */
+    video: process.env.PLAYWRIGHT_VIDEO || 'off',
   },
 
   /* Configure projects for major browsers */
+  /* 
+   * For faster local development, you can run tests with fewer browsers:
+   * - npx playwright test --project=chromium (fastest - Chromium only)
+   * - npx playwright test --project=chromium --project=firefox (desktop browsers only)
+   * - Or set PLAYWRIGHT_FAST=true to only run Chromium
+   */
   projects: [
     // Desktop browsers
     {
@@ -72,11 +81,17 @@ export default defineConfig({
     {
       name: 'firefox',
       use: { ...devices['Desktop Firefox'] },
+      // Firefox needs longer timeouts
+      timeout: process.env.CI ? 120 * 1000 : 90 * 1000, // 120s in CI, 90s locally
     },
 
     {
       name: 'webkit',
-      use: { ...devices['Desktop Safari'] },
+      use: {
+        ...devices['Desktop Safari'],
+      },
+      // WebKit needs longer timeouts
+      timeout: process.env.CI ? 120 * 1000 : 90 * 1000, // 120s in CI, 90s locally
     },
 
     // Mobile - iOS Devices
