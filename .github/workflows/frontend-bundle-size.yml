@@ -7,7 +7,7 @@ on:
       - '.github/workflows/frontend-bundle-size.yml'
   push:
     branches:
-      - main
+      - master
       - develop
     paths:
       - 'frontend/**'
