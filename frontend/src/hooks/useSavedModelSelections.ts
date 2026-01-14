@@ -13,6 +13,7 @@ import { useState, useCallback, useEffect, useMemo } from 'react'
 import { getSavedModelSelectionLimit, type SubscriptionTier } from '../config/constants'
 
 const STORAGE_KEY_PREFIX = 'compareintel_saved_model_selections'
+const DEFAULT_SELECTION_KEY_PREFIX = 'compareintel_default_model_selection'
 const ANONYMOUS_ID_KEY = 'compareintel_anonymous_id'
 
 export interface SavedModelSelection {
@@ -29,6 +30,9 @@ export interface UseSavedModelSelectionsReturn {
   loadSelection: (id: string) => string[] | null
   deleteSelection: (id: string) => void
   renameSelection: (id: string, newName: string) => { success: boolean; error?: string }
+  setDefaultSelection: (id: string | null) => void
+  getDefaultSelectionId: () => string | null
+  getDefaultSelection: () => SavedModelSelection | null
   canSaveMore: boolean
   maxSelections: number
 }
@@ -71,6 +75,45 @@ function getStorageKey(userId: number | undefined): string {
 }
 
 /**
+ * Get the default selection storage key for a specific user
+ * @param userId - The user ID (number for registered users, undefined for anonymous)
+ */
+function getDefaultSelectionKey(userId: number | undefined): string {
+  if (userId !== undefined) {
+    return `${DEFAULT_SELECTION_KEY_PREFIX}_user_${userId}`
+  }
+  return `${DEFAULT_SELECTION_KEY_PREFIX}_${getAnonymousId()}`
+}
+
+/**
+ * Load default selection ID from localStorage
+ */
+function loadDefaultSelectionId(defaultKey: string): string | null {
+  try {
+    const stored = localStorage.getItem(defaultKey)
+    return stored || null
+  } catch (error) {
+    console.warn('Failed to load default selection ID from localStorage:', error)
+    return null
+  }
+}
+
+/**
+ * Save default selection ID to localStorage
+ */
+function saveDefaultSelectionId(defaultKey: string, selectionId: string | null): void {
+  try {
+    if (selectionId === null) {
+      localStorage.removeItem(defaultKey)
+    } else {
+      localStorage.setItem(defaultKey, selectionId)
+    }
+  } catch (error) {
+    console.warn('Failed to save default selection ID to localStorage:', error)
+  }
+}
+
+/**
  * Load saved selections from localStorage for a specific user
  */
 function loadFromStorage(storageKey: string): SavedModelSelection[] {
@@ -109,9 +152,11 @@ export function useSavedModelSelections(
   tier: SubscriptionTier = 'unregistered'
 ): UseSavedModelSelectionsReturn {
   const [savedSelections, setSavedSelections] = useState<SavedModelSelection[]>([])
+  const [defaultSelectionId, setDefaultSelectionId] = useState<string | null>(null)
 
   // Compute the storage key based on user ID
   const storageKey = useMemo(() => getStorageKey(userId), [userId])
+  const defaultSelectionKey = useMemo(() => getDefaultSelectionKey(userId), [userId])
 
   // Calculate max selections based on tier
   const maxSelections = useMemo(() => getSavedModelSelectionLimit(tier), [tier])
@@ -119,7 +164,8 @@ export function useSavedModelSelections(
   // Load saved selections from localStorage when storage key changes
   useEffect(() => {
     setSavedSelections(loadFromStorage(storageKey))
-  }, [storageKey])
+    setDefaultSelectionId(loadDefaultSelectionId(defaultSelectionKey))
+  }, [storageKey, defaultSelectionKey])
 
   // Check if user can save more selections
   const canSaveMore = savedSelections.length < maxSelections
@@ -197,8 +243,14 @@ export function useSavedModelSelections(
       const updated = savedSelections.filter(s => s.id !== id)
       setSavedSelections(updated)
       saveToStorage(storageKey, updated)
+
+      // If the deleted selection was the default, clear the default
+      if (defaultSelectionId === id) {
+        setDefaultSelectionId(null)
+        saveDefaultSelectionId(defaultSelectionKey, null)
+      }
     },
-    [savedSelections, storageKey]
+    [savedSelections, storageKey, defaultSelectionId, defaultSelectionKey]
   )
 
   /**
@@ -241,12 +293,49 @@ export function useSavedModelSelections(
     [savedSelections, storageKey]
   )
 
+  /**
+   * Set the default selection (only one can be default at a time)
+   */
+  const setDefaultSelection = useCallback(
+    (id: string | null): void => {
+      // If setting a new default, verify the selection exists
+      if (id !== null && !savedSelections.some(s => s.id === id)) {
+        console.warn('Cannot set default: selection not found')
+        return
+      }
+
+      setDefaultSelectionId(id)
+      saveDefaultSelectionId(defaultSelectionKey, id)
+    },
+    [savedSelections, defaultSelectionKey]
+  )
+
+  /**
+   * Get the default selection ID
+   */
+  const getDefaultSelectionId = useCallback((): string | null => {
+    return defaultSelectionId
+  }, [defaultSelectionId])
+
+  /**
+   * Get the default selection object
+   */
+  const getDefaultSelection = useCallback((): SavedModelSelection | null => {
+    if (!defaultSelectionId) {
+      return null
+    }
+    return savedSelections.find(s => s.id === defaultSelectionId) || null
+  }, [defaultSelectionId, savedSelections])
+
   return {
     savedSelections,
     saveSelection,
     loadSelection,
     deleteSelection,
     renameSelection,
+    setDefaultSelection,
+    getDefaultSelectionId,
+    getDefaultSelection,
     canSaveMore,
     maxSelections,
   }

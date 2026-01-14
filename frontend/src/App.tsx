@@ -145,6 +145,9 @@ function AppContent() {
     saveSelection: saveModelSelection,
     loadSelection: loadModelSelectionFromStorage,
     deleteSelection: deleteModelSelection,
+    setDefaultSelection,
+    getDefaultSelectionId,
+    getDefaultSelection,
     canSaveMore: canSaveMoreSelections,
     maxSelections: maxSavedSelections,
   } = savedSelectionsHook
@@ -155,6 +158,9 @@ function AppContent() {
   // File attachments state (can be AttachedFile for new uploads or StoredAttachedFile for loaded history)
   const [attachedFiles, setAttachedFilesState] = useState<(AttachedFile | StoredAttachedFile)[]>([])
   const [webSearchEnabled, setWebSearchEnabled] = useState(false)
+
+  // Track default selection override state (for current session)
+  const [defaultSelectionOverridden, setDefaultSelectionOverridden] = useState(false)
 
   // User location state (for accurate location context)
   const [userLocation, setUserLocation] = useState<string | null>(null)
@@ -566,6 +572,12 @@ function AppContent() {
           setConversations([])
           setResponse(null)
         }
+
+        // If loading the default selection, reset the override flag
+        const defaultSelectionId = getDefaultSelectionId()
+        if (defaultSelectionId === id) {
+          setDefaultSelectionOverridden(false)
+        }
       }
     },
     [
@@ -578,6 +590,7 @@ function AppContent() {
       conversations.length,
       setConversations,
       setResponse,
+      getDefaultSelectionId,
     ]
   )
 
@@ -3592,7 +3605,104 @@ function AppContent() {
     }
 
     fetchModels()
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps -- Initializes on mount; auth changes handled separately
+  }, [])
+
+  // Load default selection when user is authenticated, models are loaded, and default hasn't been overridden
+  useEffect(() => {
+    // Only load default for authenticated users
+    if (!isAuthenticated || !user) {
+      return
+    }
+
+    // Wait for models to be loaded
+    if (isLoadingModels || Object.keys(modelsByProvider).length === 0) {
+      return
+    }
+
+    // Don't load if default has been overridden in this session
+    if (defaultSelectionOverridden) {
+      return
+    }
+
+    // Don't load if models are already selected (user may have manually selected)
+    if (selectedModels.length > 0) {
+      return
+    }
+
+    // Get default selection
+    const defaultSelection = getDefaultSelection()
+    if (!defaultSelection) {
+      return
+    }
+
+    // Load the default selection using the same logic as handleLoadModelSelection
+    const modelIds = defaultSelection.modelIds
+
+    // Validate models are still available and within tier limits
+    const validModelIds = modelIds
+      .map(id => String(id))
+      .filter(modelId => {
+        // Check if model exists in modelsByProvider
+        for (const providerModels of Object.values(modelsByProvider)) {
+          const model = providerModels.find(m => String(m.id) === modelId)
+          if (model) {
+            // Check tier access
+            const userTier = user?.subscription_tier || 'free'
+            const isPaidTier = ['starter', 'starter_plus', 'pro', 'pro_plus'].includes(userTier)
+
+            // Filter out premium models for non-paid tiers
+            if (model.tier_access === 'paid' && !isPaidTier) {
+              return false
+            }
+            if (model.available === false) {
+              return false
+            }
+            return true
+          }
+        }
+        return false
+      })
+
+    // Limit to maxModelsLimit
+    const limitedModelIds = validModelIds.slice(0, maxModelsLimit)
+
+    if (limitedModelIds.length > 0) {
+      setSelectedModels(limitedModelIds)
+
+      // Update dropdown states: expand dropdowns with selections
+      setOpenDropdowns(prev => {
+        const newSet = new Set(prev)
+        let hasChanges = false
+
+        // Expand dropdowns for providers that have selected models
+        for (const [provider, providerModels] of Object.entries(modelsByProvider)) {
+          if (providerModels) {
+            const hasSelectedModels = providerModels.some(model =>
+              limitedModelIds.includes(String(model.id))
+            )
+
+            if (hasSelectedModels && !newSet.has(provider)) {
+              newSet.add(provider)
+              hasChanges = true
+            }
+          }
+        }
+
+        return hasChanges ? newSet : prev
+      })
+    }
+  }, [
+    isAuthenticated,
+    user,
+    isLoadingModels,
+    modelsByProvider,
+    defaultSelectionOverridden,
+    selectedModels.length,
+    getDefaultSelection,
+    maxModelsLimit,
+    setSelectedModels,
+    setOpenDropdowns,
+  ])
 
   // Refetch credit balance when browserFingerprint becomes available (backup for timing issues)
   useEffect(() => {
@@ -3706,6 +3816,8 @@ function AppContent() {
       setIsModelsHidden(false)
       setIsScrollLocked(false)
       setOpenDropdowns(new Set())
+      // Reset default selection override state on login
+      setDefaultSelectionOverridden(false)
       // Clear credit state from unregistered session - authenticated users have separate credit tracking
       setCreditBalance(null)
       setAnonymousCreditsRemaining(null)
@@ -3717,6 +3829,11 @@ function AppContent() {
       // Clear scroll refs
       hasScrolledToResultsRef.current = false
       shouldScrollToTopAfterFormattingRef.current = false
+    }
+
+    // Reset default selection override state on logout
+    if (wasAuthenticated && isNowUnregistered) {
+      setDefaultSelectionOverridden(false)
     }
 
     // Reset page state when user logs out
@@ -3891,6 +4008,36 @@ function AppContent() {
       setError(null)
     }
   }
+
+  // Track manual model changes to disable default selection for session
+  useEffect(() => {
+    // Skip if no default selection
+    const defaultSelection = getDefaultSelection()
+    if (!defaultSelection) {
+      return
+    }
+
+    // Skip if no models selected yet (initial state)
+    if (selectedModels.length === 0) {
+      return
+    }
+
+    // Check if current selection matches default selection
+    const defaultModelIds = defaultSelection.modelIds.map(id => String(id)).sort()
+    const currentModelIds = [...selectedModels].sort()
+
+    const matchesDefault =
+      defaultModelIds.length === currentModelIds.length &&
+      defaultModelIds.every((id, index) => id === currentModelIds[index])
+
+    // If selection matches default, reset override flag (user manually selected back to default)
+    // If selection doesn't match default, mark as overridden (user manually changed from default)
+    if (matchesDefault) {
+      setDefaultSelectionOverridden(false)
+    } else {
+      setDefaultSelectionOverridden(true)
+    }
+  }, [selectedModels, getDefaultSelection])
 
   const handleModelToggle = async (modelId: string) => {
     if (selectedModels.includes(modelId)) {
@@ -6881,6 +7028,10 @@ function AppContent() {
                   onSaveModelSelection={handleSaveModelSelection}
                   onLoadModelSelection={handleLoadModelSelection}
                   onDeleteModelSelection={deleteModelSelection}
+                  onSetDefaultSelection={setDefaultSelection}
+                  getDefaultSelectionId={getDefaultSelectionId}
+                  getDefaultSelection={getDefaultSelection}
+                  defaultSelectionOverridden={defaultSelectionOverridden}
                   canSaveMoreSelections={canSaveMoreSelections}
                   maxSavedSelections={maxSavedSelections}
                   attachedFiles={attachedFiles}
