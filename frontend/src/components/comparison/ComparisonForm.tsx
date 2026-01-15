@@ -1508,10 +1508,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
                   const defaultSelection = getDefaultSelection()
                   if (!defaultSelection) return null
                   return (
-                    <span
-                      className="default-selection-name"
-                      title={`Default model selection: ${defaultSelection.name}`}
-                    >
+                    <span className="default-selection-name" title={`Default model selection`}>
                       {defaultSelection.name}
                     </span>
                   )
@@ -2121,8 +2118,8 @@ export const ComparisonForm = memo<ComparisonFormProps>(
                                 onClick={e => e.stopPropagation()}
                                 title={
                                   isDefault
-                                    ? `Default model selection: ${selection.name}`
-                                    : `Set "${selection.name}" as default model selection`
+                                    ? `Default model selection`
+                                    : `Set as default model selection`
                                 }
                                 className="saved-selection-default-checkbox"
                               />
