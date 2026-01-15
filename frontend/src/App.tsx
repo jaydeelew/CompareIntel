@@ -7274,6 +7274,8 @@ function AppContent() {
                         onClick={e => {
                           e.stopPropagation()
                           setSelectedModels([])
+                          // Mark default selection as overridden so it doesn't auto-reload
+                          setDefaultSelectionOverridden(true)
                           // Clear comparison results if they exist
                           if (response || conversations.length > 0) {
                             setConversations([])
