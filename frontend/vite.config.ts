@@ -73,7 +73,7 @@ export default defineConfig({
         name: 'CompareIntel',
         short_name: 'CompareIntel',
         description:
-          'Compare 50+ AI models side-by-side including GPT-4, Claude, Gemini, and Llama. Test prompts simultaneously with LaTeX/Markdown rendering.',
+          'Compare Top AI models side-by-side including GPT, Claude, Gemini, Grok, Llama, Deepseek and more. Test prompts simultaneously with LaTeX/Markdown rendering.',
         theme_color: '#2563eb',
         background_color: '#ffffff',
         display: 'standalone',
