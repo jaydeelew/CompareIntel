@@ -1370,18 +1370,19 @@ def _get_huggingface_tokenizer(model_id: str) -> Optional[Any]:
         return _tokenizer_cache.get(hf_model_name)
 
 
-def detect_repetition(content: str, window_size: int = 200, ngram_size: int = 4, repetition_threshold: int = 3) -> bool:
+def detect_repetition(content: str, window_size: int = 500, ngram_size: int = 5, repetition_threshold: int = 6) -> bool:
     """
     Detect if content contains repetitive patterns that indicate a looping response.
     
     Uses n-gram analysis on a sliding window to detect when the model is repeating
-    the same sequences of words/tokens.
+    the same sequences of words/tokens. This detection is intentionally conservative
+    to avoid false positives on legitimate structured content.
     
     Args:
         content: The content to analyze
-        window_size: Size of sliding window in characters (default: 200)
-        ngram_size: Size of n-grams to check (default: 4 words)
-        repetition_threshold: Number of times an n-gram must repeat to trigger (default: 3)
+        window_size: Size of sliding window in characters (default: 500)
+        ngram_size: Size of n-grams to check (default: 5 words)
+        repetition_threshold: Number of times an n-gram must repeat to trigger (default: 6)
     
     Returns:
         True if repetition is detected, False otherwise
@@ -1404,16 +1405,42 @@ def detect_repetition(content: str, window_size: int = 200, ngram_size: int = 4,
         ngram = tuple(words[i:i + ngram_size])
         ngrams[ngram] = ngrams.get(ngram, 0) + 1
     
+    total_ngrams = len(words) - ngram_size + 1
+    
     # Check if any n-gram appears too many times
     for ngram, count in ngrams.items():
         if count >= repetition_threshold:
             # Additional check: ensure it's not just common words
             # Skip if all words in n-gram are very short (likely common words)
-            if all(len(word) <= 2 for word in ngram):
+            if all(len(word) <= 3 for word in ngram):
                 continue
+            
+            # Skip common structural patterns that aren't actual loops
+            ngram_text = ' '.join(ngram).lower()
+            
+            # Skip numbered list patterns (e.g., "1.", "2.", "step 1", etc.)
+            if any(word.rstrip('.:)').isdigit() for word in ngram):
+                continue
+            
+            # Skip common markdown/code patterns
+            skip_patterns = [
+                '```', '---', '***', '===', '|', '#',  # Markdown
+                'def ', 'class ', 'return ', 'import ',  # Python
+                'function ', 'const ', 'let ', 'var ',  # JavaScript
+                'if ', 'else ', 'for ', 'while ',  # Control flow
+            ]
+            if any(pattern in ngram_text for pattern in skip_patterns):
+                continue
+            
+            # Use ratio-based check: n-gram should represent significant portion of content
+            # This prevents false positives when a phrase appears a few times in long content
+            repetition_ratio = count / total_ngrams
+            if repetition_ratio < 0.15:  # Must occupy at least 15% of the window
+                continue
+            
             logger.warning(
                 f"Repetition detected: n-gram '{' '.join(ngram)}' appears {count} times "
-                f"in last {window_size} characters"
+                f"({repetition_ratio:.1%} of window) in last {window_size} characters"
             )
             return True
     
@@ -1937,7 +1964,7 @@ def call_openrouter_streaming(
                             
                             # Check for repetition in streaming content
                             # Only check if we have enough content (avoid false positives early)
-                            if len(full_content) > 150:
+                            if len(full_content) > 500:
                                 if detect_repetition(full_content):
                                     logger.warning(
                                         f"Model {model_id} detected repetition in streaming response. "
@@ -1964,7 +1991,7 @@ def call_openrouter_streaming(
                                         full_content += content_chunk
                                         
                                         # Check for repetition
-                                        if len(full_content) > 150:
+                                        if len(full_content) > 500:
                                             if detect_repetition(full_content):
                                                 logger.warning(
                                                     f"Model {model_id} detected repetition in streaming response. "
@@ -1982,7 +2009,7 @@ def call_openrouter_streaming(
                                     full_content += content_chunk
                                     
                                     # Check for repetition
-                                    if len(full_content) > 150:
+                                    if len(full_content) > 500:
                                         if detect_repetition(full_content):
                                             logger.warning(
                                                 f"Model {model_id} detected repetition in streaming response. "
@@ -3297,7 +3324,7 @@ def call_openrouter_streaming(
                                     full_content += content_chunk
                                     
                                     # Check for repetition in continuation streaming
-                                    if len(full_content) > 150:
+                                    if len(full_content) > 500:
                                         if detect_repetition(full_content):
                                             logger.warning(
                                                 f"Model {model_id} detected repetition in continuation streaming response. "
@@ -3326,7 +3353,7 @@ def call_openrouter_streaming(
                                                 full_content += content_chunk
                                                 
                                                 # Check for repetition
-                                                if len(full_content) > 150:
+                                                if len(full_content) > 500:
                                                     if detect_repetition(full_content):
                                                         logger.warning(
                                                             f"Model {model_id} detected repetition in continuation streaming response. "
@@ -3344,7 +3371,7 @@ def call_openrouter_streaming(
                                             full_content += content_chunk
                                             
                                             # Check for repetition
-                                            if len(full_content) > 150:
+                                            if len(full_content) > 500:
                                                 if detect_repetition(full_content):
                                                     logger.warning(
                                                         f"Model {model_id} detected repetition in continuation streaming response. "
@@ -3481,7 +3508,7 @@ def call_openrouter_streaming(
                                     full_content += content_chunk
                                     
                                     # Check for repetition
-                                    if len(full_content) > 150:
+                                    if len(full_content) > 500:
                                         if detect_repetition(full_content):
                                             logger.warning(
                                                 f"Model {model_id} detected repetition in final completion response. "
@@ -3505,7 +3532,7 @@ def call_openrouter_streaming(
                                                 full_content += new_content
                                                 
                                                 # Check for repetition
-                                                if len(full_content) > 150:
+                                                if len(full_content) > 500:
                                                     if detect_repetition(full_content):
                                                         logger.warning(
                                                             f"Model {model_id} detected repetition in final completion response. "
@@ -3521,7 +3548,7 @@ def call_openrouter_streaming(
                                             full_content += message_content
                                             
                                             # Check for repetition
-                                            if len(full_content) > 150:
+                                            if len(full_content) > 500:
                                                 if detect_repetition(full_content):
                                                     logger.warning(
                                                         f"Model {model_id} detected repetition in final completion response. "
@@ -3625,7 +3652,7 @@ def call_openrouter_streaming(
                                                 full_content += content_chunk
                                                 
                                                 # Check for repetition
-                                                if len(full_content) > 150:
+                                                if len(full_content) > 500:
                                                     if detect_repetition(full_content):
                                                         logger.warning(
                                                             f"Model {model_id} detected repetition in incomplete response completion. "
@@ -3649,7 +3676,7 @@ def call_openrouter_streaming(
                                                             full_content += new_content
                                                             
                                                             # Check for repetition
-                                                            if len(full_content) > 150:
+                                                            if len(full_content) > 500:
                                                                 if detect_repetition(full_content):
                                                                     logger.warning(
                                                                         f"Model {model_id} detected repetition in incomplete response completion. "
@@ -3665,7 +3692,7 @@ def call_openrouter_streaming(
                                                         full_content += message_content
                                                         
                                                         # Check for repetition
-                                                        if len(full_content) > 150:
+                                                        if len(full_content) > 500:
                                                             if detect_repetition(full_content):
                                                                 logger.warning(
                                                                     f"Model {model_id} detected repetition in incomplete response completion. "
