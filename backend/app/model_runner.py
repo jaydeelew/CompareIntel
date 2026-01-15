@@ -188,6 +188,7 @@ MODELS_BY_PROVIDER = {
             "category": "Language",
             "provider": "Anthropic",
             "supports_web_search": True,  # Supports tool use
+            "knowledge_cutoff": "July 2024",
         },
         {
             "id": "anthropic/claude-haiku-4.5",
@@ -196,6 +197,7 @@ MODELS_BY_PROVIDER = {
             "category": "Language",
             "provider": "Anthropic",
             "supports_web_search": True,  # All Claude models support function calling
+            "knowledge_cutoff": "February 2025",
         },
         {
             "id": "anthropic/claude-3.7-sonnet",
@@ -204,6 +206,7 @@ MODELS_BY_PROVIDER = {
             "category": "Language/Reasoning",
             "provider": "Anthropic",
             "supports_web_search": True,
+            "knowledge_cutoff": "October 2024",
         },
         {
             "id": "anthropic/claude-opus-4",
@@ -212,6 +215,7 @@ MODELS_BY_PROVIDER = {
             "category": "Language",
             "provider": "Anthropic",
             "supports_web_search": True,
+            "knowledge_cutoff": "March 2025",
         },
         {
             "id": "anthropic/claude-sonnet-4",
@@ -220,6 +224,7 @@ MODELS_BY_PROVIDER = {
             "category": "Language",
             "provider": "Anthropic",
             "supports_web_search": True,  # All Claude models support function calling
+            "knowledge_cutoff": "March 2025",
         },
         {
             "id": "anthropic/claude-opus-4.1",
@@ -228,6 +233,7 @@ MODELS_BY_PROVIDER = {
             "category": "Language/Code",
             "provider": "Anthropic",
             "supports_web_search": True,  # All Claude models support function calling
+            "knowledge_cutoff": "March 2025",
         },
         {
             "id": "anthropic/claude-opus-4.5",
@@ -236,6 +242,7 @@ MODELS_BY_PROVIDER = {
             "category": "Language",
             "provider": "Anthropic",
             "supports_web_search": True,  # All Claude models support function calling
+            "knowledge_cutoff": "May 2025",
         },
         {
             "id": "anthropic/claude-sonnet-4.5",
@@ -244,6 +251,7 @@ MODELS_BY_PROVIDER = {
             "category": "Language",
             "provider": "Anthropic",
             "supports_web_search": True,  # All Claude models support function calling
+            "knowledge_cutoff": "May 2025",
         },
     ],
     "Cohere": [
@@ -254,6 +262,7 @@ MODELS_BY_PROVIDER = {
             "category": "Language",
             "provider": "Cohere",
             "supports_web_search": False,
+            "knowledge_cutoff": "December 2024",
         },
         {
             "id": "cohere/command-r-plus-08-2024",
@@ -262,6 +271,7 @@ MODELS_BY_PROVIDER = {
             "category": "Language/Reasoning",
             "provider": "Cohere",
             "supports_web_search": True,  # Supports function calling
+            "knowledge_cutoff": "August 2024",
         },
         {
             "id": "cohere/command-a",
@@ -270,6 +280,7 @@ MODELS_BY_PROVIDER = {
             "category": "Language",
             "provider": "Cohere",
             "supports_web_search": False,  # Does not support function calling
+            "knowledge_cutoff": "March 2025",
         },
     ],
     "DeepSeek": [
@@ -280,6 +291,7 @@ MODELS_BY_PROVIDER = {
             "category": "Language/Reasoning",
             "provider": "DeepSeek",
             "supports_web_search": True,  # Supports function calling
+            "knowledge_cutoff": "July 2025",
         },
         {
             "id": "deepseek/deepseek-v3.2-exp",
@@ -288,6 +300,7 @@ MODELS_BY_PROVIDER = {
             "category": "Language/Reasoning",
             "provider": "DeepSeek",
             "supports_web_search": True,  # Supports function calling
+            "knowledge_cutoff": "October 2025",
         },
         {
             "id": "deepseek/deepseek-r1",
@@ -296,6 +309,7 @@ MODELS_BY_PROVIDER = {
             "category": "Reasoning",
             "provider": "DeepSeek",
             "supports_web_search": True,  # Supports function calling
+            "knowledge_cutoff": "January 2025",
         },
     ],
     "Google": [
@@ -306,6 +320,7 @@ MODELS_BY_PROVIDER = {
             "category": "Language",
             "provider": "Google",
             "supports_web_search": True,  # All Gemini models support function calling
+            "knowledge_cutoff": "August 2024",
         },
         {
             "id": "google/gemini-2.5-flash",
@@ -314,6 +329,7 @@ MODELS_BY_PROVIDER = {
             "category": "Language",
             "provider": "Google",
             "supports_web_search": True,  # All Gemini models support function calling
+            "knowledge_cutoff": "January 2025",
         },
         {
             "id": "google/gemini-2.5-pro",
@@ -322,6 +338,7 @@ MODELS_BY_PROVIDER = {
             "category": "Language",
             "provider": "Google",
             "supports_web_search": True,
+            "knowledge_cutoff": "January 2025",
         },
         {
             "id": "google/gemini-3-flash-preview",
@@ -330,6 +347,7 @@ MODELS_BY_PROVIDER = {
             "category": "Language",
             "provider": "Google",
             "supports_web_search": True,  # All Gemini models support function calling
+            "knowledge_cutoff": "August 2025",
         },
         {
             "id": "google/gemini-3-pro-preview",
@@ -338,6 +356,7 @@ MODELS_BY_PROVIDER = {
             "category": "Language",
             "provider": "Google",
             "supports_web_search": True,  # All Gemini models support function calling
+            "knowledge_cutoff": "August 2025",
         },
     ],
     "Kwaipilot": [    ],
@@ -349,6 +368,7 @@ MODELS_BY_PROVIDER = {
             "category": "Language",
             "provider": "Meta",
             "supports_web_search": False,
+            "knowledge_cutoff": "December 2023",
         },
         {
             "id": "meta-llama/llama-4-maverick",
@@ -357,6 +377,7 @@ MODELS_BY_PROVIDER = {
             "category": "Multimodal",
             "provider": "Meta",
             "supports_web_search": True,  # Supports function calling
+            "knowledge_cutoff": "August 2024",
         },
         {
             "id": "meta-llama/llama-4-scout",
@@ -365,6 +386,7 @@ MODELS_BY_PROVIDER = {
             "category": "Multimodal",
             "provider": "Meta",
             "supports_web_search": True,  # Supports function calling
+            "knowledge_cutoff": "August 2024",
         },
         {
             "id": "meta-llama/llama-3.1-405b-instruct",
@@ -373,6 +395,7 @@ MODELS_BY_PROVIDER = {
             "category": "Language",
             "provider": "Meta",
             "supports_web_search": True,  # Supports function calling
+            "knowledge_cutoff": "December 2023",
         },
         {
             "id": "meta-llama/llama-3.3-70b-instruct",
@@ -381,6 +404,7 @@ MODELS_BY_PROVIDER = {
             "category": "Language",
             "provider": "Meta",
             "supports_web_search": True,  # Supports function calling
+            "knowledge_cutoff": "December 2023",
         },
     ],
     "Microsoft": [
@@ -391,6 +415,7 @@ MODELS_BY_PROVIDER = {
             "category": "Language/Reasoning",
             "provider": "Microsoft",
             "supports_web_search": False,
+            "knowledge_cutoff": "June 2024",
         },
         {
             "id": "microsoft/wizardlm-2-8x22b",
@@ -399,6 +424,7 @@ MODELS_BY_PROVIDER = {
             "category": "Language/Reasoning",
             "provider": "Microsoft",
             "supports_web_search": False,
+            "knowledge_cutoff": "April 2024",
         },
         {
             "id": "microsoft/phi-4-reasoning-plus",
@@ -407,6 +433,7 @@ MODELS_BY_PROVIDER = {
             "category": "Reasoning",
             "provider": "Microsoft",
             "supports_web_search": False,
+            "knowledge_cutoff": "June 2024",
         },
     ],
     "Minimax": [
@@ -417,6 +444,7 @@ MODELS_BY_PROVIDER = {
             "category": "Language",
             "provider": "Minimax",
             "supports_web_search": True,  # Supports function calling
+            "knowledge_cutoff": None,  # Knowledge cutoff date pending
         },
     ],
     "Mistral": [
@@ -427,6 +455,7 @@ MODELS_BY_PROVIDER = {
             "category": "Code",
             "provider": "Mistral",
             "supports_web_search": True,  # Agentic model - supports function calling
+            "knowledge_cutoff": "December 2025",
         },
         {
             "id": "mistralai/devstral-small",
@@ -435,6 +464,7 @@ MODELS_BY_PROVIDER = {
             "category": "Code",
             "provider": "Mistral",
             "supports_web_search": True,  # Agentic model - supports function calling
+            "knowledge_cutoff": "April 2024",
         },
         {
             "id": "mistralai/mistral-medium-3.1",
@@ -443,6 +473,7 @@ MODELS_BY_PROVIDER = {
             "category": "Language",
             "provider": "Mistral",
             "supports_web_search": True,  # Mistral Medium supports function calling
+            "knowledge_cutoff": "October 2024",
         },
         {
             "id": "mistralai/mistral-small-3.2-24b-instruct",
@@ -451,6 +482,7 @@ MODELS_BY_PROVIDER = {
             "category": "Multimodal",
             "provider": "Mistral",
             "supports_web_search": True,
+            "knowledge_cutoff": "October 2024",
         },
         {
             "id": "mistralai/mistral-large",
@@ -459,6 +491,7 @@ MODELS_BY_PROVIDER = {
             "category": "Language/Reasoning",
             "provider": "Mistral",
             "supports_web_search": True,
+            "knowledge_cutoff": "July 2024",
         },
         {
             "id": "mistralai/codestral-2508",
@@ -467,6 +500,7 @@ MODELS_BY_PROVIDER = {
             "category": "Code",
             "provider": "Mistral",
             "supports_web_search": True,  # Supports function calling
+            "knowledge_cutoff": "August 2025",
         },
     ],
     "Mistralai": [
@@ -477,6 +511,7 @@ MODELS_BY_PROVIDER = {
             "category": "Language",
             "provider": "Mistralai",
             "supports_web_search": True,  # Agentic coding model - supports function calling
+            "knowledge_cutoff": "December 2025",
         },
     ],
     "OpenAI": [
@@ -487,6 +522,7 @@ MODELS_BY_PROVIDER = {
             "category": "Language",
             "provider": "OpenAI",
             "supports_web_search": True,  # Supports function calling
+            "knowledge_cutoff": "May 2025",
         },
         {
             "id": "openai/o3-mini",
@@ -495,6 +531,7 @@ MODELS_BY_PROVIDER = {
             "category": "Reasoning",
             "provider": "OpenAI",
             "supports_web_search": True,  # Supports function calling
+            "knowledge_cutoff": "October 2023",
         },
         {
             "id": "openai/gpt-4o-mini",
@@ -503,6 +540,7 @@ MODELS_BY_PROVIDER = {
             "category": "Language",
             "provider": "OpenAI",
             "supports_web_search": True,  # All GPT-4o+ models support function calling
+            "knowledge_cutoff": "October 2023",
         },
         {
             "id": "openai/gpt-5-mini",
@@ -511,6 +549,7 @@ MODELS_BY_PROVIDER = {
             "category": "Language",
             "provider": "OpenAI",
             "supports_web_search": True,  # All GPT-5 models support function calling
+            "knowledge_cutoff": "September 2024",
         },
         {
             "id": "openai/gpt-5-nano",
@@ -519,6 +558,7 @@ MODELS_BY_PROVIDER = {
             "category": "Language",
             "provider": "OpenAI",
             "supports_web_search": True,  # All GPT-5 models support function calling
+            "knowledge_cutoff": "September 2024",
         },
         {
             "id": "openai/gpt-5.1-codex-mini",
@@ -527,6 +567,7 @@ MODELS_BY_PROVIDER = {
             "category": "Code",
             "provider": "OpenAI",
             "supports_web_search": True,  # All GPT-5 models support function calling
+            "knowledge_cutoff": "June 2025",
         },
         {
             "id": "openai/o3",
@@ -535,6 +576,7 @@ MODELS_BY_PROVIDER = {
             "category": "Reasoning",
             "provider": "OpenAI",
             "supports_web_search": True,  # Supports function calling
+            "knowledge_cutoff": "October 2023",
         },
         {
             "id": "openai/gpt-4o",
@@ -543,6 +585,7 @@ MODELS_BY_PROVIDER = {
             "category": "Language",
             "provider": "OpenAI",
             "supports_web_search": True,
+            "knowledge_cutoff": "October 2023",
         },
         {
             "id": "openai/gpt-5",
@@ -551,6 +594,7 @@ MODELS_BY_PROVIDER = {
             "category": "Language",
             "provider": "OpenAI",
             "supports_web_search": True,
+            "knowledge_cutoff": "September 2024",
         },
         {
             "id": "openai/gpt-5-chat",
@@ -559,6 +603,7 @@ MODELS_BY_PROVIDER = {
             "category": "Language",
             "provider": "OpenAI",
             "supports_web_search": False,  # OpenRouter API confirms this model does NOT support function/tool calling
+            "knowledge_cutoff": "September 2024",
         },
         {
             "id": "openai/gpt-5-codex",
@@ -567,6 +612,7 @@ MODELS_BY_PROVIDER = {
             "category": "Code",
             "provider": "OpenAI",
             "supports_web_search": True,  # All GPT-5 models support function calling
+            "knowledge_cutoff": "September 2024",
         },
         {
             "id": "openai/gpt-5.1",
@@ -575,6 +621,7 @@ MODELS_BY_PROVIDER = {
             "category": "Language",
             "provider": "OpenAI",
             "supports_web_search": True,  # All GPT-5 models support function calling
+            "knowledge_cutoff": "June 2025",
         },
         {
             "id": "openai/gpt-5.1-chat",
@@ -583,6 +630,7 @@ MODELS_BY_PROVIDER = {
             "category": "Language",
             "provider": "OpenAI",
             "supports_web_search": True,  # All GPT-5 models support function calling
+            "knowledge_cutoff": "June 2025",
         },
         {
             "id": "openai/gpt-5.1-codex",
@@ -591,6 +639,7 @@ MODELS_BY_PROVIDER = {
             "category": "Code",
             "provider": "OpenAI",
             "supports_web_search": True,  # All GPT-5 models support function calling
+            "knowledge_cutoff": "June 2025",
         },
         {
             "id": "openai/gpt-5.1-codex-max",
@@ -599,6 +648,7 @@ MODELS_BY_PROVIDER = {
             "category": "Language",
             "provider": "OpenAI",
             "supports_web_search": True,  # All GPT-5 models support function calling
+            "knowledge_cutoff": "June 2025",
         },
         {
             "id": "openai/gpt-5.2",
@@ -607,6 +657,7 @@ MODELS_BY_PROVIDER = {
             "category": "Language",
             "provider": "OpenAI",
             "supports_web_search": True,  # All GPT-5 models support function calling
+            "knowledge_cutoff": "August 2025",
         },
         {
             "id": "openai/gpt-5.2-chat",
@@ -615,6 +666,7 @@ MODELS_BY_PROVIDER = {
             "category": "Language",
             "provider": "OpenAI",
             "supports_web_search": True,  # All GPT-5 models support function calling
+            "knowledge_cutoff": "August 2025",
         },
         {
             "id": "openai/gpt-5.2-pro",
@@ -623,6 +675,7 @@ MODELS_BY_PROVIDER = {
             "category": "Language",
             "provider": "OpenAI",
             "supports_web_search": True,  # All GPT-5 models support function calling
+            "knowledge_cutoff": "August 2025",
         },
     ],
     "Qwen": [
@@ -633,6 +686,7 @@ MODELS_BY_PROVIDER = {
             "category": "Language",
             "provider": "Qwen",
             "supports_web_search": True,  # Supports function calling
+            "knowledge_cutoff": "July 2025",
         },
         {
             "id": "qwen/qwen3-coder-flash",
@@ -641,6 +695,7 @@ MODELS_BY_PROVIDER = {
             "category": "Code",
             "provider": "Qwen",
             "supports_web_search": True,  # Supports function calling
+            "knowledge_cutoff": "June 2025",
         },
         {
             "id": "qwen/qwen3-next-80b-a3b-instruct",
@@ -649,6 +704,7 @@ MODELS_BY_PROVIDER = {
             "category": "Language",
             "provider": "Qwen",
             "supports_web_search": True,  # Supports function calling
+            "knowledge_cutoff": "September 2025",
         },
         {
             "id": "qwen/qwen3-235b-a22b",
@@ -657,6 +713,7 @@ MODELS_BY_PROVIDER = {
             "category": "Language",
             "provider": "Qwen",
             "supports_web_search": True,  # Supports function calling
+            "knowledge_cutoff": "April 2025",
         },
         {
             "id": "qwen/qwen3-coder",
@@ -665,6 +722,7 @@ MODELS_BY_PROVIDER = {
             "category": "Code",
             "provider": "Qwen",
             "supports_web_search": True,  # Agentic coding model - supports function calling
+            "knowledge_cutoff": "June 2025",
         },
         {
             "id": "qwen/qwen3-coder-plus",
@@ -673,6 +731,7 @@ MODELS_BY_PROVIDER = {
             "category": "Code",
             "provider": "Qwen",
             "supports_web_search": True,  # Supports function calling
+            "knowledge_cutoff": "June 2025",
         },
         {
             "id": "qwen/qwen3-max",
@@ -681,6 +740,7 @@ MODELS_BY_PROVIDER = {
             "category": "Language",
             "provider": "Qwen",
             "supports_web_search": True,  # Supports function calling
+            "knowledge_cutoff": "April 2025",
         },
         {
             "id": "qwen/qwen3-next-80b-a3b-thinking",
@@ -689,6 +749,7 @@ MODELS_BY_PROVIDER = {
             "category": "Language/Reasoning",
             "provider": "Qwen",
             "supports_web_search": True,  # Supports function calling
+            "knowledge_cutoff": "September 2025",
         },
         {
             "id": "qwen/qwen3-vl-235b-a22b-thinking",
@@ -697,6 +758,7 @@ MODELS_BY_PROVIDER = {
             "category": "Multimodal/Reasoning",
             "provider": "Qwen",
             "supports_web_search": True,  # Supports function calling
+            "knowledge_cutoff": "April 2025",
         },
     ],
     "xAI": [
@@ -706,6 +768,7 @@ MODELS_BY_PROVIDER = {
             "description": 'A speedy, economical reasoning model optimized for agentic coding and development tasks.',
             "category": "Language",
             "provider": "xAI",
+            "knowledge_cutoff": "July 2025",
         },
         {
             "id": "x-ai/grok-4-fast",
@@ -713,6 +776,7 @@ MODELS_BY_PROVIDER = {
             "description": 'A cost-efficient multimodal model with 2M token context for fast, large-scale processing.',
             "category": "Language",
             "provider": "xAI",
+            "knowledge_cutoff": "June 2025",
         },
         {
             "id": "x-ai/grok-4.1-fast",
@@ -720,6 +784,7 @@ MODELS_BY_PROVIDER = {
             "description": "Grok 4.1 Fast is xAI's best agentic tool calling model that shines in real-world use cases like customer support and deep research.",
             "category": "Language",
             "provider": "xAI",
+            "knowledge_cutoff": "August 2025",
         },
         {
             "id": "x-ai/grok-3-mini",
@@ -727,6 +792,7 @@ MODELS_BY_PROVIDER = {
             "description": 'A lightweight reasoning model with chain-of-thought capabilities for efficient problem-solving.',
             "category": "Language",
             "provider": "xAI",
+            "knowledge_cutoff": "March 2025",
         },
         {
             "id": "x-ai/grok-4",
@@ -734,6 +800,7 @@ MODELS_BY_PROVIDER = {
             "description": "xAI's flagship reasoning model with 256k context for complex analysis and generation tasks.",
             "category": "Language",
             "provider": "xAI",
+            "knowledge_cutoff": "June 2025",
         },
         {
             "id": "x-ai/grok-5",
@@ -742,6 +809,7 @@ MODELS_BY_PROVIDER = {
             "category": "Language",
             "provider": "xAI",
             "available": False,
+            "knowledge_cutoff": None,  # Knowledge cutoff date pending
         },
     ],
     "Xiaomi": [
@@ -752,6 +820,7 @@ MODELS_BY_PROVIDER = {
             "category": "Language",
             "provider": "Xiaomi",
             "supports_web_search": True,  # Supports function calling
+            "knowledge_cutoff": None,  # Knowledge cutoff date pending
         },
     ]
 ,
@@ -763,6 +832,7 @@ MODELS_BY_PROVIDER = {
             "category": "Language",
             "provider": "ZAi",
             "supports_web_search": True,  # Supports tool calling and web search via OpenRouter
+            "knowledge_cutoff": "June 2025",
         },
     ],
 }

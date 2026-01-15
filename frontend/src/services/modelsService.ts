@@ -21,6 +21,7 @@ export interface AvailableModelsResponse {
     category: string
     provider: string
     available?: boolean
+    knowledge_cutoff?: string | null
   }>
   models_by_provider: ModelsByProvider
 }

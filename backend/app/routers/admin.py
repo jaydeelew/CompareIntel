@@ -1373,10 +1373,16 @@ def extract_providers_from_content(content: str) -> list[str]:
 
 class AddModelRequest(BaseModel):
     model_id: str
+    knowledge_cutoff: Optional[str] = None  # Optional knowledge cutoff date (e.g., "March 2025")
 
 
 class DeleteModelRequest(BaseModel):
     model_id: str
+
+
+class UpdateModelKnowledgeCutoffRequest(BaseModel):
+    model_id: str
+    knowledge_cutoff: Optional[str] = None  # None means "pending", empty string means remove
 
 
 class SetActiveSearchProviderRequest(BaseModel):
@@ -1843,7 +1849,12 @@ async def add_model(
             # Create new provider section - insert in alphabetical order
             escaped_description = repr(model_description)
             supports_web_search_str = "True" if supports_web_search else "False"
-            new_provider_section = f'"{provider_name}": [\n        {{\n            "id": "{model_id}",\n            "name": "{model_name}",\n            "description": {escaped_description},\n            "category": "Language",\n            "provider": "{provider_name}",\n            "supports_web_search": {supports_web_search_str},\n        }},\n    ]'
+            knowledge_cutoff_line = ""
+            if hasattr(req, 'knowledge_cutoff') and req.knowledge_cutoff:
+                knowledge_cutoff_line = f'\n            "knowledge_cutoff": "{req.knowledge_cutoff}",'
+            elif hasattr(req, 'knowledge_cutoff') and req.knowledge_cutoff is None:
+                knowledge_cutoff_line = '\n            "knowledge_cutoff": None,  # Knowledge cutoff date pending'
+            new_provider_section = f'"{provider_name}": [\n        {{\n            "id": "{model_id}",\n            "name": "{model_name}",\n            "description": {escaped_description},\n            "category": "Language",\n            "provider": "{provider_name}",\n            "supports_web_search": {supports_web_search_str},{knowledge_cutoff_line}\n        }},\n    ]'
             
             # Get existing providers from file content (not in-memory dict which may be stale)
             existing_providers = extract_providers_from_content(content)
@@ -1901,6 +1912,12 @@ async def add_model(
             }
             if hasattr(req, 'available') and not req.available:
                 new_model_dict["available"] = False
+            # Add knowledge cutoff if provided
+            if hasattr(req, 'knowledge_cutoff') and req.knowledge_cutoff:
+                new_model_dict["knowledge_cutoff"] = req.knowledge_cutoff
+            elif hasattr(req, 'knowledge_cutoff') and req.knowledge_cutoff is None:
+                # Explicitly set to None to indicate pending
+                new_model_dict["knowledge_cutoff"] = None
             
             existing_models.append(new_model_dict)
             
@@ -1927,6 +1944,11 @@ async def add_model(
                         model_lines.append(f'            "supports_web_search": {model["supports_web_search"]},')
                     if "available" in model:
                         model_lines.append(f'            "available": {model["available"]},')
+                    if "knowledge_cutoff" in model:
+                        if model["knowledge_cutoff"]:
+                            model_lines.append(f'            "knowledge_cutoff": "{model["knowledge_cutoff"]}",')
+                        else:
+                            model_lines.append(f'            "knowledge_cutoff": None,  # Knowledge cutoff date pending')
                     model_lines.append("        },")
                     models_lines.extend(model_lines)
                 
@@ -2226,14 +2248,19 @@ async def add_model_stream(
                 if closing_brace_pos > 0:
                     escaped_description = repr(model_description)
                     supports_web_search_str = "True" if supports_web_search else "False"
+                    knowledge_cutoff_line = ""
+                    if hasattr(req, 'knowledge_cutoff') and req.knowledge_cutoff:
+                        knowledge_cutoff_line = f'\n            "knowledge_cutoff": "{req.knowledge_cutoff}",'
+                    elif hasattr(req, 'knowledge_cutoff') and req.knowledge_cutoff is None:
+                        knowledge_cutoff_line = '\n            "knowledge_cutoff": None,  # Knowledge cutoff date pending'
                     # Check if previous content has a trailing comma (usually it does)
                     content_before = content[:closing_brace_pos].rstrip()
                     if content_before.endswith(','):
                         # Previous entry has trailing comma, don't add leading comma
-                        new_provider_section = f'\n    "{provider_name}": [\n        {{\n            "id": "{model_id}",\n            "name": "{model_name}",\n            "description": {escaped_description},\n            "category": "Language",\n            "provider": "{provider_name}",\n            "supports_web_search": {supports_web_search_str},\n        }},\n    ],\n'
+                        new_provider_section = f'\n    "{provider_name}": [\n        {{\n            "id": "{model_id}",\n            "name": "{model_name}",\n            "description": {escaped_description},\n            "category": "Language",\n            "provider": "{provider_name}",\n            "supports_web_search": {supports_web_search_str},{knowledge_cutoff_line}\n        }},\n    ],\n'
                     else:
                         # Need to add comma separator
-                        new_provider_section = f',\n    "{provider_name}": [\n        {{\n            "id": "{model_id}",\n            "name": "{model_name}",\n            "description": {escaped_description},\n            "category": "Language",\n            "provider": "{provider_name}",\n            "supports_web_search": {supports_web_search_str},\n        }},\n    ],\n'
+                        new_provider_section = f',\n    "{provider_name}": [\n        {{\n            "id": "{model_id}",\n            "name": "{model_name}",\n            "description": {escaped_description},\n            "category": "Language",\n            "provider": "{provider_name}",\n            "supports_web_search": {supports_web_search_str},{knowledge_cutoff_line}\n        }},\n    ],\n'
                     content = content[:closing_brace_pos] + new_provider_section + content[closing_brace_pos:]
                 else:
                     try:
@@ -2253,6 +2280,11 @@ async def add_model_stream(
                     "provider": provider_name,
                     "supports_web_search": supports_web_search,
                 }
+                # Add knowledge cutoff if provided
+                if hasattr(req, 'knowledge_cutoff') and req.knowledge_cutoff:
+                    new_model_dict["knowledge_cutoff"] = req.knowledge_cutoff
+                elif hasattr(req, 'knowledge_cutoff') and req.knowledge_cutoff is None:
+                    new_model_dict["knowledge_cutoff"] = None
                 existing_models.append(new_model_dict)
                 # Sort models by tier (anonymous first, free second, paid third) and within each tier by version number (ascending - oldest first, newest last)
                 existing_models = sort_models_by_tier_and_version(existing_models)
@@ -2275,6 +2307,11 @@ async def add_model_stream(
                             model_lines.append(f'            "supports_web_search": {model["supports_web_search"]},')
                         if "available" in model:
                             model_lines.append(f'            "available": {model["available"]},')
+                        if "knowledge_cutoff" in model:
+                            if model["knowledge_cutoff"]:
+                                model_lines.append(f'            "knowledge_cutoff": "{model["knowledge_cutoff"]}",')
+                            else:
+                                model_lines.append(f'            "knowledge_cutoff": None,  # Knowledge cutoff date pending')
                         model_lines.append("        },")
                         models_lines.extend(model_lines)
                     
@@ -2929,6 +2966,160 @@ async def delete_model(
         raise HTTPException(
             status_code=500,
             detail=f"Error deleting model: {str(e)}"
+        )
+
+
+@router.post("/models/update-knowledge-cutoff")
+async def update_model_knowledge_cutoff(
+    request: Request,
+    req: UpdateModelKnowledgeCutoffRequest,
+    current_user: User = Depends(require_admin_role("admin")),
+    db: Session = Depends(get_db),
+):
+    """
+    Update the knowledge cutoff date for a model.
+    Available in all environments (not restricted to development).
+    """
+    model_id = req.model_id.strip()
+    
+    if not model_id:
+        raise HTTPException(status_code=400, detail="Model ID cannot be empty")
+    
+    # Find the model in MODELS_BY_PROVIDER
+    model_found = False
+    provider_name = None
+    
+    for provider, models in MODELS_BY_PROVIDER.items():
+        for model in models:
+            if model["id"] == model_id:
+                model_found = True
+                provider_name = provider
+                break
+        if model_found:
+            break
+    
+    if not model_found:
+        raise HTTPException(status_code=404, detail=f"Model {model_id} not found")
+    
+    # Update model_runner.py
+    model_runner_path = Path(__file__).parent.parent / "model_runner.py"
+    
+    try:
+        with open(model_runner_path, "r", encoding="utf-8") as f:
+            content = f.read()
+        
+        # Find the provider's list in the file
+        bounds = find_provider_list_bounds(content, provider_name)
+        if not bounds:
+            raise HTTPException(status_code=500, detail=f"Could not find provider {provider_name} in MODELS_BY_PROVIDER")
+        
+        start_pos, end_pos = bounds
+        provider_content = content[start_pos:end_pos]
+        
+        # Find the model within the provider's list
+        model_pattern = rf'"id":\s*"{re.escape(model_id)}"'
+        model_match = re.search(model_pattern, provider_content)
+        
+        if not model_match:
+            raise HTTPException(status_code=404, detail=f"Model {model_id} not found in file")
+        
+        # Find the model's dictionary boundaries
+        model_start = model_match.start()
+        # Find the opening brace before the id field
+        brace_start = provider_content.rfind("{", 0, model_start)
+        if brace_start == -1:
+            raise HTTPException(status_code=500, detail="Could not find model dictionary start")
+        
+        # Find the closing brace for this model
+        brace_count = 0
+        brace_end = brace_start
+        for i in range(brace_start, len(provider_content)):
+            if provider_content[i] == "{":
+                brace_count += 1
+            elif provider_content[i] == "}":
+                brace_count -= 1
+                if brace_count == 0:
+                    brace_end = i + 1
+                    break
+        
+        if brace_count != 0:
+            raise HTTPException(status_code=500, detail="Could not find model dictionary end")
+        
+        # Extract the model dictionary
+        model_dict_str = provider_content[brace_start:brace_end]
+        
+        # Update knowledge_cutoff in the dictionary
+        # Remove existing knowledge_cutoff line if present
+        knowledge_cutoff_pattern = r'\s*"knowledge_cutoff":\s*(?:None|"[^"]*"|"[^"]*"),?\s*'
+        model_dict_str = re.sub(knowledge_cutoff_pattern, "", model_dict_str)
+        
+        # Add new knowledge_cutoff if provided
+        if req.knowledge_cutoff:
+            # Find the last field before the closing brace
+            # Insert before the closing brace
+            closing_brace_pos = model_dict_str.rfind("}")
+            if closing_brace_pos > 0:
+                # Check if there's a trailing comma before the closing brace
+                before_brace = model_dict_str[:closing_brace_pos].rstrip()
+                comma_needed = not before_brace.endswith(",")
+                if comma_needed:
+                    model_dict_str = model_dict_str[:closing_brace_pos] + f',\n            "knowledge_cutoff": "{req.knowledge_cutoff}",\n        ' + model_dict_str[closing_brace_pos:]
+                else:
+                    model_dict_str = model_dict_str[:closing_brace_pos] + f'\n            "knowledge_cutoff": "{req.knowledge_cutoff}",\n        ' + model_dict_str[closing_brace_pos:]
+        else:
+            # Set to None (pending)
+            closing_brace_pos = model_dict_str.rfind("}")
+            if closing_brace_pos > 0:
+                before_brace = model_dict_str[:closing_brace_pos].rstrip()
+                comma_needed = not before_brace.endswith(",")
+                if comma_needed:
+                    model_dict_str = model_dict_str[:closing_brace_pos] + f',\n            "knowledge_cutoff": None,  # Knowledge cutoff date pending\n        ' + model_dict_str[closing_brace_pos:]
+                else:
+                    model_dict_str = model_dict_str[:closing_brace_pos] + f'\n            "knowledge_cutoff": None,  # Knowledge cutoff date pending\n        ' + model_dict_str[closing_brace_pos:]
+        
+        # Replace the model dictionary in the provider content
+        new_provider_content = provider_content[:brace_start] + model_dict_str + provider_content[brace_end:]
+        
+        # Replace the provider section in the full content
+        new_content = content[:start_pos] + new_provider_content + content[end_pos:]
+        
+        # Write back to file
+        with open(model_runner_path, "w", encoding="utf-8") as f:
+            f.write(new_content)
+        
+        # Reload the model_runner module
+        importlib.reload(model_runner)
+        sys.modules[__name__].MODELS_BY_PROVIDER = model_runner.MODELS_BY_PROVIDER
+        sys.modules[__name__].OPENROUTER_MODELS = model_runner.OPENROUTER_MODELS
+        
+        # Invalidate models cache
+        from ..cache import invalidate_models_cache
+        invalidate_models_cache()
+        
+        # Log admin action
+        log_admin_action(
+            db=db,
+            admin_user=current_user,
+            action_type="update_model_knowledge_cutoff",
+            action_description=f"Updated knowledge cutoff for model {model_id}",
+            target_user_id=None,
+            details={"model_id": model_id, "knowledge_cutoff": req.knowledge_cutoff or "pending"},
+            request=request,
+        )
+        
+        return {
+            "success": True,
+            "model_id": model_id,
+            "knowledge_cutoff": req.knowledge_cutoff,
+            "message": f"Knowledge cutoff updated for {model_id}"
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error updating knowledge cutoff: {str(e)}"
         )
 
 

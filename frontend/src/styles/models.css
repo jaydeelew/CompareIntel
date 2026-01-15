@@ -52,7 +52,7 @@
 .provider-dropdown {
   border: 1px solid var(--border-color);
   border-radius: var(--radius-lg);
-  overflow: hidden;
+  overflow: visible; /* Changed from hidden to allow tooltips to overflow */
   background: var(--bg-primary);
   transition:
     border-color 0.3s ease,
@@ -166,6 +166,7 @@
   padding: 1rem;
   background: var(--bg-primary);
   border-top: 1px solid var(--border-color);
+  overflow: visible; /* Allow tooltips to overflow */
 }
 
 .model-option {
@@ -208,6 +209,7 @@
 
 .model-option {
   position: relative;
+  overflow: visible; /* Allow tooltips to overflow */
 }
 
 .model-checkbox {
@@ -224,6 +226,7 @@
   color: var(--text-primary);
   margin: 0 0 0.25rem 0;
   line-height: 1.3;
+  overflow: visible; /* Allow tooltips to overflow */
 }
 
 .model-info p {
@@ -231,6 +234,98 @@
   color: var(--text-secondary);
   margin: 0;
   line-height: 1.4;
+}
+
+/* Model name tooltip wrapper */
+.model-name-tooltip-wrapper {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  cursor: help;
+}
+
+.model-name-tooltip-wrapper .model-name-text {
+  display: inline;
+}
+
+/* Knowledge cutoff info icon */
+.knowledge-cutoff-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  color: var(--text-tertiary, #888);
+  opacity: 0.7;
+  transition:
+    opacity 0.2s,
+    color 0.2s;
+  flex-shrink: 0;
+}
+
+.model-name-tooltip-wrapper:hover .knowledge-cutoff-icon {
+  opacity: 1;
+  color: var(--primary-color, #2563eb);
+}
+
+/* Knowledge cutoff tooltip */
+.knowledge-cutoff-tooltip {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  /* Center the tooltip under the icon/name */
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--bg-elevated, #1a1a2e);
+  color: rgba(255, 255, 255, 0.9); /* Lighter text for better contrast */
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  white-space: nowrap;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.1));
+  z-index: 1000;
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 0.2s,
+    visibility 0.2s;
+  pointer-events: none;
+  /* Ensure tooltip doesn't get clipped on the left - adjust if needed */
+  /* Use a container query or ensure parent allows overflow */
+}
+
+/* Tooltip arrow */
+.knowledge-cutoff-tooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-top-color: var(--bg-elevated, #1a1a2e);
+}
+
+.model-name-tooltip-wrapper:hover .knowledge-cutoff-tooltip {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Knowledge cutoff label styling */
+.knowledge-cutoff-tooltip .cutoff-label {
+  color: rgba(255, 255, 255, 0.7); /* Lighter gray for better contrast */
+  margin-right: 0.25rem;
+}
+
+.knowledge-cutoff-tooltip .cutoff-date {
+  color: rgba(147, 197, 253, 0.95); /* Lighter blue for better contrast */
+  font-weight: 600;
+}
+
+.knowledge-cutoff-tooltip .cutoff-pending {
+  color: rgba(251, 191, 36, 0.95); /* Lighter amber/yellow for better contrast */
+  font-style: italic;
 }
 
 /* Selected Models Section */

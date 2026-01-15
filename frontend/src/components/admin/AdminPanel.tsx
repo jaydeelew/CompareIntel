@@ -325,7 +325,11 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
   const [models, setModels] = useState<AvailableModelsResponse | null>(null)
   const [modelsLoading, setModelsLoading] = useState(false)
   const [newModelId, setNewModelId] = useState('')
+  const [newModelKnowledgeCutoff, setNewModelKnowledgeCutoff] = useState('')
   const [addingModel, setAddingModel] = useState(false)
+  const [editingCutoff, setEditingCutoff] = useState<{ modelId: string; value: string } | null>(
+    null
+  )
   const [modelProgress, setModelProgress] = useState<{
     stage: string
     message: string
@@ -610,7 +614,10 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
           ...headers,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ model_id: newModelId.trim() }),
+        body: JSON.stringify({
+          model_id: newModelId.trim(),
+          knowledge_cutoff: newModelKnowledgeCutoff.trim() || null,
+        }),
         credentials: 'include',
         signal: abortController.signal,
       })
@@ -635,7 +642,10 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
           ...headers,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ model_id: newModelId.trim() }),
+        body: JSON.stringify({
+          model_id: newModelId.trim(),
+          knowledge_cutoff: newModelKnowledgeCutoff.trim() || null,
+        }),
         credentials: 'include',
         signal: abortController.signal,
       })
@@ -684,6 +694,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
               } else if (data.type === 'success') {
                 setModelSuccess(`Model ${data.model_id || newModelId.trim()} added successfully!`)
                 setNewModelId('')
+                setNewModelKnowledgeCutoff('')
                 // Wait for server to restart (uvicorn --reload triggers when model_runner.py changes)
                 setModelProgress({
                   stage: 'restarting',
@@ -829,6 +840,50 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
         restoreScrollPosition()
       }, 50)
       // Note: Route protection useEffect will handle staying on /admin
+    }
+  }
+
+  const handleUpdateKnowledgeCutoff = async (modelId: string, cutoff: string) => {
+    try {
+      const headers = getAuthHeaders()
+
+      const response = await fetch('/api/admin/models/update-knowledge-cutoff', {
+        method: 'POST',
+        headers: {
+          ...headers,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model_id: modelId,
+          knowledge_cutoff: cutoff.trim() || null,
+        }),
+        credentials: 'include',
+      })
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error('Authentication required. Please log in again.')
+        } else if (response.status === 403) {
+          throw new Error('Access denied. Admin privileges required.')
+        } else {
+          const errorData = await response
+            .json()
+            .catch(() => ({ detail: 'Failed to update knowledge cutoff' }))
+          throw new Error(
+            errorData.detail || `Failed to update knowledge cutoff (${response.status})`
+          )
+        }
+      }
+
+      // Refresh models list
+      await fetchModels()
+      setEditingCutoff(null)
+      setModelSuccess(`Knowledge cutoff updated for ${modelId}`)
+      setTimeout(() => setModelSuccess(null), 3000)
+    } catch (err) {
+      console.error('Error updating knowledge cutoff:', err)
+      setModelError(err instanceof Error ? err.message : 'Failed to update knowledge cutoff')
+      setTimeout(() => setModelError(null), 5000)
     }
   }
 
@@ -1600,56 +1655,123 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
               <h3 style={{ marginTop: 0, marginBottom: '1rem', color: 'var(--text-primary)' }}>
                 Add New Model
               </h3>
-              <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
-                <div style={{ flex: 1 }}>
-                  <input
-                    type="text"
-                    placeholder="Enter model ID (e.g., x-ai/grok-4.1-fast)"
-                    value={newModelId}
-                    onChange={e => {
-                      setNewModelId(e.target.value)
-                      setModelError(null)
-                      setModelSuccess(null)
-                    }}
-                    onKeyDown={e => {
-                      if (e.key === 'Enter' && !addingModel) {
-                        handleAddModel()
-                      }
-                    }}
-                    style={{
-                      width: '100%',
-                      padding: '0.75rem',
-                      borderRadius: 'var(--radius-md)',
-                      border: '1px solid var(--border-color)',
-                      background: 'var(--bg-primary)',
-                      color: 'var(--text-primary)',
-                      fontSize: '1rem',
-                    }}
-                    disabled={addingModel}
-                  />
-                  {modelError && (
-                    <div
+              <div
+                style={{
+                  marginBottom: '1rem',
+                  padding: '0.75rem',
+                  background: 'var(--bg-tertiary)',
+                  borderRadius: 'var(--radius-md)',
+                  border: '1px solid var(--warning-color, #f59e0b)',
+                  fontSize: '0.875rem',
+                  color: 'var(--text-secondary)',
+                }}
+              >
+                <strong style={{ color: 'var(--warning-color, #f59e0b)' }}>💡 Reminder:</strong>{' '}
+                When adding a new model, be sure to enter the knowledge cutoff date if available.
+                This will be displayed in tooltips for users. You can also add/update it later in
+                the models list below.
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
+                  <div style={{ flex: 1 }}>
+                    <label
                       style={{
-                        marginTop: '0.5rem',
-                        color: 'var(--error-color)',
+                        display: 'block',
+                        marginBottom: '0.5rem',
                         fontSize: '0.875rem',
+                        color: 'var(--text-secondary)',
+                        fontWeight: 500,
                       }}
                     >
-                      {modelError}
-                    </div>
-                  )}
-                  {modelSuccess && (
-                    <div
+                      Model ID
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Enter model ID (e.g., x-ai/grok-4.1-fast)"
+                      value={newModelId}
+                      onChange={e => {
+                        setNewModelId(e.target.value)
+                        setModelError(null)
+                        setModelSuccess(null)
+                      }}
+                      onKeyDown={e => {
+                        if (e.key === 'Enter' && !addingModel) {
+                          handleAddModel()
+                        }
+                      }}
                       style={{
-                        marginTop: '0.5rem',
-                        color: 'var(--success-color)',
+                        width: '100%',
+                        padding: '0.75rem',
+                        borderRadius: 'var(--radius-md)',
+                        border: '1px solid var(--border-color)',
+                        background: 'var(--bg-primary)',
+                        color: 'var(--text-primary)',
+                        fontSize: '1rem',
+                      }}
+                      disabled={addingModel}
+                    />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <label
+                      style={{
+                        display: 'block',
+                        marginBottom: '0.5rem',
                         fontSize: '0.875rem',
+                        color: 'var(--text-secondary)',
+                        fontWeight: 500,
                       }}
                     >
-                      {modelSuccess}
-                    </div>
-                  )}
+                      Knowledge Cutoff Date (Optional)
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g., March 2025 or leave empty"
+                      value={newModelKnowledgeCutoff}
+                      onChange={e => {
+                        setNewModelKnowledgeCutoff(e.target.value)
+                        setModelError(null)
+                        setModelSuccess(null)
+                      }}
+                      onKeyDown={e => {
+                        if (e.key === 'Enter' && !addingModel) {
+                          handleAddModel()
+                        }
+                      }}
+                      style={{
+                        width: '100%',
+                        padding: '0.75rem',
+                        borderRadius: 'var(--radius-md)',
+                        border: '1px solid var(--border-color)',
+                        background: 'var(--bg-primary)',
+                        color: 'var(--text-primary)',
+                        fontSize: '1rem',
+                      }}
+                      disabled={addingModel}
+                    />
+                  </div>
                 </div>
+                {modelError && (
+                  <div
+                    style={{
+                      marginTop: '0.5rem',
+                      color: 'var(--error-color)',
+                      fontSize: '0.875rem',
+                    }}
+                  >
+                    {modelError}
+                  </div>
+                )}
+                {modelSuccess && (
+                  <div
+                    style={{
+                      marginTop: '0.5rem',
+                      color: 'var(--success-color)',
+                      fontSize: '0.875rem',
+                    }}
+                  >
+                    {modelSuccess}
+                  </div>
+                )}
                 <button
                   onClick={handleAddModel}
                   disabled={addingModel || !newModelId.trim()}
@@ -1664,6 +1786,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                     fontWeight: 600,
                     cursor: addingModel || !newModelId.trim() ? 'not-allowed' : 'pointer',
                     opacity: addingModel || !newModelId.trim() ? 0.6 : 1,
+                    alignSelf: 'flex-start',
                   }}
                 >
                   {addingModel ? 'Adding...' : 'Add Model'}
@@ -1758,51 +1881,181 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                           border: '1px solid var(--border-color)',
                           borderRadius: 'var(--radius-md)',
                           display: 'flex',
-                          justifyContent: 'space-between',
-                          alignItems: 'center',
+                          flexDirection: 'column',
+                          gap: '0.75rem',
                         }}
                       >
-                        <div style={{ flex: 1 }}>
-                          <div
-                            style={{
-                              fontWeight: 600,
-                              color: 'var(--text-primary)',
-                              marginBottom: '0.25rem',
-                            }}
-                          >
-                            {model.name}
+                        <div
+                          style={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'flex-start',
+                          }}
+                        >
+                          <div style={{ flex: 1 }}>
+                            <div
+                              style={{
+                                fontWeight: 600,
+                                color: 'var(--text-primary)',
+                                marginBottom: '0.25rem',
+                              }}
+                            >
+                              {model.name}
+                            </div>
+                            <div
+                              style={{
+                                fontSize: '0.875rem',
+                                color: 'var(--text-secondary)',
+                                fontFamily: 'monospace',
+                                marginBottom: '0.5rem',
+                              }}
+                            >
+                              {model.id}
+                            </div>
+                            <div
+                              style={{
+                                fontSize: '0.875rem',
+                                color: 'var(--text-secondary)',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '0.5rem',
+                              }}
+                            >
+                              <strong>Knowledge Cutoff:</strong>
+                              {editingCutoff?.modelId === model.id ? (
+                                <div
+                                  style={{
+                                    display: 'flex',
+                                    gap: '0.5rem',
+                                    alignItems: 'center',
+                                    flex: 1,
+                                  }}
+                                >
+                                  <input
+                                    type="text"
+                                    value={editingCutoff.value}
+                                    onChange={e =>
+                                      setEditingCutoff({ modelId: model.id, value: e.target.value })
+                                    }
+                                    placeholder="e.g., March 2025 or leave empty"
+                                    style={{
+                                      flex: 1,
+                                      padding: '0.375rem 0.5rem',
+                                      borderRadius: 'var(--radius-sm)',
+                                      border: '1px solid var(--border-color)',
+                                      background: 'var(--bg-secondary)',
+                                      color: 'var(--text-primary)',
+                                      fontSize: '0.875rem',
+                                    }}
+                                    onKeyDown={async e => {
+                                      if (e.key === 'Enter') {
+                                        await handleUpdateKnowledgeCutoff(
+                                          model.id,
+                                          editingCutoff.value
+                                        )
+                                      } else if (e.key === 'Escape') {
+                                        setEditingCutoff(null)
+                                      }
+                                    }}
+                                    autoFocus
+                                  />
+                                  <button
+                                    onClick={async () => {
+                                      await handleUpdateKnowledgeCutoff(
+                                        model.id,
+                                        editingCutoff.value
+                                      )
+                                    }}
+                                    style={{
+                                      padding: '0.375rem 0.75rem',
+                                      borderRadius: 'var(--radius-sm)',
+                                      border: 'none',
+                                      background: 'var(--primary-color)',
+                                      color: 'white',
+                                      fontWeight: 500,
+                                      cursor: 'pointer',
+                                      fontSize: '0.875rem',
+                                    }}
+                                  >
+                                    Save
+                                  </button>
+                                  <button
+                                    onClick={() => setEditingCutoff(null)}
+                                    style={{
+                                      padding: '0.375rem 0.75rem',
+                                      borderRadius: 'var(--radius-sm)',
+                                      border: '1px solid var(--border-color)',
+                                      background: 'var(--bg-secondary)',
+                                      color: 'var(--text-primary)',
+                                      fontWeight: 500,
+                                      cursor: 'pointer',
+                                      fontSize: '0.875rem',
+                                    }}
+                                  >
+                                    Cancel
+                                  </button>
+                                </div>
+                              ) : (
+                                <span
+                                  style={{
+                                    color: model.knowledge_cutoff
+                                      ? 'var(--primary-color)'
+                                      : 'var(--warning-color, #f59e0b)',
+                                    fontStyle: model.knowledge_cutoff ? 'normal' : 'italic',
+                                  }}
+                                >
+                                  {model.knowledge_cutoff || 'Date pending'}
+                                </span>
+                              )}
+                            </div>
                           </div>
-                          <div
-                            style={{
-                              fontSize: '0.875rem',
-                              color: 'var(--text-secondary)',
-                              fontFamily: 'monospace',
-                            }}
-                          >
-                            {model.id}
+                          <div style={{ display: 'flex', gap: '0.5rem' }}>
+                            {editingCutoff?.modelId !== model.id && (
+                              <button
+                                onClick={() =>
+                                  setEditingCutoff({
+                                    modelId: model.id,
+                                    value: model.knowledge_cutoff || '',
+                                  })
+                                }
+                                style={{
+                                  padding: '0.375rem 0.75rem',
+                                  borderRadius: 'var(--radius-sm)',
+                                  border: '1px solid var(--border-color)',
+                                  background: 'var(--bg-secondary)',
+                                  color: 'var(--text-primary)',
+                                  fontWeight: 500,
+                                  cursor: 'pointer',
+                                  fontSize: '0.875rem',
+                                }}
+                                title="Edit knowledge cutoff date"
+                              >
+                                Edit
+                              </button>
+                            )}
+                            {/* Only show delete button in development */}
+                            {isDevelopment && (
+                              <button
+                                onClick={() => {
+                                  setModelToDelete({ id: model.id, name: model.name })
+                                  setShowDeleteConfirm(true)
+                                }}
+                                style={{
+                                  padding: '0.375rem 0.75rem',
+                                  borderRadius: 'var(--radius-sm)',
+                                  border: 'none',
+                                  background: 'var(--error-color)',
+                                  color: 'white',
+                                  fontWeight: 600,
+                                  cursor: 'pointer',
+                                  fontSize: '0.875rem',
+                                }}
+                              >
+                                Delete
+                              </button>
+                            )}
                           </div>
                         </div>
-                        {/* Only show delete button in development */}
-                        {isDevelopment && (
-                          <button
-                            onClick={() => {
-                              setModelToDelete({ id: model.id, name: model.name })
-                              setShowDeleteConfirm(true)
-                            }}
-                            style={{
-                              padding: '0.5rem 1rem',
-                              borderRadius: 'var(--radius-md)',
-                              border: 'none',
-                              background: 'var(--error-color)',
-                              color: 'white',
-                              fontWeight: 600,
-                              cursor: 'pointer',
-                              fontSize: '0.875rem',
-                            }}
-                          >
-                            Delete
-                          </button>
-                        )}
                       </div>
                     ))}
                   </div>
