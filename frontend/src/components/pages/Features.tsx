@@ -206,6 +206,14 @@ export const Features: React.FC = () => {
                 their account, while unregistered users' selections are preserved using a persistent
                 unregistered ID.
               </li>
+              <li>
+                <strong>Set a Default Selection:</strong> You can mark any saved selection as your
+                default. When you return to CompareIntel, your default model selection will
+                automatically be loaded, so your preferred models are already selected and ready to
+                use. This saves time by eliminating the need to manually select your models each
+                time you visit the site. Simply check the default checkbox next to any saved
+                selection to make it your default.
+              </li>
             </ul>
           </section>
 

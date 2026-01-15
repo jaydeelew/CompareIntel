@@ -540,6 +540,13 @@ const faqData = [
             combination
           </li>
           <li>You can rename or delete saved selections as your needs change</li>
+          <li>
+            <strong>Set a default selection:</strong> Mark any saved selection as your default by
+            checking the default checkbox next to it. When you return to CompareIntel, your default
+            model selection will automatically be loaded, so your preferred models are already
+            selected and ready to use. This saves time by eliminating the need to manually select
+            your models each time you visit the site.
+          </li>
         </ul>
         <p>
           <strong>Limits by tier:</strong> Unregistered users can save up to 2 selections, free

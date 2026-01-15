@@ -172,6 +172,13 @@ export const HowItWorks: React.FC = () => {
                   one selection for coding tasks, another for creative writing, and another for data
                   analysis.
                 </p>
+                <p>
+                  <strong>Set a default selection:</strong> You can mark any saved selection as your
+                  default by checking the default checkbox next to it. When you return to
+                  CompareIntel, your default model selection will automatically be loaded, so your
+                  preferred models are already selected and ready to use. This saves time by
+                  eliminating the need to manually select your models each time you visit the site.
+                </p>
               </div>
             </div>
 
