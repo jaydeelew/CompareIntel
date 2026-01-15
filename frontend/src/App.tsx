@@ -1,6 +1,3 @@
-import mammoth from 'mammoth'
-import * as pdfjsLib from 'pdfjs-dist'
-import pdfjsWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?url'
 import {
   useState,
   useEffect,
@@ -29,15 +26,38 @@ import './App.css'
 // Lazy load heavy components for code splitting
 const LatexRenderer = lazy(() => import('./components/LatexRenderer'))
 const AdminPanel = lazy(() => import('./components/admin/AdminPanel'))
+// Lazy load page components for better code splitting (handle named exports)
+const About = lazy(() =>
+  import('./components/pages/About').then(module => ({ default: module.About }))
+)
+const Features = lazy(() =>
+  import('./components/pages/Features').then(module => ({ default: module.Features }))
+)
+const FAQ = lazy(() => import('./components/pages/FAQ').then(module => ({ default: module.FAQ })))
+const PrivacyPolicy = lazy(() =>
+  import('./components/pages/PrivacyPolicy').then(module => ({ default: module.PrivacyPolicy }))
+)
+const HowItWorks = lazy(() =>
+  import('./components/pages/HowItWorks').then(module => ({ default: module.HowItWorks }))
+)
+const TermsOfService = lazy(() =>
+  import('./components/TermsOfService').then(module => ({ default: module.TermsOfService }))
+)
+const TutorialController = lazy(() =>
+  import('./components/tutorial/TutorialController').then(module => ({
+    default: module.TutorialController,
+  }))
+)
+const TutorialWelcomeModal = lazy(() =>
+  import('./components/tutorial/TutorialWelcomeModal').then(module => ({
+    default: module.TutorialWelcomeModal,
+  }))
+)
 import { Layout } from './components'
 import { AuthModal, VerifyEmail, VerificationBanner, ResetPassword } from './components/auth'
 import { ComparisonForm, type AttachedFile, type StoredAttachedFile } from './components/comparison'
 import { Navigation, Hero, MockModeBanner, InstallPrompt } from './components/layout'
-import { About, Features, FAQ, PrivacyPolicy, HowItWorks } from './components/pages'
 import { DoneSelectingCard, ErrorBoundary, LoadingSpinner } from './components/shared'
-import { TermsOfService } from './components/TermsOfService'
-import { TutorialController } from './components/tutorial/TutorialController'
-import { TutorialWelcomeModal } from './components/tutorial/TutorialWelcomeModal'
 import { getCreditAllocation, getDailyCreditLimit } from './config/constants'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
 import {
@@ -170,14 +190,16 @@ function AppContent() {
     setAttachedFilesState(files)
   }, [])
 
-  // Configure PDF.js worker
-  useEffect(() => {
-    pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker
-  }, [])
-
-  // Extract text from PDF file
+  // Extract text from PDF file (lazy load pdfjs-dist only when needed)
   const extractTextFromPDF = useCallback(async (file: File): Promise<string> => {
     try {
+      // Dynamically import pdfjs-dist only when needed
+      const pdfjsLib = await import('pdfjs-dist')
+      const pdfjsWorker = await import('pdfjs-dist/build/pdf.worker.min.mjs?url')
+
+      // Configure worker
+      pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker.default
+
       const arrayBuffer = await file.arrayBuffer()
       const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise
       let fullText = ''
@@ -199,11 +221,13 @@ function AppContent() {
     }
   }, [])
 
-  // Extract text from DOCX file
+  // Extract text from DOCX file (lazy load mammoth only when needed)
   const extractTextFromDOCX = useCallback(async (file: File): Promise<string> => {
     try {
+      // Dynamically import mammoth only when needed
+      const mammoth = await import('mammoth')
       const arrayBuffer = await file.arrayBuffer()
-      const result = await mammoth.extractRawText({ arrayBuffer })
+      const result = await mammoth.default.extractRawText({ arrayBuffer })
       return result.value
     } catch (error) {
       console.error('Error extracting text from DOCX:', error)
@@ -8738,17 +8762,19 @@ function AppContent() {
 
           {/* Tutorial Welcome Modal */}
           {showWelcomeModal && !isMobileLayout && (
-            <TutorialWelcomeModal
-              onStart={() => {
-                setShowWelcomeModal(false)
-                resetAppStateForTutorial() // Reset app state for clean tutorial experience
-                startTutorial()
-              }}
-              onSkip={() => {
-                setShowWelcomeModal(false)
-                skipTutorial()
-              }}
-            />
+            <Suspense fallback={<LoadingSpinner />}>
+              <TutorialWelcomeModal
+                onStart={() => {
+                  setShowWelcomeModal(false)
+                  resetAppStateForTutorial() // Reset app state for clean tutorial experience
+                  startTutorial()
+                }}
+                onSkip={() => {
+                  setShowWelcomeModal(false)
+                  skipTutorial()
+                }}
+              />
+            </Suspense>
           )}
 
           {/* Tutorial Controller */}
@@ -8767,43 +8793,45 @@ function AppContent() {
               )
 
               return (
-                <TutorialController
-                  tutorialState={tutorialState}
-                  completeStep={completeStep}
-                  skipTutorial={skipTutorial}
-                  googleProviderExpanded={googleProviderExpanded}
-                  googleModelsSelected={googleModelsSelected}
-                  hasPromptText={input.trim().length > 0}
-                  hasCompletedComparison={tutorialHasCompletedComparison}
-                  isFollowUpMode={isFollowUpMode}
-                  hasBreakoutConversation={tutorialHasBreakout}
-                  showHistoryDropdown={showHistoryDropdown}
-                  hasSavedSelection={tutorialHasSavedSelection}
-                  onProviderExpanded={() => {
-                    // Step completed, no action needed
-                  }}
-                  onModelsSelected={() => {
-                    // Step completed, no action needed
-                  }}
-                  onPromptEntered={() => {
-                    // Step completed, no action needed
-                  }}
-                  onComparisonComplete={() => {
-                    setTutorialHasCompletedComparison(false)
-                  }}
-                  onFollowUpActivated={() => {
-                    // Reset state if needed
-                  }}
-                  onBreakoutCreated={() => {
-                    setTutorialHasBreakout(false)
-                  }}
-                  onHistoryOpened={() => {
-                    // Reset state if needed
-                  }}
-                  onSelectionSaved={() => {
-                    setTutorialHasSavedSelection(false)
-                  }}
-                />
+                <Suspense fallback={<LoadingSpinner />}>
+                  <TutorialController
+                    tutorialState={tutorialState}
+                    completeStep={completeStep}
+                    skipTutorial={skipTutorial}
+                    googleProviderExpanded={googleProviderExpanded}
+                    googleModelsSelected={googleModelsSelected}
+                    hasPromptText={input.trim().length > 0}
+                    hasCompletedComparison={tutorialHasCompletedComparison}
+                    isFollowUpMode={isFollowUpMode}
+                    hasBreakoutConversation={tutorialHasBreakout}
+                    showHistoryDropdown={showHistoryDropdown}
+                    hasSavedSelection={tutorialHasSavedSelection}
+                    onProviderExpanded={() => {
+                      // Step completed, no action needed
+                    }}
+                    onModelsSelected={() => {
+                      // Step completed, no action needed
+                    }}
+                    onPromptEntered={() => {
+                      // Step completed, no action needed
+                    }}
+                    onComparisonComplete={() => {
+                      setTutorialHasCompletedComparison(false)
+                    }}
+                    onFollowUpActivated={() => {
+                      // Reset state if needed
+                    }}
+                    onBreakoutCreated={() => {
+                      setTutorialHasBreakout(false)
+                    }}
+                    onHistoryOpened={() => {
+                      // Reset state if needed
+                    }}
+                    onSelectionSaved={() => {
+                      setTutorialHasSavedSelection(false)
+                    }}
+                  />
+                </Suspense>
               )
             })()}
         </>
@@ -8820,13 +8848,55 @@ function App() {
         <Routes>
           {/* Layout wrapper provides consistent footer across all pages */}
           <Route element={<Layout />}>
-            {/* SEO Content Pages */}
-            <Route path="/about" element={<About />} />
-            <Route path="/features" element={<Features />} />
-            <Route path="/how-it-works" element={<HowItWorks />} />
-            <Route path="/faq" element={<FAQ />} />
-            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-            <Route path="/terms-of-service" element={<TermsOfService />} />
+            {/* SEO Content Pages - Lazy loaded for better code splitting */}
+            <Route
+              path="/about"
+              element={
+                <Suspense fallback={<LoadingSpinner />}>
+                  <About />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/features"
+              element={
+                <Suspense fallback={<LoadingSpinner />}>
+                  <Features />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/how-it-works"
+              element={
+                <Suspense fallback={<LoadingSpinner />}>
+                  <HowItWorks />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/faq"
+              element={
+                <Suspense fallback={<LoadingSpinner />}>
+                  <FAQ />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/privacy-policy"
+              element={
+                <Suspense fallback={<LoadingSpinner />}>
+                  <PrivacyPolicy />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/terms-of-service"
+              element={
+                <Suspense fallback={<LoadingSpinner />}>
+                  <TermsOfService />
+                </Suspense>
+              }
+            />
             {/* Main Application */}
             <Route path="*" element={<AppContent />} />
           </Route>

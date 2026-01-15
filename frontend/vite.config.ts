@@ -288,7 +288,21 @@ export default defineConfig({
             if (id.includes('lucide-react')) {
               return 'vendor-icons';
             }
-            // Other vendor dependencies
+            // Split heavy file processing libraries into separate chunk
+            if (id.includes('pdfjs-dist') || id.includes('mammoth')) {
+              return 'vendor-files';
+            }
+            // Split PDF export libraries (already lazy-loaded, but keep separate)
+            if (id.includes('html2canvas') || id.includes('jspdf') || id.includes('html-to-image')) {
+              return 'vendor-export';
+            }
+            // Split other potentially large dependencies into separate chunks
+            // This prevents one massive vendor chunk
+            if (id.includes('web-vitals')) {
+              return 'vendor-vitals';
+            }
+            // Try to identify and split other large packages
+            // If vendor chunk gets too large, Vite will warn us
             return 'vendor';
           }
           // Split large application files
@@ -297,6 +311,14 @@ export default defineConfig({
           }
           if (id.includes('/src/components/LatexRenderer.tsx')) {
             return 'latex-renderer';
+          }
+          // Split page components into separate chunk
+          if (id.includes('/src/components/pages/')) {
+            return 'pages';
+          }
+          // Split tutorial components
+          if (id.includes('/src/components/tutorial/')) {
+            return 'tutorial';
           }
         },
       },
