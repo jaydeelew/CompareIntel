@@ -1501,9 +1501,8 @@ export const ComparisonForm = memo<ComparisonFormProps>(
                   <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
                 </svg>
               </button>
-              {/* Default selection name display - only for authenticated users and when not overridden */}
-              {isAuthenticated &&
-                !defaultSelectionOverridden &&
+              {/* Default selection name display - available for all users when not overridden */}
+              {!defaultSelectionOverridden &&
                 (() => {
                   const defaultSelection = getDefaultSelection()
                   if (!defaultSelection) return null
@@ -2095,35 +2094,33 @@ export const ComparisonForm = memo<ComparisonFormProps>(
                         const isDefault = defaultSelectionId === selection.id
                         return (
                           <div key={selection.id} className="saved-selection-item">
-                            {/* Default selection checkbox - only for authenticated users */}
-                            {isAuthenticated && (
-                              <input
-                                type="checkbox"
-                                checked={isDefault}
-                                onChange={e => {
-                                  e.stopPropagation()
-                                  if (e.target.checked) {
-                                    // Set this selection as default
-                                    onSetDefaultSelection(selection.id)
-                                    showNotification(
-                                      `"${selection.name}" set as default selection`,
-                                      'success'
-                                    )
-                                  } else {
-                                    // Unset default
-                                    onSetDefaultSelection(null)
-                                    showNotification('Default selection removed', 'success')
-                                  }
-                                }}
-                                onClick={e => e.stopPropagation()}
-                                title={
-                                  isDefault
-                                    ? `Default model selection`
-                                    : `Set as default model selection`
+                            {/* Default selection checkbox - available for all users */}
+                            <input
+                              type="checkbox"
+                              checked={isDefault}
+                              onChange={e => {
+                                e.stopPropagation()
+                                if (e.target.checked) {
+                                  // Set this selection as default
+                                  onSetDefaultSelection(selection.id)
+                                  showNotification(
+                                    `"${selection.name}" set as default selection`,
+                                    'success'
+                                  )
+                                } else {
+                                  // Unset default
+                                  onSetDefaultSelection(null)
+                                  showNotification('Default selection removed', 'success')
                                 }
-                                className="saved-selection-default-checkbox"
-                              />
-                            )}
+                              }}
+                              onClick={e => e.stopPropagation()}
+                              title={
+                                isDefault
+                                  ? `Default model selection`
+                                  : `Set as default model selection`
+                              }
+                              className="saved-selection-default-checkbox"
+                            />
                             <div
                               className="saved-selection-info"
                               onClick={() => {

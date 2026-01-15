@@ -3631,13 +3631,8 @@ function AppContent() {
     fetchModels()
   }, [])
 
-  // Load default selection when user is authenticated, models are loaded, and default hasn't been overridden
+  // Load default selection when models are loaded and default hasn't been overridden
   useEffect(() => {
-    // Only load default for authenticated users
-    if (!isAuthenticated || !user) {
-      return
-    }
-
     // Wait for models to be loaded
     if (isLoadingModels || Object.keys(modelsByProvider).length === 0) {
       return
@@ -3671,7 +3666,7 @@ function AppContent() {
           const model = providerModels.find(m => String(m.id) === modelId)
           if (model) {
             // Check tier access
-            const userTier = user?.subscription_tier || 'free'
+            const userTier = isAuthenticated ? user?.subscription_tier || 'free' : 'unregistered'
             const isPaidTier = ['starter', 'starter_plus', 'pro', 'pro_plus'].includes(userTier)
 
             // Filter out premium models for non-paid tiers
@@ -3716,14 +3711,14 @@ function AppContent() {
       })
     }
   }, [
-    isAuthenticated,
-    user,
     isLoadingModels,
     modelsByProvider,
     defaultSelectionOverridden,
     selectedModels.length,
     getDefaultSelection,
     maxModelsLimit,
+    isAuthenticated,
+    user,
     setSelectedModels,
     setOpenDropdowns,
   ])
