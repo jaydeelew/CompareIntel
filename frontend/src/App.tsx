@@ -2949,16 +2949,15 @@ function AppContent() {
     }
   }, [selectedModels.length])
 
-  // Trigger card visibility check when models are selected (especially for mobile)
+  // Hide card when entering follow-up mode or when models section is hidden
+  // Card visibility is otherwise controlled by cursor position tracking (see useEffect around line 3152)
   useEffect(() => {
-    if (selectedModels.length > 0 && !isModelsHidden && !isFollowUpMode) {
-      // Simply show the card when models are selected and section is visible and not in follow-up mode
-      setShowDoneSelectingCard(true)
-    } else if (isFollowUpMode || selectedModels.length === 0) {
-      // Hide the card when entering follow-up mode or when no models are selected
+    if (isFollowUpMode || isModelsHidden) {
+      // Hide the card when entering follow-up mode or when models section is hidden
       setShowDoneSelectingCard(false)
     }
-  }, [selectedModels.length, isModelsHidden, isFollowUpMode])
+    // Note: We don't automatically show the card here - cursor position tracking handles that
+  }, [isModelsHidden, isFollowUpMode])
 
   // Refresh usage count when models are selected to ensure renderUsagePreview shows accurate remaining count
   useEffect(() => {
