@@ -30,10 +30,15 @@ The platform integrates with [OpenRouter](https://openrouter.ai/) to access mode
 - **Real-Time Streaming** — Server-Sent Events (SSE) streaming for instant, token-by-token responses
 - **Interactive Tutorial** — Step-by-step guided tour to help new users learn how to use the platform
 - **Conversation History** — Follow-up questions with full conversation context per model
+- **Breakout Conversations** — Continue individual conversations with specific models from multi-model comparisons
 - **Saved Model Selections** — Save and quickly load named groups of model selections for repeated use
+- **Export Functionality** — Export comparisons as PDF, Markdown, JSON, or HTML
 - **Web Search Capability** — Enable web search for supported models to access real-time information, current events, and up-to-date data
 - **LaTeX Rendering** — Mathematical notation support with KaTeX
+- **Syntax Highlighting** — Code blocks with syntax highlighting for 100+ programming languages via Prism.js
+- **Markdown Support** — Full Markdown rendering including lists, tables, links, and formatting
 - **File Upload Support** — Parse and analyze PDF and Word documents
+- **Progressive Web App (PWA)** — Installable app with offline capabilities
 
 ### User Management
 - **Authentication** — Email/password registration with verification, JWT-based sessions with HTTP-only cookies
@@ -43,6 +48,7 @@ The platform integrates with [OpenRouter](https://openrouter.ai/) to access mode
 
 ### Security & Performance
 - **Rate Limiting** — Per-user and anonymous rate limiting with browser fingerprinting
+- **Distributed Rate Limiting** — Redis-backed rate limiting for multi-worker deployments (optional)
 - **reCAPTCHA v3** — Bot protection on registration
 - **Request Caching** — Intelligent caching with deduplication
 - **Profiling Middleware** — Performance monitoring in development
@@ -56,12 +62,15 @@ The platform integrates with [OpenRouter](https://openrouter.ai/) to access mode
 |------------|---------|
 | **React 18** | UI framework with hooks |
 | **TypeScript** | Type safety |
-| **Vite 7** | Build tool and dev server |
+| **Vite 6** | Build tool and dev server |
 | **React Router 7** | Client-side routing |
 | **KaTeX** | LaTeX math rendering |
+| **Prism.js** | Syntax highlighting for code blocks |
 | **Lucide React** | Icon library |
 | **PDF.js** | PDF parsing |
 | **Mammoth** | Word document parsing |
+| **html2canvas & jsPDF** | PDF export functionality |
+| **vite-plugin-pwa** | Progressive Web App support |
 
 ### Backend
 | Technology | Purpose |
@@ -71,7 +80,10 @@ The platform integrates with [OpenRouter](https://openrouter.ai/) to access mode
 | **SQLAlchemy 2** | ORM |
 | **PostgreSQL 15** | Production database |
 | **OpenAI SDK** | OpenRouter API client |
-| **Tiktoken** | Token counting |
+| **Tiktoken** | Token counting (OpenAI models) |
+| **Anthropic SDK** | Claude tokenizer |
+| **Transformers** | Tokenizers for Meta, Mistral, DeepSeek, Qwen |
+| **BeautifulSoup4** | HTML parsing for web search |
 | **Passlib + Bcrypt** | Password hashing |
 | **python-jose** | JWT handling |
 
@@ -81,6 +93,7 @@ The platform integrates with [OpenRouter](https://openrouter.ai/) to access mode
 | **Docker & Docker Compose** | Containerization |
 | **Nginx** | Reverse proxy and SSL termination |
 | **Gunicorn + Uvicorn** | Production ASGI server |
+| **Redis** | Distributed rate limiting (optional) |
 | **Let's Encrypt** | SSL certificates |
 
 ### Testing
@@ -299,9 +312,13 @@ CompareIntel/
 | `/api/estimate-tokens` | POST | Estimate token usage before comparison |
 | `/api/rate-limit-status` | GET | Get user's remaining credits |
 | `/api/credit-balance` | GET | Get detailed credit balance |
+| `/api/credits/balance` | GET | Get credit balance |
+| `/api/credits/usage` | GET | Get credit usage statistics |
+| `/api/model-stats` | GET | Get model performance statistics |
 | `/api/conversations` | GET | List user's conversation history |
 | `/api/conversations/{id}` | GET | Get conversation details |
 | `/api/conversations/{id}` | DELETE | Delete a conversation |
+| `/api/conversations/breakout` | POST | Create breakout conversation from comparison |
 
 ### Admin
 
