@@ -2191,6 +2191,17 @@ async def add_model_stream(
             if not model_description:
                 model_description = f"{provider_name}'s {model_name} model"
             
+            # Check for tool calling support (required for web search)
+            try:
+                yield f"data: {json.dumps({'type': 'progress', 'stage': 'checking', 'message': f'Checking web search capability...', 'progress': 15})}\n\n"
+            except (BrokenPipeError, ConnectionResetError, ConnectionAbortedError, OSError,
+                    TimeoutError, asyncio.TimeoutError, httpx.ConnectError, httpx.TimeoutException,
+                    httpx.NetworkError, httpx.ConnectTimeout, httpx.ReadTimeout):
+                raise
+            from ..services.model_capability import get_capability_service
+            capability_service = get_capability_service()
+            supports_web_search = await capability_service.check_tool_calling_support(model_id)
+            
             # Add model to model_runner.py
             try:
                 yield f"data: {json.dumps({'type': 'progress', 'stage': 'adding', 'message': f'Adding model to model_runner.py...', 'progress': 20})}\n\n"
@@ -2214,14 +2225,15 @@ async def add_model_stream(
                 closing_brace_pos = find_models_by_provider_end(content)
                 if closing_brace_pos > 0:
                     escaped_description = repr(model_description)
+                    supports_web_search_str = "True" if supports_web_search else "False"
                     # Check if previous content has a trailing comma (usually it does)
                     content_before = content[:closing_brace_pos].rstrip()
                     if content_before.endswith(','):
                         # Previous entry has trailing comma, don't add leading comma
-                        new_provider_section = f'\n    "{provider_name}": [\n        {{\n            "id": "{model_id}",\n            "name": "{model_name}",\n            "description": {escaped_description},\n            "category": "Language",\n            "provider": "{provider_name}",\n        }},\n    ],\n'
+                        new_provider_section = f'\n    "{provider_name}": [\n        {{\n            "id": "{model_id}",\n            "name": "{model_name}",\n            "description": {escaped_description},\n            "category": "Language",\n            "provider": "{provider_name}",\n            "supports_web_search": {supports_web_search_str},\n        }},\n    ],\n'
                     else:
                         # Need to add comma separator
-                        new_provider_section = f',\n    "{provider_name}": [\n        {{\n            "id": "{model_id}",\n            "name": "{model_name}",\n            "description": {escaped_description},\n            "category": "Language",\n            "provider": "{provider_name}",\n        }},\n    ],\n'
+                        new_provider_section = f',\n    "{provider_name}": [\n        {{\n            "id": "{model_id}",\n            "name": "{model_name}",\n            "description": {escaped_description},\n            "category": "Language",\n            "provider": "{provider_name}",\n            "supports_web_search": {supports_web_search_str},\n        }},\n    ],\n'
                     content = content[:closing_brace_pos] + new_provider_section + content[closing_brace_pos:]
                 else:
                     try:
@@ -2239,6 +2251,7 @@ async def add_model_stream(
                     "description": model_description,
                     "category": "Language",
                     "provider": provider_name,
+                    "supports_web_search": supports_web_search,
                 }
                 existing_models.append(new_model_dict)
                 # Sort models by tier (anonymous first, free second, paid third) and within each tier by version number (ascending - oldest first, newest last)
@@ -2258,6 +2271,8 @@ async def add_model_stream(
                             f'            "category": "{model["category"]}",',
                             f'            "provider": "{model["provider"]}",'
                         ]
+                        if "supports_web_search" in model:
+                            model_lines.append(f'            "supports_web_search": {model["supports_web_search"]},')
                         if "available" in model:
                             model_lines.append(f'            "available": {model["available"]},')
                         model_lines.append("        },")
@@ -2537,7 +2552,7 @@ async def add_model_stream(
             
             # Send success
             try:
-                yield f"data: {json.dumps({'type': 'success', 'message': f'Model {model_id} added successfully', 'model_id': model_id, 'provider': provider_name, 'progress': 100})}\n\n"
+                yield f"data: {json.dumps({'type': 'success', 'message': f'Model {model_id} added successfully', 'model_id': model_id, 'provider': provider_name, 'supports_web_search': supports_web_search, 'progress': 100})}\n\n"
             except (BrokenPipeError, ConnectionResetError, ConnectionAbortedError, OSError,
                     TimeoutError, asyncio.TimeoutError, httpx.ConnectError, httpx.TimeoutException,
                     httpx.NetworkError, httpx.ConnectTimeout, httpx.ReadTimeout):
