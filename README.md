@@ -28,7 +28,10 @@ The platform integrates with [OpenRouter](https://openrouter.ai/) to access mode
 ### Core Functionality
 - **Multi-Model Comparison** — Select up to 12 models (depending on tier) and compare their responses side-by-side
 - **Real-Time Streaming** — Server-Sent Events (SSE) streaming for instant, token-by-token responses
+- **Interactive Tutorial** — Step-by-step guided tour to help new users learn how to use the platform
 - **Conversation History** — Follow-up questions with full conversation context per model
+- **Saved Model Selections** — Save and quickly load named groups of model selections for repeated use
+- **Web Search Capability** — Enable web search for supported models to access real-time information, current events, and up-to-date data
 - **LaTeX Rendering** — Mathematical notation support with KaTeX
 - **File Upload Support** — Parse and analyze PDF and Word documents
 
