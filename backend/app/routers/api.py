@@ -523,6 +523,106 @@ async def reset_rate_limit_dev(
     }
 
 
+class CreateTestUserRequest(BaseModel):
+    """Request model for creating test users."""
+    email: str
+    password: str
+    role: Optional[str] = "user"
+    is_admin: Optional[bool] = False
+    subscription_tier: Optional[str] = "free"
+    is_verified: Optional[bool] = True
+    is_active: Optional[bool] = True
+
+
+@router.post("/dev/create-test-user")
+async def create_test_user_dev(
+    user_data: CreateTestUserRequest,
+    db: Session = Depends(get_db),
+):
+    """
+    DEV ONLY: Create or update a test user directly in the database.
+    This bypasses registration and is used for E2E test setup.
+    This endpoint should be disabled in production!
+    """
+    # Only allow in development mode
+    if os.environ.get("ENVIRONMENT") != "development":
+        raise HTTPException(status_code=403, detail="This endpoint is only available in development mode")
+    
+    # Check for test database
+    database_url = os.getenv("DATABASE_URL", "") or getattr(settings, 'database_url', '')
+    if database_url and "test" not in database_url.lower():
+        raise HTTPException(status_code=403, detail="This endpoint is only available with test databases")
+    
+    from ..auth import get_password_hash
+    from datetime import UTC
+    
+    # Check if user already exists
+    existing_user = db.query(User).filter(User.email == user_data.email).first()
+    
+    if existing_user:
+        # Update existing user
+        existing_user.password_hash = get_password_hash(user_data.password)
+        existing_user.role = user_data.role
+        existing_user.is_admin = user_data.is_admin
+        existing_user.subscription_tier = user_data.subscription_tier
+        existing_user.is_verified = user_data.is_verified
+        existing_user.is_active = user_data.is_active
+        existing_user.subscription_status = "active"
+        db.commit()
+        db.refresh(existing_user)
+        
+        return {
+            "message": "Test user updated successfully",
+            "email": existing_user.email,
+            "role": existing_user.role,
+            "is_admin": existing_user.is_admin,
+            "is_verified": existing_user.is_verified,
+            "subscription_tier": existing_user.subscription_tier,
+        }
+    else:
+        # Create new user
+        new_user = User(
+            email=user_data.email,
+            password_hash=get_password_hash(user_data.password),
+            role=user_data.role,
+            is_admin=user_data.is_admin,
+            subscription_tier=user_data.subscription_tier,
+            subscription_status="active",
+            subscription_period="monthly",
+            is_verified=user_data.is_verified,
+            is_active=user_data.is_active,
+            subscription_start_date=datetime.now(UTC),
+        )
+        
+        db.add(new_user)
+        db.commit()
+        db.refresh(new_user)
+        
+        # Create default user preferences
+        try:
+            from ..models import UserPreference
+            preferences = UserPreference(
+                user_id=new_user.id,
+                theme="light",
+                email_notifications=True,
+                usage_alerts=True
+            )
+            db.add(preferences)
+            db.commit()
+        except Exception as e:
+            # Preferences might already exist or creation might fail - not critical
+            logging.warning(f"Could not create user preferences: {e}")
+        
+        return {
+            "message": "Test user created successfully",
+            "email": new_user.email,
+            "role": new_user.role,
+            "is_admin": new_user.is_admin,
+            "is_verified": new_user.is_verified,
+            "subscription_tier": new_user.subscription_tier,
+        }
+
+
 @router.post("/estimate-tokens", response_model=EstimateTokensResponse)
 async def estimate_tokens(
     req: EstimateTokensRequest,

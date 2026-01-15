@@ -388,9 +388,26 @@ async function globalSetup(config: FullConfig) {
 
             if (registrationSucceeded) {
               console.log('Admin user registered successfully.')
-              console.log(
-                'WARNING: Admin role must be set manually. Use backend script or database to set role="admin" and is_admin=true'
-              )
+              // Try to set admin role via dev endpoint
+              try {
+                const adminUpdateResponse = await fetch(`${backendURL}/api/dev/create-test-user`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    email: ADMIN_EMAIL,
+                    password: ADMIN_PASSWORD,
+                    role: 'admin',
+                    is_admin: true,
+                    is_verified: true,
+                    is_active: true,
+                  }),
+                })
+                if (adminUpdateResponse.ok) {
+                  console.log('Admin role set successfully via dev endpoint')
+                }
+              } catch (_e) {
+                console.log('Could not set admin role via dev endpoint (non-critical)')
+              }
               console.log(`User email: ${ADMIN_EMAIL}`)
             } else {
               // Check for error message
@@ -399,13 +416,58 @@ async function globalSetup(config: FullConfig) {
                 const regErrorText = await regErrorMessage.textContent()
                 console.log(`Registration failed: ${regErrorText}`)
                 if (regErrorText?.includes('already registered')) {
-                  console.log('User already exists in database. Login may have failed due to:')
-                  console.log('  - Wrong password')
-                  console.log('  - Email not verified (is_verified=false)')
-                  console.log('  - Missing admin role')
+                  console.log('User already exists. Attempting to update via dev endpoint...')
+                  // Try to update user via dev endpoint
+                  try {
+                    const updateResponse = await fetch(`${backendURL}/api/dev/create-test-user`, {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({
+                        email: ADMIN_EMAIL,
+                        password: ADMIN_PASSWORD,
+                        role: 'admin',
+                        is_admin: true,
+                        is_verified: true,
+                        is_active: true,
+                      }),
+                    })
+                    if (updateResponse.ok) {
+                      console.log('Admin user updated successfully via dev endpoint')
+                    } else {
+                      const errorText = await updateResponse.text()
+                      console.log(`Failed to update admin user: ${errorText}`)
+                    }
+                  } catch (e) {
+                    console.log(`Could not update admin user via dev endpoint: ${e}`)
+                  }
                 }
               } else {
-                console.log('Registration status unclear. User may need email verification.')
+                console.log(
+                  'Registration status unclear. Attempting to create user via dev endpoint...'
+                )
+                // Try to create user directly via dev endpoint
+                try {
+                  const createResponse = await fetch(`${backendURL}/api/dev/create-test-user`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      email: ADMIN_EMAIL,
+                      password: ADMIN_PASSWORD,
+                      role: 'admin',
+                      is_admin: true,
+                      is_verified: true,
+                      is_active: true,
+                    }),
+                  })
+                  if (createResponse.ok) {
+                    console.log('Admin user created successfully via dev endpoint')
+                  } else {
+                    const errorText = await createResponse.text()
+                    console.log(`Failed to create admin user: ${errorText}`)
+                  }
+                } catch (e) {
+                  console.log(`Could not create admin user via dev endpoint: ${e}`)
+                }
               }
             }
           }
@@ -594,6 +656,26 @@ async function globalSetup(config: FullConfig) {
 
           if (registrationSucceeded) {
             console.log('Test user registered successfully')
+            // Ensure user is verified via dev endpoint
+            try {
+              const verifyResponse = await fetch(`${backendURL}/api/dev/create-test-user`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  email: TEST_USER_EMAIL,
+                  password: TEST_USER_PASSWORD,
+                  role: 'user',
+                  is_admin: false,
+                  is_verified: true,
+                  is_active: true,
+                }),
+              })
+              if (verifyResponse.ok) {
+                console.log('Test user verified successfully via dev endpoint')
+              }
+            } catch (_e) {
+              console.log('Could not verify test user via dev endpoint (non-critical)')
+            }
           } else {
             // Check for error message
             const regErrorMessage = page.locator('.auth-error')
@@ -601,14 +683,58 @@ async function globalSetup(config: FullConfig) {
               const regErrorText = await regErrorMessage.textContent()
               console.log(`Test user registration failed: ${regErrorText}`)
               if (regErrorText?.includes('already registered')) {
-                console.log('Test user already exists in database. Login may have failed due to:')
-                console.log('  - Wrong password')
-                console.log('  - Email not verified (is_verified=false)')
+                console.log('Test user already exists. Attempting to update via dev endpoint...')
+                // Try to update user via dev endpoint
+                try {
+                  const updateResponse = await fetch(`${backendURL}/api/dev/create-test-user`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      email: TEST_USER_EMAIL,
+                      password: TEST_USER_PASSWORD,
+                      role: 'user',
+                      is_admin: false,
+                      is_verified: true,
+                      is_active: true,
+                    }),
+                  })
+                  if (updateResponse.ok) {
+                    console.log('Test user updated successfully via dev endpoint')
+                  } else {
+                    const errorText = await updateResponse.text()
+                    console.log(`Failed to update test user: ${errorText}`)
+                  }
+                } catch (e) {
+                  console.log(`Could not update test user via dev endpoint: ${e}`)
+                }
               }
             } else {
               const responseStatus = registerResponse ? registerResponse.status() : 'No response'
               console.log(`Test user registration status unclear. Response: ${responseStatus}`)
-              console.log('User may need email verification or may already exist.')
+              console.log('Attempting to create user via dev endpoint...')
+              // Try to create user directly via dev endpoint
+              try {
+                const createResponse = await fetch(`${backendURL}/api/dev/create-test-user`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    email: TEST_USER_EMAIL,
+                    password: TEST_USER_PASSWORD,
+                    role: 'user',
+                    is_admin: false,
+                    is_verified: true,
+                    is_active: true,
+                  }),
+                })
+                if (createResponse.ok) {
+                  console.log('Test user created successfully via dev endpoint')
+                } else {
+                  const errorText = await createResponse.text()
+                  console.log(`Failed to create test user: ${errorText}`)
+                }
+              } catch (e) {
+                console.log(`Could not create test user via dev endpoint: ${e}`)
+              }
             }
           }
         } catch (error) {

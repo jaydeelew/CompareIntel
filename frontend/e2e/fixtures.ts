@@ -276,7 +276,46 @@ async function loginUser(
     await page.getByTestId('login-submit-button').click()
 
     // Wait for login API call to complete
-    await loginResponsePromise
+    const loginResponse = await loginResponsePromise
+
+    // Check for login error message
+    if (loginResponse && loginResponse.status() !== 200) {
+      const errorMessage = page.locator('.auth-error')
+      const hasError = await errorMessage.isVisible({ timeout: 3000 }).catch(() => false)
+      if (hasError) {
+        const errorText = await errorMessage.textContent().catch(() => 'Unknown error')
+        console.error(`Login failed for ${email}: ${errorText}`)
+        // If login failed, try to create/update user via dev endpoint as fallback
+        const backendURL = process.env.BACKEND_URL || 'http://localhost:8000'
+        try {
+          const createResponse = await fetch(`${backendURL}/api/dev/create-test-user`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              email: email,
+              password: password,
+              role: 'user',
+              is_admin: false,
+              is_verified: true,
+              is_active: true,
+            }),
+          })
+          if (createResponse.ok) {
+            console.log(`User ${email} created/updated via dev endpoint, retrying login...`)
+            // Retry login after creating user
+            await page.getByTestId('login-submit-button').click()
+            await page
+              .waitForResponse(
+                response => response.url().includes('/auth/login') && response.status() === 200,
+                { timeout: 10000 }
+              )
+              .catch(() => null)
+          }
+        } catch (_e) {
+          // Dev endpoint might not be available - continue with normal flow
+        }
+      }
+    }
 
     if (waitForNavigation) {
       // Wait for load state with fallback - networkidle can be too strict
@@ -304,6 +343,15 @@ async function loginUser(
 
     // Verify login succeeded - user data needs to load after login
     const loginSucceeded = await userMenu.isVisible({ timeout: 20000 }).catch(() => false)
+    if (!loginSucceeded) {
+      // Check for error message one more time
+      const errorMessage = page.locator('.auth-error')
+      const hasError = await errorMessage.isVisible({ timeout: 2000 }).catch(() => false)
+      if (hasError) {
+        const errorText = await errorMessage.textContent().catch(() => 'Unknown error')
+        console.error(`Login verification failed for ${email}: ${errorText}`)
+      }
+    }
     return loginSucceeded
   } catch (error) {
     console.error(`Login failed for ${email}:`, error)
