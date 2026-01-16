@@ -169,6 +169,20 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
+          # Install dev dependencies if they exist (needed for dev endpoints)
+          if [ -f requirements-dev.txt ]; then
+            pip install -r requirements-dev.txt
+          fi
+      
+      - name: Initialize test database directory
+        working-directory: ./backend
+        run: |
+          # Ensure backend/data directory exists (used by database.py for SQLite)
+          mkdir -p data
+          # Ensure database directory is writable
+          touch data/.gitkeep || true
+          # Also ensure backend directory itself is writable for test-e2e.db
+          touch test-e2e.db.tmp && rm test-e2e.db.tmp || true
       
       - name: Run E2E tests
         working-directory: ./frontend
@@ -181,7 +195,8 @@ jobs:
           SECRET_KEY: test-secret-key-for-ci-testing-only-32chars
           OPENROUTER_API_KEY: test-api-key-for-ci-testing-only
           ENVIRONMENT: development
-          DATABASE_URL: sqlite:///./test.db
+          # Use relative path - backend server runs from backend/ directory, so ./test-e2e.db works
+          DATABASE_URL: sqlite:///./test-e2e.db
           # Test user credentials for E2E tests
           TEST_FREE_EMAIL: free@test.com
           TEST_FREE_PASSWORD: Test12345678/

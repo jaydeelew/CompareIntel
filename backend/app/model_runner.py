@@ -425,17 +425,7 @@ MODELS_BY_PROVIDER = {
             "provider": "Microsoft",
             "supports_web_search": False,
             "knowledge_cutoff": "April 2024",
-        },
-        {
-            "id": "microsoft/phi-4-reasoning-plus",
-            "name": "Phi 4 Reasoning Plus",
-            "description": 'An enhanced 14B model with reinforcement learning fine-tuning for improved math, science, and code reasoning.',
-            "category": "Reasoning",
-            "provider": "Microsoft",
-            "supports_web_search": False,
-            "knowledge_cutoff": "June 2024",
-        },
-    ],
+        },    ],
     "Minimax": [
         {
             "id": "minimax/minimax-m2",

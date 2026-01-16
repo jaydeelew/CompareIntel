@@ -156,7 +156,7 @@ export default defineConfig({
       command: 'python -m uvicorn app.main:app --host 127.0.0.1 --port 8000',
       url: 'http://localhost:8000/docs',
       reuseExistingServer: !process.env.CI,
-      timeout: 120 * 1000,
+      timeout: process.env.CI ? 180 * 1000 : 120 * 1000, // 3 minutes in CI, 2 minutes locally
       cwd: path.resolve(__dirname, '../backend'),
       env: {
         SECRET_KEY: process.env.SECRET_KEY || 'test-secret-key-for-e2e-testing-only-32chars',
