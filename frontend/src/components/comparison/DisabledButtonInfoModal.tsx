@@ -9,7 +9,7 @@ import './DisabledButtonInfoModal.css'
 interface DisabledButtonInfoModalProps {
   isOpen: boolean
   onClose: () => void
-  buttonType: 'websearch' | 'submit' | null
+  buttonType: 'websearch' | 'submit' | 'collapse-all' | 'clear-all' | null
   message: string
 }
 
@@ -56,7 +56,14 @@ export const DisabledButtonInfoModal: React.FC<DisabledButtonInfoModalProps> = (
 
   if (!isOpen || !buttonType) return null
 
-  const buttonTitle = buttonType === 'websearch' ? 'Web Search' : 'Submit'
+  const buttonTitle =
+    buttonType === 'websearch'
+      ? 'Web Search'
+      : buttonType === 'submit'
+        ? 'Submit'
+        : buttonType === 'collapse-all'
+          ? 'Collapse All Model Providers'
+          : 'Clear All Selections'
 
   return (
     <div

@@ -2280,6 +2280,28 @@
   stroke: #9ca3af;
 }
 
+.clear-all-button.touch-disabled {
+  color: #9ca3af;
+  cursor: pointer;
+  opacity: 0.5;
+}
+
+.clear-all-button.touch-disabled svg rect,
+.clear-all-button.touch-disabled svg path {
+  stroke: #9ca3af;
+}
+
+/* Prevent hover effects on touch-disabled buttons */
+.clear-all-button.touch-disabled:hover {
+  color: #9ca3af;
+  opacity: 0.5;
+}
+
+.clear-all-button.touch-disabled:hover svg rect,
+.clear-all-button.touch-disabled:hover svg path {
+  stroke: #9ca3af;
+}
+
 /* Collapse All Button */
 .collapse-all-button {
   padding: 0;
@@ -2317,6 +2339,26 @@
 }
 
 .collapse-all-button:disabled svg path {
+  stroke: #9ca3af;
+}
+
+.collapse-all-button.touch-disabled {
+  color: #9ca3af;
+  cursor: pointer;
+  opacity: 0.5;
+}
+
+.collapse-all-button.touch-disabled svg path {
+  stroke: #9ca3af;
+}
+
+/* Prevent hover effects on touch-disabled buttons */
+.collapse-all-button.touch-disabled:hover {
+  color: #9ca3af;
+  opacity: 0.5;
+}
+
+.collapse-all-button.touch-disabled:hover svg path {
   stroke: #9ca3af;
 }
 

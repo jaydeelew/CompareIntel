@@ -58,6 +58,7 @@ import { AuthModal, VerifyEmail, VerificationBanner, ResetPassword } from './com
 import {
   ComparisonForm,
   PremiumModelsToggleInfoModal,
+  DisabledButtonInfoModal,
   type AttachedFile,
   type StoredAttachedFile,
 } from './components/comparison'
@@ -477,6 +478,10 @@ function AppContent() {
   const [isModelsHidden, setIsModelsHidden] = useState(false)
   const [hidePremiumModels, setHidePremiumModels] = useState(false)
   const [showPremiumModelsToggleModal, setShowPremiumModelsToggleModal] = useState(false)
+  const [disabledButtonInfo, setDisabledButtonInfo] = useState<{
+    button: 'collapse-all' | 'clear-all' | null
+    message: string
+  }>({ button: null, message: '' })
   const [modelErrors, setModelErrors] = useState<{ [key: string]: boolean }>({})
   const [anonymousCreditsRemaining, setAnonymousCreditsRemaining] = useState<number | null>(null)
   const [creditBalance, setCreditBalance] = useState<CreditBalance | null>(null)
@@ -7261,12 +7266,23 @@ function AppContent() {
                         )
                       })()}
                       <button
-                        className="collapse-all-button"
+                        className={`collapse-all-button ${isMobileLayout && openDropdowns.size === 0 ? 'touch-disabled' : ''}`}
                         onClick={e => {
                           e.stopPropagation()
+                          // On mobile layout, show info modal if button is disabled
+                          if (isMobileLayout && openDropdowns.size === 0) {
+                            setDisabledButtonInfo({
+                              button: 'collapse-all',
+                              message:
+                                'This button collapses all expanded model provider dropdowns. It is currently disabled because no provider dropdowns are expanded. Expand a provider dropdown first to use this feature.',
+                            })
+                            return
+                          }
+                          // Only execute if not disabled
+                          if (openDropdowns.size === 0) return
                           collapseAllDropdowns()
                         }}
-                        disabled={openDropdowns.size === 0}
+                        disabled={!isMobileLayout && openDropdowns.size === 0}
                         title={'Collapse all model providers'}
                         aria-label={'Collapse all model providers'}
                       >
@@ -7287,9 +7303,27 @@ function AppContent() {
                         </svg>
                       </button>
                       <button
-                        className="clear-all-button"
+                        className={`clear-all-button ${isMobileLayout && (selectedModels.length === 0 || isFollowUpMode) ? 'touch-disabled' : ''}`}
                         onClick={e => {
                           e.stopPropagation()
+                          // On mobile layout, show info modal if button is disabled
+                          if (isMobileLayout && (selectedModels.length === 0 || isFollowUpMode)) {
+                            let message = ''
+                            if (isFollowUpMode) {
+                              message =
+                                'This button clears all selected models. It is currently disabled because you are in follow-up mode. Exit follow-up mode to clear your selections.'
+                            } else {
+                              message =
+                                'This button clears all selected models from your comparison. It is currently disabled because no models are selected. Select at least one model first to use this feature.'
+                            }
+                            setDisabledButtonInfo({
+                              button: 'clear-all',
+                              message,
+                            })
+                            return
+                          }
+                          // Only execute if not disabled
+                          if (selectedModels.length === 0 || isFollowUpMode) return
                           setSelectedModels([])
                           // Mark default selection as overridden so it doesn't auto-reload
                           setDefaultSelectionOverridden(true)
@@ -7301,7 +7335,9 @@ function AppContent() {
                           // Expand the models section
                           setIsModelsHidden(false)
                         }}
-                        disabled={selectedModels.length === 0 || isFollowUpMode}
+                        disabled={
+                          !isMobileLayout && (selectedModels.length === 0 || isFollowUpMode)
+                        }
                         title={
                           isFollowUpMode
                             ? 'Cannot clear models during follow-up'
@@ -8897,6 +8933,14 @@ function AppContent() {
                 localStorage.removeItem('premium-models-toggle-info-dismissed')
               }
             }}
+          />
+
+          {/* Disabled Button Info Modal - shown on mobile layout when buttons are disabled */}
+          <DisabledButtonInfoModal
+            isOpen={disabledButtonInfo.button !== null}
+            onClose={() => setDisabledButtonInfo({ button: null, message: '' })}
+            buttonType={disabledButtonInfo.button}
+            message={disabledButtonInfo.message}
           />
         </>
       )}
