@@ -37,7 +37,9 @@ export default defineConfig({
     timeout: process.env.CI ? 15 * 1000 : 10 * 1000, // 15s for assertions in CI, 10s locally
   },
   /* Global timeout for entire test run */
-  globalTimeout: process.env.CI ? 60 * 60 * 1000 : 30 * 60 * 1000, // 60min in CI, 30min locally
+  // Increased to 2 hours in CI to accommodate all browser/device combinations
+  // With 13 projects and sequential execution, tests can take 90-120 minutes
+  globalTimeout: process.env.CI ? 120 * 60 * 1000 : 30 * 60 * 1000, // 120min in CI, 30min locally
 
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   reporter: process.env.CI

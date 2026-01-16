@@ -186,7 +186,7 @@ jobs:
       
       - name: Run E2E tests
         working-directory: ./frontend
-        timeout-minutes: 90
+        timeout-minutes: 130
         run: npm run test:e2e -- --project=chromium --project=firefox --project=webkit --project='Mobile Safari - iPhone 12' --project='Mobile Chrome - Pixel 5' --timeout=90000
         env:
           CI: true
