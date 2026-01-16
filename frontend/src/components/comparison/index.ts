@@ -15,3 +15,5 @@ export type { ResultsDisplayProps } from './ResultsDisplay'
 
 export { ComparisonForm } from './ComparisonForm'
 export type { AttachedFile, StoredAttachedFile } from './ComparisonForm'
+
+export { PremiumModelsToggleInfoModal } from './PremiumModelsToggleInfoModal'

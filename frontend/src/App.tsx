@@ -55,7 +55,12 @@ const TutorialWelcomeModal = lazy(() =>
 )
 import { Layout } from './components'
 import { AuthModal, VerifyEmail, VerificationBanner, ResetPassword } from './components/auth'
-import { ComparisonForm, type AttachedFile, type StoredAttachedFile } from './components/comparison'
+import {
+  ComparisonForm,
+  PremiumModelsToggleInfoModal,
+  type AttachedFile,
+  type StoredAttachedFile,
+} from './components/comparison'
 import { Navigation, Hero, MockModeBanner, InstallPrompt } from './components/layout'
 import { DoneSelectingCard, ErrorBoundary, LoadingSpinner } from './components/shared'
 import { getCreditAllocation, getDailyCreditLimit } from './config/constants'
@@ -471,6 +476,7 @@ function AppContent() {
   const animationTimeoutRef = useRef<number | null>(null)
   const [isModelsHidden, setIsModelsHidden] = useState(false)
   const [hidePremiumModels, setHidePremiumModels] = useState(false)
+  const [showPremiumModelsToggleModal, setShowPremiumModelsToggleModal] = useState(false)
   const [modelErrors, setModelErrors] = useState<{ [key: string]: boolean }>({})
   const [anonymousCreditsRemaining, setAnonymousCreditsRemaining] = useState<number | null>(null)
   const [creditBalance, setCreditBalance] = useState<CreditBalance | null>(null)
@@ -7180,6 +7186,18 @@ function AppContent() {
                             className={`hide-premium-button ${hidePremiumModels ? 'active' : ''}`}
                             onClick={e => {
                               e.stopPropagation()
+                              // On mobile layout, show info modal first (if not dismissed)
+                              if (isMobileLayout) {
+                                const dontShowAgain = localStorage.getItem(
+                                  'premium-models-toggle-info-dismissed'
+                                )
+                                if (!dontShowAgain) {
+                                  setShowPremiumModelsToggleModal(true)
+                                  // Don't toggle immediately - toggle will happen when modal closes
+                                  return
+                                }
+                              }
+                              // Toggle the premium models visibility (desktop or mobile with dismissed modal)
                               setHidePremiumModels(!hidePremiumModels)
                             }}
                             title={
@@ -8863,6 +8881,23 @@ function AppContent() {
                 </Suspense>
               )
             })()}
+
+          {/* Premium Models Toggle Info Modal - shown on mobile layout */}
+          <PremiumModelsToggleInfoModal
+            isOpen={showPremiumModelsToggleModal}
+            onClose={() => {
+              setShowPremiumModelsToggleModal(false)
+              // After closing modal, toggle the premium models visibility
+              setHidePremiumModels(!hidePremiumModels)
+            }}
+            onDontShowAgain={checked => {
+              if (checked) {
+                localStorage.setItem('premium-models-toggle-info-dismissed', 'true')
+              } else {
+                localStorage.removeItem('premium-models-toggle-info-dismissed')
+              }
+            }}
+          />
         </>
       )}
     </div>
