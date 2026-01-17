@@ -43,17 +43,42 @@ async function generatePNG(size, outputPath, options = {}) {
   const innerSize = Math.round(size * (1 - padding * 2));
   const paddingPx = Math.round(size * padding);
 
-  // Render SVG to buffer at inner size
-  const buffer = await sharp(Buffer.from(sourceSvg))
-    .resize(innerSize, innerSize, {
-      fit: 'contain',
-      background: { r: 0, g: 0, b: 0, alpha: 0 }
-    })
-    .png()
-    .toBuffer();
+  // If we have an opaque background (like for maskable icons), create directly on that background
+  if (padding > 0 && background.alpha === 1) {
+    // Create a white canvas and composite the icon on top
+    const iconBuffer = await sharp(Buffer.from(sourceSvg))
+      .resize(innerSize, innerSize, {
+        fit: 'contain',
+        background: { r: 0, g: 0, b: 0, alpha: 0 }
+      })
+      .png()
+      .toBuffer();
 
-  // If padding is needed, extend the canvas
-  if (padding > 0) {
+    await sharp({
+      create: {
+        width: size,
+        height: size,
+        channels: 3,
+        background: { r: background.r, g: background.g, b: background.b }
+      }
+    })
+      .composite([{
+        input: iconBuffer,
+        left: paddingPx,
+        top: paddingPx
+      }])
+      .png()
+      .toFile(outputPath);
+  } else if (padding > 0) {
+    // For transparent backgrounds, use the original extend method
+    const buffer = await sharp(Buffer.from(sourceSvg))
+      .resize(innerSize, innerSize, {
+        fit: 'contain',
+        background: { r: 0, g: 0, b: 0, alpha: 0 }
+      })
+      .png()
+      .toBuffer();
+
     await sharp(buffer)
       .extend({
         top: paddingPx,
