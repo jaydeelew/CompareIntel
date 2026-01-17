@@ -48,6 +48,11 @@ const TutorialController = lazy(() =>
     default: module.TutorialController,
   }))
 )
+const MobileTutorialController = lazy(() =>
+  import('./components/tutorial/MobileTutorialController').then(module => ({
+    default: module.MobileTutorialController,
+  }))
+)
 const TutorialWelcomeModal = lazy(() =>
   import('./components/tutorial/TutorialWelcomeModal').then(module => ({
     default: module.TutorialWelcomeModal,
@@ -3639,7 +3644,7 @@ function AppContent() {
     }
 
     fetchModels()
-  }, [])
+  }, [isAuthenticated, user, setBrowserFingerprint, setError, setUsageCount])
 
   // Load default selection when models are loaded and default hasn't been overridden
   useEffect(() => {
@@ -6998,7 +7003,7 @@ function AppContent() {
               setIsAuthModalOpen(true)
             }}
             onTutorialClick={
-              !isAuthenticated && !isMobileLayout
+              !isAuthenticated
                 ? () => {
                     resetAppStateForTutorial() // Reset app state for clean tutorial experience
                     startTutorial() // Start the tutorial (includes resetting localStorage)
@@ -8844,7 +8849,7 @@ function AppContent() {
           {import.meta.env.PROD && <InstallPrompt />}
 
           {/* Tutorial Welcome Modal */}
-          {showWelcomeModal && !isMobileLayout && (
+          {showWelcomeModal && (
             <Suspense fallback={<LoadingSpinner />}>
               <TutorialWelcomeModal
                 onStart={() => {
@@ -8860,7 +8865,7 @@ function AppContent() {
             </Suspense>
           )}
 
-          {/* Tutorial Controller */}
+          {/* Tutorial Controller - Desktop */}
           {currentView === 'main' &&
             !isMobileLayout &&
             (() => {
@@ -8912,6 +8917,49 @@ function AppContent() {
                     }}
                     onSelectionSaved={() => {
                       setTutorialHasSavedSelection(false)
+                    }}
+                  />
+                </Suspense>
+              )
+            })()}
+
+          {/* Tutorial Controller - Mobile */}
+          {currentView === 'main' &&
+            isMobileLayout &&
+            (() => {
+              // Check if Google provider is expanded
+              const googleProviderExpanded =
+                'Google' in modelsByProvider && openDropdowns.has('Google')
+
+              // Check if both Google models for unregistered users are selected
+              const googleModelIds = ['google/gemini-2.0-flash-001', 'google/gemini-2.5-flash']
+              const googleModelsSelected = googleModelIds.every(modelId =>
+                selectedModels.includes(modelId)
+              )
+
+              return (
+                <Suspense fallback={<LoadingSpinner />}>
+                  <MobileTutorialController
+                    tutorialState={tutorialState}
+                    completeStep={completeStep}
+                    skipTutorial={skipTutorial}
+                    googleProviderExpanded={googleProviderExpanded}
+                    googleModelsSelected={googleModelsSelected}
+                    hasPromptText={input.trim().length > 0}
+                    hasCompletedComparison={tutorialHasCompletedComparison}
+                    isFollowUpMode={isFollowUpMode}
+                    showHistoryDropdown={showHistoryDropdown}
+                    onProviderExpanded={() => {
+                      // Step completed, no action needed
+                    }}
+                    onModelsSelected={() => {
+                      // Step completed, no action needed
+                    }}
+                    onComparisonComplete={() => {
+                      setTutorialHasCompletedComparison(false)
+                    }}
+                    onFollowUpActivated={() => {
+                      // Reset state if needed
                     }}
                   />
                 </Suspense>

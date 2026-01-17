@@ -1,5 +1,7 @@
 export { TutorialController } from './TutorialController'
 export { TutorialOverlay } from './TutorialOverlay'
 export { TutorialWelcomeModal } from './TutorialWelcomeModal'
+export { MobileTutorialController } from './MobileTutorialController'
+export { MobileTutorialOverlay } from './MobileTutorialOverlay'
 export { TUTORIAL_STEPS_CONFIG } from './tutorialSteps'
 export type { StepConfig } from './tutorialSteps'

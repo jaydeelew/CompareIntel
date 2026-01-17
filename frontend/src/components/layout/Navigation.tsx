@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 
 import { UserMenu } from '../auth'
@@ -27,6 +28,18 @@ export function Navigation({
   const navigate = useNavigate()
   const location = useLocation()
 
+  // Detect mobile layout for tutorial trigger on logo
+  const [isMobileLayout, setIsMobileLayout] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return false
+    return window.innerWidth <= 768
+  })
+
+  useEffect(() => {
+    const handleResize = () => setIsMobileLayout(window.innerWidth <= 768)
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
+
   // Use React Router navigation if available, fallback to onViewChange prop
   const handleViewChange = (view: 'main' | 'admin') => {
     if (onViewChange) {
@@ -44,14 +57,33 @@ export function Navigation({
       <nav className="navbar">
         <div className="nav-brand">
           <div className="brand-logo">
-            <img
-              src="/CI_favicon.svg"
-              alt="CompareIntel Logo"
-              className="logo-icon"
-              width="36"
-              height="36"
-              loading="eager"
-            />
+            {/* On mobile, only the icon is clickable to start tutorial */}
+            {isMobileLayout && onTutorialClick && !isAuthenticated ? (
+              <button
+                className="logo-icon-button"
+                onClick={onTutorialClick}
+                title="Start Tutorial"
+                aria-label="Start Tutorial"
+              >
+                <img
+                  src="/CI_favicon.svg"
+                  alt="CompareIntel Logo - Tap to start tutorial"
+                  className="logo-icon"
+                  width="36"
+                  height="36"
+                  loading="eager"
+                />
+              </button>
+            ) : (
+              <img
+                src="/CI_favicon.svg"
+                alt="CompareIntel Logo"
+                className="logo-icon"
+                width="36"
+                height="36"
+                loading="eager"
+              />
+            )}
             <div className="brand-text">
               <div className="brand-name">CompareIntel</div>
               <span className="brand-tagline">AI Model Comparison Platform</span>
@@ -90,7 +122,8 @@ export function Navigation({
             </>
           ) : (
             <>
-              {onTutorialClick && (
+              {/* On mobile, tutorial is triggered via logo; on desktop, show button */}
+              {onTutorialClick && !isMobileLayout && (
                 <button
                   className="nav-button-text nav-button-tutorial"
                   onClick={onTutorialClick}

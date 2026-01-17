@@ -110,3 +110,50 @@
   background: var(--bg-secondary);
   color: var(--text-primary);
 }
+
+/* Mobile-specific improvements */
+@media (max-width: 768px) {
+  .tutorial-welcome-content {
+    padding: 1.5rem;
+  }
+
+  .tutorial-welcome-title {
+    font-size: 1.375rem;
+  }
+
+  .tutorial-welcome-description {
+    font-size: 0.9375rem;
+  }
+
+  .tutorial-welcome-features {
+    gap: 0.625rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .tutorial-welcome-feature {
+    font-size: 0.875rem;
+  }
+
+  .tutorial-welcome-actions {
+    flex-direction: column;
+    gap: 0.625rem;
+  }
+
+  .tutorial-welcome-button {
+    width: 100%;
+    padding: 0.875rem 1.5rem;
+    /* Minimum touch target size */
+    min-height: 48px;
+  }
+
+  .tutorial-welcome-button-primary:active {
+    background: #0284c7;
+    transform: scale(0.98);
+  }
+
+  .tutorial-welcome-button-secondary:active {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    transform: scale(0.98);
+  }
+}
