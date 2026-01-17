@@ -288,7 +288,7 @@ export const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
     } else {
       // Very tight space - position at center of screen
       tooltipTop = (viewportHeight - tooltipHeight) / 2
-      arrowDirection = rect.centerY > viewportHeight / 2 ? 'down' : 'up'
+      arrowDirection = rect.top + rect.height / 2 > viewportHeight / 2 ? 'down' : 'up'
     }
 
     // Ensure tooltip stays within viewport vertically
