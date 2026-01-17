@@ -654,7 +654,7 @@ export const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
   const noBackdropSteps: TutorialStep[] = ['view-follow-up-results']
   const showBackdrop = !noBackdropSteps.includes(step)
 
-  const cutoutTarget = dropdownRect ?? backdropRect ?? targetRect
+  const cutoutTarget: TargetRect | null = dropdownRect ?? backdropRect ?? targetRect
 
   const cutoutStyle =
     cutoutTarget && showBackdrop
