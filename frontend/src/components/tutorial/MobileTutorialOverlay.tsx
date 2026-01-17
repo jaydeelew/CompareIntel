@@ -38,13 +38,16 @@ const MOBILE_STEP_OVERRIDES: Partial<
     position: 'bottom', // Show tooltip below the provider on mobile for better visibility
   },
   'select-models': {
-    position: 'bottom',
+    position: 'top',
   },
   'enter-prompt': {
     position: 'bottom', // Show below textarea so user can see what they're typing
   },
   'enter-prompt-2': {
     position: 'bottom', // Show below textarea so user can see what they're typing
+  },
+  'follow-up': {
+    position: 'top', // Show above the follow-up button so user can see comparison results below
   },
   'view-follow-up-results': {
     position: 'bottom', // Use fullscreen-style for results viewing
@@ -64,6 +67,11 @@ const TUTORIAL_STEP_ORDER: TutorialStep[] = [
   'save-selection',
 ]
 
+// Steps that target the textarea - tooltip must always be below to not cover input
+const TEXTAREA_STEPS: TutorialStep[] = ['enter-prompt', 'enter-prompt-2']
+// Dropdown steps should keep tooltip above to avoid covering menus
+const DROPDOWN_STEPS: TutorialStep[] = ['history-dropdown', 'save-selection']
+
 export const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
   step,
   onComplete,
@@ -73,13 +81,13 @@ export const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
   const overlayRef = useRef<HTMLDivElement>(null)
   const [targetElement, setTargetElement] = useState<HTMLElement | null>(null)
   const [targetRect, setTargetRect] = useState<TargetRect | null>(null)
+  const [backdropRect, setBackdropRect] = useState<TargetRect | null>(null)
+  const [dropdownRect, setDropdownRect] = useState<TargetRect | null>(null)
   const [tooltipPosition, setTooltipPosition] = useState<TooltipPosition | null>(null)
   const [isVisible, setIsVisible] = useState(false)
   const [isTargetOffScreen, setIsTargetOffScreen] = useState<'up' | 'down' | null>(null)
   const dropdownWasOpenedRef = useRef<boolean>(false)
   const tooltipEstimatedHeight = 220
-  // Steps that target the textarea - tooltip must always be below to not cover input
-  const textareaSteps: TutorialStep[] = ['enter-prompt', 'enter-prompt-2']
 
   // Reset dropdown opened flag when step changes
   useEffect(() => {
@@ -93,6 +101,8 @@ export const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
     if (!step) {
       setTargetElement(null)
       setTargetRect(null)
+      setBackdropRect(null)
+      setDropdownRect(null)
       setIsVisible(false)
       // Cleanup
       document.querySelectorAll('.mobile-tutorial-highlight').forEach(el => {
@@ -166,8 +176,9 @@ export const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
     const viewportWidth = window.innerWidth
     const viewportHeight = window.innerHeight
     const padding = 12 // Padding from screen edges
-    const tooltipHeight = tooltipEstimatedHeight // Estimated tooltip height
-    const tooltipWidth = Math.min(340, viewportWidth - 24)
+    const tooltipRect = overlayRef.current?.getBoundingClientRect()
+    const tooltipHeight = tooltipRect?.height ?? tooltipEstimatedHeight
+    const tooltipWidth = tooltipRect?.width ?? Math.min(340, viewportWidth - 24)
     const arrowSize = 10
 
     const newTargetRect: TargetRect = {
@@ -179,6 +190,47 @@ export const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       centerY: rect.top + rect.height / 2,
     }
     setTargetRect(newTargetRect)
+
+    if (step === 'follow-up') {
+      const resultsSection = document.querySelector('.results-section') as HTMLElement
+      if (resultsSection) {
+        const resultsRect = resultsSection.getBoundingClientRect()
+        setBackdropRect({
+          top: resultsRect.top,
+          left: resultsRect.left,
+          width: resultsRect.width,
+          height: resultsRect.height,
+          centerX: resultsRect.left + resultsRect.width / 2,
+          centerY: resultsRect.top + resultsRect.height / 2,
+        })
+      } else {
+        setBackdropRect(null)
+      }
+    } else {
+      setBackdropRect(null)
+    }
+
+    if (DROPDOWN_STEPS.includes(step)) {
+      const dropdownElement =
+        step === 'history-dropdown'
+          ? (document.querySelector('.history-inline-list') as HTMLElement)
+          : (document.querySelector('.saved-selections-dropdown') as HTMLElement)
+      if (dropdownElement) {
+        const dropdownBounds = dropdownElement.getBoundingClientRect()
+        setDropdownRect({
+          top: dropdownBounds.top,
+          left: dropdownBounds.left,
+          width: dropdownBounds.width,
+          height: dropdownBounds.height,
+          centerX: dropdownBounds.left + dropdownBounds.width / 2,
+          centerY: dropdownBounds.top + dropdownBounds.height / 2,
+        })
+      } else {
+        setDropdownRect(null)
+      }
+    } else {
+      setDropdownRect(null)
+    }
 
     // Check if target is off-screen
     if (rect.bottom < 0) {
@@ -244,12 +296,20 @@ export const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
 
     // For enter-prompt steps: ALWAYS position below the textarea to avoid any overlap
     // This ensures the user can always see the textarea while reading the instructions
-    if (textareaSteps.includes(step)) {
+    if (TEXTAREA_STEPS.includes(step)) {
       // Always position below textarea for these steps
       tooltipTop = rect.bottom + arrowSize + 8
       arrowDirection = 'up'
 
       // Re-apply viewport constraint for below positioning
+      tooltipTop = Math.max(padding, Math.min(tooltipTop, viewportHeight - tooltipHeight - padding))
+    }
+
+    // For dropdown steps: ALWAYS position above the button so menus stay visible below
+    if (DROPDOWN_STEPS.includes(step)) {
+      tooltipTop = rect.top - tooltipHeight - arrowSize - 8
+      arrowDirection = 'down'
+      // Keep tooltip within viewport
       tooltipTop = Math.max(padding, Math.min(tooltipTop, viewportHeight - tooltipHeight - padding))
     }
 
@@ -275,7 +335,7 @@ export const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       arrowOffset,
       useFullscreen: false,
     })
-  }, [targetElement, step, textareaSteps])
+  }, [targetElement, step])
 
   // Update positions on mount, scroll, resize
   useEffect(() => {
@@ -288,7 +348,7 @@ export const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       const rect = targetElement.getBoundingClientRect()
       const viewportHeight = window.innerHeight
 
-      if (textareaSteps.includes(step)) {
+      if (TEXTAREA_STEPS.includes(step)) {
         // For enter-prompt steps, ensure textarea is fully visible above the tooltip
         // The tooltip appears below the textarea, so we need to ensure no overlap
         const padding = 12
@@ -318,6 +378,92 @@ export const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
           const scrollAdjustment = padding - rect.top
           const scrollTarget = window.pageYOffset + scrollAdjustment
           window.scrollTo({ top: scrollTarget, behavior: 'smooth' })
+        }
+      } else if (step === 'select-models') {
+        // For step 2, tooltip appears above the provider card
+        // Ensure there is enough space above for the tooltip on initial scroll
+        const arrowSize = 10
+        const measuredTooltipHeight =
+          overlayRef.current?.getBoundingClientRect().height ?? tooltipEstimatedHeight
+        const tooltipSpacing = arrowSize + 8
+        const totalTooltipHeight = measuredTooltipHeight + tooltipSpacing
+        const topMargin = Math.max(8, Math.round(viewportHeight * 0.02))
+        const maxTargetTop = Math.round(viewportHeight * 0.4)
+
+        const tooltipTop = rect.top - totalTooltipHeight
+        if (tooltipTop < topMargin) {
+          const idealTargetTop = topMargin + totalTooltipHeight
+          const scrollAdjustment = rect.top - idealTargetTop
+
+          if (scrollAdjustment < 0) {
+            const scrollTarget = window.pageYOffset + scrollAdjustment
+            window.scrollTo({ top: Math.max(0, scrollTarget), behavior: 'smooth' })
+          }
+        } else if (rect.top > maxTargetTop) {
+          // If we have room above, scroll down a bit so more models are visible
+          const scrollAdjustment = rect.top - maxTargetTop
+          const scrollTarget = window.pageYOffset + scrollAdjustment
+          window.scrollTo({ top: Math.max(0, scrollTarget), behavior: 'smooth' })
+        }
+      } else if (step === 'follow-up') {
+        // For follow-up step, tooltip appears above the button
+        // Ensure tooltip has enough space above while keeping results visible below
+        const arrowSize = 10
+        const tooltipSpacing = arrowSize + 8
+        const totalTooltipHeight = tooltipEstimatedHeight + tooltipSpacing
+        const topMargin = 80 // Desired margin from top of viewport for tooltip
+
+        // Calculate where tooltip top would be if positioned above button
+        const tooltipTop = rect.top - totalTooltipHeight
+
+        // If tooltip would go off-screen at the top, scroll to position button lower
+        if (tooltipTop < topMargin) {
+          // Calculate ideal position: button top should be low enough that tooltip fits above
+          const idealButtonTop = topMargin + totalTooltipHeight
+          const currentButtonTop = rect.top
+          const scrollAdjustment = currentButtonTop - idealButtonTop
+
+          if (scrollAdjustment < 0) {
+            // Scroll up (decrease scroll position) to move button down in viewport
+            // This positions button lower, leaving room above for tooltip
+            const scrollTarget = window.pageYOffset + scrollAdjustment
+            window.scrollTo({ top: Math.max(0, scrollTarget), behavior: 'smooth' })
+          }
+        } else if (rect.top < topMargin + totalTooltipHeight) {
+          // Button too close to top, ensure we have enough space for tooltip above
+          const scrollAdjustment = topMargin + totalTooltipHeight - rect.top
+          const scrollTarget = window.pageYOffset - scrollAdjustment
+          window.scrollTo({ top: Math.max(0, scrollTarget), behavior: 'smooth' })
+        } else {
+          // If there is room above, push the target higher to reveal more results
+          const maxTargetTop = Math.round(viewportHeight * 0.4)
+          if (rect.top > maxTargetTop) {
+            const scrollAdjustment = rect.top - maxTargetTop
+            const scrollTarget = window.pageYOffset + scrollAdjustment
+            window.scrollTo({ top: Math.max(0, scrollTarget), behavior: 'smooth' })
+          }
+        }
+      } else if (DROPDOWN_STEPS.includes(step)) {
+        // For dropdown steps, keep tooltip above the button so menus are unobstructed
+        const arrowSize = 10
+        const tooltipSpacing = arrowSize + 8
+        const totalTooltipHeight = tooltipEstimatedHeight + tooltipSpacing
+        const topMargin = 80
+
+        const tooltipTop = rect.top - totalTooltipHeight
+        if (tooltipTop < topMargin) {
+          const idealButtonTop = topMargin + totalTooltipHeight
+          const currentButtonTop = rect.top
+          const scrollAdjustment = currentButtonTop - idealButtonTop
+
+          if (scrollAdjustment < 0) {
+            const scrollTarget = window.pageYOffset + scrollAdjustment
+            window.scrollTo({ top: Math.max(0, scrollTarget), behavior: 'smooth' })
+          }
+        } else if (rect.top < topMargin + totalTooltipHeight) {
+          const scrollAdjustment = topMargin + totalTooltipHeight - rect.top
+          const scrollTarget = window.pageYOffset - scrollAdjustment
+          window.scrollTo({ top: Math.max(0, scrollTarget), behavior: 'smooth' })
         }
       } else {
         // For other steps, use standard scroll logic
@@ -352,7 +498,7 @@ export const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       window.removeEventListener('resize', handleUpdate)
       clearInterval(interval)
     }
-  }, [targetElement, step, calculatePositions, textareaSteps])
+  }, [targetElement, step, calculatePositions])
 
   // Add highlight class to target element
   useEffect(() => {
@@ -372,6 +518,29 @@ export const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       ) as HTMLElement
       if (googleDropdown) {
         googleDropdown.classList.add('mobile-tutorial-highlight')
+      }
+    }
+
+    // For follow-up step, highlight the full results section
+    const resultsSection =
+      step === 'follow-up' ? (document.querySelector('.results-section') as HTMLElement) : null
+    if (resultsSection) {
+      resultsSection.classList.add('mobile-tutorial-highlight')
+    }
+
+    // For dropdown steps, highlight the dropdown list so it stays bright
+    if (step === 'history-dropdown') {
+      const historyDropdown = document.querySelector('.history-inline-list') as HTMLElement
+      if (historyDropdown) {
+        historyDropdown.classList.add('mobile-tutorial-highlight')
+      }
+    }
+    if (step === 'save-selection') {
+      const savedSelectionsDropdown = document.querySelector(
+        '.saved-selections-dropdown'
+      ) as HTMLElement
+      if (savedSelectionsDropdown) {
+        savedSelectionsDropdown.classList.add('mobile-tutorial-highlight')
       }
     }
 
@@ -485,14 +654,16 @@ export const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
   const noBackdropSteps: TutorialStep[] = ['view-follow-up-results']
   const showBackdrop = !noBackdropSteps.includes(step)
 
+  const cutoutTarget = dropdownRect ?? backdropRect ?? targetRect
+
   const cutoutStyle =
-    targetRect && showBackdrop
+    cutoutTarget && showBackdrop
       ? {
           position: 'fixed' as const,
-          top: `${targetRect.top - 8}px`,
-          left: `${targetRect.left - 8}px`,
-          width: `${targetRect.width + 16}px`,
-          height: `${targetRect.height + 16}px`,
+          top: `${cutoutTarget.top - 8}px`,
+          left: `${cutoutTarget.left - 8}px`,
+          width: `${cutoutTarget.width + 16}px`,
+          height: `${cutoutTarget.height + 16}px`,
           borderRadius: step === 'enter-prompt' || step === 'enter-prompt-2' ? '32px' : '16px',
           boxShadow: '0 0 0 9999px rgba(0, 0, 0, 0.65)',
           zIndex: 9998,

@@ -410,8 +410,29 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
 
       let scrollTarget: number
 
-      // Special handling for step 2 (select-models) - ensure tooltip bubble is visible
-      if (step === 'select-models') {
+      // Special handling for step 1 (expand-provider) - ensure tooltip bubble is visible above provider
+      if (step === 'expand-provider') {
+        // Tooltip is positioned above the element (position: 'top')
+        // Tooltip appears at: rect.top - offset (in viewport coordinates)
+        // We need to ensure the tooltip doesn't go off-screen at the top
+
+        // Estimate tooltip height (max-width 360px, typical height ~250-300px)
+        const estimatedTooltipHeight = 280
+        const tooltipOffset = 16 // Distance from target element
+        const topMargin = 80 // Desired margin from top of viewport
+
+        // Calculate where the element should be positioned in viewport after scroll
+        // so that: tooltipTop = elementTopInViewport - tooltipOffset >= topMargin
+        // Therefore: elementTopInViewport >= topMargin + tooltipOffset + tooltipHeight
+        const desiredElementTopInViewport = topMargin + tooltipOffset + estimatedTooltipHeight
+
+        // Calculate scroll position needed to achieve this
+        // After scrolling, elementTopInViewport = rect.top (current) - (scrollTarget - currentScroll)
+        // We want: rect.top - (scrollTarget - window.pageYOffset) = desiredElementTopInViewport
+        // So: scrollTarget = window.pageYOffset + rect.top - desiredElementTopInViewport
+        scrollTarget = window.pageYOffset + rect.top - desiredElementTopInViewport
+      } else if (step === 'select-models') {
+        // Special handling for step 2 (select-models) - ensure tooltip bubble is visible
         // Tooltip is positioned above the element (position: 'top')
         // Tooltip appears at: rect.top - offset (in viewport coordinates)
         // We need to ensure the tooltip doesn't go off-screen at the top
@@ -744,7 +765,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
       }
       // If we're still on expand-provider, select-models, enter-prompt, submit-comparison, or dropdown steps, don't clean up - keep the highlight
     }
-  }, [step]) // Only depend on step, not targetElement or highlightedElements, to prevent unnecessary re-runs
+  }, [step, highlightedElements, targetElement])
 
   // Separate effect to continuously maintain highlight for expand-provider step
   // Uses simple interval instead of MutationObserver to avoid performance issues
