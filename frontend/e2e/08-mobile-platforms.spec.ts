@@ -1,4 +1,6 @@
-import { test, expect, Locator, Page } from './fixtures'
+import type { Locator, Page } from '@playwright/test'
+
+import { test, expect } from './fixtures'
 
 /**
  * Helper function to safely wait with page validity check
@@ -116,16 +118,29 @@ async function dismissTutorialOverlay(page: Page) {
  * Uses tap if touch is supported, otherwise falls back to click
  * Handles tutorial overlay blocking (especially in WebKit)
  */
-async function tapOrClick(locator: Locator, page: Page, browserName?: string): Promise<void> {
+async function tapOrClick(locator: Locator, page?: Page, browserName?: string): Promise<void> {
+  // Get page from locator if not provided
+  const locatorWithPage = locator as unknown as { page?: () => Page; _page?: Page }
+  const pageInstance = page || locatorWithPage.page?.() || locatorWithPage._page
+  if (!pageInstance) {
+    // If we can't get page, just try click directly
+    try {
+      await locator.tap({ timeout: 15000 })
+    } catch {
+      await locator.click({ timeout: 15000 })
+    }
+    return
+  }
+
   const isWebKit = browserName === 'webkit'
 
   // Check if tutorial overlay is blocking (especially in WebKit)
-  const tutorialOverlay = page.locator('.tutorial-backdrop, .tutorial-welcome-backdrop')
+  const tutorialOverlay = pageInstance.locator('.tutorial-backdrop, .tutorial-welcome-backdrop')
   const overlayVisible = await tutorialOverlay.isVisible({ timeout: 1000 }).catch(() => false)
-  if (overlayVisible && !page.isClosed()) {
+  if (overlayVisible && !pageInstance.isClosed()) {
     // Dismiss tutorial overlay before clicking
-    await dismissTutorialOverlay(page)
-    await safeWait(page, 500) // Wait for overlay to fully disappear
+    await dismissTutorialOverlay(pageInstance)
+    await safeWait(pageInstance, 500) // Wait for overlay to fully disappear
   }
 
   try {
@@ -136,8 +151,8 @@ async function tapOrClick(locator: Locator, page: Page, browserName?: string): P
     if (error instanceof Error && error.message.includes('intercepts pointer events')) {
       if (isWebKit) {
         // WebKit: dismiss overlay again and use force click
-        await dismissTutorialOverlay(page)
-        await safeWait(page, 500)
+        await dismissTutorialOverlay(pageInstance)
+        await safeWait(pageInstance, 500)
         await locator.click({ timeout: 30000, force: true })
       } else {
         // Other browsers: just use force click
@@ -190,7 +205,7 @@ test.describe('Mobile Platform Tests', () => {
       .waitForResponse(
         response => {
           const url = response.url()
-          return (
+          return !!(
             (url.includes('/api/models') || url.match(/\/api\/models[^.]*$/)) &&
             !url.includes('.css') &&
             !url.includes('.js') &&
@@ -275,7 +290,7 @@ test.describe('Mobile Platform Tests', () => {
     })
   })
 
-  test('Touch interactions work correctly', async ({ page }) => {
+  test('Touch interactions work correctly', async ({ page, browserName }) => {
     await test.step('Can tap navigation buttons', async () => {
       const signUpButton = page.getByTestId('nav-sign-up-button')
       await expect(signUpButton).toBeVisible()
@@ -349,7 +364,7 @@ test.describe('Mobile Platform Tests', () => {
 
       // Tap/click first checkbox
       const firstCheckbox = modelCheckboxes.first()
-      await tapOrClick(firstCheckbox)
+      await tapOrClick(firstCheckbox, page, browserName)
       await safeWait(page, 300)
 
       // Verify it's checked
@@ -357,10 +372,10 @@ test.describe('Mobile Platform Tests', () => {
     })
   })
 
-  test('Mobile keyboard behavior', async ({ page }) => {
+  test('Mobile keyboard behavior', async ({ page, browserName }) => {
     await test.step('Keyboard appears when input is focused', async () => {
       const inputField = page.getByTestId('comparison-input-textarea')
-      await tapOrClick(inputField)
+      await tapOrClick(inputField, page, browserName)
 
       // Wait for keyboard to potentially appear (mobile browsers)
       await safeWait(page, 500)
@@ -372,7 +387,7 @@ test.describe('Mobile Platform Tests', () => {
 
     await test.step('Can type with mobile keyboard', async () => {
       const inputField = page.getByTestId('comparison-input-textarea')
-      await tapOrClick(inputField)
+      await tapOrClick(inputField, page, browserName)
       await safeWait(page, 300)
 
       // Type text
@@ -383,7 +398,7 @@ test.describe('Mobile Platform Tests', () => {
 
     await test.step('Keyboard can be dismissed', async () => {
       const inputField = page.getByTestId('comparison-input-textarea')
-      await tapOrClick(inputField)
+      await tapOrClick(inputField, page, browserName)
       await safeWait(page, 300)
 
       // Blur the input (simulates keyboard dismissal)
@@ -435,7 +450,7 @@ test.describe('Mobile Platform Tests', () => {
       await expect(userMenuButton).toBeVisible({ timeout: 10000 })
 
       // Tap/click to open menu
-      await tapOrClick(userMenuButton)
+      await tapOrClick(userMenuButton, authenticatedPage)
       await safeWait(authenticatedPage, 500)
 
       // Menu should be visible (check for logout button or menu items)
@@ -445,11 +460,11 @@ test.describe('Mobile Platform Tests', () => {
     })
   })
 
-  test('Mobile comparison flow', async ({ page }) => {
+  test('Mobile comparison flow', async ({ page, browserName }) => {
     await test.step('Can perform comparison on mobile', async () => {
       // Enter prompt
       const inputField = page.getByTestId('comparison-input-textarea')
-      await tapOrClick(inputField)
+      await tapOrClick(inputField, page, browserName)
       await inputField.fill('What is machine learning?')
 
       // Wait for models to load
@@ -482,7 +497,7 @@ test.describe('Mobile Platform Tests', () => {
       // Submit comparison
       const submitButton = page.getByTestId('comparison-submit-button')
       await expect(submitButton).toBeVisible()
-      await tapOrClick(submitButton)
+      await tapOrClick(submitButton, page, browserName)
 
       // Wait for results (may fail if backend isn't running, which is acceptable)
       const results = page.locator(
@@ -538,7 +553,7 @@ test.describe('Mobile Platform Tests', () => {
     })
   })
 
-  test('Mobile registration flow', async ({ page, context }) => {
+  test('Mobile registration flow', async ({ page, context, browserName }) => {
     // Increase timeout for this test since registration can take time
     test.setTimeout(45000)
 
@@ -559,21 +574,21 @@ test.describe('Mobile Platform Tests', () => {
       const testPassword = 'TestPassword123!'
 
       // Open registration modal
-      await tapOrClick(page.getByTestId('nav-sign-up-button'))
+      await tapOrClick(page.getByTestId('nav-sign-up-button'), page, browserName)
       await page.waitForSelector('[data-testid="auth-modal"], .auth-modal', { timeout: 5000 })
 
       // Fill form using tap/click and fill
       const emailInput = page.locator('input[type="email"]').first()
-      await tapOrClick(emailInput)
+      await tapOrClick(emailInput, page, browserName)
       await emailInput.fill(testEmail)
 
       const passwordInput = page.locator('input[type="password"]').first()
-      await tapOrClick(passwordInput)
+      await tapOrClick(passwordInput, page, browserName)
       await passwordInput.fill(testPassword)
 
       const confirmPasswordInput = page.locator('input[type="password"]').nth(1)
       if (await confirmPasswordInput.isVisible({ timeout: 2000 }).catch(() => false)) {
-        await tapOrClick(confirmPasswordInput)
+        await tapOrClick(confirmPasswordInput, page, browserName)
         await confirmPasswordInput.fill(testPassword)
       }
 
@@ -593,7 +608,7 @@ test.describe('Mobile Platform Tests', () => {
 
       // Submit
       const submitButton = page.getByTestId('register-submit-button')
-      await tapOrClick(submitButton)
+      await tapOrClick(submitButton, page, browserName)
 
       // Wait for registration API call to complete
       const registrationResponse = await registrationResponsePromise

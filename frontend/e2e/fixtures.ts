@@ -385,13 +385,56 @@ async function registerUser(
     // Dismiss tutorial overlay if present (blocks interactions)
     await dismissTutorialOverlay(page)
 
+    // Wait for any existing auth modal overlay to close before clicking sign-up
+    // The overlay can block clicks on the sign-up button
+    const existingAuthModal = page.locator(
+      '.auth-modal-overlay, [data-testid="auth-modal"], .auth-modal'
+    )
+    const modalVisible = await existingAuthModal.isVisible({ timeout: 2000 }).catch(() => false)
+    if (modalVisible && !page.isClosed()) {
+      // Close any existing auth modal
+      const closeButton = page.locator('.auth-modal-close, button[aria-label="Close"]')
+      const closeVisible = await closeButton.isVisible({ timeout: 2000 }).catch(() => false)
+      if (closeVisible) {
+        await closeButton.click({ timeout: 5000 }).catch(() => {})
+      } else {
+        // Press Escape to close modal
+        await page.keyboard.press('Escape').catch(() => {})
+      }
+      // Wait for modal to close
+      await existingAuthModal.waitFor({ state: 'hidden', timeout: 5000 }).catch(() => {})
+      await safeWait(page, 500)
+    }
+
     // Click sign up button
     const signUpButton = page.getByTestId('nav-sign-up-button')
     if (!(await signUpButton.isVisible({ timeout: 2000 }).catch(() => false))) {
       return false
     }
 
-    await signUpButton.click()
+    // Ensure the button is not blocked by overlay before clicking
+    // Retry with force if overlay is still blocking
+    try {
+      await signUpButton.click({ timeout: 10000 })
+    } catch (error) {
+      if (error instanceof Error && error.message.includes('intercepts pointer events')) {
+        // Overlay is still blocking, wait a bit more and use force
+        await safeWait(page, 1000)
+        // Check if overlay is still visible
+        const overlayStillVisible = await existingAuthModal
+          .isVisible({ timeout: 1000 })
+          .catch(() => false)
+        if (overlayStillVisible) {
+          // Try to close it again
+          await page.keyboard.press('Escape').catch(() => {})
+          await safeWait(page, 500)
+        }
+        // Use force click as last resort
+        await signUpButton.click({ timeout: 10000, force: true })
+      } else {
+        throw error
+      }
+    }
     await page.waitForSelector('[data-testid="auth-modal"], .auth-modal', { timeout: 5000 })
 
     // Fill registration form
@@ -485,14 +528,25 @@ async function ensureAuthenticated(page: Page, email: string, password: string):
   if (page.isClosed()) {
     throw new Error('Page was closed during authentication')
   }
-  await expect(userMenu)
-    .toBeVisible({ timeout: 20000 })
-    .catch(error => {
-      if (page.isClosed() || (error instanceof Error && error.message.includes('closed'))) {
-        throw new Error('Page was closed while verifying authentication')
-      }
-      throw error
-    })
+
+  // Wait for user menu with better error handling
+  try {
+    await expect(userMenu).toBeVisible({ timeout: 20000 })
+  } catch (error) {
+    // Check if page was closed during the wait
+    if (page.isClosed()) {
+      throw new Error('Page was closed while verifying authentication')
+    }
+    // Check if there's an error message visible
+    const errorMessage = page.locator('.auth-error')
+    const hasError = await errorMessage.isVisible({ timeout: 2000 }).catch(() => false)
+    if (hasError) {
+      const errorText = await errorMessage.textContent().catch(() => 'Unknown error')
+      throw new Error(`Authentication verification failed: ${errorText}`)
+    }
+    // Re-throw the original error if it's not a page closure issue
+    throw error
+  }
 }
 
 /**
