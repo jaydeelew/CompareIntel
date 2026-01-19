@@ -47,7 +47,7 @@ export const TUTORIAL_STEPS_CONFIG: Record<TutorialStep, StepConfig> = {
     targetSelector: '.follow-up-button:not(.export-dropdown-trigger)',
     title: 'Continue the Conversation',
     description:
-      'After viewing results, click "Follow up" to ask additional questions. Each model maintains its own conversation context.',
+      'View the results by clicking the two Gemini tabs below. Click "Follow up" to ask additional questions. Each model maintains its own conversation context.',
     position: 'top',
   },
   'enter-prompt-2': {
