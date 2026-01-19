@@ -41,10 +41,10 @@ const MOBILE_STEP_OVERRIDES: Partial<
     position: 'top',
   },
   'enter-prompt': {
-    position: 'bottom', // Show below textarea so user can see what they're typing
+    position: 'top', // Show above textarea initially on mobile
   },
   'enter-prompt-2': {
-    position: 'bottom', // Show below textarea so user can see what they're typing
+    position: 'top', // Show above textarea initially on mobile
   },
   'follow-up': {
     position: 'top', // Show above the follow-up button so user can see comparison results below
@@ -67,7 +67,7 @@ const TUTORIAL_STEP_ORDER: TutorialStep[] = [
   'save-selection',
 ]
 
-// Steps that target the textarea - tooltip must always be below to not cover input
+// Steps that target the textarea - tooltip appears above on mobile
 const TEXTAREA_STEPS: TutorialStep[] = ['enter-prompt', 'enter-prompt-2']
 // Dropdown steps should keep tooltip above to avoid covering menus
 const DROPDOWN_STEPS: TutorialStep[] = ['history-dropdown', 'save-selection']
@@ -294,17 +294,6 @@ export const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
     // Ensure tooltip stays within viewport vertically
     tooltipTop = Math.max(padding, Math.min(tooltipTop, viewportHeight - tooltipHeight - padding))
 
-    // For enter-prompt steps: ALWAYS position below the textarea to avoid any overlap
-    // This ensures the user can always see the textarea while reading the instructions
-    if (TEXTAREA_STEPS.includes(step)) {
-      // Always position below textarea for these steps
-      tooltipTop = rect.bottom + arrowSize + 8
-      arrowDirection = 'up'
-
-      // Re-apply viewport constraint for below positioning
-      tooltipTop = Math.max(padding, Math.min(tooltipTop, viewportHeight - tooltipHeight - padding))
-    }
-
     // For dropdown steps: ALWAYS position above the button so menus stay visible below
     if (DROPDOWN_STEPS.includes(step)) {
       tooltipTop = rect.top - tooltipHeight - arrowSize - 8
@@ -349,36 +338,9 @@ export const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       const viewportHeight = window.innerHeight
 
       if (TEXTAREA_STEPS.includes(step)) {
-        // For enter-prompt steps, ensure textarea is fully visible above the tooltip
-        // The tooltip appears below the textarea, so we need to ensure no overlap
-        const padding = 12
-        const arrowSize = 10
-        const tooltipSpacing = arrowSize + 8
-        const totalTooltipHeight = tooltipEstimatedHeight + tooltipSpacing
-
-        // Calculate where tooltip bottom would be if positioned below textarea
-        const tooltipBottom = rect.bottom + totalTooltipHeight
-
-        // If tooltip would extend beyond viewport, scroll to position textarea higher
-        // This ensures both textarea and tooltip are visible without overlap
-        if (tooltipBottom > viewportHeight - padding) {
-          // Calculate ideal position: textarea bottom should be high enough that tooltip fits below
-          const idealTextareaBottom = viewportHeight - padding - totalTooltipHeight
-          const currentTextareaBottom = rect.bottom
-          const scrollAdjustment = currentTextareaBottom - idealTextareaBottom
-
-          if (scrollAdjustment > 0) {
-            // Scroll down (increase scroll position) to move textarea up in viewport
-            // This positions textarea higher, leaving room below for tooltip
-            const scrollTarget = window.pageYOffset + scrollAdjustment
-            window.scrollTo({ top: scrollTarget, behavior: 'smooth' })
-          }
-        } else if (rect.top < padding) {
-          // Textarea too close to top, scroll down to give it padding
-          const scrollAdjustment = padding - rect.top
-          const scrollTarget = window.pageYOffset + scrollAdjustment
-          window.scrollTo({ top: scrollTarget, behavior: 'smooth' })
-        }
+        // For enter-prompt steps, scroll to the top of the page initially
+        // The tooltip appears above the textarea, and the user should see the top of the page
+        window.scrollTo({ top: 0, behavior: 'smooth' })
       } else if (step === 'select-models') {
         // For step 2, tooltip appears above the provider card
         // Ensure there is enough space above for the tooltip on initial scroll
