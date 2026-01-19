@@ -50,7 +50,7 @@ const MOBILE_STEP_OVERRIDES: Partial<
     position: 'top', // Show above the follow-up button so user can see comparison results below
   },
   'view-follow-up-results': {
-    position: 'bottom', // Use fullscreen-style for results viewing
+    position: 'top', // Show above the results section with pointer arrow
   },
 }
 
@@ -251,20 +251,6 @@ export const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
     let arrowDirection: 'up' | 'down' | 'left' | 'right' = 'up'
     let arrowOffset = 50 // Default to center
 
-    // Special handling for view-follow-up-results: position at top so results are visible
-    // This step should show a compact tooltip at the top of the screen
-    const topFixedSteps: TutorialStep[] = ['view-follow-up-results']
-    if (topFixedSteps.includes(step)) {
-      setTooltipPosition({
-        top: padding,
-        left: (viewportWidth - tooltipWidth) / 2,
-        arrowDirection: 'down',
-        arrowOffset: 50,
-        useFullscreen: false, // Part of TooltipPosition interface
-      })
-      return
-    }
-
     // Determine vertical position (above or below target)
     const spaceAbove = rect.top
     const spaceBelow = viewportHeight - rect.bottom
@@ -405,6 +391,20 @@ export const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
             window.scrollTo({ top: Math.max(0, scrollTarget), behavior: 'smooth' })
           }
         }
+      } else if (step === 'view-follow-up-results') {
+        // For view-follow-up-results, scroll high so more comparison results are visible
+        // Position results section just below the tooltip
+        const arrowSize = 10
+        const tooltipSpacing = arrowSize + 8
+        const totalTooltipHeight = tooltipEstimatedHeight + tooltipSpacing
+        const topMargin = 12 // Desired margin from top of viewport for tooltip
+
+        // Always scroll to position results section just below the tooltip
+        // This maximizes the visible results area
+        const idealResultsTop = topMargin + totalTooltipHeight
+        const scrollAdjustment = rect.top - idealResultsTop
+        const scrollTarget = window.pageYOffset + scrollAdjustment
+        window.scrollTo({ top: Math.max(0, scrollTarget), behavior: 'smooth' })
       } else if (DROPDOWN_STEPS.includes(step)) {
         // For dropdown steps, keep tooltip above the button so menus are unobstructed
         const arrowSize = 10
@@ -705,8 +705,8 @@ export const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
               ))}
             </div>
 
-            {/* Arrow - positioned dynamically, hidden for steps without specific targets */}
-            {!tooltipPosition.useFullscreen && step !== 'view-follow-up-results' && (
+            {/* Arrow - positioned dynamically */}
+            {!tooltipPosition.useFullscreen && (
               <div
                 className={`mobile-tutorial-arrow mobile-tutorial-arrow-${tooltipPosition.arrowDirection}`}
                 style={{
