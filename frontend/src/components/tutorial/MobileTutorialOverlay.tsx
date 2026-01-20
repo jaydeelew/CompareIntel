@@ -305,9 +305,9 @@ export const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
     // Ensure tooltip stays within viewport vertically
     tooltipTop = Math.max(padding, Math.min(tooltipTop, viewportHeight - tooltipHeight - padding))
 
-    // For 'follow-up' step: Position tooltip ABOVE the results section, not inside it
+    // For 'follow-up' and 'view-follow-up-results' steps: Position tooltip ABOVE the results section, not inside it
     // The tooltip should be at the top of the results section and allowed to scroll out of view
-    if (step === 'follow-up') {
+    if (step === 'follow-up' || step === 'view-follow-up-results') {
       const resultsSection = document.querySelector('.results-section') as HTMLElement
       if (resultsSection) {
         const resultsRect = resultsSection.getBoundingClientRect()
