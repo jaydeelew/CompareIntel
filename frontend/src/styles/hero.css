@@ -444,6 +444,8 @@
 .textarea-container:has(.textarea-actions-area) .hero-input-textarea {
   border-radius: 1.5rem 1.5rem 0 0;
   border-bottom: none;
+  margin-bottom: -1px;
+  /* Overlap slightly to eliminate any visible line between textarea and actions area */
   /* Ensure exact same visual properties as actions area for seamless appearance */
   background: white;
   backdrop-filter: blur(20px);
@@ -467,6 +469,8 @@
   /* Right padding: 12px (reduced from 20px), Left padding: 20px - chevron will be at 27px (20px + 7px offset) */
   border: 2px solid rgba(255, 255, 255, 0.15);
   border-top: none;
+  margin-top: -1px;
+  /* Overlap slightly to eliminate any visible line between textarea and actions area */
   border-radius: 0 0 1.5rem 1.5rem;
   /* Match textarea exactly - same background, backdrop-filter, and transition */
   background: white;
