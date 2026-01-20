@@ -211,7 +211,7 @@ Add `data-testid` attributes to key UI elements. Here are the most important one
   }}
   placeholder={isFollowUpMode
     ? "Enter your follow-up here"
-    : "Let's get started..."
+    : "Type anything you want..."
   }
   className="hero-input-textarea"
   rows={1}

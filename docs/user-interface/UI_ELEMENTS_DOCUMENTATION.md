@@ -205,7 +205,7 @@ This document provides a comprehensive breakdown of all visual elements (section
 - **Lines:** [169-190](file:///home/dan_wsl/jaydeelew/CompareIntel/frontend/src/components/comparison/ComparisonForm.tsx#L169)
 - **Class:** `hero-input-textarea`
 - **Test ID:** `comparison-input-textarea`
-- **Placeholder:** "Let's get started..." or "Enter your follow-up here"
+- **Placeholder:** "Type anything you want..." or "Enter your follow-up here"
 
 #### History Dropdown List
 - **Element:** Conversation History List

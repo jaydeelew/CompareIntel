@@ -1436,7 +1436,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
               onDragLeave={handleDragLeave}
               onDrop={handleDrop}
               placeholder={
-                isFollowUpMode ? 'Continue your conversation here' : "Let's get started..."
+                isFollowUpMode ? 'Continue your conversation here' : 'Type anything you want...'
               }
               className={`hero-input-textarea ${isDraggingOver ? 'drag-over' : ''}`}
               rows={1}
