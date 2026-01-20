@@ -59,9 +59,53 @@ logging.basicConfig(
     datefmt="%Y-%m-%d %H:%M:%S",
 )
 
+# Suppress harmless SQL linting/style warnings (e.g., FromAsCasing) while keeping real errors
+class SQLStyleWarningFilter(logging.Filter):
+    """Filter to suppress SQL style warnings that don't indicate actual problems."""
+    
+    def filter(self, record: logging.LogRecord) -> bool:
+        """Return False to suppress the log record, True to allow it."""
+        message = str(record.getMessage())
+        
+        # Suppress SQL linting style warnings (these are cosmetic, not errors)
+        style_warning_patterns = [
+            "FromAsCasing",
+            "casing do not match",
+            "SQL style",
+            "keyword.*casing",
+        ]
+        
+        # Only suppress if it's a WARNING level and matches style warning patterns
+        if record.levelno == logging.WARNING:
+            if any(pattern.lower() in message.lower() for pattern in style_warning_patterns):
+                return False
+        
+        # Always show errors and critical issues
+        if record.levelno >= logging.ERROR:
+            return True
+        
+        # Allow all other log records
+        return True
+
+# Apply the filter to all loggers to catch SQL linting warnings from any source
+logging.getLogger().addFilter(SQLStyleWarningFilter())
+
 # Set INFO level for search-related modules even in production (critical for rate limiting debugging)
 logging.getLogger("app.search").setLevel(logging.INFO)
 logging.getLogger("app.model_runner").setLevel(logging.INFO if settings.environment == "development" else logging.WARNING)
+
+# Suppress SQLAlchemy INFO/WARNING logs that are just query details (not errors)
+# Only show SQLAlchemy errors and critical issues
+sqlalchemy_logger = logging.getLogger("sqlalchemy")
+if settings.environment == "production":
+    sqlalchemy_logger.setLevel(logging.ERROR)  # Only show errors in production
+else:
+    sqlalchemy_logger.setLevel(logging.WARNING)  # Show warnings in development
+sqlalchemy_logger.addFilter(SQLStyleWarningFilter())
+
+# Suppress SQLAlchemy engine/pool INFO logs (connection pool details)
+logging.getLogger("sqlalchemy.engine").setLevel(logging.WARNING)
+logging.getLogger("sqlalchemy.pool").setLevel(logging.WARNING)
 
 # Get logger for this module
 logger = logging.getLogger(__name__)

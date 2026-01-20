@@ -79,6 +79,7 @@ import {
   useModelComparison,
   useSavedModelSelections,
   useTutorial,
+  useTouchDevice,
 } from './hooks'
 import { apiClient } from './services/api/client'
 import { ApiError, PaymentRequiredError } from './services/api/errors'
@@ -477,6 +478,7 @@ function AppContent() {
   const [openDropdowns, setOpenDropdowns] = useState<Set<string>>(new Set())
   const [, setUserMessageTimestamp] = useState<string>('')
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const isTouchDevice = useTouchDevice()
   const [showDoneSelectingCard, setShowDoneSelectingCard] = useState(false)
   const modelsSectionRef = useRef<HTMLDivElement>(null)
   const [isAnimatingButton, setIsAnimatingButton] = useState(false)
@@ -894,6 +896,20 @@ function AppContent() {
     window.addEventListener('resize', handleResize)
     return () => window.removeEventListener('resize', handleResize)
   }, [])
+
+  // Focus textarea on desktop when page loads
+  useEffect(() => {
+    // Only focus on desktop (not touch devices) and when on main view
+    if (!isTouchDevice && currentView === 'main' && textareaRef.current) {
+      // Small delay to ensure the textarea is fully rendered
+      const timeoutId = setTimeout(() => {
+        if (textareaRef.current) {
+          textareaRef.current.focus()
+        }
+      }, 100)
+      return () => clearTimeout(timeoutId)
+    }
+  }, [isTouchDevice, currentView])
 
   // State for character count tooltip visibility (per modelId)
   const [visibleCharTooltip, setVisibleCharTooltip] = useState<string | null>(null)
