@@ -74,6 +74,33 @@
   text-align: center;
 }
 
+.tutorial-welcome-dont-show-again {
+  margin-bottom: 1.5rem;
+  display: flex;
+  justify-content: center;
+}
+
+.tutorial-welcome-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  font-size: 0.9375rem;
+  color: var(--text-secondary);
+  user-select: none;
+}
+
+.tutorial-welcome-checkbox-label:hover {
+  color: var(--text-primary);
+}
+
+.tutorial-welcome-checkbox {
+  width: 1.125rem;
+  height: 1.125rem;
+  cursor: pointer;
+  accent-color: var(--accent-color);
+}
+
 .tutorial-welcome-actions {
   display: flex;
   gap: 0.75rem;
@@ -155,5 +182,20 @@
     background: var(--bg-secondary);
     color: var(--text-primary);
     transform: scale(0.98);
+  }
+
+  .tutorial-welcome-dont-show-again {
+    margin-bottom: 1.25rem;
+  }
+
+  .tutorial-welcome-checkbox-label {
+    font-size: 0.875rem;
+  }
+
+  .tutorial-welcome-checkbox {
+    width: 1.25rem;
+    height: 1.25rem;
+    min-width: 1.25rem;
+    min-height: 1.25rem;
   }
 }

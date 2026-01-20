@@ -522,6 +522,7 @@ function AppContent() {
     resetTutorial: _resetTutorial,
   } = useTutorial()
   const [showWelcomeModal, setShowWelcomeModal] = useState(false)
+  const lastWelcomeModalPathnameRef = useRef<string | null>(null)
   const [tutorialHasCompletedComparison, setTutorialHasCompletedComparison] = useState(false)
   const [tutorialHasBreakout, setTutorialHasBreakout] = useState(false)
   const [tutorialHasSavedSelection, setTutorialHasSavedSelection] = useState(false)
@@ -2370,14 +2371,40 @@ function AppContent() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showHistoryDropdown, isAuthenticated, loadHistoryFromAPI, loadHistoryFromLocalStorage])
 
-  // Check if tutorial should be shown on first visit
+  // Check if tutorial welcome modal should be shown
   useEffect(() => {
-    const hasSeenWelcome = localStorage.getItem('compareintel_tutorial_welcome_seen')
-    if (!hasSeenWelcome && !tutorialState.isActive && currentView === 'main') {
-      setShowWelcomeModal(true)
-      localStorage.setItem('compareintel_tutorial_welcome_seen', 'true')
+    if (tutorialState.isActive || currentView !== 'main') {
+      // Reset ref when leaving main view
+      if (currentView !== 'main') {
+        lastWelcomeModalPathnameRef.current = null
+      }
+      return
     }
-  }, [tutorialState.isActive, currentView])
+
+    // Only show modal when navigating to main page (not on every render)
+    const isNavigatingToMain = lastWelcomeModalPathnameRef.current !== location.pathname
+
+    if (!isNavigatingToMain) {
+      return
+    }
+
+    // For mobile/touchscreen users: show welcome modal every time (unless "Don't show again" is checked)
+    if (isTouchDevice) {
+      const dontShowAgain = localStorage.getItem('compareintel_mobile_welcome_dont_show_again')
+      if (dontShowAgain !== 'true') {
+        setShowWelcomeModal(true)
+        lastWelcomeModalPathnameRef.current = location.pathname
+      }
+    } else {
+      // For desktop users: show welcome modal only on first visit
+      const hasSeenWelcome = localStorage.getItem('compareintel_tutorial_welcome_seen')
+      if (!hasSeenWelcome) {
+        setShowWelcomeModal(true)
+        localStorage.setItem('compareintel_tutorial_welcome_seen', 'true')
+        lastWelcomeModalPathnameRef.current = location.pathname
+      }
+    }
+  }, [tutorialState.isActive, currentView, isTouchDevice, location.pathname])
 
   // Track when comparison completes for tutorial
   useEffect(() => {
@@ -8946,6 +8973,13 @@ function AppContent() {
                   setShowWelcomeModal(false)
                   skipTutorial()
                 }}
+                onDontShowAgain={() => {
+                  // Store preference to not show welcome modal again for mobile users
+                  if (isTouchDevice) {
+                    localStorage.setItem('compareintel_mobile_welcome_dont_show_again', 'true')
+                  }
+                }}
+                showDontShowAgain={isTouchDevice}
               />
             </Suspense>
           )}

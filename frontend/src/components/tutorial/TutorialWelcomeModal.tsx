@@ -1,12 +1,35 @@
-import React from 'react'
+import React, { useState } from 'react'
 import './TutorialWelcomeModal.css'
 
 interface TutorialWelcomeModalProps {
   onStart: () => void
   onSkip: () => void
+  onDontShowAgain?: () => void
+  showDontShowAgain?: boolean
 }
 
-export const TutorialWelcomeModal: React.FC<TutorialWelcomeModalProps> = ({ onStart, onSkip }) => {
+export const TutorialWelcomeModal: React.FC<TutorialWelcomeModalProps> = ({
+  onStart,
+  onSkip,
+  onDontShowAgain,
+  showDontShowAgain = false,
+}) => {
+  const [dontShowAgain, setDontShowAgain] = useState(false)
+
+  const handleStart = () => {
+    if (dontShowAgain && onDontShowAgain) {
+      onDontShowAgain()
+    }
+    onStart()
+  }
+
+  const handleSkip = () => {
+    if (dontShowAgain && onDontShowAgain) {
+      onDontShowAgain()
+    }
+    onSkip()
+  }
+
   return (
     <div className="tutorial-welcome-backdrop">
       <div className="tutorial-welcome-modal">
@@ -38,16 +61,29 @@ export const TutorialWelcomeModal: React.FC<TutorialWelcomeModalProps> = ({ onSt
               <span>Save favorite model selections</span>
             </div>
           </div>
+          {showDontShowAgain && (
+            <div className="tutorial-welcome-dont-show-again">
+              <label className="tutorial-welcome-checkbox-label">
+                <input
+                  type="checkbox"
+                  checked={dontShowAgain}
+                  onChange={e => setDontShowAgain(e.target.checked)}
+                  className="tutorial-welcome-checkbox"
+                />
+                <span>Don't show again</span>
+              </label>
+            </div>
+          )}
           <div className="tutorial-welcome-actions">
             <button
               className="tutorial-welcome-button tutorial-welcome-button-primary"
-              onClick={onStart}
+              onClick={handleStart}
             >
               Start Tutorial
             </button>
             <button
               className="tutorial-welcome-button tutorial-welcome-button-secondary"
-              onClick={onSkip}
+              onClick={handleSkip}
             >
               Skip for Now
             </button>
