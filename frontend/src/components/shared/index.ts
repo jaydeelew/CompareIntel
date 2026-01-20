@@ -19,3 +19,5 @@ export { ErrorBoundary } from './ErrorBoundary'
 
 export { LazyImage } from './LazyImage'
 export type { LazyImageProps } from './LazyImage'
+
+export { CreditWarningBanner } from './CreditWarningBanner'

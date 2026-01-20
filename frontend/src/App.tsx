@@ -43,32 +43,24 @@ const HowItWorks = lazy(() =>
 const TermsOfService = lazy(() =>
   import('./components/TermsOfService').then(module => ({ default: module.TermsOfService }))
 )
-const TutorialController = lazy(() =>
-  import('./components/tutorial/TutorialController').then(module => ({
-    default: module.TutorialController,
-  }))
-)
-const MobileTutorialController = lazy(() =>
-  import('./components/tutorial/MobileTutorialController').then(module => ({
-    default: module.MobileTutorialController,
-  }))
-)
-const TutorialWelcomeModal = lazy(() =>
-  import('./components/tutorial/TutorialWelcomeModal').then(module => ({
-    default: module.TutorialWelcomeModal,
-  }))
-)
 import { Layout } from './components'
 import { AuthModal, VerifyEmail, VerificationBanner, ResetPassword } from './components/auth'
 import {
   ComparisonForm,
+  ComparisonView,
   PremiumModelsToggleInfoModal,
   DisabledButtonInfoModal,
   type AttachedFile,
   type StoredAttachedFile,
 } from './components/comparison'
 import { Navigation, Hero, MockModeBanner, InstallPrompt } from './components/layout'
-import { DoneSelectingCard, ErrorBoundary, LoadingSpinner } from './components/shared'
+import {
+  CreditWarningBanner,
+  DoneSelectingCard,
+  ErrorBoundary,
+  LoadingSpinner,
+} from './components/shared'
+import { TutorialManager } from './components/tutorial'
 import { getCreditAllocation, getDailyCreditLimit } from './config/constants'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
 import {
@@ -82,6 +74,9 @@ import {
   useTouchDevice,
   useBreakpoint,
   useFileHandling,
+  useConversationManager,
+  useSavedSelectionManager,
+  useCreditWarningManager,
 } from './hooks'
 import { apiClient } from './services/api/client'
 import { ApiError, PaymentRequiredError } from './services/api/errors'
@@ -91,7 +86,7 @@ import {
   resetRateLimit,
   compareStream,
 } from './services/compareService'
-import { getConversation, createBreakoutConversation } from './services/conversationService'
+import { createBreakoutConversation } from './services/conversationService'
 import { getCreditBalance } from './services/creditService'
 import type { CreditBalance } from './services/creditService'
 import { getAvailableModels } from './services/modelsService'
@@ -101,12 +96,10 @@ import type {
   StoredMessage,
   ModelConversation,
   ModelsByProvider,
-  ConversationSummary,
-  ConversationRound,
   ResultTab,
   ActiveResultTabs,
 } from './types'
-import { RESULT_TAB, createModelId, createConversationId, createMessageId } from './types'
+import { RESULT_TAB, createModelId, createMessageId } from './types'
 import {
   generateBrowserFingerprint,
   showNotification,
@@ -277,11 +270,18 @@ function AppContent() {
   const [modelErrors, setModelErrors] = useState<{ [key: string]: boolean }>({})
   const [anonymousCreditsRemaining, setAnonymousCreditsRemaining] = useState<number | null>(null)
   const [creditBalance, setCreditBalance] = useState<CreditBalance | null>(null)
-  const [creditWarningMessage, setCreditWarningMessage] = useState<string | null>(null)
-  const [creditWarningType, setCreditWarningType] = useState<
-    'low' | 'insufficient' | 'none' | null
-  >(null)
-  const [creditWarningDismissible, setCreditWarningDismissible] = useState(false)
+  const {
+    creditWarningMessage,
+    setCreditWarningMessage,
+    creditWarningType,
+    setCreditWarningType,
+    creditWarningDismissible,
+    setCreditWarningDismissible,
+    creditWarningMessageRef,
+    getCreditWarningMessage,
+    isLowCreditWarningDismissed,
+    dismissLowCreditWarning,
+  } = useCreditWarningManager()
 
   // Track which models have already been broken out from the current conversation
   const [_alreadyBrokenOutModels, setAlreadyBrokenOutModels] = useState<Set<string>>(new Set())
@@ -310,122 +310,29 @@ function AppContent() {
   const [tutorialHasBreakout, setTutorialHasBreakout] = useState(false)
   const [tutorialHasSavedSelection, setTutorialHasSavedSelection] = useState(false)
 
-  // Handler to save current model selection
-  const handleSaveModelSelection = useCallback(
-    (name: string) => {
-      const result = saveModelSelection(name, selectedModels)
-      if (result.success && tutorialState.currentStep === 'save-selection') {
+  const { handleSaveModelSelection, handleLoadModelSelection } = useSavedSelectionManager({
+    selectedModels,
+    modelsByProvider,
+    maxModelsLimit,
+    response,
+    conversations,
+    saveModelSelection,
+    loadModelSelectionFromStorage,
+    setSelectedModels,
+    setOpenDropdowns,
+    setConversations,
+    setResponse,
+    getDefaultSelectionId,
+    setDefaultSelectionOverridden,
+    onSelectionSaved: () => {
+      if (tutorialState.currentStep === 'save-selection') {
         setTutorialHasSavedSelection(true)
       }
-      return result
     },
-    [saveModelSelection, selectedModels, tutorialState.currentStep]
-  )
-
-  // Handler to load a saved model selection
-  const handleLoadModelSelection = useCallback(
-    (id: string) => {
-      const modelIds = loadModelSelectionFromStorage(id)
-      if (modelIds) {
-        // Filter to only include models that still exist and are within the current tier limit
-        const validModelIds = modelIds.filter(modelId => {
-          for (const providerModels of Object.values(modelsByProvider)) {
-            if (providerModels.some(m => String(m.id) === modelId)) {
-              return true
-            }
-          }
-          return false
-        })
-
-        // Limit to maxModelsLimit
-        const limitedModelIds = validModelIds.slice(0, maxModelsLimit)
-
-        if (limitedModelIds.length === 0) {
-          showNotification('None of the saved models are available anymore', 'error')
-          return
-        }
-
-        if (limitedModelIds.length < modelIds.length) {
-          showNotification(
-            `Some models were removed (not available or tier limit exceeded)`,
-            'success'
-          )
-        }
-
-        setSelectedModels(limitedModelIds)
-
-        // Update dropdown states: collapse dropdowns without selections, expand dropdowns with selections
-        setOpenDropdowns(prev => {
-          const newSet = new Set(prev)
-          let hasChanges = false
-
-          // First, collapse any open dropdowns that don't have selected models
-          for (const provider of prev) {
-            const providerModels = modelsByProvider[provider]
-            if (providerModels) {
-              // Check if this provider has any selected models
-              const hasSelectedModels = providerModels.some(model =>
-                limitedModelIds.includes(String(model.id))
-              )
-
-              // If dropdown is open but provider has no selected models, collapse it
-              if (!hasSelectedModels) {
-                newSet.delete(provider)
-                hasChanges = true
-              }
-            }
-          }
-
-          // Then, expand dropdowns for providers that have selected models
-          for (const [provider, providerModels] of Object.entries(modelsByProvider)) {
-            if (providerModels) {
-              // Check if this provider has any selected models
-              const hasSelectedModels = providerModels.some(model =>
-                limitedModelIds.includes(String(model.id))
-              )
-
-              // If provider has selected models and dropdown is not already open, expand it
-              if (hasSelectedModels && !newSet.has(provider)) {
-                newSet.add(provider)
-                hasChanges = true
-              }
-            }
-          }
-
-          return hasChanges ? newSet : prev
-        })
-
-        // Clear any existing comparison results when loading a saved selection
-        if (response || conversations.length > 0) {
-          setConversations([])
-          setResponse(null)
-        }
-
-        // If loading the default selection, reset the override flag
-        const defaultSelectionId = getDefaultSelectionId()
-        if (defaultSelectionId === id) {
-          setDefaultSelectionOverridden(false)
-        }
-      }
-    },
-    [
-      loadModelSelectionFromStorage,
-      modelsByProvider,
-      maxModelsLimit,
-      setSelectedModels,
-      setOpenDropdowns,
-      response,
-      conversations.length,
-      setConversations,
-      setResponse,
-      getDefaultSelectionId,
-    ]
-  )
+  })
 
   // Refs for error message elements to enable scrolling
-  const creditWarningMessageRef = useRef<HTMLDivElement>(null)
   const errorMessageRef = useRef<HTMLDivElement>(null)
-  const prevCreditWarningMessageRef = useRef<string | null>(null)
   const prevErrorRef = useRef<string | null>(null)
 
   // Helper function to scroll to an element and center it vertically
@@ -448,15 +355,6 @@ function AppContent() {
       })
     }, 100) // Small delay to ensure DOM is updated
   }, [])
-
-  // Scroll to credit warning message when it first appears and center it vertically
-  useEffect(() => {
-    // Check if credit warning message just appeared
-    if (creditWarningMessage && !prevCreditWarningMessageRef.current) {
-      scrollToCenterElement(creditWarningMessageRef.current)
-    }
-    prevCreditWarningMessageRef.current = creditWarningMessage
-  }, [creditWarningMessage, scrollToCenterElement])
 
   // Scroll to error message when it first appears and center it vertically
   useEffect(() => {
@@ -509,98 +407,6 @@ function AppContent() {
     user,
     onDeleteActiveConversation: handleDeleteActiveConversation,
   })
-
-  // Helper function to get credit warning message based on tier and scenario
-  const getCreditWarningMessage = useCallback(
-    (
-      type: 'low' | 'insufficient' | 'none',
-      tier: string,
-      creditsRemaining: number,
-      estimatedCredits?: number,
-      creditsResetAt?: string
-    ): string => {
-      if (type === 'none') {
-        // No Credits scenario
-        if (tier === 'unregistered') {
-          return "You've run out of credits. Credits will reset to 50 tomorrow, or sign-up for a free account to get more credits, more models, and more history!"
-        } else if (tier === 'free') {
-          return "You've run out of credits. Credits will reset to 100 tomorrow, or upgrade your plan for more credits, more models, and more history!"
-        } else if (tier === 'pro_plus') {
-          const resetDate = creditsResetAt
-            ? new Date(creditsResetAt).toLocaleDateString('en-US', {
-                month: '2-digit',
-                day: '2-digit',
-                year: 'numeric',
-              })
-            : 'N/A'
-          return `You've run out of credits which will reset on ${resetDate}. Wait until your reset, or sign-up for model comparison overages.`
-        } else {
-          // starter, starter_plus, pro
-          const resetDate = creditsResetAt
-            ? new Date(creditsResetAt).toLocaleDateString('en-US', {
-                month: '2-digit',
-                day: '2-digit',
-                year: 'numeric',
-              })
-            : 'N/A'
-          return `You've run out of credits which will reset on ${resetDate}. Consider upgrading your plan for more credits, more models per comparison, and more history!`
-        }
-      } else if (type === 'insufficient') {
-        // Possible Insufficient Credits scenario
-        return `This comparison is estimated to take ${estimatedCredits?.toFixed(1) || 'X'} credits and you have ${Math.round(creditsRemaining)} credits remaining. The model responses may be truncated. If possible, try selecting less models or shorten your input.`
-      } else {
-        // Low Credits scenario
-        if (tier === 'unregistered') {
-          return `You have ${Math.round(creditsRemaining)} credits left for today. Credits will reset to 50 tomorrow, or sign-up for a free account to get more credits, more models, and more history!`
-        } else if (tier === 'free') {
-          return `You have ${Math.round(creditsRemaining)} credits left for today. Credits will reset to 100 tomorrow, or upgrade your plan for more credits, more models, and more history!`
-        } else if (tier === 'pro_plus') {
-          return `You have ${Math.round(creditsRemaining)} credits left in your monthly billing cycle. Wait until your cycle starts again, or sign-up for model comparison overages.`
-        } else {
-          // starter, starter_plus, pro
-          return `You have ${Math.round(creditsRemaining)} credits left in your monthly billing cycle. Consider upgrading your plan for more credits, more models per comparison, and more history!`
-        }
-      }
-    },
-    []
-  )
-
-  // Helper function to check if low credit warning was dismissed for current period
-  const isLowCreditWarningDismissed = useCallback(
-    (tier: string, periodType: 'daily' | 'monthly', creditsResetAt?: string): boolean => {
-      if (periodType === 'daily') {
-        const today = new Date().toDateString()
-        const dismissedDate = localStorage.getItem(`credit-warning-dismissed-${tier}-daily`)
-        return dismissedDate === today
-      } else {
-        // Monthly - check if dismissed for current billing period
-        if (!creditsResetAt) return false
-        const resetDate = new Date(creditsResetAt).toDateString()
-        const dismissedResetDate = localStorage.getItem(`credit-warning-dismissed-${tier}-monthly`)
-        return dismissedResetDate === resetDate
-      }
-    },
-    []
-  )
-
-  // Helper function to dismiss low credit warning for current period
-  const dismissLowCreditWarning = useCallback(
-    (tier: string, periodType: 'daily' | 'monthly', creditsResetAt?: string) => {
-      if (periodType === 'daily') {
-        const today = new Date().toDateString()
-        localStorage.setItem(`credit-warning-dismissed-${tier}-daily`, today)
-      } else {
-        if (creditsResetAt) {
-          const resetDate = new Date(creditsResetAt).toDateString()
-          localStorage.setItem(`credit-warning-dismissed-${tier}-monthly`, resetDate)
-        }
-      }
-      setCreditWarningMessage(null)
-      setCreditWarningType(null)
-      setCreditWarningDismissible(false)
-    },
-    []
-  )
 
   // Credit warnings removed - comparisons are allowed to proceed regardless of credit balance
   // Credits will be capped at allocated amount during deduction if needed
@@ -1757,370 +1563,31 @@ function AppContent() {
   // - deleteConversation
   // These functions have been migrated to the hook and are destructured from conversationHistoryHook
 
-  // Load full conversation from localStorage (unregistered users)
-  const loadConversationFromLocalStorage = useCallback(
-    (
-      id: string
-    ): {
-      input_data: string
-      models_used: string[]
-      messages: StoredMessage[]
-      file_contents?: Array<{ name: string; content: string; placeholder: string }>
-      conversation_type?: 'comparison' | 'breakout'
-      parent_conversation_id?: string | null
-      breakout_model_id?: string | null
-      already_broken_out_models?: string[]
-    } | null => {
-      try {
-        const stored = localStorage.getItem(`compareintel_conversation_${id}`)
-        if (stored) {
-          const parsed = JSON.parse(stored)
-
-          // Calculate already_broken_out_models for unregistered users
-          // Only check if this is a comparison (not a breakout itself)
-          const already_broken_out_models: string[] = []
-          if (parsed.conversation_type !== 'breakout') {
-            // Load all conversations from history to find breakouts
-            const historyJson = localStorage.getItem('compareintel_conversation_history')
-            if (historyJson) {
-              const history = JSON.parse(historyJson) as ConversationSummary[]
-              // Compare parent_conversation_id (number) with conversation id (string timestamp)
-              const conversationIdNum = parseInt(id, 10)
-              const existingBreakouts = history.filter(
-                conv =>
-                  conv.parent_conversation_id === conversationIdNum &&
-                  conv.conversation_type === 'breakout' &&
-                  conv.breakout_model_id
-              )
-              already_broken_out_models.push(
-                ...existingBreakouts.map(conv => String(conv.breakout_model_id)).filter(Boolean)
-              )
-            }
-          }
-
-          return {
-            ...parsed,
-            already_broken_out_models,
-          }
-        } else {
-          console.warn('No conversation found in localStorage for id:', id)
-        }
-      } catch (e) {
-        console.error('Failed to load conversation from localStorage:', e, { id })
-      }
-      return null
-    },
-    []
-  )
-
-  // Load full conversation from API (authenticated users)
-  const loadConversationFromAPI = useCallback(
-    async (
-      id: number
-    ): Promise<{ input_data: string; models_used: string[]; messages: StoredMessage[] } | null> => {
-      if (!isAuthenticated) return null
-
-      try {
-        const conversationId = createConversationId(id)
-        // Clear cache for this specific conversation to ensure we get the latest data
-        apiClient.deleteCache(`GET:/conversations/${id}`)
-        const data = await getConversation(conversationId)
-        return {
-          input_data: data.input_data,
-          models_used: data.models_used,
-          messages: data.messages.map(msg => {
-            const storedMessage: StoredMessage = {
-              role: msg.role,
-              content: msg.content,
-              created_at: msg.created_at,
-            }
-            if (msg.model_id !== null && msg.model_id !== undefined) {
-              storedMessage.model_id = createModelId(msg.model_id)
-            }
-            if (msg.id !== undefined && msg.id !== null) {
-              storedMessage.id = createMessageId(String(msg.id))
-            }
-            // Preserve token fields from API response
-            if (msg.input_tokens !== undefined && msg.input_tokens !== null) {
-              storedMessage.input_tokens = msg.input_tokens
-            }
-            if (msg.output_tokens !== undefined && msg.output_tokens !== null) {
-              storedMessage.output_tokens = msg.output_tokens
-            }
-            // Preserve success field from API response
-            if (msg.success !== undefined) {
-              storedMessage.success = msg.success
-            }
-            return storedMessage
-          }),
-        }
-      } catch (error) {
-        if (error instanceof ApiError) {
-          console.error('Failed to load conversation:', error.message)
-        } else {
-          console.error('Failed to load conversation from API:', error)
-        }
-      }
-      return null
-    },
-    [isAuthenticated]
-  )
-
-  // Load a conversation from history
-  const loadConversation = async (summary: ConversationSummary) => {
-    setIsLoadingHistory(true)
-    try {
-      let conversationData: {
-        input_data: string
-        models_used: string[]
-        messages: StoredMessage[]
-        file_contents?: Array<{ name: string; content: string; placeholder: string }>
-        already_broken_out_models?: string[]
-      } | null = null
-
-      if (isAuthenticated && typeof summary.id === 'number') {
-        conversationData = await loadConversationFromAPI(summary.id)
-      } else if (!isAuthenticated && typeof summary.id === 'string') {
-        conversationData = loadConversationFromLocalStorage(summary.id)
-      }
-
-      if (!conversationData) {
-        console.error('Failed to load conversation data', { summary, isAuthenticated })
-        return
-      }
-
-      // Store models_used in a local variable to satisfy TypeScript null checks in callbacks
-      const modelsUsed = conversationData.models_used
-
-      // Store already broken out models (only for authenticated users, from API)
-      if (conversationData.already_broken_out_models) {
-        setAlreadyBrokenOutModels(new Set(conversationData.already_broken_out_models))
-      } else {
-        setAlreadyBrokenOutModels(new Set())
-      }
-
-      // Group messages by model_id
-      const messagesByModel: { [key: string]: ConversationMessage[] } = {}
-
-      // Initialize empty arrays for all models
-      modelsUsed.forEach((modelId: string) => {
-        messagesByModel[modelId] = []
-      })
-
-      // Process messages in strict alternating order: user, then assistant responses for each model
-      // Messages are saved grouped by model conversation, so we need to reconstruct the round-based structure
-
-      // Sort all messages by timestamp to ensure proper chronological order
-      const sortedMessages = [...conversationData.messages].sort(
-        (a, b) => new Date(a.created_at || 0).getTime() - new Date(b.created_at || 0).getTime()
-      )
-
-      // Group messages into conversation rounds (user message + all assistant responses)
-      // User messages should already be deduplicated when saved, so we can process in order
-      const rounds: ConversationRound[] = []
-      let currentRound: ConversationRound | null = null
-
-      sortedMessages.forEach((msg: StoredMessage) => {
-        if (msg.role === 'user') {
-          // If we have a current round, save it
-          if (currentRound && currentRound.user) {
-            rounds.push(currentRound)
-          }
-          // Start a new round - user messages should be deduplicated already when saved
-          currentRound = { user: msg, assistants: [] }
-        } else if (msg.role === 'assistant' && msg.model_id) {
-          // Add assistant message to current round
-          if (currentRound) {
-            // Check for duplicate assistant messages (same model, content, and timestamp within 1 second)
-            // Compare model IDs as strings to ensure proper matching
-            const isDuplicate = currentRound.assistants.some(
-              asm =>
-                asm.model_id &&
-                msg.model_id &&
-                String(asm.model_id) === String(msg.model_id) &&
-                asm.content === msg.content &&
-                Math.abs(new Date(asm.created_at).getTime() - new Date(msg.created_at).getTime()) <
-                  1000
-            )
-
-            if (!isDuplicate) {
-              currentRound.assistants.push(msg)
-            }
-          } else {
-            // Edge case: assistant without preceding user message
-            // This shouldn't happen, but handle it gracefully
-            console.warn('Assistant message without preceding user message:', msg)
-          }
-        }
-      })
-
-      // Don't forget the last round
-      if (currentRound) {
-        rounds.push(currentRound)
-      }
-
-      // Now reconstruct messages for each model based on rounds
-      rounds.forEach(round => {
-        // Add user message to all models
-        modelsUsed.forEach((modelId: string) => {
-          messagesByModel[modelId].push({
-            id: round.user.id
-              ? typeof round.user.id === 'string'
-                ? createMessageId(round.user.id)
-                : createMessageId(String(round.user.id))
-              : createMessageId(`${Date.now()}-user-${Math.random()}`),
-            type: 'user' as const,
-            content: round.user.content,
-            timestamp: round.user.created_at || new Date().toISOString(),
-            // Preserve token fields from stored message
-            input_tokens: round.user.input_tokens,
-          })
-
-          // Add assistant message for this specific model if it exists in this round
-          // Compare model IDs as strings to ensure proper matching
-          const modelAssistant = round.assistants.find(asm => {
-            if (!asm.model_id) return false
-            // Convert both to strings for comparison to handle type differences
-            return String(asm.model_id) === String(modelId)
-          })
-          if (modelAssistant) {
-            messagesByModel[modelId].push({
-              id: modelAssistant.id
-                ? typeof modelAssistant.id === 'string'
-                  ? createMessageId(modelAssistant.id)
-                  : createMessageId(String(modelAssistant.id))
-                : createMessageId(`${Date.now()}-${Math.random()}`),
-              type: 'assistant' as const,
-              content: modelAssistant.content,
-              timestamp: modelAssistant.created_at || new Date().toISOString(),
-              // Preserve token fields from stored message
-              output_tokens: modelAssistant.output_tokens,
-            })
-          }
-        })
-      })
-
-      // Convert to ModelConversation format
-      const loadedConversations: ModelConversation[] = modelsUsed.map((modelId: string) => ({
-        modelId: createModelId(modelId),
-        messages: messagesByModel[modelId] || [],
-      }))
-
-      // Detect and mark failed models when loading from history
-      // This ensures the status indicator shows "FAIL" for failed models
-      const loadedModelErrors: { [key: string]: boolean } = {}
-
-      // Check each model that was used in the conversation
-      modelsUsed.forEach((modelId: string) => {
-        const createdModelId = createModelId(modelId)
-        const conv = loadedConversations.find(c => c.modelId === createdModelId)
-
-        if (!conv) {
-          // Model was in models_used but has no conversation - it failed
-          loadedModelErrors[createdModelId] = true
-          return
-        }
-
-        // Check if model has any assistant messages
-        const assistantMessages = conv.messages.filter(msg => msg.type === 'assistant')
-
-        // For authenticated users: if model is in models_used but has no assistant messages, it failed
-        // (failed messages are not saved to database for authenticated users)
-        if (assistantMessages.length === 0) {
-          loadedModelErrors[createdModelId] = true
-          return
-        }
-
-        // Check the latest assistant message for errors
-        const latestMessage = assistantMessages[assistantMessages.length - 1]
-        if (latestMessage) {
-          // Check if message content is an error message
-          if (isErrorMessage(latestMessage.content)) {
-            loadedModelErrors[createdModelId] = true
-            return
-          }
-
-          // Also check success field from stored messages if available (from API)
-          const modelStoredMessages =
-            conversationData?.messages?.filter(
-              msg =>
-                msg.role === 'assistant' && msg.model_id && String(msg.model_id) === String(modelId)
-            ) || []
-          if (modelStoredMessages.length > 0) {
-            const latestStoredMessage = modelStoredMessages[modelStoredMessages.length - 1]
-            // If success field exists and is false, mark as failed
-            if (latestStoredMessage.success === false) {
-              loadedModelErrors[createdModelId] = true
-            }
-          }
-        }
-      })
-      setModelErrors(loadedModelErrors)
-
-      // Set state
-      setConversations(loadedConversations)
-      // Set selected models - only the models from this conversation, clear all others
-      setSelectedModels([...modelsUsed])
-      // Set original selected models to match the loaded conversation
-      // This ensures that only models from THIS conversation show the red border when deselected
-      setOriginalSelectedModels([...modelsUsed])
-
-      // Use the first user message as the input reference, but clear textarea for new follow-up
-      // The conversation will be referenced by this first query in history
-      setInput('') // Clear textarea so user can type a new follow-up
-      setIsFollowUpMode(loadedConversations.some(conv => conv.messages.length > 0))
-      setClosedCards(new Set()) // Ensure all result cards are open/visible
-      setResponse(null) // Clear any previous response state
-      // Clear "input too long" error when selecting from history
-      if (
-        error &&
-        error.includes('Your input is too long for one or more of the selected models')
-      ) {
-        setError(null)
-      }
-      setShowHistoryDropdown(false)
-      setIsModelsHidden(true) // Collapse the models section when selecting from history
-      collapseAllDropdowns() // Collapse all provider dropdowns when selecting from history
-
-      // Mark that we just loaded from history - this will trigger scrolling to top
-      justLoadedFromHistoryRef.current = true
-
-      // Track this conversation as currently visible so it shows as active in history dropdown
-      setCurrentVisibleComparisonId(String(summary.id))
-    } catch (e) {
-      console.error('Failed to load conversation:', e)
-    } finally {
-      setIsLoadingHistory(false)
-    }
-  }
-
-  // Load history on mount
-  useEffect(() => {
-    // Clear currently visible comparison ID on mount/login/logout (page refresh or auth change)
-    // This ensures saved comparisons appear in history after refresh/login
-    setCurrentVisibleComparisonId(null)
-
-    if (isAuthenticated) {
-      loadHistoryFromAPI()
-    } else {
-      const history = loadHistoryFromLocalStorage()
-      setConversationHistory(history)
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAuthenticated, loadHistoryFromAPI, loadHistoryFromLocalStorage])
-
-  // Refresh history when dropdown is opened for authenticated users
-  useEffect(() => {
-    if (showHistoryDropdown) {
-      if (isAuthenticated) {
-        loadHistoryFromAPI()
-      } else {
-        const history = loadHistoryFromLocalStorage()
-        setConversationHistory(history)
-      }
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [showHistoryDropdown, isAuthenticated, loadHistoryFromAPI, loadHistoryFromLocalStorage])
+  const { loadConversation, loadConversationFromAPI, loadConversationFromLocalStorage } =
+    useConversationManager({
+      isAuthenticated,
+      showHistoryDropdown,
+      loadHistoryFromAPI,
+      loadHistoryFromLocalStorage,
+      setConversationHistory,
+      setIsLoadingHistory,
+      setAlreadyBrokenOutModels,
+      setConversations,
+      setSelectedModels,
+      setOriginalSelectedModels,
+      setInput,
+      setIsFollowUpMode,
+      setClosedCards,
+      setResponse,
+      error,
+      setError,
+      setShowHistoryDropdown,
+      setIsModelsHidden,
+      collapseAllDropdowns,
+      justLoadedFromHistoryRef,
+      setCurrentVisibleComparisonId,
+      setModelErrors,
+    })
 
   // Check if tutorial welcome modal should be shown
   useEffect(() => {
@@ -3770,7 +3237,7 @@ function AppContent() {
 
   // Helper function to check extended interaction limits
 
-  const collapseAllDropdowns = () => {
+  function collapseAllDropdowns() {
     setOpenDropdowns(new Set())
   }
 
@@ -4843,7 +4310,7 @@ function AppContent() {
     // "No credits" warning will be set after submission if credits are actually 0
     if (creditWarningType === 'insufficient' || creditWarningType === 'low') {
       setCreditWarningMessage(null)
-      setCreditWarningType(null)
+      setCreditWarningType('none')
       setCreditWarningDismissible(false)
     }
     setIsModelsHidden(true) // Hide models section after clicking Compare
@@ -5390,12 +4857,12 @@ function AppContent() {
                               setCreditWarningDismissible(true)
                             } else {
                               setCreditWarningMessage(null)
-                              setCreditWarningType(null)
+                              setCreditWarningType('none')
                               setCreditWarningDismissible(false)
                             }
                           } else {
                             setCreditWarningMessage(null)
-                            setCreditWarningType(null)
+                            setCreditWarningType('none')
                             setCreditWarningDismissible(false)
                           }
                         })
@@ -5448,12 +4915,12 @@ function AppContent() {
                             setCreditWarningDismissible(true)
                           } else {
                             setCreditWarningMessage(null)
-                            setCreditWarningType(null)
+                            setCreditWarningType('none')
                             setCreditWarningDismissible(false)
                           }
                         } else {
                           setCreditWarningMessage(null)
-                          setCreditWarningType(null)
+                          setCreditWarningType('none')
                           setCreditWarningDismissible(false)
                         }
 
@@ -5513,12 +4980,12 @@ function AppContent() {
                                 setCreditWarningDismissible(true)
                               } else {
                                 setCreditWarningMessage(null)
-                                setCreditWarningType(null)
+                                setCreditWarningType('none')
                                 setCreditWarningDismissible(false)
                               }
                             } else {
                               setCreditWarningMessage(null)
-                              setCreditWarningType(null)
+                              setCreditWarningType('none')
                               setCreditWarningDismissible(false)
                             }
                           })
@@ -6773,7 +6240,7 @@ function AppContent() {
         // Clear credit warning message to prevent duplicate display
         if (creditWarningMessage && creditWarningMessage === expectedErrorMessage) {
           setCreditWarningMessage(null)
-          setCreditWarningType(null)
+          setCreditWarningType('none')
         }
       }
     } else {
@@ -6797,6 +6264,8 @@ function AppContent() {
     error,
     setError,
     creditWarningMessage,
+    setCreditWarningMessage,
+    setCreditWarningType,
   ])
 
   // Helper function to render usage preview (used in both regular and follow-up modes)
@@ -6891,7 +6360,7 @@ function AppContent() {
           {/* Password reset modal */}
           {showPasswordReset && <ResetPassword onClose={handlePasswordResetClose} />}
 
-          <main className="app-main">
+          <ComparisonView>
             <Hero visibleTooltip={visibleTooltip} onCapabilityTileTap={handleCapabilityTileTap}>
               <ErrorBoundary>
                 <ComparisonForm
@@ -6942,37 +6411,20 @@ function AppContent() {
             </Hero>
 
             {/* Credit Warning Messages */}
-            {creditWarningMessage && (
-              <div className="error-message" ref={creditWarningMessageRef}>
-                <span>⚠️ {creditWarningMessage}</span>
-                {creditWarningDismissible && creditBalance && (
-                  <button
-                    onClick={() => {
-                      const userTier = isAuthenticated
-                        ? user?.subscription_tier || 'free'
-                        : 'unregistered'
-                      const periodType =
-                        userTier === 'unregistered' || userTier === 'free' ? 'daily' : 'monthly'
-                      dismissLowCreditWarning(userTier, periodType, creditBalance.credits_reset_at)
-                    }}
-                    style={{
-                      marginLeft: 'auto',
-                      background: 'none',
-                      border: 'none',
-                      color: '#dc2626',
-                      cursor: 'pointer',
-                      fontSize: '1.2rem',
-                      padding: '0 0.5rem',
-                      lineHeight: 1,
-                    }}
-                    aria-label="Dismiss warning"
-                    title="Dismiss warning"
-                  >
-                    ✕
-                  </button>
-                )}
-              </div>
-            )}
+            <CreditWarningBanner
+              message={creditWarningMessage}
+              messageRef={creditWarningMessageRef}
+              isDismissible={creditWarningDismissible}
+              creditBalance={creditBalance}
+              onDismiss={() => {
+                const userTier = isAuthenticated
+                  ? user?.subscription_tier || 'free'
+                  : 'unregistered'
+                const periodType =
+                  userTier === 'unregistered' || userTier === 'free' ? 'daily' : 'monthly'
+                dismissLowCreditWarning(userTier, periodType, creditBalance?.credits_reset_at)
+              }}
+            />
 
             {error && (
               <div className="error-message" ref={errorMessageRef}>
@@ -8695,7 +8147,7 @@ function AppContent() {
                 </section>
               </ErrorBoundary>
             )}
-          </main>
+          </ComparisonView>
 
           {/* Auth Modal */}
           <AuthModal
@@ -8711,132 +8163,31 @@ function AppContent() {
           {/* Install Prompt - Only show in production */}
           {import.meta.env.PROD && <InstallPrompt />}
 
-          {/* Tutorial Welcome Modal */}
-          {showWelcomeModal && (
-            <Suspense fallback={<LoadingSpinner />}>
-              <TutorialWelcomeModal
-                onStart={() => {
-                  setShowWelcomeModal(false)
-                  resetAppStateForTutorial() // Reset app state for clean tutorial experience
-                  startTutorial()
-                }}
-                onSkip={() => {
-                  setShowWelcomeModal(false)
-                  skipTutorial()
-                }}
-                onDontShowAgain={() => {
-                  // Store preference to not show welcome modal again for mobile users
-                  if (isTouchDevice) {
-                    localStorage.setItem('compareintel_mobile_welcome_dont_show_again', 'true')
-                  }
-                }}
-                showDontShowAgain={isTouchDevice}
-              />
-            </Suspense>
-          )}
-
-          {/* Tutorial Controller - Desktop */}
-          {currentView === 'main' &&
-            !isMobileLayout &&
-            (() => {
-              // Check if Google provider is expanded
-              const googleProviderExpanded =
-                'Google' in modelsByProvider && openDropdowns.has('Google')
-
-              // Check if both Google models for unregistered users are selected
-              // Models: google/gemini-2.0-flash-001 and google/gemini-2.5-flash
-              const googleModelIds = ['google/gemini-2.0-flash-001', 'google/gemini-2.5-flash']
-              const googleModelsSelected = googleModelIds.every(modelId =>
-                selectedModels.includes(modelId)
-              )
-
-              return (
-                <Suspense fallback={<LoadingSpinner />}>
-                  <TutorialController
-                    tutorialState={tutorialState}
-                    completeStep={completeStep}
-                    skipTutorial={skipTutorial}
-                    googleProviderExpanded={googleProviderExpanded}
-                    googleModelsSelected={googleModelsSelected}
-                    hasPromptText={input.trim().length > 0}
-                    hasCompletedComparison={tutorialHasCompletedComparison}
-                    isFollowUpMode={isFollowUpMode}
-                    hasBreakoutConversation={tutorialHasBreakout}
-                    showHistoryDropdown={showHistoryDropdown}
-                    hasSavedSelection={tutorialHasSavedSelection}
-                    isLoading={isLoading}
-                    onProviderExpanded={() => {
-                      // Step completed, no action needed
-                    }}
-                    onModelsSelected={() => {
-                      // Step completed, no action needed
-                    }}
-                    onPromptEntered={() => {
-                      // Step completed, no action needed
-                    }}
-                    onComparisonComplete={() => {
-                      setTutorialHasCompletedComparison(false)
-                    }}
-                    onFollowUpActivated={() => {
-                      // Reset state if needed
-                    }}
-                    onBreakoutCreated={() => {
-                      setTutorialHasBreakout(false)
-                    }}
-                    onHistoryOpened={() => {
-                      // Reset state if needed
-                    }}
-                    onSelectionSaved={() => {
-                      setTutorialHasSavedSelection(false)
-                    }}
-                  />
-                </Suspense>
-              )
-            })()}
-
-          {/* Tutorial Controller - Mobile */}
-          {currentView === 'main' &&
-            isMobileLayout &&
-            (() => {
-              // Check if Google provider is expanded
-              const googleProviderExpanded =
-                'Google' in modelsByProvider && openDropdowns.has('Google')
-
-              // Check if both Google models for unregistered users are selected
-              const googleModelIds = ['google/gemini-2.0-flash-001', 'google/gemini-2.5-flash']
-              const googleModelsSelected = googleModelIds.every(modelId =>
-                selectedModels.includes(modelId)
-              )
-
-              return (
-                <Suspense fallback={<LoadingSpinner />}>
-                  <MobileTutorialController
-                    tutorialState={tutorialState}
-                    completeStep={completeStep}
-                    skipTutorial={skipTutorial}
-                    googleProviderExpanded={googleProviderExpanded}
-                    googleModelsSelected={googleModelsSelected}
-                    hasPromptText={input.trim().length > 0}
-                    hasCompletedComparison={tutorialHasCompletedComparison}
-                    isFollowUpMode={isFollowUpMode}
-                    showHistoryDropdown={showHistoryDropdown}
-                    isLoading={isLoading}
-                    onProviderExpanded={() => {
-                      // Step completed, no action needed
-                    }}
-                    onModelsSelected={() => {
-                      // Step completed, no action needed
-                    }}
-                    onComparisonComplete={() => {
-                      setTutorialHasCompletedComparison(false)
-                    }}
-                    onFollowUpActivated={() => {
-                      // Reset state if needed
-                    }}
-                  />
-                </Suspense>
-              )
-            })()}
+          <TutorialManager
+            showWelcomeModal={showWelcomeModal}
+            setShowWelcomeModal={setShowWelcomeModal}
+            resetAppStateForTutorial={resetAppStateForTutorial}
+            startTutorial={startTutorial}
+            skipTutorial={skipTutorial}
+            isTouchDevice={isTouchDevice}
+            currentView={currentView}
+            isMobileLayout={isMobileLayout}
+            modelsByProvider={modelsByProvider}
+            openDropdowns={openDropdowns}
+            selectedModels={selectedModels}
+            input={input}
+            tutorialState={tutorialState}
+            completeStep={completeStep}
+            isFollowUpMode={isFollowUpMode}
+            tutorialHasCompletedComparison={tutorialHasCompletedComparison}
+            tutorialHasBreakout={tutorialHasBreakout}
+            tutorialHasSavedSelection={tutorialHasSavedSelection}
+            showHistoryDropdown={showHistoryDropdown}
+            isLoading={isLoading}
+            setTutorialHasCompletedComparison={setTutorialHasCompletedComparison}
+            setTutorialHasBreakout={setTutorialHasBreakout}
+            setTutorialHasSavedSelection={setTutorialHasSavedSelection}
+          />
 
           {/* Premium Models Toggle Info Modal - shown on mobile layout */}
           <PremiumModelsToggleInfoModal
