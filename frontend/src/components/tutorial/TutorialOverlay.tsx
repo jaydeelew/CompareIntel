@@ -10,6 +10,7 @@ interface TutorialOverlayProps {
   onComplete: () => void
   onSkip: () => void
   isStepCompleted?: boolean
+  isLoading?: boolean
 }
 
 interface HTMLElementWithTutorialProps extends HTMLElement {
@@ -22,6 +23,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
   onComplete,
   onSkip,
   isStepCompleted = false,
+  isLoading = false,
 }) => {
   const overlayRef = useRef<HTMLDivElement>(null)
   const stepRef = useRef<TutorialStep | null>(step)
@@ -47,6 +49,12 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
     top: number
     left: number
     radius: number
+  } | null>(null)
+  const [loadingStreamingCutout, setLoadingStreamingCutout] = useState<{
+    top: number
+    left: number
+    width: number
+    height: number
   } | null>(null)
 
   // Update step ref when step changes
@@ -155,6 +163,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
       setTextareaCutout(null)
       setDropdownCutout(null)
       setButtonCutout(null)
+      setLoadingStreamingCutout(null)
       setOverlayPosition({ top: 0, left: 0 })
       // Clean up any remaining tutorial classes when tutorial ends
       const textareaContainerActive = document.querySelector(
@@ -1019,6 +1028,89 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
     }
   }, [step])
 
+  // Effect to handle loading/streaming cutout for submit-comparison steps
+  // Phase 1: Loading section cutout (before streaming begins)
+  // Phase 2: Results section cutout with scroll (once streaming begins)
+  useEffect(() => {
+    const isSubmitStep = step === 'submit-comparison' || step === 'submit-comparison-2'
+    const isFollowUpSubmit = step === 'submit-comparison-2'
+
+    // Clear cutout when not on submit step or when loading ends
+    if (!isSubmitStep || !isLoading) {
+      setLoadingStreamingCutout(null)
+      return
+    }
+
+    // Track if we've already scrolled to results section
+    let hasScrolledToResults = false
+    // For follow-up (step 7), results section already exists, so we need to wait
+    // for loading section to appear first before allowing scroll
+    let loadingSectionWasSeen = false
+
+    const updateLoadingStreamingCutout = () => {
+      const resultsSection = document.querySelector('.results-section') as HTMLElement
+      const loadingSection = document.querySelector('.loading-section') as HTMLElement
+
+      // Track if loading section has been seen (needed for step 7)
+      if (loadingSection) {
+        loadingSectionWasSeen = true
+      }
+
+      // Phase 2: Results section exists = streaming has started (takes priority)
+      // Note: Loading section may still be visible during streaming, but we want to show results
+      if (resultsSection) {
+        // For step 7 (follow-up), only scroll after we've seen the loading section
+        // This ensures we don't scroll immediately when the old results are still showing
+        const canScroll = isFollowUpSubmit ? loadingSectionWasSeen : true
+
+        // Scroll to results section once when streaming starts
+        // Position it at the top of the page so users can see streaming content clearly
+        if (!hasScrolledToResults && canScroll) {
+          hasScrolledToResults = true
+          // Use requestAnimationFrame + small delay to ensure DOM is fully rendered
+          requestAnimationFrame(() => {
+            setTimeout(() => {
+              // Scroll results section to top of viewport
+              resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' })
+            }, 100)
+          })
+        }
+
+        // Update cutout for results section
+        const rect = resultsSection.getBoundingClientRect()
+        const padding = 12
+        setLoadingStreamingCutout({
+          top: rect.top - padding,
+          left: rect.left - padding,
+          width: rect.width + padding * 2,
+          height: rect.height + padding * 2,
+        })
+      }
+      // Phase 1: Only loading section exists = still in initial loading phase, before streaming
+      else if (loadingSection) {
+        const rect = loadingSection.getBoundingClientRect()
+        const padding = 12
+        setLoadingStreamingCutout({
+          top: rect.top - padding,
+          left: rect.left - padding,
+          width: rect.width + padding * 2,
+          height: rect.height + padding * 2,
+        })
+      }
+    }
+
+    // Update immediately
+    updateLoadingStreamingCutout()
+
+    // Update periodically to catch when results section appears and to keep cutout position current
+    const interval = setInterval(updateLoadingStreamingCutout, 100)
+
+    return () => {
+      clearInterval(interval)
+      setLoadingStreamingCutout(null)
+    }
+  }, [step, isLoading])
+
   // Separate effect to continuously maintain dropdown active class for history-dropdown step
   // This ensures the dropdown stays above backdrop even if the DOM updates
   useEffect(() => {
@@ -1308,7 +1400,19 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
     }
   }, [step])
 
-  if (!step || !targetElement || !isVisible) {
+  // Check if we're in loading/streaming phase on submit-comparison step
+  // This needs to be calculated before the early return so we can allow rendering during this phase
+  const isSubmitStep = step === 'submit-comparison' || step === 'submit-comparison-2'
+  const isLoadingStreamingPhase = isSubmitStep && isLoading && loadingStreamingCutout
+
+  // During loading/streaming phase, we only need loadingStreamingCutout to render the backdrop
+  // We don't need targetElement since we hide the tooltip anyway
+  if (!step || !isVisible) {
+    return null
+  }
+
+  // If not in loading/streaming phase, we need targetElement to position the tooltip
+  if (!isLoadingStreamingPhase && !targetElement) {
     return null
   }
 
@@ -1323,17 +1427,39 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
     step === 'enter-prompt-2'
   const shouldExcludeDropdown = step === 'history-dropdown' || step === 'save-selection'
 
-  // Use rounded box-shadow cutout for all textarea-related steps
+  // Use rounded box-shadow cutout for all textarea-related steps (but not during loading/streaming phase)
   const useRoundedCutout =
-    step === 'enter-prompt' ||
-    step === 'submit-comparison' ||
-    step === 'enter-prompt-2' ||
-    step === 'submit-comparison-2'
+    (step === 'enter-prompt' ||
+      step === 'submit-comparison' ||
+      step === 'enter-prompt-2' ||
+      step === 'submit-comparison-2') &&
+    !isLoadingStreamingPhase
 
   return (
     <>
-      {/* Backdrop - use box-shadow technique for rounded cutout on textarea-related steps */}
-      {useRoundedCutout && textareaCutout ? (
+      {/* Backdrop - loading/streaming cutout takes priority during submit steps */}
+      {isLoadingStreamingPhase ? (
+        <div
+          className="tutorial-backdrop-cutout"
+          style={{
+            position: 'fixed',
+            top: `${loadingStreamingCutout.top}px`,
+            left: `${loadingStreamingCutout.left}px`,
+            width: `${loadingStreamingCutout.width}px`,
+            height: `${loadingStreamingCutout.height}px`,
+            borderRadius: '16px',
+            boxShadow: '0 0 0 9999px rgba(0, 0, 0, 0.6)',
+            zIndex: 9998,
+            pointerEvents: 'none',
+          }}
+          onClick={e => {
+            const target = e.target as HTMLElement
+            if (target.classList.contains('tutorial-backdrop-cutout')) {
+              e.stopPropagation()
+            }
+          }}
+        />
+      ) : useRoundedCutout && textareaCutout ? (
         <div
           className="tutorial-backdrop-cutout"
           style={{
@@ -1459,96 +1585,98 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
         />
       )}
 
-      {/* Tooltip bubble */}
-      <div
-        ref={overlayRef}
-        className={`tutorial-tooltip tutorial-tooltip-${config.position}`}
-        style={{
-          top: `${overlayPosition.top}px`,
-          left: `${overlayPosition.left}px`,
-        }}
-      >
-        <div className="tutorial-tooltip-content">
-          <div className="tutorial-tooltip-header">
-            <span className="tutorial-step-indicator">
-              Step {stepIndex} of {totalSteps}
-            </span>
-            <button className="tutorial-close-button" onClick={onSkip} aria-label="Skip tutorial">
-              ×
-            </button>
+      {/* Tooltip bubble - hidden during loading/streaming phase on submit steps */}
+      {!isLoadingStreamingPhase && (
+        <div
+          ref={overlayRef}
+          className={`tutorial-tooltip tutorial-tooltip-${config.position}`}
+          style={{
+            top: `${overlayPosition.top}px`,
+            left: `${overlayPosition.left}px`,
+          }}
+        >
+          <div className="tutorial-tooltip-content">
+            <div className="tutorial-tooltip-header">
+              <span className="tutorial-step-indicator">
+                Step {stepIndex} of {totalSteps}
+              </span>
+              <button className="tutorial-close-button" onClick={onSkip} aria-label="Skip tutorial">
+                ×
+              </button>
+            </div>
+            <h3 className="tutorial-tooltip-title">{config.title}</h3>
+            <p className="tutorial-tooltip-description">{config.description}</p>
+            <div className="tutorial-tooltip-actions">
+              {/* Show "Done with input" button for step 3 (enter-prompt) and step 6 (enter-prompt-2) */}
+              {(step === 'enter-prompt' || step === 'enter-prompt-2') && (
+                <button
+                  className="tutorial-button tutorial-button-primary"
+                  onClick={onComplete}
+                  disabled={!isStepCompleted}
+                  title={!isStepCompleted ? 'Enter at least 1 character to continue' : undefined}
+                >
+                  Done with input
+                </button>
+              )}
+              {/* Show "Done" button for step 8 (view-follow-up-results) - always enabled */}
+              {step === 'view-follow-up-results' && (
+                <button
+                  className="tutorial-button tutorial-button-primary"
+                  onClick={e => {
+                    e.stopPropagation()
+                    e.preventDefault()
+                    onComplete()
+                  }}
+                >
+                  Done
+                </button>
+              )}
+              {/* Show "Done" button for step 9 (history-dropdown) - enabled when dropdown is open */}
+              {step === 'history-dropdown' && (
+                <button
+                  className="tutorial-button tutorial-button-primary"
+                  onClick={e => {
+                    e.stopPropagation()
+                    e.preventDefault()
+                    // Always call onComplete - handleComplete will check if dropdown was opened
+                    onComplete()
+                  }}
+                  disabled={!dropdownWasOpenedRef.current}
+                  title={
+                    !dropdownWasOpenedRef.current
+                      ? 'Open the history dropdown to continue'
+                      : 'Continue to next step'
+                  }
+                >
+                  Done
+                </button>
+              )}
+              {/* Show "Done" button for step 10 (save-selection) - enabled when dropdown is open */}
+              {step === 'save-selection' && (
+                <button
+                  className="tutorial-button tutorial-button-primary"
+                  onClick={e => {
+                    e.stopPropagation()
+                    e.preventDefault()
+                    // Always call onComplete - handleComplete will check if dropdown was opened
+                    onComplete()
+                  }}
+                  disabled={!dropdownWasOpenedRef.current}
+                  title={
+                    !dropdownWasOpenedRef.current
+                      ? 'Open the saved selections dropdown to continue'
+                      : 'Complete the tutorial'
+                  }
+                >
+                  Done
+                </button>
+              )}
+            </div>
           </div>
-          <h3 className="tutorial-tooltip-title">{config.title}</h3>
-          <p className="tutorial-tooltip-description">{config.description}</p>
-          <div className="tutorial-tooltip-actions">
-            {/* Show "Done with input" button for step 3 (enter-prompt) and step 6 (enter-prompt-2) */}
-            {(step === 'enter-prompt' || step === 'enter-prompt-2') && (
-              <button
-                className="tutorial-button tutorial-button-primary"
-                onClick={onComplete}
-                disabled={!isStepCompleted}
-                title={!isStepCompleted ? 'Enter at least 1 character to continue' : undefined}
-              >
-                Done with input
-              </button>
-            )}
-            {/* Show "Done" button for step 8 (view-follow-up-results) - always enabled */}
-            {step === 'view-follow-up-results' && (
-              <button
-                className="tutorial-button tutorial-button-primary"
-                onClick={e => {
-                  e.stopPropagation()
-                  e.preventDefault()
-                  onComplete()
-                }}
-              >
-                Done
-              </button>
-            )}
-            {/* Show "Done" button for step 9 (history-dropdown) - enabled when dropdown is open */}
-            {step === 'history-dropdown' && (
-              <button
-                className="tutorial-button tutorial-button-primary"
-                onClick={e => {
-                  e.stopPropagation()
-                  e.preventDefault()
-                  // Always call onComplete - handleComplete will check if dropdown was opened
-                  onComplete()
-                }}
-                disabled={!dropdownWasOpenedRef.current}
-                title={
-                  !dropdownWasOpenedRef.current
-                    ? 'Open the history dropdown to continue'
-                    : 'Continue to next step'
-                }
-              >
-                Done
-              </button>
-            )}
-            {/* Show "Done" button for step 10 (save-selection) - enabled when dropdown is open */}
-            {step === 'save-selection' && (
-              <button
-                className="tutorial-button tutorial-button-primary"
-                onClick={e => {
-                  e.stopPropagation()
-                  e.preventDefault()
-                  // Always call onComplete - handleComplete will check if dropdown was opened
-                  onComplete()
-                }}
-                disabled={!dropdownWasOpenedRef.current}
-                title={
-                  !dropdownWasOpenedRef.current
-                    ? 'Open the saved selections dropdown to continue'
-                    : 'Complete the tutorial'
-                }
-              >
-                Done
-              </button>
-            )}
-          </div>
+          {/* Arrow pointing to target */}
+          <div className={`tutorial-arrow tutorial-arrow-${config.position}`} />
         </div>
-        {/* Arrow pointing to target */}
-        <div className={`tutorial-arrow tutorial-arrow-${config.position}`} />
-      </div>
+      )}
     </>
   )
 }

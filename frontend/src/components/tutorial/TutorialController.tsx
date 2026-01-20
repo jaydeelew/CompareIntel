@@ -18,6 +18,8 @@ interface TutorialControllerProps {
   hasBreakoutConversation?: boolean
   showHistoryDropdown?: boolean
   hasSavedSelection?: boolean
+  // Loading state for submit-comparison steps
+  isLoading?: boolean
   // Callbacks for when user performs actions
   onProviderExpanded?: () => void
   onModelsSelected?: () => void
@@ -41,6 +43,7 @@ export const TutorialController: React.FC<TutorialControllerProps> = ({
   hasBreakoutConversation,
   showHistoryDropdown,
   hasSavedSelection,
+  isLoading,
   onProviderExpanded,
   onModelsSelected,
   onPromptEntered,
@@ -252,6 +255,7 @@ export const TutorialController: React.FC<TutorialControllerProps> = ({
       onComplete={handleComplete}
       onSkip={skipTutorial}
       isStepCompleted={isCurrentStepCompleted()}
+      isLoading={isLoading}
     />
   )
 }

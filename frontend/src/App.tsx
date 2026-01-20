@@ -8894,6 +8894,7 @@ function AppContent() {
                     hasBreakoutConversation={tutorialHasBreakout}
                     showHistoryDropdown={showHistoryDropdown}
                     hasSavedSelection={tutorialHasSavedSelection}
+                    isLoading={isLoading}
                     onProviderExpanded={() => {
                       // Step completed, no action needed
                     }}
@@ -8949,6 +8950,7 @@ function AppContent() {
                     hasCompletedComparison={tutorialHasCompletedComparison}
                     isFollowUpMode={isFollowUpMode}
                     showHistoryDropdown={showHistoryDropdown}
+                    isLoading={isLoading}
                     onProviderExpanded={() => {
                       // Step completed, no action needed
                     }}

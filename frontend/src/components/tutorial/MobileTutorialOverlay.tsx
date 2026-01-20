@@ -10,6 +10,7 @@ interface MobileTutorialOverlayProps {
   onComplete: () => void
   onSkip: () => void
   isStepCompleted?: boolean
+  isLoading?: boolean
 }
 
 interface TooltipPosition {
@@ -77,6 +78,7 @@ export const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
   onComplete,
   onSkip,
   isStepCompleted = false,
+  isLoading = false,
 }) => {
   const overlayRef = useRef<HTMLDivElement>(null)
   const [targetElement, setTargetElement] = useState<HTMLElement | null>(null)
@@ -86,13 +88,36 @@ export const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
   const [tooltipPosition, setTooltipPosition] = useState<TooltipPosition | null>(null)
   const [isVisible, setIsVisible] = useState(false)
   const [isTargetOffScreen, setIsTargetOffScreen] = useState<'up' | 'down' | null>(null)
+  const [loadingStreamingRect, setLoadingStreamingRect] = useState<TargetRect | null>(null)
+  // Track when an automatic step transition is in progress to suppress scroll indicator
+  const [isStepTransitioning, setIsStepTransitioning] = useState(false)
   const dropdownWasOpenedRef = useRef<boolean>(false)
   const tooltipEstimatedHeight = 220
+  const previousStepRef = useRef<TutorialStep | null>(null)
 
   // Reset dropdown opened flag when step changes
   useEffect(() => {
     if (step !== 'history-dropdown' && step !== 'save-selection') {
       dropdownWasOpenedRef.current = false
+    }
+  }, [step])
+
+  // Track step transitions to suppress scroll indicator during automatic scrolling
+  useEffect(() => {
+    // Only trigger transition state when step actually changes to a new value
+    if (step && step !== previousStepRef.current) {
+      previousStepRef.current = step
+      setIsStepTransitioning(true)
+      // Reset off-screen state immediately to prevent flashing indicator
+      setIsTargetOffScreen(null)
+
+      // Allow time for automatic scrolling to complete before enabling scroll indicator
+      // This accounts for: element finding (up to 300ms), scroll delay (100ms), and smooth scroll animation (400-600ms)
+      const transitionTimeout = setTimeout(() => {
+        setIsStepTransitioning(false)
+      }, 1000)
+
+      return () => clearTimeout(transitionTimeout)
     }
   }, [step])
 
@@ -539,6 +564,91 @@ export const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
     return () => clearInterval(interval)
   }, [step])
 
+  // Effect to handle loading/streaming cutout for submit-comparison steps
+  // Phase 1: Loading section cutout (before streaming begins)
+  // Phase 2: Results section cutout with scroll (once streaming begins)
+  useEffect(() => {
+    const isSubmitStep = step === 'submit-comparison' || step === 'submit-comparison-2'
+    const isFollowUpSubmit = step === 'submit-comparison-2'
+
+    // Clear cutout when not on submit step or when loading ends
+    if (!isSubmitStep || !isLoading) {
+      setLoadingStreamingRect(null)
+      return
+    }
+
+    // Track if we've already scrolled to results section
+    let hasScrolledToResults = false
+    // For follow-up (step 7), results section already exists, so we need to wait
+    // for loading section to appear first before allowing scroll
+    let loadingSectionWasSeen = false
+
+    const updateLoadingStreamingRect = () => {
+      const resultsSection = document.querySelector('.results-section') as HTMLElement
+      const loadingSection = document.querySelector('.loading-section') as HTMLElement
+
+      // Track if loading section has been seen (needed for step 7)
+      if (loadingSection) {
+        loadingSectionWasSeen = true
+      }
+
+      // Phase 2: Results section exists = streaming has started (takes priority)
+      // Note: Loading section may still be visible during streaming, but we want to show results
+      if (resultsSection) {
+        // For step 7 (follow-up), only scroll after we've seen the loading section
+        // This ensures we don't scroll immediately when the old results are still showing
+        const canScroll = isFollowUpSubmit ? loadingSectionWasSeen : true
+
+        // Scroll to results section once when streaming starts
+        // Position it at the top of the page so users can see streaming content clearly
+        if (!hasScrolledToResults && canScroll) {
+          hasScrolledToResults = true
+          // Use requestAnimationFrame + small delay to ensure DOM is fully rendered
+          requestAnimationFrame(() => {
+            setTimeout(() => {
+              // Scroll results section to top of viewport
+              resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' })
+            }, 100)
+          })
+        }
+
+        // Update cutout for results section
+        const rect = resultsSection.getBoundingClientRect()
+        setLoadingStreamingRect({
+          top: rect.top,
+          left: rect.left,
+          width: rect.width,
+          height: rect.height,
+          centerX: rect.left + rect.width / 2,
+          centerY: rect.top + rect.height / 2,
+        })
+      }
+      // Phase 1: Only loading section exists = still in initial loading phase, before streaming
+      else if (loadingSection) {
+        const rect = loadingSection.getBoundingClientRect()
+        setLoadingStreamingRect({
+          top: rect.top,
+          left: rect.left,
+          width: rect.width,
+          height: rect.height,
+          centerX: rect.left + rect.width / 2,
+          centerY: rect.top + rect.height / 2,
+        })
+      }
+    }
+
+    // Update immediately
+    updateLoadingStreamingRect()
+
+    // Update periodically to catch when results section appears and to keep cutout position current
+    const interval = setInterval(updateLoadingStreamingRect, 100)
+
+    return () => {
+      clearInterval(interval)
+      setLoadingStreamingRect(null)
+    }
+  }, [step, isLoading])
+
   if (!step || !isVisible) {
     return null
   }
@@ -592,8 +702,17 @@ export const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
 
   const buttonText = getButtonText()
 
+  // Check if we're in loading/streaming phase on submit-comparison step
+  // This needs to be calculated before early returns so we can skip them during loading/streaming
+  const isSubmitStep = step === 'submit-comparison' || step === 'submit-comparison-2'
+  const isLoadingStreamingPhase = isSubmitStep && isLoading && loadingStreamingRect
+
   // Render scroll indicator if target is off-screen
-  if (isTargetOffScreen) {
+  // Only show when:
+  // 1. Target is actually off-screen
+  // 2. NOT during loading/streaming phase
+  // 3. NOT during automatic step transition (to avoid flashing during smooth scroll between steps)
+  if (isTargetOffScreen && !isLoadingStreamingPhase && !isStepTransitioning) {
     return (
       <div
         className={`mobile-tutorial-scroll-indicator scroll-${isTargetOffScreen}`}
@@ -616,7 +735,10 @@ export const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
   const noBackdropSteps: TutorialStep[] = ['view-follow-up-results']
   const showBackdrop = !noBackdropSteps.includes(step)
 
-  const cutoutTarget: TargetRect | null = dropdownRect ?? backdropRect ?? targetRect
+  // During loading/streaming phase, use loadingStreamingRect; otherwise use normal cutout logic
+  const cutoutTarget: TargetRect | null = isLoadingStreamingPhase
+    ? loadingStreamingRect
+    : (dropdownRect ?? backdropRect ?? targetRect)
 
   const cutoutStyle =
     cutoutTarget && showBackdrop
@@ -626,7 +748,11 @@ export const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
           left: `${cutoutTarget.left - 8}px`,
           width: `${cutoutTarget.width + 16}px`,
           height: `${cutoutTarget.height + 16}px`,
-          borderRadius: step === 'enter-prompt' || step === 'enter-prompt-2' ? '32px' : '16px',
+          borderRadius: isLoadingStreamingPhase
+            ? '16px'
+            : step === 'enter-prompt' || step === 'enter-prompt-2'
+              ? '32px'
+              : '16px',
           boxShadow: '0 0 0 9999px rgba(0, 0, 0, 0.65)',
           zIndex: 9998,
           pointerEvents: 'none' as const,
@@ -643,8 +769,8 @@ export const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
           <div className="mobile-tutorial-backdrop" />
         ))}
 
-      {/* Tooltip */}
-      {tooltipPosition && (
+      {/* Tooltip - hidden during loading/streaming phase on submit steps */}
+      {!isLoadingStreamingPhase && tooltipPosition && (
         <div
           ref={overlayRef}
           className={`mobile-tutorial-tooltip ${tooltipPosition.useFullscreen ? 'mobile-tutorial-fullscreen-tooltip' : ''}`}

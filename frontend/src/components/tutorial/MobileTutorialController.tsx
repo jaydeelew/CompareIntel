@@ -18,6 +18,8 @@ interface MobileTutorialControllerProps {
   hasBreakoutConversation?: boolean
   showHistoryDropdown?: boolean
   hasSavedSelection?: boolean
+  // Loading state for submit-comparison steps
+  isLoading?: boolean
   // Callbacks for when user performs actions
   onProviderExpanded?: () => void
   onModelsSelected?: () => void
@@ -39,6 +41,7 @@ export const MobileTutorialController: React.FC<MobileTutorialControllerProps> =
   hasCompletedComparison,
   isFollowUpMode,
   showHistoryDropdown,
+  isLoading,
   onProviderExpanded,
   onModelsSelected,
   onComparisonComplete,
@@ -212,6 +215,7 @@ export const MobileTutorialController: React.FC<MobileTutorialControllerProps> =
       onComplete={handleComplete}
       onSkip={skipTutorial}
       isStepCompleted={isCurrentStepCompleted()}
+      isLoading={isLoading}
     />
   )
 }
