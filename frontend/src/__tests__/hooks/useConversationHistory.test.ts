@@ -95,9 +95,14 @@ describe('useConversationHistory', () => {
 
   describe('loadHistoryFromLocalStorage', () => {
     it('should load history from localStorage', () => {
+      // Use explicit timestamps to ensure predictable sort order
+      // (loadHistoryFromLocalStorage sorts by created_at descending)
+      const newerDate = new Date('2024-01-02').toISOString()
+      const olderDate = new Date('2024-01-01').toISOString()
+
       const mockHistory = [
-        createMockConversationSummary({ id: createConversationId('1') }),
-        createMockConversationSummary({ id: createConversationId('2') }),
+        createMockConversationSummary({ id: createConversationId('1'), created_at: newerDate }),
+        createMockConversationSummary({ id: createConversationId('2'), created_at: olderDate }),
       ]
       localStorage.setItem('compareintel_conversation_history', JSON.stringify(mockHistory))
 
@@ -109,6 +114,7 @@ describe('useConversationHistory', () => {
       )
 
       const history = result.current.loadHistoryFromLocalStorage()
+      // History is sorted by created_at descending, so mockHistory order matches expected
       expect(history).toEqual(mockHistory)
     })
 
