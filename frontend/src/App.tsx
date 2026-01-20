@@ -80,6 +80,7 @@ import {
   useSavedModelSelections,
   useTutorial,
   useTouchDevice,
+  useBreakpoint,
 } from './hooks'
 import { apiClient } from './services/api/client'
 import { ApiError, PaymentRequiredError } from './services/api/errors'
@@ -841,29 +842,9 @@ function AppContent() {
     // Note: loadConversationFromAPI and loadConversationFromLocalStorage are defined locally below
     // as they return different types (raw conversation data vs ModelConversation[])
   } = conversationHistoryHook
-  // Track wide layout to coordinate header control alignment with toggle
-  const [isWideLayout, setIsWideLayout] = useState<boolean>(() => {
-    if (typeof window === 'undefined') return false
-    return window.innerWidth > 1000 // match CSS breakpoint
-  })
 
-  useEffect(() => {
-    const handleResize = () => setIsWideLayout(window.innerWidth > 1000)
-    window.addEventListener('resize', handleResize)
-    return () => window.removeEventListener('resize', handleResize)
-  }, [])
-
-  // Detect when screen is small enough to show tabs (same breakpoint as CSS: 768px)
-  const [isMobileLayout, setIsMobileLayout] = useState<boolean>(() => {
-    if (typeof window === 'undefined') return false
-    return window.innerWidth <= 768
-  })
-
-  useEffect(() => {
-    const handleResize = () => setIsMobileLayout(window.innerWidth <= 768)
-    window.addEventListener('resize', handleResize)
-    return () => window.removeEventListener('resize', handleResize)
-  }, [])
+  // Responsive breakpoints from centralized hook
+  const { isWideLayout, isMobileLayout, isSmallLayout } = useBreakpoint()
 
   // State for active tab in mobile view (index of the visible card)
   const [activeTabIndex, setActiveTabIndex] = useState<number>(0)
@@ -885,18 +866,6 @@ function AppContent() {
       setActiveTabIndex(0)
     }
   }, [activeTabIndex, visibleConversations.length])
-
-  // Detect when screen is small enough that "chars" would wrap in result cards
-  const [isSmallLayout, setIsSmallLayout] = useState<boolean>(() => {
-    if (typeof window === 'undefined') return false
-    return window.innerWidth <= 640 // Breakpoint where "N chars" would wrap
-  })
-
-  useEffect(() => {
-    const handleResize = () => setIsSmallLayout(window.innerWidth <= 640)
-    window.addEventListener('resize', handleResize)
-    return () => window.removeEventListener('resize', handleResize)
-  }, [])
 
   // Helper function to attempt focusing the textarea
   const attemptFocusTextarea = useCallback(() => {
@@ -989,8 +958,8 @@ function AppContent() {
 
   // Handle capability tile tap on mobile to show tooltip
   const handleCapabilityTileTap = (tileId: string) => {
-    // Only show tooltip on mobile (screen width <= 768px)
-    if (typeof window !== 'undefined' && window.innerWidth <= 768) {
+    // Only show tooltip on mobile layout
+    if (isMobileLayout) {
       setVisibleTooltip(tileId)
       // Hide tooltip after 2 seconds
       setTimeout(() => {

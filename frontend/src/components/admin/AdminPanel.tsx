@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 
+import { BREAKPOINT_MOBILE } from '../../config/constants'
 import { useAuth, useAuthHeaders } from '../../contexts/AuthContext'
 import {
   getAppSettings,
@@ -147,7 +148,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
   // State for collapsed breakdown sections on mobile
   const [breakdownCollapsed, setBreakdownCollapsed] = useState<{ [key: string]: boolean }>(() => {
     // Start collapsed on mobile by default
-    if (typeof window !== 'undefined' && window.innerWidth <= 768) {
+    if (typeof window !== 'undefined' && window.innerWidth <= BREAKPOINT_MOBILE) {
       return { tier: true, role: true }
     }
     return { tier: false, role: false }
@@ -172,7 +173,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
   // Update collapsed state when window is resized
   useEffect(() => {
     const handleResize = () => {
-      const isMobile = window.innerWidth <= 768
+      const isMobile = window.innerWidth <= BREAKPOINT_MOBILE
       setBreakdownCollapsed(prev => ({
         tier: isMobile ? prev.tier : false,
         role: isMobile ? prev.role : false,

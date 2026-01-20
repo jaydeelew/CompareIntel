@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 
+import { useBreakpoint } from '../../hooks'
 import { RESULT_TAB, type ResultTab, type ConversationMessage } from '../../types'
 import { getSafeId } from '../../utils'
 import { isErrorMessage } from '../../utils/error'
@@ -87,17 +88,8 @@ export const ResultCard: React.FC<ResultCardProps> = ({
   const statusText = isProcessing ? 'Process' : hasError ? 'Failed' : 'Success'
   const statusClass = isProcessing ? 'process' : hasError ? 'error' : 'success'
 
-  // Detect when screen is small enough that "chars" would wrap
-  const [isSmallLayout, setIsSmallLayout] = useState<boolean>(() => {
-    if (typeof window === 'undefined') return false
-    return window.innerWidth <= 640 // Breakpoint where "N chars" would wrap
-  })
-
-  useEffect(() => {
-    const handleResize = () => setIsSmallLayout(window.innerWidth <= 640)
-    window.addEventListener('resize', handleResize)
-    return () => window.removeEventListener('resize', handleResize)
-  }, [])
+  // Responsive breakpoints from centralized hook
+  const { isSmallLayout } = useBreakpoint()
 
   // State for tooltip visibility (for mobile tap)
   const [showTooltip, setShowTooltip] = useState(false)

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 
+import { useBreakpoint } from '../../hooks'
 import { RESULT_TAB } from '../../types'
 import type { ModelConversation, ActiveResultTabs, ResultTab } from '../../types'
 import { isErrorMessage } from '../../utils/error'
@@ -79,17 +80,8 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
     conv => selectedModels.includes(conv.modelId) && !closedCards.has(conv.modelId)
   )
 
-  // Detect when screen is small enough to show tabs (same breakpoint as CSS: 768px)
-  const [isMobileLayout, setIsMobileLayout] = useState<boolean>(() => {
-    if (typeof window === 'undefined') return false
-    return window.innerWidth <= 768
-  })
-
-  useEffect(() => {
-    const handleResize = () => setIsMobileLayout(window.innerWidth <= 768)
-    window.addEventListener('resize', handleResize)
-    return () => window.removeEventListener('resize', handleResize)
-  }, [])
+  // Responsive breakpoints from centralized hook
+  const { isMobileLayout } = useBreakpoint()
 
   // State for active tab in mobile view (index of the visible card)
   const [activeTabIndex, setActiveTabIndex] = useState<number>(0)

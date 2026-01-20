@@ -1,7 +1,7 @@
 import React, { memo, useEffect, useCallback, useMemo, useState, useRef } from 'react'
 
-import { getConversationLimit } from '../../config/constants'
-import { useDebounce, useSpeechRecognition, useTouchDevice } from '../../hooks'
+import { getConversationLimit, BREAKPOINT_MOBILE } from '../../config/constants'
+import { useDebounce, useSpeechRecognition, useTouchDevice, useBreakpoint } from '../../hooks'
 import type { SavedModelSelection } from '../../hooks/useSavedModelSelections'
 import type { TutorialStep } from '../../hooks/useTutorial'
 import { estimateTokens } from '../../services/compareService'
@@ -264,17 +264,9 @@ export const ComparisonForm = memo<ComparisonFormProps>(
     // For mobile: track input before current speech session started
     const mobileBaseInputRef = useRef<string>('')
 
-    // Detect mobile layout for history dropdown height calculation
-    const [isMobileLayout, setIsMobileLayout] = useState<boolean>(() => {
-      if (typeof window === 'undefined') return false
-      return window.innerWidth <= 640 // Match CSS breakpoint
-    })
-
-    useEffect(() => {
-      const handleResize = () => setIsMobileLayout(window.innerWidth <= 640)
-      window.addEventListener('resize', handleResize)
-      return () => window.removeEventListener('resize', handleResize)
-    }, [])
+    // Responsive breakpoints from centralized hook
+    // Using isSmallLayout (640px) for history dropdown height calculation
+    const { isSmallLayout } = useBreakpoint()
 
     // State for disabled button info modal
     const [disabledButtonInfo, setDisabledButtonInfo] = useState<{
@@ -765,7 +757,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
       const textarea = textareaRef.current
 
       // Check if we're on mobile viewport (max-width: 768px)
-      const isMobile = window.innerWidth <= 768
+      const isMobile = window.innerWidth <= BREAKPOINT_MOBILE
 
       // Reset height to auto to get the correct scrollHeight
       textarea.style.height = 'auto'
@@ -824,7 +816,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
       if (!textareaRef.current) return
 
       const textarea = textareaRef.current
-      const isMobile = window.innerWidth <= 768
+      const isMobile = window.innerWidth <= BREAKPOINT_MOBILE
 
       // Only auto-scroll on mobile during voice input
       if (!isMobile) return
@@ -1869,7 +1861,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
                 // Increase notification height estimate for mobile due to flex column layout
                 // Mobile needs space: 2 lines of text (~50px) + gap (6px) + padding-top (8px) + padding-bottom (4px) + margin-top (8px) + margin-bottom (4px) + content padding (8px) + buffer (5px) ≈ 93px
                 // Using 95px to account for spacing while minimizing white space
-                const notificationHeight = shouldShowNotification ? (isMobileLayout ? 95 : 70) : 0
+                const notificationHeight = shouldShowNotification ? (isSmallLayout ? 95 : 70) : 0
 
                 if (maxVisibleEntries === 2) {
                   // Unregistered tier: 2 entries max

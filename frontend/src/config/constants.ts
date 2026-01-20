@@ -197,3 +197,43 @@ export function getCreditAllocation(tier: SubscriptionTier | string): number {
   }
   return getMonthlyCreditAllocation(tier)
 }
+
+// ============================================================================
+// Responsive Breakpoints
+// ============================================================================
+// Standard breakpoints for responsive design (matches CSS media queries)
+// These should be kept in sync with frontend/src/styles/responsive.css
+
+/**
+ * Breakpoint for small layouts (e.g., character count display wrapping)
+ * CSS: @media (max-width: 640px)
+ */
+export const BREAKPOINT_SMALL = 640
+
+/**
+ * Breakpoint for mobile layouts (e.g., tabbed views, compact UI)
+ * CSS: @media (max-width: 768px)
+ */
+export const BREAKPOINT_MOBILE = 768
+
+/**
+ * Breakpoint for wide layouts (e.g., header controls alignment)
+ * CSS: @media (min-width: 1001px) / @media (max-width: 1000px)
+ */
+export const BREAKPOINT_WIDE = 1000
+
+/**
+ * Breakpoint for tablet layouts
+ * CSS: @media (max-width: 1024px)
+ */
+export const BREAKPOINT_TABLET = 1024
+
+/**
+ * All breakpoints as an object for convenient access
+ */
+export const BREAKPOINTS = {
+  small: BREAKPOINT_SMALL,
+  mobile: BREAKPOINT_MOBILE,
+  wide: BREAKPOINT_WIDE,
+  tablet: BREAKPOINT_TABLET,
+} as const
