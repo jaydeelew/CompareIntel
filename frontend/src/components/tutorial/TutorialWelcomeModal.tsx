@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { Link } from 'react-router-dom'
 import './TutorialWelcomeModal.css'
 
 interface TutorialWelcomeModalProps {
@@ -49,10 +50,6 @@ export const TutorialWelcomeModal: React.FC<TutorialWelcomeModalProps> = ({
               <span>Continue conversations</span>
             </div>
             <div className="tutorial-welcome-feature">
-              <span className="tutorial-welcome-feature-icon">↗️</span>
-              <span>Break out conversations</span>
-            </div>
-            <div className="tutorial-welcome-feature">
               <span className="tutorial-welcome-feature-icon">📚</span>
               <span>Access conversation history</span>
             </div>
@@ -61,6 +58,13 @@ export const TutorialWelcomeModal: React.FC<TutorialWelcomeModalProps> = ({
               <span>Save favorite model selections</span>
             </div>
           </div>
+          <p className="tutorial-welcome-more-features">
+            Many more features are available! Check out our{' '}
+            <Link to="/features" className="tutorial-welcome-link">
+              features page
+            </Link>{' '}
+            to learn more.
+          </p>
           {showDontShowAgain && (
             <div className="tutorial-welcome-dont-show-again">
               <label className="tutorial-welcome-checkbox-label">

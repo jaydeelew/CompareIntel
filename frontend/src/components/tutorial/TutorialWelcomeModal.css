@@ -74,6 +74,26 @@
   text-align: center;
 }
 
+.tutorial-welcome-more-features {
+  font-size: 0.9375rem;
+  color: var(--text-secondary);
+  text-align: center;
+  margin: 0 0 1.5rem 0;
+  line-height: 1.6;
+}
+
+.tutorial-welcome-link {
+  color: var(--accent-color);
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s ease;
+}
+
+.tutorial-welcome-link:hover {
+  color: #0284c7;
+  text-decoration: underline;
+}
+
 .tutorial-welcome-dont-show-again {
   margin-bottom: 1.5rem;
   display: flex;
@@ -159,6 +179,11 @@
 
   .tutorial-welcome-feature {
     font-size: 0.875rem;
+  }
+
+  .tutorial-welcome-more-features {
+    font-size: 0.875rem;
+    margin-bottom: 1.25rem;
   }
 
   .tutorial-welcome-actions {
