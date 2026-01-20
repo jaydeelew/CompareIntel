@@ -3,7 +3,7 @@
  * Manages user authentication state, login, logout, and token refresh
  */
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react'
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react'
 
 import type { User, AuthContextType, LoginCredentials, RegisterData, AuthResponse } from '../types'
 
@@ -19,6 +19,8 @@ interface AuthProviderProps {
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  // Ref to prevent duplicate auth initialization logging in React StrictMode
+  const authInitializedRef = useRef(false)
 
   // Note: Tokens are now stored in HTTP-only cookies set by the backend
   // We no longer need to manage tokens in localStorage
@@ -256,6 +258,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // Initialize auth state on mount
   // Use AbortController for proper cleanup in React StrictMode
   useEffect(() => {
+    // Prevent duplicate initialization in React StrictMode
+    if (authInitializedRef.current) return
+    authInitializedRef.current = true
+
     const abortController = new AbortController()
 
     const initAuth = async () => {

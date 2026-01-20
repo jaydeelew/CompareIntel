@@ -195,6 +195,8 @@ function AppContent() {
 
   // User location state (for accurate location context)
   const [userLocation, setUserLocation] = useState<string | null>(null)
+  // Ref to prevent duplicate geolocation detection in React StrictMode
+  const geolocationDetectedRef = useRef(false)
 
   // Wrapper function to match ComparisonForm's expected signature
   const setAttachedFiles = useCallback((files: (AttachedFile | StoredAttachedFile)[]) => {
@@ -1384,6 +1386,8 @@ function AppContent() {
       const blob = await toBlob(content, {
         pixelRatio: 2, // High quality
         backgroundColor: '#ffffff',
+        // Skip external fonts to avoid CORS SecurityError when reading cross-origin stylesheets
+        skipFonts: true,
         // Removed cacheBust for faster processing (not needed for DOM elements)
         style: {
           // Ensure the element is fully visible
@@ -1406,7 +1410,9 @@ function AppContent() {
               break
             } catch (err) {
               lastError = err instanceof Error ? err : new Error(String(err))
-              console.error(`Clipboard copy attempt ${attempt + 1} failed:`, lastError)
+              // Use console.warn for expected errors (document not focused, permission denied)
+              // to avoid flooding console with errors during normal operation
+              console.warn(`Clipboard copy attempt ${attempt + 1} failed:`, lastError.message)
 
               // If it's a permission error or security error, don't retry
               if (
@@ -1434,7 +1440,8 @@ function AppContent() {
               ? `Clipboard copy failed: ${lastError.message || lastError.name || 'Unknown error'}. Image downloaded instead.`
               : 'Clipboard copy failed. Image downloaded instead.'
             copyingNotification.update(errorMsg, 'error')
-            console.error('Clipboard copy failed after retries:', lastError)
+            // Use console.warn since clipboard failures are expected when document isn't focused
+            console.warn('Clipboard copy failed after retries:', lastError?.message)
 
             // Fallback: download the image
             const link = document.createElement('a')
@@ -3462,7 +3469,11 @@ function AppContent() {
   }, [input, error])
 
   // Detect user location using browser geolocation API (most accurate)
+  // Use ref to prevent duplicate detection in React StrictMode
   useEffect(() => {
+    if (geolocationDetectedRef.current) return
+    geolocationDetectedRef.current = true
+
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         async position => {
