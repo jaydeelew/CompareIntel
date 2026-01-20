@@ -305,6 +305,19 @@ export const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
     // Ensure tooltip stays within viewport vertically
     tooltipTop = Math.max(padding, Math.min(tooltipTop, viewportHeight - tooltipHeight - padding))
 
+    // For 'follow-up' step: Position tooltip ABOVE the results section, not inside it
+    // The tooltip should be at the top of the results section and allowed to scroll out of view
+    if (step === 'follow-up') {
+      const resultsSection = document.querySelector('.results-section') as HTMLElement
+      if (resultsSection) {
+        const resultsRect = resultsSection.getBoundingClientRect()
+        // Position tooltip above the results section
+        tooltipTop = resultsRect.top - tooltipHeight - arrowSize - 8
+        arrowDirection = 'down'
+        // Do NOT clamp to viewport - allow tooltip to scroll out of view
+      }
+    }
+
     // For dropdown steps: ALWAYS position above the button so menus stay visible below
     if (DROPDOWN_STEPS.includes(step)) {
       tooltipTop = rect.top - tooltipHeight - arrowSize - 8
