@@ -897,19 +897,77 @@ function AppContent() {
     return () => window.removeEventListener('resize', handleResize)
   }, [])
 
-  // Focus textarea on desktop when page loads
+  // Helper function to attempt focusing the textarea
+  const attemptFocusTextarea = useCallback(() => {
+    if (!isTouchDevice && currentView === 'main' && textareaRef.current) {
+      const textarea = textareaRef.current
+      // Check if textarea is actually visible and not disabled
+      const rect = textarea.getBoundingClientRect()
+      const isVisible = rect.width > 0 && rect.height > 0
+      const isNotDisabled = !textarea.disabled
+
+      if (isVisible && isNotDisabled) {
+        // Check if there's no modal or overlay blocking focus
+        const hasBlockingModal = document.querySelector(
+          '.tutorial-welcome-backdrop, .tutorial-backdrop, [role="dialog"]'
+        )
+
+        if (!hasBlockingModal) {
+          textarea.focus()
+          return true
+        }
+      }
+    }
+    return false
+  }, [isTouchDevice, currentView])
+
+  // Focus textarea on desktop when page loads or when conditions change
   useEffect(() => {
     // Only focus on desktop (not touch devices) and when on main view
-    if (!isTouchDevice && currentView === 'main' && textareaRef.current) {
-      // Small delay to ensure the textarea is fully rendered
-      const timeoutId = setTimeout(() => {
-        if (textareaRef.current) {
-          textareaRef.current.focus()
-        }
-      }, 100)
-      return () => clearTimeout(timeoutId)
+    // Don't focus if welcome modal is showing or tutorial is active
+    if (!isTouchDevice && currentView === 'main' && !showWelcomeModal && !tutorialState.isActive) {
+      let timeout1: ReturnType<typeof setTimeout> | null = null
+      let timeout2: ReturnType<typeof setTimeout> | null = null
+      let timeout3: ReturnType<typeof setTimeout> | null = null
+
+      // Use requestAnimationFrame for first attempt
+      requestAnimationFrame(() => {
+        if (attemptFocusTextarea()) return
+
+        // If not successful, try with delays to handle async rendering
+        timeout1 = setTimeout(() => {
+          if (attemptFocusTextarea()) return
+
+          // Try again with longer delay
+          timeout2 = setTimeout(() => {
+            if (attemptFocusTextarea()) return
+
+            // Final attempt with even longer delay for slow renders
+            timeout3 = setTimeout(() => {
+              attemptFocusTextarea()
+            }, 500)
+          }, 300)
+        }, 100)
+      })
+
+      return () => {
+        if (timeout1) clearTimeout(timeout1)
+        if (timeout2) clearTimeout(timeout2)
+        if (timeout3) clearTimeout(timeout3)
+      }
     }
-  }, [isTouchDevice, currentView])
+  }, [isTouchDevice, currentView, showWelcomeModal, tutorialState.isActive, attemptFocusTextarea])
+
+  // Also focus when welcome modal closes
+  useEffect(() => {
+    if (!isTouchDevice && currentView === 'main' && !showWelcomeModal && !tutorialState.isActive) {
+      // When welcome modal closes, attempt to focus after a brief delay
+      const timeout = setTimeout(() => {
+        attemptFocusTextarea()
+      }, 200)
+      return () => clearTimeout(timeout)
+    }
+  }, [showWelcomeModal, isTouchDevice, currentView, tutorialState.isActive, attemptFocusTextarea])
 
   // State for character count tooltip visibility (per modelId)
   const [visibleCharTooltip, setVisibleCharTooltip] = useState<string | null>(null)

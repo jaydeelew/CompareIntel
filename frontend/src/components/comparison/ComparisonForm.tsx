@@ -851,6 +851,54 @@ export const ComparisonForm = memo<ComparisonFormProps>(
       })
     }, [input, adjustTextareaHeight, isSpeechListening, scrollToCurrentLine])
 
+    // Focus textarea on desktop when component mounts (only if not touch device and no tutorial)
+    useEffect(() => {
+      if (!isTouchDevice && !tutorialStep) {
+        let timeout1: ReturnType<typeof setTimeout> | null = null
+        let timeout2: ReturnType<typeof setTimeout> | null = null
+
+        const attemptFocus = () => {
+          if (textareaRef.current) {
+            const textarea = textareaRef.current
+            const rect = textarea.getBoundingClientRect()
+            // Only focus if textarea is visible and not disabled
+            if (rect.width > 0 && rect.height > 0 && !textarea.disabled) {
+              // Check if there's no blocking modal
+              const hasBlockingModal = document.querySelector(
+                '.tutorial-welcome-backdrop, .tutorial-backdrop, [role="dialog"]'
+              )
+
+              if (!hasBlockingModal) {
+                textarea.focus()
+                return true
+              }
+            }
+          }
+          return false
+        }
+
+        // Try immediately with requestAnimationFrame
+        requestAnimationFrame(() => {
+          if (attemptFocus()) return
+
+          // Try again with a small delay
+          timeout1 = setTimeout(() => {
+            if (attemptFocus()) return
+
+            // Final attempt with longer delay
+            timeout2 = setTimeout(() => {
+              attemptFocus()
+            }, 300)
+          }, 100)
+        })
+
+        return () => {
+          if (timeout1) clearTimeout(timeout1)
+          if (timeout2) clearTimeout(timeout2)
+        }
+      }
+    }, [isTouchDevice, tutorialStep]) // Only run when component mounts or these change
+
     // Adjust height on window resize - ensure it recalculates after media query changes
     useEffect(() => {
       let resizeTimeout: ReturnType<typeof setTimeout>
