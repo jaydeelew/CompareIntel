@@ -6,61 +6,29 @@ import { getSafeId } from '../../utils'
 import { isErrorMessage } from '../../utils/error'
 import { MessageBubble } from '../conversation/MessageBubble'
 
-/**
- * Model type for ResultCard
- */
 export interface Model {
   id: string
   name: string
   description?: string
 }
 
-/**
- * ResultCard component props
- */
 export interface ResultCardProps {
-  /** Model ID */
   modelId: string
-  /** Model details */
   model?: Model
-  /** Conversation messages */
   messages: ConversationMessage[]
-  /** Active result tab (Formatted or Raw) */
   activeTab?: ResultTab
-  /** Whether the result is an error */
   isError?: boolean
-  /** Whether the model is still processing/streaming */
   isProcessing?: boolean
-  /** Callback to screenshot/copy formatted history */
   onScreenshot?: (modelId: string) => void
-  /** Callback to copy raw history */
   onCopyResponse?: (modelId: string) => void
-  /** Callback to close/hide the card */
   onClose?: (modelId: string) => void
-  /** Callback to switch result tab */
   onSwitchTab?: (modelId: string, tab: ResultTab) => void
-  /** Callback to break out this model into a separate conversation */
   onBreakout?: (modelId: string) => void
-  /** Whether to show the breakout button (only show in multi-model comparisons) */
   showBreakoutButton?: boolean
-  /** Custom className */
   className?: string
 }
 
-/**
- * ResultCard component for displaying model comparison results
- *
- * @example
- * ```tsx
- * <ResultCard
- *   modelId="gpt-4"
- *   model={{ id: 'gpt-4', name: 'GPT-4' }}
- *   messages={messages}
- *   activeTab={RESULT_TAB.FORMATTED}
- *   onClose={handleClose}
- * />
- * ```
- */
+// Single model result card with formatted/raw toggle
 export const ResultCard: React.FC<ResultCardProps> = ({
   modelId,
   model,
@@ -76,25 +44,17 @@ export const ResultCard: React.FC<ResultCardProps> = ({
   showBreakoutButton = false,
   className = '',
 }) => {
-  // Safety check for messages array
   const safeMessages = messages && Array.isArray(messages) ? messages : []
   const latestMessage = safeMessages[safeMessages.length - 1]
   const safeId = getSafeId(modelId || 'unknown')
 
-  // Fallback error detection: check the message content directly if isError prop is not set correctly
   const hasError = isError || isErrorMessage(latestMessage?.content)
-
-  // Determine status: PROCESS during streaming, SUCCESS/FAIL when completed
   const statusText = isProcessing ? 'Process' : hasError ? 'Failed' : 'Success'
   const statusClass = isProcessing ? 'process' : hasError ? 'error' : 'success'
 
-  // Responsive breakpoints from centralized hook
   const { isSmallLayout } = useBreakpoint()
-
-  // State for tooltip visibility (for mobile tap)
   const [showTooltip, setShowTooltip] = useState(false)
 
-  // Handle tap/click to show tooltip on mobile
   const handleOutputLengthClick = () => {
     if (isSmallLayout) {
       setShowTooltip(true)

@@ -1,9 +1,3 @@
-/**
- * Comparison components exports
- *
- * Components for model comparison functionality
- */
-
 export { StreamingIndicator } from './StreamingIndicator'
 export type { StreamingIndicatorProps } from './StreamingIndicator'
 

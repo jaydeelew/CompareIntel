@@ -1,16 +1,6 @@
 """
-Credit management module for CompareIntel credits-based system.
-
-This module provides functions for managing user credits including:
-- Getting current credit balance
-- Checking if user has sufficient credits
-- Deducting credits for usage
-- Allocating credits based on subscription tier
-- Resetting credits (daily for free/anonymous, monthly for paid)
-- Getting credit usage statistics
-
-All operations use database transactions and row-level locking to ensure
-atomicity and handle concurrent requests gracefully.
+Credit management - handles allocations, deductions, and resets.
+Uses row-level locking to handle concurrent requests safely.
 """
 
 from sqlalchemy.orm import Session
@@ -27,18 +17,7 @@ import pytz
 
 
 def get_user_credits(user_id: int, db: Session) -> int:
-    """
-    Get current credit balance for a user.
-
-    Calculates: monthly_credits_allocated - credits_used_this_period
-
-    Args:
-        user_id: User ID
-        db: Database session
-
-    Returns:
-        Current credit balance (remaining credits)
-    """
+    """Returns remaining credits (allocated - used)."""
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         raise ValueError(f"User {user_id} not found")
@@ -49,22 +28,10 @@ def get_user_credits(user_id: int, db: Session) -> int:
 
 
 def check_credits_sufficient(user_id: int, required_credits: Decimal, db: Session) -> bool:
-    """
-    Check if user has sufficient credits for a request.
-
-    Args:
-        user_id: User ID
-        required_credits: Credits needed for the request (as Decimal)
-        db: Database session
-
-    Returns:
-        True if user has sufficient credits, False otherwise
-    """
-    # Check and reset credits if needed before checking balance
+    """Check if user can afford the request. Resets credits first if needed."""
     check_and_reset_credits_if_needed(user_id, db)
 
     current_credits = get_user_credits(user_id, db)
-    # Convert required_credits to int (round up to be conservative)
     required_int = int(required_credits.quantize(Decimal("1"), rounding=ROUND_CEILING))
     return current_credits >= required_int
 
@@ -76,24 +43,7 @@ def deduct_credits(
     db: Session,
     description: Optional[str] = None,
 ) -> None:
-    """
-    Deduct credits from user's balance atomically.
-
-    Uses row-level locking to prevent race conditions in concurrent requests.
-    Creates a CreditTransaction record for audit trail.
-
-    Args:
-        user_id: User ID
-        credits: Credits to deduct (as Decimal, e.g., 4.25)
-        usage_log_id: Optional UsageLog ID this deduction is related to
-        db: Database session
-        description: Optional description for the transaction
-
-    Raises:
-        ValueError: If user doesn't have sufficient credits
-    """
-    # Convert Decimal to int (round to nearest integer for User model storage)
-    # User model stores credits_used_this_period as Integer
+    """Deduct credits with row-level locking. Creates audit trail."""
     credits_int = int(round(credits))
 
     # Use row-level locking for atomic update
@@ -135,17 +85,7 @@ def deduct_credits(
 
 
 def allocate_monthly_credits(user_id: int, tier: str, db: Session) -> None:
-    """
-    Allocate monthly credits to a user based on their subscription tier.
-
-    For paid tiers: Allocates monthly credits and sets billing period.
-    For free/unregistered tiers: Allocates daily credits (handled by reset_daily_credits).
-
-    Args:
-        user_id: User ID
-        tier: Subscription tier
-        db: Database session
-    """
+    """Allocate monthly credits based on tier. Sets up 30-day billing period."""
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         raise ValueError(f"User {user_id} not found")
@@ -187,15 +127,7 @@ def allocate_monthly_credits(user_id: int, tier: str, db: Session) -> None:
 
 
 def _get_user_timezone(user: User) -> str:
-    """
-    Get user's timezone preference, defaulting to UTC.
-
-    Args:
-        user: User object
-
-    Returns:
-        IANA timezone string (e.g., "America/Chicago")
-    """
+    """Get user's timezone, default to UTC if invalid or missing."""
     if user.preferences and user.preferences.timezone:
         try:
             pytz.timezone(user.preferences.timezone)
@@ -206,15 +138,7 @@ def _get_user_timezone(user: User) -> str:
 
 
 def _get_next_local_midnight(timezone_str: str) -> datetime:
-    """
-    Get the next midnight in the specified timezone, converted to UTC.
-
-    Args:
-        timezone_str: IANA timezone string
-
-    Returns:
-        UTC datetime representing next midnight in the timezone
-    """
+    """Next midnight in the given timezone, returned as UTC."""
     tz = pytz.timezone(timezone_str)
     now_local = datetime.now(tz)
     # Get next midnight in local timezone
@@ -226,20 +150,8 @@ def _get_next_local_midnight(timezone_str: str) -> datetime:
 
 
 def _can_reset_user_credits(user_id: int, db: Session, min_hours_between_resets: int = 20) -> bool:
-    """
-    Check if user credits can be reset (safeguard against abuse).
-
-    Prevents multiple resets within a short time period by checking the last allocation transaction.
-
-    Args:
-        user_id: User ID
-        db: Database session
-        min_hours_between_resets: Minimum hours between resets (default 20)
-
-    Returns:
-        True if reset is allowed, False otherwise
-    """
-    # Find the most recent allocation transaction
+    """Abuse prevention - ensures min 20h between credit resets."""
+    # Find most recent allocation
     last_allocation = (
         db.query(CreditTransaction)
         .filter(
@@ -264,18 +176,7 @@ def _can_reset_user_credits(user_id: int, db: Session, min_hours_between_resets:
 
 
 def reset_daily_credits(user_id: int, tier: str, db: Session, force: bool = False) -> None:
-    """
-    Reset daily credits for free/unregistered tier users.
-
-    Resets credits at midnight in the user's local timezone.
-    Includes abuse prevention to prevent multiple resets within a short period.
-
-    Args:
-        user_id: User ID
-        tier: Subscription tier (should be 'unregistered' or 'free')
-        db: Database session
-        force: If True, bypass abuse prevention check (for admin resets)
-    """
+    """Reset daily credits at user's local midnight. Use force=True for admin overrides."""
     if tier not in DAILY_CREDIT_LIMITS:
         # Not a daily-reset tier, skip
         return
@@ -316,16 +217,7 @@ def reset_daily_credits(user_id: int, tier: str, db: Session, force: bool = Fals
 
 
 def get_credit_usage_stats(user_id: int, db: Session) -> Dict[str, Any]:
-    """
-    Get comprehensive credit usage statistics for a user.
-
-    Args:
-        user_id: User ID
-        db: Database session
-
-    Returns:
-        Dictionary with credit usage statistics
-    """
+    """Get full credit stats including allocation, usage, and reset time."""
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         raise ValueError(f"User {user_id} not found")
@@ -366,14 +258,7 @@ def get_credit_usage_stats(user_id: int, db: Session) -> Dict[str, Any]:
 
 
 def ensure_credits_allocated(user_id: int, db: Session) -> None:
-    """
-    Ensure user has credits allocated based on their tier.
-    Called when user makes first request or after tier change.
-
-    Args:
-        user_id: User ID
-        db: Database session
-    """
+    """Make sure user has credits - called on first request or tier change."""
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         raise ValueError(f"User {user_id} not found")
@@ -396,14 +281,7 @@ def ensure_credits_allocated(user_id: int, db: Session) -> None:
 
 
 def check_and_reset_credits_if_needed(user_id: int, db: Session) -> None:
-    """
-    Check if credits need to be reset based on reset time, and reset if needed.
-    Called before checking credit balance to ensure fresh credits are available.
-
-    Args:
-        user_id: User ID
-        db: Database session
-    """
+    """Reset credits if reset time has passed. Called before balance checks."""
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         return

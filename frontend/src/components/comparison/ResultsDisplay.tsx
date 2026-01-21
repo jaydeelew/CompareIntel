@@ -7,59 +7,28 @@ import { isErrorMessage } from '../../utils/error'
 
 import { ResultCard, type Model } from './ResultCard'
 
-/**
- * ResultsDisplay component props
- */
 export interface ResultsDisplayProps {
-  /** Conversations to display */
   conversations: ModelConversation[]
-  /** Selected model IDs */
   selectedModels: string[]
-  /** Set of closed card model IDs */
   closedCards: Set<string>
-  /** All available models */
   allModels: Model[]
-  /** Active result tabs by model ID */
   activeResultTabs: ActiveResultTabs
-  /** Processing time in milliseconds */
   processingTime?: number
-  /** Response metadata */
   metadata?: {
     models_completed: number
     models_failed: number
     total_tokens_used: number
   }
-  /** Whether models are still processing (keyed by model ID) */
   modelProcessingStates?: Record<string, boolean>
-  /** Callback to screenshot/copy formatted history */
   onScreenshot?: (modelId: string) => void
-  /** Callback to copy raw history */
   onCopyResponse?: (modelId: string) => void
-  /** Callback to close/hide a card */
   onCloseCard?: (modelId: string) => void
-  /** Callback to switch result tab */
   onSwitchTab?: (modelId: string, tab: ResultTab) => void
-  /** Callback to break out a model into a separate conversation */
   onBreakout?: (modelId: string) => void
-  /** Custom className */
   className?: string
 }
 
-/**
- * ResultsDisplay component for displaying comparison results grid
- *
- * @example
- * ```tsx
- * <ResultsDisplay
- *   conversations={conversations}
- *   selectedModels={selectedModels}
- *   closedCards={closedCards}
- *   allModels={allModels}
- *   activeResultTabs={activeResultTabs}
- *   onCloseCard={handleCloseCard}
- * />
- * ```
- */
+// Renders comparison results as a grid (desktop) or tabs (mobile)
 export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
   conversations,
   selectedModels,
@@ -93,13 +62,8 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
     }
   }, [activeTabIndex, visibleConversations.length])
 
-  if (visibleConversations.length === 0) {
-    return null
-  }
+  if (visibleConversations.length === 0) return null
 
-  /**
-   * Format processing time for display
-   */
   const formatProcessingTime = (time: number): string => {
     if (time < 1000) {
       return `${time}ms`

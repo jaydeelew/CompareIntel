@@ -2,128 +2,69 @@ import type { Locator, Page } from '@playwright/test'
 
 import { test, expect } from './fixtures'
 
-/**
- * Helper function to safely wait with page validity check
- */
+// Helper to wait safely (handles page closure during async ops)
 async function safeWait(page: Page, ms: number) {
-  try {
-    if (page.isClosed()) return
-    await page.waitForTimeout(ms)
-  } catch (error) {
-    if (error instanceof Error && error.message.includes('closed')) return
-    throw error
-  }
+  if (page.isClosed()) return
+  await page.waitForTimeout(ms).catch(() => {})
 }
 
-/**
- * Helper function to dismiss the tutorial overlay if it appears
- */
+// Dismiss tutorial if it pops up - happens on first visit
 async function dismissTutorialOverlay(page: Page) {
+  if (page.isClosed()) return
+  await safeWait(page, 500)
+
   try {
-    if (page.isClosed()) return
-
-    await safeWait(page, 500)
-
+    // Try the welcome modal first
     const welcomeModal = page.locator('.tutorial-welcome-backdrop')
-    const welcomeVisible = await welcomeModal.isVisible({ timeout: 3000 }).catch(() => false)
-
-    if (welcomeVisible && !page.isClosed()) {
+    if (await welcomeModal.isVisible({ timeout: 3000 }).catch(() => false)) {
       const skipButton = page.locator(
         '.tutorial-welcome-button-secondary, button:has-text("Skip for Now")'
       )
-      const skipVisible = await skipButton.isVisible({ timeout: 3000 }).catch(() => false)
-
-      if (skipVisible && !page.isClosed()) {
-        try {
-          await skipButton.waitFor({ state: 'visible', timeout: 5000 })
-          await safeWait(page, 300)
-
-          if (!page.isClosed()) {
-            await skipButton.click({ timeout: 10000, force: false }).catch(async () => {
-              if (!page.isClosed()) {
-                await skipButton.click({ timeout: 5000, force: true })
-              }
-            })
-            await welcomeModal.waitFor({ state: 'hidden', timeout: 5000 }).catch(() => {})
-            await safeWait(page, 500)
-          }
-        } catch (_clickError) {
-          if (!page.isClosed()) {
-            await page.keyboard.press('Escape').catch(() => {})
-            await safeWait(page, 500)
-          }
-        }
-      } else if (!page.isClosed()) {
-        await page.keyboard.press('Escape').catch(() => {})
+      if (await skipButton.isVisible({ timeout: 3000 }).catch(() => false)) {
+        await skipButton
+          .click({ timeout: 5000 })
+          .catch(() => page.keyboard.press('Escape').catch(() => {}))
+        await welcomeModal.waitFor({ state: 'hidden', timeout: 5000 }).catch(() => {})
         await safeWait(page, 500)
       }
     }
 
     if (page.isClosed()) return
 
+    // Check for the main tutorial overlay too
     const tutorialOverlay = page.locator('.tutorial-backdrop, .tutorial-welcome-backdrop')
-    const overlayVisible = await tutorialOverlay.isVisible({ timeout: 2000 }).catch(() => false)
-
-    if (overlayVisible && !page.isClosed()) {
-      const closeButton = page.locator(
-        '.tutorial-close-button, button[aria-label*="Skip"], button[aria-label*="skip"]'
-      )
-      const closeVisible = await closeButton.isVisible({ timeout: 3000 }).catch(() => false)
-
-      if (closeVisible && !page.isClosed()) {
-        try {
-          await closeButton.waitFor({ state: 'visible', timeout: 5000 })
-          await safeWait(page, 300)
-
-          if (!page.isClosed()) {
-            await closeButton.click({ timeout: 10000, force: false }).catch(async () => {
-              if (!page.isClosed()) {
-                await closeButton.click({ timeout: 5000, force: true })
-              }
-            })
-            await tutorialOverlay.waitFor({ state: 'hidden', timeout: 5000 }).catch(() => {})
-            await safeWait(page, 500)
-          }
-        } catch (_clickError) {
-          if (!page.isClosed()) {
-            await page.keyboard.press('Escape').catch(() => {})
-            await safeWait(page, 500)
-          }
-        }
-      } else if (!page.isClosed()) {
+    if (await tutorialOverlay.isVisible({ timeout: 2000 }).catch(() => false)) {
+      const closeButton = page.locator('.tutorial-close-button, button[aria-label*="Skip"]')
+      if (await closeButton.isVisible({ timeout: 3000 }).catch(() => false)) {
+        await closeButton.click({ timeout: 5000 }).catch(async () => {
+          if (!page.isClosed()) await closeButton.click({ timeout: 5000, force: true })
+        })
+        await tutorialOverlay.waitFor({ state: 'hidden', timeout: 5000 }).catch(() => {})
+        await safeWait(page, 500)
+      } else {
         await page.keyboard.press('Escape').catch(() => {})
         await safeWait(page, 500)
       }
     }
 
+    // Final check - if still visible, try escape
     if (!page.isClosed()) {
-      await safeWait(page, 500)
-      const stillVisible = await tutorialOverlay.isVisible({ timeout: 1000 }).catch(() => false)
-      if (stillVisible && !page.isClosed()) {
+      const tutorialOverlay = page.locator('.tutorial-backdrop, .tutorial-welcome-backdrop')
+      if (await tutorialOverlay.isVisible({ timeout: 1000 }).catch(() => false)) {
         await page.keyboard.press('Escape').catch(() => {})
         await safeWait(page, 500)
       }
     }
-  } catch (error) {
-    if (error instanceof Error && error.message.includes('closed')) return
-    console.log(
-      'Tutorial overlay dismissal attempted:',
-      error instanceof Error ? error.message : String(error)
-    )
+  } catch {
+    // Silently handle - page might have closed during operation
   }
 }
 
-/**
- * Helper function to tap or click an element
- * Uses tap if touch is supported, otherwise falls back to click
- * Handles tutorial overlay blocking (especially in WebKit)
- */
+// Tap for mobile, click for desktop. WebKit needs extra time and force clicks sometimes
 async function tapOrClick(locator: Locator, page?: Page, browserName?: string): Promise<void> {
-  // Get page from locator if not provided
   const locatorWithPage = locator as unknown as { page?: () => Page; _page?: Page }
   const pageInstance = page || locatorWithPage.page?.() || locatorWithPage._page
   if (!pageInstance) {
-    // If we can't get page, just try click directly
     try {
       await locator.tap({ timeout: 15000 })
     } catch {
@@ -134,28 +75,23 @@ async function tapOrClick(locator: Locator, page?: Page, browserName?: string): 
 
   const isWebKit = browserName === 'webkit'
 
-  // Check if tutorial overlay is blocking (especially in WebKit)
+  // WebKit is flakey with overlays - dismiss tutorial if it's in the way
   const tutorialOverlay = pageInstance.locator('.tutorial-backdrop, .tutorial-welcome-backdrop')
-  const overlayVisible = await tutorialOverlay.isVisible({ timeout: 1000 }).catch(() => false)
-  if (overlayVisible && !pageInstance.isClosed()) {
-    // Dismiss tutorial overlay before clicking
+  if (await tutorialOverlay.isVisible({ timeout: 1000 }).catch(() => false)) {
     await dismissTutorialOverlay(pageInstance)
-    await safeWait(pageInstance, 500) // Wait for overlay to fully disappear
+    await safeWait(pageInstance, 500)
   }
 
   try {
     await locator.tap({ timeout: isWebKit ? 30000 : 15000 })
   } catch (error) {
-    // Fallback to click if tap is not supported (e.g., desktop browser)
-    // If click fails due to overlay intercepting, use force click (especially for WebKit)
+    // Tap failed - fallback to click (happens on desktop or when overlay intercepts)
     if (error instanceof Error && error.message.includes('intercepts pointer events')) {
       if (isWebKit) {
-        // WebKit: dismiss overlay again and use force click
         await dismissTutorialOverlay(pageInstance)
         await safeWait(pageInstance, 500)
         await locator.click({ timeout: 30000, force: true })
       } else {
-        // Other browsers: just use force click
         await locator.click({ timeout: 15000, force: true })
       }
     } else {

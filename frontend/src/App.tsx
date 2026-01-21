@@ -115,16 +115,16 @@ import {
 import type { ComparisonExportData } from './utils'
 import { isErrorMessage } from './utils/error'
 
+// TODO: This file has grown way too big - should extract MainPage, ResultsSection, etc.
+// Started refactoring but got sidetracked. The state management here is a mess.
 function AppContent() {
   const { isAuthenticated, user, refreshUser, isLoading: authLoading } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
 
-  // Determine current view from route
   const currentView = location.pathname === '/admin' ? 'admin' : 'main'
 
-  // Route protection: redirect non-admin users away from /admin
-  // Only redirect if we're definitely not an admin (not just during loading/transitions)
+  // Admin route guard - be careful with the auth loading state here
   useEffect(() => {
     if (location.pathname === '/admin' && !authLoading) {
       // Only redirect if we're certain the user is not an admin
@@ -144,13 +144,12 @@ function AppContent() {
     }
   }, [location.pathname, isAuthenticated, user, authLoading, navigate])
 
-  // Custom hooks for state management
-  const browserFingerprintHook = useBrowserFingerprint()
-  const { browserFingerprint, setBrowserFingerprint } = browserFingerprintHook
-
-  const rateLimitHook = useRateLimitStatus({ isAuthenticated, browserFingerprint })
-  const { usageCount, setUsageCount, fetchRateLimitStatus } = rateLimitHook
-
+  // All these hooks could probably be consolidated into a single useAppState hook
+  const { browserFingerprint, setBrowserFingerprint } = useBrowserFingerprint()
+  const { usageCount, setUsageCount, fetchRateLimitStatus } = useRateLimitStatus({
+    isAuthenticated,
+    browserFingerprint,
+  })
   const modelSelectionHook = useModelSelection({ isAuthenticated, user })
   const {
     selectedModels,
@@ -240,15 +239,16 @@ function AppContent() {
     // getConversationsWithMessages, // Available from hook if needed
   } = comparisonHook
 
-  // State not covered by hooks (declare before callbacks that use them)
+  // Scroll tracking refs - these handle a lot of edge cases for smooth UX
+  // (there's probably a cleaner way to do this but it works)
   const selectedModelsGridRef = useRef<HTMLDivElement>(null)
-  const scrolledToTopRef = useRef<Set<string>>(new Set()) // Track which model cards have been scrolled to top
-  const shouldScrollToTopAfterFormattingRef = useRef<boolean>(false) // Track if we should scroll to top after all models format (initial comparison only)
-  const isPageScrollingRef = useRef<boolean>(false) // Track if user is scrolling the page
-  const hasScrolledToResultsOnFirstChunkRef = useRef<boolean>(false) // Track if we've scrolled to results section on first streaming chunk
-  const justLoadedFromHistoryRef = useRef<boolean>(false) // Track if we just loaded conversations from history
-  const isScrollingToTopFromHistoryRef = useRef<boolean>(false) // Track if we're currently scrolling to top from history (prevents scroll sync)
-  const lastSubmittedInputRef = useRef<string>('') // Store the expanded input that was sent to backend for matching
+  const scrolledToTopRef = useRef<Set<string>>(new Set())
+  const shouldScrollToTopAfterFormattingRef = useRef<boolean>(false)
+  const isPageScrollingRef = useRef<boolean>(false)
+  const hasScrolledToResultsOnFirstChunkRef = useRef<boolean>(false)
+  const justLoadedFromHistoryRef = useRef<boolean>(false)
+  const isScrollingToTopFromHistoryRef = useRef<boolean>(false)
+  const lastSubmittedInputRef = useRef<string>('')
   const [modelsByProvider, setModelsByProvider] = useState<ModelsByProvider>({})
   const [isLoadingModels, setIsLoadingModels] = useState(true)
   const [openDropdowns, setOpenDropdowns] = useState<Set<string>>(new Set())
@@ -283,11 +283,8 @@ function AppContent() {
     dismissLowCreditWarning,
   } = useCreditWarningManager()
 
-  // Track which models have already been broken out from the current conversation
+  // Breakout conversation tracking - could use a reducer instead
   const [_alreadyBrokenOutModels, setAlreadyBrokenOutModels] = useState<Set<string>>(new Set())
-
-  // Track breakout transition phase for smooth animations
-  // 'idle' = normal state, 'fading-out' = old cards fading out, 'hidden' = waiting to show new card, 'fading-in' = new card fading in
   const [breakoutPhase, setBreakoutPhase] = useState<
     'idle' | 'fading-out' | 'hidden' | 'fading-in'
   >('idle')
@@ -605,11 +602,11 @@ function AppContent() {
     setAuthModalMode('login')
   }
 
-  // Listen for verification messages from email and handle tab coordination
+  // Tab coordination for email verification - lets existing tab handle the token
+  // instead of opening a new one. Kind of hacky but users expect this behavior.
   useEffect(() => {
-    // Check if BroadcastChannel is supported
     if (typeof BroadcastChannel === 'undefined') {
-      console.error('[App] BroadcastChannel is not supported in this browser!')
+      console.error('[App] BroadcastChannel not supported')
       return
     }
 

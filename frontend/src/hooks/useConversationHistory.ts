@@ -1,10 +1,4 @@
-/**
- * Custom hook for managing conversation history
- *
- * Handles loading, saving, and deleting conversation history for both
- * authenticated and unregistered users. Ensures immediate UI updates when
- * conversations are created or deleted.
- */
+// Manages conversation history - API for logged-in users, localStorage for anon users
 
 import { useState, useCallback, useEffect, useMemo } from 'react'
 
@@ -26,7 +20,7 @@ import type {
 export interface UseConversationHistoryOptions {
   isAuthenticated: boolean
   user: User | null
-  onDeleteActiveConversation?: () => void // Callback when deleting the active conversation
+  onDeleteActiveConversation?: () => void
 }
 
 export interface UseConversationHistoryReturn {

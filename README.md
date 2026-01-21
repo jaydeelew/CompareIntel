@@ -25,33 +25,27 @@ The platform integrates with [OpenRouter](https://openrouter.ai/) to access mode
 
 ## Features
 
-### Core Functionality
-- **Multi-Model Comparison** — Select up to 12 models (depending on tier) and compare their responses side-by-side
-- **Real-Time Streaming** — Server-Sent Events (SSE) streaming for instant, token-by-token responses
-- **Interactive Tutorial** — Step-by-step guided tour to help new users learn how to use the platform
-- **Conversation History** — Follow-up questions with full conversation context per model
-- **Breakout Conversations** — Continue individual conversations with specific models from multi-model comparisons
-- **Saved Model Selections** — Save and quickly load named groups of model selections for repeated use
-- **Export Functionality** — Export comparisons as PDF, Markdown, JSON, or HTML
-- **Web Search Capability** — Enable web search for supported models to access real-time information, current events, and up-to-date data
-- **LaTeX Rendering** — Mathematical notation support with KaTeX
-- **Syntax Highlighting** — Code blocks with syntax highlighting for 100+ programming languages via Prism.js
-- **Markdown Support** — Full Markdown rendering including lists, tables, links, and formatting
-- **File Upload Support** — Parse and analyze PDF and Word documents
-- **Progressive Web App (PWA)** — Installable app with offline capabilities
+### Core
+- Compare up to 12 models side-by-side with real-time SSE streaming
+- Conversation history with follow-up questions (per-model context)
+- Breakout conversations to continue with a single model
+- Save/load model selection presets
+- Export as PDF, Markdown, JSON, or HTML
+- Web search for models that support it
+- LaTeX (KaTeX), syntax highlighting (Prism.js), full Markdown support
+- PDF and Word document parsing
+- PWA support
 
-### User Management
-- **Authentication** — Email/password registration with verification, JWT-based sessions with HTTP-only cookies
-- **Subscription Tiers** — Free, Starter, Starter+, Pro, and Pro+ tiers with varying limits
-- **Credit System** — Token-based credit allocation (daily for free users, monthly for paid)
-- **Admin Panel** — User management, mock mode testing, and system settings
+### Users & Billing
+- Email/password auth with JWT (HTTP-only cookies)
+- Tiered subscriptions: Free, Starter, Starter+, Pro, Pro+
+- Credit system (daily for free users, monthly for paid)
+- Admin panel
 
-### Security & Performance
-- **Rate Limiting** — Per-user and anonymous rate limiting with browser fingerprinting
-- **Distributed Rate Limiting** — Redis-backed rate limiting for multi-worker deployments (optional)
-- **reCAPTCHA v3** — Bot protection on registration
-- **Request Caching** — Intelligent caching with deduplication
-- **Profiling Middleware** — Performance monitoring in development
+### Security
+- Rate limiting (per-user + anonymous via browser fingerprinting)
+- Optional Redis for distributed rate limiting
+- reCAPTCHA v3 on registration
 
 ---
 

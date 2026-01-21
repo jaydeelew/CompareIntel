@@ -1,10 +1,3 @@
-/**
- * Custom hook for managing model selection
- *
- * Handles selected models state, validation against tier limits,
- * and provides helper functions for model selection.
- */
-
 import { useState, useCallback, useMemo } from 'react'
 
 import { getModelLimit } from '../config/constants'
@@ -27,6 +20,7 @@ export interface UseModelSelectionReturn {
   clearSelection: () => void
 }
 
+// Manages model selection with tier-based limits
 export function useModelSelection({
   isAuthenticated,
   user,
@@ -34,49 +28,30 @@ export function useModelSelection({
   const [selectedModels, setSelectedModels] = useState<string[]>([])
   const [originalSelectedModels, setOriginalSelectedModels] = useState<string[]>([])
 
-  // Get max models based on user tier
   const maxModelsLimit = useMemo(() => {
-    if (!isAuthenticated || !user) {
-      return getModelLimit('unregistered')
-    }
+    if (!isAuthenticated || !user) return getModelLimit('unregistered')
     return getModelLimit(user.subscription_tier)
   }, [isAuthenticated, user])
 
-  // Check if user can select more models
-  const canSelectMore = useMemo(() => {
-    return selectedModels.length < maxModelsLimit
-  }, [selectedModels.length, maxModelsLimit])
+  const canSelectMore = selectedModels.length < maxModelsLimit
 
-  // Check if a model is selected
   const isModelSelected = useCallback(
-    (modelId: string): boolean => {
-      return selectedModels.includes(modelId)
-    },
+    (modelId: string) => selectedModels.includes(modelId),
     [selectedModels]
   )
 
-  // Toggle model selection
   const toggleModelSelection = useCallback(
     (modelId: string) => {
       setSelectedModels(prev => {
-        if (prev.includes(modelId)) {
-          // Deselect
-          return prev.filter(id => id !== modelId)
-        } else if (prev.length < maxModelsLimit) {
-          // Select (if under limit)
-          return [...prev, modelId]
-        }
-        // At limit, don't add
+        if (prev.includes(modelId)) return prev.filter(id => id !== modelId)
+        if (prev.length < maxModelsLimit) return [...prev, modelId]
         return prev
       })
     },
     [maxModelsLimit]
   )
 
-  // Clear all selections
-  const clearSelection = useCallback(() => {
-    setSelectedModels([])
-  }, [])
+  const clearSelection = useCallback(() => setSelectedModels([]), [])
 
   return {
     selectedModels,

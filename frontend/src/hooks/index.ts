@@ -1,15 +1,4 @@
-/**
- * Custom hooks for CompareIntel
- *
- * This module re-exports all custom hooks for convenient importing.
- * Import hooks from this module for consistency across the application.
- *
- * @example
- * ```typescript
- * import { useConversationHistory, useModelSelection } from '@/hooks';
- * ```
- */
-
+// Re-export all hooks for cleaner imports
 export * from './useConversationHistory'
 export * from './useBrowserFingerprint'
 export * from './useRateLimitStatus'

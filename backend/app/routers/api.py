@@ -1,9 +1,4 @@
-"""
-Main API router for core application endpoints.
-
-This module contains the main application endpoints like /models, /compare-stream, etc.
-that are used by the frontend for the core AI comparison functionality.
-"""
+"""Core API routes: /models, /compare-stream, conversations, etc."""
 
 from fastapi import APIRouter, Request, Depends, HTTPException, status, BackgroundTasks, Body, File, UploadFile
 from fastapi.responses import StreamingResponse, JSONResponse
@@ -61,12 +56,9 @@ from ..rate_limiting import (
 )
 
 router = APIRouter(tags=["API"])
-
-# Logger for this module
 logger = logging.getLogger(__name__)
 
-# In-memory storage for model performance tracking
-# This is shared with main.py via import
+# Track model success/failure rates - shared with main.py for health checks
 model_stats: Dict[str, Dict[str, Any]] = defaultdict(lambda: {"success": 0, "failure": 0, "last_error": None, "last_success": None})
 
 # Import configuration constants
