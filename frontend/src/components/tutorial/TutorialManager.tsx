@@ -1,6 +1,6 @@
 import { Suspense, lazy } from 'react'
 
-import type { TutorialState } from '../../hooks/useTutorial'
+import type { TutorialState, TutorialStep } from '../../hooks/useTutorial'
 import type { ModelsByProvider } from '../../types/models'
 import { LoadingSpinner } from '../shared'
 
@@ -30,7 +30,7 @@ interface TutorialManagerProps {
   selectedModels: string[]
   input: string
   tutorialState: TutorialState
-  completeStep: (step?: string) => void
+  completeStep: (step: TutorialStep) => void
   isFollowUpMode: boolean
   tutorialHasCompletedComparison: boolean
   tutorialHasBreakout: boolean

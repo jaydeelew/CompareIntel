@@ -14,7 +14,7 @@
  * Created: January 21, 2026
  */
 
-import type { ExportFormat } from '../../utils/export'
+import type { ExportFormat } from '../../hooks/useExport'
 
 interface ResultsSectionHeaderProps {
   /** Number of conversations (model cards) currently displayed */

@@ -1,6 +1,12 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 
-import type { ModelConversation, ModelsByProvider, Model } from '../types'
+import type {
+  ModelConversation,
+  ModelsByProvider,
+  Model,
+  ComparisonMetadata,
+  ConversationMessage,
+} from '../types'
 import type { ComparisonExportData } from '../utils'
 import {
   showNotification,
@@ -18,15 +24,11 @@ export interface UseExportOptions {
   /** Models organized by provider */
   modelsByProvider: ModelsByProvider
   /** Response metadata (optional) */
-  responseMetadata?: {
-    request_id?: string
-    timestamp?: string
-    [key: string]: unknown
-  }
+  responseMetadata?: ComparisonMetadata
   /** Current input text (fallback for prompt) */
   input: string
   /** Function to get the first user message content */
-  getFirstUserMessage: () => { content: string } | null
+  getFirstUserMessage: () => ConversationMessage | undefined
 }
 
 export interface UseExportReturn {

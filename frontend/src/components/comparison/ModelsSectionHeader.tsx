@@ -1,5 +1,4 @@
-import type { User } from '../../contexts/AuthContext'
-import type { ModelConversation } from '../../types'
+import type { User, ModelConversation } from '../../types'
 
 export interface ModelsSectionHeaderProps {
   /** Currently selected model IDs */
@@ -95,7 +94,7 @@ export function ModelsSectionHeader({
     if (!user?.subscription_tier) return ''
     const parts = user.subscription_tier
       .split('_')
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1))
     // Replace "Plus" with "+" when it appears after another word
     const formatted = parts.length > 1 && parts[1] === 'Plus' ? parts[0] + '+' : parts.join(' ')
     return ` (${formatted} Tier)`

@@ -214,7 +214,7 @@ export interface UseComparisonStreamingCallbacks {
   setUserMessageTimestamp: (timestamp: string) => void
   setCurrentAbortController: (controller: AbortController | null) => void
   setOriginalSelectedModels: (models: string[]) => void
-  setCurrentVisibleComparisonId: (id: string | number | null) => void
+  setCurrentVisibleComparisonId: React.Dispatch<React.SetStateAction<string | null>>
   setAlreadyBrokenOutModels: (models: Set<string>) => void
   setIsScrollLocked: (locked: boolean) => void
   setUsageCount: React.Dispatch<React.SetStateAction<number>>
@@ -251,7 +251,11 @@ export interface UseComparisonStreamingCallbacks {
     estimated?: number,
     resetAt?: string
   ) => string
-  isLowCreditWarningDismissed: (tier: string, periodType: string, resetAt?: string) => boolean
+  isLowCreditWarningDismissed: (
+    tier: string,
+    periodType: 'daily' | 'monthly',
+    resetAt?: string
+  ) => boolean
   scrollConversationsToBottom: () => void
   refreshUser: () => Promise<void>
 }
