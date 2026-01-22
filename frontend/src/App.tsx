@@ -2354,7 +2354,7 @@ function AppContent() {
       setError('Please enter a follow-up question or code')
       return
     }
-    handleSubmit()
+    handleSubmitClick()
   }
 
   const handleNewComparison = () => {
