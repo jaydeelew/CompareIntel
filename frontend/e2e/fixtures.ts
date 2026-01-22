@@ -201,13 +201,160 @@ const TEST_CREDENTIALS = {
 
 // Base URL for the application
 const BASE_URL = process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:5173'
+const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:8000'
 
 // ============================================================================
 // Helper Functions
 // ============================================================================
 
 /**
- * Login a user with the given credentials
+ * API-based login - much faster than UI login, essential for CI stability
+ * This authenticates by calling the login API directly and setting cookies on the browser context
+ */
+async function apiLogin(
+  context: BrowserContext,
+  page: Page,
+  email: string,
+  password: string
+): Promise<boolean> {
+  try {
+    // Clear rate limiting first
+    await fetch(`${BACKEND_URL}/api/dev/reset-rate-limit`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ fingerprint: null }),
+    }).catch(() => {})
+
+    // Call login API directly
+    const response = await fetch(`${BACKEND_URL}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    })
+
+    if (!response.ok) {
+      console.log(`API login failed for ${email}: ${response.status}`)
+      return false
+    }
+
+    const data = await response.json()
+    const { access_token, refresh_token } = data
+
+    if (!access_token || !refresh_token) {
+      console.log(`API login returned no tokens for ${email}`)
+      return false
+    }
+
+    // Get the base URL for cookies
+    const baseUrl = new URL(BASE_URL)
+
+    // Set cookies on the browser context
+    await context.addCookies([
+      {
+        name: 'access_token',
+        value: access_token,
+        domain: baseUrl.hostname,
+        path: '/',
+        httpOnly: true,
+        secure: false, // false for localhost
+        sameSite: 'Lax',
+      },
+      {
+        name: 'refresh_token',
+        value: refresh_token,
+        domain: baseUrl.hostname,
+        path: '/',
+        httpOnly: true,
+        secure: false,
+        sameSite: 'Lax',
+      },
+    ])
+
+    // Navigate to the app to apply the auth state
+    if (!page.isClosed()) {
+      await page.goto('/', { waitUntil: 'domcontentloaded', timeout: 30000 })
+
+      // Wait for load state with fallback
+      try {
+        await page.waitForLoadState('load', { timeout: 15000 })
+      } catch {
+        await page.waitForLoadState('domcontentloaded', { timeout: 5000 }).catch(() => {})
+      }
+
+      // Wait for auth/me to complete (this loads the user data)
+      await page
+        .waitForResponse(resp => resp.url().includes('/auth/me'), { timeout: 10000 })
+        .catch(() => {})
+
+      // Give the UI time to render
+      await safeWait(page, 500)
+
+      // Dismiss tutorial overlay if present
+      await dismissTutorialOverlay(page)
+
+      // Verify login succeeded
+      const userMenu = page.getByTestId('user-menu-button')
+      const isLoggedIn = await userMenu.isVisible({ timeout: 10000 }).catch(() => false)
+
+      if (isLoggedIn) {
+        console.log(`API login successful for ${email}`)
+        return true
+      }
+    }
+
+    return false
+  } catch (error) {
+    console.log(
+      `API login error for ${email}:`,
+      error instanceof Error ? error.message : String(error)
+    )
+    return false
+  }
+}
+
+/**
+ * Ensure test user exists via API (create if needed)
+ * This is critical for CI where the database is fresh
+ */
+async function ensureTestUserExists(
+  email: string,
+  password: string,
+  isAdmin: boolean = false
+): Promise<boolean> {
+  try {
+    // Try to create/update user via dev endpoint
+    const response = await fetch(`${BACKEND_URL}/api/dev/create-test-user`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email,
+        password,
+        role: isAdmin ? 'admin' : 'user',
+        is_admin: isAdmin,
+        is_verified: true,
+        is_active: true,
+      }),
+    })
+
+    if (response.ok) {
+      console.log(`Test user ${email} created/updated via API`)
+      return true
+    } else {
+      const errorText = await response.text().catch(() => 'Unknown error')
+      console.log(`Failed to create test user ${email}: ${errorText}`)
+      return false
+    }
+  } catch (error) {
+    console.log(
+      `Error creating test user ${email}:`,
+      error instanceof Error ? error.message : String(error)
+    )
+    return false
+  }
+}
+
+/**
+ * Login a user with the given credentials (UI-based fallback)
  */
 async function loginUser(
   page: Page,
@@ -557,8 +704,20 @@ async function registerUser(
 
 /**
  * Ensure user is logged in (login or register if needed)
+ *
+ * Strategy for CI reliability:
+ * 1. First, ensure the test user exists via API (critical for fresh CI databases)
+ * 2. Try fast API-based login (sets cookies directly)
+ * 3. Fall back to UI-based login only if API login fails
+ * 4. As last resort, try UI-based registration
  */
-async function ensureAuthenticated(page: Page, email: string, password: string): Promise<void> {
+async function ensureAuthenticated(
+  page: Page,
+  email: string,
+  password: string,
+  context?: BrowserContext,
+  isAdmin: boolean = false
+): Promise<void> {
   // Check if page is still valid before starting
   if (page.isClosed()) {
     throw new Error('Page was closed before authentication')
@@ -573,30 +732,45 @@ async function ensureAuthenticated(page: Page, email: string, password: string):
       throw new Error('Page was closed before login attempt')
     }
 
-    // Try login first
-    const loginSuccess = await loginUser(page, email, password)
-
-    // Check if page was closed during login
-    if (page.isClosed()) {
-      throw new Error('Page was closed during login')
+    // In CI, first ensure the test user exists via API
+    // This is critical because CI databases are fresh
+    if (process.env.CI) {
+      await ensureTestUserExists(email, password, isAdmin)
     }
 
-    if (!loginSuccess) {
-      // If login fails, try registration
-      // Check if page is still valid before registration
+    let loginSuccess = false
+
+    // Strategy 1: Try fast API-based login (preferred for CI)
+    if (context) {
+      loginSuccess = await apiLogin(context, page, email, password)
+
       if (page.isClosed()) {
-        throw new Error('Page was closed before registration attempt')
+        throw new Error('Page was closed during API login')
       }
+    }
+
+    // Strategy 2: Fall back to UI-based login
+    if (!loginSuccess && !page.isClosed()) {
+      loginSuccess = await loginUser(page, email, password)
+
+      if (page.isClosed()) {
+        throw new Error('Page was closed during login')
+      }
+    }
+
+    // Strategy 3: If login fails, try registration (user might not exist)
+    if (!loginSuccess && !page.isClosed()) {
       await registerUser(page, email, password)
 
-      // Check if page was closed during registration
       if (page.isClosed()) {
         throw new Error('Page was closed during registration')
       }
     }
 
     // Dismiss tutorial overlay after authentication (it may reappear)
-    await dismissTutorialOverlay(page)
+    if (!page.isClosed()) {
+      await dismissTutorialOverlay(page)
+    }
   }
 
   // Verify we're authenticated - user data needs to load after login/registration
@@ -606,8 +780,10 @@ async function ensureAuthenticated(page: Page, email: string, password: string):
   }
 
   // Wait for user menu with better error handling
+  // Use longer timeout in CI environment
+  const authTimeout = process.env.CI ? 30000 : 20000
   try {
-    await expect(userMenu).toBeVisible({ timeout: 20000 })
+    await expect(userMenu).toBeVisible({ timeout: authTimeout })
   } catch (error) {
     // Check if page was closed during the wait
     if (page.isClosed()) {
@@ -738,7 +914,7 @@ export const test = base.extend<TestFixtures>({
   /**
    * Free tier user page (already authenticated)
    */
-  freeTierPage: async ({ page }, use) => {
+  freeTierPage: async ({ page, context }, use) => {
     await page.goto('/', { waitUntil: 'domcontentloaded', timeout: 30000 })
     // Wait for load state with fallback
     try {
@@ -747,7 +923,12 @@ export const test = base.extend<TestFixtures>({
       await page.waitForLoadState('domcontentloaded', { timeout: 5000 }).catch(() => {})
     }
     await dismissTutorialOverlay(page)
-    await ensureAuthenticated(page, TEST_CREDENTIALS.free.email, TEST_CREDENTIALS.free.password)
+    await ensureAuthenticated(
+      page,
+      TEST_CREDENTIALS.free.email,
+      TEST_CREDENTIALS.free.password,
+      context
+    )
     await use(page)
   },
 
@@ -755,7 +936,7 @@ export const test = base.extend<TestFixtures>({
    * Starter tier user page (already authenticated)
    * Note: User must be upgraded to starter tier in backend/admin
    */
-  starterTierPage: async ({ page }, use) => {
+  starterTierPage: async ({ page, context }, use) => {
     await page.goto('/')
     // Wait for load state with fallback - networkidle can be too strict
     try {
@@ -766,7 +947,8 @@ export const test = base.extend<TestFixtures>({
     await ensureAuthenticated(
       page,
       TEST_CREDENTIALS.starter.email,
-      TEST_CREDENTIALS.starter.password
+      TEST_CREDENTIALS.starter.password,
+      context
     )
     await use(page)
   },
@@ -775,7 +957,7 @@ export const test = base.extend<TestFixtures>({
    * Starter Plus tier user page (already authenticated)
    * Note: User must be upgraded to starter_plus tier in backend/admin
    */
-  starterPlusTierPage: async ({ page }, use) => {
+  starterPlusTierPage: async ({ page, context }, use) => {
     await page.goto('/')
     // Wait for load state with fallback - networkidle can be too strict
     try {
@@ -786,7 +968,8 @@ export const test = base.extend<TestFixtures>({
     await ensureAuthenticated(
       page,
       TEST_CREDENTIALS.starterPlus.email,
-      TEST_CREDENTIALS.starterPlus.password
+      TEST_CREDENTIALS.starterPlus.password,
+      context
     )
     await use(page)
   },
@@ -795,7 +978,7 @@ export const test = base.extend<TestFixtures>({
    * Pro tier user page (already authenticated)
    * Note: User must be upgraded to pro tier in backend/admin
    */
-  proTierPage: async ({ page }, use) => {
+  proTierPage: async ({ page, context }, use) => {
     await page.goto('/')
     // Wait for load state with fallback - networkidle can be too strict
     try {
@@ -803,7 +986,12 @@ export const test = base.extend<TestFixtures>({
     } catch {
       await page.waitForLoadState('domcontentloaded', { timeout: 5000 }).catch(() => {})
     }
-    await ensureAuthenticated(page, TEST_CREDENTIALS.pro.email, TEST_CREDENTIALS.pro.password)
+    await ensureAuthenticated(
+      page,
+      TEST_CREDENTIALS.pro.email,
+      TEST_CREDENTIALS.pro.password,
+      context
+    )
     await use(page)
   },
 
@@ -811,7 +999,7 @@ export const test = base.extend<TestFixtures>({
    * Pro Plus tier user page (already authenticated)
    * Note: User must be upgraded to pro_plus tier in backend/admin
    */
-  proPlusTierPage: async ({ page }, use) => {
+  proPlusTierPage: async ({ page, context }, use) => {
     await page.goto('/')
     // Wait for load state with fallback - networkidle can be too strict
     try {
@@ -822,7 +1010,8 @@ export const test = base.extend<TestFixtures>({
     await ensureAuthenticated(
       page,
       TEST_CREDENTIALS.proPlus.email,
-      TEST_CREDENTIALS.proPlus.password
+      TEST_CREDENTIALS.proPlus.password,
+      context
     )
     await use(page)
   },
@@ -834,7 +1023,7 @@ export const test = base.extend<TestFixtures>({
   /**
    * Admin user page (already authenticated and on admin panel)
    */
-  adminPage: async ({ page }, use) => {
+  adminPage: async ({ page, context }, use) => {
     await page.goto('/')
     // Wait for load state with fallback - networkidle can be too strict
     try {
@@ -842,7 +1031,13 @@ export const test = base.extend<TestFixtures>({
     } catch {
       await page.waitForLoadState('domcontentloaded', { timeout: 5000 }).catch(() => {})
     }
-    await ensureAuthenticated(page, TEST_CREDENTIALS.admin.email, TEST_CREDENTIALS.admin.password)
+    await ensureAuthenticated(
+      page,
+      TEST_CREDENTIALS.admin.email,
+      TEST_CREDENTIALS.admin.password,
+      context,
+      true
+    )
 
     // Navigate to admin panel
     // Wait for admin button to appear (user data needs to load first)
@@ -862,9 +1057,10 @@ export const test = base.extend<TestFixtures>({
     // Wait a bit for lazy loading of AdminPanel component
     await page.waitForTimeout(500)
 
-    // Verify admin panel is visible
+    // Verify admin panel is visible - use longer timeout in CI
     const adminPanel = page.locator('[data-testid="admin-panel"], .admin-panel')
-    await expect(adminPanel).toBeVisible({ timeout: 15000 })
+    const adminTimeout = process.env.CI ? 20000 : 15000
+    await expect(adminPanel).toBeVisible({ timeout: adminTimeout })
 
     await use(page)
   },
@@ -873,7 +1069,7 @@ export const test = base.extend<TestFixtures>({
    * Moderator user page (already authenticated)
    * Note: User must have moderator role set in backend/admin
    */
-  moderatorPage: async ({ page }, use) => {
+  moderatorPage: async ({ page, context }, use) => {
     await page.goto('/')
     // Wait for load state with fallback - networkidle can be too strict
     try {
@@ -884,7 +1080,8 @@ export const test = base.extend<TestFixtures>({
     await ensureAuthenticated(
       page,
       TEST_CREDENTIALS.moderator.email,
-      TEST_CREDENTIALS.moderator.password
+      TEST_CREDENTIALS.moderator.password,
+      context
     )
     await use(page)
   },
@@ -893,7 +1090,7 @@ export const test = base.extend<TestFixtures>({
    * Generic authenticated user page (free tier, default)
    * Use this when tier doesn't matter
    */
-  authenticatedPage: async ({ page }, use) => {
+  authenticatedPage: async ({ page, context }, use) => {
     await page.goto('/', { waitUntil: 'domcontentloaded', timeout: 30000 })
     // Wait for load state with fallback
     try {
@@ -902,7 +1099,12 @@ export const test = base.extend<TestFixtures>({
       await page.waitForLoadState('domcontentloaded', { timeout: 5000 }).catch(() => {})
     }
     await dismissTutorialOverlay(page)
-    await ensureAuthenticated(page, TEST_CREDENTIALS.free.email, TEST_CREDENTIALS.free.password)
+    await ensureAuthenticated(
+      page,
+      TEST_CREDENTIALS.free.email,
+      TEST_CREDENTIALS.free.password,
+      context
+    )
     await use(page)
   },
 

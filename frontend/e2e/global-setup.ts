@@ -218,14 +218,101 @@ async function globalSetup(config: FullConfig) {
   const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'jaydeelew@gmail.com'
   const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'sf*88323?ddpdRRl'
 
-  // Launch browser for setup
+  // ============================================================================
+  // PRIORITY: Create test users via API first (critical for CI reliability)
+  // This ensures users exist before any UI-based operations are attempted
+  // ============================================================================
+  console.log('Creating test users via API (fast path for CI)...')
+
+  // Create admin user via API
+  try {
+    const adminResponse = await fetch(`${backendURL}/api/dev/create-test-user`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email: ADMIN_EMAIL,
+        password: ADMIN_PASSWORD,
+        role: 'admin',
+        is_admin: true,
+        is_verified: true,
+        is_active: true,
+      }),
+    })
+    if (adminResponse.ok) {
+      console.log(`✓ Admin user (${ADMIN_EMAIL}) created/updated via API`)
+    } else {
+      const errorText = await adminResponse.text().catch(() => 'Unknown error')
+      console.log(`! Admin user API creation returned: ${adminResponse.status} - ${errorText}`)
+    }
+  } catch (error) {
+    console.log(
+      `! Could not create admin user via API:`,
+      error instanceof Error ? error.message : String(error)
+    )
+  }
+
+  // Create test (free tier) user via API
+  try {
+    const testUserResponse = await fetch(`${backendURL}/api/dev/create-test-user`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email: TEST_USER_EMAIL,
+        password: TEST_USER_PASSWORD,
+        role: 'user',
+        is_admin: false,
+        is_verified: true,
+        is_active: true,
+      }),
+    })
+    if (testUserResponse.ok) {
+      console.log(`✓ Test user (${TEST_USER_EMAIL}) created/updated via API`)
+    } else {
+      const errorText = await testUserResponse.text().catch(() => 'Unknown error')
+      console.log(`! Test user API creation returned: ${testUserResponse.status} - ${errorText}`)
+    }
+  } catch (error) {
+    console.log(
+      `! Could not create test user via API:`,
+      error instanceof Error ? error.message : String(error)
+    )
+  }
+
+  // Verify users can login via API (quick sanity check)
+  console.log('Verifying user logins via API...')
+  for (const { email, password, role } of [
+    { email: ADMIN_EMAIL, password: ADMIN_PASSWORD, role: 'admin' },
+    { email: TEST_USER_EMAIL, password: TEST_USER_PASSWORD, role: 'test' },
+  ]) {
+    try {
+      const loginResponse = await fetch(`${backendURL}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      })
+      if (loginResponse.ok) {
+        console.log(`✓ ${role} user (${email}) can login via API`)
+      } else {
+        console.log(`! ${role} user (${email}) login failed: ${loginResponse.status}`)
+      }
+    } catch (error) {
+      console.log(
+        `! ${role} user login check failed:`,
+        error instanceof Error ? error.message : String(error)
+      )
+    }
+  }
+
+  console.log('API-based user setup complete. Proceeding with browser verification...')
+
+  // Launch browser for setup verification (optional - API setup is the primary method)
   const browser = await chromium.launch()
   const context = await browser.newContext()
   const page = await context.newPage()
 
   try {
-    // Try to create admin user via registration
-    console.log('Setting up admin user...')
+    // Verify admin user via browser (optional fallback)
+    console.log('Verifying admin user via browser...')
 
     // Clear rate limiting before admin login attempt
     try {
