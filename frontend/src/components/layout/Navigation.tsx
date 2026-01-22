@@ -1,6 +1,6 @@
 import { useNavigate, useLocation } from 'react-router-dom'
 
-import { useBreakpoint } from '../../hooks'
+import { useResponsive } from '../../hooks'
 import { UserMenu } from '../auth'
 
 interface NavigationProps {
@@ -28,8 +28,8 @@ export function Navigation({
   const navigate = useNavigate()
   const location = useLocation()
 
-  // Responsive breakpoints from centralized hook
-  const { isMobileLayout } = useBreakpoint()
+  // Responsive state from centralized hook
+  const { isMobileLayout } = useResponsive()
 
   // Use React Router navigation if available, fallback to onViewChange prop
   const handleViewChange = (view: 'main' | 'admin') => {

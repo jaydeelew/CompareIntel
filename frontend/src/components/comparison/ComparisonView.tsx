@@ -1,9 +1,8 @@
 import type { ReactNode } from 'react'
 
-// TODO: Expand this to hold more of the comparison logic from App.tsx
-// Currently just a wrapper but should eventually contain the results grid,
-// follow-up mode state, and model selection. See ResultsDisplay.tsx for the
-// extracted grid component that's not being used yet.
+// TODO: Expand to hold more comparison logic from App.tsx
+// ResultsDisplay.tsx is now feature-complete and ready to replace the inline
+// grid rendering in App.tsx when doing the MainPage extraction.
 
 interface ComparisonViewProps {
   children: ReactNode

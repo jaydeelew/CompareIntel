@@ -20,11 +20,11 @@ export const Layout: React.FC = () => {
   const timeoutRefs = useRef<NodeJS.Timeout[]>([])
   const rafRef = useRef<number | null>(null)
 
-  // Set initial page title and meta tags on mount
+  // Set page title and meta tags when route changes
   useEffect(() => {
     updatePageTitle(pathname)
     updatePageMeta(pathname)
-  }, []) // Only run on mount
+  }, [pathname])
 
   // Disable browser's automatic scroll restoration on mount
   useEffect(() => {

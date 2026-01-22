@@ -6,40 +6,19 @@ import { formatTime } from '../../utils'
 // Lazy load LatexRenderer for code splitting
 const LatexRenderer = lazy(() => import('../LatexRenderer'))
 
-/**
- * MessageBubble component props
- */
 export interface MessageBubbleProps {
-  /** Message ID */
   id: string
-  /** Message type (user or assistant) */
   type: 'user' | 'assistant'
-  /** Message content */
   content: string
-  /** Message timestamp (ISO string or Date) */
   timestamp: string | Date
-  /** Active result tab for rendering */
   activeTab?: ResultTab
-  /** Custom className */
   className?: string
-  /** Model ID for model-specific rendering */
   modelId?: string
+  /** Callback when copy button is clicked - receives message content */
+  onCopyMessage?: (content: string) => void
 }
 
-/**
- * MessageBubble component for displaying individual conversation messages
- *
- * @example
- * ```tsx
- * <MessageBubble
- *   id="msg-1"
- *   type="user"
- *   content="What is React?"
- *   timestamp={new Date()}
- *   activeTab={RESULT_TAB.FORMATTED}
- * />
- * ```
- */
+// Displays a single message in a conversation with formatted/raw rendering
 export const MessageBubble: React.FC<MessageBubbleProps> = ({
   id,
   type,
@@ -48,6 +27,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
   activeTab = RESULT_TAB.FORMATTED,
   className = '',
   modelId,
+  onCopyMessage,
 }) => {
   // Safely format timestamp - handle undefined, null, or invalid dates
   const getFormattedTime = () => {
@@ -115,7 +95,36 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
             </>
           )}
         </span>
-        <span className="message-time">{getFormattedTime()}</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <span className="message-time">{getFormattedTime()}</span>
+          {onCopyMessage && (
+            <button
+              className="copy-message-btn"
+              onClick={e => {
+                onCopyMessage(safeContent)
+                e.currentTarget.blur()
+              }}
+              title={
+                activeTab === RESULT_TAB.FORMATTED ? 'Copy formatted message' : 'Copy raw message'
+              }
+              aria-label={`Copy ${activeTab === RESULT_TAB.FORMATTED ? 'formatted' : 'raw'} message`}
+            >
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+              </svg>
+            </button>
+          )}
+        </div>
       </div>
       <div className="message-content">
         {activeTab === RESULT_TAB.FORMATTED ? (

@@ -49,17 +49,24 @@ async function dismissTutorialOverlay(page: Page) {
       return
     }
 
+    await safeWait(page, 500)
+
+    // First check if tutorial overlay is actually visible, regardless of viewport
+    // Sometimes it appears on mobile even though it shouldn't
+    const tutorialOverlay = page.locator('.tutorial-backdrop, .tutorial-welcome-backdrop')
+    const overlayVisible = await tutorialOverlay.isVisible({ timeout: 1000 }).catch(() => false)
+
     // Check if we're on a mobile viewport (tutorial is disabled on mobile - width <= 768px)
-    // Only dismiss tutorial overlay on desktop viewports
     const viewport = page.viewportSize()
     const isMobileViewport = viewport && viewport.width <= 768
 
-    if (isMobileViewport) {
-      // Tutorial is not available on mobile, so skip dismissal
+    // If on mobile and overlay is not visible, skip dismissal (tutorial shouldn't appear)
+    if (isMobileViewport && !overlayVisible) {
+      // Tutorial is not available on mobile and not visible, so skip dismissal
       return
     }
 
-    await safeWait(page, 500)
+    // If overlay is visible (even on mobile), we need to dismiss it
 
     const welcomeModal = page.locator('.tutorial-welcome-backdrop')
     const welcomeVisible = await welcomeModal.isVisible({ timeout: 3000 }).catch(() => false)
@@ -100,10 +107,12 @@ async function dismissTutorialOverlay(page: Page) {
       return
     }
 
-    const tutorialOverlay = page.locator('.tutorial-backdrop, .tutorial-welcome-backdrop')
-    const overlayVisible = await tutorialOverlay.isVisible({ timeout: 2000 }).catch(() => false)
+    // Re-check overlay visibility (it may have changed)
+    const overlayStillVisible = await tutorialOverlay
+      .isVisible({ timeout: 2000 })
+      .catch(() => false)
 
-    if (overlayVisible && !page.isClosed()) {
+    if (overlayStillVisible && !page.isClosed()) {
       const closeButton = page.locator(
         '.tutorial-close-button, button[aria-label*="Skip"], button[aria-label*="skip"]'
       )
@@ -251,7 +260,28 @@ async function loginUser(
       return false
     }
 
-    await loginButton.click()
+    // Check if tutorial overlay is blocking before clicking
+    const tutorialOverlay = page.locator('.tutorial-backdrop, .tutorial-welcome-backdrop')
+    const overlayVisible = await tutorialOverlay.isVisible({ timeout: 1000 }).catch(() => false)
+    if (overlayVisible) {
+      // Dismiss again if it reappeared
+      await dismissTutorialOverlay(page)
+      await safeWait(page, 500)
+    }
+
+    // Try clicking with retry logic for overlay blocking
+    try {
+      await loginButton.click({ timeout: 10000 })
+    } catch (error) {
+      if (error instanceof Error && error.message.includes('intercepts pointer events')) {
+        // Overlay is still blocking, dismiss it and retry
+        await dismissTutorialOverlay(page)
+        await safeWait(page, 500)
+        await loginButton.click({ timeout: 10000, force: true })
+      } else {
+        throw error
+      }
+    }
     await page.waitForSelector('[data-testid="auth-modal"], .auth-modal', { timeout: 5000 })
 
     // Fill login form
@@ -412,6 +442,15 @@ async function registerUser(
       return false
     }
 
+    // Check if tutorial overlay is blocking before clicking
+    const tutorialOverlay = page.locator('.tutorial-backdrop, .tutorial-welcome-backdrop')
+    const tutorialVisible = await tutorialOverlay.isVisible({ timeout: 1000 }).catch(() => false)
+    if (tutorialVisible) {
+      // Dismiss tutorial overlay if it reappeared
+      await dismissTutorialOverlay(page)
+      await safeWait(page, 500)
+    }
+
     // Ensure the button is not blocked by overlay before clicking
     // Retry with force if overlay is still blocking
     try {
@@ -420,7 +459,16 @@ async function registerUser(
       if (error instanceof Error && error.message.includes('intercepts pointer events')) {
         // Overlay is still blocking, wait a bit more and use force
         await safeWait(page, 1000)
-        // Check if overlay is still visible
+        // Check if tutorial overlay is blocking
+        const tutorialStillVisible = await tutorialOverlay
+          .isVisible({ timeout: 1000 })
+          .catch(() => false)
+        if (tutorialStillVisible) {
+          // Try to dismiss tutorial overlay again
+          await dismissTutorialOverlay(page)
+          await safeWait(page, 500)
+        }
+        // Check if auth modal overlay is still visible
         const overlayStillVisible = await existingAuthModal
           .isVisible({ timeout: 1000 })
           .catch(() => false)
@@ -511,22 +559,50 @@ async function registerUser(
  * Ensure user is logged in (login or register if needed)
  */
 async function ensureAuthenticated(page: Page, email: string, password: string): Promise<void> {
+  // Check if page is still valid before starting
+  if (page.isClosed()) {
+    throw new Error('Page was closed before authentication')
+  }
+
   const userMenu = page.getByTestId('user-menu-button')
   const isLoggedIn = await userMenu.isVisible({ timeout: 2000 }).catch(() => false)
 
   if (!isLoggedIn) {
+    // Check if page is still valid before login
+    if (page.isClosed()) {
+      throw new Error('Page was closed before login attempt')
+    }
+
     // Try login first
     const loginSuccess = await loginUser(page, email, password)
+
+    // Check if page was closed during login
+    if (page.isClosed()) {
+      throw new Error('Page was closed during login')
+    }
+
     if (!loginSuccess) {
       // If login fails, try registration
+      // Check if page is still valid before registration
+      if (page.isClosed()) {
+        throw new Error('Page was closed before registration attempt')
+      }
       await registerUser(page, email, password)
+
+      // Check if page was closed during registration
+      if (page.isClosed()) {
+        throw new Error('Page was closed during registration')
+      }
     }
+
+    // Dismiss tutorial overlay after authentication (it may reappear)
+    await dismissTutorialOverlay(page)
   }
 
   // Verify we're authenticated - user data needs to load after login/registration
   // Check if page is still valid before asserting
   if (page.isClosed()) {
-    throw new Error('Page was closed during authentication')
+    throw new Error('Page was closed after authentication')
   }
 
   // Wait for user menu with better error handling
@@ -546,6 +622,12 @@ async function ensureAuthenticated(page: Page, email: string, password: string):
     }
     // Re-throw the original error if it's not a page closure issue
     throw error
+  }
+
+  // Final check - dismiss tutorial overlay one more time after verification
+  // Tutorial might appear after user menu becomes visible
+  if (!page.isClosed()) {
+    await dismissTutorialOverlay(page)
   }
 }
 

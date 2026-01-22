@@ -42,18 +42,25 @@ async function dismissTutorialOverlay(page: Page) {
       return
     }
 
+    // Wait a bit for any animations to complete
+    await safeWait(page, 500)
+
+    // First check if tutorial overlay is actually visible, regardless of viewport
+    // Sometimes it appears on mobile even though it shouldn't
+    const tutorialOverlay = page.locator('.tutorial-backdrop, .tutorial-welcome-backdrop')
+    const overlayVisible = await tutorialOverlay.isVisible({ timeout: 1000 }).catch(() => false)
+
     // Check if we're on a mobile viewport (tutorial is disabled on mobile - width <= 768px)
-    // Only dismiss tutorial overlay on desktop viewports
     const viewport = page.viewportSize()
     const isMobileViewport = viewport && viewport.width <= 768
 
-    if (isMobileViewport) {
-      // Tutorial is not available on mobile, so skip dismissal
+    // If on mobile and overlay is not visible, skip dismissal (tutorial shouldn't appear)
+    if (isMobileViewport && !overlayVisible) {
+      // Tutorial is not available on mobile and not visible, so skip dismissal
       return
     }
 
-    // Wait a bit for any animations to complete
-    await safeWait(page, 500)
+    // If overlay is visible (even on mobile), we need to dismiss it
 
     // First, check for the welcome modal (appears first)
     const welcomeModal = page.locator('.tutorial-welcome-backdrop')
@@ -104,10 +111,12 @@ async function dismissTutorialOverlay(page: Page) {
       return
     }
 
-    const tutorialOverlay = page.locator('.tutorial-backdrop, .tutorial-welcome-backdrop')
-    const overlayVisible = await tutorialOverlay.isVisible({ timeout: 2000 }).catch(() => false)
+    // Re-check overlay visibility (it may have changed)
+    const overlayStillVisible = await tutorialOverlay
+      .isVisible({ timeout: 2000 })
+      .catch(() => false)
 
-    if (overlayVisible && !page.isClosed()) {
+    if (overlayStillVisible && !page.isClosed()) {
       // Try to click the skip/close button in the tutorial overlay
       const closeButton = page.locator(
         '.tutorial-close-button, button[aria-label*="Skip"], button[aria-label*="skip"]'
@@ -621,9 +630,33 @@ test.describe('Registration and Onboarding', () => {
       process.env.TEST_FREE_PASSWORD || process.env.TEST_USER_PASSWORD || 'Test12345678/'
 
     await test.step('Open login modal', async () => {
+      // Dismiss tutorial overlay before clicking sign-in button
+      await dismissTutorialOverlay(page)
+
       const signInButton = page.getByTestId('nav-sign-in-button')
       await expect(signInButton).toBeVisible()
-      await signInButton.click()
+
+      // Check if tutorial overlay is blocking before clicking
+      const tutorialOverlay = page.locator('.tutorial-backdrop, .tutorial-welcome-backdrop')
+      const overlayVisible = await tutorialOverlay.isVisible({ timeout: 1000 }).catch(() => false)
+      if (overlayVisible) {
+        await dismissTutorialOverlay(page)
+        await safeWait(page, 500)
+      }
+
+      // Try clicking with retry logic for overlay blocking
+      try {
+        await signInButton.click({ timeout: 10000 })
+      } catch (error) {
+        if (error instanceof Error && error.message.includes('intercepts pointer events')) {
+          // Overlay is blocking, dismiss it and retry
+          await dismissTutorialOverlay(page)
+          await safeWait(page, 500)
+          await signInButton.click({ timeout: 10000, force: true })
+        } else {
+          throw error
+        }
+      }
 
       await page.waitForSelector('[data-testid="auth-modal"], .auth-modal', { timeout: 5000 })
       const authModal = page.locator('[data-testid="auth-modal"], .auth-modal')

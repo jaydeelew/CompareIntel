@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 
-import { useBreakpoint } from '../../hooks'
+import { useResponsive } from '../../hooks'
 import { RESULT_TAB } from '../../types'
 import type { ModelConversation, ActiveResultTabs, ResultTab } from '../../types'
 import { isErrorMessage } from '../../utils/error'
@@ -20,11 +20,17 @@ export interface ResultsDisplayProps {
     total_tokens_used: number
   }
   modelProcessingStates?: Record<string, boolean>
+  /** Override error state per model (e.g. from backend errors, timeouts) */
+  modelErrorStates?: Record<string, boolean>
+  /** Current breakout animation phase */
+  breakoutPhase?: 'idle' | 'fading-out' | 'hidden' | 'fading-in'
   onScreenshot?: (modelId: string) => void
   onCopyResponse?: (modelId: string) => void
   onCloseCard?: (modelId: string) => void
   onSwitchTab?: (modelId: string, tab: ResultTab) => void
   onBreakout?: (modelId: string) => void
+  onHideOthers?: (modelId: string) => void
+  onCopyMessage?: (modelId: string, messageId: string, content: string) => void
   className?: string
 }
 
@@ -38,19 +44,23 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
   processingTime,
   metadata,
   modelProcessingStates = {},
+  modelErrorStates = {},
+  breakoutPhase = 'idle',
   onScreenshot,
   onCopyResponse,
   onCloseCard,
   onSwitchTab,
   onBreakout,
+  onHideOthers,
+  onCopyMessage,
   className = '',
 }) => {
   const visibleConversations = conversations.filter(
     conv => selectedModels.includes(conv.modelId) && !closedCards.has(conv.modelId)
   )
 
-  // Responsive breakpoints from centralized hook
-  const { isMobileLayout } = useBreakpoint()
+  // Responsive state from centralized hook
+  const { isMobileLayout } = useResponsive()
 
   // State for active tab in mobile view (index of the visible card)
   const [activeTabIndex, setActiveTabIndex] = useState<number>(0)
@@ -63,6 +73,20 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
   }, [activeTabIndex, visibleConversations.length])
 
   if (visibleConversations.length === 0) return null
+
+  // Compute breakout animation class from phase
+  const getBreakoutClass = () => {
+    switch (breakoutPhase) {
+      case 'fading-out':
+        return 'breakout-fade-out'
+      case 'hidden':
+        return 'breakout-hidden'
+      case 'fading-in':
+        return 'breakout-fade-in'
+      default:
+        return ''
+    }
+  }
 
   const formatProcessingTime = (time: number): string => {
     if (time < 1000) {
@@ -81,7 +105,8 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
     const activeConversation = visibleConversations[activeTabIndex]
     const activeModel = allModels.find(m => m.id === activeConversation.modelId)
     const latestMessage = activeConversation.messages[activeConversation.messages.length - 1]
-    const isError = isErrorMessage(latestMessage?.content)
+    const hasErrorContent = isErrorMessage(latestMessage?.content)
+    const isError = modelErrorStates[activeConversation.modelId] || hasErrorContent
     const activeTab = activeResultTabs[activeConversation.modelId] || RESULT_TAB.FORMATTED
 
     return (
@@ -113,7 +138,8 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
               const model = allModels.find(m => m.id === conversation.modelId)
               const isActive = index === activeTabIndex
               const latestMsg = conversation.messages[conversation.messages.length - 1]
-              const hasError = isErrorMessage(latestMsg?.content)
+              const hasError =
+                modelErrorStates[conversation.modelId] || isErrorMessage(latestMsg?.content)
 
               return (
                 <button
@@ -144,11 +170,14 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
               activeTab={activeTab}
               isError={isError}
               isProcessing={modelProcessingStates[activeConversation.modelId] || false}
+              breakoutClassName={getBreakoutClass()}
               onScreenshot={onScreenshot}
               onCopyResponse={onCopyResponse}
               onClose={onCloseCard}
               onSwitchTab={onSwitchTab}
               onBreakout={onBreakout}
+              onHideOthers={onHideOthers}
+              onCopyMessage={onCopyMessage}
               showBreakoutButton={visibleConversations.length > 1 && !isError}
             />
           </div>
@@ -185,7 +214,8 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
         {visibleConversations.map(conversation => {
           const model = allModels.find(m => m.id === conversation.modelId)
           const latestMessage = conversation.messages[conversation.messages.length - 1]
-          const isError = isErrorMessage(latestMessage?.content)
+          const hasErrorContent = isErrorMessage(latestMessage?.content)
+          const isError = modelErrorStates[conversation.modelId] || hasErrorContent
           const activeTab = activeResultTabs[conversation.modelId] || RESULT_TAB.FORMATTED
 
           return (
@@ -197,11 +227,14 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
               activeTab={activeTab}
               isError={isError}
               isProcessing={modelProcessingStates[conversation.modelId] || false}
+              breakoutClassName={getBreakoutClass()}
               onScreenshot={onScreenshot}
               onCopyResponse={onCopyResponse}
               onClose={onCloseCard}
               onSwitchTab={onSwitchTab}
               onBreakout={onBreakout}
+              onHideOthers={onHideOthers}
+              onCopyMessage={onCopyMessage}
               showBreakoutButton={visibleConversations.length > 1 && !isError}
             />
           )

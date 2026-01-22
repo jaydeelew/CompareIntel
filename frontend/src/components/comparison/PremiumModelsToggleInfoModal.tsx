@@ -3,7 +3,7 @@
  * Used on mobile layout to explain the feature to users
  */
 
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import './PremiumModelsToggleInfoModal.css'
 
 interface PremiumModelsToggleInfoModalProps {
@@ -21,10 +21,10 @@ export const PremiumModelsToggleInfoModal: React.FC<PremiumModelsToggleInfoModal
   const closeButtonRef = useRef<HTMLButtonElement>(null)
   const [dontShowAgainChecked, setDontShowAgainChecked] = useState(false)
 
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     onDontShowAgain(dontShowAgainChecked)
     onClose()
-  }
+  }, [dontShowAgainChecked, onClose, onDontShowAgain])
 
   // Handle escape key to close modal
   useEffect(() => {
@@ -43,7 +43,7 @@ export const PremiumModelsToggleInfoModal: React.FC<PremiumModelsToggleInfoModal
     return () => {
       document.removeEventListener('keydown', handleEscape)
     }
-  }, [isOpen, dontShowAgainChecked, onClose, onDontShowAgain])
+  }, [isOpen, handleClose])
 
   // Prevent body scroll when modal is open
   useEffect(() => {

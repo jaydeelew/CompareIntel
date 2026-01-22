@@ -1,6 +1,7 @@
 /**
  * Tests for ResultCard component
  */
+/// <reference types="@testing-library/jest-dom" />
 
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
@@ -9,6 +10,17 @@ import { describe, it, expect, vi } from 'vitest'
 import { createMockConversationMessage } from '../../../__tests__/utils/test-factories'
 import { RESULT_TAB, createModelId } from '../../../types'
 import { ResultCard } from '../ResultCard'
+
+// Mock useResponsive hook
+vi.mock('../../../hooks', () => ({
+  useResponsive: () => ({
+    isSmallLayout: false,
+    isMobileLayout: false,
+    isWideLayout: true,
+    viewportWidth: 1200,
+    isTouchDevice: false,
+  }),
+}))
 
 describe('ResultCard', () => {
   const mockModel = {

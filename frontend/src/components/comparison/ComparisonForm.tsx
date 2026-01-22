@@ -1,7 +1,7 @@
 import React, { memo, useEffect, useCallback, useMemo, useState, useRef } from 'react'
 
 import { getConversationLimit, BREAKPOINT_MOBILE } from '../../config/constants'
-import { useDebounce, useSpeechRecognition, useTouchDevice, useBreakpoint } from '../../hooks'
+import { useDebounce, useSpeechRecognition, useResponsive } from '../../hooks'
 import type { SavedModelSelection } from '../../hooks/useSavedModelSelections'
 import type { TutorialStep } from '../../hooks/useTutorial'
 import { estimateTokens } from '../../services/compareService'
@@ -190,8 +190,8 @@ export const ComparisonForm = memo<ComparisonFormProps>(
     const canEnableWebSearch = selectedModelsWithWebSearch.length > 0
     const messageCount = conversations.length > 0 ? conversations[0]?.messages.length || 0 : 0
 
-    // Detect touch device for showing disabled button info modal
-    const isTouchDevice = useTouchDevice()
+    // Responsive state including touch detection
+    const { isTouchDevice, isSmallLayout } = useResponsive()
 
     // Handler for disabled button taps on touch devices
     const handleDisabledButtonTap = useCallback(
@@ -264,9 +264,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
     // For mobile: track input before current speech session started
     const mobileBaseInputRef = useRef<string>('')
 
-    // Responsive breakpoints from centralized hook
-    // Using isSmallLayout (640px) for history dropdown height calculation
-    const { isSmallLayout } = useBreakpoint()
+    // Note: isSmallLayout (640px) from useResponsive() called above
 
     // State for disabled button info modal
     const [disabledButtonInfo, setDisabledButtonInfo] = useState<{
@@ -889,7 +887,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
           if (timeout2) clearTimeout(timeout2)
         }
       }
-    }, [isTouchDevice, tutorialStep]) // Only run when component mounts or these change
+    }, [isTouchDevice, tutorialStep, textareaRef])
 
     // Adjust height on window resize - ensure it recalculates after media query changes
     useEffect(() => {

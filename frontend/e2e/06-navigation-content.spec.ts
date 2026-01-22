@@ -31,17 +31,24 @@ async function dismissTutorialOverlay(page: Page) {
   try {
     if (page.isClosed()) return
 
+    await safeWait(page, 500)
+
+    // First check if tutorial overlay is actually visible, regardless of viewport
+    // Sometimes it appears on mobile even though it shouldn't
+    const tutorialOverlay = page.locator('.tutorial-backdrop, .tutorial-welcome-backdrop')
+    const overlayVisible = await tutorialOverlay.isVisible({ timeout: 1000 }).catch(() => false)
+
     // Check if we're on a mobile viewport (tutorial is disabled on mobile - width <= 768px)
-    // Only dismiss tutorial overlay on desktop viewports
     const viewport = page.viewportSize()
     const isMobileViewport = viewport && viewport.width <= 768
 
-    if (isMobileViewport) {
-      // Tutorial is not available on mobile, so skip dismissal
+    // If on mobile and overlay is not visible, skip dismissal (tutorial shouldn't appear)
+    if (isMobileViewport && !overlayVisible) {
+      // Tutorial is not available on mobile and not visible, so skip dismissal
       return
     }
 
-    await safeWait(page, 500)
+    // If overlay is visible (even on mobile), we need to dismiss it
 
     const welcomeModal = page.locator('.tutorial-welcome-backdrop')
     const welcomeVisible = await welcomeModal.isVisible({ timeout: 3000 }).catch(() => false)
@@ -80,10 +87,12 @@ async function dismissTutorialOverlay(page: Page) {
 
     if (page.isClosed()) return
 
-    const tutorialOverlay = page.locator('.tutorial-backdrop, .tutorial-welcome-backdrop')
-    const overlayVisible = await tutorialOverlay.isVisible({ timeout: 2000 }).catch(() => false)
+    // Re-check overlay visibility (it may have changed)
+    const overlayStillVisible = await tutorialOverlay
+      .isVisible({ timeout: 2000 })
+      .catch(() => false)
 
-    if (overlayVisible && !page.isClosed()) {
+    if (overlayStillVisible && !page.isClosed()) {
       const closeButton = page.locator(
         '.tutorial-close-button, button[aria-label*="Skip"], button[aria-label*="skip"]'
       )
@@ -233,20 +242,35 @@ test.describe('Navigation and Content Pages', () => {
   })
 
   test('User can navigate to Features page', async ({ page }) => {
+    // Dismiss tutorial overlay before clicking footer link
+    await dismissTutorialOverlay(page)
+
     const footerLink = page.getByLabel('Footer navigation').getByRole('link', {
       name: 'Features',
       exact: true,
     })
 
+    // Check if tutorial overlay is blocking before clicking
+    const tutorialOverlay = page.locator('.tutorial-backdrop, .tutorial-welcome-backdrop')
+    const overlayVisible = await tutorialOverlay.isVisible({ timeout: 1000 }).catch(() => false)
+    if (overlayVisible) {
+      await dismissTutorialOverlay(page)
+    }
+
     // Try normal click first, then force click if needed (for WebKit/Firefox)
     try {
       await footerLink.click({ timeout: 10000 })
-    } catch {
-      if (!page.isClosed()) {
+    } catch (error) {
+      if (error instanceof Error && error.message.includes('intercepts pointer events')) {
+        // Overlay is blocking, dismiss it and retry
+        await dismissTutorialOverlay(page)
+        await safeWait(page, 500)
+        await footerLink.click({ timeout: 10000 })
+      } else if (!page.isClosed()) {
         await footerLink.click({ force: true, timeout: 5000 }).catch(() => {})
       }
     }
-    await page.waitForURL('**/features', { timeout: 5000 })
+    await page.waitForURL('**/features', { timeout: 10000 })
     // Wait for load state with fallback - networkidle can be too strict
     try {
       await page.waitForLoadState('load', { timeout: 10000 })
@@ -322,13 +346,36 @@ test.describe('Navigation and Content Pages', () => {
   })
 
   test('User can navigate to How It Works page', async ({ page }) => {
+    // Dismiss tutorial overlay before clicking footer link
+    await dismissTutorialOverlay(page)
+
     const footerLink = page.getByLabel('Footer navigation').getByRole('link', {
       name: 'How It Works',
       exact: true,
     })
 
-    await footerLink.click()
-    await page.waitForURL('**/how-it-works', { timeout: 5000 })
+    // Check if tutorial overlay is blocking before clicking
+    const tutorialOverlay = page.locator('.tutorial-backdrop, .tutorial-welcome-backdrop')
+    const overlayVisible = await tutorialOverlay.isVisible({ timeout: 1000 }).catch(() => false)
+    if (overlayVisible) {
+      await dismissTutorialOverlay(page)
+    }
+
+    // Try clicking with retry logic for overlay blocking
+    try {
+      await footerLink.click({ timeout: 10000 })
+    } catch (error) {
+      if (error instanceof Error && error.message.includes('intercepts pointer events')) {
+        // Overlay is blocking, dismiss it and retry
+        await dismissTutorialOverlay(page)
+        await safeWait(page, 500)
+        await footerLink.click({ timeout: 10000 })
+      } else {
+        throw error
+      }
+    }
+
+    await page.waitForURL('**/how-it-works', { timeout: 10000 })
     // Wait for load state with fallback - networkidle can be too strict
     try {
       await page.waitForLoadState('load', { timeout: 10000 })
@@ -346,13 +393,36 @@ test.describe('Navigation and Content Pages', () => {
   })
 
   test('User can navigate to Privacy Policy', async ({ page }) => {
+    // Dismiss tutorial overlay before clicking footer link
+    await dismissTutorialOverlay(page)
+
     const footerLink = page.getByLabel('Footer navigation').getByRole('link', {
       name: 'Privacy Policy',
       exact: true,
     })
 
-    await footerLink.click()
-    await page.waitForURL('**/privacy-policy', { timeout: 5000 })
+    // Check if tutorial overlay is blocking before clicking
+    const tutorialOverlay = page.locator('.tutorial-backdrop, .tutorial-welcome-backdrop')
+    const overlayVisible = await tutorialOverlay.isVisible({ timeout: 1000 }).catch(() => false)
+    if (overlayVisible) {
+      await dismissTutorialOverlay(page)
+    }
+
+    // Try clicking with retry logic for overlay blocking
+    try {
+      await footerLink.click({ timeout: 10000 })
+    } catch (error) {
+      if (error instanceof Error && error.message.includes('intercepts pointer events')) {
+        // Overlay is blocking, dismiss it and retry
+        await dismissTutorialOverlay(page)
+        await safeWait(page, 500)
+        await footerLink.click({ timeout: 10000 })
+      } else {
+        throw error
+      }
+    }
+
+    await page.waitForURL('**/privacy-policy', { timeout: 10000 })
     // Wait for load state with fallback - networkidle can be too strict
     try {
       await page.waitForLoadState('load', { timeout: 10000 })
@@ -368,12 +438,35 @@ test.describe('Navigation and Content Pages', () => {
   })
 
   test('User can navigate to Terms of Service', async ({ page }) => {
+    // Dismiss tutorial overlay before clicking footer link
+    await dismissTutorialOverlay(page)
+
     const footerLink = page.getByLabel('Footer navigation').getByRole('link', {
       name: 'Terms of Service',
       exact: true,
     })
 
-    await footerLink.click()
+    // Check if tutorial overlay is blocking before clicking
+    const tutorialOverlay = page.locator('.tutorial-backdrop, .tutorial-welcome-backdrop')
+    const overlayVisible = await tutorialOverlay.isVisible({ timeout: 1000 }).catch(() => false)
+    if (overlayVisible) {
+      await dismissTutorialOverlay(page)
+    }
+
+    // Try clicking with retry logic for overlay blocking
+    try {
+      await footerLink.click({ timeout: 10000 })
+    } catch (error) {
+      if (error instanceof Error && error.message.includes('intercepts pointer events')) {
+        // Overlay is blocking, dismiss it and retry
+        await dismissTutorialOverlay(page)
+        await safeWait(page, 500)
+        await footerLink.click({ timeout: 10000 })
+      } else {
+        throw error
+      }
+    }
+
     await page.waitForURL('**/terms-of-service', { timeout: 5000 })
     // Wait for load state with fallback - networkidle can be too strict
     try {

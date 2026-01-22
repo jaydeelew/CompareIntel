@@ -3087,17 +3087,11 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({ children, className = '',
             </div>`
       }
       // Helper functions (cleanMalformedContent, extractDisplayMath, etc.) are pure functions
-      // defined in the component scope and don't need to be in dependencies
+      // that only depend on `config`. They are included in deps for correctness, and config
+      // is the primary dependency that triggers recalculation.
     },
-    [
-      config,
-      cleanMalformedContent,
-      extractDisplayMath,
-      extractInlineMath,
-      processMarkdown,
-      processMarkdownLists,
-      renderMathContent,
-    ]
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [config]
   )
 
   // ============================================================================

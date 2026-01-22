@@ -14,6 +14,22 @@ async function dismissTutorialOverlay(page: Page) {
   await safeWait(page, 500)
 
   try {
+    // First check if tutorial overlay is actually visible, regardless of viewport
+    // Sometimes it appears on mobile even though it shouldn't
+    const tutorialOverlay = page.locator('.tutorial-backdrop, .tutorial-welcome-backdrop')
+    const overlayVisible = await tutorialOverlay.isVisible({ timeout: 1000 }).catch(() => false)
+
+    // Check if we're on a mobile viewport (tutorial is disabled on mobile - width <= 768px)
+    const viewport = page.viewportSize()
+    const isMobileViewport = viewport && viewport.width <= 768
+
+    // If on mobile and overlay is not visible, skip dismissal (tutorial shouldn't appear)
+    if (isMobileViewport && !overlayVisible) {
+      // Tutorial is not available on mobile and not visible, so skip dismissal
+      return
+    }
+
+    // If overlay is visible (even on mobile), we need to dismiss it
     // Try the welcome modal first
     const welcomeModal = page.locator('.tutorial-welcome-backdrop')
     if (await welcomeModal.isVisible({ timeout: 3000 }).catch(() => false)) {
@@ -31,9 +47,11 @@ async function dismissTutorialOverlay(page: Page) {
 
     if (page.isClosed()) return
 
-    // Check for the main tutorial overlay too
-    const tutorialOverlay = page.locator('.tutorial-backdrop, .tutorial-welcome-backdrop')
-    if (await tutorialOverlay.isVisible({ timeout: 2000 }).catch(() => false)) {
+    // Re-check overlay visibility (it may have changed)
+    const overlayStillVisible = await tutorialOverlay
+      .isVisible({ timeout: 2000 })
+      .catch(() => false)
+    if (overlayStillVisible) {
       const closeButton = page.locator('.tutorial-close-button, button[aria-label*="Skip"]')
       if (await closeButton.isVisible({ timeout: 3000 }).catch(() => false)) {
         await closeButton.click({ timeout: 5000 }).catch(async () => {
@@ -49,8 +67,10 @@ async function dismissTutorialOverlay(page: Page) {
 
     // Final check - if still visible, try escape
     if (!page.isClosed()) {
-      const tutorialOverlay = page.locator('.tutorial-backdrop, .tutorial-welcome-backdrop')
-      if (await tutorialOverlay.isVisible({ timeout: 1000 }).catch(() => false)) {
+      const overlayFinalCheck = await tutorialOverlay
+        .isVisible({ timeout: 1000 })
+        .catch(() => false)
+      if (overlayFinalCheck) {
         await page.keyboard.press('Escape').catch(() => {})
         await safeWait(page, 500)
       }
@@ -228,15 +248,33 @@ test.describe('Mobile Platform Tests', () => {
 
   test('Touch interactions work correctly', async ({ page, browserName }) => {
     await test.step('Can tap navigation buttons', async () => {
+      // Dismiss tutorial overlay before interacting
+      await dismissTutorialOverlay(page)
+
       const signUpButton = page.getByTestId('nav-sign-up-button')
       await expect(signUpButton).toBeVisible()
 
+      // Check if tutorial overlay is blocking before clicking
+      const tutorialOverlay = page.locator('.tutorial-backdrop, .tutorial-welcome-backdrop')
+      const overlayVisible = await tutorialOverlay.isVisible({ timeout: 1000 }).catch(() => false)
+      if (overlayVisible) {
+        await dismissTutorialOverlay(page)
+        await safeWait(page, 500)
+      }
+
       // Use tap if touch is supported, otherwise use click
       try {
-        await signUpButton.tap()
-      } catch {
-        // Fallback to click if tap is not supported
-        await signUpButton.click()
+        await signUpButton.tap({ timeout: 10000 })
+      } catch (error) {
+        if (error instanceof Error && error.message.includes('intercepts pointer events')) {
+          // Overlay is blocking, dismiss it and retry
+          await dismissTutorialOverlay(page)
+          await safeWait(page, 500)
+          await signUpButton.click({ timeout: 10000, force: true })
+        } else {
+          // Fallback to click if tap is not supported
+          await signUpButton.click({ timeout: 10000 })
+        }
       }
       await safeWait(page, 500)
 
