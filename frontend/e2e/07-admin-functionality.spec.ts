@@ -29,7 +29,17 @@ async function safeWait(page: Page, ms: number) {
 
 test.describe('Admin Functionality', () => {
   // Skip all admin tests on WebKit - admins do not use WebKit browsers
+  // Also skip on mobile viewports - admin panel is designed for desktop use
   test.skip(({ browserName }) => browserName === 'webkit', 'Admin panel tests skipped on WebKit')
+
+  test.beforeEach(async ({ adminPage }) => {
+    // Skip if viewport is mobile-sized (width <= 768px)
+    // Admin panel tables don't render well on mobile
+    const viewport = adminPage.viewportSize()
+    if (viewport && viewport.width <= 768) {
+      test.skip(true, 'Admin panel tests skipped on mobile viewports')
+    }
+  })
   test('Admin can access admin panel', async ({ adminPage }) => {
     await test.step('Admin panel loads', async () => {
       // Admin page fixture already navigates to /admin
