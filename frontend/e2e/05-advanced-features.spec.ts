@@ -564,42 +564,7 @@ test.describe('Advanced Features', () => {
     }
   })
 
-  test('User can filter or search models', async ({ authenticatedPage }) => {
-    // Wait for models to load first
-    const loadingMessage = authenticatedPage.locator(
-      '.loading-message:has-text("Loading available models")'
-    )
-    await loadingMessage.waitFor({ state: 'hidden', timeout: 10000 }).catch(() => {})
-
-    // Look for model search/filter input
-    const searchInput = authenticatedPage.locator(
-      'input[type="search"], input[placeholder*="search" i], input[placeholder*="filter" i], input[data-testid*="search"], input[data-testid*="filter"]'
-    )
-
-    const hasSearch = await searchInput
-      .first()
-      .isVisible({ timeout: 5000 })
-      .catch(() => false)
-
-    if (hasSearch) {
-      if (authenticatedPage.isClosed()) return
-      await searchInput.first().fill('gpt')
-      await safeWait(authenticatedPage, 1000)
-
-      // Models should filter - check for visible model elements
-      const modelCards = authenticatedPage.locator(
-        '.model-card, [class*="model-selector"], [class*="model-item"], [data-testid*="model"]'
-      )
-
-      // Wait a bit for filtering to complete
-      await safeWait(authenticatedPage, 500)
-
-      // At least some results should appear (or no results is also valid)
-      const cardCount = await modelCards.count()
-      expect(cardCount).toBeGreaterThanOrEqual(0)
-    } else {
-      // Search/filter feature might not be available - skip this test
-      test.skip()
-    }
-  })
+  // NOTE: "User can filter or search models" test was removed
+  // because model search/filter is not part of the current UX.
+  // If this feature is added in the future, add a test for it here.
 })
