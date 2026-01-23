@@ -513,15 +513,6 @@ MODELS_BY_PROVIDER = {
             "knowledge_cutoff": "October 2023",
         },
         {
-            "id": "openai/gpt-4o-mini",
-            "name": "Gpt 4o Mini",
-            "description": "GPT-4o mini is OpenAI's newest model after [GPT-4 Omni](/models/openai/gpt-4o), supporting both text and image inputs with text outputs.",
-            "category": "Language",
-            "provider": "OpenAI",
-            "supports_web_search": True,  # All GPT-4o+ models support function calling
-            "knowledge_cutoff": "October 2023",
-        },
-        {
             "id": "openai/gpt-5-mini",
             "name": "GPT-5 Mini",
             "description": 'A compact GPT-5 variant designed for efficient, lighter-weight reasoning and general tasks.',
@@ -555,6 +546,15 @@ MODELS_BY_PROVIDER = {
             "category": "Reasoning",
             "provider": "OpenAI",
             "supports_web_search": True,  # Supports function calling
+            "knowledge_cutoff": "October 2023",
+        },
+        {
+            "id": "openai/gpt-4o-mini",
+            "name": "Gpt 4o Mini",
+            "description": "GPT-4o mini is OpenAI's newest model after [GPT-4 Omni](/models/openai/gpt-4o), supporting both text and image inputs with text outputs.",
+            "category": "Language",
+            "provider": "OpenAI",
+            "supports_web_search": True,  # All GPT-4o+ models support function calling
             "knowledge_cutoff": "October 2023",
         },
         {
