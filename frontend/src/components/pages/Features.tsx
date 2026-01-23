@@ -32,50 +32,32 @@ export const Features: React.FC = () => {
               CompareIntel is committed to providing access to the newest and most capable AI models
               as soon as they become available. We continuously update our platform when AI
               providers release new models, ensuring you're always working with cutting-edge
-              technology. Our library includes:
+              technology. Our library includes models from major providers:
             </p>
 
             <div className="model-providers">
               <div className="provider-card">
-                <h3>OpenAI Models</h3>
+                <h3>OpenAI</h3>
                 <p>
                   Compare responses from GPT-5, GPT-4o, o3, and other OpenAI models known for their
                   strong general-purpose capabilities and creative outputs.
                 </p>
-                <ul>
-                  <li>GPT-5.1 - Latest frontier-grade model with improved reasoning</li>
-                  <li>GPT-5 - Advanced model for reasoning and code quality</li>
-                  <li>GPT-4o - Multimodal model supporting text and images</li>
-                  <li>o3 - Powerful reasoning model across domains</li>
-                </ul>
               </div>
 
               <div className="provider-card">
-                <h3>Anthropic Models</h3>
+                <h3>Anthropic</h3>
                 <p>
                   Test Claude models, renowned for their helpfulness, harmlessness, and strong
                   performance on complex reasoning tasks.
                 </p>
-                <ul>
-                  <li>Claude Opus 4.5 - Frontier reasoning for complex workflows</li>
-                  <li>Claude Sonnet 4.5 - Advanced model for coding and agents</li>
-                  <li>Claude 3.7 Sonnet - Improved reasoning and problem-solving</li>
-                  <li>Claude 3.5 Haiku - Ultra-fast for quick responses</li>
-                </ul>
               </div>
 
               <div className="provider-card">
-                <h3>Google Models</h3>
+                <h3>Google</h3>
                 <p>
                   Evaluate Google's Gemini family of models, featuring strong multimodal
                   capabilities and advanced reasoning.
                 </p>
-                <ul>
-                  <li>Gemini 3 Pro Preview - Flagship multimodal reasoning model</li>
-                  <li>Gemini 2.5 Pro - State-of-the-art for advanced reasoning</li>
-                  <li>Gemini 2.5 Flash - Workhorse model for STEM tasks</li>
-                  <li>Gemini 2.0 Flash - Fast with quality on par with Pro</li>
-                </ul>
               </div>
 
               <div className="provider-card">
@@ -84,12 +66,6 @@ export const Features: React.FC = () => {
                   Access Meta's Llama models and other leading open-source alternatives that offer
                   transparency and customization options.
                 </p>
-                <ul>
-                  <li>Llama 4 Maverick - High-capacity multimodal MoE model</li>
-                  <li>Llama 4 Scout - Efficient MoE language model</li>
-                  <li>Llama 3.3 70B - Multilingual instruction-tuned model</li>
-                  <li>Mistral Large - Flagship model from Mistral AI</li>
-                </ul>
               </div>
             </div>
           </section>

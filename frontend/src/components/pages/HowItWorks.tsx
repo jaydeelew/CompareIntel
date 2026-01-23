@@ -72,87 +72,19 @@ export const HowItWorks: React.FC = () => {
               <div className="step-content">
                 <h3>Select Your AI Models</h3>
                 <p>
-                  Browse our library of over 50 AI models from leading providers. Model availability
-                  varies by subscription tier:
+                  Browse our library of AI models from leading providers including OpenAI,
+                  Anthropic, Google, Meta, Mistral, xAI, and more. Model availability varies by
+                  subscription tier. We continuously add new models as they're released, so you're
+                  always working with cutting-edge technology.
                 </p>
-
-                <h4>Available to Anonymous and Free Tier Users</h4>
                 <p>
                   Anonymous (unregistered) and Free tier users have access to a curated selection of
-                  high-quality models perfect for getting started with AI comparison:
+                  high-quality models perfect for getting started with AI comparison. Free tier
+                  users have access to all unregistered tier models plus additional mid-level
+                  models, giving you a great selection to explore AI capabilities.
                 </p>
-                <ul>
-                  <li>
-                    <strong>OpenAI:</strong> GPT-5 Mini, GPT-5 Nano, GPT-5.1-Codex Mini, O3 Mini,
-                    GPT-OSS-120B
-                  </li>
-                  <li>
-                    <strong>Anthropic:</strong> Claude 3.5 Haiku, Claude Haiku 4.5
-                  </li>
-                  <li>
-                    <strong>Google:</strong> Gemini 2.0 Flash, Gemini 2.5 Flash
-                  </li>
-                  <li>
-                    <strong>Meta:</strong> Llama 3.1 405B (free), Llama 3.3 70B, Llama 4 Scout,
-                    Llama 4 Maverick
-                  </li>
-                  <li>
-                    <strong>DeepSeek:</strong> DeepSeek Chat v3.1, DeepSeek v3.2 Exp, DeepSeek R1
-                  </li>
-                  <li>
-                    <strong>Mistral:</strong> Mistral Small 3.2, Mistral Medium 3.1, Devstral Small,
-                    Devstral Medium
-                  </li>
-                  <li>
-                    <strong>Microsoft:</strong> Phi-4, Phi-4 Reasoning Plus, WizardLM-2 8x22B
-                  </li>
-                  <li>
-                    <strong>xAI:</strong> Grok 4 Fast, Grok Code Fast, Grok 3 Mini
-                  </li>
-                  <li>
-                    <strong>Cohere:</strong> Command R7B, Command R Plus
-                  </li>
-                  <li>
-                    <strong>Qwen:</strong> Qwen3 Coder Flash, Qwen3 30B, Qwen3 Next 80B
-                  </li>
-                </ul>
-                <p>
-                  Free tier users have access to all unregistered tier models plus additional
-                  mid-level models, giving you a great selection to explore AI capabilities.
-                </p>
-
-                <h4>Premium Models (Coming Soon for Paid Subscriptions)</h4>
                 <p>
                   <strong>Premium models will be available to paid subscription users soon.</strong>{' '}
-                  These include the latest frontier-grade models from leading providers:
-                </p>
-                <ul>
-                  <li>
-                    <strong>GPT-5.1, GPT-5.1-Codex & GPT-5</strong> - OpenAI's latest frontier-grade
-                    models with improved reasoning, code quality, and specialized coding
-                    capabilities
-                  </li>
-                  <li>
-                    <strong>GPT-4o & o3</strong> - OpenAI's multimodal model and powerful reasoning
-                    model across domains
-                  </li>
-                  <li>
-                    <strong>Claude Opus 4.5 & Claude Sonnet 4.5</strong> - Anthropic's frontier
-                    reasoning models optimized for complex workflows and coding
-                  </li>
-                  <li>
-                    <strong>Gemini 3 Pro Preview & Gemini 2.5 Pro</strong> - Google's flagship
-                    multimodal models for advanced reasoning and STEM tasks
-                  </li>
-                  <li>
-                    <strong>Grok 4</strong> - xAI's latest reasoning and multimodal model
-                  </li>
-                  <li>
-                    <strong>Mistral Large</strong> - Mistral AI's flagship model with strong
-                    multilingual support
-                  </li>
-                </ul>
-                <p>
                   Paid subscriptions will unlock access to all premium models as soon as they're
                   released, ensuring you always have access to the most advanced AI capabilities.
                 </p>
