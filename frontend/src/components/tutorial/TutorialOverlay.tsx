@@ -176,6 +176,22 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
     }
   }, [step])
 
+  // Ensure hero can expand during dropdown steps (history/save) on desktop
+  useEffect(() => {
+    const heroSection = document.querySelector('.hero-section') as HTMLElement
+    if (!heroSection) return
+
+    if (step === 'history-dropdown' || step === 'save-selection') {
+      heroSection.classList.add('tutorial-dropdown-hero-active')
+    } else {
+      heroSection.classList.remove('tutorial-dropdown-hero-active')
+    }
+
+    return () => {
+      heroSection.classList.remove('tutorial-dropdown-hero-active')
+    }
+  }, [step])
+
   useEffect(() => {
     if (!step) {
       setTargetElement(null)
@@ -402,6 +418,8 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
     if (!targetElement || !step) return
 
     const config = TUTORIAL_STEPS_CONFIG[step]
+    const isDropdownStep = step === 'history-dropdown' || step === 'save-selection'
+    let scrollCheckFrame: number | null = null
 
     const updatePosition = () => {
       const rect = targetElement.getBoundingClientRect()
@@ -525,9 +543,48 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
       })
     }
 
+    // If the target is offscreen for dropdown steps, hide overlay until scroll settles
+    const rect = targetElement.getBoundingClientRect()
+    const isTargetOffscreen = rect.bottom < 0 || rect.top > window.innerHeight
+    const shouldDelayReveal = isDropdownStep && isTargetOffscreen
+
+    if (shouldDelayReveal) {
+      setIsVisible(false)
+    }
+
+    const waitForScrollStop = (onStop: () => void) => {
+      let lastScrollY = window.scrollY
+      let stableFrames = 0
+      const check = () => {
+        const currentScrollY = window.scrollY
+        if (Math.abs(currentScrollY - lastScrollY) < 1) {
+          stableFrames += 1
+        } else {
+          stableFrames = 0
+          lastScrollY = currentScrollY
+        }
+
+        if (stableFrames >= 6) {
+          onStop()
+          return
+        }
+
+        scrollCheckFrame = window.requestAnimationFrame(check)
+      }
+
+      scrollCheckFrame = window.requestAnimationFrame(check)
+    }
+
     // Small delay to ensure hero is locked, then scroll
     setTimeout(() => {
       scrollToElement()
+      if (shouldDelayReveal) {
+        waitForScrollStop(() => {
+          if (stepRef.current !== step) return
+          updatePosition()
+          setIsVisible(true)
+        })
+      }
     }, 100)
 
     // Update position on scroll/resize
@@ -537,6 +594,9 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
     return () => {
       window.removeEventListener('scroll', updatePosition, true)
       window.removeEventListener('resize', updatePosition)
+      if (scrollCheckFrame !== null) {
+        window.cancelAnimationFrame(scrollCheckFrame)
+      }
     }
   }, [targetElement, step])
 

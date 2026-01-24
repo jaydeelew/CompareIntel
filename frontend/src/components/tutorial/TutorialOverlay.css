@@ -23,6 +23,17 @@ body:has(.tutorial-backdrop) .hero-section:has(.saved-selections-dropdown),
   padding-bottom: 8rem !important;
 }
 
+/* Force hero expansion during dropdown steps (desktop tutorial) */
+body:has(.tutorial-backdrop) .hero-section.tutorial-dropdown-hero-active,
+.hero-section.tutorial-dropdown-hero-active {
+  height: auto !important;
+  max-height: none !important;
+  min-height: var(--hero-locked-height, auto) !important;
+  padding-bottom: 8rem !important;
+  overflow: visible !important;
+  contain: none !important;
+}
+
 /* Backdrop that dims the page */
 .tutorial-backdrop {
   position: fixed;

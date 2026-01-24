@@ -39,7 +39,7 @@ export const TUTORIAL_STEPS_CONFIG: Record<TutorialStep, StepConfig> = {
     targetSelector: '[data-testid="comparison-submit-button"]',
     title: 'Run Your Comparison',
     description:
-      'Click the submit button in the actions area to submit your prompt and see how different models respond to the same question.',
+      'Click the submit button in the actions area to submit your prompt and see how different models respond to it.',
     position: 'top',
   },
   'follow-up': {
