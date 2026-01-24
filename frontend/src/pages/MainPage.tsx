@@ -1972,6 +1972,7 @@ export function MainPage() {
                   webSearchEnabled={webSearchEnabled}
                   onWebSearchEnabledChange={setWebSearchEnabled}
                   tutorialStep={tutorialState.currentStep}
+                  tutorialIsActive={tutorialState.isActive}
                 />
               </ErrorBoundary>
             </Hero>

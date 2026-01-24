@@ -104,6 +104,8 @@ interface ComparisonFormProps {
 
   // Tutorial step - used to block submit button during step 3 (enter-prompt)
   tutorialStep?: TutorialStep | null
+  // Whether tutorial is currently active - used to disable "start over" button without visual indication
+  tutorialIsActive?: boolean
 }
 
 /**
@@ -163,6 +165,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
     webSearchEnabled: webSearchEnabledProp,
     onWebSearchEnabledChange,
     tutorialStep,
+    tutorialIsActive = false,
   }) => {
     // Internal state for web search if not controlled via props
     const [webSearchEnabledInternal, setWebSearchEnabledInternal] = useState(false)
@@ -1392,9 +1395,15 @@ export const ComparisonForm = memo<ComparisonFormProps>(
         >
           {isFollowUpMode ? (
             <>
-              <h2 style={{ margin: 0 }}>Follow Up Mode</h2>
+              <h2 style={{ margin: 0 }}>Click to start over -&gt;</h2>
               <button
-                onClick={onNewComparison}
+                onClick={e => {
+                  if (tutorialIsActive) {
+                    e.preventDefault()
+                    return
+                  }
+                  onNewComparison()
+                }}
                 className="textarea-icon-button new-inquiry-button"
                 title="Exit follow up mode"
                 disabled={isLoading}
@@ -1421,21 +1430,32 @@ export const ComparisonForm = memo<ComparisonFormProps>(
                   }}
                 >
                   <path
-                    d="M12 2v6"
+                    d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"
                     stroke="currentColor"
                     strokeWidth="2"
                     strokeLinecap="round"
                     strokeLinejoin="round"
                   />
-                  <circle
-                    cx="12"
-                    cy="12"
-                    r="8"
+                  <path
+                    d="M21 3v5h-5"
                     stroke="currentColor"
                     strokeWidth="2"
                     strokeLinecap="round"
                     strokeLinejoin="round"
-                    fill="none"
+                  />
+                  <path
+                    d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                  <path
+                    d="M3 21v-5h5"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
                   />
                 </svg>
               </button>

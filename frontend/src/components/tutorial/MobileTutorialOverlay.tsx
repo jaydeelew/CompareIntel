@@ -744,9 +744,8 @@ export const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
   }
 
   // Calculate cutout for backdrop
-  // For view-follow-up-results, don't show a dimmed backdrop - let the user see the results
-  const noBackdropSteps: TutorialStep[] = ['view-follow-up-results']
-  const showBackdrop = !noBackdropSteps.includes(step)
+  // Always show backdrop on mobile; use cutout to keep the target visible
+  const showBackdrop = true
 
   // During loading/streaming phase, use loadingStreamingRect; otherwise use normal cutout logic
   const cutoutTarget: TargetRect | null = isLoadingStreamingPhase
