@@ -725,23 +725,8 @@ export const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
   // 1. Target is actually off-screen
   // 2. NOT during loading/streaming phase
   // 3. NOT during automatic step transition (to avoid flashing during smooth scroll between steps)
-  if (isTargetOffScreen && !isLoadingStreamingPhase && !isStepTransitioning) {
-    return (
-      <div
-        className={`mobile-tutorial-scroll-indicator scroll-${isTargetOffScreen}`}
-        onClick={() => {
-          if (targetElement) {
-            targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' })
-          }
-        }}
-      >
-        <span className="mobile-tutorial-scroll-icon">
-          {isTargetOffScreen === 'up' ? '↑' : '↓'}
-        </span>
-        <span>Tap to scroll to next step</span>
-      </div>
-    )
-  }
+  const shouldShowScrollIndicator =
+    isTargetOffScreen && !isLoadingStreamingPhase && !isStepTransitioning
 
   // Calculate cutout for backdrop
   // Always show backdrop on mobile; use cutout to keep the target visible
@@ -750,7 +735,9 @@ export const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
   // During loading/streaming phase, use loadingStreamingRect; otherwise use normal cutout logic
   const cutoutTarget: TargetRect | null = isLoadingStreamingPhase
     ? loadingStreamingRect
-    : (dropdownRect ?? backdropRect ?? targetRect)
+    : shouldShowScrollIndicator
+      ? null
+      : (dropdownRect ?? backdropRect ?? targetRect)
 
   const cutoutStyle =
     cutoutTarget && showBackdrop
@@ -781,8 +768,25 @@ export const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
           <div className="mobile-tutorial-backdrop" />
         ))}
 
+      {/* Scroll indicator - shown when target is off-screen */}
+      {shouldShowScrollIndicator && (
+        <div
+          className={`mobile-tutorial-scroll-indicator scroll-${isTargetOffScreen}`}
+          onClick={() => {
+            if (targetElement) {
+              targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' })
+            }
+          }}
+        >
+          <span className="mobile-tutorial-scroll-icon">
+            {isTargetOffScreen === 'up' ? '↑' : '↓'}
+          </span>
+          <span>Tap to scroll to next step</span>
+        </div>
+      )}
+
       {/* Tooltip - hidden during loading/streaming phase on submit steps */}
-      {!isLoadingStreamingPhase && tooltipPosition && (
+      {!shouldShowScrollIndicator && !isLoadingStreamingPhase && tooltipPosition && (
         <div
           ref={overlayRef}
           className={`mobile-tutorial-tooltip ${tooltipPosition.useFullscreen ? 'mobile-tutorial-fullscreen-tooltip' : ''}`}
