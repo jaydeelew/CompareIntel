@@ -5,9 +5,11 @@ This document describes the performance monitoring infrastructure implemented in
 ## Overview
 
 CompareIntel includes comprehensive performance monitoring to track:
-- **Core Web Vitals** (LCP, FID, CLS, FCP, TTFB, INP)
+- **Core Web Vitals** (LCP, CLS, FCP, TTFB, INP)
 - **Custom performance markers** for API requests and key operations
 - **Performance budgets** to prevent bundle size regressions
+
+**Note**: FID (First Input Delay) is not tracked as it has been deprecated and replaced by INP (Interaction to Next Paint).
 
 ## Web Vitals Tracking
 
@@ -21,11 +23,6 @@ The following metrics are tracked:
   - Good: < 2.5s
   - Needs Improvement: 2.5s - 3.75s
   - Poor: > 3.75s
-
-- **FID (First Input Delay)**: Measures interactivity (deprecated, replaced by INP)
-  - Good: < 100ms
-  - Needs Improvement: 100ms - 300ms
-  - Poor: > 300ms
 
 - **CLS (Cumulative Layout Shift)**: Measures visual stability
   - Good: < 0.1
@@ -109,14 +106,15 @@ Performance budgets are defined in `src/utils/performance.ts` and enforced at mu
 
 ### Bundle Size Budgets
 
-- **Initial Bundle**: < 200KB (gzipped)
-- **Total Bundle**: < 500KB (gzipped)
-- **Individual Chunk**: < 100KB (gzipped)
+- **Largest Entry Chunk**: < 200KB (gzipped) - The largest JavaScript chunk that loads initially
+- **Initial Bundle Total**: < 500KB (gzipped) - Sum of all initial chunks (excluding lazy-loaded chunks)
+- **Individual Chunk**: < 100KB (gzipped) - Individual chunks must be under this limit (vendor chunks can be up to 200KB)
+
+**Note**: Lazy-loaded chunks (e.g., PDF viewer, admin panel, tutorial components) are excluded from initial bundle calculations as they load on-demand.
 
 ### Runtime Budgets
 
 - **LCP**: < 2.5s
-- **FID**: < 100ms
 - **CLS**: < 0.1
 - **FCP**: < 1.8s
 - **TTFB**: < 800ms
@@ -155,9 +153,11 @@ if (!passed) {
 
 ## Performance Hooks
 
+Performance hooks are available for component-level performance tracking. **Note**: Web Vitals are already automatically tracked globally via `initWebVitals()` in `main.tsx`, so these hooks are optional and primarily useful for component-specific measurements.
+
 ### useWebVitals
 
-Track Web Vitals metrics in a component:
+Track Web Vitals metrics in a component (optional - already tracked globally):
 
 ```typescript
 import { useWebVitals } from '@/hooks/usePerformance';
@@ -171,13 +171,31 @@ function MyComponent() {
 
 ### usePerformanceTracking
 
-Enable performance tracking (enabled by default):
+Enable performance tracking in a component (optional - already enabled globally):
 
 ```typescript
 import { usePerformanceTracking } from '@/hooks/usePerformance';
 
 function MyComponent() {
   usePerformanceTracking(true); // Enable tracking
+}
+```
+
+### useRenderPerformance
+
+Measure component render performance:
+
+```typescript
+import { useRenderPerformance } from '@/hooks/usePerformance';
+
+function MyComponent() {
+  const { measureRender } = useRenderPerformance('MyComponent');
+  
+  useEffect(() => {
+    measureRender(() => {
+      // Component render logic
+    });
+  }, []);
 }
 ```
 
