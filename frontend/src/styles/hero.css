@@ -689,9 +689,20 @@
 
 .new-inquiry-button {
   background: var(--warning-color);
+  display: inline-grid;
+  place-items: center;
+  padding: 0;
+  line-height: 0;
   box-shadow:
     0 4px 16px rgba(245, 158, 11, 0.4),
     0 2px 8px rgba(245, 158, 11, 0.2);
+}
+
+.new-inquiry-button svg {
+  display: block;
+  width: 18px;
+  height: 18px;
+  transform: translateY(0.5px);
 }
 
 .new-inquiry-button:hover:not(:disabled) {

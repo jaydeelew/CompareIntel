@@ -1395,7 +1395,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
         >
           {isFollowUpMode ? (
             <>
-              <h2 style={{ margin: 0 }}>Click to start over -&gt;</h2>
+              <h2 style={{ margin: 0 }}>Click to start over ➜</h2>
               <button
                 onClick={e => {
                   if (tutorialIsActive) {
@@ -1407,28 +1407,8 @@ export const ComparisonForm = memo<ComparisonFormProps>(
                 className="textarea-icon-button new-inquiry-button"
                 title="Exit follow up mode"
                 disabled={isLoading}
-                style={{
-                  width: '32px',
-                  height: '32px',
-                  borderRadius: '50%',
-                  minWidth: '32px',
-                  padding: 0,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
               >
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                  style={{
-                    width: '20px',
-                    height: '20px',
-                    display: 'block',
-                    flexShrink: 0,
-                  }}
-                >
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <path
                     d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"
                     stroke="currentColor"

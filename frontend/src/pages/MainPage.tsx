@@ -1526,6 +1526,7 @@ export function MainPage() {
     setSelectedModels([])
     setOriginalSelectedModels([])
     setOpenDropdowns(new Set())
+    setDefaultSelectionOverridden(true)
     setIsFollowUpMode(false)
     setConversations([])
     setResponse(null)
@@ -1687,6 +1688,9 @@ export function MainPage() {
     if (!input.trim()) {
       setInput('')
     }
+    setDefaultSelectionOverridden(false)
+    setSelectedModels([])
+    collapseAllDropdowns()
     setConversations([])
     setResponse(null)
     setClosedCards(new Set())
