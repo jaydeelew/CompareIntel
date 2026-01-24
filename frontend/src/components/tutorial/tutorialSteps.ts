@@ -39,7 +39,7 @@ export const TUTORIAL_STEPS_CONFIG: Record<TutorialStep, StepConfig> = {
     targetSelector: '[data-testid="comparison-submit-button"]',
     title: 'Run Your Comparison',
     description:
-      'Click the submit button in the action area to submit your prompt and see how different models respond to the same question.',
+      'Click the submit button in the actions area to submit your prompt and see how different models respond to the same question.',
     position: 'top',
   },
   'follow-up': {
@@ -47,7 +47,7 @@ export const TUTORIAL_STEPS_CONFIG: Record<TutorialStep, StepConfig> = {
     targetSelector: '.follow-up-button:not(.export-dropdown-trigger)',
     title: 'Continue the Conversation',
     description:
-      'View the results by clicking the two Gemini tabs below. Click "Follow up" to ask additional questions. Each model maintains its own conversation context.',
+      'View the model results below. When finished, click "Follow up" to continue the conversation. Each model maintains its own conversation context.',
     position: 'top',
   },
   'enter-prompt-2': {
@@ -55,7 +55,7 @@ export const TUTORIAL_STEPS_CONFIG: Record<TutorialStep, StepConfig> = {
     targetSelector: '.textarea-container',
     title: 'Enter a Follow-Up Prompt',
     description:
-      'Now try asking a follow-up question. Type your follow-up prompt in the text area below to continue the conversation with the AI models.',
+      'Now reply to the models with a follow-up. Type your follow-up prompt in the text area below to continue the conversation with the AI models.',
     position: 'top',
   },
   'submit-comparison-2': {
@@ -63,7 +63,7 @@ export const TUTORIAL_STEPS_CONFIG: Record<TutorialStep, StepConfig> = {
     targetSelector: '[data-testid="comparison-submit-button"]',
     title: 'Submit Your Follow-Up',
     description:
-      'Click the submit button to send your follow-up question and see how the models respond in the context of your previous conversation.',
+      'Click the submit button to send your follow-up and see how the models respond in the context of your previous conversation.',
     position: 'top',
   },
   'view-follow-up-results': {

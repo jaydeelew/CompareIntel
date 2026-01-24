@@ -715,6 +715,21 @@ export const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
 
   const buttonText = getButtonText()
 
+  // Check if tabs are present for model results (mobile layout with tabs)
+  const hasTabs = (): boolean => {
+    if (step !== 'follow-up') return false
+    const tabsContainer = document.querySelector('.results-tabs-container')
+    return tabsContainer !== null && tabsContainer.children.length > 0
+  }
+
+  // Get description - use tabs-specific text if tabs are present, otherwise use default
+  const getDescription = (): string => {
+    if (step === 'follow-up' && hasTabs()) {
+      return 'View the results by clicking the two Gemini tabs below. When finished, click the "Follow up" icon to continue the conversation. Each model maintains its own conversation context.'
+    }
+    return config.description
+  }
+
   // Check if we're in loading/streaming phase on submit-comparison step
   // This needs to be calculated before early returns so we can skip them during loading/streaming
   const isSubmitStep = step === 'submit-comparison' || step === 'submit-comparison-2'
@@ -814,7 +829,7 @@ export const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
             </div>
 
             <h3 className="mobile-tutorial-tooltip-title">{config.title}</h3>
-            <p className="mobile-tutorial-tooltip-description">{config.description}</p>
+            <p className="mobile-tutorial-tooltip-description">{getDescription()}</p>
 
             {/* Tap indicator for action steps */}
             {isActionStep && !showButton && (
