@@ -72,12 +72,14 @@ CompareIntel/
 │   │   ├── components/         # React components (see §3)
 │   │   ├── contexts/           # React Context providers
 │   │   ├── hooks/              # Custom React hooks (see §4)
+│   │   ├── pages/              # Page-level components
+│   │   │   └── MainPage.tsx    # Main comparison page (contains comparison flow)
 │   │   ├── services/           # API client and services
 │   │   ├── styles/             # CSS modules and global styles
 │   │   ├── types/              # TypeScript type definitions
 │   │   ├── utils/              # Utility functions
 │   │   ├── config/             # Frontend configuration
-│   │   ├── App.tsx             # Main application component
+│   │   ├── App.tsx             # Application shell (routing setup)
 │   │   └── main.tsx            # Application entry point
 │   ├── e2e/                    # Playwright E2E tests
 │   └── package.json
@@ -96,32 +98,41 @@ CompareIntel/
 ### 3.1 Component Hierarchy
 
 ```
-App.tsx (Main application shell)
-├── AuthProvider (Context)
-│   └── Layout
-│       ├── Navigation
-│       ├── Routes
-│       │   ├── MainPage (comparison flow)
-│       │   │   ├── Hero
-│       │   │   ├── ComparisonForm (prompt input)
-│       │   │   ├── ModelsSection (model selection)
-│       │   │   │   ├── ModelsSectionHeader
-│       │   │   │   └── Provider dropdowns with model checkboxes
-│       │   │   ├── LoadingSection (during streaming)
-│       │   │   └── ResultsDisplay (comparison results)
-│       │   │       ├── ResultsSectionHeader
-│       │   │       └── ResultCard[] (one per model)
-│       │   ├── About, Features, FAQ, etc. (static pages)
-│       │   └── AdminPanel (admin-only)
-│       └── Footer
+App.tsx (Application shell - routing only)
+├── ErrorBoundary
+│   └── AuthProvider (Context)
+│       └── Routes
+│           └── Layout (shared layout wrapper)
+│               ├── Outlet (renders route content)
+│               │   ├── MainPage (comparison flow - contains all state/hooks)
+│               │   │   ├── Navigation
+│               │   │   ├── Hero
+│               │   │   ├── ComparisonForm (prompt input)
+│               │   │   ├── ModelsSection (model selection)
+│               │   │   │   ├── ModelsSectionHeader
+│               │   │   │   └── Provider dropdowns with model checkboxes
+│               │   │   ├── LoadingSection (during streaming)
+│               │   │   └── ResultsDisplay (comparison results)
+│               │   │       ├── ResultsSectionHeader
+│               │   │       └── ResultCard[] (one per model)
+│               │   ├── About, Features, FAQ, etc. (static pages)
+│               │   └── AdminPanel (admin-only)
+│               └── Footer
 ```
 
 ### 3.2 Component Categories
+
+#### Page Components (`pages/`)
+
+| Component | Purpose |
+|-----------|---------|
+| `MainPage` | Main comparison page containing all comparison flow logic, state, and hooks |
 
 #### Layout Components (`components/layout/`)
 
 | Component | Purpose |
 |-----------|---------|
+| `Layout` | Shared layout wrapper with Footer and scroll-to-top behavior |
 | `Navigation` | Top navigation bar with auth controls |
 | `Hero` | Landing page hero section with value proposition |
 | `MockModeBanner` | Development banner showing mock mode status |
@@ -438,9 +449,13 @@ CompareIntel uses **local state + custom hooks** rather than global state manage
 | **Server State** | Hooks + API | conversations, creditBalance |
 | **Persistent State** | localStorage | savedSelections, anonymousHistory |
 
-### 6.3 State Flow in App.tsx
+### 6.3 State Flow in MainPage.tsx
+
+The comparison flow state and logic has been moved from `App.tsx` to `MainPage.tsx` for better separation of concerns. `App.tsx` now only handles routing setup.
 
 ```typescript
+// In MainPage.tsx
+
 // Auth state from context
 const { isAuthenticated, user } = useAuth()
 
@@ -648,7 +663,9 @@ Server-Sent Events (SSE) for streaming because:
 
 | File | Purpose |
 |------|---------|
-| `App.tsx` | Main orchestration, routing, state composition |
+| `App.tsx` | Application shell - routing setup and provider composition |
+| `MainPage.tsx` | Main comparison page - contains all comparison flow state and logic |
+| `Layout.tsx` | Shared layout wrapper with Footer and scroll-to-top behavior |
 | `AuthContext.tsx` | Authentication state and methods |
 | `useComparisonStreaming.ts` | Core streaming logic |
 | `compareService.ts` | API client for comparisons |
