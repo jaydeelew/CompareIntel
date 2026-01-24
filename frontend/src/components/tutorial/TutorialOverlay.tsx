@@ -63,6 +63,22 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
     height: number
   } | null>(null)
 
+  useEffect(() => {
+    return () => {
+      const heroSection = document.querySelector('.hero-section') as HTMLElement
+      if (heroSection) {
+        heroSection.classList.remove('tutorial-height-locked')
+        heroSection.style.removeProperty('height')
+        heroSection.style.removeProperty('max-height')
+        heroSection.style.removeProperty('min-height')
+        heroSection.style.removeProperty('padding-top')
+        heroSection.style.removeProperty('padding-bottom')
+        heroSection.style.removeProperty('overflow')
+      }
+      document.documentElement.style.removeProperty('--hero-locked-height')
+    }
+  }, [])
+
   // Update step ref when step changes
   useEffect(() => {
     stepRef.current = step
