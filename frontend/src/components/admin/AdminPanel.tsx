@@ -17,6 +17,8 @@ import {
 import type { AvailableModelsResponse } from '../../services/modelsService'
 import type { Model } from '../../types/models'
 import { LoadingSpinner } from '../shared/LoadingSpinner'
+
+import PerformanceMonitoringTab from './PerformanceMonitoringTab'
 import './AdminPanel.css'
 
 interface AdminUser {
@@ -94,7 +96,7 @@ interface AdminPanelProps {
   onClose?: () => void
 }
 
-type AdminTab = 'users' | 'models' | 'logs' | 'analytics' | 'search-providers'
+type AdminTab = 'users' | 'models' | 'logs' | 'analytics' | 'search-providers' | 'performance'
 
 /**
  * Formats a UTC date string to Central Standard Time in 12-hour format with am/pm
@@ -137,7 +139,9 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
       const savedTab = sessionStorage.getItem('adminPanel_activeTab')
       if (
         savedTab &&
-        ['users', 'models', 'logs', 'analytics', 'search-providers'].includes(savedTab)
+        ['users', 'models', 'logs', 'analytics', 'search-providers', 'performance'].includes(
+          savedTab
+        )
       ) {
         return savedTab as AdminTab
       }
@@ -1616,7 +1620,34 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
           </svg>
           Search Providers
         </button>
+        <button
+          className={`admin-tab ${activeTab === 'performance' ? 'active' : ''}`}
+          onClick={() => {
+            // Prevent tab switching during model operations
+            if (!isModelOperationRef.current && !addingModel && !deletingModel) {
+              setActiveTab('performance')
+            }
+          }}
+          disabled={isModelOperationRef.current || addingModel || deletingModel}
+        >
+          <svg
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+          </svg>
+          Performance
+        </button>
       </div>
+
+      {/* Performance Monitoring Section */}
+      {activeTab === 'performance' && <PerformanceMonitoringTab />}
 
       {/* Models Section */}
       {activeTab === 'models' && (

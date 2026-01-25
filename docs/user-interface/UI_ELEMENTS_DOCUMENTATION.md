@@ -1716,11 +1716,35 @@ This document provides a comprehensive breakdown of all visual elements (section
 - **Class:** `admin-tab` (with `active` modifier)
 - **Text:** "👥 Users"
 
+#### Admin Tab (Models)
+- **Element:** Models Tab Button
+- **Lines:** [1528-1545](file:///home/dan_wsl/jaydeelew/CompareIntel/frontend/src/components/admin/AdminPanel.tsx#L1528)
+- **Class:** `admin-tab` (with `active` modifier)
+- **Text:** "Models"
+
 #### Admin Tab (Logs)
 - **Element:** Action Logs Tab Button
-- **Lines:** [832-837](file:///home/dan_wsl/jaydeelew/CompareIntel/frontend/src/components/admin/AdminPanel.tsx#L832)
+- **Lines:** [1547-1570](file:///home/dan_wsl/jaydeelew/CompareIntel/frontend/src/components/admin/AdminPanel.tsx#L1547)
 - **Class:** `admin-tab` (with `active` modifier)
-- **Text:** "📋 Action Logs"
+- **Text:** "Action Logs"
+
+#### Admin Tab (Analytics)
+- **Element:** Visitor Analytics Tab Button
+- **Lines:** [1572-1596](file:///home/dan_wsl/jaydeelew/CompareIntel/frontend/src/components/admin/AdminPanel.tsx#L1572)
+- **Class:** `admin-tab` (with `active` modifier)
+- **Text:** "Visitor Analytics" (desktop) / "Analytics" (mobile)
+
+#### Admin Tab (Search Providers)
+- **Element:** Search Providers Tab Button
+- **Lines:** [1598-1621](file:///home/dan_wsl/jaydeelew/CompareIntel/frontend/src/components/admin/AdminPanel.tsx#L1598)
+- **Class:** `admin-tab` (with `active` modifier)
+- **Text:** "Search Providers"
+
+#### Admin Tab (Performance)
+- **Element:** Performance Monitoring Tab Button
+- **Lines:** [1623-1645](file:///home/dan_wsl/jaydeelew/CompareIntel/frontend/src/components/admin/AdminPanel.tsx#L1623)
+- **Class:** `admin-tab` (with `active` modifier)
+- **Text:** "Performance"
 
 #### Logs Management Section
 - **Element:** Logs Management Container
@@ -2329,6 +2353,32 @@ This document provides a comprehensive breakdown of all visual elements (section
 - **Lines:** [1642-1651](file:///home/dan_wsl/jaydeelew/CompareIntel/frontend/src/components/admin/AdminPanel.tsx#L1642)
 - **Class:** `log-details-json`
 - **Tag:** `<pre>`
+
+---
+
+#### Models Management Section
+- **Element:** Model Management Container
+- **Lines:** [1652-2193](file:///home/dan_wsl/jaydeelew/CompareIntel/frontend/src/components/admin/AdminPanel.tsx#L1652)
+- **Class:** `logs-management`
+- **Description:** Manage AI models - add, delete, update knowledge cutoff dates. Development-only model addition interface.
+
+#### Analytics Management Section
+- **Element:** Visitor Analytics Container
+- **Lines:** [2456-2697](file:///home/dan_wsl/jaydeelew/CompareIntel/frontend/src/components/admin/AdminPanel.tsx#L2456)
+- **Class:** `analytics-management`
+- **Description:** View visitor statistics, daily breakdowns, comparison counts, and user analytics.
+
+#### Search Providers Management Section
+- **Element:** Search Providers Container
+- **Lines:** [2698-3041](file:///home/dan_wsl/jaydeelew/CompareIntel/frontend/src/components/admin/AdminPanel.tsx#L2698)
+- **Class:** `search-providers-management`
+- **Description:** Configure and test search providers (Tavily, Exa, etc.) for web search functionality.
+
+#### Performance Monitoring Section
+- **Element:** Performance Monitoring Container
+- **Lines:** [1649](file:///home/dan_wsl/jaydeelew/CompareIntel/frontend/src/components/admin/AdminPanel.tsx#L1649)
+- **Component:** `PerformanceMonitoringTab`
+- **Description:** Real-time performance metrics dashboard showing Web Vitals (LCP, CLS, FCP, TTFB, INP), performance budgets, navigation timing, resource loading, and API request performance.
 
 ---
 

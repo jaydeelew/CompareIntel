@@ -166,6 +166,22 @@ MAIL_FROM=your-email@gmail.com
 - **Status:** Deprecated, kept for backward compatibility
 - **Use:** `VITE_API_URL` instead
 
+#### Performance Monitoring
+
+**`VITE_PERFORMANCE_ENDPOINT`**
+- **Purpose:** Send Web Vitals metrics to your analytics endpoint in production
+- **Default:** Not set (metrics only logged to console in development)
+- **Production:** Set to your endpoint URL to collect performance data
+- **Example:** `VITE_PERFORMANCE_ENDPOINT=https://api.compareintel.com/api/performance`
+
+**How it works:**
+- Development: Metrics are logged to console only
+- Production: If set, metrics are POSTed to your endpoint as JSON
+- Metrics include LCP, CLS, FCP, TTFB, INP with ratings and timestamps
+- Endpoint should accept POST requests and return 200 status
+
+**Note:** Only active in production builds. The endpoint receives performance data automatically - no frontend code changes needed.
+
 ### Frontend Setup Steps
 
 1. **Copy the example file (optional):**
@@ -206,6 +222,7 @@ MAIL_FROM=your-email@gmail.com
 |----------|----------|---------|-------|
 | `VITE_API_URL` | ❌ No | `/api` | Works with proxy |
 | `VITE_RECAPTCHA_SITE_KEY` | ❌ No | None | Bot protection (optional) |
+| `VITE_PERFORMANCE_ENDPOINT` | ❌ No | None | Performance analytics (production only) |
 
 ---
 
@@ -267,6 +284,9 @@ MAIL_PORT=587
 VITE_API_URL=/api
 # Or if backend is on different domain:
 # VITE_API_URL=https://api.compareintel.com/api
+
+# Optional: Send performance metrics to analytics
+# VITE_PERFORMANCE_ENDPOINT=https://api.compareintel.com/api/performance
 ```
 
 ---

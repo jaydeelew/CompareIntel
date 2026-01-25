@@ -206,7 +206,7 @@ This document lists all GUI components for the CompareIntel website, divided int
 
 ### AdminPanel
 - **Parent Element:** `App.tsx` (AppContent component)
-- **Description:** Main admin panel component with tabs for Users, Models, Logs, and Analytics. Provides user management, model configuration, action log viewing, and visitor analytics.
+- **Description:** Main admin panel component with tabs for Users, Models, Logs, Analytics, Search Providers, and Performance. Provides user management, model configuration, action log viewing, visitor analytics, search provider management, and performance monitoring.
 - **Filename:** `frontend/src/components/admin/AdminPanel.tsx`
-- **Line Range:** 1-2671
+- **Line Range:** 1-4300+
 
