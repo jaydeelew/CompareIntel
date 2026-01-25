@@ -1,14 +1,12 @@
 # Database Schema
 
-Complete database schema documentation for CompareIntel.
+Database schema documentation for CompareIntel.
 
 ## Overview
 
 CompareIntel uses SQLAlchemy ORM with support for:
 - **SQLite** (development)
 - **PostgreSQL** (production)
-
-All models use SQLAlchemy declarative base and include proper relationships, indexes, and constraints.
 
 ## Entity Relationship Diagram
 
@@ -17,62 +15,58 @@ User
 ├── UserPreference (1:1)
 ├── Conversation (1:N)
 ├── UsageLog (1:N)
+├── CreditTransaction (1:N)
 ├── SubscriptionHistory (1:N)
 ├── PaymentTransaction (1:N)
 └── AdminActionLog (1:N) [as admin_user or target_user]
+
+Conversation
+├── ConversationMessage (1:N)
+└── Conversation (self-reference for breakouts)
 ```
 
 ## Models
 
 ### User
 
-Core user account model with authentication and subscription details.
+Core user account model with authentication, subscription, and credit tracking.
 
 **Table:** `users`
 
-| Column | Type | Constraints | Description |
-|--------|------|-------------|-------------|
-| `id` | Integer | PK, Index | Primary key |
-| `email` | String(255) | Unique, Not Null, Index | User email address |
-| `password_hash` | String(255) | Not Null | Bcrypt hashed password |
-| `is_verified` | Boolean | Default: False | Email verification status |
-| `is_active` | Boolean | Default: True | Account active status |
-| `verification_token` | String(255) | Index | Email verification token |
-| `verification_token_expires` | DateTime | | Token expiration |
-| `reset_token` | String(255) | Index | Password reset token |
-| `reset_token_expires` | DateTime | | Reset token expiration |
-| `subscription_tier` | String(50) | Default: "free" | Tier: free/starter/starter_plus/pro/pro_plus |
-| `subscription_status` | String(50) | Default: "active" | Status: active/cancelled/expired |
-| `subscription_period` | String(20) | Default: "monthly" | Period: monthly/yearly |
-| `subscription_start_date` | DateTime | | Subscription start |
-| `subscription_end_date` | DateTime | | Subscription end |
-| `role` | String(50) | Default: "user" | Role: user/moderator/admin/super_admin |
-| `is_admin` | Boolean | Default: False | Admin flag |
-| `admin_permissions` | Text | | JSON permissions |
-| `mock_mode_enabled` | Boolean | Default: False | Testing mode |
-| `stripe_customer_id` | String(255) | Index | Stripe customer ID |
-| `daily_usage_count` | Integer | Default: 0 | Model responses used today |
-| `usage_reset_date` | Date | Default: current_date | Last usage reset |
-| `monthly_overage_count` | Integer | Default: 0 | Monthly overage count |
-| `overage_reset_date` | Date | Default: current_date | Last overage reset |
-| `daily_extended_usage` | Integer | Default: 0 | Extended tier usage today |
-| `extended_usage_reset_date` | Date | Default: current_date | Last extended reset |
-| `created_at` | DateTime | Default: now() | Creation timestamp |
-| `updated_at` | DateTime | Default: now(), OnUpdate | Last update timestamp |
+| Column | Type | Description |
+|--------|------|-------------|
+| `id` | Integer | Primary key |
+| `email` | String(255) | Unique, indexed |
+| `password_hash` | String(255) | Bcrypt hashed password |
+| `is_verified` | Boolean | Email verification status |
+| `is_active` | Boolean | Account active status |
+| `verification_token` | String(255) | Email verification token |
+| `verification_token_expires` | DateTime | Token expiration |
+| `reset_token` | String(255) | Password reset token |
+| `reset_token_expires` | DateTime | Reset token expiration |
+| `subscription_tier` | String(50) | free/starter/starter_plus/pro/pro_plus |
+| `subscription_status` | String(50) | active/cancelled/expired |
+| `subscription_period` | String(20) | monthly/yearly |
+| `subscription_start_date` | DateTime | Subscription start |
+| `subscription_end_date` | DateTime | Subscription end |
+| `role` | String(50) | user/moderator/admin/super_admin |
+| `is_admin` | Boolean | Admin flag |
+| `admin_permissions` | Text | JSON permissions |
+| `mock_mode_enabled` | Boolean | Testing mode |
+| `stripe_customer_id` | String(255) | Stripe customer ID |
+| `monthly_credits_allocated` | Integer | Credits for billing period |
+| `credits_used_this_period` | Integer | Credits consumed |
+| `total_credits_used` | Integer | Lifetime credits |
+| `billing_period_start` | DateTime | Billing period start |
+| `billing_period_end` | DateTime | Billing period end |
+| `credits_reset_at` | DateTime | Next credit reset |
+| `monthly_overage_count` | Integer | Overage model responses |
+| `overage_reset_date` | Date | Overage reset date |
+| `last_access` | DateTime | Last website access |
+| `created_at` | DateTime | Creation timestamp |
+| `updated_at` | DateTime | Last update timestamp |
 
-**Relationships:**
-- `preferences`: One-to-one with `UserPreference`
-- `conversations`: One-to-many with `Conversation`
-- `usage_logs`: One-to-many with `UsageLog`
-- `subscription_history`: One-to-many with `SubscriptionHistory`
-- `payment_transactions`: One-to-many with `PaymentTransaction`
-
-**Indexes:**
-- `id` (primary key)
-- `email` (unique)
-- `verification_token`
-- `reset_token`
-- `stripe_customer_id`
+**Computed Property:** `credits_remaining` = `monthly_credits_allocated` - `credits_used_this_period`
 
 ---
 
@@ -82,23 +76,17 @@ User preferences and settings.
 
 **Table:** `user_preferences`
 
-| Column | Type | Constraints | Description |
-|--------|------|-------------|-------------|
-| `id` | Integer | PK, Index | Primary key |
-| `user_id` | Integer | FK → users.id, Unique, Not Null | User reference |
-| `preferred_models` | Text | | JSON array of model IDs |
-| `theme` | String(50) | Default: "light" | UI theme: light/dark |
-| `email_notifications` | Boolean | Default: True | Email notifications enabled |
-| `usage_alerts` | Boolean | Default: True | Usage alerts enabled |
-| `created_at` | DateTime | Default: now() | Creation timestamp |
-| `updated_at` | DateTime | Default: now(), OnUpdate | Last update timestamp |
-
-**Relationships:**
-- `user`: Many-to-one with `User`
-
-**Constraints:**
-- `user_id` is unique (one preference per user)
-- Cascade delete on user deletion
+| Column | Type | Description |
+|--------|------|-------------|
+| `id` | Integer | Primary key |
+| `user_id` | Integer | FK → users.id (unique) |
+| `preferred_models` | Text | JSON array of model IDs |
+| `theme` | String(50) | light/dark |
+| `email_notifications` | Boolean | Email notifications enabled |
+| `usage_alerts` | Boolean | Usage alerts enabled |
+| `timezone` | String(50) | IANA timezone (e.g., "America/Chicago") |
+| `created_at` | DateTime | Creation timestamp |
+| `updated_at` | DateTime | Last update timestamp |
 
 ---
 
@@ -108,24 +96,18 @@ Conversation/comparison history.
 
 **Table:** `conversations`
 
-| Column | Type | Constraints | Description |
-|--------|------|-------------|-------------|
-| `id` | Integer | PK, Index | Primary key |
-| `user_id` | Integer | FK → users.id, Not Null, Index | User reference |
-| `title` | String(255) | | Optional user-defined title |
-| `input_data` | Text | Not Null | The prompt/input text |
-| `models_used` | Text | Not Null | JSON array of model IDs |
-| `created_at` | DateTime | Default: now(), Index | Creation timestamp |
-| `updated_at` | DateTime | Default: now(), OnUpdate | Last update timestamp |
-
-**Relationships:**
-- `user`: Many-to-one with `User`
-- `messages`: One-to-many with `ConversationMessage`
-
-**Indexes:**
-- `id` (primary key)
-- `user_id`
-- `created_at`
+| Column | Type | Description |
+|--------|------|-------------|
+| `id` | Integer | Primary key |
+| `user_id` | Integer | FK → users.id |
+| `title` | String(255) | Optional user-defined title |
+| `input_data` | Text | The prompt/input text |
+| `models_used` | Text | JSON array of model IDs |
+| `conversation_type` | String(20) | comparison/breakout |
+| `parent_conversation_id` | Integer | FK → conversations.id (for breakouts) |
+| `breakout_model_id` | String(255) | Model ID for breakout conversations |
+| `created_at` | DateTime | Creation timestamp |
+| `updated_at` | DateTime | Last update timestamp |
 
 ---
 
@@ -135,273 +117,195 @@ Individual messages within a conversation.
 
 **Table:** `conversation_messages`
 
-| Column | Type | Constraints | Description |
-|--------|------|-------------|-------------|
-| `id` | Integer | PK, Index | Primary key |
-| `conversation_id` | Integer | FK → conversations.id, Not Null, Index | Conversation reference |
-| `model_id` | String(255) | | Model ID (null for user messages) |
-| `role` | String(20) | Not Null | Message role: user/assistant |
-| `content` | Text | Not Null | Message content |
-| `success` | Boolean | Default: True | Processing success |
-| `processing_time_ms` | Integer | | Processing time in milliseconds |
-| `created_at` | DateTime | Default: now() | Creation timestamp |
-
-**Relationships:**
-- `conversation`: Many-to-one with `Conversation`
-
-**Indexes:**
-- `id` (primary key)
-- `conversation_id`
+| Column | Type | Description |
+|--------|------|-------------|
+| `id` | Integer | Primary key |
+| `conversation_id` | Integer | FK → conversations.id |
+| `model_id` | String(255) | Model ID (null for user messages) |
+| `role` | String(20) | user/assistant |
+| `content` | Text | Message content |
+| `input_tokens` | Integer | Input tokens (for user messages) |
+| `output_tokens` | Integer | Output tokens (for assistant messages) |
+| `success` | Boolean | Processing success |
+| `processing_time_ms` | Integer | Processing time in ms |
+| `created_at` | DateTime | Creation timestamp |
 
 ---
 
 ### UsageLog
 
-Detailed usage tracking for analytics and cost analysis.
+Detailed usage tracking for analytics and billing.
 
 **Table:** `usage_logs`
 
-| Column | Type | Constraints | Description |
-|--------|------|-------------|-------------|
-| `id` | Integer | PK, Index | Primary key |
-| `user_id` | Integer | FK → users.id, Nullable, Index | User reference (null for anonymous) |
-| `ip_address` | String(45) | | IPv4 or IPv6 address |
-| `browser_fingerprint` | String(64) | | SHA-256 hash of fingerprint |
-| `models_used` | Text | | JSON array of model IDs |
-| `input_length` | Integer | | Input text length |
-| `models_requested` | Integer | | Number of models requested |
-| `models_successful` | Integer | | Number of successful responses |
-| `models_failed` | Integer | | Number of failed responses |
-| `processing_time_ms` | Integer | | Total processing time |
-| `estimated_cost` | DECIMAL(10,4) | | Estimated cost in USD |
-| `is_overage` | Boolean | Default: False | Overage flag |
-| `overage_charge` | DECIMAL(10,4) | Default: 0 | Overage charge |
-| `created_at` | DateTime | Default: now(), Index | Creation timestamp |
+| Column | Type | Description |
+|--------|------|-------------|
+| `id` | Integer | Primary key |
+| `user_id` | Integer | FK → users.id (nullable for anonymous) |
+| `ip_address` | String(45) | IPv4 or IPv6 |
+| `browser_fingerprint` | String(64) | SHA-256 hash |
+| `models_used` | Text | JSON array of model IDs |
+| `input_length` | Integer | Input text length |
+| `models_requested` | Integer | Number of models requested |
+| `models_successful` | Integer | Successful responses |
+| `models_failed` | Integer | Failed responses |
+| `processing_time_ms` | Integer | Total processing time |
+| `input_tokens` | Integer | Total input tokens |
+| `output_tokens` | Integer | Total output tokens |
+| `total_tokens` | Integer | Combined tokens |
+| `effective_tokens` | Integer | Billing tokens (input + output×2.5) |
+| `credits_used` | DECIMAL(10,4) | Credits deducted |
+| `actual_cost` | DECIMAL(10,4) | Actual API cost |
+| `estimated_cost` | DECIMAL(10,4) | Estimated cost |
+| `is_overage` | Boolean | Overage flag |
+| `overage_charge` | DECIMAL(10,4) | Overage charge |
+| `created_at` | DateTime | Creation timestamp |
 
-**Relationships:**
-- `user`: Many-to-one with `User` (nullable for anonymous users)
+---
 
-**Indexes:**
-- `id` (primary key)
-- `user_id`
-- `created_at`
+### CreditTransaction
+
+Audit trail for credit operations.
+
+**Table:** `credit_transactions`
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `id` | Integer | Primary key |
+| `user_id` | Integer | FK → users.id |
+| `transaction_type` | String(50) | allocation/usage/purchase/refund/expiration |
+| `credits_amount` | Integer | Positive or negative amount |
+| `description` | Text | Human-readable description |
+| `related_usage_log_id` | Integer | FK → usage_logs.id (nullable) |
+| `created_at` | DateTime | Creation timestamp |
+
+---
+
+### UsageLogMonthlyAggregate
+
+Monthly aggregated usage statistics for data retention.
+
+**Table:** `usage_log_monthly_aggregates`
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `id` | Integer | Primary key |
+| `year` | Integer | Year |
+| `month` | Integer | Month (1-12) |
+| `total_comparisons` | Integer | Total comparisons |
+| `total_models_requested` | Integer | Total models requested |
+| `total_models_successful` | Integer | Successful responses |
+| `total_models_failed` | Integer | Failed responses |
+| `total_input_tokens` | BigInteger | Total input tokens |
+| `total_output_tokens` | BigInteger | Total output tokens |
+| `total_effective_tokens` | BigInteger | Total billing tokens |
+| `avg_input_tokens` | DECIMAL | Average input tokens |
+| `avg_output_tokens` | DECIMAL | Average output tokens |
+| `avg_output_ratio` | DECIMAL | Output/input ratio |
+| `total_credits_used` | DECIMAL | Total credits |
+| `avg_credits_per_comparison` | DECIMAL | Average credits |
+| `total_actual_cost` | DECIMAL | Total API cost |
+| `total_estimated_cost` | DECIMAL | Total estimated cost |
+| `model_breakdown` | Text | JSON breakdown by model |
+| `created_at` | DateTime | Creation timestamp |
+| `updated_at` | DateTime | Last update timestamp |
+
+**Constraints:** Unique on (year, month)
 
 ---
 
 ### SubscriptionHistory
 
-Track subscription changes (upgrades, downgrades, renewals).
+Track subscription changes.
 
 **Table:** `subscription_history`
 
-| Column | Type | Constraints | Description |
-|--------|------|-------------|-------------|
-| `id` | Integer | PK, Index | Primary key |
-| `user_id` | Integer | FK → users.id, Not Null, Index | User reference |
-| `previous_tier` | String(50) | | Previous tier (null for initial) |
-| `new_tier` | String(50) | Not Null | New tier |
-| `period` | String(20) | | Period: monthly/yearly |
-| `amount_paid` | DECIMAL(10,2) | | Payment amount |
-| `stripe_payment_id` | String(255) | | Stripe payment ID |
-| `reason` | String(100) | | Reason: upgrade/downgrade/renewal/cancellation/initial |
-| `created_at` | DateTime | Default: now(), Index | Creation timestamp |
-
-**Relationships:**
-- `user`: Many-to-one with `User`
-
-**Indexes:**
-- `id` (primary key)
-- `user_id`
-- `created_at`
+| Column | Type | Description |
+|--------|------|-------------|
+| `id` | Integer | Primary key |
+| `user_id` | Integer | FK → users.id |
+| `previous_tier` | String(50) | Previous tier |
+| `new_tier` | String(50) | New tier |
+| `period` | String(20) | monthly/yearly |
+| `amount_paid` | DECIMAL(10,2) | Payment amount |
+| `stripe_payment_id` | String(255) | Stripe ID |
+| `reason` | String(100) | upgrade/downgrade/renewal/cancellation/initial |
+| `created_at` | DateTime | Creation timestamp |
 
 ---
 
 ### PaymentTransaction
 
-Track all payment transactions for audit and support.
+Payment transaction records.
 
 **Table:** `payment_transactions`
 
-| Column | Type | Constraints | Description |
-|--------|------|-------------|-------------|
-| `id` | Integer | PK, Index | Primary key |
-| `user_id` | Integer | FK → users.id, Not Null, Index | User reference |
-| `stripe_payment_intent_id` | String(255) | Index | Stripe payment intent ID |
-| `amount` | DECIMAL(10,2) | Not Null | Transaction amount |
-| `currency` | String(3) | Default: "USD" | Currency code |
-| `status` | String(50) | | Status: pending/succeeded/failed/refunded |
-| `description` | Text | | Transaction description |
-| `created_at` | DateTime | Default: now() | Creation timestamp |
-
-**Relationships:**
-- `user`: Many-to-one with `User`
-
-**Indexes:**
-- `id` (primary key)
-- `user_id`
-- `stripe_payment_intent_id`
+| Column | Type | Description |
+|--------|------|-------------|
+| `id` | Integer | Primary key |
+| `user_id` | Integer | FK → users.id |
+| `stripe_payment_intent_id` | String(255) | Stripe payment intent |
+| `amount` | DECIMAL(10,2) | Amount |
+| `currency` | String(3) | Currency (USD) |
+| `status` | String(50) | pending/succeeded/failed/refunded |
+| `description` | Text | Description |
+| `created_at` | DateTime | Creation timestamp |
 
 ---
 
 ### AdminActionLog
 
-Audit log for all admin actions.
+Audit log for admin actions.
 
 **Table:** `admin_action_logs`
 
-| Column | Type | Constraints | Description |
-|--------|------|-------------|-------------|
-| `id` | Integer | PK, Index | Primary key |
-| `admin_user_id` | Integer | FK → users.id, Nullable, Index | Admin user reference |
-| `target_user_id` | Integer | FK → users.id, Nullable, Index | Target user reference |
-| `action_type` | String(100) | Not Null | Action type: user_create/user_update/etc |
-| `action_description` | Text | Not Null | Human-readable description |
-| `details` | Text | | JSON string with action-specific data |
-| `ip_address` | String(45) | | IPv4 or IPv6 address |
-| `user_agent` | Text | | User agent string |
-| `created_at` | DateTime | Default: now(), Index | Creation timestamp |
-
-**Relationships:**
-- `admin_user`: Many-to-one with `User` (admin who performed action)
-- `target_user`: Many-to-one with `User` (user affected by action)
-
-**Indexes:**
-- `id` (primary key)
-- `admin_user_id`
-- `target_user_id`
-- `created_at`
+| Column | Type | Description |
+|--------|------|-------------|
+| `id` | Integer | Primary key |
+| `admin_user_id` | Integer | FK → users.id |
+| `target_user_id` | Integer | FK → users.id |
+| `action_type` | String(100) | Action type |
+| `action_description` | Text | Description |
+| `details` | Text | JSON details |
+| `ip_address` | String(45) | IP address |
+| `user_agent` | Text | User agent |
+| `created_at` | DateTime | Creation timestamp |
 
 ---
 
 ### AppSettings
 
-Global application settings (single row table).
+Global application settings (single row).
 
 **Table:** `app_settings`
 
-| Column | Type | Constraints | Description |
-|--------|------|-------------|-------------|
-| `id` | Integer | PK, Default: 1 | Primary key (always 1) |
-| `anonymous_mock_mode_enabled` | Boolean | Default: False | Mock mode for anonymous users |
-| `created_at` | DateTime | Default: now() | Creation timestamp |
-| `updated_at` | DateTime | Default: now(), OnUpdate | Last update timestamp |
-
-**Note:** This table should only have one row (id=1).
-
----
-
-## Database Schema Management
-
-Database tables are created automatically using SQLAlchemy's `Base.metadata.create_all()` in development mode. In production, tables should already exist or be created manually.
+| Column | Type | Description |
+|--------|------|-------------|
+| `id` | Integer | Primary key (always 1) |
+| `anonymous_mock_mode_enabled` | Boolean | Mock mode for anonymous users |
+| `active_search_provider` | String(50) | Search provider (brave/tavily) |
+| `search_provider_config` | Text | JSON provider config |
+| `web_search_enabled` | Boolean | Web search enabled |
+| `created_at` | DateTime | Creation timestamp |
+| `updated_at` | DateTime | Last update timestamp |
 
 ---
 
-## Query Examples
-
-### Get User with Preferences
-
-```python
-user = db.query(User).options(
-    joinedload(User.preferences)
-).filter(User.id == user_id).first()
-```
-
-### Get User Conversations with Messages
-
-```python
-conversations = db.query(Conversation).options(
-    joinedload(Conversation.messages)
-).filter(Conversation.user_id == user_id).all()
-```
-
-### Get Usage Statistics
-
-```python
-from sqlalchemy import func
-
-stats = db.query(
-    func.count(UsageLog.id).label('total_requests'),
-    func.sum(UsageLog.models_successful).label('total_successful'),
-    func.sum(UsageLog.estimated_cost).label('total_cost')
-).filter(
-    UsageLog.user_id == user_id,
-    UsageLog.created_at >= start_date
-).first()
-```
-
-### Get Admin Action Logs
-
-```python
-logs = db.query(AdminActionLog).options(
-    joinedload(AdminActionLog.admin_user),
-    joinedload(AdminActionLog.target_user)
-).filter(
-    AdminActionLog.created_at >= start_date
-).order_by(AdminActionLog.created_at.desc()).all()
-```
-
----
-
-## Performance Considerations
-
-### Indexes
-
-All foreign keys and frequently queried columns are indexed:
-- User email (unique lookup)
-- User tokens (verification/reset)
-- Conversation user_id and created_at
-- UsageLog user_id and created_at
-- AdminActionLog timestamps
-
-### Query Optimization
-
-1. **Use joinedload for relationships:**
-   ```python
-   user = db.query(User).options(joinedload(User.preferences)).first()
-   ```
-
-2. **Filter before joining:**
-   ```python
-   conversations = db.query(Conversation).filter(
-       Conversation.user_id == user_id
-   ).options(joinedload(Conversation.messages)).all()
-   ```
-
-3. **Use select_related for single relationships:**
-   ```python
-   message = db.query(ConversationMessage).options(
-       joinedload(ConversationMessage.conversation)
-   ).first()
-   ```
-
-### Caching
-
-- Model list is cached (static data)
-- AppSettings are cached (rarely changes)
-- User data can be cached (with TTL)
-
----
-
-## Data Integrity
-
-### Cascading Deletes
+## Cascading Deletes
 
 - **User → Preferences:** Cascade delete
 - **User → Conversations:** Cascade delete
+- **User → CreditTransactions:** Cascade delete
 - **User → SubscriptionHistory:** Cascade delete
 - **User → PaymentTransactions:** Cascade delete
 - **Conversation → Messages:** Cascade delete
+- **Conversation → Breakouts:** Set NULL (preserve breakout conversations)
 - **User → UsageLogs:** Set NULL (preserve anonymous logs)
 - **User → AdminActionLogs:** Set NULL (preserve audit trail)
-
-### Constraints
-
-- Email uniqueness enforced at database level
-- Foreign key constraints ensure referential integrity
-- Check constraints on enum-like fields (via application layer)
+- **UsageLog → CreditTransactions:** Set NULL
 
 ---
 
-**Last Updated:** January 2025  
-**Schema Version:** 1.0
+## Schema Management
 
+Tables are created automatically using SQLAlchemy's `Base.metadata.create_all()` in development. In production, tables should already exist.

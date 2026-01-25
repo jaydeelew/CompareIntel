@@ -1,7 +1,7 @@
 # CompareIntel
 
 <p align="center">
-  <strong>Compare 50+ AI Models Side-by-Side in Real-Time</strong>
+  <strong>Compare AI Models Side-by-Side in Real-Time</strong>
 </p>
 
 <p align="center">
@@ -17,7 +17,7 @@
 
 ## Overview
 
-**CompareIntel** is a full-stack web application that enables users to compare responses from 50+ AI language models simultaneously. Built with a modern React frontend and FastAPI backend, it provides real-time streaming responses, conversation history, and a credit-based usage system with tiered subscriptions.
+**CompareIntel** is a full-stack web application that enables users to compare responses from multiple AI language models simultaneously. Built with a modern React frontend and FastAPI backend, it provides real-time streaming responses, conversation history, and a credit-based usage system with tiered subscriptions.
 
 The platform integrates with [OpenRouter](https://openrouter.ai/) to access models from OpenAI, Anthropic, Google, Meta, Mistral, Cohere, xAI, and more—all through a single, unified interface.
 
@@ -268,8 +268,7 @@ CompareIntel/
 │                          ▼                                   │
 │                  ┌───────────────┐                           │
 │                  │ Model Runner  │ ─────► OpenRouter API     │
-│                  │ (50+ Models)  │        (External)         │
-│                  └───────────────┘                           │
+│                  └───────────────┘        (External)         │
 │                          │                                   │
 │                          ▼                                   │
 │  ┌──────────────────────────────────────────────────────┐   │
@@ -497,7 +496,7 @@ copies of the Software...
 
 ## Acknowledgments
 
-- [OpenRouter](https://openrouter.ai/) — Unified access to 50+ AI models
+- [OpenRouter](https://openrouter.ai/) — Unified access to AI models
 - [FastAPI](https://fastapi.tiangolo.com/) — Modern Python web framework
 - [Vite](https://vitejs.dev/) — Next-generation frontend tooling
 - [KaTeX](https://katex.org/) — Fast math typesetting
