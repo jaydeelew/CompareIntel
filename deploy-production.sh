@@ -38,6 +38,9 @@ BACKUP_DIR="/home/ubuntu/backups"
 LOG_FILE="/home/ubuntu/compareintel-deploy.log"
 ENV_FILE="$PROJECT_DIR/backend/.env"
 
+# Global flag to track if code changes were detected
+CODE_CHANGED=false
+
 # Function to log messages
 log() {
     echo -e "${BLUE}[$(date '+%Y-%m-%d %H:%M:%S')]${NC} $1" | tee -a "$LOG_FILE"
@@ -259,8 +262,9 @@ check_ssl_certificates() {
 }
 
 # Function to pull latest code
+# Returns: Sets CODE_CHANGED global variable to true if changes were pulled, false otherwise
 pull_latest_code() {
-    log "Pulling latest code from repository..."
+    log "Checking for updates from repository..."
     
     cd "$PROJECT_DIR"
     
@@ -283,11 +287,44 @@ pull_latest_code() {
     
     log "Using branch: $DEFAULT_BRANCH"
     
-    # Fetch and pull latest changes
+    # Fetch latest changes from remote (without merging)
+    log "Fetching latest changes from origin..."
     git fetch origin
+    
+    # Get current local commit and remote commit
+    LOCAL_COMMIT=$(git rev-parse HEAD 2>/dev/null || echo "")
+    REMOTE_COMMIT=$(git rev-parse "origin/$DEFAULT_BRANCH" 2>/dev/null || echo "")
+    
+    # Check if commits are valid
+    if [ -z "$LOCAL_COMMIT" ] || [ -z "$REMOTE_COMMIT" ]; then
+        log_warning "Could not determine commit hashes. Proceeding with pull..."
+        git pull origin "$DEFAULT_BRANCH"
+        if [ $? -eq 0 ]; then
+            CODE_CHANGED=true
+            log_success "Code updated successfully from $DEFAULT_BRANCH"
+        else
+            log_error "Failed to pull latest code from $DEFAULT_BRANCH"
+            exit 1
+        fi
+        return
+    fi
+    
+    # Check if commits match
+    if [ "$LOCAL_COMMIT" = "$REMOTE_COMMIT" ]; then
+        CODE_CHANGED=false
+        log_success "Already up to date with $DEFAULT_BRANCH (commit: ${LOCAL_COMMIT:0:7})"
+        return 0
+    fi
+    
+    # Commits differ, pull the changes
+    log "Local commit: ${LOCAL_COMMIT:0:7}"
+    log "Remote commit: ${REMOTE_COMMIT:0:7}"
+    log "Pulling latest changes..."
+    
     git pull origin "$DEFAULT_BRANCH"
     
     if [ $? -eq 0 ]; then
+        CODE_CHANGED=true
         log_success "Code updated successfully from $DEFAULT_BRANCH"
     else
         log_error "Failed to pull latest code from $DEFAULT_BRANCH"
@@ -493,28 +530,81 @@ main() {
             log_success "Backup completed"
             ;;
         "build")
-            build_and_deploy
-            log_success "Build and deploy completed"
-            ;;
-        "deploy")
+            # Build command: Force rebuild without git pull
+            # Use this when:
+            #   - You've manually edited files on the server and want to rebuild
+            #   - Docker images need to be rebuilt due to dependency changes
+            #   - You want to force a rebuild even if code hasn't changed
+            #   - You've already pulled code manually and just need to rebuild
+            log "Build mode: Skipping git pull, forcing rebuild..."
             check_system_requirements
-            check_ssl_certificates
             backup_database
-            pull_latest_code
             build_and_deploy
             verify_deployment
             show_status
             echo ""
-            log_success "=== Deployment completed successfully! ==="
+            log_success "=== Build and deploy completed successfully! ==="
+            ;;
+        "deploy")
+            # Deploy command: Full deployment with smart commit checking
+            # This is the standard deployment command that:
+            #   - Checks if the latest commit is already deployed
+            #   - Skips rebuild if no changes detected (saves time/resources)
+            #   - Proceeds with full deployment if changes are found
+            check_system_requirements
+            check_ssl_certificates
+            backup_database
+            
+            # Reset the code changed flag
+            CODE_CHANGED=false
+            pull_latest_code
+            
+            if [ "$CODE_CHANGED" = false ]; then
+                log "No code changes detected. Skipping rebuild to save time and resources."
+                log "Current deployment is already up to date."
+                log ""
+                log "To force a rebuild anyway, use: ./deploy-production.sh build"
+                log "This is useful if:"
+                log "  - Docker dependencies changed and images need rebuilding"
+                log "  - Environment variables changed and containers need restarting"
+                log "  - You want to verify the current deployment is working correctly"
+                log ""
+                verify_deployment
+                show_status
+                echo ""
+                log_success "=== Deployment check completed (no changes, deployment verified) ==="
+            else
+                log "Code changes detected. Proceeding with full deployment..."
+                build_and_deploy
+                verify_deployment
+                show_status
+                echo ""
+                log_success "=== Deployment completed successfully! ==="
+            fi
             ;;
         "quick-deploy")
-            # Quick deploy: skip git pull (useful for hotfixes already on server)
-            log_warning "Quick deploy mode: skipping git pull"
+            # Quick deploy: Skip git pull and deploy current code
+            # Use this when:
+            #   - You've already pulled code manually (e.g., via SSH)
+            #   - You've made hotfixes directly on the server
+            #   - You want to redeploy the current codebase without checking remote
+            #   - You're testing local changes before pushing to remote
+            #   - CI/CD has already pulled code and you just need to rebuild
+            log_warning "Quick deploy mode: Skipping git pull"
+            log "This will deploy the current codebase as-is."
+            log ""
+            log "Use this command when:"
+            log "  - Code is already on the server (manually pulled or hotfixed)"
+            log "  - You want to redeploy without checking for remote updates"
+            log "  - Testing local changes before committing/pushing"
+            log ""
             check_system_requirements
             backup_database
             build_and_deploy
             verify_deployment
-            log_success "Quick deployment completed!"
+            show_status
+            echo ""
+            log_success "=== Quick deployment completed successfully! ==="
             ;;
         "rollback")
             rollback_deployment
@@ -540,13 +630,18 @@ main() {
             echo "Commands:"
             echo "  check        - Check system requirements and SSL certificates"
             echo "  backup       - Create database backup only (PostgreSQL pg_dump)"
-            echo "  build        - Build and deploy without git pull"
-            echo "  deploy       - Full deployment with git pull"
-            echo "  quick-deploy - Deploy without git pull (for hotfixes)"
+            echo "  build        - Force rebuild without git pull (see comments in script)"
+            echo "  deploy       - Smart deployment: checks if already up-to-date before rebuilding"
+            echo "  quick-deploy - Deploy current code without git pull (for hotfixes/local changes)"
             echo "  rollback     - Rollback to previous version"
             echo "  restart      - Restart all services"
             echo "  status       - Show current deployment status"
             echo "  logs         - Follow container logs"
+            echo ""
+            echo "When to use each command:"
+            echo "  deploy       - Standard deployment (checks for updates, skips if already deployed)"
+            echo "  build        - Force rebuild when Docker dependencies changed or manual edits made"
+            echo "  quick-deploy - Deploy code already on server (hotfixes, manual pulls, testing)"
             echo ""
             echo "Note: All Python dependencies are managed inside Docker containers."
             echo "      No virtual environment (venv) is used on the host."
