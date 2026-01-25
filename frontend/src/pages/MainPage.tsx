@@ -90,11 +90,7 @@ export function MainPage() {
   }, [location.pathname, isAuthenticated, user, authLoading, navigate])
 
   const { browserFingerprint, setBrowserFingerprint } = useBrowserFingerprint()
-  const {
-    usageCount: _usageCount,
-    setUsageCount,
-    fetchRateLimitStatus,
-  } = useRateLimitStatus({
+  const { setUsageCount, fetchRateLimitStatus } = useRateLimitStatus({
     isAuthenticated,
     browserFingerprint,
   })
@@ -219,7 +215,7 @@ export function MainPage() {
     setIsFollowUpMode,
   })
 
-  const [_alreadyBrokenOutModels, setAlreadyBrokenOutModels] = useState<Set<string>>(new Set())
+  const [, setAlreadyBrokenOutModels] = useState<Set<string>>(new Set())
 
   const { showExportMenu, setShowExportMenu, exportMenuRef, handleExport } = useExport({
     conversations,

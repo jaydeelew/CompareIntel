@@ -6,7 +6,6 @@ user CRUD operations, role management, and audit logging.
 """
 
 from fastapi import APIRouter, Depends, HTTPException, status, Request, Query
-from fastapi import Request
 from fastapi.responses import JSONResponse, StreamingResponse
 from sqlalchemy.orm import Session
 from sqlalchemy import func, desc, and_
