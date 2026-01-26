@@ -11,6 +11,7 @@ import { truncatePrompt, formatDate } from '../../utils'
 import { showNotification } from '../../utils/error'
 
 import { DisabledButtonInfoModal } from './DisabledButtonInfoModal'
+import { UsageIndicatorInfoModal } from './UsageIndicatorInfoModal'
 
 // File attachment interface
 export interface AttachedFile {
@@ -274,6 +275,9 @@ export const ComparisonForm = memo<ComparisonFormProps>(
       button: 'websearch' | 'submit' | null
       message: string
     }>({ button: null, message: '' })
+
+    // State for usage indicator info modal
+    const [showUsageIndicatorInfo, setShowUsageIndicatorInfo] = useState(false)
 
     // Speech recognition hook
     // Mobile: Non-continuous with interim results for real-time display
@@ -1603,13 +1607,16 @@ export const ComparisonForm = memo<ComparisonFormProps>(
                     <div
                       className="token-usage-indicator"
                       title={tooltipText}
-                      style={{ cursor: 'default' }}
+                      onClick={() => {
+                        setShowUsageIndicatorInfo(true)
+                      }}
+                      style={{ touchAction: 'manipulation', cursor: 'pointer' }}
                     >
                       <svg
                         width="32"
                         height="32"
                         viewBox="0 0 32 32"
-                        style={{ transform: 'rotate(-90deg)' }}
+                        style={{ transform: 'rotate(-90deg)', pointerEvents: 'none' }}
                       >
                         {/* Background circle (grey) */}
                         <circle
@@ -2295,6 +2302,15 @@ export const ComparisonForm = memo<ComparisonFormProps>(
           onClose={() => setDisabledButtonInfo({ button: null, message: '' })}
           buttonType={disabledButtonInfo.button}
           message={disabledButtonInfo.message}
+        />
+
+        {/* Usage Indicator Info Modal - shown on touch devices when usage indicator is tapped */}
+        <UsageIndicatorInfoModal
+          isOpen={showUsageIndicatorInfo}
+          onClose={() => setShowUsageIndicatorInfo(false)}
+          percentage={tokenUsagePercentage}
+          totalInputTokens={tokenUsagePercentageInfo.totalInputTokens}
+          limitingModel={tokenUsagePercentageInfo.limitingModel}
         />
       </>
     )
