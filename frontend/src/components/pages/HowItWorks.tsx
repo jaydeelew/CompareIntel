@@ -134,6 +134,14 @@ export const HowItWorks: React.FC = () => {
                   support this capability (indicated by a 🌐 icon next to the model name).
                 </p>
                 <p>
+                  <strong>Finding model cutoff dates:</strong> To help determine if you need web
+                  search, you can check each model's knowledge cutoff date by hovering over the info
+                  icon (ⓘ) next to the model name in the model selection area. The cutoff date
+                  indicates the latest date of information in the model's training data. If your
+                  query requires information after this date, you should enable web search for
+                  supported models to get current, up-to-date information.
+                </p>
+                <p>
                   <strong>Attach files (optional):</strong> You can attach documents, code files, or
                   text files to provide context for your comparison. Simply drag and drop files onto
                   the input area or use the file picker button. Supported formats include PDF, Word
