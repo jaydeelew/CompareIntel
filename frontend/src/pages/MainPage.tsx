@@ -707,11 +707,11 @@ export function MainPage() {
     {
       tutorialState,
       currentView,
-      isTouchDevice,
       locationPathname: location.pathname,
       conversations,
       isLoading,
       isFollowUpMode,
+      isAuthenticated,
     },
     {
       setShowWelcomeModal,
@@ -1903,14 +1903,6 @@ export function MainPage() {
               setAuthModalMode('register')
               setIsAuthModalOpen(true)
             }}
-            onTutorialClick={
-              !isAuthenticated
-                ? () => {
-                    resetAppStateForTutorial()
-                    startTutorial()
-                  }
-                : undefined
-            }
           />
 
           {!showPasswordReset && !authLoading && (

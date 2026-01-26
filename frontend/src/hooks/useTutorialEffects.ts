@@ -8,11 +8,11 @@ interface UseTutorialEffectsConfig {
     currentStep: string | null
   }
   currentView: 'admin' | 'main'
-  isTouchDevice: boolean
   locationPathname: string
   conversations: ModelConversation[]
   isLoading: boolean
   isFollowUpMode: boolean
+  isAuthenticated: boolean
 }
 
 interface UseTutorialEffectsCallbacks {
@@ -27,20 +27,21 @@ export function useTutorialEffects(
   const {
     tutorialState,
     currentView,
-    isTouchDevice,
     locationPathname,
     conversations,
     isLoading,
     isFollowUpMode,
+    isAuthenticated,
   } = config
 
   const { setShowWelcomeModal, setTutorialHasCompletedComparison } = callbacks
 
   const lastWelcomeModalPathnameRef = useRef<string | null>(null)
 
-  // Welcome modal logic
+  // Welcome modal logic - show every time for unregistered users unless "Don't show again" is checked
   useEffect(() => {
-    if (tutorialState.isActive || currentView !== 'main') {
+    // Don't show for authenticated users or when tutorial is active
+    if (isAuthenticated || tutorialState.isActive || currentView !== 'main') {
       if (currentView !== 'main') {
         lastWelcomeModalPathnameRef.current = null
       }
@@ -53,21 +54,13 @@ export function useTutorialEffects(
       return
     }
 
-    if (isTouchDevice) {
-      const dontShowAgain = localStorage.getItem('compareintel_mobile_welcome_dont_show_again')
-      if (dontShowAgain !== 'true') {
-        setShowWelcomeModal(true)
-        lastWelcomeModalPathnameRef.current = locationPathname
-      }
-    } else {
-      const hasSeenWelcome = localStorage.getItem('compareintel_tutorial_welcome_seen')
-      if (!hasSeenWelcome) {
-        setShowWelcomeModal(true)
-        localStorage.setItem('compareintel_tutorial_welcome_seen', 'true')
-        lastWelcomeModalPathnameRef.current = locationPathname
-      }
+    // Unified behavior for both mobile and non-mobile: show every time unless "Don't show again" is checked
+    const dontShowAgain = localStorage.getItem('compareintel_welcome_dont_show_again')
+    if (dontShowAgain !== 'true') {
+      setShowWelcomeModal(true)
+      lastWelcomeModalPathnameRef.current = locationPathname
     }
-  }, [tutorialState.isActive, currentView, isTouchDevice, locationPathname, setShowWelcomeModal])
+  }, [tutorialState.isActive, currentView, locationPathname, setShowWelcomeModal, isAuthenticated])
 
   // Track comparison completion for tutorial
   useEffect(() => {

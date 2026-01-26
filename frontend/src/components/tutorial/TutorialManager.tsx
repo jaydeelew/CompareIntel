@@ -48,7 +48,7 @@ export function TutorialManager({
   resetAppStateForTutorial,
   startTutorial,
   skipTutorial,
-  isTouchDevice,
+  isTouchDevice: _isTouchDevice,
   currentView,
   isMobileLayout,
   modelsByProvider,
@@ -86,11 +86,9 @@ export function TutorialManager({
               skipTutorial()
             }}
             onDontShowAgain={() => {
-              if (isTouchDevice) {
-                localStorage.setItem('compareintel_mobile_welcome_dont_show_again', 'true')
-              }
+              localStorage.setItem('compareintel_welcome_dont_show_again', 'true')
             }}
-            showDontShowAgain={isTouchDevice}
+            showDontShowAgain={true}
           />
         </Suspense>
       )}
