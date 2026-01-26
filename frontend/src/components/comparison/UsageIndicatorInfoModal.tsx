@@ -12,6 +12,7 @@ interface UsageIndicatorInfoModalProps {
   percentage: number
   totalInputTokens: number
   limitingModel: { name: string; capacityChars: string } | null
+  hasSelectedModels: boolean
 }
 
 export const UsageIndicatorInfoModal: React.FC<UsageIndicatorInfoModalProps> = ({
@@ -20,6 +21,7 @@ export const UsageIndicatorInfoModal: React.FC<UsageIndicatorInfoModalProps> = (
   percentage,
   totalInputTokens: _totalInputTokens,
   limitingModel,
+  hasSelectedModels,
 }) => {
   const modalRef = useRef<HTMLDivElement>(null)
   const closeButtonRef = useRef<HTMLButtonElement>(null)
@@ -58,17 +60,23 @@ export const UsageIndicatorInfoModal: React.FC<UsageIndicatorInfoModalProps> = (
 
   if (!isOpen) return null
 
-  // Build message text - show "<1%" for sub-1% usage
+  // Build message text
   let messageText: string
-  if (percentage < 1 && percentage > 0) {
-    messageText = '<1% of input capacity used'
+  if (!hasSelectedModels) {
+    messageText =
+      'Please choose one or more models from the model selection area before the usage percentage can be calculated.'
   } else {
-    messageText = `${Math.round(percentage)}% of input capacity used`
-  }
+    // Show "<1%" for sub-1% usage
+    if (percentage < 1 && percentage > 0) {
+      messageText = '<1% of input capacity used'
+    } else {
+      messageText = `${Math.round(percentage)}% of input capacity used`
+    }
 
-  // Append "Limited by..." message only when usage >= 50% and there's a limiting model
-  if (limitingModel && percentage >= 50) {
-    messageText += ` (Limited by ${limitingModel.name} at ${limitingModel.capacityChars})`
+    // Append "Limited by..." message only when usage >= 50% and there's a limiting model
+    if (limitingModel && percentage >= 50) {
+      messageText += ` (Limited by ${limitingModel.name} at ${limitingModel.capacityChars})`
+    }
   }
 
   return (

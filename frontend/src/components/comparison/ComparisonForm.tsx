@@ -1590,17 +1590,22 @@ export const ComparisonForm = memo<ComparisonFormProps>(
                     fillColor = '#eab308' // Yellow for medium usage
                   }
 
-                  // Build tooltip text - show "<1%" for sub-1% usage
+                  // Build tooltip text
                   let tooltipText: string
-                  if (percentage < 1 && percentage > 0) {
-                    tooltipText = '<1% of input capacity used'
+                  if (selectedModels.length === 0) {
+                    tooltipText = 'Select models first'
                   } else {
-                    tooltipText = `${Math.round(percentage)}% of input capacity used`
-                  }
+                    // Show "<1%" for sub-1% usage
+                    if (percentage < 1 && percentage > 0) {
+                      tooltipText = '<1% of input capacity used'
+                    } else {
+                      tooltipText = `${Math.round(percentage)}% of input capacity used`
+                    }
 
-                  // Append "Limited by..." message only when usage >= 50% and there's a limiting model
-                  if (tokenUsagePercentageInfo.limitingModel && percentage >= 50) {
-                    tooltipText += ` (Limited by ${tokenUsagePercentageInfo.limitingModel.name} at ${tokenUsagePercentageInfo.limitingModel.capacityChars})`
+                    // Append "Limited by..." message only when usage >= 50% and there's a limiting model
+                    if (tokenUsagePercentageInfo.limitingModel && percentage >= 50) {
+                      tooltipText += ` (Limited by ${tokenUsagePercentageInfo.limitingModel.name} at ${tokenUsagePercentageInfo.limitingModel.capacityChars})`
+                    }
                   }
 
                   return (
@@ -2311,6 +2316,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
           percentage={tokenUsagePercentage}
           totalInputTokens={tokenUsagePercentageInfo.totalInputTokens}
           limitingModel={tokenUsagePercentageInfo.limitingModel}
+          hasSelectedModels={selectedModels.length > 0}
         />
       </>
     )
