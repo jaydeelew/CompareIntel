@@ -62,17 +62,13 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
     }
   }, [])
 
-  // Auto-sync password to confirm password field when password changes
   const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newPassword = e.target.value
     setPassword(newPassword)
-    // Auto-fill confirm password field when password is filled (e.g., by 1Password)
-    if (newPassword && !confirmPassword) {
-      setConfirmPassword(newPassword)
-    }
   }
 
-  // Monitor password field for programmatic changes (e.g., 1Password autofill)
+  // Monitor password fields for programmatic changes (e.g., password manager autofill)
+  // Only sync when the field value changes programmatically without user interaction
   useEffect(() => {
     const passwordField = document.getElementById('register-password') as HTMLInputElement
     const confirmPasswordField = document.getElementById(
@@ -80,54 +76,65 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
     ) as HTMLInputElement
 
     if (passwordField && confirmPasswordField) {
-      // Check for changes every 100ms to catch 1Password autofill
-      const interval = setInterval(() => {
-        // If password field has a value but React state doesn't match
-        if (passwordField.value && passwordField.value !== password) {
-          setPassword(passwordField.value)
-          // Auto-fill confirm password field if it's empty
-          if (!confirmPassword) {
-            setConfirmPassword(passwordField.value)
-          }
-        }
+      let lastUserInteraction = 0
+      const USER_INTERACTION_TIMEOUT = 500 // ms - ignore programmatic changes within 500ms of user interaction
 
-        // If confirm password field has a value but React state doesn't match
-        if (confirmPasswordField.value && confirmPasswordField.value !== confirmPassword) {
-          setConfirmPassword(confirmPasswordField.value)
-          // If password field is empty, copy from confirm field
-          if (!password) {
-            setPassword(confirmPasswordField.value)
+      // Track user interactions
+      const trackInteraction = () => {
+        lastUserInteraction = Date.now()
+      }
+
+      passwordField.addEventListener('input', trackInteraction)
+      passwordField.addEventListener('paste', trackInteraction)
+      passwordField.addEventListener('keydown', trackInteraction)
+      confirmPasswordField.addEventListener('input', trackInteraction)
+      confirmPasswordField.addEventListener('paste', trackInteraction)
+      confirmPasswordField.addEventListener('keydown', trackInteraction)
+
+      // Check for programmatic changes (password manager autofill)
+      const checkForAutofill = () => {
+        const timeSinceInteraction = Date.now() - lastUserInteraction
+
+        // Only sync if it's been more than 500ms since last user interaction
+        // This distinguishes password manager autofill from manual typing/pasting
+        if (timeSinceInteraction > USER_INTERACTION_TIMEOUT) {
+          // If password field has a value but React state doesn't match (programmatic change)
+          if (passwordField.value && passwordField.value !== password) {
+            setPassword(passwordField.value)
+            // Only auto-fill confirm password if it's completely empty (password manager autofill)
+            if (!confirmPasswordField.value) {
+              setConfirmPassword(passwordField.value)
+            }
+          }
+
+          // If confirm password field has a value but React state doesn't match (programmatic change)
+          if (confirmPasswordField.value && confirmPasswordField.value !== confirmPassword) {
+            setConfirmPassword(confirmPasswordField.value)
+            // Only auto-fill password if it's completely empty (password manager autofill)
+            if (!passwordField.value) {
+              setPassword(confirmPasswordField.value)
+            }
           }
         }
-      }, 100)
+      }
+
+      // Check periodically for autofill (less frequent than before)
+      const interval = setInterval(checkForAutofill, 300)
 
       // Also use MutationObserver for immediate detection
-      const observer = new MutationObserver(() => {
-        // If password field has a value but React state doesn't match
-        if (passwordField.value && passwordField.value !== password) {
-          setPassword(passwordField.value)
-          // Auto-fill confirm password field if it's empty
-          if (!confirmPassword) {
-            setConfirmPassword(passwordField.value)
-          }
-        }
-
-        // If confirm password field has a value but React state doesn't match
-        if (confirmPasswordField.value && confirmPasswordField.value !== confirmPassword) {
-          setConfirmPassword(confirmPasswordField.value)
-          // If password field is empty, copy from confirm field
-          if (!password) {
-            setPassword(confirmPasswordField.value)
-          }
-        }
-      })
-
+      const observer = new MutationObserver(checkForAutofill)
       observer.observe(passwordField, { attributes: true, attributeFilter: ['value'] })
       observer.observe(confirmPasswordField, { attributes: true, attributeFilter: ['value'] })
 
       return () => {
         clearInterval(interval)
         observer.disconnect()
+        passwordField.removeEventListener('input', trackInteraction)
+        passwordField.removeEventListener('paste', trackInteraction)
+        passwordField.removeEventListener('keydown', trackInteraction)
+        confirmPasswordField.removeEventListener('input', trackInteraction)
+        confirmPasswordField.removeEventListener('paste', trackInteraction)
+        confirmPasswordField.removeEventListener('keydown', trackInteraction)
       }
     }
   }, [password, confirmPassword])
