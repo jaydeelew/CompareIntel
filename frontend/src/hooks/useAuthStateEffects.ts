@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react'
 
 import type { CreditBalance } from '../services/creditService'
 import type { ActiveResultTabs, CompareResponse, ModelConversation } from '../types'
+import { loadSessionState, clearSessionState } from '../utils/sessionState'
 
 interface UseAuthStateEffectsConfig {
   isAuthenticated: boolean
@@ -30,6 +31,7 @@ interface UseAuthStateEffectsCallbacks {
   setCreditBalance: (balance: CreditBalance | null) => void
   setAnonymousCreditsRemaining: (credits: number | null) => void
   setCurrentAbortController: (controller: AbortController | null) => void
+  setWebSearchEnabled: (enabled: boolean) => void
   hasScrolledToResultsRef: React.MutableRefObject<boolean>
   shouldScrollToTopAfterFormattingRef: React.MutableRefObject<boolean>
 }
@@ -60,6 +62,7 @@ export function useAuthStateEffects(
     setCreditBalance,
     setAnonymousCreditsRemaining,
     setCurrentAbortController,
+    setWebSearchEnabled,
     hasScrolledToResultsRef,
     shouldScrollToTopAfterFormattingRef,
   } = callbacks
@@ -95,18 +98,53 @@ export function useAuthStateEffects(
     const wasAuthenticated = prevIsAuthenticatedRef.current === true
     const isNowUnregistered = isAuthenticated === false
 
-    // Clear state when signing in from unregistered
-    if (wasUnregistered && isNowAuthenticated) {
-      setInput('')
-      setResponse(null)
+    // Handle signing in from unregistered - try to restore saved state
+    if (wasUnregistered && isNowAuthenticated && userId) {
+      // Check for saved session state (from "remember state on logout" feature)
+      const savedState = loadSessionState(userId)
+
+      if (savedState) {
+        // Restore saved state
+        console.log('[Auth] Restoring saved session state')
+        setInput(savedState.input || '')
+        setResponse(savedState.response as CompareResponse | null)
+        setIsFollowUpMode(savedState.isFollowUpMode || false)
+        setWebSearchEnabled(savedState.webSearchEnabled || false)
+
+        // Restore model selections
+        if (savedState.selectedModels && savedState.selectedModels.length > 0) {
+          setSelectedModels(savedState.selectedModels)
+          setOriginalSelectedModels(savedState.selectedModels)
+        } else {
+          setSelectedModels([])
+          setOriginalSelectedModels([])
+        }
+
+        // Restore conversations (for follow-up mode)
+        if (savedState.conversations && savedState.conversations.length > 0) {
+          setConversations(savedState.conversations as ModelConversation[])
+        } else {
+          setConversations([])
+        }
+
+        // Clear the saved state after restoring
+        clearSessionState()
+      } else {
+        // No saved state - clear everything as before
+        setInput('')
+        setResponse(null)
+        setIsFollowUpMode(false)
+        setWebSearchEnabled(false)
+        setSelectedModels([])
+        setOriginalSelectedModels([])
+        setConversations([])
+      }
+
+      // Always reset these regardless of saved state
       setError(null)
       setIsLoading(false)
-      setConversations([])
       setProcessingTime(null)
-      setIsFollowUpMode(false)
       setCurrentVisibleComparisonId(null)
-      setSelectedModels([])
-      setOriginalSelectedModels([])
       setClosedCards(new Set())
       setActiveResultTabs({})
       setShowDoneSelectingCard(false)
@@ -141,5 +179,5 @@ export function useAuthStateEffects(
 
     prevIsAuthenticatedRef.current = isAuthenticated
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAuthenticated, currentAbortController])
+  }, [isAuthenticated, userId, currentAbortController])
 }

@@ -3,12 +3,17 @@
  * Displays user info and dropdown menu when authenticated
  */
 
-import React, { useState, useRef, useEffect } from 'react'
+import React, { useState, useRef, useEffect, useCallback } from 'react'
 
 import { getCreditAllocation, getDailyCreditLimit } from '../../config/constants'
 import { useAuth } from '../../contexts/AuthContext'
+import { apiClient } from '../../services/api/client'
+import { deleteAllConversations } from '../../services/conversationService'
 import { getCreditBalance } from '../../services/creditService'
 import type { CreditBalance } from '../../services/creditService'
+import { getUserPreferences, updateUserPreferences } from '../../services/userSettingsService'
+import type { UserPreferences } from '../../services/userSettingsService'
+import { dispatchSaveStateEvent } from '../../utils/sessionState'
 import './UserMenu.css'
 
 type ModalType = 'dashboard' | 'settings' | 'upgrade' | null
@@ -20,6 +25,17 @@ export const UserMenu: React.FC = () => {
   const [creditBalance, setCreditBalance] = useState<CreditBalance | null>(null)
   const [isLoadingCredits, setIsLoadingCredits] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
+
+  // Settings state
+  const [preferences, setPreferences] = useState<UserPreferences | null>(null)
+  const [isLoadingPreferences, setIsLoadingPreferences] = useState(false)
+  const [zipcode, setZipcode] = useState('')
+  const [rememberState, setRememberState] = useState(false)
+  const [isSavingPreferences, setIsSavingPreferences] = useState(false)
+  const [preferencesError, setPreferencesError] = useState<string | null>(null)
+  const [preferencesSuccess, setPreferencesSuccess] = useState<string | null>(null)
+  const [isDeletingHistory, setIsDeletingHistory] = useState(false)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
 
   // Daily model response limits per subscription tier (legacy - for backward compatibility)
   const getDailyLimit = (tier: string): number => {
@@ -95,6 +111,70 @@ export const UserMenu: React.FC = () => {
       document.body.style.overflow = ''
     }
   }, [activeModal])
+
+  // Load preferences when settings modal opens
+  useEffect(() => {
+    if (activeModal === 'settings' && user) {
+      setIsLoadingPreferences(true)
+      setPreferencesError(null)
+      setPreferencesSuccess(null)
+      getUserPreferences()
+        .then(prefs => {
+          setPreferences(prefs)
+          setZipcode(prefs.zipcode || '')
+          setRememberState(prefs.remember_state_on_logout)
+        })
+        .catch(error => {
+          console.error('Failed to load preferences:', error)
+          setPreferencesError('Failed to load settings')
+        })
+        .finally(() => {
+          setIsLoadingPreferences(false)
+        })
+    }
+  }, [activeModal, user])
+
+  // Handle saving preferences
+  const handleSavePreferences = useCallback(async () => {
+    setIsSavingPreferences(true)
+    setPreferencesError(null)
+    setPreferencesSuccess(null)
+    try {
+      const updated = await updateUserPreferences({
+        zipcode: zipcode.trim() || null,
+        remember_state_on_logout: rememberState,
+      })
+      setPreferences(updated)
+      setPreferencesSuccess('Settings saved successfully!')
+      setTimeout(() => setPreferencesSuccess(null), 3000)
+    } catch (error: unknown) {
+      console.error('Failed to save preferences:', error)
+      const errorMessage = error instanceof Error ? error.message : 'Failed to save settings'
+      setPreferencesError(errorMessage)
+    } finally {
+      setIsSavingPreferences(false)
+    }
+  }, [zipcode, rememberState])
+
+  // Handle delete all history
+  const handleDeleteAllHistory = useCallback(async () => {
+    setIsDeletingHistory(true)
+    setPreferencesError(null)
+    try {
+      const result = await deleteAllConversations()
+      setPreferencesSuccess(`${result.deleted_count} conversation(s) deleted`)
+      // Invalidate the conversations cache so the UI updates
+      apiClient.deleteCache('GET:/conversations')
+      setShowDeleteConfirm(false)
+      setTimeout(() => setPreferencesSuccess(null), 3000)
+    } catch (error: unknown) {
+      console.error('Failed to delete conversations:', error)
+      const errorMessage = error instanceof Error ? error.message : 'Failed to delete history'
+      setPreferencesError(errorMessage)
+    } finally {
+      setIsDeletingHistory(false)
+    }
+  }, [])
 
   if (!user) return null
 
@@ -337,7 +417,14 @@ export const UserMenu: React.FC = () => {
 
           <button
             className="menu-item logout-btn"
-            onClick={() => {
+            onClick={async () => {
+              // Check if user wants to remember state on logout
+              if (preferences?.remember_state_on_logout || rememberState) {
+                // Dispatch event to save state before logout
+                dispatchSaveStateEvent()
+                // Small delay to ensure state is saved
+                await new Promise(resolve => setTimeout(resolve, 50))
+              }
               logout()
               setIsOpen(false)
             }}
@@ -397,33 +484,216 @@ export const UserMenu: React.FC = () => {
 
       {activeModal === 'settings' && (
         <div className="modal-overlay" onClick={closeModal}>
-          <div className="modal-content coming-soon-modal" onClick={e => e.stopPropagation()}>
+          <div className="modal-content settings-modal" onClick={e => e.stopPropagation()}>
             <button className="modal-close" onClick={closeModal} aria-label="Close modal">
               ×
             </button>
-            <div className="modal-icon">
-              <svg
-                width="64"
-                height="64"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" />
-                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1Z" />
-              </svg>
+            <div className="settings-modal-header">
+              <div className="modal-icon">
+                <svg
+                  width="48"
+                  height="48"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" />
+                  <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1Z" />
+                </svg>
+              </div>
+              <h2 className="modal-title">Settings</h2>
             </div>
-            <h2 className="modal-title">Settings</h2>
-            <p className="modal-description">
-              The Settings feature is coming soon! Customize your experience, manage your account
-              preferences, and configure notifications to suit your workflow.
-            </p>
-            <button className="modal-button-primary" onClick={closeModal}>
-              Got it
-            </button>
+
+            {isLoadingPreferences ? (
+              <div className="settings-loading">
+                <div className="settings-spinner" />
+                <span>Loading settings...</span>
+              </div>
+            ) : (
+              <div className="settings-content">
+                {/* Status Messages */}
+                {preferencesError && (
+                  <div className="settings-message settings-error">
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    >
+                      <circle cx="12" cy="12" r="10" />
+                      <line x1="15" y1="9" x2="9" y2="15" />
+                      <line x1="9" y1="9" x2="15" y2="15" />
+                    </svg>
+                    {preferencesError}
+                  </div>
+                )}
+                {preferencesSuccess && (
+                  <div className="settings-message settings-success">
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    >
+                      <path d="M20 6L9 17l-5-5" />
+                    </svg>
+                    {preferencesSuccess}
+                  </div>
+                )}
+
+                {/* Location Settings */}
+                <div className="settings-section">
+                  <h3 className="settings-section-title">
+                    <svg
+                      width="18"
+                      height="18"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                    >
+                      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                      <circle cx="12" cy="10" r="3" />
+                    </svg>
+                    Location
+                  </h3>
+                  <div className="settings-item">
+                    <div className="settings-item-info">
+                      <label htmlFor="zipcode-input" className="settings-label">
+                        Zipcode
+                      </label>
+                      <p className="settings-description">
+                        Enter your zipcode for more precise location-based model results
+                      </p>
+                    </div>
+                    <input
+                      id="zipcode-input"
+                      type="text"
+                      className="settings-input"
+                      placeholder="12345"
+                      value={zipcode}
+                      onChange={e => setZipcode(e.target.value)}
+                      maxLength={10}
+                    />
+                  </div>
+                </div>
+
+                {/* Session Settings */}
+                <div className="settings-section">
+                  <h3 className="settings-section-title">
+                    <svg
+                      width="18"
+                      height="18"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                    >
+                      <path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83" />
+                    </svg>
+                    Session
+                  </h3>
+                  <div className="settings-item settings-item-toggle">
+                    <div className="settings-item-info">
+                      <span className="settings-label">Remember state on logout</span>
+                      <p className="settings-description">
+                        Preserve model responses, model selections, follow-up mode, text entered,
+                        and web search state when you log out
+                      </p>
+                    </div>
+                    <button
+                      className={`settings-toggle ${rememberState ? 'active' : ''}`}
+                      onClick={() => setRememberState(!rememberState)}
+                      aria-pressed={rememberState}
+                      role="switch"
+                    >
+                      <span className="settings-toggle-slider" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Save Button */}
+                <button
+                  className="settings-save-btn"
+                  onClick={handleSavePreferences}
+                  disabled={isSavingPreferences}
+                >
+                  {isSavingPreferences ? (
+                    <>
+                      <span className="settings-btn-spinner" />
+                      Saving...
+                    </>
+                  ) : (
+                    'Save Settings'
+                  )}
+                </button>
+
+                {/* Danger Zone - Delete History */}
+                <div className="settings-section settings-danger-zone">
+                  <h3 className="settings-section-title danger">
+                    <svg
+                      width="18"
+                      height="18"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                    >
+                      <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                    Danger Zone
+                  </h3>
+                  <div className="settings-item">
+                    <div className="settings-item-info">
+                      <span className="settings-label">Delete all comparison history</span>
+                      <p className="settings-description">
+                        Permanently delete all your saved model comparison conversations. This
+                        action cannot be undone.
+                      </p>
+                    </div>
+                    {!showDeleteConfirm ? (
+                      <button
+                        className="settings-delete-btn"
+                        onClick={() => setShowDeleteConfirm(true)}
+                      >
+                        Delete All
+                      </button>
+                    ) : (
+                      <div className="settings-delete-confirm">
+                        <span className="settings-delete-warning">Are you sure?</span>
+                        <button
+                          className="settings-delete-btn confirm"
+                          onClick={handleDeleteAllHistory}
+                          disabled={isDeletingHistory}
+                        >
+                          {isDeletingHistory ? 'Deleting...' : 'Yes, Delete'}
+                        </button>
+                        <button
+                          className="settings-delete-btn cancel"
+                          onClick={() => setShowDeleteConfirm(false)}
+                          disabled={isDeletingHistory}
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="settings-modal-footer">
+              <button className="modal-button-secondary" onClick={closeModal}>
+                Close
+              </button>
+            </div>
           </div>
         </div>
       )}

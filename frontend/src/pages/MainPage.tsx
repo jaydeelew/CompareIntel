@@ -66,10 +66,12 @@ import {
 import { getCreditBalance } from '../services/creditService'
 import type { CreditBalance } from '../services/creditService'
 import { getAvailableModels } from '../services/modelsService'
+import { getUserPreferences } from '../services/userSettingsService'
 import type { ModelsByProvider, ResultTab, ActiveResultTabs } from '../types'
 import { RESULT_TAB, createModelId } from '../types'
 import { generateBrowserFingerprint, getSafeId } from '../utils'
 import { isErrorMessage } from '../utils/error'
+import { saveSessionState, onSaveStateEvent } from '../utils/sessionState'
 
 export function MainPage() {
   const { isAuthenticated, user, refreshUser, isLoading: authLoading } = useAuth()
@@ -130,6 +132,7 @@ export function MainPage() {
   const [defaultSelectionOverridden, setDefaultSelectionOverridden] = useState(false)
   const [userLocation, setUserLocation] = useState<string | null>(null)
   const geolocationDetectedRef = useRef(false)
+  const savedLocationLoadedRef = useRef(false)
 
   const setAttachedFiles = useCallback((files: (AttachedFile | StoredAttachedFile)[]) => {
     setAttachedFilesState(files)
@@ -1226,14 +1229,62 @@ export function MainPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [input, error])
 
-  // Geolocation detection
+  // Load user's saved location (zipcode) from preferences - takes priority over geolocation
+  useEffect(() => {
+    if (!isAuthenticated || !user) return
+    if (savedLocationLoadedRef.current) return
+
+    const loadSavedLocation = async () => {
+      try {
+        const preferences = await getUserPreferences()
+        if (preferences.zipcode) {
+          // Convert zipcode to city, state using Zippopotam.us API
+          const response = await fetch(
+            `https://api.zippopotam.us/us/${preferences.zipcode.substring(0, 5)}`
+          )
+          if (response.ok) {
+            const data = await response.json()
+            if (data.places && data.places.length > 0) {
+              const place = data.places[0]
+              const city = place['place name'] || ''
+              const state = place['state'] || ''
+              const location = [city, state, 'United States'].filter(Boolean).join(', ')
+              console.log(
+                '[Settings] Using saved zipcode location:',
+                location,
+                `(zipcode: ${preferences.zipcode})`
+              )
+              // Override any previously detected geolocation
+              setUserLocation(location)
+              savedLocationLoadedRef.current = true
+            }
+          } else {
+            console.debug('[Settings] Could not lookup zipcode:', preferences.zipcode)
+          }
+        }
+      } catch (error) {
+        console.debug('[Settings] Failed to load saved location preference:', error)
+      }
+    }
+
+    loadSavedLocation()
+  }, [isAuthenticated, user])
+
+  // Geolocation detection (fallback when no saved zipcode)
   useEffect(() => {
     if (geolocationDetectedRef.current) return
+    // Don't run geolocation if user has a saved location
+    if (savedLocationLoadedRef.current) return
     geolocationDetectedRef.current = true
 
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         async position => {
+          // Double-check: don't override if saved location was loaded while we waited
+          if (savedLocationLoadedRef.current) {
+            console.log('[Geolocation] Skipping - user has saved location in settings')
+            return
+          }
           try {
             const response = await fetch(
               `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${position.coords.latitude}&longitude=${position.coords.longitude}&localityLanguage=en`
@@ -1262,6 +1313,26 @@ export function MainPage() {
       )
     }
   }, [])
+
+  // Listen for save state event (triggered before logout when "remember state" is enabled)
+  useEffect(() => {
+    if (!user) return
+
+    const cleanup = onSaveStateEvent(() => {
+      console.log('[SessionState] Saving state before logout...')
+      saveSessionState({
+        input,
+        isFollowUpMode,
+        webSearchEnabled,
+        response,
+        selectedModels,
+        conversations,
+        userId: user.id,
+      })
+    })
+
+    return cleanup
+  }, [user, input, isFollowUpMode, webSearchEnabled, response, selectedModels, conversations])
 
   // Load usage and models on mount
   useEffect(() => {
@@ -1546,6 +1617,7 @@ export function MainPage() {
       setCreditBalance,
       setAnonymousCreditsRemaining,
       setCurrentAbortController,
+      setWebSearchEnabled,
       hasScrolledToResultsRef,
       shouldScrollToTopAfterFormattingRef,
     }

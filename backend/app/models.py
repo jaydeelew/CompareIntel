@@ -124,6 +124,13 @@ class UserPreference(Base):
     # Auto-detected from browser, defaults to UTC if not set
     timezone = Column(String(50), default="UTC")
 
+    # Location settings - zipcode for precise location-based model results
+    zipcode = Column(String(10), nullable=True)  # US zipcode format (5 or 9 digits)
+
+    # Session state preservation settings
+    # When enabled, preserves follow-up mode, model responses, textarea text, and web search state on logout
+    remember_state_on_logout = Column(Boolean, default=False)
+
     # Timestamps
     created_at = Column(DateTime, default=func.now())
     updated_at = Column(DateTime, default=func.now(), onupdate=func.now())

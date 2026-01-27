@@ -92,3 +92,13 @@ export {
   downloadFile,
 } from './export'
 export type { ComparisonExportData } from './export'
+
+// Session state persistence utilities
+export {
+  saveSessionState,
+  loadSessionState,
+  clearSessionState,
+  dispatchSaveStateEvent,
+  onSaveStateEvent,
+} from './sessionState'
+export type { PersistedSessionState } from './sessionState'

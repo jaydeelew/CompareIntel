@@ -2472,6 +2472,22 @@ async def get_credit_usage(
     }
 
 
+@router.delete("/conversations/all", status_code=status.HTTP_200_OK)
+async def delete_all_conversations(
+    db: Session = Depends(get_db),
+    current_user: Optional[User] = Depends(get_current_user),
+):
+    """Delete all conversations for the current user."""
+    if not current_user:
+        raise HTTPException(status_code=401, detail="Authentication required")
+
+    # Count and delete all user's conversations (messages deleted via cascade)
+    deleted_count = db.query(Conversation).filter(Conversation.user_id == current_user.id).delete()
+    db.commit()
+
+    return {"message": f"Successfully deleted {deleted_count} conversation(s)", "deleted_count": deleted_count}
+
+
 @router.delete("/conversations/{conversation_id}", status_code=status.HTTP_200_OK)
 async def delete_conversation(
     conversation_id: int,
@@ -2617,4 +2633,113 @@ async def create_breakout_conversation(
         breakout_model_id=breakout_conversation.breakout_model_id,
         created_at=breakout_conversation.created_at,
         messages=message_schemas,
+    )
+
+
+@router.get("/user/preferences")
+async def get_user_preferences(
+    db: Session = Depends(get_db),
+    current_user: Optional[User] = Depends(get_current_user),
+):
+    """Get user preferences/settings."""
+    from ..models import UserPreference
+    from ..schemas import UserPreferencesResponse
+
+    if not current_user:
+        raise HTTPException(status_code=401, detail="Authentication required")
+
+    # Get or create preferences
+    preferences = current_user.preferences
+    if not preferences:
+        preferences = UserPreference(
+            user_id=current_user.id,
+            theme="light",
+            email_notifications=True,
+            usage_alerts=True,
+        )
+        db.add(preferences)
+        db.commit()
+        db.refresh(preferences)
+
+    # Parse preferred_models from JSON if present
+    preferred_models = None
+    if preferences.preferred_models:
+        try:
+            preferred_models = json.loads(preferences.preferred_models)
+        except (json.JSONDecodeError, TypeError):
+            preferred_models = None
+
+    return UserPreferencesResponse(
+        preferred_models=preferred_models,
+        theme=preferences.theme or "light",
+        email_notifications=preferences.email_notifications if preferences.email_notifications is not None else True,
+        usage_alerts=preferences.usage_alerts if preferences.usage_alerts is not None else True,
+        zipcode=preferences.zipcode,
+        remember_state_on_logout=preferences.remember_state_on_logout if preferences.remember_state_on_logout is not None else False,
+    )
+
+
+@router.put("/user/preferences")
+async def update_user_preferences(
+    preferences_data: dict = Body(...),
+    db: Session = Depends(get_db),
+    current_user: Optional[User] = Depends(get_current_user),
+):
+    """Update user preferences/settings."""
+    from ..models import UserPreference
+    from ..schemas import UserPreferencesUpdate, UserPreferencesResponse
+
+    if not current_user:
+        raise HTTPException(status_code=401, detail="Authentication required")
+
+    # Validate the input data
+    try:
+        validated_data = UserPreferencesUpdate(**preferences_data)
+    except Exception as e:
+        raise HTTPException(status_code=422, detail=str(e))
+
+    # Get or create preferences
+    preferences = current_user.preferences
+    if not preferences:
+        preferences = UserPreference(
+            user_id=current_user.id,
+            theme="light",
+            email_notifications=True,
+            usage_alerts=True,
+        )
+        db.add(preferences)
+        db.flush()
+
+    # Update only the fields that were provided
+    if validated_data.theme is not None:
+        preferences.theme = validated_data.theme
+    if validated_data.email_notifications is not None:
+        preferences.email_notifications = validated_data.email_notifications
+    if validated_data.usage_alerts is not None:
+        preferences.usage_alerts = validated_data.usage_alerts
+    if validated_data.preferred_models is not None:
+        preferences.preferred_models = json.dumps(validated_data.preferred_models)
+    if "zipcode" in preferences_data:  # Allow explicit None to clear
+        preferences.zipcode = validated_data.zipcode
+    if validated_data.remember_state_on_logout is not None:
+        preferences.remember_state_on_logout = validated_data.remember_state_on_logout
+
+    db.commit()
+    db.refresh(preferences)
+
+    # Parse preferred_models from JSON if present
+    preferred_models = None
+    if preferences.preferred_models:
+        try:
+            preferred_models = json.loads(preferences.preferred_models)
+        except (json.JSONDecodeError, TypeError):
+            preferred_models = None
+
+    return UserPreferencesResponse(
+        preferred_models=preferred_models,
+        theme=preferences.theme or "light",
+        email_notifications=preferences.email_notifications if preferences.email_notifications is not None else True,
+        usage_alerts=preferences.usage_alerts if preferences.usage_alerts is not None else True,
+        zipcode=preferences.zipcode,
+        remember_state_on_logout=preferences.remember_state_on_logout if preferences.remember_state_on_logout is not None else False,
     )

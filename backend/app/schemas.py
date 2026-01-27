@@ -231,6 +231,8 @@ class UserPreferencesUpdate(BaseModel):
     theme: Optional[Literal["light", "dark"]] = Field(None, description="UI theme preference")
     email_notifications: Optional[bool] = Field(None, description="Enable email notifications")
     usage_alerts: Optional[bool] = Field(None, description="Enable usage limit alerts")
+    zipcode: Optional[str] = Field(None, description="User's zipcode for location-based model results")
+    remember_state_on_logout: Optional[bool] = Field(None, description="Remember state (follow-up mode, responses, textarea, websearch) on logout")
 
     @field_validator("preferred_models")
     @classmethod
@@ -238,6 +240,20 @@ class UserPreferencesUpdate(BaseModel):
         """Validate preferred_models list."""
         if v is not None and len(v) == 0:
             raise ValueError("preferred_models cannot be an empty list")
+        return v
+
+    @field_validator("zipcode")
+    @classmethod
+    def validate_zipcode(cls, v: Optional[str]) -> Optional[str]:
+        """Validate zipcode format (US 5-digit or 9-digit with dash)."""
+        import re
+        if v is not None:
+            v = v.strip()
+            if v == "":
+                return None
+            # US zipcode: 5 digits or 5+4 format (12345 or 12345-6789)
+            if not re.match(r'^\d{5}(-\d{4})?$', v):
+                raise ValueError("Invalid zipcode format. Use 5 digits (12345) or ZIP+4 format (12345-6789)")
         return v
 
 
@@ -248,6 +264,8 @@ class UserPreferencesResponse(BaseModel):
     theme: str
     email_notifications: bool
     usage_alerts: bool
+    zipcode: Optional[str] = None
+    remember_state_on_logout: bool = False
 
     model_config = ConfigDict(from_attributes=True)
 

@@ -98,3 +98,19 @@ export async function createBreakoutConversation(
   const response = await apiClient.post<ConversationDetail>('/conversations/breakout', request)
   return response.data
 }
+
+/**
+ * Delete all conversations for the current user
+ *
+ * @returns Promise resolving to deletion result with count
+ * @throws {ApiError} If deletion fails or user is not authenticated
+ */
+export async function deleteAllConversations(): Promise<{
+  message: string
+  deleted_count: number
+}> {
+  const response = await apiClient.delete<{ message: string; deleted_count: number }>(
+    '/conversations/all'
+  )
+  return response.data
+}
