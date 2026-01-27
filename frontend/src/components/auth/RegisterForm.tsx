@@ -355,6 +355,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
             placeholder="your@email.com"
             required
             autoComplete="email"
+            autoFocus
             disabled={isLoading}
           />
         </div>

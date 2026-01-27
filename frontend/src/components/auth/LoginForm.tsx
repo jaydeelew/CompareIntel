@@ -81,6 +81,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
             placeholder="your@email.com"
             required
             autoComplete="email"
+            autoFocus
             disabled={isLoading}
             data-testid="login-email-input"
           />

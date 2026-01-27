@@ -57,11 +57,14 @@ async def send_verification_email(email: EmailStr, code: str) -> None:
     html = f"""
     <html>
       <head>
+        <meta name="color-scheme" content="light">
+        <meta name="supported-color-schemes" content="light">
         <style>
           body {{
             font-family: Arial, sans-serif;
             line-height: 1.6;
-            color: #333;
+            color: #333 !important;
+            background-color: #ffffff !important;
           }}
           .container {{
             max-width: 600px;
@@ -69,20 +72,23 @@ async def send_verification_email(email: EmailStr, code: str) -> None:
             padding: 20px;
           }}
           .header {{
-            background: linear-gradient(135deg, #1e40af 0%, #0ea5e9 100%);
-            color: white;
+            background-color: #1e40af !important;
+            background: linear-gradient(135deg, #1e40af 0%, #0ea5e9 100%) !important;
+            color: white !important;
             padding: 30px;
             text-align: center;
             border-radius: 8px 8px 0 0;
           }}
           .content {{
-            background: #f9f9f9;
+            background-color: #f9f9f9 !important;
+            background: #f9f9f9 !important;
             padding: 30px;
             border-radius: 0 0 8px 8px;
           }}
           .code-box {{
-            background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
-            color: white;
+            background-color: #1e40af !important;
+            background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%) !important;
+            color: white !important;
             font-size: 36px;
             font-weight: bold;
             letter-spacing: 8px;
@@ -96,13 +102,14 @@ async def send_verification_email(email: EmailStr, code: str) -> None:
           .footer {{
             text-align: center;
             margin-top: 20px;
-            color: #666;
+            color: #666 !important;
             font-size: 12px;
           }}
           .warning {{
-            background: #fef3c7;
+            background-color: #fef3c7 !important;
+            background: #fef3c7 !important;
             border: 1px solid #f59e0b;
-            color: #92400e;
+            color: #92400e !important;
             padding: 12px;
             border-radius: 6px;
             margin: 15px 0;
@@ -110,21 +117,21 @@ async def send_verification_email(email: EmailStr, code: str) -> None:
           }}
         </style>
       </head>
-      <body>
+      <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; background-color: #ffffff;">
         <div class="container">
-          <div class="header">
-            <h1>Welcome to CompareIntel!</h1>
+          <div class="header" style="background-color: #1e40af !important; background: linear-gradient(135deg, #1e40af 0%, #0ea5e9 100%) !important; color: white !important; padding: 30px; text-align: center; border-radius: 8px 8px 0 0;">
+            <h1 style="color: white !important; margin: 0;">Welcome to CompareIntel!</h1>
           </div>
-          <div class="content">
+          <div class="content" style="background-color: #f9f9f9 !important; background: #f9f9f9 !important; padding: 30px; border-radius: 0 0 8px 8px;">
             <p>Thank you for registering with CompareIntel, the AI model comparison platform.</p>
             <p>To complete your registration and start comparing AI models, enter the verification code below:</p>
             <div style="text-align: center;">
-              <div class="code-box">{code}</div>
+              <div class="code-box" style="background-color: #1e40af !important; background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%) !important; color: white !important; font-size: 36px; font-weight: bold; letter-spacing: 8px; padding: 20px 30px; border-radius: 12px; margin: 25px auto; display: inline-block; font-family: 'Courier New', monospace; box-shadow: 0 4px 14px rgba(59, 130, 246, 0.4);">{code}</div>
             </div>
-            <p style="text-align: center; color: #6b7280; font-size: 14px;">
+            <p style="text-align: center; color: #6b7280 !important; font-size: 14px;">
               Copy and paste this code into the verification modal on CompareIntel.
             </p>
-            <div class="warning">
+            <div class="warning" style="background-color: #fef3c7 !important; background: #fef3c7 !important; border: 1px solid #f59e0b; color: #92400e !important; padding: 12px; border-radius: 6px; margin: 15px 0; font-size: 14px;">
               <strong>⏰ This code expires in 15 minutes.</strong>
             </div>
             <p>If you didn't create an account with CompareIntel, you can safely ignore this email.</p>
@@ -174,11 +181,14 @@ async def send_password_reset_email(email: EmailStr, token: str) -> None:
     html = f"""
     <html>
       <head>
+        <meta name="color-scheme" content="light">
+        <meta name="supported-color-schemes" content="light">
         <style>
           body {{
             font-family: Arial, sans-serif;
             line-height: 1.6;
-            color: #333;
+            color: #333 !important;
+            background-color: #ffffff !important;
           }}
           .container {{
             max-width: 600px;
@@ -186,22 +196,25 @@ async def send_password_reset_email(email: EmailStr, token: str) -> None:
             padding: 20px;
           }}
           .header {{
-            background: linear-gradient(135deg, #1e40af 0%, #0ea5e9 100%);
-            color: white;
+            background-color: #1e40af !important;
+            background: linear-gradient(135deg, #1e40af 0%, #0ea5e9 100%) !important;
+            color: white !important;
             padding: 30px;
             text-align: center;
             border-radius: 8px 8px 0 0;
           }}
           .content {{
-            background: #f9f9f9;
+            background-color: #f9f9f9 !important;
+            background: #f9f9f9 !important;
             padding: 30px;
             border-radius: 0 0 8px 8px;
           }}
           .button {{
             display: inline-block;
             padding: 12px 30px;
-            background: linear-gradient(135deg, #1e40af 0%, #0ea5e9 100%);
-            color: white;
+            background-color: #1e40af !important;
+            background: linear-gradient(135deg, #1e40af 0%, #0ea5e9 100%) !important;
+            color: white !important;
             text-decoration: none;
             border-radius: 6px;
             margin: 20px 0;
@@ -209,33 +222,34 @@ async def send_password_reset_email(email: EmailStr, token: str) -> None:
           .footer {{
             text-align: center;
             margin-top: 20px;
-            color: #666;
+            color: #666 !important;
             font-size: 12px;
           }}
           .warning {{
-            background: #fff3cd;
+            background-color: #fff3cd !important;
+            background: #fff3cd !important;
             border: 1px solid #ffeaa7;
-            color: #856404;
+            color: #856404 !important;
             padding: 12px;
             border-radius: 6px;
             margin: 15px 0;
           }}
         </style>
       </head>
-      <body>
+      <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; background-color: #ffffff;">
         <div class="container">
-          <div class="header">
-            <h1>Password Reset Request</h1>
+          <div class="header" style="background-color: #1e40af !important; background: linear-gradient(135deg, #1e40af 0%, #0ea5e9 100%) !important; color: white !important; padding: 30px; text-align: center; border-radius: 8px 8px 0 0;">
+            <h1 style="color: white !important; margin: 0;">Password Reset Request</h1>
           </div>
-          <div class="content">
+          <div class="content" style="background-color: #f9f9f9 !important; background: #f9f9f9 !important; padding: 30px; border-radius: 0 0 8px 8px;">
             <p>You requested to reset your password for your CompareIntel account.</p>
             <p>Click the button below to create a new password:</p>
             <div style="text-align: center;">
-              <a href="{reset_url}" class="button" clicktracking="off">Reset Password</a>
+              <a href="{reset_url}" class="button" clicktracking="off" style="display: inline-block; padding: 12px 30px; background-color: #1e40af !important; background: linear-gradient(135deg, #1e40af 0%, #0ea5e9 100%) !important; color: white !important; text-decoration: none; border-radius: 6px; margin: 20px 0;">Reset Password</a>
             </div>
             <p>Or copy and paste this link into your browser:</p>
-            <p style="word-break: break-all; color: #0ea5e9;">{reset_url}</p>
-            <div class="warning">
+            <p style="word-break: break-all; color: #0ea5e9 !important;">{reset_url}</p>
+            <div class="warning" style="background-color: #fff3cd !important; background: #fff3cd !important; border: 1px solid #ffeaa7; color: #856404 !important; padding: 12px; border-radius: 6px; margin: 15px 0;">
               <strong>⚠️ Security Notice:</strong> This link will expire in 1 hour.
             </div>
             <p>If you didn't request a password reset, you can safely ignore this email. Your password will remain unchanged.</p>
@@ -316,11 +330,14 @@ async def send_subscription_confirmation_email(email: EmailStr, tier: str, perio
     html = f"""
     <html>
       <head>
+        <meta name="color-scheme" content="light">
+        <meta name="supported-color-schemes" content="light">
         <style>
           body {{
             font-family: Arial, sans-serif;
             line-height: 1.6;
-            color: #333;
+            color: #333 !important;
+            background-color: #ffffff !important;
           }}
           .container {{
             max-width: 600px;
@@ -328,35 +345,40 @@ async def send_subscription_confirmation_email(email: EmailStr, tier: str, perio
             padding: 20px;
           }}
           .header {{
-            background: linear-gradient(135deg, #1e40af 0%, #0ea5e9 100%);
-            color: white;
+            background-color: #1e40af !important;
+            background: linear-gradient(135deg, #1e40af 0%, #0ea5e9 100%) !important;
+            color: white !important;
             padding: 30px;
             text-align: center;
             border-radius: 8px 8px 0 0;
           }}
           .content {{
-            background: #f9f9f9;
+            background-color: #f9f9f9 !important;
+            background: #f9f9f9 !important;
             padding: 30px;
             border-radius: 0 0 8px 8px;
           }}
           .button {{
             display: inline-block;
             padding: 12px 30px;
-            background: linear-gradient(135deg, #1e40af 0%, #0ea5e9 100%);
-            color: white;
+            background-color: #1e40af !important;
+            background: linear-gradient(135deg, #1e40af 0%, #0ea5e9 100%) !important;
+            color: white !important;
             text-decoration: none;
             border-radius: 6px;
             margin: 20px 0;
           }}
           .subscription-box {{
-            background: white;
+            background-color: white !important;
+            background: white !important;
             border: 2px solid #0ea5e9;
             padding: 20px;
             border-radius: 8px;
             margin: 20px 0;
           }}
           .benefits {{
-            background: white;
+            background-color: white !important;
+            background: white !important;
             padding: 20px;
             border-radius: 8px;
             margin: 20px 0;
@@ -380,27 +402,27 @@ async def send_subscription_confirmation_email(email: EmailStr, tier: str, perio
           .footer {{
             text-align: center;
             margin-top: 20px;
-            color: #666;
+            color: #666 !important;
             font-size: 12px;
           }}
         </style>
       </head>
-      <body>
+      <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; background-color: #ffffff;">
         <div class="container">
-          <div class="header">
-            <h1>🎉 Subscription Confirmed!</h1>
+          <div class="header" style="background-color: #1e40af !important; background: linear-gradient(135deg, #1e40af 0%, #0ea5e9 100%) !important; color: white !important; padding: 30px; text-align: center; border-radius: 8px 8px 0 0;">
+            <h1 style="color: white !important; margin: 0;">🎉 Subscription Confirmed!</h1>
           </div>
-          <div class="content">
+          <div class="content" style="background-color: #f9f9f9 !important; background: #f9f9f9 !important; padding: 30px; border-radius: 0 0 8px 8px;">
             <p>Thank you for upgrading to CompareIntel <strong>{tier_display}</strong>!</p>
             
-            <div class="subscription-box">
+            <div class="subscription-box" style="background-color: white !important; background: white !important; border: 2px solid #0ea5e9; padding: 20px; border-radius: 8px; margin: 20px 0;">
               <h3 style="margin-top: 0;">Subscription Details</h3>
               <p><strong>Plan:</strong> {tier_display}</p>
               <p><strong>Billing:</strong> {period_display}</p>
               <p><strong>Amount:</strong> ${amount:.2f}</p>
             </div>
             
-            <div class="benefits">
+            <div class="benefits" style="background-color: white !important; background: white !important; padding: 20px; border-radius: 8px; margin: 20px 0;">
               <h3>Your {tier_display} Benefits</h3>
               <ul>
                 {benefits_html}
@@ -410,10 +432,10 @@ async def send_subscription_confirmation_email(email: EmailStr, tier: str, perio
             <p>Your subscription is now active and you have full access to all {tier_display} features.</p>
             
             <div style="text-align: center;">
-              <a href="{dashboard_url}" class="button">Go to Dashboard</a>
+              <a href="{dashboard_url}" class="button" style="display: inline-block; padding: 12px 30px; background-color: #1e40af !important; background: linear-gradient(135deg, #1e40af 0%, #0ea5e9 100%) !important; color: white !important; text-decoration: none; border-radius: 6px; margin: 20px 0;">Go to Dashboard</a>
             </div>
             
-            <p style="margin-top: 30px; color: #666; font-size: 14px;">
+            <p style="margin-top: 30px; color: #666 !important; font-size: 14px;">
               You can manage your subscription and billing from your account dashboard at any time.
             </p>
           </div>
@@ -456,11 +478,14 @@ async def send_usage_limit_warning_email(email: EmailStr, usage_count: int, dail
     html = f"""
     <html>
       <head>
+        <meta name="color-scheme" content="light">
+        <meta name="supported-color-schemes" content="light">
         <style>
           body {{
             font-family: Arial, sans-serif;
             line-height: 1.6;
-            color: #333;
+            color: #333 !important;
+            background-color: #ffffff !important;
           }}
           .container {{
             max-width: 600px;
@@ -468,35 +493,40 @@ async def send_usage_limit_warning_email(email: EmailStr, usage_count: int, dail
             padding: 20px;
           }}
           .header {{
-            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-            color: white;
+            background-color: #f59e0b !important;
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
+            color: white !important;
             padding: 30px;
             text-align: center;
             border-radius: 8px 8px 0 0;
           }}
           .content {{
-            background: #f9f9f9;
+            background-color: #f9f9f9 !important;
+            background: #f9f9f9 !important;
             padding: 30px;
             border-radius: 0 0 8px 8px;
           }}
           .button {{
             display: inline-block;
             padding: 12px 30px;
-            background: linear-gradient(135deg, #1e40af 0%, #0ea5e9 100%);
-            color: white;
+            background-color: #1e40af !important;
+            background: linear-gradient(135deg, #1e40af 0%, #0ea5e9 100%) !important;
+            color: white !important;
             text-decoration: none;
             border-radius: 6px;
             margin: 20px 0;
           }}
           .usage-bar {{
-            background: #e0e0e0;
+            background-color: #e0e0e0 !important;
+            background: #e0e0e0 !important;
             border-radius: 10px;
             height: 30px;
             position: relative;
             margin: 20px 0;
           }}
           .usage-fill {{
-            background: linear-gradient(90deg, #f59e0b 0%, #d97706 100%);
+            background-color: #f59e0b !important;
+            background: linear-gradient(90deg, #f59e0b 0%, #d97706 100%) !important;
             height: 100%;
             border-radius: 10px;
             width: {percentage_used}%;
@@ -504,32 +534,32 @@ async def send_usage_limit_warning_email(email: EmailStr, usage_count: int, dail
           .footer {{
             text-align: center;
             margin-top: 20px;
-            color: #666;
+            color: #666 !important;
             font-size: 12px;
           }}
         </style>
       </head>
-      <body>
+      <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; background-color: #ffffff;">
         <div class="container">
-          <div class="header">
-            <h1>⚠️ Usage Limit Warning</h1>
+          <div class="header" style="background-color: #f59e0b !important; background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important; color: white !important; padding: 30px; text-align: center; border-radius: 8px 8px 0 0;">
+            <h1 style="color: white !important; margin: 0;">⚠️ Usage Limit Warning</h1>
           </div>
-          <div class="content">
+          <div class="content" style="background-color: #f9f9f9 !important; background: #f9f9f9 !important; padding: 30px; border-radius: 0 0 8px 8px;">
             <p>You've used <strong>{usage_count}</strong> out of <strong>{daily_limit}</strong> daily comparisons ({percentage_used:.0f}%).</p>
             
-            <div class="usage-bar">
-              <div class="usage-fill"></div>
+            <div class="usage-bar" style="background-color: #e0e0e0 !important; background: #e0e0e0 !important; border-radius: 10px; height: 30px; position: relative; margin: 20px 0;">
+              <div class="usage-fill" style="background-color: #f59e0b !important; background: linear-gradient(90deg, #f59e0b 0%, #d97706 100%) !important; height: 100%; border-radius: 10px; width: {percentage_used}%;"></div>
             </div>
             
             <p>You're approaching your daily limit. To continue using CompareIntel without interruption, consider upgrading your plan.</p>
             
             {'''
             <div style="text-align: center;">
-              <a href="''' + upgrade_url + '''" class="button">Upgrade Your Plan</a>
+              <a href="''' + upgrade_url + '''" class="button" style="display: inline-block; padding: 12px 30px; background-color: #1e40af !important; background: linear-gradient(135deg, #1e40af 0%, #0ea5e9 100%) !important; color: white !important; text-decoration: none; border-radius: 6px; margin: 20px 0;">Upgrade Your Plan</a>
             </div>
             '''}
             
-            <p style="margin-top: 20px; color: #666; font-size: 14px;">
+            <p style="margin-top: 20px; color: #666 !important; font-size: 14px;">
               Your daily limit resets at midnight UTC.
             </p>
           </div>
@@ -635,11 +665,14 @@ async def send_model_availability_report(check_results: Dict[str, Any]) -> None:
     html = f"""
     <html>
       <head>
+        <meta name="color-scheme" content="light">
+        <meta name="supported-color-schemes" content="light">
         <style>
           body {{
             font-family: Arial, sans-serif;
             line-height: 1.6;
-            color: #333;
+            color: #333 !important;
+            background-color: #ffffff !important;
           }}
           .container {{
             max-width: 800px;
@@ -647,19 +680,22 @@ async def send_model_availability_report(check_results: Dict[str, Any]) -> None:
             padding: 20px;
           }}
           .header {{
-            background: linear-gradient(135deg, #1e40af 0%, #0ea5e9 100%);
-            color: white;
+            background-color: #1e40af !important;
+            background: linear-gradient(135deg, #1e40af 0%, #0ea5e9 100%) !important;
+            color: white !important;
             padding: 30px;
             text-align: center;
             border-radius: 8px 8px 0 0;
           }}
           .content {{
-            background: #f9f9f9;
+            background-color: #f9f9f9 !important;
+            background: #f9f9f9 !important;
             padding: 30px;
             border-radius: 0 0 8px 8px;
           }}
           .status-box {{
-            background: white;
+            background-color: white !important;
+            background: white !important;
             border: 2px solid {status_color};
             padding: 20px;
             border-radius: 8px;
@@ -667,11 +703,12 @@ async def send_model_availability_report(check_results: Dict[str, Any]) -> None:
             text-align: center;
           }}
           .status-box h2 {{
-            color: {status_color};
+            color: {status_color} !important;
             margin: 0 0 10px 0;
           }}
           .summary {{
-            background: white;
+            background-color: white !important;
+            background: white !important;
             padding: 20px;
             border-radius: 8px;
             margin: 20px 0;
@@ -686,41 +723,41 @@ async def send_model_availability_report(check_results: Dict[str, Any]) -> None:
           .footer {{
             text-align: center;
             margin-top: 20px;
-            color: #666;
+            color: #666 !important;
             font-size: 12px;
           }}
         </style>
       </head>
-      <body>
+      <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; background-color: #ffffff;">
         <div class="container">
-          <div class="header">
-            <h1>Model Availability Check Report</h1>
+          <div class="header" style="background-color: #1e40af !important; background: linear-gradient(135deg, #1e40af 0%, #0ea5e9 100%) !important; color: white !important; padding: 30px; text-align: center; border-radius: 8px 8px 0 0;">
+            <h1 style="color: white !important; margin: 0;">Model Availability Check Report</h1>
           </div>
-          <div class="content">
-            <div class="status-box">
-              <h2>{status_text}</h2>
-              <p style="margin: 0; color: #666;">Check performed on {formatted_timestamp}</p>
+          <div class="content" style="background-color: #f9f9f9 !important; background: #f9f9f9 !important; padding: 30px; border-radius: 0 0 8px 8px;">
+            <div class="status-box" style="background-color: white !important; background: white !important; border: 2px solid {status_color}; padding: 20px; border-radius: 8px; margin: 20px 0; text-align: center;">
+              <h2 style="color: {status_color} !important; margin: 0 0 10px 0;">{status_text}</h2>
+              <p style="margin: 0; color: #666 !important;">Check performed on {formatted_timestamp}</p>
             </div>
             
             {error_html}
             
-            <div class="summary">
+            <div class="summary" style="background-color: white !important; background: white !important; padding: 20px; border-radius: 8px; margin: 20px 0;">
               <h3>Summary</h3>
               <div class="summary-item">
                 <strong>Total Models Checked:</strong> {total_models}
               </div>
               <div class="summary-item">
-                <strong>Available:</strong> <span style="color: #10b981;">{len(available_models)}</span>
+                <strong>Available:</strong> <span style="color: #10b981 !important;">{len(available_models)}</span>
               </div>
               <div class="summary-item">
-                <strong>Unavailable:</strong> <span style="color: #dc2626;">{len(unavailable_models)}</span>
+                <strong>Unavailable:</strong> <span style="color: #dc2626 !important;">{len(unavailable_models)}</span>
               </div>
             </div>
             
             {available_summary}
             {unavailable_html}
             
-            <p style="margin-top: 30px; color: #666; font-size: 14px;">
+            <p style="margin-top: 30px; color: #666 !important; font-size: 14px;">
               This is an automated daily check of model availability from OpenRouter API.
             </p>
           </div>
