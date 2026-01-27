@@ -141,7 +141,7 @@ export const TrialWelcomeModal: React.FC<TrialWelcomeModalProps> = ({
               </li>
               <li>
                 <span className="feature-icon">🧠</span>
-                <span>Access Claude Opus, GPT-5, Gemini Ultra, and more</span>
+                <span>Access all lateset models by the top providers</span>
               </li>
               <li>
                 <span className="feature-icon">⚡</span>

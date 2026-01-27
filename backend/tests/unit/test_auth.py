@@ -183,28 +183,28 @@ class TestEmailVerification:
     """Tests for email verification functionality."""
     
     def test_verify_email_success(self, client, db_session):
-        """Test successful email verification."""
+        """Test successful email verification with 6-digit code."""
         from app.models import User
-        from app.auth import generate_verification_token
+        from app.auth import generate_verification_code
         from passlib.context import CryptContext
         from datetime import datetime, timedelta, UTC
         
         pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-        token = generate_verification_token()
+        code = generate_verification_code()
         user = User(
             email="verify@example.com",
             password_hash=pwd_context.hash("password123"),
             is_verified=False,
-            verification_token=token,
-            verification_token_expires=datetime.now(UTC) + timedelta(hours=24),
+            verification_token=code,
+            verification_token_expires=datetime.now(UTC) + timedelta(minutes=15),
         )
         db_session.add(user)
         db_session.commit()
         
-        # Verify email using POST endpoint
+        # Verify email using POST endpoint with 6-digit code
         response = client.post(
             "/api/auth/verify-email",
-            json={"token": token}
+            json={"token": code}
         )
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
@@ -215,36 +215,63 @@ class TestEmailVerification:
         assert user.is_verified is True
         assert user.verification_token is None
     
-    def test_verify_email_invalid_token(self, client):
-        """Test email verification with invalid token."""
+    def test_verify_email_invalid_code(self, client):
+        """Test email verification with invalid code (not 6 digits)."""
         response = client.post(
             "/api/auth/verify-email",
-            json={"token": "invalid-token-123"}
+            json={"token": "invalid"}
         )
         assert response.status_code == status.HTTP_400_BAD_REQUEST
     
-    def test_verify_email_expired_token(self, client, db_session):
-        """Test email verification with expired token."""
+    def test_verify_email_wrong_code(self, client, db_session):
+        """Test email verification with wrong 6-digit code."""
         from app.models import User
-        from app.auth import generate_verification_token
+        from app.auth import generate_verification_code
         from passlib.context import CryptContext
         from datetime import datetime, timedelta, UTC
         
         pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-        token = generate_verification_token()
+        code = generate_verification_code()
+        user = User(
+            email="wrongcode@example.com",
+            password_hash=pwd_context.hash("password123"),
+            is_verified=False,
+            verification_token=code,
+            verification_token_expires=datetime.now(UTC) + timedelta(minutes=15),
+        )
+        db_session.add(user)
+        db_session.commit()
+        
+        # Use a different but valid 6-digit code
+        wrong_code = "000000" if code != "000000" else "999999"
+        response = client.post(
+            "/api/auth/verify-email",
+            json={"token": wrong_code}
+        )
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+    
+    def test_verify_email_expired_code(self, client, db_session):
+        """Test email verification with expired code."""
+        from app.models import User
+        from app.auth import generate_verification_code
+        from passlib.context import CryptContext
+        from datetime import datetime, timedelta, UTC
+        
+        pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+        code = generate_verification_code()
         user = User(
             email="expired@example.com",
             password_hash=pwd_context.hash("password123"),
             is_verified=False,
-            verification_token=token,
-            verification_token_expires=datetime.now(UTC) - timedelta(hours=1),  # Expired
+            verification_token=code,
+            verification_token_expires=datetime.now(UTC) - timedelta(minutes=1),  # Expired
         )
         db_session.add(user)
         db_session.commit()
         
         response = client.post(
             "/api/auth/verify-email",
-            json={"token": token}
+            json={"token": code}
         )
         assert response.status_code == status.HTTP_400_BAD_REQUEST
     

@@ -272,7 +272,7 @@ class TestPasswordHashingEdgeCases:
 
 
 class TestVerificationTokenEdgeCases:
-    """Tests for verification token edge cases."""
+    """Tests for password reset token edge cases (verification tokens are now 6-digit codes)."""
     
     def test_verification_token_uniqueness(self):
         """Test that verification tokens are unique."""
@@ -300,6 +300,34 @@ class TestVerificationTokenEdgeCases:
         assert "/" not in token
         assert "+" not in token  # Base64 uses +, but token_urlsafe uses - and _
         assert "=" not in token  # Padding removed in token_urlsafe
+
+
+class TestVerificationCodeEdgeCases:
+    """Tests for email verification code edge cases."""
+    
+    def test_verification_code_uniqueness(self):
+        """Test that verification codes are likely unique (within reasonable sample)."""
+        from app.auth import generate_verification_code
+        codes = [generate_verification_code() for _ in range(100)]
+        # At least 95% should be unique (very high probability with 900000 possible codes)
+        unique_codes = set(codes)
+        assert len(unique_codes) >= 95
+    
+    def test_verification_code_format(self):
+        """Test that verification codes are exactly 6 digits."""
+        from app.auth import generate_verification_code
+        for _ in range(100):
+            code = generate_verification_code()
+            assert len(code) == 6
+            assert code.isdigit()
+    
+    def test_verification_code_range(self):
+        """Test that verification codes are in valid range (100000-999999)."""
+        from app.auth import generate_verification_code
+        for _ in range(100):
+            code = generate_verification_code()
+            numeric_code = int(code)
+            assert 100000 <= numeric_code <= 999999
 
 
 class TestAuthEdgeCases:

@@ -36,6 +36,7 @@ from ..auth import (
     create_access_token,
     create_refresh_token,
     generate_verification_token,
+    generate_verification_code,
     verify_token,
 )
 from ..dependencies import get_current_user_required, get_current_verified_user, get_current_user
@@ -205,13 +206,13 @@ async def register(user_data: UserRegister, background_tasks: BackgroundTasks, d
 
     try:
         # Create new user with 7-day trial for premium model access
-        verification_token = generate_verification_token()
+        verification_code = generate_verification_code()
         trial_ends_at = datetime.now(UTC) + timedelta(days=7)  # 7-day trial for new free users
         new_user = User(
             email=user_data.email,
             password_hash=get_password_hash(user_data.password),
-            verification_token=verification_token,
-            verification_token_expires=datetime.now(UTC) + timedelta(hours=24),
+            verification_token=verification_code,  # Store 6-digit code in verification_token field
+            verification_token_expires=datetime.now(UTC) + timedelta(minutes=15),  # 15-minute expiration
             subscription_tier="free",
             subscription_status="active",
             trial_ends_at=trial_ends_at,  # Grant 7-day premium trial
@@ -225,14 +226,14 @@ async def register(user_data: UserRegister, background_tasks: BackgroundTasks, d
         db.add(preferences)
         db.commit()
 
-        # Send verification email in background (optional - won't fail if email not configured)
+        # Send verification code email in background (optional - won't fail if email not configured)
         try:
             if os.environ.get("ENVIRONMENT") == "development":
                 # Development: await to see console output immediately
-                await send_verification_email(email=new_user.email, token=verification_token)
+                await send_verification_email(email=new_user.email, code=verification_code)
             else:
                 # Production: background task for non-blocking
-                background_tasks.add_task(send_verification_email, email=new_user.email, token=verification_token)
+                background_tasks.add_task(send_verification_email, email=new_user.email, code=verification_code)
         except Exception as e:
             print(f"Warning: Could not send verification email: {e}")
             # Continue anyway - email is optional for development
@@ -423,29 +424,35 @@ async def refresh_token(request: Request, token_data: Optional[RefreshTokenReque
 @router.post("/verify-email", status_code=status.HTTP_200_OK)
 async def verify_email(verification: EmailVerification, db: Session = Depends(get_db)):
     """
-    Verify user email with token.
+    Verify user email with 6-digit code.
 
-    - Validates verification token
+    - Validates verification code
     - Marks email as verified
-    - Clears verification token
+    - Clears verification code
     """
-    print(f"Received verification request for token: {verification.token}")
+    code = verification.token  # The field is named 'token' in schema but contains the 6-digit code
+    print(f"Received verification request for code: {code}")
 
-    # Query user by token first
-    user = db.query(User).filter(User.verification_token == verification.token).first()
+    # Validate code format (should be 6 digits)
+    if not code or len(code) != 6 or not code.isdigit():
+        print(f"Invalid code format: {code}")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid verification code")
+
+    # Query user by code
+    user = db.query(User).filter(User.verification_token == code).first()
 
     if not user:
-        print(f"No user found with token: {verification.token}")
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid or expired verification token")
+        print(f"No user found with code: {code}")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid or expired verification code")
 
-    # Check if token is expired (handle both timezone-aware and naive datetimes)
+    # Check if code is expired (handle both timezone-aware and naive datetimes)
     if user.verification_token_expires:
         token_expires = user.verification_token_expires
         if token_expires.tzinfo is None:
             token_expires = token_expires.replace(tzinfo=UTC)
         if token_expires <= datetime.now(UTC):
-            print(f"Token expired for user: {user.email}")
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid or expired verification token")
+            print(f"Code expired for user: {user.email}")
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Verification code has expired. Please request a new code.")
 
     print(f"Verifying email for user: {user.email}")
     user.is_verified = True
@@ -459,10 +466,10 @@ async def verify_email(verification: EmailVerification, db: Session = Depends(ge
 @router.post("/resend-verification", status_code=status.HTTP_200_OK)
 async def resend_verification(request: ResendVerificationRequest, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
     """
-    Resend verification email with rate limiting.
+    Resend verification code with rate limiting.
 
     - Rate limit: 1 request per minute per email
-    - Generates new verification token
+    - Generates new 6-digit verification code
     - Sends new verification email
     - Returns success message (doesn't reveal if email exists)
     """
@@ -470,33 +477,32 @@ async def resend_verification(request: ResendVerificationRequest, background_tas
 
     if not user:
         # Don't reveal if email exists - security best practice
-        return {"message": "If the email exists and is not verified, a verification link has been sent"}
+        return {"message": "If the email exists and is not verified, a verification code has been sent"}
 
     if user.is_verified:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email already verified")
 
     # Rate limiting: Check if user has requested too recently (within 60 seconds)
     if user.verification_token_expires:
-        # Calculate time since last token generation
-        # We use token expiry as a proxy for when the last resend was requested
-        # Token expires in 24 hours, so if it's recent, check the creation time
+        # Calculate time since last code generation
+        # Code expires in 15 minutes, so calculate creation time from expiry
         # Handle both timezone-aware and naive datetimes
         token_expires = user.verification_token_expires
         if token_expires.tzinfo is None:
             token_expires = token_expires.replace(tzinfo=UTC)
-        time_since_last_request = datetime.now(UTC) - (token_expires - timedelta(hours=24))
+        time_since_last_request = datetime.now(UTC) - (token_expires - timedelta(minutes=15))
 
         if time_since_last_request.total_seconds() < 60:
             remaining_seconds = int(60 - time_since_last_request.total_seconds())
             raise HTTPException(
                 status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-                detail=f"Please wait {remaining_seconds} seconds before requesting another verification email",
+                detail=f"Please wait {remaining_seconds} seconds before requesting another verification code",
             )
 
-    # Generate new token
-    verification_token = generate_verification_token()
-    user.verification_token = verification_token
-    user.verification_token_expires = datetime.now(UTC) + timedelta(hours=24)
+    # Generate new 6-digit code
+    verification_code = generate_verification_code()
+    user.verification_token = verification_code
+    user.verification_token_expires = datetime.now(UTC) + timedelta(minutes=15)
     db.commit()
 
     # In development, await the email function to see console output immediately
@@ -504,10 +510,10 @@ async def resend_verification(request: ResendVerificationRequest, background_tas
     try:
         if os.environ.get("ENVIRONMENT") == "development":
             # Development: await to see console output immediately
-            await send_verification_email(email=user.email, token=verification_token)
+            await send_verification_email(email=user.email, code=verification_code)
         else:
             # Production: background task for non-blocking
-            background_tasks.add_task(send_verification_email, email=user.email, token=verification_token)
+            background_tasks.add_task(send_verification_email, email=user.email, code=verification_code)
     except Exception as e:
         print(f"Warning: Could not send verification email: {e}")
         # Continue anyway - in development, token is printed to console

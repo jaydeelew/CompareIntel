@@ -617,16 +617,17 @@ async def send_user_verification(
     if user.is_verified:
         raise HTTPException(status_code=400, detail="User is already verified")
 
-    # Generate new verification token
-    from ..auth import generate_verification_token
+    # Generate new 6-digit verification code
+    from ..auth import generate_verification_code
 
-    user.verification_token = generate_verification_token()
-    user.verification_token_expires = datetime.now(UTC) + timedelta(hours=24)
+    verification_code = generate_verification_code()
+    user.verification_token = verification_code
+    user.verification_token_expires = datetime.now(UTC) + timedelta(minutes=15)
     db.commit()
 
-    # Send verification email
+    # Send verification email with code
     try:
-        await send_verification_email(user.email, user.verification_token)
+        await send_verification_email(user.email, verification_code)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to send verification email: {str(e)}")
 

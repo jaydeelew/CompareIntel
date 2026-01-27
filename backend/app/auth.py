@@ -144,12 +144,26 @@ def verify_token(token: str, token_type: str = "access") -> Optional[Dict[str, A
 
 def generate_verification_token() -> str:
     """
-    Generate a random secure token for email verification or password reset.
+    Generate a random secure token for password reset.
 
     Returns:
         str: URL-safe random token
     """
     return secrets.token_urlsafe(32)
+
+
+def generate_verification_code() -> str:
+    """
+    Generate a 6-digit numeric verification code for email verification.
+    
+    Uses cryptographically secure random number generation.
+
+    Returns:
+        str: 6-digit numeric code (e.g., "123456")
+    """
+    # Generate a random 6-digit code (100000 to 999999)
+    code = secrets.randbelow(900000) + 100000
+    return str(code)
 
 
 def validate_password_strength(password: str) -> Tuple[bool, str]:

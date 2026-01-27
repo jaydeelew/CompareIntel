@@ -214,8 +214,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       // Tokens are now set in HTTP-only cookies by the backend
       const responseData: AuthResponse = await response.json()
 
-      // Clear any stale verification token from URL to prevent VerifyEmail from
-      // trying to verify an old token when the user state changes
+      // Clear any stale token from URL (legacy cleanup)
       const url = new URL(window.location.href)
       if (url.searchParams.has('token')) {
         url.searchParams.delete('token')

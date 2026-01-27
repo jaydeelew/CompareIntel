@@ -40,30 +40,19 @@ else:
     fm = None
 
 
-async def send_verification_email(email: EmailStr, token: str) -> None:
+async def send_verification_email(email: EmailStr, code: str) -> None:
     """
-    Send email verification link to user.
+    Send email verification code to user.
 
     Args:
         email: User's email address
-        token: Verification token
-    
-    Note: The verification link uses clicktracking="off" attribute to prevent
-    SendGrid from wrapping the link in a subdomain (e.g., url3882.compareintel.com)
-    which would cause SSL certificate errors. This ensures users can directly
-    access the verification URL without certificate warnings.
+        code: 6-digit verification code
     """
     # Skip sending email if not configured (development mode)
     if not EMAIL_CONFIGURED:
-        frontend_url = os.getenv("FRONTEND_URL", "http://localhost:5173")
-        verification_url = f"{frontend_url}/verify-email?token={token}"
         print(f"Email service not configured - skipping verification email for {email}")
-        print(f"Verification token: {token}")
-        print(f"Verification URL: {verification_url}")
+        print(f"Verification code: {code}")
         return
-
-    frontend_url = os.getenv("FRONTEND_URL", "http://localhost:5173")
-    verification_url = f"{frontend_url}/verify-email?token={token}"
 
     html = f"""
     <html>
@@ -91,20 +80,33 @@ async def send_verification_email(email: EmailStr, token: str) -> None:
             padding: 30px;
             border-radius: 0 0 8px 8px;
           }}
-          .button {{
-            display: inline-block;
-            padding: 12px 30px;
-            background: linear-gradient(135deg, #1e40af 0%, #0ea5e9 100%);
+          .code-box {{
+            background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
             color: white;
-            text-decoration: none;
-            border-radius: 6px;
-            margin: 20px 0;
+            font-size: 36px;
+            font-weight: bold;
+            letter-spacing: 8px;
+            padding: 20px 30px;
+            border-radius: 12px;
+            margin: 25px auto;
+            display: inline-block;
+            font-family: 'Courier New', monospace;
+            box-shadow: 0 4px 14px rgba(59, 130, 246, 0.4);
           }}
           .footer {{
             text-align: center;
             margin-top: 20px;
             color: #666;
             font-size: 12px;
+          }}
+          .warning {{
+            background: #fef3c7;
+            border: 1px solid #f59e0b;
+            color: #92400e;
+            padding: 12px;
+            border-radius: 6px;
+            margin: 15px 0;
+            font-size: 14px;
           }}
         </style>
       </head>
@@ -115,13 +117,16 @@ async def send_verification_email(email: EmailStr, token: str) -> None:
           </div>
           <div class="content">
             <p>Thank you for registering with CompareIntel, the AI model comparison platform.</p>
-            <p>To complete your registration and start comparing AI models, please verify your email address by clicking the button below:</p>
+            <p>To complete your registration and start comparing AI models, enter the verification code below:</p>
             <div style="text-align: center;">
-              <a href="{verification_url}" class="button" target="_blank" clicktracking="off">Verify Email Address</a>
+              <div class="code-box">{code}</div>
             </div>
-            <p>Or copy and paste this link into your browser:</p>
-            <p style="word-break: break-all; color: #0ea5e9;">{verification_url}</p>
-            <p><strong>This link will expire in 24 hours.</strong></p>
+            <p style="text-align: center; color: #6b7280; font-size: 14px;">
+              Copy and paste this code into the verification modal on CompareIntel.
+            </p>
+            <div class="warning">
+              <strong>⏰ This code expires in 15 minutes.</strong>
+            </div>
             <p>If you didn't create an account with CompareIntel, you can safely ignore this email.</p>
           </div>
           <div class="footer">
@@ -133,13 +138,12 @@ async def send_verification_email(email: EmailStr, token: str) -> None:
     </html>
     """
 
-    message = MessageSchema(subject="Verify Your CompareIntel Account", recipients=[email], body=html, subtype="html")
+    message = MessageSchema(subject="Your CompareIntel Verification Code", recipients=[email], body=html, subtype="html")
 
     try:
         await fm.send_message(message)
     except Exception as e:
         print(f"Failed to send verification email to {email}: {str(e)}")
-        # In production, you might want to log this or use a monitoring service
         raise
 
 

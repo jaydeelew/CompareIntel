@@ -2,7 +2,12 @@ import { useState, useEffect, useRef, useCallback, useMemo, lazy, Suspense } fro
 import { useNavigate, useLocation } from 'react-router-dom'
 
 const AdminPanel = lazy(() => import('../components/admin/AdminPanel'))
-import { AuthModal, VerifyEmail, VerificationBanner, ResetPassword } from '../components/auth'
+import {
+  AuthModal,
+  VerificationCodeModal,
+  VerificationSuccessModal,
+  ResetPassword,
+} from '../components/auth'
 import {
   ComparisonForm,
   ComparisonView,
@@ -40,7 +45,6 @@ import {
   useConversationManager,
   useSavedSelectionManager,
   useCreditWarningManager,
-  useTabCoordination,
   useComparisonStreaming,
   useScrollManagement,
   useExport,
@@ -549,15 +553,40 @@ export function MainPage() {
 
   const [loginEmail, setLoginEmail] = useState<string>('')
 
-  const { verificationToken, suppressVerification, showPasswordReset, handlePasswordResetClose } =
-    useTabCoordination({
-      onOpenAuthModal: mode => {
-        setIsAuthModalOpen(true)
-        setAuthModalMode(mode === 'login' ? 'login' : 'register')
-      },
-      onCloseAuthModal: () => setIsAuthModalOpen(false),
-      onSetLoginEmail: setLoginEmail,
-    })
+  // Verification modal state
+  const [showVerificationCodeModal, setShowVerificationCodeModal] = useState(false)
+  const [showVerificationSuccessModal, setShowVerificationSuccessModal] = useState(false)
+
+  // Password reset state (check URL for reset token)
+  const [showPasswordReset, setShowPasswordReset] = useState(() => {
+    const urlParams = new URLSearchParams(window.location.search)
+    const token = urlParams.get('token')
+    const path = window.location.pathname
+    return !!(token && path.includes('reset-password'))
+  })
+
+  const handlePasswordResetClose = (email?: string) => {
+    setShowPasswordReset(false)
+    const url = new URL(window.location.href)
+    url.searchParams.delete('token')
+    window.history.pushState({}, '', url)
+    if (email) {
+      setLoginEmail(email)
+    }
+    setAuthModalMode('login')
+    setIsAuthModalOpen(true)
+  }
+
+  // Show verification modal when user is logged in but not verified
+  useEffect(() => {
+    if (isAuthenticated && user && !user.is_verified && !authLoading) {
+      // Small delay to let page settle
+      const timeout = setTimeout(() => {
+        setShowVerificationCodeModal(true)
+      }, 500)
+      return () => clearTimeout(timeout)
+    }
+  }, [isAuthenticated, user, authLoading])
 
   useEffect(() => {
     const fetchAnonymousMockModeSetting = async () => {
@@ -1594,9 +1623,14 @@ export function MainPage() {
     return () => window.removeEventListener('verification-complete', handleVerificationComplete)
   }, [user?.email, getTrialSeenKey])
 
-  // Show trial modal after verification once user state is updated and banner is gone
+  // Show trial modal after verification once user state is updated and success modal is closed
   useEffect(() => {
     if (!pendingTrialModalAfterVerification || !user?.is_verified) {
+      return
+    }
+
+    // Don't show trial modal while success modal is still visible
+    if (showVerificationSuccessModal) {
       return
     }
 
@@ -1606,18 +1640,20 @@ export function MainPage() {
       return
     }
 
-    const verificationCompletedAt = verificationCompletedAtRef.current
-    const bannerDelayMs = 5000 // 4000ms visible + 500ms fade + 500ms buffer
-    const elapsed = verificationCompletedAt ? Date.now() - verificationCompletedAt : 0
-    const remainingDelay = Math.max(0, bannerDelayMs - elapsed)
-
+    // Small delay after success modal closes before showing trial modal
     const timeout = setTimeout(() => {
       setShowTrialWelcomeModal(true)
       setPendingTrialModalAfterVerification(false)
-    }, remainingDelay)
+    }, 500)
 
     return () => clearTimeout(timeout)
-  }, [pendingTrialModalAfterVerification, user?.is_verified, user?.email, getTrialSeenKey])
+  }, [
+    pendingTrialModalAfterVerification,
+    user?.is_verified,
+    user?.email,
+    getTrialSeenKey,
+    showVerificationSuccessModal,
+  ])
 
   const resetAppStateForTutorial = () => {
     setInput('')
@@ -2007,16 +2043,24 @@ export function MainPage() {
             }}
           />
 
-          {!showPasswordReset && !authLoading && (
-            <>
-              <VerifyEmail
-                onClose={() => {}}
-                externalToken={verificationToken}
-                suppressVerification={suppressVerification}
-              />
-              <VerificationBanner />
-            </>
-          )}
+          {/* Verification Code Modal */}
+          <VerificationCodeModal
+            isOpen={showVerificationCodeModal && !showPasswordReset}
+            onClose={() => setShowVerificationCodeModal(false)}
+            onVerified={() => {
+              setShowVerificationCodeModal(false)
+              setShowVerificationSuccessModal(true)
+              // Dispatch verification-complete event to trigger model refetch and trial modal
+              window.dispatchEvent(new CustomEvent('verification-complete'))
+            }}
+            userEmail={user?.email}
+          />
+
+          {/* Verification Success Modal */}
+          <VerificationSuccessModal
+            isOpen={showVerificationSuccessModal}
+            onClose={() => setShowVerificationSuccessModal(false)}
+          />
 
           {showPasswordReset && <ResetPassword onClose={handlePasswordResetClose} />}
 

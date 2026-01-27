@@ -44,8 +44,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     }
   }, [isOpen])
 
-  // No need for manual password reset detection - handled by App.tsx tab coordination
-
   if (!isOpen) return null
 
   const handleSuccess = () => {

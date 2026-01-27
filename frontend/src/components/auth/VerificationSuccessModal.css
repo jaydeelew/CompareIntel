@@ -1,0 +1,301 @@
+/* Verification Success Modal Styles */
+
+.verification-success-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  padding: 1rem;
+  animation: successFadeIn 0.3s ease-out;
+}
+
+@keyframes successFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.verification-success-modal {
+  background: linear-gradient(135deg, #ffffff 0%, #f0fdf4 100%);
+  border-radius: 16px;
+  box-shadow:
+    0 25px 50px -12px rgba(0, 0, 0, 0.25),
+    0 0 0 1px rgba(16, 185, 129, 0.2);
+  max-width: 440px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  animation: successSlideUp 0.4s ease-out;
+  display: flex;
+  flex-direction: column;
+}
+
+@keyframes successSlideUp {
+  from {
+    transform: translateY(30px) scale(0.95);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+.verification-success-header {
+  position: relative;
+  text-align: center;
+  padding: 2rem 1.5rem 1.5rem;
+  background: linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%);
+  border-radius: 16px 16px 0 0;
+}
+
+.verification-success-icon {
+  margin-bottom: 0.75rem;
+}
+
+.checkmark-svg {
+  animation: checkmarkPop 0.5s ease-out 0.2s both;
+}
+
+@keyframes checkmarkPop {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.checkmark-path {
+  stroke-dasharray: 50;
+  stroke-dashoffset: 50;
+  animation: checkmarkDraw 0.4s ease-out 0.5s forwards;
+}
+
+@keyframes checkmarkDraw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.verification-success-header h2 {
+  margin: 0;
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: white;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  animation: fadeInUp 0.4s ease-out 0.3s both;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.verification-success-content {
+  padding: 1.5rem 2rem;
+  flex: 1;
+  text-align: center;
+}
+
+.verification-success-message {
+  font-size: 1.0625rem;
+  line-height: 1.6;
+  color: #374151;
+  margin: 0 0 1.5rem 0;
+}
+
+.verification-success-features {
+  background: white;
+  border-radius: 12px;
+  padding: 1.25rem;
+  border: 1px solid #d1fae5;
+  text-align: left;
+}
+
+.verification-success-features h3 {
+  margin: 0 0 1rem 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #065f46;
+}
+
+.verification-success-features ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.verification-success-features li {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.9375rem;
+  color: #374151;
+}
+
+.verification-success-features .feature-icon {
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+
+.verification-success-footer {
+  padding: 1rem 2rem 1.5rem;
+  display: flex;
+  justify-content: center;
+}
+
+.verification-success-button {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  padding: 1rem 2rem;
+  font-size: 1.0625rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: 100%;
+  max-width: 320px;
+  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4);
+}
+
+.verification-success-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.5);
+}
+
+.verification-success-button:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.4);
+}
+
+.verification-success-button:focus {
+  outline: 2px solid #10b981;
+  outline-offset: 3px;
+}
+
+/* Confetti animation for celebratory effect */
+.verification-success-modal::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 100%;
+  pointer-events: none;
+  background-image:
+    radial-gradient(circle, #10b981 1px, transparent 1px),
+    radial-gradient(circle, #059669 1px, transparent 1px),
+    radial-gradient(circle, #34d399 1px, transparent 1px);
+  background-size:
+    40px 40px,
+    60px 60px,
+    80px 80px;
+  background-position:
+    0 0,
+    20px 20px,
+    40px 40px;
+  opacity: 0.05;
+  border-radius: 16px;
+}
+
+/* Mobile optimizations */
+@media (max-width: 640px) {
+  .verification-success-overlay {
+    padding: 0.75rem;
+    align-items: flex-end;
+  }
+
+  .verification-success-modal {
+    max-width: 100%;
+    border-radius: 20px 20px 0 0;
+    max-height: 85vh;
+  }
+
+  .verification-success-header {
+    padding: 1.5rem 1.25rem 1.25rem;
+  }
+
+  .verification-success-icon svg {
+    width: 56px;
+    height: 56px;
+  }
+
+  .verification-success-header h2 {
+    font-size: 1.5rem;
+  }
+
+  .verification-success-content {
+    padding: 1.25rem 1.5rem;
+  }
+
+  .verification-success-message {
+    font-size: 1rem;
+  }
+
+  .verification-success-features {
+    padding: 1rem;
+  }
+
+  .verification-success-features li {
+    font-size: 0.875rem;
+  }
+
+  .verification-success-footer {
+    padding: 0.875rem 1.5rem 1.25rem;
+  }
+
+  .verification-success-button {
+    padding: 0.875rem 1.5rem;
+    font-size: 1rem;
+  }
+}
+
+/* Custom scrollbar */
+.verification-success-modal::-webkit-scrollbar {
+  width: 8px;
+}
+
+.verification-success-modal::-webkit-scrollbar-track {
+  background: #f0f0f0;
+  border-radius: 8px;
+}
+
+.verification-success-modal::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  border-radius: 8px;
+}
+
+.verification-success-modal::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+}
+
+/* Firefox scrollbar */
+.verification-success-modal {
+  scrollbar-width: thin;
+  scrollbar-color: #10b981 #f0f0f0;
+}
