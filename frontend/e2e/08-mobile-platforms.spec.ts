@@ -548,11 +548,12 @@ test.describe('Mobile Platform Tests', () => {
       const testPassword = 'TestPassword123!'
 
       // Dismiss any tutorial overlay that might be blocking
+      await dismissTutorialOverlay(page)
+
+      // Wait for tutorial overlay to be completely gone before proceeding
       const tutorialOverlay = page.locator('.tutorial-backdrop, .tutorial-welcome-backdrop')
-      if (await tutorialOverlay.isVisible({ timeout: 2000 }).catch(() => false)) {
-        await page.keyboard.press('Escape').catch(() => {})
-        await safeWait(page, 500)
-      }
+      await tutorialOverlay.waitFor({ state: 'hidden', timeout: 5000 }).catch(() => {})
+      await safeWait(page, 500)
 
       // Ensure sign-up button is visible and wait for it
       const signUpButton = page.getByTestId('nav-sign-up-button')

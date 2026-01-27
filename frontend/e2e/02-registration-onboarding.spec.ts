@@ -32,6 +32,101 @@ async function safeWait(page: Page, ms: number) {
 }
 
 /**
+ * Helper function to dismiss the verification code overlay if it appears
+ */
+async function dismissVerificationCodeOverlay(page: Page) {
+  try {
+    // Check if page is still valid
+    if (page.isClosed()) {
+      return
+    }
+
+    // Wait a bit for any animations to complete
+    await safeWait(page, 500)
+
+    // Check if verification code overlay is visible
+    const verificationOverlay = page.locator('.verification-code-overlay')
+    const overlayVisible = await verificationOverlay.isVisible({ timeout: 2000 }).catch(() => false)
+
+    if (!overlayVisible || page.isClosed()) {
+      return
+    }
+
+    // Try to click the close button first
+    const closeButton = page.locator('.verification-code-close, button[aria-label="Close"]')
+    const closeVisible = await closeButton.isVisible({ timeout: 2000 }).catch(() => false)
+
+    if (closeVisible && !page.isClosed()) {
+      try {
+        await closeButton.waitFor({ state: 'visible', timeout: 3000 })
+        await safeWait(page, 300)
+
+        if (!page.isClosed()) {
+          await closeButton.click({ timeout: 5000, force: false }).catch(async () => {
+            if (!page.isClosed()) {
+              await closeButton.click({ timeout: 3000, force: true })
+            }
+          })
+
+          // Wait for overlay to disappear
+          await verificationOverlay.waitFor({ state: 'hidden', timeout: 5000 }).catch(() => {})
+          await safeWait(page, 500)
+        }
+      } catch (_clickError) {
+        // Fallback: try pressing Escape
+        if (!page.isClosed()) {
+          await page.keyboard.press('Escape').catch(() => {})
+          await safeWait(page, 500)
+        }
+      }
+    } else if (!page.isClosed()) {
+      // Fallback: try clicking outside the modal (on the overlay) or pressing Escape
+      try {
+        // Click on the overlay at a position that's outside the modal content
+        // The overlay has onClick={onClose}, but the modal content stops propagation
+        // So we need to click on the overlay div itself, not the modal
+        const overlayBox = await verificationOverlay.boundingBox()
+        if (overlayBox && !page.isClosed()) {
+          // Click at the top-left corner of the overlay (outside modal content)
+          await page.mouse.click(overlayBox.x + 10, overlayBox.y + 10)
+          await safeWait(page, 500)
+        } else {
+          // If we can't get bounding box, try Escape
+          await page.keyboard.press('Escape').catch(() => {})
+          await safeWait(page, 500)
+        }
+      } catch {
+        // Last resort: try Escape
+        if (!page.isClosed()) {
+          await page.keyboard.press('Escape').catch(() => {})
+          await safeWait(page, 500)
+        }
+      }
+    }
+
+    // Final check: ensure overlay is gone
+    if (!page.isClosed()) {
+      await safeWait(page, 500)
+      const stillVisible = await verificationOverlay.isVisible({ timeout: 1000 }).catch(() => false)
+      if (stillVisible && !page.isClosed()) {
+        // Last resort: try Escape again
+        await page.keyboard.press('Escape').catch(() => {})
+        await safeWait(page, 500)
+      }
+    }
+  } catch (error) {
+    // Ignore errors - verification overlay might not be present or page might be closed
+    if (error instanceof Error && error.message.includes('closed')) {
+      return
+    }
+    console.log(
+      'Verification code overlay dismissal attempted:',
+      error instanceof Error ? error.message : String(error)
+    )
+  }
+}
+
+/**
  * Helper function to dismiss the tutorial overlay if it appears
  * Tutorial is disabled on mobile layouts (viewport width <= 768px), so we skip dismissal on mobile
  */
@@ -537,6 +632,9 @@ test.describe('Registration and Onboarding', () => {
       // Wait for loading message to disappear
       const loadingMessage = page.locator('.loading-message:has-text("Loading available models")')
       await loadingMessage.waitFor({ state: 'hidden', timeout: 10000 }).catch(() => {})
+
+      // Dismiss verification code overlay if it's blocking interactions
+      await dismissVerificationCodeOverlay(page)
 
       // Expand first provider dropdown if collapsed (checkboxes are inside dropdowns)
       const providerHeaders = page.locator('.provider-header, button[class*="provider-header"]')
