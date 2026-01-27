@@ -783,3 +783,152 @@ async def send_model_availability_report(check_results: Dict[str, Any]) -> None:
         print(f"Failed to send model availability report email: {str(e)}")
         raise
 
+
+async def send_trial_expired_email(email: EmailStr) -> None:
+    """
+    Send email to free tier users when their 7-day trial expires.
+    Reminds them that paid tiers are coming soon and encourages them to email support.
+    
+    Args:
+        email: User's email address
+    """
+    # Skip sending email if not configured (development mode)
+    if not EMAIL_CONFIGURED:
+        print(f"Email service not configured - skipping trial expired email for {email}")
+        return
+
+    frontend_url = os.getenv("FRONTEND_URL", "http://localhost:5173")
+    dashboard_url = f"{frontend_url}/dashboard"
+
+    html = f"""
+    <html>
+      <head>
+        <meta name="color-scheme" content="light">
+        <meta name="supported-color-schemes" content="light">
+        <style>
+          body {{
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333 !important;
+            background-color: #ffffff !important;
+          }}
+          .container {{
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+          }}
+          .header {{
+            background-color: #1e40af !important;
+            background: linear-gradient(135deg, #1e40af 0%, #0ea5e9 100%) !important;
+            color: white !important;
+            padding: 30px;
+            text-align: center;
+            border-radius: 8px 8px 0 0;
+          }}
+          .content {{
+            background-color: #f9f9f9 !important;
+            background: #f9f9f9 !important;
+            padding: 30px;
+            border-radius: 0 0 8px 8px;
+          }}
+          .info-box {{
+            background-color: white !important;
+            background: white !important;
+            border: 2px solid #0ea5e9;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+          }}
+          .cta-box {{
+            background-color: #eff6ff !important;
+            background: #eff6ff !important;
+            border-left: 4px solid #0ea5e9;
+            padding: 20px;
+            border-radius: 6px;
+            margin: 20px 0;
+          }}
+          .button {{
+            display: inline-block;
+            padding: 12px 30px;
+            background-color: #1e40af !important;
+            background: linear-gradient(135deg, #1e40af 0%, #0ea5e9 100%) !important;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 6px;
+            margin: 20px 0;
+          }}
+          .email-link {{
+            color: #0ea5e9 !important;
+            font-weight: bold;
+            text-decoration: none;
+          }}
+          .footer {{
+            text-align: center;
+            margin-top: 20px;
+            color: #666 !important;
+            font-size: 12px;
+          }}
+        </style>
+      </head>
+      <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; background-color: #ffffff;">
+        <div class="container">
+          <div class="header" style="background-color: #1e40af !important; background: linear-gradient(135deg, #1e40af 0%, #0ea5e9 100%) !important; color: white !important; padding: 30px; text-align: center; border-radius: 8px 8px 0 0;">
+            <h1 style="color: white !important; margin: 0;">Your Trial Has Ended</h1>
+          </div>
+          <div class="content" style="background-color: #f9f9f9 !important; background: #f9f9f9 !important; padding: 30px; border-radius: 0 0 8px 8px;">
+            <p>Thank you for trying CompareIntel! Your 7-day premium trial has ended, and we hope you enjoyed exploring all the premium AI models.</p>
+            
+            <div class="info-box" style="background-color: white !important; background: white !important; border: 2px solid #0ea5e9; padding: 20px; border-radius: 8px; margin: 20px 0;">
+              <h3 style="margin-top: 0; color: #1e40af;">What's Next?</h3>
+              <p>You can still use CompareIntel with our free tier, which includes access to a selection of models. However, <strong>paid subscription tiers are coming soon!</strong></p>
+              <p>With paid tiers, you'll get:</p>
+              <ul style="margin: 10px 0; padding-left: 20px;">
+                <li>Access to all premium AI models</li>
+                <li>Higher daily limits for comparisons</li>
+                <li>More models per comparison</li>
+                <li>Priority support</li>
+              </ul>
+            </div>
+            
+            <div class="cta-box" style="background-color: #eff6ff !important; background: #eff6ff !important; border-left: 4px solid #0ea5e9; padding: 20px; border-radius: 6px; margin: 20px 0;">
+              <h3 style="margin-top: 0; color: #1e40af;">Help Us Launch Paid Tiers Sooner!</h3>
+              <p>We're working hard to bring you paid subscription options. Your feedback and interest help us prioritize this feature.</p>
+              <p style="margin-bottom: 0;"><strong>Email us at <a href="mailto:support@compareintel.com" class="email-link" style="color: #0ea5e9 !important; font-weight: bold; text-decoration: none;">support@compareintel.com</a> to:</strong></p>
+              <ul style="margin: 10px 0; padding-left: 20px;">
+                <li>Express your interest in paid tiers</li>
+                <li>Share which features matter most to you</li>
+                <li>Help us understand your needs</li>
+              </ul>
+              <p style="margin-top: 15px; margin-bottom: 0;">Every email helps us prioritize the launch of paid subscriptions!</p>
+            </div>
+            
+            <div style="text-align: center;">
+              <a href="{dashboard_url}" class="button" style="display: inline-block; padding: 12px 30px; background-color: #1e40af !important; background: linear-gradient(135deg, #1e40af 0%, #0ea5e9 100%) !important; color: white !important; text-decoration: none; border-radius: 6px; margin: 20px 0;">Continue Using CompareIntel</a>
+            </div>
+            
+            <p style="margin-top: 30px; color: #666 !important; font-size: 14px;">
+              We appreciate you being part of the CompareIntel community. Stay tuned for updates on paid tiers!
+            </p>
+          </div>
+          <div class="footer">
+            <p>Need help? Contact us at <a href="mailto:support@compareintel.com" style="color: #0ea5e9;">support@compareintel.com</a></p>
+            <p>&copy; 2026 CompareIntel. All rights reserved.</p>
+          </div>
+        </div>
+      </body>
+    </html>
+    """
+
+    message = MessageSchema(
+        subject="Your CompareIntel Trial Has Ended - Paid Tiers Coming Soon!",
+        recipients=[email],
+        body=html,
+        subtype="html"
+    )
+
+    try:
+        await fm.send_message(message)
+    except Exception as e:
+        print(f"Failed to send trial expired email to {email}: {str(e)}")
+        raise
+
