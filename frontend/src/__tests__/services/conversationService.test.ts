@@ -17,6 +17,7 @@ vi.mock('../../services/api/client', () => ({
   apiClient: {
     get: vi.fn(),
     delete: vi.fn(),
+    post: vi.fn(),
   },
 }))
 
@@ -126,6 +127,48 @@ describe('conversationService', () => {
       vi.mocked(apiClient.delete).mockRejectedValue(error)
 
       await expect(conversationService.deleteConversation(conversationId)).rejects.toThrow(ApiError)
+    })
+  })
+
+  describe('deleteAllConversations', () => {
+    it('should delete all conversations and return count', async () => {
+      const mockResponse = {
+        message: 'Successfully deleted 5 conversation(s)',
+        deleted_count: 5,
+      }
+      vi.mocked(apiClient.delete).mockResolvedValue({ data: mockResponse })
+
+      const result = await conversationService.deleteAllConversations()
+
+      expect(apiClient.delete).toHaveBeenCalledWith('/conversations/all')
+      expect(result).toEqual(mockResponse)
+      expect(result.deleted_count).toBe(5)
+    })
+
+    it('should handle zero conversations to delete', async () => {
+      const mockResponse = {
+        message: 'Successfully deleted 0 conversation(s)',
+        deleted_count: 0,
+      }
+      vi.mocked(apiClient.delete).mockResolvedValue({ data: mockResponse })
+
+      const result = await conversationService.deleteAllConversations()
+
+      expect(result.deleted_count).toBe(0)
+    })
+
+    it('should handle authentication errors', async () => {
+      const error = new ApiError('Not authenticated', 401, 'Unauthorized')
+      vi.mocked(apiClient.delete).mockRejectedValue(error)
+
+      await expect(conversationService.deleteAllConversations()).rejects.toThrow(ApiError)
+    })
+
+    it('should handle server errors', async () => {
+      const error = new ApiError('Server error', 500, 'Internal Server Error')
+      vi.mocked(apiClient.delete).mockRejectedValue(error)
+
+      await expect(conversationService.deleteAllConversations()).rejects.toThrow(ApiError)
     })
   })
 })
