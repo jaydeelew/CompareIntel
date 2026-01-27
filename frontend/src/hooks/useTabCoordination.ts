@@ -124,14 +124,17 @@ export function useTabCoordination(
         }
 
         if (hasExistingTab) {
-          // Send token to existing tab and close
+          // Send token to existing tab and redirect to home page
+          // (Can't reliably close user-opened tabs, so redirect instead)
           safePostMessage({
             type: isPasswordReset ? 'password-reset' : 'verify-email',
             token,
           })
           closeTimeoutId = setTimeout(() => {
             if (!isChannelClosed) {
-              window.close()
+              // Redirect to home page instead of trying to close
+              // This avoids the "Scripts may close only the windows that were opened by them" warning
+              window.location.href = '/'
             }
           }, 500)
         } else {
