@@ -1399,7 +1399,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
         >
           {isFollowUpMode ? (
             <>
-              <h2 style={{ margin: 0 }}>Click to start over ➜</h2>
+              <h2 style={{ margin: 0 }}>Start over ➜</h2>
               <button
                 onClick={e => {
                   if (tutorialIsActive) {
