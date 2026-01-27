@@ -55,10 +55,9 @@ UNREGISTERED_TIER_MODELS = {
     "openai/gpt-oss-120b",  # Auto-classified based on pricing,
     "x-ai/grok-code-fast-1",
     "x-ai/grok-4-fast",
-    "meta-llama/llama-3.1-405b-instruct:free",  # Auto-classified based on pricing,    "meta-llama/llama-3.3-70b-instruct",  # Auto-classified based on pricing,
-    "xiaomi/mimo-v2-flash:free",  # Auto-classified based on pricing,
-    "mistralai/devstral-2512:free",  # Auto-classified based on pricing,    "openai/gpt-4o-mini",  # Auto-classified based on pricing,
-    "x-ai/grok-4.1-fast",  # Auto-classified based on pricing
+    "meta-llama/llama-3.1-405b-instruct:free",  # Auto-classified based on pricing,    "meta-llama/llama-3.3-70b-instruct",  # Auto-classified based on pricing,    "x-ai/grok-4.1-fast",  # Auto-classified based on pricing,
+    "xiaomi/mimo-v2-flash",  # Auto-classified based on pricing,
+    "mistralai/devstral-2512",  # Auto-classified based on pricing
 }
 
 # List of model IDs available to free (registered) users
@@ -494,13 +493,13 @@ MODELS_BY_PROVIDER = {
     ],
     "Mistralai": [
         {
-            "id": "mistralai/devstral-2512:free",
-            "name": "Devstral 2512:Free",
+            "id": "mistralai/devstral-2512",
+            "name": "Devstral 2512",
             "description": 'Devstral 2 is a state-of-the-art open-source model by Mistral AI specializing in agentic coding.',
             "category": "Language",
             "provider": "Mistralai",
-            "supports_web_search": True,  # Agentic coding model - supports function calling
-            "knowledge_cutoff": "December 2025",
+            "supports_web_search": True,
+            "knowledge_cutoff": None,  # Knowledge cutoff date pending
         },
     ],
     "OpenAI": [
@@ -803,12 +802,12 @@ MODELS_BY_PROVIDER = {
     ],
     "Xiaomi": [
         {
-            "id": "xiaomi/mimo-v2-flash:free",
-            "name": "Mimo V2 Flash:Free",
+            "id": "xiaomi/mimo-v2-flash",
+            "name": "Mimo V2 Flash",
             "description": 'MiMo-V2-Flash is an open-source foundation language model developed by Xiaomi.',
             "category": "Language",
             "provider": "Xiaomi",
-            "supports_web_search": True,  # Supports function calling
+            "supports_web_search": True,
             "knowledge_cutoff": None,  # Knowledge cutoff date pending
         },
     ]

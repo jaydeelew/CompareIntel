@@ -3777,124 +3777,6 @@
     }
   },
   {
-    "modelId": "xiaomi/mimo-v2-flash:free",
-    "version": "1.0.0",
-    "displayMathDelimiters": [
-      {
-        "pattern": "/\\$\\$([^\\$]+?)\\$\\$/gs",
-        "name": "double-dollar",
-        "priority": 1
-      }
-    ],
-    "inlineMathDelimiters": [
-      {
-        "pattern": "/(?<!\\$)\\$([^\\$\\n]+?)\\$(?!\\$)/g",
-        "name": "single-dollar",
-        "priority": 1
-      }
-    ],
-    "preprocessing": {
-      "fixEscapedDollars": true,
-      "removeHtmlFromMath": false,
-      "removeMathML": true,
-      "removeSVG": true
-    },
-    "markdownProcessing": {
-      "processLinks": true,
-      "fixBrokenLinks": true,
-      "processTables": true,
-      "processBlockquotes": true,
-      "processHorizontalRules": true,
-      "processHeaders": true,
-      "processBoldItalic": true,
-      "processLists": true,
-      "processInlineCode": true
-    },
-    "katexOptions": {
-      "throwOnError": false,
-      "strict": false,
-      "trust": ["\\url", "\\href", "\\includegraphics"],
-      "macros": {
-        "\\eqref": "\\href{###1}{(\\text{#1})}"
-      },
-      "maxSize": 500,
-      "maxExpand": 1000
-    },
-    "codeBlockPreservation": {
-      "enabled": true,
-      "extractBeforeProcessing": true,
-      "restoreAfterProcessing": true
-    },
-    "metadata": {
-      "createdAt": "2025-12-23T19:51:23.595263Z",
-      "needsManualReview": true
-    }
-  },
-  {
-    "modelId": "mistralai/devstral-2512:free",
-    "version": "1.0.0",
-    "displayMathDelimiters": [
-      {
-        "pattern": "/\\\\\\[\\s*([\\s\\S]*?)\\s*\\\\\\]/g",
-        "name": "bracket",
-        "priority": 1
-      },
-      {
-        "pattern": "/\\$\\$([^\\$]+?)\\$\\$/gs",
-        "name": "double-dollar",
-        "priority": 2
-      }
-    ],
-    "inlineMathDelimiters": [
-      {
-        "pattern": "/\\\\\\(\\s*([^\\\\]*?)\\s*\\\\\\)/g",
-        "name": "paren",
-        "priority": 1
-      },
-      {
-        "pattern": "/(?<!\\$)\\$([^\\$\\n]+?)\\$(?!\\$)/g",
-        "name": "single-dollar",
-        "priority": 2
-      }
-    ],
-    "preprocessing": {
-      "fixEscapedDollars": true,
-      "removeHtmlFromMath": true,
-      "removeMathML": true,
-      "removeSVG": true
-    },
-    "markdownProcessing": {
-      "processLinks": true,
-      "fixBrokenLinks": false,
-      "processTables": true,
-      "processBlockquotes": true,
-      "processHorizontalRules": true,
-      "processHeaders": true,
-      "processBoldItalic": true,
-      "processLists": true,
-      "processInlineCode": true
-    },
-    "katexOptions": {
-      "throwOnError": false,
-      "strict": false,
-      "trust": ["\\url", "\\href", "\\includegraphics"],
-      "macros": {
-        "\\eqref": "\\href{###1}{(\\text{#1})}"
-      },
-      "maxSize": 500,
-      "maxExpand": 1000
-    },
-    "codeBlockPreservation": {
-      "enabled": true,
-      "extractBeforeProcessing": true,
-      "restoreAfterProcessing": true
-    },
-    "metadata": {
-      "createdAt": "2025-12-23T19:56:08.454748Z",
-      "needsManualReview": true
-    }
-  },
-  {
     "modelId": "openai/gpt-4o-mini",
     "version": "1.0.0",
     "displayMathDelimiters": [
@@ -4073,6 +3955,134 @@
     },
     "metadata": {
       "createdAt": "2026-01-13T19:54:08.552014+00:00Z",
+      "needsManualReview": true
+    }
+  },
+  {
+    "modelId": "xiaomi/mimo-v2-flash",
+    "version": "1.0.0",
+    "displayMathDelimiters": [
+      {
+        "pattern": "/\\\\\\[\\s*([\\s\\S]*?)\\s*\\\\\\]/g",
+        "name": "bracket",
+        "priority": 1
+      },
+      {
+        "pattern": "/\\$\\$([^\\$]+?)\\$\\$/gs",
+        "name": "double-dollar",
+        "priority": 2
+      }
+    ],
+    "inlineMathDelimiters": [
+      {
+        "pattern": "/\\\\\\(\\s*([^\\\\]*?)\\s*\\\\\\)/g",
+        "name": "paren",
+        "priority": 1
+      },
+      {
+        "pattern": "/(?<!\\$)\\$([^\\$\\n]+?)\\$(?!\\$)/g",
+        "name": "single-dollar",
+        "priority": 2
+      }
+    ],
+    "preprocessing": {
+      "fixEscapedDollars": true,
+      "removeHtmlFromMath": false,
+      "removeMathML": true,
+      "removeSVG": true
+    },
+    "markdownProcessing": {
+      "processLinks": true,
+      "fixBrokenLinks": false,
+      "processTables": true,
+      "processBlockquotes": true,
+      "processHorizontalRules": true,
+      "processHeaders": true,
+      "processBoldItalic": true,
+      "processLists": true,
+      "processInlineCode": true
+    },
+    "katexOptions": {
+      "throwOnError": false,
+      "strict": false,
+      "trust": ["\\url", "\\href", "\\includegraphics"],
+      "macros": {
+        "\\eqref": "\\href{###1}{(\\text{#1})}"
+      },
+      "maxSize": 500,
+      "maxExpand": 1000
+    },
+    "codeBlockPreservation": {
+      "enabled": true,
+      "extractBeforeProcessing": true,
+      "restoreAfterProcessing": true
+    },
+    "metadata": {
+      "createdAt": "2026-01-27T20:00:11.950128+00:00Z",
+      "needsManualReview": true
+    }
+  },
+  {
+    "modelId": "mistralai/devstral-2512",
+    "version": "1.0.0",
+    "displayMathDelimiters": [
+      {
+        "pattern": "/\\\\\\[\\s*([\\s\\S]*?)\\s*\\\\\\]/g",
+        "name": "bracket",
+        "priority": 1
+      },
+      {
+        "pattern": "/\\$\\$([^\\$]+?)\\$\\$/gs",
+        "name": "double-dollar",
+        "priority": 2
+      }
+    ],
+    "inlineMathDelimiters": [
+      {
+        "pattern": "/\\\\\\(\\s*([^\\\\]*?)\\s*\\\\\\)/g",
+        "name": "paren",
+        "priority": 1
+      },
+      {
+        "pattern": "/(?<!\\$)\\$([^\\$\\n]+?)\\$(?!\\$)/g",
+        "name": "single-dollar",
+        "priority": 2
+      }
+    ],
+    "preprocessing": {
+      "fixEscapedDollars": true,
+      "removeHtmlFromMath": false,
+      "removeMathML": true,
+      "removeSVG": true
+    },
+    "markdownProcessing": {
+      "processLinks": true,
+      "fixBrokenLinks": false,
+      "processTables": true,
+      "processBlockquotes": true,
+      "processHorizontalRules": true,
+      "processHeaders": true,
+      "processBoldItalic": true,
+      "processLists": true,
+      "processInlineCode": true
+    },
+    "katexOptions": {
+      "throwOnError": false,
+      "strict": false,
+      "trust": ["\\url", "\\href", "\\includegraphics"],
+      "macros": {
+        "\\eqref": "\\href{###1}{(\\text{#1})}"
+      },
+      "maxSize": 500,
+      "maxExpand": 1000
+    },
+    "codeBlockPreservation": {
+      "enabled": true,
+      "extractBeforeProcessing": true,
+      "restoreAfterProcessing": true
+    },
+    "metadata": {
+      "createdAt": "2026-01-27T20:02:08.288407+00:00Z",
       "needsManualReview": true
     }
   }
