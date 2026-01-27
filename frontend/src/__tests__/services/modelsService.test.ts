@@ -54,6 +54,7 @@ describe('modelsService', () => {
       // getAvailableModels now includes cache options
       expect(apiClient.get).toHaveBeenCalledWith('/models', {
         cacheTTL: 600000,
+        enableCache: true,
         _cacheKey: 'GET:/models',
       })
       expect(result).toEqual(mockResponse)
@@ -82,6 +83,7 @@ describe('modelsService', () => {
       // getModelsByProvider now includes cache options
       expect(apiClient.get).toHaveBeenCalledWith('/models', {
         cacheTTL: 600000,
+        enableCache: true,
         _cacheKey: 'GET:/models',
       })
       expect(result).toEqual(mockModelsByProvider)
