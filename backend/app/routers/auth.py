@@ -474,7 +474,11 @@ async def resend_verification(request: ResendVerificationRequest, background_tas
         # Calculate time since last token generation
         # We use token expiry as a proxy for when the last resend was requested
         # Token expires in 24 hours, so if it's recent, check the creation time
-        time_since_last_request = datetime.now(UTC) - (user.verification_token_expires - timedelta(hours=24))
+        # Handle both timezone-aware and naive datetimes
+        token_expires = user.verification_token_expires
+        if token_expires.tzinfo is None:
+            token_expires = token_expires.replace(tzinfo=UTC)
+        time_since_last_request = datetime.now(UTC) - (token_expires - timedelta(hours=24))
 
         if time_since_last_request.total_seconds() < 60:
             remaining_seconds = int(60 - time_since_last_request.total_seconds())
