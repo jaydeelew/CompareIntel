@@ -1,0 +1,181 @@
+/* Trial Expired Banner Styles */
+
+.trial-expired-banner {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  border: 1px solid #f59e0b;
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+  margin: 1rem 0;
+  box-shadow: 0 4px 6px -1px rgba(245, 158, 11, 0.2);
+  animation: bannerSlideIn 0.3s ease-out;
+}
+
+@keyframes bannerSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.trial-expired-content {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.trial-expired-icon {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.trial-expired-text {
+  flex: 1;
+  min-width: 200px;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  color: #78350f;
+}
+
+.trial-expired-text strong {
+  color: #92400e;
+}
+
+.trial-expired-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-shrink: 0;
+}
+
+.trial-expired-coming-soon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 1rem;
+  background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+  color: white;
+  font-size: 0.875rem;
+  font-weight: 600;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(16, 185, 129, 0.3);
+}
+
+.trial-expired-upgrade-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 1rem;
+  background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+  color: white;
+  font-size: 0.875rem;
+  font-weight: 600;
+  border-radius: 8px;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
+}
+
+.trial-expired-upgrade-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(59, 130, 246, 0.4);
+  color: white;
+  text-decoration: none;
+}
+
+.trial-expired-upgrade-btn:active {
+  transform: translateY(0);
+}
+
+.trial-expired-dismiss-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  background: rgba(146, 64, 14, 0.1);
+  border: none;
+  border-radius: 8px;
+  color: #92400e;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.trial-expired-dismiss-btn:hover {
+  background: rgba(146, 64, 14, 0.2);
+  color: #78350f;
+}
+
+.trial-expired-dismiss-btn:focus {
+  outline: 2px solid #f59e0b;
+  outline-offset: 2px;
+}
+
+/* Mobile optimizations */
+@media (max-width: 640px) {
+  .trial-expired-banner {
+    padding: 0.875rem 1rem;
+    margin: 0.75rem 0;
+  }
+
+  .trial-expired-content {
+    gap: 0.75rem;
+  }
+
+  .trial-expired-icon {
+    font-size: 1.25rem;
+  }
+
+  .trial-expired-text {
+    font-size: 0.875rem;
+    min-width: 100%;
+    order: 2;
+  }
+
+  .trial-expired-actions {
+    order: 1;
+    margin-left: auto;
+  }
+
+  .trial-expired-upgrade-btn {
+    padding: 0.5rem 0.875rem;
+    font-size: 0.8125rem;
+  }
+
+  .trial-expired-dismiss-btn {
+    width: 28px;
+    height: 28px;
+  }
+}
+
+/* Very small screens - stack everything */
+@media (max-width: 400px) {
+  .trial-expired-content {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .trial-expired-icon {
+    display: none;
+  }
+
+  .trial-expired-text {
+    order: 1;
+  }
+
+  .trial-expired-actions {
+    order: 2;
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .trial-expired-upgrade-btn {
+    flex: 1;
+    text-align: center;
+  }
+}

@@ -287,23 +287,25 @@ async def get_available_models(
     - Models are marked with tier_access field ('unregistered', 'free', or 'paid')
     - Frontend displays locked models as disabled/restricted for unregistered and free tiers
     - Backend still validates model access when making API calls
+    - During 7-day trial, paid models get trial_unlocked=True flag
 
-    OPTIMIZATION: Uses caching since model list is static data.
+    Note: This endpoint doesn't use caching when user is authenticated with trial
+    because the response depends on user-specific trial status.
     """
-    from ..cache import get_cached_models, CACHE_KEY_MODELS
-    from ..model_runner import filter_models_by_tier
+    from ..model_runner import filter_models_by_tier, get_model_token_limits_from_openrouter
 
-    # Determine user tier
+    # Determine user tier and trial status
     if current_user:
         tier = current_user.subscription_tier or "free"
+        is_trial_active = current_user.is_trial_active
     else:
         tier = "unregistered"
+        is_trial_active = False
 
     def get_models():
-        from ..model_runner import get_model_token_limits_from_openrouter
-
         # Get all models with tier_access field (no filtering - show all models)
-        all_models = filter_models_by_tier(OPENROUTER_MODELS, tier)
+        # Pass trial status to mark premium models as unlocked during trial
+        all_models = filter_models_by_tier(OPENROUTER_MODELS, tier, is_trial_active)
 
         # Add token limits to each model
         for model in all_models:
@@ -320,7 +322,7 @@ async def get_available_models(
         # Get all models_by_provider with tier_access field
         models_by_provider = {}
         for provider, models in MODELS_BY_PROVIDER.items():
-            provider_models = filter_models_by_tier(models, tier)
+            provider_models = filter_models_by_tier(models, tier, is_trial_active)
             if provider_models:  # Add provider if it has any models
                 # Add token limits to provider models too
                 for model in provider_models:
@@ -338,8 +340,15 @@ async def get_available_models(
             "models": all_models,
             "models_by_provider": models_by_provider,
             "user_tier": tier,
+            "is_trial_active": is_trial_active,
         }
 
+    # If user has active trial, don't use cache (response is user-specific)
+    if is_trial_active:
+        return get_models()
+    
+    # For non-trial users, use caching
+    from ..cache import get_cached_models
     return get_cached_models(get_models)
 
 
@@ -878,7 +887,11 @@ async def compare_stream(
     # Validate model access based on tier (check if restricted models are selected)
     # Normalize tier name: "anonymous" should be treated as "unregistered"
     normalized_tier_name = "unregistered" if tier_name == "anonymous" else tier_name
-    restricted_models = [model_id for model_id in req.models if not is_model_available_for_tier(model_id, normalized_tier_name)]
+    
+    # Check if user has active 7-day trial (grants access to all premium models)
+    is_trial_active = current_user.is_trial_active if current_user else False
+    
+    restricted_models = [model_id for model_id in req.models if not is_model_available_for_tier(model_id, normalized_tier_name, is_trial_active)]
     if restricted_models:
         upgrade_message = ""
         if normalized_tier_name == "unregistered":
@@ -887,11 +900,11 @@ async def compare_stream(
             if token_present:
                 upgrade_message = " It appears you are signed in, but authentication failed. Please try refreshing the page or logging in again. If the issue persists, your session may have expired."
             else:
-                upgrade_message = " Sign up for a free account or upgrade to a paid tier to access premium models."
+                upgrade_message = " Sign up for a free account to access more models, plus get a 7-day trial to all premium models!"
         elif normalized_tier_name == "free":
-            upgrade_message = " Upgrade to Starter ($9.95/month) or higher to access all premium models."
+            upgrade_message = " Paid subscriptions are coming soon — stay tuned to access all premium models!"
         else:
-            upgrade_message = " This model requires a paid subscription."
+            upgrade_message = " Paid subscriptions are coming soon!"
 
         raise HTTPException(
             status_code=403,
@@ -905,13 +918,9 @@ async def compare_stream(
             free_model_limit = get_model_limit("free")
             upgrade_message = f" Sign up for a free account to compare up to {free_model_limit} models."
         elif normalized_tier_name == "free":
-            starter_model_limit = get_model_limit("starter")
-            pro_model_limit = get_model_limit("pro")
-            upgrade_message = f" Upgrade to Starter for {starter_model_limit} models or Pro for {pro_model_limit} models."
+            upgrade_message = " Paid plans with higher model limits are coming soon!"
         elif normalized_tier_name in ["starter", "starter_plus"]:
-            pro_model_limit = get_model_limit("pro")
-            pro_plus_model_limit = get_model_limit("pro_plus")
-            upgrade_message = f" Upgrade to Pro for {pro_model_limit} models or Pro+ for {pro_plus_model_limit} models."
+            upgrade_message = " Higher tier plans with more models are coming soon!"
 
         raise HTTPException(
             status_code=400,

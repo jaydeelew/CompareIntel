@@ -31,13 +31,16 @@ export interface AvailableModelsResponse {
  *
  * Uses caching with longer TTL since models list is relatively static.
  *
+ * @param skipCache - If true, bypasses cache to get fresh data (e.g., after registration or verification)
  * @returns Promise resolving to available models
  * @throws {ApiError} If the request fails
  */
-export async function getAvailableModels(): Promise<AvailableModelsResponse> {
+export async function getAvailableModels(skipCache = false): Promise<AvailableModelsResponse> {
   const response = await apiClient.get<AvailableModelsResponse>('/models', {
     // Cache models for 10 minutes (they're relatively static)
-    cacheTTL: 10 * 60 * 1000,
+    // But allow bypassing cache when user status changes (registration, verification)
+    cacheTTL: skipCache ? 0 : 10 * 60 * 1000,
+    enableCache: !skipCache,
     _cacheKey: 'GET:/models',
   })
   return response.data

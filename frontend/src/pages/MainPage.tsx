@@ -23,6 +23,7 @@ import {
   ErrorBoundary,
   LoadingSpinner,
 } from '../components/shared'
+import { TrialWelcomeModal, TrialExpiredBanner } from '../components/trial'
 import { TutorialManager } from '../components/tutorial'
 import { getCreditAllocation, getDailyCreditLimit } from '../config/constants'
 import { useAuth } from '../contexts/AuthContext'
@@ -270,6 +271,10 @@ export function MainPage() {
     resetTutorial: _resetTutorial,
   } = useTutorial()
   const [showWelcomeModal, setShowWelcomeModal] = useState(false)
+  const [showTrialWelcomeModal, setShowTrialWelcomeModal] = useState(false)
+  const [pendingTrialModalAfterVerification, setPendingTrialModalAfterVerification] =
+    useState(false)
+  const verificationCompletedAtRef = useRef<number | null>(null)
   const [tutorialHasCompletedComparison, setTutorialHasCompletedComparison] = useState(false)
   const [tutorialHasBreakout, setTutorialHasBreakout] = useState(false)
   const [tutorialHasSavedSelection, setTutorialHasSavedSelection] = useState(false)
@@ -1517,6 +1522,103 @@ export function MainPage() {
     }
   )
 
+  // Helper to get user-specific localStorage key for trial modal
+  // This ensures each user gets their own "seen" flag
+  const getTrialSeenKey = useCallback((email?: string) => {
+    return email ? `trial-welcome-seen-${email}` : 'trial-welcome-seen'
+  }, [])
+
+  // Show trial welcome modal for users with active trial on page load/login
+  // Note: For new registrations, the modal is shown via the 'registration-complete' event
+  // This effect handles cases where user returns to the site while trial is still active
+  const hasShownTrialModalRef = useRef(false)
+  useEffect(() => {
+    // Only run once per session and if user has active trial
+    const trialSeenKey = getTrialSeenKey(user?.email)
+    if (
+      !hasShownTrialModalRef.current &&
+      isAuthenticated &&
+      user?.is_trial_active &&
+      user?.is_verified &&
+      !localStorage.getItem(trialSeenKey)
+    ) {
+      hasShownTrialModalRef.current = true
+      // Delay to let page settle
+      const timeout = setTimeout(() => {
+        setShowTrialWelcomeModal(true)
+      }, 1000)
+      return () => clearTimeout(timeout)
+    }
+  }, [isAuthenticated, user?.is_trial_active, user?.email, getTrialSeenKey])
+
+  // Listen for registration complete to refetch models (trial modal shown after verification)
+  useEffect(() => {
+    const handleRegistrationComplete = async () => {
+      // Refetch models with cache bypass to get trial_unlocked status
+      try {
+        const data = await getAvailableModels(true) // Skip cache for fresh trial status
+        if (data.models_by_provider && Object.keys(data.models_by_provider).length > 0) {
+          setModelsByProvider(data.models_by_provider)
+        }
+      } catch (error) {
+        console.error('Failed to refetch models after registration:', error)
+      }
+      // Note: Trial welcome modal is shown after email verification, not registration
+    }
+
+    window.addEventListener('registration-complete', handleRegistrationComplete)
+    return () => window.removeEventListener('registration-complete', handleRegistrationComplete)
+  }, [])
+
+  // Listen for verification complete to refetch models and schedule trial modal
+  useEffect(() => {
+    const handleVerificationComplete = async () => {
+      // Record verification completion time for banner delay calculation
+      verificationCompletedAtRef.current = Date.now()
+      setPendingTrialModalAfterVerification(true)
+
+      // Refetch models with cache bypass immediately
+      try {
+        const data = await getAvailableModels(true) // Skip cache for fresh trial status
+        if (data.models_by_provider && Object.keys(data.models_by_provider).length > 0) {
+          setModelsByProvider(data.models_by_provider)
+        }
+      } catch (error) {
+        console.error('Failed to refetch models after verification:', error)
+      }
+
+      // Actual modal display is handled in the effect below once user.is_verified updates
+    }
+
+    window.addEventListener('verification-complete', handleVerificationComplete)
+    return () => window.removeEventListener('verification-complete', handleVerificationComplete)
+  }, [user?.email, getTrialSeenKey])
+
+  // Show trial modal after verification once user state is updated and banner is gone
+  useEffect(() => {
+    if (!pendingTrialModalAfterVerification || !user?.is_verified) {
+      return
+    }
+
+    const trialSeenKey = getTrialSeenKey(user?.email)
+    if (localStorage.getItem(trialSeenKey)) {
+      setPendingTrialModalAfterVerification(false)
+      return
+    }
+
+    const verificationCompletedAt = verificationCompletedAtRef.current
+    const bannerDelayMs = 5000 // 4000ms visible + 500ms fade + 500ms buffer
+    const elapsed = verificationCompletedAt ? Date.now() - verificationCompletedAt : 0
+    const remainingDelay = Math.max(0, bannerDelayMs - elapsed)
+
+    const timeout = setTimeout(() => {
+      setShowTrialWelcomeModal(true)
+      setPendingTrialModalAfterVerification(false)
+    }, remainingDelay)
+
+    return () => clearTimeout(timeout)
+  }, [pendingTrialModalAfterVerification, user?.is_verified, user?.email, getTrialSeenKey])
+
   const resetAppStateForTutorial = () => {
     setInput('')
     setSelectedModels([])
@@ -1984,6 +2086,16 @@ export function MainPage() {
               }}
             />
 
+            {/* Trial expired banner - show when user has trial_ends_at but is_trial_active is false */}
+            {isAuthenticated && user?.trial_ends_at && !user?.is_trial_active && (
+              <TrialExpiredBanner
+                trialEndsAt={user.trial_ends_at}
+                onDismiss={() => {
+                  // Banner handles its own localStorage dismissal
+                }}
+              />
+            )}
+
             {error && (
               <div className="error-message" ref={errorMessageRef}>
                 <span>⚠️ {error}</span>
@@ -2144,6 +2256,13 @@ export function MainPage() {
             onClose={() => setDisabledButtonInfo({ button: null, message: '' })}
             buttonType={disabledButtonInfo.button}
             message={disabledButtonInfo.message}
+          />
+
+          <TrialWelcomeModal
+            isOpen={showTrialWelcomeModal}
+            onClose={() => setShowTrialWelcomeModal(false)}
+            trialEndsAt={user?.trial_ends_at}
+            userEmail={user?.email}
           />
         </>
       )}

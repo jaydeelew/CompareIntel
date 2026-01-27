@@ -103,17 +103,22 @@ FREE_TIER_MODELS = UNREGISTERED_TIER_MODELS.union(
 )
 
 
-def is_model_available_for_tier(model_id: str, tier: str) -> bool:
+def is_model_available_for_tier(model_id: str, tier: str, is_trial_active: bool = False) -> bool:
     """
     Check if a model is available for a given subscription tier.
 
     Args:
         model_id: Model identifier (e.g., "openai/gpt-5.1")
         tier: Subscription tier ("unregistered", "free", "starter", "starter_plus", "pro", "pro_plus")
+        is_trial_active: Whether the user has an active 7-day trial (grants access to all models)
 
     Returns:
         True if model is available for the tier, False otherwise
     """
+    # Active trial grants access to all models (like paid tiers)
+    if is_trial_active and tier == "free":
+        return True
+
     # All paid tiers have access to all models
     if tier in ["starter", "starter_plus", "pro", "pro_plus"]:
         return True
@@ -130,7 +135,7 @@ def is_model_available_for_tier(model_id: str, tier: str) -> bool:
     return False
 
 
-def filter_models_by_tier(models: List[Dict[str, Any]], tier: str) -> List[Dict[str, Any]]:
+def filter_models_by_tier(models: List[Dict[str, Any]], tier: str, is_trial_active: bool = False) -> List[Dict[str, Any]]:
     """
     Return all models with tier_access field indicating availability for the tier.
 
@@ -141,6 +146,7 @@ def filter_models_by_tier(models: List[Dict[str, Any]], tier: str) -> List[Dict[
     Args:
         models: List of model dictionaries
         tier: Subscription tier
+        is_trial_active: Whether the user has an active 7-day trial (grants access to all models)
 
     Returns:
         List of all models with tier_access field set appropriately
@@ -161,6 +167,10 @@ def filter_models_by_tier(models: List[Dict[str, Any]], tier: str) -> List[Dict[
             model_with_access["tier_access"] = "free"
         else:
             model_with_access["tier_access"] = "paid"
+        
+        # Add trial_unlocked field for frontend to know model is available during trial
+        if is_trial_active and tier == "free" and model_with_access["tier_access"] == "paid":
+            model_with_access["trial_unlocked"] = True
 
         result.append(model_with_access)
 

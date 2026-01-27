@@ -40,6 +40,9 @@ class User(Base):
     subscription_start_date = Column(DateTime)
     subscription_end_date = Column(DateTime)
 
+    # 7-day trial for new free users - grants access to all premium models
+    trial_ends_at = Column(DateTime, nullable=True)  # NULL means no trial or trial not applicable
+
     # Admin roles and permissions
     role = Column(String(50), default="user")  # 'user', 'moderator', 'admin', 'super_admin'
     is_admin = Column(Boolean, default=False)
@@ -83,6 +86,22 @@ class User(Base):
         Returns: credits_remaining = monthly_credits_allocated - credits_used_this_period
         """
         return max(0, (self.monthly_credits_allocated or 0) - (self.credits_used_this_period or 0))
+
+    @property
+    def is_trial_active(self) -> bool:
+        """
+        Check if the user's 7-day trial is currently active.
+        Trial is active if trial_ends_at is set and in the future.
+        """
+        if self.trial_ends_at is None:
+            return False
+        from datetime import datetime, timezone
+        now = datetime.now(timezone.utc)
+        # Handle both timezone-aware and naive datetimes
+        trial_end = self.trial_ends_at
+        if trial_end.tzinfo is None:
+            trial_end = trial_end.replace(tzinfo=timezone.utc)
+        return now < trial_end
 
 
 class UserPreference(Base):

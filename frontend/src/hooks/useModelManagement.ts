@@ -379,10 +379,8 @@ export function useModelManagement({
           const tierName = !isAuthenticated ? 'Unregistered' : user?.subscription_tier || 'free'
           const upgradeMsg =
             tierName === 'Unregistered'
-              ? ' Sign up for a free account or upgrade to a paid tier to access premium models.'
-              : tierName === 'free'
-                ? ' Upgrade to Starter ($9.95/month) or higher to access all premium models.'
-                : ' This model requires a paid subscription.'
+              ? ' Sign up for a free account to access more models, plus get a 7-day trial to all premium models!'
+              : ' Paid subscriptions are coming soon — stay tuned to access all premium models!'
           setError(
             `The model "${modelInfo.name}" is not available for your ${tierName} tier.${upgradeMsg}`
           )

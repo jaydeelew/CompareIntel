@@ -25,6 +25,8 @@ export interface Model {
   available?: boolean
   /** Tier access level: 'unregistered', 'free', or 'paid' */
   tier_access?: 'unregistered' | 'free' | 'paid'
+  /** Whether this paid model is unlocked during the 7-day trial */
+  trial_unlocked?: boolean
   /** Maximum input tokens (accurate, from model tokenizer) */
   max_input_tokens?: number
   /** Maximum output tokens (accurate, from model tokenizer) */

@@ -165,20 +165,20 @@ export const VerifyEmail: React.FC<VerifyEmailProps> = ({
     verifyEmail()
   }, [refreshUser, onClose, externalToken, suppressVerification, user, authLoading])
 
-  // Auto-hide success banner after 8 seconds
+  // Auto-hide success banner after 4 seconds
   useEffect(() => {
     if (status === 'success' && hasAnimatedIn) {
-      // Wait 8 seconds, then start fade-out
+      // Wait 4 seconds, then start fade-out
       const fadeTimer = setTimeout(() => {
         setHasAnimatedIn(false) // Trigger fade-out
-      }, 8000)
+      }, 4000)
 
       // After fade-out completes, remove banner
       const removeTimer = setTimeout(() => {
         window.history.replaceState({}, document.title, window.location.pathname)
         setIsVisible(false)
         onClose()
-      }, 8500) // 8000ms wait + 500ms fade-out
+      }, 4500) // 4000ms wait + 500ms fade-out
 
       return () => {
         clearTimeout(fadeTimer)

@@ -24,6 +24,17 @@
   margin: 0;
 }
 
+.auth-form-header p.trial-highlight {
+  margin-top: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  border: 1px solid #f59e0b;
+  border-radius: 6px;
+  color: #92400e;
+  font-weight: 600;
+  font-size: 0.8rem;
+}
+
 .auth-form {
   display: flex;
   flex-direction: column;

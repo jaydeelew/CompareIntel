@@ -50,6 +50,10 @@ export interface User {
   mock_mode_enabled: boolean
   /** ISO timestamp when the user account was created */
   created_at: string
+  /** 7-DAY TRIAL: When the premium trial period ends (ISO timestamp) */
+  trial_ends_at?: string
+  /** 7-DAY TRIAL: Whether the user's trial is currently active */
+  is_trial_active?: boolean
 }
 
 /**

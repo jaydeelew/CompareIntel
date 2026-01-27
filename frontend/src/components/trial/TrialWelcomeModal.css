@@ -1,0 +1,346 @@
+/* Trial Welcome Modal Styles */
+
+.trial-welcome-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  padding: 1rem;
+  animation: trialFadeIn 0.3s ease-out;
+}
+
+@keyframes trialFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.trial-welcome-modal {
+  background: linear-gradient(135deg, #ffffff 0%, #f0f7ff 100%);
+  border-radius: 16px;
+  box-shadow:
+    0 25px 50px -12px rgba(0, 0, 0, 0.25),
+    0 0 0 1px rgba(59, 130, 246, 0.1);
+  max-width: 520px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  animation: trialSlideUp 0.3s ease-out;
+  display: flex;
+  flex-direction: column;
+}
+
+@keyframes trialSlideUp {
+  from {
+    transform: translateY(30px) scale(0.95);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+.trial-welcome-header {
+  position: relative;
+  text-align: center;
+  padding: 2rem 1.5rem 1rem;
+  background: linear-gradient(135deg, #1e40af 0%, #3b82f6 50%, #0ea5e9 100%);
+  border-radius: 16px 16px 0 0;
+}
+
+.trial-welcome-icon {
+  font-size: 3rem;
+  margin-bottom: 0.5rem;
+  animation: bounce 1s ease-in-out infinite;
+}
+
+@keyframes bounce {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+.trial-welcome-header h2 {
+  margin: 0;
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: white;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.trial-welcome-close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  cursor: pointer;
+  padding: 0.5rem;
+  color: white;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  line-height: 1;
+}
+
+.trial-welcome-close:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: scale(1.05);
+}
+
+.trial-welcome-close:focus {
+  outline: 2px solid white;
+  outline-offset: 2px;
+}
+
+.trial-welcome-content {
+  padding: 1.5rem 2rem;
+  flex: 1;
+}
+
+.trial-welcome-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  border: 2px solid #f59e0b;
+  border-radius: 50px;
+  margin-bottom: 1.5rem;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(245, 158, 11, 0);
+  }
+}
+
+.badge-star {
+  font-size: 1.25rem;
+}
+
+.badge-text {
+  font-weight: 700;
+  font-size: 1.125rem;
+  color: #92400e;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.trial-welcome-intro {
+  font-size: 1.125rem;
+  line-height: 1.6;
+  color: #374151;
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.trial-welcome-intro strong {
+  color: #1e40af;
+}
+
+.trial-welcome-features {
+  background: white;
+  border-radius: 12px;
+  padding: 1.25rem;
+  margin-bottom: 1.25rem;
+  border: 1px solid #e5e7eb;
+}
+
+.trial-welcome-features h3 {
+  margin: 0 0 1rem 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+.trial-welcome-features ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.trial-welcome-features li {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.9375rem;
+  color: #374151;
+}
+
+.feature-icon {
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+
+.trial-welcome-note {
+  background: #f3f4f6;
+  border-radius: 8px;
+  padding: 1rem;
+  border-left: 4px solid #3b82f6;
+}
+
+.trial-welcome-note p {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: #4b5563;
+}
+
+.trial-welcome-note strong {
+  color: #111827;
+}
+
+.trial-welcome-footer {
+  padding: 1rem 2rem 1.5rem;
+  display: flex;
+  justify-content: center;
+}
+
+.trial-welcome-button {
+  background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  padding: 1rem 2rem;
+  font-size: 1.0625rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: 100%;
+  max-width: 320px;
+  box-shadow: 0 4px 14px rgba(59, 130, 246, 0.4);
+}
+
+.trial-welcome-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.5);
+}
+
+.trial-welcome-button:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4);
+}
+
+.trial-welcome-button:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 3px;
+}
+
+/* Mobile optimizations */
+@media (max-width: 640px) {
+  .trial-welcome-overlay {
+    padding: 0.75rem;
+    align-items: flex-end;
+  }
+
+  .trial-welcome-modal {
+    max-width: 100%;
+    border-radius: 20px 20px 0 0;
+    max-height: 85vh;
+  }
+
+  .trial-welcome-header {
+    padding: 1.5rem 1.25rem 1rem;
+  }
+
+  .trial-welcome-icon {
+    font-size: 2.5rem;
+  }
+
+  .trial-welcome-header h2 {
+    font-size: 1.5rem;
+  }
+
+  .trial-welcome-content {
+    padding: 1.25rem 1.5rem;
+  }
+
+  .trial-welcome-badge {
+    padding: 0.625rem 1.25rem;
+  }
+
+  .badge-text {
+    font-size: 1rem;
+  }
+
+  .trial-welcome-intro {
+    font-size: 1rem;
+  }
+
+  .trial-welcome-features {
+    padding: 1rem;
+  }
+
+  .trial-welcome-features li {
+    font-size: 0.875rem;
+  }
+
+  .trial-welcome-note p {
+    font-size: 0.8125rem;
+  }
+
+  .trial-welcome-footer {
+    padding: 0.875rem 1.5rem 1.25rem;
+  }
+
+  .trial-welcome-button {
+    padding: 0.875rem 1.5rem;
+    font-size: 1rem;
+  }
+}
+
+/* Ensure modal is accessible and visible */
+.trial-welcome-modal:focus {
+  outline: none;
+}
+
+/* Custom scrollbar */
+.trial-welcome-modal::-webkit-scrollbar {
+  width: 8px;
+}
+
+.trial-welcome-modal::-webkit-scrollbar-track {
+  background: #f0f0f0;
+  border-radius: 8px;
+}
+
+.trial-welcome-modal::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+  border-radius: 8px;
+}
+
+.trial-welcome-modal::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%);
+}
+
+/* Firefox scrollbar */
+.trial-welcome-modal {
+  scrollbar-width: thin;
+  scrollbar-color: #3b82f6 #f0f0f0;
+}

@@ -213,8 +213,24 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       // Tokens are now set in HTTP-only cookies by the backend
       const responseData: AuthResponse = await response.json()
+
+      // Clear any stale verification token from URL to prevent VerifyEmail from
+      // trying to verify an old token when the user state changes
+      const url = new URL(window.location.href)
+      if (url.searchParams.has('token')) {
+        url.searchParams.delete('token')
+        window.history.replaceState({}, '', url.toString())
+      }
+
       setUser(responseData.user)
       setIsLoading(false)
+
+      // Dispatch event to notify that registration is complete
+      // Use setTimeout to ensure React has flushed state updates before event fires
+      // This triggers model refetch and trial welcome modal
+      setTimeout(() => {
+        window.dispatchEvent(new CustomEvent('registration-complete'))
+      }, 0)
     } catch (error) {
       console.error('Registration error:', error)
       setIsLoading(false)

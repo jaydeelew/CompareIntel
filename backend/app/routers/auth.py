@@ -204,8 +204,9 @@ async def register(user_data: UserRegister, background_tasks: BackgroundTasks, d
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
 
     try:
-        # Create new user
+        # Create new user with 7-day trial for premium model access
         verification_token = generate_verification_token()
+        trial_ends_at = datetime.now(UTC) + timedelta(days=7)  # 7-day trial for new free users
         new_user = User(
             email=user_data.email,
             password_hash=get_password_hash(user_data.password),
@@ -213,6 +214,7 @@ async def register(user_data: UserRegister, background_tasks: BackgroundTasks, d
             verification_token_expires=datetime.now(UTC) + timedelta(hours=24),
             subscription_tier="free",
             subscription_status="active",
+            trial_ends_at=trial_ends_at,  # Grant 7-day premium trial
         )
         db.add(new_user)
         db.commit()
@@ -251,6 +253,9 @@ async def register(user_data: UserRegister, background_tasks: BackgroundTasks, d
             # Legacy: daily_usage_count removed - use credits_used_this_period instead
             "monthly_overage_count": new_user.monthly_overage_count,
             "created_at": new_user.created_at.isoformat() if new_user.created_at else None,
+            # 7-day trial fields
+            "trial_ends_at": new_user.trial_ends_at.isoformat() if new_user.trial_ends_at else None,
+            "is_trial_active": new_user.is_trial_active,
         }
 
         # Create response with cookies

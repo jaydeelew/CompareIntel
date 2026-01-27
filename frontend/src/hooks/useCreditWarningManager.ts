@@ -46,7 +46,7 @@ export function useCreditWarningManager() {
         if (tier === 'unregistered') {
           return "You've run out of credits. Credits will reset to 50 tomorrow, or sign-up for a free account to get more credits, more models, and more history!"
         } else if (tier === 'free') {
-          return "You've run out of credits. Credits will reset to 100 tomorrow, or upgrade your plan for more credits, more models, and more history!"
+          return "You've run out of credits. Credits will reset to 100 tomorrow. Paid plans with more credits are coming soon!"
         } else if (tier === 'pro_plus') {
           const resetDate = creditsResetAt
             ? new Date(creditsResetAt).toLocaleDateString('en-US', {
@@ -64,7 +64,7 @@ export function useCreditWarningManager() {
                 year: 'numeric',
               })
             : 'N/A'
-          return `You've run out of credits which will reset on ${resetDate}. Consider upgrading your plan for more credits, more models per comparison, and more history!`
+          return `You've run out of credits which will reset on ${resetDate}. More subscription options are coming soon!`
         }
       } else if (type === 'insufficient') {
         return `This comparison is estimated to take ${estimatedCredits?.toFixed(1) || 'X'} credits and you have ${Math.round(creditsRemaining)} credits remaining. The model responses may be truncated. If possible, try selecting less models or shorten your input.`
@@ -72,11 +72,11 @@ export function useCreditWarningManager() {
         if (tier === 'unregistered') {
           return `You have ${Math.round(creditsRemaining)} credits left for today. Credits will reset to 50 tomorrow, or sign-up for a free account to get more credits, more models, and more history!`
         } else if (tier === 'free') {
-          return `You have ${Math.round(creditsRemaining)} credits left for today. Credits will reset to 100 tomorrow, or upgrade your plan for more credits, more models, and more history!`
+          return `You have ${Math.round(creditsRemaining)} credits left for today. Credits will reset to 100 tomorrow. Paid plans with more credits are coming soon!`
         } else if (tier === 'pro_plus') {
           return `You have ${Math.round(creditsRemaining)} credits left in your monthly billing cycle. Wait until your cycle starts again, or sign-up for model comparison overages.`
         } else {
-          return `You have ${Math.round(creditsRemaining)} credits left in your monthly billing cycle. Consider upgrading your plan for more credits, more models per comparison, and more history!`
+          return `You have ${Math.round(creditsRemaining)} credits left in your monthly billing cycle. More subscription options are coming soon!`
         }
       }
     },

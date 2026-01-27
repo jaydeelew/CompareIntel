@@ -74,6 +74,9 @@ class UserResponse(BaseModel):
     billing_period_start: Optional[datetime] = None
     billing_period_end: Optional[datetime] = None
     credits_reset_at: Optional[datetime] = None
+    # 7-day trial fields - grants free users access to all premium models
+    trial_ends_at: Optional[datetime] = None
+    is_trial_active: Optional[bool] = False
 
     model_config = ConfigDict(from_attributes=True)
 

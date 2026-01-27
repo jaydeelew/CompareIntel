@@ -91,9 +91,11 @@ export const ModelsSection: React.FC<ModelsSectionProps> = ({
         {Object.entries(modelsByProvider).map(([provider, models]) => {
           // Filter models based on hidePremiumModels toggle
           // When toggle is active, hide models that are restricted for the user's tier
+          // Note: trial_unlocked models are available during the 7-day trial period
           const visibleModels = hidePremiumModels
             ? models.filter(model => {
                 if (isPaidTier) return true // Paid tiers see all
+                if (model.trial_unlocked) return true // Trial users see trial-unlocked models
                 if (userTier === 'unregistered') {
                   return model.tier_access === 'unregistered'
                 }
@@ -195,10 +197,14 @@ export const ModelsSection: React.FC<ModelsSectionProps> = ({
 
                     // Determine if model is restricted based on user tier
                     // When hidePremiumModels is true, restricted models are already filtered out
+                    // trial_unlocked models are available during 7-day trial period
                     let isRestricted = false
                     if (!hidePremiumModels) {
                       if (isPaidTier) {
                         // Paid tiers have access to all models
+                        isRestricted = false
+                      } else if (model.trial_unlocked) {
+                        // Model is unlocked during trial period
                         isRestricted = false
                       } else if (userTier === 'unregistered') {
                         // Unregistered tier only has access to unregistered-tier models
@@ -222,7 +228,7 @@ export const ModelsSection: React.FC<ModelsSectionProps> = ({
                       if (isRestricted && requiresUpgrade) {
                         // Open upgrade modal or show upgrade message
                         onError(
-                          `This model requires a paid subscription. Upgrade to access premium models like ${model.name}.`
+                          `${model.name} is a premium model. Paid subscriptions are coming soon — stay tuned!`
                         )
                         window.scrollTo({ top: 0, behavior: 'smooth' })
                         return
@@ -265,6 +271,14 @@ export const ModelsSection: React.FC<ModelsSectionProps> = ({
                                 )}
                               </span>
                             </span>
+                            {model.trial_unlocked && (
+                              <span
+                                className="model-badge trial-unlocked"
+                                title="Premium model unlocked during your 7-day trial!"
+                              >
+                                ⭐ Trial
+                              </span>
+                            )}
                             {isRestricted && (
                               <span
                                 className="model-badge premium"

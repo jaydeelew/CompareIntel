@@ -2496,6 +2496,13 @@
   font-size: 0.87rem;
 }
 
+.model-badge.trial-unlocked {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  color: #92400e;
+  border: 1px solid #f59e0b;
+  font-weight: 600;
+}
+
 /* Small screen adjustments for provider count indicator */
 @media (max-width: 350px) {
   .provider-count {
