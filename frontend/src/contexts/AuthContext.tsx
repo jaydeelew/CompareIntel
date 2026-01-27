@@ -225,6 +225,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setUser(responseData.user)
       setIsLoading(false)
 
+      // Clear trial welcome modal flag for this email to ensure new registrations see the modal
+      // This handles the case where a user deletes their account and re-registers with the same email
+      if (responseData.user?.email) {
+        const trialSeenKey = `trial-welcome-seen-${responseData.user.email}`
+        localStorage.removeItem(trialSeenKey)
+      }
+
       // Dispatch event to notify that registration is complete
       // Use setTimeout to ensure React has flushed state updates before event fires
       // This triggers model refetch and trial welcome modal
