@@ -156,8 +156,8 @@ class TestDeleteAllConversations:
         assert data["deleted_count"] == 0
         assert "message" in data
 
-    def test_delete_all_conversations_with_conversations(self, authenticated_client, db_session):
-        """Test deleting all conversations when user has conversations."""
+    def test_delete_all_conversations_when_user_has_conversations(self, authenticated_client, db_session):
+        """Test deleting all conversations when user has existing conversations."""
         client, user, access_token, refresh_token = authenticated_client
         from app.models import Conversation
         import json
