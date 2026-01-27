@@ -55,8 +55,30 @@ export function useTabCoordination(
 
     const channel = new BroadcastChannel('compareintel-verification')
     let hasExistingTab = false
+    let isChannelClosed = false
+    let timeoutId: ReturnType<typeof setTimeout> | null = null
+    let closeTimeoutId: ReturnType<typeof setTimeout> | null = null
+
+    // Safe wrapper for postMessage that checks if channel is closed
+    const safePostMessage = (message: unknown) => {
+      if (isChannelClosed) {
+        return
+      }
+      try {
+        channel.postMessage(message)
+      } catch (error) {
+        // Channel might be closed, ignore the error
+        if (error instanceof DOMException && error.name === 'InvalidStateError') {
+          isChannelClosed = true
+        }
+      }
+    }
 
     const handleMessage = (event: MessageEvent) => {
+      if (isChannelClosed) {
+        return
+      }
+
       if (event.data.type === 'verify-email' && event.data.token) {
         // Existing tab received verification token from new tab
         const newUrl = new URL(window.location.href)
@@ -77,7 +99,7 @@ export function useTabCoordination(
         window.focus()
       } else if (event.data.type === 'ping') {
         hasExistingTab = true
-        channel.postMessage({ type: 'pong' })
+        safePostMessage({ type: 'pong' })
       } else if (event.data.type === 'pong') {
         hasExistingTab = true
       }
@@ -94,16 +116,24 @@ export function useTabCoordination(
 
     if (token && window.opener === null) {
       // New tab with token - ping for existing tabs
-      channel.postMessage({ type: 'ping' })
+      safePostMessage({ type: 'ping' })
 
-      setTimeout(() => {
+      timeoutId = setTimeout(() => {
+        if (isChannelClosed) {
+          return
+        }
+
         if (hasExistingTab) {
           // Send token to existing tab and close
-          channel.postMessage({
+          safePostMessage({
             type: isPasswordReset ? 'password-reset' : 'verify-email',
             token,
           })
-          setTimeout(() => window.close(), 500)
+          closeTimeoutId = setTimeout(() => {
+            if (!isChannelClosed) {
+              window.close()
+            }
+          }, 500)
         } else {
           // No existing tab - handle here
           if (isPasswordReset) {
@@ -115,8 +145,22 @@ export function useTabCoordination(
     }
 
     return () => {
+      isChannelClosed = true
+
+      // Clear any pending timeouts
+      if (timeoutId !== null) {
+        clearTimeout(timeoutId)
+      }
+      if (closeTimeoutId !== null) {
+        clearTimeout(closeTimeoutId)
+      }
+
       channel.removeEventListener('message', handleMessage)
-      channel.close()
+      try {
+        channel.close()
+      } catch (_error) {
+        // Ignore errors when closing already closed channel
+      }
     }
   }, [onCloseAuthModal])
 
