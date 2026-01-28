@@ -1,10 +1,18 @@
 # Rate Limiting Implementation Guide
 
+> **⚠️ LEGACY DOCUMENTATION**  
+> **Status:** This document describes the legacy model-based rate limiting system.  
+> **Current System:** CompareIntel now uses a **credit-based rate limiting system** instead of model-response-based limits.  
+> **See:** [`CREDIT_SYSTEM.md`](./CREDIT_SYSTEM.md) for current implementation details.  
+> **Note:** The constants and configuration described here still exist for backward compatibility but are being phased out in favor of the credit system.
+
 ## Overview
 
-This document describes the **multi-layer anti-abuse system** implemented to prevent users from exceeding daily limits. The system uses **model-based pricing** where each AI model response counts individually toward the daily limit.
+This document describes the **legacy multi-layer anti-abuse system** that used **model-based pricing** where each AI model response counted individually toward the daily limit. This system has been superseded by the credit-based system.
 
 **Updated October 22, 2025:** Switched from comparison-based to model-based rate limiting. Model limits are tiered: Free (3), Starter/Starter Plus (6), Pro (9), Pro Plus (12).
+
+**Current Status (January 2026):** The system has migrated to credit-based rate limiting. See [`CREDIT_SYSTEM.md`](./CREDIT_SYSTEM.md) for the current implementation.
 
 ## Architecture
 

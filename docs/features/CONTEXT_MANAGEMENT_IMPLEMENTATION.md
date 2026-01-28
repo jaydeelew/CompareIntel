@@ -1,8 +1,10 @@
 # Context Window Management Implementation
 
 **Date:** October 24, 2025  
-**Status:** ✅ Complete - Ready for Testing  
+**Status:** ⚠️ **Partially Implemented** - Frontend warnings complete, backend truncation not implemented  
 **Approach:** Industry Best Practices 2025 (Claude + Perplexity patterns)
+
+> **Note:** This document describes both implemented and planned features. Frontend context warnings are fully implemented, but backend conversation history truncation (`truncate_conversation_history()`) is not yet implemented.
 
 ---
 
@@ -33,24 +35,30 @@ def count_conversation_tokens(messages: list) -> int
 - Counts total tokens in conversation history
 - Includes overhead for message formatting (~4 tokens/message)
 
-#### 2. Context Window Truncation (`backend/app/model_runner.py`)
+#### 2. Context Window Truncation (`backend/app/model_runner.py`) ⚠️ **NOT IMPLEMENTED**
 
 ```python
 def truncate_conversation_history(conversation_history: list, max_messages: int = 20) -> tuple
 ```
 
-- Implements sliding window approach
-- Keeps most recent 20 messages (10 exchanges)
-- Returns: (truncated_history, was_truncated, original_count)
-- Prevents context overflow and manages costs
+**Status:** This function is **not currently implemented** in the codebase.
 
-#### 3. Automatic Truncation in API Calls
+**Planned Behavior:**
+- Would implement sliding window approach
+- Would keep most recent 20 messages (10 exchanges)
+- Would return: (truncated_history, was_truncated, original_count)
+- Would prevent context overflow and manage costs
 
-Both `call_openrouter_streaming()` and `call_openrouter()` now:
+#### 3. Automatic Truncation in API Calls ⚠️ **NOT IMPLEMENTED**
 
-- Automatically truncate conversation history to 20 messages
-- Inform the model when context was truncated
-- Transparent to the API consumer
+**Status:** Backend truncation is **not currently implemented**.
+
+**Planned Behavior:**
+- `call_openrouter_streaming()` and `call_openrouter()` would automatically truncate conversation history to 20 messages
+- Would inform the model when context was truncated
+- Would be transparent to the API consumer
+
+**Current State:** Conversation history is sent to models without truncation. Only frontend warnings prevent users from exceeding 24 messages.
 
 #### 4. Extended Interaction Tracking (`backend/app/routers/api.py`)
 
@@ -263,11 +271,11 @@ Total cost controlled: Max 20 messages × $0.05 = $1.00
 
 ### Backend Tests
 
-- [ ] Verify token counting works with tiktoken
-- [ ] Test truncation at exactly 20 messages
-- [ ] Confirm truncation notification sent to model
-- [ ] Check extended interaction detection (>6 messages)
-- [ ] Validate metadata returned in API response
+- [x] Verify token counting works with tiktoken ✅ (implemented)
+- [ ] Test truncation at exactly 20 messages ⚠️ (not implemented - backend truncation missing)
+- [ ] Confirm truncation notification sent to model ⚠️ (not implemented - backend truncation missing)
+- [x] Check extended interaction detection (>6 messages) ✅ (implemented)
+- [x] Validate metadata returned in API response ✅ (implemented)
 
 ### Frontend Tests
 
@@ -407,7 +415,13 @@ Implementation based on industry best practices from:
 
 ---
 
-**Implementation Status:** ✅ Complete  
-**Ready for:** Testing → Staging → Production  
-**Estimated Testing Time:** 2-3 hours  
-**Risk Level:** Low (additive feature, no breaking changes)
+**Implementation Status:** ⚠️ **Partially Complete**  
+- ✅ Frontend warnings and limits (6, 10, 14, 20, 24 message thresholds)
+- ✅ Extended interaction tracking
+- ✅ Token counting and estimation
+- ⚠️ Backend conversation history truncation **NOT IMPLEMENTED**
+- ⚠️ Automatic truncation in API calls **NOT IMPLEMENTED**
+
+**Ready for:** Frontend features are production-ready. Backend truncation needs implementation.  
+**Estimated Testing Time:** 2-3 hours (frontend), +4-6 hours (backend truncation implementation)  
+**Risk Level:** Low (frontend features are additive, no breaking changes)
