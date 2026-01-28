@@ -1852,10 +1852,9 @@ export const ComparisonForm = memo<ComparisonFormProps>(
               // For paid tiers, show scrolling when there are more than 3 entries
               // For anonymous/free, hide scrollbar when at or below limit
               const isPaidTier = userTier !== 'unregistered' && userTier !== 'free'
-              const shouldHideScrollbar =
-                !isPaidTier &&
-                conversationHistory.length <= maxVisibleEntries &&
-                !shouldShowNotification
+              // Hide scrollbar when there are 3 or fewer entries (for all tiers)
+              // This ensures the dropdown sizes to fit 1, 2, or 3 entries exactly
+              const shouldHideScrollbar = conversationHistory.length <= 3 && !shouldShowNotification
 
               // Only calculate max height when there are entries to show
               // Each entry: 1rem top padding (16px) + content (~23px prompt + 8px margin + ~15px meta) + 1rem bottom padding (16px) ≈ 78px
@@ -1873,12 +1872,28 @@ export const ComparisonForm = memo<ComparisonFormProps>(
                 // Using 95px to account for spacing while minimizing white space
                 const notificationHeight = shouldShowNotification ? (isSmallLayout ? 95 : 70) : 0
 
-                if (maxVisibleEntries === 2) {
-                  // Unregistered tier: 2 entries max
-                  return `${165 + notificationHeight}px`
+                // Calculate the actual number of entries to display
+                // For paid tiers, we show all entries up to historyLimit, but cap visible height at 3
+                // For non-paid tiers, we show up to maxVisibleEntries
+                const actualEntriesToShow = isPaidTier
+                  ? Math.min(conversationHistory.length, historyLimit)
+                  : Math.min(conversationHistory.length, maxVisibleEntries)
+
+                // Calculate height based on actual number of entries displayed (up to 3 max)
+                // Height per entry: ~83px (based on 165px for 2 entries, 250px for 3 entries)
+                // 1 entry: ~83px, 2 entries: ~165px, 3 entries: ~250px
+                const entriesForHeight = Math.min(actualEntriesToShow, 3)
+                let baseHeight: number
+                if (entriesForHeight === 1) {
+                  baseHeight = 83
+                } else if (entriesForHeight === 2) {
+                  baseHeight = 165
+                } else {
+                  // 3 or more entries - cap at 3 entry height
+                  baseHeight = 250
                 }
-                // Free/Paid tiers: 3 entries max visible
-                return `${250 + notificationHeight}px`
+
+                return `${baseHeight + notificationHeight}px`
               }
 
               const maxHeight = getMaxHeight()
