@@ -127,6 +127,10 @@ export function useAuthStateEffects(
           setConversations([])
         }
 
+        // When restoring saved state, collapse models section and all provider dropdowns
+        setIsModelsHidden(true)
+        setOpenDropdowns(new Set())
+
         // Clear the saved state after restoring
         clearSessionState()
       } else {
@@ -148,9 +152,13 @@ export function useAuthStateEffects(
       setClosedCards(new Set())
       setActiveResultTabs({})
       setShowDoneSelectingCard(false)
-      setIsModelsHidden(false)
+      // Only set isModelsHidden and openDropdowns if not restoring saved state
+      // (they are set above when restoring saved state)
+      if (!savedState) {
+        setIsModelsHidden(false)
+        setOpenDropdowns(new Set())
+      }
       setIsScrollLocked(false)
-      setOpenDropdowns(new Set())
       setDefaultSelectionOverridden(false)
       setCreditBalance(null)
       setAnonymousCreditsRemaining(null)
