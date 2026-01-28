@@ -379,6 +379,10 @@ input:-webkit-autofill:active {
     margin-bottom: 0.15rem;
   }
 
+  .auth-form-header p.trial-highlight {
+    font-size: 0.65rem;
+  }
+
   .auth-form {
     gap: 0.5rem;
   }
