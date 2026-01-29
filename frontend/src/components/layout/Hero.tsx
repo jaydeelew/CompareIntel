@@ -21,21 +21,29 @@ function CapabilityTile({
 }: CapabilityTileProps) {
   const [isPressed, setIsPressed] = useState(false)
 
-  const handleTouchStart = () => {
-    setIsPressed(true)
+  const handlePointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (event.pointerType === 'touch') {
+      setIsPressed(true)
+    }
   }
 
-  const handleTouchEnd = () => {
+  const handlePointerRelease = () => {
     setIsPressed(false)
+  }
+
+  const handleClick = () => {
+    setIsPressed(false)
+    onTap(id)
   }
 
   return (
     <div
       className={`capability-tile ${isPressed ? 'pressed' : ''}`}
-      onClick={() => onTap(id)}
-      onTouchStart={handleTouchStart}
-      onTouchEnd={handleTouchEnd}
-      onTouchCancel={handleTouchEnd}
+      onClick={handleClick}
+      onPointerDown={handlePointerDown}
+      onPointerUp={handlePointerRelease}
+      onPointerCancel={handlePointerRelease}
+      onPointerLeave={handlePointerRelease}
     >
       <div className="capability-icon">{icon}</div>
       <h3 className="capability-title">{title}</h3>
