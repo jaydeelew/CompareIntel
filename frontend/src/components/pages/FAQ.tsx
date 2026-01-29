@@ -5,6 +5,8 @@
 
 import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
+
+import { BackToMainCTA } from '../shared'
 import './Pages.css'
 
 interface FAQItemProps {
@@ -1255,19 +1257,13 @@ export const FAQ: React.FC = () => {
             </p>
           </section>
 
-          <section className="seo-section cta-section">
-            <h2>Ready to Compare AI Models?</h2>
-            <p>
-              Start comparing the latest AI models from OpenAI, Anthropic, Google, Meta, and more
-              today. Unregistered users can get started immediately with 50 credits per day, or sign
-              up for a free account to receive 100 credits per day—no credit card required. Paid
-              subscription tiers are available for users who need more credits, access to premium
-              models, and higher limits.
-            </p>
-            <Link to="/" className="cta-button">
-              Start Comparing Free
-            </Link>
-          </section>
+          <BackToMainCTA
+            title="Ready to Compare AI Models?"
+            description="Got your questions answered? Now it's time to try CompareIntel for yourself! Compare different AI models side-by-side and discover which one works best for your needs."
+            primaryButtonText="Start Comparing AI Models"
+            secondaryButtonText="Learn More About Us"
+            secondaryButtonLink="/about"
+          />
         </article>
       </div>
     </div>

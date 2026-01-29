@@ -5,6 +5,8 @@
 
 import React from 'react'
 import { Link } from 'react-router-dom'
+
+import { BackToMainCTA } from '../shared'
 import './Pages.css'
 
 export const PrivacyPolicy: React.FC = () => {
@@ -310,6 +312,12 @@ export const PrivacyPolicy: React.FC = () => {
               </li>
             </ul>
           </section>
+
+          <BackToMainCTA
+            title="Ready to Get Started?"
+            description="Confident in how we protect your data? Start comparing AI models side-by-side and discover which one works best for your needs."
+            primaryButtonText="Start Comparing AI Models"
+          />
         </article>
       </div>
     </div>

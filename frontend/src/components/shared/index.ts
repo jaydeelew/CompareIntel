@@ -21,3 +21,5 @@ export { LazyImage } from './LazyImage'
 export type { LazyImageProps } from './LazyImage'
 
 export { CreditWarningBanner } from './CreditWarningBanner'
+
+export { BackToMainCTA } from './BackToMainCTA'

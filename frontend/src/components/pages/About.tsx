@@ -5,6 +5,8 @@
 
 import React from 'react'
 import { Link } from 'react-router-dom'
+
+import { BackToMainCTA } from '../shared'
 import './Pages.css'
 
 export const About: React.FC = () => {
@@ -225,17 +227,11 @@ export const About: React.FC = () => {
             </p>
           </section>
 
-          <section className="seo-section cta-section">
-            <h2>Start Comparing Today</h2>
-            <p>
-              Join users who trust CompareIntel to help them find the best AI models for their
-              needs. Whether you're comparing OpenAI vs Anthropic, evaluating Gemini against Llama,
-              or testing any combination of 65+ models, CompareIntel makes it easy.
-            </p>
-            <Link to="/" className="cta-button">
-              Try CompareIntel Free
-            </Link>
-          </section>
+          <BackToMainCTA
+            title="Ready to Get Started?"
+            description="Now that you know what CompareIntel is all about, try it for yourself! Compare different AI models side-by-side and find the perfect AI for your needs."
+            primaryButtonText="Start Comparing AI Models"
+          />
         </article>
       </div>
     </div>

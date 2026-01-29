@@ -4,6 +4,8 @@
  */
 
 import React from 'react'
+
+import { BackToMainCTA } from './shared'
 import './TermsOfService.css'
 
 export const TermsOfService: React.FC = () => {
@@ -312,6 +314,12 @@ export const TermsOfService: React.FC = () => {
               compareIntel.com through the appropriate channels provided on compareIntel.com.
             </p>
           </section>
+
+          <BackToMainCTA
+            title="Ready to Get Started?"
+            description="Now that you've reviewed our terms, start comparing AI models side-by-side and discover which one works best for your needs."
+            primaryButtonText="Start Comparing AI Models"
+          />
         </div>
       </div>
     </div>

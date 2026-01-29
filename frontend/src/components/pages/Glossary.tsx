@@ -5,6 +5,8 @@
 
 import React, { useState, useMemo } from 'react'
 import { Link } from 'react-router-dom'
+
+import { BackToMainCTA } from '../shared'
 import './Pages.css'
 
 interface GlossaryTerm {
@@ -527,70 +529,11 @@ export const Glossary: React.FC = () => {
           </section>
 
           {/* Call to Action */}
-          <section className="glossary-cta">
-            <div className="cta-glow" />
-            <div className="cta-content">
-              <div className="cta-icon-wrapper">
-                <svg
-                  className="cta-icon"
-                  width="48"
-                  height="48"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M12 2L2 7l10 5 10-5-10-5z" />
-                  <path d="M2 17l10 5 10-5" />
-                  <path d="M2 12l10 5 10-5" />
-                </svg>
-              </div>
-              <h2 className="cta-title">Ready to Try AI?</h2>
-              <p className="cta-description">
-                Now that you understand the basics, put your knowledge to use! Compare different AI
-                models side-by-side and discover which one works best for your needs.
-              </p>
-              <div className="cta-buttons">
-                <Link to="/" className="cta-btn cta-btn-primary">
-                  <svg
-                    width="20"
-                    height="20"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
-                  </svg>
-                  Start Comparing AI Models
-                </Link>
-                <Link to="/faq" className="cta-btn cta-btn-secondary">
-                  <svg
-                    width="20"
-                    height="20"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <circle cx="12" cy="12" r="10" />
-                    <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
-                    <line x1="12" y1="17" x2="12.01" y2="17" />
-                  </svg>
-                  Read the FAQ
-                </Link>
-              </div>
-            </div>
-            <div className="cta-decoration cta-decoration-1" />
-            <div className="cta-decoration cta-decoration-2" />
-            <div className="cta-decoration cta-decoration-3" />
-          </section>
+          <BackToMainCTA
+            title="Ready to Try AI?"
+            description="Now that you understand the basics, put your knowledge to use! Compare different AI models side-by-side and discover which one works best for your needs."
+            primaryButtonText="Start Comparing AI Models"
+          />
         </article>
       </div>
     </div>

@@ -1,0 +1,287 @@
+/**
+ * Back to Main CTA Component Styles
+ * Professional dark gradient design with animated elements
+ */
+
+.back-to-main-cta {
+  position: relative;
+  margin-top: 3rem;
+  padding: 3rem 2.5rem;
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+  border-radius: 1.5rem;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+/* Animated gradient glow effect */
+.back-to-main-cta .cta-glow {
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg,
+    rgba(59, 130, 246, 0.15) 60deg,
+    transparent 120deg,
+    rgba(139, 92, 246, 0.15) 180deg,
+    transparent 240deg,
+    rgba(14, 165, 233, 0.15) 300deg,
+    transparent 360deg
+  );
+  animation: back-to-main-glow-rotate 12s linear infinite;
+  z-index: 0;
+}
+
+@keyframes back-to-main-glow-rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Floating decoration elements */
+.back-to-main-cta .cta-decoration {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.back-to-main-cta .cta-decoration-1 {
+  width: 300px;
+  height: 300px;
+  top: -100px;
+  right: -100px;
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.2) 0%, transparent 70%);
+  animation: back-to-main-float 8s ease-in-out infinite;
+}
+
+.back-to-main-cta .cta-decoration-2 {
+  width: 200px;
+  height: 200px;
+  bottom: -60px;
+  left: -60px;
+  background: radial-gradient(circle, rgba(139, 92, 246, 0.2) 0%, transparent 70%);
+  animation: back-to-main-float 10s ease-in-out infinite reverse;
+}
+
+.back-to-main-cta .cta-decoration-3 {
+  width: 150px;
+  height: 150px;
+  top: 50%;
+  left: 20%;
+  transform: translateY(-50%);
+  background: radial-gradient(circle, rgba(14, 165, 233, 0.15) 0%, transparent 70%);
+  animation: back-to-main-float 12s ease-in-out infinite;
+}
+
+@keyframes back-to-main-float {
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    transform: translateY(-20px) scale(1.05);
+  }
+}
+
+/* Main content container */
+.back-to-main-cta .cta-content {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+}
+
+/* Icon wrapper */
+.back-to-main-cta .cta-icon-wrapper {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 80px;
+  height: 80px;
+  margin-bottom: 1.5rem;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(139, 92, 246, 0.2) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 1.25rem;
+  backdrop-filter: blur(8px);
+}
+
+.back-to-main-cta .cta-icon {
+  color: #60a5fa;
+  animation: back-to-main-icon-pulse 3s ease-in-out infinite;
+}
+
+@keyframes back-to-main-icon-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0.8;
+  }
+}
+
+/* Title */
+.back-to-main-cta .cta-title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: white;
+  margin: 0 0 1rem;
+  letter-spacing: -0.02em;
+  background: linear-gradient(135deg, #ffffff 0%, #94a3b8 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Description */
+.back-to-main-cta .cta-description {
+  font-size: 1.125rem;
+  color: rgba(255, 255, 255, 0.7);
+  line-height: 1.7;
+  max-width: 550px;
+  margin: 0 auto 2rem;
+}
+
+/* Button container */
+.back-to-main-cta .cta-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1rem;
+}
+
+/* Base button styles */
+.back-to-main-cta .cta-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.875rem 1.75rem;
+  font-size: 1rem;
+  font-weight: 600;
+  text-decoration: none;
+  border-radius: 0.75rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  border: none;
+}
+
+/* Primary button */
+.back-to-main-cta .cta-btn-primary {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 50%, #1d4ed8 100%);
+  color: white;
+  box-shadow:
+    0 4px 15px rgba(59, 130, 246, 0.4),
+    0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+}
+
+.back-to-main-cta .cta-btn-primary:hover {
+  transform: translateY(-3px);
+  box-shadow:
+    0 8px 25px rgba(59, 130, 246, 0.5),
+    0 0 0 1px rgba(255, 255, 255, 0.2) inset;
+}
+
+.back-to-main-cta .cta-btn-primary:active {
+  transform: translateY(-1px);
+}
+
+.back-to-main-cta .cta-btn-primary svg {
+  transition: transform 0.3s ease;
+}
+
+.back-to-main-cta .cta-btn-primary:hover svg {
+  transform: rotate(-12deg) scale(1.1);
+}
+
+/* Secondary button */
+.back-to-main-cta .cta-btn-secondary {
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(4px);
+}
+
+.back-to-main-cta .cta-btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.25);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.back-to-main-cta .cta-btn-secondary:active {
+  transform: translateY(0);
+}
+
+.back-to-main-cta .cta-btn-secondary svg {
+  opacity: 0.7;
+  transition: opacity 0.3s ease;
+}
+
+.back-to-main-cta .cta-btn-secondary:hover svg {
+  opacity: 1;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .back-to-main-cta {
+    padding: 2.5rem 1.5rem;
+    margin-top: 2rem;
+  }
+
+  .back-to-main-cta .cta-icon-wrapper {
+    width: 64px;
+    height: 64px;
+    margin-bottom: 1.25rem;
+  }
+
+  .back-to-main-cta .cta-icon {
+    width: 36px;
+    height: 36px;
+  }
+
+  .back-to-main-cta .cta-title {
+    font-size: 1.5rem;
+  }
+
+  .back-to-main-cta .cta-description {
+    font-size: 1rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .back-to-main-cta .cta-buttons {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .back-to-main-cta .cta-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .back-to-main-cta {
+    padding: 2rem 1.25rem;
+    border-radius: 1rem;
+  }
+
+  .back-to-main-cta .cta-title {
+    font-size: 1.375rem;
+  }
+
+  .back-to-main-cta .cta-description {
+    font-size: 0.9375rem;
+  }
+
+  .back-to-main-cta .cta-btn {
+    padding: 0.75rem 1.25rem;
+    font-size: 0.9375rem;
+  }
+}

@@ -5,6 +5,8 @@
 
 import React from 'react'
 import { Link } from 'react-router-dom'
+
+import { BackToMainCTA } from '../shared'
 import './Pages.css'
 
 export const Features: React.FC = () => {
@@ -558,17 +560,11 @@ export const Features: React.FC = () => {
             </ul>
           </section>
 
-          <section className="seo-section cta-section">
-            <h2>Ready to Experience These Features?</h2>
-            <p>
-              Start comparing AI models today and discover which ones work best for your specific
-              needs. With over 50 models to choose from and powerful comparison tools, CompareIntel
-              helps you make informed decisions about AI technology.
-            </p>
-            <Link to="/" className="cta-button">
-              Start Comparing Free
-            </Link>
-          </section>
+          <BackToMainCTA
+            title="Ready to Experience These Features?"
+            description="Try CompareIntel today and see these features in action! Compare different AI models side-by-side and discover which one works best for your needs."
+            primaryButtonText="Start Comparing AI Models"
+          />
         </article>
       </div>
     </div>
