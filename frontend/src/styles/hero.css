@@ -213,16 +213,31 @@
   }
 }
 
-/* Tap animation for touch devices - lift up slightly and return */
-.capability-tile:active {
+/* Tap animation for touch devices - use JS-controlled .pressed class for reliable behavior */
+/* The :active pseudo-class is unreliable on Android touch devices and can get stuck */
+.capability-tile.pressed {
   transform: translateY(-2px);
   border-color: rgba(255, 255, 255, 0.25);
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
   transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.capability-tile:active::before {
+.capability-tile.pressed::before {
   opacity: 0.5;
+}
+
+/* Fallback :active for devices that support hover (mouse/trackpad) */
+@media (hover: hover) {
+  .capability-tile:active {
+    transform: translateY(-2px);
+    border-color: rgba(255, 255, 255, 0.25);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+    transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .capability-tile:active::before {
+    opacity: 0.5;
+  }
 }
 
 .capability-icon {
@@ -254,11 +269,20 @@
   }
 }
 
-/* Icon animation on tap for touch devices */
-.capability-tile:active .capability-icon {
+/* Icon animation on tap for touch devices - uses JS-controlled .pressed class */
+.capability-tile.pressed .capability-icon {
   transform: scale(1.05);
   background: linear-gradient(135deg, rgba(99, 102, 241, 0.25) 0%, rgba(168, 85, 247, 0.25) 100%);
   transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Fallback icon animation on :active for devices that support hover */
+@media (hover: hover) {
+  .capability-tile:active .capability-icon {
+    transform: scale(1.05);
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.25) 0%, rgba(168, 85, 247, 0.25) 100%);
+    transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  }
 }
 
 .capability-title {

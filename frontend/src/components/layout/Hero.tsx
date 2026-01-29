@@ -19,8 +19,24 @@ function CapabilityTile({
   isVisible,
   onTap,
 }: CapabilityTileProps) {
+  const [isPressed, setIsPressed] = useState(false)
+
+  const handleTouchStart = () => {
+    setIsPressed(true)
+  }
+
+  const handleTouchEnd = () => {
+    setIsPressed(false)
+  }
+
   return (
-    <div className="capability-tile" onClick={() => onTap(id)}>
+    <div
+      className={`capability-tile ${isPressed ? 'pressed' : ''}`}
+      onClick={() => onTap(id)}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+      onTouchCancel={handleTouchEnd}
+    >
       <div className="capability-icon">{icon}</div>
       <h3 className="capability-title">{title}</h3>
       <p className="capability-description">{description}</p>
