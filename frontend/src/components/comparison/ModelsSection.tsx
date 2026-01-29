@@ -292,13 +292,6 @@ export const ModelsSection: React.FC<ModelsSectionProps> = ({
                                     Latest date of this model's training data
                                   </span>
                                 </span>
-                                <a
-                                  href="/glossary"
-                                  className="tooltip-learn-more"
-                                  onClick={e => e.stopPropagation()}
-                                >
-                                  Learn more about AI terms →
-                                </a>
                               </span>
                             </span>
                             {model.trial_unlocked && (

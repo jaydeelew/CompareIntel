@@ -378,24 +378,6 @@
   font-style: italic;
 }
 
-/* Learn more link */
-.model-info-tooltip .tooltip-learn-more {
-  display: block;
-  margin-top: 0.25rem;
-  padding-top: 0.5rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-  font-size: 0.6875rem;
-  font-weight: 500;
-  color: var(--primary-color, #3b82f6);
-  text-decoration: none;
-  transition: color 0.15s ease;
-}
-
-.model-info-tooltip .tooltip-learn-more:hover {
-  color: rgba(147, 197, 253, 1);
-  text-decoration: underline;
-}
-
 /* Context window value styling */
 .model-info-tooltip .tooltip-value.context-window {
   color: rgba(134, 239, 172, 0.95); /* Light green for context window */
