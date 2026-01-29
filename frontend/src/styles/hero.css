@@ -200,8 +200,8 @@
   border-radius: 16px;
 }
 
-/* Only apply hover effects on devices that support hover (not touch devices) */
-@media (hover: hover) {
+/* Only apply hover effects on true mouse/trackpad devices (avoid "stuck hover" on touch) */
+@media (hover: hover) and (pointer: fine) {
   .capability-tile:hover {
     transform: translateY(-4px);
     border-color: rgba(255, 255, 255, 0.3);
@@ -213,21 +213,62 @@
   }
 }
 
-/* Tap animation for touch devices - use JS-controlled .pressed class for reliable behavior */
-/* The :active pseudo-class is unreliable on Android touch devices and can get stuck */
-.capability-tile.pressed {
-  transform: translateY(-2px);
-  border-color: rgba(255, 255, 255, 0.25);
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
-  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+/* Defensive: if a mobile browser emulates/sticks :hover, force tiles back to baseline */
+@media (hover: none), (pointer: coarse) {
+  .capability-tile:hover {
+    transform: translateY(0) !important;
+    border-color: rgba(255, 255, 255, 0.15) !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+  }
+
+  .capability-tile:hover::before {
+    opacity: 0 !important;
+  }
+
+  /* Some mobile browsers can also leave elements in :active/:focus states after tap */
+  .capability-tile:active,
+  .capability-tile:focus,
+  .capability-tile:focus-visible {
+    transform: translateY(0) !important;
+    border-color: rgba(255, 255, 255, 0.15) !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+  }
+
+  .capability-tile:active::before,
+  .capability-tile:focus::before,
+  .capability-tile:focus-visible::before {
+    opacity: 0 !important;
+  }
 }
 
-.capability-tile.pressed::before {
+/* Tap animation keyframes - lifts up and returns automatically */
+@keyframes tileTap {
+  0% {
+    transform: translateY(0);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+  40% {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2);
+  }
+  100% {
+    transform: translateY(0);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+}
+
+/* Tap animation for touch devices - uses CSS animation that auto-resets */
+/* This avoids the stuck :active state issue on Android touch devices */
+.capability-tile.tap-animate {
+  animation: tileTap 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.capability-tile.tap-animate::before {
   opacity: 0.5;
 }
 
-/* Fallback :active for devices that support hover (mouse/trackpad) */
-@media (hover: hover) {
+/* :active for devices that support hover (mouse/trackpad) */
+@media (hover: hover) and (pointer: fine) {
   .capability-tile:active {
     transform: translateY(-2px);
     border-color: rgba(255, 255, 255, 0.25);
@@ -261,23 +302,34 @@
   height: 20px;
 }
 
-/* Only apply icon hover effects on devices that support hover */
-@media (hover: hover) {
+/* Only apply icon hover effects on true mouse/trackpad devices */
+@media (hover: hover) and (pointer: fine) {
   .capability-tile:hover .capability-icon {
     transform: scale(1.1);
     background: linear-gradient(135deg, rgba(99, 102, 241, 0.3) 0%, rgba(168, 85, 247, 0.3) 100%);
   }
 }
 
-/* Icon animation on tap for touch devices - uses JS-controlled .pressed class */
-.capability-tile.pressed .capability-icon {
-  transform: scale(1.05);
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.25) 0%, rgba(168, 85, 247, 0.25) 100%);
-  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+/* Icon animation keyframes for tap */
+@keyframes iconTap {
+  0% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
 }
 
-/* Fallback icon animation on :active for devices that support hover */
-@media (hover: hover) {
+/* Icon animation on tap for touch devices - uses CSS animation that auto-resets */
+.capability-tile.tap-animate .capability-icon {
+  animation: iconTap 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+/* Icon animation on :active for devices that support hover */
+@media (hover: hover) and (pointer: fine) {
   .capability-tile:active .capability-icon {
     transform: scale(1.05);
     background: linear-gradient(135deg, rgba(99, 102, 241, 0.25) 0%, rgba(168, 85, 247, 0.25) 100%);

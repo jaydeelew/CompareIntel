@@ -190,9 +190,8 @@ const aiBasicsFaqData = [
         </p>
         <p>
           <strong>How this affects your credits:</strong> On CompareIntel, we convert token usage
-          into credits using a weighted formula. See the{' '}
-          <a href="#credits-system">"How does the credits system work?"</a> FAQ below for the
-          complete breakdown.
+          into credits using a weighted formula. For the complete breakdown, see the{' '}
+          <a href="#credits-system">"How does the credits system work?"</a> FAQ below.
         </p>
       </>
     ),

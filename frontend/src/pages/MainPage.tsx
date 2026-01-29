@@ -546,7 +546,7 @@ export function MainPage() {
       setVisibleTooltip(tileId)
       setTimeout(() => {
         setVisibleTooltip(null)
-      }, 2000)
+      }, 3000)
     }
   }
 

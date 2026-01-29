@@ -19,32 +19,20 @@ function CapabilityTile({
   isVisible,
   onTap,
 }: CapabilityTileProps) {
-  const [isPressed, setIsPressed] = useState(false)
-
-  const handlePointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
-    if (event.pointerType === 'touch') {
-      setIsPressed(true)
-    }
-  }
-
-  const handlePointerRelease = () => {
-    setIsPressed(false)
-  }
+  const [tapAnimating, setTapAnimating] = useState(false)
 
   const handleClick = () => {
-    setIsPressed(false)
+    // Trigger tap animation class that auto-resets via CSS animation
+    setTapAnimating(true)
+    // Remove the class after animation completes (300ms)
+    setTimeout(() => {
+      setTapAnimating(false)
+    }, 300)
     onTap(id)
   }
 
   return (
-    <div
-      className={`capability-tile ${isPressed ? 'pressed' : ''}`}
-      onClick={handleClick}
-      onPointerDown={handlePointerDown}
-      onPointerUp={handlePointerRelease}
-      onPointerCancel={handlePointerRelease}
-      onPointerLeave={handlePointerRelease}
-    >
+    <div className={`capability-tile ${tapAnimating ? 'tap-animate' : ''}`} onClick={handleClick}>
       <div className="capability-icon">{icon}</div>
       <h3 className="capability-title">{title}</h3>
       <p className="capability-description">{description}</p>
