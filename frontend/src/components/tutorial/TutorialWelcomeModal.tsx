@@ -65,6 +65,42 @@ export const TutorialWelcomeModal: React.FC<TutorialWelcomeModalProps> = ({
             </Link>{' '}
             to learn more.
           </p>
+
+          {/* AI Basics Section for Beginners */}
+          <div className="tutorial-welcome-ai-basics">
+            <div className="ai-basics-icon">🎓</div>
+            <div className="ai-basics-content">
+              <span className="ai-basics-label">New to AI?</span>
+              <p>
+                Learn key AI concepts like context windows, tokens, and knowledge cutoffs in our{' '}
+                <Link
+                  to="/glossary"
+                  className="tutorial-welcome-link"
+                  onClick={() => {
+                    if (dontShowAgain && onDontShowAgain) {
+                      onDontShowAgain()
+                    }
+                  }}
+                >
+                  AI Glossary
+                </Link>{' '}
+                or{' '}
+                <Link
+                  to="/faq#what-is-ai"
+                  className="tutorial-welcome-link"
+                  onClick={() => {
+                    if (dontShowAgain && onDontShowAgain) {
+                      onDontShowAgain()
+                    }
+                  }}
+                >
+                  AI Basics FAQ
+                </Link>
+                .
+              </p>
+            </div>
+          </div>
+
           {showDontShowAgain && (
             <div className="tutorial-welcome-dont-show-again">
               <label className="tutorial-welcome-checkbox-label">

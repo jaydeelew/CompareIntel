@@ -58,10 +58,10 @@ export const PrivacyPolicy: React.FC = () => {
                 <strong>Prompts and Queries:</strong> The prompts you submit to compare AI models
                 are sent directly to the respective AI providers (such as OpenAI, Anthropic, Google,
                 etc.) to generate responses. CompareIntel acts solely as a pass-through service and
-                does not access, analyze, train on, or use your prompts or AI model responses for any
-                purpose other than displaying them back to you. While conversation history may be
-                stored to enable conversation features, this data is only accessible to you and is
-                not used by CompareIntel for any other purpose.
+                does not access, analyze, train on, or use your prompts or AI model responses for
+                any purpose other than displaying them back to you. While conversation history may
+                be stored to enable conversation features, this data is only accessible to you and
+                is not used by CompareIntel for any other purpose.
               </li>
               <li>
                 <strong>Communications:</strong> If you contact us for support or feedback, we
@@ -129,10 +129,10 @@ export const PrivacyPolicy: React.FC = () => {
             </p>
             <ul className="seo-list">
               <li>
-                <strong>AI Providers:</strong> Your prompts are sent directly to the AI model providers you
-                select (such as OpenAI, Anthropic, Google, etc.) in order to generate responses.
-                Each provider has its own privacy policy governing their handling of this data.
-                CompareIntel does not access, analyze, or use your prompts or responses.
+                <strong>AI Providers:</strong> Your prompts are sent directly to the AI model
+                providers you select (such as OpenAI, Anthropic, Google, etc.) in order to generate
+                responses. Each provider has its own privacy policy governing their handling of this
+                data. CompareIntel does not access, analyze, or use your prompts or responses.
               </li>
               <li>
                 <strong>Service Providers:</strong> We may share information with third-party
@@ -248,11 +248,13 @@ export const PrivacyPolicy: React.FC = () => {
               These providers include but are not limited to:
             </p>
             <ul className="seo-list">
-              <li>OpenAI (GPT-4, GPT-4o, GPT-3.5)</li>
+              <li>OpenAI (GPT and reasoning models)</li>
               <li>Anthropic (Claude models)</li>
               <li>Google (Gemini models)</li>
               <li>Meta (Llama models)</li>
+              <li>xAI (Grok models)</li>
               <li>Mistral AI</li>
+              <li>DeepSeek</li>
             </ul>
             <p>
               Each provider has its own privacy policy and data handling practices. We encourage you

@@ -22,11 +22,11 @@ const PAGE_META: Record<string, PageMeta> = {
   '/': {
     title: 'CompareIntel - Compare AI Models Side-by-Side',
     description:
-      'Compare AI models side-by-side. Test GPT-5, Claude 4.5, Gemini, Grok 4, Llama 3, and more simultaneously. New models added regularly. Free tier available.',
+      'Compare the latest AI models side-by-side. Test models from OpenAI, Anthropic, Google, Meta, xAI, and more simultaneously. New models added regularly. Free tier available.',
     canonical: `${BASE_URL}/`,
     ogTitle: 'CompareIntel - Compare 65+ AI Models Side-by-Side',
     ogDescription:
-      'Compare GPT-5.1, Claude Opus 4.5, Gemini 3 Pro, Llama 4, and 65+ AI models side-by-side. Test prompts simultaneously and find the best AI for your needs. Free tier available.',
+      'Compare 65+ AI models side-by-side from leading providers. Test prompts simultaneously and find the best AI for your needs. New models added as released. Free tier available.',
     ogImage: DEFAULT_OG_IMAGE,
   },
   '/about': {
@@ -119,11 +119,11 @@ export function getPageMeta(pathname: string): PageMeta {
   return {
     title: 'CompareIntel',
     description:
-      'Compare AI models side-by-side. Test GPT-5, Claude 4.5, Gemini, Grok 4, Llama 3, and more simultaneously.',
+      'Compare the latest AI models side-by-side from OpenAI, Anthropic, Google, Meta, xAI, and more simultaneously.',
     canonical: `${BASE_URL}${normalizedPath}`,
     ogTitle: 'CompareIntel',
     ogDescription:
-      'Compare AI models side-by-side. Test GPT-5, Claude 4.5, Gemini, Grok 4, Llama 3, and more simultaneously.',
+      'Compare the latest AI models side-by-side from OpenAI, Anthropic, Google, Meta, xAI, and more simultaneously.',
     ogImage: DEFAULT_OG_IMAGE,
   }
 }

@@ -39,7 +39,7 @@ export const Features: React.FC = () => {
               <div className="provider-card">
                 <h3>OpenAI</h3>
                 <p>
-                  Compare responses from GPT-5, GPT-4o, o3, and other OpenAI models known for their
+                  Compare responses from OpenAI's latest GPT and reasoning models, known for their
                   strong general-purpose capabilities and creative outputs.
                 </p>
               </div>

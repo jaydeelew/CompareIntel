@@ -139,3 +139,41 @@ export function formatConversationMessage(
   const time = formatTime(timestamp)
   return `[${label}] ${time}\n${content}`
 }
+
+/**
+ * Format a token count into a human-readable abbreviated format.
+ *
+ * Converts large numbers into readable format with K (thousands) or M (millions) suffix.
+ * Numbers below 1000 are displayed as-is.
+ *
+ * @param tokens - Number of tokens to format
+ * @returns Formatted string (e.g., "128K", "1M", "500")
+ *
+ * @example
+ * ```typescript
+ * formatTokenCount(128000); // "128K"
+ * formatTokenCount(1000000); // "1M"
+ * formatTokenCount(1500000); // "1.5M"
+ * formatTokenCount(500); // "500"
+ * formatTokenCount(undefined); // "Unknown"
+ * ```
+ */
+export function formatTokenCount(tokens: number | undefined | null): string {
+  if (tokens === undefined || tokens === null) {
+    return 'Unknown'
+  }
+
+  if (tokens >= 1_000_000) {
+    const millions = tokens / 1_000_000
+    // Show decimal only if not a whole number
+    return millions % 1 === 0 ? `${millions}M` : `${millions.toFixed(1)}M`
+  }
+
+  if (tokens >= 1_000) {
+    const thousands = tokens / 1_000
+    // Show decimal only if not a whole number
+    return thousands % 1 === 0 ? `${thousands}K` : `${thousands.toFixed(1)}K`
+  }
+
+  return tokens.toString()
+}

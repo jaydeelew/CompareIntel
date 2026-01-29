@@ -32,7 +32,7 @@ export const HowItWorks: React.FC = () => {
               CompareIntel gives you access to the newest and most capable AI models and makes it
               easy to compare them with a single prompt. We continuously add new models as they're
               released, so you're always working with cutting-edge technology. Whether you're
-              evaluating GPT-4 against Claude, testing Gemini's capabilities, or exploring
+              evaluating OpenAI's models against Claude, testing Gemini's capabilities, or exploring
               open-source alternatives like Llama, our platform streamlines the comparison process.
             </p>
           </section>
@@ -307,10 +307,10 @@ export const HowItWorks: React.FC = () => {
                   </li>
                 </ul>
                 <p>
-                  <strong>Example use case:</strong> You compare GPT-4, Claude, and Gemini on a
-                  coding problem. GPT-4 gives the best solution, so you break out with GPT-4 to ask
-                  follow-up questions about optimization and edge cases. Meanwhile, the original
-                  comparison stays in your history for reference.
+                  <strong>Example use case:</strong> You compare models from OpenAI, Anthropic, and
+                  Google on a coding problem. One gives the best solution, so you break out with
+                  that model to ask follow-up questions about optimization and edge cases.
+                  Meanwhile, the original comparison stays in your history for reference.
                 </p>
                 <p>
                   <strong>Available for everyone:</strong> Breakout conversations work for both
@@ -457,7 +457,7 @@ export const HowItWorks: React.FC = () => {
             <p>
               Now that you know how CompareIntel works, it's time to put it into action. Create your
               free account and start comparing AI models in minutes. With daily credits and access
-              to 50+ models, you have everything you need to find the perfect AI for your tasks.
+              to 65+ models, you have everything you need to find the perfect AI for your tasks.
               Plus, registered users get twice the credits of unregistered users.
             </p>
             <Link to="/" className="cta-button">

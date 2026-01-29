@@ -2,6 +2,7 @@ import React from 'react'
 
 import { useResponsive } from '../../hooks'
 import type { Model, ModelsByProvider, User } from '../../types'
+import { formatTokenCount } from '../../utils/format'
 
 /**
  * Props for the ModelsSection component
@@ -262,13 +263,42 @@ export const ModelsSection: React.FC<ModelsSectionProps> = ({
                                 <path d="M12 16v-4" />
                                 <path d="M12 8h.01" />
                               </svg>
-                              <span className="knowledge-cutoff-tooltip">
-                                <span className="cutoff-label">Knowledge cutoff:</span>
-                                {model.knowledge_cutoff ? (
-                                  <span className="cutoff-date">{model.knowledge_cutoff}</span>
-                                ) : (
-                                  <span className="cutoff-pending">Date pending</span>
-                                )}
+                              <span className="model-info-tooltip">
+                                <span className="tooltip-section">
+                                  <span className="tooltip-row">
+                                    <span className="tooltip-label">Context window:</span>
+                                    <span className="tooltip-value context-window">
+                                      {formatTokenCount(model.max_input_tokens)} tokens
+                                    </span>
+                                  </span>
+                                  <span className="tooltip-explanation">
+                                    How much text this model can process at once
+                                  </span>
+                                </span>
+                                <span className="tooltip-section">
+                                  <span className="tooltip-row">
+                                    <span className="tooltip-label">Knowledge cutoff:</span>
+                                    {model.knowledge_cutoff ? (
+                                      <span className="tooltip-value cutoff-date">
+                                        {model.knowledge_cutoff}
+                                      </span>
+                                    ) : (
+                                      <span className="tooltip-value cutoff-pending">
+                                        Date pending
+                                      </span>
+                                    )}
+                                  </span>
+                                  <span className="tooltip-explanation">
+                                    Latest date of this model's training data
+                                  </span>
+                                </span>
+                                <a
+                                  href="/glossary"
+                                  className="tooltip-learn-more"
+                                  onClick={e => e.stopPropagation()}
+                                >
+                                  Learn more about AI terms →
+                                </a>
                               </span>
                             </span>
                             {model.trial_unlocked && (

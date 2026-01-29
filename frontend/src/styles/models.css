@@ -305,8 +305,8 @@
   color: var(--primary-color, #2563eb);
 }
 
-/* Knowledge cutoff tooltip */
-.knowledge-cutoff-tooltip {
+/* Model info tooltip (context window + knowledge cutoff) */
+.model-info-tooltip {
   position: absolute;
   bottom: calc(100% + 8px);
   /* Center the tooltip under the icon/name */
@@ -314,12 +314,12 @@
   transform: translateX(-50%);
   background: var(--bg-elevated, #1a1a2e);
   color: rgba(255, 255, 255, 0.9); /* Lighter text for better contrast */
-  padding: 0.5rem 0.75rem;
-  border-radius: 6px;
+  padding: 0.625rem 0.875rem;
+  border-radius: 8px;
   font-size: 0.75rem;
   font-weight: 500;
   white-space: nowrap;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
   border: 1px solid var(--border-color, rgba(255, 255, 255, 0.1));
   z-index: 1000;
   opacity: 0;
@@ -328,12 +328,14 @@
     opacity 0.2s,
     visibility 0.2s;
   pointer-events: none;
-  /* Ensure tooltip doesn't get clipped on the left - adjust if needed */
-  /* Use a container query or ensure parent allows overflow */
+  /* Multi-line layout */
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
 /* Tooltip arrow */
-.knowledge-cutoff-tooltip::after {
+.model-info-tooltip::after {
   content: '';
   position: absolute;
   top: 100%;
@@ -343,23 +345,71 @@
   border-top-color: var(--bg-elevated, #1a1a2e);
 }
 
-.model-name-tooltip-wrapper:hover .knowledge-cutoff-tooltip {
+.model-name-tooltip-wrapper:hover .model-info-tooltip {
   opacity: 1;
   visibility: visible;
+  pointer-events: auto; /* Enable clicking on links when tooltip is visible */
 }
 
-/* Knowledge cutoff label styling */
-.knowledge-cutoff-tooltip .cutoff-label {
+/* Tooltip section groups term + explanation */
+.model-info-tooltip .tooltip-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+/* Tooltip row layout */
+.model-info-tooltip .tooltip-row {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+/* Tooltip label styling */
+.model-info-tooltip .tooltip-label {
   color: rgba(255, 255, 255, 0.7); /* Lighter gray for better contrast */
-  margin-right: 0.25rem;
 }
 
-.knowledge-cutoff-tooltip .cutoff-date {
+/* Plain English explanation text */
+.model-info-tooltip .tooltip-explanation {
+  font-size: 0.6875rem;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.5);
+  font-style: italic;
+}
+
+/* Learn more link */
+.model-info-tooltip .tooltip-learn-more {
+  display: block;
+  margin-top: 0.25rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  color: var(--primary-color, #3b82f6);
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+
+.model-info-tooltip .tooltip-learn-more:hover {
+  color: rgba(147, 197, 253, 1);
+  text-decoration: underline;
+}
+
+/* Context window value styling */
+.model-info-tooltip .tooltip-value.context-window {
+  color: rgba(134, 239, 172, 0.95); /* Light green for context window */
+  font-weight: 600;
+}
+
+/* Knowledge cutoff date styling */
+.model-info-tooltip .tooltip-value.cutoff-date {
   color: rgba(147, 197, 253, 0.95); /* Lighter blue for better contrast */
   font-weight: 600;
 }
 
-.knowledge-cutoff-tooltip .cutoff-pending {
+/* Knowledge cutoff pending styling */
+.model-info-tooltip .tooltip-value.cutoff-pending {
   color: rgba(251, 191, 36, 0.95); /* Lighter amber/yellow for better contrast */
   font-style: italic;
 }

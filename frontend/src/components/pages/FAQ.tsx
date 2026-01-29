@@ -38,6 +38,203 @@ const FAQItem: React.FC<FAQItemProps> = ({ question, answer, isOpen, onToggle })
   )
 }
 
+// AI Basics for Beginners section - appears first in the FAQ
+const aiBasicsFaqData = [
+  {
+    id: 'what-is-ai',
+    question: 'What is AI and how does it work?',
+    answer: (
+      <>
+        <p>
+          <strong>Artificial Intelligence (AI)</strong> refers to computer systems designed to
+          perform tasks that typically require human intelligence. Modern AI assistants like
+          ChatGPT, Claude, and Gemini are powered by <strong>Large Language Models (LLMs)</strong>—
+          sophisticated programs trained on massive amounts of text to understand and generate
+          human-like responses. These models are continuously evolving, with new versions released
+          regularly.
+        </p>
+        <p>
+          When you type a question, the AI doesn't "think" like a human. Instead, it predicts the
+          most likely helpful response based on patterns it learned during training. The result is a
+          conversational experience that can help with writing, coding, research, creative projects,
+          and much more.
+        </p>
+        <p>
+          <a href="/glossary">Explore our AI Glossary →</a> for more terms explained in plain
+          English.
+        </p>
+      </>
+    ),
+  },
+  {
+    id: 'what-is-context-window',
+    question: 'What is a "context window" and why does it matter?',
+    answer: (
+      <>
+        <p>
+          A <strong>context window</strong> is like an AI's short-term memory—it's the maximum
+          amount of text the model can "see" and remember during a conversation. This includes
+          everything: your questions, the AI's responses, and any documents you share.
+        </p>
+        <p>
+          Context windows are measured in "tokens" (roughly ¾ of a word). Here's what different
+          sizes mean:
+        </p>
+        <ul>
+          <li>
+            <strong>8K tokens (~6,000 words):</strong> Good for short conversations and quick
+            questions
+          </li>
+          <li>
+            <strong>32K tokens (~24,000 words):</strong> Can handle longer documents or extended
+            conversations
+          </li>
+          <li>
+            <strong>128K+ tokens (~100,000 words):</strong> Can process entire books or very long
+            documents at once
+          </li>
+        </ul>
+        <p>
+          <strong>Why it matters:</strong> If your conversation exceeds the context window, the AI
+          will "forget" the earliest parts. Models with larger context windows are better for
+          analyzing long documents or having extended conversations.
+        </p>
+      </>
+    ),
+  },
+  {
+    id: 'what-is-knowledge-cutoff',
+    question: 'What is a "knowledge cutoff" date?',
+    answer: (
+      <>
+        <p>
+          The <strong>knowledge cutoff</strong> is the date when an AI model's training data ends.
+          The model doesn't inherently "know" about events, discoveries, or changes that happened
+          after this date.
+        </p>
+        <p>
+          For example, if a model has a knowledge cutoff of January 2024, it won't know about news
+          from March 2024—unless it has <strong>web search</strong> capability enabled, which allows
+          it to look up current information in real-time.
+        </p>
+        <p>
+          <strong>Tip:</strong> On CompareIntel, hover over the info icon (ⓘ) next to any model name
+          to see its knowledge cutoff date. For time-sensitive questions, enable web search or
+          choose models with more recent cutoff dates.
+        </p>
+      </>
+    ),
+  },
+  {
+    id: 'why-different-models',
+    question: 'Why are there so many AI models? How do I choose?',
+    answer: (
+      <>
+        <p>
+          Different AI companies (called "providers") create their own models, each with unique
+          strengths, training approaches, and personalities. Think of it like cars—there are many
+          brands, and each has different features and performance characteristics.
+        </p>
+        <p>
+          <strong>Common providers and their models:</strong>
+        </p>
+        <ul>
+          <li>
+            <strong>OpenAI:</strong> GPT series and reasoning models — Known for versatility and
+            strong general performance
+          </li>
+          <li>
+            <strong>Anthropic:</strong> Claude family (Haiku, Sonnet, Opus) — Known for nuanced
+            writing and following instructions carefully
+          </li>
+          <li>
+            <strong>Google:</strong> Gemini family — Known for strong reasoning and multimodal
+            capabilities
+          </li>
+          <li>
+            <strong>Meta:</strong> Llama models — Open-source models that run on various platforms
+          </li>
+        </ul>
+        <p>
+          <strong>That's why CompareIntel exists!</strong> Instead of guessing which model is best
+          for your task, you can ask the same question to multiple models and see which one gives
+          you the best answer.
+        </p>
+      </>
+    ),
+  },
+  {
+    id: 'what-are-tokens',
+    question: 'What are "tokens" and why do they affect my usage?',
+    answer: (
+      <>
+        <p>
+          <strong>Tokens</strong> are the fundamental units AI models use to process text. Think of
+          tokens as pieces of words—a token is roughly equivalent to ¾ of a word in English. For
+          reference:
+        </p>
+        <ul>
+          <li>"Hello" = 1 token</li>
+          <li>"Hello, how are you today?" ≈ 6 tokens</li>
+          <li>"Artificial intelligence" = 2–3 tokens</li>
+          <li>A typical paragraph ≈ 75–100 tokens</li>
+        </ul>
+        <p>
+          <strong>Input vs. Output Tokens:</strong> When you send a prompt to an AI model, those are{' '}
+          <em>input tokens</em>. The AI's response consists of <em>output tokens</em>. Output tokens
+          are more computationally expensive because the AI must generate each one, while input
+          tokens are simply read. This is why most AI providers (and CompareIntel) weight output
+          tokens more heavily in pricing.
+        </p>
+        <p>
+          <strong>How this affects your credits:</strong> On CompareIntel, we convert token usage
+          into credits using a weighted formula. See the{' '}
+          <a href="#credits-system">"How does the credits system work?"</a> FAQ below for the
+          complete breakdown.
+        </p>
+      </>
+    ),
+  },
+  {
+    id: 'can-ai-be-wrong',
+    question: 'Can AI be wrong? What are "hallucinations"?',
+    answer: (
+      <>
+        <p>
+          <strong>Yes, AI can be wrong.</strong> AI models don't truly "know" facts—they predict
+          likely responses based on patterns in their training data. This means they can sometimes
+          generate information that sounds convincing but is actually incorrect.
+        </p>
+        <p>
+          This phenomenon is called <strong>"hallucination"</strong>—when an AI confidently states
+          something that isn't true. For example, an AI might cite a research paper that doesn't
+          exist or give you incorrect historical dates.
+        </p>
+        <p>
+          <strong>Best practices:</strong>
+        </p>
+        <ul>
+          <li>
+            <strong>Verify important information</strong> from authoritative sources, especially for
+            medical, legal, or financial topics
+          </li>
+          <li>
+            <strong>Use web search</strong> when you need current or factual information
+          </li>
+          <li>
+            <strong>Compare multiple models</strong>—if they all agree, the information is more
+            likely to be accurate
+          </li>
+          <li>
+            <strong>Ask for sources</strong>—though AI might still make up citations, it can help
+            you identify what to verify
+          </li>
+        </ul>
+      </>
+    ),
+  },
+]
+
 const faqData = [
   {
     id: 'what-is-compareintel',
@@ -59,10 +256,9 @@ const faqData = [
     answer: (
       <>
         <p>
-          CompareIntel provides access to 50+ of the latest AI models from leading providers
-          including OpenAI (GPT-4, GPT-4o), Anthropic (Claude 3.5 Sonnet, Claude 3 Opus), Google
-          (Gemini Pro, Gemini Ultra), Meta (Llama 3), Mistral AI, and many more. We continuously add
-          new models as they're released, so you always have access to the newest AI technology.
+          CompareIntel provides access to 65+ of the latest AI models from leading providers
+          including OpenAI, Anthropic, Google, Meta, Mistral AI, xAI, and many more. We continuously
+          add new models as they're released, so you always have access to the newest AI technology.
         </p>
         <p>
           <strong>
@@ -126,7 +322,7 @@ const faqData = [
             and features
           </li>
           <li>
-            Select the AI models you want to compare from our library of 50+ models (up to 3 models
+            Select the AI models you want to compare from our library of 65+ models (up to 3 models
             for free users, more for paid tiers)
           </li>
           <li>
@@ -266,9 +462,10 @@ const faqData = [
           <li>Available for both registered and unregistered users</li>
         </ul>
         <p>
-          <strong>Example:</strong> You compare GPT-4, Claude, and Gemini on a coding problem. GPT-4
-          gives the best solution, so you break out with GPT-4 to ask follow-up questions about
-          optimization. The original comparison stays in your history for reference.
+          <strong>Example:</strong> You compare models from OpenAI, Anthropic, and Google on a
+          coding problem. One gives the best solution, so you break out with that model to ask
+          follow-up questions about optimization. The original comparison stays in your history for
+          reference.
         </p>
       </>
     ),
@@ -363,15 +560,15 @@ const faqData = [
     ),
   },
   {
-    id: 'gpt4-vs-claude',
-    question: 'Which is better: GPT-4 or Claude?',
+    id: 'comparing-models',
+    question: 'Which AI model is best?',
     answer: (
       <p>
-        The "best" AI model depends entirely on your specific use case. GPT-4 and Claude each have
-        different strengths. GPT-4 is known for its broad general knowledge and creative
-        capabilities, while Claude excels at following complex instructions and producing
-        well-structured outputs. The best way to determine which model works better for your needs
-        is to compare them directly on CompareIntel with your actual prompts and tasks.
+        The "best" AI model depends entirely on your specific use case. OpenAI's GPT models,
+        Anthropic's Claude, Google's Gemini, and other leading models each have different strengths.
+        Some excel at creative writing, others at code generation, analysis, or following complex
+        instructions. The best way to determine which model works better for your needs is to
+        compare them directly on CompareIntel with your actual prompts and tasks.
       </p>
     ),
   },
@@ -445,34 +642,58 @@ const faqData = [
     answer: (
       <>
         <p>
-          CompareIntel uses a credit-based system to track usage. Credits are calculated based on
-          token usage:
+          CompareIntel uses a credit-based system that translates AI token usage into a simple,
+          predictable unit. This approach abstracts the complexity of different model pricing while
+          ensuring fair and transparent billing.
+        </p>
+        <p>
+          <strong>The Token-to-Credit Formula:</strong>
         </p>
         <ul>
           <li>
-            <strong>1 credit = 1,000 effective tokens</strong>
+            <strong>Effective Tokens</strong> = Input Tokens + (Output Tokens × 2.5)
           </li>
           <li>
-            <strong>Effective tokens = input_tokens + (output_tokens × 2.5)</strong>
-          </li>
-          <li>
-            On average, a comparison uses about 5 credits (varies based on prompt length and
-            response size)
+            <strong>Credits Used</strong> = Effective Tokens ÷ 1,000
           </li>
         </ul>
         <p>
-          <strong>Free tiers:</strong> Unregistered users receive 50 credits per day, and free
-          registered users receive 100 credits per day. Credits reset daily at midnight.
+          The 2.5× multiplier on output tokens reflects the higher computational cost of generating
+          text compared to processing input. This industry-standard weighting ensures our pricing
+          aligns with actual AI provider costs.
         </p>
         <p>
-          <strong>Paid tiers:</strong> Monthly credit allocations range from 1,200 credits (Starter)
-          to 10,000 credits (Pro+). Credits reset monthly on your billing date. Paid tiers can also
-          purchase additional credits if needed.
+          <strong>Practical Example:</strong> Suppose you send a 500-word prompt (≈400 input tokens)
+          and receive a detailed 800-word response (≈600 output tokens). Your usage would be:
+        </p>
+        <ul>
+          <li>Effective Tokens: 400 + (600 × 2.5) = 1,900</li>
+          <li>
+            Credits Used: 1,900 ÷ 1,000 = <strong>1.9 credits</strong>
+          </li>
+        </ul>
+        <p>
+          When comparing multiple models simultaneously, credits are calculated separately for each
+          model's response and summed together.
         </p>
         <p>
-          You can always check your credit balance in your account dashboard. Credits are only used
-          when you successfully complete a comparison—if a comparison fails, no credits are
-          deducted.
+          <strong>Credit Allocations:</strong>
+        </p>
+        <ul>
+          <li>
+            <strong>Free tiers:</strong> Unregistered users receive 50 credits/day; registered free
+            users receive 100 credits/day. Credits reset daily at midnight UTC.
+          </li>
+          <li>
+            <strong>Paid tiers:</strong> Monthly allocations from 1,200 credits (Starter) to 10,000
+            credits (Pro+). Credits reset monthly on your billing date. Additional credits can be
+            purchased if needed.
+          </li>
+        </ul>
+        <p>
+          <strong>Important:</strong> Credits are only deducted upon successful completion—if a
+          request fails, no credits are charged. You can monitor your balance in real-time via the
+          credit indicator in the interface.
         </p>
       </>
     ),
@@ -748,9 +969,9 @@ const faqData = [
         </p>
         <p>
           <strong>All Paid Tiers (Starter and above):</strong> Full access to all premium AI models,
-          including the latest GPT-4 models, Claude 3.5 Sonnet, Claude 3 Opus, Gemini Ultra, and
-          other advanced models as they're released. Paid tiers ensure you always have access to the
-          most cutting-edge AI technology available.
+          including the latest models from OpenAI, Anthropic, Google, and other leading providers as
+          they're released. Paid tiers ensure you always have access to the most cutting-edge AI
+          technology available.
         </p>
       </>
     ),
@@ -912,12 +1133,15 @@ const faqData = [
   },
 ]
 
+// Combine all FAQ data for SEO structured data
+const allFaqData = [...aiBasicsFaqData, ...faqData]
+
 // Generate FAQ structured data for SEO
 const generateFAQStructuredData = () => {
   return {
     '@context': 'https://schema.org',
     '@type': 'FAQPage',
-    mainEntity: faqData.map(item => ({
+    mainEntity: allFaqData.map(item => ({
       '@type': 'Question',
       name: item.question,
       acceptedAnswer: {
@@ -980,7 +1204,35 @@ export const FAQ: React.FC = () => {
             </p>
           </header>
 
+          {/* AI Basics for Beginners Section */}
+          <section className="seo-section ai-basics-section">
+            <div className="ai-basics-header">
+              <span className="ai-basics-badge">🎓 New to AI?</span>
+              <h2>AI Basics for Beginners</h2>
+              <p>
+                Start here if you're new to artificial intelligence. These questions cover the
+                fundamental concepts you need to understand AI and get the most out of CompareIntel.
+              </p>
+              <p className="ai-basics-link">
+                Want to dive deeper? <Link to="/glossary">Explore our complete AI Glossary →</Link>
+              </p>
+            </div>
+            <div className="faq-list">
+              {aiBasicsFaqData.map(item => (
+                <FAQItem
+                  key={item.id}
+                  question={item.question}
+                  answer={item.answer}
+                  isOpen={openItems.has(item.id)}
+                  onToggle={() => toggleItem(item.id)}
+                />
+              ))}
+            </div>
+          </section>
+
+          {/* Main FAQ Section */}
           <section className="seo-section">
+            <h2>Using CompareIntel</h2>
             <div className="faq-list">
               {faqData.map(item => (
                 <FAQItem
@@ -1006,9 +1258,9 @@ export const FAQ: React.FC = () => {
           <section className="seo-section cta-section">
             <h2>Ready to Compare AI Models?</h2>
             <p>
-              Start comparing GPT-4, Claude, Gemini, Llama, and 50+ other AI models today.
-              Unregistered users can get started immediately with 50 credits per day, or sign up for
-              a free account to receive 100 credits per day—no credit card required. Paid
+              Start comparing the latest AI models from OpenAI, Anthropic, Google, Meta, and more
+              today. Unregistered users can get started immediately with 50 credits per day, or sign
+              up for a free account to receive 100 credits per day—no credit card required. Paid
               subscription tiers are available for users who need more credits, access to premium
               models, and higher limits.
             </p>

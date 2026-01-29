@@ -40,6 +40,9 @@ export const Footer: React.FC = () => {
         <Link to="/how-it-works" style={linkStyle}>
           How It Works
         </Link>
+        <Link to="/glossary" style={linkStyle}>
+          AI Glossary
+        </Link>
         <Link to="/faq" style={linkStyle}>
           FAQ
         </Link>

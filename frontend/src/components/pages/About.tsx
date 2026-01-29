@@ -38,13 +38,12 @@ export const About: React.FC = () => {
               data-driven decisions.
             </p>
             <p>
-              Our platform supports the newest and most powerful AI models including the GPT family
-              of models and o3 from OpenAI, Claude Opus, Claude Sonnet, and Claude Haiku from
-              Anthropic, Google's Gemini Pro and Gemini Flash, Meta's Llama 3, Mistral AI's models,
-              xAI's Grok line and many more. As AI providers release new versions and capabilities,
-              we add them to CompareIntel so you're never left behind. You can send the same prompt
-              to multiple models and receive their responses in real-time, making it easy to
-              evaluate which model performs best for your specific use case.
+              Our platform supports the newest and most powerful AI models from leading providers
+              including OpenAI, Anthropic, Google, Meta, Mistral AI, xAI, DeepSeek, and many more.
+              As AI providers release new versions and capabilities, we add them to CompareIntel so
+              you're never left behind. You can send the same prompt to multiple models and receive
+              their responses in real-time, making it easy to evaluate which model performs best for
+              your specific use case.
             </p>
           </section>
 
@@ -230,8 +229,8 @@ export const About: React.FC = () => {
             <h2>Start Comparing Today</h2>
             <p>
               Join users who trust CompareIntel to help them find the best AI models for their
-              needs. Whether you're comparing GPT-4 vs Claude, evaluating Gemini against Llama, or
-              testing any combination of 50+ models, CompareIntel makes it easy.
+              needs. Whether you're comparing OpenAI vs Anthropic, evaluating Gemini against Llama,
+              or testing any combination of 65+ models, CompareIntel makes it easy.
             </p>
             <Link to="/" className="cta-button">
               Try CompareIntel Free

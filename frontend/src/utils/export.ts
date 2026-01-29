@@ -151,7 +151,7 @@ export function exportToMarkdown(data: ComparisonExportData): string {
 
   // Footer
   md += `---\n\n`
-  md += `*Exported from [CompareIntel](https://compareintel.com) - Compare 50+ AI Models Side-by-Side*\n`
+  md += `*Exported from [CompareIntel](https://compareintel.com) - Compare 65+ AI Models Side-by-Side*\n`
 
   return md
 }
@@ -856,7 +856,7 @@ export function exportToHTML(data: ComparisonExportData): string {
   }
 
   // Footer
-  html += `<div class="footer">Exported from <a href="https://compareintel.com">CompareIntel</a> — Compare 50+ AI Models Side-by-Side</div>`
+  html += `<div class="footer">Exported from <a href="https://compareintel.com">CompareIntel</a> — Compare 65+ AI Models Side-by-Side</div>`
 
   html += `</div></body></html>`
 

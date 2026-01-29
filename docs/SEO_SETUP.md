@@ -144,11 +144,11 @@ For multiple pages or site-wide changes:
 For effective SEO, place keywords naturally in these locations (in order of importance):
 
 1. **Title Tag** (`<title>`) - ✅ Already optimized
-   - Your current title: "CompareIntel - Compare 50+ AI Models Side-by-Side"
+   - Your current title: "CompareIntel - Compare 65+ AI Models Side-by-Side"
    - Contains key terms: "Compare", "AI Models", "Side-by-Side"
 
 2. **Meta Description** - ✅ Already optimized
-   - Your current description includes: "AI models", "GPT-4", "Claude", "Gemini"
+   - Your current description includes: "AI models", provider names like "OpenAI", "Anthropic", "Google"
    - Keep it under 160 characters for best display
 
 3. **H1/H2 Headings** - ✅ Already optimized
@@ -160,7 +160,7 @@ For effective SEO, place keywords naturally in these locations (in order of impo
    - Ensure keywords appear in the first 100-200 words of visible content
 
 5. **Structured Data (JSON-LD)** - ✅ Already optimized
-   - Your structured data includes: "AI models", "GPT-4", "Claude", "Gemini", "Llama"
+   - Your structured data includes: "AI models", provider names, and model counts
    - This helps search engines understand your content
 
 6. **Alt Text for Images** - ⚠️ Verify

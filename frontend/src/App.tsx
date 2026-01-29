@@ -32,6 +32,9 @@ const PrivacyPolicy = lazy(() =>
 const HowItWorks = lazy(() =>
   import('./components/pages/HowItWorks').then(module => ({ default: module.HowItWorks }))
 )
+const Glossary = lazy(() =>
+  import('./components/pages/Glossary').then(module => ({ default: module.Glossary }))
+)
 const TermsOfService = lazy(() =>
   import('./components/TermsOfService').then(module => ({ default: module.TermsOfService }))
 )
@@ -71,6 +74,14 @@ function App() {
               element={
                 <Suspense fallback={<LoadingSpinner />}>
                   <FAQ />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/glossary"
+              element={
+                <Suspense fallback={<LoadingSpinner />}>
+                  <Glossary />
                 </Suspense>
               }
             />
