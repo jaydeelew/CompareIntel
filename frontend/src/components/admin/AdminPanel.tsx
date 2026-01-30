@@ -612,7 +612,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
     try {
       const headers = getAuthHeaders()
 
-      // First validate the model with OpenRouter
+      // First validate the model
       const validateResponse = await fetch('/api/admin/models/validate', {
         method: 'POST',
         headers: {
@@ -635,9 +635,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
 
       // Check the validation response body to ensure model is valid
       if (!validateData.valid) {
-        throw new Error(
-          validateData.message || `Model ${newModelId.trim()} is not valid in OpenRouter`
-        )
+        throw new Error(validateData.message || `Model ${newModelId.trim()} is not valid`)
       }
 
       // Use streaming endpoint to add the model with progress updates

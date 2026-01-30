@@ -723,17 +723,7 @@ const glossaryTerms: GlossaryTerm[] = [
       'A way for software applications to communicate with AI models. APIs allow developers to build AI features into their own apps and services.',
     example:
       'CompareIntel uses APIs to connect to multiple AI providers, letting you access different models all in one place without needing separate accounts.',
-    relatedTerms: ['Provider', 'AI Model', 'OpenRouter'],
-    category: 'usage',
-  },
-  {
-    id: 'openrouter',
-    term: 'OpenRouter',
-    definition:
-      'An API aggregation service that provides access to many AI models from different providers through a single interface. It simplifies integration and billing when working with multiple AI providers.',
-    example:
-      'CompareIntel uses OpenRouter to give you access to 65+ models from OpenAI, Anthropic, Google, Meta, and others—all through one platform.',
-    relatedTerms: ['API', 'Provider', 'AI Model'],
+    relatedTerms: ['Provider', 'AI Model'],
     category: 'usage',
   },
   {
