@@ -40,8 +40,7 @@ const FAQItem: React.FC<FAQItemProps> = ({ question, answer, isOpen, onToggle })
   )
 }
 
-// AI Basics for Beginners section - appears first in the FAQ
-const aiBasicsFaqData = [
+const faqData = [
   {
     id: 'what-is-ai',
     question: 'What is AI and how does it work?',
@@ -234,9 +233,6 @@ const aiBasicsFaqData = [
       </>
     ),
   },
-]
-
-const faqData = [
   {
     id: 'what-is-compareintel',
     question: 'What is CompareIntel?',
@@ -1134,15 +1130,12 @@ const faqData = [
   },
 ]
 
-// Combine all FAQ data for SEO structured data
-const allFaqData = [...aiBasicsFaqData, ...faqData]
-
 // Generate FAQ structured data for SEO
 const generateFAQStructuredData = () => {
   return {
     '@context': 'https://schema.org',
     '@type': 'FAQPage',
-    mainEntity: allFaqData.map(item => ({
+    mainEntity: faqData.map(item => ({
       '@type': 'Question',
       name: item.question,
       acceptedAnswer: {
@@ -1157,7 +1150,7 @@ const generateFAQStructuredData = () => {
 }
 
 export const FAQ: React.FC = () => {
-  const [openItems, setOpenItems] = useState<Set<string>>(new Set(['what-is-compareintel']))
+  const [openItems, setOpenItems] = useState<Set<string>>(new Set())
 
   // Inject FAQ structured data for SEO
   useEffect(() => {
@@ -1205,35 +1198,7 @@ export const FAQ: React.FC = () => {
             </p>
           </header>
 
-          {/* AI Basics for Beginners Section */}
-          <section className="seo-section ai-basics-section">
-            <div className="ai-basics-header">
-              <span className="ai-basics-badge">🎓 New to AI?</span>
-              <h2>AI Basics for Beginners</h2>
-              <p>
-                Start here if you're new to artificial intelligence. These questions cover the
-                fundamental concepts you need to understand AI and get the most out of CompareIntel.
-              </p>
-              <p className="ai-basics-link">
-                Want to dive deeper? <Link to="/glossary">Explore our complete AI Glossary →</Link>
-              </p>
-            </div>
-            <div className="faq-list">
-              {aiBasicsFaqData.map(item => (
-                <FAQItem
-                  key={item.id}
-                  question={item.question}
-                  answer={item.answer}
-                  isOpen={openItems.has(item.id)}
-                  onToggle={() => toggleItem(item.id)}
-                />
-              ))}
-            </div>
-          </section>
-
-          {/* Main FAQ Section */}
           <section className="seo-section">
-            <h2>Using CompareIntel</h2>
             <div className="faq-list">
               {faqData.map(item => (
                 <FAQItem

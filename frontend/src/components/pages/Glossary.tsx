@@ -3,7 +3,7 @@
  * SEO-optimized glossary of AI terms and concepts for beginners
  */
 
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 
 import { BackToMainCTA } from '../shared'
@@ -322,10 +322,101 @@ const categoryDescriptions: Record<string, string> = {
   usage: 'How to use AI tools effectively',
 }
 
+// Generate Glossary structured data for SEO (DefinedTermSet schema)
+const generateGlossaryStructuredData = () => {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'DefinedTermSet',
+    '@id': 'https://compareintel.com/glossary',
+    name: 'AI Glossary - Artificial Intelligence Terms Explained',
+    description:
+      'A comprehensive glossary of AI terms and concepts explained in plain English for beginners. Learn about LLMs, tokens, context windows, and more.',
+    url: 'https://compareintel.com/glossary',
+    hasDefinedTerm: glossaryTerms.map(term => ({
+      '@type': 'DefinedTerm',
+      '@id': `https://compareintel.com/glossary#${term.id}`,
+      name: term.term,
+      description: term.definition,
+      inDefinedTermSet: 'https://compareintel.com/glossary',
+    })),
+  }
+}
+
+// Generate WebPage structured data for SEO
+const generateWebPageStructuredData = () => {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'WebPage',
+    '@id': 'https://compareintel.com/glossary#webpage',
+    url: 'https://compareintel.com/glossary',
+    name: 'AI Glossary - Learn AI Terms & Concepts | CompareIntel',
+    description:
+      'Comprehensive AI glossary explaining artificial intelligence terms in plain English. Learn about LLMs, tokens, context windows, hallucinations, and more.',
+    isPartOf: {
+      '@type': 'WebSite',
+      '@id': 'https://compareintel.com/#website',
+      name: 'CompareIntel',
+      url: 'https://compareintel.com',
+    },
+    about: {
+      '@type': 'Thing',
+      name: 'Artificial Intelligence',
+    },
+    mainEntity: {
+      '@id': 'https://compareintel.com/glossary',
+    },
+    breadcrumb: {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        {
+          '@type': 'ListItem',
+          position: 1,
+          name: 'Home',
+          item: 'https://compareintel.com',
+        },
+        {
+          '@type': 'ListItem',
+          position: 2,
+          name: 'AI Glossary',
+          item: 'https://compareintel.com/glossary',
+        },
+      ],
+    },
+  }
+}
+
 export const Glossary: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
   const [expandedTerms, setExpandedTerms] = useState<Set<string>>(new Set())
+
+  // Inject Glossary structured data for SEO
+  useEffect(() => {
+    // Add DefinedTermSet structured data
+    const glossaryScript = document.createElement('script')
+    glossaryScript.type = 'application/ld+json'
+    glossaryScript.id = 'glossary-structured-data'
+    glossaryScript.textContent = JSON.stringify(generateGlossaryStructuredData())
+    document.head.appendChild(glossaryScript)
+
+    // Add WebPage structured data
+    const webPageScript = document.createElement('script')
+    webPageScript.type = 'application/ld+json'
+    webPageScript.id = 'glossary-webpage-structured-data'
+    webPageScript.textContent = JSON.stringify(generateWebPageStructuredData())
+    document.head.appendChild(webPageScript)
+
+    return () => {
+      const existingGlossaryScript = document.getElementById('glossary-structured-data')
+      if (existingGlossaryScript) {
+        existingGlossaryScript.remove()
+      }
+      const existingWebPageScript = document.getElementById('glossary-webpage-structured-data')
+      if (existingWebPageScript) {
+        existingWebPageScript.remove()
+      }
+    }
+  }, [])
 
   const filteredTerms = useMemo(() => {
     let terms = glossaryTerms
