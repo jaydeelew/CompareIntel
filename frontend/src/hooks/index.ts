@@ -34,3 +34,17 @@ export * from './useAnimationState'
 export * from './useModalManagement'
 export * from './useActiveTabIndex'
 export * from './useTokenNotification'
+
+// Combined hooks (reducing hook count while maintaining functionality)
+// Note: Using specific exports to avoid naming conflicts with original hooks
+export {
+  useTutorialComplete,
+  type UseTutorialCompleteConfig,
+  type UseTutorialCompleteReturn,
+} from './useTutorialComplete'
+export {
+  useSavedSelectionsComplete,
+  type UseSavedSelectionsCompleteConfig,
+  type UseSavedSelectionsCompleteCallbacks,
+  type UseSavedSelectionsCompleteReturn,
+} from './useSavedSelectionsComplete'

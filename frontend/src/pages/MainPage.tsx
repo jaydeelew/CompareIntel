@@ -13,15 +13,12 @@ import {
   ComparisonView,
   PremiumModelsToggleInfoModal,
   DisabledButtonInfoModal,
-  ResultsDisplay,
-  ModelsSection,
-  ModelsSectionHeader,
   LoadingSection,
-  ResultsSectionHeader,
   type AttachedFile,
   type StoredAttachedFile,
 } from '../components/comparison'
 import { Navigation, Hero, MockModeBanner, InstallPrompt } from '../components/layout'
+import { ModelsArea, ResultsArea } from '../components/main-page'
 import {
   CreditWarningBanner,
   DoneSelectingCard,
@@ -38,12 +35,9 @@ import {
   useRateLimitStatus,
   useModelSelection,
   useModelComparison,
-  useSavedModelSelections,
-  useTutorial,
   useResponsive,
   useFileHandling,
   useConversationManager,
-  useSavedSelectionManager,
   useCreditWarningManager,
   useComparisonStreaming,
   useScrollManagement,
@@ -52,10 +46,12 @@ import {
   useScreenshotCopy,
   useDoneSelectingCard,
   useCreditsRemaining,
-  useTutorialEffects,
   useTokenReload,
   useAuthStateEffects,
   useBreakoutConversation,
+  // Combined hooks (2025 best practices)
+  useTutorialComplete,
+  useSavedSelectionsComplete,
 } from '../hooks'
 import { ApiError } from '../services/api/errors'
 import {
@@ -110,21 +106,8 @@ export function MainPage() {
     maxModelsLimit,
   } = modelSelectionHook
 
-  const savedSelectionsHook = useSavedModelSelections(
-    user?.id,
-    user?.subscription_tier ?? 'unregistered'
-  )
-  const {
-    savedSelections: savedModelSelections,
-    saveSelection: saveModelSelection,
-    loadSelection: loadModelSelectionFromStorage,
-    deleteSelection: deleteModelSelection,
-    setDefaultSelection,
-    getDefaultSelectionId,
-    getDefaultSelection,
-    canSaveMore: canSaveMoreSelections,
-    maxSelections: maxSavedSelections,
-  } = savedSelectionsHook
+  // Note: Saved selections hook is called later (after useModelManagement)
+  // to have access to all required dependencies
 
   const [accurateInputTokens, setAccurateInputTokens] = useState<number | null>(null)
   const [attachedFiles, setAttachedFilesState] = useState<(AttachedFile | StoredAttachedFile)[]>([])
@@ -270,21 +253,35 @@ export function MainPage() {
     switchResultTab,
   })
 
+  // Combined tutorial hook (replaces useTutorial + useTutorialEffects)
   const {
     tutorialState,
     startTutorial,
     skipTutorial,
     completeStep,
     resetTutorial: _resetTutorial,
-  } = useTutorial()
-  const [showWelcomeModal, setShowWelcomeModal] = useState(false)
+    showWelcomeModal,
+    setShowWelcomeModal,
+    tutorialHasCompletedComparison,
+    setTutorialHasCompletedComparison,
+    tutorialHasBreakout,
+    setTutorialHasBreakout,
+    tutorialHasSavedSelection,
+    setTutorialHasSavedSelection,
+  } = useTutorialComplete({
+    currentView,
+    locationPathname: location.pathname,
+    conversations,
+    isLoading,
+    isFollowUpMode,
+    isAuthenticated,
+  })
+
+  // Trial modal state (not part of tutorial)
   const [showTrialWelcomeModal, setShowTrialWelcomeModal] = useState(false)
   const [pendingTrialModalAfterVerification, setPendingTrialModalAfterVerification] =
     useState(false)
   const verificationCompletedAtRef = useRef<number | null>(null)
-  const [tutorialHasCompletedComparison, setTutorialHasCompletedComparison] = useState(false)
-  const [tutorialHasBreakout, setTutorialHasBreakout] = useState(false)
-  const [tutorialHasSavedSelection, setTutorialHasSavedSelection] = useState(false)
 
   const { showDoneSelectingCard, setShowDoneSelectingCard, handleDoneSelecting } =
     useDoneSelectingCard(
@@ -302,26 +299,43 @@ export function MainPage() {
       }
     )
 
-  const { handleSaveModelSelection, handleLoadModelSelection } = useSavedSelectionManager({
-    selectedModels,
-    modelsByProvider,
-    maxModelsLimit,
-    response,
-    conversations,
-    saveModelSelection,
-    loadModelSelectionFromStorage,
-    setSelectedModels,
-    setOpenDropdowns,
-    setConversations,
-    setResponse,
-    getDefaultSelectionId,
-    setDefaultSelectionOverridden,
-    onSelectionSaved: () => {
-      if (tutorialState.currentStep === 'save-selection') {
-        setTutorialHasSavedSelection(true)
-      }
+  // Combined saved selections hook (replaces useSavedModelSelections + useSavedSelectionManager)
+  const {
+    savedSelections: savedModelSelections,
+    deleteSelection: deleteModelSelection,
+    setDefaultSelection,
+    getDefaultSelection,
+    defaultSelectionId,
+    canSaveMore: canSaveMoreSelections,
+    maxSelections: maxSavedSelections,
+    handleSaveSelection: handleSaveModelSelection,
+    handleLoadSelection: handleLoadModelSelection,
+  } = useSavedSelectionsComplete(
+    {
+      userId: user?.id,
+      tier: user?.subscription_tier ?? 'unregistered',
+      selectedModels,
+      modelsByProvider,
+      maxModelsLimit,
+      response,
+      conversations,
+      onSelectionSaved: () => {
+        if (tutorialState.currentStep === 'save-selection') {
+          setTutorialHasSavedSelection(true)
+        }
+      },
     },
-  })
+    {
+      setSelectedModels,
+      setOpenDropdowns,
+      setConversations,
+      setResponse,
+      setDefaultSelectionOverridden,
+    }
+  )
+
+  // Helper to get the default selection ID (used by ComparisonForm)
+  const getDefaultSelectionId = useCallback(() => defaultSelectionId, [defaultSelectionId])
 
   const errorMessageRef = useRef<HTMLDivElement>(null)
   const prevErrorRef = useRef<string | null>(null)
@@ -739,22 +753,7 @@ export function MainPage() {
       setModelErrors,
     })
 
-  // Tutorial effects (welcome modal, comparison tracking)
-  useTutorialEffects(
-    {
-      tutorialState,
-      currentView,
-      locationPathname: location.pathname,
-      conversations,
-      isLoading,
-      isFollowUpMode,
-      isAuthenticated,
-    },
-    {
-      setShowWelcomeModal,
-      setTutorialHasCompletedComparison,
-    }
-  )
+  // Note: Tutorial effects are now handled by useTutorialComplete hook
 
   // Anonymous credits reset listener
   useEffect(() => {
@@ -1650,7 +1649,7 @@ export function MainPage() {
       }, 1000)
       return () => clearTimeout(timeout)
     }
-  }, [isAuthenticated, user?.is_trial_active, user?.email, getTrialSeenKey])
+  }, [isAuthenticated, user?.is_trial_active, user?.is_verified, user?.email, getTrialSeenKey])
 
   // Listen for registration complete to refetch models (trial modal shown after verification)
   useEffect(() => {
@@ -2218,99 +2217,75 @@ export function MainPage() {
               </div>
             )}
 
-            <ErrorBoundary>
-              <section className="models-section" ref={modelsSectionRef}>
-                <ModelsSectionHeader
-                  selectedModels={selectedModels}
-                  maxModelsLimit={maxModelsLimit}
-                  isModelsHidden={isModelsHidden}
-                  isFollowUpMode={isFollowUpMode}
-                  isAuthenticated={isAuthenticated}
-                  user={user}
-                  isWideLayout={isWideLayout}
-                  isMobileLayout={isMobileLayout}
-                  hidePremiumModels={hidePremiumModels}
-                  openDropdowns={openDropdowns}
-                  response={response}
-                  conversations={conversations}
-                  onToggleModelsHidden={() => setIsModelsHidden(!isModelsHidden)}
-                  onToggleHidePremiumModels={() => setHidePremiumModels(!hidePremiumModels)}
-                  onShowPremiumModelsModal={() => setShowPremiumModelsToggleModal(true)}
-                  onCollapseAllDropdowns={collapseAllDropdowns}
-                  onShowDisabledButtonInfo={setDisabledButtonInfo}
-                  onClearAllModels={() => setSelectedModels([])}
-                  onSetDefaultSelectionOverridden={setDefaultSelectionOverridden}
-                  onClearConversations={() => setConversations([])}
-                  onClearResponse={() => setResponse(null)}
-                  onExpandModelsSection={() => setIsModelsHidden(false)}
-                />
-
-                {!isModelsHidden && (
-                  <ModelsSection
-                    modelsByProvider={modelsByProvider}
-                    selectedModels={selectedModels}
-                    originalSelectedModels={originalSelectedModels}
-                    openDropdowns={openDropdowns}
-                    allModels={allModels}
-                    isLoadingModels={isLoadingModels}
-                    isFollowUpMode={isFollowUpMode}
-                    maxModelsLimit={maxModelsLimit}
-                    hidePremiumModels={hidePremiumModels}
-                    isAuthenticated={isAuthenticated}
-                    user={user}
-                    selectedModelsGridRef={selectedModelsGridRef}
-                    onToggleDropdown={toggleDropdown}
-                    onToggleModel={handleModelToggle}
-                    onToggleAllForProvider={toggleAllForProvider}
-                    onError={setError}
-                  />
-                )}
-              </section>
-            </ErrorBoundary>
+            <ModelsArea
+              modelsByProvider={modelsByProvider}
+              selectedModels={selectedModels}
+              originalSelectedModels={originalSelectedModels}
+              openDropdowns={openDropdowns}
+              allModels={allModels}
+              isLoadingModels={isLoadingModels}
+              isFollowUpMode={isFollowUpMode}
+              maxModelsLimit={maxModelsLimit}
+              hidePremiumModels={hidePremiumModels}
+              isModelsHidden={isModelsHidden}
+              isAuthenticated={isAuthenticated}
+              user={user}
+              isWideLayout={isWideLayout}
+              isMobileLayout={isMobileLayout}
+              response={response}
+              conversations={conversations}
+              modelsSectionRef={modelsSectionRef}
+              selectedModelsGridRef={selectedModelsGridRef}
+              onToggleDropdown={toggleDropdown}
+              onToggleModel={handleModelToggle}
+              onToggleAllForProvider={toggleAllForProvider}
+              onToggleModelsHidden={() => setIsModelsHidden(!isModelsHidden)}
+              onToggleHidePremiumModels={() => setHidePremiumModels(!hidePremiumModels)}
+              onShowPremiumModelsModal={() => setShowPremiumModelsToggleModal(true)}
+              onCollapseAllDropdowns={collapseAllDropdowns}
+              onShowDisabledButtonInfo={setDisabledButtonInfo}
+              onClearAllModels={() => setSelectedModels([])}
+              onSetDefaultSelectionOverridden={setDefaultSelectionOverridden}
+              onClearConversations={() => setConversations([])}
+              onClearResponse={() => setResponse(null)}
+              onExpandModelsSection={() => setIsModelsHidden(false)}
+              onError={setError}
+            />
 
             {isLoading && (
               <LoadingSection selectedModelsCount={selectedModels.length} onCancel={handleCancel} />
             )}
 
             {(response || conversations.length > 0) && (
-              <ErrorBoundary>
-                <section className="results-section">
-                  <ResultsSectionHeader
-                    conversationsCount={conversations.length}
-                    isScrollLocked={isScrollLocked}
-                    onToggleScrollLock={() => setIsScrollLocked(!isScrollLocked)}
-                    isFollowUpMode={isFollowUpMode}
-                    isFollowUpDisabled={isFollowUpDisabled()}
-                    followUpDisabledReason="Cannot follow up when new models are selected. You can follow up if you only deselect models from the original comparison."
-                    onFollowUp={handleFollowUp}
-                    showExportMenu={showExportMenu}
-                    onToggleExportMenu={() => setShowExportMenu(!showExportMenu)}
-                    exportMenuRef={exportMenuRef}
-                    onExport={handleExport}
-                    closedCardsCount={closedCards.size}
-                    onShowAllResults={showAllResults}
-                    isMobileLayout={isMobileLayout}
-                  />
-
-                  <ResultsDisplay
-                    conversations={conversations}
-                    selectedModels={selectedModels}
-                    closedCards={closedCards}
-                    allModels={allModels}
-                    activeResultTabs={activeResultTabs}
-                    modelProcessingStates={modelProcessingStates}
-                    modelErrorStates={modelErrorStates}
-                    breakoutPhase={breakoutPhase}
-                    onScreenshot={handleScreenshot}
-                    onCopyResponse={handleCopyResponse}
-                    onCloseCard={closeResultCard}
-                    onSwitchTab={switchResultTab}
-                    onBreakout={handleBreakout}
-                    onHideOthers={hideAllOtherModels}
-                    onCopyMessage={handleCopyMessage}
-                  />
-                </section>
-              </ErrorBoundary>
+              <ResultsArea
+                conversations={conversations}
+                selectedModels={selectedModels}
+                closedCards={closedCards}
+                allModels={allModels}
+                activeResultTabs={activeResultTabs}
+                modelProcessingStates={modelProcessingStates}
+                modelErrorStates={modelErrorStates}
+                breakoutPhase={breakoutPhase}
+                isScrollLocked={isScrollLocked}
+                isFollowUpMode={isFollowUpMode}
+                isFollowUpDisabled={isFollowUpDisabled()}
+                followUpDisabledReason="Cannot follow up when new models are selected. You can follow up if you only deselect models from the original comparison."
+                showExportMenu={showExportMenu}
+                isMobileLayout={isMobileLayout}
+                exportMenuRef={exportMenuRef}
+                onToggleScrollLock={() => setIsScrollLocked(!isScrollLocked)}
+                onFollowUp={handleFollowUp}
+                onToggleExportMenu={() => setShowExportMenu(!showExportMenu)}
+                onExport={handleExport}
+                onShowAllResults={showAllResults}
+                onScreenshot={handleScreenshot}
+                onCopyResponse={handleCopyResponse}
+                onCloseCard={closeResultCard}
+                onSwitchTab={switchResultTab}
+                onBreakout={handleBreakout}
+                onHideOthers={hideAllOtherModels}
+                onCopyMessage={handleCopyMessage}
+              />
             )}
           </ComparisonView>
 
