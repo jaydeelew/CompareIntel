@@ -27,3 +27,10 @@ export * from './useTutorialEffects'
 export * from './useTokenReload'
 export * from './useAuthStateEffects'
 export * from './useBreakoutConversation'
+
+// New hooks for better useEffect patterns (2025 best practices)
+export * from './useInputValidation'
+export * from './useAnimationState'
+export * from './useModalManagement'
+export * from './useActiveTabIndex'
+export * from './useTokenNotification'
