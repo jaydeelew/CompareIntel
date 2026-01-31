@@ -59,14 +59,15 @@ logging.basicConfig(
     datefmt="%Y-%m-%d %H:%M:%S",
 )
 
+
 # Suppress harmless SQL linting/style warnings (e.g., FromAsCasing) while keeping real errors
 class SQLStyleWarningFilter(logging.Filter):
     """Filter to suppress SQL style warnings that don't indicate actual problems."""
-    
+
     def filter(self, record: logging.LogRecord) -> bool:
         """Return False to suppress the log record, True to allow it."""
         message = str(record.getMessage())
-        
+
         # Suppress SQL linting style warnings (these are cosmetic, not errors)
         style_warning_patterns = [
             "FromAsCasing",
@@ -74,18 +75,19 @@ class SQLStyleWarningFilter(logging.Filter):
             "SQL style",
             "keyword.*casing",
         ]
-        
+
         # Only suppress if it's a WARNING level and matches style warning patterns
         if record.levelno == logging.WARNING:
             if any(pattern.lower() in message.lower() for pattern in style_warning_patterns):
                 return False
-        
+
         # Always show errors and critical issues
         if record.levelno >= logging.ERROR:
             return True
-        
+
         # Allow all other log records
         return True
+
 
 # Apply the filter to all loggers to catch SQL linting warnings from any source
 logging.getLogger().addFilter(SQLStyleWarningFilter())
@@ -141,10 +143,11 @@ async def lifespan(app: FastAPI):
         # Preload model token limits from OpenRouter
         logger.info("Preloading model token limits...")
         preload_model_token_limits()
-        
+
         # Initialize search rate limiter early to ensure it's ready and logs are visible
         logger.info("Initializing search rate limiter...")
         from .search.rate_limiter import get_rate_limiter
+
         rate_limiter = get_rate_limiter()  # This will log initialization details
         logger.info("Search rate limiter initialized successfully")
 
@@ -231,23 +234,42 @@ async def global_exception_handler(request: Request, exc: Exception):
     is_db_error = isinstance(exc, (OperationalError, DatabaseError, DisconnectionError, SQLAlchemyError))
     if not is_db_error:
         # Check exception chain for database errors
-        cause = getattr(exc, '__cause__', None)
-        context = getattr(exc, '__context__', None)
+        cause = getattr(exc, "__cause__", None)
+        context = getattr(exc, "__context__", None)
         if cause and isinstance(cause, (OperationalError, DatabaseError, DisconnectionError, SQLAlchemyError)):
             is_db_error = True
         elif context and isinstance(context, (OperationalError, DatabaseError, DisconnectionError, SQLAlchemyError)):
             is_db_error = True
-    
-    # Also check error message for common database error patterns
+
+    # Also check error message for specific database error patterns (more restrictive)
+    # Only match if it's clearly a database-related error, not just any error containing these words
     if not is_db_error:
         error_lower = error_message.lower()
+        # More specific patterns that clearly indicate database issues
         db_error_patterns = [
-            'database', 'sqlite', 'postgresql', 'connection', 'operational',
-            'no such table', 'unable to open', 'database is locked', 'disk i/o error'
+            "no such table",
+            "unable to open database",
+            "database is locked",
+            "disk i/o error",
+            "database disk image is malformed",
+            "sqlite",
+            "postgresql",
+            "connection to database",
+            "database connection",
+            "operationalerror",
+            "databaseerror",
+            "disconnectionerror",
+            "sqlalchemy",
         ]
+        # Only match if the error message clearly indicates a database issue
+        # Avoid false positives from generic errors containing words like "connection"
         if any(pattern in error_lower for pattern in db_error_patterns):
-            is_db_error = True
-    
+            # Additional check: make sure it's not a false positive
+            # Skip if it's clearly not a database error (e.g., "API connection" or "network connection")
+            false_positive_patterns = ["api connection", "network connection", "http connection", "tcp connection"]
+            if not any(fp_pattern in error_lower for fp_pattern in false_positive_patterns):
+                is_db_error = True
+
     # Log the error
     if is_db_error:
         logger.error(f"Database connection error: {error_type}: {error_message}")
@@ -259,19 +281,18 @@ async def global_exception_handler(request: Request, exc: Exception):
     # Return appropriate error response
     if is_db_error:
         # Return 503 Service Unavailable for database errors (more appropriate than 500)
-        return JSONResponse(
-            status_code=503,
-            content={
-                "detail": "Database service temporarily unavailable. Please try again later.",
-                "error_type": error_type
-            }
-        )
+        # Include error details in development mode for debugging
+        environment = os.getenv("ENVIRONMENT", "development")
+        error_detail = {"detail": "Database service temporarily unavailable. Please try again later.", "error_type": error_type}
+        # Include actual error message in development mode for debugging
+        if environment == "development":
+            error_detail["error_message"] = error_message
+            error_detail["debug_info"] = "Check backend logs for full traceback"
+
+        return JSONResponse(status_code=503, content=error_detail)
     else:
         # Return JSON error response for other errors
-        return JSONResponse(
-            status_code=500,
-            content={"detail": f"Internal server error: {error_message}", "error_type": error_type}
-        )
+        return JSONResponse(status_code=500, content={"detail": f"Internal server error: {error_message}", "error_type": error_type})
 
 
 # Include routers AFTER middleware
