@@ -1191,7 +1191,7 @@ Add `data-testid` attributes to key UI elements. Here are examples for common co
   ref={textareaRef}
   value={input}
   onChange={(e) => setInput(e.target.value)}
-  placeholder="Type anything you want..."
+  placeholder="Enter your input here..."
   className="hero-input-textarea"
   rows={1}
   data-testid="comparison-input-textarea"

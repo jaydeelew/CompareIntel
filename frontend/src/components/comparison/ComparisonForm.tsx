@@ -734,9 +734,9 @@ export const ComparisonForm = memo<ComparisonFormProps>(
         limitingModel:
           hasSignificantDifference && limitingModelInfo
             ? {
-                name: limitingModelInfo.modelName,
-                capacityChars: formatCapacityChars(limitingModelInfo.maxInputTokens),
-              }
+              name: limitingModelInfo.modelName,
+              capacityChars: formatCapacityChars(limitingModelInfo.maxInputTokens),
+            }
             : null,
       }
     }, [
@@ -1478,7 +1478,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
               onDragLeave={handleDragLeave}
               onDrop={handleDrop}
               placeholder={
-                isFollowUpMode ? 'Continue your conversation here' : 'Type anything you want...'
+                isFollowUpMode ? 'Continue your conversation here' : 'Enter your input here...'
               }
               className={`hero-input-textarea ${isDraggingOver ? 'drag-over' : ''}`}
               rows={1}
@@ -1792,14 +1792,13 @@ export const ComparisonForm = memo<ComparisonFormProps>(
                     creditsRemaining <= 0 ||
                     (!isFollowUpMode && (!input.trim() || selectedModels.length === 0)))
                 }
-                className={`textarea-icon-button submit-button ${isAnimatingButton ? 'animate-pulse-glow' : ''} ${
-                  (isLoading ||
+                className={`textarea-icon-button submit-button ${isAnimatingButton ? 'animate-pulse-glow' : ''} ${(isLoading ||
                     creditsRemaining <= 0 ||
                     (!isFollowUpMode && (!input.trim() || selectedModels.length === 0))) &&
-                  isTouchDevice
+                    isTouchDevice
                     ? 'touch-disabled'
                     : ''
-                }`}
+                  }`}
                 title={(() => {
                   if (creditsRemaining <= 0) {
                     return 'You have run out of credits'
@@ -1946,7 +1945,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
                                     <span className="history-item-models">
                                       {summary.models_used.length === 1
                                         ? summary.models_used[0].split('/').pop() ||
-                                          summary.models_used[0]
+                                        summary.models_used[0]
                                         : `${summary.models_used.length} models`}
                                     </span>
                                     <span className="history-item-date">
