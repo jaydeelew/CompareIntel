@@ -205,6 +205,14 @@ openrouter_models.json
 *.db
 *.sqlite
 *.sqlite3
+# SQLite WAL (Write-Ahead Logging) files
+*.db-wal
+*.sqlite-wal
+*.sqlite3-wal
+# SQLite SHM (Shared Memory) files
+*.db-shm
+*.sqlite-shm
+*.sqlite3-shm
 
 # Docker
 # Allow backend/.dockerignore to be tracked (it's needed for builds)
