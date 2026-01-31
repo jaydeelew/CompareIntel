@@ -56,12 +56,6 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
     width: number
     height: number
   } | null>(null)
-  const [resultsSectionCutout, setResultsSectionCutout] = useState<{
-    top: number
-    left: number
-    width: number
-    height: number
-  } | null>(null)
 
   useEffect(() => {
     return () => {
@@ -202,7 +196,6 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
       setDropdownCutout(null)
       setButtonCutout(null)
       setLoadingStreamingCutout(null)
-      setResultsSectionCutout(null)
       setOverlayPosition({ top: 0, left: 0 })
       // Clean up any remaining tutorial classes when tutorial ends
       const textareaContainerActive = document.querySelector(
@@ -252,7 +245,6 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
     setTextareaCutout(null)
     setDropdownCutout(null)
     setButtonCutout(null)
-    setResultsSectionCutout(null)
 
     // Wait for element to be available
     const findElement = () => {
@@ -1115,48 +1107,6 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
     }
   }, [step])
 
-  // Separate effect to continuously maintain cutout for view-follow-up-results step (step 8)
-  // Creates a cutout for the results section so it's not dimmed by the backdrop
-  useEffect(() => {
-    if (step !== 'view-follow-up-results') {
-      setResultsSectionCutout(null)
-      return
-    }
-
-    const ensureResultsCutout = () => {
-      const resultsSection = document.querySelector('.results-section') as HTMLElement
-      if (resultsSection) {
-        const rect = resultsSection.getBoundingClientRect()
-        const padding = 12
-        setResultsSectionCutout({
-          top: rect.top - padding,
-          left: rect.left - padding,
-          width: rect.width + padding * 2,
-          height: rect.height + padding * 2,
-        })
-      } else {
-        setResultsSectionCutout(null)
-      }
-    }
-
-    // Check immediately
-    ensureResultsCutout()
-
-    // Check periodically to maintain cutout position (handles scroll/resize)
-    const interval = setInterval(ensureResultsCutout, 200)
-
-    // Also update on scroll/resize
-    window.addEventListener('scroll', ensureResultsCutout, true)
-    window.addEventListener('resize', ensureResultsCutout)
-
-    return () => {
-      clearInterval(interval)
-      window.removeEventListener('scroll', ensureResultsCutout, true)
-      window.removeEventListener('resize', ensureResultsCutout)
-      setResultsSectionCutout(null)
-    }
-  }, [step])
-
   // Ensure the textarea is not kept above the backdrop on view-follow-up-results
   // This step should only keep the results section visible
   useEffect(() => {
@@ -1711,37 +1661,15 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
             }
           }}
         />
-      ) : step === 'view-follow-up-results' && resultsSectionCutout ? (
-        <div
-          className="tutorial-backdrop-cutout"
-          style={{
-            position: 'fixed',
-            top: `${resultsSectionCutout.top}px`,
-            left: `${resultsSectionCutout.left}px`,
-            width: `${resultsSectionCutout.width}px`,
-            height: `${resultsSectionCutout.height}px`,
-            borderRadius: '16px',
-            // Use huge box-shadow to create the dim overlay effect around the cutout
-            boxShadow: '0 0 0 9999px rgba(0, 0, 0, 0.6)',
-            zIndex: 9998,
-            pointerEvents: 'none',
-          }}
-          onClick={e => {
-            const target = e.target as HTMLElement
-            if (target.classList.contains('tutorial-backdrop-cutout')) {
-              e.stopPropagation()
-            }
-          }}
-        />
       ) : (
         <div
           className="tutorial-backdrop"
           style={
             buttonCutout
               ? {
-                  maskImage: `radial-gradient(circle ${buttonCutout.radius + 1}px at ${buttonCutout.left}px ${buttonCutout.top}px, transparent ${buttonCutout.radius}px, black ${buttonCutout.radius + 1}px)`,
-                  WebkitMaskImage: `radial-gradient(circle ${buttonCutout.radius + 1}px at ${buttonCutout.left}px ${buttonCutout.top}px, transparent ${buttonCutout.radius}px, black ${buttonCutout.radius + 1}px)`,
-                }
+                maskImage: `radial-gradient(circle ${buttonCutout.radius + 1}px at ${buttonCutout.left}px ${buttonCutout.top}px, transparent ${buttonCutout.radius}px, black ${buttonCutout.radius + 1}px)`,
+                WebkitMaskImage: `radial-gradient(circle ${buttonCutout.radius + 1}px at ${buttonCutout.left}px ${buttonCutout.top}px, transparent ${buttonCutout.radius}px, black ${buttonCutout.radius + 1}px)`,
+              }
               : undefined
           }
           onClick={e => {

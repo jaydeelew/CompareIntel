@@ -757,20 +757,20 @@ export const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
   const cutoutStyle =
     cutoutTarget && showBackdrop
       ? {
-          position: 'fixed' as const,
-          top: `${cutoutTarget.top - 8}px`,
-          left: `${cutoutTarget.left - 8}px`,
-          width: `${cutoutTarget.width + 16}px`,
-          height: `${cutoutTarget.height + 16}px`,
-          borderRadius: isLoadingStreamingPhase
-            ? '16px'
-            : step === 'enter-prompt' || step === 'enter-prompt-2'
-              ? '32px'
-              : '16px',
-          boxShadow: '0 0 0 9999px rgba(0, 0, 0, 0.65)',
-          zIndex: 9998,
-          pointerEvents: 'none' as const,
-        }
+        position: 'fixed' as const,
+        top: `${cutoutTarget.top - 8}px`,
+        left: `${cutoutTarget.left - 8}px`,
+        width: `${cutoutTarget.width + 16}px`,
+        height: `${cutoutTarget.height + 16}px`,
+        borderRadius: isLoadingStreamingPhase
+          ? '16px'
+          : step === 'enter-prompt' || step === 'enter-prompt-2'
+            ? '32px'
+            : '16px',
+        boxShadow: '0 0 0 9999px rgba(0, 0, 0, 0.65)',
+        zIndex: 9998,
+        pointerEvents: 'none' as const,
+      }
       : undefined
 
   return (
@@ -809,9 +809,9 @@ export const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
             tooltipPosition.useFullscreen
               ? undefined
               : {
-                  top: `${tooltipPosition.top}px`,
-                  left: `${tooltipPosition.left}px`,
-                }
+                top: `${tooltipPosition.top}px`,
+                left: `${tooltipPosition.left}px`,
+              }
           }
         >
           <div className="mobile-tutorial-tooltip-content">
@@ -834,7 +834,6 @@ export const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
             {/* Tap indicator for action steps */}
             {isActionStep && !showButton && (
               <div className="mobile-tutorial-tap-indicator">
-                <span className="mobile-tutorial-tap-icon">👆</span>
                 <span>Tap the highlighted area</span>
               </div>
             )}
@@ -869,17 +868,17 @@ export const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
                 style={{
                   left:
                     tooltipPosition.arrowDirection === 'up' ||
-                    tooltipPosition.arrowDirection === 'down'
+                      tooltipPosition.arrowDirection === 'down'
                       ? `${tooltipPosition.arrowOffset}%`
                       : undefined,
                   top:
                     tooltipPosition.arrowDirection === 'left' ||
-                    tooltipPosition.arrowDirection === 'right'
+                      tooltipPosition.arrowDirection === 'right'
                       ? `${tooltipPosition.arrowOffset}%`
                       : undefined,
                   transform:
                     tooltipPosition.arrowDirection === 'up' ||
-                    tooltipPosition.arrowDirection === 'down'
+                      tooltipPosition.arrowDirection === 'down'
                       ? 'translateX(-50%)'
                       : 'translateY(-50%)',
                 }}

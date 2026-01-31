@@ -27,11 +27,11 @@
 .mobile-tutorial-highlight {
   position: relative;
   z-index: 9999 !important;
-  outline: 3px solid var(--accent-color) !important;
-  outline-offset: 4px !important;
+  /* Use box-shadow rings instead of outline so rounded corners render cleanly */
   box-shadow:
-    0 0 0 4px rgba(14, 165, 233, 0.3),
-    0 0 15px rgba(14, 165, 233, 0.5) !important;
+    0 0 0 3px var(--accent-color),
+    0 0 0 7px rgba(14, 165, 233, 0.25),
+    0 0 18px rgba(14, 165, 233, 0.45) !important;
   border-radius: var(--radius-md) !important;
   animation: mobile-tutorial-pulse 2s ease-in-out infinite;
   pointer-events: auto !important;
@@ -53,17 +53,20 @@
 }
 
 @keyframes mobile-tutorial-pulse {
+
   0%,
   100% {
     box-shadow:
-      0 0 0 4px rgba(14, 165, 233, 0.2),
-      0 0 15px rgba(14, 165, 233, 0.4);
+      0 0 0 3px var(--accent-color),
+      0 0 0 7px rgba(14, 165, 233, 0.2),
+      0 0 18px rgba(14, 165, 233, 0.4);
   }
 
   50% {
     box-shadow:
-      0 0 0 6px rgba(14, 165, 233, 0.3),
-      0 0 25px rgba(14, 165, 233, 0.6);
+      0 0 0 3px var(--accent-color),
+      0 0 0 9px rgba(14, 165, 233, 0.28),
+      0 0 28px rgba(14, 165, 233, 0.55);
   }
 }
 
@@ -280,10 +283,12 @@
 }
 
 @keyframes mobile-tutorial-tap-bounce {
+
   0%,
   100% {
     transform: translateY(0);
   }
+
   50% {
     transform: translateY(-3px);
   }
@@ -322,20 +327,24 @@
 }
 
 @keyframes mobile-tutorial-scroll-bounce {
+
   0%,
   100% {
     transform: translateX(-50%) translateY(0);
   }
+
   50% {
     transform: translateX(-50%) translateY(4px);
   }
 }
 
 @keyframes mobile-tutorial-scroll-arrow {
+
   0%,
   100% {
     transform: translateY(0);
   }
+
   50% {
     transform: translateY(4px);
   }
