@@ -183,7 +183,100 @@ export const VerificationCodeModal: React.FC<VerificationCodeModalProps> = ({
     >
       <div className="verification-code-modal" onClick={e => e.stopPropagation()} ref={modalRef}>
         <div className="verification-code-header">
-          <div className="verification-code-icon">📧</div>
+          <div className="verification-code-icon-container">
+            {/* Animated glow rings */}
+            <div className="verification-glow-ring verification-glow-ring-1" />
+            <div className="verification-glow-ring verification-glow-ring-2" />
+            <div className="verification-glow-ring verification-glow-ring-3" />
+
+            {/* Floating particles */}
+            <div className="verification-particle verification-particle-1" />
+            <div className="verification-particle verification-particle-2" />
+            <div className="verification-particle verification-particle-3" />
+            <div className="verification-particle verification-particle-4" />
+
+            {/* Main envelope icon */}
+            <div className="verification-envelope-wrapper">
+              <svg
+                className="verification-envelope-icon"
+                viewBox="0 0 64 64"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                {/* Envelope body with gradient */}
+                <defs>
+                  <linearGradient id="envelopeGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#ffffff" />
+                    <stop offset="100%" stopColor="#e0e7ff" />
+                  </linearGradient>
+                  <linearGradient id="flapGradient" x1="0%" y1="100%" x2="0%" y2="0%">
+                    <stop offset="0%" stopColor="#c7d2fe" />
+                    <stop offset="100%" stopColor="#ffffff" />
+                  </linearGradient>
+                  <filter id="envelopeShadow" x="-20%" y="-20%" width="140%" height="140%">
+                    <feDropShadow dx="0" dy="4" stdDeviation="3" floodOpacity="0.2" />
+                  </filter>
+                </defs>
+
+                {/* Envelope back */}
+                <rect
+                  x="6"
+                  y="16"
+                  width="52"
+                  height="36"
+                  rx="4"
+                  fill="url(#envelopeGradient)"
+                  filter="url(#envelopeShadow)"
+                  className="verification-envelope-body"
+                />
+
+                {/* Envelope flap (animated) */}
+                <path
+                  d="M6 20 L32 38 L58 20 L58 16 Q58 12 54 12 L10 12 Q6 12 6 16 Z"
+                  fill="url(#flapGradient)"
+                  className="verification-envelope-flap"
+                />
+
+                {/* Envelope bottom fold lines */}
+                <path
+                  d="M6 48 L26 32"
+                  stroke="#a5b4fc"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  opacity="0.6"
+                />
+                <path
+                  d="M58 48 L38 32"
+                  stroke="#a5b4fc"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  opacity="0.6"
+                />
+              </svg>
+
+              {/* Animated @ symbol emerging from envelope */}
+              <div className="verification-at-symbol">
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <circle cx="12" cy="12" r="10" stroke="url(#atGradient)" strokeWidth="2" fill="none" />
+                  <defs>
+                    <linearGradient id="atGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#ef4444" />
+                      <stop offset="50%" stopColor="#f97316" />
+                      <stop offset="100%" stopColor="#ef4444" />
+                    </linearGradient>
+                  </defs>
+                  <path
+                    d="M12 8C9.79 8 8 9.79 8 12C8 14.21 9.79 16 12 16C13.2 16 14.27 15.45 15 14.58V16C15 17.1 14.1 18 13 18H11C9.9 18 9 17.1 9 16"
+                    stroke="#ef4444"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    fill="none"
+                  />
+                  <circle cx="12" cy="12" r="2" fill="#ef4444" />
+                </svg>
+              </div>
+            </div>
+          </div>
           <h2 id="verification-code-title">Verify Your Email</h2>
           <button
             className="verification-code-close"
