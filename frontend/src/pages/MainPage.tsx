@@ -167,6 +167,8 @@ export function MainPage() {
   const lastSubmittedInputRef = useRef<string>('')
   const [modelsByProvider, setModelsByProvider] = useState<ModelsByProvider>({})
   const [isLoadingModels, setIsLoadingModels] = useState(true)
+  // Track previous auth state to skip cache when auth changes (e.g., after login/registration)
+  const prevIsAuthenticatedRef = useRef<boolean | null>(null)
   const [, setUserMessageTimestamp] = useState<string>('')
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const { isTouchDevice, isWideLayout, isMobileLayout } = useResponsive()
@@ -1430,7 +1432,14 @@ export function MainPage() {
 
     const fetchModels = async () => {
       try {
-        const data = await getAvailableModels()
+        // Skip cache when auth state changes (e.g., after login/registration/logout)
+        // This ensures we get fresh model data with correct trial_unlocked status
+        const authStateChanged =
+          prevIsAuthenticatedRef.current !== null &&
+          prevIsAuthenticatedRef.current !== isAuthenticated
+        const skipCache = authStateChanged
+
+        const data = await getAvailableModels(skipCache)
 
         if (data.models_by_provider && Object.keys(data.models_by_provider).length > 0) {
           setModelsByProvider(data.models_by_provider)
@@ -1456,6 +1465,8 @@ export function MainPage() {
         }
       } finally {
         setIsLoadingModels(false)
+        // Update ref after fetch completes
+        prevIsAuthenticatedRef.current = isAuthenticated
       }
     }
 
