@@ -128,6 +128,9 @@ function getUserTierInfo(isAuthenticated: boolean, user: User | null) {
  * - 'free': Available to free tier and above (not anonymous)
  * - 'paid': Only available to paying subscribers
  *
+ * Additionally, models with `trial_unlocked: true` are accessible to
+ * users with an active 7-day trial.
+ *
  * @param model - Model to check
  * @param userTier - User's subscription tier
  * @param isPaidTier - Whether user is on a paid tier
@@ -135,6 +138,8 @@ function getUserTierInfo(isAuthenticated: boolean, user: User | null) {
  */
 function isModelRestricted(model: Model, userTier: string, isPaidTier: boolean): boolean {
   if (isPaidTier) return false
+  // Trial-unlocked models are accessible during active 7-day trial
+  if (model.trial_unlocked) return false
   if (userTier === 'unregistered') return model.tier_access !== 'unregistered'
   if (userTier === 'free') return model.tier_access === 'paid'
   return false
@@ -198,9 +203,12 @@ export function useModelManagement({
       const { userTier, isPaidTier } = getUserTierInfo(isAuthenticated, user)
 
       // Filter out unavailable models and restricted models based on tier
+      // Also include trial_unlocked models for users with active 7-day trial
       const availableProviderModels = providerModels.filter(model => {
         if (model.available === false) return false
         if (isPaidTier) return true
+        // Trial-unlocked models are accessible during active 7-day trial
+        if (model.trial_unlocked) return true
         if (userTier === 'unregistered') return model.tier_access === 'unregistered'
         if (userTier === 'free') return model.tier_access !== 'paid'
         return true

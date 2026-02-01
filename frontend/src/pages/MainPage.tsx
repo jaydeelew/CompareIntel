@@ -685,7 +685,7 @@ export function MainPage() {
   }
 
   if (typeof window !== 'undefined') {
-    ;(window as unknown as Record<string, unknown>).resetUsage = resetUsage
+    ; (window as unknown as Record<string, unknown>).resetUsage = resetUsage
   }
 
   const allModels = Object.values(modelsByProvider).flat()
@@ -1492,7 +1492,8 @@ export function MainPage() {
             const userTier = isAuthenticated ? user?.subscription_tier || 'free' : 'unregistered'
             const isPaidTier = ['starter', 'starter_plus', 'pro', 'pro_plus'].includes(userTier)
 
-            if (model.tier_access === 'paid' && !isPaidTier) {
+            // Check if model is accessible: paid tiers can access all, trial_unlocked means trial user can access
+            if (model.tier_access === 'paid' && !isPaidTier && !model.trial_unlocked) {
               return false
             }
             if (model.available === false) {
