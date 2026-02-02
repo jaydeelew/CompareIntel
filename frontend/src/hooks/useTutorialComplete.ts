@@ -85,7 +85,7 @@ export interface UseTutorialCompleteReturn {
 export function useTutorialComplete(config: UseTutorialCompleteConfig): UseTutorialCompleteReturn {
   const {
     currentView,
-    locationPathname,
+    locationPathname: _locationPathname,
     conversations,
     isLoading,
     isFollowUpMode,
@@ -102,16 +102,23 @@ export function useTutorialComplete(config: UseTutorialCompleteConfig): UseTutor
     }
   })
 
-  // Welcome modal state
-  const [showWelcomeModal, setShowWelcomeModal] = useState(false)
+  // Welcome modal state - initialize based on localStorage
+  // Show modal for unauthenticated users unless they've dismissed it
+  const [showWelcomeModal, setShowWelcomeModal] = useState(() => {
+    // Check if user has permanently dismissed the modal
+    const dontShowAgain = localStorage.getItem(WELCOME_DONT_SHOW_KEY) === 'true'
+    const tutorialSkipped = localStorage.getItem(TUTORIAL_STORAGE_KEY) === 'true'
+    // Only show if neither dismissal flag is set
+    return !dontShowAgain && !tutorialSkipped
+  })
 
   // Tutorial progress tracking
   const [tutorialHasCompletedComparison, setTutorialHasCompletedComparison] = useState(false)
   const [tutorialHasBreakout, setTutorialHasBreakout] = useState(false)
   const [tutorialHasSavedSelection, setTutorialHasSavedSelection] = useState(false)
 
-  // Refs for effect tracking
-  const lastWelcomeModalPathnameRef = useRef<string | null>(null)
+  // Track if we've already shown the modal this session (to prevent re-showing on dependency changes)
+  const hasShownModalRef = useRef(false)
 
   // ============================================
   // Tutorial Actions
@@ -184,27 +191,35 @@ export function useTutorialComplete(config: UseTutorialCompleteConfig): UseTutor
   // Effects (previously in useTutorialEffects)
   // ============================================
 
-  // Welcome modal logic
+  // Welcome modal logic - show for unauthenticated users on main view
+  // unless they've clicked "Don't show again" or "Skip for Now"
   useEffect(() => {
+    // Hide modal for authenticated users, when tutorial is active, or not on main view
     if (isAuthenticated || tutorialState.isActive || currentView !== 'main') {
-      if (currentView !== 'main') {
-        lastWelcomeModalPathnameRef.current = null
+      if (showWelcomeModal) {
+        setShowWelcomeModal(false)
       }
       return
     }
 
-    const isNavigatingToMain = lastWelcomeModalPathnameRef.current !== locationPathname
+    // Check localStorage flags (in case they changed)
+    const dontShowAgain = localStorage.getItem(WELCOME_DONT_SHOW_KEY) === 'true'
+    const tutorialSkipped = localStorage.getItem(TUTORIAL_STORAGE_KEY) === 'true'
 
-    if (!isNavigatingToMain) {
+    // If user has dismissed the modal, ensure it stays hidden
+    if (dontShowAgain || tutorialSkipped) {
+      if (showWelcomeModal) {
+        setShowWelcomeModal(false)
+      }
       return
     }
 
-    const dontShowAgain = localStorage.getItem(WELCOME_DONT_SHOW_KEY)
-    if (dontShowAgain !== 'true') {
+    // Show modal if conditions are met and we haven't shown it yet this session
+    if (!showWelcomeModal && !hasShownModalRef.current) {
       setShowWelcomeModal(true)
-      lastWelcomeModalPathnameRef.current = locationPathname
+      hasShownModalRef.current = true
     }
-  }, [tutorialState.isActive, currentView, locationPathname, isAuthenticated])
+  }, [isAuthenticated, tutorialState.isActive, currentView, showWelcomeModal])
 
   // Track comparison completion for tutorial
   useEffect(() => {
