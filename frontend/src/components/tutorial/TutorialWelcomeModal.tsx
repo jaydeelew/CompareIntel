@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { createPortal } from 'react-dom'
 import { Link } from 'react-router-dom'
 import './TutorialWelcomeModal.css'
 
@@ -31,7 +32,8 @@ export const TutorialWelcomeModal: React.FC<TutorialWelcomeModalProps> = ({
     onSkip()
   }
 
-  return (
+  // Use portal to render outside the .app stacking context
+  return createPortal(
     <div className="tutorial-welcome-backdrop">
       <div className="tutorial-welcome-modal">
         <div className="tutorial-welcome-content">
@@ -95,6 +97,7 @@ export const TutorialWelcomeModal: React.FC<TutorialWelcomeModalProps> = ({
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
