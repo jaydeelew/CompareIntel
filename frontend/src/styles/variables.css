@@ -1,58 +1,140 @@
-/* CSS Custom Properties for consistent theming - Expanded with spacing, sizing, and common values */
-/* Note: Font import is handled in App.css to avoid duplicate imports */
+/* CSS Custom Properties - Premium Dark Theme 2026 */
+/* Distinctive aesthetic inspired by high-end developer tools */
 
 :root {
-  /* Colors - Primary */
-  --primary-color: #2563eb;
-  --primary-hover: #1d4ed8;
-  --secondary-color: #64748b;
-  --accent-color: #0ea5e9;
+  /* ═══════════════════════════════════════════════════════════
+     COLOR SYSTEM - Dark Mode First
+     ═══════════════════════════════════════════════════════════ */
 
-  /* Colors - Status */
+  /* Primary Accent - Vibrant Cyan/Teal for AI feel */
+  --primary-color: #06b6d4;
+  --primary-hover: #0891b2;
+  --primary-light: #22d3ee;
+  --primary-dark: #0e7490;
+  --primary-glow: rgba(6, 182, 212, 0.4);
+
+  /* Secondary Accent - Electric Violet */
+  --secondary-color: #8b5cf6;
+  --secondary-hover: #7c3aed;
+  --secondary-light: #a78bfa;
+
+  /* Accent - Emerald for success states */
+  --accent-color: #10b981;
+  --accent-hover: #059669;
+  --accent-light: #34d399;
+
+  /* Status Colors */
   --success-color: #10b981;
   --warning-color: #f59e0b;
   --error-color: #ef4444;
+  --info-color: #06b6d4;
 
-  /* Colors - Text */
-  --text-primary: #0f172a;
-  --text-secondary: #475569;
+  /* ═══════════════════════════════════════════════════════════
+     BACKGROUND SYSTEM - Rich Dark Surfaces
+     ═══════════════════════════════════════════════════════════ */
+
+  /* Base backgrounds - Deep, rich blacks */
+  --bg-primary: #0a0a0f;
+  --bg-secondary: #0f0f17;
+  --bg-tertiary: #151520;
+  --bg-elevated: #1a1a28;
+  --bg-hover: #1f1f2e;
+
+  /* Card and surface backgrounds with subtle blue tint */
+  --bg-card: #12121c;
+  --bg-card-hover: #181824;
+  --bg-input: #0d0d14;
+
+  /* Glass morphism backgrounds */
+  --bg-glass: rgba(15, 15, 23, 0.8);
+  --bg-glass-hover: rgba(26, 26, 40, 0.9);
+  --bg-glass-border: rgba(255, 255, 255, 0.08);
+
+  /* ═══════════════════════════════════════════════════════════
+     TEXT SYSTEM - High Contrast Hierarchy
+     ═══════════════════════════════════════════════════════════ */
+
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
   --text-muted: #64748b;
-  --text-inverse: #ffffff;
+  --text-subtle: #475569;
+  --text-inverse: #0a0a0f;
+  --text-accent: #22d3ee;
 
-  /* Colors - Background */
-  --bg-primary: #ffffff;
-  --bg-secondary: #f8fafc;
-  --bg-tertiary: #f1f5f9;
-  --bg-inverse: #0f172a;
+  /* ═══════════════════════════════════════════════════════════
+     BORDER SYSTEM
+     ═══════════════════════════════════════════════════════════ */
 
-  /* Colors - Border */
-  --border-color: #e2e8f0;
-  --border-focus: #3b82f6;
+  --border-color: rgba(255, 255, 255, 0.08);
+  --border-light: rgba(255, 255, 255, 0.05);
+  --border-strong: rgba(255, 255, 255, 0.12);
+  --border-focus: var(--primary-color);
+  --border-glow: rgba(6, 182, 212, 0.3);
 
-  /* Shadows */
-  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+  /* ═══════════════════════════════════════════════════════════
+     GRADIENT SYSTEM - Signature Visual Identity
+     ═══════════════════════════════════════════════════════════ */
 
-  /* Border Radius */
-  --radius-sm: 0.375rem;
-  --radius-md: 0.5rem;
-  --radius-lg: 0.75rem;
-  --radius-xl: 1rem;
-  --radius-2xl: 1.5rem;
-  --radius-full: 9999px;
+  /* Hero gradient - Bold and memorable */
+  --gradient-hero: linear-gradient(
+    135deg,
+    #0a0a0f 0%,
+    #0c1426 25%,
+    #0f1729 50%,
+    #0a1628 75%,
+    #0a0a0f 100%
+  );
 
-  /* Spacing - Consistent spacing scale */
-  --spacing-xs: 0.25rem;
-  --spacing-sm: 0.5rem;
-  --spacing-md: 1rem;
-  --spacing-lg: 1.5rem;
-  --spacing-xl: 2rem;
-  --spacing-2xl: 3rem;
-  --spacing-3xl: 4rem;
+  /* Accent gradients */
+  --gradient-primary: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+  --gradient-secondary: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%);
+  --gradient-accent: linear-gradient(135deg, #10b981 0%, #059669 100%);
 
-  /* Font Sizes */
+  /* Button gradients */
+  --gradient-button: linear-gradient(135deg, #06b6d4 0%, #0891b2 50%, #0e7490 100%);
+  --gradient-button-hover: linear-gradient(135deg, #22d3ee 0%, #06b6d4 50%, #0891b2 100%);
+
+  /* Card gradients */
+  --gradient-card: linear-gradient(
+    135deg,
+    rgba(6, 182, 212, 0.1) 0%,
+    rgba(139, 92, 246, 0.05) 100%
+  );
+  --gradient-card-selected: linear-gradient(135deg, #06b6d4 0%, #8b5cf6 100%);
+
+  /* Mesh gradient for backgrounds */
+  --gradient-mesh:
+    radial-gradient(at 40% 20%, rgba(6, 182, 212, 0.15) 0px, transparent 50%),
+    radial-gradient(at 80% 0%, rgba(139, 92, 246, 0.1) 0px, transparent 50%),
+    radial-gradient(at 0% 50%, rgba(16, 185, 129, 0.08) 0px, transparent 50%),
+    radial-gradient(at 80% 50%, rgba(6, 182, 212, 0.05) 0px, transparent 50%),
+    radial-gradient(at 0% 100%, rgba(139, 92, 246, 0.1) 0px, transparent 50%);
+
+  /* ═══════════════════════════════════════════════════════════
+     SHADOWS - Subtle depth in dark mode
+     ═══════════════════════════════════════════════════════════ */
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -2px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -4px rgba(0, 0, 0, 0.4);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.4);
+  --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+
+  /* Glow shadows */
+  --shadow-glow-sm: 0 0 10px var(--primary-glow);
+  --shadow-glow-md: 0 0 20px var(--primary-glow);
+  --shadow-glow-lg: 0 0 30px var(--primary-glow), 0 0 60px rgba(6, 182, 212, 0.2);
+
+  /* ═══════════════════════════════════════════════════════════
+     TYPOGRAPHY SYSTEM
+     ═══════════════════════════════════════════════════════════ */
+
+  /* Font Families - Distinctive 2026 Typography */
+  --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+  --font-display: 'Sora', 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+
+  /* Font Sizes - Fluid typography */
   --font-xs: 0.75rem;
   --font-sm: 0.875rem;
   --font-base: 1rem;
@@ -60,6 +142,9 @@
   --font-xl: 1.25rem;
   --font-2xl: 1.5rem;
   --font-3xl: 1.875rem;
+  --font-4xl: 2.25rem;
+  --font-5xl: 3rem;
+  --font-6xl: 3.75rem;
 
   /* Font Weights */
   --font-light: 300;
@@ -71,15 +156,83 @@
 
   /* Line Heights */
   --line-tight: 1.2;
+  --line-snug: 1.375;
   --line-normal: 1.5;
-  --line-relaxed: 1.6;
+  --line-relaxed: 1.625;
+  --line-loose: 2;
 
-  /* Transitions */
+  /* Letter Spacing */
+  --tracking-tight: -0.025em;
+  --tracking-normal: 0em;
+  --tracking-wide: 0.025em;
+  --tracking-wider: 0.05em;
+
+  /* ═══════════════════════════════════════════════════════════
+     SPACING SYSTEM
+     ═══════════════════════════════════════════════════════════ */
+
+  --spacing-px: 1px;
+  --spacing-0: 0;
+  --spacing-0-5: 0.125rem;
+  --spacing-1: 0.25rem;
+  --spacing-1-5: 0.375rem;
+  --spacing-2: 0.5rem;
+  --spacing-2-5: 0.625rem;
+  --spacing-3: 0.75rem;
+  --spacing-3-5: 0.875rem;
+  --spacing-4: 1rem;
+  --spacing-5: 1.25rem;
+  --spacing-6: 1.5rem;
+  --spacing-7: 1.75rem;
+  --spacing-8: 2rem;
+  --spacing-9: 2.25rem;
+  --spacing-10: 2.5rem;
+  --spacing-12: 3rem;
+  --spacing-14: 3.5rem;
+  --spacing-16: 4rem;
+  --spacing-20: 5rem;
+  --spacing-24: 6rem;
+
+  /* Legacy spacing aliases */
+  --spacing-xs: var(--spacing-1);
+  --spacing-sm: var(--spacing-2);
+  --spacing-md: var(--spacing-4);
+  --spacing-lg: var(--spacing-6);
+  --spacing-xl: var(--spacing-8);
+  --spacing-2xl: var(--spacing-12);
+  --spacing-3xl: var(--spacing-16);
+
+  /* ═══════════════════════════════════════════════════════════
+     BORDER RADIUS
+     ═══════════════════════════════════════════════════════════ */
+
+  --radius-none: 0;
+  --radius-sm: 0.25rem;
+  --radius-md: 0.375rem;
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.75rem;
+  --radius-2xl: 1rem;
+  --radius-3xl: 1.5rem;
+  --radius-full: 9999px;
+
+  /* ═══════════════════════════════════════════════════════════
+     TRANSITIONS & ANIMATIONS
+     ═══════════════════════════════════════════════════════════ */
+
   --transition-fast: 0.15s ease;
   --transition-base: 0.2s ease;
   --transition-slow: 0.3s ease;
+  --transition-slower: 0.5s ease;
 
-  /* Z-index Scale */
+  --ease-in: cubic-bezier(0.4, 0, 1, 1);
+  --ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* ═══════════════════════════════════════════════════════════
+     Z-INDEX SCALE
+     ═══════════════════════════════════════════════════════════ */
+
   --z-base: 1;
   --z-dropdown: 100;
   --z-sticky: 100;
@@ -88,22 +241,25 @@
   --z-tooltip: 10000;
   --z-banner: 9999;
 
-  /* Viewport */
-  --vw: 100vw;
-  --vh: 100vh;
+  /* ═══════════════════════════════════════════════════════════
+     LAYOUT
+     ═══════════════════════════════════════════════════════════ */
 
-  /* Layout */
-  --page-gutter: clamp(8px, 3vw, 24px);
+  --page-gutter: clamp(16px, 4vw, 32px);
+  --max-width-content: 1400px;
+  --navbar-height: 64px;
   --models-header-control-height: 36px;
 
-  /* Component Specific */
-  --navbar-height: 60px;
+  /* Button sizes */
   --button-height-sm: 32px;
   --button-height-md: 40px;
   --button-height-lg: 48px;
 
-  /* Opacity Values */
-  --opacity-disabled: 0.6;
+  /* ═══════════════════════════════════════════════════════════
+     OPACITY
+     ═══════════════════════════════════════════════════════════ */
+
+  --opacity-disabled: 0.5;
   --opacity-muted: 0.7;
   --opacity-hover: 0.9;
 }

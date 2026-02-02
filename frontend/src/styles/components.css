@@ -1,6 +1,12 @@
-/* Common UI Components - Buttons, Cards, Inputs, etc. */
+/* ═══════════════════════════════════════════════════════════
+   COMPONENTS - Premium Dark Theme 2026
+   Reusable UI components with consistent styling
+   ═══════════════════════════════════════════════════════════ */
 
-/* Card action buttons */
+/* ═══════════════════════════════════════════════════════════
+   CARD ACTION BUTTONS
+   ═══════════════════════════════════════════════════════════ */
+
 .screenshot-card-btn,
 .copy-response-btn,
 .hide-others-btn,
@@ -10,13 +16,13 @@
   color: var(--text-muted);
   font-size: 1.2rem;
   cursor: pointer;
-  padding: var(--spacing-xs);
-  border-radius: var(--radius-sm);
+  padding: var(--spacing-1);
+  border-radius: var(--radius-md);
   transition: all var(--transition-base);
   line-height: 1;
-  background: none;
-  width: 28px;
-  height: 28px;
+  background: transparent;
+  width: 32px;
+  height: 32px;
   z-index: 10;
   display: flex;
   align-items: center;
@@ -28,24 +34,28 @@
   background: var(--primary-color);
   color: white;
   transform: scale(1.1);
+  box-shadow: 0 0 16px var(--primary-glow);
 }
 
 .copy-response-btn:hover {
-  background: var(--success-color);
+  background: var(--accent-color);
   color: white;
   transform: scale(1.1);
+  box-shadow: 0 0 16px rgba(16, 185, 129, 0.4);
 }
 
 .hide-others-btn:hover {
-  background: var(--warning-color, #f59e0b);
+  background: var(--warning-color);
   color: white;
   transform: scale(1.1);
+  box-shadow: 0 0 16px rgba(245, 158, 11, 0.4);
 }
 
 .close-card-btn:hover {
   background: var(--error-color);
   color: white;
   transform: scale(1.1);
+  box-shadow: 0 0 16px rgba(239, 68, 68, 0.4);
 }
 
 .screenshot-card-btn:active,
@@ -60,7 +70,7 @@
 .hide-others-btn:focus,
 .close-card-btn:focus {
   outline: none !important;
-  background: none;
+  background: transparent;
   transform: scale(1);
 }
 
@@ -68,7 +78,7 @@
 .copy-response-btn:focus:not(:hover),
 .hide-others-btn:focus:not(:hover),
 .close-card-btn:focus:not(:hover) {
-  background: none;
+  background: transparent;
   color: var(--text-muted);
 }
 
@@ -79,12 +89,15 @@
 .hide-others-btn img,
 .hide-others-btn svg {
   pointer-events: none;
-  width: 16px;
-  height: 16px;
+  width: 18px;
+  height: 18px;
   object-fit: contain;
 }
 
-/* Copy message button in message headers */
+/* ═══════════════════════════════════════════════════════════
+   COPY MESSAGE BUTTON (in message headers)
+   ═══════════════════════════════════════════════════════════ */
+
 .copy-message-btn {
   outline: none !important;
   border: none !important;
@@ -92,7 +105,7 @@
   font-size: 1rem;
   cursor: pointer;
   padding: 0.25rem;
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md);
   transition: all var(--transition-base);
   line-height: 1;
   background: rgba(255, 255, 255, 0.1);
@@ -133,23 +146,23 @@
   object-fit: contain;
 }
 
-/* Compare Button */
+/* ═══════════════════════════════════════════════════════════
+   COMPARE BUTTON
+   ═══════════════════════════════════════════════════════════ */
+
 .compare-button {
-  background: linear-gradient(
-    135deg,
-    var(--primary-color) 0%,
-    #3b82f6 50%,
-    var(--primary-hover) 100%
-  );
-  color: var(--text-inverse);
+  background: var(--gradient-button);
+  color: white;
   border: none;
-  padding: var(--spacing-md) var(--spacing-xl);
-  border-radius: var(--radius-lg);
+  padding: var(--spacing-4) var(--spacing-8);
+  border-radius: var(--radius-xl);
   font-size: var(--font-base);
   font-weight: var(--font-semibold);
   cursor: pointer;
   transition: all var(--transition-slow);
-  box-shadow: var(--shadow-md);
+  box-shadow:
+    0 4px 20px rgba(6, 182, 212, 0.3),
+    0 0 30px rgba(6, 182, 212, 0.1);
   min-width: 200px;
   position: relative;
   overflow: hidden;
@@ -164,9 +177,9 @@
   bottom: 0;
   background: linear-gradient(
     135deg,
-    rgba(255, 255, 255, 0.1) 0%,
-    rgba(255, 255, 255, 0.2) 50%,
-    rgba(255, 255, 255, 0.1) 100%
+    rgba(255, 255, 255, 0.15) 0%,
+    rgba(255, 255, 255, 0.05) 50%,
+    transparent 100%
   );
   opacity: 0;
   transition: opacity var(--transition-slow);
@@ -174,8 +187,10 @@
 }
 
 .compare-button:hover:not(:disabled) {
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-lg);
+  transform: translateY(-2px);
+  box-shadow:
+    0 8px 32px rgba(6, 182, 212, 0.4),
+    0 0 40px rgba(6, 182, 212, 0.2);
 }
 
 .compare-button:hover:not(:disabled)::before {
@@ -188,12 +203,15 @@
   transform: none;
 }
 
-/* Cancel Button */
+/* ═══════════════════════════════════════════════════════════
+   CANCEL BUTTON
+   ═══════════════════════════════════════════════════════════ */
+
 .cancel-button {
   background: linear-gradient(135deg, #991b1b, #7f1d1d);
   border: 2px solid #7f1d1d;
   color: white;
-  padding: var(--spacing-sm) var(--spacing-lg);
+  padding: var(--spacing-2) var(--spacing-6);
   border-radius: var(--radius-xl);
   font-size: var(--font-sm);
   font-weight: var(--font-semibold);
@@ -211,7 +229,9 @@
   background: linear-gradient(135deg, #7f1d1d, #6b1c1c);
   border-color: #6b1c1c;
   transform: translateY(-1px);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.15),
+    0 8px 24px rgba(127, 29, 29, 0.3);
 }
 
 .cancel-button:active {
@@ -219,26 +239,30 @@
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
-/* Error and Loading Messages */
+/* ═══════════════════════════════════════════════════════════
+   ERROR AND LOADING MESSAGES
+   ═══════════════════════════════════════════════════════════ */
+
 .error-message {
-  background: #fef2f2;
-  border: 1px solid #fecaca;
-  color: #dc2626;
-  padding: var(--spacing-md);
-  border-radius: var(--radius-lg);
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #fca5a5;
+  padding: var(--spacing-4);
+  border-radius: var(--radius-xl);
   margin: 8px auto;
   display: flex;
   align-items: center;
-  gap: var(--spacing-sm);
-  max-width: 1400px;
+  gap: var(--spacing-2);
+  max-width: var(--max-width-content);
   width: calc(100% - 2rem);
+  backdrop-filter: blur(8px);
 }
 
 .error-message button {
   margin-left: auto;
-  background: none;
+  background: transparent;
   border: none;
-  color: #dc2626;
+  color: #fca5a5;
   cursor: pointer;
   font-size: 1.2rem;
   padding: 0 0.5rem;
@@ -256,23 +280,27 @@
 }
 
 .loading-message {
-  background: var(--bg-secondary);
+  background: var(--bg-elevated);
   border: 1px solid var(--border-color);
   color: var(--text-secondary);
-  padding: var(--spacing-md);
-  border-radius: var(--radius-lg);
+  padding: var(--spacing-4);
+  border-radius: var(--radius-xl);
   text-align: center;
 }
 
-/* Context Warning Banner */
+/* ═══════════════════════════════════════════════════════════
+   CONTEXT WARNING BANNER
+   ═══════════════════════════════════════════════════════════ */
+
 .context-warning {
-  padding: 0.875rem 1rem;
-  border-radius: 12px;
+  padding: 1rem 1.25rem;
+  border-radius: var(--radius-xl);
   margin-top: 0.75rem;
   font-size: 0.875rem;
   display: flex;
   align-items: center;
   gap: 0.75rem;
+  backdrop-filter: blur(8px);
 }
 
 .context-warning.critical {
@@ -287,8 +315,8 @@
 
 .context-warning.medium,
 .context-warning.info {
-  background: linear-gradient(135deg, rgba(59, 130, 246, 0.12), rgba(37, 99, 235, 0.12));
-  border: 1px solid rgba(120, 170, 255, 0.35);
+  background: linear-gradient(135deg, rgba(6, 182, 212, 0.12), rgba(6, 182, 212, 0.08));
+  border: 1px solid rgba(6, 182, 212, 0.25);
 }
 
 .context-warning-content {
@@ -296,16 +324,19 @@
 }
 
 .context-warning-message {
-  color: rgba(255, 255, 255, 0.95);
+  color: var(--text-primary);
   margin-bottom: 0.25rem;
-  font-weight: 500;
+  font-weight: var(--font-medium);
 }
 
 .context-warning-icon {
   margin-right: 0.5rem;
 }
 
-/* Loading Spinner Styles */
+/* ═══════════════════════════════════════════════════════════
+   LOADING SPINNER
+   ═══════════════════════════════════════════════════════════ */
+
 .sr-only {
   position: absolute;
   width: 1px;
@@ -348,11 +379,221 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--spacing-md);
+  gap: var(--spacing-4);
 }
 
 .loading-spinner-message {
   color: var(--text-secondary);
   font-size: var(--font-sm);
   margin: 0;
+}
+
+@keyframes rotateClockwise {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   TOOLTIPS
+   ═══════════════════════════════════════════════════════════ */
+
+.tooltip {
+  position: relative;
+  display: inline-block;
+}
+
+.tooltip-content {
+  visibility: hidden;
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+  text-align: center;
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-lg);
+  position: absolute;
+  z-index: var(--z-tooltip);
+  bottom: 125%;
+  left: 50%;
+  transform: translateX(-50%) translateY(-4px);
+  white-space: nowrap;
+  opacity: 0;
+  transition: all 0.3s var(--ease-spring);
+  box-shadow: var(--shadow-xl);
+  border: 1px solid var(--border-color);
+  font-size: var(--font-sm);
+  font-weight: var(--font-medium);
+}
+
+.tooltip-content::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 8px solid transparent;
+  border-top-color: var(--bg-elevated);
+}
+
+.tooltip:hover .tooltip-content {
+  visibility: visible;
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   BADGES
+   ═══════════════════════════════════════════════════════════ */
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.75rem;
+  border-radius: var(--radius-full);
+  font-size: var(--font-xs);
+  font-weight: var(--font-medium);
+  line-height: 1;
+}
+
+.badge-primary {
+  background: rgba(6, 182, 212, 0.15);
+  color: var(--primary-light);
+  border: 1px solid rgba(6, 182, 212, 0.3);
+}
+
+.badge-success {
+  background: rgba(16, 185, 129, 0.15);
+  color: var(--accent-light);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.badge-warning {
+  background: rgba(245, 158, 11, 0.15);
+  color: #fcd34d;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.badge-error {
+  background: rgba(239, 68, 68, 0.15);
+  color: #fca5a5;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   MODAL OVERLAY
+   ═══════════════════════════════════════════════════════════ */
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: var(--z-modal);
+  animation: fadeIn 0.2s ease-out;
+}
+
+.modal-content {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-2xl);
+  box-shadow: var(--shadow-2xl);
+  max-width: 90vw;
+  max-height: 90vh;
+  overflow: auto;
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   DIVIDERS
+   ═══════════════════════════════════════════════════════════ */
+
+.divider {
+  height: 1px;
+  background: var(--border-color);
+  margin: var(--spacing-4) 0;
+}
+
+.divider-vertical {
+  width: 1px;
+  height: 100%;
+  background: var(--border-color);
+  margin: 0 var(--spacing-4);
+}
+
+.divider-glow {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--primary-color), transparent);
+  margin: var(--spacing-6) 0;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   SKELETON LOADING
+   ═══════════════════════════════════════════════════════════ */
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--bg-tertiary) 0%,
+    var(--bg-hover) 50%,
+    var(--bg-tertiary) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: var(--radius-md);
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.skeleton-text {
+  height: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.skeleton-text:last-child {
+  width: 70%;
+}
+
+.skeleton-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-full);
+}
+
+.skeleton-card {
+  height: 200px;
 }

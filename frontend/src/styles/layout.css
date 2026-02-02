@@ -1,28 +1,33 @@
-/* Layout - Main content containers, grids, sections */
+/* ═══════════════════════════════════════════════════════════
+   LAYOUT - Premium Dark Theme 2026
+   Consistent spacing and structure
+   ═══════════════════════════════════════════════════════════ */
 
-/* Main content */
+/* Main Content Container */
 .app-main {
   flex: 1;
   width: 100%;
   max-width: none;
   margin: 0;
-  margin-bottom: var(--spacing-lg);
+  margin-bottom: var(--spacing-6);
   padding: 0 var(--page-gutter);
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-md);
+  gap: var(--spacing-4);
 }
 
-/* Three-tile grid layout for equal height tiles */
+/* ═══════════════════════════════════════════════════════════
+   THREE-TILE GRID LAYOUT
+   ═══════════════════════════════════════════════════════════ */
+
 .tiles-container {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
-  gap: var(--spacing-xl);
+  gap: var(--spacing-8);
   align-items: stretch;
 }
 
-/* Ensure all tiles stretch to fill the grid row */
 .tiles-container > .models-section,
 .tiles-container > .input-section,
 .tiles-container > .action-section {
@@ -31,35 +36,62 @@
   height: 100%;
 }
 
-/* Sections */
+/* ═══════════════════════════════════════════════════════════
+   SECTION CARDS
+   ═══════════════════════════════════════════════════════════ */
+
 .input-section,
 .models-section,
 .action-section,
 .results-section {
-  background: var(--bg-primary);
-  border-radius: var(--radius-xl);
-  padding: var(--spacing-xl) var(--spacing-md);
-  box-shadow: var(--shadow-md);
+  background: var(--bg-card);
+  border-radius: var(--radius-2xl);
+  padding: var(--spacing-8) var(--spacing-6);
+  box-shadow: var(--shadow-lg);
   border: 1px solid var(--border-color);
   transition: all var(--transition-slow);
-  max-width: 1400px;
+  max-width: var(--max-width-content);
   margin: 0 auto;
   width: 100%;
 }
 
-/* Specific padding adjustment for models section */
+/* Models Section Specific Styling */
 .models-section {
-  padding: var(--spacing-xl) var(--spacing-md) var(--spacing-md) var(--spacing-md);
-  margin-top: var(--spacing-xl);
+  padding: var(--spacing-8) var(--spacing-6) var(--spacing-6) var(--spacing-6);
+  margin-top: var(--spacing-8);
   margin-bottom: 2rem;
 }
 
-/* Models section header */
+/* Section Hover Effects */
+.input-section:hover,
+.models-section:hover,
+.results-section:hover {
+  box-shadow:
+    var(--shadow-xl),
+    0 0 40px rgba(6, 182, 212, 0.05);
+  border-color: var(--border-strong);
+}
+
+/* Section Headings */
+.input-section h2,
+.models-section h2,
+.results-section h2 {
+  margin-bottom: var(--spacing-6);
+  color: var(--text-primary);
+  font-size: var(--font-2xl);
+  font-weight: var(--font-semibold);
+  line-height: var(--line-tight);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   MODELS SECTION HEADER
+   ═══════════════════════════════════════════════════════════ */
+
 .models-section-header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  margin-bottom: var(--spacing-lg);
+  margin-bottom: var(--spacing-6);
   cursor: pointer;
   position: relative;
   padding-right: 2.5rem;
@@ -72,24 +104,24 @@
 
 .models-header-controls {
   display: flex;
-  gap: var(--spacing-md);
+  gap: var(--spacing-4);
   align-items: center;
-  margin-top: var(--spacing-lg);
+  margin-top: var(--spacing-6);
   transition: none;
 }
 
 .models-header-buttons {
   display: flex;
-  gap: var(--spacing-sm);
+  gap: var(--spacing-2);
 }
 
 .models-header-right {
   display: flex;
-  gap: var(--spacing-md);
+  gap: var(--spacing-4);
   align-items: center;
 }
 
-/* Keep header controls equal height across layouts */
+/* Equal height controls */
 .models-header-buttons button,
 .models-count-indicator,
 .models-toggle-arrow {
@@ -99,55 +131,144 @@
   box-sizing: border-box;
 }
 
-.input-section:hover,
-.models-section:hover,
-.results-section:hover {
-  box-shadow: var(--shadow-lg);
-}
+/* ═══════════════════════════════════════════════════════════
+   TEXTAREA
+   ═══════════════════════════════════════════════════════════ */
 
-.input-section h2,
-.models-section h2,
-.results-section h2 {
-  margin-bottom: var(--spacing-lg);
-  color: var(--text-primary);
-  font-size: var(--font-2xl);
-  font-weight: var(--font-semibold);
-  line-height: var(--line-tight);
-}
-
-/* Textarea */
 .input-textarea {
   width: 100%;
-  padding: var(--spacing-md);
-  border: 2px solid var(--border-color);
-  border-radius: var(--radius-lg);
+  padding: var(--spacing-4);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-xl);
   font-size: var(--font-base);
   font-family: inherit;
   resize: vertical;
   transition: all var(--transition-base);
-  background: var(--bg-secondary);
+  background: var(--bg-input);
   color: var(--text-primary);
   line-height: var(--line-normal);
 }
 
 .input-textarea:focus {
   outline: none;
-  border-color: var(--border-focus);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-  background: var(--bg-primary);
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px var(--primary-glow);
+  background: var(--bg-elevated);
 }
 
 .input-textarea::placeholder {
   color: var(--text-muted);
 }
 
-/* Action Section */
+/* ═══════════════════════════════════════════════════════════
+   ACTION SECTION
+   ═══════════════════════════════════════════════════════════ */
+
 .action-section {
   text-align: center;
-  padding: var(--spacing-lg) var(--spacing-xl);
+  padding: var(--spacing-6) var(--spacing-8);
 }
 
-/* Reduce spacing when error message is above models section */
+/* Error spacing fix */
 .error-message + .models-section {
   margin-top: -1rem;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   RESPONSIVE LAYOUT
+   ═══════════════════════════════════════════════════════════ */
+
+@media (max-width: 1024px) {
+  .tiles-container {
+    grid-template-columns: 1fr 1fr;
+    gap: var(--spacing-6);
+  }
+
+  .tiles-container .action-section {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 768px) {
+  .app-main {
+    padding: 0 var(--page-gutter);
+    gap: var(--spacing-6);
+  }
+
+  .tiles-container {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-6);
+  }
+
+  .input-section,
+  .models-section,
+  .action-section,
+  .results-section {
+    padding: var(--spacing-6) var(--spacing-4);
+    max-width: none;
+    border-radius: var(--radius-xl);
+  }
+
+  .models-section {
+    margin-top: var(--spacing-4);
+    margin-bottom: var(--spacing-4);
+  }
+
+  .input-section h2,
+  .models-section h2,
+  .results-section h2 {
+    font-size: var(--font-xl);
+    margin-bottom: var(--spacing-4);
+  }
+
+  .models-selection-layout {
+    flex-direction: column;
+    gap: var(--spacing-4);
+  }
+
+  .selected-models-section {
+    width: 100%;
+    min-width: 100%;
+    order: -1;
+  }
+
+  .selected-models-grid {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: var(--spacing-3);
+    overflow-y: visible;
+    max-height: none;
+  }
+
+  .selected-model-card {
+    flex: 1 1 calc(50% - var(--spacing-3));
+    min-width: 140px;
+    max-width: calc(50% - var(--spacing-3));
+  }
+
+  .models-section-header {
+    flex-direction: column;
+    gap: var(--spacing-3);
+    padding-right: 0;
+  }
+
+  .models-header-controls {
+    width: 100%;
+    justify-content: space-between;
+    margin-top: var(--spacing-3);
+  }
+}
+
+@media (max-width: 480px) {
+  .input-section,
+  .models-section,
+  .action-section,
+  .results-section {
+    padding: var(--spacing-4) var(--spacing-3);
+  }
+
+  .selected-model-card {
+    flex: 1 1 100%;
+    max-width: 100%;
+  }
 }

@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 
 export const Footer: React.FC = () => {
   const linkStyle: React.CSSProperties = {
-    color: '#0284c7',
+    color: '#22d3ee',
     textDecoration: 'none',
     transition: 'color 0.2s',
     cursor: 'pointer',
@@ -15,9 +15,10 @@ export const Footer: React.FC = () => {
         textAlign: 'center',
         padding: '20px 20px 22px',
         marginTop: 0,
-        color: '#6b7280',
+        color: '#94a3b8',
         fontSize: '14px',
-        backgroundColor: '#ffffff',
+        backgroundColor: '#0a0a0f',
+        borderTop: '1px solid rgba(255, 255, 255, 0.08)',
       }}
     >
       {/* Navigation Links */}
@@ -60,17 +61,17 @@ export const Footer: React.FC = () => {
         <a
           href="mailto:support@compareintel.com"
           style={{
-            color: '#0284c7',
+            color: '#22d3ee',
             textDecoration: 'underline',
             textDecorationThickness: '1px',
             textUnderlineOffset: '2px',
           }}
           onMouseOver={e => {
-            e.currentTarget.style.color = '#0369a1'
+            e.currentTarget.style.color = '#06b6d4'
             e.currentTarget.style.textDecorationThickness = '2px'
           }}
           onMouseOut={e => {
-            e.currentTarget.style.color = '#0284c7'
+            e.currentTarget.style.color = '#22d3ee'
             e.currentTarget.style.textDecorationThickness = '1px'
           }}
         >
@@ -79,7 +80,7 @@ export const Footer: React.FC = () => {
       </p>
 
       {/* Copyright */}
-      <p style={{ margin: '8px 0', fontSize: '12px', color: '#4b5563' }}>
+      <p style={{ margin: '8px 0', fontSize: '12px', color: '#64748b' }}>
         © 2026 CompareIntel. All rights reserved.
       </p>
     </footer>

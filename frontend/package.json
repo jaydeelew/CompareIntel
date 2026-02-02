@@ -29,7 +29,7 @@
     "generate:icons": "node scripts/generate-icons.js"
   },
   "dependencies": {
-    "@sentry/react": "^8.0.0",
+    "@sentry/react": "^8.55.0",
     "@types/katex": "^0.16.7",
     "html-to-image": "^1.11.13",
     "html2canvas": "^1.4.1",
