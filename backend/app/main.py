@@ -4,6 +4,11 @@ from fastapi.exceptions import RequestValidationError
 from pydantic import BaseModel
 from typing import Any
 from contextlib import asynccontextmanager
+
+# Initialize Sentry error monitoring early, before other imports
+from .sentry import init_sentry
+init_sentry(app_version="1.0.0")
+
 from .model_runner import (
     call_openrouter_streaming,
     clean_model_response,
@@ -296,6 +301,17 @@ async def global_exception_handler(request: Request, exc: Exception):
 
 
 # Include routers AFTER middleware
+# API versioning: Support both /api/ (backwards compatible) and /api/v1/ (versioned)
+# New clients should use /api/v1/, existing clients can continue using /api/
+# Both prefixes route to the same handlers for v1
+
+# Versioned API endpoints (/api/v1/) - recommended for new integrations
+app.include_router(auth.router, prefix="/api/v1", tags=["v1"])
+app.include_router(admin.router, prefix="/api/v1", tags=["v1"])
+app.include_router(api.router, prefix="/api/v1", tags=["v1"])
+
+# Legacy API endpoints (/api/) - maintained for backwards compatibility
+# These map to the same handlers as v1
 app.include_router(auth.router, prefix="/api")
 app.include_router(admin.router, prefix="/api")
 app.include_router(api.router, prefix="/api")

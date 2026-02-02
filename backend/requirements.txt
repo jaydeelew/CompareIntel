@@ -65,6 +65,7 @@ bcrypt==4.0.1                      # Password hashing (primary)
 # ============================================================================
 sqlalchemy>=2.0.0        # ORM
 psycopg2-binary>=2.9.9   # PostgreSQL driver
+alembic>=1.13.0          # Database migrations
 
 # ============================================================================
 # Email
@@ -81,3 +82,8 @@ pytz>=2024.1             # Timezone handling for credit resets
 # Distributed Rate Limiting (Optional - for multi-worker deployments)
 # ============================================================================
 redis>=5.0.0             # Redis client for distributed rate limiting (optional)
+
+# ============================================================================
+# Error Monitoring & APM
+# ============================================================================
+sentry-sdk[fastapi]>=2.0.0  # Error tracking and performance monitoring

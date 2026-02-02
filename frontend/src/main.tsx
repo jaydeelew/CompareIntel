@@ -8,6 +8,11 @@ import './index.css'
 import App from './App.tsx'
 import { initializeRegistry } from './config/loadModelConfigs'
 import { initWebVitals } from './utils/performance'
+import { initSentry } from './utils/sentry'
+
+// Initialize Sentry error monitoring before anything else
+// This ensures we capture any errors during startup
+initSentry()
 
 // CRITICAL: Disable browser scroll restoration BEFORE React renders
 // This must happen as early as possible to prevent any scroll position restoration

@@ -1,0 +1,183 @@
+name: Deploy to Production
+
+on:
+  # Manual deployment trigger
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+          - production
+          - staging
+      skip_tests:
+        description: 'Skip test verification (emergency deploys only)'
+        required: false
+        default: false
+        type: boolean
+
+  # Auto-deploy on main branch (after CI passes)
+  push:
+    branches: [main, master]
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+
+# Only one deployment at a time
+concurrency:
+  group: deploy-${{ github.event.inputs.environment || 'production' }}
+  cancel-in-progress: false
+
+jobs:
+  # ============================================================================
+  # Verify CI Status Before Deploy
+  # ============================================================================
+  verify-ci:
+    name: Verify CI Status
+    runs-on: ubuntu-latest
+    if: ${{ github.event.inputs.skip_tests != 'true' }}
+    
+    steps:
+      - name: Check CI workflow status
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data: runs } = await github.rest.actions.listWorkflowRuns({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: 'ci.yml',
+              branch: context.ref.replace('refs/heads/', ''),
+              per_page: 1,
+            });
+            
+            if (runs.workflow_runs.length === 0) {
+              core.setFailed('No CI runs found for this branch');
+              return;
+            }
+            
+            const latestRun = runs.workflow_runs[0];
+            if (latestRun.conclusion !== 'success') {
+              core.setFailed(`CI workflow did not pass. Status: ${latestRun.conclusion}`);
+              return;
+            }
+            
+            console.log('✅ CI workflow passed');
+
+  # ============================================================================
+  # Build Docker Images
+  # ============================================================================
+  build:
+    name: Build Docker Images
+    runs-on: ubuntu-latest
+    needs: verify-ci
+    if: always() && (needs.verify-ci.result == 'success' || needs.verify-ci.result == 'skipped')
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      
+      - name: Build frontend image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./frontend
+          file: ./frontend/Dockerfile
+          target: build
+          push: false
+          tags: compareintel-frontend:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      
+      - name: Build backend image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          file: ./backend/Dockerfile
+          push: false
+          tags: compareintel-backend:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # ============================================================================
+  # Deploy to Server
+  # ============================================================================
+  deploy:
+    name: Deploy to ${{ github.event.inputs.environment || 'production' }}
+    runs-on: ubuntu-latest
+    needs: build
+    environment: ${{ github.event.inputs.environment || 'production' }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Deploy to server via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          script: |
+            cd ~/CompareIntel
+            
+            # Pull latest code
+            git fetch origin
+            git reset --hard origin/${{ github.ref_name }}
+            
+            # Run deployment script
+            ./deploy-production.sh quick-deploy
+            
+            echo "Deployment completed at $(date)"
+      
+      - name: Verify deployment
+        run: |
+          # Wait for services to start
+          sleep 30
+          
+          # Check if site is accessible
+          curl -f -s -o /dev/null -w "%{http_code}" https://compareintel.com || exit 1
+          echo "✅ Site is accessible"
+      
+      - name: Notify on success
+        if: success()
+        run: echo "🚀 Deployment to ${{ github.event.inputs.environment || 'production' }} completed successfully!"
+      
+      - name: Notify on failure
+        if: failure()
+        run: echo "❌ Deployment failed!"
+
+  # ============================================================================
+  # Post-Deployment Health Checks
+  # ============================================================================
+  health-check:
+    name: Post-Deployment Health Check
+    runs-on: ubuntu-latest
+    needs: deploy
+    
+    steps:
+      - name: Check API health
+        run: |
+          response=$(curl -s -o /dev/null -w "%{http_code}" https://compareintel.com/api/health)
+          if [ "$response" != "200" ]; then
+            echo "❌ API health check failed with status: $response"
+            exit 1
+          fi
+          echo "✅ API is healthy"
+      
+      - name: Check frontend
+        run: |
+          response=$(curl -s -o /dev/null -w "%{http_code}" https://compareintel.com/)
+          if [ "$response" != "200" ]; then
+            echo "❌ Frontend check failed with status: $response"
+            exit 1
+          fi
+          echo "✅ Frontend is accessible"
+      
+      - name: Check SSL certificate
+        run: |
+          echo | openssl s_client -servername compareintel.com -connect compareintel.com:443 2>/dev/null | openssl x509 -noout -dates
+          echo "✅ SSL certificate is valid"

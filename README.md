@@ -95,8 +95,15 @@ The platform integrates with [OpenRouter](https://openrouter.ai/) to access mode
 |------------|---------|
 | **Vitest** | Frontend unit testing |
 | **Playwright** | End-to-end testing |
+| **axe-core** | Accessibility testing (WCAG 2.1 AA) |
 | **Pytest** | Backend testing |
 | **Testing Library** | React component testing |
+
+### Monitoring & Error Tracking
+| Technology | Purpose |
+|------------|---------|
+| **Sentry** | Error tracking and performance monitoring |
+| **Web Vitals** | Core Web Vitals monitoring |
 
 ---
 
@@ -282,6 +289,15 @@ CompareIntel/
 
 ## API Reference
 
+### API Versioning
+
+The API supports versioned endpoints for better future compatibility:
+
+- **Versioned (recommended)**: `/api/v1/...` - Use for new integrations
+- **Legacy**: `/api/...` - Maintained for backwards compatibility
+
+Both prefixes currently route to the same v1 handlers.
+
 ### Authentication
 
 | Endpoint | Method | Description |
@@ -452,6 +468,61 @@ cd frontend
 npm run lint
 npm run format:check
 npm run type-check
+```
+
+### Database Migrations
+
+The project uses Alembic for database migrations:
+
+```bash
+cd backend
+
+# Generate a new migration
+alembic revision --autogenerate -m "description of changes"
+
+# Apply all pending migrations
+alembic upgrade head
+
+# Rollback last migration
+alembic downgrade -1
+
+# View migration history
+alembic history
+```
+
+For existing databases, mark the initial migration as applied:
+```bash
+alembic stamp 0001_initial
+```
+
+### CI/CD Pipeline
+
+The project includes GitHub Actions workflows:
+
+- **CI** (`ci.yml`): Runs on every push/PR
+  - Frontend: lint, type-check, unit tests, build, bundle size check
+  - Backend: lint, type-check, unit tests
+  - E2E tests (on main branch)
+  - Security scanning
+
+- **Deploy** (`deploy.yml`): Production deployment
+  - Manual trigger or auto-deploy on main
+  - Health checks and verification
+
+### Error Monitoring (Sentry)
+
+To enable Sentry error monitoring:
+
+**Backend** (add to `backend/.env`):
+```bash
+SENTRY_DSN=your-sentry-dsn
+SENTRY_ENVIRONMENT=production
+```
+
+**Frontend** (add to build environment):
+```bash
+VITE_SENTRY_DSN=your-sentry-dsn
+VITE_SENTRY_ENVIRONMENT=production
 ```
 
 ---
