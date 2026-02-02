@@ -97,8 +97,11 @@ function reportMetric(
  * Send performance metric to analytics endpoint
  */
 async function sendToAnalytics(metric: PerformanceMetric): Promise<void> {
+  const endpoint = import.meta.env.VITE_PERFORMANCE_ENDPOINT
+  if (!endpoint) return
+
   try {
-    await fetch(import.meta.env.VITE_PERFORMANCE_ENDPOINT, {
+    await fetch(endpoint, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
