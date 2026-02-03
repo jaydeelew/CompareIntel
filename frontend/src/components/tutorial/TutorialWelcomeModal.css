@@ -20,6 +20,30 @@
   width: 100%;
   animation: tutorial-modal-enter 0.3s ease-out;
   border: 1px solid rgba(6, 182, 212, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+.tutorial-welcome-logo-background {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.tutorial-welcome-logo-image {
+  width: 60%;
+  height: auto;
+  opacity: 0.06;
+  animation: tutorial-logo-float 6s ease-in-out infinite;
+  filter: blur(0.5px);
 }
 
 @keyframes tutorial-modal-enter {
@@ -34,8 +58,23 @@
   }
 }
 
+@keyframes tutorial-logo-float {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+    opacity: 0.06;
+  }
+
+  50% {
+    transform: translate(0, -10px) scale(1.02);
+    opacity: 0.08;
+  }
+}
+
 .tutorial-welcome-content {
   padding: 2rem;
+  position: relative;
+  z-index: 1;
 }
 
 .tutorial-welcome-title {

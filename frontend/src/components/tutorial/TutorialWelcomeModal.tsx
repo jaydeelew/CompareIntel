@@ -36,6 +36,9 @@ export const TutorialWelcomeModal: React.FC<TutorialWelcomeModalProps> = ({
   return createPortal(
     <div className="tutorial-welcome-backdrop">
       <div className="tutorial-welcome-modal">
+        <div className="tutorial-welcome-logo-background">
+          <img src="/CI_favicon_512x512.png" alt="" className="tutorial-welcome-logo-image" />
+        </div>
         <div className="tutorial-welcome-content">
           <h2 className="tutorial-welcome-title">Welcome to CompareIntel!</h2>
           <p className="tutorial-welcome-description">
