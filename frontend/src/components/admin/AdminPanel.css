@@ -171,11 +171,11 @@ button:hover {
   box-shadow: var(--shadow-md);
 }
 
-/* Error Messages */
+/* Error Messages - Dark Theme */
 .error-message {
-  background: linear-gradient(135deg, #fef2f2, #fee2e2);
-  border: 1px solid #fecaca;
-  color: var(--error-color);
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #fca5a5;
   padding: 1.5rem;
   border-radius: var(--radius-lg);
   margin-bottom: 2rem;
@@ -1606,11 +1606,11 @@ button:hover {
   }
 }
 
-/* Success States */
+/* Success States - Dark Theme */
 .success-message {
-  background: linear-gradient(135deg, #f0fdf4, #dcfce7);
-  border: 1px solid #bbf7d0;
-  color: var(--success-color);
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  color: var(--accent-light);
   padding: 1rem;
   border-radius: var(--radius-lg);
   margin-bottom: 1rem;
@@ -1662,31 +1662,31 @@ button:hover {
   border: 1px solid var(--border-color);
 }
 
-/* Custom scrollbar styling for admin modals */
+/* Custom scrollbar styling for admin modals - Dark Theme */
 .modal-content::-webkit-scrollbar {
   width: 10px;
 }
 
 .modal-content::-webkit-scrollbar-track {
-  background: #f0f0f0;
+  background: var(--bg-tertiary);
   border-radius: 10px;
   margin: 8px 0;
 }
 
 .modal-content::-webkit-scrollbar-thumb {
-  background: linear-gradient(135deg, #1e40af 0%, #0ea5e9 100%);
+  background: var(--gradient-primary);
   border-radius: 10px;
-  border: 2px solid #f0f0f0;
+  border: 2px solid var(--bg-tertiary);
 }
 
 .modal-content::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(135deg, #1e3a8a 0%, #0284c7 100%);
+  background: var(--primary-hover);
 }
 
 /* Firefox scrollbar */
 .modal-content {
   scrollbar-width: thin;
-  scrollbar-color: #0ea5e9 #f0f0f0;
+  scrollbar-color: var(--primary-color) var(--bg-tertiary);
 }
 
 .modal-header {

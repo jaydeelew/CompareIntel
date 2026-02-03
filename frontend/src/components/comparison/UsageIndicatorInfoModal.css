@@ -1,4 +1,4 @@
-/* Usage Indicator Info Modal Styles */
+/* Usage Indicator Info Modal Styles - Dark Theme */
 
 .usage-indicator-info-overlay {
   position: fixed;
@@ -6,7 +6,8 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -25,11 +26,12 @@
 }
 
 .usage-indicator-info-modal {
-  background: white;
-  border-radius: 12px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-2xl);
   box-shadow:
-    0 20px 25px -5px rgba(0, 0, 0, 0.1),
-    0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    var(--shadow-2xl),
+    0 0 0 1px rgba(6, 182, 212, 0.1);
   max-width: 400px;
   width: 100%;
   max-height: 90vh;
@@ -55,26 +57,28 @@
   align-items: center;
   justify-content: space-between;
   padding: 1.25rem 1.5rem;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid var(--border-color);
+  background: var(--bg-elevated);
+  border-radius: var(--radius-2xl) var(--radius-2xl) 0 0;
 }
 
 .usage-indicator-info-header h3 {
   margin: 0;
   font-size: 1.25rem;
   font-weight: 600;
-  color: #111827;
+  color: var(--text-primary);
   display: flex;
   align-items: center;
   gap: 0.5rem;
 }
 
 .usage-indicator-info-close {
-  background: none;
-  border: none;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
   cursor: pointer;
   padding: 0.5rem;
-  color: #6b7280;
-  border-radius: 6px;
+  color: var(--text-secondary);
+  border-radius: var(--radius-lg);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -83,12 +87,13 @@
 }
 
 .usage-indicator-info-close:hover {
-  background: #f3f4f6;
-  color: #111827;
+  background: var(--bg-hover);
+  color: var(--text-primary);
+  border-color: var(--border-strong);
 }
 
 .usage-indicator-info-close:focus {
-  outline: 2px solid #3b82f6;
+  outline: 2px solid var(--primary-color);
   outline-offset: 2px;
 }
 
@@ -101,44 +106,45 @@
   margin: 0;
   font-size: 1rem;
   line-height: 1.6;
-  color: #374151;
+  color: var(--text-secondary);
 }
 
 .usage-indicator-info-footer {
   padding: 1rem 1.5rem;
-  border-top: 1px solid #e5e7eb;
+  border-top: 1px solid var(--border-color);
   display: flex;
   justify-content: flex-end;
+  background: var(--bg-elevated);
+  border-radius: 0 0 var(--radius-2xl) var(--radius-2xl);
 }
 
 .usage-indicator-info-button {
-  background: #3b82f6;
+  background: var(--gradient-button);
   color: white;
   border: none;
-  border-radius: 8px;
+  border-radius: var(--radius-lg);
   padding: 0.625rem 1.25rem;
   font-size: 1rem;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
   min-width: 80px;
+  box-shadow: var(--shadow-glow-sm);
 }
 
 .usage-indicator-info-button:hover {
-  background: #2563eb;
+  background: var(--gradient-button-hover);
   transform: translateY(-1px);
-  box-shadow:
-    0 4px 6px -1px rgba(0, 0, 0, 0.1),
-    0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  box-shadow: var(--shadow-glow-md);
 }
 
 .usage-indicator-info-button:active {
   transform: translateY(0);
-  box-shadow: none;
+  box-shadow: var(--shadow-glow-sm);
 }
 
 .usage-indicator-info-button:focus {
-  outline: 2px solid #3b82f6;
+  outline: 2px solid var(--primary-color);
   outline-offset: 2px;
 }
 
@@ -146,16 +152,18 @@
 @media (max-width: 640px) {
   .usage-indicator-info-overlay {
     padding: 0.5rem;
+    align-items: flex-end;
   }
 
   .usage-indicator-info-modal {
     max-width: 100%;
-    border-radius: 12px 12px 0 0;
+    border-radius: var(--radius-2xl) var(--radius-2xl) 0 0;
     max-height: 80vh;
   }
 
   .usage-indicator-info-header {
     padding: 1rem 1.25rem;
+    border-radius: var(--radius-2xl) var(--radius-2xl) 0 0;
   }
 
   .usage-indicator-info-header h3 {
@@ -172,6 +180,7 @@
 
   .usage-indicator-info-footer {
     padding: 0.875rem 1.25rem;
+    border-radius: 0;
   }
 
   .usage-indicator-info-button {
@@ -188,4 +197,29 @@
 /* Prevent scrolling on body when modal is open */
 body:has(.usage-indicator-info-overlay) {
   overflow: hidden;
+}
+
+/* Custom scrollbar for dark theme */
+.usage-indicator-info-modal::-webkit-scrollbar {
+  width: 8px;
+}
+
+.usage-indicator-info-modal::-webkit-scrollbar-track {
+  background: var(--bg-tertiary);
+  border-radius: 8px;
+}
+
+.usage-indicator-info-modal::-webkit-scrollbar-thumb {
+  background: var(--gradient-primary);
+  border-radius: 8px;
+}
+
+.usage-indicator-info-modal::-webkit-scrollbar-thumb:hover {
+  background: var(--primary-hover);
+}
+
+/* Firefox scrollbar */
+.usage-indicator-info-modal {
+  scrollbar-width: thin;
+  scrollbar-color: var(--primary-color) var(--bg-tertiary);
 }

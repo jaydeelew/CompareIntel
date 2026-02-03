@@ -1,4 +1,4 @@
-/* Trial Welcome Modal Styles */
+/* Trial Welcome Modal Styles - Dark Theme */
 
 .trial-welcome-overlay {
   position: fixed;
@@ -6,7 +6,8 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.7);
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -25,11 +26,12 @@
 }
 
 .trial-welcome-modal {
-  background: linear-gradient(135deg, #ffffff 0%, #f0f7ff 100%);
-  border-radius: 16px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-2xl);
   box-shadow:
-    0 25px 50px -12px rgba(0, 0, 0, 0.25),
-    0 0 0 1px rgba(59, 130, 246, 0.1);
+    var(--shadow-2xl),
+    0 0 0 1px rgba(6, 182, 212, 0.15);
   max-width: 520px;
   width: 100%;
   max-height: 90vh;
@@ -54,8 +56,13 @@
   position: relative;
   text-align: center;
   padding: 2rem 1.5rem 1rem;
-  background: linear-gradient(135deg, #1e40af 0%, #3b82f6 50%, #0ea5e9 100%);
-  border-radius: 16px 16px 0 0;
+  background: linear-gradient(
+    135deg,
+    var(--primary-dark) 0%,
+    var(--primary-color) 50%,
+    var(--primary-light) 100%
+  );
+  border-radius: var(--radius-2xl) var(--radius-2xl) 0 0;
 }
 
 .trial-welcome-icon {
@@ -79,19 +86,19 @@
   font-size: 1.75rem;
   font-weight: 700;
   color: white;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .trial-welcome-close {
   position: absolute;
   top: 1rem;
   right: 1rem;
-  background: rgba(255, 255, 255, 0.2);
-  border: none;
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   cursor: pointer;
   padding: 0.5rem;
   color: white;
-  border-radius: 8px;
+  border-radius: var(--radius-lg);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -100,7 +107,7 @@
 }
 
 .trial-welcome-close:hover {
-  background: rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.25);
   transform: scale(1.05);
 }
 
@@ -120,8 +127,8 @@
   justify-content: center;
   gap: 0.5rem;
   padding: 0.75rem 1.5rem;
-  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-  border: 2px solid #f59e0b;
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.2) 0%, rgba(245, 158, 11, 0.1) 100%);
+  border: 2px solid var(--warning-color);
   border-radius: 50px;
   margin-bottom: 1.5rem;
   animation: pulse 2s ease-in-out infinite;
@@ -144,7 +151,7 @@
 .badge-text {
   font-weight: 700;
   font-size: 1.125rem;
-  color: #92400e;
+  color: var(--warning-color);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -152,28 +159,28 @@
 .trial-welcome-intro {
   font-size: 1.125rem;
   line-height: 1.6;
-  color: #374151;
+  color: var(--text-secondary);
   text-align: center;
   margin-bottom: 1.5rem;
 }
 
 .trial-welcome-intro strong {
-  color: #1e40af;
+  color: var(--primary-light);
 }
 
 .trial-welcome-features {
-  background: white;
-  border-radius: 12px;
+  background: var(--bg-elevated);
+  border-radius: var(--radius-xl);
   padding: 1.25rem;
   margin-bottom: 1.25rem;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--border-color);
 }
 
 .trial-welcome-features h3 {
   margin: 0 0 1rem 0;
   font-size: 1rem;
   font-weight: 600;
-  color: #111827;
+  color: var(--text-primary);
 }
 
 .trial-welcome-features ul {
@@ -190,7 +197,7 @@
   align-items: center;
   gap: 0.75rem;
   font-size: 0.9375rem;
-  color: #374151;
+  color: var(--text-secondary);
 }
 
 .feature-icon {
@@ -199,21 +206,21 @@
 }
 
 .trial-welcome-note {
-  background: #f3f4f6;
-  border-radius: 8px;
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-lg);
   padding: 1rem;
-  border-left: 4px solid #3b82f6;
+  border-left: 4px solid var(--primary-color);
 }
 
 .trial-welcome-note p {
   margin: 0;
   font-size: 0.875rem;
   line-height: 1.5;
-  color: #4b5563;
+  color: var(--text-secondary);
 }
 
 .trial-welcome-note strong {
-  color: #111827;
+  color: var(--text-primary);
 }
 
 .trial-welcome-footer {
@@ -223,10 +230,10 @@
 }
 
 .trial-welcome-button {
-  background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+  background: var(--gradient-button);
   color: white;
   border: none;
-  border-radius: 10px;
+  border-radius: var(--radius-xl);
   padding: 1rem 2rem;
   font-size: 1.0625rem;
   font-weight: 600;
@@ -234,21 +241,21 @@
   transition: all 0.2s ease;
   width: 100%;
   max-width: 320px;
-  box-shadow: 0 4px 14px rgba(59, 130, 246, 0.4);
+  box-shadow: var(--shadow-glow-md);
 }
 
 .trial-welcome-button:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.5);
+  box-shadow: var(--shadow-glow-lg);
 }
 
 .trial-welcome-button:active {
   transform: translateY(0);
-  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4);
+  box-shadow: var(--shadow-glow-sm);
 }
 
 .trial-welcome-button:focus {
-  outline: 2px solid #3b82f6;
+  outline: 2px solid var(--primary-color);
   outline-offset: 3px;
 }
 
@@ -261,12 +268,13 @@
 
   .trial-welcome-modal {
     max-width: 100%;
-    border-radius: 20px 20px 0 0;
+    border-radius: var(--radius-2xl) var(--radius-2xl) 0 0;
     max-height: 85vh;
   }
 
   .trial-welcome-header {
     padding: 1.5rem 1.25rem 1rem;
+    border-radius: var(--radius-2xl) var(--radius-2xl) 0 0;
   }
 
   .trial-welcome-icon {
@@ -320,27 +328,27 @@
   outline: none;
 }
 
-/* Custom scrollbar */
+/* Custom scrollbar for dark theme */
 .trial-welcome-modal::-webkit-scrollbar {
   width: 8px;
 }
 
 .trial-welcome-modal::-webkit-scrollbar-track {
-  background: #f0f0f0;
+  background: var(--bg-tertiary);
   border-radius: 8px;
 }
 
 .trial-welcome-modal::-webkit-scrollbar-thumb {
-  background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+  background: var(--gradient-primary);
   border-radius: 8px;
 }
 
 .trial-welcome-modal::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%);
+  background: var(--primary-hover);
 }
 
 /* Firefox scrollbar */
 .trial-welcome-modal {
   scrollbar-width: thin;
-  scrollbar-color: #3b82f6 #f0f0f0;
+  scrollbar-color: var(--primary-color) var(--bg-tertiary);
 }

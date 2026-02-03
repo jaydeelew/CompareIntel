@@ -188,14 +188,15 @@
   color: var(--text-primary);
 }
 
-/* iOS Instructions Modal */
+/* iOS Instructions Modal - Dark Theme */
 .install-prompt-overlay {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(8px);
   z-index: var(--z-modal);
   display: flex;
   align-items: center;
@@ -205,12 +206,13 @@
 }
 
 .install-prompt-modal {
-  background: white;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
   border-radius: var(--radius-lg);
   padding: var(--spacing-xl);
   max-width: 400px;
   width: 100%;
-  box-shadow: var(--shadow-xl);
+  box-shadow: var(--shadow-2xl);
   position: relative;
   animation: slideUp 0.3s ease-out;
 }
