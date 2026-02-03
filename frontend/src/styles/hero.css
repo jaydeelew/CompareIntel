@@ -545,10 +545,6 @@
 
 .textarea-container:has(.hero-input-textarea:focus) .textarea-actions-area {
   border-color: var(--primary-color);
-  box-shadow:
-    -3px 0 0 0 var(--primary-glow),
-    3px 0 0 0 var(--primary-glow),
-    0 3px 0 0 var(--primary-glow);
 }
 
 /* Drag and drop */

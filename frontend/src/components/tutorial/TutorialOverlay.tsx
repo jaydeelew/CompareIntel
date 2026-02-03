@@ -56,6 +56,14 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
     width: number
     height: number
   } | null>(null)
+  // General-purpose cutout for target elements (used for steps without special cutout handling)
+  const [targetCutout, setTargetCutout] = useState<{
+    top: number
+    left: number
+    width: number
+    height: number
+    borderRadius: number
+  } | null>(null)
 
   useEffect(() => {
     return () => {
@@ -357,6 +365,17 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
         } else {
           setHighlightedElements([])
         }
+      } else if (step === 'follow-up') {
+        // Special handling for follow-up step - highlight the results section so users can see results
+        // while the tooltip points at the follow-up button
+        const resultsSection = document.querySelector('.results-section') as HTMLElement
+        if (resultsSection) {
+          setHighlightedElements([resultsSection])
+        } else {
+          setHighlightedElements([])
+        }
+        // Use default selector for the follow-up button
+        element = document.querySelector(config.targetSelector) as HTMLElement
       } else {
         // Use default selector for other steps
         element = document.querySelector(config.targetSelector) as HTMLElement
@@ -1496,6 +1515,97 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
     }
   }, [step])
 
+  // Calculate target cutout for steps that don't have special cutout handling
+  // This ensures the target element is not dimmed by the backdrop
+  useEffect(() => {
+    const needsTargetCutout =
+      step === 'expand-provider' ||
+      step === 'select-models' ||
+      step === 'follow-up' ||
+      step === 'view-follow-up-results'
+
+    // For submit-comparison steps, we need to show the textarea container
+    // This serves as a fallback in case textareaCutout timing is off
+    const isSubmitStep = step === 'submit-comparison' || step === 'submit-comparison-2'
+
+    if (!needsTargetCutout && !isSubmitStep) {
+      setTargetCutout(null)
+      return
+    }
+
+    const updateTargetCutout = () => {
+      let elementsToUse: HTMLElement[] = []
+
+      if (isSubmitStep) {
+        // For submit steps, always use the textarea container
+        const textareaContainer = document.querySelector('.textarea-container') as HTMLElement
+        if (textareaContainer) {
+          elementsToUse = [textareaContainer]
+        }
+      } else {
+        // Use highlighted elements if available, otherwise use targetElement
+        elementsToUse =
+          highlightedElements.length > 0
+            ? highlightedElements
+            : targetElement
+              ? [targetElement]
+              : []
+      }
+
+      if (elementsToUse.length === 0) {
+        setTargetCutout(null)
+        return
+      }
+
+      // Calculate bounding box that encompasses all highlighted elements
+      let minTop = Infinity
+      let minLeft = Infinity
+      let maxRight = -Infinity
+      let maxBottom = -Infinity
+
+      elementsToUse.forEach(element => {
+        const rect = element.getBoundingClientRect()
+        minTop = Math.min(minTop, rect.top)
+        minLeft = Math.min(minLeft, rect.left)
+        maxRight = Math.max(maxRight, rect.right)
+        maxBottom = Math.max(maxBottom, rect.bottom)
+      })
+
+      if (minTop === Infinity) {
+        setTargetCutout(null)
+        return
+      }
+
+      const padding = 8 // Padding around the cutout
+      // Use larger border-radius for results section and textarea, smaller for buttons/dropdowns
+      const borderRadius = step === 'view-follow-up-results' ? 16 : isSubmitStep ? 32 : 12
+
+      setTargetCutout({
+        top: minTop - padding,
+        left: minLeft - padding,
+        width: maxRight - minLeft + padding * 2,
+        height: maxBottom - minTop + padding * 2,
+        borderRadius,
+      })
+    }
+
+    // Update immediately
+    updateTargetCutout()
+
+    // Update on scroll/resize
+    window.addEventListener('scroll', updateTargetCutout, true)
+    window.addEventListener('resize', updateTargetCutout)
+
+    // Also update periodically to handle dynamic content
+    const interval = setInterval(updateTargetCutout, 100)
+
+    return () => {
+      window.removeEventListener('scroll', updateTargetCutout, true)
+      window.removeEventListener('resize', updateTargetCutout)
+      clearInterval(interval)
+    }
+  }, [step, highlightedElements, targetElement])
+
   // Check if we're in loading/streaming phase on submit-comparison step
   // This needs to be calculated before the early return so we can allow rendering during this phase
   const isSubmitStep = step === 'submit-comparison' || step === 'submit-comparison-2'
@@ -1531,6 +1641,9 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
       step === 'submit-comparison-2') &&
     !isLoadingStreamingPhase
 
+  // For submit steps, use textareaCutout if available, otherwise use targetCutout as fallback
+  const textareaCutoutToUse = textareaCutout || (isSubmitStep ? targetCutout : null)
+
   return (
     <>
       {/* Backdrop - loading/streaming cutout takes priority during submit steps */}
@@ -1555,15 +1668,15 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
             }
           }}
         />
-      ) : useRoundedCutout && textareaCutout ? (
+      ) : useRoundedCutout && textareaCutoutToUse ? (
         <div
           className="tutorial-backdrop-cutout"
           style={{
             position: 'fixed',
-            top: `${textareaCutout.top}px`,
-            left: `${textareaCutout.left}px`,
-            width: `${textareaCutout.width}px`,
-            height: `${textareaCutout.height}px`,
+            top: `${textareaCutoutToUse.top}px`,
+            left: `${textareaCutoutToUse.left}px`,
+            width: `${textareaCutoutToUse.width}px`,
+            height: `${textareaCutoutToUse.height}px`,
             // Border-radius: textarea has 1.5rem (24px), cutout is 8px from element edge, so radius = 24px + 8px = 32px
             borderRadius: '32px',
             // Use huge box-shadow to create the dim overlay effect around the cutout
@@ -1578,13 +1691,13 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
             }
           }}
         />
-      ) : shouldExcludeTextarea && textareaCutout ? (
+      ) : shouldExcludeTextarea && textareaCutoutToUse ? (
         <>
           {/* Top backdrop section */}
           <div
             className="tutorial-backdrop tutorial-backdrop-top"
             style={{
-              height: `${textareaCutout.top}px`,
+              height: `${textareaCutoutToUse.top}px`,
             }}
             onClick={e => {
               const target = e.target as HTMLElement
@@ -1597,7 +1710,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
           <div
             className="tutorial-backdrop tutorial-backdrop-bottom"
             style={{
-              top: `${textareaCutout.top + textareaCutout.height}px`,
+              top: `${textareaCutoutToUse.top + textareaCutoutToUse.height}px`,
             }}
             onClick={e => {
               const target = e.target as HTMLElement
@@ -1610,10 +1723,10 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
           <div
             className="tutorial-backdrop tutorial-backdrop-left"
             style={{
-              top: `${textareaCutout.top}px`,
+              top: `${textareaCutoutToUse.top}px`,
               left: '0',
-              width: `${textareaCutout.left}px`,
-              height: `${textareaCutout.height}px`,
+              width: `${textareaCutoutToUse.left}px`,
+              height: `${textareaCutoutToUse.height}px`,
             }}
             onClick={e => {
               const target = e.target as HTMLElement
@@ -1626,9 +1739,9 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
           <div
             className="tutorial-backdrop tutorial-backdrop-right"
             style={{
-              top: `${textareaCutout.top}px`,
-              left: `${textareaCutout.left + textareaCutout.width}px`,
-              height: `${textareaCutout.height}px`,
+              top: `${textareaCutoutToUse.top}px`,
+              left: `${textareaCutoutToUse.left + textareaCutoutToUse.width}px`,
+              height: `${textareaCutoutToUse.height}px`,
             }}
             onClick={e => {
               const target = e.target as HTMLElement
@@ -1661,15 +1774,37 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
             }
           }}
         />
+      ) : targetCutout ? (
+        <div
+          className="tutorial-backdrop-cutout"
+          style={{
+            position: 'fixed',
+            top: `${targetCutout.top}px`,
+            left: `${targetCutout.left}px`,
+            width: `${targetCutout.width}px`,
+            height: `${targetCutout.height}px`,
+            borderRadius: `${targetCutout.borderRadius}px`,
+            // Use huge box-shadow to create the dim overlay effect around the cutout
+            boxShadow: '0 0 0 9999px rgba(0, 0, 0, 0.6)',
+            zIndex: 9998,
+            pointerEvents: 'none',
+          }}
+          onClick={e => {
+            const target = e.target as HTMLElement
+            if (target.classList.contains('tutorial-backdrop-cutout')) {
+              e.stopPropagation()
+            }
+          }}
+        />
       ) : (
         <div
           className="tutorial-backdrop"
           style={
             buttonCutout
               ? {
-                maskImage: `radial-gradient(circle ${buttonCutout.radius + 1}px at ${buttonCutout.left}px ${buttonCutout.top}px, transparent ${buttonCutout.radius}px, black ${buttonCutout.radius + 1}px)`,
-                WebkitMaskImage: `radial-gradient(circle ${buttonCutout.radius + 1}px at ${buttonCutout.left}px ${buttonCutout.top}px, transparent ${buttonCutout.radius}px, black ${buttonCutout.radius + 1}px)`,
-              }
+                  maskImage: `radial-gradient(circle ${buttonCutout.radius + 1}px at ${buttonCutout.left}px ${buttonCutout.top}px, transparent ${buttonCutout.radius}px, black ${buttonCutout.radius + 1}px)`,
+                  WebkitMaskImage: `radial-gradient(circle ${buttonCutout.radius + 1}px at ${buttonCutout.left}px ${buttonCutout.top}px, transparent ${buttonCutout.radius}px, black ${buttonCutout.radius + 1}px)`,
+                }
               : undefined
           }
           onClick={e => {
