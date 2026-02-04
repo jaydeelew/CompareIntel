@@ -331,10 +331,73 @@ export const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
         setTargetElement(foundElement)
         targetElementRef.current = foundElement
         setIsVisible(true)
-        // Calculate positions immediately when element is found
-        // Use requestAnimationFrame to ensure DOM is ready
+
+        // Set initial tooltip position immediately with estimated dimensions
+        // This ensures the tooltip can render, then we'll recalculate with actual dimensions
+        const rect = foundElement.getBoundingClientRect()
+        const viewportWidth = window.innerWidth
+        const viewportHeight = window.innerHeight
+        const padding = 12
+        const arrowSize = 10
+        const estimatedWidth = Math.min(340, viewportWidth - 24)
+        const estimatedHeight = tooltipEstimatedHeight
+
+        // Get mobile override for position preference
+        const mobileOverride = MOBILE_STEP_OVERRIDES[step]
+        const preferredPosition = mobileOverride?.position || 'bottom'
+
+        const centerX = rect.left + rect.width / 2
+        const tooltipLeft = Math.max(
+          padding,
+          Math.min(centerX - estimatedWidth / 2, viewportWidth - estimatedWidth - padding)
+        )
+
+        // Calculate initial vertical position based on preference
+        let tooltipTop = 0
+        let arrowDirection: 'up' | 'down' = 'up'
+        const spaceAbove = rect.top
+        const spaceBelow = viewportHeight - rect.bottom
+
+        if (preferredPosition === 'bottom' && spaceBelow >= estimatedHeight + padding + arrowSize) {
+          tooltipTop = rect.bottom + arrowSize + 8
+          arrowDirection = 'up'
+        } else if (
+          preferredPosition === 'top' &&
+          spaceAbove >= estimatedHeight + padding + arrowSize
+        ) {
+          tooltipTop = rect.top - estimatedHeight - arrowSize - 8
+          arrowDirection = 'down'
+        } else if (spaceBelow >= spaceAbove && spaceBelow >= 100) {
+          tooltipTop = rect.bottom + arrowSize + 8
+          arrowDirection = 'up'
+        } else if (spaceAbove >= 100) {
+          tooltipTop = rect.top - estimatedHeight - arrowSize - 8
+          arrowDirection = 'down'
+        } else {
+          tooltipTop = (viewportHeight - estimatedHeight) / 2
+          arrowDirection = rect.top + rect.height / 2 > viewportHeight / 2 ? 'down' : 'up'
+        }
+
+        tooltipTop = Math.max(
+          padding,
+          Math.min(tooltipTop, viewportHeight - estimatedHeight - padding)
+        )
+
+        // Set initial position - will be refined once tooltip renders
+        setTooltipPosition({
+          top: tooltipTop,
+          left: tooltipLeft,
+          arrowDirection,
+          arrowOffset: 50,
+          useFullscreen: false,
+        })
+
+        // Calculate positions with actual dimensions once tooltip is rendered
+        // Use double requestAnimationFrame to ensure tooltip has rendered
         requestAnimationFrame(() => {
-          calculatePositionsForElement(foundElement)
+          requestAnimationFrame(() => {
+            calculatePositionsForElement(foundElement)
+          })
         })
         return true
       }
@@ -516,6 +579,21 @@ export const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       clearInterval(interval)
     }
   }, [targetElement, step, calculatePositions])
+
+  // Recalculate positions once tooltip is rendered and we have actual dimensions
+  useEffect(() => {
+    if (!tooltipPosition || !targetElementRef.current || !step) return
+
+    // Wait for tooltip to render and get actual dimensions
+    const timeout = setTimeout(() => {
+      if (overlayRef.current) {
+        // Tooltip is now rendered, recalculate with actual dimensions
+        calculatePositions()
+      }
+    }, 50) // Small delay to ensure tooltip has rendered
+
+    return () => clearTimeout(timeout)
+  }, [tooltipPosition, step, calculatePositions])
 
   // Add highlight class to target element
   useEffect(() => {
