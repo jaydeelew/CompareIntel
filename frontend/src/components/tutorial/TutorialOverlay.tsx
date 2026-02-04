@@ -29,6 +29,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
   const stepRef = useRef<TutorialStep | null>(step)
   const heroHeightLockedRef = useRef<boolean>(false)
   const dropdownWasOpenedRef = useRef<boolean>(false)
+  const hasAttemptedElementFindRef = useRef<boolean>(false)
   const [targetElement, setTargetElement] = useState<HTMLElement | null>(null)
   const [highlightedElements, setHighlightedElements] = useState<HTMLElement[]>([])
   const [overlayPosition, setOverlayPosition] = useState({ top: 0, left: 0 })
@@ -199,6 +200,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
       setTargetElement(null)
       setHighlightedElements([])
       setIsVisible(false)
+      hasAttemptedElementFindRef.current = false
       // Reset all cutout states when tutorial ends to prevent stale values on next run
       setTextareaCutout(null)
       setDropdownCutout(null)
@@ -384,10 +386,10 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
 
       if (element) {
         // For textarea container, check if it's visible (might be in viewport)
-        const isVisible =
+        const isElementVisible =
           element.offsetParent !== null || (element.offsetWidth > 0 && element.offsetHeight > 0)
 
-        if (isVisible) {
+        if (isElementVisible) {
           setTargetElement(element)
           setIsVisible(true)
           return true
@@ -395,6 +397,9 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
       }
       return false
     }
+
+    // Mark that we've attempted to find the element
+    hasAttemptedElementFindRef.current = true
 
     // Try immediately
     if (!findElement()) {
@@ -415,13 +420,41 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
           console.warn(
             `Tutorial target not found after ${maxAttempts} attempts: ${config.targetSelector}`
           )
-          // Still try to show the overlay even if element not found (for debugging)
-          setIsVisible(true)
+          // In production, element finding might fail due to timing or DOM differences
+          // Try to find a fallback element or show tooltip anyway
+          const fallbackElement = document.querySelector(config.targetSelector) as HTMLElement
+          if (fallbackElement) {
+            setTargetElement(fallbackElement)
+            setIsVisible(true)
+          } else {
+            // For expand-provider step, try to use the Google dropdown as fallback
+            if (step === 'expand-provider' || step === 'select-models') {
+              const googleDropdown = document.querySelector(
+                '.provider-dropdown[data-provider-name="Google"]'
+              ) as HTMLElement
+              if (googleDropdown) {
+                const headerElement =
+                  step === 'expand-provider'
+                    ? (googleDropdown.querySelector('.provider-header') as HTMLElement)
+                    : googleDropdown
+                if (headerElement) {
+                  setTargetElement(headerElement)
+                  setIsVisible(true)
+                  return
+                }
+              }
+            }
+            // Last resort: show tooltip anyway (it will be positioned at 0,0 but visible)
+            setIsVisible(true)
+          }
         }
       }
 
       const timeout = setTimeout(tryFind, attemptDelay)
       return () => clearTimeout(timeout)
+    } else {
+      // Element found immediately - mark attempt as complete
+      hasAttemptedElementFindRef.current = true
     }
   }, [step])
 
@@ -1611,13 +1644,29 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
 
   // During loading/streaming phase, we only need loadingStreamingCutout to render the backdrop
   // We don't need targetElement since we hide the tooltip anyway
-  if (!step || !isVisible) {
+  if (!step) {
     return null
   }
 
-  // If not in loading/streaming phase, we need targetElement to position the tooltip
-  if (!isLoadingStreamingPhase && !targetElement) {
-    return null
+  // In production builds, element finding might fail or be delayed due to:
+  // - Code splitting/chunk loading timing
+  // - CSS loading timing
+  // - DOM rendering differences
+  // - Minification affecting querySelector behavior
+  // CRITICAL FIX: Allow rendering during initial element finding phase
+  // The findElement effect will find the element and update visibility/position
+  // This prevents tooltips from never appearing in production due to timing issues
+  if (!isLoadingStreamingPhase) {
+    // Allow rendering if:
+    // 1. We have visibility set to true, OR
+    // 2. We haven't attempted element finding yet (initial render), OR
+    // 3. We have a targetElement (element was found)
+    // Only block if we've attempted finding AND visibility is explicitly false AND no element
+    const shouldBlock = hasAttemptedElementFindRef.current && !isVisible && !targetElement
+
+    if (shouldBlock) {
+      return null
+    }
   }
 
   const config = TUTORIAL_STEPS_CONFIG[step]
@@ -1822,6 +1871,13 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
           style={{
             top: `${overlayPosition.top}px`,
             left: `${overlayPosition.left}px`,
+            // Ensure tooltip is visible even if position calculation fails
+            visibility:
+              overlayPosition.top === 0 && overlayPosition.left === 0 && !targetElement
+                ? 'hidden'
+                : 'visible',
+            // Ensure z-index is high enough to appear above other elements
+            zIndex: 10000,
           }}
         >
           <div className="tutorial-tooltip-content">
