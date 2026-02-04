@@ -121,169 +121,13 @@ export const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
     }
   }, [step])
 
-  // Store target element in ref for immediate access in calculations
-  const targetElementRef = useRef<HTMLElement | null>(null)
-
-  // Function to calculate positions - can be called immediately with element
-  const calculatePositionsForElement = useCallback(
-    (element: HTMLElement) => {
-      if (!element || !step) return
-
-      const rect = element.getBoundingClientRect()
-      const viewportWidth = window.innerWidth
-      const viewportHeight = window.innerHeight
-      const padding = 12
-      const tooltipRect = overlayRef.current?.getBoundingClientRect()
-      const tooltipHeight = tooltipRect?.height ?? tooltipEstimatedHeight
-      const tooltipWidth = tooltipRect?.width ?? Math.min(340, viewportWidth - 24)
-      const arrowSize = 10
-
-      const newTargetRect: TargetRect = {
-        top: rect.top,
-        left: rect.left,
-        width: rect.width,
-        height: rect.height,
-        centerX: rect.left + rect.width / 2,
-        centerY: rect.top + rect.height / 2,
-      }
-      setTargetRect(newTargetRect)
-
-      // Handle backdrop rect for follow-up step
-      if (step === 'follow-up') {
-        const resultsSection = document.querySelector('.results-section') as HTMLElement
-        if (resultsSection) {
-          const resultsRect = resultsSection.getBoundingClientRect()
-          setBackdropRect({
-            top: resultsRect.top,
-            left: resultsRect.left,
-            width: resultsRect.width,
-            height: resultsRect.height,
-            centerX: resultsRect.left + resultsRect.width / 2,
-            centerY: resultsRect.top + resultsRect.height / 2,
-          })
-        } else {
-          setBackdropRect(null)
-        }
-      } else {
-        setBackdropRect(null)
-      }
-
-      // Handle dropdown rect
-      if (DROPDOWN_STEPS.includes(step)) {
-        const dropdownElement =
-          step === 'history-dropdown'
-            ? (document.querySelector('.history-inline-list') as HTMLElement)
-            : (document.querySelector('.saved-selections-dropdown') as HTMLElement)
-        if (dropdownElement) {
-          const dropdownBounds = dropdownElement.getBoundingClientRect()
-          setDropdownRect({
-            top: dropdownBounds.top,
-            left: dropdownBounds.left,
-            width: dropdownBounds.width,
-            height: dropdownBounds.height,
-            centerX: dropdownBounds.left + dropdownBounds.width / 2,
-            centerY: dropdownBounds.top + dropdownBounds.height / 2,
-          })
-        } else {
-          setDropdownRect(null)
-        }
-      } else {
-        setDropdownRect(null)
-      }
-
-      // Check if target is off-screen
-      if (rect.bottom < 0) {
-        setIsTargetOffScreen('up')
-      } else if (rect.top > viewportHeight) {
-        setIsTargetOffScreen('down')
-      } else {
-        setIsTargetOffScreen(null)
-      }
-
-      // Get mobile override for position preference
-      const mobileOverride = MOBILE_STEP_OVERRIDES[step]
-      const preferredPosition = mobileOverride?.position || 'bottom'
-
-      // Calculate tooltip position
-      let tooltipTop = 0
-      let tooltipLeft = 0
-      let arrowDirection: 'up' | 'down' | 'left' | 'right' = 'up'
-      let arrowOffset = 50
-
-      const spaceAbove = rect.top
-      const spaceBelow = viewportHeight - rect.bottom
-
-      if (preferredPosition === 'bottom' && spaceBelow >= tooltipHeight + padding + arrowSize) {
-        tooltipTop = rect.bottom + arrowSize + 8
-        arrowDirection = 'up'
-      } else if (preferredPosition === 'top' && spaceAbove >= tooltipHeight + padding + arrowSize) {
-        tooltipTop = rect.top - tooltipHeight - arrowSize - 8
-        arrowDirection = 'down'
-      } else if (spaceBelow >= spaceAbove && spaceBelow >= 100) {
-        tooltipTop = rect.bottom + arrowSize + 8
-        arrowDirection = 'up'
-      } else if (spaceAbove >= 100) {
-        tooltipTop = rect.top - tooltipHeight - arrowSize - 8
-        arrowDirection = 'down'
-      } else {
-        tooltipTop = (viewportHeight - tooltipHeight) / 2
-        arrowDirection = rect.top + rect.height / 2 > viewportHeight / 2 ? 'down' : 'up'
-      }
-
-      tooltipTop = Math.max(padding, Math.min(tooltipTop, viewportHeight - tooltipHeight - padding))
-
-      // Special positioning for follow-up and view-follow-up-results
-      if (step === 'follow-up' || step === 'view-follow-up-results') {
-        const resultsSection = document.querySelector('.results-section') as HTMLElement
-        if (resultsSection) {
-          const resultsRect = resultsSection.getBoundingClientRect()
-          tooltipTop = resultsRect.top - tooltipHeight - arrowSize - 8
-          arrowDirection = 'down'
-        }
-      }
-
-      // Dropdown steps: position above button
-      if (DROPDOWN_STEPS.includes(step)) {
-        tooltipTop = rect.top - tooltipHeight - arrowSize - 8
-        arrowDirection = 'down'
-        tooltipTop = Math.max(
-          padding,
-          Math.min(tooltipTop, viewportHeight - tooltipHeight - padding)
-        )
-      }
-
-      // Calculate horizontal position
-      tooltipLeft = newTargetRect.centerX - tooltipWidth / 2
-
-      if (tooltipLeft < padding) {
-        tooltipLeft = padding
-      } else if (tooltipLeft + tooltipWidth > viewportWidth - padding) {
-        tooltipLeft = viewportWidth - tooltipWidth - padding
-      }
-
-      const targetCenterInTooltip = newTargetRect.centerX - tooltipLeft
-      arrowOffset = Math.max(15, Math.min(85, (targetCenterInTooltip / tooltipWidth) * 100))
-
-      setTooltipPosition({
-        top: tooltipTop,
-        left: tooltipLeft,
-        arrowDirection,
-        arrowOffset,
-        useFullscreen: false,
-      })
-    },
-    [step, tooltipEstimatedHeight]
-  )
-
   // Find target element for current step
   useEffect(() => {
     if (!step) {
       setTargetElement(null)
-      targetElementRef.current = null
       setTargetRect(null)
       setBackdropRect(null)
       setDropdownRect(null)
-      setTooltipPosition(null)
       setIsVisible(false)
       // Cleanup
       document.querySelectorAll('.mobile-tutorial-highlight').forEach(el => {
@@ -326,79 +170,8 @@ export const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       }
 
       if (element && (element.offsetParent !== null || element.offsetWidth > 0)) {
-        // Store reference for TypeScript to understand it's non-null in callback
-        const foundElement = element
-        setTargetElement(foundElement)
-        targetElementRef.current = foundElement
+        setTargetElement(element)
         setIsVisible(true)
-
-        // Set initial tooltip position immediately with estimated dimensions
-        // This ensures the tooltip can render, then we'll recalculate with actual dimensions
-        const rect = foundElement.getBoundingClientRect()
-        const viewportWidth = window.innerWidth
-        const viewportHeight = window.innerHeight
-        const padding = 12
-        const arrowSize = 10
-        const estimatedWidth = Math.min(340, viewportWidth - 24)
-        const estimatedHeight = tooltipEstimatedHeight
-
-        // Get mobile override for position preference
-        const mobileOverride = MOBILE_STEP_OVERRIDES[step]
-        const preferredPosition = mobileOverride?.position || 'bottom'
-
-        const centerX = rect.left + rect.width / 2
-        const tooltipLeft = Math.max(
-          padding,
-          Math.min(centerX - estimatedWidth / 2, viewportWidth - estimatedWidth - padding)
-        )
-
-        // Calculate initial vertical position based on preference
-        let tooltipTop = 0
-        let arrowDirection: 'up' | 'down' = 'up'
-        const spaceAbove = rect.top
-        const spaceBelow = viewportHeight - rect.bottom
-
-        if (preferredPosition === 'bottom' && spaceBelow >= estimatedHeight + padding + arrowSize) {
-          tooltipTop = rect.bottom + arrowSize + 8
-          arrowDirection = 'up'
-        } else if (
-          preferredPosition === 'top' &&
-          spaceAbove >= estimatedHeight + padding + arrowSize
-        ) {
-          tooltipTop = rect.top - estimatedHeight - arrowSize - 8
-          arrowDirection = 'down'
-        } else if (spaceBelow >= spaceAbove && spaceBelow >= 100) {
-          tooltipTop = rect.bottom + arrowSize + 8
-          arrowDirection = 'up'
-        } else if (spaceAbove >= 100) {
-          tooltipTop = rect.top - estimatedHeight - arrowSize - 8
-          arrowDirection = 'down'
-        } else {
-          tooltipTop = (viewportHeight - estimatedHeight) / 2
-          arrowDirection = rect.top + rect.height / 2 > viewportHeight / 2 ? 'down' : 'up'
-        }
-
-        tooltipTop = Math.max(
-          padding,
-          Math.min(tooltipTop, viewportHeight - estimatedHeight - padding)
-        )
-
-        // Set initial position - will be refined once tooltip renders
-        setTooltipPosition({
-          top: tooltipTop,
-          left: tooltipLeft,
-          arrowDirection,
-          arrowOffset: 50,
-          useFullscreen: false,
-        })
-
-        // Calculate positions with actual dimensions once tooltip is rendered
-        // Use double requestAnimationFrame to ensure tooltip has rendered
-        requestAnimationFrame(() => {
-          requestAnimationFrame(() => {
-            calculatePositionsForElement(foundElement)
-          })
-        })
         return true
       }
       return false
@@ -418,27 +191,174 @@ export const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       }
       setTimeout(tryFind, 300)
     }
-  }, [step, calculatePositionsForElement])
+  }, [step])
 
-  // Wrapper that uses the ref for position calculation
+  // Calculate target rect and tooltip position
   const calculatePositions = useCallback(() => {
-    const element = targetElementRef.current
-    if (element) {
-      calculatePositionsForElement(element)
+    if (!targetElement || !step) return
+
+    const rect = targetElement.getBoundingClientRect()
+    const viewportWidth = window.innerWidth
+    const viewportHeight = window.innerHeight
+    const padding = 12 // Padding from screen edges
+    const tooltipRect = overlayRef.current?.getBoundingClientRect()
+    const tooltipHeight = tooltipRect?.height ?? tooltipEstimatedHeight
+    const tooltipWidth = tooltipRect?.width ?? Math.min(340, viewportWidth - 24)
+    const arrowSize = 10
+
+    const newTargetRect: TargetRect = {
+      top: rect.top,
+      left: rect.left,
+      width: rect.width,
+      height: rect.height,
+      centerX: rect.left + rect.width / 2,
+      centerY: rect.top + rect.height / 2,
     }
-  }, [calculatePositionsForElement])
+    setTargetRect(newTargetRect)
+
+    if (step === 'follow-up') {
+      const resultsSection = document.querySelector('.results-section') as HTMLElement
+      if (resultsSection) {
+        const resultsRect = resultsSection.getBoundingClientRect()
+        setBackdropRect({
+          top: resultsRect.top,
+          left: resultsRect.left,
+          width: resultsRect.width,
+          height: resultsRect.height,
+          centerX: resultsRect.left + resultsRect.width / 2,
+          centerY: resultsRect.top + resultsRect.height / 2,
+        })
+      } else {
+        setBackdropRect(null)
+      }
+    } else {
+      setBackdropRect(null)
+    }
+
+    if (DROPDOWN_STEPS.includes(step)) {
+      const dropdownElement =
+        step === 'history-dropdown'
+          ? (document.querySelector('.history-inline-list') as HTMLElement)
+          : (document.querySelector('.saved-selections-dropdown') as HTMLElement)
+      if (dropdownElement) {
+        const dropdownBounds = dropdownElement.getBoundingClientRect()
+        setDropdownRect({
+          top: dropdownBounds.top,
+          left: dropdownBounds.left,
+          width: dropdownBounds.width,
+          height: dropdownBounds.height,
+          centerX: dropdownBounds.left + dropdownBounds.width / 2,
+          centerY: dropdownBounds.top + dropdownBounds.height / 2,
+        })
+      } else {
+        setDropdownRect(null)
+      }
+    } else {
+      setDropdownRect(null)
+    }
+
+    // Check if target is off-screen
+    if (rect.bottom < 0) {
+      setIsTargetOffScreen('up')
+    } else if (rect.top > viewportHeight) {
+      setIsTargetOffScreen('down')
+    } else {
+      setIsTargetOffScreen(null)
+    }
+
+    // Get mobile override for position preference
+    const mobileOverride = MOBILE_STEP_OVERRIDES[step]
+    const preferredPosition = mobileOverride?.position || 'bottom'
+
+    // Calculate tooltip position with smart placement
+    let tooltipTop = 0
+    let tooltipLeft = 0
+    let arrowDirection: 'up' | 'down' | 'left' | 'right' = 'up'
+    let arrowOffset = 50 // Default to center
+
+    // Determine vertical position (above or below target)
+    const spaceAbove = rect.top
+    const spaceBelow = viewportHeight - rect.bottom
+
+    if (preferredPosition === 'bottom' && spaceBelow >= tooltipHeight + padding + arrowSize) {
+      // Position below target
+      tooltipTop = rect.bottom + arrowSize + 8
+      arrowDirection = 'up'
+    } else if (preferredPosition === 'top' && spaceAbove >= tooltipHeight + padding + arrowSize) {
+      // Position above target
+      tooltipTop = rect.top - tooltipHeight - arrowSize - 8
+      arrowDirection = 'down'
+    } else if (spaceBelow >= spaceAbove && spaceBelow >= 100) {
+      // More space below
+      tooltipTop = rect.bottom + arrowSize + 8
+      arrowDirection = 'up'
+    } else if (spaceAbove >= 100) {
+      // More space above
+      tooltipTop = rect.top - tooltipHeight - arrowSize - 8
+      arrowDirection = 'down'
+    } else {
+      // Very tight space - position at center of screen
+      tooltipTop = (viewportHeight - tooltipHeight) / 2
+      arrowDirection = rect.top + rect.height / 2 > viewportHeight / 2 ? 'down' : 'up'
+    }
+
+    // Ensure tooltip stays within viewport vertically
+    tooltipTop = Math.max(padding, Math.min(tooltipTop, viewportHeight - tooltipHeight - padding))
+
+    // For 'follow-up' and 'view-follow-up-results' steps: Position tooltip ABOVE the results section, not inside it
+    // The tooltip should be at the top of the results section and allowed to scroll out of view
+    if (step === 'follow-up' || step === 'view-follow-up-results') {
+      const resultsSection = document.querySelector('.results-section') as HTMLElement
+      if (resultsSection) {
+        const resultsRect = resultsSection.getBoundingClientRect()
+        // Position tooltip above the results section
+        tooltipTop = resultsRect.top - tooltipHeight - arrowSize - 8
+        arrowDirection = 'down'
+        // Do NOT clamp to viewport - allow tooltip to scroll out of view
+      }
+    }
+
+    // For dropdown steps: ALWAYS position above the button so menus stay visible below
+    if (DROPDOWN_STEPS.includes(step)) {
+      tooltipTop = rect.top - tooltipHeight - arrowSize - 8
+      arrowDirection = 'down'
+      // Keep tooltip within viewport
+      tooltipTop = Math.max(padding, Math.min(tooltipTop, viewportHeight - tooltipHeight - padding))
+    }
+
+    // Calculate horizontal position - try to center on target
+    tooltipLeft = newTargetRect.centerX - tooltipWidth / 2
+
+    // Ensure tooltip stays within viewport horizontally
+    if (tooltipLeft < padding) {
+      tooltipLeft = padding
+    } else if (tooltipLeft + tooltipWidth > viewportWidth - padding) {
+      tooltipLeft = viewportWidth - tooltipWidth - padding
+    }
+
+    // Calculate arrow offset to point at target center
+    // Arrow offset is percentage from left edge of tooltip
+    const targetCenterInTooltip = newTargetRect.centerX - tooltipLeft
+    arrowOffset = Math.max(15, Math.min(85, (targetCenterInTooltip / tooltipWidth) * 100))
+
+    setTooltipPosition({
+      top: tooltipTop,
+      left: tooltipLeft,
+      arrowDirection,
+      arrowOffset,
+      useFullscreen: false,
+    })
+  }, [targetElement, step])
 
   // Update positions on mount, scroll, resize
   useEffect(() => {
-    // Use ref for reliable access to element
-    const element = targetElementRef.current
-    if (!element || !step) return
+    if (!targetElement || !step) return
 
     calculatePositions()
 
     // Scroll target into view if needed
     const scrollTargetIntoView = () => {
-      const rect = element.getBoundingClientRect()
+      const rect = targetElement.getBoundingClientRect()
       const viewportHeight = window.innerHeight
 
       if (TEXTAREA_STEPS.includes(step)) {
@@ -579,21 +499,6 @@ export const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       clearInterval(interval)
     }
   }, [targetElement, step, calculatePositions])
-
-  // Recalculate positions once tooltip is rendered and we have actual dimensions
-  useEffect(() => {
-    if (!tooltipPosition || !targetElementRef.current || !step) return
-
-    // Wait for tooltip to render and get actual dimensions
-    const timeout = setTimeout(() => {
-      if (overlayRef.current) {
-        // Tooltip is now rendered, recalculate with actual dimensions
-        calculatePositions()
-      }
-    }, 50) // Small delay to ensure tooltip has rendered
-
-    return () => clearTimeout(timeout)
-  }, [tooltipPosition, step, calculatePositions])
 
   // Add highlight class to target element
   useEffect(() => {

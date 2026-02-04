@@ -1,20 +1,9 @@
-import { Suspense, lazy } from 'react'
-
 import type { TutorialState, TutorialStep } from '../../hooks/useTutorial'
 import type { ModelsByProvider } from '../../types/models'
-import { LoadingSpinner } from '../shared'
 
-const TutorialController = lazy(() =>
-  import('./TutorialController').then(module => ({ default: module.TutorialController }))
-)
-const MobileTutorialController = lazy(() =>
-  import('./MobileTutorialController').then(module => ({
-    default: module.MobileTutorialController,
-  }))
-)
-const TutorialWelcomeModal = lazy(() =>
-  import('./TutorialWelcomeModal').then(module => ({ default: module.TutorialWelcomeModal }))
-)
+import { MobileTutorialController } from './MobileTutorialController'
+import { TutorialController } from './TutorialController'
+import { TutorialWelcomeModal } from './TutorialWelcomeModal'
 
 interface TutorialManagerProps {
   showWelcomeModal: boolean
@@ -74,89 +63,83 @@ export function TutorialManager({
   return (
     <>
       {showWelcomeModal && (
-        <Suspense fallback={<LoadingSpinner />}>
-          <TutorialWelcomeModal
-            onStart={() => {
-              setShowWelcomeModal(false)
-              resetAppStateForTutorial()
-              startTutorial()
-            }}
-            onSkip={() => {
-              setShowWelcomeModal(false)
-              skipTutorial()
-            }}
-            onDontShowAgain={() => {
-              localStorage.setItem('compareintel_welcome_dont_show_again', 'true')
-            }}
-            showDontShowAgain={true}
-          />
-        </Suspense>
+        <TutorialWelcomeModal
+          onStart={() => {
+            setShowWelcomeModal(false)
+            resetAppStateForTutorial()
+            startTutorial()
+          }}
+          onSkip={() => {
+            setShowWelcomeModal(false)
+            skipTutorial()
+          }}
+          onDontShowAgain={() => {
+            localStorage.setItem('compareintel_welcome_dont_show_again', 'true')
+          }}
+          showDontShowAgain={true}
+        />
       )}
 
       {currentView === 'main' && !isMobileLayout && (
-        <Suspense fallback={<LoadingSpinner />}>
-          <TutorialController
-            tutorialState={tutorialState}
-            completeStep={completeStep}
-            skipTutorial={skipTutorial}
-            googleProviderExpanded={googleProviderExpanded}
-            googleModelsSelected={googleModelsSelected}
-            hasPromptText={input.trim().length > 0}
-            hasCompletedComparison={tutorialHasCompletedComparison}
-            isFollowUpMode={isFollowUpMode}
-            hasBreakoutConversation={tutorialHasBreakout}
-            showHistoryDropdown={showHistoryDropdown}
-            hasSavedSelection={tutorialHasSavedSelection}
-            isLoading={isLoading}
-            onProviderExpanded={() => {}}
-            onModelsSelected={() => {}}
-            onPromptEntered={() => {}}
-            onComparisonComplete={() => {
-              setTutorialHasCompletedComparison(false)
-            }}
-            onFollowUpActivated={() => {}}
-            onBreakoutCreated={() => {
-              setTutorialHasBreakout(false)
-            }}
-            onHistoryOpened={() => {}}
-            onSelectionSaved={() => {
-              setTutorialHasSavedSelection(false)
-            }}
-          />
-        </Suspense>
+        <TutorialController
+          tutorialState={tutorialState}
+          completeStep={completeStep}
+          skipTutorial={skipTutorial}
+          googleProviderExpanded={googleProviderExpanded}
+          googleModelsSelected={googleModelsSelected}
+          hasPromptText={input.trim().length > 0}
+          hasCompletedComparison={tutorialHasCompletedComparison}
+          isFollowUpMode={isFollowUpMode}
+          hasBreakoutConversation={tutorialHasBreakout}
+          showHistoryDropdown={showHistoryDropdown}
+          hasSavedSelection={tutorialHasSavedSelection}
+          isLoading={isLoading}
+          onProviderExpanded={() => {}}
+          onModelsSelected={() => {}}
+          onPromptEntered={() => {}}
+          onComparisonComplete={() => {
+            setTutorialHasCompletedComparison(false)
+          }}
+          onFollowUpActivated={() => {}}
+          onBreakoutCreated={() => {
+            setTutorialHasBreakout(false)
+          }}
+          onHistoryOpened={() => {}}
+          onSelectionSaved={() => {
+            setTutorialHasSavedSelection(false)
+          }}
+        />
       )}
 
       {currentView === 'main' && isMobileLayout && (
-        <Suspense fallback={<LoadingSpinner />}>
-          <MobileTutorialController
-            tutorialState={tutorialState}
-            completeStep={completeStep}
-            skipTutorial={skipTutorial}
-            googleProviderExpanded={googleProviderExpanded}
-            googleModelsSelected={googleModelsSelected}
-            hasPromptText={input.trim().length > 0}
-            hasCompletedComparison={tutorialHasCompletedComparison}
-            isFollowUpMode={isFollowUpMode}
-            hasBreakoutConversation={tutorialHasBreakout}
-            showHistoryDropdown={showHistoryDropdown}
-            hasSavedSelection={tutorialHasSavedSelection}
-            isLoading={isLoading}
-            onProviderExpanded={() => {}}
-            onModelsSelected={() => {}}
-            onPromptEntered={() => {}}
-            onComparisonComplete={() => {
-              setTutorialHasCompletedComparison(false)
-            }}
-            onFollowUpActivated={() => {}}
-            onBreakoutCreated={() => {
-              setTutorialHasBreakout(false)
-            }}
-            onHistoryOpened={() => {}}
-            onSelectionSaved={() => {
-              setTutorialHasSavedSelection(false)
-            }}
-          />
-        </Suspense>
+        <MobileTutorialController
+          tutorialState={tutorialState}
+          completeStep={completeStep}
+          skipTutorial={skipTutorial}
+          googleProviderExpanded={googleProviderExpanded}
+          googleModelsSelected={googleModelsSelected}
+          hasPromptText={input.trim().length > 0}
+          hasCompletedComparison={tutorialHasCompletedComparison}
+          isFollowUpMode={isFollowUpMode}
+          hasBreakoutConversation={tutorialHasBreakout}
+          showHistoryDropdown={showHistoryDropdown}
+          hasSavedSelection={tutorialHasSavedSelection}
+          isLoading={isLoading}
+          onProviderExpanded={() => {}}
+          onModelsSelected={() => {}}
+          onPromptEntered={() => {}}
+          onComparisonComplete={() => {
+            setTutorialHasCompletedComparison(false)
+          }}
+          onFollowUpActivated={() => {}}
+          onBreakoutCreated={() => {
+            setTutorialHasBreakout(false)
+          }}
+          onHistoryOpened={() => {}}
+          onSelectionSaved={() => {
+            setTutorialHasSavedSelection(false)
+          }}
+        />
       )}
     </>
   )
