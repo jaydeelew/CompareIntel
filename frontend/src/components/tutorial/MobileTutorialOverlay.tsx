@@ -154,13 +154,13 @@ export const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
               : googleDropdown
         }
       } else if (step === 'enter-prompt' || step === 'enter-prompt-2') {
-        element = document.querySelector('.textarea-container') as HTMLElement
+        element = document.querySelector('.composer') as HTMLElement
         if (!element) {
           const textarea = document.querySelector(
             '[data-testid="comparison-input-textarea"]'
           ) as HTMLElement
           if (textarea) {
-            element = textarea.closest('.textarea-container') as HTMLElement
+            element = textarea.closest('.composer') as HTMLElement
           }
         }
       } else if (step === 'view-follow-up-results') {
@@ -757,20 +757,20 @@ export const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
   const cutoutStyle =
     cutoutTarget && showBackdrop
       ? {
-        position: 'fixed' as const,
-        top: `${cutoutTarget.top - 8}px`,
-        left: `${cutoutTarget.left - 8}px`,
-        width: `${cutoutTarget.width + 16}px`,
-        height: `${cutoutTarget.height + 16}px`,
-        borderRadius: isLoadingStreamingPhase
-          ? '16px'
-          : step === 'enter-prompt' || step === 'enter-prompt-2'
-            ? '32px'
-            : '16px',
-        boxShadow: '0 0 0 9999px rgba(0, 0, 0, 0.65)',
-        zIndex: 9998,
-        pointerEvents: 'none' as const,
-      }
+          position: 'fixed' as const,
+          top: `${cutoutTarget.top - 8}px`,
+          left: `${cutoutTarget.left - 8}px`,
+          width: `${cutoutTarget.width + 16}px`,
+          height: `${cutoutTarget.height + 16}px`,
+          borderRadius: isLoadingStreamingPhase
+            ? '16px'
+            : step === 'enter-prompt' || step === 'enter-prompt-2'
+              ? '32px'
+              : '16px',
+          boxShadow: '0 0 0 9999px rgba(0, 0, 0, 0.65)',
+          zIndex: 9998,
+          pointerEvents: 'none' as const,
+        }
       : undefined
 
   return (
@@ -809,9 +809,9 @@ export const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
             tooltipPosition.useFullscreen
               ? undefined
               : {
-                top: `${tooltipPosition.top}px`,
-                left: `${tooltipPosition.left}px`,
-              }
+                  top: `${tooltipPosition.top}px`,
+                  left: `${tooltipPosition.left}px`,
+                }
           }
         >
           <div className="mobile-tutorial-tooltip-content">
@@ -868,17 +868,17 @@ export const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
                 style={{
                   left:
                     tooltipPosition.arrowDirection === 'up' ||
-                      tooltipPosition.arrowDirection === 'down'
+                    tooltipPosition.arrowDirection === 'down'
                       ? `${tooltipPosition.arrowOffset}%`
                       : undefined,
                   top:
                     tooltipPosition.arrowDirection === 'left' ||
-                      tooltipPosition.arrowDirection === 'right'
+                    tooltipPosition.arrowDirection === 'right'
                       ? `${tooltipPosition.arrowOffset}%`
                       : undefined,
                   transform:
                     tooltipPosition.arrowDirection === 'up' ||
-                      tooltipPosition.arrowDirection === 'down'
+                    tooltipPosition.arrowDirection === 'down'
                       ? 'translateX(-50%)'
                       : 'translateY(-50%)',
                 }}

@@ -2479,12 +2479,12 @@ button.nav-button-primary {
 }
 
 /* Ensure history toggle is positioned relative to textarea container */
-.textarea-wrapper .history-toggle-wrapper {
+.composer-input-wrapper .history-toggle-wrapper {
   display: none;
 }
 
 /* Position history toggle button in actions area */
-.textarea-actions-area .history-toggle-button {
+.composer-toolbar .history-toggle-button {
   width: 32px;
   height: 32px;
   background-color: transparent;
@@ -2507,7 +2507,7 @@ button.nav-button-primary {
 }
 
 .history-toggle-button {
-  /* Default styles - will be overridden by .textarea-wrapper .history-toggle-button */
+  /* Default styles - will be overridden by .composer-input-wrapper .history-toggle-button */
   width: 44px;
   height: 44px;
   background-color: transparent;
@@ -2903,13 +2903,13 @@ button.nav-button-primary {
   }
 
   /* Ensure actions area maintains consistent padding for alignment */
-  .textarea-actions-area {
+  .composer-toolbar {
     padding: 0.5rem 1rem !important;
     /* Left padding: 1rem (16px) */
   }
 
   /* Button in actions area remains 32px (higher specificity selector takes precedence) */
-  .textarea-actions-area .history-toggle-button {
+  .composer-toolbar .history-toggle-button {
     width: 32px !important;
     height: 32px !important;
     left: auto !important;

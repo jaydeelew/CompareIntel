@@ -206,11 +206,11 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
       setLoadingStreamingCutout(null)
       setOverlayPosition({ top: 0, left: 0 })
       // Clean up any remaining tutorial classes when tutorial ends
-      const textareaContainerActive = document.querySelector(
-        '.textarea-container.tutorial-textarea-active'
+      const composerElementActive = document.querySelector(
+        '.composer.tutorial-textarea-active'
       ) as HTMLElement
-      if (textareaContainerActive) {
-        textareaContainerActive.classList.remove('tutorial-textarea-active')
+      if (composerElementActive) {
+        composerElementActive.classList.remove('tutorial-textarea-active')
       }
       // Clean up any highlighted elements
       document.querySelectorAll('.tutorial-highlight').forEach(el => {
@@ -234,7 +234,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
       }
       // Clean up parent container classes
       const dropdownContainerActive = document.querySelector(
-        '.textarea-container.tutorial-dropdown-container-active'
+        '.composer.tutorial-dropdown-container-active'
       ) as HTMLElement
       if (dropdownContainerActive) {
         dropdownContainerActive.classList.remove('tutorial-dropdown-container-active')
@@ -323,14 +323,14 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
         }
       } else if (step === 'enter-prompt' || step === 'enter-prompt-2') {
         // Special handling for textarea container - ensure it's found and visible
-        element = document.querySelector('.textarea-container') as HTMLElement
+        element = document.querySelector('.composer') as HTMLElement
         if (!element) {
           // Fallback: try to find by testid and get parent container
           const textarea = document.querySelector(
             '[data-testid="comparison-input-textarea"]'
           ) as HTMLElement
           if (textarea) {
-            element = textarea.closest('.textarea-container') as HTMLElement
+            element = textarea.closest('.composer') as HTMLElement
           }
         }
         if (step === 'enter-prompt') {
@@ -633,9 +633,9 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
       }
     } else if (step === 'enter-prompt') {
       // Highlight the textarea container for step 3
-      const textareaContainer = document.querySelector('.textarea-container') as HTMLElement
-      if (textareaContainer) {
-        elementsToHighlight = [textareaContainer]
+      const composerElement = document.querySelector('.composer') as HTMLElement
+      if (composerElement) {
+        elementsToHighlight = [composerElement]
       }
     } else if (step === 'history-dropdown') {
       // Don't add highlight border, but ensure dropdown is not dimmed
@@ -680,13 +680,13 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
       step === 'submit-comparison' ||
       step === 'submit-comparison-2' ||
       step === 'enter-prompt-2'
-    let textareaContainer: HTMLElement | null = null
+    let composerElement: HTMLElement | null = null
     if (shouldExcludeTextarea) {
-      textareaContainer = document.querySelector('.textarea-container') as HTMLElement
-      if (textareaContainer) {
-        textareaContainer.classList.add('tutorial-textarea-active')
+      composerElement = document.querySelector('.composer') as HTMLElement
+      if (composerElement) {
+        composerElement.classList.add('tutorial-textarea-active')
         // Calculate cutout position for backdrop mask
-        const rect = textareaContainer.getBoundingClientRect()
+        const rect = composerElement.getBoundingClientRect()
         // For all textarea-related steps with rounded cutout, use tighter padding (outline 3px + offset 4px = 7px + 1px buffer)
         const padding = 8
         const cutout = {
@@ -719,7 +719,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
       if (historyDropdown) {
         historyDropdown.classList.add('tutorial-dropdown-active')
         // Also ensure parent container is above backdrop
-        dropdownContainer = historyDropdown.closest('.textarea-container') as HTMLElement
+        dropdownContainer = historyDropdown.closest('.composer') as HTMLElement
         if (dropdownContainer) {
           dropdownContainer.classList.add('tutorial-dropdown-container-active')
           // Calculate cutout position for backdrop mask
@@ -747,7 +747,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
       if (savedSelectionsDropdown) {
         savedSelectionsDropdown.classList.add('tutorial-dropdown-active')
         // Also ensure parent container is above backdrop
-        dropdownContainer = savedSelectionsDropdown.closest('.textarea-container') as HTMLElement
+        dropdownContainer = savedSelectionsDropdown.closest('.composer') as HTMLElement
         if (dropdownContainer) {
           dropdownContainer.classList.add('tutorial-dropdown-container-active')
           // Calculate cutout position for backdrop mask
@@ -821,11 +821,11 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
           googleDropdown.style.position = ''
         }
         // Also clean up any textarea container highlights that might still exist
-        const textareaContainer = document.querySelector('.textarea-container') as HTMLElement
-        if (textareaContainer) {
-          textareaContainer.classList.remove('tutorial-highlight')
-          textareaContainer.style.pointerEvents = ''
-          textareaContainer.style.position = ''
+        const composerElement = document.querySelector('.composer') as HTMLElement
+        if (composerElement) {
+          composerElement.classList.remove('tutorial-highlight')
+          composerElement.style.pointerEvents = ''
+          composerElement.style.position = ''
         }
         // Also clean up any results section highlights that might still exist
         const resultsSection = document.querySelector('.results-section') as HTMLElement
@@ -854,16 +854,16 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
         }
         // Clean up parent container classes
         const dropdownContainerActive = document.querySelector(
-          '.textarea-container.tutorial-dropdown-container-active'
+          '.composer.tutorial-dropdown-container-active'
         ) as HTMLElement
         if (dropdownContainerActive) {
           dropdownContainerActive.classList.remove('tutorial-dropdown-container-active')
         }
-        const textareaContainerActive = document.querySelector(
-          '.textarea-container.tutorial-textarea-active'
+        const composerElementActive = document.querySelector(
+          '.composer.tutorial-textarea-active'
         ) as HTMLElement
-        if (textareaContainerActive) {
-          textareaContainerActive.classList.remove('tutorial-textarea-active')
+        if (composerElementActive) {
+          composerElementActive.classList.remove('tutorial-textarea-active')
         }
         setTextareaCutout(null)
       }
@@ -949,17 +949,17 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
     if (step !== 'enter-prompt') return
 
     const ensureHighlightAndCutout = () => {
-      const textareaContainer = document.querySelector('.textarea-container') as HTMLElement
-      if (textareaContainer) {
+      const composerElement = document.querySelector('.composer') as HTMLElement
+      if (composerElement) {
         // Always force add highlight class (remove first to ensure it's applied fresh)
         // This handles cases where the class might have been removed by other effects
-        textareaContainer.classList.add('tutorial-highlight')
-        textareaContainer.style.pointerEvents = 'auto'
-        textareaContainer.style.position = 'relative'
+        composerElement.classList.add('tutorial-highlight')
+        composerElement.style.pointerEvents = 'auto'
+        composerElement.style.position = 'relative'
         // Ensure textarea-active class is present
-        textareaContainer.classList.add('tutorial-textarea-active')
+        composerElement.classList.add('tutorial-textarea-active')
         // Ensure cutout is calculated - this handles cases where initial calculation was missed
-        const rect = textareaContainer.getBoundingClientRect()
+        const rect = composerElement.getBoundingClientRect()
         const padding = 8
         setTextareaCutout({
           top: rect.top - padding,
@@ -983,12 +983,12 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
       clearTimeout(initialTimeout)
       clearInterval(interval)
       // Clean up highlight when leaving this step
-      const textareaContainer = document.querySelector('.textarea-container') as HTMLElement
-      if (textareaContainer) {
-        textareaContainer.classList.remove('tutorial-highlight')
-        textareaContainer.classList.remove('tutorial-textarea-active')
-        textareaContainer.style.pointerEvents = ''
-        textareaContainer.style.position = ''
+      const composerElement = document.querySelector('.composer') as HTMLElement
+      if (composerElement) {
+        composerElement.classList.remove('tutorial-highlight')
+        composerElement.classList.remove('tutorial-textarea-active')
+        composerElement.style.pointerEvents = ''
+        composerElement.style.position = ''
       }
     }
   }, [step])
@@ -999,14 +999,14 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
     if (step !== 'enter-prompt-2') return
 
     const ensureCutout = () => {
-      const textareaContainer = document.querySelector('.textarea-container') as HTMLElement
-      if (textareaContainer) {
+      const composerElement = document.querySelector('.composer') as HTMLElement
+      if (composerElement) {
         // Ensure textarea-active class is present
-        if (!textareaContainer.classList.contains('tutorial-textarea-active')) {
-          textareaContainer.classList.add('tutorial-textarea-active')
+        if (!composerElement.classList.contains('tutorial-textarea-active')) {
+          composerElement.classList.add('tutorial-textarea-active')
         }
         // Ensure cutout is calculated - this handles cases where initial calculation was missed
-        const rect = textareaContainer.getBoundingClientRect()
+        const rect = composerElement.getBoundingClientRect()
         const padding = 8
         setTextareaCutout({
           top: rect.top - padding,
@@ -1026,9 +1026,9 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
     return () => {
       clearInterval(interval)
       // Clean up when leaving this step
-      const textareaContainer = document.querySelector('.textarea-container') as HTMLElement
-      if (textareaContainer) {
-        textareaContainer.classList.remove('tutorial-textarea-active')
+      const composerElement = document.querySelector('.composer') as HTMLElement
+      if (composerElement) {
+        composerElement.classList.remove('tutorial-textarea-active')
       }
     }
   }, [step])
@@ -1079,13 +1079,13 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
       // Also maintain textarea cutout for submit steps (they need the textarea visible)
       // But NOT for view-follow-up-results step - it only needs the results section visible
       if (step !== 'view-follow-up-results') {
-        const textareaContainer = document.querySelector('.textarea-container') as HTMLElement
-        if (textareaContainer) {
-          if (!textareaContainer.classList.contains('tutorial-textarea-active')) {
-            textareaContainer.classList.add('tutorial-textarea-active')
+        const composerElement = document.querySelector('.composer') as HTMLElement
+        if (composerElement) {
+          if (!composerElement.classList.contains('tutorial-textarea-active')) {
+            composerElement.classList.add('tutorial-textarea-active')
           }
           // Ensure cutout is calculated
-          const rect = textareaContainer.getBoundingClientRect()
+          const rect = composerElement.getBoundingClientRect()
           const padding = 8
           setTextareaCutout({
             top: rect.top - padding,
@@ -1119,9 +1119,9 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
         loadingSection.style.position = ''
       }
       // Clean up textarea active class
-      const textareaContainer = document.querySelector('.textarea-container') as HTMLElement
-      if (textareaContainer) {
-        textareaContainer.classList.remove('tutorial-textarea-active')
+      const composerElement = document.querySelector('.composer') as HTMLElement
+      if (composerElement) {
+        composerElement.classList.remove('tutorial-textarea-active')
       }
     }
   }, [step])
@@ -1133,12 +1133,12 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
       return
     }
 
-    const textareaContainer = document.querySelector('.textarea-container') as HTMLElement
-    if (textareaContainer) {
-      textareaContainer.classList.remove('tutorial-textarea-active')
-      textareaContainer.classList.remove('tutorial-highlight')
-      textareaContainer.style.pointerEvents = ''
-      textareaContainer.style.position = ''
+    const composerElement = document.querySelector('.composer') as HTMLElement
+    if (composerElement) {
+      composerElement.classList.remove('tutorial-textarea-active')
+      composerElement.classList.remove('tutorial-highlight')
+      composerElement.style.pointerEvents = ''
+      composerElement.style.position = ''
     }
     setTextareaCutout(null)
   }, [step])
@@ -1263,13 +1263,13 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
           historyDropdown.classList.add('tutorial-dropdown-active')
         }
         // Also ensure parent container is above backdrop
-        const textareaContainer = historyDropdown.closest('.textarea-container') as HTMLElement
-        if (textareaContainer) {
-          if (!textareaContainer.classList.contains('tutorial-dropdown-container-active')) {
-            textareaContainer.classList.add('tutorial-dropdown-container-active')
+        const composerElement = historyDropdown.closest('.composer') as HTMLElement
+        if (composerElement) {
+          if (!composerElement.classList.contains('tutorial-dropdown-container-active')) {
+            composerElement.classList.add('tutorial-dropdown-container-active')
           }
           // Update cutout - always recalculate to ensure it's current
-          const rect = textareaContainer.getBoundingClientRect()
+          const rect = composerElement.getBoundingClientRect()
           // Use tighter padding for rounded cutout
           const padding = 8
           setDropdownCutout({
@@ -1306,11 +1306,11 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
       if (historyDropdown) {
         historyDropdown.classList.remove('tutorial-dropdown-active')
       }
-      const textareaContainer = document.querySelector(
-        '.textarea-container.tutorial-dropdown-container-active'
+      const composerElement = document.querySelector(
+        '.composer.tutorial-dropdown-container-active'
       ) as HTMLElement
-      if (textareaContainer) {
-        textareaContainer.classList.remove('tutorial-dropdown-container-active')
+      if (composerElement) {
+        composerElement.classList.remove('tutorial-dropdown-container-active')
       }
       setDropdownCutout(null)
       setButtonCutout(null)
@@ -1358,15 +1358,13 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
           savedSelectionsDropdown.classList.add('tutorial-dropdown-active')
         }
         // Also ensure parent container is above backdrop
-        const textareaContainer = savedSelectionsDropdown.closest(
-          '.textarea-container'
-        ) as HTMLElement
-        if (textareaContainer) {
-          if (!textareaContainer.classList.contains('tutorial-dropdown-container-active')) {
-            textareaContainer.classList.add('tutorial-dropdown-container-active')
+        const composerElement = savedSelectionsDropdown.closest('.composer') as HTMLElement
+        if (composerElement) {
+          if (!composerElement.classList.contains('tutorial-dropdown-container-active')) {
+            composerElement.classList.add('tutorial-dropdown-container-active')
           }
           // Update cutout
-          const rect = textareaContainer.getBoundingClientRect()
+          const rect = composerElement.getBoundingClientRect()
           // Use tighter padding for rounded cutout
           const padding = 8
           setDropdownCutout({
@@ -1403,11 +1401,11 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
       if (savedSelectionsDropdown) {
         savedSelectionsDropdown.classList.remove('tutorial-dropdown-active')
       }
-      const textareaContainer = document.querySelector(
-        '.textarea-container.tutorial-dropdown-container-active'
+      const composerElement = document.querySelector(
+        '.composer.tutorial-dropdown-container-active'
       ) as HTMLElement
-      if (textareaContainer) {
-        textareaContainer.classList.remove('tutorial-dropdown-container-active')
+      if (composerElement) {
+        composerElement.classList.remove('tutorial-dropdown-container-active')
       }
       setDropdownCutout(null)
       setButtonCutout(null)
@@ -1425,9 +1423,9 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
     if (!shouldExcludeTextarea) return
 
     const updateTextareaCutout = () => {
-      const textareaContainer = document.querySelector('.textarea-container') as HTMLElement
-      if (textareaContainer) {
-        const rect = textareaContainer.getBoundingClientRect()
+      const composerElement = document.querySelector('.composer') as HTMLElement
+      if (composerElement) {
+        const rect = composerElement.getBoundingClientRect()
         // For all textarea-related steps with rounded cutout, use tighter padding (outline 3px + offset 4px = 7px + 1px buffer)
         const padding = 8
         const cutout = {
@@ -1470,14 +1468,14 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
       if (step === 'history-dropdown') {
         const historyDropdown = document.querySelector('.history-inline-list') as HTMLElement
         if (historyDropdown) {
-          dropdownContainer = historyDropdown.closest('.textarea-container') as HTMLElement
+          dropdownContainer = historyDropdown.closest('.composer') as HTMLElement
         }
       } else if (step === 'save-selection') {
         const savedSelectionsDropdown = document.querySelector(
           '.saved-selections-dropdown'
         ) as HTMLElement
         if (savedSelectionsDropdown) {
-          dropdownContainer = savedSelectionsDropdown.closest('.textarea-container') as HTMLElement
+          dropdownContainer = savedSelectionsDropdown.closest('.composer') as HTMLElement
         }
       }
 
@@ -1538,9 +1536,9 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
 
       if (isSubmitStep) {
         // For submit steps, always use the textarea container
-        const textareaContainer = document.querySelector('.textarea-container') as HTMLElement
-        if (textareaContainer) {
-          elementsToUse = [textareaContainer]
+        const composerElement = document.querySelector('.composer') as HTMLElement
+        if (composerElement) {
+          elementsToUse = [composerElement]
         }
       } else {
         // Use highlighted elements if available, otherwise use targetElement

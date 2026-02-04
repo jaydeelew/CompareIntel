@@ -28,7 +28,7 @@ export const TUTORIAL_STEPS_CONFIG: Record<TutorialStep, StepConfig> = {
   },
   'enter-prompt': {
     step: 'enter-prompt',
-    targetSelector: '.textarea-container',
+    targetSelector: '.composer',
     title: 'Enter Your Prompt',
     description:
       'Type your question or prompt in the text area below. This is what you want the AI models to respond to.',
@@ -52,7 +52,7 @@ export const TUTORIAL_STEPS_CONFIG: Record<TutorialStep, StepConfig> = {
   },
   'enter-prompt-2': {
     step: 'enter-prompt-2',
-    targetSelector: '.textarea-container',
+    targetSelector: '.composer',
     title: 'Enter a Follow-Up Prompt',
     description:
       'Now reply to the models with a follow-up. Type your follow-up prompt in the text area below to continue the conversation with the AI models.',

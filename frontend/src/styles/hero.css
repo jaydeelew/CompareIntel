@@ -435,8 +435,8 @@
   letter-spacing: -0.025em;
 }
 
-/* Textarea Container */
-.textarea-container {
+/* Composer - Combined textarea + toolbar component */
+.composer {
   position: relative;
   display: flex;
   flex-direction: column;
@@ -452,14 +452,14 @@
   transition: box-shadow 0.3s var(--ease-spring);
 }
 
-.textarea-container:hover {
+.composer:hover {
   box-shadow:
     0 0 0 1px rgba(6, 182, 212, 0.25),
     0 0 25px rgba(6, 182, 212, 0.12),
     0 0 50px rgba(6, 182, 212, 0.06);
 }
 
-.textarea-wrapper {
+.composer-input-wrapper {
   position: relative;
   display: flex;
   flex-direction: column;
@@ -469,19 +469,19 @@
 }
 
 /* History dropdown border radius adjustments */
-.textarea-container:has(.history-inline-list) .hero-input-textarea,
-.textarea-container:has(.saved-selections-dropdown) .hero-input-textarea {
+.composer:has(.history-inline-list) .hero-input-textarea,
+.composer:has(.saved-selections-dropdown) .hero-input-textarea {
   border-radius: 1.5rem 1.5rem 0 0;
   border-bottom: none;
 }
 
-.textarea-container:has(.history-inline-list) .textarea-wrapper,
-.textarea-container:has(.saved-selections-dropdown) .textarea-wrapper {
+.composer:has(.history-inline-list) .composer-input-wrapper,
+.composer:has(.saved-selections-dropdown) .composer-input-wrapper {
   border-radius: 1.5rem 1.5rem 0 0;
 }
 
-.textarea-container:has(.history-inline-list) .textarea-actions-area,
-.textarea-container:has(.saved-selections-dropdown) .textarea-actions-area {
+.composer:has(.history-inline-list) .composer-toolbar,
+.composer:has(.saved-selections-dropdown) .composer-toolbar {
   border-radius: 0;
   border-bottom: none;
 }
@@ -507,7 +507,7 @@
   box-sizing: border-box;
 }
 
-.textarea-container:has(.textarea-actions-area) .hero-input-textarea {
+.composer:has(.composer-toolbar) .hero-input-textarea {
   border-radius: 1.5rem 1.5rem 0 0;
   border-bottom: none;
   margin-bottom: -1px;
@@ -515,12 +515,12 @@
   transition: all 0.3s var(--ease-spring);
 }
 
-.textarea-container:has(.textarea-actions-area) .textarea-wrapper {
+.composer:has(.composer-toolbar) .composer-input-wrapper {
   border-radius: 1.5rem 1.5rem 0 0;
 }
 
-/* Textarea Actions Area */
-.textarea-actions-area {
+/* Composer Toolbar - Actions area below textarea */
+.composer-toolbar {
   position: relative;
   width: 100%;
   min-height: 44px;
@@ -539,7 +539,7 @@
 }
 
 /* When history dropdown is visible */
-.textarea-container:has(.history-inline-list) .textarea-actions-area {
+.composer:has(.history-inline-list) .composer-toolbar {
   border-radius: 0;
 }
 
@@ -551,16 +551,16 @@
   background: var(--bg-card-hover);
 }
 
-.textarea-container:has(.textarea-actions-area) .hero-input-textarea:focus {
+.composer:has(.composer-toolbar) .hero-input-textarea:focus {
   /* Clip box-shadow at bottom so no blue line shows between textarea and actions area */
   clip-path: inset(-3px -3px 0 -3px);
 }
 
-.textarea-container:has(.hero-input-textarea:focus) .textarea-actions-area {
+.composer:has(.hero-input-textarea:focus) .composer-toolbar {
   border-color: var(--primary-color);
 }
 
-.textarea-container:has(.hero-input-textarea:focus) {
+.composer:has(.hero-input-textarea:focus) {
   box-shadow:
     0 0 0 1px rgba(6, 182, 212, 0.35),
     0 0 30px rgba(6, 182, 212, 0.2),
@@ -569,14 +569,14 @@
 
 /* Drag and drop */
 .hero-input-textarea.drag-over,
-.textarea-actions-area.drag-over {
+.composer-toolbar.drag-over {
   border-color: var(--primary-color) !important;
   background: rgba(6, 182, 212, 0.1) !important;
   box-shadow: 0 0 0 3px var(--primary-glow);
 }
 
-.textarea-container:has(.hero-input-textarea.drag-over) .textarea-actions-area,
-.textarea-container:has(.textarea-actions-area.drag-over) .hero-input-textarea {
+.composer:has(.hero-input-textarea.drag-over) .composer-toolbar,
+.composer:has(.composer-toolbar.drag-over) .hero-input-textarea {
   border-color: var(--primary-color);
   background: rgba(6, 182, 212, 0.1);
 }
@@ -1296,7 +1296,7 @@
     white-space: nowrap !important;
   }
 
-  .textarea-wrapper {
+  .composer-input-wrapper {
     border-radius: 1.25rem;
   }
 
@@ -1308,18 +1308,18 @@
     border-radius: 1.25rem;
   }
 
-  .textarea-container:has(.textarea-actions-area) .textarea-wrapper {
+  .composer:has(.composer-toolbar) .composer-input-wrapper {
     border-radius: 1.25rem 1.25rem 0 0;
   }
 
-  .textarea-container:has(.textarea-actions-area) .hero-input-textarea {
+  .composer:has(.composer-toolbar) .hero-input-textarea {
     border-bottom: none !important;
     margin-bottom: -1px;
     padding: 0.5rem 1rem 0.5rem 1.4375rem !important;
     line-height: 1.25 !important;
   }
 
-  .textarea-actions-area {
+  .composer-toolbar {
     min-height: 40px;
     height: 40px;
     padding: 0.5rem 0.75rem 0.5rem 1rem;

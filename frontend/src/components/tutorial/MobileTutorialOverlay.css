@@ -39,7 +39,7 @@
 }
 
 /* Special styling for textarea container highlight on mobile */
-.textarea-container.mobile-tutorial-highlight {
+.composer.mobile-tutorial-highlight {
   border-radius: 1.5rem !important;
   isolation: isolate !important;
   position: relative !important;
@@ -53,7 +53,6 @@
 }
 
 @keyframes mobile-tutorial-pulse {
-
   0%,
   100% {
     box-shadow:
@@ -283,7 +282,6 @@
 }
 
 @keyframes mobile-tutorial-tap-bounce {
-
   0%,
   100% {
     transform: translateY(0);
@@ -327,7 +325,6 @@
 }
 
 @keyframes mobile-tutorial-scroll-bounce {
-
   0%,
   100% {
     transform: translateX(-50%) translateY(0);
@@ -339,7 +336,6 @@
 }
 
 @keyframes mobile-tutorial-scroll-arrow {
-
   0%,
   100% {
     transform: translateY(0);
@@ -377,7 +373,7 @@ body.mobile-tutorial-active {
 }
 
 /* Ensure dropdown containers stay above backdrop */
-.textarea-container.mobile-tutorial-dropdown-active {
+.composer.mobile-tutorial-dropdown-active {
   position: relative;
   z-index: 9999 !important;
   isolation: isolate;

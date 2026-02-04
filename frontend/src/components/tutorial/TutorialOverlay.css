@@ -1,7 +1,10 @@
 /* Prevent hero section height changes when tutorial is active */
 /* But allow expansion when dropdowns are visible */
-body:has(.tutorial-backdrop) .hero-section:not(:has(.history-inline-list)):not(:has(.saved-selections-dropdown)),
-.hero-section.tutorial-height-locked:not(:has(.history-inline-list)):not( :has(.saved-selections-dropdown)) {
+body:has(.tutorial-backdrop)
+  .hero-section:not(:has(.history-inline-list)):not(:has(.saved-selections-dropdown)),
+.hero-section.tutorial-height-locked:not(:has(.history-inline-list)):not(
+    :has(.saved-selections-dropdown)
+  ) {
   height: var(--hero-locked-height, auto) !important;
   max-height: var(--hero-locked-height, auto) !important;
   min-height: var(--hero-locked-height, auto) !important;
@@ -66,7 +69,7 @@ body:has(.tutorial-backdrop) .hero-section.tutorial-dropdown-hero-active,
 }
 
 /* Ensure textarea container is above backdrop and maintains default styling */
-.textarea-container.tutorial-textarea-active {
+.composer.tutorial-textarea-active {
   position: relative;
   z-index: 9999 !important;
   /* Ensure it maintains its default colors and is not affected by backdrop */
@@ -86,7 +89,7 @@ body:has(.tutorial-backdrop) .hero-section.tutorial-dropdown-hero-active,
 }
 
 /* Ensure parent container is also above backdrop when dropdowns are active */
-.textarea-container.tutorial-dropdown-container-active {
+.composer.tutorial-dropdown-container-active {
   position: relative;
   z-index: 9999 !important;
   isolation: isolate;
@@ -110,7 +113,7 @@ body:has(.tutorial-backdrop) .hero-section.tutorial-dropdown-hero-active,
 }
 
 /* Special styling for textarea container highlight - match its border-radius */
-.textarea-container.tutorial-highlight {
+.composer.tutorial-highlight {
   border-radius: 1.5rem !important;
   /* Ensure it's above backdrop and not dimmed */
   isolation: isolate !important;
@@ -129,9 +132,9 @@ body:has(.tutorial-backdrop) .hero-section.tutorial-dropdown-hero-active,
 }
 
 /* Ensure textarea wrapper and textarea maintain brightness when container is highlighted */
-.textarea-container.tutorial-highlight .textarea-wrapper,
-.textarea-container.tutorial-highlight .hero-input-textarea,
-.textarea-container.tutorial-highlight .textarea-actions-area {
+.composer.tutorial-highlight .composer-input-wrapper,
+.composer.tutorial-highlight .hero-input-textarea,
+.composer.tutorial-highlight .composer-toolbar {
   /* Ensure these elements maintain their default appearance and are not dimmed */
   opacity: 1 !important;
   filter: none !important;
@@ -147,7 +150,6 @@ body:has(.tutorial-backdrop) .hero-section.tutorial-dropdown-hero-active,
 }
 
 @keyframes tutorial-pulse {
-
   0%,
   100% {
     box-shadow:

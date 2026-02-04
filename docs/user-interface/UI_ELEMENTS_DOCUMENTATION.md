@@ -190,9 +190,9 @@ This document provides a comprehensive breakdown of all visual elements (section
 - **Text:** "Enter Your Prompt"
 
 #### Textarea Container
-- **Element:** Input Textarea Wrapper
+- **Element:** Composer (Input + Toolbar combined)
 - **Lines:** [154-387](file:///home/dan_wsl/jaydeelew/CompareIntel/frontend/src/components/comparison/ComparisonForm.tsx#L154)
-- **Class:** `textarea-container` (with `animate-pulse-border` modifier)
+- **Class:** `composer` (with `animate-pulse-border` modifier)
 
 #### History Toggle Button
 - **Element:** History Dropdown Toggle
