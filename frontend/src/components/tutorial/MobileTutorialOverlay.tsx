@@ -326,13 +326,15 @@ export const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       }
 
       if (element && (element.offsetParent !== null || element.offsetWidth > 0)) {
-        setTargetElement(element)
-        targetElementRef.current = element
+        // Store reference for TypeScript to understand it's non-null in callback
+        const foundElement = element
+        setTargetElement(foundElement)
+        targetElementRef.current = foundElement
         setIsVisible(true)
         // Calculate positions immediately when element is found
         // Use requestAnimationFrame to ensure DOM is ready
         requestAnimationFrame(() => {
-          calculatePositionsForElement(element)
+          calculatePositionsForElement(foundElement)
         })
         return true
       }
