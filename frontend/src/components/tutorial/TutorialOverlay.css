@@ -362,3 +362,63 @@ body:has(.tutorial-backdrop) .hero-section.tutorial-dropdown-hero-active,
     display: none;
   }
 }
+
+/* Extra small screens - more compact tooltip */
+@media (max-height: 700px) {
+  .tutorial-tooltip {
+    max-width: calc(100vw - 1.5rem);
+  }
+
+  .tutorial-tooltip-content {
+    padding: 1rem;
+  }
+
+  .tutorial-tooltip-title {
+    font-size: 1rem;
+    margin-bottom: 0.375rem;
+  }
+
+  .tutorial-tooltip-description {
+    font-size: 0.875rem;
+    line-height: 1.5;
+    margin-bottom: 0.75rem;
+  }
+
+  .tutorial-tooltip-header {
+    margin-bottom: 0.5rem;
+  }
+
+  .tutorial-step-indicator {
+    font-size: 0.6875rem;
+  }
+
+  .tutorial-button {
+    padding: 0.375rem 0.75rem;
+    font-size: 0.8125rem;
+  }
+}
+
+/* Very small screens - ensure tooltip never overflows viewport */
+@media (max-height: 600px) {
+  .tutorial-tooltip {
+    max-height: calc(100vh - 120px);
+    overflow-y: auto;
+  }
+
+  .tutorial-tooltip-content {
+    padding: 0.75rem;
+  }
+
+  .tutorial-tooltip-title {
+    font-size: 0.9375rem;
+  }
+
+  .tutorial-tooltip-description {
+    font-size: 0.8125rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .tutorial-tooltip-actions {
+    gap: 0.5rem;
+  }
+}

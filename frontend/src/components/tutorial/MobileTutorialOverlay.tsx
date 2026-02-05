@@ -92,7 +92,14 @@ export const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
   // Track when an automatic step transition is in progress to suppress scroll indicator
   const [isStepTransitioning, setIsStepTransitioning] = useState(false)
   const dropdownWasOpenedRef = useRef<boolean>(false)
-  const tooltipEstimatedHeight = 220
+  // Estimated tooltip height - smaller for short viewports
+  const getTooltipEstimatedHeight = () => {
+    const vh = window.innerHeight
+    if (vh < 600) return 160
+    if (vh < 700) return 180
+    return 220
+  }
+  const tooltipEstimatedHeight = getTooltipEstimatedHeight()
   const previousStepRef = useRef<TutorialStep | null>(null)
 
   // Reset dropdown opened flag when step changes

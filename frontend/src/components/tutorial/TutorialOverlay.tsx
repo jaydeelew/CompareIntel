@@ -622,18 +622,31 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
 
       if (isEnterPromptStep) {
         // Steps 3 and 6: Default to 'bottom', switch to 'top' when not enough space below
-        const estimatedTooltipHeight = 280 // Estimated tooltip height
+        const viewportHeight = window.innerHeight
+        const estimatedTooltipHeight = viewportHeight < 700 ? 200 : 280 // Smaller estimate for small screens
         const minSpaceNeeded = estimatedTooltipHeight + offset + 40 // Space needed for tooltip + margin
 
         // Calculate available space below the composer
-        const spaceBelow = window.innerHeight - rect.bottom
+        const spaceBelow = viewportHeight - rect.bottom
         // Calculate available space above the composer
         const spaceAbove = rect.top
 
         // Determine which position to use:
         // - Default to 'bottom' (tooltip below composer)
         // - Switch to 'top' (tooltip above composer) if not enough space below
-        const shouldUseTop = spaceBelow < minSpaceNeeded && spaceAbove >= minSpaceNeeded
+        // - Fallback to whichever direction has more space when neither has enough
+        const hasEnoughSpaceBelow = spaceBelow >= minSpaceNeeded
+        const hasEnoughSpaceAbove = spaceAbove >= minSpaceNeeded
+
+        let shouldUseTop: boolean
+        if (hasEnoughSpaceBelow) {
+          shouldUseTop = false // Use bottom (preferred)
+        } else if (hasEnoughSpaceAbove) {
+          shouldUseTop = true // Use top
+        } else {
+          // Neither direction has enough space - use whichever has more room
+          shouldUseTop = spaceAbove > spaceBelow
+        }
 
         if (shouldUseTop) {
           // Position tooltip above the composer
@@ -646,6 +659,17 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
           top = rect.bottom + offset
           left = rect.left + rect.width / 2
         }
+
+        // Final safety: clamp to viewport
+        const margin = 12
+        if (shouldUseTop) {
+          const tooltipTopEdge = top - estimatedTooltipHeight
+          if (tooltipTopEdge < margin) {
+            top = margin + estimatedTooltipHeight
+          }
+        } else {
+          top = Math.min(top, viewportHeight - estimatedTooltipHeight - margin)
+        }
       } else if (
         isExpandProviderStep ||
         isSelectModelsStep ||
@@ -655,18 +679,33 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
         isSaveSelectionStep
       ) {
         // Steps 1, 2, 5, 8, 9, and 10: Default to 'top', switch to 'bottom' when not enough space above
-        const estimatedTooltipHeight = 280 // Estimated tooltip height
+        // Use smaller estimated height on smaller viewports for better fitting
+        const viewportHeight = window.innerHeight
+        const estimatedTooltipHeight = viewportHeight < 700 ? 200 : 280 // Smaller estimate for small screens
         const minSpaceNeeded = estimatedTooltipHeight + offset + 40 // Space needed for tooltip + margin
 
         // Calculate available space above the element
         const spaceAbove = rect.top
         // Calculate available space below the element
-        const spaceBelow = window.innerHeight - rect.bottom
+        const spaceBelow = viewportHeight - rect.bottom
 
         // Determine which position to use:
         // - Default to 'top' (tooltip above provider)
         // - Switch to 'bottom' (tooltip below provider) if not enough space above
-        const shouldUseBottom = spaceAbove < minSpaceNeeded && spaceBelow >= minSpaceNeeded
+        // - Fallback to whichever direction has more space when neither has enough
+        const hasEnoughSpaceAbove = spaceAbove >= minSpaceNeeded
+        const hasEnoughSpaceBelow = spaceBelow >= minSpaceNeeded
+
+        let shouldUseBottom: boolean
+        if (hasEnoughSpaceAbove) {
+          shouldUseBottom = false // Use top (preferred)
+        } else if (hasEnoughSpaceBelow) {
+          shouldUseBottom = true // Use bottom
+        } else {
+          // Neither direction has enough space - use whichever has more room
+          // This ensures tooltip appears somewhere visible on small screens
+          shouldUseBottom = spaceBelow > spaceAbove
+        }
 
         if (shouldUseBottom) {
           // Position tooltip below the provider
@@ -678,6 +717,21 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
           setEffectivePosition('top')
           top = rect.top - offset
           left = rect.left + rect.width / 2
+        }
+
+        // Final safety: clamp top to ensure tooltip starts within viewport
+        // The useLayoutEffect will do fine-tuning, but this prevents extreme off-screen positions
+        const margin = 12
+        if (shouldUseBottom) {
+          // For bottom position, ensure there's room below
+          top = Math.min(top, viewportHeight - estimatedTooltipHeight - margin)
+        } else {
+          // For top position, ensure the tooltip top edge isn't above viewport
+          // top is where the tooltip bottom edge is, subtract height to get top edge
+          const tooltipTopEdge = top - estimatedTooltipHeight
+          if (tooltipTopEdge < margin) {
+            top = margin + estimatedTooltipHeight
+          }
         }
       } else {
         // For other steps, use config position

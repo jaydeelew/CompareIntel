@@ -386,3 +386,66 @@ body.mobile-tutorial-active {
   z-index: 9999 !important;
   isolation: isolate;
 }
+
+/* Small viewport height - more compact tooltip */
+@media (max-height: 700px) {
+  .mobile-tutorial-tooltip-content {
+    padding: 0.75rem 1rem;
+  }
+
+  .mobile-tutorial-tooltip-title {
+    font-size: 1rem;
+    margin-bottom: 0.375rem;
+  }
+
+  .mobile-tutorial-tooltip-description {
+    font-size: 0.875rem;
+    line-height: 1.4;
+    margin-bottom: 0.75rem;
+  }
+
+  .mobile-tutorial-tooltip-header {
+    margin-bottom: 0.5rem;
+  }
+
+  .mobile-tutorial-button {
+    padding: 0.625rem 1rem;
+    min-height: 44px;
+    font-size: 0.875rem;
+  }
+
+  .mobile-tutorial-progress {
+    margin-top: 0.5rem;
+    padding-top: 0.5rem;
+  }
+}
+
+/* Very small viewport height */
+@media (max-height: 600px) {
+  .mobile-tutorial-tooltip {
+    max-height: calc(100vh - 100px);
+    overflow-y: auto;
+  }
+
+  .mobile-tutorial-tooltip-content {
+    padding: 0.625rem 0.875rem;
+  }
+
+  .mobile-tutorial-tooltip-title {
+    font-size: 0.9375rem;
+  }
+
+  .mobile-tutorial-tooltip-description {
+    font-size: 0.8125rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .mobile-tutorial-tooltip-actions {
+    gap: 0.5rem;
+  }
+
+  .mobile-tutorial-button {
+    padding: 0.5rem 0.75rem;
+    min-height: 40px;
+  }
+}
