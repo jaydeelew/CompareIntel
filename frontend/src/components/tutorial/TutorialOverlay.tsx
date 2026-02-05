@@ -992,25 +992,36 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
 
   // Separate effect to continuously maintain highlight for expand-provider step
   // Uses simple interval instead of MutationObserver to avoid performance issues
+  // ALSO ensures visibility and targetElement are set (fixes production timing issues)
   useEffect(() => {
     if (step !== 'expand-provider') return
 
-    const ensureHighlight = () => {
+    const ensureHighlightAndVisibility = () => {
       const googleDropdown = document.querySelector(
         '.provider-dropdown[data-provider-name="Google"]'
       ) as HTMLElement
-      if (googleDropdown && !googleDropdown.classList.contains('tutorial-highlight')) {
-        googleDropdown.classList.add('tutorial-highlight')
-        googleDropdown.style.pointerEvents = 'auto'
-        googleDropdown.style.position = 'relative'
+      if (googleDropdown) {
+        // Add highlight class if not present
+        if (!googleDropdown.classList.contains('tutorial-highlight')) {
+          googleDropdown.classList.add('tutorial-highlight')
+          googleDropdown.style.pointerEvents = 'auto'
+          googleDropdown.style.position = 'relative'
+        }
+        // CRITICAL: Also ensure visibility and target are set
+        // This fixes production timing issues where main findElement fails but interval finds element
+        const headerElement = googleDropdown.querySelector('.provider-header') as HTMLElement
+        if (headerElement) {
+          setTargetElement(headerElement)
+          setIsVisible(true)
+        }
       }
     }
 
     // Check immediately
-    ensureHighlight()
+    ensureHighlightAndVisibility()
 
-    // Check periodically to maintain highlight
-    const interval = setInterval(ensureHighlight, 200)
+    // Check periodically to maintain highlight and visibility
+    const interval = setInterval(ensureHighlightAndVisibility, 200)
 
     return () => {
       clearInterval(interval)
@@ -1028,25 +1039,33 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
 
   // Separate effect to continuously maintain highlight for select-models step
   // Uses simple interval instead of MutationObserver to avoid performance issues
+  // ALSO ensures visibility and targetElement are set (fixes production timing issues)
   useEffect(() => {
     if (step !== 'select-models') return
 
-    const ensureHighlight = () => {
+    const ensureHighlightAndVisibility = () => {
       const googleDropdown = document.querySelector(
         '.provider-dropdown[data-provider-name="Google"]'
       ) as HTMLElement
-      if (googleDropdown && !googleDropdown.classList.contains('tutorial-highlight')) {
-        googleDropdown.classList.add('tutorial-highlight')
-        googleDropdown.style.pointerEvents = 'auto'
-        googleDropdown.style.position = 'relative'
+      if (googleDropdown) {
+        // Add highlight class if not present
+        if (!googleDropdown.classList.contains('tutorial-highlight')) {
+          googleDropdown.classList.add('tutorial-highlight')
+          googleDropdown.style.pointerEvents = 'auto'
+          googleDropdown.style.position = 'relative'
+        }
+        // CRITICAL: Also ensure visibility and target are set
+        // This fixes production timing issues where main findElement fails but interval finds element
+        setTargetElement(googleDropdown)
+        setIsVisible(true)
       }
     }
 
     // Check immediately
-    ensureHighlight()
+    ensureHighlightAndVisibility()
 
-    // Check periodically to maintain highlight
-    const interval = setInterval(ensureHighlight, 200)
+    // Check periodically to maintain highlight and visibility
+    const interval = setInterval(ensureHighlightAndVisibility, 200)
 
     return () => {
       clearInterval(interval)
@@ -1064,10 +1083,11 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
 
   // Separate effect to continuously maintain highlight and cutout for enter-prompt step
   // Uses simple interval instead of MutationObserver to avoid performance issues
+  // ALSO ensures visibility and targetElement are set (fixes production timing issues)
   useEffect(() => {
     if (step !== 'enter-prompt') return
 
-    const ensureHighlightAndCutout = () => {
+    const ensureHighlightCutoutAndVisibility = () => {
       const composerElement = getComposerElement()
       if (composerElement) {
         // Always force add highlight class (remove first to ensure it's applied fresh)
@@ -1091,17 +1111,21 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
           width: maxRight - minLeft + padding * 2,
           height: maxBottom - minTop + padding * 2,
         })
+        // CRITICAL: Also ensure visibility and target are set
+        // This fixes production timing issues where main findElement fails but interval finds element
+        setTargetElement(composerElement)
+        setIsVisible(true)
       }
     }
 
     // Run immediately
-    ensureHighlightAndCutout()
+    ensureHighlightCutoutAndVisibility()
 
     // Also run after a brief delay to handle any cleanup that might run after this effect
-    const initialTimeout = setTimeout(ensureHighlightAndCutout, 50)
+    const initialTimeout = setTimeout(ensureHighlightCutoutAndVisibility, 50)
 
-    // Check periodically to maintain highlight and cutout
-    const interval = setInterval(ensureHighlightAndCutout, 200)
+    // Check periodically to maintain highlight, cutout, and visibility
+    const interval = setInterval(ensureHighlightCutoutAndVisibility, 200)
 
     return () => {
       clearTimeout(initialTimeout)
@@ -1119,10 +1143,11 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
 
   // Separate effect to continuously maintain cutout for enter-prompt-2 step (no highlight, but needs cutout)
   // Uses simple interval to ensure cutout is properly calculated
+  // ALSO ensures visibility and targetElement are set (fixes production timing issues)
   useEffect(() => {
     if (step !== 'enter-prompt-2') return
 
-    const ensureCutout = () => {
+    const ensureCutoutAndVisibility = () => {
       const composerElement = getComposerElement()
       if (composerElement) {
         // Ensure textarea-active class is present
@@ -1143,14 +1168,18 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
           width: maxRight - minLeft + padding * 2,
           height: maxBottom - minTop + padding * 2,
         })
+        // CRITICAL: Also ensure visibility and target are set
+        // This fixes production timing issues where main findElement fails but interval finds element
+        setTargetElement(composerElement)
+        setIsVisible(true)
       }
     }
 
     // Check immediately
-    ensureCutout()
+    ensureCutoutAndVisibility()
 
-    // Check periodically to maintain cutout
-    const interval = setInterval(ensureCutout, 200)
+    // Check periodically to maintain cutout and visibility
+    const interval = setInterval(ensureCutoutAndVisibility, 200)
 
     return () => {
       clearInterval(interval)
@@ -1164,6 +1193,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
 
   // Separate effect to continuously maintain highlight for submit-comparison, follow-up, and view-follow-up-results steps
   // Uses simple interval instead of MutationObserver to avoid performance issues
+  // ALSO ensures visibility and targetElement are set (fixes production timing issues)
   useEffect(() => {
     if (
       step !== 'submit-comparison' &&
@@ -1187,7 +1217,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
       return
     }
 
-    const ensureHighlightAndCutout = () => {
+    const ensureHighlightCutoutAndVisibility = () => {
       const resultsSection = document.querySelector('.results-section') as HTMLElement
       const loadingSection = document.querySelector('.loading-section') as HTMLElement
 
@@ -1224,13 +1254,43 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
           })
         }
       }
+
+      // CRITICAL: Also ensure visibility and target are set
+      // This fixes production timing issues where main findElement fails but interval finds element
+      // For submit-comparison steps, target the submit button
+      if (step === 'submit-comparison' || step === 'submit-comparison-2') {
+        const submitButton = document.querySelector(
+          '[data-testid="comparison-submit-button"]'
+        ) as HTMLElement
+        if (submitButton) {
+          setTargetElement(submitButton)
+          setIsVisible(true)
+        }
+      }
+      // For follow-up step, target the follow-up button
+      else if (step === 'follow-up') {
+        const followUpButton = document.querySelector(
+          '.follow-up-button:not(.export-dropdown-trigger)'
+        ) as HTMLElement
+        if (followUpButton) {
+          setTargetElement(followUpButton)
+          setIsVisible(true)
+        }
+      }
+      // For view-follow-up-results step, target the results section
+      else if (step === 'view-follow-up-results') {
+        if (resultsSection) {
+          setTargetElement(resultsSection)
+          setIsVisible(true)
+        }
+      }
     }
 
     // Check immediately
-    ensureHighlightAndCutout()
+    ensureHighlightCutoutAndVisibility()
 
-    // Check periodically to maintain highlight and cutout
-    const interval = setInterval(ensureHighlightAndCutout, 200)
+    // Check periodically to maintain highlight, cutout, and visibility
+    const interval = setInterval(ensureHighlightCutoutAndVisibility, 200)
 
     return () => {
       clearInterval(interval)
@@ -1357,6 +1417,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
 
   // Separate effect to continuously maintain dropdown active class for history-dropdown step
   // This ensures the dropdown stays above backdrop even if the DOM updates
+  // ALSO ensures visibility and targetElement are set (fixes production timing issues)
   useEffect(() => {
     if (step !== 'history-dropdown') return
 
@@ -1369,7 +1430,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
       historyToggleButton.addEventListener('click', handleHistoryButtonClick)
     }
 
-    const ensureDropdownActive = () => {
+    const ensureDropdownActiveAndVisibility = () => {
       // Update button cutout position and add highlight to button
       const historyToggleButton = document.querySelector('.history-toggle-button') as HTMLElement
       if (historyToggleButton) {
@@ -1386,6 +1447,10 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
         if (!historyToggleButton.classList.contains('tutorial-highlight')) {
           historyToggleButton.classList.add('tutorial-highlight')
         }
+        // CRITICAL: Also ensure visibility and target are set
+        // This fixes production timing issues where main findElement fails but interval finds element
+        setTargetElement(historyToggleButton)
+        setIsVisible(true)
       }
 
       // Always set composer cutout from the start (not just when dropdown opens)
@@ -1421,10 +1486,10 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
     }
 
     // Check immediately
-    ensureDropdownActive()
+    ensureDropdownActiveAndVisibility()
 
-    // Check periodically to maintain dropdown state (no MutationObserver to avoid performance issues)
-    const interval = setInterval(ensureDropdownActive, 100)
+    // Check periodically to maintain dropdown state and visibility (no MutationObserver to avoid performance issues)
+    const interval = setInterval(ensureDropdownActiveAndVisibility, 100)
 
     return () => {
       clearInterval(interval)
@@ -1456,6 +1521,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
 
   // Separate effect to continuously maintain dropdown active class for save-selection step
   // Uses simple interval instead of MutationObserver to avoid performance issues
+  // ALSO ensures visibility and targetElement are set (fixes production timing issues)
   useEffect(() => {
     if (step !== 'save-selection') return
 
@@ -1468,7 +1534,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
       savedSelectionsButton.addEventListener('click', handleSavedSelectionsButtonClick)
     }
 
-    const ensureDropdownActive = () => {
+    const ensureDropdownActiveAndVisibility = () => {
       // Update button cutout position and add highlight to button
       const savedSelectionsButton = document.querySelector(
         '.saved-selections-button'
@@ -1487,6 +1553,10 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
         if (!savedSelectionsButton.classList.contains('tutorial-highlight')) {
           savedSelectionsButton.classList.add('tutorial-highlight')
         }
+        // CRITICAL: Also ensure visibility and target are set
+        // This fixes production timing issues where main findElement fails but interval finds element
+        setTargetElement(savedSelectionsButton)
+        setIsVisible(true)
       }
 
       // Always set composer cutout from the start (not just when dropdown opens)
@@ -1524,10 +1594,10 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
     }
 
     // Check immediately
-    ensureDropdownActive()
+    ensureDropdownActiveAndVisibility()
 
-    // Check periodically to maintain dropdown state (no MutationObserver to avoid performance issues)
-    const interval = setInterval(ensureDropdownActive, 100)
+    // Check periodically to maintain dropdown state and visibility (no MutationObserver to avoid performance issues)
+    const interval = setInterval(ensureDropdownActiveAndVisibility, 100)
 
     return () => {
       clearInterval(interval)
