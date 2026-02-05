@@ -269,7 +269,7 @@ body:has(.tutorial-backdrop) .hero-section.tutorial-dropdown-hero-active,
 }
 
 .tutorial-button-primary {
-  background: var(--accent-color);
+  background: var(--primary-color);
   color: white;
 }
 

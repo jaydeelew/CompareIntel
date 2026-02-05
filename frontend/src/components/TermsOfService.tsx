@@ -192,7 +192,7 @@ export const TermsOfService: React.FC = () => {
                 href="https://policies.google.com/privacy"
                 target="_blank"
                 rel="noopener noreferrer"
-                style={{ color: '#0ea5e9', textDecoration: 'underline' }}
+                style={{ color: '#0369a1', textDecoration: 'underline' }}
               >
                 Privacy Policy
               </a>{' '}
@@ -201,7 +201,7 @@ export const TermsOfService: React.FC = () => {
                 href="https://policies.google.com/terms"
                 target="_blank"
                 rel="noopener noreferrer"
-                style={{ color: '#0ea5e9', textDecoration: 'underline' }}
+                style={{ color: '#0369a1', textDecoration: 'underline' }}
               >
                 Terms of Service
               </a>{' '}

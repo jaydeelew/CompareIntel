@@ -174,7 +174,7 @@
 }
 
 .mobile-tutorial-button-primary {
-  background: var(--accent-color);
+  background: var(--primary-color);
   color: white;
   flex: 1;
 }

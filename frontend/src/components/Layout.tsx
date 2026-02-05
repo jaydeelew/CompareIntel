@@ -104,8 +104,8 @@ export const Layout: React.FC = () => {
 
   return (
     <>
-      {/* SEO fallback H1 - visually hidden but present for search engines */}
-      <h1 className="visually-hidden">CompareIntel - Compare AI Models Side by Side</h1>
+      {/* Removed SEO H1 - Hero component provides the main H1 on homepage */}
+      {/* Other pages have their own H1s in their page components */}
       <Outlet />
       <Footer />
     </>

@@ -184,7 +184,9 @@ export function ModelsSectionHeader({
         <h2 style={{ margin: 0 }}>
           {isFollowUpMode ? 'Selected Models (Follow-up Mode)' : 'Select Models to Compare'}
         </h2>
-        <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.875rem', color: '#6b7280' }}>
+        <p
+          style={{ margin: '0.25rem 0 0 0', fontSize: '0.875rem', color: 'var(--text-secondary)' }}
+        >
           {isFollowUpMode
             ? 'You can deselect models or reselect previously selected ones (minimum 1 model required)'
             : `Choose up to ${maxModelsLimit} models${formatTierName()}`}

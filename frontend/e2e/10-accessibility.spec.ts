@@ -139,11 +139,21 @@ test.describe('Accessibility Tests', () => {
 
       const results = await runAccessibilityAudit(page)
 
+      // Log violations for debugging (if any)
+      if (results.violations.length > 0) {
+        console.log('Terms of Service page accessibility violations:')
+        console.log(JSON.stringify(formatViolations(results.violations), null, 2))
+      }
+
       const criticalViolations = results.violations.filter(
         v => v.impact === 'critical' || v.impact === 'serious'
       )
 
-      expect(criticalViolations.length).toBe(0)
+      expect(
+        criticalViolations.length,
+        `Found ${criticalViolations.length} critical/serious accessibility violations:\n` +
+          JSON.stringify(formatViolations(criticalViolations), null, 2)
+      ).toBe(0)
     })
   })
 
@@ -151,6 +161,25 @@ test.describe('Accessibility Tests', () => {
     test('Login modal should be accessible', async ({ page }) => {
       await page.goto('/')
       await page.waitForLoadState('networkidle')
+
+      // Dismiss tutorial overlay if present (blocks interactions)
+      const tutorialOverlay = page.locator('.tutorial-backdrop, .tutorial-welcome-backdrop')
+      const overlayVisible = await tutorialOverlay.isVisible({ timeout: 2000 }).catch(() => false)
+      if (overlayVisible) {
+        // Try to find and click skip button
+        const skipButton = page.locator(
+          '.tutorial-welcome-button-secondary, button:has-text("Skip for Now"), .tutorial-close-button, button[aria-label*="Skip"]'
+        )
+        const skipVisible = await skipButton.isVisible({ timeout: 3000 }).catch(() => false)
+        if (skipVisible) {
+          await skipButton.click({ timeout: 5000 }).catch(() => {})
+          await tutorialOverlay.waitFor({ state: 'hidden', timeout: 5000 }).catch(() => {})
+        } else {
+          // Fallback to Escape key
+          await page.keyboard.press('Escape').catch(() => {})
+          await page.waitForTimeout(500)
+        }
+      }
 
       // Open login modal
       const loginButton = page.getByRole('button', { name: /log in|sign in/i })
@@ -332,6 +361,23 @@ test.describe('Accessibility Tests', () => {
       await page.goto('/')
       await page.waitForLoadState('networkidle')
 
+      // Dismiss tutorial overlay if present
+      const tutorialOverlay = page.locator('.tutorial-backdrop, .tutorial-welcome-backdrop')
+      const overlayVisible = await tutorialOverlay.isVisible({ timeout: 2000 }).catch(() => false)
+      if (overlayVisible) {
+        const skipButton = page.locator(
+          '.tutorial-welcome-button-secondary, button:has-text("Skip for Now"), .tutorial-close-button, button[aria-label*="Skip"]'
+        )
+        const skipVisible = await skipButton.isVisible({ timeout: 3000 }).catch(() => false)
+        if (skipVisible) {
+          await skipButton.click({ timeout: 5000 }).catch(() => {})
+          await tutorialOverlay.waitFor({ state: 'hidden', timeout: 5000 }).catch(() => {})
+        } else {
+          await page.keyboard.press('Escape').catch(() => {})
+          await page.waitForTimeout(500)
+        }
+      }
+
       // Get all headings
       const headings = await page.evaluate(() => {
         const elements = document.querySelectorAll('h1, h2, h3, h4, h5, h6')
@@ -341,7 +387,7 @@ test.describe('Accessibility Tests', () => {
         }))
       })
 
-      // Check for H1
+      // Check for H1 (should be exactly 1 - the visually hidden SEO H1 in Layout)
       const h1Count = headings.filter(h => h.level === 1).length
       expect(h1Count, 'Page should have exactly one H1').toBe(1)
 

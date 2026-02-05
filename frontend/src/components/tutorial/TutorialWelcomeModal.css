@@ -223,7 +223,7 @@
 }
 
 .tutorial-welcome-button-primary {
-  background: var(--accent-color);
+  background: var(--primary-color);
   color: white;
 }
 

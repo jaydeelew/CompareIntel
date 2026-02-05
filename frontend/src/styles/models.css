@@ -133,7 +133,7 @@
 
 .provider-count.empty {
   background: var(--bg-tertiary);
-  color: var(--text-muted);
+  color: var(--text-secondary);
   border: 1px solid var(--border-color);
 }
 
@@ -1329,7 +1329,7 @@
 
 .models-count-indicator.empty {
   background: var(--bg-tertiary);
-  color: var(--text-muted);
+  color: var(--text-secondary);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-lg) !important;
 }
