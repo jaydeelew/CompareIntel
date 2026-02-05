@@ -110,6 +110,17 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
     }
   }, [step])
 
+  // CRITICAL FIX: Force visibility immediately for first two steps (expand-provider, select-models)
+  // This ensures tooltip appears in production even if main findElement has timing issues
+  useEffect(() => {
+    if (step === 'expand-provider' || step === 'select-models') {
+      // Force visibility immediately - tooltip should ALWAYS show for these steps
+      setIsVisible(true)
+      // Set a reasonable default position in case elements aren't found yet
+      setOverlayPosition({ top: 320, left: window.innerWidth / 2 })
+    }
+  }, [step])
+
   // Lock hero section dimensions immediately when tutorial starts
   useEffect(() => {
     const heroSection = document.querySelector('.hero-section') as HTMLElement
@@ -996,6 +1007,9 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
   useEffect(() => {
     if (step !== 'expand-provider') return
 
+    // FORCE visibility immediately on mount to ensure tooltip appears
+    setIsVisible(true)
+
     const ensureHighlightVisibilityAndPosition = () => {
       const googleDropdown = document.querySelector(
         '.provider-dropdown[data-provider-name="Google"]'
@@ -1034,7 +1048,15 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
 
           const left = Math.max(200, Math.min(rect.left + rect.width / 2, window.innerWidth - 200))
           setOverlayPosition({ top, left })
+        } else {
+          // Fallback: even if we don't find the header, still show tooltip at a reasonable position
+          setIsVisible(true)
+          setOverlayPosition({ top: 300, left: window.innerWidth / 2 })
         }
+      } else {
+        // Fallback: even if we don't find Google dropdown, still show tooltip at center-top
+        setIsVisible(true)
+        setOverlayPosition({ top: 300, left: window.innerWidth / 2 })
       }
     }
 
@@ -1042,7 +1064,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
     ensureHighlightVisibilityAndPosition()
 
     // Check periodically to maintain highlight, visibility, and position
-    const interval = setInterval(ensureHighlightVisibilityAndPosition, 200)
+    const interval = setInterval(ensureHighlightVisibilityAndPosition, 100)
 
     return () => {
       clearInterval(interval)
@@ -1063,6 +1085,9 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
   // ALSO ensures visibility, targetElement, and position are set (fixes production timing issues)
   useEffect(() => {
     if (step !== 'select-models') return
+
+    // FORCE visibility immediately on mount to ensure tooltip appears
+    setIsVisible(true)
 
     const ensureHighlightVisibilityAndPosition = () => {
       const googleDropdown = document.querySelector(
@@ -1100,6 +1125,10 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
 
         const left = Math.max(200, Math.min(rect.left + rect.width / 2, window.innerWidth - 200))
         setOverlayPosition({ top, left })
+      } else {
+        // Fallback: even if we don't find Google dropdown, still show tooltip at center-top
+        setIsVisible(true)
+        setOverlayPosition({ top: 300, left: window.innerWidth / 2 })
       }
     }
 
@@ -1107,7 +1136,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
     ensureHighlightVisibilityAndPosition()
 
     // Check periodically to maintain highlight, visibility, and position
-    const interval = setInterval(ensureHighlightVisibilityAndPosition, 200)
+    const interval = setInterval(ensureHighlightVisibilityAndPosition, 100)
 
     return () => {
       clearInterval(interval)
