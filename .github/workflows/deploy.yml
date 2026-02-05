@@ -18,17 +18,22 @@ on:
         default: false
         type: boolean
 
-  # Auto-deploy on main branch (after CI passes)
+  # Auto-deploy on master branch (after CI passes)
   push:
-    branches: [main, master]
+    branches: [master]
     paths-ignore:
       - '**.md'
       - 'docs/**'
+      - '.gitignore'
 
 # Only one deployment at a time
 concurrency:
   group: deploy-${{ github.event.inputs.environment || 'production' }}
   cancel-in-progress: false
+
+env:
+  NODE_VERSION: '20'
+  PYTHON_VERSION: '3.11'
 
 jobs:
   # ============================================================================
@@ -37,6 +42,7 @@ jobs:
   verify-ci:
     name: Verify CI Status
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     if: ${{ github.event.inputs.skip_tests != 'true' }}
     
     steps:
@@ -71,6 +77,7 @@ jobs:
   build:
     name: Build Docker Images
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     needs: verify-ci
     if: always() && (needs.verify-ci.result == 'success' || needs.verify-ci.result == 'skipped')
     
@@ -108,6 +115,7 @@ jobs:
   deploy:
     name: Deploy to ${{ github.event.inputs.environment || 'production' }}
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     needs: build
     environment: ${{ github.event.inputs.environment || 'production' }}
     
@@ -134,17 +142,27 @@ jobs:
             echo "Deployment completed at $(date)"
       
       - name: Verify deployment
+        env:
+          DEPLOY_URL: ${{ secrets.DEPLOY_URL }}
         run: |
           # Wait for services to start
           sleep 30
           
           # Check if site is accessible
-          curl -f -s -o /dev/null -w "%{http_code}" https://compareintel.com || exit 1
+          curl -f -s -o /dev/null -w "%{http_code}" "${DEPLOY_URL}" || exit 1
           echo "✅ Site is accessible"
       
-      - name: Notify on success
-        if: success()
-        run: echo "🚀 Deployment to ${{ github.event.inputs.environment || 'production' }} completed successfully!"
+      - name: Create deployment summary
+        run: |
+          echo "## 🚀 Deployment Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Property | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|----------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Environment | ${{ github.event.inputs.environment || 'production' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Commit | ${{ github.sha }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Branch | ${{ github.ref_name }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Triggered by | ${{ github.actor }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Time | $(date -u +'%Y-%m-%d %H:%M:%S UTC') |" >> $GITHUB_STEP_SUMMARY
       
       - name: Notify on failure
         if: failure()
@@ -156,12 +174,16 @@ jobs:
   health-check:
     name: Post-Deployment Health Check
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     needs: deploy
+    
+    env:
+      DEPLOY_URL: ${{ secrets.DEPLOY_URL }}
     
     steps:
       - name: Check API health
         run: |
-          response=$(curl -s -o /dev/null -w "%{http_code}" https://compareintel.com/api/health)
+          response=$(curl -s -o /dev/null -w "%{http_code}" "${DEPLOY_URL}/api/health")
           if [ "$response" != "200" ]; then
             echo "❌ API health check failed with status: $response"
             exit 1
@@ -170,7 +192,7 @@ jobs:
       
       - name: Check frontend
         run: |
-          response=$(curl -s -o /dev/null -w "%{http_code}" https://compareintel.com/)
+          response=$(curl -s -o /dev/null -w "%{http_code}" "${DEPLOY_URL}/")
           if [ "$response" != "200" ]; then
             echo "❌ Frontend check failed with status: $response"
             exit 1
@@ -179,5 +201,15 @@ jobs:
       
       - name: Check SSL certificate
         run: |
-          echo | openssl s_client -servername compareintel.com -connect compareintel.com:443 2>/dev/null | openssl x509 -noout -dates
+          DOMAIN=$(echo "${DEPLOY_URL}" | sed 's|https://||' | sed 's|/.*||')
+          echo | openssl s_client -servername "${DOMAIN}" -connect "${DOMAIN}:443" 2>/dev/null | openssl x509 -noout -dates
           echo "✅ SSL certificate is valid"
+      
+      - name: Create health check summary
+        run: |
+          echo "## ✅ Health Check Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "All post-deployment health checks passed:" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ API health endpoint responding" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Frontend accessible" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ SSL certificate valid" >> $GITHUB_STEP_SUMMARY
