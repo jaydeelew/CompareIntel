@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react'
+import { createPortal } from 'react-dom'
 
 import type { TutorialStep } from '../../hooks/useTutorial'
 
@@ -92,6 +93,29 @@ export const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
   // Track when an automatic step transition is in progress to suppress scroll indicator
   const [isStepTransitioning, setIsStepTransitioning] = useState(false)
   const dropdownWasOpenedRef = useRef<boolean>(false)
+  // Portal root for rendering tutorial UI - ensures position: fixed works correctly
+  const [portalRoot, setPortalRoot] = useState<HTMLElement | null>(null)
+
+  // Render the tutorial UI in a portal attached to <body> so `position: fixed` is truly viewport-fixed.
+  // This avoids cases where an ancestor has `contain/transform` which can break fixed positioning or clip the tooltip.
+  useEffect(() => {
+    if (typeof document === 'undefined') return
+
+    const existing = document.getElementById('mobile-tutorial-portal-root') as HTMLElement | null
+    if (existing) {
+      setPortalRoot(existing)
+      return
+    }
+
+    const el = document.createElement('div')
+    el.id = 'mobile-tutorial-portal-root'
+    document.body.appendChild(el)
+    setPortalRoot(el)
+
+    return () => {
+      if (el.parentNode) el.parentNode.removeChild(el)
+    }
+  }, [])
   // Estimated tooltip height - smaller for short viewports
   const getTooltipEstimatedHeight = () => {
     const vh = window.innerHeight
@@ -669,7 +693,7 @@ export const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
     }
   }, [step, isLoading])
 
-  if (!step || !isVisible) {
+  if (!step || !isVisible || !portalRoot) {
     return null
   }
 
@@ -780,7 +804,7 @@ export const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
         }
       : undefined
 
-  return (
+  const overlayUi = (
     <>
       {/* Backdrop with cutout - skip for steps where user needs to see full content */}
       {showBackdrop &&
@@ -896,4 +920,6 @@ export const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       )}
     </>
   )
+
+  return createPortal(overlayUi, portalRoot)
 }
