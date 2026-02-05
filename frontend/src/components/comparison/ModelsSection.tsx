@@ -426,42 +426,43 @@ export const ModelsSection: React.FC<ModelsSectionProps> = ({
                 <div key={modelId} className="selected-model-card">
                   <div className="selected-model-header">
                     <h4>{model.name}</h4>
-                    {model.supports_web_search && (
-                      <span
-                        className="web-search-indicator"
-                        title="This model can access the Internet"
-                        style={{
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          marginLeft: '0.5rem',
-                          opacity: 1,
-                        }}
-                      >
-                        <svg
-                          width="16"
-                          height="16"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
+                    <div className="selected-model-actions">
+                      {model.supports_web_search && (
+                        <span
+                          className="web-search-indicator"
+                          title="This model can access the Internet"
                           style={{
-                            color: 'var(--primary-color, #007bff)',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            opacity: 1,
                           }}
                         >
-                          <circle cx="12" cy="12" r="10" />
-                          <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
-                        </svg>
-                      </span>
-                    )}
-                    <button
-                      className="remove-model-btn"
-                      onClick={() => onToggleModel(modelId)}
-                      aria-label={`Remove ${model.name}`}
-                    >
-                      ✕
-                    </button>
+                          <svg
+                            width="16"
+                            height="16"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            style={{
+                              color: 'var(--primary-color, #007bff)',
+                            }}
+                          >
+                            <circle cx="12" cy="12" r="10" />
+                            <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+                          </svg>
+                        </span>
+                      )}
+                      <button
+                        className="remove-model-btn"
+                        onClick={() => onToggleModel(modelId)}
+                        aria-label={`Remove ${model.name}`}
+                      >
+                        ✕
+                      </button>
+                    </div>
                   </div>
                   <p className="selected-model-description">{model.description}</p>
                 </div>
