@@ -54,9 +54,7 @@ UNREGISTERED_TIER_MODELS = {
     "google/gemini-2.5-flash",  # ~$0.15 input, $0.60 output = ~$0.38/M avg
     "openai/gpt-oss-120b",  # Auto-classified based on pricing,
     "x-ai/grok-code-fast-1",
-    "x-ai/grok-4-fast",
-    "meta-llama/llama-3.1-405b-instruct:free",  # Auto-classified based on pricing,    "meta-llama/llama-3.3-70b-instruct",  # Auto-classified based on pricing,    "x-ai/grok-4.1-fast",  # Auto-classified based on pricing,
-    "xiaomi/mimo-v2-flash",  # Auto-classified based on pricing,
+    "x-ai/grok-4-fast",    "xiaomi/mimo-v2-flash",  # Auto-classified based on pricing,
     "mistralai/devstral-2512",  # Auto-classified based on pricing
 }
 
@@ -358,17 +356,7 @@ MODELS_BY_PROVIDER = {
         },
     ],
     "Kwaipilot": [    ],
-    "Meta": [
-        {
-            "id": "meta-llama/llama-3.1-405b-instruct:free",
-            "name": "Llama 3.1 405B Instruct:Free",
-            "description": "Meta's largest open-source model (405B) with strong multilingual, coding, and reasoning capabilities.",
-            "category": "Language",
-            "provider": "Meta",
-            "supports_web_search": False,
-            "knowledge_cutoff": "December 2023",
-        },
-        {
+    "Meta": [        {
             "id": "meta-llama/llama-4-maverick",
             "name": "Llama 4 Maverick",
             "description": 'A high-capacity 400B MoE model (17B active, 128 experts) for complex multimodal reasoning and generation.',
