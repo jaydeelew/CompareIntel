@@ -1013,12 +1013,25 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
         if (headerElement) {
           setTargetElement(headerElement)
           setIsVisible(true)
-          // Also update position to ensure tooltip is correctly positioned
+          // Calculate position with viewport bounds checking
           const rect = headerElement.getBoundingClientRect()
           const offset = 16
-          // Position is 'top' for expand-provider
+          const tooltipHeight = 280 // Estimated tooltip height
+          // Position is 'top' for expand-provider - tooltip appears above element
           const top = rect.top - offset
           const left = rect.left + rect.width / 2
+
+          // Ensure tooltip stays within viewport - if tooltip would go off top, position below element
+          if (top - tooltipHeight < 0) {
+            // Tooltip would be cut off at top - scroll page to make room
+            const neededScroll = tooltipHeight + offset + 80 // 80px margin
+            const currentScroll = window.pageYOffset
+            const elementPageY = rect.top + currentScroll
+            const targetScroll = elementPageY - neededScroll
+            if (targetScroll > 0 && Math.abs(currentScroll - targetScroll) > 50) {
+              window.scrollTo({ top: targetScroll, behavior: 'smooth' })
+            }
+          }
           setOverlayPosition({ top, left })
         }
       }
@@ -1065,12 +1078,24 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
         // This fixes production timing issues where main findElement fails but interval finds element
         setTargetElement(googleDropdown)
         setIsVisible(true)
-        // Also update position to ensure tooltip is correctly positioned
+        // Calculate position with viewport bounds checking
         const rect = googleDropdown.getBoundingClientRect()
         const offset = 16
-        // Position is 'top' for select-models
+        const tooltipHeight = 280 // Estimated tooltip height
+        // Position is 'top' for select-models - tooltip appears above element
         const top = rect.top - offset
         const left = rect.left + rect.width / 2
+
+        // Ensure tooltip stays within viewport - if tooltip would go off top, scroll page
+        if (top - tooltipHeight < 0) {
+          const neededScroll = tooltipHeight + offset + 80
+          const currentScroll = window.pageYOffset
+          const elementPageY = rect.top + currentScroll
+          const targetScroll = elementPageY - neededScroll
+          if (targetScroll > 0 && Math.abs(currentScroll - targetScroll) > 50) {
+            window.scrollTo({ top: targetScroll, behavior: 'smooth' })
+          }
+        }
         setOverlayPosition({ top, left })
       }
     }
