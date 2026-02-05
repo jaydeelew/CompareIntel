@@ -6,23 +6,24 @@ This script helps you create your first super admin user after running
 the database migration. It's safer than manually updating the database.
 """
 
+import getpass
 import os
 import sys
-import getpass
-from datetime import datetime, UTC
+from datetime import UTC, datetime
 from pathlib import Path
 
 # Load environment variables from .env file
 from dotenv import load_dotenv
+
 backend_dir = Path(__file__).parent.resolve()
 load_dotenv(backend_dir / ".env")
 
 # Add the backend directory to the Python path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
+from app.auth import get_password_hash, validate_password_strength
 from app.database import SessionLocal
 from app.models import User
-from app.auth import get_password_hash, validate_password_strength
 
 
 def create_admin_user():
@@ -65,9 +66,8 @@ def create_admin_user():
                 db.commit()
                 print(f"User {email} promoted to super admin successfully!")
                 return
-            else:
-                print("Exiting...")
-                return
+            print("Exiting...")
+            return
 
         # Get password
         while True:
@@ -75,9 +75,8 @@ def create_admin_user():
             is_valid, error_msg = validate_password_strength(password)
             if is_valid:
                 break
-            else:
-                print(f"Password error: {error_msg}")
-                print("Please try again.")
+            print(f"Password error: {error_msg}")
+            print("Please try again.")
 
         # Confirm password
         password_confirm = getpass.getpass("Confirm password: ")
@@ -96,14 +95,13 @@ def create_admin_user():
             if role_choice == "1":
                 role = "moderator"
                 break
-            elif role_choice == "2":
+            if role_choice == "2":
                 role = "admin"
                 break
-            elif role_choice == "3":
+            if role_choice == "3":
                 role = "super_admin"
                 break
-            else:
-                print("Invalid choice. Please enter 1, 2, or 3.")
+            print("Invalid choice. Please enter 1, 2, or 3.")
 
         # Get subscription tier
         print("\nSelect subscription tier:")
@@ -118,20 +116,19 @@ def create_admin_user():
             if tier_choice == "1":
                 subscription_tier = "free"
                 break
-            elif tier_choice == "2":
+            if tier_choice == "2":
                 subscription_tier = "starter"
                 break
-            elif tier_choice == "3":
+            if tier_choice == "3":
                 subscription_tier = "starter_plus"
                 break
-            elif tier_choice == "4":
+            if tier_choice == "4":
                 subscription_tier = "pro"
                 break
-            elif tier_choice == "5":
+            if tier_choice == "5":
                 subscription_tier = "pro_plus"
                 break
-            else:
-                print("Invalid choice. Please enter 1, 2, 3, 4, or 5.")
+            print("Invalid choice. Please enter 1, 2, 3, 4, or 5.")
 
         # Create user
         user = User(

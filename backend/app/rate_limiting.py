@@ -11,43 +11,39 @@ CREDITS-BASED SYSTEM:
 - All rate limiting uses credits instead of model responses
 """
 
-from datetime import datetime, date, timezone, timedelta
-from typing import Optional, Tuple, Dict, Any
-from sqlalchemy.orm import Session
-from decimal import Decimal, ROUND_CEILING
-from .models import User, UsageLog
-from sqlalchemy import func
 from collections import defaultdict
+from datetime import UTC, date, datetime, timedelta
+from decimal import ROUND_CEILING, Decimal
+from typing import Any
+
 import pytz
-from .types import (
-    UsageStatsDict,
-    FullUsageStatsDict,
-    AnonymousRateLimitData,
-)
+from sqlalchemy import func
+from sqlalchemy.orm import Session
 
 # Import configuration constants
 from .config import (
+    ANONYMOUS_DAILY_LIMIT,
+    MODEL_LIMITS,
     SUBSCRIPTION_CONFIG,
     SUBSCRIPTION_LIMITS,
-    MODEL_LIMITS,
-    ANONYMOUS_DAILY_LIMIT,
-    ANONYMOUS_MODEL_LIMIT,
-    get_model_limit,
     get_daily_limit,
+)
+from .config.constants import (
+    DAILY_CREDIT_LIMITS,
 )
 
 # Import credit management functions
 from .credit_manager import (
-    get_user_credits,
+    check_and_reset_credits_if_needed,
     check_credits_sufficient,
     deduct_credits,
-    get_credit_usage_stats,
-    check_and_reset_credits_if_needed,
     ensure_credits_allocated,
 )
-from .config.constants import (
-    DAILY_CREDIT_LIMITS,
-    MONTHLY_CREDIT_ALLOCATIONS,
+from .models import UsageLog, User
+from .types import (
+    AnonymousRateLimitData,
+    FullUsageStatsDict,
+    UsageStatsDict,
 )
 
 
@@ -59,20 +55,23 @@ def _default_rate_limit_data() -> AnonymousRateLimitData:
     return {"count": 0, "date": "", "first_seen": None, "timezone": "UTC", "last_reset_at": None}
 
 
-anonymous_rate_limit_storage: Dict[str, AnonymousRateLimitData] = defaultdict(_default_rate_limit_data)
+anonymous_rate_limit_storage: dict[str, AnonymousRateLimitData] = defaultdict(
+    _default_rate_limit_data
+)
 
 
 # ============================================================================
 # TIMEZONE UTILITY FUNCTIONS
 # ============================================================================
 
+
 def _validate_timezone(timezone_str: str) -> str:
     """
     Validate and return a timezone string, defaulting to UTC if invalid.
-    
+
     Args:
         timezone_str: IANA timezone string (e.g., "America/Chicago")
-        
+
     Returns:
         Valid timezone string (defaults to "UTC" if invalid)
     """
@@ -86,10 +85,10 @@ def _validate_timezone(timezone_str: str) -> str:
 def _get_local_date(timezone_str: str) -> str:
     """
     Get today's date string (YYYY-MM-DD) in the specified timezone.
-    
+
     Args:
         timezone_str: IANA timezone string
-        
+
     Returns:
         Date string in YYYY-MM-DD format
     """
@@ -101,40 +100,43 @@ def _get_local_date(timezone_str: str) -> str:
 def _get_next_local_midnight(timezone_str: str) -> datetime:
     """
     Get the next midnight in the specified timezone, converted to UTC.
-    
+
     Args:
         timezone_str: IANA timezone string
-        
+
     Returns:
         UTC datetime representing next midnight in the timezone
     """
     tz = pytz.timezone(_validate_timezone(timezone_str))
     now_local = datetime.now(tz)
     # Get next midnight in local timezone
-    tomorrow_local = (now_local + timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
+    tomorrow_local = (now_local + timedelta(days=1)).replace(
+        hour=0, minute=0, second=0, microsecond=0
+    )
     # Convert to UTC for storage
-    return tomorrow_local.astimezone(timezone.utc)
+    return tomorrow_local.astimezone(UTC)
 
 
-def _can_reset_credits(last_reset_at: Optional[datetime], min_hours_between_resets: int = 20) -> bool:
+def _can_reset_credits(last_reset_at: datetime | None, min_hours_between_resets: int = 20) -> bool:
     """
     Check if credits can be reset (safeguard against abuse).
-    
+
     Prevents multiple resets within a short time period (e.g., by changing timezone).
-    
+
     Args:
         last_reset_at: UTC timestamp of last reset (None if never reset)
         min_hours_between_resets: Minimum hours between resets (default 20 to allow for timezone changes)
-        
+
     Returns:
         True if reset is allowed, False otherwise
     """
     if last_reset_at is None:
         return True
-    
-    now = datetime.now(timezone.utc)
+
+    now = datetime.now(UTC)
     hours_since_reset = (now - last_reset_at).total_seconds() / 3600
     return hours_since_reset >= min_hours_between_resets
+
 
 # ============================================================================
 # CREDITS-BASED RATE LIMITING FUNCTIONS
@@ -142,7 +144,7 @@ def _can_reset_credits(last_reset_at: Optional[datetime], min_hours_between_rese
 # Credit-based functions for rate limiting
 
 
-def check_user_credits(user: User, required_credits: Decimal, db: Session) -> Tuple[bool, int, int]:
+def check_user_credits(user: User, required_credits: Decimal, db: Session) -> tuple[bool, int, int]:
     """
     Check if authenticated user has sufficient credits for a request.
 
@@ -175,7 +177,11 @@ def check_user_credits(user: User, required_credits: Decimal, db: Session) -> Tu
 
 
 def deduct_user_credits(
-    user: User, credits: Decimal, usage_log_id: Optional[int], db: Session, description: Optional[str] = None
+    user: User,
+    credits: Decimal,
+    usage_log_id: int | None,
+    db: Session,
+    description: str | None = None,
 ) -> None:
     """
     Deduct credits from authenticated user's balance.
@@ -192,7 +198,9 @@ def deduct_user_credits(
     deduct_credits(user.id, credits, usage_log_id, db, description)
 
 
-def check_anonymous_credits(identifier: str, required_credits: Decimal, timezone_str: str = "UTC", db: Optional[Session] = None) -> Tuple[bool, int, int]:
+def check_anonymous_credits(
+    identifier: str, required_credits: Decimal, timezone_str: str = "UTC", db: Session | None = None
+) -> tuple[bool, int, int]:
     """
     Check if unregistered user has sufficient credits for a request.
 
@@ -211,11 +219,11 @@ def check_anonymous_credits(identifier: str, required_credits: Decimal, timezone
     """
     # Validate and normalize timezone
     timezone_str = _validate_timezone(timezone_str)
-    
+
     # Get today's date in user's timezone
     today = _get_local_date(timezone_str)
     user_data = anonymous_rate_limit_storage[identifier]
-    
+
     # Initialize timezone if not set
     if not user_data.get("timezone"):
         user_data["timezone"] = timezone_str
@@ -230,9 +238,15 @@ def check_anonymous_credits(identifier: str, required_credits: Decimal, timezone
             # Note: Database queries use UTC dates, but we filter by UTC date range that covers the local day
             tz = pytz.timezone(timezone_str)
             now_local = datetime.now(tz)
-            today_start_utc = now_local.replace(hour=0, minute=0, second=0, microsecond=0).astimezone(timezone.utc)
-            today_end_utc = (now_local + timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0).astimezone(timezone.utc)
-            
+            today_start_utc = now_local.replace(
+                hour=0, minute=0, second=0, microsecond=0
+            ).astimezone(UTC)
+            today_end_utc = (
+                (now_local + timedelta(days=1))
+                .replace(hour=0, minute=0, second=0, microsecond=0)
+                .astimezone(UTC)
+            )
+
             credits_query = db.query(func.sum(UsageLog.credits_used)).filter(
                 UsageLog.user_id.is_(None),  # Unregistered users only
                 UsageLog.ip_address == ip_address,
@@ -242,19 +256,31 @@ def check_anonymous_credits(identifier: str, required_credits: Decimal, timezone
             )
             db_credits_used = credits_query.scalar() or Decimal(0)
             # Sync memory with database (round UP to be conservative - never give free credits)
-            user_data["count"] = int(db_credits_used.quantize(Decimal('1'), rounding=ROUND_CEILING)) if db_credits_used > 0 else 0
+            user_data["count"] = (
+                int(db_credits_used.quantize(Decimal("1"), rounding=ROUND_CEILING))
+                if db_credits_used > 0
+                else 0
+            )
             user_data["date"] = today
             if not user_data.get("first_seen"):
-                user_data["first_seen"] = datetime.now(timezone.utc)
-            print(f"[SYNC] {identifier}: synced from DB, credits_used={db_credits_used}, count={user_data['count']}, date_range={today_start_utc} to {today_end_utc}")
+                user_data["first_seen"] = datetime.now(UTC)
+            print(
+                f"[SYNC] {identifier}: synced from DB, credits_used={db_credits_used}, count={user_data['count']}, date_range={today_start_utc} to {today_end_utc}"
+            )
         elif identifier.startswith("fp:"):
             fingerprint = identifier[3:]  # Remove "fp:" prefix
             # Query UsageLog for credits used today in user's timezone
             tz = pytz.timezone(timezone_str)
             now_local = datetime.now(tz)
-            today_start_utc = now_local.replace(hour=0, minute=0, second=0, microsecond=0).astimezone(timezone.utc)
-            today_end_utc = (now_local + timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0).astimezone(timezone.utc)
-            
+            today_start_utc = now_local.replace(
+                hour=0, minute=0, second=0, microsecond=0
+            ).astimezone(UTC)
+            today_end_utc = (
+                (now_local + timedelta(days=1))
+                .replace(hour=0, minute=0, second=0, microsecond=0)
+                .astimezone(UTC)
+            )
+
             credits_query = db.query(func.sum(UsageLog.credits_used)).filter(
                 UsageLog.user_id.is_(None),  # Unregistered users only
                 UsageLog.browser_fingerprint == fingerprint,
@@ -264,13 +290,21 @@ def check_anonymous_credits(identifier: str, required_credits: Decimal, timezone
             )
             db_credits_used = credits_query.scalar() or Decimal(0)
             # Sync memory with database (round UP to be conservative - never give free credits)
-            user_data["count"] = int(db_credits_used.quantize(Decimal('1'), rounding=ROUND_CEILING)) if db_credits_used > 0 else 0
+            user_data["count"] = (
+                int(db_credits_used.quantize(Decimal("1"), rounding=ROUND_CEILING))
+                if db_credits_used > 0
+                else 0
+            )
             user_data["date"] = today
             if not user_data.get("first_seen"):
-                user_data["first_seen"] = datetime.now(timezone.utc)
-            print(f"[SYNC] {identifier}: synced from DB, credits_used={db_credits_used}, count={user_data['count']}, date_range={today_start_utc} to {today_end_utc}")
+                user_data["first_seen"] = datetime.now(UTC)
+            print(
+                f"[SYNC] {identifier}: synced from DB, credits_used={db_credits_used}, count={user_data['count']}, date_range={today_start_utc} to {today_end_utc}"
+            )
     elif db is not None and user_data.get("_admin_reset", False):
-        print(f"[SYNC] {identifier}: skipping sync due to admin reset flag, count={user_data.get('count', 0)}")
+        print(
+            f"[SYNC] {identifier}: skipping sync due to admin reset flag, count={user_data.get('count', 0)}"
+        )
 
     # Check if timezone changed (user might be traveling or using VPN)
     stored_timezone = user_data.get("timezone", "UTC")
@@ -283,7 +317,7 @@ def check_anonymous_credits(identifier: str, required_credits: Decimal, timezone
             if user_data["date"] != today:
                 user_data["count"] = 0
                 user_data["date"] = today
-                user_data["last_reset_at"] = datetime.now(timezone.utc)
+                user_data["last_reset_at"] = datetime.now(UTC)
         else:
             # Too soon to reset - keep using old timezone for now
             timezone_str = stored_timezone
@@ -296,9 +330,9 @@ def check_anonymous_credits(identifier: str, required_credits: Decimal, timezone
             user_data["count"] = 0  # Credits used (stored as integer)
             user_data["date"] = today
             user_data["timezone"] = timezone_str
-            user_data["last_reset_at"] = datetime.now(timezone.utc)
+            user_data["last_reset_at"] = datetime.now(UTC)
             if not user_data.get("first_seen"):
-                user_data["first_seen"] = datetime.now(timezone.utc)
+                user_data["first_seen"] = datetime.now(UTC)
 
     # Get daily credit limit for unregistered users
     credits_allocated = DAILY_CREDIT_LIMITS.get("unregistered", 50)
@@ -312,7 +346,9 @@ def check_anonymous_credits(identifier: str, required_credits: Decimal, timezone
 
     # Clear admin reset flag after first check (allows normal syncing going forward)
     if user_data.get("_admin_reset", False):
-        print(f"[CHECK] {identifier}: admin reset flag cleared after check, credits_used={credits_used}, credits_remaining={credits_remaining}, is_allowed={is_allowed}")
+        print(
+            f"[CHECK] {identifier}: admin reset flag cleared after check, credits_used={credits_used}, credits_remaining={credits_remaining}, is_allowed={is_allowed}"
+        )
         user_data.pop("_admin_reset", None)
 
     return is_allowed, credits_remaining, credits_allocated
@@ -331,14 +367,14 @@ def deduct_anonymous_credits(identifier: str, credits: Decimal, timezone_str: st
         timezone_str: IANA timezone string (e.g., "America/Chicago"), defaults to "UTC"
     """
     from .config.constants import DAILY_CREDIT_LIMITS
-    
+
     # Validate and normalize timezone
     timezone_str = _validate_timezone(timezone_str)
-    
+
     # Get today's date in user's timezone
     today = _get_local_date(timezone_str)
     user_data = anonymous_rate_limit_storage[identifier]
-    
+
     # Initialize timezone if not set
     if not user_data.get("timezone"):
         user_data["timezone"] = timezone_str
@@ -352,34 +388,36 @@ def deduct_anonymous_credits(identifier: str, credits: Decimal, timezone_str: st
             if user_data["date"] != today:
                 user_data["count"] = 0
                 user_data["date"] = today
-                user_data["last_reset_at"] = datetime.now(timezone.utc)
+                user_data["last_reset_at"] = datetime.now(UTC)
         else:
             # Too soon - use stored timezone
             timezone_str = stored_timezone
             today = _get_local_date(timezone_str)
-    
+
     if user_data["date"] != today:
         # Check if reset is allowed (prevent abuse)
         if _can_reset_credits(user_data.get("last_reset_at")):
             user_data["count"] = 0
             user_data["date"] = today
             user_data["timezone"] = timezone_str
-            user_data["last_reset_at"] = datetime.now(timezone.utc)
+            user_data["last_reset_at"] = datetime.now(UTC)
             if not user_data.get("first_seen"):
-                user_data["first_seen"] = datetime.now(timezone.utc)
+                user_data["first_seen"] = datetime.now(UTC)
 
     # Convert Decimal to int (round UP to be conservative - never give free credits)
     # Use ceiling to ensure we always deduct at least 1 credit for any usage
-    credits_int = int(credits.quantize(Decimal('1'), rounding=ROUND_CEILING))
-    
+    credits_int = int(credits.quantize(Decimal("1"), rounding=ROUND_CEILING))
+
     # Get allocated amount for unregistered users (50 credits)
     allocated = DAILY_CREDIT_LIMITS.get("unregistered", 50)
-    
+
     # Cap credits at allocated amount (zero out, don't go negative)
     new_count = user_data["count"] + credits_int
     user_data["count"] = min(new_count, allocated)
-    
-    print(f"[DEBUG] deduct_anonymous_credits - {identifier}: deducted {credits_int} credits (from {float(credits):.4f}), new count: {user_data['count']} (capped at {allocated})")
+
+    print(
+        f"[DEBUG] deduct_anonymous_credits - {identifier}: deducted {credits_int} credits (from {float(credits):.4f}), new count: {user_data['count']} (capped at {allocated})"
+    )
 
 
 def get_user_usage_stats(user: User) -> FullUsageStatsDict:
@@ -442,12 +480,12 @@ def get_anonymous_usage_stats(identifier: str, timezone_str: str = "UTC") -> Usa
     """
     # Validate and normalize timezone
     timezone_str = _validate_timezone(timezone_str)
-    
+
     # Get credit-based stats
     credits_allocated = DAILY_CREDIT_LIMITS.get("unregistered", 50)
     today = _get_local_date(timezone_str)
     user_data = anonymous_rate_limit_storage[identifier]
-    
+
     # Initialize timezone if not set
     if not user_data.get("timezone"):
         user_data["timezone"] = timezone_str
@@ -463,7 +501,7 @@ def get_anonymous_usage_stats(identifier: str, timezone_str: str = "UTC") -> Usa
             credits_used = 0
             user_data["date"] = today
             user_data["timezone"] = stored_timezone
-            user_data["last_reset_at"] = datetime.now(timezone.utc)
+            user_data["last_reset_at"] = datetime.now(UTC)
         else:
             # Too soon to reset - use existing count
             credits_used = user_data["count"]
@@ -540,7 +578,7 @@ def is_overage_allowed(tier: str) -> bool:
     return config.get("overage_allowed", False)
 
 
-def get_overage_price(tier: str) -> Optional[float]:
+def get_overage_price(tier: str) -> float | None:
     """
     Get overage price per model response for a tier.
 
@@ -554,7 +592,7 @@ def get_overage_price(tier: str) -> Optional[float]:
     return config.get("overage_price")
 
 
-def get_extended_overage_price(tier: str) -> Optional[float]:
+def get_extended_overage_price(tier: str) -> float | None:
     """
     Get extended overage price per extended interaction for a tier.
 
@@ -568,7 +606,9 @@ def get_extended_overage_price(tier: str) -> Optional[float]:
     return config.get("extended_overage_price")
 
 
-def get_tier_config(tier: str) -> Dict[str, Any]:  # TODO: Use TierConfigDict when config.py uses TypedDict
+def get_tier_config(
+    tier: str,
+) -> dict[str, Any]:  # TODO: Use TierConfigDict when config.py uses TypedDict
     """
     Get complete configuration for a tier.
 
@@ -581,7 +621,7 @@ def get_tier_config(tier: str) -> Dict[str, Any]:  # TODO: Use TierConfigDict wh
     return SUBSCRIPTION_CONFIG.get(tier, SUBSCRIPTION_CONFIG["free"])
 
 
-def get_rate_limit_info() -> Dict[str, Any]:
+def get_rate_limit_info() -> dict[str, Any]:
     """
     Get information about all rate limits (for debugging).
 
@@ -594,5 +634,3 @@ def get_rate_limit_info() -> Dict[str, Any]:
         "anonymous_limit": ANONYMOUS_DAILY_LIMIT,
         "anonymous_users_tracked": len(anonymous_rate_limit_storage),
     }
-
-

@@ -5,35 +5,34 @@ This module provides comprehensive user management functionality including
 user CRUD operations, role management, and audit logging.
 """
 
-from fastapi import APIRouter, Depends, HTTPException, status, Request, Query
-from fastapi.responses import JSONResponse, StreamingResponse
-from sqlalchemy.orm import Session
-from sqlalchemy import func, desc, and_
-from typing import List, Optional, Dict, Any
-from datetime import datetime, timedelta, UTC
-import json
-import httpx
 import asyncio
+import json
+from datetime import UTC, date, datetime, timedelta
+from typing import Any
 
+import httpx
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
+from fastapi.responses import StreamingResponse
+from sqlalchemy import desc, func
+from sqlalchemy.orm import Session
+
+from ..auth import get_password_hash
+from ..config.constants import DAILY_CREDIT_LIMITS, MONTHLY_CREDIT_ALLOCATIONS
+from ..credit_manager import allocate_monthly_credits, ensure_credits_allocated, reset_daily_credits
 from ..database import get_db
-from ..models import User, AdminActionLog, AppSettings, UsageLog
+from ..dependencies import get_current_admin_user, require_admin_role
+from ..email_service import send_verification_email
+from ..models import AdminActionLog, AppSettings, UsageLog, User
+from ..rate_limiting import anonymous_rate_limit_storage
 from ..schemas import (
-    AdminUserResponse,
-    AdminUserCreate,
-    AdminUserUpdate,
-    AdminUserListResponse,
     AdminActionLogResponse,
     AdminStatsResponse,
+    AdminUserCreate,
+    AdminUserListResponse,
+    AdminUserResponse,
+    AdminUserUpdate,
     VisitorAnalyticsResponse,
 )
-from ..dependencies import get_current_admin_user, require_admin_role
-from ..auth import get_password_hash
-from ..rate_limiting import anonymous_rate_limit_storage
-from datetime import date
-from ..credit_manager import allocate_monthly_credits, reset_daily_credits, ensure_credits_allocated
-from ..config.constants import DAILY_CREDIT_LIMITS, MONTHLY_CREDIT_ALLOCATIONS
-
-from ..email_service import send_verification_email
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 
@@ -60,9 +59,9 @@ def log_admin_action(
     admin_user: User,
     action_type: str,
     action_description: str,
-    target_user_id: Optional[int] = None,
-    details: Optional[Dict[str, Any]] = None,
-    request: Optional[Request] = None,
+    target_user_id: int | None = None,
+    details: dict[str, Any] | None = None,
+    request: Request | None = None,
 ) -> None:
     """Log admin action for audit trail."""
     # Safely extract IP address and user agent
@@ -71,9 +70,7 @@ def log_admin_action(
     if request:
         try:
             ip_address = (
-                request.client.host
-                if hasattr(request, "client") and request.client
-                else None
+                request.client.host if hasattr(request, "client") and request.client else None
             )
         except:
             ip_address = None
@@ -81,7 +78,7 @@ def log_admin_action(
             user_agent = request.headers.get("user-agent")
         except:
             user_agent = None
-    
+
     log_entry = AdminActionLog(
         admin_user_id=admin_user.id,
         target_user_id=target_user_id,
@@ -127,9 +124,10 @@ async def get_admin_stats(
     # Legacy: daily_usage_count removed - use credits instead
     # Calculate total credits used today (approximate usage metric)
     total_usage_today = (
-        db.query(func.sum(User.credits_used_this_period)).filter(
-            User.credits_reset_at.isnot(None)
-        ).scalar() or 0
+        db.query(func.sum(User.credits_used_this_period))
+        .filter(User.credits_reset_at.isnot(None))
+        .scalar()
+        or 0
     )
 
     # Admin actions today
@@ -272,10 +270,10 @@ async def get_visitor_analytics(
 async def list_users(
     page: int = Query(1, ge=1),
     per_page: int = Query(20, ge=1, le=100),
-    search: Optional[str] = Query(None),
-    role: Optional[str] = Query(None),
-    tier: Optional[str] = Query(None),
-    is_active: Optional[bool] = Query(None),
+    search: str | None = Query(None),
+    role: str | None = Query(None),
+    tier: str | None = Query(None),
+    is_active: bool | None = Query(None),
     current_user: User = Depends(get_current_admin_user),
     db: Session = Depends(get_db),
 ):
@@ -439,10 +437,9 @@ async def update_user(
         user.is_admin = user_data.role in ["moderator", "admin", "super_admin"]
 
     # Check if subscription tier changed
-    tier_changed = (
-        "subscription_tier" in update_data
-        and original_values.get("subscription_tier") != update_data.get("subscription_tier")
-    )
+    tier_changed = "subscription_tier" in update_data and original_values.get(
+        "subscription_tier"
+    ) != update_data.get("subscription_tier")
 
     db.commit()
     db.refresh(user)
@@ -456,7 +453,9 @@ async def update_user(
             db.refresh(user)
         elif tier in DAILY_CREDIT_LIMITS:
             # Free tier: reset daily credits (this also resets usage to 0)
-            reset_daily_credits(user_id, tier, db, force=True)  # Admin change bypasses abuse prevention
+            reset_daily_credits(
+                user_id, tier, db, force=True
+            )  # Admin change bypasses abuse prevention
             db.refresh(user)
 
     # Ensure usage is reset if it's a new day
@@ -544,7 +543,7 @@ async def delete_user(
             )
             db.add(log_entry)
             db.commit()
-            print(f"Admin action logged successfully")
+            print("Admin action logged successfully")
         except Exception as e:
             print(f"Warning: Could not log admin action: {e}")
             # Continue anyway - logging failure shouldn't prevent user deletion
@@ -644,13 +643,13 @@ async def send_user_verification(
     return {"message": "Verification email sent successfully"}
 
 
-@router.get("/action-logs", response_model=List[AdminActionLogResponse])
+@router.get("/action-logs", response_model=list[AdminActionLogResponse])
 async def get_action_logs(
     page: int = Query(1, ge=1),
     per_page: int = Query(50, ge=1, le=100),
-    action_type: Optional[str] = Query(None),
-    admin_user_id: Optional[int] = Query(None),
-    target_user_id: Optional[int] = Query(None),
+    action_type: str | None = Query(None),
+    admin_user_id: int | None = Query(None),
+    target_user_id: int | None = Query(None),
     current_user: User = Depends(get_current_admin_user),
     db: Session = Depends(get_db),
 ):
@@ -743,15 +742,15 @@ async def reset_user_usage(
     db: Session = Depends(get_db),
 ):
     """Reset user's credit usage to zero and restore full credits based on subscription tier.
-    
+
     This resets:
     - Credits used this period to 0
     - Restores full credit allocation based on tier
-    
+
     Credit allocation by tier:
     - Free tier: Restores daily credit allocation (100 credits)
     - Paid tiers: Restores monthly credit allocation (1,200 - 10,000 credits)
-    
+
     Comparison history is NOT affected by this operation.
     """
 
@@ -964,12 +963,12 @@ async def get_app_settings(
     # Format datetime fields for JSON serialization
     created_at_str = settings.created_at.isoformat() if settings.created_at else None
     updated_at_str = settings.updated_at.isoformat() if settings.updated_at else None
-    
+
     # Count unregistered users with credits used (development mode only)
     # These values are only relevant for the unregistered credit reset feature
     anonymous_users_with_usage = 0
     anonymous_db_usage_count = 0
-    
+
     if is_development:
         # Check memory storage for unregistered entries with usage > 0
         for key in list(anonymous_rate_limit_storage.keys()):
@@ -977,14 +976,14 @@ async def get_app_settings(
                 count = anonymous_rate_limit_storage[key].get("count", 0)
                 if count > 0:
                     anonymous_users_with_usage += 1
-        
+
         # Also check database for anonymous usage logs
         anonymous_db_usage_count = (
             db.query(UsageLog)
             .filter(UsageLog.user_id.is_(None))  # Unregistered users only
             .count()
         )
-    
+
     return {
         "anonymous_mock_mode_enabled": (
             settings.anonymous_mock_mode_enabled if is_development else False
@@ -1091,7 +1090,7 @@ async def zero_anonymous_usage(
     import os
 
     is_development = os.environ.get("ENVIRONMENT") == "development"
-    
+
     # Restrict to development mode only
     if not is_development:
         raise HTTPException(
@@ -1118,7 +1117,9 @@ async def zero_anonymous_usage(
                 # Add a flag to prevent sync from overwriting this reset
                 anonymous_rate_limit_storage[key]["_admin_reset"] = True
                 keys_reset.append(key)
-                print(f"[ZERO_USAGE] Reset {key}: count {old_count} -> 0, date={anonymous_rate_limit_storage[key]['date']}, reset_at={reset_timestamp}")
+                print(
+                    f"[ZERO_USAGE] Reset {key}: count {old_count} -> 0, date={anonymous_rate_limit_storage[key]['date']}, reset_at={reset_timestamp}"
+                )
 
     # Delete ALL UsageLog entries for unregistered users (not just today's)
     # This ensures that when memory storage syncs with database, it finds 0 credits used
@@ -1132,7 +1133,7 @@ async def zero_anonymous_usage(
         )
         .count()
     )
-    
+
     usage_logs_deleted = (
         db.query(UsageLog)
         .filter(
@@ -1141,8 +1142,10 @@ async def zero_anonymous_usage(
         .delete()
     )
     db.commit()
-    
-    print(f"[ZERO_USAGE] Deleted {usage_logs_deleted} UsageLog entries (found {usage_logs_before} total) for ALL unregistered users (not just today, to handle timezone differences)")
+
+    print(
+        f"[ZERO_USAGE] Deleted {usage_logs_deleted} UsageLog entries (found {usage_logs_before} total) for ALL unregistered users (not just today, to handle timezone differences)"
+    )
 
     # Log admin action
     log_admin_action(
@@ -1177,39 +1180,39 @@ async def cleanup_usage_logs(
 ):
     """
     Cleanup old UsageLog entries by aggregating them into monthly summaries.
-    
+
     This endpoint aggregates UsageLog entries older than keep_days into monthly
     summary records and then deletes the detailed entries. This helps manage
     database growth while preserving aggregated data for long-term analysis.
-    
+
     The aggregated data includes:
     - Total comparisons, models requested/successful/failed
     - Token aggregates (total and average input/output tokens)
     - Credit aggregates (total and average credits per comparison)
     - Cost aggregates (total actual and estimated costs)
     - Model breakdown (per-model statistics)
-    
+
     Detailed UsageLog entries are needed for:
     - Token estimation (requires ~30 days of detailed data)
     - Recent usage analysis
-    
+
     Aggregated monthly summaries are kept indefinitely for:
     - Long-term trend analysis
     - Cost analysis over time
     - Historical reporting
-    
+
     Args:
         keep_days: Number of days of detailed data to keep (default: 90)
         dry_run: If True, only report what would be deleted, don't actually delete
-    
+
     Returns:
         Dictionary with cleanup statistics
     """
     from ..data_retention import cleanup_old_usage_logs
-    
+
     try:
         result = cleanup_old_usage_logs(db, keep_days=keep_days, dry_run=dry_run)
-        
+
         # Log admin action
         log_admin_action(
             db=db,
@@ -1220,52 +1223,52 @@ async def cleanup_usage_logs(
             details=result,
             request=request,
         )
-        
+
         return result
     except Exception as e:
         db.rollback()
-        raise HTTPException(
-            status_code=500,
-            detail=f"Error during cleanup: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Error during cleanup: {str(e)}")
 
 
 # Model Management Endpoints
 
-from pydantic import BaseModel
-from ..model_runner import (
-    MODELS_BY_PROVIDER,
-    OPENROUTER_MODELS,
-    client,
-    UNREGISTERED_TIER_MODELS,
-    FREE_TIER_MODELS,
-    refresh_model_token_limits,
-)
-from .. import model_runner
-from ..config import settings
-import subprocess
-from pathlib import Path
-import ast
-import re
-import sys
 import importlib
 import logging
-from openai import APIError, NotFoundError, APIConnectionError, RateLimitError, APITimeoutError
+import re
+import subprocess
+import sys
+from pathlib import Path
+
+from openai import APIConnectionError, APIError, APITimeoutError, NotFoundError, RateLimitError
+from pydantic import BaseModel
+
+from .. import model_runner
+from ..config import settings
+from ..model_runner import (
+    FREE_TIER_MODELS,
+    MODELS_BY_PROVIDER,
+    OPENROUTER_MODELS,
+    UNREGISTERED_TIER_MODELS,
+    client,
+    refresh_model_token_limits,
+)
 
 logger = logging.getLogger(__name__)
 
 
-def find_matching_brace(content: str, start_pos: int, open_char: str = '{', close_char: str = '}') -> int:
+def find_matching_brace(
+    content: str, start_pos: int, open_char: str = "{", close_char: str = "}"
+) -> int:
     """
     Find the position after the matching closing brace/bracket starting from start_pos.
     Handles nested braces and ignores braces inside strings.
-    
+
     Args:
         content: The content to search in
         start_pos: Position right after the opening brace/bracket
         open_char: The opening character ('{' or '[')
         close_char: The closing character ('}' or ']')
-    
+
     Returns:
         Position after the closing brace/bracket, or -1 if not found
     """
@@ -1274,13 +1277,13 @@ def find_matching_brace(content: str, start_pos: int, open_char: str = '{', clos
     in_string = False
     string_char = None
     escape_next = False
-    
+
     while pos < len(content) and count > 0:
         char = content[pos]
-        
+
         if escape_next:
             escape_next = False
-        elif char == '\\':
+        elif char == "\\":
             escape_next = True
         elif in_string:
             if char == string_char:
@@ -1292,9 +1295,9 @@ def find_matching_brace(content: str, start_pos: int, open_char: str = '{', clos
             count += 1
         elif char == close_char:
             count -= 1
-        
+
         pos += 1
-    
+
     return pos if count == 0 else -1
 
 
@@ -1302,23 +1305,23 @@ def find_provider_list_bounds(content: str, provider_name: str) -> tuple[int, in
     """
     Find the start and end positions of a provider's model list in the content.
     Uses bracket counting to handle brackets inside strings correctly.
-    
+
     Returns (start, end) where start is the position of the opening quote of provider name
     and end is the position after the closing bracket, or None if not found.
     """
     provider_start_pattern = rf'("{re.escape(provider_name)}"\s*:\s*\[)'
     start_match = re.search(provider_start_pattern, content)
-    
+
     if not start_match:
         return None
-    
+
     # Use bracket counting to find the matching closing bracket
     list_start = start_match.end()  # Position after the opening [
-    end_pos = find_matching_brace(content, list_start, '[', ']')
-    
+    end_pos = find_matching_brace(content, list_start, "[", "]")
+
     if end_pos > 0:
         return (start_match.start(), end_pos)
-    
+
     return None
 
 
@@ -1326,19 +1329,19 @@ def find_models_by_provider_end(content: str) -> int:
     """
     Find the position of the closing brace of MODELS_BY_PROVIDER dict.
     Uses brace counting to handle nested structures correctly.
-    
+
     Returns the position of the closing }, or -1 if not found.
     """
-    pattern = r'MODELS_BY_PROVIDER\s*=\s*\{'
+    pattern = r"MODELS_BY_PROVIDER\s*=\s*\{"
     match = re.search(pattern, content)
-    
+
     if not match:
         return -1
-    
+
     # Start after the opening brace
     dict_start = match.end()
-    end_pos = find_matching_brace(content, dict_start, '{', '}')
-    
+    end_pos = find_matching_brace(content, dict_start, "{", "}")
+
     # Return position of the closing brace itself (not after it)
     return end_pos - 1 if end_pos > 0 else -1
 
@@ -1349,31 +1352,31 @@ def extract_providers_from_content(content: str) -> list[str]:
     Returns list of provider names in the order they appear in the file.
     """
     providers = []
-    
+
     # Find the start and end of MODELS_BY_PROVIDER
-    mbp_start = content.find('MODELS_BY_PROVIDER = {')
+    mbp_start = content.find("MODELS_BY_PROVIDER = {")
     if mbp_start == -1:
         return providers
-    
+
     mbp_end = find_models_by_provider_end(content)
     if mbp_end == -1:
         return providers
-    
+
     # Search within MODELS_BY_PROVIDER section
     mbp_content = content[mbp_start:mbp_end]
-    
+
     # Match provider entries like: \n    "Anthropic": [
     # Using explicit newline + 4 spaces to find top-level provider keys
     provider_pattern = r'\n    "([^"]+)"\s*:\s*\['
     for match in re.finditer(provider_pattern, mbp_content):
         providers.append(match.group(1))
-    
+
     return providers
 
 
 class AddModelRequest(BaseModel):
     model_id: str
-    knowledge_cutoff: Optional[str] = None  # Optional knowledge cutoff date (e.g., "March 2025")
+    knowledge_cutoff: str | None = None  # Optional knowledge cutoff date (e.g., "March 2025")
 
 
 class DeleteModelRequest(BaseModel):
@@ -1382,7 +1385,7 @@ class DeleteModelRequest(BaseModel):
 
 class UpdateModelKnowledgeCutoffRequest(BaseModel):
     model_id: str
-    knowledge_cutoff: Optional[str] = None  # None means "pending", empty string means remove
+    knowledge_cutoff: str | None = None  # None means "pending", empty string means remove
 
 
 class SetActiveSearchProviderRequest(BaseModel):
@@ -1394,14 +1397,14 @@ class TestSearchProviderRequest(BaseModel):
     query: str
 
 
-async def fetch_model_data_from_openrouter(model_id: str) -> Optional[Dict[str, Any]]:
+async def fetch_model_data_from_openrouter(model_id: str) -> dict[str, Any] | None:
     """
     Fetch model data from OpenRouter's Models API.
     Returns full model data including pricing information.
-    
+
     Args:
         model_id: The model ID (e.g., "openai/gpt-4")
-        
+
     Returns:
         Model data dictionary if found, None otherwise
     """
@@ -1412,13 +1415,13 @@ async def fetch_model_data_from_openrouter(model_id: str) -> Optional[Dict[str, 
                 headers={
                     "Authorization": f"Bearer {settings.openrouter_api_key}",
                     "HTTP-Referer": "https://compareintel.com",
-                }
+                },
             )
-            
+
             if response.status_code == 200:
                 data = response.json()
                 models = data.get("data", [])
-                
+
                 # Find the model by ID
                 for model in models:
                     if model.get("id") == model_id:
@@ -1426,56 +1429,55 @@ async def fetch_model_data_from_openrouter(model_id: str) -> Optional[Dict[str, 
     except Exception as e:
         # Log error but don't fail
         print(f"Error fetching model data from OpenRouter: {e}")
-    
+
     return None
 
 
-async def fetch_model_description_from_openrouter(model_id: str) -> Optional[str]:
+async def fetch_model_description_from_openrouter(model_id: str) -> str | None:
     """
     Fetch model description from OpenRouter's Models API.
     Returns only the first sentence of the description.
-    
+
     Args:
         model_id: The model ID (e.g., "openai/gpt-4")
-        
+
     Returns:
         The first sentence of the model description if found, None otherwise
     """
     model_data = await fetch_model_data_from_openrouter(model_id)
     if not model_data:
         return None
-    
+
     description = model_data.get("description")
     if description:
         # Extract only the first sentence
         description = description.strip()
-        
+
         # Find the first sentence-ending punctuation
-        match = re.search(r'([.!?])(?:\s+|$)', description)
+        match = re.search(r"([.!?])(?:\s+|$)", description)
         if match:
             end_pos = match.end()
             first_sentence = description[:end_pos].strip()
             return first_sentence
-        else:
-            return description
-    
+        return description
+
     return None
 
 
-def calculate_average_cost_per_million_tokens(model_data: Dict[str, Any]) -> Optional[float]:
+def calculate_average_cost_per_million_tokens(model_data: dict[str, Any]) -> float | None:
     """
     Calculate average cost per million tokens from OpenRouter pricing data.
-    
+
     Args:
         model_data: Model data dictionary from OpenRouter API
-        
+
     Returns:
         Average cost per million tokens, or None if pricing data unavailable
     """
     pricing = model_data.get("pricing", {})
     if not pricing:
         return None
-    
+
     # Get input and output pricing from OpenRouter API
     # IMPORTANT: OpenRouter returns price PER TOKEN, not per million tokens!
     # We need to multiply by 1,000,000 to get per-million-token pricing
@@ -1486,15 +1488,15 @@ def calculate_average_cost_per_million_tokens(model_data: Dict[str, Any]) -> Opt
     except (ValueError, TypeError):
         # If conversion fails, return None
         return None
-    
+
     # If both are zero or missing, return None
     if input_price_per_token == 0 and output_price_per_token == 0:
         return None
-    
+
     # Convert from per-token to per-million-tokens pricing
     input_price = input_price_per_token * 1_000_000
     output_price = output_price_per_token * 1_000_000
-    
+
     # Calculate average: (input + output) / 2
     # This gives us a rough average cost per million tokens
     if input_price > 0 and output_price > 0:
@@ -1505,37 +1507,37 @@ def calculate_average_cost_per_million_tokens(model_data: Dict[str, Any]) -> Opt
         avg_cost = output_price
     else:
         return None
-    
+
     return avg_cost
 
 
-async def classify_model_by_pricing(model_id: str, model_data: Optional[Dict[str, Any]] = None) -> str:
+async def classify_model_by_pricing(model_id: str, model_data: dict[str, Any] | None = None) -> str:
     """
     Classify a model into unregistered, free, or paid tier based on OpenRouter pricing.
-    
+
     Classification criteria:
     - Unregistered tier: Models costing < $0.50 per million tokens (input+output average)
     - Free tier: Models costing $0.50 - $3.00 per million tokens
     - Paid tier: Models costing >= $3.00 per million tokens
-    
+
     Args:
         model_id: The model ID (e.g., "openai/gpt-4")
         model_data: Optional model data from OpenRouter (will fetch if not provided)
-        
+
     Returns:
         Tier classification: "unregistered", "free", or "paid"
     """
     # If model_data not provided, fetch it
     if model_data is None:
         model_data = await fetch_model_data_from_openrouter(model_id)
-    
+
     # If we can't get pricing data, default to paid tier (safest option)
     if not model_data:
         print(f"Warning: Could not fetch pricing data for {model_id}, defaulting to paid tier")
         return "paid"
-    
+
     avg_cost = calculate_average_cost_per_million_tokens(model_data)
-    
+
     # If pricing unavailable, check model name patterns as fallback
     if avg_cost is None:
         # Fallback: use naming patterns to classify
@@ -1544,28 +1546,29 @@ async def classify_model_by_pricing(model_id: str, model_data: Optional[Dict[str
         if ":free" in model_name_lower:
             return "unregistered"
         # Free tier: budget/efficient model variants (typically $0.50-$3.00/M)
-        elif any(pattern in model_name_lower for pattern in ["-mini", "-nano", "-small", "-flash", "-fast", "-medium"]):
+        if any(
+            pattern in model_name_lower
+            for pattern in ["-mini", "-nano", "-small", "-flash", "-fast", "-medium"]
+        ):
             return "free"
         # Everything else defaults to paid (safest option)
-        else:
-            return "paid"
-    
+        return "paid"
+
     # Classify based on pricing thresholds
     # Unregistered tier: < $0.50/M - most budget models (free variants, nano/mini)
     # Free tier: $0.50 - $3.00/M - mid-level models for registered users
     # Paid tier: >= $3.00/M - premium models for subscribers
     if avg_cost < 0.5:
         return "unregistered"
-    elif avg_cost < 3.0:
+    if avg_cost < 3.0:
         return "free"
-    else:
-        return "paid"
+    return "paid"
 
 
 @router.get("/models")
 async def get_admin_models(
     current_user: User = Depends(require_admin_role("admin")),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Get all models organized by provider for admin panel.
     """
@@ -1586,27 +1589,25 @@ async def validate_model(
     Validate that a model exists in OpenRouter and is callable.
     """
     model_id = req.model_id.strip()
-    
+
     if not model_id:
         raise HTTPException(status_code=400, detail="Model ID cannot be empty")
-    
+
     # Check if model already exists in our system
     for provider, models in MODELS_BY_PROVIDER.items():
         for model in models:
             if model["id"] == model_id:
                 raise HTTPException(
-                    status_code=400,
-                    detail=f"Model {model_id} already exists in model_runner.py"
+                    status_code=400, detail=f"Model {model_id} already exists in model_runner.py"
                 )
-    
+
     # First, check if model exists in OpenRouter's model list
     model_data = await fetch_model_data_from_openrouter(model_id)
     if not model_data:
         raise HTTPException(
-            status_code=404,
-            detail=f"Model {model_id} not found in OpenRouter's model list"
+            status_code=404, detail=f"Model {model_id} not found in OpenRouter's model list"
         )
-    
+
     # Model exists in the list, now verify it's actually callable
     try:
         # Make a minimal test call to OpenRouter to validate the model is callable
@@ -1619,9 +1620,9 @@ async def validate_model(
                 messages=[{"role": "user", "content": "Hi"}],
                 max_tokens=16,  # Minimum required by OpenAI API (OpenRouter uses OpenAI's API)
                 timeout=10,
-            )
+            ),
         )
-        
+
         # If we get here, the model exists and is accessible
         # Log admin action
         log_admin_action(
@@ -1633,27 +1634,27 @@ async def validate_model(
             details={"model_id": model_id, "exists": True},
             request=request,
         )
-        
+
         return {
             "valid": True,
             "model_id": model_id,
-            "message": f"Model {model_id} exists in OpenRouter and is callable"
+            "message": f"Model {model_id} exists in OpenRouter and is callable",
         }
-        
+
     except HTTPException:
         raise
     except NotFoundError as e:
         # This shouldn't happen if model is in the list, but handle it anyway
         raise HTTPException(
             status_code=404,
-            detail=f"Model {model_id} found in OpenRouter's list but API call failed: {str(e)}"
+            detail=f"Model {model_id} found in OpenRouter's list but API call failed: {str(e)}",
         )
     except (RateLimitError, APITimeoutError, APIConnectionError) as e:
         # Temporary errors - network issues, rate limits, timeouts
         return {
             "valid": False,
             "model_id": model_id,
-            "message": f"Model {model_id} exists in OpenRouter but validation failed due to temporary error: {str(e)}. Please try again later."
+            "message": f"Model {model_id} exists in OpenRouter but validation failed due to temporary error: {str(e)}. Please try again later.",
         }
     except APIError as e:
         # Return the actual error message so user knows what went wrong
@@ -1661,7 +1662,7 @@ async def validate_model(
         return {
             "valid": False,
             "model_id": model_id,
-            "message": f"Model {model_id} exists in OpenRouter's list but API call failed: {error_str}. The model may require special access, be in beta, or have other restrictions."
+            "message": f"Model {model_id} exists in OpenRouter's list but API call failed: {error_str}. The model may require special access, be in beta, or have other restrictions.",
         }
     except Exception as e:
         # Unexpected errors - return the actual error
@@ -1669,7 +1670,7 @@ async def validate_model(
         return {
             "valid": False,
             "model_id": model_id,
-            "message": f"Model {model_id} exists in OpenRouter's list but validation failed: {error_str}"
+            "message": f"Model {model_id} exists in OpenRouter's list but validation failed: {error_str}",
         }
 
 
@@ -1680,10 +1681,9 @@ def get_model_tier(model_id: str) -> int:
     """
     if model_id in UNREGISTERED_TIER_MODELS:
         return 0  # unregistered-tier
-    elif model_id in FREE_TIER_MODELS:
+    if model_id in FREE_TIER_MODELS:
         return 1  # free-tier
-    else:
-        return 2  # paid-tier
+    return 2  # paid-tier
 
 
 def extract_version_number(model_name: str) -> tuple:
@@ -1695,57 +1695,58 @@ def extract_version_number(model_name: str) -> tuple:
     - "GPT-5 Nano" -> (5, 0, 0)
     - "Gemini 3 Pro Preview" -> (3, 0, 0)
     - "Gemini 2.5 Flash" -> (2, 5, 0)
-    
+
     Returns (0, 0, 0) if no version number is found.
     """
     # Try to find version patterns like "5.1", "3", "2.5", etc.
     # Look for patterns like: number.number or just number
     version_patterns = [
-        r'(\d+)\.(\d+)\.(\d+)',  # e.g., "3.2.1"
-        r'(\d+)\.(\d+)',          # e.g., "5.1", "2.5"
-        r'(\d+)',                  # e.g., "3", "5"
+        r"(\d+)\.(\d+)\.(\d+)",  # e.g., "3.2.1"
+        r"(\d+)\.(\d+)",  # e.g., "5.1", "2.5"
+        r"(\d+)",  # e.g., "3", "5"
     ]
-    
+
     for pattern in version_patterns:
         match = re.search(pattern, model_name)
         if match:
             groups = match.groups()
             if len(groups) == 3:
                 return (int(groups[0]), int(groups[1]), int(groups[2]))
-            elif len(groups) == 2:
+            if len(groups) == 2:
                 return (int(groups[0]), int(groups[1]), 0)
-            elif len(groups) == 1:
+            if len(groups) == 1:
                 return (int(groups[0]), 0, 0)
-    
+
     # No version number found
     return (0, 0, 0)
 
 
-def sort_models_by_tier_and_version(models: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+def sort_models_by_tier_and_version(models: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """
     Sort models by tier (anonymous first, free second, paid third) and within each tier
     by version number in ascending order (oldest first, newest last).
-    
+
     Args:
         models: List of model dictionaries with "id" and "name" keys
-        
+
     Returns:
         Sorted list of models
     """
-    def sort_key(model: Dict[str, Any]) -> tuple:
+
+    def sort_key(model: dict[str, Any]) -> tuple:
         model_id = model.get("id", "")
         model_name = model.get("name", "")
-        
+
         # First sort by tier (0=anonymous, 1=free, 2=paid)
         tier = get_model_tier(model_id)
-        
+
         # Then sort by version number within the tier
         version = extract_version_number(model_name)
-        
+
         # Return tuple for sorting: (tier, version_tuple, model_name)
         # Using model_name as final tiebreaker for consistent ordering
         return (tier, version, model_name)
-    
+
     return sorted(models, key=sort_key)
 
 
@@ -1761,39 +1762,40 @@ async def add_model(
     Only available in development environment.
     """
     import os
-    
+
     # Prevent adding models in production
     is_development = os.environ.get("ENVIRONMENT") == "development"
     if not is_development:
         raise HTTPException(
             status_code=403,
-            detail="Adding models is only available in development environment. Please add models via development and deploy to production."
+            detail="Adding models is only available in development environment. Please add models via development and deploy to production.",
         )
-    
+
     model_id = req.model_id.strip()
-    
+
     if not model_id:
         raise HTTPException(status_code=400, detail="Model ID cannot be empty")
-    
+
     # Check if model already exists (validation will happen via test API call)
     # The validate endpoint checks OpenRouter, but we also need to check our local list
-    
+
     # Check if model already exists
     for provider, models in MODELS_BY_PROVIDER.items():
         for model in models:
             if model["id"] == model_id:
                 raise HTTPException(
-                    status_code=400,
-                    detail=f"Model {model_id} already exists in model_runner.py"
+                    status_code=400, detail=f"Model {model_id} already exists in model_runner.py"
                 )
-    
+
     # Extract provider from model_id (format: provider/model-name)
-    if '/' not in model_id:
-        raise HTTPException(status_code=400, detail="Invalid model ID format. Expected: provider/model-name")
-    
-    provider_name = model_id.split('/')[0]
+    if "/" not in model_id:
+        raise HTTPException(
+            status_code=400, detail="Invalid model ID format. Expected: provider/model-name"
+        )
+
+    provider_name = model_id.split("/")[0]
     original_provider = provider_name  # Save original for special case checks
-    
+
     # Check for special cases BEFORE transformation
     if original_provider.lower() == "meta-llama":
         provider_name = "Meta"
@@ -1803,40 +1805,41 @@ async def add_model(
         provider_name = "OpenAI"
     else:
         # Capitalize provider name (e.g., "x-ai" -> "xAI", "openai" -> "OpenAI")
-        provider_name = provider_name.replace('-', ' ').title().replace(' ', '')
+        provider_name = provider_name.replace("-", " ").title().replace(" ", "")
         if provider_name.lower() == "xai":
             provider_name = "xAI"
         elif provider_name.lower() == "openai":
             provider_name = "OpenAI"
-    
+
     # Get model name - use a formatted version of the model ID
-    model_name = model_id.split('/')[-1]
+    model_name = model_id.split("/")[-1]
     # Format the name nicely (e.g., "grok-4.1-fast" -> "Grok 4.1 Fast")
-    model_name = model_name.replace('-', ' ').replace('_', ' ').title()
-    
+    model_name = model_name.replace("-", " ").replace("_", " ").title()
+
     # Try to fetch description from OpenRouter's Models API
     model_description = await fetch_model_description_from_openrouter(model_id)
-    
+
     # Fall back to template-based description if OpenRouter doesn't have it
     if not model_description:
         model_description = f"{provider_name}'s {model_name} model"
-    
+
     # Check for tool calling support (required for web search)
     from ..services.model_capability import get_capability_service
+
     capability_service = get_capability_service()
     supports_web_search = await capability_service.check_tool_calling_support(model_id)
-    
+
     # Add model to model_runner.py
     model_runner_path = Path(__file__).parent.parent / "model_runner.py"
-    
+
     try:
-        with open(model_runner_path, "r", encoding="utf-8") as f:
+        with open(model_runner_path, encoding="utf-8") as f:
             content = f.read()
-        
+
         # Find the provider section in MODELS_BY_PROVIDER
         # We need to add the model to the appropriate provider list
         provider_found = False
-        
+
         # Try to find existing provider - use file content, not in-memory dict
         existing_providers_in_file = extract_providers_from_content(content)
         for existing_provider in existing_providers_in_file:
@@ -1844,47 +1847,61 @@ async def add_model(
                 provider_name = existing_provider  # Use exact case from file
                 provider_found = True
                 break
-        
+
         if not provider_found:
             # Create new provider section - insert in alphabetical order
             escaped_description = repr(model_description)
             supports_web_search_str = "True" if supports_web_search else "False"
             knowledge_cutoff_line = ""
-            if hasattr(req, 'knowledge_cutoff') and req.knowledge_cutoff:
-                knowledge_cutoff_line = f'\n            "knowledge_cutoff": "{req.knowledge_cutoff}",'
-            elif hasattr(req, 'knowledge_cutoff') and req.knowledge_cutoff is None:
-                knowledge_cutoff_line = '\n            "knowledge_cutoff": None,  # Knowledge cutoff date pending'
+            if hasattr(req, "knowledge_cutoff") and req.knowledge_cutoff:
+                knowledge_cutoff_line = (
+                    f'\n            "knowledge_cutoff": "{req.knowledge_cutoff}",'
+                )
+            elif hasattr(req, "knowledge_cutoff") and req.knowledge_cutoff is None:
+                knowledge_cutoff_line = (
+                    '\n            "knowledge_cutoff": None,  # Knowledge cutoff date pending'
+                )
             new_provider_section = f'"{provider_name}": [\n        {{\n            "id": "{model_id}",\n            "name": "{model_name}",\n            "description": {escaped_description},\n            "category": "Language",\n            "provider": "{provider_name}",\n            "supports_web_search": {supports_web_search_str},{knowledge_cutoff_line}\n        }},\n    ]'
-            
+
             # Get existing providers from file content (not in-memory dict which may be stale)
             existing_providers = extract_providers_from_content(content)
             # Sort providers alphabetically (case-insensitive) to ensure correct insertion position
-            all_providers_sorted = sorted(existing_providers + [provider_name], key=lambda x: x.lower())
+            all_providers_sorted = sorted(
+                existing_providers + [provider_name], key=lambda x: x.lower()
+            )
             new_provider_index = all_providers_sorted.index(provider_name)
-            
+
             # Find the insertion position based on alphabetical order
             if new_provider_index == 0:
                 # New provider comes first alphabetically - insert at the beginning
-                mbp_start_pattern = r'MODELS_BY_PROVIDER\s*=\s*\{'
+                mbp_start_pattern = r"MODELS_BY_PROVIDER\s*=\s*\{"
                 mbp_start_match = re.search(mbp_start_pattern, content)
                 if mbp_start_match:
                     insert_pos = mbp_start_match.end()  # Position after opening brace
-                    new_provider_section = f'\n    {new_provider_section},\n'
+                    new_provider_section = f"\n    {new_provider_section},\n"
                     content = content[:insert_pos] + new_provider_section + content[insert_pos:]
                 else:
-                    raise HTTPException(status_code=500, detail="Could not find MODELS_BY_PROVIDER structure")
+                    raise HTTPException(
+                        status_code=500, detail="Could not find MODELS_BY_PROVIDER structure"
+                    )
             elif new_provider_index == len(all_providers_sorted) - 1:
                 # New provider comes last alphabetically - insert before closing brace
                 closing_brace_pos = find_models_by_provider_end(content)
                 if closing_brace_pos > 0:
                     content_before = content[:closing_brace_pos].rstrip()
-                    if content_before.endswith(','):
-                        new_provider_section = f'\n    {new_provider_section},\n'
+                    if content_before.endswith(","):
+                        new_provider_section = f"\n    {new_provider_section},\n"
                     else:
-                        new_provider_section = f',\n    {new_provider_section},\n'
-                    content = content[:closing_brace_pos] + new_provider_section + content[closing_brace_pos:]
+                        new_provider_section = f",\n    {new_provider_section},\n"
+                    content = (
+                        content[:closing_brace_pos]
+                        + new_provider_section
+                        + content[closing_brace_pos:]
+                    )
                 else:
-                    raise HTTPException(status_code=500, detail="Could not find MODELS_BY_PROVIDER structure")
+                    raise HTTPException(
+                        status_code=500, detail="Could not find MODELS_BY_PROVIDER structure"
+                    )
             else:
                 # Find the provider that should come after the new one (alphabetically)
                 next_provider = all_providers_sorted[new_provider_index + 1]
@@ -1892,15 +1909,18 @@ async def add_model(
                 if next_provider_bounds:
                     insert_pos = next_provider_bounds[0]
                     # Insert new provider before the next provider
-                    new_provider_section = f'{new_provider_section},\n    '
+                    new_provider_section = f"{new_provider_section},\n    "
                     content = content[:insert_pos] + new_provider_section + content[insert_pos:]
                 else:
-                    raise HTTPException(status_code=500, detail=f"Could not find provider {next_provider} in MODELS_BY_PROVIDER")
+                    raise HTTPException(
+                        status_code=500,
+                        detail=f"Could not find provider {next_provider} in MODELS_BY_PROVIDER",
+                    )
         else:
             # Add to existing provider
             # Use the already-loaded MODELS_BY_PROVIDER to get existing models
             existing_models = MODELS_BY_PROVIDER.get(provider_name, []).copy()
-            
+
             # Add the new model
             new_model_dict = {
                 "id": model_id,
@@ -1910,20 +1930,20 @@ async def add_model(
                 "provider": provider_name,
                 "supports_web_search": supports_web_search,
             }
-            if hasattr(req, 'available') and not req.available:
+            if hasattr(req, "available") and not req.available:
                 new_model_dict["available"] = False
             # Add knowledge cutoff if provided
-            if hasattr(req, 'knowledge_cutoff') and req.knowledge_cutoff:
+            if hasattr(req, "knowledge_cutoff") and req.knowledge_cutoff:
                 new_model_dict["knowledge_cutoff"] = req.knowledge_cutoff
-            elif hasattr(req, 'knowledge_cutoff') and req.knowledge_cutoff is None:
+            elif hasattr(req, "knowledge_cutoff") and req.knowledge_cutoff is None:
                 # Explicitly set to None to indicate pending
                 new_model_dict["knowledge_cutoff"] = None
-            
+
             existing_models.append(new_model_dict)
-            
+
             # Sort models by tier (anonymous first, free second, paid third) and within each tier by version number (ascending - oldest first, newest last)
             existing_models = sort_models_by_tier_and_version(existing_models)
-            
+
             # Find the provider's list in the file using bracket counting
             # This handles brackets inside strings correctly (e.g., descriptions with [feature])
             bounds = find_provider_list_bounds(content, provider_name)
@@ -1938,51 +1958,60 @@ async def add_model(
                         f'            "name": "{model["name"]}",',
                         f'            "description": {repr(model["description"])},',
                         f'            "category": "{model["category"]}",',
-                        f'            "provider": "{model["provider"]}",'
+                        f'            "provider": "{model["provider"]}",',
                     ]
                     if "supports_web_search" in model:
-                        model_lines.append(f'            "supports_web_search": {model["supports_web_search"]},')
+                        model_lines.append(
+                            f'            "supports_web_search": {model["supports_web_search"]},'
+                        )
                     if "available" in model:
                         model_lines.append(f'            "available": {model["available"]},')
                     if "knowledge_cutoff" in model:
                         if model["knowledge_cutoff"]:
-                            model_lines.append(f'            "knowledge_cutoff": "{model["knowledge_cutoff"]}",')
+                            model_lines.append(
+                                f'            "knowledge_cutoff": "{model["knowledge_cutoff"]}",'
+                            )
                         else:
-                            model_lines.append(f'            "knowledge_cutoff": None,  # Knowledge cutoff date pending')
+                            model_lines.append(
+                                '            "knowledge_cutoff": None,  # Knowledge cutoff date pending'
+                            )
                     model_lines.append("        },")
                     models_lines.extend(model_lines)
-                
+
                 # Join models with newlines
                 models_str = "\n".join(models_lines)
-                
+
                 # Replace the provider's list with the sorted one
                 new_provider_section = f'"{provider_name}": [\n{models_str}\n    ]'
                 content = content[:start_pos] + new_provider_section + content[end_pos:]
             else:
-                raise HTTPException(status_code=500, detail=f"Could not find provider {provider_name} in MODELS_BY_PROVIDER")
-        
+                raise HTTPException(
+                    status_code=500,
+                    detail=f"Could not find provider {provider_name} in MODELS_BY_PROVIDER",
+                )
+
         # Write back to file
         with open(model_runner_path, "w", encoding="utf-8") as f:
             f.write(content)
-        
+
         # Classify model based on OpenRouter pricing and add to appropriate tier set
         model_data = await fetch_model_data_from_openrouter(model_id)
         tier_classification = await classify_model_by_pricing(model_id, model_data)
-        
+
         # Read file again to add model to tier sets
-        with open(model_runner_path, "r", encoding="utf-8") as f:
+        with open(model_runner_path, encoding="utf-8") as f:
             content = f.read()
-        
+
         # Add model to appropriate tier set(s)
         if tier_classification == "unregistered":
             # Add to UNREGISTERED_TIER_MODELS
             # Pattern must match up to the closing brace, but stop before FREE_TIER_MODELS definition
-            anonymous_pattern = r'(UNREGISTERED_TIER_MODELS\s*=\s*\{)(.*?)(\n\})'
+            anonymous_pattern = r"(UNREGISTERED_TIER_MODELS\s*=\s*\{)(.*?)(\n\})"
             match = re.search(anonymous_pattern, content, re.DOTALL)
             if not match:
                 raise HTTPException(
                     status_code=500,
-                    detail="Could not find UNREGISTERED_TIER_MODELS structure in model_runner.py"
+                    detail="Could not find UNREGISTERED_TIER_MODELS structure in model_runner.py",
                 )
             # Check if model already in set
             if f'"{model_id}"' not in match.group(2):
@@ -1991,7 +2020,7 @@ async def add_model(
                 insertion_point = match.start(3)  # Start of closing brace group (newline + brace)
                 # Check if the content before closing brace ends with a comma
                 content_before_brace = match.group(2).rstrip()
-                if content_before_brace and content_before_brace[-1] == ',':
+                if content_before_brace and content_before_brace[-1] == ",":
                     # Last entry already has comma, add new entry with comma
                     model_entry = f'\n    "{model_id}",  # Auto-classified based on pricing'
                 else:
@@ -2001,7 +2030,9 @@ async def add_model(
         elif tier_classification == "free":
             # Add to FREE_TIER_MODELS (which includes anonymous models)
             # Pattern matches: FREE_TIER_MODELS = UNREGISTERED_TIER_MODELS.union({ ... })
-            free_pattern = r'(FREE_TIER_MODELS\s*=\s*UNREGISTERED_TIER_MODELS\.union\()(\{)(.*?)(\})(\))'
+            free_pattern = (
+                r"(FREE_TIER_MODELS\s*=\s*UNREGISTERED_TIER_MODELS\.union\()(\{)(.*?)(\})(\))"
+            )
             match = re.search(free_pattern, content, re.DOTALL)
             if match:
                 # Check if model already in set
@@ -2011,28 +2042,34 @@ async def add_model(
                     mid_level_comment = "# Additional mid-level models"
                     if mid_level_comment in match.group(3):
                         insertion_point = match.start(3) + match.group(3).find(mid_level_comment)
-                        model_entry = f'\n    "{model_id}",  # Auto-classified based on pricing\n    '
-                        content = content[:insertion_point] + model_entry + content[insertion_point:]
+                        model_entry = (
+                            f'\n    "{model_id}",  # Auto-classified based on pricing\n    '
+                        )
+                        content = (
+                            content[:insertion_point] + model_entry + content[insertion_point:]
+                        )
                     else:
                         # Add before closing brace of the set literal
                         insertion_point = match.start(4)  # Position of the closing brace
                         model_entry = f',\n    "{model_id}",  # Auto-classified based on pricing'
-                        content = content[:insertion_point] + model_entry + content[insertion_point:]
+                        content = (
+                            content[:insertion_point] + model_entry + content[insertion_point:]
+                        )
         # If tier_classification == "paid", don't add to any tier set (defaults to paid)
-        
+
         # Write updated content back
         with open(model_runner_path, "w", encoding="utf-8") as f:
             f.write(content)
-        
+
         # Reload the model_runner module to get updated MODELS_BY_PROVIDER
         importlib.reload(model_runner)
         # Update the imported references in this module's namespace
         sys.modules[__name__].MODELS_BY_PROVIDER = model_runner.MODELS_BY_PROVIDER
         sys.modules[__name__].OPENROUTER_MODELS = model_runner.OPENROUTER_MODELS
-        
+
         # Refresh token limits for the newly added model
         refresh_model_token_limits(model_id)
-        
+
         # Run setup script to generate renderer config
         # Path from backend/app/routers/admin.py to backend/scripts/setup_model_renderer.py
         script_path = Path(__file__).parent.parent.parent / "scripts" / "setup_model_renderer.py"
@@ -2044,31 +2081,28 @@ async def add_model(
                 capture_output=True,
                 text=True,
                 timeout=600,  # 10 minute timeout
-                cwd=str(backend_dir)
+                cwd=str(backend_dir),
             )
-            
+
             if result.returncode != 0:
                 # Model was added but config generation failed
                 error_msg = result.stderr[:500] if result.stderr else "Unknown error"
                 raise HTTPException(
                     status_code=500,
-                    detail=f"Model added but renderer config generation failed: {error_msg}"
+                    detail=f"Model added but renderer config generation failed: {error_msg}",
                 )
         except subprocess.TimeoutExpired:
-            raise HTTPException(
-                status_code=500,
-                detail="Renderer config generation timed out"
-            )
+            raise HTTPException(status_code=500, detail="Renderer config generation timed out")
         except Exception as e:
             raise HTTPException(
-                status_code=500,
-                detail=f"Error generating renderer config: {str(e)}"
+                status_code=500, detail=f"Error generating renderer config: {str(e)}"
             )
-        
+
         # Invalidate models cache so fresh data is returned
         from ..cache import invalidate_models_cache
+
         invalidate_models_cache()
-        
+
         # Log admin action
         log_admin_action(
             db=db,
@@ -2079,22 +2113,19 @@ async def add_model(
             details={"model_id": model_id, "provider": provider_name},
             request=request,
         )
-        
+
         return {
             "success": True,
             "model_id": model_id,
             "provider": provider_name,
             "supports_web_search": supports_web_search,
-            "message": f"Model {model_id} added successfully"
+            "message": f"Model {model_id} added successfully",
         }
-        
+
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Error adding model: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Error adding model: {str(e)}")
 
 
 @router.post("/models/add-stream")
@@ -2110,82 +2141,117 @@ async def add_model_stream(
     Only available in development environment.
     """
     import os
-    
+
     # Prevent adding models in production
     is_development = os.environ.get("ENVIRONMENT") == "development"
     if not is_development:
+
         async def error_stream():
             yield f"data: {json.dumps({'type': 'error', 'message': 'Adding models is only available in development environment. Please add models via development and deploy to production.'})}\n\n"
+
         return StreamingResponse(error_stream(), media_type="text/event-stream")
-    
+
     async def generate_progress_stream():
         model_id = req.model_id.strip()
-        
+
         if not model_id:
             yield f"data: {json.dumps({'type': 'error', 'message': 'Model ID cannot be empty'})}\n\n"
             return
-        
+
         # Backup paths for rollback
         model_runner_path = Path(__file__).parent.parent / "model_runner.py"
-        config_path = Path(__file__).parent.parent.parent / "frontend" / "src" / "config" / "model_renderer_configs.json"
-        backup_model_runner_path = model_runner_path.with_suffix('.py.backup')
-        backup_config_path = config_path.with_suffix('.json.backup')
-        
+        config_path = (
+            Path(__file__).parent.parent.parent
+            / "frontend"
+            / "src"
+            / "config"
+            / "model_renderer_configs.json"
+        )
+        backup_model_runner_path = model_runner_path.with_suffix(".py.backup")
+        backup_config_path = config_path.with_suffix(".json.backup")
+
         # Save backups before making any changes
         model_runner_backup = None
         config_backup = None
         process = None
-        
+
         try:
             # Read and backup model_runner.py
-            with open(model_runner_path, "r", encoding="utf-8") as f:
+            with open(model_runner_path, encoding="utf-8") as f:
                 model_runner_backup = f.read()
             with open(backup_model_runner_path, "w", encoding="utf-8") as f:
                 f.write(model_runner_backup)
-            
+
             # Backup renderer config if it exists
             if config_path.exists():
-                with open(config_path, "r", encoding="utf-8") as f:
+                with open(config_path, encoding="utf-8") as f:
                     config_backup = f.read()
                 with open(backup_config_path, "w", encoding="utf-8") as f:
                     f.write(config_backup)
             else:
                 config_backup = None
-            
+
             # Send initial progress
             try:
                 yield f"data: {json.dumps({'type': 'progress', 'stage': 'validating', 'message': f'Validating model {model_id}...', 'progress': 0})}\n\n"
-            except (BrokenPipeError, ConnectionResetError, ConnectionAbortedError, OSError,
-                    TimeoutError, asyncio.TimeoutError, httpx.ConnectError, httpx.TimeoutException,
-                    httpx.NetworkError, httpx.ConnectTimeout, httpx.ReadTimeout):
+            except (
+                BrokenPipeError,
+                ConnectionResetError,
+                ConnectionAbortedError,
+                OSError,
+                TimeoutError,
+                httpx.ConnectError,
+                httpx.TimeoutException,
+                httpx.NetworkError,
+                httpx.ConnectTimeout,
+                httpx.ReadTimeout,
+            ):
                 # Client disconnected or network error, restore backups
                 raise
-            
+
             # Check if model already exists
             for provider, models in MODELS_BY_PROVIDER.items():
                 for model in models:
                     if model["id"] == model_id:
                         try:
                             yield f"data: {json.dumps({'type': 'error', 'message': f'Model {model_id} already exists in model_runner.py'})}\n\n"
-                        except (BrokenPipeError, ConnectionResetError, ConnectionAbortedError, OSError,
-                                TimeoutError, asyncio.TimeoutError, httpx.ConnectError, httpx.TimeoutException,
-                                httpx.NetworkError, httpx.ConnectTimeout, httpx.ReadTimeout):
+                        except (
+                            BrokenPipeError,
+                            ConnectionResetError,
+                            ConnectionAbortedError,
+                            OSError,
+                            TimeoutError,
+                            httpx.ConnectError,
+                            httpx.TimeoutException,
+                            httpx.NetworkError,
+                            httpx.ConnectTimeout,
+                            httpx.ReadTimeout,
+                        ):
                             raise
                         return
-            
+
             # Extract provider from model_id
-            if '/' not in model_id:
+            if "/" not in model_id:
                 try:
                     yield f"data: {json.dumps({'type': 'error', 'message': 'Invalid model ID format. Expected: provider/model-name'})}\n\n"
-                except (BrokenPipeError, ConnectionResetError, ConnectionAbortedError, OSError,
-                        TimeoutError, asyncio.TimeoutError, httpx.ConnectError, httpx.TimeoutException,
-                        httpx.NetworkError, httpx.ConnectTimeout, httpx.ReadTimeout):
+                except (
+                    BrokenPipeError,
+                    ConnectionResetError,
+                    ConnectionAbortedError,
+                    OSError,
+                    TimeoutError,
+                    httpx.ConnectError,
+                    httpx.TimeoutException,
+                    httpx.NetworkError,
+                    httpx.ConnectTimeout,
+                    httpx.ReadTimeout,
+                ):
                     raise
                 return
-            
-            provider_name = model_id.split('/')[0]
+
+            provider_name = model_id.split("/")[0]
             original_provider = provider_name  # Save original for special case checks
-            
+
             # Check for special cases BEFORE transformation
             if original_provider.lower() == "meta-llama":
                 provider_name = "Meta"
@@ -2194,54 +2260,73 @@ async def add_model_stream(
             elif original_provider.lower() == "openai":
                 provider_name = "OpenAI"
             else:
-                provider_name = provider_name.replace('-', ' ').title().replace(' ', '')
+                provider_name = provider_name.replace("-", " ").title().replace(" ", "")
                 if provider_name.lower() == "xai":
                     provider_name = "xAI"
                 elif provider_name.lower() == "openai":
                     provider_name = "OpenAI"
-            
-            model_name = model_id.split('/')[-1]
-            model_name = model_name.replace('-', ' ').replace('_', ' ').title()
-            
+
+            model_name = model_id.split("/")[-1]
+            model_name = model_name.replace("-", " ").replace("_", " ").title()
+
             # Fetch description
             try:
-                yield f"data: {json.dumps({'type': 'progress', 'stage': 'fetching', 'message': f'Fetching model description from OpenRouter...', 'progress': 10})}\n\n"
+                yield f"data: {json.dumps({'type': 'progress', 'stage': 'fetching', 'message': 'Fetching model description from OpenRouter...', 'progress': 10})}\n\n"
             except (BrokenPipeError, ConnectionResetError, OSError):
                 raise
             model_description = await fetch_model_description_from_openrouter(model_id)
-            
+
             if not model_description:
                 model_description = f"{provider_name}'s {model_name} model"
-            
+
             # Check for tool calling support (required for web search)
             try:
-                yield f"data: {json.dumps({'type': 'progress', 'stage': 'checking', 'message': f'Checking web search capability...', 'progress': 15})}\n\n"
-            except (BrokenPipeError, ConnectionResetError, ConnectionAbortedError, OSError,
-                    TimeoutError, asyncio.TimeoutError, httpx.ConnectError, httpx.TimeoutException,
-                    httpx.NetworkError, httpx.ConnectTimeout, httpx.ReadTimeout):
+                yield f"data: {json.dumps({'type': 'progress', 'stage': 'checking', 'message': 'Checking web search capability...', 'progress': 15})}\n\n"
+            except (
+                BrokenPipeError,
+                ConnectionResetError,
+                ConnectionAbortedError,
+                OSError,
+                TimeoutError,
+                httpx.ConnectError,
+                httpx.TimeoutException,
+                httpx.NetworkError,
+                httpx.ConnectTimeout,
+                httpx.ReadTimeout,
+            ):
                 raise
             from ..services.model_capability import get_capability_service
+
             capability_service = get_capability_service()
             supports_web_search = await capability_service.check_tool_calling_support(model_id)
-            
+
             # Add model to model_runner.py
             try:
-                yield f"data: {json.dumps({'type': 'progress', 'stage': 'adding', 'message': f'Adding model to model_runner.py...', 'progress': 20})}\n\n"
-            except (BrokenPipeError, ConnectionResetError, ConnectionAbortedError, OSError,
-                    TimeoutError, asyncio.TimeoutError, httpx.ConnectError, httpx.TimeoutException,
-                    httpx.NetworkError, httpx.ConnectTimeout, httpx.ReadTimeout):
+                yield f"data: {json.dumps({'type': 'progress', 'stage': 'adding', 'message': 'Adding model to model_runner.py...', 'progress': 20})}\n\n"
+            except (
+                BrokenPipeError,
+                ConnectionResetError,
+                ConnectionAbortedError,
+                OSError,
+                TimeoutError,
+                httpx.ConnectError,
+                httpx.TimeoutException,
+                httpx.NetworkError,
+                httpx.ConnectTimeout,
+                httpx.ReadTimeout,
+            ):
                 raise
-            
-            with open(model_runner_path, "r", encoding="utf-8") as f:
+
+            with open(model_runner_path, encoding="utf-8") as f:
                 content = f.read()
-            
+
             provider_found = False
             for existing_provider in MODELS_BY_PROVIDER.keys():
                 if existing_provider.lower() == provider_name.lower():
                     provider_name = existing_provider
                     provider_found = True
                     break
-            
+
             if not provider_found:
                 # Find the closing brace of MODELS_BY_PROVIDER using brace counting
                 closing_brace_pos = find_models_by_provider_end(content)
@@ -2249,25 +2334,40 @@ async def add_model_stream(
                     escaped_description = repr(model_description)
                     supports_web_search_str = "True" if supports_web_search else "False"
                     knowledge_cutoff_line = ""
-                    if hasattr(req, 'knowledge_cutoff') and req.knowledge_cutoff:
-                        knowledge_cutoff_line = f'\n            "knowledge_cutoff": "{req.knowledge_cutoff}",'
-                    elif hasattr(req, 'knowledge_cutoff') and req.knowledge_cutoff is None:
+                    if hasattr(req, "knowledge_cutoff") and req.knowledge_cutoff:
+                        knowledge_cutoff_line = (
+                            f'\n            "knowledge_cutoff": "{req.knowledge_cutoff}",'
+                        )
+                    elif hasattr(req, "knowledge_cutoff") and req.knowledge_cutoff is None:
                         knowledge_cutoff_line = '\n            "knowledge_cutoff": None,  # Knowledge cutoff date pending'
                     # Check if previous content has a trailing comma (usually it does)
                     content_before = content[:closing_brace_pos].rstrip()
-                    if content_before.endswith(','):
+                    if content_before.endswith(","):
                         # Previous entry has trailing comma, don't add leading comma
                         new_provider_section = f'\n    "{provider_name}": [\n        {{\n            "id": "{model_id}",\n            "name": "{model_name}",\n            "description": {escaped_description},\n            "category": "Language",\n            "provider": "{provider_name}",\n            "supports_web_search": {supports_web_search_str},{knowledge_cutoff_line}\n        }},\n    ],\n'
                     else:
                         # Need to add comma separator
                         new_provider_section = f',\n    "{provider_name}": [\n        {{\n            "id": "{model_id}",\n            "name": "{model_name}",\n            "description": {escaped_description},\n            "category": "Language",\n            "provider": "{provider_name}",\n            "supports_web_search": {supports_web_search_str},{knowledge_cutoff_line}\n        }},\n    ],\n'
-                    content = content[:closing_brace_pos] + new_provider_section + content[closing_brace_pos:]
+                    content = (
+                        content[:closing_brace_pos]
+                        + new_provider_section
+                        + content[closing_brace_pos:]
+                    )
                 else:
                     try:
                         yield f"data: {json.dumps({'type': 'error', 'message': 'Could not find MODELS_BY_PROVIDER structure'})}\n\n"
-                    except (BrokenPipeError, ConnectionResetError, ConnectionAbortedError, OSError,
-                            TimeoutError, asyncio.TimeoutError, httpx.ConnectError, httpx.TimeoutException,
-                            httpx.NetworkError, httpx.ConnectTimeout, httpx.ReadTimeout):
+                    except (
+                        BrokenPipeError,
+                        ConnectionResetError,
+                        ConnectionAbortedError,
+                        OSError,
+                        TimeoutError,
+                        httpx.ConnectError,
+                        httpx.TimeoutException,
+                        httpx.NetworkError,
+                        httpx.ConnectTimeout,
+                        httpx.ReadTimeout,
+                    ):
                         raise
                     return
             else:
@@ -2281,14 +2381,14 @@ async def add_model_stream(
                     "supports_web_search": supports_web_search,
                 }
                 # Add knowledge cutoff if provided
-                if hasattr(req, 'knowledge_cutoff') and req.knowledge_cutoff:
+                if hasattr(req, "knowledge_cutoff") and req.knowledge_cutoff:
                     new_model_dict["knowledge_cutoff"] = req.knowledge_cutoff
-                elif hasattr(req, 'knowledge_cutoff') and req.knowledge_cutoff is None:
+                elif hasattr(req, "knowledge_cutoff") and req.knowledge_cutoff is None:
                     new_model_dict["knowledge_cutoff"] = None
                 existing_models.append(new_model_dict)
                 # Sort models by tier (anonymous first, free second, paid third) and within each tier by version number (ascending - oldest first, newest last)
                 existing_models = sort_models_by_tier_and_version(existing_models)
-                
+
                 # Find the provider's list using bracket counting (handles brackets in strings)
                 bounds = find_provider_list_bounds(content, provider_name)
                 if bounds:
@@ -2301,72 +2401,114 @@ async def add_model_stream(
                             f'            "name": "{model["name"]}",',
                             f'            "description": {repr(model["description"])},',
                             f'            "category": "{model["category"]}",',
-                            f'            "provider": "{model["provider"]}",'
+                            f'            "provider": "{model["provider"]}",',
                         ]
                         if "supports_web_search" in model:
-                            model_lines.append(f'            "supports_web_search": {model["supports_web_search"]},')
+                            model_lines.append(
+                                f'            "supports_web_search": {model["supports_web_search"]},'
+                            )
                         if "available" in model:
                             model_lines.append(f'            "available": {model["available"]},')
                         if "knowledge_cutoff" in model:
                             if model["knowledge_cutoff"]:
-                                model_lines.append(f'            "knowledge_cutoff": "{model["knowledge_cutoff"]}",')
+                                model_lines.append(
+                                    f'            "knowledge_cutoff": "{model["knowledge_cutoff"]}",'
+                                )
                             else:
-                                model_lines.append(f'            "knowledge_cutoff": None,  # Knowledge cutoff date pending')
+                                model_lines.append(
+                                    '            "knowledge_cutoff": None,  # Knowledge cutoff date pending'
+                                )
                         model_lines.append("        },")
                         models_lines.extend(model_lines)
-                    
+
                     models_str = "\n".join(models_lines)
                     new_provider_section = f'"{provider_name}": [\n{models_str}\n    ]'
                     content = content[:start_pos] + new_provider_section + content[end_pos:]
                 else:
                     try:
                         yield f"data: {json.dumps({'type': 'error', 'message': f'Could not find provider {provider_name} in MODELS_BY_PROVIDER'})}\n\n"
-                    except (BrokenPipeError, ConnectionResetError, ConnectionAbortedError, OSError,
-                            TimeoutError, asyncio.TimeoutError, httpx.ConnectError, httpx.TimeoutException,
-                            httpx.NetworkError, httpx.ConnectTimeout, httpx.ReadTimeout):
+                    except (
+                        BrokenPipeError,
+                        ConnectionResetError,
+                        ConnectionAbortedError,
+                        OSError,
+                        TimeoutError,
+                        httpx.ConnectError,
+                        httpx.TimeoutException,
+                        httpx.NetworkError,
+                        httpx.ConnectTimeout,
+                        httpx.ReadTimeout,
+                    ):
                         raise
                     return
-            
+
             # Write back to file
             with open(model_runner_path, "w", encoding="utf-8") as f:
                 f.write(content)
-            
+
             # Classify model based on OpenRouter pricing and add to appropriate tier set
             try:
-                yield f"data: {json.dumps({'type': 'progress', 'stage': 'classifying', 'message': f'Classifying model tier based on pricing...', 'progress': 25})}\n\n"
-            except (BrokenPipeError, ConnectionResetError, ConnectionAbortedError, OSError,
-                    TimeoutError, asyncio.TimeoutError, httpx.ConnectError, httpx.TimeoutException,
-                    httpx.NetworkError, httpx.ConnectTimeout, httpx.ReadTimeout):
+                yield f"data: {json.dumps({'type': 'progress', 'stage': 'classifying', 'message': 'Classifying model tier based on pricing...', 'progress': 25})}\n\n"
+            except (
+                BrokenPipeError,
+                ConnectionResetError,
+                ConnectionAbortedError,
+                OSError,
+                TimeoutError,
+                httpx.ConnectError,
+                httpx.TimeoutException,
+                httpx.NetworkError,
+                httpx.ConnectTimeout,
+                httpx.ReadTimeout,
+            ):
                 raise
             try:
                 model_data = await fetch_model_data_from_openrouter(model_id)
                 tier_classification = await classify_model_by_pricing(model_id, model_data)
-            except (BrokenPipeError, ConnectionResetError, ConnectionAbortedError, OSError,
-                    TimeoutError, asyncio.TimeoutError, httpx.ConnectError, httpx.TimeoutException,
-                    httpx.NetworkError, httpx.ConnectTimeout, httpx.ReadTimeout) as e:
+            except (
+                BrokenPipeError,
+                ConnectionResetError,
+                ConnectionAbortedError,
+                OSError,
+                TimeoutError,
+                httpx.ConnectError,
+                httpx.TimeoutException,
+                httpx.NetworkError,
+                httpx.ConnectTimeout,
+                httpx.ReadTimeout,
+            ):
                 # Network error during API call - trigger rollback
                 raise
-            
+
             # Read file again to add model to tier sets
-            with open(model_runner_path, "r", encoding="utf-8") as f:
+            with open(model_runner_path, encoding="utf-8") as f:
                 content = f.read()
-            
+
             # Add model to appropriate tier set(s)
             if tier_classification == "unregistered":
                 # Add to UNREGISTERED_TIER_MODELS
                 # Pattern must match up to the closing brace, explicitly stopping before FREE_TIER_MODELS
-                anonymous_pattern = r'(UNREGISTERED_TIER_MODELS\s*=\s*\{)(.*?)(\n\}\s*\n\s*# List of model IDs available to free)'
+                anonymous_pattern = r"(UNREGISTERED_TIER_MODELS\s*=\s*\{)(.*?)(\n\}\s*\n\s*# List of model IDs available to free)"
                 match = re.search(anonymous_pattern, content, re.DOTALL)
                 if not match:
                     # Fallback to simpler pattern if the above doesn't match
-                    anonymous_pattern = r'(UNREGISTERED_TIER_MODELS\s*=\s*\{)(.*?)(\n\})'
+                    anonymous_pattern = r"(UNREGISTERED_TIER_MODELS\s*=\s*\{)(.*?)(\n\})"
                     match = re.search(anonymous_pattern, content, re.DOTALL)
                 if not match:
                     try:
                         yield f"data: {json.dumps({'type': 'error', 'message': 'Could not find UNREGISTERED_TIER_MODELS structure in model_runner.py'})}\n\n"
-                    except (BrokenPipeError, ConnectionResetError, ConnectionAbortedError, OSError,
-                            TimeoutError, asyncio.TimeoutError, httpx.ConnectError, httpx.TimeoutException,
-                            httpx.NetworkError, httpx.ConnectTimeout, httpx.ReadTimeout):
+                    except (
+                        BrokenPipeError,
+                        ConnectionResetError,
+                        ConnectionAbortedError,
+                        OSError,
+                        TimeoutError,
+                        httpx.ConnectError,
+                        httpx.TimeoutException,
+                        httpx.NetworkError,
+                        httpx.ConnectTimeout,
+                        httpx.ReadTimeout,
+                    ):
                         raise
                     return
                 # Check if model already in set
@@ -2377,7 +2519,7 @@ async def add_model_stream(
                     insertion_point = match.start(3)  # Start of closing pattern
                     # Check if the content before closing brace ends with a comma
                     content_before_brace = match.group(2).rstrip()
-                    if content_before_brace and content_before_brace[-1] == ',':
+                    if content_before_brace and content_before_brace[-1] == ",":
                         # Last entry already has comma, add new entry with comma
                         model_entry = f'\n    "{model_id}",  # Auto-classified based on pricing'
                     else:
@@ -2386,16 +2528,25 @@ async def add_model_stream(
                     # Insert before the closing brace/newline pattern
                     # If the pattern matched the full closing pattern (with comment), we need to preserve it
                     # Otherwise, just insert before the closing brace
-                    if match.lastindex >= 3 and '# List of model IDs available to free' in match.group(3):
+                    if (
+                        match.lastindex >= 3
+                        and "# List of model IDs available to free" in match.group(3)
+                    ):
                         # Pattern matched the full closing with comment, insert before it
-                        content = content[:insertion_point] + model_entry + content[insertion_point:]
+                        content = (
+                            content[:insertion_point] + model_entry + content[insertion_point:]
+                        )
                     else:
                         # Simple pattern match, insert before closing brace
-                        content = content[:insertion_point] + model_entry + content[insertion_point:]
+                        content = (
+                            content[:insertion_point] + model_entry + content[insertion_point:]
+                        )
             elif tier_classification == "free":
                 # Add to FREE_TIER_MODELS (which includes anonymous models)
                 # Pattern matches: FREE_TIER_MODELS = UNREGISTERED_TIER_MODELS.union({ ... })
-                free_pattern = r'(FREE_TIER_MODELS\s*=\s*UNREGISTERED_TIER_MODELS\.union\()(\{)(.*?)(\})(\))'
+                free_pattern = (
+                    r"(FREE_TIER_MODELS\s*=\s*UNREGISTERED_TIER_MODELS\.union\()(\{)(.*?)(\})(\))"
+                )
                 match = re.search(free_pattern, content, re.DOTALL)
                 if match:
                     # Check if model already in set
@@ -2404,27 +2555,46 @@ async def add_model_stream(
                         # Look for the comment about additional mid-level models
                         mid_level_comment = "# Additional mid-level models"
                         if mid_level_comment in match.group(3):
-                            insertion_point = match.start(3) + match.group(3).find(mid_level_comment)
-                            model_entry = f'\n    "{model_id}",  # Auto-classified based on pricing\n    '
-                            content = content[:insertion_point] + model_entry + content[insertion_point:]
+                            insertion_point = match.start(3) + match.group(3).find(
+                                mid_level_comment
+                            )
+                            model_entry = (
+                                f'\n    "{model_id}",  # Auto-classified based on pricing\n    '
+                            )
+                            content = (
+                                content[:insertion_point] + model_entry + content[insertion_point:]
+                            )
                         else:
                             # Add before closing brace of the set literal
                             insertion_point = match.start(4)  # Position of the closing brace
-                            model_entry = f',\n    "{model_id}",  # Auto-classified based on pricing'
-                            content = content[:insertion_point] + model_entry + content[insertion_point:]
+                            model_entry = (
+                                f',\n    "{model_id}",  # Auto-classified based on pricing'
+                            )
+                            content = (
+                                content[:insertion_point] + model_entry + content[insertion_point:]
+                            )
             # If tier_classification == "paid", don't add to any tier set (defaults to paid)
-            
+
             # Write updated content back
             with open(model_runner_path, "w", encoding="utf-8") as f:
                 f.write(content)
-            
+
             try:
                 yield f"data: {json.dumps({'type': 'progress', 'stage': 'classifying', 'message': f'Model classified as {tier_classification} tier', 'progress': 27})}\n\n"
-            except (BrokenPipeError, ConnectionResetError, ConnectionAbortedError, OSError,
-                    TimeoutError, asyncio.TimeoutError, httpx.ConnectError, httpx.TimeoutException,
-                    httpx.NetworkError, httpx.ConnectTimeout, httpx.ReadTimeout):
+            except (
+                BrokenPipeError,
+                ConnectionResetError,
+                ConnectionAbortedError,
+                OSError,
+                TimeoutError,
+                httpx.ConnectError,
+                httpx.TimeoutException,
+                httpx.NetworkError,
+                httpx.ConnectTimeout,
+                httpx.ReadTimeout,
+            ):
                 raise
-            
+
             # Reload module
             try:
                 importlib.reload(model_runner)
@@ -2441,60 +2611,99 @@ async def add_model_stream(
                         # Verify restoration by attempting reload
                         try:
                             importlib.reload(model_runner)
-                            sys.modules[__name__].MODELS_BY_PROVIDER = model_runner.MODELS_BY_PROVIDER
+                            sys.modules[
+                                __name__
+                            ].MODELS_BY_PROVIDER = model_runner.MODELS_BY_PROVIDER
                             sys.modules[__name__].OPENROUTER_MODELS = model_runner.OPENROUTER_MODELS
                             rollback_success = True
                             backup_model_runner_path.unlink()
                         except Exception as reload_err:
-                            print(f"Warning: Failed to verify rollback after SyntaxError: {reload_err}", file=sys.stderr)
+                            print(
+                                f"Warning: Failed to verify rollback after SyntaxError: {reload_err}",
+                                file=sys.stderr,
+                            )
                             # File was restored but reload failed - might be a different issue
                             rollback_success = True  # File was written, consider it successful
                     except Exception as restore_err:
-                        print(f"Error restoring backup after SyntaxError: {restore_err}", file=sys.stderr)
-                
+                        print(
+                            f"Error restoring backup after SyntaxError: {restore_err}",
+                            file=sys.stderr,
+                        )
+
                 # Now try to yield error message (but rollback already happened)
                 try:
                     if rollback_success:
                         yield f"data: {json.dumps({'type': 'error', 'message': f'Syntax error in model_runner.py after modification: {str(e)}. Changes have been rolled back.'})}\n\n"
                     else:
                         yield f"data: {json.dumps({'type': 'error', 'message': f'Syntax error in model_runner.py after modification: {str(e)}. Attempted rollback - please check backup file at {backup_model_runner_path}'})}\n\n"
-                except (BrokenPipeError, ConnectionResetError, ConnectionAbortedError, OSError,
-                        TimeoutError, asyncio.TimeoutError, httpx.ConnectError, httpx.TimeoutException,
-                        httpx.NetworkError, httpx.ConnectTimeout, httpx.ReadTimeout):
+                except (
+                    BrokenPipeError,
+                    ConnectionResetError,
+                    ConnectionAbortedError,
+                    OSError,
+                    TimeoutError,
+                    httpx.ConnectError,
+                    httpx.TimeoutException,
+                    httpx.NetworkError,
+                    httpx.ConnectTimeout,
+                    httpx.ReadTimeout,
+                ):
                     # Stream ended, but rollback already happened, so we're good
                     pass
                 return
-            
+
             # Run setup script with streaming output
             try:
-                yield f"data: {json.dumps({'type': 'progress', 'stage': 'setup', 'message': f'Starting renderer configuration setup...', 'progress': 30})}\n\n"
-            except (BrokenPipeError, ConnectionResetError, ConnectionAbortedError, OSError,
-                    TimeoutError, asyncio.TimeoutError, httpx.ConnectError, httpx.TimeoutException,
-                    httpx.NetworkError, httpx.ConnectTimeout, httpx.ReadTimeout):
+                yield f"data: {json.dumps({'type': 'progress', 'stage': 'setup', 'message': 'Starting renderer configuration setup...', 'progress': 30})}\n\n"
+            except (
+                BrokenPipeError,
+                ConnectionResetError,
+                ConnectionAbortedError,
+                OSError,
+                TimeoutError,
+                httpx.ConnectError,
+                httpx.TimeoutException,
+                httpx.NetworkError,
+                httpx.ConnectTimeout,
+                httpx.ReadTimeout,
+            ):
                 raise
-            
-            script_path = Path(__file__).parent.parent.parent / "scripts" / "setup_model_renderer.py"
+
+            script_path = (
+                Path(__file__).parent.parent.parent / "scripts" / "setup_model_renderer.py"
+            )
             backend_dir = Path(__file__).parent.parent.parent
-            
+
             # Use asyncio subprocess for async output reading
             import asyncio
-            
+
             process = await asyncio.create_subprocess_exec(
-                sys.executable, str(script_path), model_id,
+                sys.executable,
+                str(script_path),
+                model_id,
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
-                cwd=str(backend_dir)
+                cwd=str(backend_dir),
             )
-            
+
             stderr_lines = []
-            
+
             # Read stdout line by line asynchronously
             while True:
                 try:
                     line_bytes = await process.stdout.readline()
-                except (BrokenPipeError, ConnectionResetError, ConnectionAbortedError, OSError,
-                        TimeoutError, asyncio.TimeoutError, httpx.ConnectError, httpx.TimeoutException,
-                        httpx.NetworkError, httpx.ConnectTimeout, httpx.ReadTimeout) as e:
+                except (
+                    BrokenPipeError,
+                    ConnectionResetError,
+                    ConnectionAbortedError,
+                    OSError,
+                    TimeoutError,
+                    httpx.ConnectError,
+                    httpx.TimeoutException,
+                    httpx.NetworkError,
+                    httpx.ConnectTimeout,
+                    httpx.ReadTimeout,
+                ):
                     # Network error while reading subprocess output - trigger rollback
                     if process:
                         try:
@@ -2504,39 +2713,48 @@ async def add_model_stream(
                     raise
                 if not line_bytes:
                     break
-                
-                line_str = line_bytes.decode('utf-8').strip()
-                if line_str.startswith('PROGRESS:'):
+
+                line_str = line_bytes.decode("utf-8").strip()
+                if line_str.startswith("PROGRESS:"):
                     try:
                         progress_json = json.loads(line_str[9:])  # Remove 'PROGRESS:' prefix
                         # Map script stages to our progress percentages
-                        stage = progress_json.get('stage', 'processing')
-                        message = progress_json.get('message', 'Processing...')
-                        script_progress = progress_json.get('progress', 0)
-                        
+                        stage = progress_json.get("stage", "processing")
+                        message = progress_json.get("message", "Processing...")
+                        script_progress = progress_json.get("progress", 0)
+
                         # Map stages to progress ranges
-                        if stage == 'starting':
+                        if stage == "starting":
                             mapped_progress = 30
-                        elif stage == 'collecting':
+                        elif stage == "collecting":
                             # Collecting is 30-60% of total
                             mapped_progress = 30 + (script_progress * 0.3)
-                        elif stage == 'analyzing':
+                        elif stage == "analyzing":
                             # Analyzing is 60-80% of total
                             mapped_progress = 60 + (script_progress * 0.2)
-                        elif stage == 'generating':
+                        elif stage == "generating":
                             # Generating is 80-90% of total
                             mapped_progress = 80 + (script_progress * 0.1)
-                        elif stage == 'saving':
+                        elif stage == "saving":
                             # Saving is 90-95% of total
                             mapped_progress = 90 + (script_progress * 0.05)
                         else:
                             mapped_progress = 30 + (script_progress * 0.65)
-                        
+
                         try:
                             yield f"data: {json.dumps({'type': 'progress', 'stage': stage, 'message': message, 'progress': mapped_progress})}\n\n"
-                        except (BrokenPipeError, ConnectionResetError, ConnectionAbortedError, OSError,
-                                TimeoutError, asyncio.TimeoutError, httpx.ConnectError, httpx.TimeoutException,
-                                httpx.NetworkError, httpx.ConnectTimeout, httpx.ReadTimeout):
+                        except (
+                            BrokenPipeError,
+                            ConnectionResetError,
+                            ConnectionAbortedError,
+                            OSError,
+                            TimeoutError,
+                            httpx.ConnectError,
+                            httpx.TimeoutException,
+                            httpx.NetworkError,
+                            httpx.ConnectTimeout,
+                            httpx.ReadTimeout,
+                        ):
                             # Kill the subprocess if client disconnected or network error
                             if process:
                                 try:
@@ -2546,36 +2764,55 @@ async def add_model_stream(
                             raise
                     except json.JSONDecodeError:
                         pass  # Skip invalid JSON lines
-            
+
             # Read remaining stderr
             stderr_data = await process.stderr.read()
             if stderr_data:
-                stderr_lines = stderr_data.decode('utf-8').split('\n')
-            
+                stderr_lines = stderr_data.decode("utf-8").split("\n")
+
             # Wait for process to complete
             return_code = await process.wait()
-            
+
             if return_code != 0:
                 # Get error from stderr
-                error_msg = '\n'.join(stderr_lines[-10:])[:500] if stderr_lines else "Unknown error"
+                error_msg = "\n".join(stderr_lines[-10:])[:500] if stderr_lines else "Unknown error"
                 try:
                     yield f"data: {json.dumps({'type': 'error', 'message': f'Renderer config generation failed: {error_msg}'})}\n\n"
-                except (BrokenPipeError, ConnectionResetError, ConnectionAbortedError, OSError,
-                        TimeoutError, asyncio.TimeoutError, httpx.ConnectError, httpx.TimeoutException,
-                        httpx.NetworkError, httpx.ConnectTimeout, httpx.ReadTimeout):
+                except (
+                    BrokenPipeError,
+                    ConnectionResetError,
+                    ConnectionAbortedError,
+                    OSError,
+                    TimeoutError,
+                    httpx.ConnectError,
+                    httpx.TimeoutException,
+                    httpx.NetworkError,
+                    httpx.ConnectTimeout,
+                    httpx.ReadTimeout,
+                ):
                     raise
                 return
-            
+
             # Invalidate cache
             try:
                 yield f"data: {json.dumps({'type': 'progress', 'stage': 'finalizing', 'message': 'Finalizing model addition...', 'progress': 95})}\n\n"
-            except (BrokenPipeError, ConnectionResetError, ConnectionAbortedError, OSError,
-                    TimeoutError, asyncio.TimeoutError, httpx.ConnectError, httpx.TimeoutException,
-                    httpx.NetworkError, httpx.ConnectTimeout, httpx.ReadTimeout):
+            except (
+                BrokenPipeError,
+                ConnectionResetError,
+                ConnectionAbortedError,
+                OSError,
+                TimeoutError,
+                httpx.ConnectError,
+                httpx.TimeoutException,
+                httpx.NetworkError,
+                httpx.ConnectTimeout,
+                httpx.ReadTimeout,
+            ):
                 raise
             from ..cache import invalidate_models_cache
+
             invalidate_models_cache()
-            
+
             # Log admin action
             log_admin_action(
                 db=db,
@@ -2586,16 +2823,25 @@ async def add_model_stream(
                 details={"model_id": model_id, "provider": provider_name},
                 request=request,
             )
-            
+
             # Send success
             try:
                 yield f"data: {json.dumps({'type': 'success', 'message': f'Model {model_id} added successfully', 'model_id': model_id, 'provider': provider_name, 'supports_web_search': supports_web_search, 'progress': 100})}\n\n"
-            except (BrokenPipeError, ConnectionResetError, ConnectionAbortedError, OSError,
-                    TimeoutError, asyncio.TimeoutError, httpx.ConnectError, httpx.TimeoutException,
-                    httpx.NetworkError, httpx.ConnectTimeout, httpx.ReadTimeout):
+            except (
+                BrokenPipeError,
+                ConnectionResetError,
+                ConnectionAbortedError,
+                OSError,
+                TimeoutError,
+                httpx.ConnectError,
+                httpx.TimeoutException,
+                httpx.NetworkError,
+                httpx.ConnectTimeout,
+                httpx.ReadTimeout,
+            ):
                 # Even on success, if client disconnected or network error, we should rollback
                 raise
-            
+
             # Clean up backups on success
             try:
                 if backup_model_runner_path.exists():
@@ -2604,10 +2850,19 @@ async def add_model_stream(
                     backup_config_path.unlink()
             except:
                 pass  # Ignore cleanup errors
-            
-        except (BrokenPipeError, ConnectionResetError, ConnectionAbortedError, OSError, 
-                TimeoutError, asyncio.TimeoutError, httpx.ConnectError, httpx.TimeoutException,
-                httpx.NetworkError, httpx.ConnectTimeout, httpx.ReadTimeout) as e:
+
+        except (
+            BrokenPipeError,
+            ConnectionResetError,
+            ConnectionAbortedError,
+            OSError,
+            TimeoutError,
+            httpx.ConnectError,
+            httpx.TimeoutException,
+            httpx.NetworkError,
+            httpx.ConnectTimeout,
+            httpx.ReadTimeout,
+        ):
             # Client disconnected or network error - rollback all changes
             # This covers: manual cancellation, network disruptions, timeouts, connection failures
             try:
@@ -2618,7 +2873,7 @@ async def add_model_stream(
                         await process.wait()
                     except:
                         pass
-                
+
                 # Restore model_runner.py backup
                 if model_runner_backup and backup_model_runner_path.exists():
                     try:
@@ -2628,23 +2883,33 @@ async def add_model_stream(
                         # Try to reload to verify syntax is valid
                         try:
                             importlib.reload(model_runner)
-                            sys.modules[__name__].MODELS_BY_PROVIDER = model_runner.MODELS_BY_PROVIDER
+                            sys.modules[
+                                __name__
+                            ].MODELS_BY_PROVIDER = model_runner.MODELS_BY_PROVIDER
                             sys.modules[__name__].OPENROUTER_MODELS = model_runner.OPENROUTER_MODELS
                             # Only delete backup if reload succeeded
                             backup_model_runner_path.unlink()
                         except (SyntaxError, ImportError, AttributeError) as reload_error:
                             # If reload fails, the backup might be corrupted or there's a deeper issue
                             # Keep the backup file for manual inspection
-                            print(f"Warning: Failed to reload model_runner after rollback: {reload_error}", file=sys.stderr)
-                            print(f"Backup file kept at: {backup_model_runner_path}", file=sys.stderr)
+                            print(
+                                f"Warning: Failed to reload model_runner after rollback: {reload_error}",
+                                file=sys.stderr,
+                            )
+                            print(
+                                f"Backup file kept at: {backup_model_runner_path}", file=sys.stderr
+                            )
                             # Try to restore from backup again in case write failed
                             if backup_model_runner_path.exists():
                                 with open(model_runner_path, "w", encoding="utf-8") as f:
                                     f.write(model_runner_backup)
                     except Exception as restore_error:
-                        print(f"Error restoring model_runner.py backup: {restore_error}", file=sys.stderr)
+                        print(
+                            f"Error restoring model_runner.py backup: {restore_error}",
+                            file=sys.stderr,
+                        )
                         print(f"Backup file location: {backup_model_runner_path}", file=sys.stderr)
-                
+
                 # Restore renderer config backup
                 if config_backup and backup_config_path.exists():
                     with open(config_path, "w", encoding="utf-8") as f:
@@ -2654,7 +2919,7 @@ async def add_model_stream(
                     # Remove model from renderer config if it was partially added (no backup existed)
                     if config_path.exists():
                         try:
-                            with open(config_path, "r", encoding="utf-8") as f:
+                            with open(config_path, encoding="utf-8") as f:
                                 configs = json.load(f)
                             if isinstance(configs, dict) and model_id in configs:
                                 del configs[model_id]
@@ -2670,17 +2935,35 @@ async def add_model_stream(
         except HTTPException as e:
             try:
                 yield f"data: {json.dumps({'type': 'error', 'message': e.detail})}\n\n"
-            except (BrokenPipeError, ConnectionResetError, ConnectionAbortedError, OSError,
-                    TimeoutError, asyncio.TimeoutError, httpx.ConnectError, httpx.TimeoutException,
-                    httpx.NetworkError, httpx.ConnectTimeout, httpx.ReadTimeout):
+            except (
+                BrokenPipeError,
+                ConnectionResetError,
+                ConnectionAbortedError,
+                OSError,
+                TimeoutError,
+                httpx.ConnectError,
+                httpx.TimeoutException,
+                httpx.NetworkError,
+                httpx.ConnectTimeout,
+                httpx.ReadTimeout,
+            ):
                 # Rollback on disconnection or network error even for HTTP exceptions
                 raise
         except Exception as e:
             try:
                 yield f"data: {json.dumps({'type': 'error', 'message': f'Error adding model: {str(e)}'})}\n\n"
-            except (BrokenPipeError, ConnectionResetError, ConnectionAbortedError, OSError,
-                    TimeoutError, asyncio.TimeoutError, httpx.ConnectError, httpx.TimeoutException,
-                    httpx.NetworkError, httpx.ConnectTimeout, httpx.ReadTimeout):
+            except (
+                BrokenPipeError,
+                ConnectionResetError,
+                ConnectionAbortedError,
+                OSError,
+                TimeoutError,
+                httpx.ConnectError,
+                httpx.TimeoutException,
+                httpx.NetworkError,
+                httpx.ConnectTimeout,
+                httpx.ReadTimeout,
+            ):
                 # Rollback on disconnection or network error
                 raise
             finally:
@@ -2693,7 +2976,7 @@ async def add_model_stream(
                             await process.wait()
                         except:
                             pass
-                    
+
                     # Restore backups if we had errors
                     if backup_model_runner_path.exists():
                         if model_runner_backup:
@@ -2703,25 +2986,41 @@ async def add_model_stream(
                                 # Verify restoration by attempting reload
                                 try:
                                     importlib.reload(model_runner)
-                                    sys.modules[__name__].MODELS_BY_PROVIDER = model_runner.MODELS_BY_PROVIDER
-                                    sys.modules[__name__].OPENROUTER_MODELS = model_runner.OPENROUTER_MODELS
+                                    sys.modules[
+                                        __name__
+                                    ].MODELS_BY_PROVIDER = model_runner.MODELS_BY_PROVIDER
+                                    sys.modules[
+                                        __name__
+                                    ].OPENROUTER_MODELS = model_runner.OPENROUTER_MODELS
                                     # Only delete backup if reload succeeded
                                     backup_model_runner_path.unlink()
                                 except (SyntaxError, ImportError, AttributeError) as reload_error:
                                     # Keep backup if reload fails
-                                    print(f"Warning: Failed to verify rollback: {reload_error}", file=sys.stderr)
-                                    print(f"Backup file kept at: {backup_model_runner_path}", file=sys.stderr)
+                                    print(
+                                        f"Warning: Failed to verify rollback: {reload_error}",
+                                        file=sys.stderr,
+                                    )
+                                    print(
+                                        f"Backup file kept at: {backup_model_runner_path}",
+                                        file=sys.stderr,
+                                    )
                             except Exception as restore_error:
-                                print(f"Error restoring backup in finally block: {restore_error}", file=sys.stderr)
-                                print(f"Backup file location: {backup_model_runner_path}", file=sys.stderr)
-                    
+                                print(
+                                    f"Error restoring backup in finally block: {restore_error}",
+                                    file=sys.stderr,
+                                )
+                                print(
+                                    f"Backup file location: {backup_model_runner_path}",
+                                    file=sys.stderr,
+                                )
+
                     if backup_config_path.exists() and config_backup:
                         with open(config_path, "w", encoding="utf-8") as f:
                             f.write(config_backup)
                         backup_config_path.unlink()
                 except:
                     pass  # Ignore cleanup errors
-    
+
     return StreamingResponse(generate_progress_stream(), media_type="text/event-stream")
 
 
@@ -2737,20 +3036,20 @@ async def delete_model(
     Only available in development environment.
     """
     import os
-    
+
     # Prevent deleting models in production
     is_development = os.environ.get("ENVIRONMENT") == "development"
     if not is_development:
         raise HTTPException(
             status_code=403,
-            detail="Deleting models is only available in development environment. Please delete models via development and deploy to production."
+            detail="Deleting models is only available in development environment. Please delete models via development and deploy to production.",
         )
-    
+
     model_id = req.model_id.strip()
-    
+
     if not model_id:
         raise HTTPException(status_code=400, detail="Model ID cannot be empty")
-    
+
     # Check if model exists
     model_found = False
     provider_name = None
@@ -2762,36 +3061,35 @@ async def delete_model(
                 break
         if model_found:
             break
-    
+
     if not model_found:
         raise HTTPException(
-            status_code=404,
-            detail=f"Model {model_id} not found in model_runner.py"
+            status_code=404, detail=f"Model {model_id} not found in model_runner.py"
         )
-    
+
     # Remove from model_runner.py
     model_runner_path = Path(__file__).parent.parent / "model_runner.py"
-    
+
     try:
-        with open(model_runner_path, "r", encoding="utf-8") as f:
+        with open(model_runner_path, encoding="utf-8") as f:
             content = f.read()
-        
+
         # Find and remove the model entry
         # Model entries are multi-line dictionaries, so we need to match from opening brace to closing brace
         # Pattern: match from "id": "model_id" to the closing brace and comma (or just closing brace if last item)
-        
+
         # First, try to match with trailing comma (not last item)
         # Match: whitespace, opening brace, "id": "model_id", then everything until closing brace and comma
         # Use a more robust pattern that matches the entire dict structure
         model_pattern_with_comma = rf'(\s*{{\s*"id":\s*"{re.escape(model_id)}".*?}},\s*\n)'
         original_content = content
-        content = re.sub(model_pattern_with_comma, '', content, flags=re.DOTALL)
-        
+        content = re.sub(model_pattern_with_comma, "", content, flags=re.DOTALL)
+
         # If no match, try without comma (last item in list)
         if content == original_content:
             model_pattern_no_comma = rf'(\s*{{\s*"id":\s*"{re.escape(model_id)}".*?}}\s*\n)'
-            content = re.sub(model_pattern_no_comma, '', content, flags=re.DOTALL)
-        
+            content = re.sub(model_pattern_no_comma, "", content, flags=re.DOTALL)
+
         # More robust: match entire dict by finding matching braces
         # This handles cases where the simple pattern doesn't work
         model_removed = False
@@ -2807,17 +3105,17 @@ async def delete_model(
                 match_start = start_match.start()
                 match_text = start_match.group(1)
                 # Find the opening brace in the matched text
-                brace_offset = match_text.find('{')
+                brace_offset = match_text.find("{")
                 if brace_offset >= 0:
                     start_pos = match_start + brace_offset
                 else:
                     # Fallback: search backwards from match start
                     start_pos = match_start
                     for i in range(match_start - 1, max(0, match_start - 20), -1):
-                        if content[i] == '{':
+                        if content[i] == "{":
                             start_pos = i
                             break
-                        elif not content[i].isspace():
+                        if not content[i].isspace():
                             break
                 # Find the matching closing brace
                 brace_count = 0
@@ -2828,91 +3126,97 @@ async def delete_model(
                     if escape_next:
                         escape_next = False
                         continue
-                    if char == '\\':
+                    if char == "\\":
                         escape_next = True
                         continue
                     if char == '"' and not escape_next:
                         in_string = not in_string
                         continue
                     if not in_string:
-                        if char == '{':
+                        if char == "{":
                             brace_count += 1
-                        elif char == '}':
+                        elif char == "}":
                             brace_count -= 1
                             if brace_count == 0:
                                 # Found the matching closing brace
                                 end_pos = i + 1
                                 # Check if there's a comma after
-                                if end_pos < len(content) and content[end_pos] == ',':
+                                if end_pos < len(content) and content[end_pos] == ",":
                                     end_pos += 1
                                 # Check if there's a newline after the comma/brace
-                                if end_pos < len(content) and content[end_pos] == '\n':
+                                if end_pos < len(content) and content[end_pos] == "\n":
                                     end_pos += 1
                                 # Remove the model dict (including comma and newline if present)
                                 content = content[:start_pos] + content[end_pos:]
                                 model_removed = True
                                 break
-        
+
         # Verify that the model was actually removed
         if content == original_content:
             raise HTTPException(
                 status_code=500,
-                detail=f"Failed to remove model {model_id} from model_runner.py. The model entry could not be found or matched."
+                detail=f"Failed to remove model {model_id} from model_runner.py. The model entry could not be found or matched.",
             )
-        
+
         # Verify the model is no longer in the content (double-check)
         if f'"id": "{model_id}"' in content:
             raise HTTPException(
                 status_code=500,
-                detail=f"Failed to remove model {model_id} from model_runner.py. Model entry still present after deletion attempt."
+                detail=f"Failed to remove model {model_id} from model_runner.py. Model entry still present after deletion attempt.",
             )
-        
+
         # Remove model from tier classification sets (UNREGISTERED_TIER_MODELS and FREE_TIER_MODELS)
         # Remove from UNREGISTERED_TIER_MODELS
-        anonymous_pattern = r'(UNREGISTERED_TIER_MODELS\s*=\s*\{)(.*?)(\s*\})'
+        anonymous_pattern = r"(UNREGISTERED_TIER_MODELS\s*=\s*\{)(.*?)(\s*\})"
         match = re.search(anonymous_pattern, content, re.DOTALL)
         if match:
             anonymous_content = match.group(2)
             # Remove the model entry (with or without trailing comma)
-            anonymous_content = re.sub(rf'\s*"{re.escape(model_id)}",?\s*(?:#.*)?\n?', '', anonymous_content)
-            content = content[:match.start(2)] + anonymous_content + content[match.end(2):]
-        
+            anonymous_content = re.sub(
+                rf'\s*"{re.escape(model_id)}",?\s*(?:#.*)?\n?', "", anonymous_content
+            )
+            content = content[: match.start(2)] + anonymous_content + content[match.end(2) :]
+
         # Remove from FREE_TIER_MODELS
         # Pattern matches: FREE_TIER_MODELS = UNREGISTERED_TIER_MODELS.union({ ... })
-        free_pattern = r'(FREE_TIER_MODELS\s*=\s*UNREGISTERED_TIER_MODELS\.union\()(\{)(.*?)(\})(\))'
+        free_pattern = (
+            r"(FREE_TIER_MODELS\s*=\s*UNREGISTERED_TIER_MODELS\.union\()(\{)(.*?)(\})(\))"
+        )
         match = re.search(free_pattern, content, re.DOTALL)
         if match:
             free_content = match.group(3)  # The content inside the set literal
             # Remove the model entry (with or without trailing comma)
-            free_content = re.sub(rf'\s*"{re.escape(model_id)}",?\s*(?:#.*)?\n?', '', free_content)
-            content = content[:match.start(3)] + free_content + content[match.end(3):]
-        
+            free_content = re.sub(rf'\s*"{re.escape(model_id)}",?\s*(?:#.*)?\n?', "", free_content)
+            content = content[: match.start(3)] + free_content + content[match.end(3) :]
+
         # If provider list becomes empty, remove the provider section
         # This is more complex, so we'll leave empty provider lists for now
-        
+
         # Write back to file
         with open(model_runner_path, "w", encoding="utf-8") as f:
             f.write(content)
-        
+
         # Reload the model_runner module to get updated MODELS_BY_PROVIDER
         importlib.reload(model_runner)
         # Update the imported references in this module's namespace
         sys.modules[__name__].MODELS_BY_PROVIDER = model_runner.MODELS_BY_PROVIDER
         sys.modules[__name__].OPENROUTER_MODELS = model_runner.OPENROUTER_MODELS
-        
+
         # Remove renderer config from frontend config file
         project_root = Path(__file__).parent.parent.parent.parent
-        frontend_config_path = project_root / "frontend" / "src" / "config" / "model_renderer_configs.json"
-        
+        frontend_config_path = (
+            project_root / "frontend" / "src" / "config" / "model_renderer_configs.json"
+        )
+
         config_removed = False
         if frontend_config_path.exists():
             try:
-                with open(frontend_config_path, "r", encoding="utf-8") as f:
+                with open(frontend_config_path, encoding="utf-8") as f:
                     configs = json.load(f)
-                
+
                 # Count configs before removal
                 initial_count = len(configs) if isinstance(configs, list) else len(configs)
-                
+
                 # Filter out the deleted model's config
                 if isinstance(configs, list):
                     configs = [c for c in configs if c.get("modelId") != model_id]
@@ -2921,28 +3225,35 @@ async def delete_model(
                     config_removed = model_id in configs
                     configs.pop(model_id, None)
                     configs = list(configs.values())
-                
+
                 # Write back the updated configs
                 with open(frontend_config_path, "w", encoding="utf-8") as f:
                     json.dump(configs, f, indent=2, ensure_ascii=False)
-                
+
                 if config_removed:
-                    logger.info(f"Removed renderer config for {model_id} from {frontend_config_path}")
+                    logger.info(
+                        f"Removed renderer config for {model_id} from {frontend_config_path}"
+                    )
                 else:
-                    logger.info(f"No renderer config found for {model_id} in {frontend_config_path}")
+                    logger.info(
+                        f"No renderer config found for {model_id} in {frontend_config_path}"
+                    )
             except Exception as e:
                 # Log error but don't fail the deletion - model is already removed from model_runner.py
-                logger.error(f"Failed to remove renderer config for {model_id} from {frontend_config_path}: {e}")
+                logger.error(
+                    f"Failed to remove renderer config for {model_id} from {frontend_config_path}: {e}"
+                )
                 # Still raise the error so admin knows about it, but model deletion from model_runner.py succeeded
                 raise HTTPException(
                     status_code=500,
-                    detail=f"Model removed from model_runner.py, but failed to remove renderer config: {str(e)}"
+                    detail=f"Model removed from model_runner.py, but failed to remove renderer config: {str(e)}",
                 )
-        
+
         # Invalidate models cache so fresh data is returned
         from ..cache import invalidate_models_cache
+
         invalidate_models_cache()
-        
+
         # Log admin action
         log_admin_action(
             db=db,
@@ -2953,20 +3264,17 @@ async def delete_model(
             details={"model_id": model_id, "provider": provider_name},
             request=request,
         )
-        
+
         return {
             "success": True,
             "model_id": model_id,
-            "message": f"Model {model_id} deleted successfully"
+            "message": f"Model {model_id} deleted successfully",
         }
-        
+
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Error deleting model: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Error deleting model: {str(e)}")
 
 
 @router.post("/models/update-knowledge-cutoff")
@@ -2981,14 +3289,14 @@ async def update_model_knowledge_cutoff(
     Available in all environments (not restricted to development).
     """
     model_id = req.model_id.strip()
-    
+
     if not model_id:
         raise HTTPException(status_code=400, detail="Model ID cannot be empty")
-    
+
     # Find the model in MODELS_BY_PROVIDER
     model_found = False
     provider_name = None
-    
+
     for provider, models in MODELS_BY_PROVIDER.items():
         for model in models:
             if model["id"] == model_id:
@@ -2997,39 +3305,42 @@ async def update_model_knowledge_cutoff(
                 break
         if model_found:
             break
-    
+
     if not model_found:
         raise HTTPException(status_code=404, detail=f"Model {model_id} not found")
-    
+
     # Update model_runner.py
     model_runner_path = Path(__file__).parent.parent / "model_runner.py"
-    
+
     try:
-        with open(model_runner_path, "r", encoding="utf-8") as f:
+        with open(model_runner_path, encoding="utf-8") as f:
             content = f.read()
-        
+
         # Find the provider's list in the file
         bounds = find_provider_list_bounds(content, provider_name)
         if not bounds:
-            raise HTTPException(status_code=500, detail=f"Could not find provider {provider_name} in MODELS_BY_PROVIDER")
-        
+            raise HTTPException(
+                status_code=500,
+                detail=f"Could not find provider {provider_name} in MODELS_BY_PROVIDER",
+            )
+
         start_pos, end_pos = bounds
         provider_content = content[start_pos:end_pos]
-        
+
         # Find the model within the provider's list
         model_pattern = rf'"id":\s*"{re.escape(model_id)}"'
         model_match = re.search(model_pattern, provider_content)
-        
+
         if not model_match:
             raise HTTPException(status_code=404, detail=f"Model {model_id} not found in file")
-        
+
         # Find the model's dictionary boundaries
         model_start = model_match.start()
         # Find the opening brace before the id field
         brace_start = provider_content.rfind("{", 0, model_start)
         if brace_start == -1:
             raise HTTPException(status_code=500, detail="Could not find model dictionary start")
-        
+
         # Find the closing brace for this model
         brace_count = 0
         brace_end = brace_start
@@ -3041,18 +3352,18 @@ async def update_model_knowledge_cutoff(
                 if brace_count == 0:
                     brace_end = i + 1
                     break
-        
+
         if brace_count != 0:
             raise HTTPException(status_code=500, detail="Could not find model dictionary end")
-        
+
         # Extract the model dictionary
         model_dict_str = provider_content[brace_start:brace_end]
-        
+
         # Update knowledge_cutoff in the dictionary
         # Remove existing knowledge_cutoff line if present
         knowledge_cutoff_pattern = r'\s*"knowledge_cutoff":\s*(?:None|"[^"]*"|"[^"]*"),?\s*'
         model_dict_str = re.sub(knowledge_cutoff_pattern, "", model_dict_str)
-        
+
         # Add new knowledge_cutoff if provided
         if req.knowledge_cutoff:
             # Find the last field before the closing brace
@@ -3063,9 +3374,17 @@ async def update_model_knowledge_cutoff(
                 before_brace = model_dict_str[:closing_brace_pos].rstrip()
                 comma_needed = not before_brace.endswith(",")
                 if comma_needed:
-                    model_dict_str = model_dict_str[:closing_brace_pos] + f',\n            "knowledge_cutoff": "{req.knowledge_cutoff}",\n        ' + model_dict_str[closing_brace_pos:]
+                    model_dict_str = (
+                        model_dict_str[:closing_brace_pos]
+                        + f',\n            "knowledge_cutoff": "{req.knowledge_cutoff}",\n        '
+                        + model_dict_str[closing_brace_pos:]
+                    )
                 else:
-                    model_dict_str = model_dict_str[:closing_brace_pos] + f'\n            "knowledge_cutoff": "{req.knowledge_cutoff}",\n        ' + model_dict_str[closing_brace_pos:]
+                    model_dict_str = (
+                        model_dict_str[:closing_brace_pos]
+                        + f'\n            "knowledge_cutoff": "{req.knowledge_cutoff}",\n        '
+                        + model_dict_str[closing_brace_pos:]
+                    )
         else:
             # Set to None (pending)
             closing_brace_pos = model_dict_str.rfind("}")
@@ -3073,29 +3392,40 @@ async def update_model_knowledge_cutoff(
                 before_brace = model_dict_str[:closing_brace_pos].rstrip()
                 comma_needed = not before_brace.endswith(",")
                 if comma_needed:
-                    model_dict_str = model_dict_str[:closing_brace_pos] + f',\n            "knowledge_cutoff": None,  # Knowledge cutoff date pending\n        ' + model_dict_str[closing_brace_pos:]
+                    model_dict_str = (
+                        model_dict_str[:closing_brace_pos]
+                        + ',\n            "knowledge_cutoff": None,  # Knowledge cutoff date pending\n        '
+                        + model_dict_str[closing_brace_pos:]
+                    )
                 else:
-                    model_dict_str = model_dict_str[:closing_brace_pos] + f'\n            "knowledge_cutoff": None,  # Knowledge cutoff date pending\n        ' + model_dict_str[closing_brace_pos:]
-        
+                    model_dict_str = (
+                        model_dict_str[:closing_brace_pos]
+                        + '\n            "knowledge_cutoff": None,  # Knowledge cutoff date pending\n        '
+                        + model_dict_str[closing_brace_pos:]
+                    )
+
         # Replace the model dictionary in the provider content
-        new_provider_content = provider_content[:brace_start] + model_dict_str + provider_content[brace_end:]
-        
+        new_provider_content = (
+            provider_content[:brace_start] + model_dict_str + provider_content[brace_end:]
+        )
+
         # Replace the provider section in the full content
         new_content = content[:start_pos] + new_provider_content + content[end_pos:]
-        
+
         # Write back to file
         with open(model_runner_path, "w", encoding="utf-8") as f:
             f.write(new_content)
-        
+
         # Reload the model_runner module
         importlib.reload(model_runner)
         sys.modules[__name__].MODELS_BY_PROVIDER = model_runner.MODELS_BY_PROVIDER
         sys.modules[__name__].OPENROUTER_MODELS = model_runner.OPENROUTER_MODELS
-        
+
         # Invalidate models cache
         from ..cache import invalidate_models_cache
+
         invalidate_models_cache()
-        
+
         # Log admin action
         log_admin_action(
             db=db,
@@ -3106,26 +3436,24 @@ async def update_model_knowledge_cutoff(
             details={"model_id": model_id, "knowledge_cutoff": req.knowledge_cutoff or "pending"},
             request=request,
         )
-        
+
         return {
             "success": True,
             "model_id": model_id,
             "knowledge_cutoff": req.knowledge_cutoff,
-            "message": f"Knowledge cutoff updated for {model_id}"
+            "message": f"Knowledge cutoff updated for {model_id}",
         }
-        
+
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Error updating knowledge cutoff: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Error updating knowledge cutoff: {str(e)}")
 
 
 # ============================================================================
 # Search Provider Management Endpoints
 # ============================================================================
+
 
 @router.get("/search-providers")
 async def get_search_providers(
@@ -3137,30 +3465,33 @@ async def get_search_providers(
     Returns is_development flag for informational purposes (changes are allowed in all environments).
     """
     import os
+
     from ..search.factory import SearchProviderFactory
-    
+
     is_development = os.environ.get("ENVIRONMENT") == "development"
-    
+
     # Get current active provider from database
     app_settings = db.query(AppSettings).first()
     active_provider = app_settings.active_search_provider if app_settings else None
-    
+
     # Get available providers (those with API keys configured)
     available_providers = SearchProviderFactory.get_available_providers()
-    
+
     # Build provider list with status
     providers = []
     for provider_name in ["brave", "tavily"]:
         is_configured = provider_name in available_providers
         is_active = provider_name == active_provider
-        
-        providers.append({
-            "name": provider_name,
-            "display_name": provider_name.capitalize(),
-            "is_configured": is_configured,
-            "is_active": is_active,
-        })
-    
+
+        providers.append(
+            {
+                "name": provider_name,
+                "display_name": provider_name.capitalize(),
+                "is_configured": is_configured,
+                "is_active": is_active,
+            }
+        )
+
     return {
         "providers": providers,
         "active_provider": active_provider,
@@ -3180,34 +3511,34 @@ async def set_active_search_provider(
     Available in both development and production environments.
     """
     from ..search.factory import SearchProviderFactory
-    
+
     provider = req.provider
-    
+
     # Validate provider name
     if provider not in ["brave", "tavily"]:
         raise HTTPException(
             status_code=400,
-            detail=f"Invalid provider: {provider}. Supported providers: brave, tavily"
+            detail=f"Invalid provider: {provider}. Supported providers: brave, tavily",
         )
-    
+
     # Check if API key is configured
     available_providers = SearchProviderFactory.get_available_providers()
     if provider not in available_providers:
         raise HTTPException(
             status_code=400,
-            detail=f"API key not configured for provider: {provider}. Please add the API key to backend/.env file."
+            detail=f"API key not configured for provider: {provider}. Please add the API key to backend/.env file.",
         )
-    
+
     # Get or create AppSettings
     app_settings = db.query(AppSettings).first()
     if not app_settings:
         app_settings = AppSettings()
         db.add(app_settings)
-    
+
     # Update active provider
     app_settings.active_search_provider = provider
     db.commit()
-    
+
     # Log admin action
     log_admin_action(
         db=db,
@@ -3218,11 +3549,11 @@ async def set_active_search_provider(
         details={"provider": provider},
         request=request,
     )
-    
+
     return {
         "success": True,
         "active_provider": provider,
-        "message": f"Active search provider set to {provider}"
+        "message": f"Active search provider set to {provider}",
     }
 
 
@@ -3236,15 +3567,12 @@ async def test_search_provider(
     Available in both development and production (read-only operation).
     """
     from ..search.factory import SearchProviderFactory
-    
+
     # Get active provider
     provider = SearchProviderFactory.get_active_provider(db)
     if not provider:
-        raise HTTPException(
-            status_code=400,
-            detail="No active search provider configured"
-        )
-    
+        raise HTTPException(status_code=400, detail="No active search provider configured")
+
     # Test with sample query
     try:
         results = await provider.search("test query", max_results=3)
@@ -3260,14 +3588,10 @@ async def test_search_provider(
                     "source": r.source,
                 }
                 for r in results
-            ]
+            ],
         }
     except Exception as e:
-        return {
-            "success": False,
-            "provider": provider.get_provider_name(),
-            "error": str(e)
-        }
+        return {"success": False, "provider": provider.get_provider_name(), "error": str(e)}
 
 
 @router.post("/search-providers/test-provider")
@@ -3282,25 +3606,25 @@ async def test_specific_search_provider(
     Available in both development and production (read-only operation).
     """
     from ..search.factory import SearchProviderFactory
-    
+
     provider_name = req.provider
     query = req.query
-    
+
     # Validate provider name
     if provider_name not in ["brave", "tavily"]:
         raise HTTPException(
             status_code=400,
-            detail=f"Invalid provider: {provider_name}. Supported providers: brave, tavily"
+            detail=f"Invalid provider: {provider_name}. Supported providers: brave, tavily",
         )
-    
+
     # Get provider instance
     provider = SearchProviderFactory.get_provider(provider_name, db)
     if not provider:
         raise HTTPException(
             status_code=400,
-            detail=f"Provider {provider_name} is not available (API key not configured)"
+            detail=f"Provider {provider_name} is not available (API key not configured)",
         )
-    
+
     # Test with provided query
     try:
         results = await provider.search(query, max_results=5)
@@ -3317,12 +3641,7 @@ async def test_specific_search_provider(
                     "source": r.source,
                 }
                 for r in results
-            ]
+            ],
         }
     except Exception as e:
-        return {
-            "success": False,
-            "provider": provider_name,
-            "query": query,
-            "error": str(e)
-        }
+        return {"success": False, "provider": provider_name, "query": query, "error": str(e)}

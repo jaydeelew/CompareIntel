@@ -5,9 +5,8 @@ Provides secure cookie setting and reading functions for JWT tokens.
 """
 
 from fastapi import Response
-from typing import Optional
-from ..config import settings
 
+from ..config import settings
 
 # Cookie names
 ACCESS_TOKEN_COOKIE = "access_token"
@@ -22,7 +21,7 @@ def set_auth_cookies(
     response: Response,
     access_token: str,
     refresh_token: str,
-    secure: Optional[bool] = None,
+    secure: bool | None = None,
     same_site: str = "lax",
 ) -> None:
     """
@@ -98,7 +97,7 @@ def clear_auth_cookies(response: Response) -> None:
     )
 
 
-def get_token_from_cookies(request) -> Optional[str]:
+def get_token_from_cookies(request) -> str | None:
     """
     Get access token from cookies.
 
@@ -112,7 +111,7 @@ def get_token_from_cookies(request) -> Optional[str]:
     return token
 
 
-def get_refresh_token_from_cookies(request) -> Optional[str]:
+def get_refresh_token_from_cookies(request) -> str | None:
     """
     Get refresh token from cookies.
 

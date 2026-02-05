@@ -5,12 +5,11 @@ This module provides utility functions for accessing and working with
 configuration values.
 """
 
-from typing import Dict
 from .constants import (
+    ANONYMOUS_DAILY_LIMIT,
+    CONVERSATION_LIMITS,
     MODEL_LIMITS,
     SUBSCRIPTION_LIMITS,
-    CONVERSATION_LIMITS,
-    ANONYMOUS_DAILY_LIMIT,
 )
 
 
@@ -67,5 +66,3 @@ def get_conversation_limit(tier: str) -> int:
         Maximum number of conversations stored (each conversation counts as 1)
     """
     return CONVERSATION_LIMITS.get(tier, 2)  # Default to anonymous limit
-
-

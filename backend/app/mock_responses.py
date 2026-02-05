@@ -116,7 +116,7 @@ I encourage you to take these concepts and apply them thoughtfully to your own c
 def get_mock_response() -> str:
     """
     Get a mock response for testing purposes.
-        
+
     Returns:
         Mock response string
     """
@@ -126,17 +126,16 @@ def get_mock_response() -> str:
 def stream_mock_response(chunk_size: int = 50):
     """
     Generator that yields mock response in chunks to simulate streaming.
-    
+
     Args:
         chunk_size: Number of characters per chunk (default: 50)
-        
+
     Yields:
         String chunks of the mock response
     """
     response = get_mock_response()
-    
+
     # Split into chunks and yield
     for i in range(0, len(response), chunk_size):
-        chunk = response[i:i + chunk_size]
+        chunk = response[i : i + chunk_size]
         yield chunk
-

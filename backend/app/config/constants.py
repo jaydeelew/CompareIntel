@@ -10,9 +10,7 @@ This module contains all application constants including:
 All constants should be imported from this module to maintain a single source of truth.
 """
 
-from typing import Dict, Any
 from ..types import TierConfigDict
-
 
 # ============================================================================
 # Subscription Tier Configuration
@@ -23,7 +21,7 @@ from ..types import TierConfigDict
 # overage_price = price per additional model response (TBD - pricing not yet finalized)
 # extended_overage_price = price per additional extended interaction (TBD - pricing not yet finalized)
 
-SUBSCRIPTION_CONFIG: Dict[str, TierConfigDict] = {
+SUBSCRIPTION_CONFIG: dict[str, TierConfigDict] = {
     "free": {
         "daily_limit": 20,
         "model_limit": 3,
@@ -62,9 +60,13 @@ SUBSCRIPTION_CONFIG: Dict[str, TierConfigDict] = {
 }
 
 # Backwards compatibility - extract limits
-SUBSCRIPTION_LIMITS: Dict[str, int] = {tier: config["daily_limit"] for tier, config in SUBSCRIPTION_CONFIG.items()}
+SUBSCRIPTION_LIMITS: dict[str, int] = {
+    tier: config["daily_limit"] for tier, config in SUBSCRIPTION_CONFIG.items()
+}
 
-MODEL_LIMITS: Dict[str, int] = {tier: config["model_limit"] for tier, config in SUBSCRIPTION_CONFIG.items()}
+MODEL_LIMITS: dict[str, int] = {
+    tier: config["model_limit"] for tier, config in SUBSCRIPTION_CONFIG.items()
+}
 
 
 # Extended tier usage tracking removed - extended mode is now unlimited (only limited by credits)
@@ -80,7 +82,9 @@ MODEL_LIMITS: Dict[str, int] = {tier: config["model_limit"] for tier, config in 
 # ============================================================================
 # Limits for unregistered users
 
-ANONYMOUS_DAILY_LIMIT: int = 10  # Model responses per day for unregistered users (legacy, use credits instead)
+ANONYMOUS_DAILY_LIMIT: int = (
+    10  # Model responses per day for unregistered users (legacy, use credits instead)
+)
 ANONYMOUS_MODEL_LIMIT: int = 3  # Maximum models per comparison for unregistered users
 
 
@@ -90,7 +94,7 @@ ANONYMOUS_MODEL_LIMIT: int = 3  # Maximum models per comparison for unregistered
 # Maximum number of conversations stored per subscription tier
 # Each conversation (with or without follow-ups) counts as 1 conversation
 
-CONVERSATION_LIMITS: Dict[str, int] = {
+CONVERSATION_LIMITS: dict[str, int] = {
     "unregistered": 2,
     "free": 3,
     "starter": 10,
@@ -109,13 +113,13 @@ CONVERSATION_LIMITS: Dict[str, int] = {
 # Average exchange: ~5 credits (mix of standard/extended/follow-ups)
 
 # Daily credit limits for free tiers (resets daily)
-DAILY_CREDIT_LIMITS: Dict[str, int] = {
+DAILY_CREDIT_LIMITS: dict[str, int] = {
     "unregistered": 50,  # 50 credits/day (~10 exchanges/day)
     "free": 100,  # 100 credits/day (~20 exchanges/day)
 }
 
 # Monthly credit allocations for paid tiers
-MONTHLY_CREDIT_ALLOCATIONS: Dict[str, int] = {
+MONTHLY_CREDIT_ALLOCATIONS: dict[str, int] = {
     "starter": 1_200,  # $9.95/month - ~240 exchanges/month (~8/day)
     "starter_plus": 2_500,  # $19.95/month - ~500 exchanges/month (~17/day)
     "pro": 5_000,  # $39.95/month - ~1,000 exchanges/month (~33/day)
@@ -123,7 +127,7 @@ MONTHLY_CREDIT_ALLOCATIONS: Dict[str, int] = {
 }
 
 # Subscription pricing (monthly)
-TIER_PRICING: Dict[str, float] = {
+TIER_PRICING: dict[str, float] = {
     "unregistered": 0.0,
     "free": 0.0,
     "starter": 9.95,

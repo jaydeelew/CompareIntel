@@ -5,14 +5,16 @@ This module provides dependency functions for protecting routes
 and checking user permissions.
 """
 
-from fastapi import Depends, HTTPException, status, Request
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from collections.abc import Callable
+from datetime import UTC, datetime
+
+from fastapi import Depends, HTTPException, Request, status
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.orm import Session
-from typing import Optional, Callable
-from datetime import datetime, UTC
+
+from .auth import verify_token
 from .database import get_db
 from .models import User
-from .auth import verify_token
 from .utils.cookies import get_token_from_cookies
 
 # HTTP Bearer token security scheme
@@ -21,9 +23,9 @@ security = HTTPBearer(auto_error=False)
 
 def get_current_user(
     request: Request,
-    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
-    db: Session = Depends(get_db)
-) -> Optional[User]:
+    credentials: HTTPAuthorizationCredentials | None = Depends(security),
+    db: Session = Depends(get_db),
+) -> User | None:
     """
     Get current authenticated user from JWT token.
     Returns None if not authenticated (for optional authentication).
@@ -41,11 +43,11 @@ def get_current_user(
     """
     # Try to get token from cookies first (preferred method)
     token = get_token_from_cookies(request)
-    
+
     # Fallback to Authorization header for backward compatibility
     if not token and credentials:
         token = credentials.credentials
-    
+
     if not token:
         return None
 
@@ -89,8 +91,8 @@ def get_current_user(
 
 def get_current_user_required(
     request: Request,
-    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
-    db: Session = Depends(get_db)
+    credentials: HTTPAuthorizationCredentials | None = Depends(security),
+    db: Session = Depends(get_db),
 ) -> User:
     """
     Get current authenticated user from JWT token (required).
@@ -112,34 +114,44 @@ def get_current_user_required(
     """
     # Try to get token from cookies first (preferred method)
     token = get_token_from_cookies(request)
-    
+
     # Fallback to Authorization header for backward compatibility
     if not token and credentials:
         token = credentials.credentials
-    
+
     if not token:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Authentication required")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Authentication required"
+        )
 
     payload = verify_token(token, token_type="access")
 
     if payload is None:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid authentication credentials")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid authentication credentials"
+        )
 
     user_id_str = payload.get("sub")
     if user_id_str is None:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid authentication credentials")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid authentication credentials"
+        )
 
     try:
         user_id = int(user_id_str)
     except (ValueError, TypeError):
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid authentication credentials")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid authentication credentials"
+        )
 
     user = db.query(User).filter(User.id == user_id).first()
     if user is None:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
 
     if not user.is_active:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="User account is inactive")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="User account is inactive"
+        )
 
     # Update last_access timestamp (only update if more than 1 minute has passed to avoid excessive writes)
     now = datetime.now(UTC)
@@ -169,7 +181,9 @@ def get_current_verified_user(current_user: User = Depends(get_current_user_requ
         HTTPException: If user email is not verified
     """
     if not current_user.is_verified:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Email verification required")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Email verification required"
+        )
     return current_user
 
 
@@ -213,14 +227,17 @@ def require_admin_role(required_role: str = "admin") -> Callable[[User], User]:
 
     def dependency(current_user: User = Depends(get_current_verified_user)) -> User:
         if not current_user.is_admin:
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin access required")
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN, detail="Admin access required"
+            )
 
         user_role_level = role_hierarchy.get(current_user.role, 0)
         required_role_level = role_hierarchy.get(required_role, 0)
 
         if user_role_level < required_role_level:
             raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN, detail=f"This feature requires {required_role} role or higher"
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"This feature requires {required_role} role or higher",
             )
 
         return current_user

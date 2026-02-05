@@ -7,7 +7,7 @@ Tests cover:
 - Deleting all conversations
 - Validation of zipcode format
 """
-import pytest
+
 from fastapi import status
 
 
@@ -25,7 +25,7 @@ class TestUserPreferences:
         response = client.get("/api/user/preferences")
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
-        
+
         # Check default values
         assert "theme" in data
         assert "email_notifications" in data
@@ -36,16 +36,17 @@ class TestUserPreferences:
     def test_get_preferences_creates_default_if_not_exists(self, authenticated_client, db_session):
         """Test that getting preferences creates default preferences if they don't exist."""
         client, user, access_token, refresh_token = authenticated_client
-        
+
         # First, ensure user has no preferences
         from app.models import UserPreference
+
         db_session.query(UserPreference).filter(UserPreference.user_id == user.id).delete()
         db_session.commit()
-        
+
         response = client.get("/api/user/preferences")
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
-        
+
         # Should have default values
         assert data["theme"] == "light"
         assert data["email_notifications"] is True
@@ -55,10 +56,7 @@ class TestUserPreferences:
     def test_update_preferences_zipcode(self, authenticated_client):
         """Test updating zipcode preference."""
         client, user, access_token, refresh_token = authenticated_client
-        response = client.put(
-            "/api/user/preferences",
-            json={"zipcode": "12345"}
-        )
+        response = client.put("/api/user/preferences", json={"zipcode": "12345"})
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
         assert data["zipcode"] == "12345"
@@ -66,10 +64,7 @@ class TestUserPreferences:
     def test_update_preferences_zipcode_with_plus4(self, authenticated_client):
         """Test updating zipcode with ZIP+4 format."""
         client, user, access_token, refresh_token = authenticated_client
-        response = client.put(
-            "/api/user/preferences",
-            json={"zipcode": "12345-6789"}
-        )
+        response = client.put("/api/user/preferences", json={"zipcode": "12345-6789"})
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
         assert data["zipcode"] == "12345-6789"
@@ -77,27 +72,18 @@ class TestUserPreferences:
     def test_update_preferences_invalid_zipcode(self, authenticated_client):
         """Test updating with invalid zipcode format returns error."""
         client, user, access_token, refresh_token = authenticated_client
-        response = client.put(
-            "/api/user/preferences",
-            json={"zipcode": "invalid"}
-        )
+        response = client.put("/api/user/preferences", json={"zipcode": "invalid"})
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
 
     def test_update_preferences_clear_zipcode(self, authenticated_client):
         """Test clearing zipcode by setting to null."""
         client, user, access_token, refresh_token = authenticated_client
-        
+
         # First set a zipcode
-        client.put(
-            "/api/user/preferences",
-            json={"zipcode": "12345"}
-        )
-        
+        client.put("/api/user/preferences", json={"zipcode": "12345"})
+
         # Then clear it
-        response = client.put(
-            "/api/user/preferences",
-            json={"zipcode": None}
-        )
+        response = client.put("/api/user/preferences", json={"zipcode": None})
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
         assert data["zipcode"] is None
@@ -105,10 +91,7 @@ class TestUserPreferences:
     def test_update_preferences_remember_state(self, authenticated_client):
         """Test updating remember_state_on_logout preference."""
         client, user, access_token, refresh_token = authenticated_client
-        response = client.put(
-            "/api/user/preferences",
-            json={"remember_state_on_logout": True}
-        )
+        response = client.put("/api/user/preferences", json={"remember_state_on_logout": True})
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
         assert data["remember_state_on_logout"] is True
@@ -118,11 +101,7 @@ class TestUserPreferences:
         client, user, access_token, refresh_token = authenticated_client
         response = client.put(
             "/api/user/preferences",
-            json={
-                "zipcode": "90210",
-                "remember_state_on_logout": True,
-                "theme": "dark"
-            }
+            json={"zipcode": "90210", "remember_state_on_logout": True, "theme": "dark"},
         )
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
@@ -132,10 +111,7 @@ class TestUserPreferences:
 
     def test_update_preferences_unauthenticated(self, client):
         """Test updating preferences without authentication returns 401."""
-        response = client.put(
-            "/api/user/preferences",
-            json={"zipcode": "12345"}
-        )
+        response = client.put("/api/user/preferences", json={"zipcode": "12345"})
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
 
@@ -156,88 +132,89 @@ class TestDeleteAllConversations:
         assert data["deleted_count"] == 0
         assert "message" in data
 
-    def test_delete_all_conversations_when_user_has_conversations(self, authenticated_client, db_session):
+    def test_delete_all_conversations_when_user_has_conversations(
+        self, authenticated_client, db_session
+    ):
         """Test deleting all conversations when user has existing conversations."""
         client, user, access_token, refresh_token = authenticated_client
-        from app.models import Conversation
         import json
-        
+
+        from app.models import Conversation
+
         # Create some conversations for the user
         for i in range(3):
             conv = Conversation(
                 user_id=user.id,
                 title=f"Test Conversation {i}",
                 input_data=f"Test input {i}",
-                models_used=json.dumps(["gpt-4", "claude-3"])
+                models_used=json.dumps(["gpt-4", "claude-3"]),
             )
             db_session.add(conv)
         db_session.commit()
-        
+
         # Verify conversations were created
-        count_before = db_session.query(Conversation).filter(
-            Conversation.user_id == user.id
-        ).count()
+        count_before = (
+            db_session.query(Conversation).filter(Conversation.user_id == user.id).count()
+        )
         assert count_before == 3
-        
+
         # Delete all
         response = client.delete("/api/conversations/all")
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
         assert data["deleted_count"] == 3
-        
+
         # Verify they're deleted
-        count_after = db_session.query(Conversation).filter(
-            Conversation.user_id == user.id
-        ).count()
+        count_after = db_session.query(Conversation).filter(Conversation.user_id == user.id).count()
         assert count_after == 0
 
     def test_delete_all_conversations_only_own_conversations(self, client, db_session):
         """Test that deleting only affects the current user's conversations."""
-        from app.models import Conversation
-        from tests.factories import create_user, DEFAULT_TEST_PASSWORD
         import json
-        
+
+        from app.models import Conversation
+        from tests.factories import DEFAULT_TEST_PASSWORD, create_user
+
         # Create two users
         user1 = create_user(db_session, email="user1@test.com")
         user2 = create_user(db_session, email="user2@test.com")
-        
+
         # Create conversations for both users
         for i in range(2):
             conv1 = Conversation(
                 user_id=user1.id,
                 title=f"User1 Conversation {i}",
                 input_data=f"Test input {i}",
-                models_used=json.dumps(["gpt-4"])
+                models_used=json.dumps(["gpt-4"]),
             )
             conv2 = Conversation(
                 user_id=user2.id,
                 title=f"User2 Conversation {i}",
                 input_data=f"Test input {i}",
-                models_used=json.dumps(["claude-3"])
+                models_used=json.dumps(["claude-3"]),
             )
             db_session.add(conv1)
             db_session.add(conv2)
         db_session.commit()
-        
+
         # Login as user1 and delete their conversations
         login_response = client.post(
-            "/api/auth/login",
-            json={"email": "user1@test.com", "password": DEFAULT_TEST_PASSWORD}
+            "/api/auth/login", json={"email": "user1@test.com", "password": DEFAULT_TEST_PASSWORD}
         )
         assert login_response.status_code == status.HTTP_200_OK
-        
+
         delete_response = client.delete("/api/conversations/all")
         assert delete_response.status_code == status.HTTP_200_OK
         assert delete_response.json()["deleted_count"] == 2
-        
+
         # Verify user1's conversations are deleted
-        user1_count = db_session.query(Conversation).filter(
-            Conversation.user_id == user1.id
-        ).count()
+        user1_count = (
+            db_session.query(Conversation).filter(Conversation.user_id == user1.id).count()
+        )
         assert user1_count == 0
-        
+
         # Verify user2's conversations still exist
-        user2_count = db_session.query(Conversation).filter(
-            Conversation.user_id == user2.id
-        ).count()
+        user2_count = (
+            db_session.query(Conversation).filter(Conversation.user_id == user2.id).count()
+        )
         assert user2_count == 2

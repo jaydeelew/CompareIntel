@@ -9,10 +9,7 @@ Tests cover:
 - Error handling scenarios
 """
 
-import pytest  # type: ignore
 from fastapi import status
-from unittest.mock import patch, MagicMock
-from app.models import User
 
 
 class TestComparisonStreamingEdgeCases:

@@ -1,61 +1,43 @@
-from fastapi import FastAPI, HTTPException, Request, Depends, BackgroundTasks
-from fastapi.responses import StreamingResponse, JSONResponse
-from fastapi.exceptions import RequestValidationError
-from pydantic import BaseModel
-from typing import Any
 from contextlib import asynccontextmanager
+from typing import Any
+
+from fastapi import Depends, FastAPI, HTTPException, Request
+from fastapi.responses import JSONResponse
+from pydantic import BaseModel
 
 # Initialize Sentry error monitoring early, before other imports
 from .sentry import init_sentry
+
 init_sentry(app_version="1.0.0")
 
+import logging
+import os
+
+from dotenv import load_dotenv
+from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy.orm import Session
+
 from .model_runner import (
-    call_openrouter_streaming,
-    clean_model_response,
-    OPENROUTER_MODELS,
-    MODELS_BY_PROVIDER,
     preload_model_token_limits,
 )
-from fastapi.middleware.cors import CORSMiddleware
-from datetime import datetime, timedelta
-import asyncio
-import os
-import json
-import logging
-from collections import defaultdict
-from typing import Dict, Any, Optional
-from sqlalchemy.orm import Session
-from dotenv import load_dotenv
 
 # Load environment variables from .env file
 # Use override=False to ensure environment variables set by test runners (like Playwright) take precedence
 load_dotenv(os.path.join(os.path.dirname(__file__), "..", ".env"), override=False)
 
 # Import authentication modules
-from .database import get_db, Base, engine
-from .models import User, UsageLog
-from .dependencies import get_current_user
-from .rate_limiting import (
-    get_user_usage_stats,
-    get_anonymous_usage_stats,
-    get_model_limit,
-    is_overage_allowed,
-    get_overage_price,
-    anonymous_rate_limit_storage,
-)
-from .routers import auth, admin, api
-
-# Import model_stats from api router to share the same storage
-from .routers.api import model_stats
-
 # Import configuration constants
 from .config import (
     MODEL_LIMITS,
-    validate_config,
     log_configuration,
     settings,
+    validate_config,
 )
+from .database import Base, engine, get_db
+from .models import UsageLog
+from .routers import admin, api, auth
 
+# Import model_stats from api router to share the same storage
 
 # Configure logging
 logging.basicConfig(
@@ -99,7 +81,9 @@ logging.getLogger().addFilter(SQLStyleWarningFilter())
 
 # Set INFO level for search-related modules even in production (critical for rate limiting debugging)
 logging.getLogger("app.search").setLevel(logging.INFO)
-logging.getLogger("app.model_runner").setLevel(logging.INFO if settings.environment == "development" else logging.WARNING)
+logging.getLogger("app.model_runner").setLevel(
+    logging.INFO if settings.environment == "development" else logging.WARNING
+)
 
 # Suppress SQLAlchemy INFO/WARNING logs that are just query details (not errors)
 # Only show SQLAlchemy errors and critical issues
@@ -165,7 +149,6 @@ async def lifespan(app: FastAPI):
         # Other startup errors
         logger.error(f"Startup error: {e}", exc_info=True)
         # Let the application continue, as tables may already exist
-        pass
 
     yield
 
@@ -228,7 +211,8 @@ async def global_exception_handler(request: Request, exc: Exception):
         raise exc
 
     import traceback
-    from sqlalchemy.exc import OperationalError, DatabaseError, DisconnectionError, SQLAlchemyError
+
+    from sqlalchemy.exc import DatabaseError, DisconnectionError, OperationalError, SQLAlchemyError
 
     error_type = type(exc).__name__
     error_message = str(exc)
@@ -236,14 +220,23 @@ async def global_exception_handler(request: Request, exc: Exception):
 
     # Check if this is a database connection error
     # Check both the exception itself and its __cause__ and __context__ for SQLAlchemy errors
-    is_db_error = isinstance(exc, (OperationalError, DatabaseError, DisconnectionError, SQLAlchemyError))
+    is_db_error = isinstance(
+        exc, (OperationalError, DatabaseError, DisconnectionError, SQLAlchemyError)
+    )
     if not is_db_error:
         # Check exception chain for database errors
         cause = getattr(exc, "__cause__", None)
         context = getattr(exc, "__context__", None)
-        if cause and isinstance(cause, (OperationalError, DatabaseError, DisconnectionError, SQLAlchemyError)):
-            is_db_error = True
-        elif context and isinstance(context, (OperationalError, DatabaseError, DisconnectionError, SQLAlchemyError)):
+        if (
+            cause
+            and isinstance(
+                cause, (OperationalError, DatabaseError, DisconnectionError, SQLAlchemyError)
+            )
+            or context
+            and isinstance(
+                context, (OperationalError, DatabaseError, DisconnectionError, SQLAlchemyError)
+            )
+        ):
             is_db_error = True
 
     # Also check error message for specific database error patterns (more restrictive)
@@ -271,7 +264,12 @@ async def global_exception_handler(request: Request, exc: Exception):
         if any(pattern in error_lower for pattern in db_error_patterns):
             # Additional check: make sure it's not a false positive
             # Skip if it's clearly not a database error (e.g., "API connection" or "network connection")
-            false_positive_patterns = ["api connection", "network connection", "http connection", "tcp connection"]
+            false_positive_patterns = [
+                "api connection",
+                "network connection",
+                "http connection",
+                "tcp connection",
+            ]
             if not any(fp_pattern in error_lower for fp_pattern in false_positive_patterns):
                 is_db_error = True
 
@@ -288,16 +286,21 @@ async def global_exception_handler(request: Request, exc: Exception):
         # Return 503 Service Unavailable for database errors (more appropriate than 500)
         # Include error details in development mode for debugging
         environment = os.getenv("ENVIRONMENT", "development")
-        error_detail = {"detail": "Database service temporarily unavailable. Please try again later.", "error_type": error_type}
+        error_detail = {
+            "detail": "Database service temporarily unavailable. Please try again later.",
+            "error_type": error_type,
+        }
         # Include actual error message in development mode for debugging
         if environment == "development":
             error_detail["error_message"] = error_message
             error_detail["debug_info"] = "Check backend logs for full traceback"
 
         return JSONResponse(status_code=503, content=error_detail)
-    else:
-        # Return JSON error response for other errors
-        return JSONResponse(status_code=500, content={"detail": f"Internal server error: {error_message}", "error_type": error_type})
+    # Return JSON error response for other errors
+    return JSONResponse(
+        status_code=500,
+        content={"detail": f"Internal server error: {error_message}", "error_type": error_type},
+    )
 
 
 # Include routers AFTER middleware
@@ -346,14 +349,16 @@ def get_client_ip(request: Request) -> str:
 class ConversationMessage(BaseModel):
     role: str  # "user" or "assistant"
     content: str
-    model_id: Optional[str] = None  # Optional model ID for assistant messages (used to filter per-model history)
+    model_id: str | None = (
+        None  # Optional model ID for assistant messages (used to filter per-model history)
+    )
 
 
 class CompareRequest(BaseModel):
     input_data: str
     models: list[str]
     conversation_history: list[ConversationMessage] = []  # Optional conversation context
-    browser_fingerprint: Optional[str] = None  # Optional browser fingerprint for rate limiting
+    browser_fingerprint: str | None = None  # Optional browser fingerprint for rate limiting
 
 
 class CompareResponse(BaseModel):
@@ -369,6 +374,7 @@ async def root():
 @app.get("/health")
 async def health_check(db: Session = Depends(get_db)):
     import time
+
     from sqlalchemy import text
 
     start = time.time()
@@ -384,10 +390,16 @@ async def health_check(db: Session = Depends(get_db)):
 
         total_duration = time.time() - start
         print(f"[HEALTH] Health check completed in {total_duration:.3f}s")
-        return {"status": "healthy", "db_connected": True, "duration_ms": int(total_duration * 1000)}
+        return {
+            "status": "healthy",
+            "db_connected": True,
+            "duration_ms": int(total_duration * 1000),
+        }
     except Exception as e:
         total_duration = time.time() - start
-        print(f"[HEALTH] Health check failed after {total_duration:.3f}s: {type(e).__name__}: {str(e)}")
+        print(
+            f"[HEALTH] Health check failed after {total_duration:.3f}s: {type(e).__name__}: {str(e)}"
+        )
         import traceback
 
         traceback.print_exc()

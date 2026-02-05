@@ -8,8 +8,8 @@ Tests cover:
 - Streaming failures
 """
 
-import pytest  # type: ignore
-from unittest.mock import patch, MagicMock, AsyncMock
+from unittest.mock import MagicMock, patch
+
 from app.model_runner import (
     call_openrouter_streaming,
     clean_model_response,
@@ -28,7 +28,9 @@ class TestStreamingErrorHandling:
         # Simulate connection error during streaming
         mock_client.chat.completions.create.side_effect = Exception("Connection failed")
 
-        chunks = list(call_openrouter_streaming(prompt="Test prompt", model_id="gpt-4", use_mock=False))
+        chunks = list(
+            call_openrouter_streaming(prompt="Test prompt", model_id="gpt-4", use_mock=False)
+        )
 
         # Should handle error gracefully
         assert len(chunks) >= 0
@@ -45,14 +47,18 @@ class TestStreamingErrorHandling:
         # Simulate timeout during streaming
         mock_client.chat.completions.create.side_effect = TimeoutError("Request timed out")
 
-        chunks = list(call_openrouter_streaming(prompt="Test prompt", model_id="gpt-4", use_mock=False))
+        chunks = list(
+            call_openrouter_streaming(prompt="Test prompt", model_id="gpt-4", use_mock=False)
+        )
 
         # Should handle timeout gracefully
         assert isinstance(chunks, list)
 
     def test_streaming_empty_response(self):
         """Test handling of empty streaming response."""
-        chunks = list(call_openrouter_streaming(prompt="Test prompt", model_id="gpt-4", use_mock=True))
+        chunks = list(
+            call_openrouter_streaming(prompt="Test prompt", model_id="gpt-4", use_mock=True)
+        )
 
         # Should return at least some chunks (even if empty)
         assert isinstance(chunks, list)

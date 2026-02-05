@@ -5,9 +5,8 @@ This module defines TypedDict types for structured dictionaries and
 custom type aliases for database models and common data structures.
 """
 
-from typing import TypedDict, Dict, List, Optional, Any, Literal
-from datetime import datetime, date
-
+from datetime import datetime
+from typing import Any, Literal, TypedDict
 
 # ============================================================================
 # Subscription Tier Types
@@ -26,15 +25,17 @@ UserRole = Literal["user", "moderator", "admin", "super_admin"]
 
 class TierConfigDict(TypedDict):
     """Configuration for a subscription tier."""
+
     daily_limit: int
     model_limit: int
     overage_allowed: bool
-    overage_price: Optional[float]
-    extended_overage_price: Optional[float]
+    overage_price: float | None
+    extended_overage_price: float | None
 
 
 class ModelInfoDict(TypedDict, total=False):
     """Information about an AI model."""
+
     id: str
     name: str
     description: str
@@ -50,15 +51,17 @@ class ModelInfoDict(TypedDict, total=False):
 
 class AnonymousRateLimitData(TypedDict, total=False):
     """Storage structure for unregistered user rate limiting."""
+
     count: int
     date: str
-    first_seen: Optional[datetime]
+    first_seen: datetime | None
     timezone: str  # IANA timezone string (e.g., "America/Chicago")
-    last_reset_at: Optional[datetime]  # UTC timestamp of last reset (for abuse prevention)
+    last_reset_at: datetime | None  # UTC timestamp of last reset (for abuse prevention)
 
 
 class UsageStatsDict(TypedDict):
     """Usage statistics for a user."""
+
     daily_usage: int
     daily_limit: int
     remaining_usage: int
@@ -68,6 +71,7 @@ class UsageStatsDict(TypedDict):
 
 class ExtendedUsageStatsDict(TypedDict):
     """Extended tier usage statistics."""
+
     daily_extended_usage: int
     daily_extended_limit: int
     remaining_extended_usage: int
@@ -77,6 +81,7 @@ class ExtendedUsageStatsDict(TypedDict):
 
 class FullUsageStatsDict(TypedDict):
     """Complete usage statistics including extended tier."""
+
     daily_usage: int
     daily_limit: int
     remaining_usage: int
@@ -94,33 +99,37 @@ class FullUsageStatsDict(TypedDict):
 
 class ConversationMessageDict(TypedDict):
     """Dictionary representation of a conversation message."""
+
     role: str  # "user" or "assistant"
     content: str
 
 
 class ModelResponseDict(TypedDict):
     """Response from a single model."""
+
     model_id: str
     response: str
     success: bool
-    error: Optional[str]
+    error: str | None
 
 
 class BatchResultsDict(TypedDict):
     """Results from a batch of model calls."""
-    results: Dict[str, str]
+
+    results: dict[str, str]
     successful: int
     failed: int
-    processing_time_ms: Optional[int]
+    processing_time_ms: int | None
 
 
 class ConnectionQualityDict(TypedDict, total=False):
     """Connection quality test results."""
+
     response_time: float
     quality: str
     time_multiplier: float
     success: bool
-    error: Optional[str]
+    error: str | None
 
 
 # ============================================================================
@@ -130,19 +139,21 @@ class ConnectionQualityDict(TypedDict, total=False):
 
 class AdminActionDetailsDict(TypedDict, total=False):
     """Details for an admin action log entry."""
+
     previous_value: Any
     new_value: Any
-    action_reason: Optional[str]
-    additional_info: Optional[str]
+    action_reason: str | None
+    additional_info: str | None
 
 
 class AdminStatsDict(TypedDict):
     """Admin dashboard statistics."""
+
     total_users: int
     active_users: int
     verified_users: int
-    users_by_tier: Dict[str, int]
-    users_by_role: Dict[str, int]
+    users_by_tier: dict[str, int]
+    users_by_role: dict[str, int]
     recent_registrations: int
     total_usage_today: int
     admin_actions_today: int
@@ -155,6 +166,7 @@ class AdminStatsDict(TypedDict):
 
 class EmailConfigDict(TypedDict, total=False):
     """Email configuration dictionary."""
+
     username: str
     password: str
     from_email: str
@@ -169,10 +181,11 @@ class EmailConfigDict(TypedDict, total=False):
 
 class ModelStatsDict(TypedDict, total=False):
     """Statistics for a model's performance."""
+
     success: int
     failure: int
-    last_error: Optional[str]
-    last_success: Optional[datetime]
+    last_error: str | None
+    last_success: datetime | None
 
 
 # ============================================================================
@@ -188,4 +201,3 @@ UserId = int
 ConversationId = int
 UsageLogId = int
 MessageId = int
-

@@ -5,11 +5,11 @@ This module sets up SQLAlchemy with PostgreSQL support and provides
 database session management for the FastAPI application.
 """
 
-from sqlalchemy import create_engine, event
-from sqlalchemy.orm import sessionmaker, Session, declarative_base
-from typing import Generator
 import os
-from pathlib import Path
+from collections.abc import Generator
+
+from sqlalchemy import create_engine, event
+from sqlalchemy.orm import Session, declarative_base, sessionmaker
 
 # Import configuration
 from .config import settings
@@ -56,6 +56,7 @@ elif DATABASE_URL.startswith("sqlite:///"):
 
 # Log the database URL being used (mask password if present)
 import logging
+
 db_logger = logging.getLogger(__name__)
 if "postgresql" in DATABASE_URL:
     # Mask password in PostgreSQL URL
@@ -95,6 +96,7 @@ elif is_sqlite:
     # Connection pooling with SQLite can cause "database is locked" errors
     # Add timeout to handle concurrent access better
     from sqlalchemy.pool import NullPool
+
     engine = create_engine(
         DATABASE_URL,
         connect_args={
@@ -117,6 +119,7 @@ else:
 # on every connection for CASCADE deletes to function properly
 # WAL mode improves concurrent read/write performance
 if "sqlite" in DATABASE_URL:
+
     @event.listens_for(engine, "connect")
     def set_sqlite_pragma(dbapi_conn, connection_record):
         """Configure SQLite connection with optimal settings."""
@@ -129,6 +132,7 @@ if "sqlite" in DATABASE_URL:
         cursor.execute("PRAGMA synchronous=NORMAL")
         cursor.execute("PRAGMA busy_timeout=20000")  # 20 second timeout
         cursor.close()
+
 
 # Create session factory
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
@@ -150,9 +154,9 @@ def get_db() -> Generator[Session, None, None]:
     Yields:
         Session: Database session
     """
-    import time
     import logging
-    
+    import time
+
     logger = logging.getLogger(__name__)
     db_start = time.time()
     db = None
@@ -166,12 +170,14 @@ def get_db() -> Generator[Session, None, None]:
         # Don't log HTTPException as database errors - these are normal FastAPI exceptions
         # (e.g., authentication errors) that should be handled by FastAPI's exception handlers
         from fastapi import HTTPException
+
         if isinstance(e, HTTPException):
             # Re-raise HTTPException without logging - FastAPI will handle it
             raise
-        
+
         # Log actual database connection errors with full details
         import traceback
+
         logger.error(f"[DB] Failed to create database session: {type(e).__name__}: {str(e)}")
         logger.error(f"[DB] Traceback: {traceback.format_exc()}")
         # Re-raise the exception so FastAPI can handle it properly
@@ -194,7 +200,6 @@ def init_db() -> None:
     Initialize database tables.
     This creates all tables defined in models.
     """
-    from app import models  # Import models to register them
 
     Base.metadata.create_all(bind=engine)
 
@@ -205,6 +210,5 @@ def drop_db() -> None:
     WARNING: This will delete all data!
     Only use in development/testing.
     """
-    from app import models  # Import models to register them
 
     Base.metadata.drop_all(bind=engine)

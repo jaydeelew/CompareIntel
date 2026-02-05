@@ -3,17 +3,19 @@ Credit management - handles allocations, deductions, and resets.
 Uses row-level locking to handle concurrent requests safely.
 """
 
+from datetime import UTC, datetime, timedelta
+from decimal import ROUND_CEILING, Decimal
+from typing import Any
+
+import pytz
+from sqlalchemy import desc
 from sqlalchemy.orm import Session
-from sqlalchemy import select, update, func, desc
-from decimal import Decimal, ROUND_CEILING
-from datetime import datetime, timedelta, timezone
-from typing import Dict, Any, Optional
-from .models import User, UsageLog, CreditTransaction
+
 from .config.constants import (
     DAILY_CREDIT_LIMITS,
     MONTHLY_CREDIT_ALLOCATIONS,
 )
-import pytz
+from .models import CreditTransaction, User
 
 
 def get_user_credits(user_id: int, db: Session) -> int:
@@ -39,9 +41,9 @@ def check_credits_sufficient(user_id: int, required_credits: Decimal, db: Sessio
 def deduct_credits(
     user_id: int,
     credits: Decimal,
-    usage_log_id: Optional[int],
+    usage_log_id: int | None,
     db: Session,
-    description: Optional[str] = None,
+    description: str | None = None,
 ) -> None:
     """Deduct credits with row-level locking. Creates audit trail."""
     credits_int = int(round(credits))
@@ -95,7 +97,7 @@ def allocate_monthly_credits(user_id: int, tier: str, db: Session) -> None:
         credits = MONTHLY_CREDIT_ALLOCATIONS[tier]
 
         # Set billing period (monthly for paid tiers)
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         user.billing_period_start = now
         user.billing_period_end = now + timedelta(days=30)
         user.credits_reset_at = user.billing_period_end
@@ -146,7 +148,7 @@ def _get_next_local_midnight(timezone_str: str) -> datetime:
         hour=0, minute=0, second=0, microsecond=0
     )
     # Convert to UTC for storage
-    return tomorrow_local.astimezone(timezone.utc)
+    return tomorrow_local.astimezone(UTC)
 
 
 def _can_reset_user_credits(user_id: int, db: Session, min_hours_between_resets: int = 20) -> bool:
@@ -164,10 +166,10 @@ def _can_reset_user_credits(user_id: int, db: Session, min_hours_between_resets:
     if last_allocation is None:
         return True
 
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     # Make created_at timezone-aware (SQLite stores as naive UTC)
     created_at = (
-        last_allocation.created_at.replace(tzinfo=timezone.utc)
+        last_allocation.created_at.replace(tzinfo=UTC)
         if last_allocation.created_at.tzinfo is None
         else last_allocation.created_at
     )
@@ -216,7 +218,7 @@ def reset_daily_credits(user_id: int, tier: str, db: Session, force: bool = Fals
     db.commit()
 
 
-def get_credit_usage_stats(user_id: int, db: Session) -> Dict[str, Any]:
+def get_credit_usage_stats(user_id: int, db: Session) -> dict[str, Any]:
     """Get full credit stats including allocation, usage, and reset time."""
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
@@ -290,10 +292,10 @@ def check_and_reset_credits_if_needed(user_id: int, db: Session) -> None:
 
     # Check if reset is needed
     if user.credits_reset_at:
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         # Make credits_reset_at timezone-aware (SQLite stores as naive UTC)
         reset_at = (
-            user.credits_reset_at.replace(tzinfo=timezone.utc)
+            user.credits_reset_at.replace(tzinfo=UTC)
             if user.credits_reset_at.tzinfo is None
             else user.credits_reset_at
         )

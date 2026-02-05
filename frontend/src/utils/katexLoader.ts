@@ -17,7 +17,7 @@ export async function loadKatexCss(): Promise<void> {
 
   if (katexCssLoading) {
     // Wait for ongoing load
-    return new Promise<void>((resolve) => {
+    return new Promise<void>(resolve => {
       const checkInterval = setInterval(() => {
         if (katexCssLoaded) {
           clearInterval(checkInterval)
@@ -46,7 +46,7 @@ export async function loadKatexCss(): Promise<void> {
         katexCssLoading = false
         resolve()
       })
-      .catch((error) => {
+      .catch(error => {
         // Fallback: create link element
         const link = document.createElement('link')
         link.rel = 'stylesheet'

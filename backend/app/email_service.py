@@ -5,11 +5,12 @@ This module handles all email communications including verification,
 password resets, and subscription notifications.
 """
 
-from fastapi_mail import FastMail, MessageSchema, ConnectionConfig
-from pydantic import EmailStr
 import os
-from typing import List, Optional, Dict, Any
 from datetime import datetime
+from typing import Any
+
+from fastapi_mail import ConnectionConfig, FastMail, MessageSchema
+from pydantic import EmailStr
 
 # Email configuration from environment variables
 # Only initialize if we have valid email settings
@@ -145,7 +146,9 @@ async def send_verification_email(email: EmailStr, code: str) -> None:
     </html>
     """
 
-    message = MessageSchema(subject="Your CompareIntel Verification Code", recipients=[email], body=html, subtype="html")
+    message = MessageSchema(
+        subject="Your CompareIntel Verification Code", recipients=[email], body=html, subtype="html"
+    )
 
     try:
         await fm.send_message(message)
@@ -161,7 +164,7 @@ async def send_password_reset_email(email: EmailStr, token: str) -> None:
     Args:
         email: User's email address
         token: Password reset token
-    
+
     Note: The password reset link uses clicktracking="off" attribute to prevent
     SendGrid from wrapping the link in a subdomain which would cause SSL certificate
     errors. This ensures users can directly access the reset URL without certificate warnings.
@@ -263,7 +266,9 @@ async def send_password_reset_email(email: EmailStr, token: str) -> None:
     </html>
     """
 
-    message = MessageSchema(subject="Reset Your CompareIntel Password", recipients=[email], body=html, subtype="html")
+    message = MessageSchema(
+        subject="Reset Your CompareIntel Password", recipients=[email], body=html, subtype="html"
+    )
 
     try:
         await fm.send_message(message)
@@ -272,7 +277,9 @@ async def send_password_reset_email(email: EmailStr, token: str) -> None:
         raise
 
 
-async def send_subscription_confirmation_email(email: EmailStr, tier: str, period: str, amount: float) -> None:
+async def send_subscription_confirmation_email(
+    email: EmailStr, tier: str, period: str, amount: float
+) -> None:
     """
     Send subscription confirmation email.
 
@@ -289,8 +296,8 @@ async def send_subscription_confirmation_email(email: EmailStr, tier: str, perio
     period_display = "Monthly" if period == "monthly" else "Yearly"
 
     # Import configuration to get tier limits
-    from .config import get_daily_limit, get_model_limit, get_conversation_limit
-    
+    from .config import get_conversation_limit, get_daily_limit, get_model_limit
+
     # Get tier benefits from configuration
     benefits = {
         "starter": [
@@ -449,7 +456,10 @@ async def send_subscription_confirmation_email(email: EmailStr, tier: str, perio
     """
 
     message = MessageSchema(
-        subject=f"Subscription Confirmed - CompareIntel {tier_display}", recipients=[email], body=html, subtype="html"
+        subject=f"Subscription Confirmed - CompareIntel {tier_display}",
+        recipients=[email],
+        body=html,
+        subtype="html",
     )
 
     try:
@@ -457,10 +467,11 @@ async def send_subscription_confirmation_email(email: EmailStr, tier: str, perio
     except Exception as e:
         print(f"Failed to send subscription confirmation email to {email}: {str(e)}")
         # Don't raise exception here - subscription is already confirmed
-        pass
 
 
-async def send_usage_limit_warning_email(email: EmailStr, usage_count: int, daily_limit: int, tier: str) -> None:
+async def send_usage_limit_warning_email(
+    email: EmailStr, usage_count: int, daily_limit: int, tier: str
+) -> None:
     """
     Send warning email when user is approaching their daily limit.
 
@@ -545,19 +556,27 @@ async def send_usage_limit_warning_email(email: EmailStr, usage_count: int, dail
             <h1 style="color: white !important; margin: 0;">⚠️ Usage Limit Warning</h1>
           </div>
           <div class="content" style="background-color: #f9f9f9 !important; background: #f9f9f9 !important; padding: 30px; border-radius: 0 0 8px 8px;">
-            <p>You've used <strong>{usage_count}</strong> out of <strong>{daily_limit}</strong> daily comparisons ({percentage_used:.0f}%).</p>
+            <p>You've used <strong>{usage_count}</strong> out of <strong>{
+        daily_limit
+    }</strong> daily comparisons ({percentage_used:.0f}%).</p>
             
             <div class="usage-bar" style="background-color: #e0e0e0 !important; background: #e0e0e0 !important; border-radius: 10px; height: 30px; position: relative; margin: 20px 0;">
-              <div class="usage-fill" style="background-color: #f59e0b !important; background: linear-gradient(90deg, #f59e0b 0%, #d97706 100%) !important; height: 100%; border-radius: 10px; width: {percentage_used}%;"></div>
+              <div class="usage-fill" style="background-color: #f59e0b !important; background: linear-gradient(90deg, #f59e0b 0%, #d97706 100%) !important; height: 100%; border-radius: 10px; width: {
+        percentage_used
+    }%;"></div>
             </div>
             
             <p>You're approaching your daily limit. To continue using CompareIntel without interruption, consider upgrading your plan.</p>
             
-            {'''
+            {
+        '''
             <div style="text-align: center;">
-              <a href="''' + upgrade_url + '''" class="button" style="display: inline-block; padding: 12px 30px; background-color: #1e40af !important; background: linear-gradient(135deg, #1e40af 0%, #0ea5e9 100%) !important; color: white !important; text-decoration: none; border-radius: 6px; margin: 20px 0;">Upgrade Your Plan</a>
+              <a href="'''
+        + upgrade_url
+        + '''" class="button" style="display: inline-block; padding: 12px 30px; background-color: #1e40af !important; background: linear-gradient(135deg, #1e40af 0%, #0ea5e9 100%) !important; color: white !important; text-decoration: none; border-radius: 6px; margin: 20px 0;">Upgrade Your Plan</a>
             </div>
-            '''}
+            '''
+    }
             
             <p style="margin-top: 20px; color: #666 !important; font-size: 14px;">
               Your daily limit resets at midnight UTC.
@@ -572,20 +591,21 @@ async def send_usage_limit_warning_email(email: EmailStr, usage_count: int, dail
     </html>
     """
 
-    message = MessageSchema(subject="CompareIntel Usage Warning", recipients=[email], body=html, subtype="html")
+    message = MessageSchema(
+        subject="CompareIntel Usage Warning", recipients=[email], body=html, subtype="html"
+    )
 
     try:
         await fm.send_message(message)
     except Exception as e:
         print(f"Failed to send usage warning email to {email}: {str(e)}")
         # Don't raise exception - this is just a notification
-        pass
 
 
-async def send_model_availability_report(check_results: Dict[str, Any]) -> None:
+async def send_model_availability_report(check_results: dict[str, Any]) -> None:
     """
     Send model availability check report email to support@compareintel.com.
-    
+
     Args:
         check_results: Dictionary containing check results with:
             - total_models: Total number of models checked
@@ -595,23 +615,23 @@ async def send_model_availability_report(check_results: Dict[str, Any]) -> None:
             - error: Any error that occurred
     """
     recipient_email = "support@compareintel.com"
-    
+
     # Skip sending email if not configured (development mode)
     if not EMAIL_CONFIGURED:
         return
-    
+
     total_models = check_results.get("total_models", 0)
     available_models = check_results.get("available_models", [])
     unavailable_models = check_results.get("unavailable_models", [])
     check_timestamp = check_results.get("check_timestamp", "")
     error = check_results.get("error")
-    
+
     # Determine status and subject
     if error:
         status = "error"
         status_color = "#dc2626"
         status_text = "Error"
-        subject = f"⚠️ Model Availability Check - Error"
+        subject = "⚠️ Model Availability Check - Error"
     elif unavailable_models:
         status = "warning"
         status_color = "#f59e0b"
@@ -622,14 +642,14 @@ async def send_model_availability_report(check_results: Dict[str, Any]) -> None:
         status_color = "#10b981"
         status_text = "All Models Available"
         subject = f"✓ Model Availability Check - All {total_models} Models Available"
-    
+
     # Format timestamp
     try:
-        dt = datetime.fromisoformat(check_timestamp.replace('Z', '+00:00'))
-        formatted_timestamp = dt.strftime('%Y-%m-%d %H:%M:%S UTC')
+        dt = datetime.fromisoformat(check_timestamp.replace("Z", "+00:00"))
+        formatted_timestamp = dt.strftime("%Y-%m-%d %H:%M:%S UTC")
     except:
         formatted_timestamp = check_timestamp
-    
+
     # Build unavailable models HTML
     unavailable_html = ""
     if unavailable_models:
@@ -647,12 +667,14 @@ async def send_model_availability_report(check_results: Dict[str, Any]) -> None:
             </li>
             """
         unavailable_html += "</ul>"
-    
+
     # Build available models summary (only show if there are issues)
     available_summary = ""
     if unavailable_models:
-        available_summary = f"<p><strong>Available Models:</strong> {len(available_models)}/{total_models}</p>"
-    
+        available_summary = (
+            f"<p><strong>Available Models:</strong> {len(available_models)}/{total_models}</p>"
+        )
+
     # Build error section if present
     error_html = ""
     if error:
@@ -661,7 +683,7 @@ async def send_model_availability_report(check_results: Dict[str, Any]) -> None:
             <strong style='color: #dc2626;'>Error:</strong> {error}
         </div>
         """
-    
+
     html = f"""
     <html>
       <head>
@@ -769,14 +791,11 @@ async def send_model_availability_report(check_results: Dict[str, Any]) -> None:
       </body>
     </html>
     """
-    
+
     message = MessageSchema(
-        subject=subject,
-        recipients=[recipient_email],
-        body=html,
-        subtype="html"
+        subject=subject, recipients=[recipient_email], body=html, subtype="html"
     )
-    
+
     try:
         await fm.send_message(message)
     except Exception as e:
@@ -788,7 +807,7 @@ async def send_trial_expired_email(email: EmailStr) -> None:
     """
     Send email to free tier users when their 7-day trial expires.
     Reminds them that paid tiers are coming soon and encourages them to email support.
-    
+
     Args:
         email: User's email address
     """
@@ -923,7 +942,7 @@ async def send_trial_expired_email(email: EmailStr) -> None:
         subject="Your CompareIntel Trial Has Ended - Paid Tiers Coming Soon!",
         recipients=[email],
         body=html,
-        subtype="html"
+        subtype="html",
     )
 
     try:
@@ -931,4 +950,3 @@ async def send_trial_expired_email(email: EmailStr) -> None:
     except Exception as e:
         print(f"Failed to send trial expired email to {email}: {str(e)}")
         raise
-

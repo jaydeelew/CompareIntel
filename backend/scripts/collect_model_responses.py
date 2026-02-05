@@ -26,22 +26,20 @@ Options:
     --quiet: Suppress verbose output
 """
 
+import argparse
 import asyncio
+import copy
 import json
 import sys
-import argparse
-import copy
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional, Set
-import time
 
 # Add parent directory to path to import app modules
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from app.model_runner import call_openrouter, OPENROUTER_MODELS
-from scripts.test_prompts import TEST_PROMPTS, get_prompt_by_name, get_all_prompt_names
-from scripts.config_helpers import filter_models_without_configs, has_model_config
+from app.model_runner import OPENROUTER_MODELS, call_openrouter
+from scripts.config_helpers import filter_models_without_configs
+from scripts.test_prompts import get_all_prompt_names, get_prompt_by_name
 
 
 class ResponseCollector:
@@ -53,7 +51,7 @@ class ResponseCollector:
         delay: float = 1.0,
         max_retries: int = 3,
         verbose: bool = True,
-        output_file: Optional[Path] = None,
+        output_file: Path | None = None,
         concurrency: int = 5,
     ):
         self.output_dir = output_dir
@@ -64,8 +62,8 @@ class ResponseCollector:
         self.output_file = output_file
         self.concurrency = concurrency
         self.stats = {"total_requests": 0, "successful": 0, "failed": 0, "skipped": 0, "errors": []}
-        self.existing_results: Dict[str, Dict] = {}
-        self.existing_collection_metadata: Dict = {}
+        self.existing_results: dict[str, dict] = {}
+        self.existing_collection_metadata: dict = {}
 
     def log(self, message: str, end: str = "\n", flush: bool = False):
         """Print log message if verbose."""
@@ -76,7 +74,7 @@ class ResponseCollector:
         """Load existing results from output file if it exists."""
         if self.output_file and self.output_file.exists():
             try:
-                with open(self.output_file, "r", encoding="utf-8") as f:
+                with open(self.output_file, encoding="utf-8") as f:
                     data = json.load(f)
 
                 # Extract results and metadata
@@ -109,7 +107,9 @@ class ResponseCollector:
             "success", False
         )
 
-    async def collect_response_async(self, model_id: str, prompt_text: str, prompt_name: str) -> Dict:
+    async def collect_response_async(
+        self, model_id: str, prompt_text: str, prompt_name: str
+    ) -> dict:
         """Collect a single response asynchronously."""
         self.stats["total_requests"] += 1
         loop = asyncio.get_event_loop()
@@ -120,13 +120,7 @@ class ResponseCollector:
 
                 # Run synchronous call_openrouter in a thread pool
                 response = await loop.run_in_executor(
-                    None,
-                    call_openrouter,
-                    prompt_text,
-                    model_id,
-                    "standard",
-                    None,
-                    False
+                    None, call_openrouter, prompt_text, model_id, "standard", None, False
                 )
 
                 self.stats["successful"] += 1
@@ -149,7 +143,7 @@ class ResponseCollector:
                         self.log(f"      Rate limited, waiting {wait_time}s...")
                         await asyncio.sleep(wait_time)
                         continue
-                    elif "timeout" in error_str:
+                    if "timeout" in error_str:
                         wait_time = (attempt + 1) * 2
                         self.log(f"      Timeout, waiting {wait_time}s...")
                         await asyncio.sleep(wait_time)
@@ -182,12 +176,14 @@ class ResponseCollector:
             "success": False,
             "attempts": self.max_retries,
         }
-    
-    def collect_response(self, model_id: str, prompt_text: str, prompt_name: str) -> Dict:
+
+    def collect_response(self, model_id: str, prompt_text: str, prompt_name: str) -> dict:
         """Collect a single response from a model (synchronous wrapper for backward compatibility)."""
         return asyncio.run(self.collect_response_async(model_id, prompt_text, prompt_name))
-    
-    async def collect_model_responses_async(self, model_id: str, prompts_to_use: List[Dict]) -> Dict:
+
+    async def collect_model_responses_async(
+        self, model_id: str, prompts_to_use: list[dict]
+    ) -> dict:
         """Collect all responses for a single model concurrently."""
         # Filter prompts that haven't been collected yet
         prompts_to_collect = [
@@ -195,38 +191,38 @@ class ResponseCollector:
             for prompt in prompts_to_use
             if not self.has_response(model_id, prompt["name"])
         ]
-        
+
         if not prompts_to_collect:
             return {}
-        
+
         # Use semaphore to limit concurrent requests (respect rate limits)
         semaphore = asyncio.Semaphore(self.concurrency)
-        
+
         async def collect_with_semaphore(prompt_name: str, prompt_text: str):
             async with semaphore:
                 return await self.collect_response_async(model_id, prompt_text, prompt_name)
-        
+
         # Create all tasks
         tasks = [
             collect_with_semaphore(prompt_name, prompt_text)
             for prompt_name, prompt_text in prompts_to_collect
         ]
-        
+
         # Execute concurrently
         results = await asyncio.gather(*tasks)
-        
+
         # Convert to dictionary
         responses = {}
         for result in results:
             prompt_name = result["prompt_name"]
             responses[prompt_name] = result
-        
+
         return responses
 
-    def collect_all_responses(self, model_ids: List[str], prompt_names: List[str]) -> Dict:
+    def collect_all_responses(self, model_ids: list[str], prompt_names: list[str]) -> dict:
         """Collect responses from all specified models for all prompts."""
         # Start with existing results if available (deep copy to avoid modifying original)
-        results: Dict[str, Dict] = {}
+        results: dict[str, dict] = {}
         if self.existing_results:
             results = copy.deepcopy(self.existing_results)
 
@@ -241,7 +237,8 @@ class ResponseCollector:
 
         # Filter to available models only (and those without configs)
         available_models = [
-            m for m in OPENROUTER_MODELS 
+            m
+            for m in OPENROUTER_MODELS
             if m.get("id") in model_ids_without_configs and m.get("available", True)
         ]
 
@@ -259,8 +256,8 @@ class ResponseCollector:
         total_requests = len(available_models) * len(prompts_to_use)
         skipped = total_requests - total_needed
 
-        self.log(f"\n{'='*60}")
-        self.log(f"Starting response collection")
+        self.log(f"\n{'=' * 60}")
+        self.log("Starting response collection")
         self.log(f"Models: {len(available_models)}")
         self.log(f"Prompts: {len(prompts_to_use)}")
         self.log(f"Total combinations: {total_requests}")
@@ -268,7 +265,7 @@ class ResponseCollector:
             self.log(f"Already collected: {skipped}")
             self.log(f"Remaining to collect: {total_needed}")
             self.stats["skipped"] = skipped
-        self.log(f"{'='*60}\n")
+        self.log(f"{'=' * 60}\n")
 
         current_request = 0
 
@@ -320,17 +317,21 @@ class ResponseCollector:
                 )
 
             # Collect all responses for this model concurrently
-            prompts_to_collect = [p for p in prompts_to_use if not self.has_response(model_id, p["name"])]
+            prompts_to_collect = [
+                p for p in prompts_to_use if not self.has_response(model_id, p["name"])
+            ]
             if prompts_to_collect:
                 self.log(f"  Collecting {len(prompts_to_collect)} responses concurrently...")
-                model_responses = asyncio.run(self.collect_model_responses_async(model_id, prompts_to_use))
+                model_responses = asyncio.run(
+                    self.collect_model_responses_async(model_id, prompts_to_use)
+                )
             else:
                 model_responses = {}
-            
+
             # Merge with existing responses and log results
             for prompt in prompts_to_use:
                 prompt_name = prompt["name"]
-                
+
                 # Skip if already collected
                 if self.has_response(model_id, prompt_name):
                     self.log(
@@ -339,7 +340,7 @@ class ResponseCollector:
                     self.log("⊘")
                     current_request += 1
                     continue
-                
+
                 # Get response from concurrent collection
                 if prompt_name in model_responses:
                     response_data = model_responses[prompt_name]
@@ -352,7 +353,7 @@ class ResponseCollector:
                         results[model_id]["metadata"]["failed_responses"] += 1
                         error_preview = response_data.get("error", "Unknown error")[:50]
                         self.log(f"  ✗ {prompt_name} ({error_preview})")
-                    
+
                     current_request += 1
 
             # Save incrementally after each model completes
@@ -361,7 +362,7 @@ class ResponseCollector:
 
         return results
 
-    def save_results(self, results: Dict, filename: Optional[str] = None, silent: bool = False):
+    def save_results(self, results: dict, filename: str | None = None, silent: bool = False):
         """Save collected results to JSON file."""
         if filename is None:
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -400,9 +401,9 @@ class ResponseCollector:
 
     def print_summary(self):
         """Print collection summary statistics."""
-        self.log(f"\n{'='*60}")
+        self.log(f"\n{'=' * 60}")
         self.log("Collection Summary")
-        self.log(f"{'='*60}")
+        self.log(f"{'=' * 60}")
         self.log(f"Total requests: {self.stats['total_requests']}")
         self.log(f"Successful: {self.stats['successful']}")
         self.log(f"Failed: {self.stats['failed']}")
@@ -432,7 +433,10 @@ def main():
         help="Directory to save responses",
     )
     parser.add_argument(
-        "--delay", type=float, default=1.0, help="Delay between requests in seconds (default: 1.0, not used with concurrent collection)"
+        "--delay",
+        type=float,
+        default=1.0,
+        help="Delay between requests in seconds (default: 1.0, not used with concurrent collection)",
     )
     parser.add_argument(
         "--max-retries",

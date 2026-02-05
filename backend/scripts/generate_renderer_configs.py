@@ -13,18 +13,17 @@ Options:
     --output: Output file path (default: frontend/src/config/model_renderer_configs.json)
 """
 
-import json
-import re
-import sys
 import argparse
+import json
+import sys
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Dict, List, Optional, Any
-from datetime import datetime, UTC
+from typing import Any
 
 # Add parent directory to path to import script modules
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from scripts.config_helpers import load_existing_configs, has_model_config
+from scripts.config_helpers import has_model_config, load_existing_configs
 
 
 class ConfigGenerator:
@@ -38,7 +37,7 @@ class ConfigGenerator:
         if self.verbose:
             print(message)
 
-    def create_delimiter_pattern(self, delimiter_type: str, priority: int) -> Dict[str, Any]:
+    def create_delimiter_pattern(self, delimiter_type: str, priority: int) -> dict[str, Any]:
         """Create a delimiter pattern object from delimiter type name.
 
         Args:
@@ -77,7 +76,7 @@ class ConfigGenerator:
             "priority": priority,
         }
 
-    def generate_config(self, model_id: str, analysis: Dict[str, Any]) -> Dict[str, Any]:
+    def generate_config(self, model_id: str, analysis: dict[str, Any]) -> dict[str, Any]:
         """Generate a renderer configuration from analysis data.
 
         Args:
@@ -173,7 +172,7 @@ class ConfigGenerator:
 
         return config
 
-    def validate_config(self, config: Dict[str, Any]) -> List[str]:
+    def validate_config(self, config: dict[str, Any]) -> list[str]:
         """Validate a generated configuration.
 
         Args:
@@ -221,8 +220,8 @@ class ConfigGenerator:
         return errors
 
     def generate_configs(
-        self, analysis_data: Dict[str, Any], preserve_existing: bool = True
-    ) -> List[Dict[str, Any]]:
+        self, analysis_data: dict[str, Any], preserve_existing: bool = True
+    ) -> list[dict[str, Any]]:
         """Generate configurations for all models in analysis data.
 
         Args:
@@ -323,7 +322,7 @@ def main():
     generator.log(f"Loading analysis data from {analysis_path}...")
 
     try:
-        with open(analysis_path, "r", encoding="utf-8") as f:
+        with open(analysis_path, encoding="utf-8") as f:
             analysis_data = json.load(f)
     except Exception as e:
         print(f"Error loading analysis file: {e}", file=sys.stderr)

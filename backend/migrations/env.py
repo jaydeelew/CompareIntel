@@ -9,30 +9,16 @@ import os
 import sys
 from logging.config import fileConfig
 
-from sqlalchemy import engine_from_config, pool
 from alembic import context
+from sqlalchemy import engine_from_config, pool
 
 # Add the parent directory to sys.path to import app modules
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 # Import the SQLAlchemy models and Base
-from app.database import Base
-from app.models import (
-    User,
-    UserPreference,
-    Conversation,
-    ConversationMessage,
-    UsageLog,
-    SubscriptionHistory,
-    PaymentTransaction,
-    AdminActionLog,
-    CreditTransaction,
-    UsageLogMonthlyAggregate,
-    AppSettings,
-)
-
 # Import settings for database URL
 from app.config import settings
+from app.database import Base
 
 # Alembic Config object
 config = context.config
@@ -48,18 +34,18 @@ target_metadata = Base.metadata
 def get_database_url() -> str:
     """
     Get database URL from environment or settings.
-    
+
     Priority:
     1. Environment variable DATABASE_URL
     2. App settings database_url
     3. SQLite fallback for development
     """
     url = os.environ.get("DATABASE_URL") or settings.database_url
-    
+
     if not url:
         # Fallback to SQLite for development
         url = "sqlite:///./compareintel.db"
-    
+
     return url
 
 
@@ -101,7 +87,7 @@ def run_migrations_online() -> None:
     # Override the database URL from settings
     configuration = config.get_section(config.config_ini_section)
     configuration["sqlalchemy.url"] = get_database_url()
-    
+
     connectable = engine_from_config(
         configuration,
         prefix="sqlalchemy.",

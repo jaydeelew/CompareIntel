@@ -10,26 +10,29 @@ Phase 4, Week 9, Task 2: Enhanced test fixtures with:
 - API client fixtures
 - Integration with factories module for mock data generation
 """
-import sys
+
 import os
+import sys
+from unittest.mock import AsyncMock, MagicMock
+
 import pytest
-from unittest.mock import MagicMock, AsyncMock, patch
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
-from typing import Tuple, Optional
 
 # Set environment variables to avoid email configuration issues
-os.environ.setdefault('MAIL_USERNAME', '')
-os.environ.setdefault('MAIL_PASSWORD', '')
-os.environ.setdefault('MAIL_FROM', '')
+os.environ.setdefault("MAIL_USERNAME", "")
+os.environ.setdefault("MAIL_PASSWORD", "")
+os.environ.setdefault("MAIL_FROM", "")
 
 # Set required environment variables for tests (works in both dev and production)
 # These are dummy values for testing - actual API calls would fail, but tests don't make real API calls
-os.environ.setdefault('SECRET_KEY', 'test-secret-key-for-testing-only-not-for-production-use-32chars')
-os.environ.setdefault('OPENROUTER_API_KEY', 'test-api-key-for-testing-only')
-os.environ.setdefault('ENVIRONMENT', 'development')  # Use development mode for tests
+os.environ.setdefault(
+    "SECRET_KEY", "test-secret-key-for-testing-only-not-for-production-use-32chars"
+)
+os.environ.setdefault("OPENROUTER_API_KEY", "test-api-key-for-testing-only")
+os.environ.setdefault("ENVIRONMENT", "development")  # Use development mode for tests
 
 # Mock email service functions before importing app to avoid fastapi_mail import issues
 # This is a known bug in fastapi-mail 1.5.2 where SecretStr is not imported
@@ -41,29 +44,27 @@ email_service_mock.send_usage_limit_warning_email = AsyncMock(return_value=None)
 email_service_mock.EMAIL_CONFIGURED = False
 
 # Patch the email_service module before it's imported
-sys.modules['app.email_service'] = email_service_mock
+sys.modules["app.email_service"] = email_service_mock
 
 # Now import app - email_service will use the mock
-from app.main import app as fastapi_app  # Rename to avoid conflict with app module
 from app.database import Base, get_db
-from app.models import User, UsageLog
+from app.main import app as fastapi_app  # Rename to avoid conflict with app module
+from app.models import User
 
 # Import factories for creating test data
 from .factories import (
-    create_user,
-    create_free_user,
-    create_starter_user,
-    create_starter_plus_user,
-    create_pro_user,
-    create_pro_plus_user,
-    create_admin_user,
-    create_super_admin_user,
-    create_moderator_user,
-    create_unverified_user,
-    create_inactive_user,
     DEFAULT_TEST_PASSWORD,
+    create_admin_user,
+    create_free_user,
+    create_inactive_user,
+    create_moderator_user,
+    create_pro_plus_user,
+    create_pro_user,
+    create_starter_plus_user,
+    create_starter_user,
+    create_super_admin_user,
+    create_unverified_user,
 )
-
 
 # In-memory SQLite database for testing
 SQLALCHEMY_TEST_DATABASE_URL = "sqlite:///:memory:"
@@ -81,6 +82,7 @@ TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=test_
 # Patch SessionLocal in app.database to use test engine for any direct SessionLocal() calls in app code
 # This ensures that when app code creates fresh sessions (like in api.py), they use the test database
 import app.database
+
 app.database.SessionLocal = TestingSessionLocal
 
 
@@ -88,12 +90,12 @@ app.database.SessionLocal = TestingSessionLocal
 def db_session():
     """
     Create a fresh database session for each test.
-    
+
     This fixture provides an in-memory SQLite database that is:
     - Created fresh for each test (function scope)
     - Automatically cleaned up after each test
     - Isolated from other tests
-    
+
     Usage:
         def test_example(db_session):
             user = User(...)
@@ -102,16 +104,16 @@ def db_session():
     """
     # Import all models to ensure they're registered with Base.metadata
     from app import models  # noqa: F401
-    
+
     # Drop all tables first to ensure clean state
     Base.metadata.drop_all(bind=test_engine)
-    
+
     # Create all tables with all columns
     Base.metadata.create_all(bind=test_engine)
-    
+
     # Create a new session
     session = TestingSessionLocal()
-    
+
     try:
         yield session
     finally:
@@ -124,32 +126,35 @@ def db_session():
 def client(db_session):
     """
     Create a test client with database dependency override.
-    
+
     This fixture:
     - Overrides the get_db dependency to use test database
     - Returns a TestClient instance for making API requests
     - Clears login rate limiting between tests
     - Clears API rate limiting (anonymous_rate_limit_storage) between tests
     """
+
     def override_get_db():
         try:
             yield db_session
         finally:
             pass
-    
+
     fastapi_app.dependency_overrides[get_db] = override_get_db
-    
+
     # Clear login rate limiting before each test
     from app.routers.auth import failed_login_attempts
+
     failed_login_attempts.clear()
-    
+
     # Clear API rate limiting (credit-based) before each test
     from app.rate_limiting import anonymous_rate_limit_storage
+
     anonymous_rate_limit_storage.clear()
-    
+
     with TestClient(fastapi_app) as test_client:
         yield test_client
-    
+
     # Clean up dependency override and rate limiting
     fastapi_app.dependency_overrides.clear()
     failed_login_attempts.clear()
@@ -160,14 +165,15 @@ def client(db_session):
 # User Fixtures - All Subscription Tiers
 # ============================================================================
 
+
 @pytest.fixture
 def test_user(db_session):
     """
     Create a free tier test user.
-    
+
     Returns a User instance with default test credentials.
     Password: "test_password_123" (or use DEFAULT_TEST_PASSWORD from factories)
-    
+
     Backward compatibility: Also accepts "secret" as password for existing tests.
     """
     return create_free_user(
@@ -211,7 +217,7 @@ def test_user_pro_plus(db_session):
 def test_user_premium(db_session):
     """
     Create a premium tier test user (pro tier).
-    
+
     Backward compatibility fixture - uses pro tier.
     Password: "secret"
     """
@@ -226,7 +232,7 @@ def test_user_premium(db_session):
 def test_user_admin(db_session):
     """
     Create an admin test user.
-    
+
     Uses "secret" as password for backward compatibility with existing tests.
     """
     return create_admin_user(
@@ -265,13 +271,14 @@ def test_user_inactive(db_session):
 # API Client Fixtures
 # ============================================================================
 
+
 @pytest.fixture
 def authenticated_client(client, test_user):
     """
     Create a test client with authenticated free tier user.
-    
+
     Returns a tuple of (client, user, access_token, refresh_token) for making authenticated requests.
-    
+
     Usage:
         def test_example(authenticated_client):
             client, user, access_token, refresh_token = authenticated_client
@@ -289,10 +296,10 @@ def authenticated_client(client, test_user):
     data = response.json()
     access_token = data["access_token"]
     refresh_token = data["refresh_token"]
-    
+
     # Set authorization header
     client.headers = {"Authorization": f"Bearer {access_token}"}
-    
+
     return client, test_user, access_token, refresh_token
 
 
@@ -310,7 +317,7 @@ def authenticated_client_starter(client, test_user_starter):
     data = response.json()
     access_token = data["access_token"]
     refresh_token = data["refresh_token"]
-    
+
     client.headers = {"Authorization": f"Bearer {access_token}"}
     return client, test_user_starter, access_token, refresh_token
 
@@ -329,7 +336,7 @@ def authenticated_client_pro(client, test_user_pro):
     data = response.json()
     access_token = data["access_token"]
     refresh_token = data["refresh_token"]
-    
+
     client.headers = {"Authorization": f"Bearer {access_token}"}
     return client, test_user_pro, access_token, refresh_token
 
@@ -348,7 +355,7 @@ def authenticated_client_admin(client, test_user_admin):
     data = response.json()
     access_token = data["access_token"]
     refresh_token = data["refresh_token"]
-    
+
     client.headers = {"Authorization": f"Bearer {access_token}"}
     return client, test_user_admin, access_token, refresh_token
 
@@ -367,20 +374,22 @@ def authenticated_client_super_admin(client, test_user_super_admin):
     data = response.json()
     access_token = data["access_token"]
     refresh_token = data["refresh_token"]
-    
+
     client.headers = {"Authorization": f"Bearer {access_token}"}
     return client, test_user_super_admin, access_token, refresh_token
 
 
-def create_authenticated_client(client, user: User, password: str = DEFAULT_TEST_PASSWORD) -> Tuple[TestClient, User, str, str]:
+def create_authenticated_client(
+    client, user: User, password: str = DEFAULT_TEST_PASSWORD
+) -> tuple[TestClient, User, str, str]:
     """
     Helper function to create an authenticated client for any user.
-    
+
     Args:
         client: TestClient instance
         user: User instance to authenticate
         password: User password (default: DEFAULT_TEST_PASSWORD)
-        
+
     Returns:
         Tuple of (client, user, access_token, refresh_token)
     """
@@ -395,7 +404,6 @@ def create_authenticated_client(client, user: User, password: str = DEFAULT_TEST
     data = response.json()
     access_token = data["access_token"]
     refresh_token = data["refresh_token"]
-    
+
     client.headers = {"Authorization": f"Bearer {access_token}"}
     return client, user, access_token, refresh_token
-

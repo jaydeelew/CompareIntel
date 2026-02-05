@@ -13,10 +13,8 @@ These prompts are used to collect model responses for analysis and
 renderer configuration generation.
 """
 
-from typing import List, Dict
-
 # Test prompts designed to elicit model-specific formatting behaviors
-TEST_PROMPTS: List[Dict[str, str]] = [
+TEST_PROMPTS: list[dict[str, str]] = [
     {
         "name": "complex_math_display",
         "description": "Complex display math with multiple equations and symbols",
@@ -33,7 +31,7 @@ Also show the integral:
 $$\\int_0^{\\infty} e^{-x^2} dx = \\frac{\\sqrt{\\pi}}{2}$$
 
 And the matrix equation:
-$$\\begin{pmatrix} a & b \\\\ c & d \\end{pmatrix} \\begin{pmatrix} x \\\\ y \\end{pmatrix} = \\begin{pmatrix} e \\\\ f \\end{pmatrix}$$"""
+$$\\begin{pmatrix} a & b \\\\ c & d \\end{pmatrix} \\begin{pmatrix} x \\\\ y \\end{pmatrix} = \\begin{pmatrix} e \\\\ f \\end{pmatrix}$$""",
     },
     {
         "name": "inline_math_mixed",
@@ -50,7 +48,7 @@ The limit as $x$ approaches infinity of $\\frac{1}{x}$ is $0$.
 
 When $\\alpha = 0.05$, we reject the null hypothesis if $p < \\alpha$.
 
-The sum $\\sum_{i=1}^{n} x_i$ represents the total of all values."""
+The sum $\\sum_{i=1}^{n} x_i$ represents the total of all values.""",
     },
     {
         "name": "markdown_lists",
@@ -73,7 +71,7 @@ Also create an unordered list:
 - Item A with **bold**
 - Item B with *italic*
 - Item C with $x = y + z$
-- Item D with `code`"""
+- Item D with `code`""",
     },
     {
         "name": "markdown_headers",
@@ -96,7 +94,7 @@ Another equation: $$\\sum_{i=1}^{n} i = \\frac{n(n+1)}{2}$$
 
 ### Subsection 2.1
 
-Final content."""
+Final content.""",
     },
     {
         "name": "markdown_tables",
@@ -114,7 +112,7 @@ Also include a table with display math:
 | Equation | Description |
 |----------|-------------|
 | $$E = mc^2$$ | Mass-energy equivalence |
-| $$F = ma$$ | Newton's second law |"""
+| $$F = ma$$ | Newton's second law |""",
     },
     {
         "name": "edge_cases_dollar_signs",
@@ -127,7 +125,7 @@ Also include a table with display math:
 - Code with math: `const price = $50`
 - Display math: $$\\sum_{i=1}^{n} \\$x_i$$
 - Text with dollar: I have $5 in my pocket
-- Mixed: Price $p$ where $p = \\$50 + tax$"""
+- Mixed: Price $p$ where $p = \\$50 + tax$""",
     },
     {
         "name": "code_blocks_preservation",
@@ -166,7 +164,7 @@ Code with dollar signs:
 ```bash
 echo "Price: $50"
 export PRICE=$100
-```"""
+```""",
     },
     {
         "name": "mixed_content_complex",
@@ -205,7 +203,7 @@ def pythagorean(a, b):
 | $y$ | $2$ |
 | $z$ | $3$ |
 
-**Note:** This only works in Euclidean space."""
+**Note:** This only works in Euclidean space.""",
     },
     {
         "name": "blockquotes_and_special",
@@ -225,7 +223,7 @@ Also include:
 
 And more content with **bold**, *italic*, and `code`.
 
-> Nested quote with $x = y + z$"""
+> Nested quote with $x = y + z$""",
     },
     {
         "name": "unicode_and_special_chars",
@@ -243,7 +241,7 @@ Set theory: $\\in, \\subset, \\cup, \\cap, \\emptyset$
 Special: $\\infty, \\nabla, \\Delta, \\forall, \\exists$
 
 Display versions:
-$$\\sum_{i=1}^{n} x_i, \\quad \\prod_{j=1}^{m} y_j, \\quad \\int_a^b f(x) dx$$"""
+$$\\sum_{i=1}^{n} x_i, \\quad \\prod_{j=1}^{m} y_j, \\quad \\int_a^b f(x) dx$$""",
     },
     {
         "name": "fractions_and_complex_expressions",
@@ -261,7 +259,7 @@ Complex expression:
 $$\\frac{\\partial^2 f}{\\partial x^2} + \\frac{\\partial^2 f}{\\partial y^2} = 0$$
 
 With subscripts and superscripts:
-$$x_{i,j}^{n+1} = x_{i,j}^n + \\Delta t \\cdot f(x_{i,j}^n)$$"""
+$$x_{i,j}^{n+1} = x_{i,j}^n + \\Delta t \\cdot f(x_{i,j}^n)$$""",
     },
     {
         "name": "links_and_references",
@@ -276,7 +274,7 @@ More links:
 - [Wikipedia](https://wikipedia.org) has info on $\\pi$
 - [MathWorld](https://mathworld.wolfram.com) explains $e^{i\\pi} + 1 = 0$
 
-Inline reference: As shown in equation $x = y + z$, we can see..."""
+Inline reference: As shown in equation $x = y + z$, we can see...""",
     },
     {
         "name": "nested_structures",
@@ -293,12 +291,12 @@ Inline reference: As shown in equation $x = y + z$, we can see..."""
 > > Quote level 2 with $z = x + y$
 > > > Quote level 3
 
-**Bold** with *italic* and `code` with $math$ all together."""
-    }
+**Bold** with *italic* and `code` with $math$ all together.""",
+    },
 ]
 
 
-def get_prompt_by_name(name: str) -> Dict[str, str]:
+def get_prompt_by_name(name: str) -> dict[str, str]:
     """Get a test prompt by its name."""
     for prompt in TEST_PROMPTS:
         if prompt["name"] == name:
@@ -306,12 +304,12 @@ def get_prompt_by_name(name: str) -> Dict[str, str]:
     raise ValueError(f"Prompt '{name}' not found")
 
 
-def get_all_prompt_names() -> List[str]:
+def get_all_prompt_names() -> list[str]:
     """Get list of all prompt names."""
     return [prompt["name"] for prompt in TEST_PROMPTS]
 
 
-def get_prompts_by_category() -> Dict[str, List[Dict[str, str]]]:
+def get_prompts_by_category() -> dict[str, list[dict[str, str]]]:
     """Group prompts by category based on their name prefix."""
     categories = {}
     for prompt in TEST_PROMPTS:
@@ -326,10 +324,9 @@ def get_prompts_by_category() -> Dict[str, List[Dict[str, str]]]:
             category = "edge_cases"
         else:
             category = "mixed"
-        
+
         if category not in categories:
             categories[category] = []
         categories[category].append(prompt)
-    
-    return categories
 
+    return categories

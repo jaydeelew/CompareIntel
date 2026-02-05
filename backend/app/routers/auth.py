@@ -5,49 +5,50 @@ This module handles all authentication-related endpoints including
 user registration, login, email verification, and password resets.
 """
 
-from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks, Request, Response
+import logging
+import os
+from collections import defaultdict
+from datetime import UTC, datetime, timedelta
+
+import httpx
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request, Response, status
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
-from datetime import datetime, timedelta, UTC
-from typing import Dict, Optional
-from collections import defaultdict
-import os
-import httpx
-import logging
-from ..database import get_db
+
 from ..config import settings
+from ..database import get_db
 
 logger = logging.getLogger(__name__)
-from ..models import User, UserPreference
-from ..schemas import (
-    UserRegister,
-    UserLogin,
-    UserResponse,
-    TokenResponse,
-    EmailVerification,
-    ResendVerificationRequest,
-    PasswordResetRequest,
-    PasswordReset,
-    RefreshTokenRequest,
-)
 from ..auth import (
-    verify_password,
-    get_password_hash,
     create_access_token,
     create_refresh_token,
-    generate_verification_token,
     generate_verification_code,
+    generate_verification_token,
+    get_password_hash,
+    verify_password,
     verify_token,
 )
-from ..dependencies import get_current_user_required, get_current_verified_user, get_current_user
-from ..email_service import send_verification_email, send_password_reset_email
-from ..utils.cookies import set_auth_cookies, clear_auth_cookies, get_refresh_token_from_cookies
+from ..dependencies import get_current_user_required, get_current_verified_user
+from ..email_service import send_password_reset_email, send_verification_email
+from ..models import User, UserPreference
+from ..schemas import (
+    EmailVerification,
+    PasswordReset,
+    PasswordResetRequest,
+    RefreshTokenRequest,
+    ResendVerificationRequest,
+    TokenResponse,
+    UserLogin,
+    UserRegister,
+    UserResponse,
+)
+from ..utils.cookies import clear_auth_cookies, get_refresh_token_from_cookies, set_auth_cookies
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
 # Rate limiting for login attempts
 # Track failed login attempts per IP address
-failed_login_attempts: Dict[str, list] = defaultdict(list)
+failed_login_attempts: dict[str, list] = defaultdict(list)
 MAX_LOGIN_ATTEMPTS = 5
 LOCKOUT_DURATION_MINUTES = 15
 
@@ -73,7 +74,9 @@ def check_login_rate_limit(client_ip: str) -> None:
 
     # Clean old attempts outside lockout window
     failed_login_attempts[client_ip] = [
-        attempt for attempt in failed_login_attempts[client_ip] if attempt > now - timedelta(minutes=LOCKOUT_DURATION_MINUTES)
+        attempt
+        for attempt in failed_login_attempts[client_ip]
+        if attempt > now - timedelta(minutes=LOCKOUT_DURATION_MINUTES)
     ]
 
     # Check if limit exceeded
@@ -99,7 +102,7 @@ def clear_login_attempts(client_ip: str) -> None:
         del failed_login_attempts[client_ip]
 
 
-async def verify_recaptcha(token: Optional[str]) -> bool:
+async def verify_recaptcha(token: str | None) -> bool:
     """
     Verify reCAPTCHA v3 token with Google's API.
 
@@ -111,29 +114,35 @@ async def verify_recaptcha(token: Optional[str]) -> bool:
     """
     # Skip reCAPTCHA verification in test/development environments
     import os
-    
+
     # Check for test database (E2E tests use test-e2e.db)
-    database_url = os.getenv("DATABASE_URL", "") or getattr(settings, 'database_url', '')
+    database_url = os.getenv("DATABASE_URL", "") or getattr(settings, "database_url", "")
     if database_url and ("test" in database_url.lower() or "test-e2e" in database_url.lower()):
-        logger.info(f"Test environment detected (database_url: {database_url}), skipping reCAPTCHA verification")
+        logger.info(
+            f"Test environment detected (database_url: {database_url}), skipping reCAPTCHA verification"
+        )
         return True
-    
+
     # Check for development environment - always skip reCAPTCHA in development for easier testing
-    environment = os.getenv("ENVIRONMENT", getattr(settings, 'environment', 'production'))
+    environment = os.getenv("ENVIRONMENT", getattr(settings, "environment", "production"))
     if environment == "development":
-        logger.debug(f"Development mode detected, skipping reCAPTCHA verification")
+        logger.debug("Development mode detected, skipping reCAPTCHA verification")
         return True
-    
+
     # If reCAPTCHA is not configured, skip verification (for development)
     # Check for None, empty string, or whitespace-only strings
     recaptcha_key = settings.recaptcha_secret_key
     if not recaptcha_key or (isinstance(recaptcha_key, str) and not recaptcha_key.strip()):
-        logger.debug(f"reCAPTCHA secret key not configured (value: {repr(recaptcha_key)}), skipping verification")
+        logger.debug(
+            f"reCAPTCHA secret key not configured (value: {repr(recaptcha_key)}), skipping verification"
+        )
         return True
 
     # If token is not provided and reCAPTCHA is configured, fail
     if not token:
-        logger.warning("reCAPTCHA verification failed: token not provided (reCAPTCHA is configured)")
+        logger.warning(
+            "reCAPTCHA verification failed: token not provided (reCAPTCHA is configured)"
+        )
         return False
 
     try:
@@ -161,7 +170,9 @@ async def verify_recaptcha(token: Optional[str]) -> bool:
             # Score >= 0.5 is typically considered human
             # You can adjust this threshold based on your needs
             if score < 0.5:
-                logger.warning(f"reCAPTCHA verification failed: score too low (score={score}, threshold=0.5)")
+                logger.warning(
+                    f"reCAPTCHA verification failed: score too low (score={score}, threshold=0.5)"
+                )
                 return False
 
             logger.debug(f"reCAPTCHA verification passed: score={score}")
@@ -179,7 +190,9 @@ async def verify_recaptcha(token: Optional[str]) -> bool:
 
 
 @router.post("/register", status_code=status.HTTP_201_CREATED)
-async def register(user_data: UserRegister, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
+async def register(
+    user_data: UserRegister, background_tasks: BackgroundTasks, db: Session = Depends(get_db)
+):
     """
     Register a new user account.
 
@@ -191,13 +204,18 @@ async def register(user_data: UserRegister, background_tasks: BackgroundTasks, d
     """
     # Verify reCAPTCHA if configured
     if not await verify_recaptcha(user_data.recaptcha_token):
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="reCAPTCHA verification failed. Please try again.")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="reCAPTCHA verification failed. Please try again.",
+        )
 
     try:
         # Check if user already exists
         existing_user = db.query(User).filter(User.email == user_data.email).first()
         if existing_user:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email already registered")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST, detail="Email already registered"
+            )
     except HTTPException:
         raise
     except Exception as e:
@@ -212,7 +230,8 @@ async def register(user_data: UserRegister, background_tasks: BackgroundTasks, d
             email=user_data.email,
             password_hash=get_password_hash(user_data.password),
             verification_token=verification_code,  # Store 6-digit code in verification_token field
-            verification_token_expires=datetime.now(UTC) + timedelta(minutes=15),  # 15-minute expiration
+            verification_token_expires=datetime.now(UTC)
+            + timedelta(minutes=15),  # 15-minute expiration
             subscription_tier="free",
             subscription_status="active",
             trial_ends_at=trial_ends_at,  # Grant 7-day premium trial
@@ -222,7 +241,9 @@ async def register(user_data: UserRegister, background_tasks: BackgroundTasks, d
         db.refresh(new_user)
 
         # Create default user preferences
-        preferences = UserPreference(user_id=new_user.id, theme="light", email_notifications=True, usage_alerts=True)
+        preferences = UserPreference(
+            user_id=new_user.id, theme="light", email_notifications=True, usage_alerts=True
+        )
         db.add(preferences)
         db.commit()
 
@@ -233,7 +254,9 @@ async def register(user_data: UserRegister, background_tasks: BackgroundTasks, d
                 await send_verification_email(email=new_user.email, code=verification_code)
             else:
                 # Production: background task for non-blocking
-                background_tasks.add_task(send_verification_email, email=new_user.email, code=verification_code)
+                background_tasks.add_task(
+                    send_verification_email, email=new_user.email, code=verification_code
+                )
         except Exception as e:
             print(f"Warning: Could not send verification email: {e}")
             # Continue anyway - email is optional for development
@@ -261,11 +284,13 @@ async def register(user_data: UserRegister, background_tasks: BackgroundTasks, d
 
         # Create response with cookies
         # Return dict and let FastAPI handle status code from decorator
-        response_data = {"access_token": access_token, "refresh_token": refresh_token, "token_type": "bearer", "user": user_dict}
-        response = JSONResponse(
-            content=response_data,
-            status_code=status.HTTP_201_CREATED
-        )
+        response_data = {
+            "access_token": access_token,
+            "refresh_token": refresh_token,
+            "token_type": "bearer",
+            "user": user_dict,
+        }
+        response = JSONResponse(content=response_data, status_code=status.HTTP_201_CREATED)
         set_auth_cookies(response, access_token, refresh_token)
         return response
     except HTTPException:
@@ -299,34 +324,40 @@ async def login(user_data: UserLogin, request: Request, db: Session = Depends(ge
         print(f"[LOGIN] Client IP: {client_ip}")
 
         # Check rate limiting before processing login
-        print(f"[LOGIN] Checking rate limit...")
+        print("[LOGIN] Checking rate limit...")
         check_login_rate_limit(client_ip)
-        print(f"[LOGIN] Rate limit check passed")
+        print("[LOGIN] Rate limit check passed")
 
-        print(f"[LOGIN] Querying database for user...")
+        print("[LOGIN] Querying database for user...")
         db_start = time.time()
         user = db.query(User).filter(User.email == user_data.email).first()
         db_duration = time.time() - db_start
         print(f"[LOGIN] Database query completed in {db_duration:.3f}s")
 
         if not user:
-            print(f"[LOGIN] User not found")
+            print("[LOGIN] User not found")
             record_failed_login(client_ip)
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Incorrect email or password")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED, detail="Incorrect email or password"
+            )
 
         print(f"[LOGIN] User found: {user.email}, verifying password...")
         verify_start = time.time()
         password_valid = verify_password(user_data.password, user.password_hash)
         verify_duration = time.time() - verify_start
-        print(f"[LOGIN] Password verification completed in {verify_duration:.3f}s, result: {password_valid}")
+        print(
+            f"[LOGIN] Password verification completed in {verify_duration:.3f}s, result: {password_valid}"
+        )
 
         if not password_valid:
-            print(f"[LOGIN] Password verification failed")
+            print("[LOGIN] Password verification failed")
             record_failed_login(client_ip)
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Incorrect email or password")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED, detail="Incorrect email or password"
+            )
 
         if not user.is_active:
-            print(f"[LOGIN] Account is inactive")
+            print("[LOGIN] Account is inactive")
             record_failed_login(client_ip)
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Account is inactive")
 
@@ -338,7 +369,7 @@ async def login(user_data: UserLogin, request: Request, db: Session = Depends(ge
         db.commit()
 
         # Create tokens
-        print(f"[LOGIN] Creating tokens...")
+        print("[LOGIN] Creating tokens...")
         token_start = time.time()
         access_token = create_access_token(data={"sub": str(user.id)})
         refresh_token = create_refresh_token(data={"sub": str(user.id)})
@@ -349,7 +380,13 @@ async def login(user_data: UserLogin, request: Request, db: Session = Depends(ge
         print(f"[LOGIN] Login successful, total time: {total_duration:.3f}s")
 
         # Create response with cookies
-        response = JSONResponse(content={"access_token": access_token, "refresh_token": refresh_token, "token_type": "bearer"})
+        response = JSONResponse(
+            content={
+                "access_token": access_token,
+                "refresh_token": refresh_token,
+                "token_type": "bearer",
+            }
+        )
         set_auth_cookies(response, access_token, refresh_token)
         return response
     except HTTPException:
@@ -366,7 +403,9 @@ async def login(user_data: UserLogin, request: Request, db: Session = Depends(ge
 
 
 @router.post("/refresh", response_model=TokenResponse)
-async def refresh_token(request: Request, token_data: Optional[RefreshTokenRequest] = None, db: Session = Depends(get_db)):
+async def refresh_token(
+    request: Request, token_data: RefreshTokenRequest | None = None, db: Session = Depends(get_db)
+):
     """
     Refresh access token using refresh token.
 
@@ -383,42 +422,60 @@ async def refresh_token(request: Request, token_data: Optional[RefreshTokenReque
             refresh_token_value = get_refresh_token_from_cookies(request)
 
         if not refresh_token_value:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Refresh token required")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED, detail="Refresh token required"
+            )
 
         payload = verify_token(refresh_token_value, token_type="refresh")
 
         if payload is None:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid refresh token")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid refresh token"
+            )
 
         user_id_str = payload.get("sub")
         if user_id_str is None:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid refresh token")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid refresh token"
+            )
 
         # Convert user_id to int, handling potential errors
         try:
             user_id = int(user_id_str)
         except (ValueError, TypeError):
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid refresh token")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid refresh token"
+            )
 
         user = db.query(User).filter(User.id == user_id).first()
         if not user or not user.is_active:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found or inactive")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found or inactive"
+            )
 
         # Create new tokens
         access_token = create_access_token(data={"sub": str(user.id)})
         new_refresh_token = create_refresh_token(data={"sub": str(user.id)})
 
         # Create response with cookies
-        response = JSONResponse(content={"access_token": access_token, "refresh_token": new_refresh_token, "token_type": "bearer"})
+        response = JSONResponse(
+            content={
+                "access_token": access_token,
+                "refresh_token": new_refresh_token,
+                "token_type": "bearer",
+            }
+        )
         set_auth_cookies(response, access_token, new_refresh_token)
         return response
     except HTTPException:
         # Re-raise HTTP exceptions (401, etc.) as-is
         raise
-    except Exception as e:
+    except Exception:
         # Catch any other exceptions (malformed tokens, database errors, etc.)
         # and return 401 instead of 500 to avoid exposing internal errors
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid refresh token")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid refresh token"
+        )
 
 
 @router.post("/verify-email", status_code=status.HTTP_200_OK)
@@ -436,14 +493,18 @@ async def verify_email(verification: EmailVerification, db: Session = Depends(ge
     # Validate code format (should be 6 digits)
     if not code or len(code) != 6 or not code.isdigit():
         print(f"Invalid code format: {code}")
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid verification code")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid verification code"
+        )
 
     # Query user by code
     user = db.query(User).filter(User.verification_token == code).first()
 
     if not user:
         print(f"No user found with code: {code}")
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid or expired verification code")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid or expired verification code"
+        )
 
     # Check if code is expired (handle both timezone-aware and naive datetimes)
     if user.verification_token_expires:
@@ -452,7 +513,10 @@ async def verify_email(verification: EmailVerification, db: Session = Depends(ge
             token_expires = token_expires.replace(tzinfo=UTC)
         if token_expires <= datetime.now(UTC):
             print(f"Code expired for user: {user.email}")
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Verification code has expired. Please request a new code.")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Verification code has expired. Please request a new code.",
+            )
 
     print(f"Verifying email for user: {user.email}")
     user.is_verified = True
@@ -464,7 +528,11 @@ async def verify_email(verification: EmailVerification, db: Session = Depends(ge
 
 
 @router.post("/resend-verification", status_code=status.HTTP_200_OK)
-async def resend_verification(request: ResendVerificationRequest, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
+async def resend_verification(
+    request: ResendVerificationRequest,
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db),
+):
     """
     Resend verification code with rate limiting.
 
@@ -477,10 +545,14 @@ async def resend_verification(request: ResendVerificationRequest, background_tas
 
     if not user:
         # Don't reveal if email exists - security best practice
-        return {"message": "If the email exists and is not verified, a verification code has been sent"}
+        return {
+            "message": "If the email exists and is not verified, a verification code has been sent"
+        }
 
     if user.is_verified:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email already verified")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Email already verified"
+        )
 
     # Rate limiting: Check if user has requested too recently (within 60 seconds)
     if user.verification_token_expires:
@@ -513,7 +585,9 @@ async def resend_verification(request: ResendVerificationRequest, background_tas
             await send_verification_email(email=user.email, code=verification_code)
         else:
             # Production: background task for non-blocking
-            background_tasks.add_task(send_verification_email, email=user.email, code=verification_code)
+            background_tasks.add_task(
+                send_verification_email, email=user.email, code=verification_code
+            )
     except Exception as e:
         print(f"Warning: Could not send verification email: {e}")
         # Continue anyway - in development, token is printed to console
@@ -522,7 +596,9 @@ async def resend_verification(request: ResendVerificationRequest, background_tas
 
 
 @router.post("/forgot-password", status_code=status.HTTP_200_OK)
-async def forgot_password(request: PasswordResetRequest, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
+async def forgot_password(
+    request: PasswordResetRequest, background_tasks: BackgroundTasks, db: Session = Depends(get_db)
+):
     """
     Request password reset.
 
@@ -550,7 +626,9 @@ async def forgot_password(request: PasswordResetRequest, background_tasks: Backg
             await send_password_reset_email(email=user.email, token=reset_token)
         else:
             # Production: background task for non-blocking
-            background_tasks.add_task(send_password_reset_email, email=user.email, token=reset_token)
+            background_tasks.add_task(
+                send_password_reset_email, email=user.email, token=reset_token
+            )
     except Exception as e:
         print(f"Warning: Could not send password reset email: {e}")
         # Continue anyway - in development, token is printed to console
@@ -567,10 +645,16 @@ async def reset_password(reset: PasswordReset, db: Session = Depends(get_db)):
     - Updates password
     - Clears reset token
     """
-    user = db.query(User).filter(User.reset_token == reset.token, User.reset_token_expires > datetime.now(UTC)).first()
+    user = (
+        db.query(User)
+        .filter(User.reset_token == reset.token, User.reset_token_expires > datetime.now(UTC))
+        .first()
+    )
 
     if not user:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid or expired reset token")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid or expired reset token"
+        )
 
     user.password_hash = get_password_hash(reset.new_password)
     user.reset_token = None
@@ -581,13 +665,15 @@ async def reset_password(reset: PasswordReset, db: Session = Depends(get_db)):
 
 
 @router.get("/test")
-async def test_endpoint() -> Dict[str, str]:
+async def test_endpoint() -> dict[str, str]:
     """Test endpoint to verify basic functionality."""
     return {"message": "Auth router is working"}
 
 
 @router.get("/me", response_model=UserResponse)
-async def get_current_user_info(current_user: User = Depends(get_current_user_required), db: Session = Depends(get_db)):
+async def get_current_user_info(
+    current_user: User = Depends(get_current_user_required), db: Session = Depends(get_db)
+):
     """
     Get current authenticated user information.
 
@@ -598,12 +684,16 @@ async def get_current_user_info(current_user: User = Depends(get_current_user_re
     # Refresh the user object from the database to get the latest data
     # This is important after usage increments in /compare-stream endpoint
     db.refresh(current_user)
-    print(f"[/auth/me] Returning user data for {current_user.email}: credits_used={current_user.credits_used_this_period}")
+    print(
+        f"[/auth/me] Returning user data for {current_user.email}: credits_used={current_user.credits_used_this_period}"
+    )
     return current_user
 
 
 @router.delete("/delete-account", status_code=status.HTTP_200_OK)
-async def delete_account(current_user: User = Depends(get_current_verified_user), db: Session = Depends(get_db)):
+async def delete_account(
+    current_user: User = Depends(get_current_verified_user), db: Session = Depends(get_db)
+):
     """
     Delete user account permanently.
 

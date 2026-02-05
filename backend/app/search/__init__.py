@@ -6,9 +6,9 @@ This package provides a unified interface for different search providers
 without code changes.
 """
 
-from .base import SearchResult, SearchProvider
-from .factory import SearchProviderFactory
+from .base import SearchProvider, SearchResult
 from .brave import BraveSearchProvider
+from .factory import SearchProviderFactory
 from .retry import RetryConfig, execute_with_retry
 
 __all__ = [
@@ -19,4 +19,3 @@ __all__ = [
     "RetryConfig",
     "execute_with_retry",
 ]
-

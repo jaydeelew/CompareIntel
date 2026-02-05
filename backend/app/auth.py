@@ -5,17 +5,19 @@ This module provides password hashing, JWT token generation/validation,
 and token generation for email verification and password resets.
 """
 
-from passlib.context import CryptContext
-from jose import JWTError, jwt
-from datetime import datetime, timedelta, UTC
-from typing import Optional, Tuple, Dict, Any
-import os
 import secrets
+from datetime import UTC, datetime, timedelta
+from typing import Any
+
 import bcrypt
+from jose import JWTError, jwt
+from passlib.context import CryptContext
 
 # Password hashing configuration
 # Using bcrypt with explicit rounds to avoid issues
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto", bcrypt__rounds=12, bcrypt__ident="2b")
+pwd_context = CryptContext(
+    schemes=["bcrypt"], deprecated="auto", bcrypt__rounds=12, bcrypt__ident="2b"
+)
 
 # Import configuration
 from .config import settings
@@ -63,11 +65,11 @@ def get_password_hash(password: str) -> str:
         salt = bcrypt.gensalt(rounds=12)
         hashed = bcrypt.hashpw(password_bytes, salt)
         return hashed.decode("utf-8")
-    except Exception as e:
+    except Exception:
         raise
 
 
-def create_access_token(data: Dict[str, Any], expires_delta: Optional[timedelta] = None) -> str:
+def create_access_token(data: dict[str, Any], expires_delta: timedelta | None = None) -> str:
     """
     Create a JWT access token.
 
@@ -90,7 +92,7 @@ def create_access_token(data: Dict[str, Any], expires_delta: Optional[timedelta]
     return encoded_jwt
 
 
-def create_refresh_token(data: Dict[str, Any]) -> str:
+def create_refresh_token(data: dict[str, Any]) -> str:
     """
     Create a JWT refresh token with longer expiration.
 
@@ -107,7 +109,7 @@ def create_refresh_token(data: Dict[str, Any]) -> str:
     return encoded_jwt
 
 
-def verify_token(token: str, token_type: str = "access") -> Optional[Dict[str, Any]]:
+def verify_token(token: str, token_type: str = "access") -> dict[str, Any] | None:
     """
     Verify and decode a JWT token.
 
@@ -120,7 +122,7 @@ def verify_token(token: str, token_type: str = "access") -> Optional[Dict[str, A
     """
     if not token or not isinstance(token, str):
         return None
-    
+
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
 
@@ -155,7 +157,7 @@ def generate_verification_token() -> str:
 def generate_verification_code() -> str:
     """
     Generate a 6-digit numeric verification code for email verification.
-    
+
     Uses cryptographically secure random number generation.
 
     Returns:
@@ -166,7 +168,7 @@ def generate_verification_code() -> str:
     return str(code)
 
 
-def validate_password_strength(password: str) -> Tuple[bool, str]:
+def validate_password_strength(password: str) -> tuple[bool, str]:
     """
     Validate password meets strength requirements.
 
@@ -191,6 +193,9 @@ def validate_password_strength(password: str) -> Tuple[bool, str]:
     # Check for special character
     special_chars = "!@#$%^&*()_+-=[]{};':\"\\|,.<>/?"
     if not any(char in special_chars for char in password):
-        return False, "Password must contain at least one special character (!@#$%^&*()_+-=[]{};':\"\\|,.<>/?)"
+        return (
+            False,
+            "Password must contain at least one special character (!@#$%^&*()_+-=[]{};':\"\\|,.<>/?)",
+        )
 
     return True, ""

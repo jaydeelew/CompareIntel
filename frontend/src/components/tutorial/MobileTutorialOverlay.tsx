@@ -430,7 +430,7 @@ export const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       arrowOffset,
       useFullscreen: false,
     })
-  }, [targetElement, step])
+  }, [targetElement, step, tooltipEstimatedHeight])
 
   // Update positions on mount, scroll, resize
   useEffect(() => {
@@ -580,7 +580,7 @@ export const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       window.removeEventListener('resize', handleUpdate)
       clearInterval(interval)
     }
-  }, [targetElement, step, calculatePositions])
+  }, [targetElement, step, calculatePositions, tooltipEstimatedHeight])
 
   // Add highlight class to target element
   useEffect(() => {

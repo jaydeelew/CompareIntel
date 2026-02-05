@@ -18,14 +18,14 @@ USAGE:
 
 CUSTOMIZATION:
     To delete users with a different email pattern, modify line 39:
-    
+
     # Current: Delete users ending in @example.com
     example_users = db.query(User).filter(User.email.endswith("@example.com")).all()
-    
+
     # Examples of other patterns:
     # - Delete users starting with "test-":
     #   example_users = db.query(User).filter(User.email.startswith("test-")).all()
-    # 
+    #
     # - Delete users containing "@test.":
     #   example_users = db.query(User).filter(User.email.contains("@test.")).all()
     #
@@ -55,7 +55,7 @@ CASCADE DELETION:
     - SubscriptionHistory (subscription history)
     - PaymentTransaction (payment transactions)
     - CreditTransaction (credit transactions)
-    
+
     Note: UsageLog records are NOT automatically deleted (no cascade), but they
     reference the user_id which will become invalid.
 
@@ -66,13 +66,14 @@ SAFETY:
     - Make a database backup before running in production environments
 """
 
+import argparse
 import os
 import sys
-import argparse
 from pathlib import Path
 
 # Load environment variables from .env file
 from dotenv import load_dotenv
+
 backend_dir = Path(__file__).parent.resolve()
 load_dotenv(backend_dir / ".env")
 
@@ -86,19 +87,19 @@ from app.models import User
 def delete_example_users(skip_confirmation=False):
     """
     Delete all users with email ending in @example.com.
-    
+
     Args:
         skip_confirmation (bool): If True, skip the confirmation prompt and proceed
                                  with deletion. If False, require user to type 'DELETE'
                                  to confirm.
-    
+
     Returns:
         None
-    
+
     Example:
         # Interactive deletion (requires confirmation):
         delete_example_users(skip_confirmation=False)
-        
+
         # Non-interactive deletion (no confirmation):
         delete_example_users(skip_confirmation=True)
     """
@@ -113,10 +114,10 @@ def delete_example_users(skip_confirmation=False):
 
     try:
         # Find all users with email ending in @example.com
-        # 
+        #
         # TO CUSTOMIZE: Modify this filter to match different criteria.
         # See the module docstring for examples of other filter patterns.
-        # 
+        #
         # Common filter methods:
         # - .endswith(suffix)     : Email ends with suffix
         # - .startswith(prefix)   : Email starts with prefix
@@ -176,6 +177,7 @@ def delete_example_users(skip_confirmation=False):
         print(f"❌ Error: {e}")
         db.rollback()
         import traceback
+
         traceback.print_exc()
         sys.exit(1)
     finally:
@@ -185,19 +187,19 @@ def delete_example_users(skip_confirmation=False):
 def main():
     """
     Main function - handles command-line arguments and executes deletion.
-    
+
     Command-line arguments:
         --yes    : Skip confirmation prompt and proceed with deletion immediately
                    Use this flag for automated scripts or when you're certain
                    about the deletion.
-    
+
     Examples:
         # See what would be deleted (interactive):
         python3 delete_example_users.py
-        
+
         # Delete without confirmation (non-interactive):
         python3 delete_example_users.py --yes
-        
+
         # Get help:
         python3 delete_example_users.py --help
     """
@@ -210,7 +212,7 @@ def main():
             "\n"
             "For customization instructions, see the script's docstring."
         ),
-        formatter_class=argparse.RawDescriptionHelpFormatter
+        formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     parser.add_argument(
         "--yes",
@@ -227,6 +229,7 @@ def main():
     except Exception as e:
         print(f"\nUnexpected error: {e}")
         import traceback
+
         traceback.print_exc()
         sys.exit(1)
 

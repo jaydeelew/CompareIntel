@@ -6,8 +6,6 @@ Tests cover:
 - Error handling
 """
 
-import pytest  # type: ignore
-from unittest.mock import patch, MagicMock
 from app.model_runner import (
     call_openrouter_streaming,
 )
@@ -18,8 +16,9 @@ class TestModelRunnerMockMode:
 
     def test_call_openrouter_streaming_mock_mode(self):
         """Test streaming OpenRouter in mock mode."""
-        chunks = list(call_openrouter_streaming(prompt="Test prompt", model_id="gpt-4", use_mock=True))
+        chunks = list(
+            call_openrouter_streaming(prompt="Test prompt", model_id="gpt-4", use_mock=True)
+        )
         assert len(chunks) > 0
         # All chunks should be strings
         assert all(isinstance(chunk, str) for chunk in chunks)
-

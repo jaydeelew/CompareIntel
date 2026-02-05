@@ -4,10 +4,10 @@ Pydantic schemas for request/response validation.
 This module defines all data models for API requests and responses.
 """
 
-from pydantic import BaseModel, EmailStr, Field, field_validator, field_serializer, ConfigDict
-from typing import Optional, List, Dict, Literal, Any
-from datetime import datetime, date
+from datetime import datetime
+from typing import Any, Literal
 
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 
 # ============================================================================
 # User Schemas
@@ -18,12 +18,18 @@ class UserRegister(BaseModel):
     """Schema for user registration request."""
 
     model_config = ConfigDict(
-        json_schema_extra={"example": {"email": "user@example.com", "password": "SecurePass123!", "recaptcha_token": "03AGdBq24..."}}
+        json_schema_extra={
+            "example": {
+                "email": "user@example.com",
+                "password": "SecurePass123!",
+                "recaptcha_token": "03AGdBq24...",
+            }
+        }
     )
 
     email: EmailStr
     password: str = Field(..., min_length=8)
-    recaptcha_token: Optional[str] = None
+    recaptcha_token: str | None = None
 
     @field_validator("password")
     @classmethod
@@ -38,14 +44,18 @@ class UserRegister(BaseModel):
         # Check for special character
         special_chars = "!@#$%^&*()_+-=[]{};':\"\\|,.<>/?"
         if not any(char in special_chars for char in v):
-            raise ValueError("Password must contain at least one special character (!@#$%^&*()_+-=[]{};':\"|,.<>/?)")
+            raise ValueError(
+                "Password must contain at least one special character (!@#$%^&*()_+-=[]{};':\"|,.<>/?)"
+            )
         return v
 
 
 class UserLogin(BaseModel):
     """Schema for user login request."""
 
-    model_config = ConfigDict(json_schema_extra={"example": {"email": "user@example.com", "password": "SecurePass123!"}})
+    model_config = ConfigDict(
+        json_schema_extra={"example": {"email": "user@example.com", "password": "SecurePass123!"}}
+    )
 
     email: EmailStr
     password: str
@@ -64,19 +74,19 @@ class UserResponse(BaseModel):
     subscription_status: str
     subscription_period: str
     monthly_overage_count: int
-    mock_mode_enabled: Optional[bool] = False  # Testing feature for admins
+    mock_mode_enabled: bool | None = False  # Testing feature for admins
     created_at: datetime
-    updated_at: Optional[datetime] = None
+    updated_at: datetime | None = None
     # Credit-based system fields
-    monthly_credits_allocated: Optional[int] = None
-    credits_used_this_period: Optional[int] = None
-    total_credits_used: Optional[int] = None
-    billing_period_start: Optional[datetime] = None
-    billing_period_end: Optional[datetime] = None
-    credits_reset_at: Optional[datetime] = None
+    monthly_credits_allocated: int | None = None
+    credits_used_this_period: int | None = None
+    total_credits_used: int | None = None
+    billing_period_start: datetime | None = None
+    billing_period_end: datetime | None = None
+    credits_reset_at: datetime | None = None
     # 7-day trial fields - grants free users access to all premium models
-    trial_ends_at: Optional[datetime] = None
-    is_trial_active: Optional[bool] = False
+    trial_ends_at: datetime | None = None
+    is_trial_active: bool | None = False
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -152,7 +162,9 @@ class PasswordReset(BaseModel):
         # Check for special character
         special_chars = "!@#$%^&*()_+-=[]{};':\"\\|,.<>/?"
         if not any(char in special_chars for char in v):
-            raise ValueError("Password must contain at least one special character (!@#$%^&*()_+-=[]{};':\"|,.<>/?)")
+            raise ValueError(
+                "Password must contain at least one special character (!@#$%^&*()_+-=[]{};':\"|,.<>/?)"
+            )
         return v
 
 
@@ -164,7 +176,9 @@ class PasswordReset(BaseModel):
 class SubscriptionUpdate(BaseModel):
     """Schema for updating subscription."""
 
-    tier: Literal["free", "starter", "starter_plus", "pro", "pro_plus"] = Field(..., description="Subscription tier")
+    tier: Literal["free", "starter", "starter_plus", "pro", "pro_plus"] = Field(
+        ..., description="Subscription tier"
+    )
     period: Literal["monthly", "yearly"] = Field(..., description="Billing period")
 
 
@@ -174,8 +188,8 @@ class SubscriptionInfo(BaseModel):
     tier: str
     status: str
     period: str
-    start_date: Optional[datetime]
-    end_date: Optional[datetime]
+    start_date: datetime | None
+    end_date: datetime | None
     daily_limit: int
     daily_usage: int
     remaining_usage: int
@@ -200,7 +214,7 @@ class UsageHistory(BaseModel):
     """Schema for usage history item."""
 
     id: int
-    models_used: List[str] = Field(..., min_length=1, description="List of model IDs used")
+    models_used: list[str] = Field(..., min_length=1, description="List of model IDs used")
     input_length: int = Field(..., ge=0, description="Input text length in characters")
     models_successful: int = Field(..., ge=0, description="Number of successful model responses")
     models_failed: int = Field(..., ge=0, description="Number of failed model responses")
@@ -210,7 +224,7 @@ class UsageHistory(BaseModel):
 
     @field_validator("models_used")
     @classmethod
-    def validate_models_used(cls, v: List[str]) -> List[str]:
+    def validate_models_used(cls, v: list[str]) -> list[str]:
         """Validate models_used is not empty."""
         if not v:
             raise ValueError("models_used cannot be empty")
@@ -227,16 +241,19 @@ class UsageHistory(BaseModel):
 class UserPreferencesUpdate(BaseModel):
     """Schema for updating user preferences."""
 
-    preferred_models: Optional[List[str]] = Field(None, description="List of preferred model IDs")
-    theme: Optional[Literal["light", "dark"]] = Field(None, description="UI theme preference")
-    email_notifications: Optional[bool] = Field(None, description="Enable email notifications")
-    usage_alerts: Optional[bool] = Field(None, description="Enable usage limit alerts")
-    zipcode: Optional[str] = Field(None, description="User's zipcode for location-based model results")
-    remember_state_on_logout: Optional[bool] = Field(None, description="Remember state (follow-up mode, responses, textarea, websearch) on logout")
+    preferred_models: list[str] | None = Field(None, description="List of preferred model IDs")
+    theme: Literal["light", "dark"] | None = Field(None, description="UI theme preference")
+    email_notifications: bool | None = Field(None, description="Enable email notifications")
+    usage_alerts: bool | None = Field(None, description="Enable usage limit alerts")
+    zipcode: str | None = Field(None, description="User's zipcode for location-based model results")
+    remember_state_on_logout: bool | None = Field(
+        None,
+        description="Remember state (follow-up mode, responses, textarea, websearch) on logout",
+    )
 
     @field_validator("preferred_models")
     @classmethod
-    def validate_preferred_models(cls, v: Optional[List[str]]) -> Optional[List[str]]:
+    def validate_preferred_models(cls, v: list[str] | None) -> list[str] | None:
         """Validate preferred_models list."""
         if v is not None and len(v) == 0:
             raise ValueError("preferred_models cannot be an empty list")
@@ -244,27 +261,30 @@ class UserPreferencesUpdate(BaseModel):
 
     @field_validator("zipcode")
     @classmethod
-    def validate_zipcode(cls, v: Optional[str]) -> Optional[str]:
+    def validate_zipcode(cls, v: str | None) -> str | None:
         """Validate zipcode format (US 5-digit or 9-digit with dash)."""
         import re
+
         if v is not None:
             v = v.strip()
             if v == "":
                 return None
             # US zipcode: 5 digits or 5+4 format (12345 or 12345-6789)
-            if not re.match(r'^\d{5}(-\d{4})?$', v):
-                raise ValueError("Invalid zipcode format. Use 5 digits (12345) or ZIP+4 format (12345-6789)")
+            if not re.match(r"^\d{5}(-\d{4})?$", v):
+                raise ValueError(
+                    "Invalid zipcode format. Use 5 digits (12345) or ZIP+4 format (12345-6789)"
+                )
         return v
 
 
 class UserPreferencesResponse(BaseModel):
     """Schema for user preferences response."""
 
-    preferred_models: Optional[List[str]]
+    preferred_models: list[str] | None
     theme: str
     email_notifications: bool
     usage_alerts: bool
-    zipcode: Optional[str] = None
+    zipcode: str | None = None
     remember_state_on_logout: bool = False
 
     model_config = ConfigDict(from_attributes=True)
@@ -279,12 +299,18 @@ class ConversationListItem(BaseModel):
     """Schema for conversation list item."""
 
     id: int
-    title: Optional[str]
+    title: str | None
     input_data: str
-    models_used: List[str]
-    conversation_type: str = Field(default="comparison", description="Type of conversation: 'comparison' or 'breakout'")
-    parent_conversation_id: Optional[int] = Field(None, description="ID of parent comparison (for breakout conversations)")
-    breakout_model_id: Optional[str] = Field(None, description="Model ID that was broken out (for breakout conversations)")
+    models_used: list[str]
+    conversation_type: str = Field(
+        default="comparison", description="Type of conversation: 'comparison' or 'breakout'"
+    )
+    parent_conversation_id: int | None = Field(
+        None, description="ID of parent comparison (for breakout conversations)"
+    )
+    breakout_model_id: str | None = Field(
+        None, description="Model ID that was broken out (for breakout conversations)"
+    )
     created_at: datetime
     message_count: int
 
@@ -295,13 +321,23 @@ class ConversationMessage(BaseModel):
     """Schema for a single conversation message."""
 
     id: int
-    model_id: Optional[str] = None
-    role: Literal["user", "assistant"] = Field(..., description="Message role: 'user' or 'assistant'")
+    model_id: str | None = None
+    role: Literal["user", "assistant"] = Field(
+        ..., description="Message role: 'user' or 'assistant'"
+    )
     content: str = Field(..., min_length=1, description="Message content")
-    input_tokens: Optional[int] = Field(None, ge=0, description="Input tokens for user messages (from OpenRouter)")
-    output_tokens: Optional[int] = Field(None, ge=0, description="Output tokens for assistant messages (from OpenRouter)")
-    success: bool = Field(default=True, description="Whether the message was successfully processed")
-    processing_time_ms: Optional[int] = Field(None, ge=0, description="Processing time in milliseconds")
+    input_tokens: int | None = Field(
+        None, ge=0, description="Input tokens for user messages (from OpenRouter)"
+    )
+    output_tokens: int | None = Field(
+        None, ge=0, description="Output tokens for assistant messages (from OpenRouter)"
+    )
+    success: bool = Field(
+        default=True, description="Whether the message was successfully processed"
+    )
+    processing_time_ms: int | None = Field(
+        None, ge=0, description="Processing time in milliseconds"
+    )
     created_at: datetime
 
     @field_validator("role")
@@ -320,10 +356,16 @@ class ConversationSummary(BaseModel):
 
     id: int
     input_data: str
-    models_used: List[str]
-    conversation_type: str = Field(default="comparison", description="Type of conversation: 'comparison' or 'breakout'")
-    parent_conversation_id: Optional[int] = Field(None, description="ID of parent comparison (for breakout conversations)")
-    breakout_model_id: Optional[str] = Field(None, description="Model ID that was broken out (for breakout conversations)")
+    models_used: list[str]
+    conversation_type: str = Field(
+        default="comparison", description="Type of conversation: 'comparison' or 'breakout'"
+    )
+    parent_conversation_id: int | None = Field(
+        None, description="ID of parent comparison (for breakout conversations)"
+    )
+    breakout_model_id: str | None = Field(
+        None, description="Model ID that was broken out (for breakout conversations)"
+    )
     created_at: datetime
     message_count: int
 
@@ -334,18 +376,24 @@ class ConversationDetail(BaseModel):
     """Schema for detailed conversation with messages."""
 
     id: int
-    title: Optional[str]
+    title: str | None
     input_data: str
-    models_used: List[str]
-    conversation_type: str = Field(default="comparison", description="Type of conversation: 'comparison' or 'breakout'")
-    parent_conversation_id: Optional[int] = Field(None, description="ID of parent comparison (for breakout conversations)")
-    breakout_model_id: Optional[str] = Field(None, description="Model ID that was broken out (for breakout conversations)")
-    already_broken_out_models: List[str] = Field(
+    models_used: list[str]
+    conversation_type: str = Field(
+        default="comparison", description="Type of conversation: 'comparison' or 'breakout'"
+    )
+    parent_conversation_id: int | None = Field(
+        None, description="ID of parent comparison (for breakout conversations)"
+    )
+    breakout_model_id: str | None = Field(
+        None, description="Model ID that was broken out (for breakout conversations)"
+    )
+    already_broken_out_models: list[str] = Field(
         default_factory=list,
         description="List of model IDs that have already been broken out from this conversation",
     )
     created_at: datetime
-    messages: List[ConversationMessage]
+    messages: list[ConversationMessage]
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -353,10 +401,14 @@ class ConversationDetail(BaseModel):
 class BreakoutConversationCreate(BaseModel):
     """Schema for creating a breakout conversation from a comparison."""
 
-    parent_conversation_id: int = Field(..., description="ID of the original comparison conversation")
+    parent_conversation_id: int = Field(
+        ..., description="ID of the original comparison conversation"
+    )
     model_id: str = Field(..., description="Model ID to break out into a separate conversation")
 
-    model_config = ConfigDict(json_schema_extra={"example": {"parent_conversation_id": 123, "model_id": "openai/gpt-4o"}})
+    model_config = ConfigDict(
+        json_schema_extra={"example": {"parent_conversation_id": 123, "model_id": "openai/gpt-4o"}}
+    )
 
 
 # ============================================================================
@@ -377,12 +429,12 @@ class AdminUserResponse(BaseModel):
     subscription_status: str
     subscription_period: str
     monthly_overage_count: int
-    monthly_credits_allocated: Optional[int] = 0
-    credits_used_this_period: Optional[int] = 0
-    mock_mode_enabled: Optional[bool] = False  # Testing feature for admins
+    monthly_credits_allocated: int | None = 0
+    credits_used_this_period: int | None = 0
+    mock_mode_enabled: bool | None = False  # Testing feature for admins
     created_at: datetime
-    updated_at: Optional[datetime] = None
-    last_access: Optional[datetime] = None  # Last time user accessed the website
+    updated_at: datetime | None = None
+    last_access: datetime | None = None  # Last time user accessed the website
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -393,7 +445,9 @@ class AdminUserCreate(BaseModel):
     email: EmailStr
     password: str = Field(..., min_length=8)
     role: str = Field(default="user", pattern="^(user|moderator|admin|super_admin)$")
-    subscription_tier: str = Field(default="free", pattern="^(free|starter|starter_plus|pro|pro_plus)$")
+    subscription_tier: str = Field(
+        default="free", pattern="^(free|starter|starter_plus|pro|pro_plus)$"
+    )
     subscription_period: str = Field(default="monthly", pattern="^(monthly|yearly)$")
     is_active: bool = Field(default=True)
     is_verified: bool = Field(default=False)
@@ -411,27 +465,31 @@ class AdminUserCreate(BaseModel):
             raise ValueError("Password must contain at least one lowercase letter")
         special_chars = "!@#$%^&*()_+-=[]{};':\"\\|,.<>/?"
         if not any(char in special_chars for char in v):
-            raise ValueError("Password must contain at least one special character (!@#$%^&*()_+-=[]{};':\"\\|,.<>/?)")
+            raise ValueError(
+                "Password must contain at least one special character (!@#$%^&*()_+-=[]{};':\"\\|,.<>/?)"
+            )
         return v
 
 
 class AdminUserUpdate(BaseModel):
     """Schema for updating a user via admin panel."""
 
-    email: Optional[EmailStr] = None
-    role: Optional[str] = Field(None, pattern="^(user|moderator|admin|super_admin)$")
-    subscription_tier: Optional[str] = Field(None, pattern="^(free|starter|starter_plus|pro|pro_plus)$")
-    subscription_status: Optional[str] = Field(None, pattern="^(active|cancelled|expired)$")
-    subscription_period: Optional[str] = Field(None, pattern="^(monthly|yearly)$")
-    is_active: Optional[bool] = None
-    is_verified: Optional[bool] = None
-    monthly_overage_count: Optional[int] = Field(None, ge=0)
+    email: EmailStr | None = None
+    role: str | None = Field(None, pattern="^(user|moderator|admin|super_admin)$")
+    subscription_tier: str | None = Field(
+        None, pattern="^(free|starter|starter_plus|pro|pro_plus)$"
+    )
+    subscription_status: str | None = Field(None, pattern="^(active|cancelled|expired)$")
+    subscription_period: str | None = Field(None, pattern="^(monthly|yearly)$")
+    is_active: bool | None = None
+    is_verified: bool | None = None
+    monthly_overage_count: int | None = Field(None, ge=0)
 
 
 class AdminUserListResponse(BaseModel):
     """Schema for paginated user list response."""
 
-    users: List[AdminUserResponse]
+    users: list[AdminUserResponse]
     total: int
     page: int
     per_page: int
@@ -442,15 +500,15 @@ class AdminActionLogResponse(BaseModel):
     """Schema for admin action log response."""
 
     id: int
-    admin_user_id: Optional[int] = None
-    admin_user_email: Optional[str] = None
-    target_user_id: Optional[int] = None
-    target_user_email: Optional[str] = None
+    admin_user_id: int | None = None
+    admin_user_email: str | None = None
+    target_user_id: int | None = None
+    target_user_email: str | None = None
     action_type: str
     action_description: str
-    details: Optional[str]
-    ip_address: Optional[str]
-    user_agent: Optional[str]
+    details: str | None
+    ip_address: str | None
+    user_agent: str | None
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
@@ -462,8 +520,8 @@ class AdminStatsResponse(BaseModel):
     total_users: int
     active_users: int
     verified_users: int
-    users_by_tier: Dict[str, int]
-    users_by_role: Dict[str, int]
+    users_by_tier: dict[str, int]
+    users_by_role: dict[str, int]
     recent_registrations: int  # Last 7 days
     total_usage_today: int
     admin_actions_today: int
@@ -487,7 +545,7 @@ class VisitorAnalyticsResponse(BaseModel):
     anonymous_visitors: int  # Visitors without user_id
 
     # Daily breakdown (last 30 days)
-    daily_breakdown: List[Dict[str, Any]]  # [{date, unique_visitors, total_comparisons}]
+    daily_breakdown: list[dict[str, Any]]  # [{date, unique_visitors, total_comparisons}]
 
     # Recent activity
     comparisons_today: int

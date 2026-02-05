@@ -1,73 +1,71 @@
 """Core API routes: /models, /compare-stream, conversations, etc."""
 
-from fastapi import APIRouter, Request, Depends, HTTPException, status, BackgroundTasks, Body, File, UploadFile
-from fastapi.responses import StreamingResponse, JSONResponse
-from pydantic import BaseModel, ConfigDict
-from typing import Optional, Dict, Any, Union
-from sqlalchemy.orm import Session
-from sqlalchemy import func
-from collections import defaultdict
-from datetime import datetime, timezone, timedelta
 import asyncio
 import json
-import os
-import tempfile
-import time
 import logging
+import os
+import time
+from collections import defaultdict
+from datetime import UTC, datetime, timedelta
+from decimal import ROUND_CEILING, Decimal
+from typing import Any
 
-from ..model_runner import (
-    OPENROUTER_MODELS,
-    MODELS_BY_PROVIDER,
-    call_openrouter_streaming,
-    clean_model_response,
-    TokenUsage,
-    estimate_token_count,
-)
-from ..search.factory import SearchProviderFactory
-from ..models import (
-    User,
-    UsageLog,
-    AppSettings,
-    Conversation,
-    ConversationMessage as ConversationMessageModel,
-)
+from fastapi import APIRouter, BackgroundTasks, Body, Depends, HTTPException, Request, status
+from fastapi.responses import StreamingResponse
+from pydantic import BaseModel, ConfigDict
+from sqlalchemy import func
+from sqlalchemy.orm import Session
+
+from ..config.settings import settings
 from ..credit_manager import (
-    ensure_credits_allocated,
-    get_user_credits,
-    get_credit_usage_stats,
     check_and_reset_credits_if_needed,
+    ensure_credits_allocated,
+    get_credit_usage_stats,
+    get_user_credits,
 )
-from decimal import Decimal, ROUND_CEILING
 from ..database import get_db
 from ..dependencies import get_current_user
-from ..schemas import ConversationSummary, ConversationDetail, BreakoutConversationCreate
-from ..config.settings import settings
-from ..rate_limiting import (
-    get_user_usage_stats,
-    get_anonymous_usage_stats,
-    anonymous_rate_limit_storage,
-    get_model_limit,
-    is_overage_allowed,
-    # Credit-based functions
-    check_user_credits,
-    deduct_user_credits,
-    check_anonymous_credits,
-    deduct_anonymous_credits,
+from ..model_runner import (
+    MODELS_BY_PROVIDER,
+    OPENROUTER_MODELS,
+    call_openrouter_streaming,
+    clean_model_response,
+    estimate_token_count,
 )
+from ..models import (
+    AppSettings,
+    Conversation,
+    UsageLog,
+    User,
+)
+from ..models import (
+    ConversationMessage as ConversationMessageModel,
+)
+from ..rate_limiting import (
+    anonymous_rate_limit_storage,
+    check_anonymous_credits,
+    # Credit-based functions
+    deduct_anonymous_credits,
+    deduct_user_credits,
+    get_anonymous_usage_stats,
+    get_user_usage_stats,
+)
+from ..config import get_model_limit
+from ..schemas import BreakoutConversationCreate, ConversationDetail, ConversationSummary
+from ..search.factory import SearchProviderFactory
 
 router = APIRouter(tags=["API"])
 logger = logging.getLogger(__name__)
 
 # Track model success/failure rates - shared with main.py for health checks
-model_stats: Dict[str, Dict[str, Any]] = defaultdict(lambda: {"success": 0, "failure": 0, "last_error": None, "last_success": None})
+model_stats: dict[str, dict[str, Any]] = defaultdict(
+    lambda: {"success": 0, "failure": 0, "last_error": None, "last_success": None}
+)
 
 # Import configuration constants
 from ..config import (
     ANONYMOUS_MODEL_LIMIT,
-    MODEL_LIMITS,
-    SUBSCRIPTION_CONFIG,
     get_conversation_limit,
-    get_daily_limit,
     get_model_limit,
 )
 from ..config.constants import DAILY_CREDIT_LIMITS
@@ -77,20 +75,34 @@ from ..config.constants import DAILY_CREDIT_LIMITS
 class ConversationMessage(BaseModel):
     role: str  # "user" or "assistant"
     content: str
-    model_id: Optional[str] = None  # Optional model ID for assistant messages (used to filter per-model history)
+    model_id: str | None = (
+        None  # Optional model ID for assistant messages (used to filter per-model history)
+    )
 
-    model_config = ConfigDict(json_schema_extra={"example": {"role": "user", "content": "What is artificial intelligence?"}})
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {"role": "user", "content": "What is artificial intelligence?"}
+        }
+    )
 
 
 class CompareRequest(BaseModel):
     input_data: str
     models: list[str]
     conversation_history: list[ConversationMessage] = []  # Optional conversation context
-    browser_fingerprint: Optional[str] = None  # Optional browser fingerprint for rate limiting
-    conversation_id: Optional[int] = None  # Optional conversation ID for follow-ups (most reliable matching)
-    estimated_input_tokens: Optional[int] = None  # Optional: Accurate token count from frontend (from /estimate-tokens endpoint)
-    timezone: Optional[str] = None  # Optional: IANA timezone string (e.g., "America/Chicago") for credit reset timing
-    location: Optional[str] = None  # Optional: User-provided location (e.g., "Granbury, TX, USA") - most accurate, takes priority over IP-based detection
+    browser_fingerprint: str | None = None  # Optional browser fingerprint for rate limiting
+    conversation_id: int | None = (
+        None  # Optional conversation ID for follow-ups (most reliable matching)
+    )
+    estimated_input_tokens: int | None = (
+        None  # Optional: Accurate token count from frontend (from /estimate-tokens endpoint)
+    )
+    timezone: str | None = (
+        None  # Optional: IANA timezone string (e.g., "America/Chicago") for credit reset timing
+    )
+    location: str | None = (
+        None  # Optional: User-provided location (e.g., "Granbury, TX, USA") - most accurate, takes priority over IP-based detection
+    )
     enable_web_search: bool = False  # Optional: Enable web search tool for models that support it
 
     model_config = ConfigDict(
@@ -117,8 +129,10 @@ class EstimateTokensRequest(BaseModel):
     """Request model for token estimation endpoint."""
 
     input_data: str
-    model_id: Optional[str] = None  # Optional model ID for accurate token counting
-    conversation_history: list[ConversationMessage] = []  # Optional conversation context (with optional model_id for filtering)
+    model_id: str | None = None  # Optional model ID for accurate token counting
+    conversation_history: list[
+        ConversationMessage
+    ] = []  # Optional conversation context (with optional model_id for filtering)
 
     model_config = ConfigDict(
         json_schema_extra={
@@ -140,11 +154,11 @@ class EstimateTokensResponse(BaseModel):
     input_tokens: int
     conversation_history_tokens: int
     total_input_tokens: int
-    model_id: Optional[str] = None
+    model_id: str | None = None
 
 
 class ResetRateLimitRequest(BaseModel):
-    fingerprint: Optional[str] = None
+    fingerprint: str | None = None
 
 
 # Helper functions
@@ -171,28 +185,33 @@ def get_client_ip(request: Request) -> str:
     return "unknown"
 
 
-async def get_location_from_ip(ip_address: str) -> Optional[str]:
+async def get_location_from_ip(ip_address: str) -> str | None:
     """
     Get approximate location from IP address using a geolocation service.
     Returns location string like "New York, NY, USA" or None if unavailable.
-    
+
     Uses ip-api.com free tier (45 requests/minute, no API key required).
     Falls back gracefully if service is unavailable.
     """
     if not ip_address or ip_address == "unknown":
         return None
-    
+
     # Skip localhost/private IPs (won't have valid geolocation)
-    if ip_address.startswith("127.") or ip_address.startswith("192.168.") or ip_address.startswith("10.") or ip_address == "::1":
+    if (
+        ip_address.startswith("127.")
+        or ip_address.startswith("192.168.")
+        or ip_address.startswith("10.")
+        or ip_address == "::1"
+    ):
         return None
-    
+
     try:
         import httpx
+
         async with httpx.AsyncClient(timeout=2.0) as client:
             # Use ip-api.com free tier (no API key required, 45 req/min)
             response = await client.get(
-                f"http://ip-api.com/json/{ip_address}",
-                params={"fields": "city,regionName,country"}
+                f"http://ip-api.com/json/{ip_address}", params={"fields": "city,regionName,country"}
             )
             if response.status_code == 200:
                 data = response.json()
@@ -208,12 +227,13 @@ async def get_location_from_ip(ip_address: str) -> Optional[str]:
         # Log error in development for debugging, but don't break the request
         if settings.environment == "development":
             logging.getLogger(__name__).debug(f"Geolocation lookup failed for IP {ip_address}: {e}")
-        pass
-    
+
     return None
 
 
-def get_timezone_from_request(req: CompareRequest, current_user: Optional[User] = None, db: Optional[Session] = None) -> str:
+def get_timezone_from_request(
+    req: CompareRequest, current_user: User | None = None, db: Session | None = None
+) -> str:
     """
     Get timezone from request, user preferences, or default to UTC.
 
@@ -241,7 +261,9 @@ def get_timezone_from_request(req: CompareRequest, current_user: Optional[User] 
                 if not current_user.preferences:
                     from ..models import UserPreference
 
-                    current_user.preferences = UserPreference(user_id=current_user.id, timezone=req.timezone)
+                    current_user.preferences = UserPreference(
+                        user_id=current_user.id, timezone=req.timezone
+                    )
                     db.commit()
                 elif current_user.preferences.timezone != req.timezone:
                     current_user.preferences.timezone = req.timezone
@@ -278,8 +300,8 @@ def log_usage_to_db(usage_log: UsageLog, db: Session) -> None:
 
 @router.get("/models")
 async def get_available_models(
-    current_user: Optional[User] = Depends(get_current_user),
-) -> Dict[str, Any]:
+    current_user: User | None = Depends(get_current_user),
+) -> dict[str, Any]:
     """
     Get list of all AI models with tier_access field indicating availability.
 
@@ -346,9 +368,10 @@ async def get_available_models(
     # If user has active trial, don't use cache (response is user-specific)
     if is_trial_active:
         return get_models()
-    
+
     # For non-trial users, use caching
     from ..cache import get_cached_models
+
     return get_cached_models(get_models)
 
 
@@ -366,7 +389,7 @@ async def get_anonymous_mock_mode_status(db: Session = Depends(get_db)):
         return {"anonymous_mock_mode_enabled": False, "is_development": False}
 
     # Use cache to avoid repeated database queries
-    from ..cache import get_cached_app_settings, CACHE_KEY_APP_SETTINGS
+    from ..cache import get_cached_app_settings
 
     def get_settings():
         return db.query(AppSettings).first()
@@ -393,10 +416,10 @@ async def get_anonymous_mock_mode_status(db: Session = Depends(get_db)):
 @router.get("/rate-limit-status")
 async def get_rate_limit_status(
     request: Request,
-    fingerprint: Optional[str] = None,
-    current_user: Optional[User] = Depends(get_current_user),
+    fingerprint: str | None = None,
+    current_user: User | None = Depends(get_current_user),
     db: Session = Depends(get_db),
-    timezone: Optional[str] = None,
+    timezone: str | None = None,
 ):
     """
     Get current rate limit status for the client.
@@ -414,39 +437,38 @@ async def get_rate_limit_status(
             "email": current_user.email,
             "subscription_status": current_user.subscription_status,
         }
-    else:
-        # Unregistered user - return IP/fingerprint-based usage
-        client_ip = get_client_ip(request)
-        # Get timezone from query parameter or header, default to UTC
-        import pytz
+    # Unregistered user - return IP/fingerprint-based usage
+    client_ip = get_client_ip(request)
+    # Get timezone from query parameter or header, default to UTC
+    import pytz
 
-        user_timezone = "UTC"
-        if timezone:
+    user_timezone = "UTC"
+    if timezone:
+        try:
+            pytz.timezone(timezone)
+            user_timezone = timezone
+        except (pytz.exceptions.UnknownTimeZoneError, AttributeError):
+            pass
+    else:
+        header_tz = request.headers.get("X-Timezone")
+        if header_tz:
             try:
-                pytz.timezone(timezone)
-                user_timezone = timezone
+                pytz.timezone(header_tz)
+                user_timezone = header_tz
             except (pytz.exceptions.UnknownTimeZoneError, AttributeError):
                 pass
-        else:
-            header_tz = request.headers.get("X-Timezone")
-            if header_tz:
-                try:
-                    pytz.timezone(header_tz)
-                    user_timezone = header_tz
-                except (pytz.exceptions.UnknownTimeZoneError, AttributeError):
-                    pass
 
-        usage_stats = get_anonymous_usage_stats(f"ip:{client_ip}", user_timezone)
+    usage_stats = get_anonymous_usage_stats(f"ip:{client_ip}", user_timezone)
 
-        result = {**usage_stats, "authenticated": False, "ip_address": client_ip}
+    result = {**usage_stats, "authenticated": False, "ip_address": client_ip}
 
-        # Include fingerprint stats if provided
-        if fingerprint:
-            fp_stats = get_anonymous_usage_stats(f"fp:{fingerprint}", user_timezone)
-            result["fingerprint_usage"] = fp_stats["daily_usage"]
-            result["fingerprint_remaining"] = fp_stats["remaining_usage"]
+    # Include fingerprint stats if provided
+    if fingerprint:
+        fp_stats = get_anonymous_usage_stats(f"fp:{fingerprint}", user_timezone)
+        result["fingerprint_usage"] = fp_stats["daily_usage"]
+        result["fingerprint_remaining"] = fp_stats["remaining_usage"]
 
-        return result
+    return result
 
 
 @router.get("/model-stats")
@@ -471,7 +493,7 @@ async def get_model_stats():
 async def reset_rate_limit_dev(
     request: Request,
     req_body: ResetRateLimitRequest,
-    current_user: Optional[User] = Depends(get_current_user),
+    current_user: User | None = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     """
@@ -482,7 +504,9 @@ async def reset_rate_limit_dev(
     """
     # Only allow in development mode
     if os.environ.get("ENVIRONMENT") != "development":
-        raise HTTPException(status_code=403, detail="This endpoint is only available in development mode")
+        raise HTTPException(
+            status_code=403, detail="This endpoint is only available in development mode"
+        )
 
     client_ip = get_client_ip(request)
     deleted_count = 0
@@ -494,7 +518,9 @@ async def reset_rate_limit_dev(
         current_user.daily_extended_usage = 0
 
         # Delete only this user's conversations (messages deleted via cascade)
-        deleted_count = db.query(Conversation).filter(Conversation.user_id == current_user.id).delete()
+        deleted_count = (
+            db.query(Conversation).filter(Conversation.user_id == current_user.id).delete()
+        )
         db.commit()
 
     # For unregistered users: reset IP-based rate limits
@@ -513,6 +539,7 @@ async def reset_rate_limit_dev(
     # Clear login rate limiting for this IP and all IPs (for E2E tests)
     # E2E tests may use different IPs, so clear everything
     from ..routers.auth import failed_login_attempts
+
     failed_login_attempts.clear()  # Clear all login attempts for E2E tests
 
     return {
@@ -526,13 +553,14 @@ async def reset_rate_limit_dev(
 
 class CreateTestUserRequest(BaseModel):
     """Request model for creating test users."""
+
     email: str
     password: str
-    role: Optional[str] = "user"
-    is_admin: Optional[bool] = False
-    subscription_tier: Optional[str] = "free"
-    is_verified: Optional[bool] = True
-    is_active: Optional[bool] = True
+    role: str | None = "user"
+    is_admin: bool | None = False
+    subscription_tier: str | None = "free"
+    is_verified: bool | None = True
+    is_active: bool | None = True
 
 
 @router.post("/dev/create-test-user")
@@ -547,19 +575,24 @@ async def create_test_user_dev(
     """
     # Only allow in development mode
     if os.environ.get("ENVIRONMENT") != "development":
-        raise HTTPException(status_code=403, detail="This endpoint is only available in development mode")
-    
+        raise HTTPException(
+            status_code=403, detail="This endpoint is only available in development mode"
+        )
+
     # Check for test database
-    database_url = os.getenv("DATABASE_URL", "") or getattr(settings, 'database_url', '')
+    database_url = os.getenv("DATABASE_URL", "") or getattr(settings, "database_url", "")
     if database_url and "test" not in database_url.lower():
-        raise HTTPException(status_code=403, detail="This endpoint is only available with test databases")
-    
-    from ..auth import get_password_hash
+        raise HTTPException(
+            status_code=403, detail="This endpoint is only available with test databases"
+        )
+
     from datetime import UTC
-    
+
+    from ..auth import get_password_hash
+
     # Check if user already exists
     existing_user = db.query(User).filter(User.email == user_data.email).first()
-    
+
     if existing_user:
         # Update existing user
         existing_user.password_hash = get_password_hash(user_data.password)
@@ -571,7 +604,7 @@ async def create_test_user_dev(
         existing_user.subscription_status = "active"
         db.commit()
         db.refresh(existing_user)
-        
+
         return {
             "message": "Test user updated successfully",
             "email": existing_user.email,
@@ -580,54 +613,51 @@ async def create_test_user_dev(
             "is_verified": existing_user.is_verified,
             "subscription_tier": existing_user.subscription_tier,
         }
-    else:
-        # Create new user
-        new_user = User(
-            email=user_data.email,
-            password_hash=get_password_hash(user_data.password),
-            role=user_data.role,
-            is_admin=user_data.is_admin,
-            subscription_tier=user_data.subscription_tier,
-            subscription_status="active",
-            subscription_period="monthly",
-            is_verified=user_data.is_verified,
-            is_active=user_data.is_active,
-            subscription_start_date=datetime.now(UTC),
+    # Create new user
+    new_user = User(
+        email=user_data.email,
+        password_hash=get_password_hash(user_data.password),
+        role=user_data.role,
+        is_admin=user_data.is_admin,
+        subscription_tier=user_data.subscription_tier,
+        subscription_status="active",
+        subscription_period="monthly",
+        is_verified=user_data.is_verified,
+        is_active=user_data.is_active,
+        subscription_start_date=datetime.now(UTC),
+    )
+
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+
+    # Create default user preferences
+    try:
+        from ..models import UserPreference
+
+        preferences = UserPreference(
+            user_id=new_user.id, theme="light", email_notifications=True, usage_alerts=True
         )
-        
-        db.add(new_user)
+        db.add(preferences)
         db.commit()
-        db.refresh(new_user)
-        
-        # Create default user preferences
-        try:
-            from ..models import UserPreference
-            preferences = UserPreference(
-                user_id=new_user.id,
-                theme="light",
-                email_notifications=True,
-                usage_alerts=True
-            )
-            db.add(preferences)
-            db.commit()
-        except Exception as e:
-            # Preferences might already exist or creation might fail - not critical
-            logging.warning(f"Could not create user preferences: {e}")
-        
-        return {
-            "message": "Test user created successfully",
-            "email": new_user.email,
-            "role": new_user.role,
-            "is_admin": new_user.is_admin,
-            "is_verified": new_user.is_verified,
-            "subscription_tier": new_user.subscription_tier,
-        }
+    except Exception as e:
+        # Preferences might already exist or creation might fail - not critical
+        logging.warning(f"Could not create user preferences: {e}")
+
+    return {
+        "message": "Test user created successfully",
+        "email": new_user.email,
+        "role": new_user.role,
+        "is_admin": new_user.is_admin,
+        "is_verified": new_user.is_verified,
+        "subscription_tier": new_user.subscription_tier,
+    }
 
 
 @router.post("/estimate-tokens", response_model=EstimateTokensResponse)
 async def estimate_tokens(
     req: EstimateTokensRequest,
-    current_user: Optional[User] = Depends(get_current_user),
+    current_user: User | None = Depends(get_current_user),
 ) -> EstimateTokensResponse:
     """
     Estimate token count for input text and optional conversation history.
@@ -641,7 +671,7 @@ async def estimate_tokens(
     This endpoint is designed for real-time token counting in the frontend
     with debounced API calls to provide accurate token estimates.
     """
-    from ..model_runner import estimate_token_count, count_conversation_tokens
+    from ..model_runner import count_conversation_tokens
 
     # Estimate tokens for current input
     input_tokens = estimate_token_count(req.input_data, model_id=req.model_id)
@@ -649,7 +679,9 @@ async def estimate_tokens(
     # Estimate tokens for conversation history if provided
     conversation_history_tokens = 0
     if req.conversation_history:
-        conversation_history_tokens = count_conversation_tokens(req.conversation_history, model_id=req.model_id)
+        conversation_history_tokens = count_conversation_tokens(
+            req.conversation_history, model_id=req.model_id
+        )
 
     total_input_tokens = input_tokens + conversation_history_tokens
 
@@ -667,7 +699,7 @@ async def compare_stream(
     request: Request,
     background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
-    current_user: Optional[User] = Depends(get_current_user),
+    current_user: User | None = Depends(get_current_user),
 ):
     """
     Compare AI models using Server-Sent Events (SSE) streaming.
@@ -698,7 +730,6 @@ async def compare_stream(
     from ..model_runner import (
         get_min_max_input_tokens,
         get_model_max_input_tokens,
-        estimate_token_count,
     )
 
     min_max_input_tokens = get_min_max_input_tokens(req.models)
@@ -748,15 +779,22 @@ async def compare_stream(
         )
 
     # Import utilities needed for tier checking
+    import logging
+
     from ..model_runner import is_model_available_for_tier
     from ..utils.cookies import get_token_from_cookies
-    import logging
-    
+
     # Determine model limit based on user tier
     if current_user:
         # Ensure subscription_tier is set and valid
         subscription_tier = current_user.subscription_tier
-        if not subscription_tier or subscription_tier not in ["free", "starter", "starter_plus", "pro", "pro_plus"]:
+        if not subscription_tier or subscription_tier not in [
+            "free",
+            "starter",
+            "starter_plus",
+            "pro",
+            "pro_plus",
+        ]:
             # Log unexpected tier value for debugging
             if settings.environment == "development":
                 logging.getLogger(__name__).warning(
@@ -764,32 +802,33 @@ async def compare_stream(
                     f"Defaulting to 'free' tier."
                 )
             subscription_tier = "free"  # Default to free tier if invalid
-        
+
         tier_model_limit = get_model_limit(subscription_tier)
         tier_name = subscription_tier
     else:
         # Check if there's a token present but authentication failed (helps diagnose auth issues)
         token_present = get_token_from_cookies(request) is not None
         tier_recovered_from_token = False
-        
+
         # If token is present but authentication failed, try to get user info from token for better error message
         # This helps diagnose cases where user thinks they're logged in but session expired
         # This can happen after code changes/restarts when the frontend still has a valid token
         # but the backend dependency system hasn't properly authenticated
         if token_present:
             from ..auth import verify_token
+
             try:
                 import jwt
-                from jwt.exceptions import ExpiredSignatureError, DecodeError
+                from jwt.exceptions import DecodeError, ExpiredSignatureError
             except ImportError:
                 jwt = None
-            
+
             token = get_token_from_cookies(request)
             if token:
                 try:
                     # Try to verify token - this will fail if expired or invalid
                     payload = verify_token(token, token_type="access")
-                    
+
                     if payload:
                         user_id_from_token = payload.get("sub")
                         if user_id_from_token:
@@ -797,25 +836,33 @@ async def compare_stream(
                                 user_id_int = int(user_id_from_token)
                                 # Refresh user from database to ensure we have latest tier info
                                 # Use a fresh query to avoid stale session issues
-                                user_from_token = db.query(User).filter(User.id == user_id_int).first()
-                                
+                                user_from_token = (
+                                    db.query(User).filter(User.id == user_id_int).first()
+                                )
+
                                 if user_from_token:
                                     # Refresh the user object to get latest data
                                     db.refresh(user_from_token)
-                                    
+
                                     if user_from_token.is_active:
                                         # User exists and is active, but get_current_user failed
                                         # This can happen after code changes when dependency system has issues
                                         # Use their actual tier for validation
                                         subscription_tier = user_from_token.subscription_tier
-                                        
+
                                         # Handle all valid tiers including pro_plus
-                                        valid_tiers = ["free", "starter", "starter_plus", "pro", "pro_plus"]
+                                        valid_tiers = [
+                                            "free",
+                                            "starter",
+                                            "starter_plus",
+                                            "pro",
+                                            "pro_plus",
+                                        ]
                                         if subscription_tier and subscription_tier in valid_tiers:
                                             tier_model_limit = get_model_limit(subscription_tier)
                                             tier_name = subscription_tier
                                             tier_recovered_from_token = True
-                                            
+
                                             # Log this recovery for debugging
                                             logger.warning(
                                                 f"[AUTH RECOVERY] Authentication dependency failed but recovered tier from token. "
@@ -853,7 +900,9 @@ async def compare_stream(
                         # Try to decode without verification to get user info for better error message
                         if jwt:
                             try:
-                                unverified_payload = jwt.decode(token, options={"verify_signature": False})
+                                unverified_payload = jwt.decode(
+                                    token, options={"verify_signature": False}
+                                )
                                 user_id_from_token = unverified_payload.get("sub")
                                 if user_id_from_token:
                                     logger.warning(
@@ -874,7 +923,7 @@ async def compare_stream(
         else:
             tier_model_limit = ANONYMOUS_MODEL_LIMIT
             tier_name = "unregistered"
-        
+
         # Log authentication failure for debugging
         if not tier_recovered_from_token:
             logger.warning(
@@ -887,11 +936,15 @@ async def compare_stream(
     # Validate model access based on tier (check if restricted models are selected)
     # Normalize tier name: "anonymous" should be treated as "unregistered"
     normalized_tier_name = "unregistered" if tier_name == "anonymous" else tier_name
-    
+
     # Check if user has active 7-day trial (grants access to all premium models)
     is_trial_active = current_user.is_trial_active if current_user else False
-    
-    restricted_models = [model_id for model_id in req.models if not is_model_available_for_tier(model_id, normalized_tier_name, is_trial_active)]
+
+    restricted_models = [
+        model_id
+        for model_id in req.models
+        if not is_model_available_for_tier(model_id, normalized_tier_name, is_trial_active)
+    ]
     if restricted_models:
         upgrade_message = ""
         if normalized_tier_name == "unregistered":
@@ -902,7 +955,9 @@ async def compare_stream(
             else:
                 upgrade_message = " Sign up for a free account to access more models, plus get a 7-day trial to all premium models!"
         elif normalized_tier_name == "free":
-            upgrade_message = " Paid subscriptions are coming soon — stay tuned to access all premium models!"
+            upgrade_message = (
+                " Paid subscriptions are coming soon — stay tuned to access all premium models!"
+            )
         else:
             upgrade_message = " Paid subscriptions are coming soon!"
 
@@ -916,7 +971,9 @@ async def compare_stream(
         upgrade_message = ""
         if normalized_tier_name == "unregistered":
             free_model_limit = get_model_limit("free")
-            upgrade_message = f" Sign up for a free account to compare up to {free_model_limit} models."
+            upgrade_message = (
+                f" Sign up for a free account to compare up to {free_model_limit} models."
+            )
         elif normalized_tier_name == "free":
             upgrade_message = " Paid plans with higher model limits are coming soon!"
         elif normalized_tier_name in ["starter", "starter_plus"]:
@@ -941,7 +998,9 @@ async def compare_stream(
         if not current_user.preferences:
             from ..models import UserPreference
 
-            current_user.preferences = UserPreference(user_id=current_user.id, timezone=user_timezone)
+            current_user.preferences = UserPreference(
+                user_id=current_user.id, timezone=user_timezone
+            )
             db.commit()
         elif current_user.preferences.timezone != user_timezone:
             current_user.preferences.timezone = user_timezone
@@ -950,13 +1009,15 @@ async def compare_stream(
     # Get location - prioritize user-provided location over IP-based detection
     user_location = None
     location_source = None  # Track where location came from: "user_provided", "ip_based", or None
-    
+
     if req.location and req.location.strip():
         # User provided location explicitly (most accurate - browser geolocation or manual entry)
         user_location = req.location.strip()
         location_source = "user_provided"
         print(f"[API] ✓ Using user-provided location: {user_location}")
-        logger.info(f"[API] Received location from frontend: '{req.location}', processed as: '{user_location}', source: {location_source}")
+        logger.info(
+            f"[API] Received location from frontend: '{req.location}', processed as: '{user_location}', source: {location_source}"
+        )
     else:
         logger.debug(f"[API] No location in request body. req.location = {req.location}")
         print(f"[API] No location provided in request (req.location = {req.location})")
@@ -965,9 +1026,13 @@ async def compare_stream(
         if ip_location:
             user_location = ip_location
             location_source = "ip_based"
-            print(f"[API] Detected approximate location from IP {client_ip}: {user_location} (IP-based location may be inaccurate)")
+            print(
+                f"[API] Detected approximate location from IP {client_ip}: {user_location} (IP-based location may be inaccurate)"
+            )
         else:
-            print(f"[API] Could not detect location from IP {client_ip} (may be localhost, VPN, or service unavailable)")
+            print(
+                f"[API] Could not detect location from IP {client_ip} (may be localhost, VPN, or service unavailable)"
+            )
 
     is_overage = False
     overage_charge = 0.0
@@ -1001,13 +1066,21 @@ async def compare_stream(
                     f"or sign-up for a free account to get more credits, more models, and more history!"
                 )
             elif tier_name == "pro_plus":
-                reset_date = current_user.credits_reset_at.date().isoformat() if current_user.credits_reset_at else "N/A"
+                reset_date = (
+                    current_user.credits_reset_at.date().isoformat()
+                    if current_user.credits_reset_at
+                    else "N/A"
+                )
                 error_msg = (
                     f"You've run out of credits which will reset on {reset_date}. "
                     f"Wait until your reset, or sign-up for model comparison overages."
                 )
             else:
-                reset_date = current_user.credits_reset_at.date().isoformat() if current_user.credits_reset_at else "N/A"
+                reset_date = (
+                    current_user.credits_reset_at.date().isoformat()
+                    if current_user.credits_reset_at
+                    else "N/A"
+                )
                 error_msg = (
                     f"You've run out of credits which will reset on {reset_date}. "
                     f"Consider upgrading your plan for more credits, more models per comparison, and more history!"
@@ -1017,7 +1090,9 @@ async def compare_stream(
                 detail=error_msg,
             )
 
-        print(f"Authenticated user {current_user.email} - Credits: {credits_remaining}/{credits_allocated}")
+        print(
+            f"Authenticated user {current_user.email} - Credits: {credits_remaining}/{credits_allocated}"
+        )
     else:
         # Unregistered user - check credit-based limits
         print(
@@ -1026,14 +1101,16 @@ async def compare_stream(
 
         # Check IP-based credits (pass Decimal(0) since we don't need estimate for blocking)
         ip_identifier = f"ip:{client_ip}"
-        _, ip_credits_remaining, ip_credits_allocated = check_anonymous_credits(ip_identifier, Decimal(0), user_timezone, db)
+        _, ip_credits_remaining, ip_credits_allocated = check_anonymous_credits(
+            ip_identifier, Decimal(0), user_timezone, db
+        )
 
         fingerprint_credits_remaining = ip_credits_remaining
         fingerprint_credits_allocated = ip_credits_allocated
         if req.browser_fingerprint:
             fp_identifier = f"fp:{req.browser_fingerprint}"
-            _, fingerprint_credits_remaining, fingerprint_credits_allocated = check_anonymous_credits(
-                fp_identifier, Decimal(0), user_timezone, db
+            _, fingerprint_credits_remaining, fingerprint_credits_allocated = (
+                check_anonymous_credits(fp_identifier, Decimal(0), user_timezone, db)
             )
 
         # Use the most restrictive limit (lowest remaining credits)
@@ -1049,12 +1126,14 @@ async def compare_stream(
             raise HTTPException(
                 status_code=402,  # Payment Required
                 detail=(
-                    f"You've run out of credits. Credits will reset to 50 tomorrow, "
-                    f"or sign-up for a free account to get more credits, more models, and more history!"
+                    "You've run out of credits. Credits will reset to 50 tomorrow, "
+                    "or sign-up for a free account to get more credits, more models, and more history!"
                 ),
             )
 
-        print(f"Unregistered user - IP: {client_ip} - Credits: {credits_remaining}/{credits_allocated}")
+        print(
+            f"Unregistered user - IP: {client_ip} - Credits: {credits_remaining}/{credits_allocated}"
+        )
     # --- END CREDIT-BASED RATE LIMITING ---
 
     # Track start time for processing metrics
@@ -1064,7 +1143,7 @@ async def compare_stream(
     # IMPORTANT: Also store whether user exists to prevent anonymous mock mode for authenticated users
     user_id = current_user.id if current_user else None
     has_authenticated_user = current_user is not None
-    
+
     # Capture logger in local variable for use in nested function
     _logger = logger
 
@@ -1140,19 +1219,22 @@ async def compare_stream(
 
         try:
             # Calculate minimum max output tokens across all models to avoid truncation
-            from ..model_runner import (
-                get_min_max_output_tokens,
-                estimate_token_count,
-                count_conversation_tokens,
-            )
             from decimal import Decimal
+
+            from ..model_runner import (
+                count_conversation_tokens,
+                estimate_token_count,
+                get_min_max_output_tokens,
+            )
 
             # Calculate input tokens for this request
             # Use first model for accurate token counting (if available)
             model_id = req.models[0] if req.models else None
             input_tokens = estimate_token_count(req.input_data, model_id=model_id)
             if req.conversation_history:
-                input_tokens += count_conversation_tokens(req.conversation_history, model_id=model_id)
+                input_tokens += count_conversation_tokens(
+                    req.conversation_history, model_id=model_id
+                )
 
             # If credits are low, calculate reduced max_tokens based on available credits per model
             # This helps ensure users can still get responses even with low credits
@@ -1160,7 +1242,9 @@ async def compare_stream(
             credits_limited = False  # Track if max_tokens was reduced due to credits
 
             # Calculate credits available per model
-            credits_per_model = Decimal(credits_remaining) / Decimal(num_models) if num_models > 0 else Decimal(0)
+            credits_per_model = (
+                Decimal(credits_remaining) / Decimal(num_models) if num_models > 0 else Decimal(0)
+            )
 
             # Minimum usable response threshold: 300 output tokens
             # This ensures responses are meaningful even with low credits
@@ -1174,14 +1258,19 @@ async def compare_stream(
                 effective_tokens_per_model = credits_per_model * Decimal(1000)
                 # Calculate max output tokens: (effective_tokens - input_tokens) / 2.5
                 # Ensure we don't go negative
-                max_output_tokens_calc = (effective_tokens_per_model - Decimal(input_tokens)) / Decimal(2.5)
+                max_output_tokens_calc = (
+                    effective_tokens_per_model - Decimal(input_tokens)
+                ) / Decimal(2.5)
                 max_output_tokens_int = max(
                     MIN_USABLE_OUTPUT_TOKENS, int(max_output_tokens_calc)
                 )  # Enforce minimum usable threshold
 
                 # If we had to enforce the minimum threshold, the comparison will exceed available credits
                 # Credits will be capped to 0 after deduction (handled by credit_manager)
-                if max_output_tokens_int == MIN_USABLE_OUTPUT_TOKENS and max_output_tokens_calc < MIN_USABLE_OUTPUT_TOKENS:
+                if (
+                    max_output_tokens_int == MIN_USABLE_OUTPUT_TOKENS
+                    and max_output_tokens_calc < MIN_USABLE_OUTPUT_TOKENS
+                ):
                     print(
                         f"[API] Low credits per model ({credits_per_model:.2f}) - enforcing minimum usable response ({MIN_USABLE_OUTPUT_TOKENS} tokens). Credits will be capped to 0."
                     )
@@ -1217,8 +1306,7 @@ async def compare_stream(
                     # Do this BEFORE entering thread pool to avoid database session thread-safety issues
                     enable_web_search_for_model = False
                     search_provider_instance = None
-                    
-                    
+
                     if req.enable_web_search:
                         # Check if this model supports web search
                         model_supports_web_search = False
@@ -1229,7 +1317,7 @@ async def compare_stream(
                                     break
                             if model_supports_web_search:
                                 break
-                        
+
                         if model_supports_web_search:
                             # Get search provider from database (must be done in async context, not thread pool)
                             search_provider_instance = SearchProviderFactory.get_active_provider(db)
@@ -1244,7 +1332,7 @@ async def compare_stream(
                                     f"Web search requested for model {model_id} but no active search provider configured. "
                                     f"Check AppSettings.active_search_provider and ensure API keys are set."
                                 )
-                    
+
                     # Run synchronous streaming in a thread, push chunks to queue as they arrive
                     loop = asyncio.get_event_loop()
 
@@ -1277,7 +1365,7 @@ async def compare_stream(
                                         # Include if model_id matches, or if model_id is None (legacy support)
                                         if msg.model_id is None or msg.model_id == model_id:
                                             filtered_history.append(msg)
-                            
+
                             # Manually iterate generator to capture return value (TokenUsage)
                             gen = call_openrouter_streaming(
                                 req.input_data,
@@ -1296,7 +1384,7 @@ async def compare_stream(
                             try:
                                 while True:
                                     chunk = next(gen)
-                                    
+
                                     # Detect keepalive chunks (single space) used during web search operations
                                     # Keepalive chunks are sent during tool call handling (before/during/after web search)
                                     # They come as isolated single spaces when content accumulation is paused.
@@ -1326,7 +1414,7 @@ async def compare_stream(
                                             # Previous chunk was keepalive - this is likely also keepalive
                                             # (keepalive chunks come in sequence during web search)
                                             is_keepalive = True
-                                    
+
                                     if is_keepalive:
                                         # Push keepalive event instead of content chunk
                                         # DO NOT add to content - this prevents character counter inflation
@@ -1369,19 +1457,22 @@ async def compare_stream(
                         except Exception as e:
                             error_msg = f"Error: {str(e)[:100]}"
                             _logger.error(
-                                f"Error streaming model {model_id}: {str(e)}",
-                                exc_info=True
+                                f"Error streaming model {model_id}: {str(e)}", exc_info=True
                             )
                             # Push error as chunk
                             asyncio.run_coroutine_threadsafe(
-                                chunk_queue.put({"type": "chunk", "model": model_id, "content": error_msg}),
+                                chunk_queue.put(
+                                    {"type": "chunk", "model": model_id, "content": error_msg}
+                                ),
                                 loop,
                             )
                             return error_msg, True, None  # error_msg, is_error, usage_data
 
                     # Run streaming in executor without timeout
                     # Timeout is handled in the chunk processing loop based on inactivity
-                    full_content, is_error, usage_data = await loop.run_in_executor(None, process_stream_to_queue)
+                    full_content, is_error, usage_data = await loop.run_in_executor(
+                        None, process_stream_to_queue
+                    )
 
                     # Clean the final accumulated content (unless it's an error)
                     if not is_error:
@@ -1412,14 +1503,17 @@ async def compare_stream(
                         if trimmed_content.startswith("Error:"):
                             # Check if it matches known backend error patterns
                             matches_pattern = any(
-                                re.match(pattern, trimmed_content, re.IGNORECASE) for pattern in backend_error_patterns
+                                re.match(pattern, trimmed_content, re.IGNORECASE)
+                                for pattern in backend_error_patterns
                             )
                             if matches_pattern:
                                 is_error = True
                             # If content is very short (< 100 chars) and starts with "Error:",
                             # it's likely a backend error (not a model explanation)
                             # This catches cases like "Error: Timeout" without the full pattern match
-                            elif len(trimmed_content) < 100 and not any(c in trimmed_content for c in ".!?"):
+                            elif len(trimmed_content) < 100 and not any(
+                                c in trimmed_content for c in ".!?"
+                            ):
                                 # Very short, no sentence-ending punctuation = likely backend error
                                 is_error = True
                             # Content starting with "Error:" that doesn't match patterns and is longer
@@ -1433,7 +1527,8 @@ async def compare_stream(
                                 # Check if the appended error matches backend patterns
                                 error_text = trimmed_content[error_index:]
                                 matches_pattern = any(
-                                    re.match(pattern, error_text, re.IGNORECASE) for pattern in backend_error_patterns
+                                    re.match(pattern, error_text, re.IGNORECASE)
+                                    for pattern in backend_error_patterns
                                 )
                                 if matches_pattern:
                                     is_error = True
@@ -1450,19 +1545,21 @@ async def compare_stream(
                     error_msg = f"Error: {str(e)[:100]}"
 
                     # Put error in queue as chunk
-                    await chunk_queue.put({"type": "chunk", "model": model_id, "content": error_msg})
+                    await chunk_queue.put(
+                        {"type": "chunk", "model": model_id, "content": error_msg}
+                    )
 
                     return {"model": model_id, "content": error_msg, "error": True, "usage": None}
 
             # Create tasks for all models to run concurrently
             tasks = [asyncio.create_task(stream_single_model(model_id)) for model_id in req.models]
-            
+
             # Map tasks to model IDs for inactivity timeout tracking
             task_to_model = {task: model_id for task, model_id in zip(tasks, req.models)}
 
             # Process chunks and completed tasks concurrently
             pending_tasks = set(tasks)
-            
+
             # Track last activity time per model for inactivity timeout
             # Activity is defined as receiving chunks or keepalives
             model_last_activity = {model_id: time.time() for model_id in req.models}
@@ -1472,7 +1569,7 @@ async def compare_stream(
                 # This prioritizes streaming responsiveness over task completion processing
                 chunks_processed = False
                 current_time = time.time()
-                
+
                 # Check for inactivity timeout before processing chunks
                 # Timeout if no chunks/keepalives received for inactivity period
                 timed_out_tasks = set()
@@ -1492,23 +1589,27 @@ async def compare_stream(
                             task.cancel()
                             timed_out_tasks.add(task)
                             # Push timeout error as chunk
-                            await chunk_queue.put({
-                                "type": "chunk",
-                                "model": model_id,
-                                "content": "Error: Model timed out after 1 minute of inactivity"
-                            })
+                            await chunk_queue.put(
+                                {
+                                    "type": "chunk",
+                                    "model": model_id,
+                                    "content": "Error: Model timed out after 1 minute of inactivity",
+                                }
+                            )
                             # Mark task as done with error result
-                            results_dict[model_id] = "Error: Model timed out after 1 minute of inactivity"
+                            results_dict[model_id] = (
+                                "Error: Model timed out after 1 minute of inactivity"
+                            )
                             model_stats[model_id]["failure"] += 1
                             failed_models += 1
                             yield f"data: {json.dumps({'model': model_id, 'type': 'done', 'error': True})}\n\n"
                             # Remove from activity tracking
                             if model_id in model_last_activity:
                                 del model_last_activity[model_id]
-                
+
                 # Remove timed out tasks from pending
                 pending_tasks -= timed_out_tasks
-                
+
                 while not chunk_queue.empty():
                     try:
                         chunk_data = await asyncio.wait_for(chunk_queue.get(), timeout=0.001)
@@ -1528,7 +1629,7 @@ async def compare_stream(
                             # incrementing the character counter
                             yield f"data: {json.dumps({'model': chunk_data['model'], 'type': 'keepalive'})}\n\n"
                             chunks_processed = True
-                    except asyncio.TimeoutError:
+                    except TimeoutError:
                         break
 
                 # Check for completed tasks without blocking
@@ -1543,18 +1644,18 @@ async def compare_stream(
                     model_id = task_to_model.get(task)
                     if not model_id:
                         continue
-                    
+
                     # Handle cancelled tasks (timeout)
                     if task.cancelled():
                         # Task was cancelled due to timeout - already handled above
                         continue
-                    
+
                     try:
                         result = await task
                     except asyncio.CancelledError:
                         # Task was cancelled - already handled above
                         continue
-                    
+
                     result_model_id = result.get("model")
                     if result_model_id:
                         model_id = result_model_id
@@ -1609,7 +1710,9 @@ async def compare_stream(
                 # Ensure minimum 1 credit deduction per comparison (round UP)
                 # This ensures users are charged at least 1 credit per comparison
                 # Always round up and ensure at least 1 credit when models succeed
-                total_credits_used = max(Decimal(1), total_credits_used.quantize(Decimal("1"), rounding=ROUND_CEILING))
+                total_credits_used = max(
+                    Decimal(1), total_credits_used.quantize(Decimal("1"), rounding=ROUND_CEILING)
+                )
 
             # Store the actual fractional credits for UsageLog (for analytics)
             actual_credits_used = total_credits_used
@@ -1651,19 +1754,29 @@ async def compare_stream(
                         ip_identifier = f"ip:{client_ip}"
                         deduct_anonymous_credits(ip_identifier, total_credits_used, user_timezone)
                         # Get updated IP credit balance (no db arg - read from memory only)
-                        _, ip_credits_remaining, _ = check_anonymous_credits(ip_identifier, Decimal(0), user_timezone)
+                        _, ip_credits_remaining, _ = check_anonymous_credits(
+                            ip_identifier, Decimal(0), user_timezone
+                        )
 
                         fingerprint_credits_remaining = ip_credits_remaining
                         if req.browser_fingerprint:
                             fp_identifier = f"fp:{req.browser_fingerprint}"
-                            deduct_anonymous_credits(fp_identifier, total_credits_used, user_timezone)
+                            deduct_anonymous_credits(
+                                fp_identifier, total_credits_used, user_timezone
+                            )
                             # Get updated fingerprint credit balance (no db arg - read from memory only)
-                            _, fingerprint_credits_remaining, _ = check_anonymous_credits(fp_identifier, Decimal(0), user_timezone)
+                            _, fingerprint_credits_remaining, _ = check_anonymous_credits(
+                                fp_identifier, Decimal(0), user_timezone
+                            )
 
                         # Use the most restrictive limit (lowest remaining credits) - same logic as at start
                         credits_remaining = min(
                             ip_credits_remaining,
-                            (fingerprint_credits_remaining if req.browser_fingerprint else ip_credits_remaining),
+                            (
+                                fingerprint_credits_remaining
+                                if req.browser_fingerprint
+                                else ip_credits_remaining
+                            ),
                         )
                 except Exception as e:
                     # Handle any exception during credit deduction
@@ -1674,14 +1787,22 @@ async def compare_stream(
                     # Refresh credits_remaining even if deduction failed (may have partially succeeded)
                     if not user_id:
                         ip_identifier = f"ip:{client_ip}"
-                        _, ip_credits_remaining, _ = check_anonymous_credits(ip_identifier, Decimal(0), user_timezone)
+                        _, ip_credits_remaining, _ = check_anonymous_credits(
+                            ip_identifier, Decimal(0), user_timezone
+                        )
                         fingerprint_credits_remaining = ip_credits_remaining
                         if req.browser_fingerprint:
                             fp_identifier = f"fp:{req.browser_fingerprint}"
-                            _, fingerprint_credits_remaining, _ = check_anonymous_credits(fp_identifier, Decimal(0), user_timezone)
+                            _, fingerprint_credits_remaining, _ = check_anonymous_credits(
+                                fp_identifier, Decimal(0), user_timezone
+                            )
                         credits_remaining = min(
                             ip_credits_remaining,
-                            (fingerprint_credits_remaining if req.browser_fingerprint else ip_credits_remaining),
+                            (
+                                fingerprint_credits_remaining
+                                if req.browser_fingerprint
+                                else ip_credits_remaining
+                            ),
                         )
                 finally:
                     credit_db.close()
@@ -1691,14 +1812,22 @@ async def compare_stream(
                 # (in case of any other state changes, though this shouldn't normally happen)
                 if not user_id:
                     ip_identifier = f"ip:{client_ip}"
-                    _, ip_credits_remaining, _ = check_anonymous_credits(ip_identifier, Decimal(0), user_timezone)
+                    _, ip_credits_remaining, _ = check_anonymous_credits(
+                        ip_identifier, Decimal(0), user_timezone
+                    )
                     fingerprint_credits_remaining = ip_credits_remaining
                     if req.browser_fingerprint:
                         fp_identifier = f"fp:{req.browser_fingerprint}"
-                        _, fingerprint_credits_remaining, _ = check_anonymous_credits(fp_identifier, Decimal(0), user_timezone)
+                        _, fingerprint_credits_remaining, _ = check_anonymous_credits(
+                            fp_identifier, Decimal(0), user_timezone
+                        )
                     credits_remaining = min(
                         ip_credits_remaining,
-                        (fingerprint_credits_remaining if req.browser_fingerprint else ip_credits_remaining),
+                        (
+                            fingerprint_credits_remaining
+                            if req.browser_fingerprint
+                            else ip_credits_remaining
+                        ),
                     )
 
                 # Extended tier usage tracking removed - no longer needed
@@ -1707,14 +1836,22 @@ async def compare_stream(
             # This is especially important for unregistered users where credits are stored in memory
             if not user_id and successful_models > 0:
                 ip_identifier = f"ip:{client_ip}"
-                _, ip_credits_remaining, _ = check_anonymous_credits(ip_identifier, Decimal(0), user_timezone)
+                _, ip_credits_remaining, _ = check_anonymous_credits(
+                    ip_identifier, Decimal(0), user_timezone
+                )
                 fingerprint_credits_remaining = ip_credits_remaining
                 if req.browser_fingerprint:
                     fp_identifier = f"fp:{req.browser_fingerprint}"
-                    _, fingerprint_credits_remaining, _ = check_anonymous_credits(fp_identifier, Decimal(0), user_timezone)
+                    _, fingerprint_credits_remaining, _ = check_anonymous_credits(
+                        fp_identifier, Decimal(0), user_timezone
+                    )
                     credits_remaining = min(
                         ip_credits_remaining,
-                        (fingerprint_credits_remaining if req.browser_fingerprint else ip_credits_remaining),
+                        (
+                            fingerprint_credits_remaining
+                            if req.browser_fingerprint
+                            else ip_credits_remaining
+                        ),
                     )
 
             # Calculate processing time
@@ -1730,7 +1867,9 @@ async def compare_stream(
                 "processing_time_ms": processing_time_ms,
                 # Credit-based fields
                 "credits_used": float(total_credits_used),
-                "credits_remaining": int(credits_remaining),  # Convert to int for JSON serialization
+                "credits_remaining": int(
+                    credits_remaining
+                ),  # Convert to int for JSON serialization
             }
 
             # Log usage to database SYNCHRONOUSLY (not in background) to ensure database is updated
@@ -1749,14 +1888,17 @@ async def compare_stream(
                 models_successful=successful_models,
                 models_failed=failed_models,
                 processing_time_ms=processing_time_ms,
-                estimated_cost=len(req.models) * 0.0166,  # Legacy field - keep for backward compatibility
+                estimated_cost=len(req.models)
+                * 0.0166,  # Legacy field - keep for backward compatibility
                 is_overage=is_overage,
                 overage_charge=overage_charge,
                 # Credit-based fields
                 input_tokens=total_input_tokens if total_input_tokens > 0 else None,
                 output_tokens=total_output_tokens if total_output_tokens > 0 else None,
                 total_tokens=(
-                    total_input_tokens + total_output_tokens if (total_input_tokens > 0 or total_output_tokens > 0) else None
+                    total_input_tokens + total_output_tokens
+                    if (total_input_tokens > 0 or total_output_tokens > 0)
+                    else None
                 ),
                 effective_tokens=total_effective_tokens if total_effective_tokens > 0 else None,
                 credits_used=total_credits_used,  # Store charged credits (minimum 1 per comparison)
@@ -1774,12 +1916,15 @@ async def compare_stream(
 
             # Save conversation to database for authenticated users
             if user_id and successful_models > 0:
+
                 def save_conversation_to_db():
                     """Save conversation and messages to database."""
                     conv_db = SessionLocal()
                     try:
                         # Determine if this is a follow-up or new conversation
-                        is_follow_up = bool(req.conversation_history and len(req.conversation_history) > 0)
+                        is_follow_up = bool(
+                            req.conversation_history and len(req.conversation_history) > 0
+                        )
 
                         # Try to find existing conversation if this is a follow-up
                         existing_conversation = None
@@ -1824,10 +1969,15 @@ async def compare_stream(
 
                                 for conv in all_user_conversations:
                                     try:
-                                        conv_models = json.loads(conv.models_used) if conv.models_used else []
+                                        conv_models = (
+                                            json.loads(conv.models_used) if conv.models_used else []
+                                        )
                                         # Match by models AND original input_data to ensure correct conversation
                                         models_match = sorted(conv_models) == req_models_sorted
-                                        input_matches = original_input_data and conv.input_data == original_input_data
+                                        input_matches = (
+                                            original_input_data
+                                            and conv.input_data == original_input_data
+                                        )
 
                                         # Additional safeguard: if timestamps are available in future,
                                         # we could also match by comparing conversation.created_at with
@@ -1892,32 +2042,44 @@ async def compare_stream(
 
                             # Sum up input_tokens from all previous user messages
                             sum_previous_user_tokens = sum(
-                                msg.input_tokens for msg in previous_user_messages if msg.input_tokens is not None
+                                msg.input_tokens
+                                for msg in previous_user_messages
+                                if msg.input_tokens is not None
                             )
 
                             # Sum up output_tokens from all previous assistant messages
                             # When assistant messages are sent back to OpenRouter as conversation history,
                             # they count as input tokens, so we use their output_tokens value
                             sum_previous_assistant_tokens = sum(
-                                msg.output_tokens for msg in previous_assistant_messages if msg.output_tokens is not None
+                                msg.output_tokens
+                                for msg in previous_assistant_messages
+                                if msg.output_tokens is not None
                             )
 
                             # Total previous tokens = user messages + assistant messages
-                            sum_previous_tokens = sum_previous_user_tokens + sum_previous_assistant_tokens
+                            sum_previous_tokens = (
+                                sum_previous_user_tokens + sum_previous_assistant_tokens
+                            )
 
                             # Check if we have valid previous token data
                             # If no previous messages or previous messages don't have token data saved,
                             # we can't accurately calculate, so fall back to estimate
-                            has_previous_messages = previous_user_messages or previous_assistant_messages
+                            has_previous_messages = (
+                                previous_user_messages or previous_assistant_messages
+                            )
                             if not has_previous_messages or sum_previous_tokens == 0:
                                 # No previous messages or previous messages don't have token data
                                 # (likely from before this feature was implemented)
                                 # Fall back to estimate
                                 if req.models:
                                     try:
-                                        user_input_tokens = estimate_token_count(req.input_data, model_id=req.models[0])
+                                        user_input_tokens = estimate_token_count(
+                                            req.input_data, model_id=req.models[0]
+                                        )
                                     except Exception:
-                                        user_input_tokens = estimate_token_count(req.input_data, model_id=None)
+                                        user_input_tokens = estimate_token_count(
+                                            req.input_data, model_id=None
+                                        )
                             else:
                                 # Calculate current prompt tokens
                                 # prompt_tokens from OpenRouter = previous user tokens + previous assistant tokens + current prompt tokens
@@ -1925,23 +2087,34 @@ async def compare_stream(
 
                                 # Sanity check: ensure we don't get negative or unreasonably small values
                                 # If calculation seems wrong, fall back to estimate
-                                if user_input_tokens < 0 or user_input_tokens < len(req.input_data) // 10:
+                                if (
+                                    user_input_tokens < 0
+                                    or user_input_tokens < len(req.input_data) // 10
+                                ):
                                     # Fallback to estimate if calculation seems incorrect
                                     if req.models:
                                         try:
-                                            user_input_tokens = estimate_token_count(req.input_data, model_id=req.models[0])
+                                            user_input_tokens = estimate_token_count(
+                                                req.input_data, model_id=req.models[0]
+                                            )
                                         except Exception:
-                                            user_input_tokens = estimate_token_count(req.input_data, model_id=None)
+                                            user_input_tokens = estimate_token_count(
+                                                req.input_data, model_id=None
+                                            )
                         else:
                             # New conversation or no usage data: use estimate
                             # For new conversations, prompt_tokens includes system message tokens
                             # which we don't track separately, so estimate is more practical
                             if req.models:
                                 try:
-                                    user_input_tokens = estimate_token_count(req.input_data, model_id=req.models[0])
+                                    user_input_tokens = estimate_token_count(
+                                        req.input_data, model_id=req.models[0]
+                                    )
                                 except Exception:
                                     # Fallback: estimate without model-specific tokenizer
-                                    user_input_tokens = estimate_token_count(req.input_data, model_id=None)
+                                    user_input_tokens = estimate_token_count(
+                                        req.input_data, model_id=None
+                                    )
 
                         # Save user message (current prompt)
                         # For new conversations, this is the first message
@@ -2060,7 +2233,8 @@ async def compare_stream(
                     "input_length": len(req.input_data),
                     "models_requested": len(req.models),
                     "models_successful": successful_models,
-                    "models_failed": failed_models + (len(req.models) - successful_models - failed_models),
+                    "models_failed": failed_models
+                    + (len(req.models) - successful_models - failed_models),
                     "timestamp": datetime.now().isoformat(),
                     "processing_time_ms": processing_time_ms,
                     "credits_used": float(total_credits_used) if successful_models > 0 else 0.0,
@@ -2078,7 +2252,7 @@ async def compare_stream(
 @router.get("/conversations", response_model=list[ConversationSummary])
 async def get_conversations(
     db: Session = Depends(get_db),
-    current_user: Optional[User] = Depends(get_current_user),
+    current_user: User | None = Depends(get_current_user),
 ):
     """Get list of user's conversations, limited by subscription tier."""
     if not current_user:
@@ -2159,7 +2333,7 @@ async def get_conversations(
 async def get_conversation(
     conversation_id: int,
     db: Session = Depends(get_db),
-    current_user: Optional[User] = Depends(get_current_user),
+    current_user: User | None = Depends(get_current_user),
 ):
     """Get full conversation with all messages."""
     if not current_user:
@@ -2206,7 +2380,9 @@ async def get_conversation(
             .all()
         )
         already_broken_out_models = [
-            breakout.breakout_model_id for breakout in existing_breakouts if breakout.breakout_model_id is not None
+            breakout.breakout_model_id
+            for breakout in existing_breakouts
+            if breakout.breakout_model_id is not None
         ]
 
     # Convert messages to schema format
@@ -2249,10 +2425,10 @@ async def get_conversation(
 @router.get("/credits/balance")
 async def get_credit_balance(
     db: Session = Depends(get_db),
-    current_user: Optional[User] = Depends(get_current_user),
+    current_user: User | None = Depends(get_current_user),
     request: Request = None,
-    fingerprint: Optional[str] = None,
-    timezone: Optional[str] = None,
+    fingerprint: str | None = None,
+    timezone: str | None = None,
 ):
     """
     Get current credit balance and usage statistics.
@@ -2284,132 +2460,151 @@ async def get_credit_balance(
             "period_type": stats["period_type"],
             "subscription_tier": stats["subscription_tier"],
         }
-    else:
-        # Unregistered user - calculate credits from database (persists across server restarts)
-        client_ip = get_client_ip(request) if request else "unknown"
-        credits_allocated = DAILY_CREDIT_LIMITS.get("unregistered", 50)
+    # Unregistered user - calculate credits from database (persists across server restarts)
+    client_ip = get_client_ip(request) if request else "unknown"
+    credits_allocated = DAILY_CREDIT_LIMITS.get("unregistered", 50)
 
-        # Get timezone from query parameter or header, default to UTC
-        import pytz
-        from datetime import timezone as dt_timezone
+    # Get timezone from query parameter or header, default to UTC
 
-        user_timezone = "UTC"
-        if timezone:
+    import pytz
+
+    user_timezone = "UTC"
+    if timezone:
+        try:
+            pytz.timezone(timezone)
+            user_timezone = timezone
+        except (pytz.exceptions.UnknownTimeZoneError, AttributeError):
+            pass
+    elif request:
+        header_tz = request.headers.get("X-Timezone")
+        if header_tz:
             try:
-                pytz.timezone(timezone)
-                user_timezone = timezone
+                pytz.timezone(header_tz)
+                user_timezone = header_tz
             except (pytz.exceptions.UnknownTimeZoneError, AttributeError):
                 pass
-        elif request:
-            header_tz = request.headers.get("X-Timezone")
-            if header_tz:
-                try:
-                    pytz.timezone(header_tz)
-                    user_timezone = header_tz
-                except (pytz.exceptions.UnknownTimeZoneError, AttributeError):
-                    pass
 
-        # Calculate credits used today from UsageLog (database) - this persists across restarts
-        # Use timezone-aware date range for accurate daily reset
-        from ..rate_limiting import _get_local_date, _validate_timezone
+    # Calculate credits used today from UsageLog (database) - this persists across restarts
+    # Use timezone-aware date range for accurate daily reset
+    from ..rate_limiting import _get_local_date, _validate_timezone
 
-        user_timezone = _validate_timezone(user_timezone)
-        tz = pytz.timezone(user_timezone)
-        now_local = datetime.now(tz)
-        today_start_utc = now_local.replace(hour=0, minute=0, second=0, microsecond=0).astimezone(dt_timezone.utc)
-        today_end_utc = (
-            (now_local + timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0).astimezone(dt_timezone.utc)
-        )
+    user_timezone = _validate_timezone(user_timezone)
+    tz = pytz.timezone(user_timezone)
+    now_local = datetime.now(tz)
+    today_start_utc = now_local.replace(hour=0, minute=0, second=0, microsecond=0).astimezone(UTC)
+    today_end_utc = (
+        (now_local + timedelta(days=1))
+        .replace(hour=0, minute=0, second=0, microsecond=0)
+        .astimezone(UTC)
+    )
 
-        # Query UsageLog for credits used today by IP (using timezone-aware date range)
-        ip_credits_query = db.query(func.sum(UsageLog.credits_used)).filter(
+    # Query UsageLog for credits used today by IP (using timezone-aware date range)
+    ip_credits_query = db.query(func.sum(UsageLog.credits_used)).filter(
+        UsageLog.user_id.is_(None),  # Anonymous users only
+        UsageLog.ip_address == client_ip,
+        UsageLog.created_at >= today_start_utc,
+        UsageLog.created_at < today_end_utc,
+        UsageLog.credits_used.isnot(None),
+    )
+    ip_credits_used = ip_credits_query.scalar() or Decimal(0)
+    # Round UP to be conservative - never give free credits
+    ip_credits_used_rounded = (
+        int(ip_credits_used.quantize(Decimal("1"), rounding=ROUND_CEILING))
+        if ip_credits_used > 0
+        else 0
+    )
+    ip_credits_remaining = max(0, credits_allocated - ip_credits_used_rounded)
+
+    # Query UsageLog for credits used today by fingerprint (if provided, using timezone-aware date range)
+    fingerprint_credits_remaining = ip_credits_remaining
+    fp_credits_used = Decimal(0)
+    if fingerprint:
+        fp_credits_query = db.query(func.sum(UsageLog.credits_used)).filter(
             UsageLog.user_id.is_(None),  # Anonymous users only
-            UsageLog.ip_address == client_ip,
+            UsageLog.browser_fingerprint == fingerprint,
             UsageLog.created_at >= today_start_utc,
             UsageLog.created_at < today_end_utc,
             UsageLog.credits_used.isnot(None),
         )
-        ip_credits_used = ip_credits_query.scalar() or Decimal(0)
+        fp_credits_used = fp_credits_query.scalar() or Decimal(0)
         # Round UP to be conservative - never give free credits
-        ip_credits_used_rounded = int(ip_credits_used.quantize(Decimal("1"), rounding=ROUND_CEILING)) if ip_credits_used > 0 else 0
-        ip_credits_remaining = max(0, credits_allocated - ip_credits_used_rounded)
+        fp_credits_used_rounded = (
+            int(fp_credits_used.quantize(Decimal("1"), rounding=ROUND_CEILING))
+            if fp_credits_used > 0
+            else 0
+        )
+        fingerprint_credits_remaining = max(0, credits_allocated - fp_credits_used_rounded)
 
-        # Query UsageLog for credits used today by fingerprint (if provided, using timezone-aware date range)
-        fingerprint_credits_remaining = ip_credits_remaining
-        fp_credits_used = Decimal(0)
-        if fingerprint:
-            fp_credits_query = db.query(func.sum(UsageLog.credits_used)).filter(
-                UsageLog.user_id.is_(None),  # Anonymous users only
-                UsageLog.browser_fingerprint == fingerprint,
-                UsageLog.created_at >= today_start_utc,
-                UsageLog.created_at < today_end_utc,
-                UsageLog.credits_used.isnot(None),
-            )
-            fp_credits_used = fp_credits_query.scalar() or Decimal(0)
-            # Round UP to be conservative - never give free credits
-            fp_credits_used_rounded = (
-                int(fp_credits_used.quantize(Decimal("1"), rounding=ROUND_CEILING)) if fp_credits_used > 0 else 0
-            )
-            fingerprint_credits_remaining = max(0, credits_allocated - fp_credits_used_rounded)
+    # Sync in-memory storage with database (for fast access in other endpoints)
+    # Round UP to be conservative - never give free credits
+    # BUT: Skip sync if admin reset flag is set (prevents overwriting admin reset)
+    from ..rate_limiting import anonymous_rate_limit_storage
 
-        # Sync in-memory storage with database (for fast access in other endpoints)
-        # Round UP to be conservative - never give free credits
-        # BUT: Skip sync if admin reset flag is set (prevents overwriting admin reset)
-        from ..rate_limiting import anonymous_rate_limit_storage, _get_local_date
+    ip_identifier = f"ip:{client_ip}"
+    today_str = _get_local_date(user_timezone)
 
-        ip_identifier = f"ip:{client_ip}"
-        today_str = _get_local_date(user_timezone)
+    # Check if admin reset flag is set - if so, use the reset count instead of DB value
+    ip_has_admin_reset = anonymous_rate_limit_storage[ip_identifier].get("_admin_reset", False)
+    if ip_has_admin_reset:
+        print(
+            f"[BALANCE] {ip_identifier}: admin reset flag detected, preserving reset count={anonymous_rate_limit_storage[ip_identifier].get('count', 0)}"
+        )
+        # Use the reset count from storage instead of database value
+        ip_credits_used_from_storage = anonymous_rate_limit_storage[ip_identifier].get("count", 0)
+        ip_credits_remaining = max(0, credits_allocated - ip_credits_used_from_storage)
+    else:
+        # Normal sync - update storage from database
+        anonymous_rate_limit_storage[ip_identifier] = {
+            "count": (
+                int(ip_credits_used.quantize(Decimal("1"), rounding=ROUND_CEILING))
+                if ip_credits_used > 0
+                else 0
+            ),
+            "date": today_str,
+            "timezone": user_timezone,
+            "first_seen": anonymous_rate_limit_storage[ip_identifier].get("first_seen")
+            or datetime.now(UTC),
+        }
 
-        # Check if admin reset flag is set - if so, use the reset count instead of DB value
-        ip_has_admin_reset = anonymous_rate_limit_storage[ip_identifier].get("_admin_reset", False)
-        if ip_has_admin_reset:
+    if fingerprint:
+        fp_identifier = f"fp:{fingerprint}"
+        fp_has_admin_reset = anonymous_rate_limit_storage[fp_identifier].get("_admin_reset", False)
+        if fp_has_admin_reset:
             print(
-                f"[BALANCE] {ip_identifier}: admin reset flag detected, preserving reset count={anonymous_rate_limit_storage[ip_identifier].get('count', 0)}"
+                f"[BALANCE] {fp_identifier}: admin reset flag detected, preserving reset count={anonymous_rate_limit_storage[fp_identifier].get('count', 0)}"
             )
             # Use the reset count from storage instead of database value
-            ip_credits_used_from_storage = anonymous_rate_limit_storage[ip_identifier].get("count", 0)
-            ip_credits_remaining = max(0, credits_allocated - ip_credits_used_from_storage)
+            fp_credits_used_from_storage = anonymous_rate_limit_storage[fp_identifier].get(
+                "count", 0
+            )
+            fingerprint_credits_remaining = max(0, credits_allocated - fp_credits_used_from_storage)
         else:
             # Normal sync - update storage from database
-            anonymous_rate_limit_storage[ip_identifier] = {
-                "count": (int(ip_credits_used.quantize(Decimal("1"), rounding=ROUND_CEILING)) if ip_credits_used > 0 else 0),
+            anonymous_rate_limit_storage[fp_identifier] = {
+                "count": (
+                    int(fp_credits_used.quantize(Decimal("1"), rounding=ROUND_CEILING))
+                    if fp_credits_used > 0
+                    else 0
+                ),
                 "date": today_str,
                 "timezone": user_timezone,
-                "first_seen": anonymous_rate_limit_storage[ip_identifier].get("first_seen") or datetime.now(dt_timezone.utc),
+                "first_seen": anonymous_rate_limit_storage[fp_identifier].get("first_seen")
+                or datetime.now(UTC),
             }
 
-        if fingerprint:
-            fp_identifier = f"fp:{fingerprint}"
-            fp_has_admin_reset = anonymous_rate_limit_storage[fp_identifier].get("_admin_reset", False)
-            if fp_has_admin_reset:
-                print(
-                    f"[BALANCE] {fp_identifier}: admin reset flag detected, preserving reset count={anonymous_rate_limit_storage[fp_identifier].get('count', 0)}"
-                )
-                # Use the reset count from storage instead of database value
-                fp_credits_used_from_storage = anonymous_rate_limit_storage[fp_identifier].get("count", 0)
-                fingerprint_credits_remaining = max(0, credits_allocated - fp_credits_used_from_storage)
-            else:
-                # Normal sync - update storage from database
-                anonymous_rate_limit_storage[fp_identifier] = {
-                    "count": (int(fp_credits_used.quantize(Decimal("1"), rounding=ROUND_CEILING)) if fp_credits_used > 0 else 0),
-                    "date": today_str,
-                    "timezone": user_timezone,
-                    "first_seen": anonymous_rate_limit_storage[fp_identifier].get("first_seen") or datetime.now(dt_timezone.utc),
-                }
+    # Use the most restrictive limit (lowest remaining credits) - same logic as compare endpoints
+    credits_remaining = min(
+        ip_credits_remaining,
+        fingerprint_credits_remaining if fingerprint else ip_credits_remaining,
+    )
 
-        # Use the most restrictive limit (lowest remaining credits) - same logic as compare endpoints
-        credits_remaining = min(
-            ip_credits_remaining,
-            fingerprint_credits_remaining if fingerprint else ip_credits_remaining,
-        )
-
-        return {
-            "credits_allocated": credits_allocated,
-            "credits_used_today": credits_allocated - credits_remaining,
-            "credits_remaining": credits_remaining,
-            "period_type": "daily",
-            "subscription_tier": "unregistered",
-        }
+    return {
+        "credits_allocated": credits_allocated,
+        "credits_used_today": credits_allocated - credits_remaining,
+        "credits_remaining": credits_remaining,
+        "period_type": "daily",
+        "subscription_tier": "unregistered",
+    }
 
 
 @router.get("/credits/usage")
@@ -2417,7 +2612,7 @@ async def get_credit_usage(
     page: int = 1,
     per_page: int = 50,
     db: Session = Depends(get_db),
-    current_user: Optional[User] = Depends(get_current_user),
+    current_user: User | None = Depends(get_current_user),
 ):
     """
     Get detailed credit usage history.
@@ -2475,7 +2670,7 @@ async def get_credit_usage(
 @router.delete("/conversations/all", status_code=status.HTTP_200_OK)
 async def delete_all_conversations(
     db: Session = Depends(get_db),
-    current_user: Optional[User] = Depends(get_current_user),
+    current_user: User | None = Depends(get_current_user),
 ):
     """Delete all conversations for the current user."""
     if not current_user:
@@ -2485,14 +2680,17 @@ async def delete_all_conversations(
     deleted_count = db.query(Conversation).filter(Conversation.user_id == current_user.id).delete()
     db.commit()
 
-    return {"message": f"Successfully deleted {deleted_count} conversation(s)", "deleted_count": deleted_count}
+    return {
+        "message": f"Successfully deleted {deleted_count} conversation(s)",
+        "deleted_count": deleted_count,
+    }
 
 
 @router.delete("/conversations/{conversation_id}", status_code=status.HTTP_200_OK)
 async def delete_conversation(
     conversation_id: int,
     db: Session = Depends(get_db),
-    current_user: Optional[User] = Depends(get_current_user),
+    current_user: User | None = Depends(get_current_user),
 ):
     """Delete a conversation and all its messages."""
     if not current_user:
@@ -2522,7 +2720,7 @@ async def delete_conversation(
 async def create_breakout_conversation(
     breakout_data: BreakoutConversationCreate,
     db: Session = Depends(get_db),
-    current_user: Optional[User] = Depends(get_current_user),
+    current_user: User | None = Depends(get_current_user),
 ):
     """
     Create a breakout conversation from a multi-model comparison.
@@ -2550,12 +2748,17 @@ async def create_breakout_conversation(
 
     # Verify the model_id was used in the parent conversation
     try:
-        parent_models_used = json.loads(parent_conversation.models_used) if parent_conversation.models_used else []
+        parent_models_used = (
+            json.loads(parent_conversation.models_used) if parent_conversation.models_used else []
+        )
     except (json.JSONDecodeError, TypeError):
         parent_models_used = []
 
     if breakout_data.model_id not in parent_models_used:
-        raise HTTPException(status_code=400, detail=f"Model {breakout_data.model_id} was not part of the parent conversation")
+        raise HTTPException(
+            status_code=400,
+            detail=f"Model {breakout_data.model_id} was not part of the parent conversation",
+        )
 
     # Get messages from parent conversation for this model
     parent_messages = (
@@ -2580,7 +2783,9 @@ async def create_breakout_conversation(
 
     # Copy relevant messages (user messages and assistant messages from the breakout model only)
     for msg in parent_messages:
-        if msg.role == "user" or (msg.role == "assistant" and msg.model_id == breakout_data.model_id):
+        if msg.role == "user" or (
+            msg.role == "assistant" and msg.model_id == breakout_data.model_id
+        ):
             new_message = ConversationMessageModel(
                 conversation_id=breakout_conversation.id,
                 model_id=msg.model_id,
@@ -2639,7 +2844,7 @@ async def create_breakout_conversation(
 @router.get("/user/preferences")
 async def get_user_preferences(
     db: Session = Depends(get_db),
-    current_user: Optional[User] = Depends(get_current_user),
+    current_user: User | None = Depends(get_current_user),
 ):
     """Get user preferences/settings."""
     from ..models import UserPreference
@@ -2672,10 +2877,14 @@ async def get_user_preferences(
     return UserPreferencesResponse(
         preferred_models=preferred_models,
         theme=preferences.theme or "light",
-        email_notifications=preferences.email_notifications if preferences.email_notifications is not None else True,
+        email_notifications=preferences.email_notifications
+        if preferences.email_notifications is not None
+        else True,
         usage_alerts=preferences.usage_alerts if preferences.usage_alerts is not None else True,
         zipcode=preferences.zipcode,
-        remember_state_on_logout=preferences.remember_state_on_logout if preferences.remember_state_on_logout is not None else False,
+        remember_state_on_logout=preferences.remember_state_on_logout
+        if preferences.remember_state_on_logout is not None
+        else False,
     )
 
 
@@ -2683,11 +2892,11 @@ async def get_user_preferences(
 async def update_user_preferences(
     preferences_data: dict = Body(...),
     db: Session = Depends(get_db),
-    current_user: Optional[User] = Depends(get_current_user),
+    current_user: User | None = Depends(get_current_user),
 ):
     """Update user preferences/settings."""
     from ..models import UserPreference
-    from ..schemas import UserPreferencesUpdate, UserPreferencesResponse
+    from ..schemas import UserPreferencesResponse, UserPreferencesUpdate
 
     if not current_user:
         raise HTTPException(status_code=401, detail="Authentication required")
@@ -2738,8 +2947,12 @@ async def update_user_preferences(
     return UserPreferencesResponse(
         preferred_models=preferred_models,
         theme=preferences.theme or "light",
-        email_notifications=preferences.email_notifications if preferences.email_notifications is not None else True,
+        email_notifications=preferences.email_notifications
+        if preferences.email_notifications is not None
+        else True,
         usage_alerts=preferences.usage_alerts if preferences.usage_alerts is not None else True,
         zipcode=preferences.zipcode,
-        remember_state_on_logout=preferences.remember_state_on_logout if preferences.remember_state_on_logout is not None else False,
+        remember_state_on_logout=preferences.remember_state_on_logout
+        if preferences.remember_state_on_logout is not None
+        else False,
     )

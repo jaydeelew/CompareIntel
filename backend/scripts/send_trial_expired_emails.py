@@ -8,12 +8,10 @@ an email reminding them that paid tiers are coming soon.
 Run this script daily via cron job (e.g., once per day).
 """
 
-import sys
-import os
-from pathlib import Path
-from datetime import datetime, timedelta, timezone
-from typing import List
 import asyncio
+import sys
+from datetime import UTC, datetime, timedelta
+from pathlib import Path
 
 # Add parent directory to path to import app modules
 backend_dir = Path(__file__).parent.parent.resolve()
@@ -33,57 +31,62 @@ for env_path in env_paths:
         load_dotenv(env_path, override=False)  # Don't override existing env vars
         break
 
-from app.database import SessionLocal
-from app.models import User
-from app.email_service import send_trial_expired_email, EMAIL_CONFIGURED
 from sqlalchemy import and_
 
+from app.database import SessionLocal
+from app.email_service import EMAIL_CONFIGURED, send_trial_expired_email
+from app.models import User
 
-def find_users_with_expired_trials(db) -> List[User]:
+
+def find_users_with_expired_trials(db) -> list[User]:
     """
     Find users whose trial has expired but haven't been sent the email yet.
-    
+
     We check for users where:
     - subscription_tier == 'free'
     - trial_ends_at is not None
     - trial_ends_at is in the past
     - trial_ends_at is within the last 7 days (to avoid sending old emails)
-    
+
     Args:
         db: Database session
-        
+
     Returns:
         List of User objects with expired trials
     """
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     # Only check trials that expired in the last 7 days to avoid sending emails for very old trials
     seven_days_ago = now - timedelta(days=7)
-    
+
     # Get all potential users first, then filter in Python to handle timezone issues
-    potential_users = db.query(User).filter(
-        and_(
-            User.subscription_tier == "free",
-            User.trial_ends_at.isnot(None),
-            User.is_verified == True,  # Only send to verified users
-            User.is_active == True,  # Only send to active users
+    potential_users = (
+        db.query(User)
+        .filter(
+            and_(
+                User.subscription_tier == "free",
+                User.trial_ends_at.isnot(None),
+                User.is_verified == True,  # Only send to verified users
+                User.is_active == True,  # Only send to active users
+            )
         )
-    ).all()
-    
+        .all()
+    )
+
     # Filter users with expired trials, handling both timezone-aware and naive datetimes
     users = []
     for user in potential_users:
         if user.trial_ends_at is None:
             continue
-        
+
         # Handle both timezone-aware and naive datetimes
         trial_end = user.trial_ends_at
         if trial_end.tzinfo is None:
-            trial_end = trial_end.replace(tzinfo=timezone.utc)
-        
+            trial_end = trial_end.replace(tzinfo=UTC)
+
         # Check if trial expired and is within the last 7 days
         if trial_end <= now and trial_end >= seven_days_ago:
             users.append(user)
-    
+
     return users
 
 
@@ -94,35 +97,37 @@ async def send_trial_expired_emails() -> None:
     if not EMAIL_CONFIGURED:
         print("Email service not configured - skipping trial expired emails")
         return
-    
+
     db = SessionLocal()
     try:
         users = find_users_with_expired_trials(db)
-        
+
         if not users:
             print("No users with expired trials found.")
             return
-        
+
         print(f"Found {len(users)} user(s) with expired trials.")
-        
+
         success_count = 0
         error_count = 0
-        
+
         for user in users:
             try:
-                print(f"Sending trial expired email to {user.email} (trial ended: {user.trial_ends_at})...")
+                print(
+                    f"Sending trial expired email to {user.email} (trial ended: {user.trial_ends_at})..."
+                )
                 await send_trial_expired_email(user.email)
                 success_count += 1
                 print(f"✓ Email sent successfully to {user.email}")
             except Exception as e:
                 error_count += 1
                 print(f"✗ Failed to send email to {user.email}: {str(e)}")
-        
-        print(f"\nSummary:")
+
+        print("\nSummary:")
         print(f"  Total users: {len(users)}")
         print(f"  Emails sent successfully: {success_count}")
         print(f"  Errors: {error_count}")
-        
+
     finally:
         db.close()
 
@@ -134,7 +139,7 @@ def main():
     print("=" * 60)
     print(f"Started at: {datetime.now().isoformat()}")
     print()
-    
+
     try:
         asyncio.run(send_trial_expired_emails())
         print()
@@ -142,6 +147,7 @@ def main():
     except Exception as e:
         print(f"\n✗ Script failed with error: {str(e)}")
         import traceback
+
         traceback.print_exc()
         sys.exit(1)
 

@@ -687,7 +687,7 @@ export function MainPage() {
   }
 
   if (typeof window !== 'undefined') {
-    ; (window as unknown as Record<string, unknown>).resetUsage = resetUsage
+    ;(window as unknown as Record<string, unknown>).resetUsage = resetUsage
   }
 
   const allModels = Object.values(modelsByProvider).flat()

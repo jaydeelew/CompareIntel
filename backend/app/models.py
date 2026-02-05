@@ -5,9 +5,24 @@ This module defines all database models including users, preferences,
 conversations, and usage tracking.
 """
 
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, Date, Text, ForeignKey, DECIMAL, BigInteger, UniqueConstraint
+from datetime import UTC
+
+from sqlalchemy import (
+    DECIMAL,
+    BigInteger,
+    Boolean,
+    Column,
+    Date,
+    DateTime,
+    ForeignKey,
+    Integer,
+    String,
+    Text,
+    UniqueConstraint,
+)
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
+
 from .database import Base
 
 
@@ -34,7 +49,9 @@ class User(Base):
     reset_token_expires = Column(DateTime)
 
     # Subscription details
-    subscription_tier = Column(String(50), default="free")  # 'free', 'starter', 'starter_plus', 'pro', 'pro_plus'
+    subscription_tier = Column(
+        String(50), default="free"
+    )  # 'free', 'starter', 'starter_plus', 'pro', 'pro_plus'
     subscription_status = Column(String(50), default="active")  # 'active', 'cancelled', 'expired'
     subscription_period = Column(String(20), default="monthly")  # 'monthly', 'yearly'
     subscription_start_date = Column(DateTime)
@@ -49,7 +66,9 @@ class User(Base):
     admin_permissions = Column(Text)  # JSON string of specific permissions
 
     # Testing features (admin/super_admin only)
-    mock_mode_enabled = Column(Boolean, default=False)  # Use mock responses instead of real API calls
+    mock_mode_enabled = Column(
+        Boolean, default=False
+    )  # Use mock responses instead of real API calls
 
     # Payment integration
     stripe_customer_id = Column(String(255), index=True)
@@ -59,12 +78,16 @@ class User(Base):
     overage_reset_date = Column(Date, default=func.current_date())  # Reset monthly
 
     # Credit-based system tracking
-    monthly_credits_allocated = Column(Integer, default=0)  # Credits allocated for current billing period
+    monthly_credits_allocated = Column(
+        Integer, default=0
+    )  # Credits allocated for current billing period
     credits_used_this_period = Column(Integer, default=0)  # Credits used in current billing period
     total_credits_used = Column(Integer, default=0)  # Lifetime total credits used
     billing_period_start = Column(DateTime)  # Start of current billing period (for paid tiers)
     billing_period_end = Column(DateTime)  # End of current billing period (for paid tiers)
-    credits_reset_at = Column(DateTime)  # When credits reset (daily for free/anonymous, monthly for paid)
+    credits_reset_at = Column(
+        DateTime
+    )  # When credits reset (daily for free/anonymous, monthly for paid)
 
     # Timestamps
     created_at = Column(DateTime, default=func.now())
@@ -72,12 +95,22 @@ class User(Base):
     last_access = Column(DateTime)  # Last time user accessed the website
 
     # Relationships
-    preferences = relationship("UserPreference", back_populates="user", cascade="all, delete-orphan", uselist=False)
-    conversations = relationship("Conversation", back_populates="user", cascade="all, delete-orphan")
+    preferences = relationship(
+        "UserPreference", back_populates="user", cascade="all, delete-orphan", uselist=False
+    )
+    conversations = relationship(
+        "Conversation", back_populates="user", cascade="all, delete-orphan"
+    )
     usage_logs = relationship("UsageLog", back_populates="user")
-    subscription_history = relationship("SubscriptionHistory", back_populates="user", cascade="all, delete-orphan")
-    payment_transactions = relationship("PaymentTransaction", back_populates="user", cascade="all, delete-orphan")
-    credit_transactions = relationship("CreditTransaction", back_populates="user", cascade="all, delete-orphan")
+    subscription_history = relationship(
+        "SubscriptionHistory", back_populates="user", cascade="all, delete-orphan"
+    )
+    payment_transactions = relationship(
+        "PaymentTransaction", back_populates="user", cascade="all, delete-orphan"
+    )
+    credit_transactions = relationship(
+        "CreditTransaction", back_populates="user", cascade="all, delete-orphan"
+    )
 
     @property
     def credits_remaining(self) -> int:
@@ -95,12 +128,13 @@ class User(Base):
         """
         if self.trial_ends_at is None:
             return False
-        from datetime import datetime, timezone
-        now = datetime.now(timezone.utc)
+        from datetime import datetime
+
+        now = datetime.now(UTC)
         # Handle both timezone-aware and naive datetimes
         trial_end = self.trial_ends_at
         if trial_end.tzinfo is None:
-            trial_end = trial_end.replace(tzinfo=timezone.utc)
+            trial_end = trial_end.replace(tzinfo=UTC)
         return now < trial_end
 
 
@@ -110,7 +144,9 @@ class UserPreference(Base):
     __tablename__ = "user_preferences"
 
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, unique=True)
+    user_id = Column(
+        Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, unique=True
+    )
 
     # Preferences stored as JSON strings
     preferred_models = Column(Text)  # JSON array of model IDs
@@ -145,7 +181,9 @@ class Conversation(Base):
     __tablename__ = "conversations"
 
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    user_id = Column(
+        Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
+    )
 
     # Conversation details
     title = Column(String(255))  # Optional user-defined title
@@ -153,9 +191,15 @@ class Conversation(Base):
     models_used = Column(Text, nullable=False)  # JSON array of model IDs
 
     # Breakout conversation support
-    conversation_type = Column(String(20), default="comparison", nullable=False)  # 'comparison' or 'breakout'
-    parent_conversation_id = Column(Integer, ForeignKey("conversations.id", ondelete="SET NULL"), nullable=True, index=True)
-    breakout_model_id = Column(String(255), nullable=True)  # The specific model that was broken out (for breakout type)
+    conversation_type = Column(
+        String(20), default="comparison", nullable=False
+    )  # 'comparison' or 'breakout'
+    parent_conversation_id = Column(
+        Integer, ForeignKey("conversations.id", ondelete="SET NULL"), nullable=True, index=True
+    )
+    breakout_model_id = Column(
+        String(255), nullable=True
+    )  # The specific model that was broken out (for breakout type)
 
     # Timestamps
     created_at = Column(DateTime, default=func.now(), index=True)
@@ -163,8 +207,12 @@ class Conversation(Base):
 
     # Relationships
     user = relationship("User", back_populates="conversations")
-    messages = relationship("ConversationMessage", back_populates="conversation", cascade="all, delete-orphan")
-    parent_conversation = relationship("Conversation", remote_side=[id], backref="breakout_conversations")
+    messages = relationship(
+        "ConversationMessage", back_populates="conversation", cascade="all, delete-orphan"
+    )
+    parent_conversation = relationship(
+        "Conversation", remote_side=[id], backref="breakout_conversations"
+    )
 
 
 class ConversationMessage(Base):
@@ -173,7 +221,9 @@ class ConversationMessage(Base):
     __tablename__ = "conversation_messages"
 
     id = Column(Integer, primary_key=True, index=True)
-    conversation_id = Column(Integer, ForeignKey("conversations.id", ondelete="CASCADE"), nullable=False, index=True)
+    conversation_id = Column(
+        Integer, ForeignKey("conversations.id", ondelete="CASCADE"), nullable=False, index=True
+    )
 
     # Message details
     model_id = Column(String(255))  # Which model generated this response (null for user messages)
@@ -201,7 +251,9 @@ class UsageLog(Base):
     __tablename__ = "usage_logs"
 
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)  # NULL for unregistered users
+    user_id = Column(
+        Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True
+    )  # NULL for unregistered users
 
     # Request details
     ip_address = Column(String(45))  # IPv4 or IPv6
@@ -218,7 +270,9 @@ class UsageLog(Base):
     # Cost tracking (MODEL-BASED)
     estimated_cost = Column(DECIMAL(10, 4))  # Estimated cost in USD
     is_overage = Column(Boolean, default=False)  # Whether this included overage model responses
-    overage_charge = Column(DECIMAL(10, 4), default=0)  # Charge for overage model responses (if applicable)
+    overage_charge = Column(
+        DECIMAL(10, 4), default=0
+    )  # Charge for overage model responses (if applicable)
 
     # Token and credit tracking (CREDITS-BASED SYSTEM)
     input_tokens = Column(Integer)  # Input tokens used
@@ -242,7 +296,9 @@ class SubscriptionHistory(Base):
     __tablename__ = "subscription_history"
 
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    user_id = Column(
+        Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
+    )
 
     # Subscription change details
     previous_tier = Column(String(50))  # Previous tier (null for initial subscription)
@@ -269,7 +325,9 @@ class PaymentTransaction(Base):
     __tablename__ = "payment_transactions"
 
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    user_id = Column(
+        Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
+    )
 
     # Stripe details
     stripe_payment_intent_id = Column(String(255), index=True)
@@ -293,11 +351,17 @@ class AdminActionLog(Base):
     __tablename__ = "admin_action_logs"
 
     id = Column(Integer, primary_key=True, index=True)
-    admin_user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
-    target_user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
+    admin_user_id = Column(
+        Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True
+    )
+    target_user_id = Column(
+        Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True
+    )
 
     # Action details
-    action_type = Column(String(100), nullable=False)  # 'user_create', 'user_update', 'user_delete', etc.
+    action_type = Column(
+        String(100), nullable=False
+    )  # 'user_create', 'user_update', 'user_delete', etc.
     action_description = Column(Text, nullable=False)
     details = Column(Text)  # JSON string with action-specific data
     ip_address = Column(String(45))  # IPv4 or IPv6
@@ -307,8 +371,12 @@ class AdminActionLog(Base):
     created_at = Column(DateTime, default=func.now(), index=True)
 
     # Relationships
-    admin_user = relationship("User", foreign_keys=[admin_user_id], backref="admin_actions_performed")
-    target_user = relationship("User", foreign_keys=[target_user_id], backref="admin_actions_received")
+    admin_user = relationship(
+        "User", foreign_keys=[admin_user_id], backref="admin_actions_performed"
+    )
+    target_user = relationship(
+        "User", foreign_keys=[target_user_id], backref="admin_actions_received"
+    )
 
 
 class CreditTransaction(Base):
@@ -317,13 +385,21 @@ class CreditTransaction(Base):
     __tablename__ = "credit_transactions"
 
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    user_id = Column(
+        Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
+    )
 
     # Transaction details
-    transaction_type = Column(String(50), nullable=False)  # 'allocation', 'usage', 'purchase', 'refund', 'expiration'
-    credits_amount = Column(Integer, nullable=False)  # Positive for allocations/purchases/refunds, negative for usage/expiration
+    transaction_type = Column(
+        String(50), nullable=False
+    )  # 'allocation', 'usage', 'purchase', 'refund', 'expiration'
+    credits_amount = Column(
+        Integer, nullable=False
+    )  # Positive for allocations/purchases/refunds, negative for usage/expiration
     description = Column(Text)  # Human-readable description of the transaction
-    related_usage_log_id = Column(Integer, ForeignKey("usage_logs.id", ondelete="SET NULL"), nullable=True, index=True)
+    related_usage_log_id = Column(
+        Integer, ForeignKey("usage_logs.id", ondelete="SET NULL"), nullable=True, index=True
+    )
 
     # Timestamp
     created_at = Column(DateTime, default=func.now(), index=True)
@@ -382,7 +458,9 @@ class AppSettings(Base):
     id = Column(Integer, primary_key=True, default=1)
 
     # Mock mode settings
-    anonymous_mock_mode_enabled = Column(Boolean, default=False)  # Enable mock mode for all unregistered users
+    anonymous_mock_mode_enabled = Column(
+        Boolean, default=False
+    )  # Enable mock mode for all unregistered users
 
     # Web search provider settings
     active_search_provider = Column(String(50), default=None)  # e.g., "brave", "tavily"

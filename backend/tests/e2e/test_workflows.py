@@ -8,8 +8,8 @@ Tests cover:
 - Rate limit handling workflows
 """
 
-import pytest  # type: ignore
 from unittest.mock import patch
+
 from fastapi import status
 
 
@@ -23,7 +23,7 @@ class TestUserRegistrationWorkflow:
         password = "SecurePassword123!"
 
         # Mock reCAPTCHA verification to bypass it in tests
-        with patch('app.routers.auth.verify_recaptcha', return_value=True):
+        with patch("app.routers.auth.verify_recaptcha", return_value=True):
             register_response = client.post(
                 "/api/auth/register",
                 json={
@@ -60,7 +60,9 @@ class TestUserRegistrationWorkflow:
 class TestAuthenticatedUserWorkflow:
     """Tests for authenticated user comparison workflow."""
 
-    def test_authenticated_user_tier_upgrade_workflow(self, authenticated_client, test_user_admin, db_session):
+    def test_authenticated_user_tier_upgrade_workflow(
+        self, authenticated_client, test_user_admin, db_session
+    ):
         """Test user tier upgrade workflow."""
         client, user, token, _ = authenticated_client
 
@@ -77,8 +79,10 @@ class TestAuthenticatedUserWorkflow:
         admin_client.headers = {"Authorization": f"Bearer {admin_token}"}
 
         # Upgrade user tier to pro (valid tier)
-        upgrade_response = admin_client.patch(f"/api/admin/users/{user.id}", json={"subscription_tier": "pro"})
-        
+        upgrade_response = admin_client.patch(
+            f"/api/admin/users/{user.id}", json={"subscription_tier": "pro"}
+        )
+
         # Refresh user to get updated tier
         db_session.refresh(user)
 
