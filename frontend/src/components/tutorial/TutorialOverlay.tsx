@@ -609,10 +609,13 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
       let left = 0
       const offset = 16 // Distance from target element
 
-      // For step 3 (enter-prompt) and step 6 (enter-prompt-2), dynamically switch between top/bottom based on scroll position
+      // For steps with dynamic positioning, switch between top/bottom based on scroll position
       const isEnterPromptStep =
         (step === 'enter-prompt' || step === 'enter-prompt-2') && config.position === 'bottom'
+      const isExpandProviderStep = step === 'expand-provider' && config.position === 'top'
+
       if (isEnterPromptStep) {
+        // Steps 3 and 6: Default to 'bottom', switch to 'top' when not enough space below
         const estimatedTooltipHeight = 280 // Estimated tooltip height
         const minSpaceNeeded = estimatedTooltipHeight + offset + 40 // Space needed for tooltip + margin
 
@@ -623,7 +626,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
 
         // Determine which position to use:
         // - Default to 'bottom' (tooltip below composer)
-        // - Switch to 'top' (tooltip above composer) if not enough space below OR if composer is too high in viewport
+        // - Switch to 'top' (tooltip above composer) if not enough space below
         const shouldUseTop = spaceBelow < minSpaceNeeded && spaceAbove >= minSpaceNeeded
 
         if (shouldUseTop) {
@@ -635,6 +638,32 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
           // Position tooltip below the composer (default)
           setEffectivePosition('bottom')
           top = rect.bottom + offset
+          left = rect.left + rect.width / 2
+        }
+      } else if (isExpandProviderStep) {
+        // Step 1: Default to 'top', switch to 'bottom' when not enough space above
+        const estimatedTooltipHeight = 280 // Estimated tooltip height
+        const minSpaceNeeded = estimatedTooltipHeight + offset + 40 // Space needed for tooltip + margin
+
+        // Calculate available space above the element
+        const spaceAbove = rect.top
+        // Calculate available space below the element
+        const spaceBelow = window.innerHeight - rect.bottom
+
+        // Determine which position to use:
+        // - Default to 'top' (tooltip above provider)
+        // - Switch to 'bottom' (tooltip below provider) if not enough space above
+        const shouldUseBottom = spaceAbove < minSpaceNeeded && spaceBelow >= minSpaceNeeded
+
+        if (shouldUseBottom) {
+          // Position tooltip below the provider
+          setEffectivePosition('bottom')
+          top = rect.bottom + offset
+          left = rect.left + rect.width / 2
+        } else {
+          // Position tooltip above the provider (default)
+          setEffectivePosition('top')
+          top = rect.top - offset
           left = rect.left + rect.width / 2
         }
       } else {
@@ -1182,25 +1211,30 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
         if (headerElement) {
           setTargetElement(headerElement)
           setIsVisible(true)
-          // Calculate position with viewport bounds clamping
+
+          // Calculate position with dynamic top/bottom switching based on available space
           const rect = headerElement.getBoundingClientRect()
           const offset = 16
-          const tooltipHeight = 280 // Estimated tooltip height
-          const minMargin = 20 // Minimum margin from viewport top
+          const estimatedTooltipHeight = 280
+          const minSpaceNeeded = estimatedTooltipHeight + offset + 40
 
-          // Position is 'top' for expand-provider - tooltip appears above element
-          // With CSS transform: translateY(-100%), the 'top' value is where tooltip BOTTOM sits
-          // So actual tooltip top = top - tooltipHeight
-          // To ensure tooltip stays on screen: top - tooltipHeight >= minMargin
-          // Therefore: top >= tooltipHeight + minMargin
-          const minTop = tooltipHeight + minMargin
-          let top = rect.top - offset
+          // Calculate available space
+          const spaceAbove = rect.top
+          const spaceBelow = window.innerHeight - rect.bottom
 
-          // ROBUST FIX: Clamp position so tooltip is always visible
-          if (top < minTop) {
-            top = minTop
+          // Determine which position to use:
+          // - Default to 'top' (tooltip above provider)
+          // - Switch to 'bottom' (tooltip below provider) if not enough space above
+          const shouldUseBottom = spaceAbove < minSpaceNeeded && spaceBelow >= minSpaceNeeded
+
+          let top: number
+          if (shouldUseBottom) {
+            setEffectivePosition('bottom')
+            top = rect.bottom + offset
+          } else {
+            setEffectivePosition('top')
+            top = rect.top - offset
           }
-
           const left = Math.max(200, Math.min(rect.left + rect.width / 2, window.innerWidth - 200))
           setOverlayPosition({ top, left })
         } else {
@@ -2338,15 +2372,15 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
       {!isLoadingStreamingPhase && isVisible && (
         <div
           ref={overlayRef}
-          className={`tutorial-tooltip tutorial-tooltip-${(step === 'enter-prompt' || step === 'enter-prompt-2') && effectivePosition ? effectivePosition : config.position}`}
+          className={`tutorial-tooltip tutorial-tooltip-${(step === 'expand-provider' || step === 'enter-prompt' || step === 'enter-prompt-2') && effectivePosition ? effectivePosition : config.position}`}
           style={{
             top: `${overlayPosition.top}px`,
             left: `${overlayPosition.left}px`,
             // Ensure z-index is high enough to appear above other elements
             zIndex: 10000,
-            // Add smooth transition for position changes (step 3 and step 6)
+            // Add smooth transition for position changes (step 1, step 3, and step 6)
             transition:
-              step === 'enter-prompt' || step === 'enter-prompt-2'
+              step === 'expand-provider' || step === 'enter-prompt' || step === 'enter-prompt-2'
                 ? 'top 0.3s ease-in-out, transform 0.3s ease-in-out'
                 : undefined,
           }}
@@ -2431,7 +2465,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
           </div>
           {/* Arrow pointing to target */}
           <div
-            className={`tutorial-arrow tutorial-arrow-${(step === 'enter-prompt' || step === 'enter-prompt-2') && effectivePosition ? effectivePosition : config.position}`}
+            className={`tutorial-arrow tutorial-arrow-${(step === 'expand-provider' || step === 'enter-prompt' || step === 'enter-prompt-2') && effectivePosition ? effectivePosition : config.position}`}
           />
         </div>
       )}
