@@ -1013,25 +1013,26 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
         if (headerElement) {
           setTargetElement(headerElement)
           setIsVisible(true)
-          // Calculate position with viewport bounds checking
+          // Calculate position with viewport bounds clamping
           const rect = headerElement.getBoundingClientRect()
           const offset = 16
           const tooltipHeight = 280 // Estimated tooltip height
-          // Position is 'top' for expand-provider - tooltip appears above element
-          const top = rect.top - offset
-          const left = rect.left + rect.width / 2
+          const minMargin = 20 // Minimum margin from viewport top
 
-          // Ensure tooltip stays within viewport - if tooltip would go off top, position below element
-          if (top - tooltipHeight < 0) {
-            // Tooltip would be cut off at top - scroll page to make room
-            const neededScroll = tooltipHeight + offset + 80 // 80px margin
-            const currentScroll = window.pageYOffset
-            const elementPageY = rect.top + currentScroll
-            const targetScroll = elementPageY - neededScroll
-            if (targetScroll > 0 && Math.abs(currentScroll - targetScroll) > 50) {
-              window.scrollTo({ top: targetScroll, behavior: 'smooth' })
-            }
+          // Position is 'top' for expand-provider - tooltip appears above element
+          // With CSS transform: translateY(-100%), the 'top' value is where tooltip BOTTOM sits
+          // So actual tooltip top = top - tooltipHeight
+          // To ensure tooltip stays on screen: top - tooltipHeight >= minMargin
+          // Therefore: top >= tooltipHeight + minMargin
+          const minTop = tooltipHeight + minMargin
+          let top = rect.top - offset
+
+          // ROBUST FIX: Clamp position so tooltip is always visible
+          if (top < minTop) {
+            top = minTop
           }
+
+          const left = Math.max(200, Math.min(rect.left + rect.width / 2, window.innerWidth - 200))
           setOverlayPosition({ top, left })
         }
       }
@@ -1078,24 +1079,26 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
         // This fixes production timing issues where main findElement fails but interval finds element
         setTargetElement(googleDropdown)
         setIsVisible(true)
-        // Calculate position with viewport bounds checking
+        // Calculate position with viewport bounds clamping
         const rect = googleDropdown.getBoundingClientRect()
         const offset = 16
         const tooltipHeight = 280 // Estimated tooltip height
-        // Position is 'top' for select-models - tooltip appears above element
-        const top = rect.top - offset
-        const left = rect.left + rect.width / 2
+        const minMargin = 20 // Minimum margin from viewport top
 
-        // Ensure tooltip stays within viewport - if tooltip would go off top, scroll page
-        if (top - tooltipHeight < 0) {
-          const neededScroll = tooltipHeight + offset + 80
-          const currentScroll = window.pageYOffset
-          const elementPageY = rect.top + currentScroll
-          const targetScroll = elementPageY - neededScroll
-          if (targetScroll > 0 && Math.abs(currentScroll - targetScroll) > 50) {
-            window.scrollTo({ top: targetScroll, behavior: 'smooth' })
-          }
+        // Position is 'top' for select-models - tooltip appears above element
+        // With CSS transform: translateY(-100%), the 'top' value is where tooltip BOTTOM sits
+        // So actual tooltip top = top - tooltipHeight
+        // To ensure tooltip stays on screen: top - tooltipHeight >= minMargin
+        // Therefore: top >= tooltipHeight + minMargin
+        const minTop = tooltipHeight + minMargin
+        let top = rect.top - offset
+
+        // ROBUST FIX: Clamp position so tooltip is always visible
+        if (top < minTop) {
+          top = minTop
         }
+
+        const left = Math.max(200, Math.min(rect.left + rect.width / 2, window.innerWidth - 200))
         setOverlayPosition({ top, left })
       }
     }
