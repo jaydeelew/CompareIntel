@@ -18,6 +18,24 @@ interface HTMLElementWithTutorialProps extends HTMLElement {
   __tutorialHeightInterval?: number
 }
 
+function getComposerElement(): HTMLElement | null {
+  const composer = document.querySelector('.composer') as HTMLElement | null
+  if (composer) return composer
+  const textarea = document.querySelector(
+    '[data-testid="comparison-input-textarea"]'
+  ) as HTMLElement | null
+  return (textarea?.closest('.composer') as HTMLElement | null) || null
+}
+
+function getComposerCutoutRects(composerElement: HTMLElement): DOMRect[] {
+  const inputWrapper = composerElement.querySelector(
+    '.composer-input-wrapper'
+  ) as HTMLElement | null
+  const toolbar = composerElement.querySelector('.composer-toolbar') as HTMLElement | null
+  const parts = [inputWrapper, toolbar].filter(Boolean) as HTMLElement[]
+  return (parts.length > 0 ? parts : [composerElement]).map(el => el.getBoundingClientRect())
+}
+
 export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
   step,
   onComplete,
@@ -145,7 +163,23 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
       heroHeightLockedRef.current = false
     }
 
-    // Lock hero section dimensions if not already locked
+    // Steps that need the composer visible - don't lock height for these
+    const needsComposerVisible =
+      step === 'enter-prompt' ||
+      step === 'enter-prompt-2' ||
+      step === 'submit-comparison' ||
+      step === 'submit-comparison-2' ||
+      step === 'history-dropdown' ||
+      step === 'save-selection'
+
+    // If we're on a step that needs the composer, don't lock and ensure hero can expand
+    if (needsComposerVisible) {
+      restoreHeroStyles()
+      heroHeightLockedRef.current = false
+      return
+    }
+
+    // Lock hero section dimensions if not already locked (only for steps that don't need composer)
     if (!heroHeightLockedRef.current && heroSection) {
       // Capture all dimensions immediately, before any operations
       const computedStyle = window.getComputedStyle(heroSection)
@@ -179,13 +213,30 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
     }
   }, [step])
 
-  // Ensure hero can expand during dropdown steps (history/save) on desktop
+  // Ensure hero can expand during steps where the composer (prompt + actions) or dropdowns must be visible.
+  // Without this, the "tutorial-height-locked" behavior can clip the composer, making step 3 appear broken
+  // (no composer visible => no meaningful cutout/tooltip targeting possible).
   useEffect(() => {
     const heroSection = document.querySelector('.hero-section') as HTMLElement
     if (!heroSection) return
 
-    if (step === 'history-dropdown' || step === 'save-selection') {
+    const needsHeroExpansion =
+      step === 'history-dropdown' ||
+      step === 'save-selection' ||
+      step === 'enter-prompt' ||
+      step === 'enter-prompt-2' ||
+      step === 'submit-comparison' ||
+      step === 'submit-comparison-2'
+
+    if (needsHeroExpansion) {
       heroSection.classList.add('tutorial-dropdown-hero-active')
+      // CRITICAL: Also remove inline styles that were set by the height-locking effect
+      // CSS !important can override inline styles, but removing them ensures no conflicts
+      heroSection.style.removeProperty('height')
+      heroSection.style.removeProperty('max-height')
+      heroSection.style.removeProperty('min-height')
+      heroSection.style.removeProperty('overflow')
+      heroSection.style.overflow = 'visible'
     } else {
       heroSection.classList.remove('tutorial-dropdown-hero-active')
     }
@@ -464,6 +515,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
     const config = TUTORIAL_STEPS_CONFIG[step]
     const isDropdownStep = step === 'history-dropdown' || step === 'save-selection'
     let scrollCheckFrame: number | null = null
+    let postScrollTimers: number[] = []
 
     const updatePosition = () => {
       const rect = targetElement.getBoundingClientRect()
@@ -572,6 +624,21 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
 
         const desiredElementTopInViewport = topMargin + tooltipOffset + estimatedTooltipHeight
         scrollTarget = window.pageYOffset + rect.top - desiredElementTopInViewport
+      } else if (step === 'enter-prompt' || step === 'enter-prompt-2') {
+        // Special handling for enter-prompt steps - the composer is below the model selection area
+        // The tooltip is positioned above the composer (position: 'top')
+        // We need to scroll so that there's room for the tooltip above the composer
+        // Use smaller estimates to position the composer higher in the viewport
+        const estimatedTooltipHeight = 200 // Reduced estimate for tighter positioning
+        const tooltipOffset = 16
+        const topMargin = 60 // Reduced margin from top
+
+        // Calculate where the element should be positioned in viewport after scroll
+        // so that the tooltip above it is fully visible with margin from top
+        const desiredElementTopInViewport = topMargin + tooltipOffset + estimatedTooltipHeight
+
+        // Calculate scroll position needed to achieve this
+        scrollTarget = window.pageYOffset + rect.top - desiredElementTopInViewport
       } else {
         // Default behavior: center the element in viewport
         const elementCenter = elementTop + rect.height / 2
@@ -587,10 +654,13 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
       })
     }
 
-    // If the target is offscreen for dropdown steps, hide overlay until scroll settles
+    // Determine if we need to delay tooltip reveal until scroll completes
     const rect = targetElement.getBoundingClientRect()
     const isTargetOffscreen = rect.bottom < 0 || rect.top > window.innerHeight
-    const shouldDelayReveal = isDropdownStep && isTargetOffscreen
+    const isEnterPromptStep = step === 'enter-prompt' || step === 'enter-prompt-2'
+    // Delay reveal for dropdown steps when target is offscreen, or ALWAYS for enter-prompt steps
+    // (enter-prompt needs scroll to position the composer correctly with room for tooltip above)
+    const shouldDelayReveal = (isDropdownStep && isTargetOffscreen) || isEnterPromptStep
 
     if (shouldDelayReveal) {
       setIsVisible(false)
@@ -627,6 +697,21 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
           if (stepRef.current !== step) return
           updatePosition()
           setIsVisible(true)
+          // Layout can continue to shift (CSS transitions, expanding/collapsing sections)
+          // after scroll stops, so re-run positioning a few times to stay aligned.
+          const t1 = window.setTimeout(() => {
+            if (stepRef.current !== step) return
+            updatePosition()
+          }, 150)
+          const t2 = window.setTimeout(() => {
+            if (stepRef.current !== step) return
+            updatePosition()
+          }, 350)
+          const t3 = window.setTimeout(() => {
+            if (stepRef.current !== step) return
+            updatePosition()
+          }, 700)
+          postScrollTimers = [t1, t2, t3]
         })
       }
     }, 100)
@@ -641,6 +726,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
       if (scrollCheckFrame !== null) {
         window.cancelAnimationFrame(scrollCheckFrame)
       }
+      postScrollTimers.forEach(t => window.clearTimeout(t))
     }
   }, [targetElement, step])
 
@@ -715,24 +801,24 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
       step === 'enter-prompt-2'
     let composerElement: HTMLElement | null = null
     if (shouldExcludeTextarea) {
-      composerElement = document.querySelector('.composer') as HTMLElement
+      composerElement = getComposerElement()
       if (composerElement) {
         composerElement.classList.add('tutorial-textarea-active')
-        // Calculate cutout position for backdrop mask
-        const rect = composerElement.getBoundingClientRect()
-        // For all textarea-related steps with rounded cutout, use tighter padding (outline 3px + offset 4px = 7px + 1px buffer)
-        const padding = 8
-        const cutout = {
-          top: rect.top - padding,
-          left: rect.left - padding,
-          right: rect.right + padding,
-          bottom: rect.bottom + padding,
-        }
+        // Calculate cutout position for backdrop mask.
+        // IMPORTANT: compute using the union of the textarea wrapper + toolbar since the composer
+        // can have negative margins and dynamic layout that makes a single rect less reliable.
+        const padding = 8 // tighter padding for rounded cutout
+        const rects = getComposerCutoutRects(composerElement)
+        const minTop = Math.min(...rects.map(r => r.top))
+        const minLeft = Math.min(...rects.map(r => r.left))
+        const maxRight = Math.max(...rects.map(r => r.right))
+        const maxBottom = Math.max(...rects.map(r => r.bottom))
+
         setTextareaCutout({
-          top: cutout.top,
-          left: cutout.left,
-          width: cutout.right - cutout.left,
-          height: cutout.bottom - cutout.top,
+          top: minTop - padding,
+          left: minLeft - padding,
+          width: maxRight - minLeft + padding * 2,
+          height: maxBottom - minTop + padding * 2,
         })
       } else {
         setTextareaCutout(null)
@@ -982,7 +1068,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
     if (step !== 'enter-prompt') return
 
     const ensureHighlightAndCutout = () => {
-      const composerElement = document.querySelector('.composer') as HTMLElement
+      const composerElement = getComposerElement()
       if (composerElement) {
         // Always force add highlight class (remove first to ensure it's applied fresh)
         // This handles cases where the class might have been removed by other effects
@@ -992,13 +1078,18 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
         // Ensure textarea-active class is present
         composerElement.classList.add('tutorial-textarea-active')
         // Ensure cutout is calculated - this handles cases where initial calculation was missed
-        const rect = composerElement.getBoundingClientRect()
         const padding = 8
+        const rects = getComposerCutoutRects(composerElement)
+        const minTop = Math.min(...rects.map(r => r.top))
+        const minLeft = Math.min(...rects.map(r => r.left))
+        const maxRight = Math.max(...rects.map(r => r.right))
+        const maxBottom = Math.max(...rects.map(r => r.bottom))
+
         setTextareaCutout({
-          top: rect.top - padding,
-          left: rect.left - padding,
-          width: rect.width + padding * 2,
-          height: rect.height + padding * 2,
+          top: minTop - padding,
+          left: minLeft - padding,
+          width: maxRight - minLeft + padding * 2,
+          height: maxBottom - minTop + padding * 2,
         })
       }
     }
@@ -1032,20 +1123,25 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
     if (step !== 'enter-prompt-2') return
 
     const ensureCutout = () => {
-      const composerElement = document.querySelector('.composer') as HTMLElement
+      const composerElement = getComposerElement()
       if (composerElement) {
         // Ensure textarea-active class is present
         if (!composerElement.classList.contains('tutorial-textarea-active')) {
           composerElement.classList.add('tutorial-textarea-active')
         }
         // Ensure cutout is calculated - this handles cases where initial calculation was missed
-        const rect = composerElement.getBoundingClientRect()
         const padding = 8
+        const rects = getComposerCutoutRects(composerElement)
+        const minTop = Math.min(...rects.map(r => r.top))
+        const minLeft = Math.min(...rects.map(r => r.left))
+        const maxRight = Math.max(...rects.map(r => r.right))
+        const maxBottom = Math.max(...rects.map(r => r.bottom))
+
         setTextareaCutout({
-          top: rect.top - padding,
-          left: rect.left - padding,
-          width: rect.width + padding * 2,
-          height: rect.height + padding * 2,
+          top: minTop - padding,
+          left: minLeft - padding,
+          width: maxRight - minLeft + padding * 2,
+          height: maxBottom - minTop + padding * 2,
         })
       }
     }
@@ -1274,7 +1370,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
     }
 
     const ensureDropdownActive = () => {
-      // Update button cutout position
+      // Update button cutout position and add highlight to button
       const historyToggleButton = document.querySelector('.history-toggle-button') as HTMLElement
       if (historyToggleButton) {
         const rect = historyToggleButton.getBoundingClientRect()
@@ -1286,6 +1382,32 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
           left: centerX,
           radius: radius,
         })
+        // Add highlight class to the button for visual emphasis
+        if (!historyToggleButton.classList.contains('tutorial-highlight')) {
+          historyToggleButton.classList.add('tutorial-highlight')
+        }
+      }
+
+      // Always set composer cutout from the start (not just when dropdown opens)
+      // This highlights the compose section along with the button
+      const composerElement = document.querySelector('.composer') as HTMLElement
+      if (composerElement) {
+        if (!composerElement.classList.contains('tutorial-dropdown-container-active')) {
+          composerElement.classList.add('tutorial-dropdown-container-active')
+        }
+        // Add highlight class to the composer for visual emphasis (green border)
+        if (!composerElement.classList.contains('tutorial-highlight')) {
+          composerElement.classList.add('tutorial-highlight')
+        }
+        // Always update cutout for composer section
+        const rect = composerElement.getBoundingClientRect()
+        const padding = 8
+        setDropdownCutout({
+          top: rect.top - padding,
+          left: rect.left - padding,
+          width: rect.right - rect.left + padding * 2,
+          height: rect.bottom - rect.top + padding * 2,
+        })
       }
 
       const historyDropdown = document.querySelector('.history-inline-list') as HTMLElement
@@ -1295,30 +1417,6 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
         if (!historyDropdown.classList.contains('tutorial-dropdown-active')) {
           historyDropdown.classList.add('tutorial-dropdown-active')
         }
-        // Also ensure parent container is above backdrop
-        const composerElement = historyDropdown.closest('.composer') as HTMLElement
-        if (composerElement) {
-          if (!composerElement.classList.contains('tutorial-dropdown-container-active')) {
-            composerElement.classList.add('tutorial-dropdown-container-active')
-          }
-          // Update cutout - always recalculate to ensure it's current
-          const rect = composerElement.getBoundingClientRect()
-          // Use tighter padding for rounded cutout
-          const padding = 8
-          setDropdownCutout({
-            top: rect.top - padding,
-            left: rect.left - padding,
-            width: rect.right - rect.left + padding * 2,
-            height: rect.bottom - rect.top + padding * 2,
-          })
-        }
-      } else {
-        // If dropdown was previously opened but is now closed, clear the dropdown cutout
-        // Keep button cutout visible
-        if (dropdownWasOpenedRef.current) {
-          setDropdownCutout(null)
-        }
-        // If dropdown doesn't exist yet and hasn't been opened, don't set cutout to null - wait for it to appear
       }
     }
 
@@ -1344,6 +1442,12 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
       ) as HTMLElement
       if (composerElement) {
         composerElement.classList.remove('tutorial-dropdown-container-active')
+        composerElement.classList.remove('tutorial-highlight')
+      }
+      // Clean up highlight from history button
+      const historyButton = document.querySelector('.history-toggle-button') as HTMLElement
+      if (historyButton) {
+        historyButton.classList.remove('tutorial-highlight')
       }
       setDropdownCutout(null)
       setButtonCutout(null)
@@ -1365,7 +1469,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
     }
 
     const ensureDropdownActive = () => {
-      // Update button cutout position (no highlight, just cutout)
+      // Update button cutout position and add highlight to button
       const savedSelectionsButton = document.querySelector(
         '.saved-selections-button'
       ) as HTMLElement
@@ -1379,6 +1483,32 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
           left: centerX,
           radius: radius,
         })
+        // Add highlight class to the button for visual emphasis
+        if (!savedSelectionsButton.classList.contains('tutorial-highlight')) {
+          savedSelectionsButton.classList.add('tutorial-highlight')
+        }
+      }
+
+      // Always set composer cutout from the start (not just when dropdown opens)
+      // This highlights the compose section along with the button
+      const composerElement = document.querySelector('.composer') as HTMLElement
+      if (composerElement) {
+        if (!composerElement.classList.contains('tutorial-dropdown-container-active')) {
+          composerElement.classList.add('tutorial-dropdown-container-active')
+        }
+        // Add highlight class to the composer for visual emphasis (green border)
+        if (!composerElement.classList.contains('tutorial-highlight')) {
+          composerElement.classList.add('tutorial-highlight')
+        }
+        // Always update cutout for composer section
+        const rect = composerElement.getBoundingClientRect()
+        const padding = 8
+        setDropdownCutout({
+          top: rect.top - padding,
+          left: rect.left - padding,
+          width: rect.right - rect.left + padding * 2,
+          height: rect.bottom - rect.top + padding * 2,
+        })
       }
 
       const savedSelectionsDropdown = document.querySelector(
@@ -1389,29 +1519,6 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
         dropdownWasOpenedRef.current = true
         if (!savedSelectionsDropdown.classList.contains('tutorial-dropdown-active')) {
           savedSelectionsDropdown.classList.add('tutorial-dropdown-active')
-        }
-        // Also ensure parent container is above backdrop
-        const composerElement = savedSelectionsDropdown.closest('.composer') as HTMLElement
-        if (composerElement) {
-          if (!composerElement.classList.contains('tutorial-dropdown-container-active')) {
-            composerElement.classList.add('tutorial-dropdown-container-active')
-          }
-          // Update cutout
-          const rect = composerElement.getBoundingClientRect()
-          // Use tighter padding for rounded cutout
-          const padding = 8
-          setDropdownCutout({
-            top: rect.top - padding,
-            left: rect.left - padding,
-            width: rect.right - rect.left + padding * 2,
-            height: rect.bottom - rect.top + padding * 2,
-          })
-        }
-      } else {
-        // If dropdown was previously opened but is now closed, clear the dropdown cutout
-        // Keep button cutout visible
-        if (dropdownWasOpenedRef.current) {
-          setDropdownCutout(null)
         }
       }
     }
@@ -1439,6 +1546,12 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
       ) as HTMLElement
       if (composerElement) {
         composerElement.classList.remove('tutorial-dropdown-container-active')
+        composerElement.classList.remove('tutorial-highlight')
+      }
+      // Clean up highlight from saved selections button
+      const savedButton = document.querySelector('.saved-selections-button') as HTMLElement
+      if (savedButton) {
+        savedButton.classList.remove('tutorial-highlight')
       }
       setDropdownCutout(null)
       setButtonCutout(null)
@@ -1456,22 +1569,20 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
     if (!shouldExcludeTextarea) return
 
     const updateTextareaCutout = () => {
-      const composerElement = document.querySelector('.composer') as HTMLElement
+      const composerElement = getComposerElement()
       if (composerElement) {
-        const rect = composerElement.getBoundingClientRect()
-        // For all textarea-related steps with rounded cutout, use tighter padding (outline 3px + offset 4px = 7px + 1px buffer)
         const padding = 8
-        const cutout = {
-          top: rect.top - padding,
-          left: rect.left - padding,
-          right: rect.right + padding,
-          bottom: rect.bottom + padding,
-        }
+        const rects = getComposerCutoutRects(composerElement)
+        const minTop = Math.min(...rects.map(r => r.top))
+        const minLeft = Math.min(...rects.map(r => r.left))
+        const maxRight = Math.max(...rects.map(r => r.right))
+        const maxBottom = Math.max(...rects.map(r => r.bottom))
+
         setTextareaCutout({
-          top: cutout.top,
-          left: cutout.left,
-          width: cutout.right - cutout.left,
-          height: cutout.bottom - cutout.top,
+          top: minTop - padding,
+          left: minLeft - padding,
+          width: maxRight - minLeft + padding * 2,
+          height: maxBottom - minTop + padding * 2,
         })
       } else {
         setTextareaCutout(null)
@@ -1863,8 +1974,10 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
         />
       )}
 
-      {/* Tooltip bubble - hidden during loading/streaming phase on submit steps */}
-      {!isLoadingStreamingPhase && (
+      {/* Tooltip bubble - hidden during loading/streaming phase on submit steps.
+          Also gate on isVisible so steps that require scrolling/layout settle (e.g. enter-prompt)
+          don't render a mis-positioned tooltip while the page is moving. */}
+      {!isLoadingStreamingPhase && isVisible && (
         <div
           ref={overlayRef}
           className={`tutorial-tooltip tutorial-tooltip-${config.position}`}
