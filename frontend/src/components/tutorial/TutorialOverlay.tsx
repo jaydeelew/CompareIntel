@@ -1,4 +1,5 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 
 import type { TutorialStep } from '../../hooks/useTutorial'
 
@@ -48,10 +49,12 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
   const heroHeightLockedRef = useRef<boolean>(false)
   const dropdownWasOpenedRef = useRef<boolean>(false)
   const hasAttemptedElementFindRef = useRef<boolean>(false)
+  const tooltipClampAttemptsRef = useRef<number>(0)
   const [targetElement, setTargetElement] = useState<HTMLElement | null>(null)
   const [highlightedElements, setHighlightedElements] = useState<HTMLElement[]>([])
   const [overlayPosition, setOverlayPosition] = useState({ top: 0, left: 0 })
   const [isVisible, setIsVisible] = useState(false)
+  const [portalRoot, setPortalRoot] = useState<HTMLElement | null>(null)
   const [textareaCutout, setTextareaCutout] = useState<{
     top: number
     left: number
@@ -109,6 +112,66 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
       setButtonCutout(null)
     }
   }, [step])
+
+  // Render the tutorial UI in a portal attached to <body> so `position: fixed` is truly viewport-fixed.
+  // This avoids cases where an ancestor has `contain/transform` which can break fixed positioning or clip the tooltip.
+  useEffect(() => {
+    if (typeof document === 'undefined') return
+
+    const existing = document.getElementById('tutorial-portal-root') as HTMLElement | null
+    if (existing) {
+      setPortalRoot(existing)
+      return
+    }
+
+    const el = document.createElement('div')
+    el.id = 'tutorial-portal-root'
+    document.body.appendChild(el)
+    setPortalRoot(el)
+
+    return () => {
+      if (el.parentNode) el.parentNode.removeChild(el)
+    }
+  }, [])
+
+  // Reset clamp attempts when the step changes.
+  useEffect(() => {
+    tooltipClampAttemptsRef.current = 0
+  }, [step])
+
+  // After the tooltip renders, clamp it fully into the viewport (regardless of content height/transform).
+  // This is a final safety net for production timing/layout differences.
+  useLayoutEffect(() => {
+    if (!isVisible) return
+    const el = overlayRef.current
+    if (!el) return
+
+    // Avoid infinite adjust loops
+    if (tooltipClampAttemptsRef.current > 8) return
+
+    const margin = 12
+    const rect = el.getBoundingClientRect()
+
+    let dx = 0
+    let dy = 0
+
+    if (rect.left < margin) dx = margin - rect.left
+    else if (rect.right > window.innerWidth - margin) {
+      dx = window.innerWidth - margin - rect.right
+    }
+
+    if (rect.top < margin) dy = margin - rect.top
+    else if (rect.bottom > window.innerHeight - margin) {
+      dy = window.innerHeight - margin - rect.bottom
+    }
+
+    if (Math.abs(dx) > 0.5 || Math.abs(dy) > 0.5) {
+      tooltipClampAttemptsRef.current += 1
+      setOverlayPosition(pos => ({ top: pos.top + dy, left: pos.left + dx }))
+    } else {
+      tooltipClampAttemptsRef.current = 0
+    }
+  }, [isVisible, step, overlayPosition.top, overlayPosition.left])
 
   // CRITICAL FIX: Force visibility immediately for key tutorial steps
   // This ensures tooltip appears in production even if main findElement has timing issues
@@ -1976,7 +2039,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
   // For submit steps, use textareaCutout if available, otherwise use targetCutout as fallback
   const textareaCutoutToUse = textareaCutout || (isSubmitStep ? targetCutout : null)
 
-  return (
+  const overlayUi = (
     <>
       {/* Backdrop - loading/streaming cutout takes priority during submit steps */}
       {isLoadingStreamingPhase ? (
@@ -2158,11 +2221,6 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
           style={{
             top: `${overlayPosition.top}px`,
             left: `${overlayPosition.left}px`,
-            // Ensure tooltip is visible even if position calculation fails
-            visibility:
-              overlayPosition.top === 0 && overlayPosition.left === 0 && !targetElement
-                ? 'hidden'
-                : 'visible',
             // Ensure z-index is high enough to appear above other elements
             zIndex: 10000,
           }}
@@ -2251,4 +2309,6 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
       )}
     </>
   )
+
+  return portalRoot ? createPortal(overlayUi, portalRoot) : overlayUi
 }
