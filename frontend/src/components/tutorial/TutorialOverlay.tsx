@@ -55,6 +55,8 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
   const [overlayPosition, setOverlayPosition] = useState({ top: 0, left: 0 })
   const [isVisible, setIsVisible] = useState(false)
   const [portalRoot, setPortalRoot] = useState<HTMLElement | null>(null)
+  // Dynamic position for step 3 - can switch between 'top' and 'bottom' based on scroll
+  const [effectivePosition, setEffectivePosition] = useState<'top' | 'bottom' | null>(null)
   const [textareaCutout, setTextareaCutout] = useState<{
     top: number
     left: number
@@ -134,9 +136,10 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
     }
   }, [])
 
-  // Reset clamp attempts when the step changes.
+  // Reset clamp attempts and effective position when the step changes.
   useEffect(() => {
     tooltipClampAttemptsRef.current = 0
+    setEffectivePosition(null)
   }, [step])
 
   // After the tooltip renders, clamp it fully into the viewport (regardless of content height/transform).
@@ -337,6 +340,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
       setButtonCutout(null)
       setLoadingStreamingCutout(null)
       setOverlayPosition({ top: 0, left: 0 })
+      setEffectivePosition(null)
       // Clean up any remaining tutorial classes when tutorial ends
       const composerElementActive = document.querySelector(
         '.composer.tutorial-textarea-active'
@@ -605,23 +609,54 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
       let left = 0
       const offset = 16 // Distance from target element
 
-      switch (config.position) {
-        case 'bottom':
-          top = rect.bottom + offset
-          left = rect.left + rect.width / 2
-          break
-        case 'top':
+      // For step 3 (enter-prompt) and step 6 (enter-prompt-2), dynamically switch between top/bottom based on scroll position
+      const isEnterPromptStep =
+        (step === 'enter-prompt' || step === 'enter-prompt-2') && config.position === 'bottom'
+      if (isEnterPromptStep) {
+        const estimatedTooltipHeight = 280 // Estimated tooltip height
+        const minSpaceNeeded = estimatedTooltipHeight + offset + 40 // Space needed for tooltip + margin
+
+        // Calculate available space below the composer
+        const spaceBelow = window.innerHeight - rect.bottom
+        // Calculate available space above the composer
+        const spaceAbove = rect.top
+
+        // Determine which position to use:
+        // - Default to 'bottom' (tooltip below composer)
+        // - Switch to 'top' (tooltip above composer) if not enough space below OR if composer is too high in viewport
+        const shouldUseTop = spaceBelow < minSpaceNeeded && spaceAbove >= minSpaceNeeded
+
+        if (shouldUseTop) {
+          // Position tooltip above the composer
+          setEffectivePosition('top')
           top = rect.top - offset
           left = rect.left + rect.width / 2
-          break
-        case 'left':
-          top = rect.top + rect.height / 2
-          left = rect.left - offset
-          break
-        case 'right':
-          top = rect.top + rect.height / 2
-          left = rect.right + offset
-          break
+        } else {
+          // Position tooltip below the composer (default)
+          setEffectivePosition('bottom')
+          top = rect.bottom + offset
+          left = rect.left + rect.width / 2
+        }
+      } else {
+        // For other steps, use config position
+        switch (config.position) {
+          case 'bottom':
+            top = rect.bottom + offset
+            left = rect.left + rect.width / 2
+            break
+          case 'top':
+            top = rect.top - offset
+            left = rect.left + rect.width / 2
+            break
+          case 'left':
+            top = rect.top + rect.height / 2
+            left = rect.left - offset
+            break
+          case 'right':
+            top = rect.top + rect.height / 2
+            left = rect.right + offset
+            break
+        }
       }
 
       setOverlayPosition({ top, left })
@@ -703,21 +738,40 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
 
         const desiredElementTopInViewport = topMargin + tooltipOffset + estimatedTooltipHeight
         scrollTarget = window.pageYOffset + rect.top - desiredElementTopInViewport
-      } else if (step === 'enter-prompt' || step === 'enter-prompt-2') {
-        // Special handling for enter-prompt steps - the composer is below the model selection area
-        // The tooltip is positioned above the composer (position: 'top')
-        // We need to scroll so that there's room for the tooltip above the composer
-        // Use smaller estimates to position the composer higher in the viewport
-        const estimatedTooltipHeight = 200 // Reduced estimate for tighter positioning
-        const tooltipOffset = 16
-        const topMargin = 60 // Reduced margin from top
+      } else if (step === 'enter-prompt') {
+        // Special handling for step 3 (enter-prompt) - tooltip is positioned BELOW the composer (position: 'bottom')
+        // We need to scroll so that both the composer and the tooltip below it are visible
+        const estimatedTooltipHeight = 280 // Estimated tooltip height
+        const tooltipOffset = 16 // Distance from composer to tooltip
+        const bottomMargin = 40 // Desired margin from bottom of viewport
 
         // Calculate where the element should be positioned in viewport after scroll
-        // so that the tooltip above it is fully visible with margin from top
-        const desiredElementTopInViewport = topMargin + tooltipOffset + estimatedTooltipHeight
+        // so that: composerBottom + tooltipOffset + tooltipHeight <= viewportHeight - bottomMargin
+        // Therefore: composerBottom <= viewportHeight - bottomMargin - tooltipOffset - tooltipHeight
+        const desiredComposerBottomInViewport =
+          window.innerHeight - bottomMargin - tooltipOffset - estimatedTooltipHeight
 
         // Calculate scroll position needed to achieve this
-        scrollTarget = window.pageYOffset + rect.top - desiredElementTopInViewport
+        // After scrolling, composerBottomInViewport = rect.bottom (current) - (scrollTarget - currentScroll)
+        // We want: rect.bottom - (scrollTarget - window.pageYOffset) = desiredComposerBottomInViewport
+        // So: scrollTarget = window.pageYOffset + rect.bottom - desiredComposerBottomInViewport
+        scrollTarget = window.pageYOffset + rect.bottom - desiredComposerBottomInViewport
+      } else if (step === 'enter-prompt-2') {
+        // Special handling for step 6 (enter-prompt-2) - same as step 3
+        // Tooltip is positioned BELOW the composer (position: 'bottom')
+        // We need to scroll so that both the composer and the tooltip below it are visible
+        const estimatedTooltipHeight = 280 // Estimated tooltip height
+        const tooltipOffset = 16 // Distance from composer to tooltip
+        const bottomMargin = 40 // Desired margin from bottom of viewport
+
+        // Calculate where the element should be positioned in viewport after scroll
+        // so that: composerBottom + tooltipOffset + tooltipHeight <= viewportHeight - bottomMargin
+        // Therefore: composerBottom <= viewportHeight - bottomMargin - tooltipOffset - tooltipHeight
+        const desiredComposerBottomInViewport =
+          window.innerHeight - bottomMargin - tooltipOffset - estimatedTooltipHeight
+
+        // Calculate scroll position needed to achieve this
+        scrollTarget = window.pageYOffset + rect.bottom - desiredComposerBottomInViewport
       } else {
         // Default behavior: center the element in viewport
         const elementCenter = elementTop + rect.height / 2
@@ -726,11 +780,44 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
       }
 
       // Scroll smoothly without affecting hero section layout
-      window.scrollTo({
+      // For step 3 (enter-prompt) and step 6 (enter-prompt-2), use slower, smoother scrolling
+      const scrollOptions: ScrollToOptions = {
         top: Math.max(0, scrollTarget),
         behavior: 'smooth',
         left: window.pageXOffset, // Keep horizontal position
-      })
+      }
+
+      if (step === 'enter-prompt' || step === 'enter-prompt-2') {
+        // Use a custom smooth scroll implementation for slower, smoother scrolling
+        const startScrollY = window.pageYOffset
+        const targetScrollY = Math.max(0, scrollTarget)
+        const distance = targetScrollY - startScrollY
+        const duration = 1500 // 1.5 seconds for smooth, slow scroll
+        const startTime = performance.now()
+
+        // Ease-in-out cubic function for smooth animation
+        const easeInOutCubic = (t: number): number => {
+          return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2
+        }
+
+        const animateScroll = (currentTime: number) => {
+          const elapsed = currentTime - startTime
+          const progress = Math.min(elapsed / duration, 1)
+          const easeProgress = easeInOutCubic(progress)
+
+          const currentScrollY = startScrollY + distance * easeProgress
+          window.scrollTo(0, currentScrollY)
+
+          if (progress < 1) {
+            requestAnimationFrame(animateScroll)
+          }
+        }
+
+        requestAnimationFrame(animateScroll)
+      } else {
+        // Use default smooth scroll for other steps
+        window.scrollTo(scrollOptions)
+      }
     }
 
     // Determine if we need to delay tooltip reveal until scroll completes
@@ -1258,10 +1345,27 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
         setTargetElement(composerElement)
         setIsVisible(true)
 
-        // Calculate position - tooltip should be BELOW the composer (position: 'bottom')
+        // Calculate position with dynamic top/bottom switching based on available space
         const rect = composerElement.getBoundingClientRect()
         const offset = 16
-        const top = rect.bottom + offset
+        const estimatedTooltipHeight = 280
+        const minSpaceNeeded = estimatedTooltipHeight + offset + 40
+
+        // Calculate available space
+        const spaceBelow = window.innerHeight - rect.bottom
+        const spaceAbove = rect.top
+
+        // Determine which position to use
+        const shouldUseTop = spaceBelow < minSpaceNeeded && spaceAbove >= minSpaceNeeded
+
+        let top: number
+        if (shouldUseTop) {
+          setEffectivePosition('top')
+          top = rect.top - offset
+        } else {
+          setEffectivePosition('bottom')
+          top = rect.bottom + offset
+        }
         const left = Math.max(200, Math.min(rect.left + rect.width / 2, window.innerWidth - 200))
         setOverlayPosition({ top, left })
       } else {
@@ -1329,10 +1433,27 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
         setTargetElement(composerElement)
         setIsVisible(true)
 
-        // Calculate position - tooltip should be BELOW the composer (position: 'bottom')
+        // Calculate position with dynamic top/bottom switching based on available space (like step 3)
         const rect = composerElement.getBoundingClientRect()
         const offset = 16
-        const top = rect.bottom + offset
+        const estimatedTooltipHeight = 280
+        const minSpaceNeeded = estimatedTooltipHeight + offset + 40
+
+        // Calculate available space
+        const spaceBelow = window.innerHeight - rect.bottom
+        const spaceAbove = rect.top
+
+        // Determine which position to use
+        const shouldUseTop = spaceBelow < minSpaceNeeded && spaceAbove >= minSpaceNeeded
+
+        let top: number
+        if (shouldUseTop) {
+          setEffectivePosition('top')
+          top = rect.top - offset
+        } else {
+          setEffectivePosition('bottom')
+          top = rect.bottom + offset
+        }
         const left = Math.max(200, Math.min(rect.left + rect.width / 2, window.innerWidth - 200))
         setOverlayPosition({ top, left })
       } else {
@@ -2217,12 +2338,17 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
       {!isLoadingStreamingPhase && isVisible && (
         <div
           ref={overlayRef}
-          className={`tutorial-tooltip tutorial-tooltip-${config.position}`}
+          className={`tutorial-tooltip tutorial-tooltip-${(step === 'enter-prompt' || step === 'enter-prompt-2') && effectivePosition ? effectivePosition : config.position}`}
           style={{
             top: `${overlayPosition.top}px`,
             left: `${overlayPosition.left}px`,
             // Ensure z-index is high enough to appear above other elements
             zIndex: 10000,
+            // Add smooth transition for position changes (step 3 and step 6)
+            transition:
+              step === 'enter-prompt' || step === 'enter-prompt-2'
+                ? 'top 0.3s ease-in-out, transform 0.3s ease-in-out'
+                : undefined,
           }}
         >
           <div className="tutorial-tooltip-content">
@@ -2304,7 +2430,9 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
             </div>
           </div>
           {/* Arrow pointing to target */}
-          <div className={`tutorial-arrow tutorial-arrow-${config.position}`} />
+          <div
+            className={`tutorial-arrow tutorial-arrow-${(step === 'enter-prompt' || step === 'enter-prompt-2') && effectivePosition ? effectivePosition : config.position}`}
+          />
         </div>
       )}
     </>
