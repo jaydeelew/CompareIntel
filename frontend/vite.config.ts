@@ -81,6 +81,24 @@ export default defineConfig({
         start_url: '/',
         orientation: 'portrait-primary',
         categories: ['productivity', 'utilities', 'developer tools'],
+        lang: 'en',
+        dir: 'ltr',
+        prefer_related_applications: false,
+        shortcuts: [
+          {
+            name: 'New Comparison',
+            short_name: 'New',
+            description: 'Start a new AI model comparison',
+            url: '/?action=new',
+            icons: [
+              {
+                src: 'CI_favicon_192x192.png',
+                sizes: '192x192',
+                type: 'image/png',
+              },
+            ],
+          },
+        ],
         icons: [
           // Standard icons
           {

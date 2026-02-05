@@ -166,6 +166,23 @@
   transform: translateY(0);
 }
 
+/* Focus styles for keyboard navigation - override global outline removal */
+.install-prompt-button:focus-visible,
+.install-prompt-dismiss:focus-visible,
+.install-prompt-close:focus-visible {
+  outline: 2px solid var(--primary-color) !important;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.2);
+}
+
+/* Fallback for browsers without :focus-visible support */
+.install-prompt-button:focus:not(:active),
+.install-prompt-dismiss:focus:not(:active),
+.install-prompt-close:focus:not(:active) {
+  outline: 2px solid var(--primary-color) !important;
+  outline-offset: 2px;
+}
+
 .install-prompt-dismiss {
   background: transparent;
   color: var(--text-muted);
@@ -237,6 +254,11 @@
 }
 
 .install-prompt-close:hover {
+  background: var(--bg-secondary);
+}
+
+/* Ensure close button maintains focus visibility */
+.install-prompt-close:focus-visible {
   background: var(--bg-secondary);
 }
 

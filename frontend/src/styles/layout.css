@@ -3,6 +3,28 @@
    Consistent spacing and structure
    ═══════════════════════════════════════════════════════════ */
 
+/* Skip Link - Accessibility feature for keyboard navigation */
+.skip-link {
+  position: absolute;
+  top: -100px;
+  left: 0;
+  background: var(--primary-color);
+  color: var(--text-inverse);
+  padding: var(--spacing-sm) var(--spacing-md);
+  z-index: 10000;
+  text-decoration: none;
+  border-radius: 0 0 var(--radius-md) 0;
+  font-weight: var(--font-semibold);
+  font-size: var(--font-sm);
+  transition: top var(--transition-base);
+}
+
+.skip-link:focus {
+  top: 0;
+  outline: 2px solid var(--text-inverse);
+  outline-offset: 2px;
+}
+
 /* Main Content Container */
 .app-main {
   flex: 1;

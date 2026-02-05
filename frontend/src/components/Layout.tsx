@@ -13,6 +13,7 @@ import { updatePageMeta } from '../utils/pageMeta'
 import { updatePageTitle } from '../utils/pageTitles'
 
 import { Footer } from './Footer'
+import { SkipLink } from './layout/SkipLink'
 
 export const Layout: React.FC = () => {
   const { pathname } = useLocation()
@@ -104,6 +105,8 @@ export const Layout: React.FC = () => {
 
   return (
     <>
+      {/* Skip link for keyboard navigation accessibility */}
+      <SkipLink />
       {/* Removed SEO H1 - Hero component provides the main H1 on homepage */}
       {/* Other pages have their own H1s in their page components */}
       <Outlet />

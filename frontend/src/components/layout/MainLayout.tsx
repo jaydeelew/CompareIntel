@@ -22,7 +22,11 @@ export interface MainLayoutProps {
  * ```
  */
 export const MainLayout: React.FC<MainLayoutProps> = ({ children, className = '' }) => {
-  return <main className={`app-main ${className}`.trim()}>{children}</main>
+  return (
+    <main id="main-content" className={`app-main ${className}`.trim()}>
+      {children}
+    </main>
+  )
 }
 
 MainLayout.displayName = 'MainLayout'

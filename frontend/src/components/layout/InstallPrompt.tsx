@@ -35,6 +35,9 @@ export function InstallPrompt() {
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false)
   const engagementTimerRef = useRef<NodeJS.Timeout | null>(null)
   const hasShownRef = useRef(false)
+  const modalRef = useRef<HTMLDivElement>(null)
+  const previousActiveElementRef = useRef<HTMLElement | null>(null)
+  const installButtonRef = useRef<HTMLButtonElement>(null)
 
   useEffect(() => {
     // Check for reduced motion preference
@@ -172,11 +175,75 @@ export function InstallPrompt() {
     setIsDismissed(true)
     localStorage.setItem('pwa-install-dismissed', Date.now().toString())
     setShowIOSInstructions(false)
+    // Return focus to install button if modal was open
+    if (previousActiveElementRef.current) {
+      previousActiveElementRef.current.focus()
+      previousActiveElementRef.current = null
+    } else if (installButtonRef.current) {
+      installButtonRef.current.focus()
+    }
   }
+
+  // Focus trap effect for modal
+  useEffect(() => {
+    if (!showIOSInstructions || !modalRef.current) return
+
+    // Store the previously focused element
+    previousActiveElementRef.current = document.activeElement as HTMLElement
+
+    // Get all focusable elements within the modal
+    const focusableSelectors =
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+    const focusableElements = Array.from(
+      modalRef.current.querySelectorAll<HTMLElement>(focusableSelectors)
+    )
+
+    if (focusableElements.length === 0) return
+
+    const firstElement = focusableElements[0]
+    const lastElement = focusableElements[focusableElements.length - 1]
+
+    // Focus the first element
+    firstElement.focus()
+
+    // Handle Tab key to trap focus
+    const handleTab = (e: KeyboardEvent) => {
+      if (e.key !== 'Tab') return
+
+      const currentFocus = document.activeElement as HTMLElement
+
+      if (e.shiftKey) {
+        // Shift + Tab
+        if (currentFocus === firstElement) {
+          e.preventDefault()
+          lastElement.focus()
+        }
+      } else {
+        // Tab
+        if (currentFocus === lastElement) {
+          e.preventDefault()
+          firstElement.focus()
+        }
+      }
+    }
+
+    document.addEventListener('keydown', handleTab)
+
+    return () => {
+      document.removeEventListener('keydown', handleTab)
+    }
+  }, [showIOSInstructions])
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Escape') {
       handleDismiss()
+    }
+    // Allow Enter and Space to activate buttons
+    if ((e.key === 'Enter' || e.key === ' ') && e.target === e.currentTarget) {
+      e.preventDefault()
+      if (e.currentTarget instanceof HTMLButtonElement) {
+        e.currentTarget.click()
+      }
     }
   }
 
@@ -196,6 +263,7 @@ export function InstallPrompt() {
         aria-labelledby="install-prompt-title"
       >
         <div
+          ref={modalRef}
           className="install-prompt-modal"
           onClick={e => e.stopPropagation()}
           onKeyDown={handleKeyDown}
@@ -203,6 +271,7 @@ export function InstallPrompt() {
           <button
             className="install-prompt-close"
             onClick={handleDismiss}
+            onKeyDown={handleKeyDown}
             aria-label="Close install instructions"
             type="button"
           >
@@ -251,8 +320,10 @@ export function InstallPrompt() {
         </div>
         <div className="install-prompt-actions">
           <button
+            ref={installButtonRef}
             className="install-prompt-button"
             onClick={handleInstallClick}
+            onKeyDown={handleKeyDown}
             type="button"
             aria-label="Install CompareIntel app"
           >
@@ -261,6 +332,7 @@ export function InstallPrompt() {
           <button
             className="install-prompt-dismiss"
             onClick={handleDismiss}
+            onKeyDown={handleKeyDown}
             aria-label="Dismiss install prompt"
             type="button"
           >
