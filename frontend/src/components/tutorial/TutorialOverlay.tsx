@@ -613,6 +613,8 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
       const isEnterPromptStep =
         (step === 'enter-prompt' || step === 'enter-prompt-2') && config.position === 'bottom'
       const isExpandProviderStep = step === 'expand-provider' && config.position === 'top'
+      const isSelectModelsStep = step === 'select-models' && config.position === 'top'
+      const isFollowUpStep = step === 'follow-up' && config.position === 'top'
 
       if (isEnterPromptStep) {
         // Steps 3 and 6: Default to 'bottom', switch to 'top' when not enough space below
@@ -640,8 +642,8 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
           top = rect.bottom + offset
           left = rect.left + rect.width / 2
         }
-      } else if (isExpandProviderStep) {
-        // Step 1: Default to 'top', switch to 'bottom' when not enough space above
+      } else if (isExpandProviderStep || isSelectModelsStep || isFollowUpStep) {
+        // Steps 1, 2, and 5: Default to 'top', switch to 'bottom' when not enough space above
         const estimatedTooltipHeight = 280 // Estimated tooltip height
         const minSpaceNeeded = estimatedTooltipHeight + offset + 40 // Space needed for tooltip + margin
 
@@ -1293,25 +1295,30 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
         // This fixes production timing issues where main findElement fails but interval finds element
         setTargetElement(googleDropdown)
         setIsVisible(true)
-        // Calculate position with viewport bounds clamping
+
+        // Calculate position with dynamic top/bottom switching based on available space
         const rect = googleDropdown.getBoundingClientRect()
         const offset = 16
-        const tooltipHeight = 280 // Estimated tooltip height
-        const minMargin = 20 // Minimum margin from viewport top
+        const estimatedTooltipHeight = 280
+        const minSpaceNeeded = estimatedTooltipHeight + offset + 40
 
-        // Position is 'top' for select-models - tooltip appears above element
-        // With CSS transform: translateY(-100%), the 'top' value is where tooltip BOTTOM sits
-        // So actual tooltip top = top - tooltipHeight
-        // To ensure tooltip stays on screen: top - tooltipHeight >= minMargin
-        // Therefore: top >= tooltipHeight + minMargin
-        const minTop = tooltipHeight + minMargin
-        let top = rect.top - offset
+        // Calculate available space
+        const spaceAbove = rect.top
+        const spaceBelow = window.innerHeight - rect.bottom
 
-        // ROBUST FIX: Clamp position so tooltip is always visible
-        if (top < minTop) {
-          top = minTop
+        // Determine which position to use:
+        // - Default to 'top' (tooltip above provider)
+        // - Switch to 'bottom' (tooltip below provider) if not enough space above
+        const shouldUseBottom = spaceAbove < minSpaceNeeded && spaceBelow >= minSpaceNeeded
+
+        let top: number
+        if (shouldUseBottom) {
+          setEffectivePosition('bottom')
+          top = rect.bottom + offset
+        } else {
+          setEffectivePosition('top')
+          top = rect.top - offset
         }
-
         const left = Math.max(200, Math.min(rect.left + rect.width / 2, window.innerWidth - 200))
         setOverlayPosition({ top, left })
       } else {
@@ -2372,15 +2379,19 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
       {!isLoadingStreamingPhase && isVisible && (
         <div
           ref={overlayRef}
-          className={`tutorial-tooltip tutorial-tooltip-${(step === 'expand-provider' || step === 'enter-prompt' || step === 'enter-prompt-2') && effectivePosition ? effectivePosition : config.position}`}
+          className={`tutorial-tooltip tutorial-tooltip-${(step === 'expand-provider' || step === 'select-models' || step === 'enter-prompt' || step === 'follow-up' || step === 'enter-prompt-2') && effectivePosition ? effectivePosition : config.position}`}
           style={{
             top: `${overlayPosition.top}px`,
             left: `${overlayPosition.left}px`,
             // Ensure z-index is high enough to appear above other elements
             zIndex: 10000,
-            // Add smooth transition for position changes (step 1, step 3, and step 6)
+            // Add smooth transition for position changes (steps 1, 2, 3, 5, and 6)
             transition:
-              step === 'expand-provider' || step === 'enter-prompt' || step === 'enter-prompt-2'
+              step === 'expand-provider' ||
+              step === 'select-models' ||
+              step === 'enter-prompt' ||
+              step === 'follow-up' ||
+              step === 'enter-prompt-2'
                 ? 'top 0.3s ease-in-out, transform 0.3s ease-in-out'
                 : undefined,
           }}
@@ -2465,7 +2476,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
           </div>
           {/* Arrow pointing to target */}
           <div
-            className={`tutorial-arrow tutorial-arrow-${(step === 'expand-provider' || step === 'enter-prompt' || step === 'enter-prompt-2') && effectivePosition ? effectivePosition : config.position}`}
+            className={`tutorial-arrow tutorial-arrow-${(step === 'expand-provider' || step === 'select-models' || step === 'enter-prompt' || step === 'follow-up' || step === 'enter-prompt-2') && effectivePosition ? effectivePosition : config.position}`}
           />
         </div>
       )}
