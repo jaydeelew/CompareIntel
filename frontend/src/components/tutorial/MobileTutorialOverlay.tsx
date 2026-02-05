@@ -262,6 +262,57 @@ export const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       } else {
         setBackdropRect(null)
       }
+    } else if (TEXTAREA_STEPS.includes(step)) {
+      // Keep the entire composer (prompt + toolbar) visible/bright for textarea steps (3 and 6).
+      const composer = document.querySelector('.composer') as HTMLElement | null
+      if (composer) {
+        const inputWrapper = composer.querySelector('.composer-input-wrapper') as HTMLElement | null
+        const toolbar = composer.querySelector('.composer-toolbar') as HTMLElement | null
+        const parts = [inputWrapper, toolbar].filter(Boolean) as HTMLElement[]
+        const rects = (parts.length > 0 ? parts : [composer]).map(el => el.getBoundingClientRect())
+        const minTop = Math.min(...rects.map(r => r.top))
+        const minLeft = Math.min(...rects.map(r => r.left))
+        const maxRight = Math.max(...rects.map(r => r.right))
+        const maxBottom = Math.max(...rects.map(r => r.bottom))
+        const width = maxRight - minLeft
+        const height = maxBottom - minTop
+        setBackdropRect({
+          top: minTop,
+          left: minLeft,
+          width,
+          height,
+          centerX: minLeft + width / 2,
+          centerY: minTop + height / 2,
+        })
+      } else {
+        setBackdropRect(null)
+      }
+    } else if (step === 'submit-comparison' || step === 'submit-comparison-2') {
+      // Keep the entire composer (prompt + toolbar) visible/bright during submit steps.
+      // Tooltip still targets the submit button, but the cutout should match step 3 behavior.
+      const composer = document.querySelector('.composer') as HTMLElement | null
+      if (composer) {
+        const inputWrapper = composer.querySelector('.composer-input-wrapper') as HTMLElement | null
+        const toolbar = composer.querySelector('.composer-toolbar') as HTMLElement | null
+        const parts = [inputWrapper, toolbar].filter(Boolean) as HTMLElement[]
+        const rects = (parts.length > 0 ? parts : [composer]).map(el => el.getBoundingClientRect())
+        const minTop = Math.min(...rects.map(r => r.top))
+        const minLeft = Math.min(...rects.map(r => r.left))
+        const maxRight = Math.max(...rects.map(r => r.right))
+        const maxBottom = Math.max(...rects.map(r => r.bottom))
+        const width = maxRight - minLeft
+        const height = maxBottom - minTop
+        setBackdropRect({
+          top: minTop,
+          left: minLeft,
+          width,
+          height,
+          centerX: minLeft + width / 2,
+          centerY: minTop + height / 2,
+        })
+      } else {
+        setBackdropRect(null)
+      }
     } else {
       setBackdropRect(null)
     }
@@ -535,10 +586,6 @@ export const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
   useEffect(() => {
     if (!targetElement || !step) return
 
-    // Skip highlight for certain steps
-    const skipHighlightSteps: TutorialStep[] = ['enter-prompt-2']
-    if (skipHighlightSteps.includes(step)) return
-
     // Apply highlight
     targetElement.classList.add('mobile-tutorial-highlight')
 
@@ -557,6 +604,14 @@ export const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       step === 'follow-up' ? (document.querySelector('.results-section') as HTMLElement) : null
     if (resultsSection) {
       resultsSection.classList.add('mobile-tutorial-highlight')
+    }
+
+    // For submit steps, highlight the composer container too (match step 3's visual emphasis)
+    if (step === 'submit-comparison' || step === 'submit-comparison-2') {
+      const composer = document.querySelector('.composer') as HTMLElement | null
+      if (composer) {
+        composer.classList.add('mobile-tutorial-highlight')
+      }
     }
 
     // For dropdown steps, highlight the dropdown list so it stays bright
@@ -795,7 +850,10 @@ export const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
           height: `${cutoutTarget.height + 16}px`,
           borderRadius: isLoadingStreamingPhase
             ? '16px'
-            : step === 'enter-prompt' || step === 'enter-prompt-2'
+            : step === 'enter-prompt' ||
+                step === 'enter-prompt-2' ||
+                step === 'submit-comparison' ||
+                step === 'submit-comparison-2'
               ? '32px'
               : '16px',
           boxShadow: '0 0 0 9999px rgba(0, 0, 0, 0.65)',

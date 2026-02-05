@@ -479,8 +479,34 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
         } else {
           setHighlightedElements([]) // Clear any previous highlights for enter-prompt-2
         }
-      } else if (step === 'submit-comparison' || step === 'submit-comparison-2') {
-        // Special handling for submit steps - highlight the Comparison Results card or loading section
+      } else if (step === 'submit-comparison') {
+        // Step 4: Highlight the composer (same as step 3) and set cutout immediately
+        const composerElement = getComposerElement()
+        if (composerElement) {
+          setHighlightedElements([composerElement])
+          // Add highlight class immediately for step 4
+          composerElement.classList.add('tutorial-highlight')
+          composerElement.classList.add('tutorial-textarea-active')
+          composerElement.style.pointerEvents = 'auto'
+          composerElement.style.position = 'relative'
+          // Calculate and set textareaCutout immediately to prevent timing gap
+          const padding = 8
+          const rects = getComposerCutoutRects(composerElement)
+          const minTop = Math.min(...rects.map(r => r.top))
+          const minLeft = Math.min(...rects.map(r => r.left))
+          const maxRight = Math.max(...rects.map(r => r.right))
+          const maxBottom = Math.max(...rects.map(r => r.bottom))
+          setTextareaCutout({
+            top: minTop - padding,
+            left: minLeft - padding,
+            width: maxRight - minLeft + padding * 2,
+            height: maxBottom - minTop + padding * 2,
+          })
+        }
+        // Use default selector for the submit button as target element
+        element = document.querySelector(config.targetSelector) as HTMLElement
+      } else if (step === 'submit-comparison-2') {
+        // Special handling for submit-comparison-2 - highlight the Comparison Results card or loading section
         const resultsSection = document.querySelector('.results-section') as HTMLElement
         const loadingSection = document.querySelector('.loading-section') as HTMLElement
         const elementsToHighlight: HTMLElement[] = []
@@ -1033,8 +1059,13 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
       // Don't add highlight border, but ensure dropdown is not dimmed
       // The dropdown will be kept above backdrop via z-index in CSS
       elementsToHighlight = []
+    } else if (step === 'submit-comparison') {
+      // Highlight the composer for step 4 (same as step 3)
+      const composerElement = document.querySelector('.composer') as HTMLElement
+      if (composerElement) {
+        elementsToHighlight = [composerElement]
+      }
     } else if (
-      step === 'submit-comparison' ||
       step === 'submit-comparison-2' ||
       step === 'follow-up' ||
       step === 'view-follow-up-results'
@@ -1632,19 +1663,30 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
       // Also maintain textarea cutout for submit steps (they need the textarea visible)
       // But NOT for view-follow-up-results step - it only needs the results section visible
       if (step !== 'view-follow-up-results') {
-        const composerElement = document.querySelector('.composer') as HTMLElement
+        const composerElement = getComposerElement()
         if (composerElement) {
-          if (!composerElement.classList.contains('tutorial-textarea-active')) {
-            composerElement.classList.add('tutorial-textarea-active')
+          // Always add textarea-active class
+          composerElement.classList.add('tutorial-textarea-active')
+          // For step 4 (submit-comparison), also add highlight to the composer (same as step 3)
+          if (step === 'submit-comparison') {
+            // Always force add highlight class (same as enter-prompt step)
+            composerElement.classList.add('tutorial-highlight')
+            composerElement.style.pointerEvents = 'auto'
+            composerElement.style.position = 'relative'
           }
-          // Ensure cutout is calculated
-          const rect = composerElement.getBoundingClientRect()
+          // Ensure cutout is calculated using proper union of input wrapper + toolbar
+          // (same as enter-prompt step)
           const padding = 8
+          const rects = getComposerCutoutRects(composerElement)
+          const minTop = Math.min(...rects.map(r => r.top))
+          const minLeft = Math.min(...rects.map(r => r.left))
+          const maxRight = Math.max(...rects.map(r => r.right))
+          const maxBottom = Math.max(...rects.map(r => r.bottom))
           setTextareaCutout({
-            top: rect.top - padding,
-            left: rect.left - padding,
-            width: rect.width + padding * 2,
-            height: rect.height + padding * 2,
+            top: minTop - padding,
+            left: minLeft - padding,
+            width: maxRight - minLeft + padding * 2,
+            height: maxBottom - minTop + padding * 2,
           })
         }
       }
@@ -1701,10 +1743,13 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
         loadingSection.style.pointerEvents = ''
         loadingSection.style.position = ''
       }
-      // Clean up textarea active class
+      // Clean up textarea active class and highlight (for step 4 submit-comparison)
       const composerElement = document.querySelector('.composer') as HTMLElement
       if (composerElement) {
         composerElement.classList.remove('tutorial-textarea-active')
+        composerElement.classList.remove('tutorial-highlight')
+        composerElement.style.pointerEvents = ''
+        composerElement.style.position = ''
       }
     }
   }, [step])
