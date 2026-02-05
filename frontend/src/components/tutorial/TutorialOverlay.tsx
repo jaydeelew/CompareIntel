@@ -992,11 +992,11 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
 
   // Separate effect to continuously maintain highlight for expand-provider step
   // Uses simple interval instead of MutationObserver to avoid performance issues
-  // ALSO ensures visibility and targetElement are set (fixes production timing issues)
+  // ALSO ensures visibility, targetElement, and position are set (fixes production timing issues)
   useEffect(() => {
     if (step !== 'expand-provider') return
 
-    const ensureHighlightAndVisibility = () => {
+    const ensureHighlightVisibilityAndPosition = () => {
       const googleDropdown = document.querySelector(
         '.provider-dropdown[data-provider-name="Google"]'
       ) as HTMLElement
@@ -1007,21 +1007,28 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
           googleDropdown.style.pointerEvents = 'auto'
           googleDropdown.style.position = 'relative'
         }
-        // CRITICAL: Also ensure visibility and target are set
+        // CRITICAL: Also ensure visibility, target, and position are set
         // This fixes production timing issues where main findElement fails but interval finds element
         const headerElement = googleDropdown.querySelector('.provider-header') as HTMLElement
         if (headerElement) {
           setTargetElement(headerElement)
           setIsVisible(true)
+          // Also update position to ensure tooltip is correctly positioned
+          const rect = headerElement.getBoundingClientRect()
+          const offset = 16
+          // Position is 'top' for expand-provider
+          const top = rect.top - offset
+          const left = rect.left + rect.width / 2
+          setOverlayPosition({ top, left })
         }
       }
     }
 
     // Check immediately
-    ensureHighlightAndVisibility()
+    ensureHighlightVisibilityAndPosition()
 
-    // Check periodically to maintain highlight and visibility
-    const interval = setInterval(ensureHighlightAndVisibility, 200)
+    // Check periodically to maintain highlight, visibility, and position
+    const interval = setInterval(ensureHighlightVisibilityAndPosition, 200)
 
     return () => {
       clearInterval(interval)
@@ -1039,11 +1046,11 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
 
   // Separate effect to continuously maintain highlight for select-models step
   // Uses simple interval instead of MutationObserver to avoid performance issues
-  // ALSO ensures visibility and targetElement are set (fixes production timing issues)
+  // ALSO ensures visibility, targetElement, and position are set (fixes production timing issues)
   useEffect(() => {
     if (step !== 'select-models') return
 
-    const ensureHighlightAndVisibility = () => {
+    const ensureHighlightVisibilityAndPosition = () => {
       const googleDropdown = document.querySelector(
         '.provider-dropdown[data-provider-name="Google"]'
       ) as HTMLElement
@@ -1054,18 +1061,25 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
           googleDropdown.style.pointerEvents = 'auto'
           googleDropdown.style.position = 'relative'
         }
-        // CRITICAL: Also ensure visibility and target are set
+        // CRITICAL: Also ensure visibility, target, and position are set
         // This fixes production timing issues where main findElement fails but interval finds element
         setTargetElement(googleDropdown)
         setIsVisible(true)
+        // Also update position to ensure tooltip is correctly positioned
+        const rect = googleDropdown.getBoundingClientRect()
+        const offset = 16
+        // Position is 'top' for select-models
+        const top = rect.top - offset
+        const left = rect.left + rect.width / 2
+        setOverlayPosition({ top, left })
       }
     }
 
     // Check immediately
-    ensureHighlightAndVisibility()
+    ensureHighlightVisibilityAndPosition()
 
-    // Check periodically to maintain highlight and visibility
-    const interval = setInterval(ensureHighlightAndVisibility, 200)
+    // Check periodically to maintain highlight, visibility, and position
+    const interval = setInterval(ensureHighlightVisibilityAndPosition, 200)
 
     return () => {
       clearInterval(interval)
