@@ -1516,21 +1516,36 @@ Tests run automatically in CI/CD pipelines via GitHub Actions. The workflows inc
 
 **Available Workflows:**
 
-1. **Test Workflow** (`.github/workflows/test-workflow.yml`):
-   - Backend unit, integration, and E2E tests
-   - Frontend unit and integration tests
-   - Frontend E2E tests (including mobile devices)
-   - Coverage reporting and artifact uploads
+All tests and checks run as part of the **CI Workflow** (`.github/workflows/ci.yml`), which includes:
 
-2. **Frontend Bundle Size Check** (`.github/workflows/frontend-bundle-size.yml`):
-   - Bundle size analysis
-   - Size limit enforcement
-   - PR comments with bundle analysis
+1. **Frontend Jobs:**
+   - Frontend Lint & Type Check (`frontend-lint`)
+   - Frontend Unit Tests (`frontend-test`) - with coverage reporting
+   - Frontend Build & Bundle Analysis (`frontend-build`) - includes bundle size checks
+
+2. **Backend Jobs:**
+   - Backend Lint & Type Check (`backend-lint`)
+   - Backend Tests (`backend-test`) - unit, integration, and E2E tests with coverage
+
+3. **E2E Tests:**
+   - Full-stack E2E tests (`e2e-test`) - including mobile device testing (iPhone 12, Pixel 5)
+   - Runs on Chromium, Firefox, WebKit, and mobile browsers
+
+4. **Additional Checks:**
+   - Security scanning (`security-scan`)
+   - Dependency review for PRs (`dependency-review`)
+
+**Bundle Size Check:**
+
+The bundle size check is part of the `frontend-build` job in the CI workflow:
+- Bundle size analysis and limit enforcement
+- PR comments with bundle analysis
+- Uploads bundle analysis artifacts
 
 **When Workflows Trigger:**
 
-- **Push events**: On pushes to `master` or `develop` branches
-- **Pull requests**: On all pull requests
+- **Push events**: On pushes to `master` branch (excluding markdown/docs changes)
+- **Pull requests**: On all pull requests to `master` branch
 - **Manual triggers**: Via `workflow_dispatch` (always runs, cannot be skipped)
 
 **Skipping CI/CD Workflows:**
@@ -1548,7 +1563,7 @@ Sometimes you may want to push commits without triggering tests (e.g., documenta
 ```bash
 # Skip CI for documentation updates
 git commit -m "Update README [skip ci]"
-git push origin develop
+git push origin master
 
 # Skip CI for minor fixes
 git commit -m "Fix typo in comments [no ci]"
@@ -1556,7 +1571,7 @@ git push origin master
 
 # Skip CI for work-in-progress commits
 git commit -m "WIP: experimental feature [skip actions]"
-git push origin develop
+git push origin master
 ```
 
 **Notes:**

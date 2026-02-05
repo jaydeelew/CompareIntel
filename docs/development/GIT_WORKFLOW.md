@@ -144,11 +144,12 @@ gh pr create --title "Add user authentication feature" --body "Description of ch
 
 ### 5. Tests Run Automatically
 
-Once the PR is created, GitHub Actions will automatically:
-- Run backend tests (unit, integration, E2E)
-- Run frontend unit/integration tests
-- Run frontend E2E tests
-- Generate coverage reports
+Once the PR is created, the CI workflow (`.github/workflows/ci.yml`) will automatically:
+- Run frontend lint, type-check, and unit tests
+- Run frontend build and bundle size checks
+- Run backend lint, type-check, and tests (unit, integration, E2E)
+- Run full-stack E2E tests (including mobile device testing)
+- Generate coverage reports and upload artifacts
 
 You can see the progress in the **"Checks"** tab of the PR.
 

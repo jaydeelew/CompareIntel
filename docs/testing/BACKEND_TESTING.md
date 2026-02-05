@@ -164,20 +164,20 @@ pytest --cov=app --cov-report=html --cov-report=xml --cov-report=term-missing
 
 ## CI/CD Integration
 
-Backend tests run automatically in CI/CD pipelines via GitHub Actions. The test workflow includes comprehensive backend testing with coverage reporting.
+Backend tests run automatically in CI/CD pipelines via GitHub Actions. The CI workflow includes comprehensive backend testing with coverage reporting.
 
 **GitHub Actions Workflow:**
 
-The backend tests are part of the **Test Workflow** (`.github/workflows/test-workflow.yml`), which runs:
+The backend tests are part of the **CI Workflow** (`.github/workflows/ci.yml`), specifically the `backend-test` job, which runs:
 - Backend unit tests
 - Backend integration tests
 - Backend E2E tests
-- Coverage reporting and artifact uploads
+- Coverage reporting and artifact uploads (uploaded to Codecov and as GitHub Actions artifacts)
 
 **When Workflows Trigger:**
 
-- **Push events**: On pushes to `master` or `develop` branches
-- **Pull requests**: On all pull requests
+- **Push events**: On pushes to `master` branch (excluding markdown/docs changes)
+- **Pull requests**: On all pull requests to `master` branch
 - **Manual triggers**: Via `workflow_dispatch` (always runs, cannot be skipped)
 
 **Skipping CI/CD Workflows:**
@@ -195,7 +195,7 @@ Sometimes you may want to push commits without triggering tests (e.g., documenta
 ```bash
 # Skip CI for documentation updates
 git commit -m "Update API docs [skip ci]"
-git push origin develop
+git push origin master
 
 # Skip CI for minor fixes
 git commit -m "Fix typo in comments [no ci]"
@@ -203,7 +203,7 @@ git push origin master
 
 # Skip CI for work-in-progress commits
 git commit -m "WIP: experimental feature [skip actions]"
-git push origin develop
+git push origin master
 ```
 
 **Notes:**

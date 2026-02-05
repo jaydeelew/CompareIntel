@@ -499,14 +499,15 @@ alembic stamp 0001_initial
 
 The project includes GitHub Actions workflows:
 
-- **CI** (`ci.yml`): Runs on every push/PR
+- **CI** (`ci.yml`): Runs on every push/PR to `master` branch
   - Frontend: lint, type-check, unit tests, build, bundle size check
-  - Backend: lint, type-check, unit tests
-  - E2E tests (on main branch)
+  - Backend: lint, type-check, unit tests, integration tests, E2E tests
+  - E2E tests (full-stack with mobile device testing)
   - Security scanning
+  - Dependency review (PRs only)
 
 - **Deploy** (`deploy.yml`): Production deployment
-  - Manual trigger or auto-deploy on main
+  - Manual trigger or auto-deploy on `master` branch (after CI passes)
   - Health checks and verification
 
 ### Error Monitoring (Sentry)

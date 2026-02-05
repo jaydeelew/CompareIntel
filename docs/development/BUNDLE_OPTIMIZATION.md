@@ -109,17 +109,21 @@ The following unused dependencies have been removed:
 
 ## CI/CD Integration
 
-Bundle size checks run automatically on:
+Bundle size checks run automatically as part of the **CI Workflow** (`.github/workflows/ci.yml`), specifically in the `frontend-build` job.
+
+**When Bundle Size Checks Run:**
 
 - Pull requests affecting `frontend/`
-- Pushes to `main` and `develop` branches
+- Pushes to `master` branch (excluding markdown/docs changes)
+- Manual workflow triggers
 
-The GitHub Actions workflow (`/.github/workflows/frontend-bundle-size.yml`):
+**The CI Workflow (`frontend-build` job):**
 
-1. Builds the application
-2. Runs bundle size checks
-3. Uploads bundle analysis artifact
-4. Comments on PRs with bundle size information
+1. Builds the application for production
+2. Runs bundle size checks (`npm run bundle:size`)
+3. Uploads build artifacts (`frontend-dist`)
+4. Uploads bundle analysis artifact (`bundle-analysis` - contains `stats.html`)
+5. Comments on PRs with bundle size information
 
 ## Optimization Tips
 
@@ -164,7 +168,7 @@ Check GitHub Actions workflow runs for:
 
 - `vite.config.ts`: Build configuration and chunk splitting
 - `scripts/check-bundle-size.js`: Bundle size limits and checks
-- `.github/workflows/frontend-bundle-size.yml`: CI/CD integration
+- `.github/workflows/ci.yml`: CI/CD integration (bundle size check is part of `frontend-build` job)
 
 ## Future Improvements
 
