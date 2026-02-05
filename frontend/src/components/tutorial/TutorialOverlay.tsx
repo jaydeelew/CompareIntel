@@ -615,6 +615,8 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
       const isExpandProviderStep = step === 'expand-provider' && config.position === 'top'
       const isSelectModelsStep = step === 'select-models' && config.position === 'top'
       const isFollowUpStep = step === 'follow-up' && config.position === 'top'
+      const isViewFollowUpResultsStep =
+        step === 'view-follow-up-results' && config.position === 'top'
       const isHistoryDropdownStep = step === 'history-dropdown' && config.position === 'top'
       const isSaveSelectionStep = step === 'save-selection' && config.position === 'top'
 
@@ -648,10 +650,11 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
         isExpandProviderStep ||
         isSelectModelsStep ||
         isFollowUpStep ||
+        isViewFollowUpResultsStep ||
         isHistoryDropdownStep ||
         isSaveSelectionStep
       ) {
-        // Steps 1, 2, 5, 9, and 10: Default to 'top', switch to 'bottom' when not enough space above
+        // Steps 1, 2, 5, 8, 9, and 10: Default to 'top', switch to 'bottom' when not enough space above
         const estimatedTooltipHeight = 280 // Estimated tooltip height
         const minSpaceNeeded = estimatedTooltipHeight + offset + 40 // Space needed for tooltip + margin
 
@@ -2387,19 +2390,20 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
       {!isLoadingStreamingPhase && isVisible && (
         <div
           ref={overlayRef}
-          className={`tutorial-tooltip tutorial-tooltip-${(step === 'expand-provider' || step === 'select-models' || step === 'enter-prompt' || step === 'follow-up' || step === 'enter-prompt-2' || step === 'history-dropdown' || step === 'save-selection') && effectivePosition ? effectivePosition : config.position}`}
+          className={`tutorial-tooltip tutorial-tooltip-${(step === 'expand-provider' || step === 'select-models' || step === 'enter-prompt' || step === 'follow-up' || step === 'enter-prompt-2' || step === 'view-follow-up-results' || step === 'history-dropdown' || step === 'save-selection') && effectivePosition ? effectivePosition : config.position}`}
           style={{
             top: `${overlayPosition.top}px`,
             left: `${overlayPosition.left}px`,
             // Ensure z-index is high enough to appear above other elements
             zIndex: 10000,
-            // Add smooth transition for position changes (steps 1, 2, 3, 5, 6, 9, and 10)
+            // Add smooth transition for position changes (steps 1, 2, 3, 5, 6, 8, 9, and 10)
             transition:
               step === 'expand-provider' ||
               step === 'select-models' ||
               step === 'enter-prompt' ||
               step === 'follow-up' ||
               step === 'enter-prompt-2' ||
+              step === 'view-follow-up-results' ||
               step === 'history-dropdown' ||
               step === 'save-selection'
                 ? 'top 0.3s ease-in-out, transform 0.3s ease-in-out'
@@ -2486,7 +2490,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
           </div>
           {/* Arrow pointing to target */}
           <div
-            className={`tutorial-arrow tutorial-arrow-${(step === 'expand-provider' || step === 'select-models' || step === 'enter-prompt' || step === 'follow-up' || step === 'enter-prompt-2' || step === 'history-dropdown' || step === 'save-selection') && effectivePosition ? effectivePosition : config.position}`}
+            className={`tutorial-arrow tutorial-arrow-${(step === 'expand-provider' || step === 'select-models' || step === 'enter-prompt' || step === 'follow-up' || step === 'enter-prompt-2' || step === 'view-follow-up-results' || step === 'history-dropdown' || step === 'save-selection') && effectivePosition ? effectivePosition : config.position}`}
           />
         </div>
       )}
