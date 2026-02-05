@@ -110,7 +110,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
     }
   }, [step])
 
-  // CRITICAL FIX: Force visibility immediately for first two steps (expand-provider, select-models)
+  // CRITICAL FIX: Force visibility immediately for key tutorial steps
   // This ensures tooltip appears in production even if main findElement has timing issues
   useEffect(() => {
     if (step === 'expand-provider' || step === 'select-models') {
@@ -118,6 +118,11 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
       setIsVisible(true)
       // Set a reasonable default position in case elements aren't found yet
       setOverlayPosition({ top: 320, left: window.innerWidth / 2 })
+    } else if (step === 'enter-prompt' || step === 'enter-prompt-2') {
+      // Force visibility for enter-prompt steps - position below the composer
+      setIsVisible(true)
+      // Position tooltip below the input area (around 400px from top)
+      setOverlayPosition({ top: 450, left: window.innerWidth / 2 })
     }
   }, [step])
 
@@ -1154,9 +1159,12 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
 
   // Separate effect to continuously maintain highlight and cutout for enter-prompt step
   // Uses simple interval instead of MutationObserver to avoid performance issues
-  // ALSO ensures visibility and targetElement are set (fixes production timing issues)
+  // ALSO ensures visibility, targetElement, and POSITION are set (fixes production timing issues)
   useEffect(() => {
     if (step !== 'enter-prompt') return
+
+    // FORCE visibility immediately on mount to ensure tooltip appears
+    setIsVisible(true)
 
     const ensureHighlightCutoutAndVisibility = () => {
       const composerElement = getComposerElement()
@@ -1182,10 +1190,21 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
           width: maxRight - minLeft + padding * 2,
           height: maxBottom - minTop + padding * 2,
         })
-        // CRITICAL: Also ensure visibility and target are set
+        // CRITICAL: Also ensure visibility, target, and POSITION are set
         // This fixes production timing issues where main findElement fails but interval finds element
         setTargetElement(composerElement)
         setIsVisible(true)
+
+        // Calculate position - tooltip should be BELOW the composer (position: 'bottom')
+        const rect = composerElement.getBoundingClientRect()
+        const offset = 16
+        const top = rect.bottom + offset
+        const left = Math.max(200, Math.min(rect.left + rect.width / 2, window.innerWidth - 200))
+        setOverlayPosition({ top, left })
+      } else {
+        // Fallback: show tooltip at a reasonable position even if composer not found
+        setIsVisible(true)
+        setOverlayPosition({ top: 450, left: window.innerWidth / 2 })
       }
     }
 
@@ -1195,8 +1214,8 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
     // Also run after a brief delay to handle any cleanup that might run after this effect
     const initialTimeout = setTimeout(ensureHighlightCutoutAndVisibility, 50)
 
-    // Check periodically to maintain highlight, cutout, and visibility
-    const interval = setInterval(ensureHighlightCutoutAndVisibility, 200)
+    // Check periodically to maintain highlight, cutout, visibility, and position
+    const interval = setInterval(ensureHighlightCutoutAndVisibility, 100)
 
     return () => {
       clearTimeout(initialTimeout)
@@ -1214,9 +1233,12 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
 
   // Separate effect to continuously maintain cutout for enter-prompt-2 step (no highlight, but needs cutout)
   // Uses simple interval to ensure cutout is properly calculated
-  // ALSO ensures visibility and targetElement are set (fixes production timing issues)
+  // ALSO ensures visibility, targetElement, and POSITION are set (fixes production timing issues)
   useEffect(() => {
     if (step !== 'enter-prompt-2') return
+
+    // FORCE visibility immediately on mount to ensure tooltip appears
+    setIsVisible(true)
 
     const ensureCutoutAndVisibility = () => {
       const composerElement = getComposerElement()
@@ -1239,18 +1261,29 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
           width: maxRight - minLeft + padding * 2,
           height: maxBottom - minTop + padding * 2,
         })
-        // CRITICAL: Also ensure visibility and target are set
+        // CRITICAL: Also ensure visibility, target, and POSITION are set
         // This fixes production timing issues where main findElement fails but interval finds element
         setTargetElement(composerElement)
         setIsVisible(true)
+
+        // Calculate position - tooltip should be BELOW the composer (position: 'bottom')
+        const rect = composerElement.getBoundingClientRect()
+        const offset = 16
+        const top = rect.bottom + offset
+        const left = Math.max(200, Math.min(rect.left + rect.width / 2, window.innerWidth - 200))
+        setOverlayPosition({ top, left })
+      } else {
+        // Fallback: show tooltip at a reasonable position even if composer not found
+        setIsVisible(true)
+        setOverlayPosition({ top: 450, left: window.innerWidth / 2 })
       }
     }
 
     // Check immediately
     ensureCutoutAndVisibility()
 
-    // Check periodically to maintain cutout and visibility
-    const interval = setInterval(ensureCutoutAndVisibility, 200)
+    // Check periodically to maintain cutout, visibility, and position
+    const interval = setInterval(ensureCutoutAndVisibility, 100)
 
     return () => {
       clearInterval(interval)
