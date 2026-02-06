@@ -257,7 +257,8 @@ jobs:
       
       - name: Generate HTML coverage report
         if: success()
-        run: python -m coverage html --directory=htmlcov || echo "Warning: Could not generate HTML coverage report"
+        run: |
+          python -m coverage html --directory=htmlcov || echo "Warning: Could not generate HTML coverage report"
       
       - name: Upload coverage to Codecov
         if: always()
