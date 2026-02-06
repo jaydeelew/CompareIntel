@@ -119,9 +119,9 @@ export const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
   // Estimated tooltip height - smaller for short viewports
   const getTooltipEstimatedHeight = () => {
     const vh = window.innerHeight
-    if (vh < 600) return 160
-    if (vh < 700) return 180
-    return 220
+    if (vh < 600) return 130
+    if (vh < 700) return 150
+    return 180
   }
   const tooltipEstimatedHeight = getTooltipEstimatedHeight()
   const previousStepRef = useRef<TutorialStep | null>(null)
@@ -811,7 +811,7 @@ export const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
   // Get description - use tabs-specific text if tabs are present, otherwise use default
   const getDescription = (): string => {
     if (step === 'follow-up' && hasTabs()) {
-      return 'View the results by clicking the two Gemini tabs below. When finished, click the "Follow up" icon to continue the conversation. Each model maintains its own conversation context.'
+      return 'View results by tapping the Gemini tabs below. Then tap "Follow up" to continue.'
     }
     return config.description
   }

@@ -75,7 +75,7 @@
   z-index: 10000;
   max-width: calc(100vw - 24px);
   width: 100%;
-  max-width: 340px;
+  max-width: 300px;
   pointer-events: auto;
   /* Transform is applied via inline styles based on position calculation */
 }
@@ -84,8 +84,8 @@
 .mobile-tutorial-tooltip-content {
   background: var(--bg-primary);
   border: 2px solid var(--accent-color);
-  border-radius: 16px;
-  padding: 1rem 1.125rem;
+  border-radius: 14px;
+  padding: 0.875rem 1rem;
   box-shadow:
     0 4px 24px rgba(0, 0, 0, 0.25),
     0 0 0 1px rgba(255, 255, 255, 0.1);
@@ -97,36 +97,36 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 0.625rem;
+  margin-bottom: 0.375rem;
 }
 
 .mobile-tutorial-step-indicator {
-  font-size: 0.75rem;
+  font-size: 0.6875rem;
   font-weight: 600;
   color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
 
-/* Close button - larger touch target for mobile */
+/* Close button - adequate touch target for mobile */
 .mobile-tutorial-close-button {
   background: none;
   border: none;
-  font-size: 1.75rem;
+  font-size: 1.5rem;
   line-height: 1;
   color: var(--text-muted);
   cursor: pointer;
-  padding: 4px;
-  width: 36px;
-  height: 36px;
+  padding: 2px;
+  width: 30px;
+  height: 30px;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: var(--radius-md);
   transition: all 0.2s ease;
-  /* Larger touch target */
-  min-width: 44px;
-  min-height: 44px;
+  /* Touch target */
+  min-width: 40px;
+  min-height: 40px;
 }
 
 .mobile-tutorial-close-button:active {
@@ -137,40 +137,40 @@
 
 /* Title */
 .mobile-tutorial-tooltip-title {
-  font-size: 1.0625rem;
+  font-size: 1rem;
   font-weight: 600;
   color: var(--text-primary);
-  margin: 0 0 0.5rem 0;
+  margin: 0 0 0.375rem 0;
   line-height: 1.3;
 }
 
 /* Description */
 .mobile-tutorial-tooltip-description {
-  font-size: 0.9375rem;
+  font-size: 0.875rem;
   color: var(--text-secondary);
-  line-height: 1.5;
-  margin: 0 0 1rem 0;
+  line-height: 1.45;
+  margin: 0 0 0.625rem 0;
 }
 
 /* Actions container */
 .mobile-tutorial-tooltip-actions {
   display: flex;
-  gap: 0.75rem;
+  gap: 0.5rem;
   justify-content: center;
 }
 
-/* Buttons - larger touch targets for mobile */
+/* Buttons - adequate touch targets for mobile */
 .mobile-tutorial-button {
-  padding: 0.75rem 1.25rem;
+  padding: 0.5rem 1rem;
   border-radius: var(--radius-md);
-  font-size: 0.9375rem;
+  font-size: 0.875rem;
   font-weight: 500;
   cursor: pointer;
   border: none;
   transition: all 0.2s ease;
   /* Minimum touch target size for accessibility */
-  min-height: 48px;
-  min-width: 100px;
+  min-height: 42px;
+  min-width: 92px;
 }
 
 .mobile-tutorial-button-primary {
@@ -242,15 +242,15 @@
 .mobile-tutorial-progress {
   display: flex;
   justify-content: center;
-  gap: 6px;
-  margin-top: 0.75rem;
-  padding-top: 0.75rem;
+  gap: 5px;
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
   border-top: 1px solid var(--bg-tertiary);
 }
 
 .mobile-tutorial-progress-dot {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
   background: var(--bg-tertiary);
   transition: all 0.2s ease;
@@ -358,8 +358,8 @@
 }
 
 .mobile-tutorial-fullscreen-tooltip .mobile-tutorial-tooltip-content {
-  border-radius: 16px 16px 16px 16px;
-  padding: 1.25rem;
+  border-radius: 14px;
+  padding: 0.875rem 1rem;
 }
 
 /* Fullscreen mode doesn't show arrow */
@@ -387,36 +387,36 @@ body.mobile-tutorial-active {
   isolation: isolate;
 }
 
-/* Small viewport height - more compact tooltip */
+/* Small viewport height - tighter tooltip */
 @media (max-height: 700px) {
   .mobile-tutorial-tooltip-content {
-    padding: 0.75rem 1rem;
+    padding: 0.625rem 0.75rem;
   }
 
   .mobile-tutorial-tooltip-title {
-    font-size: 1rem;
-    margin-bottom: 0.375rem;
+    font-size: 0.9375rem;
+    margin-bottom: 0.25rem;
   }
 
   .mobile-tutorial-tooltip-description {
-    font-size: 0.875rem;
-    line-height: 1.4;
-    margin-bottom: 0.75rem;
-  }
-
-  .mobile-tutorial-tooltip-header {
+    font-size: 0.75rem;
+    line-height: 1.35;
     margin-bottom: 0.5rem;
   }
 
+  .mobile-tutorial-tooltip-header {
+    margin-bottom: 0.25rem;
+  }
+
   .mobile-tutorial-button {
-    padding: 0.625rem 1rem;
-    min-height: 44px;
-    font-size: 0.875rem;
+    padding: 0.4375rem 0.875rem;
+    min-height: 36px;
+    font-size: 0.75rem;
   }
 
   .mobile-tutorial-progress {
-    margin-top: 0.5rem;
-    padding-top: 0.5rem;
+    margin-top: 0.375rem;
+    padding-top: 0.375rem;
   }
 }
 
@@ -428,24 +428,24 @@ body.mobile-tutorial-active {
   }
 
   .mobile-tutorial-tooltip-content {
-    padding: 0.625rem 0.875rem;
+    padding: 0.5rem 0.625rem;
   }
 
   .mobile-tutorial-tooltip-title {
-    font-size: 0.9375rem;
+    font-size: 0.875rem;
   }
 
   .mobile-tutorial-tooltip-description {
-    font-size: 0.8125rem;
-    margin-bottom: 0.5rem;
+    font-size: 0.6875rem;
+    margin-bottom: 0.375rem;
   }
 
   .mobile-tutorial-tooltip-actions {
-    gap: 0.5rem;
+    gap: 0.375rem;
   }
 
   .mobile-tutorial-button {
-    padding: 0.5rem 0.75rem;
-    min-height: 40px;
+    padding: 0.375rem 0.625rem;
+    min-height: 34px;
   }
 }

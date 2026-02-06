@@ -50,6 +50,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
   const dropdownWasOpenedRef = useRef<boolean>(false)
   const hasAttemptedElementFindRef = useRef<boolean>(false)
   const tooltipClampAttemptsRef = useRef<number>(0)
+  const initialScrollCompleteRef = useRef<boolean>(false)
   const [targetElement, setTargetElement] = useState<HTMLElement | null>(null)
   const [highlightedElements, setHighlightedElements] = useState<HTMLElement[]>([])
   const [overlayPosition, setOverlayPosition] = useState({ top: 0, left: 0 })
@@ -334,6 +335,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
       setHighlightedElements([])
       setIsVisible(false)
       hasAttemptedElementFindRef.current = false
+      initialScrollCompleteRef.current = false
       // Reset all cutout states when tutorial ends to prevent stale values on next run
       setTextareaCutout(null)
       setDropdownCutout(null)
@@ -383,6 +385,9 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
       console.warn(`No config found for tutorial step: ${step}`)
       return
     }
+
+    // Reset scroll complete flag for the new step
+    initialScrollCompleteRef.current = false
 
     // Clear cutout states when entering a new step to ensure fresh calculation
     // This prevents stale cutout positions from previous steps
@@ -649,7 +654,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
       if (isEnterPromptStep) {
         // Steps 3 and 6: Default to 'bottom', switch to 'top' when not enough space below
         const viewportHeight = window.innerHeight
-        const estimatedTooltipHeight = viewportHeight < 700 ? 200 : 280 // Smaller estimate for small screens
+        const estimatedTooltipHeight = viewportHeight < 700 ? 160 : 210 // Smaller estimate for small screens
         const minSpaceNeeded = estimatedTooltipHeight + offset + 40 // Space needed for tooltip + margin
 
         // Calculate available space below the composer
@@ -707,7 +712,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
         // Steps 1, 2, 5, 8, 9, and 10: Default to 'top', switch to 'bottom' when not enough space above
         // Use smaller estimated height on smaller viewports for better fitting
         const viewportHeight = window.innerHeight
-        const estimatedTooltipHeight = viewportHeight < 700 ? 200 : 280 // Smaller estimate for small screens
+        const estimatedTooltipHeight = viewportHeight < 700 ? 160 : 210 // Smaller estimate for small screens
         const minSpaceNeeded = estimatedTooltipHeight + offset + 40 // Space needed for tooltip + margin
 
         // Calculate available space above the element
@@ -799,8 +804,8 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
         // Tooltip appears at: rect.top - offset (in viewport coordinates)
         // We need to ensure the tooltip doesn't go off-screen at the top
 
-        // Estimate tooltip height (max-width 360px, typical height ~250-300px)
-        const estimatedTooltipHeight = 280
+        // Estimate tooltip height (max-width 320px, typical height ~180-220px)
+        const estimatedTooltipHeight = 210
         const tooltipOffset = 16 // Distance from target element
         const topMargin = 80 // Desired margin from top of viewport
 
@@ -820,8 +825,8 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
         // Tooltip appears at: rect.top - offset (in viewport coordinates)
         // We need to ensure the tooltip doesn't go off-screen at the top
 
-        // Estimate tooltip height (max-width 360px, typical height ~250-300px)
-        const estimatedTooltipHeight = 280
+        // Estimate tooltip height (max-width 320px, typical height ~180-220px)
+        const estimatedTooltipHeight = 210
         const tooltipOffset = 16 // Distance from target element
         const topMargin = 80 // Desired margin from top of viewport
 
@@ -840,8 +845,8 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
         // The tooltip is positioned above the follow-up button (position: 'top')
         // We need to scroll down enough to see both the button and the tooltip above it
 
-        // Estimate tooltip height (max-width 360px, typical height ~250-300px)
-        const estimatedTooltipHeight = 280
+        // Estimate tooltip height (max-width 320px, typical height ~180-220px)
+        const estimatedTooltipHeight = 210
         const tooltipOffset = 16 // Distance from target element
         const topMargin = 80 // Desired margin from top of viewport
 
@@ -854,7 +859,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
       } else if (step === 'view-follow-up-results') {
         // Special handling for step 8 (view-follow-up-results) - scroll to show results section with tooltip
         // The tooltip is positioned above the results section (position: 'top')
-        const estimatedTooltipHeight = 280
+        const estimatedTooltipHeight = 210
         const tooltipOffset = 16
         const topMargin = 80
 
@@ -863,7 +868,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
       } else if (step === 'enter-prompt') {
         // Special handling for step 3 (enter-prompt) - tooltip is positioned BELOW the composer (position: 'bottom')
         // We need to scroll so that both the composer and the tooltip below it are visible
-        const estimatedTooltipHeight = 280 // Estimated tooltip height
+        const estimatedTooltipHeight = 210 // Estimated tooltip height
         const tooltipOffset = 16 // Distance from composer to tooltip
         const bottomMargin = 40 // Desired margin from bottom of viewport
 
@@ -882,7 +887,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
         // Special handling for step 6 (enter-prompt-2) - same as step 3
         // Tooltip is positioned BELOW the composer (position: 'bottom')
         // We need to scroll so that both the composer and the tooltip below it are visible
-        const estimatedTooltipHeight = 280 // Estimated tooltip height
+        const estimatedTooltipHeight = 210 // Estimated tooltip height
         const tooltipOffset = 16 // Distance from composer to tooltip
         const bottomMargin = 40 // Desired margin from bottom of viewport
 
@@ -985,6 +990,8 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
           if (stepRef.current !== step) return
           updatePosition()
           setIsVisible(true)
+          // Mark initial scroll as complete - allows dedicated step effects to take over positioning
+          initialScrollCompleteRef.current = true
           // Layout can continue to shift (CSS transitions, expanding/collapsing sections)
           // after scroll stops, so re-run positioning a few times to stay aligned.
           const t1 = window.setTimeout(() => {
@@ -1001,6 +1008,11 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
           }, 700)
           postScrollTimers = [t1, t2, t3]
         })
+      } else {
+        // For steps without delay, mark scroll complete after initial scroll animation
+        setTimeout(() => {
+          initialScrollCompleteRef.current = true
+        }, 500)
       }
     }, 100)
 
@@ -1022,8 +1034,8 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
   useEffect(() => {
     if (!step) return
 
-    // Skip highlighting only for enter-prompt-2 (keep cutout for step 6)
-    const shouldSkipHighlight = step === 'enter-prompt-2'
+    // No steps skip highlighting - all steps get consistent highlights
+    const shouldSkipHighlight = false
     const isDropdownStep = step === 'history-dropdown' || step === 'save-selection'
 
     // For expand-provider and select-models steps, always find and highlight the entire Google provider section
@@ -1038,8 +1050,8 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
       if (googleDropdown) {
         elementsToHighlight = [googleDropdown]
       }
-    } else if (step === 'enter-prompt') {
-      // Highlight the textarea container for step 3
+    } else if (step === 'enter-prompt' || step === 'enter-prompt-2') {
+      // Highlight the textarea container for step 3 and step 6 (consistent highlight)
       const composerElement = document.querySelector('.composer') as HTMLElement
       if (composerElement) {
         elementsToHighlight = [composerElement]
@@ -1313,7 +1325,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
           // Calculate position with dynamic top/bottom switching based on available space
           const rect = headerElement.getBoundingClientRect()
           const offset = 16
-          const estimatedTooltipHeight = 280
+          const estimatedTooltipHeight = 210
           const minSpaceNeeded = estimatedTooltipHeight + offset + 40
 
           // Calculate available space
@@ -1395,7 +1407,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
         // Calculate position with dynamic top/bottom switching based on available space
         const rect = googleDropdown.getBoundingClientRect()
         const offset = 16
-        const estimatedTooltipHeight = 280
+        const estimatedTooltipHeight = 210
         const minSpaceNeeded = estimatedTooltipHeight + offset + 40
 
         // Calculate available space
@@ -1445,19 +1457,98 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
   }, [step])
 
   // Separate effect to continuously maintain highlight and cutout for enter-prompt step
-  // Uses simple interval instead of MutationObserver to avoid performance issues
-  // ALSO ensures visibility, targetElement, and POSITION are set (fixes production timing issues)
+  // Respects the initial scroll phase - only updates position after main effect completes scroll
   useEffect(() => {
     if (step !== 'enter-prompt') return
 
-    // FORCE visibility immediately on mount to ensure tooltip appears
-    setIsVisible(true)
-
-    const ensureHighlightCutoutAndVisibility = () => {
+    const ensureHighlightAndCutout = () => {
       const composerElement = getComposerElement()
       if (composerElement) {
-        // Always force add highlight class (remove first to ensure it's applied fresh)
-        // This handles cases where the class might have been removed by other effects
+        // Always force add highlight class
+        composerElement.classList.add('tutorial-highlight')
+        composerElement.style.pointerEvents = 'auto'
+        composerElement.style.position = 'relative'
+        // Ensure textarea-active class is present
+        composerElement.classList.add('tutorial-textarea-active')
+        // Ensure cutout is calculated
+        const padding = 8
+        const rects = getComposerCutoutRects(composerElement)
+        const minTop = Math.min(...rects.map(r => r.top))
+        const minLeft = Math.min(...rects.map(r => r.left))
+        const maxRight = Math.max(...rects.map(r => r.right))
+        const maxBottom = Math.max(...rects.map(r => r.bottom))
+
+        setTextareaCutout({
+          top: minTop - padding,
+          left: minLeft - padding,
+          width: maxRight - minLeft + padding * 2,
+          height: maxBottom - minTop + padding * 2,
+        })
+        // Set target element if not set
+        setTargetElement(composerElement)
+
+        // Only update position AFTER initial scroll is complete to avoid jarring movement
+        if (initialScrollCompleteRef.current) {
+          // Calculate position with dynamic top/bottom switching based on available space
+          const rect = composerElement.getBoundingClientRect()
+          const offset = 16
+          const estimatedTooltipHeight = 210
+          const minSpaceNeeded = estimatedTooltipHeight + offset + 40
+
+          // Calculate available space
+          const spaceBelow = window.innerHeight - rect.bottom
+          const spaceAbove = rect.top
+
+          // Determine which position to use
+          const shouldUseTop = spaceBelow < minSpaceNeeded && spaceAbove >= minSpaceNeeded
+
+          let top: number
+          if (shouldUseTop) {
+            setEffectivePosition('top')
+            top = rect.top - offset
+          } else {
+            setEffectivePosition('bottom')
+            top = rect.bottom + offset
+          }
+          const left = Math.max(200, Math.min(rect.left + rect.width / 2, window.innerWidth - 200))
+          setOverlayPosition({ top, left })
+        }
+      }
+    }
+
+    // Run immediately to set up highlight and cutout
+    ensureHighlightAndCutout()
+
+    // Also run after a brief delay to handle any cleanup that might run after this effect
+    const initialTimeout = setTimeout(ensureHighlightAndCutout, 50)
+
+    // Check periodically to maintain highlight, cutout, and position (only after scroll complete)
+    const interval = setInterval(ensureHighlightAndCutout, 100)
+
+    return () => {
+      clearTimeout(initialTimeout)
+      clearInterval(interval)
+      // Clean up highlight when leaving this step
+      const composerElement = document.querySelector('.composer') as HTMLElement
+      if (composerElement) {
+        composerElement.classList.remove('tutorial-highlight')
+        composerElement.classList.remove('tutorial-textarea-active')
+        composerElement.style.pointerEvents = ''
+        composerElement.style.position = ''
+      }
+    }
+  }, [step])
+
+  // Separate effect to continuously maintain highlight and cutout for enter-prompt-2 step
+  // Matches step 3 (enter-prompt) behavior for consistent highlights
+  // Respects the initial scroll phase - only updates position after main effect completes scroll
+  useEffect(() => {
+    if (step !== 'enter-prompt-2') return
+
+    const ensureHighlightAndCutout = () => {
+      const composerElement = getComposerElement()
+      if (composerElement) {
+        // Always force add highlight class (same as step 3 enter-prompt)
         composerElement.classList.add('tutorial-highlight')
         composerElement.style.pointerEvents = 'auto'
         composerElement.style.position = 'relative'
@@ -1477,49 +1568,46 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
           width: maxRight - minLeft + padding * 2,
           height: maxBottom - minTop + padding * 2,
         })
-        // CRITICAL: Also ensure visibility, target, and POSITION are set
-        // This fixes production timing issues where main findElement fails but interval finds element
+        // Set target element if not set
         setTargetElement(composerElement)
-        setIsVisible(true)
 
-        // Calculate position with dynamic top/bottom switching based on available space
-        const rect = composerElement.getBoundingClientRect()
-        const offset = 16
-        const estimatedTooltipHeight = 280
-        const minSpaceNeeded = estimatedTooltipHeight + offset + 40
+        // Only update position AFTER initial scroll is complete to avoid jarring movement
+        if (initialScrollCompleteRef.current) {
+          // Calculate position with dynamic top/bottom switching based on available space
+          const rect = composerElement.getBoundingClientRect()
+          const offset = 16
+          const estimatedTooltipHeight = 210
+          const minSpaceNeeded = estimatedTooltipHeight + offset + 40
 
-        // Calculate available space
-        const spaceBelow = window.innerHeight - rect.bottom
-        const spaceAbove = rect.top
+          // Calculate available space
+          const spaceBelow = window.innerHeight - rect.bottom
+          const spaceAbove = rect.top
 
-        // Determine which position to use
-        const shouldUseTop = spaceBelow < minSpaceNeeded && spaceAbove >= minSpaceNeeded
+          // Determine which position to use
+          const shouldUseTop = spaceBelow < minSpaceNeeded && spaceAbove >= minSpaceNeeded
 
-        let top: number
-        if (shouldUseTop) {
-          setEffectivePosition('top')
-          top = rect.top - offset
-        } else {
-          setEffectivePosition('bottom')
-          top = rect.bottom + offset
+          let top: number
+          if (shouldUseTop) {
+            setEffectivePosition('top')
+            top = rect.top - offset
+          } else {
+            setEffectivePosition('bottom')
+            top = rect.bottom + offset
+          }
+          const left = Math.max(200, Math.min(rect.left + rect.width / 2, window.innerWidth - 200))
+          setOverlayPosition({ top, left })
         }
-        const left = Math.max(200, Math.min(rect.left + rect.width / 2, window.innerWidth - 200))
-        setOverlayPosition({ top, left })
-      } else {
-        // Fallback: show tooltip at a reasonable position even if composer not found
-        setIsVisible(true)
-        setOverlayPosition({ top: 450, left: window.innerWidth / 2 })
       }
     }
 
-    // Run immediately
-    ensureHighlightCutoutAndVisibility()
+    // Run immediately to set up highlight and cutout
+    ensureHighlightAndCutout()
 
     // Also run after a brief delay to handle any cleanup that might run after this effect
-    const initialTimeout = setTimeout(ensureHighlightCutoutAndVisibility, 50)
+    const initialTimeout = setTimeout(ensureHighlightAndCutout, 50)
 
-    // Check periodically to maintain highlight, cutout, visibility, and position
-    const interval = setInterval(ensureHighlightCutoutAndVisibility, 100)
+    // Check periodically to maintain highlight, cutout, and position (only after scroll complete)
+    const interval = setInterval(ensureHighlightAndCutout, 100)
 
     return () => {
       clearTimeout(initialTimeout)
@@ -1531,87 +1619,6 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
         composerElement.classList.remove('tutorial-textarea-active')
         composerElement.style.pointerEvents = ''
         composerElement.style.position = ''
-      }
-    }
-  }, [step])
-
-  // Separate effect to continuously maintain cutout for enter-prompt-2 step (no highlight, but needs cutout)
-  // Uses simple interval to ensure cutout is properly calculated
-  // ALSO ensures visibility, targetElement, and POSITION are set (fixes production timing issues)
-  useEffect(() => {
-    if (step !== 'enter-prompt-2') return
-
-    // FORCE visibility immediately on mount to ensure tooltip appears
-    setIsVisible(true)
-
-    const ensureCutoutAndVisibility = () => {
-      const composerElement = getComposerElement()
-      if (composerElement) {
-        // Ensure textarea-active class is present
-        if (!composerElement.classList.contains('tutorial-textarea-active')) {
-          composerElement.classList.add('tutorial-textarea-active')
-        }
-        // Ensure cutout is calculated - this handles cases where initial calculation was missed
-        const padding = 8
-        const rects = getComposerCutoutRects(composerElement)
-        const minTop = Math.min(...rects.map(r => r.top))
-        const minLeft = Math.min(...rects.map(r => r.left))
-        const maxRight = Math.max(...rects.map(r => r.right))
-        const maxBottom = Math.max(...rects.map(r => r.bottom))
-
-        setTextareaCutout({
-          top: minTop - padding,
-          left: minLeft - padding,
-          width: maxRight - minLeft + padding * 2,
-          height: maxBottom - minTop + padding * 2,
-        })
-        // CRITICAL: Also ensure visibility, target, and POSITION are set
-        // This fixes production timing issues where main findElement fails but interval finds element
-        setTargetElement(composerElement)
-        setIsVisible(true)
-
-        // Calculate position with dynamic top/bottom switching based on available space (like step 3)
-        const rect = composerElement.getBoundingClientRect()
-        const offset = 16
-        const estimatedTooltipHeight = 280
-        const minSpaceNeeded = estimatedTooltipHeight + offset + 40
-
-        // Calculate available space
-        const spaceBelow = window.innerHeight - rect.bottom
-        const spaceAbove = rect.top
-
-        // Determine which position to use
-        const shouldUseTop = spaceBelow < minSpaceNeeded && spaceAbove >= minSpaceNeeded
-
-        let top: number
-        if (shouldUseTop) {
-          setEffectivePosition('top')
-          top = rect.top - offset
-        } else {
-          setEffectivePosition('bottom')
-          top = rect.bottom + offset
-        }
-        const left = Math.max(200, Math.min(rect.left + rect.width / 2, window.innerWidth - 200))
-        setOverlayPosition({ top, left })
-      } else {
-        // Fallback: show tooltip at a reasonable position even if composer not found
-        setIsVisible(true)
-        setOverlayPosition({ top: 450, left: window.innerWidth / 2 })
-      }
-    }
-
-    // Check immediately
-    ensureCutoutAndVisibility()
-
-    // Check periodically to maintain cutout, visibility, and position
-    const interval = setInterval(ensureCutoutAndVisibility, 100)
-
-    return () => {
-      clearInterval(interval)
-      // Clean up when leaving this step
-      const composerElement = document.querySelector('.composer') as HTMLElement
-      if (composerElement) {
-        composerElement.classList.remove('tutorial-textarea-active')
       }
     }
   }, [step])
