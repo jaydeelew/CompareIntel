@@ -102,8 +102,8 @@ jobs:
           
           base_url = 'http://localhost:8000'
           
-          # Test health endpoint
-          health_response = requests.get(f'{base_url}/api/health')
+          # Test health endpoint (mounted at root, not under /api)
+          health_response = requests.get(f'{base_url}/health')
           assert health_response.status_code == 200, 'Health endpoint failed'
           health_data = health_response.json()
           assert 'status' in health_data, 'Health response missing status field'
