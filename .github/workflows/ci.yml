@@ -26,10 +26,40 @@ env:
 
 jobs:
   # ============================================================================
+  # Detect Changed Paths
+  # ============================================================================
+  detect-changes:
+    name: Detect Changed Paths
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    outputs:
+      frontend: ${{ steps.filter.outputs.frontend }}
+      backend: ${{ steps.filter.outputs.backend }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Need full history for path filtering
+      
+      - name: Detect changed paths
+        uses: dorny/paths-filter@v2
+        id: filter
+        with:
+          filters: |
+            frontend:
+              - 'frontend/**'
+              - '.github/workflows/ci.yml'
+            backend:
+              - 'backend/**'
+              - '.github/workflows/ci.yml'
+
+  # ============================================================================
   # Frontend Jobs
   # ============================================================================
   frontend-lint:
     name: Frontend Lint & Type Check
+    needs: detect-changes
+    if: needs.detect-changes.outputs.frontend == 'true' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     defaults:
@@ -61,6 +91,8 @@ jobs:
 
   frontend-test:
     name: Frontend Unit Tests
+    needs: detect-changes
+    if: needs.detect-changes.outputs.frontend == 'true' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     defaults:
@@ -107,6 +139,8 @@ jobs:
 
   frontend-build:
     name: Frontend Build & Bundle Analysis
+    needs: detect-changes
+    if: needs.detect-changes.outputs.frontend == 'true' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     defaults:
@@ -175,6 +209,8 @@ jobs:
   # ============================================================================
   backend-lint:
     name: Backend Lint & Type Check
+    needs: detect-changes
+    if: needs.detect-changes.outputs.backend == 'true' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     defaults:
@@ -208,6 +244,8 @@ jobs:
 
   backend-test:
     name: Backend Tests
+    needs: detect-changes
+    if: needs.detect-changes.outputs.backend == 'true' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     defaults:
@@ -300,9 +338,13 @@ jobs:
   # ============================================================================
   e2e-test-critical:
     name: E2E Tests - Critical User Flows
+    needs: [detect-changes, frontend-build, backend-test]
+    if: |
+      (needs.detect-changes.outputs.frontend == 'true' || needs.detect-changes.outputs.backend == 'true' || github.event_name == 'workflow_dispatch') &&
+      (needs.frontend-build.result == 'success' || needs.frontend-build.result == 'skipped') &&
+      (needs.backend-test.result == 'success' || needs.backend-test.result == 'skipped')
     runs-on: ubuntu-latest
     timeout-minutes: 45
-    needs: [frontend-build, backend-test]
     
     env:
       DATABASE_URL: sqlite:///./test-e2e.db
@@ -392,10 +434,14 @@ jobs:
   # ============================================================================
   e2e-test-browsers:
     name: E2E Tests - Cross-Browser & Mobile
+    needs: [detect-changes, frontend-build, backend-test]
+    if: |
+      (github.event_name == 'pull_request' || github.ref == 'refs/heads/master' || github.event_name == 'workflow_dispatch') &&
+      (needs.detect-changes.outputs.frontend == 'true' || needs.detect-changes.outputs.backend == 'true' || github.event_name == 'workflow_dispatch') &&
+      (needs.frontend-build.result == 'success' || needs.frontend-build.result == 'skipped') &&
+      (needs.backend-test.result == 'success' || needs.backend-test.result == 'skipped')
     runs-on: ubuntu-latest
     timeout-minutes: 90
-    needs: [frontend-build, backend-test]
-    if: github.event_name == 'pull_request' || github.ref == 'refs/heads/master'
     
     env:
       DATABASE_URL: sqlite:///./test-e2e.db
@@ -500,9 +546,13 @@ jobs:
   # ============================================================================
   e2e-test-accessibility:
     name: E2E Tests - Accessibility (WCAG 2.1 AA)
+    needs: [detect-changes, frontend-build, backend-test]
+    if: |
+      (needs.detect-changes.outputs.frontend == 'true' || needs.detect-changes.outputs.backend == 'true' || github.event_name == 'workflow_dispatch') &&
+      (needs.frontend-build.result == 'success' || needs.frontend-build.result == 'skipped') &&
+      (needs.backend-test.result == 'success' || needs.backend-test.result == 'skipped')
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    needs: [frontend-build, backend-test]
     
     env:
       DATABASE_URL: sqlite:///./test-e2e.db
@@ -579,6 +629,8 @@ jobs:
   # ============================================================================
   security-scan:
     name: Security Scan
+    needs: detect-changes
+    if: needs.detect-changes.outputs.frontend == 'true' || needs.detect-changes.outputs.backend == 'true' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     
@@ -652,9 +704,8 @@ jobs:
   # ============================================================================
   ci-success:
     name: CI Success
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
     needs: [
+      detect-changes,
       frontend-lint,
       frontend-test,
       frontend-build,
@@ -665,6 +716,8 @@ jobs:
       security-scan
     ]
     if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
     
     steps:
       - name: Check all jobs passed
@@ -684,14 +737,15 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           
           FAILED=0
-          if [[ "${{ needs.frontend-lint.result }}" != "success" ]]; then FAILED=1; fi
-          if [[ "${{ needs.frontend-test.result }}" != "success" ]]; then FAILED=1; fi
-          if [[ "${{ needs.frontend-build.result }}" != "success" ]]; then FAILED=1; fi
-          if [[ "${{ needs.backend-lint.result }}" != "success" ]]; then FAILED=1; fi
-          if [[ "${{ needs.backend-test.result }}" != "success" ]]; then FAILED=1; fi
-          if [[ "${{ needs.e2e-test-critical.result }}" != "success" ]]; then FAILED=1; fi
-          if [[ "${{ needs.e2e-test-accessibility.result }}" != "success" ]]; then FAILED=1; fi
-          if [[ "${{ needs.security-scan.result }}" != "success" ]]; then FAILED=1; fi
+          # Only check jobs that actually ran (not skipped)
+          if [[ "${{ needs.frontend-lint.result }}" == "failure" ]]; then FAILED=1; fi
+          if [[ "${{ needs.frontend-test.result }}" == "failure" ]]; then FAILED=1; fi
+          if [[ "${{ needs.frontend-build.result }}" == "failure" ]]; then FAILED=1; fi
+          if [[ "${{ needs.backend-lint.result }}" == "failure" ]]; then FAILED=1; fi
+          if [[ "${{ needs.backend-test.result }}" == "failure" ]]; then FAILED=1; fi
+          if [[ "${{ needs.e2e-test-critical.result }}" == "failure" ]]; then FAILED=1; fi
+          if [[ "${{ needs.e2e-test-accessibility.result }}" == "failure" ]]; then FAILED=1; fi
+          if [[ "${{ needs.security-scan.result }}" == "failure" ]]; then FAILED=1; fi
           
           if [[ $FAILED -eq 1 ]]; then
             echo "❌ One or more required jobs failed" >> $GITHUB_STEP_SUMMARY

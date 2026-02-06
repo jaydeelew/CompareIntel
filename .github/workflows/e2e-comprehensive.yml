@@ -22,14 +22,40 @@ env:
   PYTHON_VERSION: '3.11'
 
 jobs:
+  detect-changes:
+    name: Detect Changed Paths
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    outputs:
+      frontend: ${{ steps.filter.outputs.frontend }}
+      backend: ${{ steps.filter.outputs.backend }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Detect changed paths
+        uses: dorny/paths-filter@v2
+        id: filter
+        with:
+          filters: |
+            frontend:
+              - 'frontend/**'
+            backend:
+              - 'backend/**'
+
   # ============================================================================
   # E2E Tests - Advanced Features
   # ============================================================================
   e2e-advanced-features:
     name: E2E Tests - Advanced Features
+    needs: detect-changes
+    if: |
+      (github.event_name == 'push' || github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch') &&
+      (needs.detect-changes.outputs.frontend == 'true' || needs.detect-changes.outputs.backend == 'true' || github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-latest
     timeout-minutes: 45
-    if: github.event_name == 'push' || github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
     
     env:
       DATABASE_URL: sqlite:///./test-e2e.db
@@ -110,9 +136,12 @@ jobs:
   # ============================================================================
   e2e-admin:
     name: E2E Tests - Admin Functionality
+    needs: detect-changes
+    if: |
+      (github.event_name == 'push' || github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch') &&
+      (needs.detect-changes.outputs.frontend == 'true' || needs.detect-changes.outputs.backend == 'true' || github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    if: github.event_name == 'push' || github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
     
     env:
       DATABASE_URL: sqlite:///./test-e2e.db
@@ -190,9 +219,12 @@ jobs:
   # ============================================================================
   e2e-mobile:
     name: E2E Tests - Mobile Platforms
+    needs: detect-changes
+    if: |
+      (github.event_name == 'push' || github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch') &&
+      (needs.detect-changes.outputs.frontend == 'true' || needs.detect-changes.outputs.backend == 'true' || github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-latest
     timeout-minutes: 60
-    if: github.event_name == 'push' || github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
     
     env:
       DATABASE_URL: sqlite:///./test-e2e.db
@@ -279,9 +311,12 @@ jobs:
   # ============================================================================
   e2e-error-scenarios:
     name: E2E Tests - Error Scenarios
+    needs: detect-changes
+    if: |
+      (github.event_name == 'push' || github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch') &&
+      (needs.detect-changes.outputs.frontend == 'true' || needs.detect-changes.outputs.backend == 'true' || github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    if: github.event_name == 'push' || github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
     
     env:
       DATABASE_URL: sqlite:///./test-e2e.db
