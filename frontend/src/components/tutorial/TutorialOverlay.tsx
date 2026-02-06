@@ -630,6 +630,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
     const isDropdownStep = step === 'history-dropdown' || step === 'save-selection'
     let scrollCheckFrame: number | null = null
     let postScrollTimers: number[] = []
+    const isScrollingRef = { current: false } // Track if we're in the middle of programmatic scroll
 
     const updatePosition = () => {
       const rect = targetElement.getBoundingClientRect()
@@ -919,6 +920,10 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
         const startScrollY = window.pageYOffset
         const targetScrollY = Math.max(0, scrollTarget)
         const distance = targetScrollY - startScrollY
+
+        // Mark that we're starting a programmatic scroll
+        isScrollingRef.current = true
+
         const duration = 1500 // 1.5 seconds for smooth, slow scroll
         const startTime = performance.now()
 
@@ -937,6 +942,11 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
 
           if (progress < 1) {
             requestAnimationFrame(animateScroll)
+          } else {
+            // Scroll animation complete - mark as done after a brief delay to allow layout to settle
+            setTimeout(() => {
+              isScrollingRef.current = false
+            }, 100)
           }
         }
 
@@ -983,6 +993,8 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
     }
 
     // Small delay to ensure hero is locked, then scroll
+    // For step 3 (enter-prompt), wait longer to ensure hero section has fully expanded
+    const scrollDelay = step === 'enter-prompt' || step === 'enter-prompt-2' ? 300 : 100
     setTimeout(() => {
       scrollToElement()
       if (shouldDelayReveal) {
@@ -1014,19 +1026,29 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
           initialScrollCompleteRef.current = true
         }, 500)
       }
-    }, 100)
+    }, scrollDelay)
 
     // Update position on scroll/resize
-    window.addEventListener('scroll', updatePosition, true)
+    // For step 3 (enter-prompt), prevent updatePosition from running during programmatic scroll
+    // to avoid triggering additional scroll adjustments
+    const handleScroll = () => {
+      if ((step === 'enter-prompt' || step === 'enter-prompt-2') && isScrollingRef.current) {
+        // Skip position updates during programmatic scroll for step 3
+        return
+      }
+      updatePosition()
+    }
+    window.addEventListener('scroll', handleScroll, true)
     window.addEventListener('resize', updatePosition)
 
     return () => {
-      window.removeEventListener('scroll', updatePosition, true)
+      window.removeEventListener('scroll', handleScroll, true)
       window.removeEventListener('resize', updatePosition)
       if (scrollCheckFrame !== null) {
         window.cancelAnimationFrame(scrollCheckFrame)
       }
       postScrollTimers.forEach(t => window.clearTimeout(t))
+      isScrollingRef.current = false
     }
   }, [targetElement, step])
 

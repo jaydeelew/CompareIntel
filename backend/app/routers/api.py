@@ -578,11 +578,16 @@ async def create_test_user_dev(
             status_code=403, detail="This endpoint is only available in development mode"
         )
 
-    # Check for test database
+    # Check for test database or development environment
+    # Allow in development mode OR if database URL contains "test"
     database_url = os.getenv("DATABASE_URL", "") or getattr(settings, "database_url", "")
-    if database_url and "test" not in database_url.lower():
+    environment = os.environ.get("ENVIRONMENT", "").lower()
+    is_test_db = database_url and "test" in database_url.lower()
+    is_dev_mode = environment == "development"
+    
+    if database_url and not is_test_db and not is_dev_mode:
         raise HTTPException(
-            status_code=403, detail="This endpoint is only available with test databases"
+            status_code=403, detail="This endpoint is only available with test databases or in development mode"
         )
 
     from datetime import UTC

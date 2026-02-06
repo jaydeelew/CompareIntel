@@ -285,7 +285,7 @@ async function globalSetup(config: FullConfig) {
     { email: TEST_USER_EMAIL, password: TEST_USER_PASSWORD, role: 'test' },
   ]) {
     try {
-      const loginResponse = await fetch(`${backendURL}/auth/login`, {
+      const loginResponse = await fetch(`${backendURL}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
