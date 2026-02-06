@@ -1,15 +1,17 @@
 name: Performance Testing
 
 on:
+  push:
+    branches: [master]
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
   pull_request:
     branches: [master]
     paths-ignore:
       - '**.md'
       - 'docs/**'
   workflow_dispatch:
-  schedule:
-    # Run weekly on Mondays at 3:00 AM UTC
-    - cron: '0 3 * * 1'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}

@@ -1,6 +1,11 @@
 name: PWA Testing
 
 on:
+  push:
+    branches: [master]
+    paths:
+      - 'frontend/**'
+      - '.github/workflows/pwa-testing.yml'
   pull_request:
     branches: [master]
     paths:

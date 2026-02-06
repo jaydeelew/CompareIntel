@@ -1,6 +1,11 @@
 name: API Contract Testing
 
 on:
+  push:
+    branches: [master]
+    paths:
+      - 'backend/**'
+      - '.github/workflows/api-contract.yml'
   pull_request:
     branches: [master]
     paths:

@@ -1,6 +1,11 @@
 name: Visual Regression Testing
 
 on:
+  push:
+    branches: [master]
+    paths:
+      - 'frontend/**'
+      - '.github/workflows/visual-regression.yml'
   pull_request:
     branches: [master]
     paths:
