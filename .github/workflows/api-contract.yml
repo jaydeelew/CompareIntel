@@ -72,7 +72,7 @@ jobs:
           
           # Check critical endpoints exist
           critical_endpoints = [
-              '/api/health',
+              '/health',  # Health check endpoint (not under /api)
               '/api/auth/login',
               '/api/auth/register',
               '/api/compare-stream',

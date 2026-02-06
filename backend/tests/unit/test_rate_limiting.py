@@ -405,24 +405,28 @@ class TestAnonymousCreditEdgeCases:
 
     def test_anonymous_credits_reset_on_new_day(self):
         """Test anonymous credits reset on new day."""
-        from datetime import date
+        from datetime import UTC, date, datetime
 
-        from app.rate_limiting import anonymous_rate_limit_storage
+        from app.rate_limiting import anonymous_rate_limit_storage, _get_local_date
 
         identifier = "ip:192.168.1.7"
+
+        # Get today's date in UTC (same as check_anonymous_credits uses by default)
+        today_utc = _get_local_date("UTC")
+        yesterday_utc = str(date.fromisoformat(today_utc) - timedelta(days=1))
 
         # Set count to high value with yesterday's date
         anonymous_rate_limit_storage[identifier] = {
             "count": 100,
-            "date": str(date.today() - timedelta(days=1)),
+            "date": yesterday_utc,
             "first_seen": None,
         }
 
         # Check credits (should reset)
         is_allowed, credits_remaining, credits_allocated = check_anonymous_credits(
-            identifier, Decimal("0"), None
+            identifier, Decimal("0"), "UTC"
         )
 
         # Should reset to 0 or fresh count
         assert credits_remaining >= 0
-        assert anonymous_rate_limit_storage[identifier]["date"] == str(date.today())
+        assert anonymous_rate_limit_storage[identifier]["date"] == today_utc

@@ -20,6 +20,16 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from app.config import settings
 from app.database import Base
 
+# Import all models so Alembic can detect them for autogenerate
+# This ensures all models are included in migration generation
+from app.models import (
+    User,
+    UserPreference,
+    Conversation,
+    ConversationMessage,
+    UsageLog,
+)
+
 # Alembic Config object
 config = context.config
 

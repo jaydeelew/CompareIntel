@@ -325,23 +325,31 @@ class TestAnonymousCreditBoundaries:
 
     def test_anonymous_reset_on_new_day(self):
         """Test unregistered user reset on new day."""
+        from datetime import date
+
+        from app.rate_limiting import _get_local_date
+
         identifier = "ip:192.168.1.3"
+
+        # Get today's date in UTC (same as check_anonymous_credits uses by default)
+        today_utc = _get_local_date("UTC")
+        yesterday_utc = str(date.fromisoformat(today_utc) - timedelta(days=1))
 
         # Set to limit with yesterday's date
         anonymous_rate_limit_storage[identifier] = {
             "count": 100,
-            "date": str(date.today() - timedelta(days=1)),
+            "date": yesterday_utc,
             "first_seen": None,
         }
 
         is_allowed, credits_remaining, credits_allocated = check_anonymous_credits(
-            identifier, Decimal("0"), None
+            identifier, Decimal("0"), "UTC"
         )
 
         # Should reset
         assert is_allowed is True
         assert credits_remaining == credits_allocated
-        assert anonymous_rate_limit_storage[identifier]["date"] == str(date.today())
+        assert anonymous_rate_limit_storage[identifier]["date"] == today_utc
 
 
 class TestUsageStats:
