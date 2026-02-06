@@ -1,4 +1,4 @@
-import { chromium, FullConfig, Page } from '@playwright/test'
+import { chromium, firefox, webkit, FullConfig, Page, BrowserType } from '@playwright/test'
 
 /**
  * Global Setup for E2E Tests
@@ -305,8 +305,65 @@ async function globalSetup(config: FullConfig) {
 
   console.log('API-based user setup complete. Proceeding with browser verification...')
 
+  // Determine which browser to use based on the project configuration
+  // When --project=webkit is used, we need to detect webkit, not default to chromium
+  // Check all projects to find webkit/safari projects first, then firefox, then chromium
+  let browserType: BrowserType<object> = chromium
+  let projectName = 'chromium (default)'
+  let foundWebkit = false
+  let foundFirefox = false
+
+  // Check all projects - prioritize webkit, then firefox, then chromium
+  // Project names are clear: 'webkit', 'firefox', 'chromium', 'Mobile Safari - iPhone 12', etc.
+  for (const project of config.projects) {
+    const name = project?.name?.toLowerCase() || ''
+
+    // Check for webkit/safari (highest priority)
+    if (name.includes('webkit') || name.includes('safari')) {
+      browserType = webkit
+      projectName = project.name || 'webkit'
+      foundWebkit = true
+      break // Webkit has highest priority, use it immediately
+    }
+
+    // Check for firefox (only if webkit not found yet)
+    if (name.includes('firefox') && !foundWebkit) {
+      browserType = firefox
+      projectName = project.name || 'firefox'
+      foundFirefox = true
+      // Continue checking for webkit
+    }
+
+    // Check for chromium/chrome (only if webkit and firefox not found)
+    if ((name.includes('chromium') || name.includes('chrome')) && !foundWebkit && !foundFirefox) {
+      browserType = chromium
+      projectName = project.name || 'chromium'
+    }
+  }
+
+  console.log(`Using browser: ${projectName}`)
+
   // Launch browser for setup verification (optional - API setup is the primary method)
-  const browser = await chromium.launch()
+  let browser: Awaited<ReturnType<typeof browserType.launch>> | null = null
+  try {
+    browser = await browserType.launch()
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error)
+    console.error(`Failed to launch ${projectName} browser: ${errorMessage}`)
+    console.error('This may indicate that the browser is not installed.')
+    const browserName = projectName.toLowerCase().includes('webkit')
+      ? 'webkit'
+      : projectName.toLowerCase().includes('firefox')
+        ? 'firefox'
+        : 'chromium'
+    console.error(`Please run: npx playwright install ${browserName}`)
+    console.warn(
+      'Skipping browser verification - API-based setup is complete and tests should still work.'
+    )
+    console.log('Global setup complete (browser verification skipped)')
+    return // Exit early if browser can't be launched
+  }
+
   const context = await browser.newContext()
   const page = await context.newPage()
 
@@ -858,7 +915,9 @@ async function globalSetup(config: FullConfig) {
     console.error('Error during global setup:', error)
     // Don't fail the setup - tests can handle missing users
   } finally {
-    await browser.close()
+    if (browser) {
+      await browser.close()
+    }
   }
 
   console.log('Global setup complete')
