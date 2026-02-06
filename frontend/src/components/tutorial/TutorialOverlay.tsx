@@ -1214,12 +1214,13 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
       // Check current step from ref (always up-to-date)
       const currentStep = stepRef.current
 
-      // Only remove highlights when step actually changes away from expand-provider, select-models, enter-prompt, submit-comparison, follow-up, view-follow-up-results, or dropdown steps
-      // If we're still on these steps, keep the highlight even if elements change
+      // Only remove highlights when step actually changes away from steps that maintain highlights.
+      // If we're still on these steps, keep the highlight even if elements change.
       if (
         currentStep !== 'expand-provider' &&
         currentStep !== 'select-models' &&
         currentStep !== 'enter-prompt' &&
+        currentStep !== 'enter-prompt-2' &&
         currentStep !== 'submit-comparison' &&
         currentStep !== 'submit-comparison-2' &&
         currentStep !== 'follow-up' &&
@@ -1751,12 +1752,17 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
         loadingSection.style.position = ''
       }
       // Clean up textarea active class and highlight (for step 4 submit-comparison)
-      const composerElement = document.querySelector('.composer') as HTMLElement
-      if (composerElement) {
-        composerElement.classList.remove('tutorial-textarea-active')
-        composerElement.classList.remove('tutorial-highlight')
-        composerElement.style.pointerEvents = ''
-        composerElement.style.position = ''
+      // BUT skip if transitioning to enter-prompt-2 (step 6) so the composer highlight
+      // is preserved and doesn't flash/reset between steps.
+      const nextStep = stepRef.current
+      if (nextStep !== 'enter-prompt-2') {
+        const composerElement = document.querySelector('.composer') as HTMLElement
+        if (composerElement) {
+          composerElement.classList.remove('tutorial-textarea-active')
+          composerElement.classList.remove('tutorial-highlight')
+          composerElement.style.pointerEvents = ''
+          composerElement.style.position = ''
+        }
       }
     }
   }, [step])

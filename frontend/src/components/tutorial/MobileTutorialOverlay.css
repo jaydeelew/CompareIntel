@@ -33,7 +33,9 @@
     0 0 0 7px rgba(14, 165, 233, 0.25),
     0 0 18px rgba(14, 165, 233, 0.45) !important;
   border-radius: var(--radius-md) !important;
-  animation: mobile-tutorial-pulse 2s ease-in-out infinite;
+  animation: mobile-tutorial-pulse 2s ease-in-out infinite !important;
+  /* Override any transition on the element so it doesn't dampen the pulse animation */
+  transition: none !important;
   pointer-events: auto !important;
   isolation: isolate !important;
 }
@@ -45,6 +47,14 @@
   position: relative !important;
   z-index: 9999 !important;
   transform: translateZ(0) !important;
+  /* Ensure the highlight box-shadow and pulse animation are consistent across all steps.
+     The .composer normally has transition: box-shadow which can dampen the pulse. */
+  box-shadow:
+    0 0 0 3px var(--accent-color),
+    0 0 0 7px rgba(14, 165, 233, 0.25),
+    0 0 18px rgba(14, 165, 233, 0.45) !important;
+  animation: mobile-tutorial-pulse 2s ease-in-out infinite !important;
+  transition: none !important;
 }
 
 /* Special styling for provider dropdown highlight on mobile */
