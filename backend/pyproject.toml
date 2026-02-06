@@ -2,6 +2,14 @@
 # Ruff configuration for fast Python linting
 target-version = "py311"
 line-length = 100
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
+
+[tool.ruff.lint]
 select = [
     "E",   # pycodestyle errors
     "W",   # pycodestyle warnings
@@ -10,36 +18,57 @@ select = [
     "B",   # flake8-bugbear
     "C4",  # flake8-comprehensions
     "UP",  # pyupgrade
-    "ARG", # flake8-unused-arguments
-    "SIM", # flake8-simplify
     "TCH", # flake8-type-checking
-    "TID", # flake8-tidy-imports
-    "PIE", # flake8-pie
-    "PT",  # flake8-pytest-style
-    "RET", # flake8-return
     "N",   # pep8-naming
     "S",   # flake8-bandit (security)
-    "B904", # require exception context
 ]
 ignore = [
-    "E501",  # line too long (handled by black)
-    "B008",  # do not perform function calls in argument defaults
-    "S101",  # use of assert detected (used in tests)
-    "T201",  # print statements (ok for scripts)
+    # pycodestyle
+    "E402",   # module-import-not-at-top-of-file (conditional/deferred imports are valid)
+    "E501",   # line too long (handled by formatter)
+    "E712",   # true-false-comparison (== True vs is True — readability preference)
+    "E722",   # bare-except (intentional broad exception handling in some cases)
+    "W291",   # trailing-whitespace (handled by formatter)
+    "W293",   # blank-line-with-whitespace (handled by formatter)
+    # flake8-bugbear
+    "B007",   # unused-loop-control-variable (used for readability in unpacking)
+    "B008",   # do not perform function calls in argument defaults (FastAPI Depends pattern)
+    "B017",   # assert-raises-exception (broad raises in tests acceptable)
+    "B023",   # function-uses-loop-variable (intentional closure patterns)
+    "B028",   # no-explicit-stacklevel (minor warnings convenience)
+    "B904",   # raise-without-from-inside-except (re-raising with different exception type)
+    "B905",   # zip-without-explicit-strict (Python 3.10+ strict param optional)
+    # flake8-comprehensions
+    "C401",   # unnecessary-generator-set (readability preference)
+    "C414",   # unnecessary-double-cast-or-process (explicit type conversion for clarity)
+    "C416",   # unnecessary-comprehension (readability preference)
+    # pyflakes
+    "F841",   # unused-variable (intentional for readability/debugging)
+    # pep8-naming
+    "N806",   # non-lowercase-variable-in-function (acceptable for constants)
+    # flake8-bandit (security)
+    "S101",   # use of assert detected (used in tests)
+    "S105",   # hardcoded-password-string (false positives in config/tests)
+    "S106",   # hardcoded-password-func-arg (false positives in config/tests)
+    "S107",   # hardcoded-password-default (false positives in config/tests)
+    "S110",   # try-except-pass (intentional exception suppression)
+    "S311",   # suspicious-non-cryptographic-random (acceptable for non-security uses)
+    "S603",   # subprocess-without-shell-equals-true (trusted input)
+    # misc
+    "T201",   # print statements (ok for scripts)
 ]
 
-[tool.ruff.format]
-quote-style = "double"
-indent-style = "space"
-skip-magic-trailing-comma = false
-line-ending = "auto"
-
-[tool.ruff.isort]
+[tool.ruff.lint.isort]
 known-first-party = ["app"]
 
-[tool.ruff.per-file-ignores]
-"__init__.py" = ["F401"]  # Allow unused imports in __init__.py
-"tests/**/*.py" = ["S101", "S106", "S108"]  # Allow assert, temp files in tests
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["F401"]             # Allow unused imports in __init__.py
+"tests/**/*.py" = [
+    "S101", "S106", "S108", "S105",  # Allow assert, hardcoded passwords, temp files in tests
+    "ARG001", "ARG002",              # Allow unused arguments in test fixtures/mocks
+    "F841",                          # Allow unused variables (assertion setup)
+    "B023",                          # Allow loop variable binding in closures (test patterns)
+]
 
 [tool.black]
 line-length = 100

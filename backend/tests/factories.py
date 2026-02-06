@@ -29,7 +29,7 @@ from app.models import (
     User,
     UserPreference,
 )
-from app.types import SubscriptionPeriod, SubscriptionStatus, SubscriptionTier, UserRole
+from app.type_defs import SubscriptionPeriod, SubscriptionStatus, SubscriptionTier, UserRole
 
 fake = Faker()
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")

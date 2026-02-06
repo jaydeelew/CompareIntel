@@ -16,6 +16,7 @@ from pydantic import BaseModel, ConfigDict
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
+from ..config import get_model_limit
 from ..config.settings import settings
 from ..credit_manager import (
     check_and_reset_credits_if_needed,
@@ -50,7 +51,6 @@ from ..rate_limiting import (
     get_anonymous_usage_stats,
     get_user_usage_stats,
 )
-from ..config import get_model_limit
 from ..schemas import BreakoutConversationCreate, ConversationDetail, ConversationSummary
 from ..search.factory import SearchProviderFactory
 
@@ -66,7 +66,6 @@ model_stats: dict[str, dict[str, Any]] = defaultdict(
 from ..config import (
     ANONYMOUS_MODEL_LIMIT,
     get_conversation_limit,
-    get_model_limit,
 )
 from ..config.constants import DAILY_CREDIT_LIMITS
 
@@ -819,7 +818,6 @@ async def compare_stream(
 
             try:
                 import jwt
-                from jwt.exceptions import DecodeError, ExpiredSignatureError
             except ImportError:
                 jwt = None
 

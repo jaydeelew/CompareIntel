@@ -10,7 +10,7 @@ This module contains all application constants including:
 All constants should be imported from this module to maintain a single source of truth.
 """
 
-from ..types import TierConfigDict
+from ..type_defs import TierConfigDict
 
 # ============================================================================
 # Subscription Tier Configuration

@@ -40,7 +40,7 @@ from .credit_manager import (
     ensure_credits_allocated,
 )
 from .models import UsageLog, User
-from .types import (
+from .type_defs import (
     AnonymousRateLimitData,
     FullUsageStatsDict,
     UsageStatsDict,

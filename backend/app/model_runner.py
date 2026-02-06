@@ -21,7 +21,7 @@ from openai import APIError, OpenAI  # type: ignore[import-untyped]
 from .config import settings
 from .mock_responses import stream_mock_response
 from .search.rate_limiter import get_rate_limiter
-from .types import ConnectionQualityDict
+from .type_defs import ConnectionQualityDict
 
 logger = logging.getLogger(__name__)
 
