@@ -506,10 +506,6 @@ The project includes GitHub Actions workflows:
   - Security scanning
   - Dependency review (PRs only)
 
-- **Deploy** (`deploy.yml`): Production deployment
-  - Manual trigger or auto-deploy on `master` branch (after CI passes)
-  - Health checks and verification
-
 ### Error Monitoring (Sentry)
 
 To enable Sentry error monitoring:
