@@ -223,12 +223,12 @@
 }
 
 .tutorial-welcome-button-primary {
-  background: var(--primary-color);
+  background: var(--primary-dark);
   color: white;
 }
 
 .tutorial-welcome-button-primary:hover {
-  background: #0284c7;
+  background: var(--primary-hover);
   transform: translateY(-1px);
   box-shadow: var(--shadow-md);
 }
@@ -284,7 +284,7 @@
   }
 
   .tutorial-welcome-button-primary:active {
-    background: #0284c7;
+    background: var(--primary-hover);
     transform: scale(0.98);
   }
 
