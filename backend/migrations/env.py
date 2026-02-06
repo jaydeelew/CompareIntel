@@ -22,12 +22,12 @@ from app.database import Base
 
 # Import all models so Alembic can detect them for autogenerate
 # This ensures all models are included in migration generation
-from app.models import (
-    User,
-    UserPreference,
+from app.models import (  # noqa: F401
     Conversation,
     ConversationMessage,
     UsageLog,
+    User,
+    UserPreference,
 )
 
 # Alembic Config object

@@ -405,9 +405,9 @@ class TestAnonymousCreditEdgeCases:
 
     def test_anonymous_credits_reset_on_new_day(self):
         """Test anonymous credits reset on new day."""
-        from datetime import UTC, date, datetime
+        from datetime import date
 
-        from app.rate_limiting import anonymous_rate_limit_storage, _get_local_date
+        from app.rate_limiting import _get_local_date, anonymous_rate_limit_storage
 
         identifier = "ip:192.168.1.7"
 

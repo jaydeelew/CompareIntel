@@ -8,7 +8,7 @@ Tests cover:
 - Concurrent access
 """
 
-from datetime import UTC, date, datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 
 from app.config.constants import (
