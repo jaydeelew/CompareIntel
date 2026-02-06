@@ -29,6 +29,7 @@ jobs:
       SECRET_KEY: test-secret-key-for-contract-testing
       ENVIRONMENT: test
       SKIP_CONFIG_VALIDATION: true
+      OPENROUTER_API_KEY: ""
     
     steps:
       - name: Checkout code
@@ -129,6 +130,7 @@ jobs:
       SECRET_KEY: test-secret-key-for-migration-testing
       ENVIRONMENT: test
       SKIP_CONFIG_VALIDATION: true
+      OPENROUTER_API_KEY: ""
     
     steps:
       - name: Checkout code
@@ -153,7 +155,8 @@ jobs:
           # Test that database can be initialized
           python -c "
           from app.database import Base, engine
-          from app.models import User, Comparison, Conversation
+          # Import models to ensure they're registered with Base
+          import app.models
           
           # Create all tables
           Base.metadata.create_all(bind=engine)

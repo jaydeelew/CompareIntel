@@ -8,7 +8,7 @@ All settings are loaded from environment variables with sensible defaults.
 from pathlib import Path
 
 from dotenv import load_dotenv
-from pydantic import field_validator
+from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 # Load environment variables from .env file
@@ -35,7 +35,9 @@ class Settings(BaseSettings):
     secret_key: str
 
     # API Keys
-    openrouter_api_key: str
+    # Optional in test environments (when SKIP_CONFIG_VALIDATION is set)
+    # Validation function will check this in non-test environments
+    openrouter_api_key: str = Field(default="")
 
     # Search Provider API Keys (Optional)
     brave_search_api_key: str | None = None
