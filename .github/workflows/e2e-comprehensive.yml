@@ -345,7 +345,7 @@ jobs:
           npm run test:e2e -- \
             --project=chromium \
             --grep="(error|rate.limit|network|failure)" \
-            --timeout=90000 || true
+            --timeout=90000
       
       - name: Upload Playwright report
         if: always()

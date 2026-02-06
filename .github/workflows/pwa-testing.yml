@@ -118,7 +118,7 @@ jobs:
           npm run test:e2e -- \
             --project=chromium \
             --grep="(pwa|offline|service.worker|install)" \
-            --timeout=90000 || echo "PWA-specific tests not yet implemented"
+            --timeout=90000
       
       - name: Upload PWA test results
         if: always()
@@ -129,80 +129,118 @@ jobs:
           retention-days: 7
 
   # ============================================================================
-  # Lighthouse PWA Audit
+  # PWA Manifest & Assets Validation
   # ============================================================================
-  lighthouse-pwa:
-    name: Lighthouse PWA Audit
+  # Note: Full Lighthouse audits (including PWA category) run in performance.yml.
+  # This job focuses on structural PWA validation that doesn't need a running server.
+  pwa-manifest-validation:
+    name: PWA Manifest & Assets Validation
     runs-on: ubuntu-latest
-    timeout-minutes: 20
-    
+    timeout-minutes: 10
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
           cache-dependency-path: frontend/package-lock.json
-      
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-          cache: 'pip'
-          cache-dependency-path: backend/requirements.txt
-      
-      - name: Install dependencies
+
+      - name: Install dependencies and build
+        working-directory: frontend
         run: |
-          cd backend
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          if [ -f requirements-dev.txt ]; then
-            pip install -r requirements-dev.txt
-          fi
-          cd ../frontend
           npm ci
-      
-      - name: Build frontend
-        working-directory: frontend
-        run: npm run build
-      
-      - name: Start backend server
-        working-directory: backend
-        env:
-          DATABASE_URL: sqlite:///./test-pwa.db
-          SECRET_KEY: test-secret-key-for-pwa-testing
-          ENVIRONMENT: test
-          SKIP_CONFIG_VALIDATION: true
-        run: |
-          python -m uvicorn app.main:app --host 127.0.0.1 --port 8000 &
-          sleep 10
-      
-      - name: Start frontend server
+          npm run build
+
+      - name: Validate PWA manifest structure
         working-directory: frontend
         run: |
-          npm run preview -- --port 5173 &
-          sleep 5
-      
-      - name: Install Lighthouse CI
-        run: npm install -g @lhci/cli@0.12.x
-      
-      - name: Run Lighthouse PWA audit
+          python3 -c "
+          import json, sys, glob
+
+          # Find manifest file
+          manifests = glob.glob('dist/manifest*.json') + glob.glob('dist/manifest*.webmanifest')
+          if not manifests:
+              print('❌ No PWA manifest found in dist/')
+              sys.exit(1)
+
+          manifest_path = manifests[0]
+          print(f'Found manifest: {manifest_path}')
+
+          with open(manifest_path) as f:
+              m = json.load(f)
+
+          errors = []
+
+          # Required fields for installable PWA
+          required = ['name', 'short_name', 'start_url', 'display', 'icons']
+          for field in required:
+              if field not in m:
+                  errors.append(f'Missing required field: {field}')
+
+          # Validate display mode
+          valid_displays = ['standalone', 'fullscreen', 'minimal-ui', 'browser']
+          if m.get('display') not in valid_displays:
+              errors.append(f'Invalid display mode: {m.get(\"display\")}')
+
+          # Validate icons (need at least 192x192 and 512x512 for installability)
+          icons = m.get('icons', [])
+          icon_sizes = {icon.get('sizes', '') for icon in icons}
+          if '192x192' not in icon_sizes:
+              errors.append('Missing 192x192 icon (required for installability)')
+          if '512x512' not in icon_sizes:
+              errors.append('Missing 512x512 icon (required for installability)')
+
+          # Validate theme_color and background_color (recommended)
+          if 'theme_color' not in m:
+              print('⚠️  Warning: theme_color not set')
+          if 'background_color' not in m:
+              print('⚠️  Warning: background_color not set')
+
+          if errors:
+              for e in errors:
+                  print(f'❌ {e}')
+              sys.exit(1)
+          else:
+              print('✅ PWA manifest validation passed')
+              print(f'   Name: {m.get(\"name\")}')
+              print(f'   Display: {m.get(\"display\")}')
+              print(f'   Icons: {len(icons)} defined')
+          "
+
+      - name: Verify service worker in build output
+        working-directory: frontend
         run: |
-          lhci autorun \
-            --collect.url=http://localhost:5173 \
-            --collect.numberOfRuns=1 \
-            --assert.assertions.off=0 \
-            --assert.assertions.warn=0 \
-            --assert.assertions.error=0 \
-            --upload.target=temporary-public-storage || true
-      
-      - name: Upload Lighthouse PWA report
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: lighthouse-pwa-report
-          path: .lighthouseci/
-          retention-days: 30
+          SW_FILES=$(find dist -name "sw.js" -o -name "service-worker.js" -o -name "sw.*.js" 2>/dev/null)
+          if [ -n "$SW_FILES" ]; then
+            echo "✅ Service worker found:"
+            echo "$SW_FILES"
+            # Verify it's not empty
+            for f in $SW_FILES; do
+              SIZE=$(wc -c < "$f")
+              if [ "$SIZE" -lt 100 ]; then
+                echo "⚠️  Service worker $f seems too small ($SIZE bytes)"
+              else
+                echo "   $f: $SIZE bytes"
+              fi
+            done
+          else
+            echo "❌ No service worker found in build output"
+            exit 1
+          fi
+
+      - name: Check HTML references manifest and service worker
+        working-directory: frontend
+        run: |
+          if [ -f dist/index.html ]; then
+            # Check manifest link
+            if grep -q 'manifest' dist/index.html; then
+              echo "✅ index.html references manifest"
+            else
+              echo "❌ index.html missing manifest link"
+              exit 1
+            fi
+          fi

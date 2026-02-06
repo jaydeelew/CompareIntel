@@ -214,11 +214,24 @@ jobs:
       run:
         working-directory: backend
     
+    # Redis service container for distributed rate limiting tests
+    services:
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 5
+    
     env:
       DATABASE_URL: sqlite:///./test.db
       SECRET_KEY: test-secret-key-for-ci-only
       ENVIRONMENT: test
       SKIP_CONFIG_VALIDATION: true
+      TEST_REDIS_URL: redis://localhost:6379/15
     
     steps:
       - name: Checkout code
@@ -241,10 +254,14 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements-dev.txt
       
+      - name: Verify Redis is available
+        run: |
+          redis-cli -h localhost -p 6379 ping || echo "Redis not available (tests will skip gracefully)"
+      
       - name: Run unit tests
         run: pytest tests/unit/ -v --cov=app --cov-report=xml --cov-report=term-missing
       
-      - name: Run integration tests
+      - name: Run integration tests (including Redis rate limiting)
         run: pytest tests/integration/ -v --cov=app --cov-report=xml --cov-report=term-missing --cov-append
       
       - name: Run backend E2E tests

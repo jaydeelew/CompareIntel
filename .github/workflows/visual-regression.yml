@@ -89,11 +89,12 @@ jobs:
         working-directory: frontend
         run: |
           # Run tests that include visual comparisons
-          # Note: This requires Playwright visual comparison setup
+          # Uses Playwright's built-in screenshot comparison (toHaveScreenshot)
           npm run test:e2e -- \
             --project=chromium \
             --grep="(visual|regression|display)" \
-            --timeout=90000 || true
+            --timeout=90000 \
+            --update-snapshots=${{ github.event_name == 'workflow_dispatch' && 'missing' || '' }}
       
       - name: Upload visual comparison results
         if: always()

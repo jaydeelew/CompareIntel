@@ -87,10 +87,12 @@ jobs:
         run: |
           lhci autorun --collect.url=http://localhost:5173 \
             --collect.numberOfRuns=3 \
-            --assert.assertions.off=0 \
-            --assert.assertions.warn=0 \
-            --assert.assertions.error=0 \
-            --upload.target=temporary-public-storage || true
+            --assert.preset=lighthouse:recommended \
+            --assert.assertions.categories:performance=["warn", {"minScore": 0.6}] \
+            --assert.assertions.categories:accessibility=["error", {"minScore": 0.8}] \
+            --assert.assertions.categories:best-practices=["warn", {"minScore": 0.8}] \
+            --assert.assertions.categories:seo=["warn", {"minScore": 0.7}] \
+            --upload.target=temporary-public-storage
       
       - name: Upload Lighthouse report
         if: always()
@@ -201,7 +203,7 @@ jobs:
       - name: Run basic API performance tests
         working-directory: backend
         run: |
-          # Simple performance test using curl
+          # Baseline: measure individual response times
           echo "Testing API response times..."
           for i in {1..10}; do
             RESPONSE_TIME=$(curl -f -o /dev/null -s -w '%{time_total}' http://localhost:8000/health || echo "ERROR")
@@ -212,10 +214,26 @@ jobs:
             echo "Request $i: ${RESPONSE_TIME}s"
           done
       
-      - name: Test API under load
+      - name: Run Locust load tests
         working-directory: backend
         run: |
-          # Basic load test - 10 concurrent users, 100 requests
-          echo "Running basic load test..."
-          # This is a placeholder - implement proper load testing with locust or similar
-          echo "Load testing framework ready for implementation"
+          locust -f tests/load/locustfile.py \
+            --headless \
+            -u 20 \
+            -r 5 \
+            --run-time 30s \
+            --host http://localhost:8000 \
+            --csv=load-test-results \
+            --html=load-test-report.html \
+            --exit-code-on-error 1
+      
+      - name: Upload load test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: load-test-results
+          path: |
+            backend/load-test-results*.csv
+            backend/load-test-report.html
+          retention-days: 30
+          if-no-files-found: ignore

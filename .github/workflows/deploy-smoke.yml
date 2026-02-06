@@ -1,0 +1,243 @@
+name: Deployment Smoke Tests
+
+on:
+  # Run after deployment (triggered manually or by deploy workflow)
+  workflow_dispatch:
+    inputs:
+      target_url:
+        description: 'Base URL to test (e.g., https://compareintel.com)'
+        required: true
+        default: 'https://compareintel.com'
+      run_full_suite:
+        description: 'Run full smoke test suite (not just health checks)'
+        required: false
+        type: boolean
+        default: true
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  TARGET_URL: ${{ github.event.inputs.target_url || 'https://compareintel.com' }}
+
+jobs:
+  # ============================================================================
+  # Health & Connectivity Checks
+  # ============================================================================
+  health-checks:
+    name: Health & Connectivity
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check frontend is reachable
+        run: |
+          echo "Testing frontend at ${{ env.TARGET_URL }}..."
+          HTTP_CODE=$(curl -s -o /dev/null -w '%{http_code}' -L "${{ env.TARGET_URL }}" --max-time 30)
+          if [ "$HTTP_CODE" -ge 200 ] && [ "$HTTP_CODE" -lt 400 ]; then
+            echo "✅ Frontend is reachable (HTTP $HTTP_CODE)"
+          else
+            echo "❌ Frontend returned HTTP $HTTP_CODE"
+            exit 1
+          fi
+
+      - name: Check backend health endpoint
+        run: |
+          # Try both direct and proxied health endpoints
+          HEALTH_URL="${{ env.TARGET_URL }}/health"
+          echo "Testing health at $HEALTH_URL..."
+          
+          RESPONSE=$(curl -s -w "\n%{http_code}" -L "$HEALTH_URL" --max-time 15)
+          HTTP_CODE=$(echo "$RESPONSE" | tail -1)
+          BODY=$(echo "$RESPONSE" | head -n -1)
+          
+          echo "HTTP Status: $HTTP_CODE"
+          echo "Response: $BODY"
+          
+          if [ "$HTTP_CODE" = "200" ]; then
+            # Validate response body
+            STATUS=$(echo "$BODY" | python3 -c "import json,sys; print(json.load(sys.stdin).get('status',''))" 2>/dev/null || echo "")
+            if [ "$STATUS" = "healthy" ]; then
+              echo "✅ Backend health check passed"
+            else
+              echo "⚠️  Backend responded but status is not 'healthy': $STATUS"
+            fi
+          else
+            echo "❌ Backend health check failed (HTTP $HTTP_CODE)"
+            exit 1
+          fi
+
+      - name: Check API root endpoint
+        run: |
+          API_URL="${{ env.TARGET_URL }}/api/"
+          echo "Testing API root at $API_URL..."
+          HTTP_CODE=$(curl -s -o /dev/null -w '%{http_code}' -L "$API_URL" --max-time 15)
+          echo "API root: HTTP $HTTP_CODE"
+          # API root might redirect or return various codes, just shouldn't 5xx
+          if [ "$HTTP_CODE" -ge 500 ]; then
+            echo "❌ API root returned server error"
+            exit 1
+          fi
+          echo "✅ API root is responsive"
+
+      - name: Check SSL certificate
+        run: |
+          DOMAIN=$(echo "${{ env.TARGET_URL }}" | sed 's|https://||' | sed 's|http://||' | sed 's|/.*||')
+          if echo "${{ env.TARGET_URL }}" | grep -q "https"; then
+            echo "Checking SSL for $DOMAIN..."
+            EXPIRY=$(echo | openssl s_client -servername "$DOMAIN" -connect "$DOMAIN:443" 2>/dev/null | openssl x509 -noout -enddate 2>/dev/null | cut -d= -f2)
+            if [ -n "$EXPIRY" ]; then
+              echo "SSL certificate expires: $EXPIRY"
+              # Check if cert expires within 14 days
+              EXPIRY_EPOCH=$(date -d "$EXPIRY" +%s 2>/dev/null || date -j -f "%b %d %T %Y %Z" "$EXPIRY" +%s 2>/dev/null || echo "0")
+              NOW_EPOCH=$(date +%s)
+              DAYS_LEFT=$(( (EXPIRY_EPOCH - NOW_EPOCH) / 86400 ))
+              if [ "$DAYS_LEFT" -lt 14 ]; then
+                echo "⚠️  SSL certificate expires in $DAYS_LEFT days!"
+              else
+                echo "✅ SSL certificate valid for $DAYS_LEFT more days"
+              fi
+            else
+              echo "⚠️  Could not check SSL certificate"
+            fi
+          else
+            echo "Skipping SSL check (not HTTPS)"
+          fi
+
+  # ============================================================================
+  # Functional Smoke Tests
+  # ============================================================================
+  functional-smoke:
+    name: Functional Smoke Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: health-checks
+    if: ${{ github.event.inputs.run_full_suite != 'false' }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check critical API endpoints respond
+        run: |
+          echo "=== Testing critical API endpoints ==="
+          PASS=0
+          FAIL=0
+          
+          # Test OpenAPI schema endpoint
+          echo -n "  /openapi.json: "
+          CODE=$(curl -s -o /dev/null -w '%{http_code}' "${{ env.TARGET_URL }}/openapi.json" --max-time 15)
+          if [ "$CODE" = "200" ]; then echo "✅ ($CODE)"; PASS=$((PASS+1)); else echo "❌ ($CODE)"; FAIL=$((FAIL+1)); fi
+          
+          # Test models endpoint
+          echo -n "  /api/models: "
+          CODE=$(curl -s -o /dev/null -w '%{http_code}' "${{ env.TARGET_URL }}/api/models" --max-time 15)
+          if [ "$CODE" = "200" ]; then echo "✅ ($CODE)"; PASS=$((PASS+1)); else echo "❌ ($CODE)"; FAIL=$((FAIL+1)); fi
+          
+          # Test rate limit status
+          echo -n "  /api/rate-limit-status: "
+          CODE=$(curl -s -o /dev/null -w '%{http_code}' "${{ env.TARGET_URL }}/api/rate-limit-status" --max-time 15)
+          if [ "$CODE" = "200" ]; then echo "✅ ($CODE)"; PASS=$((PASS+1)); else echo "❌ ($CODE)"; FAIL=$((FAIL+1)); fi
+          
+          # Test auth endpoint exists (should return 422 for missing body, not 404)
+          echo -n "  /api/auth/login (exists): "
+          CODE=$(curl -s -o /dev/null -w '%{http_code}' -X POST "${{ env.TARGET_URL }}/api/auth/login" -H "Content-Type: application/json" -d '{}' --max-time 15)
+          if [ "$CODE" = "422" ] || [ "$CODE" = "400" ]; then echo "✅ ($CODE - endpoint exists)"; PASS=$((PASS+1)); else echo "❌ ($CODE)"; FAIL=$((FAIL+1)); fi
+          
+          echo ""
+          echo "Results: $PASS passed, $FAIL failed"
+          if [ "$FAIL" -gt 0 ]; then
+            exit 1
+          fi
+
+      - name: Check response times
+        run: |
+          echo "=== Measuring response times ==="
+          
+          endpoints=(
+            "/health"
+            "/api/models"
+            "/api/rate-limit-status"
+          )
+          
+          ALL_OK=true
+          for endpoint in "${endpoints[@]}"; do
+            TOTAL_TIME=$(curl -s -o /dev/null -w '%{time_total}' "${{ env.TARGET_URL }}${endpoint}" --max-time 30)
+            TIME_MS=$(echo "$TOTAL_TIME * 1000" | bc | cut -d. -f1)
+            
+            if [ "$TIME_MS" -gt 5000 ]; then
+              echo "  ❌ ${endpoint}: ${TIME_MS}ms (> 5000ms threshold)"
+              ALL_OK=false
+            elif [ "$TIME_MS" -gt 2000 ]; then
+              echo "  ⚠️  ${endpoint}: ${TIME_MS}ms (slow but acceptable)"
+            else
+              echo "  ✅ ${endpoint}: ${TIME_MS}ms"
+            fi
+          done
+          
+          if [ "$ALL_OK" = false ]; then
+            echo "Some endpoints exceeded response time threshold"
+            exit 1
+          fi
+
+      - name: Verify frontend serves static assets
+        run: |
+          echo "=== Checking frontend static assets ==="
+          
+          # Check that the main HTML page contains expected elements
+          HTML=$(curl -s -L "${{ env.TARGET_URL }}" --max-time 15)
+          
+          # Check for React root element
+          if echo "$HTML" | grep -q 'id="root"'; then
+            echo "✅ React root element found"
+          else
+            echo "❌ React root element missing"
+            exit 1
+          fi
+          
+          # Check for manifest link (PWA)
+          if echo "$HTML" | grep -q 'manifest'; then
+            echo "✅ PWA manifest link found"
+          else
+            echo "⚠️  PWA manifest link not found (may be expected in some configs)"
+          fi
+
+      - name: Check security headers
+        run: |
+          echo "=== Checking security headers ==="
+          HEADERS=$(curl -s -I -L "${{ env.TARGET_URL }}" --max-time 15)
+          
+          WARNINGS=0
+          
+          # Check X-Content-Type-Options
+          if echo "$HEADERS" | grep -qi "x-content-type-options"; then
+            echo "✅ X-Content-Type-Options header present"
+          else
+            echo "⚠️  X-Content-Type-Options header missing"
+            WARNINGS=$((WARNINGS+1))
+          fi
+          
+          # Check X-Frame-Options or CSP frame-ancestors
+          if echo "$HEADERS" | grep -qi "x-frame-options\|frame-ancestors"; then
+            echo "✅ Frame protection header present"
+          else
+            echo "⚠️  No frame protection header"
+            WARNINGS=$((WARNINGS+1))
+          fi
+          
+          # Check Strict-Transport-Security
+          if echo "${{ env.TARGET_URL }}" | grep -q "https"; then
+            if echo "$HEADERS" | grep -qi "strict-transport-security"; then
+              echo "✅ HSTS header present"
+            else
+              echo "⚠️  HSTS header missing"
+              WARNINGS=$((WARNINGS+1))
+            fi
+          fi
+          
+          echo ""
+          echo "$WARNINGS security header warnings"

@@ -1,0 +1,196 @@
+name: Docker Build Validation
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - 'backend/Dockerfile'
+      - 'frontend/Dockerfile'
+      - 'docker-compose*.yml'
+      - 'nginx/**'
+      - 'backend/requirements.txt'
+      - 'frontend/package.json'
+      - '.github/workflows/docker-build.yml'
+  pull_request:
+    branches: [master]
+    paths:
+      - 'backend/Dockerfile'
+      - 'frontend/Dockerfile'
+      - 'docker-compose*.yml'
+      - 'nginx/**'
+      - 'backend/requirements.txt'
+      - 'frontend/package.json'
+      - '.github/workflows/docker-build.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ============================================================================
+  # Validate Docker Compose Configurations
+  # ============================================================================
+  validate-compose:
+    name: Validate Docker Compose Files
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Validate docker-compose.yml
+        run: docker compose -f docker-compose.yml config --quiet
+
+      - name: Validate docker-compose.prod.yml
+        run: docker compose -f docker-compose.prod.yml config --quiet
+
+      - name: Validate docker-compose.ssl.yml
+        if: hashFiles('docker-compose.ssl.yml') != ''
+        run: docker compose -f docker-compose.ssl.yml config --quiet
+
+      - name: Validate docker-compose.dev-ssl.yml
+        if: hashFiles('docker-compose.dev-ssl.yml') != ''
+        run: docker compose -f docker-compose.dev-ssl.yml config --quiet
+
+  # ============================================================================
+  # Build Backend Docker Image
+  # ============================================================================
+  build-backend:
+    name: Build Backend Image
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build backend image (development)
+        uses: docker/build-push-action@v6
+        with:
+          context: ./backend
+          file: ./backend/Dockerfile
+          push: false
+          tags: compareintel-backend:dev-test
+          build-args: ENVIRONMENT=development
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build backend image (production)
+        uses: docker/build-push-action@v6
+        with:
+          context: ./backend
+          file: ./backend/Dockerfile
+          push: false
+          tags: compareintel-backend:prod-test
+          build-args: ENVIRONMENT=production
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Verify backend image starts
+        run: |
+          docker run --rm -d \
+            --name backend-test \
+            -e SECRET_KEY=test-secret-key-for-docker-validation \
+            -e DATABASE_URL=sqlite:///./test.db \
+            -e OPENROUTER_API_KEY=test-key \
+            -e ENVIRONMENT=test \
+            -e SKIP_CONFIG_VALIDATION=true \
+            -p 8000:8000 \
+            compareintel-backend:dev-test \
+            python -m uvicorn app.main:app --host 0.0.0.0 --port 8000
+          
+          # Wait for container to start
+          echo "Waiting for backend container..."
+          for i in {1..30}; do
+            if curl -f -s http://localhost:8000/health > /dev/null 2>&1; then
+              echo "✅ Backend container is healthy"
+              break
+            fi
+            if [ $i -eq 30 ]; then
+              echo "❌ Backend container failed to start"
+              docker logs backend-test
+              exit 1
+            fi
+            sleep 1
+          done
+          
+          # Verify health endpoint response
+          HEALTH=$(curl -s http://localhost:8000/health)
+          echo "Health response: $HEALTH"
+          
+          docker stop backend-test
+
+  # ============================================================================
+  # Build Frontend Docker Image
+  # ============================================================================
+  build-frontend:
+    name: Build Frontend Image
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build frontend image (build stage)
+        uses: docker/build-push-action@v6
+        with:
+          context: ./frontend
+          file: ./frontend/Dockerfile
+          push: false
+          tags: compareintel-frontend:build-test
+          target: build
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build frontend image (dev stage)
+        uses: docker/build-push-action@v6
+        with:
+          context: ./frontend
+          file: ./frontend/Dockerfile
+          push: false
+          tags: compareintel-frontend:dev-test
+          target: dev
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build frontend image (prod stage)
+        uses: docker/build-push-action@v6
+        with:
+          context: ./frontend
+          file: ./frontend/Dockerfile
+          push: false
+          tags: compareintel-frontend:prod-test
+          target: prod
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Verify production nginx image starts
+        run: |
+          docker run --rm -d \
+            --name frontend-test \
+            -p 8080:80 \
+            compareintel-frontend:prod-test
+          
+          # Wait for nginx to start
+          sleep 3
+          
+          # Verify nginx is serving
+          HTTP_CODE=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8080/ || echo "000")
+          if [ "$HTTP_CODE" = "200" ] || [ "$HTTP_CODE" = "304" ]; then
+            echo "✅ Frontend nginx container is serving (HTTP $HTTP_CODE)"
+          else
+            echo "❌ Frontend container returned HTTP $HTTP_CODE"
+            docker logs frontend-test
+            exit 1
+          fi
+          
+          docker stop frontend-test
