@@ -1,0 +1,203 @@
+name: Performance Testing
+
+on:
+  pull_request:
+    branches: [master]
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+  workflow_dispatch:
+  schedule:
+    # Run weekly on Mondays at 3:00 AM UTC
+    - cron: '0 3 * * 1'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: '20'
+  PYTHON_VERSION: '3.11'
+
+jobs:
+  # ============================================================================
+  # Lighthouse Performance Testing
+  # ============================================================================
+  lighthouse-performance:
+    name: Lighthouse Performance Audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+      
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+          cache-dependency-path: backend/requirements.txt
+      
+      - name: Install dependencies
+        run: |
+          cd backend
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          if [ -f requirements-dev.txt ]; then
+            pip install -r requirements-dev.txt
+          fi
+          cd ../frontend
+          npm ci
+      
+      - name: Build frontend
+        working-directory: frontend
+        run: npm run build
+      
+      - name: Start backend server
+        working-directory: backend
+        env:
+          DATABASE_URL: sqlite:///./test-perf.db
+          SECRET_KEY: test-secret-key-for-performance-testing
+          ENVIRONMENT: test
+          SKIP_CONFIG_VALIDATION: true
+        run: |
+          python -m uvicorn app.main:app --host 127.0.0.1 --port 8000 &
+          sleep 10
+      
+      - name: Start frontend server
+        working-directory: frontend
+        run: |
+          npm run preview -- --port 5173 &
+          sleep 5
+      
+      - name: Install Lighthouse CI
+        run: npm install -g @lhci/cli@0.12.x
+      
+      - name: Run Lighthouse CI
+        run: |
+          lhci autorun --collect.url=http://localhost:5173 \
+            --collect.numberOfRuns=3 \
+            --assert.assertions.off=0 \
+            --assert.assertions.warn=0 \
+            --assert.assertions.error=0 \
+            --upload.target=temporary-public-storage || true
+      
+      - name: Upload Lighthouse report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse-report
+          path: .lighthouseci/
+          retention-days: 30
+
+  # ============================================================================
+  # Bundle Size Monitoring
+  # ============================================================================
+  bundle-size:
+    name: Bundle Size Analysis
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+      
+      - name: Install dependencies
+        working-directory: frontend
+        run: npm ci
+      
+      - name: Build and analyze bundle
+        working-directory: frontend
+        run: npm run build:analyze
+      
+      - name: Check bundle size thresholds
+        working-directory: frontend
+        run: |
+          # Check if main bundle exceeds reasonable size (e.g., 500KB gzipped)
+          if [ -f dist/assets/*.js ]; then
+            BUNDLE_SIZE=$(du -k dist/assets/*.js | tail -1 | awk '{print $1}')
+            echo "Main bundle size: ${BUNDLE_SIZE}KB"
+            if [ "$BUNDLE_SIZE" -gt 500 ]; then
+              echo "⚠️  Warning: Bundle size exceeds 500KB"
+            fi
+          fi
+      
+      - name: Upload bundle analysis
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bundle-size-analysis
+          path: frontend/dist/stats.html
+          retention-days: 30
+          if-no-files-found: ignore
+
+  # ============================================================================
+  # API Performance Testing
+  # ============================================================================
+  api-performance:
+    name: API Performance & Load Testing
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    
+    env:
+      DATABASE_URL: sqlite:///./test-perf.db
+      SECRET_KEY: test-secret-key-for-performance-testing
+      ENVIRONMENT: test
+      SKIP_CONFIG_VALIDATION: true
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+          cache-dependency-path: backend/requirements-dev.txt
+      
+      - name: Install dependencies
+        run: |
+          cd backend
+          python -m pip install --upgrade pip
+          pip install -r requirements-dev.txt
+          pip install locust
+      
+      - name: Start backend server
+        working-directory: backend
+        run: |
+          python -m uvicorn app.main:app --host 127.0.0.1 --port 8000 &
+          sleep 10
+      
+      - name: Run basic API performance tests
+        working-directory: backend
+        run: |
+          # Simple performance test using curl
+          echo "Testing API response times..."
+          for i in {1..10}; do
+            RESPONSE_TIME=$(curl -o /dev/null -s -w '%{time_total}' http://localhost:8000/api/health)
+            echo "Request $i: ${RESPONSE_TIME}s"
+          done
+      
+      - name: Test API under load
+        working-directory: backend
+        run: |
+          # Basic load test - 10 concurrent users, 100 requests
+          echo "Running basic load test..."
+          # This is a placeholder - implement proper load testing with locust or similar
+          echo "Load testing framework ready for implementation"

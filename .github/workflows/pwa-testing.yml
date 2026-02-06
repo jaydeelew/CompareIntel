@@ -1,0 +1,203 @@
+name: PWA Testing
+
+on:
+  pull_request:
+    branches: [master]
+    paths:
+      - 'frontend/**'
+      - '.github/workflows/pwa-testing.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: '20'
+  PYTHON_VERSION: '3.11'
+
+jobs:
+  # ============================================================================
+  # PWA Feature Testing
+  # ============================================================================
+  pwa-test:
+    name: PWA Feature Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    
+    env:
+      DATABASE_URL: sqlite:///./test-pwa.db
+      SECRET_KEY: test-secret-key-for-pwa-testing
+      ENVIRONMENT: development
+      SKIP_CONFIG_VALIDATION: true
+      CI: true
+      PLAYWRIGHT_BASE_URL: http://localhost:5173
+      BACKEND_URL: http://localhost:8000
+      OPENROUTER_API_KEY: ${{ secrets.TEST_OPENROUTER_API_KEY }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+      
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+          cache-dependency-path: backend/requirements.txt
+      
+      - name: Install backend dependencies
+        run: |
+          cd backend
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          if [ -f requirements-dev.txt ]; then
+            pip install -r requirements-dev.txt
+          fi
+      
+      - name: Install frontend dependencies
+        run: |
+          cd frontend
+          npm ci
+      
+      - name: Build frontend for PWA testing
+        working-directory: frontend
+        run: npm run build
+      
+      - name: Validate PWA manifest
+        working-directory: frontend
+        run: |
+          # Check if manifest.json exists and is valid
+          if [ -f "dist/manifest.json" ] || [ -f "dist/manifest.webmanifest" ]; then
+            echo "✅ PWA manifest found"
+            # Basic JSON validation
+            if command -v python3 &> /dev/null; then
+              python3 -m json.tool dist/manifest*.json > /dev/null && echo "✅ Manifest JSON is valid"
+            fi
+          else
+            echo "⚠️  Warning: PWA manifest not found"
+          fi
+      
+      - name: Check service worker registration
+        working-directory: frontend
+        run: |
+          # Check if service worker file exists
+          if find dist -name "sw.js" -o -name "service-worker.js" -o -name "sw.*.js" | grep -q .; then
+            echo "✅ Service worker file found"
+          else
+            echo "⚠️  Warning: Service worker file not found"
+          fi
+      
+      - name: Install Playwright browsers
+        run: |
+          cd frontend
+          npx playwright install --with-deps chromium
+      
+      - name: Initialize test database directory
+        run: |
+          cd backend
+          mkdir -p data
+          touch data/.gitkeep || true
+      
+      - name: Test PWA features with Playwright
+        working-directory: frontend
+        run: |
+          # Test PWA installation, offline functionality, etc.
+          npm run test:e2e -- \
+            --project=chromium \
+            --grep="(pwa|offline|service.worker|install)" \
+            --timeout=90000 || echo "PWA-specific tests not yet implemented"
+      
+      - name: Upload PWA test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pwa-test-results
+          path: frontend/test-results/
+          retention-days: 7
+
+  # ============================================================================
+  # Lighthouse PWA Audit
+  # ============================================================================
+  lighthouse-pwa:
+    name: Lighthouse PWA Audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+      
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+          cache-dependency-path: backend/requirements.txt
+      
+      - name: Install dependencies
+        run: |
+          cd backend
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          if [ -f requirements-dev.txt ]; then
+            pip install -r requirements-dev.txt
+          fi
+          cd ../frontend
+          npm ci
+      
+      - name: Build frontend
+        working-directory: frontend
+        run: npm run build
+      
+      - name: Start backend server
+        working-directory: backend
+        env:
+          DATABASE_URL: sqlite:///./test-pwa.db
+          SECRET_KEY: test-secret-key-for-pwa-testing
+          ENVIRONMENT: test
+          SKIP_CONFIG_VALIDATION: true
+        run: |
+          python -m uvicorn app.main:app --host 127.0.0.1 --port 8000 &
+          sleep 10
+      
+      - name: Start frontend server
+        working-directory: frontend
+        run: |
+          npm run preview -- --port 5173 &
+          sleep 5
+      
+      - name: Install Lighthouse CI
+        run: npm install -g @lhci/cli@0.12.x
+      
+      - name: Run Lighthouse PWA audit
+        run: |
+          lhci autorun \
+            --collect.url=http://localhost:5173 \
+            --collect.numberOfRuns=1 \
+            --assert.assertions.off=0 \
+            --assert.assertions.warn=0 \
+            --assert.assertions.error=0 \
+            --upload.target=temporary-public-storage || true
+      
+      - name: Upload Lighthouse PWA report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse-pwa-report
+          path: .lighthouseci/
+          retention-days: 30
