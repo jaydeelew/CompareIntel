@@ -52,7 +52,7 @@ export default defineConfig({
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     /* Base URL to use in actions like `await page.goto('/')`. */
-    baseURL: process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:5173',
+    baseURL: process.env.PLAYWRIGHT_BASE_URL || (process.env.PLAYWRIGHT_USE_PREVIEW === 'true' ? 'http://localhost:4173' : 'http://localhost:5173'),
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     /* Disable trace for faster runs - enable with PLAYWRIGHT_TRACE=on-first-retry if needed */
@@ -142,10 +142,11 @@ export default defineConfig({
   ],
 
   /* Run your local dev server before starting the tests */
+  /* Use preview mode (production build) for PWA tests, dev mode for others */
   webServer: [
     {
-      command: 'npm run dev',
-      url: 'http://localhost:5173',
+      command: process.env.PLAYWRIGHT_USE_PREVIEW === 'true' ? 'npm run preview' : 'npm run dev',
+      url: process.env.PLAYWRIGHT_USE_PREVIEW === 'true' ? 'http://localhost:4173' : 'http://localhost:5173',
       reuseExistingServer: !process.env.CI,
       timeout: 120 * 1000,
       cwd: path.resolve(__dirname),

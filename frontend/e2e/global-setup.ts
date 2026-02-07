@@ -306,38 +306,39 @@ async function globalSetup(config: FullConfig) {
   console.log('API-based user setup complete. Proceeding with browser verification...')
 
   // Determine which browser to use based on the project configuration
-  // When --project=webkit is used, we need to detect webkit, not default to chromium
-  // Check all projects to find webkit/safari projects first, then firefox, then chromium
+  // Prioritize chromium (most common), then check other browsers
+  // When --project=chromium is used, we should use chromium, not webkit
   let browserType: BrowserType<object> = chromium
   let projectName = 'chromium (default)'
-  let foundWebkit = false
+  let foundChromium = false
   let foundFirefox = false
+  let foundWebkit = false
 
-  // Check all projects - prioritize webkit, then firefox, then chromium
+  // Check all projects - prioritize chromium first (most common in CI), then firefox, then webkit
   // Project names are clear: 'webkit', 'firefox', 'chromium', 'Mobile Safari - iPhone 12', etc.
   for (const project of config.projects) {
     const name = project?.name?.toLowerCase() || ''
 
-    // Check for webkit/safari (highest priority)
-    if (name.includes('webkit') || name.includes('safari')) {
-      browserType = webkit
-      projectName = project.name || 'webkit'
-      foundWebkit = true
-      break // Webkit has highest priority, use it immediately
+    // Check for chromium/chrome first (highest priority for CI)
+    if ((name.includes('chromium') || name.includes('chrome')) && !foundChromium) {
+      browserType = chromium
+      projectName = project.name || 'chromium'
+      foundChromium = true
+      // Don't break - continue to see if there are other options, but chromium takes priority
     }
 
-    // Check for firefox (only if webkit not found yet)
-    if (name.includes('firefox') && !foundWebkit) {
+    // Check for firefox (only if chromium not found yet)
+    if (name.includes('firefox') && !foundChromium && !foundFirefox) {
       browserType = firefox
       projectName = project.name || 'firefox'
       foundFirefox = true
-      // Continue checking for webkit
     }
 
-    // Check for chromium/chrome (only if webkit and firefox not found)
-    if ((name.includes('chromium') || name.includes('chrome')) && !foundWebkit && !foundFirefox) {
-      browserType = chromium
-      projectName = project.name || 'chromium'
+    // Check for webkit/safari (only if chromium and firefox not found)
+    if ((name.includes('webkit') || name.includes('safari')) && !foundChromium && !foundFirefox) {
+      browserType = webkit
+      projectName = project.name || 'webkit'
+      foundWebkit = true
     }
   }
 
@@ -351,17 +352,49 @@ async function globalSetup(config: FullConfig) {
     const errorMessage = error instanceof Error ? error.message : String(error)
     console.error(`Failed to launch ${projectName} browser: ${errorMessage}`)
     console.error('This may indicate that the browser is not installed.')
-    const browserName = projectName.toLowerCase().includes('webkit')
-      ? 'webkit'
-      : projectName.toLowerCase().includes('firefox')
-        ? 'firefox'
-        : 'chromium'
-    console.error(`Please run: npx playwright install ${browserName}`)
-    console.warn(
-      'Skipping browser verification - API-based setup is complete and tests should still work.'
-    )
-    console.log('Global setup complete (browser verification skipped)')
-    return // Exit early if browser can't be launched
+
+    // If chromium failed and we have other options, try fallback
+    if (foundChromium && browserType === chromium) {
+      // Try firefox as fallback if available
+      if (foundFirefox) {
+        console.log('Chromium failed, trying Firefox as fallback...')
+        try {
+          browserType = firefox
+          projectName = 'firefox'
+          browser = await firefox.launch()
+          console.log('Successfully launched Firefox as fallback')
+        } catch {
+          // Firefox also failed, continue to skip
+        }
+      }
+      // If firefox also failed or not available, try webkit
+      if (!browser && foundWebkit) {
+        console.log('Chromium and Firefox failed, trying WebKit as fallback...')
+        try {
+          browserType = webkit
+          projectName = 'webkit'
+          browser = await webkit.launch()
+          console.log('Successfully launched WebKit as fallback')
+        } catch {
+          // WebKit also failed, continue to skip
+        }
+      }
+    }
+
+    // If all browsers failed, skip browser verification
+    if (!browser) {
+      const browserName = projectName.toLowerCase().includes('webkit')
+        ? 'webkit'
+        : projectName.toLowerCase().includes('firefox')
+          ? 'firefox'
+          : 'chromium'
+      console.error(`Please run: npx playwright install ${browserName}`)
+      console.warn(
+        'Skipping browser verification - API-based setup is complete and tests should still work.'
+      )
+      console.log('Global setup complete (browser verification skipped)')
+      return // Exit early if browser can't be launched
+    }
   }
 
   const context = await browser.newContext()

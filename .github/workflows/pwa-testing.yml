@@ -36,7 +36,7 @@ jobs:
       ENVIRONMENT: development
       SKIP_CONFIG_VALIDATION: true
       CI: true
-      PLAYWRIGHT_BASE_URL: http://localhost:5173
+      PLAYWRIGHT_BASE_URL: http://localhost:4173
       BACKEND_URL: http://localhost:8000
       OPENROUTER_API_KEY: ${{ secrets.TEST_OPENROUTER_API_KEY }}
     
@@ -123,8 +123,12 @@ jobs:
       
       - name: Test PWA features with Playwright
         working-directory: frontend
+        env:
+          PLAYWRIGHT_USE_PREVIEW: 'true'
+          PLAYWRIGHT_BASE_URL: 'http://localhost:4173'
         run: |
           # Test PWA installation, offline functionality, etc.
+          # Use preview mode (production build) for PWA tests since service workers only work in production
           npm run test:e2e -- \
             --project=chromium \
             --grep="(pwa|offline|service.worker|install)" \
