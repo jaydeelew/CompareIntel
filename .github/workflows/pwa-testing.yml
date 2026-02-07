@@ -80,11 +80,21 @@ jobs:
         working-directory: frontend
         run: |
           # Check if manifest.json exists and is valid
-          if [ -f "dist/manifest.json" ] || [ -f "dist/manifest.webmanifest" ]; then
-            echo "✅ PWA manifest found"
+          MANIFEST_FILE=""
+          if [ -f "dist/manifest.json" ]; then
+            MANIFEST_FILE="dist/manifest.json"
+          elif [ -f "dist/manifest.webmanifest" ]; then
+            MANIFEST_FILE="dist/manifest.webmanifest"
+          else
+            # Try to find any manifest file
+            MANIFEST_FILE=$(find dist -name "manifest*.json" -o -name "manifest*.webmanifest" | head -n 1)
+          fi
+          
+          if [ -n "$MANIFEST_FILE" ] && [ -f "$MANIFEST_FILE" ]; then
+            echo "✅ PWA manifest found: $MANIFEST_FILE"
             # Basic JSON validation
             if command -v python3 &> /dev/null; then
-              python3 -m json.tool dist/manifest*.json > /dev/null && echo "✅ Manifest JSON is valid"
+              python3 -m json.tool "$MANIFEST_FILE" > /dev/null && echo "✅ Manifest JSON is valid"
             fi
           else
             echo "⚠️  Warning: PWA manifest not found"
