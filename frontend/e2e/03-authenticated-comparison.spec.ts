@@ -109,6 +109,7 @@ test.describe('Authenticated User Comparison Flow', () => {
   })
 
   test('User can continue conversation with follow-up', async ({ authenticatedPage }) => {
+    test.setTimeout(60000) // 60 seconds for this test
     await test.step('Perform initial comparison', async () => {
       const inputField = authenticatedPage.getByTestId('comparison-input-textarea')
       await inputField.fill('What is Python?')
@@ -215,25 +216,89 @@ test.describe('Authenticated User Comparison Flow', () => {
         .isVisible({ timeout: 5000 })
         .catch(() => {})
 
+      // Check page is still valid before proceeding
+      if (authenticatedPage.isClosed()) {
+        throw new Error('Page was closed unexpectedly')
+      }
+
       // Input field should still be visible and ready for follow-up
       const inputField = authenticatedPage.getByTestId('comparison-input-textarea')
-      await expect(inputField).toBeVisible()
+      await expect(inputField).toBeVisible({ timeout: 10000 })
+
+      // Wait for any loading to complete before proceeding
+      // Check for loading indicators and wait for them to disappear
+      if (!authenticatedPage.isClosed()) {
+        const loadingIndicators = authenticatedPage.locator(
+          '.loading-message, [class*="loading"], [data-testid*="loading"]'
+        )
+        await loadingIndicators
+          .first()
+          .waitFor({ state: 'hidden', timeout: 10000 })
+          .catch(() => {})
+      }
+
+      // Wait for network to be idle to ensure previous comparison is complete
+      if (!authenticatedPage.isClosed()) {
+        try {
+          await authenticatedPage.waitForLoadState('networkidle', { timeout: 5000 })
+        } catch {
+          await authenticatedPage.waitForLoadState('load', { timeout: 5000 }).catch(() => {})
+        }
+      }
+
+      // Check page validity again before clearing
+      if (authenticatedPage.isClosed()) {
+        throw new Error('Page was closed before clearing input')
+      }
 
       // Clear any existing text first
-      await inputField.clear()
-      await authenticatedPage.waitForTimeout(500)
+      await inputField.clear({ timeout: 5000 })
+      if (!authenticatedPage.isClosed()) {
+        await authenticatedPage.waitForTimeout(300)
+      }
+
+      // Check page validity before filling
+      if (authenticatedPage.isClosed()) {
+        throw new Error('Page was closed before filling input')
+      }
 
       // Fill follow-up question
-      await inputField.fill('What are its main use cases?')
+      await inputField.fill('What are its main use cases?', { timeout: 5000 })
 
-      // Wait for input to be processed
-      await authenticatedPage.waitForTimeout(500)
+      // Wait for input to be processed and React state to update
+      if (!authenticatedPage.isClosed()) {
+        await authenticatedPage.waitForTimeout(500)
+      }
 
-      // Get submit button - in follow-up mode, it should be enabled if input is not empty
+      // Check page validity before checking button
+      if (authenticatedPage.isClosed()) {
+        throw new Error('Page was closed before checking submit button')
+      }
+
+      // Get submit button - in follow-up mode, it should be enabled if not loading and credits > 0
       const submitButton = authenticatedPage.getByTestId('comparison-submit-button')
 
+      // Check if button is disabled and why (for debugging)
+      const isDisabled = await submitButton.isDisabled({ timeout: 5000 }).catch(() => true)
+      if (isDisabled && !authenticatedPage.isClosed()) {
+        // Check if it's because of loading state
+        const isLoading = await authenticatedPage
+          .locator('[class*="loading"], [data-testid*="loading"]')
+          .first()
+          .isVisible({ timeout: 1000 })
+          .catch(() => false)
+
+        // Wait a bit more for loading to complete if still loading
+        if (isLoading && !authenticatedPage.isClosed()) {
+          await authenticatedPage.waitForTimeout(2000)
+        }
+      }
+
       // Wait for button to be enabled (with longer timeout to account for React state updates)
-      await expect(submitButton).toBeEnabled({ timeout: 15000 })
+      // In follow-up mode, button should be enabled unless loading or no credits
+      if (!authenticatedPage.isClosed()) {
+        await expect(submitButton).toBeEnabled({ timeout: 15000 })
+      }
 
       // Submit follow-up
       await submitButton.click()

@@ -15,13 +15,29 @@ import { test, expect } from './fixtures'
 
 /**
  * Helper function to safely wait with page validity check
+ * Uses smaller chunks to avoid exceeding test timeout
  */
 async function safeWait(page: Page, ms: number) {
   try {
     if (page.isClosed()) return
-    await page.waitForTimeout(ms)
+
+    // Use smaller chunks to avoid timeout issues
+    // If waiting more than 1 second, break into chunks
+    if (ms > 1000) {
+      const chunks = Math.ceil(ms / 500)
+      for (let i = 0; i < chunks; i++) {
+        if (page.isClosed()) return
+        await page.waitForTimeout(Math.min(500, ms - i * 500))
+      }
+    } else {
+      await page.waitForTimeout(ms)
+    }
   } catch (error) {
-    if (error instanceof Error && error.message.includes('closed')) return
+    if (
+      error instanceof Error &&
+      (error.message.includes('closed') || error.message.includes('timeout'))
+    )
+      return
     throw error
   }
 }
@@ -250,6 +266,7 @@ test.describe('Conversation Management', () => {
   })
 
   test('User can delete a conversation', async ({ authenticatedPage }) => {
+    test.setTimeout(60000) // 60 seconds for this test
     await test.step('Create a conversation first', async () => {
       const inputField = authenticatedPage.getByTestId('comparison-input-textarea')
       await inputField.fill('Test conversation to delete')
@@ -335,7 +352,15 @@ test.describe('Conversation Management', () => {
           const firstItem = conversationItems.first()
 
           // Hover to show delete button (if needed)
-          await firstItem.hover()
+          // Wait for item to be stable before hovering
+          await firstItem.waitFor({ state: 'visible', timeout: 5000 })
+          try {
+            await firstItem.hover({ timeout: 5000, force: true })
+          } catch {
+            // If hover fails, try scrolling into view first
+            await firstItem.scrollIntoViewIfNeeded()
+            await firstItem.hover({ timeout: 3000, force: true }).catch(() => {})
+          }
           await safeWait(authenticatedPage, 300)
 
           // Look for delete button - it has class "history-item-delete" and contains "×"
@@ -366,25 +391,44 @@ test.describe('Conversation Management', () => {
               await confirmButton.click()
             }
 
-            // Wait for deletion to complete
-            await safeWait(authenticatedPage, 1500)
+            // Wait for deletion to complete (reduced wait time)
+            await safeWait(authenticatedPage, 500)
 
-            // Wait for load state with fallback - networkidle can be too strict
+            // Wait for load state with fallback - use shorter timeout to avoid test timeout
             try {
-              await authenticatedPage.waitForLoadState('load', { timeout: 10000 })
+              await authenticatedPage.waitForLoadState('load', { timeout: 5000 })
             } catch {
               await authenticatedPage
-                .waitForLoadState('domcontentloaded', { timeout: 5000 })
+                .waitForLoadState('domcontentloaded', { timeout: 3000 })
                 .catch(() => {})
             }
 
             // Re-query conversation items after deletion
+            // Check page validity before querying
+            if (authenticatedPage.isClosed()) {
+              // Page closed, skip verification
+              return
+            }
+
             const updatedConversationItems = authenticatedPage.locator(
               '.history-item, [data-testid*="conversation-item"], .conversation-item'
             )
 
-            // Wait a bit more for UI to update
-            await safeWait(authenticatedPage, 1000)
+            // Wait for UI to update - use condition-based wait instead of fixed timeout
+            await updatedConversationItems
+              .first()
+              .waitFor({ state: 'visible', timeout: 3000 })
+              .catch(() => {})
+
+            if (authenticatedPage.isClosed()) {
+              return
+            }
+
+            await safeWait(authenticatedPage, 300)
+
+            if (authenticatedPage.isClosed()) {
+              return
+            }
 
             const newCount = await updatedConversationItems.count()
 

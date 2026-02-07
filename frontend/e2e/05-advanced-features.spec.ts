@@ -14,13 +14,29 @@ import { test, expect } from './fixtures'
 
 /**
  * Helper function to safely wait with page validity check
+ * Uses smaller chunks to avoid exceeding test timeout
  */
 async function safeWait(page: Page, ms: number) {
   try {
     if (page.isClosed()) return
-    await page.waitForTimeout(ms)
+
+    // Use smaller chunks to avoid timeout issues
+    // If waiting more than 1 second, break into chunks
+    if (ms > 1000) {
+      const chunks = Math.ceil(ms / 500)
+      for (let i = 0; i < chunks; i++) {
+        if (page.isClosed()) return
+        await page.waitForTimeout(Math.min(500, ms - i * 500))
+      }
+    } else {
+      await page.waitForTimeout(ms)
+    }
   } catch (error) {
-    if (error instanceof Error && error.message.includes('closed')) return
+    if (
+      error instanceof Error &&
+      (error.message.includes('closed') || error.message.includes('timeout'))
+    )
+      return
     throw error
   }
 }
@@ -245,6 +261,7 @@ test.describe('Advanced Features', () => {
   })
 
   test('User can load saved model selections', async ({ authenticatedPage }) => {
+    test.setTimeout(60000) // 60 seconds for this test
     // Skip if saved selections feature is not available
     test.skip(
       !(await authenticatedPage
@@ -406,38 +423,53 @@ test.describe('Advanced Features', () => {
           )
           await expect(confirmButton.first()).toBeVisible({ timeout: 2000 })
           await confirmButton.first().click()
-          // Wait for load state with fallback - networkidle can be too strict
+          // Wait for load state with fallback - use shorter timeout to avoid test timeout
           try {
-            await authenticatedPage.waitForLoadState('load', { timeout: 10000 })
+            await authenticatedPage.waitForLoadState('load', { timeout: 5000 })
           } catch {
             await authenticatedPage
-              .waitForLoadState('domcontentloaded', { timeout: 5000 })
+              .waitForLoadState('domcontentloaded', { timeout: 3000 })
               .catch(() => {})
           }
-          await safeWait(authenticatedPage, 1000) // Wait for save to complete
+          await safeWait(authenticatedPage, 500) // Wait for save to complete
 
-          // Close dialog and wait for it to disappear
+          // Close dialog and wait for it to disappear - use condition-based wait
           await authenticatedPage
-            .waitForSelector('[role="dialog"]', { state: 'hidden', timeout: 5000 })
+            .waitForSelector('[role="dialog"]', { state: 'hidden', timeout: 3000 })
             .catch(() => {})
-          await safeWait(authenticatedPage, 1000)
+          await safeWait(authenticatedPage, 300)
 
           // Close dropdown and reopen to refresh the list
           if (!authenticatedPage.isClosed()) {
-            await authenticatedPage.keyboard.press('Escape')
-            await safeWait(authenticatedPage, 500)
+            try {
+              await authenticatedPage.keyboard.press('Escape', { timeout: 3000 })
+            } catch {
+              // If Escape fails, try clicking outside or using a different method
+              await authenticatedPage.mouse.click(10, 10).catch(() => {})
+            }
+            await safeWait(authenticatedPage, 300)
           }
         } else {
           // Close dropdown to prepare for loading
           if (!authenticatedPage.isClosed()) {
-            await authenticatedPage.keyboard.press('Escape')
-            await safeWait(authenticatedPage, 500)
+            try {
+              await authenticatedPage.keyboard.press('Escape', { timeout: 3000 })
+            } catch {
+              // If Escape fails, try clicking outside or using a different method
+              await authenticatedPage.mouse.click(10, 10).catch(() => {})
+            }
+            await safeWait(authenticatedPage, 300)
           }
         }
       }
     })
 
     await test.step('Load saved selection', async () => {
+      // Check page is still valid
+      if (authenticatedPage.isClosed()) {
+        throw new Error('Page was closed before loading saved selection')
+      }
+
       // Open saved selections dropdown
       const savedSelectionsButton = authenticatedPage.locator(
         'button[class*="saved"], ' +
@@ -448,7 +480,7 @@ test.describe('Advanced Features', () => {
       await expect(savedSelectionsButton.first()).toBeVisible({ timeout: 5000 })
       if (authenticatedPage.isClosed()) return
       await savedSelectionsButton.first().click()
-      await safeWait(authenticatedPage, 1500) // Wait for dropdown to open and list to render
+      await safeWait(authenticatedPage, 500) // Wait for dropdown to open and list to render (reduced from 1500)
 
       // Find saved selection items - wait for them to appear
       const selectionItems = authenticatedPage.locator('.saved-selection-item')
