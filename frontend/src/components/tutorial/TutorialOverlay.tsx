@@ -58,6 +58,10 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
   const [portalRoot, setPortalRoot] = useState<HTMLElement | null>(null)
   // Dynamic position for step 3 - can switch between 'top' and 'bottom' based on scroll
   const [effectivePosition, setEffectivePosition] = useState<'top' | 'bottom' | null>(null)
+  // Suppress CSS transitions on the tooltip until initial placement is complete.
+  // This prevents the tooltip from visibly animating through intermediate positions
+  // during the scroll + post-scroll adjustment phase when changing steps.
+  const [positionStabilized, setPositionStabilized] = useState(false)
   const [textareaCutout, setTextareaCutout] = useState<{
     top: number
     left: number
@@ -186,9 +190,12 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
       // Set a reasonable default position in case elements aren't found yet
       setOverlayPosition({ top: 320, left: window.innerWidth / 2 })
     } else if (step === 'enter-prompt' || step === 'enter-prompt-2') {
-      // Force visibility for enter-prompt steps - position below the composer
-      setIsVisible(true)
-      // Position tooltip below the input area (around 400px from top)
+      // Do NOT force visibility for enter-prompt steps.
+      // These steps require scrolling to the composer first, and the scroll effect
+      // controls visibility — showing the tooltip only after scroll completes.
+      // Forcing isVisible=true here causes a flicker (tooltip briefly appears at wrong
+      // position before the scroll effect hides it).
+      // Just set a default position so the tooltip has a reasonable starting point.
       setOverlayPosition({ top: 450, left: window.innerWidth / 2 })
     }
   }, [step])
@@ -336,6 +343,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
       setIsVisible(false)
       hasAttemptedElementFindRef.current = false
       initialScrollCompleteRef.current = false
+      setPositionStabilized(false)
       // Reset all cutout states when tutorial ends to prevent stale values on next run
       setTextareaCutout(null)
       setDropdownCutout(null)
@@ -388,6 +396,10 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
 
     // Reset scroll complete flag for the new step
     initialScrollCompleteRef.current = false
+
+    // Reset position stabilized flag — CSS transitions on the tooltip are suppressed
+    // until the initial scroll + position adjustments settle.
+    setPositionStabilized(false)
 
     // Clear cutout states when entering a new step to ensure fresh calculation
     // This prevents stale cutout positions from previous steps
@@ -556,7 +568,12 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
 
         if (isElementVisible) {
           setTargetElement(element)
-          setIsVisible(true)
+          // For enter-prompt steps, DON'T set visible here — the scroll effect
+          // controls visibility and will show the tooltip after scrolling completes.
+          // Setting it here causes a brief flash at the wrong position.
+          if (step !== 'enter-prompt' && step !== 'enter-prompt-2') {
+            setIsVisible(true)
+          }
           return true
         }
       }
@@ -630,6 +647,9 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
     const isDropdownStep = step === 'history-dropdown' || step === 'save-selection'
     let scrollCheckFrame: number | null = null
     let postScrollTimers: number[] = []
+    let scrollDelayTimer: ReturnType<typeof setTimeout> | null = null
+    let scrollAnimFrame: number | null = null // Track custom rAF scroll animation
+    let scrollCompletionResolver: (() => void) | null = null
     const isScrollingRef = { current: false } // Track if we're in the middle of programmatic scroll
 
     const updatePosition = () => {
@@ -941,16 +961,21 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
           window.scrollTo(0, currentScrollY)
 
           if (progress < 1) {
-            requestAnimationFrame(animateScroll)
+            scrollAnimFrame = requestAnimationFrame(animateScroll)
           } else {
+            scrollAnimFrame = null
             // Scroll animation complete - mark as done after a brief delay to allow layout to settle
             setTimeout(() => {
               isScrollingRef.current = false
+              if (scrollCompletionResolver) {
+                scrollCompletionResolver()
+                scrollCompletionResolver = null
+              }
             }, 100)
           }
         }
 
-        requestAnimationFrame(animateScroll)
+        scrollAnimFrame = requestAnimationFrame(animateScroll)
       } else {
         // Use default smooth scroll for other steps
         window.scrollTo(scrollOptions)
@@ -992,13 +1017,27 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
       scrollCheckFrame = window.requestAnimationFrame(check)
     }
 
+    const waitForProgrammaticScrollCompletion = () =>
+      new Promise<void>(resolve => {
+        scrollCompletionResolver = resolve
+      })
+
     // Small delay to ensure hero is locked, then scroll
     // For step 3 (enter-prompt), wait longer to ensure hero section has fully expanded
     const scrollDelay = step === 'enter-prompt' || step === 'enter-prompt-2' ? 300 : 100
-    setTimeout(() => {
+    scrollDelayTimer = setTimeout(() => {
+      scrollDelayTimer = null
+      const isCustomScrollStep = step === 'enter-prompt' || step === 'enter-prompt-2'
+      const waitForScroll = shouldDelayReveal
+        ? isCustomScrollStep
+          ? waitForProgrammaticScrollCompletion()
+          : new Promise<void>(resolve => waitForScrollStop(resolve))
+        : null
+
       scrollToElement()
-      if (shouldDelayReveal) {
-        waitForScrollStop(() => {
+
+      if (shouldDelayReveal && waitForScroll) {
+        waitForScroll.then(() => {
           if (stepRef.current !== step) return
           updatePosition()
           setIsVisible(true)
@@ -1018,12 +1057,20 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
             if (stepRef.current !== step) return
             updatePosition()
           }, 700)
-          postScrollTimers = [t1, t2, t3]
+          // Enable CSS transitions only after all post-scroll position adjustments
+          // are done. This prevents the tooltip from visibly animating between
+          // intermediate positions during initial placement.
+          const t4 = window.setTimeout(() => {
+            if (stepRef.current !== step) return
+            setPositionStabilized(true)
+          }, 800)
+          postScrollTimers = [t1, t2, t3, t4]
         })
-      } else {
+      } else if (!shouldDelayReveal) {
         // For steps without delay, mark scroll complete after initial scroll animation
         setTimeout(() => {
           initialScrollCompleteRef.current = true
+          setPositionStabilized(true)
         }, 500)
       }
     }, scrollDelay)
@@ -1044,6 +1091,16 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
     return () => {
       window.removeEventListener('scroll', handleScroll, true)
       window.removeEventListener('resize', updatePosition)
+      // Cancel any pending scroll delay timeout — this prevents a stale scroll from
+      // firing when the effect re-runs (e.g. targetElement changes after step change).
+      if (scrollDelayTimer !== null) {
+        clearTimeout(scrollDelayTimer)
+      }
+      // Cancel any in-progress custom rAF scroll animation
+      if (scrollAnimFrame !== null) {
+        cancelAnimationFrame(scrollAnimFrame)
+      }
+      scrollCompletionResolver = null
       if (scrollCheckFrame !== null) {
         window.cancelAnimationFrame(scrollCheckFrame)
       }
@@ -2531,17 +2588,21 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
             // Ensure z-index is high enough to appear above other elements
             zIndex: 10000,
             // Add smooth transition for position changes (steps 1, 2, 3, 5, 6, 8, 9, and 10)
+            // Only enable AFTER initial placement is complete (positionStabilized) to
+            // prevent the tooltip from visibly animating through intermediate positions
+            // during the scroll + post-scroll adjustment phase.
             transition:
-              step === 'expand-provider' ||
-              step === 'select-models' ||
-              step === 'enter-prompt' ||
-              step === 'follow-up' ||
-              step === 'enter-prompt-2' ||
-              step === 'view-follow-up-results' ||
-              step === 'history-dropdown' ||
-              step === 'save-selection'
+              positionStabilized &&
+              (step === 'expand-provider' ||
+                step === 'select-models' ||
+                step === 'enter-prompt' ||
+                step === 'follow-up' ||
+                step === 'enter-prompt-2' ||
+                step === 'view-follow-up-results' ||
+                step === 'history-dropdown' ||
+                step === 'save-selection')
                 ? 'top 0.3s ease-in-out, transform 0.3s ease-in-out'
-                : undefined,
+                : 'none',
           }}
         >
           <div className="tutorial-tooltip-content">

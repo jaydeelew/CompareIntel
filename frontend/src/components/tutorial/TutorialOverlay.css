@@ -34,6 +34,15 @@ body:has(.tutorial-backdrop) .hero-section.tutorial-dropdown-hero-active,
   contain: none !important;
 }
 
+/* Disable hero section CSS transitions during the tutorial to prevent delayed
+   layout shifts.  The base .hero-section has `transition: padding-bottom 0.3s`
+   which causes the hero to gradually expand when padding changes between steps.
+   This animated expansion races with the scroll-to-target logic and produces a
+   visible "extra scroll" after the tooltip is placed. */
+body:has(.tutorial-backdrop) .hero-section {
+  transition: none !important;
+}
+
 /* Backdrop that dims the page */
 .tutorial-backdrop {
   position: fixed;
