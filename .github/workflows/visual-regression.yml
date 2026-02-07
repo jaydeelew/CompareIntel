@@ -94,7 +94,7 @@ jobs:
             --project=chromium \
             --grep="(visual|regression|display)" \
             --timeout=90000 \
-            --update-snapshots=${{ github.event_name == 'workflow_dispatch' && 'missing' || '' }}
+            --update-snapshots=${{ github.event_name == 'workflow_dispatch' && 'missing' || 'none' }}
       
       - name: Upload visual comparison results
         if: always()
