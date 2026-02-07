@@ -1337,7 +1337,8 @@ export function MainPage() {
       // Remove listeners after first interaction
       window.removeEventListener('click', handleUserInteraction)
       window.removeEventListener('touchstart', handleUserInteraction)
-      window.removeEventListener('scroll', handleUserInteraction, { passive: true })
+      // removeEventListener doesn't accept options, only the handler needs to match
+      window.removeEventListener('scroll', handleUserInteraction)
     }
 
     // Listen for user interaction

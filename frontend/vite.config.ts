@@ -285,10 +285,6 @@ export default defineConfig({
     // Enable CSS code splitting and minification
     cssCodeSplit: true,
     cssMinify: true,
-    // Enable tree-shaking for better dead code elimination
-    treeshake: {
-      moduleSideEffects: false,
-    },
     // Optimize chunk splitting
     rollupOptions: {
       output: {
