@@ -102,7 +102,7 @@ jobs:
       - name: Start frontend server
         working-directory: frontend
         run: |
-          npm run preview -- --port 5173 &
+          npm run preview &
           sleep 5
       
       - name: Install Lighthouse CI

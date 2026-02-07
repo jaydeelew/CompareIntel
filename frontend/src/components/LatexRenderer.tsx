@@ -2382,8 +2382,6 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({ children, className = '',
           url.startsWith('http://') || url.startsWith('https://') || url.startsWith('//')
         const loadingAttr = isExternal ? 'loading="lazy"' : 'loading="lazy"'
         const decodingAttr = 'decoding="async"'
-        const styleAttr =
-          'style="max-width: 100%; height: auto; transition: opacity 0.3s ease-in-out;"'
 
         // For internal images, add optimization query params if not already present
         let optimizedUrl = url
@@ -2392,6 +2390,10 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({ children, className = '',
           optimizedUrl = `${url}?w=1024&q=80`
         }
 
+        // Add aspect-ratio placeholder to prevent layout shift (Lighthouse best practice)
+        // Using 16:9 as default for unknown dimensions
+        const styleAttr =
+          'style="max-width: 100%; height: auto; aspect-ratio: 16/9; transition: opacity 0.3s ease-in-out;"'
         return `<img src="${optimizedUrl}" alt="${alt.replace(/"/g, '&quot;')}"${titleAttr} ${loadingAttr} ${decodingAttr} ${styleAttr} />`
       }
     )

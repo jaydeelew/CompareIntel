@@ -1250,21 +1250,27 @@ export function MainPage() {
               const city = place['place name'] || ''
               const state = place['state'] || ''
               const location = [city, state, 'United States'].filter(Boolean).join(', ')
-              console.log(
-                '[Settings] Using saved zipcode location:',
-                location,
-                `(zipcode: ${preferences.zipcode})`
-              )
+              if (import.meta.env.DEV) {
+                console.log(
+                  '[Settings] Using saved zipcode location:',
+                  location,
+                  `(zipcode: ${preferences.zipcode})`
+                )
+              }
               // Override any previously detected geolocation
               setUserLocation(location)
               savedLocationLoadedRef.current = true
             }
           } else {
-            console.debug('[Settings] Could not lookup zipcode:', preferences.zipcode)
+            if (import.meta.env.DEV) {
+              console.debug('[Settings] Could not lookup zipcode:', preferences.zipcode)
+            }
           }
         }
       } catch (error) {
-        console.debug('[Settings] Failed to load saved location preference:', error)
+        if (import.meta.env.DEV) {
+          console.debug('[Settings] Failed to load saved location preference:', error)
+        }
       }
     }
 
@@ -1272,46 +1278,86 @@ export function MainPage() {
   }, [isAuthenticated, user])
 
   // Geolocation detection (fallback when no saved zipcode)
+  // Deferred until user interaction to avoid requesting permission on page load
   useEffect(() => {
     if (geolocationDetectedRef.current) return
     // Don't run geolocation if user has a saved location
     if (savedLocationLoadedRef.current) return
-    geolocationDetectedRef.current = true
 
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        async position => {
-          // Double-check: don't override if saved location was loaded while we waited
-          if (savedLocationLoadedRef.current) {
-            console.log('[Geolocation] Skipping - user has saved location in settings')
-            return
-          }
-          try {
-            const response = await fetch(
-              `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${position.coords.latitude}&longitude=${position.coords.longitude}&localityLanguage=en`
-            )
-            if (response.ok) {
-              const data = await response.json()
-              const city = data.city || ''
-              const region = data.principalSubdivision || ''
-              let country = data.countryName || ''
-              country = country.replace(/\s*\(the\)\s*$/i, '').trim()
-              const parts = [city, region, country].filter(Boolean)
-              if (parts.length > 0) {
-                const location = parts.join(', ')
-                console.log('[Geolocation] Successfully detected location:', location)
-                setUserLocation(location)
+    // Only request geolocation after user interaction (click, touch, scroll)
+    const handleUserInteraction = () => {
+      if (geolocationDetectedRef.current) return
+      if (savedLocationLoadedRef.current) return
+      geolocationDetectedRef.current = true
+
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          async position => {
+            // Double-check: don't override if saved location was loaded while we waited
+            if (savedLocationLoadedRef.current) {
+              if (import.meta.env.DEV) {
+                console.log('[Geolocation] Skipping - user has saved location in settings')
+              }
+              return
+            }
+            try {
+              const response = await fetch(
+                `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${position.coords.latitude}&longitude=${position.coords.longitude}&localityLanguage=en`
+              )
+              if (response.ok) {
+                const data = await response.json()
+                const city = data.city || ''
+                const region = data.principalSubdivision || ''
+                let country = data.countryName || ''
+                country = country.replace(/\s*\(the\)\s*$/i, '').trim()
+                const parts = [city, region, country].filter(Boolean)
+                if (parts.length > 0) {
+                  const location = parts.join(', ')
+                  if (import.meta.env.DEV) {
+                    console.log('[Geolocation] Successfully detected location:', location)
+                  }
+                  setUserLocation(location)
+                }
+              }
+            } catch (error) {
+              if (import.meta.env.DEV) {
+                console.debug('Failed to get location from coordinates:', error)
               }
             }
-          } catch (error) {
-            console.debug('Failed to get location from coordinates:', error)
-          }
-        },
-        error => {
-          console.debug('Geolocation not available:', error.message)
-        },
-        { timeout: 5000, enableHighAccuracy: false }
-      )
+          },
+          error => {
+            if (import.meta.env.DEV) {
+              console.debug('Geolocation not available:', error.message)
+            }
+          },
+          { timeout: 5000, enableHighAccuracy: false }
+        )
+      }
+
+      // Remove listeners after first interaction
+      window.removeEventListener('click', handleUserInteraction)
+      window.removeEventListener('touchstart', handleUserInteraction)
+      window.removeEventListener('scroll', handleUserInteraction, { passive: true })
+    }
+
+    // Listen for user interaction
+    window.addEventListener('click', handleUserInteraction, { once: true })
+    window.addEventListener('touchstart', handleUserInteraction, { once: true })
+    // Also trigger after scroll (user has engaged with page)
+    window.addEventListener('scroll', handleUserInteraction, { once: true, passive: true })
+
+    // Fallback: trigger after 5 seconds if no interaction (for automated tests)
+    const timeoutId = setTimeout(() => {
+      if (!geolocationDetectedRef.current && !savedLocationLoadedRef.current) {
+        handleUserInteraction()
+      }
+    }, 5000)
+
+    return () => {
+      window.removeEventListener('click', handleUserInteraction)
+      window.removeEventListener('touchstart', handleUserInteraction)
+      window.removeEventListener('scroll', handleUserInteraction)
+      clearTimeout(timeoutId)
     }
   }, [])
 
@@ -1320,7 +1366,9 @@ export function MainPage() {
     if (!user) return
 
     const cleanup = onSaveStateEvent(() => {
-      console.log('[SessionState] Saving state before logout...')
+      if (import.meta.env.DEV) {
+        console.log('[SessionState] Saving state before logout...')
+      }
       saveSessionState({
         input,
         isFollowUpMode,

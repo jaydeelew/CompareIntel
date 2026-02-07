@@ -1304,7 +1304,7 @@
     padding: 0.5rem 1rem 0.5rem 1.4375rem;
     font-size: 1rem;
     line-height: 1.25;
-    min-height: 40px;
+    min-height: 48px;
     border-radius: 1.25rem;
   }
 
@@ -1320,7 +1320,7 @@
   }
 
   .composer-toolbar {
-    min-height: 40px;
+    min-height: 48px;
     height: 40px;
     padding: 0.5rem 0.75rem 0.5rem 1rem;
     border-top: none !important;

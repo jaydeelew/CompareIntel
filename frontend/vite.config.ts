@@ -280,11 +280,15 @@ export default defineConfig({
     target: 'esnext',
     // Minify with esbuild (faster than terser, produces smaller bundles)
     minify: 'esbuild',
-    // Enable source maps for production debugging (optional, increases bundle size)
-    sourcemap: false,
+    // Enable source maps for production debugging (required for Lighthouse)
+    sourcemap: true,
     // Enable CSS code splitting and minification
     cssCodeSplit: true,
     cssMinify: true,
+    // Enable tree-shaking for better dead code elimination
+    treeshake: {
+      moduleSideEffects: false,
+    },
     // Optimize chunk splitting
     rollupOptions: {
       output: {

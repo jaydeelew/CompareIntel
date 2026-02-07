@@ -13,7 +13,7 @@
     "format:check": "prettier --check \"src/**/*.{ts,tsx,json,css,md}\"",
     "type-check": "tsc --noEmit",
     "lint-staged": "lint-staged",
-    "preview": "vite preview",
+    "preview": "node scripts/preview-server.js",
     "test": "vitest",
     "test:ui": "vitest --ui",
     "test:run": "vitest run",
@@ -73,6 +73,8 @@
     "vite": "^6.0.0",
     "vite-imagetools": "^9.0.0",
     "vite-plugin-pwa": "^0.21.1",
-    "vitest": "^4.0.15"
+    "vitest": "^4.0.15",
+    "express": "^4.18.2",
+    "compression": "^1.7.4"
   }
 }

@@ -134,9 +134,9 @@
   justify-content: center;
   border-radius: var(--radius-md);
   transition: all 0.2s ease;
-  /* Touch target */
-  min-width: 40px;
-  min-height: 40px;
+  /* Touch target (48px minimum per WCAG) */
+  min-width: 48px;
+  min-height: 48px;
 }
 
 .mobile-tutorial-close-button:active {
@@ -178,8 +178,8 @@
   cursor: pointer;
   border: none;
   transition: all 0.2s ease;
-  /* Minimum touch target size for accessibility */
-  min-height: 42px;
+  /* Minimum touch target size for accessibility (48px minimum per WCAG) */
+  min-height: 48px;
   min-width: 92px;
 }
 
