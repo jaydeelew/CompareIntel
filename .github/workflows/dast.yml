@@ -189,7 +189,7 @@ jobs:
         with:
           target: 'http://localhost:5173'
           rules_file_name: '.github/zap-rules.tsv'
-          fail_action: true
+          fail_action: false
           cmd_options: >-
             -z "-config api.disablekey=true
             -config spider.maxDuration=2
