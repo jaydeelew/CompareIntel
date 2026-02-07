@@ -6,11 +6,9 @@ on:
     paths:
       - 'frontend/**'
       - '.github/workflows/pwa-testing.yml'
-  pull_request:
-    branches: [master]
-    paths:
-      - 'frontend/**'
-      - '.github/workflows/pwa-testing.yml'
+  schedule:
+    # Run weekly PWA tests on Mondays at 5 AM UTC
+    - cron: '0 5 * * 1'
   workflow_dispatch:
 
 concurrency:

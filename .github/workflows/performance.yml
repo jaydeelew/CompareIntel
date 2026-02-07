@@ -6,11 +6,9 @@ on:
     paths-ignore:
       - '**.md'
       - 'docs/**'
-  pull_request:
-    branches: [master]
-    paths-ignore:
-      - '**.md'
-      - 'docs/**'
+  schedule:
+    # Run weekly performance audit on Mondays at 4 AM UTC
+    - cron: '0 4 * * 1'
   workflow_dispatch:
 
 concurrency:

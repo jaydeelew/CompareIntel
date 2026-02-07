@@ -6,11 +6,9 @@ on:
     paths:
       - 'frontend/**'
       - '.github/workflows/visual-regression.yml'
-  pull_request:
-    branches: [master]
-    paths:
-      - 'frontend/**'
-      - '.github/workflows/visual-regression.yml'
+  schedule:
+    # Run nightly visual regression tests at 1 AM UTC
+    - cron: '0 1 * * *'
   workflow_dispatch:
 
 concurrency:
