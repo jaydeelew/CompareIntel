@@ -8,7 +8,7 @@ const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
 
 const app = express()
-const PORT = 5173
+const PORT = process.env.PORT || 4173
 
 // Enable compression for all responses
 app.use(compression({
