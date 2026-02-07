@@ -82,6 +82,7 @@ jobs:
           context: ./backend
           file: ./backend/Dockerfile
           push: false
+          load: true
           tags: compareintel-backend:dev-test
           build-args: ENVIRONMENT=development
           cache-from: type=gha
