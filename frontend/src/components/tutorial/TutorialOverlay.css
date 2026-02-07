@@ -43,6 +43,16 @@ body:has(.tutorial-backdrop) .hero-section {
   transition: none !important;
 }
 
+/* Prevent scroll anchoring from nudging the viewport when the composer grows
+   (e.g. typing in step 3). This avoids a subtle auto-scroll after input. */
+body:has(.tutorial-backdrop) {
+  overflow-anchor: none;
+}
+
+body:has(.tutorial-backdrop) .hero-section {
+  overflow-anchor: none;
+}
+
 /* Backdrop that dims the page */
 .tutorial-backdrop {
   position: fixed;

@@ -944,7 +944,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
         // Mark that we're starting a programmatic scroll
         isScrollingRef.current = true
 
-        const duration = 1500 // 1.5 seconds for smooth, slow scroll
+        const duration = 900 // Faster smooth scroll for prompt steps
         const startTime = performance.now()
 
         // Ease-in-out cubic function for smooth animation
@@ -1023,8 +1023,8 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
       })
 
     // Small delay to ensure hero is locked, then scroll
-    // For step 3 (enter-prompt), wait longer to ensure hero section has fully expanded
-    const scrollDelay = step === 'enter-prompt' || step === 'enter-prompt-2' ? 300 : 100
+    // For enter-prompt steps, keep a brief delay for layout expansion without feeling sluggish
+    const scrollDelay = step === 'enter-prompt' || step === 'enter-prompt-2' ? 150 : 100
     scrollDelayTimer = setTimeout(() => {
       scrollDelayTimer = null
       const isCustomScrollStep = step === 'enter-prompt' || step === 'enter-prompt-2'
