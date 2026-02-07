@@ -40,6 +40,13 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Create minimal .env file for validation
+        run: |
+          # Create backend/.env if it doesn't exist (required by docker-compose.yml)
+          # This file is gitignored and won't exist in CI, but docker compose config requires it
+          mkdir -p backend
+          touch backend/.env
+
       - name: Validate docker-compose.yml
         run: docker compose -f docker-compose.yml config --quiet
 
