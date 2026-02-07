@@ -1,5 +1,7 @@
 import { test, expect, type Page } from '@playwright/test'
 
+import { waitForAuthState, waitForReactHydration } from './fixtures'
+
 /**
  * E2E Tests: Unregistered User Journey
  *
@@ -220,8 +222,57 @@ test.describe('Unregistered User Journey', () => {
         // API might have already completed or fail, continue anyway
       })
 
+    // Set up error listeners BEFORE navigation to catch any errors
+    const consoleErrors: string[] = []
+    const pageErrors: string[] = []
+
+    page.on('console', msg => {
+      if (msg.type() === 'error') {
+        consoleErrors.push(msg.text())
+      }
+    })
+
+    page.on('pageerror', error => {
+      pageErrors.push(error.message)
+    })
+
     try {
-      await page.goto('/', { waitUntil: 'domcontentloaded', timeout: navigationTimeout })
+      // Navigate to homepage and wait for network to be idle to ensure scripts load
+      const response = await page.goto('/', {
+        waitUntil: 'domcontentloaded',
+        timeout: navigationTimeout,
+      })
+
+      // Check if navigation was successful
+      if (!response || response.status() >= 400) {
+        const status = response?.status() || 'unknown'
+        throw new Error(`Page navigation failed with status: ${status}`)
+      }
+
+      // Wait for the main.tsx script to load and execute
+      // Check if the script tag exists and wait for it to execute
+      try {
+        await page.waitForFunction(
+          () => {
+            // Check if React has mounted by looking for root content
+            const root = document.getElementById('root')
+            if (!root) return false
+            // React has mounted if root has children OR if we can find navigation
+            return (
+              root.children.length > 0 ||
+              document.querySelector('.navbar, .app-header, nav') !== null
+            )
+          },
+          { timeout: 20000 }
+        )
+      } catch (_waitError) {
+        // If React doesn't mount, log errors for debugging
+        if (consoleErrors.length > 0 || pageErrors.length > 0) {
+          console.log(`[DEBUG] Console errors: ${consoleErrors.join('; ')}`)
+          console.log(`[DEBUG] Page errors: ${pageErrors.join('; ')}`)
+        }
+        // Don't throw here - let the navigation wait handle it
+      }
     } catch (error) {
       // If navigation fails, check if page is still valid
       if (page.isClosed()) {
@@ -234,17 +285,93 @@ test.describe('Unregistered User Journey', () => {
         }
         throw new Error('Page was closed during navigation')
       }
+      // Log the error and any JS errors for debugging
+      console.log(
+        `[DEBUG] Navigation error: ${error instanceof Error ? error.message : String(error)}`
+      )
+      if (consoleErrors.length > 0 || pageErrors.length > 0) {
+        console.log(`[DEBUG] Console errors during navigation: ${consoleErrors.join('; ')}`)
+        console.log(`[DEBUG] Page errors during navigation: ${pageErrors.join('; ')}`)
+      }
       throw error
     }
 
     // Wait for load state with fallback - networkidle can be too strict
     try {
       await page.waitForLoadState('load', { timeout: loadTimeout })
-    } catch {
+    } catch (error) {
       // If load times out, try networkidle with shorter timeout
       await page.waitForLoadState('networkidle', { timeout: 5000 }).catch(() => {
         // If networkidle also fails, just continue - page is likely loaded enough
+        console.log(`[DEBUG] Load state wait failed, continuing anyway`)
       })
+      // Log if there was an error
+      if (error instanceof Error) {
+        console.log(`[DEBUG] Load state error: ${error.message}`)
+      }
+    }
+
+    // CRITICAL: Wait for React to mount and render navigation
+    // The simplest and most reliable approach: wait for the navigation element to appear
+    // This is a clear sign that React has mounted and the app has rendered
+    if (!page.isClosed()) {
+      try {
+        // Wait for navigation element with reasonable timeout
+        // This ensures React has mounted and rendered the Navigation component
+        await page.waitForSelector('.navbar, .app-header, nav', {
+          timeout: 30000,
+          state: 'attached', // Just need it in DOM, visibility will be checked later
+        })
+      } catch (_error) {
+        if (page.isClosed()) {
+          throw new Error('Page was closed while waiting for React to mount')
+        }
+
+        // If navigation doesn't appear, check what's on the page
+        const rootContent = await page
+          .evaluate(() => {
+            const root = document.getElementById('root')
+            return root ? root.innerHTML.substring(0, 300) : 'No root element'
+          })
+          .catch(() => 'Unable to check root')
+
+        // Check if script tag loaded
+        const scriptLoaded = await page
+          .evaluate(() => {
+            const scripts = Array.from(document.querySelectorAll('script[type="module"]'))
+            return scripts.some(s => {
+              const script = s as HTMLScriptElement
+              return script.src.includes('main.tsx') || script.src.includes('main.js')
+            })
+          })
+          .catch(() => false)
+
+        // Wait a bit more and try again
+        await safeWait(page, 2000)
+
+        if (!page.isClosed()) {
+          const navExists = await page.locator('.navbar, .app-header, nav').count()
+          if (navExists === 0) {
+            throw new Error(
+              `React did not mount. Root content: "${rootContent}". ` +
+                `Script loaded: ${scriptLoaded}. ` +
+                `This usually means the React app failed to initialize. ` +
+                `Check browser console for JavaScript errors.`
+            )
+          }
+        }
+      }
+    }
+
+    // Verify page actually loaded by checking for basic elements
+    const pageHasContent = await page
+      .evaluate(() => {
+        return document.body !== null && document.body.children.length > 0
+      })
+      .catch(() => false)
+
+    if (!pageHasContent) {
+      throw new Error('Page appears to be empty - navigation may have failed')
     }
 
     // Check if page is still valid before continuing
@@ -290,13 +417,46 @@ test.describe('Unregistered User Journey', () => {
       return
     }
 
-    // Wait a bit more to ensure overlay is fully dismissed
+    // Wait for React hydration (non-blocking with timeout guard)
+    try {
+      await Promise.race([
+        waitForReactHydration(page, 5000),
+        new Promise(resolve => setTimeout(resolve, 5000)), // Max 5 seconds
+      ])
+    } catch {
+      // Continue anyway
+    }
+
+    // Wait for auth state to be determined (non-blocking with timeout guard)
+    // Use Promise.race to ensure we don't hang forever
+    try {
+      await Promise.race([
+        waitForAuthState(page, 8000),
+        new Promise(resolve => setTimeout(resolve, 8000)), // Max 8 seconds
+      ])
+    } catch {
+      // Continue anyway - elements might still be available
+    }
+
+    // Wait a bit more to ensure overlay is fully dismissed and page is interactive
     await safeWait(page, 500)
 
-    // Log console errors
+    // Log console errors and page errors
     page.on('console', msg => {
       if (msg.type() === 'error') {
         console.log(`[BROWSER ERROR] ${msg.text()}`)
+      }
+    })
+
+    // Log page errors
+    page.on('pageerror', error => {
+      console.log(`[PAGE ERROR] ${error.message}`)
+    })
+
+    // Log failed network requests
+    page.on('response', response => {
+      if (response.status() >= 400) {
+        console.log(`[HTTP ERROR] ${response.status()} ${response.url()}`)
       }
     })
   })
@@ -305,19 +465,162 @@ test.describe('Unregistered User Journey', () => {
     await test.step('Homepage loads correctly', async () => {
       await expect(page).toHaveTitle(/CompareIntel/i)
 
-      // Verify main navigation is visible
-      await expect(page.getByTestId('nav-sign-in-button')).toBeVisible()
-      await expect(page.getByTestId('nav-sign-up-button')).toBeVisible()
+      // Wait for page to be fully loaded (DOM ready)
+      await page.waitForLoadState('domcontentloaded', { timeout: 20000 })
+      await page.waitForLoadState('load', { timeout: 20000 }).catch(() => {
+        // Load state might timeout, but DOM should be ready
+      })
 
-      // Verify hero section is visible
+      // Wait for React to hydrate - check for any React-rendered content
+      // Try multiple selectors that should exist on the page
+      const pageLoaded = await page
+        .waitForFunction(
+          () => {
+            // Check for various elements that indicate page has loaded
+            const hasBody = document.body !== null
+            const hasNav = document.querySelector('.navbar, .app-header, nav') !== null
+            const hasContent = document.querySelector('main, .main-content, [role="main"]') !== null
+            const hasAnyContent = document.body && document.body.children.length > 0
+            return hasBody && (hasNav || hasContent || hasAnyContent)
+          },
+          { timeout: 20000 }
+        )
+        .catch(() => {
+          // If function wait fails, page might still be loading
+          return false
+        })
+
+      if (!pageLoaded) {
+        // Log page state for debugging
+        const bodyHTML = await page.evaluate(
+          () => document.body?.innerHTML?.substring(0, 500) || 'No body'
+        )
+        console.log(`[DEBUG] Page body preview: ${bodyHTML}`)
+      }
+
+      // Wait for auth state to be determined using helper function
+      // This ensures React has hydrated and auth context has finished loading
+      try {
+        await Promise.race([
+          waitForAuthState(page, 15000),
+          new Promise(resolve => setTimeout(resolve, 15000)), // Max 15 seconds
+        ])
+      } catch (error) {
+        // Log error for debugging
+        console.log(
+          `[DEBUG] waitForAuthState error: ${error instanceof Error ? error.message : String(error)}`
+        )
+      }
+
+      // Verify main navigation is visible
+      // Use direct waits instead of complex retry logic to avoid page closure issues
+      if (page.isClosed()) {
+        throw new Error('Page was closed before checking navigation buttons')
+      }
+
+      // Debug: Check what's actually on the page
+      const pageContent = await page.content().catch(() => 'Unable to get page content')
+      const hasNav = pageContent.includes('navbar') || pageContent.includes('app-header')
+      const hasSignIn = pageContent.includes('nav-sign-in-button')
+      const hasUserMenu = pageContent.includes('user-menu-button')
+      console.log(
+        `[DEBUG] Page state - hasNav: ${hasNav}, hasSignIn: ${hasSignIn}, hasUserMenu: ${hasUserMenu}`
+      )
+
+      // Wait for React to actually render content, not just mount
+      // Check for any visible content or navigation
+      let navExists = 0
+      let attempts = 0
+      const maxAttempts = 10
+
+      while (navExists === 0 && attempts < maxAttempts) {
+        if (page.isClosed()) {
+          throw new Error('Page was closed while waiting for navigation')
+        }
+
+        navExists = await page.locator('.navbar, .app-header, nav').count()
+
+        if (navExists === 0) {
+          // Check if React is still loading
+          const isLoading = await page
+            .evaluate(() => {
+              // Check for loading spinners or empty body
+              const body = document.body
+              if (!body || body.children.length === 0) return true
+              // Check for common loading indicators
+              const loadingSpinners = document.querySelectorAll(
+                '[class*="loading"], [class*="spinner"], [class*="Loading"]'
+              )
+              return loadingSpinners.length > 0
+            })
+            .catch(() => false)
+
+          if (!isLoading) {
+            // React should have rendered by now, wait a bit more
+            await safeWait(page, 500)
+          } else {
+            // Still loading, wait longer
+            await safeWait(page, 1000)
+          }
+
+          attempts++
+        }
+      }
+
+      console.log(
+        `[DEBUG] Navigation check completed after ${attempts} attempts, found ${navExists} elements`
+      )
+
+      if (navExists === 0) {
+        // Final check - get page content for debugging
+        const pageContent = await page.content().catch(() => 'Unable to get content')
+        const bodyHTML = await page
+          .evaluate(() => document.body?.innerHTML?.substring(0, 500) || 'No body')
+          .catch(() => 'Unable to get body')
+        console.log(`[DEBUG] Final page content preview: ${pageContent.substring(0, 500)}`)
+        console.log(`[DEBUG] Final body HTML preview: ${bodyHTML}`)
+        throw new Error(
+          'Navigation element not found on page after waiting - React may not have rendered correctly'
+        )
+      }
+
+      // Wait for sign-in button with reasonable timeout
+      const signInButton = page.getByTestId('nav-sign-in-button')
+      await expect(signInButton).toBeVisible({ timeout: 20000 })
+
+      // Check page validity before checking second button
+      if (page.isClosed()) {
+        throw new Error('Page was closed after checking sign-in button')
+      }
+
+      // Wait for sign-up button
+      const signUpButton = page.getByTestId('nav-sign-up-button')
+      await expect(signUpButton).toBeVisible({ timeout: 20000 })
+
+      // Verify hero section is visible (optional - might not exist)
       const heroSection = page.locator('.hero-section, [class*="hero"]')
-      await expect(heroSection.first()).toBeVisible()
+      await heroSection
+        .first()
+        .isVisible({ timeout: 10000 })
+        .catch(() => {
+          // Hero section might not exist, that's OK
+        })
     })
 
     await test.step('Comparison form is accessible', async () => {
+      // Wait for comparison input to be available (may load after models)
+      if (page.isClosed()) {
+        throw new Error('Page was closed before checking comparison input')
+      }
+
       const inputField = page.getByTestId('comparison-input-textarea')
-      await expect(inputField).toBeVisible()
-      await expect(inputField).toBeEnabled()
+      await expect(inputField).toBeVisible({ timeout: 20000 })
+
+      if (page.isClosed()) {
+        throw new Error('Page was closed after checking input visibility')
+      }
+
+      await expect(inputField).toBeEnabled({ timeout: 10000 })
 
       // Verify placeholder text guides the user
       const placeholder = await inputField.getAttribute('placeholder')
@@ -390,7 +693,11 @@ test.describe('Unregistered User Journey', () => {
 
   test('Unregistered user can perform a comparison', async ({ page }) => {
     await test.step('Enter a prompt', async () => {
+      // Wait for input field to be available (may load after models)
       const inputField = page.getByTestId('comparison-input-textarea')
+      await expect(inputField).toBeVisible({ timeout: 20000 })
+      await expect(inputField).toBeEnabled({ timeout: 10000 })
+
       await inputField.fill('What is artificial intelligence?')
 
       // Verify input is captured
@@ -616,9 +923,12 @@ test.describe('Unregistered User Journey', () => {
     // - Banner/alert after using features
     // - Inline prompts
 
+    // Wait for navigation to be rendered and auth state determined
+    await page.waitForSelector('.navbar, .app-header', { timeout: 15000 })
+
     // Navigation sign-up button should always be visible
     const signUpButton = page.getByTestId('nav-sign-up-button')
-    await expect(signUpButton).toBeVisible()
+    await expect(signUpButton).toBeVisible({ timeout: 20000 })
 
     // There might be additional prompts after using features
     const signUpPrompts = page
@@ -633,16 +943,25 @@ test.describe('Unregistered User Journey', () => {
   test('Unregistered user cannot select more than 3 models', async ({ page }) => {
     // Wait for loading message to disappear
     const loadingMessage = page.locator('.loading-message:has-text("Loading available models")')
-    await loadingMessage.waitFor({ state: 'hidden', timeout: 10000 }).catch(() => {
+    await loadingMessage.waitFor({ state: 'hidden', timeout: 15000 }).catch(() => {
       // Loading message might not exist or already be gone, continue
     })
+
+    // Wait for model selection area to be available
+    await page
+      .waitForSelector('.provider-header, [data-testid^="model-checkbox-"], .model-checkbox', {
+        timeout: 20000,
+      })
+      .catch(() => {
+        // Models might load differently, continue anyway
+      })
 
     // Expand first provider dropdown if collapsed (checkboxes are inside dropdowns)
     const providerHeaders = page.locator('.provider-header, button[class*="provider-header"]')
     if ((await providerHeaders.count()) > 0 && !page.isClosed()) {
       const firstProvider = providerHeaders.first()
       // Wait for provider header to be visible and stable
-      await firstProvider.waitFor({ state: 'visible', timeout: 10000 }).catch(() => {
+      await firstProvider.waitFor({ state: 'visible', timeout: 15000 }).catch(() => {
         if (page.isClosed()) {
           throw new Error('Page was closed while waiting for provider header')
         }

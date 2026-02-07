@@ -1,8 +1,20 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useRef, useState, Suspense, lazy } from 'react'
 
 import type { TutorialStep, TutorialState } from '../../hooks/useTutorial'
 
-import { TutorialOverlay } from './TutorialOverlay'
+// Lazy load TutorialOverlay to prevent blocking React mount
+// This fixes the module export error that was preventing React from initializing
+// Try default export first, fallback to named export
+const TutorialOverlayLazy = lazy(() =>
+  import('./TutorialOverlay').then(module => {
+    // Try default export first, then named export
+    const component = module.default || module.TutorialOverlay
+    if (!component) {
+      throw new Error('TutorialOverlay component not found in module')
+    }
+    return { default: component }
+  })
+)
 
 interface TutorialControllerProps {
   // Tutorial state and functions (passed from parent to share state)
@@ -249,13 +261,15 @@ export const TutorialController: React.FC<TutorialControllerProps> = ({
   }
 
   return (
-    <TutorialOverlay
-      key={tutorialSessionKey}
-      step={tutorialState.currentStep}
-      onComplete={handleComplete}
-      onSkip={skipTutorial}
-      isStepCompleted={isCurrentStepCompleted()}
-      isLoading={isLoading}
-    />
+    <Suspense fallback={null}>
+      <TutorialOverlayLazy
+        key={tutorialSessionKey}
+        step={tutorialState.currentStep}
+        onComplete={handleComplete}
+        onSkip={skipTutorial}
+        isStepCompleted={isCurrentStepCompleted()}
+        isLoading={isLoading}
+      />
+    </Suspense>
   )
 }

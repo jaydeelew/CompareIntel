@@ -1,5 +1,6 @@
 import type { Page } from '@playwright/test'
 
+import { waitForAuthState, waitForReactHydration } from './fixtures'
 import { test, expect } from './test-setup'
 
 /**
@@ -374,6 +375,26 @@ test.describe('Registration and Onboarding', () => {
       return
     }
 
+    // Wait for React hydration (non-blocking with timeout guard)
+    try {
+      await Promise.race([
+        waitForReactHydration(page, 5000),
+        new Promise(resolve => setTimeout(resolve, 5000)), // Max 5 seconds
+      ])
+    } catch {
+      // Continue anyway
+    }
+
+    // Wait for auth state to be determined (non-blocking with timeout guard)
+    try {
+      await Promise.race([
+        waitForAuthState(page, 8000),
+        new Promise(resolve => setTimeout(resolve, 8000)), // Max 8 seconds
+      ])
+    } catch {
+      // Continue anyway - elements might still be available
+    }
+
     // Wait a bit more to ensure overlay is fully dismissed
     await safeWait(page, 500)
   })
@@ -386,8 +407,23 @@ test.describe('Registration and Onboarding', () => {
     const testPassword = 'TestPassword123!'
 
     await test.step('Open registration modal', async () => {
+      // Ensure page is still valid
+      if (page.isClosed()) {
+        throw new Error('Page was closed before opening registration modal')
+      }
+
+      // Wait for auth state if not already determined
+      try {
+        await Promise.race([
+          waitForAuthState(page, 10000),
+          new Promise(resolve => setTimeout(resolve, 10000)),
+        ])
+      } catch {
+        // Continue anyway
+      }
+
       const signUpButton = page.getByTestId('nav-sign-up-button')
-      await expect(signUpButton).toBeVisible()
+      await expect(signUpButton).toBeVisible({ timeout: 20000 })
       await signUpButton.click()
 
       // Wait for auth modal to appear

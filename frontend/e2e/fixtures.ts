@@ -40,6 +40,201 @@ async function safeWait(page: Page, ms: number) {
 }
 
 /**
+ * Wait for auth state to be determined (auth context initialized)
+ * This ensures React has hydrated and auth context has finished loading
+ */
+async function waitForAuthState(page: Page, timeout: number = 20000): Promise<void> {
+  // Check page validity before starting
+  if (page.isClosed()) {
+    return // Page already closed, nothing to wait for
+  }
+
+  // Strategy: Wait for auth context to finish loading by checking React state
+  // The auth context sets isLoading to false when done, and isAuthenticated to true/false
+  // We can detect this by waiting for either sign-in buttons (unauthenticated) or user menu (authenticated)
+  try {
+    // First, wait for navigation element (indicates React has rendered)
+    const navTimeout = Math.min(timeout, 10000)
+    await page.waitForSelector('.navbar, .app-header, nav', {
+      timeout: navTimeout,
+      state: 'attached', // Just need it in DOM, not necessarily visible
+    })
+
+    // Check page validity after navigation wait
+    if (page.isClosed()) {
+      return
+    }
+
+    // Wait for auth state to be determined by checking for auth buttons or user menu
+    // Use waitForFunction to check React state directly
+    await Promise.race([
+      page.waitForFunction(
+        () => {
+          // Check if navigation exists
+          const nav = document.querySelector('.navbar, .app-header, nav')
+          if (!nav) return false
+
+          // Check for sign-in button (unauthenticated state)
+          const signInButton = document.querySelector('[data-testid="nav-sign-in-button"]')
+          // Check for user menu (authenticated state)
+          const userMenu = document.querySelector('[data-testid="user-menu-button"]')
+
+          // Auth state is determined when either button is present
+          return signInButton !== null || userMenu !== null
+        },
+        { timeout: Math.min(timeout, 15000) }
+      ),
+      // Timeout guard to prevent hanging
+      new Promise(resolve => setTimeout(resolve, Math.min(timeout, 15000))),
+    ])
+  } catch (_error) {
+    // If page closed, exit gracefully
+    if (page.isClosed()) {
+      return
+    }
+
+    // Fallback: Try waiting for buttons directly with locators
+    try {
+      const signInButton = page.getByTestId('nav-sign-in-button')
+      const userMenu = page.getByTestId('user-menu-button')
+
+      await Promise.race([
+        signInButton
+          .waitFor({ state: 'attached', timeout: Math.min(timeout, 10000) })
+          .catch(() => {}),
+        userMenu.waitFor({ state: 'attached', timeout: Math.min(timeout, 10000) }).catch(() => {}),
+      ])
+    } catch (fallbackError) {
+      // If page closed during fallback, exit gracefully
+      if (page.isClosed()) {
+        return
+      }
+      // Log but don't throw - auth state might still be loading, test can continue
+      console.log(
+        `[DEBUG] Auth state wait failed: ${fallbackError instanceof Error ? fallbackError.message : String(fallbackError)}`
+      )
+    }
+  }
+}
+
+/**
+ * Wait for React to hydrate and page to be interactive
+ */
+async function waitForReactHydration(page: Page, timeout: number = 15000): Promise<void> {
+  if (page.isClosed()) {
+    return
+  }
+
+  try {
+    // Wait for React to hydrate by checking for React-rendered content
+    await page.waitForFunction(
+      () => {
+        // Check for basic React-rendered elements
+        const hasBody = document.body !== null
+        const hasContent = document.body && document.body.children.length > 0
+        const hasReactRoot =
+          document.querySelector('#root, [data-reactroot], [id^="root"]') !== null
+
+        return hasBody && hasContent && (hasReactRoot || document.body.innerHTML.length > 100)
+      },
+      { timeout }
+    )
+  } catch (_error) {
+    // If function wait fails, check if page closed
+    if (page.isClosed()) {
+      return
+    }
+    // Otherwise, just verify body exists as fallback
+    // This is a fallback - page might still be loading
+    try {
+      await page.waitForSelector('body', { timeout: 5000 })
+    } catch {
+      // Body check also failed, but don't throw - page might be loading
+    }
+  }
+}
+
+/**
+ * Retry element detection with exponential backoff
+ */
+async function retryElementDetection<T>(
+  page: Page,
+  action: () => Promise<T>,
+  options: {
+    maxRetries?: number
+    retryDelay?: number
+    timeout?: number
+  } = {}
+): Promise<T> {
+  const { maxRetries = 3, retryDelay = 500, timeout = 10000 } = options
+
+  let lastError: Error | null = null
+
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    // Check page validity before each attempt
+    if (page.isClosed()) {
+      // If page is closed, check if it's recoverable or if we should fail
+      // For now, throw error but with more context
+      throw new Error(
+        `Page was closed during element detection retry (attempt ${attempt + 1}/${maxRetries})`
+      )
+    }
+
+    try {
+      // Wrap action in a check to catch page closure during execution
+      const result = await Promise.race([
+        (async () => {
+          // Double-check page is still valid right before action
+          if (page.isClosed()) {
+            throw new Error('Page was closed right before action execution')
+          }
+          return await action()
+        })(),
+        new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error('Action timeout')), timeout)
+        ),
+      ])
+      return result
+    } catch (error) {
+      // Check if page closed during action
+      if (page.isClosed()) {
+        throw new Error(
+          `Page was closed during action execution (attempt ${attempt + 1}/${maxRetries})`
+        )
+      }
+
+      lastError = error instanceof Error ? error : new Error(String(error))
+
+      // Don't retry on last attempt
+      if (attempt === maxRetries - 1) {
+        break
+      }
+
+      // Wait before retry with exponential backoff
+      // Check page validity during wait
+      try {
+        await safeWait(page, retryDelay * Math.pow(2, attempt))
+        // Check again after wait
+        if (page.isClosed()) {
+          throw new Error(
+            `Page was closed during retry delay (attempt ${attempt + 1}/${maxRetries})`
+          )
+        }
+      } catch (_waitError) {
+        if (page.isClosed()) {
+          throw new Error(
+            `Page was closed during retry delay (attempt ${attempt + 1}/${maxRetries})`
+          )
+        }
+        // If wait error is not page closure, continue to next retry
+      }
+    }
+  }
+
+  throw lastError || new Error('Element detection failed after retries')
+}
+
+/**
  * Helper function to dismiss the tutorial overlay if it appears
  * Tutorial is disabled on mobile layouts (viewport width <= 768px), so we skip dismissal on mobile
  */
@@ -779,16 +974,50 @@ async function ensureAuthenticated(
     throw new Error('Page was closed after authentication')
   }
 
-  // Wait for user menu with better error handling
+  // Wait for auth state to update after login/registration
+  // This ensures the auth context has processed the login response
+  await waitForAuthState(page, 30000)
+
+  // Wait for user menu with retry logic and better error handling
   // Use longer timeout in CI environment
   const authTimeout = process.env.CI ? 30000 : 20000
+
+  // Check page validity before waiting
+  if (page.isClosed()) {
+    throw new Error('Page was closed before verifying authentication')
+  }
+
   try {
-    await expect(userMenu).toBeVisible({ timeout: authTimeout })
+    // Use retry logic for user menu detection with timeout guard
+    await Promise.race([
+      retryElementDetection(
+        page,
+        async () => {
+          if (page.isClosed()) {
+            throw new Error('Page was closed during user menu detection')
+          }
+          await expect(userMenu).toBeVisible({ timeout: authTimeout })
+        },
+        {
+          maxRetries: 3,
+          retryDelay: 1000,
+          timeout: authTimeout,
+        }
+      ),
+      // Timeout guard - don't wait forever
+      new Promise((_, reject) =>
+        setTimeout(
+          () => reject(new Error('Authentication verification timeout')),
+          authTimeout + 5000
+        )
+      ),
+    ])
   } catch (error) {
     // Check if page was closed during the wait
     if (page.isClosed()) {
       throw new Error('Page was closed while verifying authentication')
     }
+
     // Check if there's an error message visible
     const errorMessage = page.locator('.auth-error')
     const hasError = await errorMessage.isVisible({ timeout: 2000 }).catch(() => false)
@@ -796,6 +1025,16 @@ async function ensureAuthenticated(
       const errorText = await errorMessage.textContent().catch(() => 'Unknown error')
       throw new Error(`Authentication verification failed: ${errorText}`)
     }
+
+    // If timeout error, check if user menu exists (might have appeared after timeout)
+    if (error instanceof Error && error.message.includes('timeout')) {
+      const menuExists = await userMenu.isVisible({ timeout: 2000 }).catch(() => false)
+      if (menuExists) {
+        // Menu exists, authentication succeeded despite timeout
+        return
+      }
+    }
+
     // Re-throw the original error if it's not a page closure issue
     throw error
   }
@@ -922,6 +1161,13 @@ export const test = base.extend<TestFixtures>({
     } catch {
       await page.waitForLoadState('domcontentloaded', { timeout: 5000 }).catch(() => {})
     }
+
+    // Wait for React hydration
+    await waitForReactHydration(page)
+
+    // Wait for auth state to be determined before authentication
+    await waitForAuthState(page)
+
     await dismissTutorialOverlay(page)
     await ensureAuthenticated(
       page,
@@ -944,6 +1190,13 @@ export const test = base.extend<TestFixtures>({
     } catch {
       await page.waitForLoadState('domcontentloaded', { timeout: 5000 }).catch(() => {})
     }
+
+    // Wait for React hydration
+    await waitForReactHydration(page)
+
+    // Wait for auth state to be determined before authentication
+    await waitForAuthState(page)
+
     await ensureAuthenticated(
       page,
       TEST_CREDENTIALS.starter.email,
@@ -965,6 +1218,13 @@ export const test = base.extend<TestFixtures>({
     } catch {
       await page.waitForLoadState('domcontentloaded', { timeout: 5000 }).catch(() => {})
     }
+
+    // Wait for React hydration
+    await waitForReactHydration(page)
+
+    // Wait for auth state to be determined before authentication
+    await waitForAuthState(page)
+
     await ensureAuthenticated(
       page,
       TEST_CREDENTIALS.starterPlus.email,
@@ -986,6 +1246,13 @@ export const test = base.extend<TestFixtures>({
     } catch {
       await page.waitForLoadState('domcontentloaded', { timeout: 5000 }).catch(() => {})
     }
+
+    // Wait for React hydration
+    await waitForReactHydration(page)
+
+    // Wait for auth state to be determined before authentication
+    await waitForAuthState(page)
+
     await ensureAuthenticated(
       page,
       TEST_CREDENTIALS.pro.email,
@@ -1007,6 +1274,13 @@ export const test = base.extend<TestFixtures>({
     } catch {
       await page.waitForLoadState('domcontentloaded', { timeout: 5000 }).catch(() => {})
     }
+
+    // Wait for React hydration
+    await waitForReactHydration(page)
+
+    // Wait for auth state to be determined before authentication
+    await waitForAuthState(page)
+
     await ensureAuthenticated(
       page,
       TEST_CREDENTIALS.proPlus.email,
@@ -1031,6 +1305,13 @@ export const test = base.extend<TestFixtures>({
     } catch {
       await page.waitForLoadState('domcontentloaded', { timeout: 5000 }).catch(() => {})
     }
+
+    // Wait for React hydration
+    await waitForReactHydration(page)
+
+    // Wait for auth state to be determined before authentication
+    await waitForAuthState(page)
+
     await ensureAuthenticated(
       page,
       TEST_CREDENTIALS.admin.email,
@@ -1318,3 +1599,12 @@ export const test = base.extend<TestFixtures>({
 
 // Re-export expect for convenience
 export { expect } from '@playwright/test'
+
+// Export helper functions for use in test files
+export {
+  waitForAuthState,
+  waitForReactHydration,
+  retryElementDetection,
+  safeWait,
+  dismissTutorialOverlay,
+}

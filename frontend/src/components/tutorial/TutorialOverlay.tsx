@@ -2633,3 +2633,6 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
 
   return portalRoot ? createPortal(overlayUi, portalRoot) : overlayUi
 }
+
+// Also export as default for better module resolution compatibility
+export default TutorialOverlay
