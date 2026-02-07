@@ -51,6 +51,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
   const hasAttemptedElementFindRef = useRef<boolean>(false)
   const tooltipClampAttemptsRef = useRef<number>(0)
   const initialScrollCompleteRef = useRef<boolean>(false)
+  const targetElementRef = useRef<HTMLElement | null>(null)
   const [targetElement, setTargetElement] = useState<HTMLElement | null>(null)
   const [highlightedElements, setHighlightedElements] = useState<HTMLElement[]>([])
   const [overlayPosition, setOverlayPosition] = useState({ top: 0, left: 0 })
@@ -119,6 +120,10 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
       setButtonCutout(null)
     }
   }, [step])
+
+  useEffect(() => {
+    targetElementRef.current = targetElement
+  }, [targetElement])
 
   // Render the tutorial UI in a portal attached to <body> so `position: fixed` is truly viewport-fixed.
   // This avoids cases where an ancestor has `contain/transform` which can break fixed positioning or clip the tooltip.
@@ -1027,12 +1032,24 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
     const scrollDelay = step === 'enter-prompt' || step === 'enter-prompt-2' ? 150 : 100
     scrollDelayTimer = setTimeout(() => {
       scrollDelayTimer = null
+      const shouldSkipScroll =
+        (step === 'enter-prompt' || step === 'enter-prompt-2') && initialScrollCompleteRef.current
+
       const isCustomScrollStep = step === 'enter-prompt' || step === 'enter-prompt-2'
-      const waitForScroll = shouldDelayReveal
-        ? isCustomScrollStep
-          ? waitForProgrammaticScrollCompletion()
-          : new Promise<void>(resolve => waitForScrollStop(resolve))
-        : null
+      const waitForScroll =
+        shouldDelayReveal && !shouldSkipScroll
+          ? isCustomScrollStep
+            ? waitForProgrammaticScrollCompletion()
+            : new Promise<void>(resolve => waitForScrollStop(resolve))
+          : null
+
+      if (shouldSkipScroll) {
+        updatePosition()
+        setIsVisible(true)
+        initialScrollCompleteRef.current = true
+        setPositionStabilized(true)
+        return
+      }
 
       scrollToElement()
 
@@ -1564,8 +1581,13 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
           width: maxRight - minLeft + padding * 2,
           height: maxBottom - minTop + padding * 2,
         })
-        // Set target element if not set
-        setTargetElement(composerElement)
+        // Set target element only when needed; avoid re-triggering scroll during the initial phase
+        const currentTarget = targetElementRef.current
+        if (!currentTarget) {
+          setTargetElement(composerElement)
+        } else if (initialScrollCompleteRef.current && currentTarget !== composerElement) {
+          setTargetElement(composerElement)
+        }
 
         // Only update position AFTER initial scroll is complete to avoid jarring movement
         if (initialScrollCompleteRef.current) {
