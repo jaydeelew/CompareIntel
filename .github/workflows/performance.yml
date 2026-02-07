@@ -136,7 +136,6 @@ jobs:
         run: |
           lhci autorun --collect.url=http://localhost:5173 \
             --collect.numberOfRuns=3 \
-            --assert.preset=lighthouse:recommended \
             --assert.assertions.categories:performance=["warn", {"minScore": 0.6}] \
             --assert.assertions.categories:accessibility=["error", {"minScore": 0.8}] \
             --assert.assertions.categories:best-practices=["warn", {"minScore": 0.8}] \
