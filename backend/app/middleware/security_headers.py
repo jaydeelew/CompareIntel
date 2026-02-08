@@ -32,8 +32,10 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
 
         # Remove X-Powered-By header (security best practice)
         # This prevents information disclosure about the server stack
-        response.headers.pop("X-Powered-By", None)
-        response.headers.pop("server", None)  # Also remove server header if present
+        if "X-Powered-By" in response.headers:
+            del response.headers["X-Powered-By"]
+        if "server" in response.headers:
+            del response.headers["server"]  # Also remove server header if present
 
         # Add security headers
         # X-Content-Type-Options: Prevent MIME type sniffing
