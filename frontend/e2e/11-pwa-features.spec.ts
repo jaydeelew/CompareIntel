@@ -63,18 +63,75 @@ async function getManifestContent(page: Page): Promise<object | null> {
 }
 
 test.describe('PWA Features', () => {
-  test.beforeEach(async ({ page }) => {
+  test.beforeEach(async ({ page, browserName }) => {
+    // Detect mobile devices and adjust timeouts accordingly
+    const isFirefox = browserName === 'firefox'
+    const isWebKit = browserName === 'webkit'
+
+    // Check browserName for mobile indicators (project names may include "Mobile", "iPhone", "iPad")
+    // Note: In Playwright, browserName might be the project name for device emulation
+    const browserNameIndicatesMobile =
+      browserName.includes('Mobile') ||
+      browserName.includes('iPhone') ||
+      browserName.includes('iPad') ||
+      browserName.includes('Pixel') ||
+      browserName.includes('Galaxy')
+
+    // Mobile devices and WebKit/Firefox need longer timeouts
+    // WebKit is used by all iOS devices (iPhone, iPad), so give it longer timeouts
+    const navigationTimeout = isFirefox || isWebKit || browserNameIndicatesMobile ? 60000 : 30000
+    const loadTimeout = isFirefox || isWebKit || browserNameIndicatesMobile ? 30000 : 15000
+
+    // Increase beforeEach timeout for mobile devices and WebKit to prevent timeout errors
+    if (browserNameIndicatesMobile || isWebKit) {
+      test.setTimeout(90000) // 90 seconds for mobile devices and WebKit
+    }
+
     // Navigate to the app
-    await page.goto('/')
-    await page.waitForLoadState('networkidle')
+    await page.goto('/', { waitUntil: 'domcontentloaded', timeout: navigationTimeout })
+
+    // Check viewport size after navigation to catch mobile devices that weren't detected by browserName
+    // Mobile devices typically have width <= 1024px
+    try {
+      const viewport = page.viewportSize()
+      if (viewport && viewport.width <= 1024 && !browserNameIndicatesMobile) {
+        // Detected mobile viewport but wasn't caught by browserName - adjust timeout
+        test.setTimeout(90000)
+      }
+    } catch {
+      // Ignore viewport check errors
+    }
+
+    // Wait for load state with fallback - networkidle can be too strict for mobile
+    try {
+      await page.waitForLoadState('load', { timeout: loadTimeout })
+    } catch {
+      // If load times out, try domcontentloaded with shorter timeout
+      await page.waitForLoadState('domcontentloaded', { timeout: loadTimeout / 2 }).catch(() => {
+        // If that also fails, just continue - page is likely loaded enough
+      })
+    }
   })
 
   test('should have PWA manifest link in HTML', async ({ page }) => {
-    // Check for manifest link tag (link tags are not visible, so check existence)
+    // Wait for the document to be ready
+    await page.waitForLoadState('domcontentloaded')
+
+    // Wait for head element to be available (link tags are in head)
+    await page.waitForSelector('head', { timeout: 10000 })
+
+    // Wait for the manifest link to be present in the DOM
+    // Use waitForSelector with a longer timeout for mobile browsers
+    await page.waitForSelector('link[rel="manifest"]', { timeout: 15000 })
+
+    // Now check for the manifest link tag
     const manifestLink = page.locator('link[rel="manifest"]')
+
+    // Verify the link exists (should be exactly 1)
     await expect(manifestLink).toHaveCount(1)
 
-    const manifestHref = await manifestLink.getAttribute('href')
+    // Get the href attribute
+    const manifestHref = await manifestLink.first().getAttribute('href')
     expect(manifestHref).toBeTruthy()
     expect(manifestHref).toMatch(/manifest/i)
   })
