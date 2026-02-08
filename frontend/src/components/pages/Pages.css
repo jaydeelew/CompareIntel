@@ -503,6 +503,8 @@
 .step-content p {
   margin: 0 0 1rem;
   font-size: 0.9375rem;
+  white-space: normal;
+  word-wrap: break-word;
 }
 
 .step-content ul {
