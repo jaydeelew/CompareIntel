@@ -118,7 +118,8 @@ test.describe('PWA Features', () => {
     await page.waitForLoadState('domcontentloaded')
 
     // Wait for head element to be available (link tags are in head)
-    await page.waitForSelector('head', { timeout: 10000 })
+    // Use 'attached' state since head is never visible
+    await page.waitForSelector('head', { state: 'attached', timeout: 10000 })
 
     // Wait for the manifest link to be present in the DOM
     // Use waitForSelector with a longer timeout for mobile browsers
