@@ -177,10 +177,22 @@ jobs:
 
       - name: Start frontend preview server
         working-directory: frontend
+        env:
+          PORT: 5173
         run: |
-          npm run preview -- --port 5173 --host 127.0.0.1 &
-          sleep 5
-          echo "Frontend ready"
+          npm run preview &
+          echo "Waiting for frontend server to start..."
+          for i in {1..30}; do
+            if curl -f -s http://localhost:5173 > /dev/null 2>&1; then
+              echo "Frontend server is ready!"
+              break
+            fi
+            if [ $i -eq 30 ]; then
+              echo "Frontend server failed to start after 30 seconds"
+              exit 1
+            fi
+            sleep 1
+          done
 
       - name: Run OWASP ZAP baseline scan
         uses: zaproxy/action-baseline@v0.13.0
