@@ -391,3 +391,18 @@
     transform: scale(0.9);
   }
 }
+
+/* Spark expansion animation - expands outward from center with fade */
+@keyframes sparkExpand {
+  0% {
+    opacity: 0;
+    transform: translate(0, 0) scale(1);
+  }
+  20% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--spark-tx), var(--spark-ty)) scale(0.5);
+  }
+}

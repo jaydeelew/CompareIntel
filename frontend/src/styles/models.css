@@ -1120,11 +1120,85 @@
 .spark-effect {
   transform-origin: 100px 40px;
 }
+
 .spark-particle {
   transform-origin: 100px 40px;
+  animation: sparkExpand 2s ease-out infinite;
+  filter: drop-shadow(0 0 4px rgba(255, 149, 0, 0.8)) drop-shadow(0 0 8px rgba(255, 149, 0, 0.4));
 }
 
-/* Spark animations defined in animations.css */
+/* Each particle expands in a different direction (12 particles, 30° apart in a circle) */
+.spark-particle:nth-child(1) {
+  --spark-tx: 0px;
+  --spark-ty: -40px;
+  animation-delay: 0.7s;
+}
+
+.spark-particle:nth-child(2) {
+  --spark-tx: 20px;
+  --spark-ty: -34.64px;
+  animation-delay: 0.75s;
+}
+
+.spark-particle:nth-child(3) {
+  --spark-tx: 34.64px;
+  --spark-ty: -20px;
+  animation-delay: 0.8s;
+}
+
+.spark-particle:nth-child(4) {
+  --spark-tx: 40px;
+  --spark-ty: 0px;
+  animation-delay: 0.85s;
+}
+
+.spark-particle:nth-child(5) {
+  --spark-tx: 34.64px;
+  --spark-ty: 20px;
+  animation-delay: 0.9s;
+}
+
+.spark-particle:nth-child(6) {
+  --spark-tx: 20px;
+  --spark-ty: 34.64px;
+  animation-delay: 0.95s;
+}
+
+.spark-particle:nth-child(7) {
+  --spark-tx: 0px;
+  --spark-ty: 40px;
+  animation-delay: 1s;
+}
+
+.spark-particle:nth-child(8) {
+  --spark-tx: -20px;
+  --spark-ty: 34.64px;
+  animation-delay: 1.05s;
+}
+
+.spark-particle:nth-child(9) {
+  --spark-tx: -34.64px;
+  --spark-ty: 20px;
+  animation-delay: 1.1s;
+}
+
+.spark-particle:nth-child(10) {
+  --spark-tx: -40px;
+  --spark-ty: 0px;
+  animation-delay: 1.15s;
+}
+
+.spark-particle:nth-child(11) {
+  --spark-tx: -34.64px;
+  --spark-ty: -20px;
+  animation-delay: 1.2s;
+}
+
+.spark-particle:nth-child(12) {
+  --spark-tx: -20px;
+  --spark-ty: -34.64px;
+  animation-delay: 1.25s;
+}
 
 @keyframes slideFromLeft {
   0% {
