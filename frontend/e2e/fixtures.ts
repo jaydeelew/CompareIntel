@@ -385,8 +385,8 @@ const TEST_CREDENTIALS = {
     password: process.env.TEST_PRO_PLUS_PASSWORD || 'Test12345678/',
   },
   admin: {
-    email: process.env.ADMIN_EMAIL || 'jaydeelew@gmail.com',
-    password: process.env.ADMIN_PASSWORD || 'sf*88323?ddpdRRl',
+    email: process.env.ADMIN_EMAIL || 'admin@example.com',
+    password: process.env.ADMIN_PASSWORD || 'AdminPassword123!',
   },
   moderator: {
     email: process.env.MODERATOR_EMAIL || 'moderator@test.com',

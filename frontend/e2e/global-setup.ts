@@ -211,12 +211,13 @@ async function globalSetup(config: FullConfig) {
   }
 
   // Test credentials - use tier-specific variables for clarity
+  // Note: In CI, these come from GitHub Secrets. Fallback values are for local development only.
   const TEST_USER_EMAIL =
     process.env.TEST_FREE_EMAIL || process.env.TEST_USER_EMAIL || 'free@test.com'
   const TEST_USER_PASSWORD =
     process.env.TEST_FREE_PASSWORD || process.env.TEST_USER_PASSWORD || 'Test12345678/'
-  const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'jaydeelew@gmail.com'
-  const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'sf*88323?ddpdRRl'
+  const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@example.com'
+  const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'AdminPassword123!'
 
   // ============================================================================
   // PRIORITY: Create test users via API first (critical for CI reliability)

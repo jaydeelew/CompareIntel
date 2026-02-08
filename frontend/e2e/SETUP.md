@@ -73,8 +73,8 @@ export TEST_PRO_PLUS_EMAIL="pro_plus@test.com"
 export TEST_PRO_PLUS_PASSWORD="Test12345678/"
 
 # Admin Credentials
-export ADMIN_EMAIL="jaydeelew@gmail.com"
-export ADMIN_PASSWORD="sf*88323?ddpdRRl"
+export ADMIN_EMAIL="admin@example.com"
+export ADMIN_PASSWORD="AdminPassword123!"
 
 # Other Configuration
 export SECRET_KEY="your-secret-key-32-chars-minimum"
@@ -170,7 +170,7 @@ test('User can do something', async ({ authenticatedPage }) => {
 
 ## Test Data
 
-- **Admin User**: `jaydeelew@gmail.com` / `sf*88323?ddpdRRl`
+- **Admin User**: `admin@example.com` / `AdminPassword123!`
 - **Free Tier User**: `free@test.com` / `Test12345678/`
 - **Starter Tier User**: `starter@test.com` / `Test12345678/`
 - **Starter+ Tier User**: `starter_plus@test.com` / `Test12345678/`
