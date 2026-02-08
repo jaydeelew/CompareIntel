@@ -36,13 +36,20 @@ jobs:
       CI: true
       PLAYWRIGHT_BASE_URL: http://localhost:5173
       BACKEND_URL: http://localhost:8000
-      OPENROUTER_API_KEY: ${{ secrets.TEST_OPENROUTER_API_KEY }}
-      TEST_FREE_EMAIL: ${{ secrets.TEST_FREE_EMAIL }}
-      TEST_FREE_PASSWORD: ${{ secrets.TEST_FREE_PASSWORD }}
     
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+      
+      - name: Set test secrets as environment variables
+        env:
+          OPENROUTER_API_KEY: ${{ secrets.TEST_OPENROUTER_API_KEY }}
+          TEST_FREE_EMAIL: ${{ secrets.TEST_FREE_EMAIL }}
+          TEST_FREE_PASSWORD: ${{ secrets.TEST_FREE_PASSWORD }}
+        run: |
+          echo "OPENROUTER_API_KEY=$OPENROUTER_API_KEY" >> $GITHUB_ENV
+          echo "TEST_FREE_EMAIL=$TEST_FREE_EMAIL" >> $GITHUB_ENV
+          echo "TEST_FREE_PASSWORD=$TEST_FREE_PASSWORD" >> $GITHUB_ENV
       
       - name: Setup Node.js
         uses: actions/setup-node@v4
