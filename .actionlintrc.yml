@@ -1,0 +1,18 @@
+# Actionlint configuration for GitHub Actions workflows
+# 
+# This file documents secrets that are configured in GitHub repository settings.
+# The "Context access might be invalid" warnings for these secrets are false positives
+# because actionlint cannot verify secrets exist at static analysis time.
+#
+# All secrets listed below are properly configured in:
+# GitHub Settings > Secrets and variables > Actions
+#
+# To suppress context-access warnings when using actionlint, use:
+# actionlint -ignore 'context-access:secrets\.(TEST_OPENROUTER_API_KEY|TEST_FREE_EMAIL|TEST_FREE_PASSWORD|TEST_ADMIN_EMAIL|TEST_ADMIN_PASSWORD)'
+#
+# Configured secrets:
+# - TEST_OPENROUTER_API_KEY: OpenRouter API key for E2E tests
+# - TEST_FREE_EMAIL: Test user email (free tier account)  
+# - TEST_FREE_PASSWORD: Test user password (free tier account)
+# - TEST_ADMIN_EMAIL: Admin test user email
+# - TEST_ADMIN_PASSWORD: Admin test user password

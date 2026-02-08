@@ -93,7 +93,13 @@ After adding all secrets:
 - **Warnings, not errors** - Workflows will run successfully
 - **False positives** - They don't indicate actual problems
 - **Common in GitHub Actions** - Most workflows using secrets will show these warnings
-- **Cannot be eliminated** - They're inherent to static analysis of workflow files
+- **From VS Code Extension** - These warnings come from the GitHub Actions extension in VS Code/Cursor
+
+**To Reduce Warnings**:
+- The workflow files include comment blocks documenting all configured secrets
+- An `.actionlintrc.yml` file documents secrets for actionlint users
+- A `.vscode/settings.json` file includes notes about these warnings
+- These warnings can be safely ignored - workflows will execute successfully
 
 These warnings do not affect workflow execution and can be safely ignored once you've verified the secrets are configured correctly.
 

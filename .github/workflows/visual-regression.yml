@@ -1,5 +1,14 @@
 name: Visual Regression Testing
 
+# Configured GitHub Secrets (all secrets are set in GitHub Settings > Secrets and variables > Actions):
+# - TEST_OPENROUTER_API_KEY: OpenRouter API key for E2E tests
+# - TEST_FREE_EMAIL: Test user email (free tier account)
+# - TEST_FREE_PASSWORD: Test user password (free tier account)
+#
+# Note: VS Code GitHub Actions extension may show "Context access might be invalid" warnings
+# for these secrets. These are false positives - the secrets are properly configured and
+# workflows will execute successfully.
+
 on:
   push:
     branches: [master]
@@ -95,11 +104,16 @@ jobs:
         run: |
           # Run tests that include visual comparisons
           # Uses Playwright's built-in screenshot comparison (toHaveScreenshot)
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            UPDATE_SNAPSHOTS="missing"
+          else
+            UPDATE_SNAPSHOTS="none"
+          fi
           npm run test:e2e -- \
             --project=chromium \
             --grep="(visual|regression|display)" \
             --timeout=90000 \
-            --update-snapshots=${{ github.event_name == 'workflow_dispatch' && 'missing' || 'none' }}
+            --update-snapshots="$UPDATE_SNAPSHOTS"
       
       - name: Upload visual comparison results
         if: always()
