@@ -87,8 +87,15 @@ After adding all secrets:
 
 1. Push a commit or create a pull request that triggers the CI workflows
 2. Check the workflow runs in the **Actions** tab
-3. The linter warnings should no longer appear
-4. E2E tests should run successfully with the configured secrets
+3. E2E tests should run successfully with the configured secrets
+
+**Note about Linter Warnings**: The linter warnings about "Context access might be invalid" for secrets are **expected and normal**. These are static analysis warnings that occur because the linter cannot verify that secrets exist in your repository settings. They are:
+- **Warnings, not errors** - Workflows will run successfully
+- **False positives** - They don't indicate actual problems
+- **Common in GitHub Actions** - Most workflows using secrets will show these warnings
+- **Cannot be eliminated** - They're inherent to static analysis of workflow files
+
+These warnings do not affect workflow execution and can be safely ignored once you've verified the secrets are configured correctly.
 
 ## Troubleshooting
 
@@ -100,13 +107,18 @@ If workflows fail with "secrets not found" errors:
 2. Ensure you're adding secrets to the correct repository
 3. Check that you have admin access to the repository (required to add secrets)
 
-### Linter Warnings Persist
+### Linter Warnings About Secrets
 
-If linter warnings still appear after adding secrets:
+**Important**: The linter warnings about secret access are **expected and cannot be eliminated**. They occur because:
 
-1. Wait a few minutes for the linter cache to refresh
-2. Try pushing a new commit to trigger a fresh lint check
-3. Verify the secrets are visible in **Settings** → **Secrets and variables** → **Actions**
+1. The linter performs static analysis and cannot access your repository settings
+2. It cannot verify that secrets exist, so it warns about potential issues
+3. These are warnings, not errors - workflows will run successfully
+
+**You can safely ignore these warnings** as long as:
+- Your workflows run successfully
+- Secrets are configured in repository settings
+- Tests execute without "secret not found" errors
 
 ### Workflow Still Fails
 
