@@ -24,7 +24,8 @@
   
   <!-- Content Security Policy -->
   <!-- Note: frame-ancestors is set via HTTP header (nginx) as meta tags don't support it -->
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.google.com https://www.gstatic.com https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: https:; connect-src 'self' https://www.google.com https://api.bigdatacloud.net; frame-src https://www.google.com; base-uri 'self'; form-action 'self';" />
+  <!-- img-src: 'self', data:, and compareintel.com for social images -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.google.com https://www.gstatic.com https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: https://compareintel.com; connect-src 'self' https://www.google.com https://api.bigdatacloud.net; frame-src https://www.google.com; base-uri 'self'; form-action 'self';" />
 
   <!-- Preconnect to Google Fonts for faster font loading - MUST be before font stylesheet -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />

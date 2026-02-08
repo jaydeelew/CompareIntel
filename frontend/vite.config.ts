@@ -5,6 +5,8 @@ import { imagetools } from 'vite-imagetools'
 import { VitePWA } from 'vite-plugin-pwa'
 import { defineConfig } from 'vitest/config'
 
+import { securityHeadersPlugin } from './vite-plugin-security-headers'
+
 // Plugin to auto-version social sharing images (cache busting)
 // Replaces __SOCIAL_IMAGE_VERSION__ with build timestamp in index.html
 function socialImageVersionPlugin(): Plugin {
@@ -20,6 +22,8 @@ function socialImageVersionPlugin(): Plugin {
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [
+    // Add security headers to dev server responses (for ZAP compliance)
+    securityHeadersPlugin(),
     // Auto-version social sharing images on every build (cache busting for OG/Twitter images)
     socialImageVersionPlugin(),
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -269,6 +273,9 @@ export default defineConfig({
         }
       }
     },
+    // Add security and cache headers for dev server responses
+    // This helps with security scanning tools like ZAP
+    middlewareMode: false,
     // Exclude model_renderer_configs.json from HMR to prevent page reload
     // when backend modifies this file during model add/delete operations
     watch: {
