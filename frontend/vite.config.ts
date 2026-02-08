@@ -242,7 +242,9 @@ export default defineConfig({
         ],
       },
       devOptions: {
-        enabled: false, // Disable in development to avoid caching issues
+        enabled: true, // Enable PWA plugin in dev mode to generate manifest file
+        // Service worker registration is disabled via injectRegister: null above
+        type: 'module',
       },
     }),
   ],
