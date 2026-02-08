@@ -99,10 +99,18 @@ export function useScreenshotCopy({
 
         const toBlob = htmlToImage.toBlob
 
+        // Use the actual computed background color to preserve the dark theme
+        const computedBg = getComputedStyle(content).backgroundColor
+        const backgroundColor =
+          computedBg && computedBg !== 'transparent' && computedBg !== 'rgba(0, 0, 0, 0)'
+            ? computedBg
+            : getComputedStyle(document.documentElement).getPropertyValue('--bg-card').trim() ||
+              '#12121c'
+
         // Use html-to-image which typically preserves colors better
         const blob = await toBlob(content, {
           pixelRatio: 2, // High quality
-          backgroundColor: '#ffffff',
+          backgroundColor,
           // Skip external fonts to avoid CORS SecurityError when reading cross-origin stylesheets
           skipFonts: true,
           // Removed cacheBust for faster processing (not needed for DOM elements)
@@ -292,17 +300,18 @@ export function useScreenshotCopy({
 
           // Store original styles that we'll modify
           const prevOverflow = messageElement.style.overflow
+          const prevOverflowX = messageElement.style.overflowX
           const prevMaxHeight = messageElement.style.maxHeight
           const prevPadding = messageElement.style.padding
           const prevMargin = messageElement.style.margin
 
-          // Expand to show all content
+          // Expand to show all content and remove margin so the border isn't clipped
           messageElement.style.overflow = 'visible'
+          messageElement.style.overflowX = 'visible'
           messageElement.style.maxHeight = 'none'
           messageElement.style.padding =
             messageElement.style.padding || getComputedStyle(messageElement).padding
-          messageElement.style.margin =
-            messageElement.style.margin || getComputedStyle(messageElement).margin
+          messageElement.style.margin = '0'
 
           try {
             // Start importing the library and waiting for repaint in parallel
@@ -317,13 +326,25 @@ export function useScreenshotCopy({
 
             const toBlob = htmlToImage.toBlob
 
+            // Use the element's own computed background color to preserve the dark theme
+            // This ensures the area behind the border-radius corners matches the element background
+            const computedBg = getComputedStyle(messageElement).backgroundColor
+            const backgroundColor =
+              computedBg && computedBg !== 'transparent' && computedBg !== 'rgba(0, 0, 0, 0)'
+                ? computedBg
+                : getComputedStyle(document.documentElement)
+                    .getPropertyValue('--bg-tertiary')
+                    .trim() || '#151520'
+
             // Create screenshot of the message element
             const blob = await toBlob(messageElement, {
               pixelRatio: 2, // High quality
-              backgroundColor: '#ffffff',
+              backgroundColor,
               style: {
                 overflow: 'visible',
+                overflowX: 'visible',
                 maxHeight: 'none',
+                margin: '0',
               },
             })
 
@@ -407,6 +428,7 @@ export function useScreenshotCopy({
           } finally {
             // Restore original styles
             messageElement.style.overflow = prevOverflow
+            messageElement.style.overflowX = prevOverflowX
             messageElement.style.maxHeight = prevMaxHeight
             messageElement.style.padding = prevPadding
             messageElement.style.margin = prevMargin

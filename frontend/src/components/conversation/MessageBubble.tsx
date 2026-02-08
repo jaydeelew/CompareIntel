@@ -1,7 +1,7 @@
 import React, { lazy, Suspense } from 'react'
 
 import { RESULT_TAB, type ResultTab } from '../../types'
-import { formatTime } from '../../utils'
+import { formatTime, getSafeId } from '../../utils'
 
 // Lazy load LatexRenderer for code splitting
 const LatexRenderer = lazy(() => import('../LatexRenderer'))
@@ -43,6 +43,11 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
   // Ensure content is always a string and trim leading/trailing whitespace
   // This prevents horizontal scrollbars caused by leading spaces
   const safeContent = (content || '').trim()
+
+  // Generate the message content ID that matches what useScreenshotCopy expects
+  const safeModelId = modelId ? getSafeId(modelId) : 'unknown'
+  const safeMessageId = getSafeId(id)
+  const messageContentId = `message-content-${safeModelId}-${safeMessageId}`
 
   return (
     <div key={id} className={`conversation-message ${type || 'assistant'} ${className}`.trim()}>
@@ -126,7 +131,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
           )}
         </div>
       </div>
-      <div className="message-content">
+      <div className="message-content" id={messageContentId}>
         {activeTab === RESULT_TAB.FORMATTED ? (
           /* Full LaTeX rendering for formatted view */
           <Suspense fallback={<pre className="result-output raw-output">{safeContent}</pre>}>
