@@ -152,7 +152,7 @@ class TestRedisRateLimiterAcquireRelease:
     @pytest.mark.asyncio
     async def test_acquire_enforces_per_minute_limit(self, redis_client, rate_limit_config):
         """Acquire should fail when per-minute limit (5) is exceeded."""
-        from app.search.distributed_rate_limiter import RedisRateLimiter
+        from app.search.distributed_rate_limiter import RedisRateLimiter, ProviderRateLimitConfig
 
         # Use high concurrent limit so we only hit per-minute limit
         config = ProviderRateLimitConfig(
@@ -160,7 +160,6 @@ class TestRedisRateLimiterAcquireRelease:
             max_concurrent=100,
             delay_between_requests=0.0,
         )
-        from app.search.distributed_rate_limiter import ProviderRateLimitConfig
 
         limiter = RedisRateLimiter(
             redis_client=redis_client,
@@ -230,17 +229,19 @@ class TestCircuitBreaker:
 
     def test_circuit_starts_closed(self):
         """Circuit breaker should start in CLOSED state."""
-        from app.search.distributed_rate_limiter import CircuitBreaker, CircuitState
+        from app.search.distributed_rate_limiter import CircuitBreaker, CircuitBreakerConfig, CircuitState
 
-        cb = CircuitBreaker(failure_threshold=3, recovery_timeout=30.0)
+        config = CircuitBreakerConfig(failure_threshold=3, timeout_seconds=30.0)
+        cb = CircuitBreaker(config)
         assert cb.state == CircuitState.CLOSED
         assert cb.can_proceed() is True
 
     def test_circuit_opens_after_failures(self):
         """Circuit should OPEN after exceeding failure threshold."""
-        from app.search.distributed_rate_limiter import CircuitBreaker, CircuitState
+        from app.search.distributed_rate_limiter import CircuitBreaker, CircuitBreakerConfig, CircuitState
 
-        cb = CircuitBreaker(failure_threshold=3, recovery_timeout=30.0)
+        config = CircuitBreakerConfig(failure_threshold=3, timeout_seconds=30.0)
+        cb = CircuitBreaker(config)
 
         # Record 3 failures
         for _ in range(3):
@@ -251,9 +252,10 @@ class TestCircuitBreaker:
 
     def test_circuit_allows_half_open_after_timeout(self):
         """Circuit should move to HALF_OPEN after recovery timeout."""
-        from app.search.distributed_rate_limiter import CircuitBreaker, CircuitState
+        from app.search.distributed_rate_limiter import CircuitBreaker, CircuitBreakerConfig, CircuitState
 
-        cb = CircuitBreaker(failure_threshold=2, recovery_timeout=0.1)  # Very short timeout
+        config = CircuitBreakerConfig(failure_threshold=2, timeout_seconds=0.1)  # Very short timeout
+        cb = CircuitBreaker(config)
 
         # Open the circuit
         cb.record_failure()
@@ -268,9 +270,10 @@ class TestCircuitBreaker:
 
     def test_circuit_closes_on_success(self):
         """Circuit should close again after successful request in HALF_OPEN."""
-        from app.search.distributed_rate_limiter import CircuitBreaker, CircuitState
+        from app.search.distributed_rate_limiter import CircuitBreaker, CircuitBreakerConfig, CircuitState
 
-        cb = CircuitBreaker(failure_threshold=2, recovery_timeout=0.1)
+        config = CircuitBreakerConfig(failure_threshold=2, timeout_seconds=0.1)
+        cb = CircuitBreaker(config)
 
         # Open the circuit
         cb.record_failure()
@@ -280,6 +283,11 @@ class TestCircuitBreaker:
         # Wait for recovery
         time.sleep(0.2)
 
-        # Record success
+        # Transition to HALF_OPEN by calling can_proceed()
+        assert cb.can_proceed() is True  # Should transition to HALF_OPEN
+        assert cb.state == CircuitState.HALF_OPEN
+
+        # Record success (need success_threshold successes to close)
         cb.record_success()
+        cb.record_success()  # Need 2 successes (default success_threshold)
         assert cb.state == CircuitState.CLOSED
