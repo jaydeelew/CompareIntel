@@ -1285,53 +1285,77 @@ export function MainPage() {
     if (savedLocationLoadedRef.current) return
 
     // Only request geolocation after user interaction (click, touch, scroll)
-    const handleUserInteraction = () => {
+    const handleUserInteraction = async () => {
       if (geolocationDetectedRef.current) return
       if (savedLocationLoadedRef.current) return
       geolocationDetectedRef.current = true
 
+      // Check if geolocation is available and accessible (not blocked by permissions policy)
       if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-          async position => {
-            // Double-check: don't override if saved location was loaded while we waited
-            if (savedLocationLoadedRef.current) {
-              if (import.meta.env.DEV) {
-                console.log('[Geolocation] Skipping - user has saved location in settings')
-              }
-              return
-            }
-            try {
-              const response = await fetch(
-                `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${position.coords.latitude}&longitude=${position.coords.longitude}&localityLanguage=en`
-              )
-              if (response.ok) {
-                const data = await response.json()
-                const city = data.city || ''
-                const region = data.principalSubdivision || ''
-                let country = data.countryName || ''
-                country = country.replace(/\s*\(the\)\s*$/i, '').trim()
-                const parts = [city, region, country].filter(Boolean)
-                if (parts.length > 0) {
-                  const location = parts.join(', ')
+        // Check permissions first to avoid policy violation warnings
+        let geolocationAllowed = true
+        if (navigator.permissions && navigator.permissions.query) {
+          try {
+            const permissionStatus = await navigator.permissions.query({ name: 'geolocation' })
+            geolocationAllowed = permissionStatus.state !== 'denied'
+          } catch {
+            // Permissions API not supported or geolocation not in queryable permissions
+            // Fall through to try geolocation anyway
+          }
+        }
+
+        if (geolocationAllowed) {
+          try {
+            navigator.geolocation.getCurrentPosition(
+              async position => {
+                // Double-check: don't override if saved location was loaded while we waited
+                if (savedLocationLoadedRef.current) {
                   if (import.meta.env.DEV) {
-                    console.log('[Geolocation] Successfully detected location:', location)
+                    console.log('[Geolocation] Skipping - user has saved location in settings')
                   }
-                  setUserLocation(location)
+                  return
                 }
-              }
-            } catch (error) {
-              if (import.meta.env.DEV) {
-                console.debug('Failed to get location from coordinates:', error)
-              }
-            }
-          },
-          error => {
+                try {
+                  const response = await fetch(
+                    `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${position.coords.latitude}&longitude=${position.coords.longitude}&localityLanguage=en`
+                  )
+                  if (response.ok) {
+                    const data = await response.json()
+                    const city = data.city || ''
+                    const region = data.principalSubdivision || ''
+                    let country = data.countryName || ''
+                    country = country.replace(/\s*\(the\)\s*$/i, '').trim()
+                    const parts = [city, region, country].filter(Boolean)
+                    if (parts.length > 0) {
+                      const location = parts.join(', ')
+                      if (import.meta.env.DEV) {
+                        console.log('[Geolocation] Successfully detected location:', location)
+                      }
+                      setUserLocation(location)
+                    }
+                  }
+                } catch (error) {
+                  if (import.meta.env.DEV) {
+                    console.debug('Failed to get location from coordinates:', error)
+                  }
+                }
+              },
+              error => {
+                if (import.meta.env.DEV) {
+                  console.debug('Geolocation not available:', error.message)
+                }
+              },
+              { timeout: 5000, enableHighAccuracy: false }
+            )
+          } catch (error) {
+            // Catch permissions policy violations and other access errors
             if (import.meta.env.DEV) {
-              console.debug('Geolocation not available:', error.message)
+              console.debug('Geolocation access blocked:', error)
             }
-          },
-          { timeout: 5000, enableHighAccuracy: false }
-        )
+          }
+        } else if (import.meta.env.DEV) {
+          console.debug('[Geolocation] Access denied by permissions policy')
+        }
       }
 
       // Remove listeners after first interaction

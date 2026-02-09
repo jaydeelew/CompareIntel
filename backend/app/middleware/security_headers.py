@@ -46,6 +46,7 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
 
         # Permissions-Policy: Restrict browser features
         # Only allow essential features, deny others by default
+        # geolocation=(self) is allowed for unregistered users who don't enter zipcode
         permissions_policy = (
             "accelerometer=(), "
             "ambient-light-sensor=(), "
@@ -59,7 +60,7 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
             "execution-while-not-rendered=(), "
             "execution-while-out-of-viewport=(), "
             "fullscreen=(), "
-            "geolocation=(), "
+            "geolocation=(self), "
             "gyroscope=(), "
             "keyboard-map=(), "
             "magnetometer=(), "
