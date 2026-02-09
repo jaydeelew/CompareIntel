@@ -80,8 +80,13 @@ export function useScreenshotCopy({
       // Store original styles that we'll modify
       const prevOverflow = content.style.overflow
       const prevMaxHeight = content.style.maxHeight
+      const screenshotClass = 'screenshot-mode'
+      const hadScreenshotClass = content.classList.contains(screenshotClass)
 
-      // Expand to show all content
+      // Apply screenshot-only styles and expand to show all content
+      if (!hadScreenshotClass) {
+        content.classList.add(screenshotClass)
+      }
       content.style.overflow = 'visible'
       content.style.maxHeight = 'none'
 
@@ -216,6 +221,9 @@ export function useScreenshotCopy({
         // Restore original styles
         content.style.overflow = prevOverflow
         content.style.maxHeight = prevMaxHeight
+        if (!hadScreenshotClass) {
+          content.classList.remove(screenshotClass)
+        }
 
         // Restore original tab if we switched it
         if (needsTabSwitch) {

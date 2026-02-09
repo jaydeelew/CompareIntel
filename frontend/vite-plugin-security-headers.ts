@@ -12,9 +12,12 @@ export function securityHeadersPlugin(): Plugin {
         // Add security headers to all responses
         res.setHeader('X-Content-Type-Options', 'nosniff')
         res.setHeader('X-Frame-Options', 'DENY')
+        // Permissions-Policy: Removed deprecated features to avoid browser console warnings
+        // Removed: ambient-light-sensor, battery, document-domain, execution-while-not-rendered,
+        // execution-while-out-of-viewport, navigation-override
         res.setHeader(
           'Permissions-Policy',
-          'accelerometer=(), ambient-light-sensor=(), autoplay=(), battery=(), camera=(), cross-origin-isolated=(), display-capture=(), document-domain=(), encrypted-media=(), execution-while-not-rendered=(), execution-while-out-of-viewport=(), fullscreen=(), geolocation=(self), gyroscope=(), keyboard-map=(), magnetometer=(), microphone=(), midi=(), navigation-override=(), payment=(), picture-in-picture=(), publickey-credentials-get=(), screen-wake-lock=(), sync-xhr=(), usb=(), web-share=(), xr-spatial-tracking=()'
+          'accelerometer=(), autoplay=(), camera=(), cross-origin-isolated=(), display-capture=(), encrypted-media=(), fullscreen=(), geolocation=(self), gyroscope=(), keyboard-map=(), magnetometer=(), microphone=(), midi=(), payment=(), picture-in-picture=(), publickey-credentials-get=(), screen-wake-lock=(), sync-xhr=(), usb=(), web-share=(), xr-spatial-tracking=()'
         )
 
         // Add cache-control headers based on file type

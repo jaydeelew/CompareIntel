@@ -981,6 +981,10 @@
   border-left: 3px solid var(--primary-color);
 }
 
+.conversation-content.screenshot-mode .conversation-message.assistant .message-content {
+  border-left-color: transparent;
+}
+
 .message-content .result-output {
   margin: 0;
   line-height: 1.6;
