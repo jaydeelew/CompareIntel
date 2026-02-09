@@ -43,7 +43,8 @@ export const TUTORIAL_STEPS_CONFIG: Record<TutorialStep, StepConfig> = {
     step: 'follow-up',
     targetSelector: '.follow-up-button:not(.export-dropdown-trigger)',
     title: 'Continue the Conversation',
-    description: 'Review the results, then click "Follow up" to continue the conversation.',
+    description:
+      'Review the results, then click the "Follow up" button to continue the conversation.',
     position: 'top',
   },
   'enter-prompt-2': {
