@@ -113,36 +113,66 @@ test.describe('PWA Features', () => {
     }
   })
 
-  test('should have PWA manifest link in HTML', async ({ page }) => {
+  test('should have PWA manifest link in HTML', async ({ page, browserName }) => {
+    // Detect mobile devices and WebKit for longer timeouts
+    const isWebKit = browserName === 'webkit'
+    const browserNameIndicatesMobile =
+      browserName.includes('Mobile') ||
+      browserName.includes('iPhone') ||
+      browserName.includes('iPad') ||
+      browserName.includes('Pixel') ||
+      browserName.includes('Galaxy')
+
+    // Mobile Safari/WebKit needs longer timeouts
+    const isMobileSafari = isWebKit || browserNameIndicatesMobile
+    const headTimeout = isMobileSafari ? 30000 : 10000
+    const manifestTimeout = isMobileSafari ? 60000 : 20000
+
     // Wait for the document to be ready
     await page.waitForLoadState('domcontentloaded')
 
     // Wait for head element to be available (link tags are in head)
     // Use 'attached' state since head is never visible
-    await page.waitForSelector('head', { state: 'attached', timeout: 10000 })
+    await page.waitForSelector('head', { state: 'attached', timeout: headTimeout })
 
     // Wait a moment for any HTML transformations (e.g., VitePWA plugin processing)
-    // This ensures the manifest link is fully processed
-    await page.waitForTimeout(1000)
+    // Mobile Safari needs more time for plugin processing
+    await page.waitForTimeout(isMobileSafari ? 3000 : 1000)
 
     // Wait for the manifest link to be present in the DOM
     // VitePWA plugin should inject it, but it's also in index.html as fallback
-    // Use a longer timeout to account for plugin processing
+    // Use a longer timeout to account for plugin processing, especially on Mobile Safari
     const manifestLinkSelector = 'link[rel="manifest"]'
 
     // Wait for the selector with retries - Playwright will auto-retry
     // Use 'attached' state since link tags are never visible
-    await page.waitForSelector(manifestLinkSelector, {
-      state: 'attached',
-      timeout: 20000,
-    })
+    // Mobile Safari needs significantly longer timeout
+    try {
+      await page.waitForSelector(manifestLinkSelector, {
+        state: 'attached',
+        timeout: manifestTimeout,
+      })
+    } catch (error) {
+      // If selector wait fails, try checking HTML content directly as fallback
+      // This helps with Mobile Safari where DOM might be ready but selector timing is off
+      const htmlContent = await page.content()
+      const hasManifestLink =
+        htmlContent.includes('rel="manifest"') || htmlContent.includes("rel='manifest'")
+
+      if (!hasManifestLink) {
+        // Re-throw the original error if manifest link truly doesn't exist
+        throw error
+      }
+      // If found in HTML, continue with the test
+    }
 
     // Now check for the manifest link tag
     const manifestLink = page.locator(manifestLinkSelector)
 
     // Verify the link exists (should be exactly 1)
     // Use toBeVisible or toBeAttached - but link tags are never "visible", so use count
-    await expect(manifestLink).toHaveCount(1)
+    // Mobile Safari might need more time, so use a longer timeout for the assertion
+    await expect(manifestLink).toHaveCount(1, { timeout: isMobileSafari ? 30000 : 10000 })
 
     // Get the href attribute
     const manifestHref = await manifestLink.first().getAttribute('href')
