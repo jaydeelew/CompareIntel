@@ -121,14 +121,27 @@ test.describe('PWA Features', () => {
     // Use 'attached' state since head is never visible
     await page.waitForSelector('head', { state: 'attached', timeout: 10000 })
 
+    // Wait a moment for any HTML transformations (e.g., VitePWA plugin processing)
+    // This ensures the manifest link is fully processed
+    await page.waitForTimeout(1000)
+
     // Wait for the manifest link to be present in the DOM
-    // Use waitForSelector with a longer timeout for mobile browsers
-    await page.waitForSelector('link[rel="manifest"]', { timeout: 15000 })
+    // VitePWA plugin should inject it, but it's also in index.html as fallback
+    // Use a longer timeout to account for plugin processing
+    const manifestLinkSelector = 'link[rel="manifest"]'
+
+    // Wait for the selector with retries - Playwright will auto-retry
+    // Use 'attached' state since link tags are never visible
+    await page.waitForSelector(manifestLinkSelector, {
+      state: 'attached',
+      timeout: 20000,
+    })
 
     // Now check for the manifest link tag
-    const manifestLink = page.locator('link[rel="manifest"]')
+    const manifestLink = page.locator(manifestLinkSelector)
 
     // Verify the link exists (should be exactly 1)
+    // Use toBeVisible or toBeAttached - but link tags are never "visible", so use count
     await expect(manifestLink).toHaveCount(1)
 
     // Get the href attribute
