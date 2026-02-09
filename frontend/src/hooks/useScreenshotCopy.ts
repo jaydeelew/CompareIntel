@@ -116,9 +116,9 @@ export function useScreenshotCopy({
         const blob = await toBlob(content, {
           pixelRatio: 2, // High quality
           backgroundColor,
-          // Skip external fonts to avoid CORS SecurityError when reading cross-origin stylesheets
-          skipFonts: true,
-          // Removed cacheBust for faster processing (not needed for DOM elements)
+          // Google Fonts loaded with crossorigin in index.html, so html-to-image can
+          // read and embed them. Other cross-origin stylesheets (KaTeX, Prism) are
+          // gracefully skipped by the library's internal try-catch.
           style: {
             // Ensure the element is fully visible
             overflow: 'visible',

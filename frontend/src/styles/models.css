@@ -981,10 +981,6 @@
   border-left: 3px solid var(--primary-color);
 }
 
-.conversation-content.screenshot-mode .conversation-message.assistant .message-content {
-  border-left-color: transparent;
-}
-
 .message-content .result-output {
   margin: 0;
   line-height: 1.6;
@@ -1011,6 +1007,7 @@
     opacity: 0;
     transform: translateY(10px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -1096,18 +1093,23 @@
 .arrow-gradient-tail {
   animation: gradientTailFade 2s ease-in-out infinite;
 }
+
 .arrow-gradient-mid {
   animation: gradientMidFade 2s ease-in-out infinite;
 }
+
 .arrow-gradient-head {
   animation: gradientHeadFade 2s ease-in-out infinite;
 }
+
 .arrow-gradient-tail-turquoise {
   animation: gradientTailFade 2s ease-in-out infinite;
 }
+
 .arrow-gradient-mid-turquoise {
   animation: gradientMidFade 2s ease-in-out infinite;
 }
+
 .arrow-gradient-head-turquoise {
   animation: gradientHeadFade 2s ease-in-out infinite;
 }
@@ -1116,6 +1118,7 @@
   animation: slideFromLeft 2s ease-in-out infinite;
   transform-origin: center;
 }
+
 .arrow-right {
   animation: slideFromRight 2s ease-in-out infinite;
   transform-origin: center;
@@ -1209,18 +1212,22 @@
     transform: translateX(-30px);
     opacity: 0;
   }
+
   35% {
     transform: translateX(0);
     opacity: 1;
   }
+
   55% {
     transform: translateX(0);
     opacity: 1;
   }
+
   70% {
     transform: translateX(0);
     opacity: 0;
   }
+
   100% {
     transform: translateX(-30px);
     opacity: 0;
@@ -1232,18 +1239,22 @@
     transform: translateX(30px);
     opacity: 0;
   }
+
   35% {
     transform: translateX(0);
     opacity: 1;
   }
+
   55% {
     transform: translateX(0);
     opacity: 1;
   }
+
   70% {
     transform: translateX(0);
     opacity: 0;
   }
+
   100% {
     transform: translateX(30px);
     opacity: 0;
@@ -1254,18 +1265,23 @@
   0% {
     stop-opacity: 0.2;
   }
+
   35% {
     stop-opacity: 1;
   }
+
   50% {
     stop-opacity: 1;
   }
+
   52% {
     stop-opacity: 0.3;
   }
+
   56% {
     stop-opacity: 0;
   }
+
   100% {
     stop-opacity: 0;
   }
@@ -1275,18 +1291,23 @@
   0% {
     stop-opacity: 0.5;
   }
+
   35% {
     stop-opacity: 1;
   }
+
   50% {
     stop-opacity: 1;
   }
+
   55% {
     stop-opacity: 0.5;
   }
+
   60% {
     stop-opacity: 0;
   }
+
   100% {
     stop-opacity: 0;
   }
@@ -1296,18 +1317,23 @@
   0% {
     stop-opacity: 0.8;
   }
+
   35% {
     stop-opacity: 1;
   }
+
   50% {
     stop-opacity: 1;
   }
+
   58% {
     stop-opacity: 0.7;
   }
+
   64% {
     stop-opacity: 0;
   }
+
   100% {
     stop-opacity: 0;
   }
