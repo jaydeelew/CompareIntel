@@ -133,6 +133,11 @@ body:has(.tutorial-backdrop) .hero-section {
   isolation: isolate !important;
 }
 
+/* Ensure results section highlight fully surrounds the bottom - prevent overflow clipping */
+.results-section.tutorial-highlight {
+  overflow: visible !important;
+}
+
 /* Special styling for textarea container highlight - match its border-radius */
 .composer.tutorial-highlight {
   border-radius: 1.5rem !important;
