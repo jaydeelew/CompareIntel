@@ -48,6 +48,8 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
   const stepRef = useRef<TutorialStep | null>(step)
   const heroHeightLockedRef = useRef<boolean>(false)
   const dropdownWasOpenedRef = useRef<boolean>(false)
+  // State for save-selection step so Done button re-renders when user clicks (ref doesn't trigger re-renders)
+  const [saveSelectionDropdownOpened, setSaveSelectionDropdownOpened] = useState(false)
   const hasAttemptedElementFindRef = useRef<boolean>(false)
   const tooltipClampAttemptsRef = useRef<number>(0)
   const initialScrollCompleteRef = useRef<boolean>(false)
@@ -118,6 +120,14 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
     if (step !== 'history-dropdown' && step !== 'save-selection') {
       dropdownWasOpenedRef.current = false
       setButtonCutout(null)
+    }
+  }, [step])
+
+  // Reset save-selection flag synchronously before paint when entering step 10
+  // useLayoutEffect ensures user never sees Done enabled before they've clicked
+  useLayoutEffect(() => {
+    if (step === 'save-selection') {
+      setSaveSelectionDropdownOpened(false)
     }
   }, [step])
 
@@ -2080,18 +2090,11 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
   // Separate effect to continuously maintain dropdown active class for save-selection step
   // Uses simple interval instead of MutationObserver to avoid performance issues
   // ALSO ensures visibility and targetElement are set (fixes production timing issues)
+  // Done button enabled ONLY when dropdown exists in DOM (dropdown only renders when user clicks)
   useEffect(() => {
     if (step !== 'save-selection') return
 
-    // Listen for clicks on the saved selections button to mark dropdown as opened
-    const savedSelectionsButton = document.querySelector('.saved-selections-button') as HTMLElement
-    const handleSavedSelectionsButtonClick = () => {
-      dropdownWasOpenedRef.current = true
-    }
-    if (savedSelectionsButton) {
-      savedSelectionsButton.addEventListener('click', handleSavedSelectionsButtonClick)
-    }
-
+    let didEnableDoneForThisStep = false
     const ensureDropdownActiveAndVisibility = () => {
       // Update button cutout position and add highlight to button
       const savedSelectionsButton = document.querySelector(
@@ -2150,8 +2153,12 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
       }
 
       if (savedSelectionsDropdown) {
-        // Mark that dropdown was opened
-        dropdownWasOpenedRef.current = true
+        // Dropdown only exists when user has clicked "Save or load model selections"
+        // Use DOM presence as source of truth - enable Done only when dropdown is visible
+        if (!didEnableDoneForThisStep) {
+          didEnableDoneForThisStep = true
+          setSaveSelectionDropdownOpened(true)
+        }
         if (!savedSelectionsDropdown.classList.contains('tutorial-dropdown-active')) {
           savedSelectionsDropdown.classList.add('tutorial-dropdown-active')
         }
@@ -2166,10 +2173,6 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
 
     return () => {
       clearInterval(interval)
-      // Clean up on unmount
-      if (savedSelectionsButton) {
-        savedSelectionsButton.removeEventListener('click', handleSavedSelectionsButtonClick)
-      }
       const savedSelectionsDropdown = document.querySelector(
         '.saved-selections-dropdown'
       ) as HTMLElement
@@ -2690,20 +2693,22 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
                   Done
                 </button>
               )}
-              {/* Show "Done" button for step 10 (save-selection) - enabled when dropdown is open */}
+              {/* Show "Done" button for step 10 (save-selection) - enabled only after user clicks "Save or load model selections" */}
               {step === 'save-selection' && (
                 <button
                   className="tutorial-button tutorial-button-primary tutorial-button-highlight"
                   onClick={e => {
                     e.stopPropagation()
                     e.preventDefault()
-                    // Always call onComplete - handleComplete will check if dropdown was opened
-                    onComplete()
+                    // Guard: only complete when dropdown was opened (in case of disabled click bypass)
+                    if (saveSelectionDropdownOpened) {
+                      onComplete()
+                    }
                   }}
-                  disabled={!dropdownWasOpenedRef.current}
+                  disabled={!saveSelectionDropdownOpened}
                   title={
-                    !dropdownWasOpenedRef.current
-                      ? 'Open the saved selections dropdown to continue'
+                    !saveSelectionDropdownOpened
+                      ? 'Click "Save or load model selections" to expand the dropdown first'
                       : 'Complete the tutorial'
                   }
                 >

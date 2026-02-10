@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, useCallback } from 'react'
+import React, { useEffect, useLayoutEffect, useRef, useState, useCallback } from 'react'
 import { createPortal } from 'react-dom'
 
 import type { TutorialStep } from '../../hooks/useTutorial'
@@ -98,6 +98,8 @@ export const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
   // Track when an automatic step transition is in progress to suppress scroll indicator
   const [isStepTransitioning, setIsStepTransitioning] = useState(false)
   const dropdownWasOpenedRef = useRef<boolean>(false)
+  // State for save-selection step so Done button re-renders when user clicks (ref doesn't trigger re-renders)
+  const [saveSelectionDropdownOpened, setSaveSelectionDropdownOpened] = useState(false)
   // Portal root for rendering tutorial UI - ensures position: fixed works correctly
   const [portalRoot, setPortalRoot] = useState<HTMLElement | null>(null)
 
@@ -135,6 +137,13 @@ export const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
   useEffect(() => {
     if (step !== 'history-dropdown' && step !== 'save-selection') {
       dropdownWasOpenedRef.current = false
+    }
+  }, [step])
+
+  // Reset save-selection flag synchronously before paint when entering step 10
+  useLayoutEffect(() => {
+    if (step === 'save-selection') {
+      setSaveSelectionDropdownOpened(false)
     }
   }, [step])
 
@@ -672,9 +681,11 @@ export const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
   }, [targetElement, step])
 
   // Handle dropdown steps - track when dropdown is opened
+  // For save-selection: use DOM presence as source of truth (dropdown only renders when user clicks)
   useEffect(() => {
     if (step !== 'history-dropdown' && step !== 'save-selection') return
 
+    let didEnableSaveSelectionDone = false
     const checkDropdown = () => {
       if (step === 'history-dropdown') {
         const historyDropdown = document.querySelector('.history-inline-list')
@@ -683,8 +694,9 @@ export const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
         }
       } else if (step === 'save-selection') {
         const savedSelectionsDropdown = document.querySelector('.saved-selections-dropdown')
-        if (savedSelectionsDropdown) {
-          dropdownWasOpenedRef.current = true
+        if (savedSelectionsDropdown && !didEnableSaveSelectionDone) {
+          didEnableSaveSelectionDone = true
+          setSaveSelectionDropdownOpened(true)
         }
       }
     }
@@ -825,8 +837,11 @@ export const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
     if (step === 'enter-prompt' || step === 'enter-prompt-2') {
       return !isStepCompleted
     }
-    if (step === 'history-dropdown' || step === 'save-selection') {
+    if (step === 'history-dropdown') {
       return !dropdownWasOpenedRef.current
+    }
+    if (step === 'save-selection') {
+      return !saveSelectionDropdownOpened
     }
     return false
   }
@@ -962,7 +977,12 @@ export const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
               <div className="mobile-tutorial-tooltip-actions">
                 <button
                   className="mobile-tutorial-button mobile-tutorial-button-primary"
-                  onClick={onComplete}
+                  onClick={() => {
+                    // Guard: only complete when button is enabled (e.g. save-selection needs dropdown opened)
+                    if (!isButtonDisabled()) {
+                      onComplete()
+                    }
+                  }}
                   disabled={isButtonDisabled()}
                 >
                   {buttonText}
