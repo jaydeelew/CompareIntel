@@ -31,9 +31,12 @@ interface TargetRect {
   centerY: number
 }
 
-// Mobile-specific step configurations (can override desktop positions)
+// Mobile-specific step configurations (can override desktop positions and descriptions)
 const MOBILE_STEP_OVERRIDES: Partial<
-  Record<TutorialStep, { targetSelector?: string; position?: 'top' | 'bottom' }>
+  Record<
+    TutorialStep,
+    { targetSelector?: string; position?: 'top' | 'bottom'; description?: string }
+  >
 > = {
   // On mobile, some steps might need different selectors or positions
   'expand-provider': {
@@ -50,6 +53,8 @@ const MOBILE_STEP_OVERRIDES: Partial<
   },
   'follow-up': {
     position: 'top', // Show above the follow-up button so user can see comparison results below
+    description:
+      'Review the results by clicking the Gemini tabs below, then click the "Follow up" button to continue the conversation.',
   },
   'view-follow-up-results': {
     position: 'top', // Show above the results section with pointer arrow
@@ -815,8 +820,9 @@ export const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
 
   const buttonText = getButtonText()
 
-  // Get description - use config (same as desktop for step 5)
-  const getDescription = (): string => config.description
+  // Get description - use mobile override if available, otherwise config
+  const getDescription = (): string =>
+    MOBILE_STEP_OVERRIDES[step]?.description ?? config.description
 
   // Check if we're in loading/streaming phase on submit-comparison step
   // This needs to be calculated before early returns so we can skip them during loading/streaming
