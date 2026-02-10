@@ -923,7 +923,13 @@ export const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
             {/* Tap indicator for action steps (exclude step 2 - select-models) */}
             {isActionStep && !showButton && step !== 'select-models' && (
               <div className="mobile-tutorial-tap-indicator">
-                <span>Tap the highlighted area</span>
+                <span>
+                  {step === 'submit-comparison' ||
+                  step === 'follow-up' ||
+                  step === 'submit-comparison-2'
+                    ? 'Tap the highlighted button'
+                    : 'Tap the highlighted area'}
+                </span>
               </div>
             )}
 
