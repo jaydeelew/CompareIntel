@@ -226,12 +226,20 @@
 }
 
 .model-option.disabled {
-  opacity: 0.5;
   cursor: not-allowed;
 }
 
+/* Dim disabled model content but not the tooltip (tooltip must stay fully opaque) */
+.model-option.disabled .model-name-text,
+.model-option.disabled .knowledge-cutoff-icon,
+.model-option.disabled .model-badge,
+.model-option.disabled .model-info p,
+.model-option.disabled .model-checkbox,
+.model-option.disabled > div:last-of-type {
+  opacity: 0.5;
+}
+
 .model-option:not(.disabled) {
-  opacity: 1;
   cursor: pointer;
 }
 
@@ -346,8 +354,8 @@
 .model-info-tooltip {
   position: absolute;
   bottom: calc(100% + 8px);
-  left: 50%;
-  transform: translateX(-50%);
+  left: 0;
+  transform: none;
   background: var(--bg-elevated);
   color: var(--text-primary);
   padding: 0.75rem 1rem;
@@ -367,6 +375,8 @@
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+  /* Keep tooltip within viewport when near edges */
+  max-width: min(calc(100vw - 2rem), 400px);
 }
 
 .model-info-tooltip::after {
@@ -399,13 +409,6 @@
 
 .model-info-tooltip .tooltip-label {
   color: var(--text-muted);
-}
-
-.model-info-tooltip .tooltip-explanation {
-  font-size: 0.6875rem;
-  font-weight: var(--font-normal);
-  color: var(--text-subtle);
-  font-style: italic;
 }
 
 .model-info-tooltip .tooltip-value.context-window {

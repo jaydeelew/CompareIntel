@@ -271,9 +271,6 @@ export const ModelsSection: React.FC<ModelsSectionProps> = ({
                                       {formatTokenCount(model.max_input_tokens)} tokens
                                     </span>
                                   </span>
-                                  <span className="tooltip-explanation">
-                                    How much text this model can process at once
-                                  </span>
                                 </span>
                                 <span className="tooltip-section">
                                   <span className="tooltip-row">
@@ -287,9 +284,6 @@ export const ModelsSection: React.FC<ModelsSectionProps> = ({
                                         Date pending
                                       </span>
                                     )}
-                                  </span>
-                                  <span className="tooltip-explanation">
-                                    Latest date of this model's training data
                                   </span>
                                 </span>
                               </span>
