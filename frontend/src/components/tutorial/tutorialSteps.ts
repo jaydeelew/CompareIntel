@@ -80,7 +80,8 @@ export const TUTORIAL_STEPS_CONFIG: Record<TutorialStep, StepConfig> = {
     step: 'save-selection',
     targetSelector: '.saved-selections-button',
     title: 'Save Model Selections',
-    description: 'Save your favorite model combinations for quick access.',
+    description:
+      'After this tutorial, save your favorite model combinations for quick access, and even set one as default.',
     position: 'top',
   },
 }
