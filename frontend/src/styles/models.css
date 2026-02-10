@@ -63,7 +63,7 @@
 .provider-dropdown {
   border: 1px solid var(--border-color);
   border-radius: var(--radius-xl);
-  overflow: visible;
+  overflow: hidden;
   background: var(--bg-card);
   transition:
     border-color 0.3s ease,
@@ -76,6 +76,14 @@
     0 8px 32px rgba(0, 0, 0, 0.3),
     0 0 20px rgba(6, 182, 212, 0.05);
   border-color: var(--border-strong);
+}
+
+/* Preserve corner-fill shadow when collapsed and hovered */
+.provider-dropdown:not(:has(.provider-models)):hover {
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.3),
+    0 0 20px rgba(6, 182, 212, 0.05),
+    0 0 0 2px var(--bg-elevated);
 }
 
 /* Provider Header */
@@ -91,6 +99,19 @@
   transition: background-color 0.2s ease;
   font-family: inherit;
   border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+}
+
+/* When collapsed: header fills the container and matches its background so no
+   darker container background shows through at rounded corners. Box-shadow
+   extends the background into the corner cut-off so the parent's darker bg
+   doesn't peek through when zoomed. */
+.provider-dropdown:not(:has(.provider-models)) {
+  background: var(--bg-elevated);
+  box-shadow: 0 0 0 2px var(--bg-elevated);
+}
+
+.provider-dropdown:not(:has(.provider-models)) .provider-header {
+  border-radius: var(--radius-xl);
 }
 
 .provider-header:hover {
@@ -165,6 +186,7 @@
   padding: 1rem;
   background: var(--bg-card);
   border-top: 1px solid var(--border-color);
+  border-radius: 0 0 var(--radius-xl) var(--radius-xl);
   overflow: visible;
 }
 
