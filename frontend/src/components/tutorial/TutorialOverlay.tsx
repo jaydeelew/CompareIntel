@@ -37,6 +37,19 @@ function getComposerCutoutRects(composerElement: HTMLElement): DOMRect[] {
   return (parts.length > 0 ? parts : [composerElement]).map(el => el.getBoundingClientRect())
 }
 
+/** Returns the bounding rect that encompasses both rects (union) */
+function unionRects(
+  rect1: DOMRect | { top: number; left: number; right: number; bottom: number },
+  rect2: DOMRect | { top: number; left: number; right: number; bottom: number }
+) {
+  return {
+    top: Math.min(rect1.top, rect2.top),
+    left: Math.min(rect1.left, rect2.left),
+    right: Math.max(rect1.right, rect2.right),
+    bottom: Math.max(rect1.bottom, rect2.bottom),
+  }
+}
+
 export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
   step,
   onComplete,
@@ -1153,9 +1166,11 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
         elementsToHighlight = [composerElement]
       }
     } else if (step === 'history-dropdown') {
-      // Don't add highlight border, but ensure dropdown is not dimmed
-      // The dropdown will be kept above backdrop via z-index in CSS
-      elementsToHighlight = []
+      // Highlight the composer (same blue & green border as step 3)
+      const composerElement = document.querySelector('.composer') as HTMLElement
+      if (composerElement) {
+        elementsToHighlight = [composerElement]
+      }
       // Explicitly remove highlight from results section when transitioning to step 9
       const resultsSection = document.querySelector('.results-section') as HTMLElement
       if (resultsSection) {
@@ -1164,9 +1179,11 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
         resultsSection.style.position = ''
       }
     } else if (step === 'save-selection') {
-      // Don't add highlight border, but ensure dropdown is not dimmed
-      // The dropdown will be kept above backdrop via z-index in CSS
-      elementsToHighlight = []
+      // Highlight the composer (same blue & green border as step 3)
+      const composerElement = document.querySelector('.composer') as HTMLElement
+      if (composerElement) {
+        elementsToHighlight = [composerElement]
+      }
     } else if (step === 'submit-comparison') {
       // Highlight the composer for step 4 (same as step 3)
       const composerElement = document.querySelector('.composer') as HTMLElement
@@ -1236,60 +1253,44 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
     let dropdownContainer: HTMLElement | null = null
     if (step === 'history-dropdown') {
       historyDropdown = document.querySelector('.history-inline-list') as HTMLElement
-      if (historyDropdown) {
-        historyDropdown.classList.add('tutorial-dropdown-active')
-        // Also ensure parent container is above backdrop
-        dropdownContainer = historyDropdown.closest('.composer') as HTMLElement
-        if (dropdownContainer) {
-          dropdownContainer.classList.add('tutorial-dropdown-container-active')
-          // Calculate cutout position for backdrop mask
-          const rect = dropdownContainer.getBoundingClientRect()
-          // Use tighter padding for rounded cutout
-          const padding = 8
-          const cutout = {
-            top: rect.top - padding,
-            left: rect.left - padding,
-            right: rect.right + padding,
-            bottom: rect.bottom + padding,
-          }
-          setDropdownCutout({
-            top: cutout.top,
-            left: cutout.left,
-            width: cutout.right - cutout.left,
-            height: cutout.bottom - cutout.top,
-          })
+      dropdownContainer = document.querySelector('.composer') as HTMLElement
+      if (dropdownContainer) {
+        dropdownContainer.classList.add('tutorial-dropdown-container-active')
+        if (historyDropdown) {
+          historyDropdown.classList.add('tutorial-dropdown-active')
         }
+        // Use composer's full rect as base (includes input + toolbar) and union with dropdown
+        const composerRect = dropdownContainer.getBoundingClientRect()
+        const dropdownRect = historyDropdown?.getBoundingClientRect()
+        const rect = dropdownRect ? unionRects(composerRect, dropdownRect) : composerRect
+        const padding = 8
+        setDropdownCutout({
+          top: rect.top - padding,
+          left: rect.left - padding,
+          width: rect.right - rect.left + padding * 2,
+          height: rect.bottom - rect.top + padding * 2,
+        })
       }
-      // Don't set cutout to null if dropdown doesn't exist yet - let continuous effect handle it
-      // This prevents the backdrop from rendering without a cutout before the dropdown appears
     } else if (step === 'save-selection') {
       savedSelectionsDropdown = document.querySelector('.saved-selections-dropdown') as HTMLElement
-      if (savedSelectionsDropdown) {
-        savedSelectionsDropdown.classList.add('tutorial-dropdown-active')
-        // Also ensure parent container is above backdrop
-        dropdownContainer = savedSelectionsDropdown.closest('.composer') as HTMLElement
-        if (dropdownContainer) {
-          dropdownContainer.classList.add('tutorial-dropdown-container-active')
-          // Calculate cutout position for backdrop mask
-          const rect = dropdownContainer.getBoundingClientRect()
-          // Use tighter padding for rounded cutout
-          const padding = 8
-          const cutout = {
-            top: rect.top - padding,
-            left: rect.left - padding,
-            right: rect.right + padding,
-            bottom: rect.bottom + padding,
-          }
-          setDropdownCutout({
-            top: cutout.top,
-            left: cutout.left,
-            width: cutout.right - cutout.left,
-            height: cutout.bottom - cutout.top,
-          })
+      dropdownContainer = document.querySelector('.composer') as HTMLElement
+      if (dropdownContainer) {
+        dropdownContainer.classList.add('tutorial-dropdown-container-active')
+        if (savedSelectionsDropdown) {
+          savedSelectionsDropdown.classList.add('tutorial-dropdown-active')
         }
+        // Use composer's full rect as base (includes input + toolbar) and union with dropdown
+        const composerRect = dropdownContainer.getBoundingClientRect()
+        const dropdownRect = savedSelectionsDropdown?.getBoundingClientRect()
+        const rect = dropdownRect ? unionRects(composerRect, dropdownRect) : composerRect
+        const padding = 8
+        setDropdownCutout({
+          top: rect.top - padding,
+          left: rect.left - padding,
+          width: rect.right - rect.left + padding * 2,
+          height: rect.bottom - rect.top + padding * 2,
+        })
       }
-      // Don't set cutout to null if dropdown doesn't exist yet - let continuous effect handle it
-      // Also don't clear cutout here - let the continuous effect maintain it
     } else if (!isDropdownStep) {
       // Only clear cutout when NOT on a dropdown step
       setDropdownCutout(null)
@@ -2009,16 +2010,19 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
       // Always set composer cutout from the start (not just when dropdown opens)
       // This highlights the compose section along with the button
       const composerElement = document.querySelector('.composer') as HTMLElement
+      const historyDropdown = document.querySelector('.history-inline-list') as HTMLElement
       if (composerElement) {
         if (!composerElement.classList.contains('tutorial-dropdown-container-active')) {
           composerElement.classList.add('tutorial-dropdown-container-active')
         }
-        // Add highlight class to the composer for visual emphasis (green border)
+        // Add highlight class to the composer for visual emphasis (same blue & green as step 3)
         if (!composerElement.classList.contains('tutorial-highlight')) {
           composerElement.classList.add('tutorial-highlight')
         }
-        // Always update cutout for composer section
-        const rect = composerElement.getBoundingClientRect()
+        // Use composer's full rect and union with dropdown so both are undimmed
+        const composerRect = composerElement.getBoundingClientRect()
+        const dropdownRect = historyDropdown?.getBoundingClientRect()
+        const rect = dropdownRect ? unionRects(composerRect, dropdownRect) : composerRect
         const padding = 8
         setDropdownCutout({
           top: rect.top - padding,
@@ -2028,7 +2032,6 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
         })
       }
 
-      const historyDropdown = document.querySelector('.history-inline-list') as HTMLElement
       if (historyDropdown) {
         // Mark that dropdown was opened
         dropdownWasOpenedRef.current = true
@@ -2115,16 +2118,21 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
       // Always set composer cutout from the start (not just when dropdown opens)
       // This highlights the compose section along with the button
       const composerElement = document.querySelector('.composer') as HTMLElement
+      const savedSelectionsDropdown = document.querySelector(
+        '.saved-selections-dropdown'
+      ) as HTMLElement
       if (composerElement) {
         if (!composerElement.classList.contains('tutorial-dropdown-container-active')) {
           composerElement.classList.add('tutorial-dropdown-container-active')
         }
-        // Add highlight class to the composer for visual emphasis (green border)
+        // Add highlight class to the composer for visual emphasis (same blue & green as step 3)
         if (!composerElement.classList.contains('tutorial-highlight')) {
           composerElement.classList.add('tutorial-highlight')
         }
-        // Always update cutout for composer section
-        const rect = composerElement.getBoundingClientRect()
+        // Use composer's full rect and union with dropdown so both are undimmed
+        const composerRect = composerElement.getBoundingClientRect()
+        const dropdownRect = savedSelectionsDropdown?.getBoundingClientRect()
+        const rect = dropdownRect ? unionRects(composerRect, dropdownRect) : composerRect
         const padding = 8
         setDropdownCutout({
           top: rect.top - padding,
@@ -2134,9 +2142,6 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
         })
       }
 
-      const savedSelectionsDropdown = document.querySelector(
-        '.saved-selections-dropdown'
-      ) as HTMLElement
       if (savedSelectionsDropdown) {
         // Mark that dropdown was opened
         dropdownWasOpenedRef.current = true
@@ -2231,40 +2236,34 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
     if (!shouldExcludeDropdown) return
 
     const updateDropdownCutout = () => {
-      let dropdownContainer: HTMLElement | null = null
+      const composer = document.querySelector('.composer') as HTMLElement | null
+      if (!composer) return
+
+      let rect: { top: number; left: number; right: number; bottom: number }
+      const composerRect = composer.getBoundingClientRect()
       if (step === 'history-dropdown') {
         const historyDropdown = document.querySelector('.history-inline-list') as HTMLElement
-        if (historyDropdown) {
-          dropdownContainer = historyDropdown.closest('.composer') as HTMLElement
-        }
+        rect = historyDropdown
+          ? unionRects(composerRect, historyDropdown.getBoundingClientRect())
+          : composerRect
       } else if (step === 'save-selection') {
         const savedSelectionsDropdown = document.querySelector(
           '.saved-selections-dropdown'
         ) as HTMLElement
-        if (savedSelectionsDropdown) {
-          dropdownContainer = savedSelectionsDropdown.closest('.composer') as HTMLElement
-        }
+        rect = savedSelectionsDropdown
+          ? unionRects(composerRect, savedSelectionsDropdown.getBoundingClientRect())
+          : composerRect
+      } else {
+        return
       }
 
-      if (dropdownContainer) {
-        const rect = dropdownContainer.getBoundingClientRect()
-        // Use tighter padding for rounded cutout
-        const padding = 8
-        const cutout = {
-          top: rect.top - padding,
-          left: rect.left - padding,
-          right: rect.right + padding,
-          bottom: rect.bottom + padding,
-        }
-        setDropdownCutout({
-          top: cutout.top,
-          left: cutout.left,
-          width: cutout.right - cutout.left,
-          height: cutout.bottom - cutout.top,
-        })
-      }
-      // Don't set to null if dropdown doesn't exist - it might appear later
-      // The continuous effect will handle setting it when it appears
+      const padding = 8
+      setDropdownCutout({
+        top: rect.top - padding,
+        left: rect.left - padding,
+        width: rect.right - rect.left + padding * 2,
+        height: rect.bottom - rect.top + padding * 2,
+      })
     }
 
     // Update immediately
@@ -2653,7 +2652,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
               {/* Show "Done" button for step 8 (view-follow-up-results) - always enabled */}
               {step === 'view-follow-up-results' && (
                 <button
-                  className="tutorial-button tutorial-button-primary"
+                  className="tutorial-button tutorial-button-primary tutorial-button-highlight"
                   onClick={e => {
                     e.stopPropagation()
                     e.preventDefault()
@@ -2666,7 +2665,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
               {/* Show "Done" button for step 9 (history-dropdown) - enabled when dropdown is open */}
               {step === 'history-dropdown' && (
                 <button
-                  className="tutorial-button tutorial-button-primary"
+                  className="tutorial-button tutorial-button-primary tutorial-button-highlight"
                   onClick={e => {
                     e.stopPropagation()
                     e.preventDefault()
@@ -2686,7 +2685,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
               {/* Show "Done" button for step 10 (save-selection) - enabled when dropdown is open */}
               {step === 'save-selection' && (
                 <button
-                  className="tutorial-button tutorial-button-primary"
+                  className="tutorial-button tutorial-button-primary tutorial-button-highlight"
                   onClick={e => {
                     e.stopPropagation()
                     e.preventDefault()

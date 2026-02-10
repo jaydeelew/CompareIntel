@@ -423,6 +423,17 @@ body.mobile-tutorial-active {
   isolation: isolate;
 }
 
+/* During steps 9 & 10, make composer area match dropdown items (same as desktop) */
+.composer.tutorial-dropdown-container-active .composer-input-wrapper,
+.composer.tutorial-dropdown-container-active .composer-toolbar,
+.composer.tutorial-dropdown-container-active .hero-input-textarea {
+  background: rgba(6, 182, 212, 0.08) !important;
+}
+
+.composer.tutorial-dropdown-container-active .composer-toolbar {
+  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.2);
+}
+
 /* Dropdown active state */
 .history-inline-list.mobile-tutorial-dropdown-active,
 .saved-selections-dropdown.mobile-tutorial-dropdown-active {

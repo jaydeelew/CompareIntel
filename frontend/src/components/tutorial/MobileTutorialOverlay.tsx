@@ -628,23 +628,18 @@ export const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       }
     }
 
-    // For dropdown steps, highlight the dropdown list so it stays bright
-    if (step === 'history-dropdown') {
-      const historyDropdown = document.querySelector('.history-inline-list') as HTMLElement
-      if (historyDropdown) {
-        historyDropdown.classList.add('mobile-tutorial-highlight')
-      }
-    }
-    if (step === 'save-selection') {
-      const savedSelectionsDropdown = document.querySelector(
-        '.saved-selections-dropdown'
-      ) as HTMLElement
-      if (savedSelectionsDropdown) {
-        savedSelectionsDropdown.classList.add('mobile-tutorial-highlight')
+    // For dropdown steps, highlight the composer (same blue & green as step 3)
+    // so it surrounds both composer and dropdowns when they are expanded
+    if (step === 'history-dropdown' || step === 'save-selection') {
+      const composer = document.querySelector('.composer') as HTMLElement | null
+      if (composer) {
+        composer.classList.add('mobile-tutorial-highlight')
+        composer.classList.add('tutorial-dropdown-container-active')
       }
     }
 
     return () => {
+      document.querySelector('.composer')?.classList.remove('tutorial-dropdown-container-active')
       targetElement.classList.remove('mobile-tutorial-highlight')
       targetElement.classList.remove('mobile-tutorial-button-pulsate')
       // Clean up tabs pulse
