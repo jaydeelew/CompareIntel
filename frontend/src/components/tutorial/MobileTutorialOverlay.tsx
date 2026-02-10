@@ -323,19 +323,32 @@ export const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
     }
 
     if (DROPDOWN_STEPS.includes(step)) {
+      // Keep composer + dropdown visible/bright - union of composer, input wrapper, toolbar, and dropdown
+      const composer = document.querySelector('.composer') as HTMLElement | null
       const dropdownElement =
         step === 'history-dropdown'
           ? (document.querySelector('.history-inline-list') as HTMLElement)
           : (document.querySelector('.saved-selections-dropdown') as HTMLElement)
-      if (dropdownElement) {
-        const dropdownBounds = dropdownElement.getBoundingClientRect()
+      if (composer) {
+        const inputWrapper = composer.querySelector('.composer-input-wrapper') as HTMLElement | null
+        const toolbar = composer.querySelector('.composer-toolbar') as HTMLElement | null
+        const elements = [composer, inputWrapper, toolbar, dropdownElement].filter(
+          Boolean
+        ) as HTMLElement[]
+        const rects = elements.map(el => el.getBoundingClientRect())
+        const minTop = Math.min(...rects.map(r => r.top))
+        const minLeft = Math.min(...rects.map(r => r.left))
+        const maxRight = Math.max(...rects.map(r => r.right))
+        const maxBottom = Math.max(...rects.map(r => r.bottom))
+        const width = maxRight - minLeft
+        const height = maxBottom - minTop
         setDropdownRect({
-          top: dropdownBounds.top,
-          left: dropdownBounds.left,
-          width: dropdownBounds.width,
-          height: dropdownBounds.height,
-          centerX: dropdownBounds.left + dropdownBounds.width / 2,
-          centerY: dropdownBounds.top + dropdownBounds.height / 2,
+          top: minTop,
+          left: minLeft,
+          width,
+          height,
+          centerX: minLeft + width / 2,
+          centerY: minTop + height / 2,
         })
       } else {
         setDropdownRect(null)
@@ -848,20 +861,23 @@ export const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       ? null
       : (dropdownRect ?? backdropRect ?? targetRect)
 
+  const cutoutPadding = step === 'history-dropdown' || step === 'save-selection' ? 12 : 8
   const cutoutStyle =
     cutoutTarget && showBackdrop
       ? {
           position: 'fixed' as const,
-          top: `${cutoutTarget.top - 8}px`,
-          left: `${cutoutTarget.left - 8}px`,
-          width: `${cutoutTarget.width + 16}px`,
-          height: `${cutoutTarget.height + 16}px`,
+          top: `${cutoutTarget.top - cutoutPadding}px`,
+          left: `${cutoutTarget.left - cutoutPadding}px`,
+          width: `${cutoutTarget.width + cutoutPadding * 2}px`,
+          height: `${cutoutTarget.height + cutoutPadding * 2}px`,
           borderRadius: isLoadingStreamingPhase
             ? '16px'
             : step === 'enter-prompt' ||
                 step === 'enter-prompt-2' ||
                 step === 'submit-comparison' ||
-                step === 'submit-comparison-2'
+                step === 'submit-comparison-2' ||
+                step === 'history-dropdown' ||
+                step === 'save-selection'
               ? '32px'
               : '16px',
           boxShadow: '0 0 0 9999px rgba(0, 0, 0, 0.65)',

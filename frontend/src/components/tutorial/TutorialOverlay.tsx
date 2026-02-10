@@ -37,19 +37,6 @@ function getComposerCutoutRects(composerElement: HTMLElement): DOMRect[] {
   return (parts.length > 0 ? parts : [composerElement]).map(el => el.getBoundingClientRect())
 }
 
-/** Returns the bounding rect that encompasses both rects (union) */
-function unionRects(
-  rect1: DOMRect | { top: number; left: number; right: number; bottom: number },
-  rect2: DOMRect | { top: number; left: number; right: number; bottom: number }
-) {
-  return {
-    top: Math.min(rect1.top, rect2.top),
-    left: Math.min(rect1.left, rect2.left),
-    right: Math.max(rect1.right, rect2.right),
-    bottom: Math.max(rect1.bottom, rect2.bottom),
-  }
-}
-
 export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
   step,
   onComplete,
@@ -1259,16 +1246,21 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
         if (historyDropdown) {
           historyDropdown.classList.add('tutorial-dropdown-active')
         }
-        // Use composer's full rect as base (includes input + toolbar) and union with dropdown
+        // Union of composer, input wrapper + toolbar, and dropdown to ensure composer is never dimmed
         const composerRect = dropdownContainer.getBoundingClientRect()
+        const cutoutRects = getComposerCutoutRects(dropdownContainer)
         const dropdownRect = historyDropdown?.getBoundingClientRect()
-        const rect = dropdownRect ? unionRects(composerRect, dropdownRect) : composerRect
-        const padding = 8
+        const allRects = [composerRect, ...cutoutRects, ...(dropdownRect ? [dropdownRect] : [])]
+        const minTop = Math.min(...allRects.map(r => r.top))
+        const minLeft = Math.min(...allRects.map(r => r.left))
+        const maxRight = Math.max(...allRects.map(r => r.right))
+        const maxBottom = Math.max(...allRects.map(r => r.bottom))
+        const padding = 12
         setDropdownCutout({
-          top: rect.top - padding,
-          left: rect.left - padding,
-          width: rect.right - rect.left + padding * 2,
-          height: rect.bottom - rect.top + padding * 2,
+          top: minTop - padding,
+          left: minLeft - padding,
+          width: maxRight - minLeft + padding * 2,
+          height: maxBottom - minTop + padding * 2,
         })
       }
     } else if (step === 'save-selection') {
@@ -1279,16 +1271,21 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
         if (savedSelectionsDropdown) {
           savedSelectionsDropdown.classList.add('tutorial-dropdown-active')
         }
-        // Use composer's full rect as base (includes input + toolbar) and union with dropdown
+        // Union of composer, input wrapper + toolbar, and dropdown to ensure composer is never dimmed
         const composerRect = dropdownContainer.getBoundingClientRect()
+        const cutoutRects = getComposerCutoutRects(dropdownContainer)
         const dropdownRect = savedSelectionsDropdown?.getBoundingClientRect()
-        const rect = dropdownRect ? unionRects(composerRect, dropdownRect) : composerRect
-        const padding = 8
+        const allRects = [composerRect, ...cutoutRects, ...(dropdownRect ? [dropdownRect] : [])]
+        const minTop = Math.min(...allRects.map(r => r.top))
+        const minLeft = Math.min(...allRects.map(r => r.left))
+        const maxRight = Math.max(...allRects.map(r => r.right))
+        const maxBottom = Math.max(...allRects.map(r => r.bottom))
+        const padding = 12
         setDropdownCutout({
-          top: rect.top - padding,
-          left: rect.left - padding,
-          width: rect.right - rect.left + padding * 2,
-          height: rect.bottom - rect.top + padding * 2,
+          top: minTop - padding,
+          left: minLeft - padding,
+          width: maxRight - minLeft + padding * 2,
+          height: maxBottom - minTop + padding * 2,
         })
       }
     } else if (!isDropdownStep) {
@@ -2019,16 +2016,21 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
         if (!composerElement.classList.contains('tutorial-highlight')) {
           composerElement.classList.add('tutorial-highlight')
         }
-        // Use composer's full rect and union with dropdown so both are undimmed
+        // Union of composer, input wrapper + toolbar, and dropdown to ensure composer is never dimmed
         const composerRect = composerElement.getBoundingClientRect()
+        const cutoutRects = getComposerCutoutRects(composerElement)
         const dropdownRect = historyDropdown?.getBoundingClientRect()
-        const rect = dropdownRect ? unionRects(composerRect, dropdownRect) : composerRect
-        const padding = 8
+        const allRects = [composerRect, ...cutoutRects, ...(dropdownRect ? [dropdownRect] : [])]
+        const minTop = Math.min(...allRects.map(r => r.top))
+        const minLeft = Math.min(...allRects.map(r => r.left))
+        const maxRight = Math.max(...allRects.map(r => r.right))
+        const maxBottom = Math.max(...allRects.map(r => r.bottom))
+        const padding = 12
         setDropdownCutout({
-          top: rect.top - padding,
-          left: rect.left - padding,
-          width: rect.right - rect.left + padding * 2,
-          height: rect.bottom - rect.top + padding * 2,
+          top: minTop - padding,
+          left: minLeft - padding,
+          width: maxRight - minLeft + padding * 2,
+          height: maxBottom - minTop + padding * 2,
         })
       }
 
@@ -2129,16 +2131,21 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
         if (!composerElement.classList.contains('tutorial-highlight')) {
           composerElement.classList.add('tutorial-highlight')
         }
-        // Use composer's full rect and union with dropdown so both are undimmed
+        // Union of composer, input wrapper + toolbar, and dropdown to ensure composer is never dimmed
         const composerRect = composerElement.getBoundingClientRect()
+        const cutoutRects = getComposerCutoutRects(composerElement)
         const dropdownRect = savedSelectionsDropdown?.getBoundingClientRect()
-        const rect = dropdownRect ? unionRects(composerRect, dropdownRect) : composerRect
-        const padding = 8
+        const allRects = [composerRect, ...cutoutRects, ...(dropdownRect ? [dropdownRect] : [])]
+        const minTop = Math.min(...allRects.map(r => r.top))
+        const minLeft = Math.min(...allRects.map(r => r.left))
+        const maxRight = Math.max(...allRects.map(r => r.right))
+        const maxBottom = Math.max(...allRects.map(r => r.bottom))
+        const padding = 12
         setDropdownCutout({
-          top: rect.top - padding,
-          left: rect.left - padding,
-          width: rect.right - rect.left + padding * 2,
-          height: rect.bottom - rect.top + padding * 2,
+          top: minTop - padding,
+          left: minLeft - padding,
+          width: maxRight - minLeft + padding * 2,
+          height: maxBottom - minTop + padding * 2,
         })
       }
 
@@ -2239,30 +2246,31 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
       const composer = document.querySelector('.composer') as HTMLElement | null
       if (!composer) return
 
-      let rect: { top: number; left: number; right: number; bottom: number }
       const composerRect = composer.getBoundingClientRect()
+      const cutoutRects = getComposerCutoutRects(composer)
+      const allRects: DOMRect[] = [composerRect, ...cutoutRects]
       if (step === 'history-dropdown') {
         const historyDropdown = document.querySelector('.history-inline-list') as HTMLElement
-        rect = historyDropdown
-          ? unionRects(composerRect, historyDropdown.getBoundingClientRect())
-          : composerRect
+        if (historyDropdown) allRects.push(historyDropdown.getBoundingClientRect())
       } else if (step === 'save-selection') {
         const savedSelectionsDropdown = document.querySelector(
           '.saved-selections-dropdown'
         ) as HTMLElement
-        rect = savedSelectionsDropdown
-          ? unionRects(composerRect, savedSelectionsDropdown.getBoundingClientRect())
-          : composerRect
+        if (savedSelectionsDropdown) allRects.push(savedSelectionsDropdown.getBoundingClientRect())
       } else {
         return
       }
 
-      const padding = 8
+      const minTop = Math.min(...allRects.map(r => r.top))
+      const minLeft = Math.min(...allRects.map(r => r.left))
+      const maxRight = Math.max(...allRects.map(r => r.right))
+      const maxBottom = Math.max(...allRects.map(r => r.bottom))
+      const padding = 12
       setDropdownCutout({
-        top: rect.top - padding,
-        left: rect.left - padding,
-        width: rect.right - rect.left + padding * 2,
-        height: rect.bottom - rect.top + padding * 2,
+        top: minTop - padding,
+        left: minLeft - padding,
+        width: maxRight - minLeft + padding * 2,
+        height: maxBottom - minTop + padding * 2,
       })
     }
 

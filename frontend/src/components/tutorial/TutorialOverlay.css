@@ -333,13 +333,21 @@ body:has(.tutorial-backdrop) .hero-section {
   opacity: 0.6;
 }
 
-/* Blue-green border highlight for Done button on steps 9 & 10 - matches other steps */
+/* Blue-green border highlight for Done button on steps 8, 9 & 10 - matches other steps */
 .tutorial-button-highlight {
   box-shadow:
     0 0 0 3px var(--accent-color),
     0 0 0 7px rgba(14, 165, 233, 0.22),
     0 0 24px rgba(14, 165, 233, 0.45) !important;
   animation: tutorial-pulse 2s ease-in-out infinite !important;
+}
+
+.tutorial-button-highlight:disabled {
+  /* Keep highlight visible when disabled - reduce opacity of fill, not the border */
+  box-shadow:
+    0 0 0 3px var(--accent-color),
+    0 0 0 7px rgba(14, 165, 233, 0.22),
+    0 0 24px rgba(14, 165, 233, 0.45) !important;
 }
 
 .tutorial-button-secondary {
