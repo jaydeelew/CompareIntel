@@ -599,11 +599,16 @@ export const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       }
     }
 
-    // For follow-up step, highlight the full results section
+    // For follow-up step, highlight the full results section and add pulsing to model tabs
     const resultsSection =
       step === 'follow-up' ? (document.querySelector('.results-section') as HTMLElement) : null
     if (resultsSection) {
       resultsSection.classList.add('mobile-tutorial-highlight')
+      // Add pulsing effect to model results tabs to draw attention
+      const tabsHeader = document.querySelector('.results-tabs-header') as HTMLElement
+      if (tabsHeader) {
+        tabsHeader.classList.add('mobile-tutorial-tabs-pulse')
+      }
     }
 
     // For submit steps, highlight the composer container too (match step 3's visual emphasis)
@@ -632,6 +637,10 @@ export const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
 
     return () => {
       targetElement.classList.remove('mobile-tutorial-highlight')
+      // Clean up tabs pulse
+      document.querySelectorAll('.mobile-tutorial-tabs-pulse').forEach(el => {
+        el.classList.remove('mobile-tutorial-tabs-pulse')
+      })
       // Clean up all highlights
       document.querySelectorAll('.mobile-tutorial-highlight').forEach(el => {
         el.classList.remove('mobile-tutorial-highlight')
