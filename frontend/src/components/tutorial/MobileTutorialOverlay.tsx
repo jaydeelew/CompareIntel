@@ -573,12 +573,16 @@ export const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
     window.addEventListener('resize', handleUpdate)
 
     // Recalculate periodically to handle DOM changes
-    const interval = setInterval(handleUpdate, 200)
+    // Skip interval for button-pulsate steps so tooltip stays stable while button scales
+    const isButtonPulsateStep = ['submit-comparison', 'follow-up', 'submit-comparison-2'].includes(
+      step
+    )
+    const interval = isButtonPulsateStep ? null : setInterval(handleUpdate, 200)
 
     return () => {
       window.removeEventListener('scroll', handleUpdate, true)
       window.removeEventListener('resize', handleUpdate)
-      clearInterval(interval)
+      if (interval) clearInterval(interval)
     }
   }, [targetElement, step, calculatePositions, tooltipEstimatedHeight])
 
@@ -588,6 +592,11 @@ export const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
 
     // Apply highlight
     targetElement.classList.add('mobile-tutorial-highlight')
+
+    // Add button pulsate when tooltip says "Tap the highlighted button"
+    if (step === 'submit-comparison' || step === 'follow-up' || step === 'submit-comparison-2') {
+      targetElement.classList.add('mobile-tutorial-button-pulsate')
+    }
 
     // For provider steps, highlight the whole dropdown
     if (step === 'expand-provider' || step === 'select-models') {
@@ -637,6 +646,7 @@ export const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
 
     return () => {
       targetElement.classList.remove('mobile-tutorial-highlight')
+      targetElement.classList.remove('mobile-tutorial-button-pulsate')
       // Clean up tabs pulse
       document.querySelectorAll('.mobile-tutorial-tabs-pulse').forEach(el => {
         el.classList.remove('mobile-tutorial-tabs-pulse')
@@ -810,20 +820,8 @@ export const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
 
   const buttonText = getButtonText()
 
-  // Check if tabs are present for model results (mobile layout with tabs)
-  const hasTabs = (): boolean => {
-    if (step !== 'follow-up') return false
-    const tabsContainer = document.querySelector('.results-tabs-container')
-    return tabsContainer !== null && tabsContainer.children.length > 0
-  }
-
-  // Get description - use tabs-specific text if tabs are present, otherwise use default
-  const getDescription = (): string => {
-    if (step === 'follow-up' && hasTabs()) {
-      return 'View results by tapping the Gemini tabs below. Then tap "Follow up" to continue.'
-    }
-    return config.description
-  }
+  // Get description - use config (same as desktop for step 5)
+  const getDescription = (): string => config.description
 
   // Check if we're in loading/streaming phase on submit-comparison step
   // This needs to be calculated before early returns so we can skip them during loading/streaming

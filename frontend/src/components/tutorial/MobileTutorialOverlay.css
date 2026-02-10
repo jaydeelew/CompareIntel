@@ -95,6 +95,24 @@
   }
 }
 
+/* Pulsate animation for buttons when tooltip says "Tap the highlighted button" */
+.mobile-tutorial-highlight.mobile-tutorial-button-pulsate {
+  animation:
+    mobile-tutorial-pulse 2s ease-in-out infinite,
+    mobile-tutorial-button-pulsate 1.2s ease-in-out infinite !important;
+}
+
+@keyframes mobile-tutorial-button-pulsate {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.06);
+  }
+}
+
 /* Mobile tooltip container - uses smart positioning */
 .mobile-tutorial-tooltip {
   position: fixed;
