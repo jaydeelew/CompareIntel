@@ -920,8 +920,8 @@ export const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
             <h3 className="mobile-tutorial-tooltip-title">{config.title}</h3>
             <p className="mobile-tutorial-tooltip-description">{getDescription()}</p>
 
-            {/* Tap indicator for action steps */}
-            {isActionStep && !showButton && (
+            {/* Tap indicator for action steps (exclude step 2 - select-models) */}
+            {isActionStep && !showButton && step !== 'select-models' && (
               <div className="mobile-tutorial-tap-indicator">
                 <span>Tap the highlighted area</span>
               </div>
