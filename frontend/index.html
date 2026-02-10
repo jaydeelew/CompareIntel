@@ -31,16 +31,11 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 
-  <!-- Google Fonts - Load asynchronously to prevent render-blocking -->
-  <!-- Sora: Modern geometric sans-serif for headings - distinctive and premium feel -->
-  <!-- Plus Jakarta Sans: Clean, professional body text - excellent readability -->
+  <!-- Google Fonts: Sora (headings) + Plus Jakarta Sans (body) -->
+  <!-- Standard stylesheet - preload caused "not used" warnings and ERR_SOCKET_NOT_CONNECTED in some environments -->
   <!-- crossorigin enables JS access to stylesheet rules (needed by html-to-image for screenshots) -->
-  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap"
-    as="style" crossorigin onload="this.onload=null;this.rel='stylesheet'" />
-  <noscript>
-    <link rel="stylesheet" crossorigin
-      href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" />
-  </noscript>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap"
+    crossorigin />
 
   <!-- PWA Meta Tags -->
   <meta name="theme-color" content="#0f172a" />
