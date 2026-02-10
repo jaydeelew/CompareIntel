@@ -109,18 +109,29 @@ export const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
     if (typeof document === 'undefined') return
 
     const existing = document.getElementById('mobile-tutorial-portal-root') as HTMLElement | null
-    if (existing) {
+    let el: HTMLElement | null = null
+    if (!existing) {
+      el = document.createElement('div')
+      el.id = 'mobile-tutorial-portal-root'
+      document.body.appendChild(el)
+      setPortalRoot(el)
+    } else {
       setPortalRoot(existing)
-      return
     }
 
-    const el = document.createElement('div')
-    el.id = 'mobile-tutorial-portal-root'
-    document.body.appendChild(el)
-    setPortalRoot(el)
-
     return () => {
-      if (el.parentNode) el.parentNode.removeChild(el)
+      if (el?.parentNode) el.parentNode.removeChild(el)
+      // Restore composer and all elements when tutorial completes (unmount)
+      document.querySelector('.composer')?.classList.remove('tutorial-dropdown-container-active')
+      document.querySelectorAll('.mobile-tutorial-highlight').forEach(htmlEl => {
+        htmlEl.classList.remove('mobile-tutorial-highlight')
+      })
+      document.querySelectorAll('.mobile-tutorial-button-pulsate').forEach(htmlEl => {
+        htmlEl.classList.remove('mobile-tutorial-button-pulsate')
+      })
+      document.querySelectorAll('.mobile-tutorial-tabs-pulse').forEach(htmlEl => {
+        htmlEl.classList.remove('mobile-tutorial-tabs-pulse')
+      })
     }
   }, [])
   // Estimated tooltip height - smaller for short viewports

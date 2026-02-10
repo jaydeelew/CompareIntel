@@ -97,11 +97,16 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
     borderRadius: number
   } | null>(null)
 
+  // Unified cleanup for tutorial end - runs on unmount (when tutorial completes) so that
+  // composer and hero section restore to normal appearance. When tutorial completes,
+  // TutorialController returns null and this overlay unmounts without ever receiving step=null,
+  // so the step effect's cleanup never runs. This ensures we always clean up properly.
   useEffect(() => {
-    return () => {
+    const cleanupTutorialState = () => {
       const heroSection = document.querySelector('.hero-section') as HTMLElement
       if (heroSection) {
         heroSection.classList.remove('tutorial-height-locked')
+        heroSection.classList.remove('tutorial-dropdown-hero-active')
         heroSection.style.removeProperty('height')
         heroSection.style.removeProperty('max-height')
         heroSection.style.removeProperty('min-height')
@@ -110,7 +115,49 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
         heroSection.style.removeProperty('overflow')
       }
       document.documentElement.style.removeProperty('--hero-locked-height')
+
+      // Restore composer to normal - remove all tutorial classes that affect its appearance
+      const composerElementActive = document.querySelector(
+        '.composer.tutorial-textarea-active'
+      ) as HTMLElement
+      if (composerElementActive) {
+        composerElementActive.classList.remove('tutorial-textarea-active')
+      }
+      document.querySelectorAll('.composer.tutorial-highlight').forEach(el => {
+        const htmlEl = el as HTMLElement
+        htmlEl.classList.remove('tutorial-highlight')
+        htmlEl.style.removeProperty('pointer-events')
+        htmlEl.style.removeProperty('position')
+      })
+      const dropdownContainerActive = document.querySelector(
+        '.composer.tutorial-dropdown-container-active'
+      ) as HTMLElement
+      if (dropdownContainerActive) {
+        dropdownContainerActive.classList.remove('tutorial-dropdown-container-active')
+      }
+
+      // Clean up any other tutorial highlights
+      document.querySelectorAll('.tutorial-highlight').forEach(el => {
+        const htmlEl = el as HTMLElement
+        htmlEl.classList.remove('tutorial-highlight')
+        htmlEl.style.removeProperty('pointer-events')
+        htmlEl.style.removeProperty('position')
+      })
+      const historyDropdown = document.querySelector(
+        '.history-inline-list.tutorial-dropdown-active'
+      ) as HTMLElement
+      if (historyDropdown) {
+        historyDropdown.classList.remove('tutorial-dropdown-active')
+      }
+      const savedSelectionsDropdown = document.querySelector(
+        '.saved-selections-dropdown.tutorial-dropdown-active'
+      ) as HTMLElement
+      if (savedSelectionsDropdown) {
+        savedSelectionsDropdown.classList.remove('tutorial-dropdown-active')
+      }
     }
+
+    return cleanupTutorialState
   }, [])
 
   // Update step ref when step changes
