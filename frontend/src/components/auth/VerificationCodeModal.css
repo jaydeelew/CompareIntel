@@ -372,33 +372,6 @@
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
-.verification-code-close {
-  position: absolute;
-  top: 1rem;
-  right: 1rem;
-  background: rgba(255, 255, 255, 0.15);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  cursor: pointer;
-  padding: 0.5rem;
-  color: white;
-  border-radius: var(--radius-lg);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s ease;
-  line-height: 1;
-}
-
-.verification-code-close:hover {
-  background: rgba(255, 255, 255, 0.25);
-  transform: scale(1.05);
-}
-
-.verification-code-close:focus {
-  outline: 2px solid white;
-  outline-offset: 2px;
-}
-
 .verification-code-content {
   padding: 1.5rem 2rem;
   flex: 1;
@@ -559,6 +532,32 @@
   opacity: 0.6;
   cursor: not-allowed;
   color: var(--text-muted);
+}
+
+/* Escape hatch buttons - subtle, link-style */
+.verification-code-escape-hatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  justify-content: center;
+  margin-top: 0.5rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border-color);
+}
+
+.verification-code-button.tertiary {
+  background: transparent;
+  color: var(--text-secondary);
+  border: none;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.verification-code-button.tertiary:hover {
+  color: var(--primary-light);
+  background: transparent;
+  text-decoration: underline;
 }
 
 .verification-code-button:focus {

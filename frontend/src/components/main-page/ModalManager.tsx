@@ -26,6 +26,7 @@ export interface ModalManagerProps {
   showPasswordReset: boolean
   userEmail: string | undefined
   onVerificationCodeModalClose: () => void
+  onVerificationCodeModalUseDifferentEmail?: () => void
   onVerificationComplete: () => void
   onVerificationSuccessModalClose: () => void
   onPasswordResetClose: (email?: string) => void
@@ -62,6 +63,7 @@ export function ModalManager({
   showPasswordReset,
   userEmail,
   onVerificationCodeModalClose,
+  onVerificationCodeModalUseDifferentEmail,
   onVerificationComplete,
   onVerificationSuccessModalClose,
   onPasswordResetClose,
@@ -87,6 +89,7 @@ export function ModalManager({
       <VerificationCodeModal
         isOpen={showVerificationCodeModal && !showPasswordReset}
         onClose={onVerificationCodeModalClose}
+        onUseDifferentEmail={onVerificationCodeModalUseDifferentEmail}
         onVerified={onVerificationComplete}
         userEmail={userEmail}
       />

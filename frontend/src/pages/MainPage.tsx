@@ -2217,6 +2217,11 @@ export function MainPage() {
           <VerificationCodeModal
             isOpen={showVerificationCodeModal && !showPasswordReset}
             onClose={() => setShowVerificationCodeModal(false)}
+            onUseDifferentEmail={() => {
+              setShowVerificationCodeModal(false)
+              setAuthModalMode('login')
+              setIsAuthModalOpen(true)
+            }}
             onVerified={() => {
               setShowVerificationCodeModal(false)
               setShowVerificationSuccessModal(true)

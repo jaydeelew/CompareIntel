@@ -33,7 +33,11 @@ async function safeWait(page: Page, ms: number) {
 }
 
 /**
- * Helper function to dismiss the verification code overlay if it appears
+ * Helper function to dismiss the verification code overlay if it appears.
+ * The verification modal is non-dismissible per 2026 best practices - the only
+ * way to get past it is to click "Log out" or "Use different email".
+ * This helper clicks "Log out" to dismiss (user will need to log in again if
+ * the test requires an authenticated state).
  */
 async function dismissVerificationCodeOverlay(page: Page) {
   try {
@@ -53,19 +57,19 @@ async function dismissVerificationCodeOverlay(page: Page) {
       return
     }
 
-    // Try to click the close button first
-    const closeButton = page.locator('.verification-code-close, button[aria-label="Close"]')
-    const closeVisible = await closeButton.isVisible({ timeout: 2000 }).catch(() => false)
+    // Modal is non-dismissible - click "Log out" to get past it
+    const logoutButton = page.getByTestId('verification-modal-logout-button')
+    const logoutVisible = await logoutButton.isVisible({ timeout: 2000 }).catch(() => false)
 
-    if (closeVisible && !page.isClosed()) {
+    if (logoutVisible && !page.isClosed()) {
       try {
-        await closeButton.waitFor({ state: 'visible', timeout: 3000 })
+        await logoutButton.waitFor({ state: 'visible', timeout: 3000 })
         await safeWait(page, 300)
 
         if (!page.isClosed()) {
-          await closeButton.click({ timeout: 5000, force: false }).catch(async () => {
+          await logoutButton.click({ timeout: 5000, force: false }).catch(async () => {
             if (!page.isClosed()) {
-              await closeButton.click({ timeout: 3000, force: true })
+              await logoutButton.click({ timeout: 3000, force: true })
             }
           })
 
@@ -74,45 +78,10 @@ async function dismissVerificationCodeOverlay(page: Page) {
           await safeWait(page, 500)
         }
       } catch (_clickError) {
-        // Fallback: try pressing Escape
-        if (!page.isClosed()) {
-          await page.keyboard.press('Escape').catch(() => {})
-          await safeWait(page, 500)
-        }
-      }
-    } else if (!page.isClosed()) {
-      // Fallback: try clicking outside the modal (on the overlay) or pressing Escape
-      try {
-        // Click on the overlay at a position that's outside the modal content
-        // The overlay has onClick={onClose}, but the modal content stops propagation
-        // So we need to click on the overlay div itself, not the modal
-        const overlayBox = await verificationOverlay.boundingBox()
-        if (overlayBox && !page.isClosed()) {
-          // Click at the top-left corner of the overlay (outside modal content)
-          await page.mouse.click(overlayBox.x + 10, overlayBox.y + 10)
-          await safeWait(page, 500)
-        } else {
-          // If we can't get bounding box, try Escape
-          await page.keyboard.press('Escape').catch(() => {})
-          await safeWait(page, 500)
-        }
-      } catch {
-        // Last resort: try Escape
-        if (!page.isClosed()) {
-          await page.keyboard.press('Escape').catch(() => {})
-          await safeWait(page, 500)
-        }
-      }
-    }
-
-    // Final check: ensure overlay is gone
-    if (!page.isClosed()) {
-      await safeWait(page, 500)
-      const stillVisible = await verificationOverlay.isVisible({ timeout: 1000 }).catch(() => false)
-      if (stillVisible && !page.isClosed()) {
-        // Last resort: try Escape again
-        await page.keyboard.press('Escape').catch(() => {})
-        await safeWait(page, 500)
+        console.log(
+          'Verification overlay: could not click Log out:',
+          _clickError instanceof Error ? _clickError.message : String(_clickError)
+        )
       }
     }
   } catch (error) {

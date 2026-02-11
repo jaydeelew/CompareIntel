@@ -16,6 +16,7 @@ interface VerificationCodeModalProps {
   isOpen: boolean
   onClose: () => void
   onVerified: () => void
+  onUseDifferentEmail?: () => void
   userEmail?: string
 }
 
@@ -23,9 +24,10 @@ export const VerificationCodeModal: React.FC<VerificationCodeModalProps> = ({
   isOpen,
   onClose,
   onVerified,
+  onUseDifferentEmail,
   userEmail,
 }) => {
-  const { refreshUser } = useAuth()
+  const { refreshUser, logout } = useAuth()
   const [code, setCode] = useState('')
   const [isVerifying, setIsVerifying] = useState(false)
   const [isResending, setIsResending] = useState(false)
@@ -53,20 +55,7 @@ export const VerificationCodeModal: React.FC<VerificationCodeModalProps> = ({
     }
   }, [cooldownRemaining])
 
-  // Handle escape key
-  useEffect(() => {
-    if (!isOpen) return
-
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        onClose()
-      }
-    }
-
-    document.addEventListener('keydown', handleEscape)
-    return () => document.removeEventListener('keydown', handleEscape)
-  }, [isOpen, onClose])
-
+  // Modal is non-dismissible - no escape key or backdrop click
   // Prevent body scroll when modal is open
   useEffect(() => {
     if (isOpen) {
@@ -171,15 +160,25 @@ export const VerificationCodeModal: React.FC<VerificationCodeModalProps> = ({
     }
   }
 
+  const handleLogout = useCallback(async () => {
+    onClose()
+    await logout()
+  }, [onClose, logout])
+
+  const handleUseDifferentEmail = useCallback(() => {
+    onClose()
+    onUseDifferentEmail?.()
+  }, [onClose, onUseDifferentEmail])
+
   if (!isOpen) return null
 
   return (
     <div
       className="verification-code-overlay"
-      onClick={onClose}
       role="dialog"
       aria-modal="true"
       aria-labelledby="verification-code-title"
+      aria-describedby="verification-code-description"
     >
       <div className="verification-code-modal" onClick={e => e.stopPropagation()} ref={modalRef}>
         <div className="verification-code-header">
@@ -285,29 +284,9 @@ export const VerificationCodeModal: React.FC<VerificationCodeModalProps> = ({
             </div>
           </div>
           <h2 id="verification-code-title">Verify Your Email</h2>
-          <button
-            className="verification-code-close"
-            onClick={onClose}
-            aria-label="Close"
-            type="button"
-          >
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <line x1="18" y1="6" x2="6" y2="18" />
-              <line x1="6" y1="6" x2="18" y2="18" />
-            </svg>
-          </button>
         </div>
 
-        <div className="verification-code-content">
+        <div className="verification-code-content" id="verification-code-description">
           <p className="verification-code-intro">We've sent a 6-digit verification code to:</p>
           <p className="verification-code-email">{userEmail}</p>
 
@@ -363,6 +342,26 @@ export const VerificationCodeModal: React.FC<VerificationCodeModalProps> = ({
                 ? `Resend code (${cooldownRemaining}s)`
                 : 'Resend code'}
           </button>
+
+          <div className="verification-code-escape-hatches">
+            {onUseDifferentEmail && (
+              <button
+                className="verification-code-button tertiary"
+                onClick={handleUseDifferentEmail}
+                type="button"
+              >
+                Use different email
+              </button>
+            )}
+            <button
+              className="verification-code-button tertiary"
+              onClick={handleLogout}
+              type="button"
+              data-testid="verification-modal-logout-button"
+            >
+              Log out
+            </button>
+          </div>
         </div>
       </div>
     </div>
