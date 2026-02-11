@@ -37,7 +37,13 @@ export const TutorialWelcomeModal: React.FC<TutorialWelcomeModalProps> = ({
     <div className="tutorial-welcome-backdrop">
       <div className="tutorial-welcome-modal">
         <div className="tutorial-welcome-logo-background">
-          <img src="/CI_favicon_512x512.png" alt="" className="tutorial-welcome-logo-image" />
+          <div
+            className="tutorial-welcome-logo-image"
+            style={{
+              WebkitMaskImage: 'url(/CI_favicon_512x512.png)',
+              maskImage: 'url(/CI_favicon_512x512.png)',
+            }}
+          />
         </div>
         <div className="tutorial-welcome-content">
           <h2 className="tutorial-welcome-title">Welcome to CompareIntel!</h2>
