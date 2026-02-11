@@ -556,13 +556,27 @@ export function MainPage() {
   }, [showWelcomeModal, isTouchDevice, currentView, tutorialState.isActive, attemptFocusTextarea])
 
   const [visibleTooltip, setVisibleTooltip] = useState<string | null>(null)
+  const tooltipHideTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => {
+    return () => {
+      if (tooltipHideTimeoutRef.current) {
+        clearTimeout(tooltipHideTimeoutRef.current)
+      }
+    }
+  }, [])
 
   const handleCapabilityTileTap = (tileId: string) => {
     if (isMobileLayout) {
+      if (tooltipHideTimeoutRef.current) {
+        clearTimeout(tooltipHideTimeoutRef.current)
+        tooltipHideTimeoutRef.current = null
+      }
       setVisibleTooltip(tileId)
-      setTimeout(() => {
+      tooltipHideTimeoutRef.current = setTimeout(() => {
         setVisibleTooltip(null)
-      }, 3000)
+        tooltipHideTimeoutRef.current = null
+      }, 4000)
     }
   }
 
