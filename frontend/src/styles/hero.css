@@ -187,8 +187,13 @@
   animation: fadeInUp 0.8s ease-out 0.1s both;
 }
 
+.hero-subtitle-first-line,
 .hero-subtitle-second-line {
-  display: block;
+  display: inline;
+}
+
+.hero-subtitle-second-line {
+  white-space: normal;
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -1236,6 +1241,11 @@
   .hero-subtitle {
     font-size: clamp(0.95rem, 4vw, 1.15rem);
     margin-bottom: 2rem;
+  }
+
+  .hero-subtitle-second-line {
+    display: block !important;
+    margin-left: 0;
   }
 
   .hero-capabilities {
