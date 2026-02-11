@@ -122,19 +122,10 @@ export const ResetPasswordForm: React.FC<ResetPasswordFormProps> = ({ token, onS
           <p>Your password has been updated</p>
         </div>
 
-        <div style={{ textAlign: 'center', padding: '1rem 0' }}>
-          <div
-            style={{
-              fontSize: '3rem',
-              marginBottom: '1rem',
-            }}
-          >
-            ✓
-          </div>
-          <p style={{ color: '#666', marginBottom: '1rem' }}>
-            Your password has been successfully reset.
-          </p>
-          <p style={{ color: '#999', fontSize: '0.85rem' }}>Redirecting to login...</p>
+        <div className="auth-reset-success">
+          <div className="auth-reset-success-icon">✓</div>
+          <p className="auth-reset-success-message">Your password has been successfully reset.</p>
+          <p className="auth-reset-success-redirect">Redirecting to login...</p>
         </div>
       </div>
     )

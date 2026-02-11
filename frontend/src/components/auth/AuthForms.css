@@ -277,6 +277,28 @@ input:-webkit-autofill:active {
   text-decoration: underline;
 }
 
+/* Password Reset Success State - Dark Theme */
+.auth-reset-success {
+  text-align: center;
+  padding: 1rem 0;
+}
+
+.auth-reset-success-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  color: var(--accent-color);
+}
+
+.auth-reset-success-message {
+  color: var(--text-secondary);
+  margin-bottom: 1rem;
+}
+
+.auth-reset-success-redirect {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
 /* Auth Modal Styles - Dark Theme */
 .auth-modal-overlay {
   position: fixed;
