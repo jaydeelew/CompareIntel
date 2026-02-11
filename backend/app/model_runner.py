@@ -760,20 +760,20 @@ MODELS_BY_PROVIDER = {
             "knowledge_cutoff": "June 2025",
         },
         {
-            "id": "x-ai/grok-4.1-fast",
-            "name": "Grok 4.1 Fast",
-            "description": "Grok 4.1 Fast is xAI's best agentic tool calling model that shines in real-world use cases like customer support and deep research.",
-            "category": "Language",
-            "provider": "xAI",
-            "knowledge_cutoff": "August 2025",
-        },
-        {
             "id": "x-ai/grok-3-mini",
             "name": "Grok 3 Mini",
             "description": "A lightweight reasoning model with chain-of-thought capabilities for efficient problem-solving.",
             "category": "Language",
             "provider": "xAI",
             "knowledge_cutoff": "March 2025",
+        },
+        {
+            "id": "x-ai/grok-4.1-fast",
+            "name": "Grok 4.1 Fast",
+            "description": "Grok 4.1 Fast is xAI's best agentic tool calling model that shines in real-world use cases like customer support and deep research.",
+            "category": "Language",
+            "provider": "xAI",
+            "knowledge_cutoff": "August 2025",
         },
         {
             "id": "x-ai/grok-4",
