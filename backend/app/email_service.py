@@ -803,6 +803,124 @@ async def send_model_availability_report(check_results: dict[str, Any]) -> None:
         raise
 
 
+async def send_new_user_signup_notification(
+    recipient_email: str, user_email: str, user_id: int, created_at: datetime
+) -> None:
+    """
+    Send notification email to admin when a new user signs up (production only).
+
+    Args:
+        recipient_email: Admin email to receive the notification
+        user_email: The new user's email address
+        user_id: The new user's database ID
+        created_at: When the user registered
+    """
+    if not EMAIL_CONFIGURED:
+        print(
+            f"Email service not configured - skipping new user signup notification for {user_email}"
+        )
+        return
+
+    if not recipient_email or "@" not in recipient_email:
+        print(
+            f"NEW_USER_NOTIFICATION_EMAIL not configured - skipping signup notification for {user_email}"
+        )
+        return
+
+    formatted_time = created_at.strftime("%Y-%m-%d %H:%M:%S UTC")
+
+    html = f"""
+    <html>
+      <head>
+        <meta name="color-scheme" content="light">
+        <meta name="supported-color-schemes" content="light">
+        <style>
+          body {{
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333 !important;
+            background-color: #ffffff !important;
+          }}
+          .container {{
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+          }}
+          .header {{
+            background-color: #10b981 !important;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+            color: white !important;
+            padding: 30px;
+            text-align: center;
+            border-radius: 8px 8px 0 0;
+          }}
+          .content {{
+            background-color: #f9f9f9 !important;
+            background: #f9f9f9 !important;
+            padding: 30px;
+            border-radius: 0 0 8px 8px;
+          }}
+          .info-box {{
+            background-color: white !important;
+            background: white !important;
+            border: 2px solid #10b981;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+          }}
+          .info-row {{
+            padding: 8px 0;
+            border-bottom: 1px solid #e5e7eb;
+          }}
+          .info-row:last-child {{
+            border-bottom: none;
+          }}
+          .footer {{
+            text-align: center;
+            margin-top: 20px;
+            color: #666 !important;
+            font-size: 12px;
+          }}
+        </style>
+      </head>
+      <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; background-color: #ffffff;">
+        <div class="container">
+          <div class="header" style="background-color: #10b981 !important; background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important; color: white !important; padding: 30px; text-align: center; border-radius: 8px 8px 0 0;">
+            <h1 style="color: white !important; margin: 0;">🎉 New User Signup</h1>
+          </div>
+          <div class="content" style="background-color: #f9f9f9 !important; background: #f9f9f9 !important; padding: 30px; border-radius: 0 0 8px 8px;">
+            <p>A new user has registered at CompareIntel (compareintel.com).</p>
+            <div class="info-box" style="background-color: white !important; background: white !important; border: 2px solid #10b981; padding: 20px; border-radius: 8px; margin: 20px 0;">
+              <div class="info-row"><strong>Email:</strong> {user_email}</div>
+              <div class="info-row"><strong>User ID:</strong> {user_id}</div>
+              <div class="info-row"><strong>Registered:</strong> {formatted_time}</div>
+            </div>
+          </div>
+          <div class="footer">
+            <p>CompareIntel Admin Notification</p>
+            <p>&copy; 2026 CompareIntel. All rights reserved.</p>
+          </div>
+        </div>
+      </body>
+    </html>
+    """
+
+    message = MessageSchema(
+        subject=f"[CompareIntel] New signup: {user_email}",
+        recipients=[recipient_email],
+        body=html,
+        subtype="html",
+    )
+
+    try:
+        await fm.send_message(message)
+    except Exception as e:
+        print(
+            f"Failed to send new user signup notification to {recipient_email}: {str(e)}"
+        )
+        # Don't raise - registration succeeded, this is just a notification
+
+
 async def send_trial_expired_email(email: EmailStr) -> None:
     """
     Send email to free tier users when their 7-day trial expires.

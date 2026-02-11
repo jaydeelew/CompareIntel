@@ -16,6 +16,8 @@ export interface MessageBubbleProps {
   modelId?: string
   /** Callback when copy button is clicked - receives message content */
   onCopyMessage?: (content: string) => void
+  /** When true, copy button is visible but disabled (e.g. during tutorial) */
+  copyButtonDisabled?: boolean
 }
 
 // Displays a single message in a conversation with formatted/raw rendering
@@ -28,6 +30,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
   className = '',
   modelId,
   onCopyMessage,
+  copyButtonDisabled = false,
 }) => {
   // Safely format timestamp - handle undefined, null, or invalid dates
   const getFormattedTime = () => {
@@ -105,6 +108,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
           {onCopyMessage && (
             <button
               className="copy-message-btn"
+              disabled={copyButtonDisabled}
               onClick={e => {
                 onCopyMessage(safeContent)
                 e.currentTarget.blur()

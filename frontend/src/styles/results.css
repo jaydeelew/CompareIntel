@@ -380,6 +380,17 @@
   transform: scale(0.95);
 }
 
+.breakout-card-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.breakout-card-btn:disabled:hover {
+  background: transparent;
+  color: var(--text-muted);
+}
+
 .output-length {
   font-size: 0.75rem;
   color: var(--text-muted);

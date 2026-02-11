@@ -45,6 +45,8 @@ interface ResultsSectionHeaderProps {
   onShowAllResults: () => void
   /** Whether in mobile layout */
   isMobileLayout: boolean
+  /** When true, disables all header buttons (tutorial mode) */
+  isTutorialActive?: boolean
 }
 
 export function ResultsSectionHeader({
@@ -62,7 +64,9 @@ export function ResultsSectionHeader({
   closedCardsCount,
   onShowAllResults,
   isMobileLayout,
+  isTutorialActive = false,
 }: ResultsSectionHeaderProps) {
+  const buttonsDisabled = isTutorialActive
   return (
     <div
       style={{
@@ -90,6 +94,7 @@ export function ResultsSectionHeader({
             {conversationsCount > 1 && (
               <button
                 onClick={onToggleScrollLock}
+                disabled={buttonsDisabled}
                 style={{
                   padding: '0.5rem 0.75rem',
                   fontSize: '0.875rem',
@@ -173,12 +178,14 @@ export function ResultsSectionHeader({
               exportMenuRef={exportMenuRef}
               onExport={onExport}
               isMobileLayout={false}
+              disabled={buttonsDisabled}
             />
 
             {/* Show all results button for desktop */}
             {closedCardsCount > 0 && (
               <button
                 onClick={onShowAllResults}
+                disabled={buttonsDisabled}
                 style={{
                   padding: '0.5rem 1rem',
                   fontSize: '0.875rem',
@@ -251,12 +258,14 @@ export function ResultsSectionHeader({
               exportMenuRef={exportMenuRef}
               onExport={onExport}
               isMobileLayout={true}
+              disabled={buttonsDisabled}
             />
 
             {/* Show all results button - icon only */}
             {closedCardsCount > 0 && (
               <button
                 onClick={onShowAllResults}
+                disabled={buttonsDisabled}
                 title={`Show all results (${closedCardsCount} hidden)`}
                 style={{
                   padding: '0.5rem',
@@ -314,6 +323,7 @@ interface ExportDropdownProps {
   exportMenuRef: React.RefObject<HTMLDivElement>
   onExport: (format: ExportFormat) => Promise<void>
   isMobileLayout: boolean
+  disabled?: boolean
 }
 
 function ExportDropdown({
@@ -322,6 +332,7 @@ function ExportDropdown({
   exportMenuRef,
   onExport,
   isMobileLayout,
+  disabled = false,
 }: ExportDropdownProps) {
   return (
     <div className="export-dropdown-container" ref={exportMenuRef}>
@@ -329,6 +340,7 @@ function ExportDropdown({
         onClick={onToggleExportMenu}
         className="follow-up-button export-dropdown-trigger"
         title="Export comparison"
+        disabled={disabled}
         aria-expanded={showExportMenu}
         aria-haspopup="true"
         style={
@@ -380,6 +392,7 @@ function ExportDropdown({
         <div className="export-dropdown-menu" role="menu">
           <button
             onClick={() => onExport('pdf')}
+            disabled={disabled}
             className="export-dropdown-item"
             role="menuitem"
             title="Best for sharing & printing"
@@ -403,6 +416,7 @@ function ExportDropdown({
           </button>
           <button
             onClick={() => onExport('markdown')}
+            disabled={disabled}
             className="export-dropdown-item"
             role="menuitem"
             title="For docs & note apps"
@@ -426,6 +440,7 @@ function ExportDropdown({
           </button>
           <button
             onClick={() => onExport('html')}
+            disabled={disabled}
             className="export-dropdown-item"
             role="menuitem"
             title="Standalone web page"
@@ -447,6 +462,7 @@ function ExportDropdown({
           </button>
           <button
             onClick={() => onExport('json')}
+            disabled={disabled}
             className="export-dropdown-item"
             role="menuitem"
             title="For developers & APIs"

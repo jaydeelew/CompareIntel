@@ -94,6 +94,24 @@
   object-fit: contain;
 }
 
+.screenshot-card-btn:disabled,
+.copy-response-btn:disabled,
+.hide-others-btn:disabled,
+.close-card-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.screenshot-card-btn:disabled:hover,
+.copy-response-btn:disabled:hover,
+.hide-others-btn:disabled:hover,
+.close-card-btn:disabled:hover {
+  background: transparent;
+  color: var(--text-muted);
+  box-shadow: none;
+}
+
 /* ═══════════════════════════════════════════════════════════
    COPY MESSAGE BUTTON (in message headers)
    ═══════════════════════════════════════════════════════════ */
@@ -137,6 +155,17 @@
 .copy-message-btn:focus:not(:hover) {
   background: rgba(255, 255, 255, 0.1);
   color: rgba(255, 255, 255, 0.9);
+}
+
+.copy-message-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.copy-message-btn:disabled:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: none;
 }
 
 .copy-message-btn svg {

@@ -32,6 +32,8 @@ export interface ResultsDisplayProps {
   onHideOthers?: (modelId: string) => void
   onCopyMessage?: (modelId: string, messageId: string, content: string) => void
   className?: string
+  /** When true, disables card action buttons (not model tabs or formatted/raw tabs) */
+  isTutorialActive?: boolean
 }
 
 // Renders comparison results as a grid (desktop) or tabs (mobile)
@@ -54,6 +56,7 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
   onHideOthers,
   onCopyMessage,
   className = '',
+  isTutorialActive = false,
 }) => {
   const visibleConversations = conversations.filter(
     conv => selectedModels.includes(conv.modelId) && !closedCards.has(conv.modelId)
@@ -179,6 +182,7 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
               onHideOthers={onHideOthers}
               onCopyMessage={onCopyMessage}
               showBreakoutButton={visibleConversations.length > 1 && !isError}
+              isTutorialActive={isTutorialActive}
             />
           </div>
         </div>
@@ -236,6 +240,7 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
               onHideOthers={onHideOthers}
               onCopyMessage={onCopyMessage}
               showBreakoutButton={visibleConversations.length > 1 && !isError}
+              isTutorialActive={isTutorialActive}
             />
           )
         })}

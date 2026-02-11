@@ -29,7 +29,11 @@ from ..auth import (
     verify_token,
 )
 from ..dependencies import get_current_user_required, get_current_verified_user
-from ..email_service import send_password_reset_email, send_verification_email
+from ..email_service import (
+    send_new_user_signup_notification,
+    send_password_reset_email,
+    send_verification_email,
+)
 from ..models import User, UserPreference
 from ..schemas import (
     EmailVerification,
@@ -260,6 +264,18 @@ async def register(
         except Exception as e:
             print(f"Warning: Could not send verification email: {e}")
             # Continue anyway - email is optional for development
+
+        # Send admin notification on new signup (production only)
+        if os.environ.get("ENVIRONMENT") == "production":
+            notification_email = os.environ.get("NEW_USER_NOTIFICATION_EMAIL", "").strip()
+            if notification_email and "@" in notification_email:
+                background_tasks.add_task(
+                    send_new_user_signup_notification,
+                    recipient_email=notification_email,
+                    user_email=new_user.email,
+                    user_id=new_user.id,
+                    created_at=new_user.created_at or datetime.now(UTC),
+                )
 
         # Generate tokens for immediate login
         access_token = create_access_token(data={"sub": str(new_user.id)})

@@ -32,6 +32,8 @@ export interface ResultCardProps {
   /** Inline style for mobile tabbed display toggle */
   style?: React.CSSProperties
   className?: string
+  /** When true, disables card action buttons (screenshot, copy, close, breakout, hide others, copy message) - not formatted/raw tabs */
+  isTutorialActive?: boolean
 }
 
 // Single model result card with formatted/raw toggle
@@ -53,6 +55,7 @@ export const ResultCard: React.FC<ResultCardProps> = ({
   breakoutClassName = '',
   style,
   className = '',
+  isTutorialActive = false,
 }) => {
   const safeMessages = messages && Array.isArray(messages) ? messages : []
   const latestMessage = safeMessages[safeMessages.length - 1]
@@ -88,6 +91,7 @@ export const ResultCard: React.FC<ResultCardProps> = ({
             {onScreenshot && (
               <button
                 className="screenshot-card-btn"
+                disabled={isTutorialActive}
                 onClick={e => {
                   onScreenshot(modelId)
                   e.currentTarget.blur()
@@ -114,6 +118,7 @@ export const ResultCard: React.FC<ResultCardProps> = ({
             {onCopyResponse && (
               <button
                 className="copy-response-btn"
+                disabled={isTutorialActive}
                 onClick={() => onCopyResponse(modelId)}
                 title="Copy raw chat history"
                 aria-label={`Copy raw chat history from ${model?.name || modelId}`}
@@ -136,6 +141,7 @@ export const ResultCard: React.FC<ResultCardProps> = ({
             {onHideOthers && (
               <button
                 className="hide-others-btn"
+                disabled={isTutorialActive}
                 onClick={() => onHideOthers(modelId)}
                 title="Hide all other results"
                 aria-label={`Hide all other results except ${model?.name || modelId}`}
@@ -160,6 +166,7 @@ export const ResultCard: React.FC<ResultCardProps> = ({
             {onClose && (
               <button
                 className="close-card-btn"
+                disabled={isTutorialActive}
                 onClick={() => onClose(modelId)}
                 title="Hide this result"
                 aria-label={`Hide result for ${model?.name || modelId}`}
@@ -182,6 +189,7 @@ export const ResultCard: React.FC<ResultCardProps> = ({
             {showBreakoutButton && onBreakout && !isError && (
               <button
                 className="breakout-card-btn"
+                disabled={isTutorialActive}
                 onClick={e => {
                   onBreakout(modelId)
                   e.currentTarget.blur()
@@ -251,6 +259,7 @@ export const ResultCard: React.FC<ResultCardProps> = ({
               onCopyMessage={
                 onCopyMessage ? content => onCopyMessage(modelId, messageId, content) : undefined
               }
+              copyButtonDisabled={isTutorialActive}
             />
           )
         })}

@@ -2371,6 +2371,7 @@ export function MainPage() {
                 followUpDisabledReason="Cannot follow up when new models are selected. You can follow up if you only deselect models from the original comparison."
                 showExportMenu={showExportMenu}
                 isMobileLayout={isMobileLayout}
+                isTutorialActive={tutorialState.isActive}
                 exportMenuRef={exportMenuRef}
                 onToggleScrollLock={() => setIsScrollLocked(!isScrollLocked)}
                 onFollowUp={handleFollowUp}
