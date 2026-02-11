@@ -22,10 +22,10 @@ The script performs the following tasks:
    - **Production**: Via Docker environment variables or `.env` file
    
    ```
-   MAIL_USERNAME=your_smtp_username
-   MAIL_PASSWORD=your_smtp_password
+   MAIL_USERNAME=emailapikey
+   MAIL_PASSWORD=your_zeptomail_smtp_password
    MAIL_FROM=noreply@compareintel.com
-   MAIL_SERVER=smtp.sendgrid.net
+   MAIL_SERVER=smtp.zeptomail.com
    MAIL_PORT=587
    ```
 

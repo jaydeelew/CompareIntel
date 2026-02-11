@@ -72,14 +72,15 @@ These variables **must** be set for the backend to run:
 
 Email is **optional** - if not configured, verification emails will be skipped in development.
 
-**SendGrid (Recommended):**
+**ZeptoMail / Zoho (Recommended):**
 ```bash
-MAIL_USERNAME=apikey
-MAIL_PASSWORD=SG.your_sendgrid_api_key_here
+MAIL_USERNAME=emailapikey
+MAIL_PASSWORD=your_zeptomail_smtp_password
 MAIL_FROM=noreply@yourdomain.com
-MAIL_SERVER=smtp.sendgrid.net
+MAIL_SERVER=smtp.zeptomail.com
 MAIL_PORT=587
 ```
+Create a Mail Agent at [ZeptoMail](https://www.zoho.com/zeptomail/) → Setup Options → SMTP.
 
 **SMTP (Alternative):**
 ```bash
@@ -131,7 +132,7 @@ MAIL_FROM=your-email@gmail.com
    - Add it to `OPENROUTER_API_KEY` in your `.env` file
 
 4. **Configure email (optional):**
-   - Add SendGrid or SMTP credentials if you want email verification
+   - Add ZeptoMail or SMTP credentials if you want email verification
 
 5. **Verify your configuration:**
    ```bash
@@ -272,10 +273,10 @@ SECRET_KEY=<strong-random-key-generated-once>
 OPENROUTER_API_KEY=sk-or-v1-production-key
 ENVIRONMENT=production
 FRONTEND_URL=https://compareintel.com
-MAIL_USERNAME=apikey
-MAIL_PASSWORD=SG.production-sendgrid-key
+MAIL_USERNAME=emailapikey
+MAIL_PASSWORD=your_zeptomail_smtp_password
 MAIL_FROM=noreply@compareintel.com
-MAIL_SERVER=smtp.sendgrid.net
+MAIL_SERVER=smtp.zeptomail.com
 MAIL_PORT=587
 ```
 
@@ -309,8 +310,8 @@ VITE_API_URL=/api
 
 **Email not sending**
 - ✅ Email is optional - check logs to see if it's configured
-- ✅ Verify SendGrid API key is correct
-- ✅ Check `MAIL_FROM` is a verified sender (SendGrid)
+- ✅ Verify ZeptoMail SMTP credentials (Mail Agent → Setup → SMTP)
+- ✅ Ensure `MAIL_FROM` is a verified/configured sender in ZeptoMail
 - ✅ In development, emails are sent synchronously (check console)
 
 ### Frontend Issues
@@ -359,7 +360,7 @@ VITE_API_URL=/api
 ## 📚 Additional Resources
 
 - [OpenRouter API Keys](https://openrouter.ai/keys)
-- [SendGrid API Keys](https://app.sendgrid.com/settings/api_keys)
+- [ZeptoMail SMTP](https://www.zoho.com/zeptomail/help/smtp-home.html)
 - [Python secrets module](https://docs.python.org/3/library/secrets.html)
 - [Vite Environment Variables](https://vitejs.dev/guide/env-and-mode.html)
 - [FastAPI Configuration](https://fastapi.tiangolo.com/advanced/settings/)

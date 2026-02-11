@@ -17,7 +17,7 @@ from pydantic import EmailStr
 MAIL_USERNAME = os.getenv("MAIL_USERNAME", "")
 MAIL_PASSWORD = os.getenv("MAIL_PASSWORD", "")
 MAIL_FROM = os.getenv("MAIL_FROM", "noreply@compareintel.com")
-MAIL_SERVER = os.getenv("MAIL_SERVER", "smtp.sendgrid.net")
+MAIL_SERVER = os.getenv("MAIL_SERVER", "smtp.zeptomail.com")
 
 # Check if email is configured
 EMAIL_CONFIGURED = bool(MAIL_USERNAME and MAIL_PASSWORD and MAIL_FROM and "@" in MAIL_FROM)
@@ -166,8 +166,8 @@ async def send_password_reset_email(email: EmailStr, token: str) -> None:
         token: Password reset token
 
     Note: The password reset link uses clicktracking="off" attribute to prevent
-    SendGrid from wrapping the link in a subdomain which would cause SSL certificate
-    errors. This ensures users can directly access the reset URL without certificate warnings.
+    email providers from wrapping the link in a subdomain which would cause SSL
+    certificate errors. This ensures users can directly access the reset URL.
     """
     # Skip sending email if not configured (development mode)
     if not EMAIL_CONFIGURED:
