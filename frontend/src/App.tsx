@@ -14,7 +14,7 @@ import './styles/models.css'
 import './styles/results.css'
 import './App.css'
 
-import { Layout } from './components'
+import { Layout, ThemeSync } from './components'
 import { ErrorBoundary, LoadingSpinner } from './components/shared'
 import { AuthProvider } from './contexts/AuthContext'
 import { ThemeProvider } from './contexts/ThemeContext'
@@ -45,6 +45,7 @@ function App() {
     <ErrorBoundary>
       <ThemeProvider>
         <AuthProvider>
+          <ThemeSync />
           <Routes>
             <Route element={<Layout />}>
               <Route

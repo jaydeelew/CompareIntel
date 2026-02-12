@@ -6,6 +6,7 @@
 
 export { Footer } from './Footer'
 export { Layout } from './Layout'
+export { ThemeSync } from './ThemeSync'
 
 // Shared components
 export * from './shared'
