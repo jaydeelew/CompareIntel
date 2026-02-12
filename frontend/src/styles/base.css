@@ -23,9 +23,9 @@ html {
   text-rendering: optimizeLegibility;
 }
 
-/* Default dark when no data-theme (fallback) */
+/* Default light when no data-theme (fallback) */
 html:not([data-theme]) {
-  color-scheme: dark;
+  color-scheme: light;
 }
 
 /* Body - Dark Mode Base */
