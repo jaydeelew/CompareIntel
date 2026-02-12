@@ -75,6 +75,19 @@
      GRADIENT SYSTEM - Signature Visual Identity
      ═══════════════════════════════════════════════════════════ */
 
+  /* Hero text - light on dark (overridden in light theme where hero stays dark) */
+  --hero-text-color: var(--text-primary);
+
+  /* Hero background - full gradient (overridden in light theme) */
+  --hero-background: linear-gradient(
+    180deg,
+    var(--bg-primary) 0%,
+    #0c1220 25%,
+    #0e1628 50%,
+    #0a1220 75%,
+    var(--bg-secondary) 100%
+  );
+
   /* Hero gradient - Bold and memorable */
   --gradient-hero: linear-gradient(
     135deg,
@@ -262,4 +275,128 @@
   --opacity-disabled: 0.5;
   --opacity-muted: 0.7;
   --opacity-hover: 0.9;
+
+  /* Header - theme-aware (overridden in light theme) */
+  --header-bg: rgba(10, 10, 15, 0.8);
+  --header-shadow: 0 1px 0 rgba(255, 255, 255, 0.03), 0 4px 24px rgba(0, 0, 0, 0.3);
+
+  /* Hero capability tile icons - theme-aware */
+  --capability-icon-color: var(--primary-light);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   LIGHT THEME - Original CompareIntel aesthetic
+   Clean, bright surfaces with blue accent palette
+   ═══════════════════════════════════════════════════════════ */
+
+[data-theme='light'] {
+  /* Primary - Blue palette */
+  --primary-color: #2563eb;
+  --primary-hover: #1d4ed8;
+  --primary-light: #3b82f6;
+  --primary-dark: #1e40af;
+  --primary-glow: rgba(37, 99, 235, 0.3);
+
+  /* Secondary */
+  --secondary-color: #64748b;
+  --secondary-hover: #475569;
+  --secondary-light: #94a3b8;
+
+  /* Accent */
+  --accent-color: #0ea5e9;
+  --accent-hover: #0284c7;
+  --accent-light: #38bdf8;
+
+  /* Status - same */
+  --success-color: #10b981;
+  --warning-color: #f59e0b;
+  --error-color: #ef4444;
+  --info-color: #0ea5e9;
+
+  /* Backgrounds - Light surfaces */
+  --bg-primary: #ffffff;
+  --bg-secondary: #f8fafc;
+  --bg-tertiary: #f1f5f9;
+  --bg-elevated: #ffffff;
+  --bg-hover: #f1f5f9;
+  --bg-card: #ffffff;
+  --bg-card-hover: #f8fafc;
+  --bg-input: #ffffff;
+
+  /* Glass */
+  --bg-glass: rgba(255, 255, 255, 0.9);
+  --bg-glass-hover: rgba(248, 250, 252, 0.95);
+  --bg-glass-border: rgba(0, 0, 0, 0.08);
+
+  /* Text - Dark on light */
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #64748b;
+  --text-subtle: #64748b;
+  --text-inverse: #ffffff;
+  --text-accent: #2563eb;
+
+  /* Borders */
+  --border-color: #e2e8f0;
+  --border-light: rgba(0, 0, 0, 0.06);
+  --border-strong: rgba(0, 0, 0, 0.12);
+  --border-focus: #3b82f6;
+  --border-glow: rgba(37, 99, 235, 0.25);
+
+  /* Hero text - stays light on dark blue gradient */
+  --hero-text-color: #f8fafc;
+
+  /* Capability tile icons - brighter for better contrast on dark hero gradient */
+  --capability-icon-color: #93c5fd;
+
+  /* Hero - Blue gradient (original light theme hero) */
+  --hero-background: linear-gradient(
+    135deg,
+    #0f172a 0%,
+    #1e3a8a 20%,
+    #0ea5e9 50%,
+    #1e40af 80%,
+    #0f172a 100%
+  );
+  --gradient-hero: var(--hero-background);
+
+  /* Accent gradients */
+  --gradient-primary: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  --gradient-secondary: linear-gradient(135deg, #64748b 0%, #475569 100%);
+  --gradient-accent: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+
+  /* Button gradients */
+  --gradient-button: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  --gradient-button-hover: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+
+  /* Card gradients */
+  --gradient-card: linear-gradient(
+    135deg,
+    rgba(37, 99, 235, 0.05) 0%,
+    rgba(14, 165, 233, 0.03) 100%
+  );
+  --gradient-card-selected: linear-gradient(135deg, #2563eb 0%, #0ea5e9 100%);
+
+  /* Mesh gradient - subtle for light */
+  --gradient-mesh:
+    radial-gradient(at 40% 20%, rgba(37, 99, 235, 0.06) 0px, transparent 50%),
+    radial-gradient(at 80% 0%, rgba(14, 165, 233, 0.04) 0px, transparent 50%),
+    radial-gradient(at 0% 50%, rgba(16, 185, 129, 0.03) 0px, transparent 50%),
+    radial-gradient(at 80% 50%, rgba(37, 99, 235, 0.02) 0px, transparent 50%),
+    radial-gradient(at 0% 100%, rgba(14, 165, 233, 0.04) 0px, transparent 50%);
+
+  /* Shadows - Softer for light mode */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+  --shadow-2xl: 0 25px 50px -12px rgb(0 0 0 / 0.15);
+
+  --shadow-glow-sm: 0 0 10px var(--primary-glow);
+  --shadow-glow-md: 0 0 20px var(--primary-glow);
+  --shadow-glow-lg: 0 0 30px var(--primary-glow), 0 0 60px rgba(37, 99, 235, 0.15);
+
+  /* Header */
+  --header-bg: rgba(255, 255, 255, 0.9);
+  --header-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(0, 0, 0, 0.04);
 }

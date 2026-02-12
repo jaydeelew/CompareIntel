@@ -3,6 +3,15 @@
 
 <head>
   <meta charset="UTF-8" />
+  <!-- Theme persistence: prevent flash of wrong theme before React mounts -->
+  <script>
+    (function() {
+      var stored = localStorage.getItem('compareintel-theme');
+      var theme = (stored === 'light' || stored === 'dark') ? stored : 'dark';
+      document.documentElement.setAttribute('data-theme', theme);
+      document.documentElement.style.colorScheme = theme;
+    })();
+  </script>
   <!-- Favicons - SVG first for modern browsers, PNG fallbacks for older browsers -->
   <!-- SVG favicon - modern browsers (Chrome 80+, Firefox 41+, Safari 16.4+) -->
   <!-- Using brighter version for browser tab visibility in dark mode -->

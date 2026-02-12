@@ -11,7 +11,7 @@
   position: relative;
   overflow: hidden;
   display: block;
-  color: var(--text-primary);
+  color: var(--hero-text-color);
 
   /* Full-bleed across viewport */
   width: 100vw;
@@ -20,15 +20,8 @@
   margin-right: calc(50% - 50vw);
   margin-bottom: 0;
 
-  /* Rich dark gradient background */
-  background: linear-gradient(
-    180deg,
-    var(--bg-primary) 0%,
-    #0c1220 25%,
-    #0e1628 50%,
-    #0a1220 75%,
-    var(--bg-secondary) 100%
-  );
+  /* Theme-aware gradient background */
+  background: var(--hero-background);
 
   transition: padding-bottom 0.3s ease-out;
 }
@@ -308,7 +301,7 @@
   justify-content: center;
   background: linear-gradient(135deg, rgba(6, 182, 212, 0.2) 0%, rgba(139, 92, 246, 0.2) 100%);
   border-radius: 16px;
-  color: var(--primary-light);
+  color: var(--capability-icon-color);
   transition: all 0.3s ease;
   position: relative;
   z-index: 1;

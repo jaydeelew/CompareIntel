@@ -17,6 +17,7 @@ import './App.css'
 import { Layout } from './components'
 import { ErrorBoundary, LoadingSpinner } from './components/shared'
 import { AuthProvider } from './contexts/AuthContext'
+import { ThemeProvider } from './contexts/ThemeContext'
 import { MainPage } from './pages'
 
 const About = lazy(() =>
@@ -42,69 +43,71 @@ const TermsOfService = lazy(() =>
 function App() {
   return (
     <ErrorBoundary>
-      <AuthProvider>
-        <Routes>
-          <Route element={<Layout />}>
-            <Route
-              path="/about"
-              element={
-                <Suspense fallback={<LoadingSpinner />}>
-                  <About />
-                </Suspense>
-              }
-            />
-            <Route
-              path="/features"
-              element={
-                <Suspense fallback={<LoadingSpinner />}>
-                  <Features />
-                </Suspense>
-              }
-            />
-            <Route
-              path="/how-it-works"
-              element={
-                <Suspense fallback={<LoadingSpinner />}>
-                  <HowItWorks />
-                </Suspense>
-              }
-            />
-            <Route
-              path="/faq"
-              element={
-                <Suspense fallback={<LoadingSpinner />}>
-                  <FAQ />
-                </Suspense>
-              }
-            />
-            <Route
-              path="/glossary"
-              element={
-                <Suspense fallback={<LoadingSpinner />}>
-                  <Glossary />
-                </Suspense>
-              }
-            />
-            <Route
-              path="/privacy-policy"
-              element={
-                <Suspense fallback={<LoadingSpinner />}>
-                  <PrivacyPolicy />
-                </Suspense>
-              }
-            />
-            <Route
-              path="/terms-of-service"
-              element={
-                <Suspense fallback={<LoadingSpinner />}>
-                  <TermsOfService />
-                </Suspense>
-              }
-            />
-            <Route path="*" element={<MainPage />} />
-          </Route>
-        </Routes>
-      </AuthProvider>
+      <ThemeProvider>
+        <AuthProvider>
+          <Routes>
+            <Route element={<Layout />}>
+              <Route
+                path="/about"
+                element={
+                  <Suspense fallback={<LoadingSpinner />}>
+                    <About />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/features"
+                element={
+                  <Suspense fallback={<LoadingSpinner />}>
+                    <Features />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/how-it-works"
+                element={
+                  <Suspense fallback={<LoadingSpinner />}>
+                    <HowItWorks />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/faq"
+                element={
+                  <Suspense fallback={<LoadingSpinner />}>
+                    <FAQ />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/glossary"
+                element={
+                  <Suspense fallback={<LoadingSpinner />}>
+                    <Glossary />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/privacy-policy"
+                element={
+                  <Suspense fallback={<LoadingSpinner />}>
+                    <PrivacyPolicy />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/terms-of-service"
+                element={
+                  <Suspense fallback={<LoadingSpinner />}>
+                    <TermsOfService />
+                  </Suspense>
+                }
+              />
+              <Route path="*" element={<MainPage />} />
+            </Route>
+          </Routes>
+        </AuthProvider>
+      </ThemeProvider>
     </ErrorBoundary>
   )
 }

@@ -11,7 +11,7 @@
   box-sizing: border-box;
 }
 
-/* Root HTML */
+/* Root HTML - color-scheme set by ThemeContext/anti-flash script */
 html {
   overflow-x: hidden;
   width: 100%;
@@ -21,6 +21,10 @@ html {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
+}
+
+/* Default dark when no data-theme (fallback) */
+html:not([data-theme]) {
   color-scheme: dark;
 }
 
