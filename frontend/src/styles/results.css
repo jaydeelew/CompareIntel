@@ -2506,7 +2506,7 @@ button.nav-button-primary {
   align-items: center;
   justify-content: center;
   transition: color 0.2s ease;
-  color: #9ca3af;
+  color: var(--text-muted);
   box-sizing: border-box;
   padding: 0;
   flex-shrink: 0;
@@ -2529,7 +2529,7 @@ button.nav-button-primary {
   align-items: center;
   justify-content: center;
   transition: color 0.2s ease;
-  color: #9ca3af;
+  color: var(--text-muted);
   box-sizing: border-box;
   padding: 0;
   flex-shrink: 0;
@@ -2542,12 +2542,12 @@ button.nav-button-primary {
 }
 
 .history-toggle-button:hover {
-  color: #6b7280;
+  color: var(--text-secondary);
   /* No transform to prevent position shifting */
 }
 
 .history-toggle-button.active:hover {
-  color: #6b7280;
+  color: var(--text-secondary);
 }
 
 .history-toggle-button svg {

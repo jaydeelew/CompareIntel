@@ -1289,12 +1289,12 @@ test.describe('Unregistered User Journey', () => {
 
   test('Unregistered user sees clear value proposition', async ({ page }) => {
     // Check for key messaging about the platform
-    // Note: Hero uses "at the same time", other pages use "real-time" or "concurrent"
+    // Hero: "Get responses from multiple AI models at the same time"
     const valueProps = [
       /compare.*models/i,
       /ai.*comparison/i,
       /side.*side/i,
-      /(real.*time|concurrent|at the same time)/i, // Hero: "at the same time"; others: "real-time" or "concurrent"
+      /(real[- ]?time|concurrent|same time)/i, // Hero: "at the same time"; others: "real-time" or "concurrent"
     ]
 
     const pageContent = await page.textContent('body')

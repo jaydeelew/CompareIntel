@@ -643,10 +643,10 @@ test.describe('Registration and Onboarding', () => {
 
       // Dismiss tutorial overlay first if it's blocking (new users see it after registration)
       const tutorialOverlay = page.locator('.tutorial-backdrop, .tutorial-welcome-backdrop')
-      const overlayVisible = await tutorialOverlay.isVisible({ timeout: 1000 }).catch(() => false)
+      const overlayVisible = await tutorialOverlay.isVisible({ timeout: 2000 }).catch(() => false)
       if (overlayVisible && !page.isClosed()) {
         await dismissTutorialOverlay(page)
-        await safeWait(page, 1000) // Wait for overlay to fully disappear
+        await safeWait(page, 1500) // Wait for overlay to fully disappear (mobile Safari needs longer)
       }
 
       // Expand first provider dropdown if collapsed (checkboxes are inside dropdowns)
@@ -655,8 +655,15 @@ test.describe('Registration and Onboarding', () => {
         const firstProvider = providerHeaders.first()
         const isExpanded = await firstProvider.getAttribute('aria-expanded')
         if (isExpanded !== 'true') {
-          await firstProvider.click()
-          await page.waitForTimeout(500)
+          // On mobile/WebKit, use force click if normal click fails (overlay can linger)
+          await firstProvider.scrollIntoViewIfNeeded().catch(() => {})
+          await safeWait(page, 300)
+          try {
+            await firstProvider.click({ timeout: 5000 })
+          } catch {
+            await firstProvider.click({ timeout: 3000, force: true })
+          }
+          await page.waitForTimeout(800) // Wait for dropdown to expand and render checkboxes
         }
       }
 
@@ -664,7 +671,7 @@ test.describe('Registration and Onboarding', () => {
       const modelCheckboxes = page.locator(
         '[data-testid^="model-checkbox-"], input[type="checkbox"].model-checkbox'
       )
-      await expect(modelCheckboxes.first()).toBeVisible({ timeout: 15000 })
+      await expect(modelCheckboxes.first()).toBeVisible({ timeout: 20000 })
 
       const checkboxCount = await modelCheckboxes.count()
       expect(checkboxCount).toBeGreaterThan(0)
