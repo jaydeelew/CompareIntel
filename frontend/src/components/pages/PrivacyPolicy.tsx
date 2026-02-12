@@ -37,12 +37,13 @@ export const PrivacyPolicy: React.FC = () => {
               Welcome to CompareIntel. We respect your privacy and are committed to protecting your
               personal data. This Privacy Policy explains how we collect, use, disclose, and
               safeguard your information when you use our AI model comparison platform at
-              compareintel.com (the "Service").
+              compareintel.com (the "Service"). CompareIntel acts as a pass-through: we send your
+              prompts to AI providers and display responses, but we do not access, analyze, train
+              on, or use your prompt or response content for any other purpose.
             </p>
             <p>
-              Please read this Privacy Policy carefully. By using CompareIntel, you agree to the
-              collection and use of information in accordance with this policy. If you do not agree
-              with our policies and practices, please do not use our Service.
+              By using CompareIntel, you agree to the collection and use of information in
+              accordance with this policy. If you do not agree, please do not use our Service.
             </p>
           </section>
 
@@ -57,13 +58,9 @@ export const PrivacyPolicy: React.FC = () => {
                 email address and any profile information you choose to provide.
               </li>
               <li>
-                <strong>Prompts and Queries:</strong> The prompts you submit to compare AI models
-                are sent directly to the respective AI providers (such as OpenAI, Anthropic, Google,
-                etc.) to generate responses. CompareIntel acts solely as a pass-through service and
-                does not access, analyze, train on, or use your prompts or AI model responses for
-                any purpose other than displaying them back to you. While conversation history may
-                be stored to enable conversation features, this data is only accessible to you and
-                is not used by CompareIntel for any other purpose.
+                <strong>Prompts and Queries:</strong> Prompts are sent directly to AI providers to
+                generate responses. Conversation history may be stored for your use and is only
+                accessible to you.
               </li>
               <li>
                 <strong>Communications:</strong> If you contact us for support or feedback, we
@@ -98,15 +95,12 @@ export const PrivacyPolicy: React.FC = () => {
             <p>We use the information we collect for the following purposes:</p>
             <ul className="seo-list">
               <li>
-                <strong>Provide the Service:</strong> To facilitate sending your prompts to AI
-                providers and delivering AI model responses back to you, maintain your account, and
-                enable the core functionality of CompareIntel. CompareIntel does not access or use
-                the content of your prompts or responses.
+                <strong>Provide the Service:</strong> To send your prompts to AI providers, deliver
+                responses, maintain your account, and enable core functionality.
               </li>
               <li>
                 <strong>Improve the Service:</strong> To understand how users interact with our
-                platform and make improvements to features and user experience. This analysis does
-                not include access to your prompts or AI model responses.
+                platform and make improvements (without access to prompt or response content).
               </li>
               <li>
                 <strong>Security:</strong> To detect, prevent, and address technical issues, fraud,
@@ -131,16 +125,13 @@ export const PrivacyPolicy: React.FC = () => {
             </p>
             <ul className="seo-list">
               <li>
-                <strong>AI Providers:</strong> Your prompts are sent directly to the AI model
-                providers you select (such as OpenAI, Anthropic, Google, etc.) in order to generate
-                responses. Each provider has its own privacy policy governing their handling of this
-                data. CompareIntel does not access, analyze, or use your prompts or responses.
+                <strong>AI Providers:</strong> Prompts are sent directly to the providers you
+                select. Each has its own privacy policy. We do not access or use your prompts or
+                responses.
               </li>
               <li>
-                <strong>Service Providers:</strong> We may share information with third-party
-                vendors who assist in operating our Service, such as hosting providers and analytics
-                services. However, your prompts and AI model responses are never shared with these
-                service providers.
+                <strong>Service Providers:</strong> We may share information with vendors who assist
+                operations (hosting, analytics). Prompts and responses are never shared with them.
               </li>
               <li>
                 <strong>Legal Requirements:</strong> We may disclose information if required by law,
@@ -165,10 +156,8 @@ export const PrivacyPolicy: React.FC = () => {
                 reasonable period thereafter.
               </li>
               <li>
-                <strong>Conversation History:</strong> Your prompts and AI responses may be retained
-                solely to enable conversation history features for your use. This data is only
-                accessible to you and is not used by CompareIntel for any other purpose. You can
-                delete your conversation history at any time.
+                <strong>Conversation History:</strong> Retained only to enable conversation features
+                for your use. Only you can access it. Delete anytime from your history.
               </li>
               <li>
                 <strong>Usage Data:</strong> Aggregated and anonymized usage data may be retained

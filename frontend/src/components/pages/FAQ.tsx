@@ -1061,11 +1061,8 @@ const faqData = [
           </li>
           <li>You can rename or delete saved selections as your needs change</li>
           <li>
-            <strong>Set a default selection:</strong> Mark any saved selection as your default by
-            checking the default checkbox next to it. When you return to CompareIntel, your default
-            model selection will automatically be loaded, so your preferred models are already
-            selected and ready to use. This saves time by eliminating the need to manually select
-            your models each time you visit the site.
+            <strong>Set a default selection:</strong> Mark any saved selection as default to
+            auto-load your preferred models when you return.
           </li>
         </ul>
         <p>
@@ -1184,19 +1181,9 @@ const faqData = [
           </li>
         </ul>
         <p>
-          <strong>How it works:</strong> When you select models for a comparison, CompareIntel
-          enforces your tier's model limit. You can choose any combination of available models up to
-          your tier's maximum. All selected models receive the same prompt simultaneously, and
-          you'll see their responses stream in real-time side-by-side for easy comparison. If you
-          try to select more models than your tier allows, CompareIntel will notify you of the
-          limit.
-        </p>
-        <p>
-          <strong>Upgrading your tier:</strong> Higher tiers not only increase the number of models
-          you can compare at once, but also provide more credits, access to premium models, more
-          saved conversations, and more saved model selections. This tiered approach ensures that
-          free users can fully experience CompareIntel while providing clear upgrade paths for users
-          who need more capacity.
+          Select any combination of available models up to your tier's limit. All receive the same
+          prompt simultaneously; responses stream in real-time side-by-side. CompareIntel notifies
+          you if you exceed your limit.
         </p>
       </>
     ),
@@ -1821,30 +1808,9 @@ const faqData = [
           <li>Any query requiring information more recent than the model's training data</li>
         </ul>
         <p>
-          <strong>Important notes:</strong>
-        </p>
-        <ul>
-          <li>Web search requires a configured search provider (configured by administrators)</li>
-          <li>
-            Not all models support web search—only models with the 🌐 indicator can use this feature
-          </li>
-          <li>
-            When web search is enabled, models automatically decide when to search based on your
-            question
-          </li>
-          <li>
-            Web search may add a few seconds to response time as models fetch information from the
-            Internet
-          </li>
-          <li>
-            If web search fails or returns no results, models will explicitly state this rather than
-            providing generic information
-          </li>
-        </ul>
-        <p>
-          Web search is perfect for comparing how different models gather, evaluate, and synthesize
-          current information from the web, making CompareIntel ideal for research tasks that
-          require up-to-date data.
+          <strong>Important notes:</strong> Web search requires a configured search provider. Only
+          models with the 🌐 indicator support it. Models automatically decide when to search.
+          Response time may increase by a few seconds. If search fails, models will say so.
         </p>
       </>
     ),

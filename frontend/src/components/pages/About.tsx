@@ -31,21 +31,12 @@ export const About: React.FC = () => {
           <section className="seo-section">
             <h2>What is CompareIntel?</h2>
             <p>
-              CompareIntel is a powerful web application designed to give you access to the latest
-              and most capable artificial intelligence models available. We continuously update our
-              platform as new models are released, ensuring you always have access to cutting-edge
-              AI technology. Whether you're a developer evaluating AI tools for your next project, a
-              researcher comparing language model capabilities, or a business professional seeking
-              the best AI solution for your needs, CompareIntel provides the tools you need to make
-              data-driven decisions.
-            </p>
-            <p>
-              Our platform supports the newest and most powerful AI models from leading providers
-              including OpenAI, Anthropic, Google, Meta, Mistral AI, xAI, DeepSeek, and many more.
-              As AI providers release new versions and capabilities, we add them to CompareIntel so
-              you're never left behind. You can send the same prompt to multiple models and receive
-              their responses in real-time, making it easy to evaluate which model performs best for
-              your specific use case.
+              CompareIntel is a powerful web application designed for developers evaluating AI
+              tools, researchers comparing language model capabilities, and business professionals
+              seeking the best AI solution. Our platform supports models from OpenAI, Anthropic,
+              Google, Meta, Mistral AI, xAI, DeepSeek, and many more. You can send the same prompt
+              to multiple models and receive their responses in real-time, making it easy to
+              evaluate which model performs best for your specific use case.
             </p>
           </section>
 
@@ -94,17 +85,11 @@ export const About: React.FC = () => {
           <section className="seo-section">
             <h2>Our Mission</h2>
             <p>
-              At CompareIntel, our mission is to provide access to the newest and most advanced AI
-              models and democratize AI comparison tools. We believe that everyone should be able to
-              evaluate and use cutting-edge AI technology without needing deep technical expertise
-              or expensive enterprise solutions. When new AI models launch, we prioritize adding
-              them to our platform so you can be among the first to test them.
-            </p>
-            <p>
-              We're committed to providing a transparent, unbiased platform where you can see
-              exactly how different AI models respond to your prompts. We don't favor any particular
-              AI provider —our goal is to help you find the best tool for your needs by giving you
-              access to the most advanced models available.
+              We believe everyone should be able to evaluate AI technology without needing deep
+              technical expertise or expensive enterprise solutions. We're committed to a
+              transparent, unbiased platform where you can see exactly how different AI models
+              respond to your prompts. We don't favor any particular provider—our goal is to help
+              you find the best tool for your needs.
             </p>
           </section>
 
@@ -114,9 +99,8 @@ export const About: React.FC = () => {
               <div className="feature-item">
                 <h3>Latest AI Models</h3>
                 <p>
-                  Access the newest and most capable AI models as soon as they're released. We
-                  continuously update our library to include cutting-edge models from OpenAI,
-                  Anthropic, Google, Meta, Mistral, xAI and more.
+                  We continuously update our library as providers release new models, ensuring
+                  you're never left behind.
                 </p>
               </div>
               <div className="feature-item">
@@ -213,17 +197,7 @@ export const About: React.FC = () => {
               <li>Compare results and make informed decisions</li>
             </ol>
             <p>
-              <strong>Unregistered users</strong> can get familiar with CompareIntel by accessing a
-              handful of models. For access to more models and additional credits,{' '}
-              <strong>sign up for a free account</strong>—no credit card required. Free registered
-              users receive twice the credits of unregistered users, giving you more opportunities
-              to explore different AI models and their capabilities.
-            </p>
-            <p>
-              <strong>Paid tiers will be available soon</strong> that unlock all of the latest and
-              greatest premium AI models, giving you access to the most advanced capabilities as
-              soon as they're released. In the meantime, our free tier is perfect for casual users
-              and those wanting to explore the platform.
+              See the <Link to="/features">Features</Link> page for access tiers and credit details.
             </p>
           </section>
 

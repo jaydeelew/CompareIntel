@@ -31,10 +31,8 @@ export const Features: React.FC = () => {
           <section className="seo-section">
             <h2>Always the Latest AI Models</h2>
             <p>
-              CompareIntel is committed to providing access to the newest and most capable AI models
-              as soon as they become available. We continuously update our platform when AI
-              providers release new models, ensuring you're always working with cutting-edge
-              technology. Our library includes models from major providers:
+              We continuously update our platform when AI providers release new models. Our library
+              includes models from major providers:
             </p>
 
             <div className="model-providers">
@@ -116,27 +114,16 @@ export const Features: React.FC = () => {
             <div className="feature-detail">
               <h3>LaTeX Mathematical Equations</h3>
               <p>
-                Mathematical content is rendered using professional-quality LaTeX formatting.
-                Whether you're testing AI models on calculus problems, statistical analysis, or
-                complex physics equations, you'll see beautifully formatted mathematical notation
-                just like you would in academic papers.
-              </p>
-              <p>
-                Supports both inline equations and display-mode block equations, making it perfect
-                for comparing AI performance on STEM-related tasks.
+                Professional-quality LaTeX formatting for inline and display-mode equations, ideal
+                for STEM-related comparisons.
               </p>
             </div>
 
             <div className="feature-detail">
               <h3>Syntax-Highlighted Code</h3>
               <p>
-                Code blocks are rendered with syntax highlighting for over 100 programming
-                languages. Compare code generation capabilities across models with proper formatting
-                for Python, JavaScript, TypeScript, Java, C++, Rust, Go, and many more.
-              </p>
-              <p>
-                Our syntax highlighting makes it easy to read and compare generated code, helping
-                you evaluate code quality, style, and correctness at a glance.
+                Syntax highlighting for over 100 languages including Python, JavaScript, TypeScript,
+                Java, C++, Rust, and Go—making it easy to evaluate code quality at a glance.
               </p>
             </div>
 
@@ -185,12 +172,8 @@ export const Features: React.FC = () => {
                 unregistered ID.
               </li>
               <li>
-                <strong>Set a Default Selection:</strong> You can mark any saved selection as your
-                default. When you return to CompareIntel, your default model selection will
-                automatically be loaded, so your preferred models are already selected and ready to
-                use. This saves time by eliminating the need to manually select your models each
-                time you visit the site. Simply check the default checkbox next to any saved
-                selection to make it your default.
+                <strong>Set a Default Selection:</strong> Mark any saved selection as default to
+                auto-load your preferred models when you return.
               </li>
             </ul>
           </section>
@@ -273,26 +256,18 @@ export const Features: React.FC = () => {
               <div className="pricing-tier">
                 <h3>Unregistered Access</h3>
                 <p>
-                  Get familiar with CompareIntel by accessing a handful of models. Perfect for
-                  trying out the platform and seeing how AI model comparison works. No account
-                  required.
+                  A handful of models, no account required. Perfect for trying out the platform.
                 </p>
               </div>
               <div className="pricing-tier">
                 <h3>Free Account</h3>
                 <p>
-                  Sign up for a free account to access more models and receive twice the credits of
-                  unregistered users. Perfect for casual users who want to explore AI comparison
-                  without any commitment. No credit card required.
+                  More models and twice the credits of unregistered users. No credit card required.
                 </p>
               </div>
               <div className="pricing-tier pricing-tier-full">
                 <h3>Paid Tiers (Coming Soon)</h3>
-                <p>
-                  Paid tiers will be available soon that unlock all of the latest and greatest
-                  premium AI models. Get access to the most advanced capabilities as soon as they're
-                  released, with higher limits and priority access to new models.
-                </p>
+                <p>Premium AI models, higher limits, and priority access to new releases.</p>
                 <div className="paid-tiers-grid">
                   <div className="paid-tier-item">
                     <h4>Starter</h4>
@@ -397,28 +372,9 @@ export const Features: React.FC = () => {
                 buttons for quick access to both formatted and raw output options.
               </li>
               <li>
-                <strong>Export Complete Comparisons:</strong> Export your entire comparison session
-                in multiple formats. Choose from PDF for sharing and printing, Markdown for
-                documentation and note-taking apps, HTML for standalone web pages, or JSON for
-                developers and API integration. Each export includes all model responses, the
-                original prompt, model metadata, and comparison statistics.
-              </li>
-              <li>
-                <strong>Professional PDF Exports:</strong> Generate beautifully formatted PDF
-                documents with all model responses, complete with proper formatting for code blocks,
-                LaTeX equations, and markdown. Perfect for reports, presentations, or archival
-                purposes.
-              </li>
-              <li>
-                <strong>Developer-Friendly Formats:</strong> Export to Markdown or JSON for easy
-                integration into documentation workflows, version control systems, or custom
-                applications. Markdown exports preserve all formatting and are compatible with most
-                documentation platforms.
-              </li>
-              <li>
-                <strong>Standalone HTML Exports:</strong> Create self-contained HTML files that can
-                be opened in any browser, shared via email, or hosted on a website. Includes all
-                styling and formatting for a complete viewing experience.
+                <strong>Export Complete Comparisons:</strong> PDF (sharing, printing), Markdown
+                (documentation), HTML (standalone web pages), or JSON (developers). All formats
+                include model responses, the original prompt, metadata, and comparison statistics.
               </li>
             </ul>
           </section>
@@ -452,18 +408,12 @@ export const Features: React.FC = () => {
           <section className="seo-section">
             <h2>Web Search Integration</h2>
             <p>
-              CompareIntel now supports web search capabilities for compatible AI models, enabling
-              them to access real-time information from the Internet. This powerful feature allows
-              models to search the web and fetch current data, making them capable of answering
-              time-sensitive questions with up-to-date information.
+              Compatible models can search the Internet for current information. When enabled,
+              supported models can retrieve:
             </p>
 
             <div className="feature-detail">
               <h3>Real-Time Information Access</h3>
-              <p>
-                When web search is enabled, supported models can search the Internet for current
-                information, including:
-              </p>
               <ul className="seo-list">
                 <li>
                   <strong>Current Events & News:</strong> Get the latest news, recent developments,
@@ -490,9 +440,6 @@ export const Features: React.FC = () => {
 
             <div className="feature-detail">
               <h3>How It Works</h3>
-              <p>
-                Web search is easy to use and seamlessly integrated into your comparison workflow:
-              </p>
               <ul className="seo-list">
                 <li>
                   <strong>Toggle Web Search:</strong> Enable web search using the toggle button in
@@ -519,7 +466,6 @@ export const Features: React.FC = () => {
 
             <div className="feature-detail">
               <h3>Use Cases</h3>
-              <p>Web search is particularly useful for:</p>
               <ul className="seo-list">
                 <li>
                   Research tasks requiring current information that wasn't in the model's training
