@@ -22,11 +22,8 @@ export interface TutorialTooltipProps {
   totalSteps: number
   onComplete: () => void
   onSkip: () => void
-  /** For enter-prompt and enter-prompt-2 steps */
   isStepCompleted: boolean
-  /** For save-selection step - Done enabled when user opened the dropdown */
   saveSelectionDropdownOpened: boolean
-  /** For history-dropdown step - Done enabled when user opened the dropdown */
   isHistoryDropdownOpened: boolean
   overlayRef: React.Ref<HTMLDivElement>
   overlayPosition: { top: number; left: number }
@@ -34,9 +31,6 @@ export interface TutorialTooltipProps {
   positionStabilized: boolean
 }
 
-/**
- * Renders the tutorial tooltip bubble with step content and action buttons.
- */
 export const TutorialTooltip: React.FC<TutorialTooltipProps> = ({
   step,
   config,

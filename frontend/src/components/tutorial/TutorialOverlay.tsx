@@ -7,6 +7,7 @@ import { TutorialBackdrop } from './TutorialBackdrop'
 import { TUTORIAL_STEPS_CONFIG } from './tutorialSteps'
 import { TutorialTooltip } from './TutorialTooltip'
 import { getComposerCutoutRects, getComposerElement } from './tutorialUtils'
+import { useTutorialCleanup } from './useTutorialCleanup'
 import './TutorialOverlay.css'
 
 interface TutorialOverlayProps {
@@ -82,70 +83,8 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
     borderRadius: number
   } | null>(null)
 
-  // Unified cleanup for tutorial end - runs on unmount (when tutorial completes) so that
-  // composer and hero section restore to normal appearance. When tutorial completes,
-  // TutorialController returns null and this overlay unmounts without ever receiving step=null,
-  // so the step effect's cleanup never runs. This ensures we always clean up properly.
-  useEffect(() => {
-    const cleanupTutorialState = () => {
-      const heroSection = document.querySelector('.hero-section') as HTMLElement
-      if (heroSection) {
-        heroSection.classList.remove('tutorial-height-locked')
-        heroSection.classList.remove('tutorial-dropdown-hero-active')
-        heroSection.style.removeProperty('height')
-        heroSection.style.removeProperty('max-height')
-        heroSection.style.removeProperty('min-height')
-        heroSection.style.removeProperty('padding-top')
-        heroSection.style.removeProperty('padding-bottom')
-        heroSection.style.removeProperty('overflow')
-      }
-      document.documentElement.style.removeProperty('--hero-locked-height')
+  useTutorialCleanup()
 
-      // Restore composer to normal - remove all tutorial classes that affect its appearance
-      const composerElementActive = document.querySelector(
-        '.composer.tutorial-textarea-active'
-      ) as HTMLElement
-      if (composerElementActive) {
-        composerElementActive.classList.remove('tutorial-textarea-active')
-      }
-      document.querySelectorAll('.composer.tutorial-highlight').forEach(el => {
-        const htmlEl = el as HTMLElement
-        htmlEl.classList.remove('tutorial-highlight')
-        htmlEl.style.removeProperty('pointer-events')
-        htmlEl.style.removeProperty('position')
-      })
-      const dropdownContainerActive = document.querySelector(
-        '.composer.tutorial-dropdown-container-active'
-      ) as HTMLElement
-      if (dropdownContainerActive) {
-        dropdownContainerActive.classList.remove('tutorial-dropdown-container-active')
-      }
-
-      // Clean up any other tutorial highlights
-      document.querySelectorAll('.tutorial-highlight').forEach(el => {
-        const htmlEl = el as HTMLElement
-        htmlEl.classList.remove('tutorial-highlight')
-        htmlEl.style.removeProperty('pointer-events')
-        htmlEl.style.removeProperty('position')
-      })
-      const historyDropdown = document.querySelector(
-        '.history-inline-list.tutorial-dropdown-active'
-      ) as HTMLElement
-      if (historyDropdown) {
-        historyDropdown.classList.remove('tutorial-dropdown-active')
-      }
-      const savedSelectionsDropdown = document.querySelector(
-        '.saved-selections-dropdown.tutorial-dropdown-active'
-      ) as HTMLElement
-      if (savedSelectionsDropdown) {
-        savedSelectionsDropdown.classList.remove('tutorial-dropdown-active')
-      }
-    }
-
-    return cleanupTutorialState
-  }, [])
-
-  // Update step ref when step changes
   useEffect(() => {
     stepRef.current = step
     // Reset dropdown opened flag when step changes away from dropdown steps
@@ -247,7 +186,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
     }
   }, [step])
 
-  // Lock hero section dimensions immediately when tutorial starts
+  // --- hero (height lock + expansion for composer visibility) ---
   useEffect(() => {
     const heroSection = document.querySelector('.hero-section') as HTMLElement
 
@@ -383,6 +322,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
     }
   }, [step])
 
+  // --- find element, scroll into view, position tooltip ---
   useEffect(() => {
     if (!step) {
       setTargetElement(null)

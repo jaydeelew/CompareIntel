@@ -18,20 +18,14 @@ export interface ButtonCutout {
 }
 
 export interface TutorialBackdropProps {
-  /** Loading/streaming phase during submit steps - shows loading cutout */
   isLoadingStreamingPhase: boolean
   loadingStreamingCutout: RectCutout | null
-  /** Use rounded box cutout for textarea steps */
   useRoundedCutout: boolean
   textareaCutoutToUse: RectCutout | null
-  /** Use 4-panel backdrop (top/bottom/left/right) for textarea */
   shouldExcludeTextarea: boolean
-  /** Use dropdown cutout for history/save-selection steps */
   shouldExcludeDropdown: boolean
   dropdownCutout: RectCutout | null
-  /** General target element cutout */
   targetCutout: RectCutoutWithRadius | null
-  /** Circular cutout for buttons */
   buttonCutout: ButtonCutout | null
 }
 
@@ -42,11 +36,6 @@ function handleBackdropClick(e: React.MouseEvent, className: string) {
   }
 }
 
-/**
- * Renders the tutorial backdrop with the appropriate cutout style based on the current step.
- * Supports: loading cutout, rounded cutout, 4-panel textarea cutout, dropdown cutout,
- * target cutout, and circular button cutout.
- */
 export const TutorialBackdrop: React.FC<TutorialBackdropProps> = ({
   isLoadingStreamingPhase,
   loadingStreamingCutout,
