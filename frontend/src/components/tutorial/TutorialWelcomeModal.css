@@ -277,10 +277,6 @@
     margin-bottom: 1.25rem;
   }
 
-  .tutorial-welcome-line-break-desktop {
-    display: none;
-  }
-
   .tutorial-welcome-actions {
     flex-direction: column;
     gap: 0.625rem;

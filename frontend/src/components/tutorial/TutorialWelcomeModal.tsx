@@ -71,7 +71,7 @@ export const TutorialWelcomeModal: React.FC<TutorialWelcomeModalProps> = ({
           </div>
           <p className="tutorial-welcome-more-features">
             Many more features are available!
-            <br className="tutorial-welcome-line-break-desktop" />
+            <br />
             Check out our{' '}
             <Link to="/how-it-works" className="tutorial-welcome-link">
               How it works page
