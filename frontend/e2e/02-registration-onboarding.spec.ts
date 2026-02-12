@@ -680,9 +680,10 @@ test.describe('Registration and Onboarding', () => {
       await modelCheckboxes.first().check()
 
       // Check if tutorial overlay is blocking (especially in WebKit)
-      const tutorialOverlay = page.locator('.tutorial-backdrop, .tutorial-welcome-backdrop')
-      const overlayVisible = await tutorialOverlay.isVisible({ timeout: 1000 }).catch(() => false)
-      if (overlayVisible && !page.isClosed()) {
+      const overlayVisibleBeforeSubmit = await tutorialOverlay
+        .isVisible({ timeout: 1000 })
+        .catch(() => false)
+      if (overlayVisibleBeforeSubmit && !page.isClosed()) {
         // Dismiss tutorial overlay before submitting
         await dismissTutorialOverlay(page)
         await safeWait(page, 1000) // Wait longer for overlay to fully disappear
