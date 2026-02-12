@@ -1445,7 +1445,9 @@ export const ComparisonForm = memo<ComparisonFormProps>(
               </button>
             </>
           ) : (
-            <h2>Enter Your Prompt</h2>
+            <h2>
+              {selectedModels.length === 0 ? 'First Select Models Below' : 'Enter Your Prompt'}
+            </h2>
           )}
         </div>
 
