@@ -2283,6 +2283,7 @@ export function MainPage() {
                   onWebSearchEnabledChange={setWebSearchEnabled}
                   tutorialStep={tutorialState.currentStep}
                   tutorialIsActive={tutorialState.isActive}
+                  modelsSectionRef={modelsSectionRef}
                 />
               </ErrorBoundary>
             </Hero>

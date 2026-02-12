@@ -453,6 +453,23 @@
   letter-spacing: -0.025em;
 }
 
+.hero-input-section .select-models-heading-link {
+  font: inherit;
+  color: inherit;
+  letter-spacing: inherit;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  text-decoration: none;
+  transition: text-decoration-color 0.2s ease;
+}
+
+.hero-input-section .select-models-heading-link:hover {
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
 /* Composer - Combined textarea + toolbar component */
 .composer {
   position: relative;

@@ -107,6 +107,9 @@ interface ComparisonFormProps {
   tutorialStep?: TutorialStep | null
   // Whether tutorial is currently active - used to disable "start over" button without visual indication
   tutorialIsActive?: boolean
+
+  // Ref to model selection section (for scroll-into-view when no models selected)
+  modelsSectionRef?: React.RefObject<HTMLDivElement | null>
 }
 
 /**
@@ -167,6 +170,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
     onWebSearchEnabledChange,
     tutorialStep,
     tutorialIsActive = false,
+    modelsSectionRef,
   }) => {
     // Internal state for web search if not controlled via props
     const [webSearchEnabledInternal, setWebSearchEnabledInternal] = useState(false)
@@ -1447,10 +1451,21 @@ export const ComparisonForm = memo<ComparisonFormProps>(
                 </svg>
               </button>
             </>
-          ) : (
+          ) : selectedModels.length === 0 ? (
             <h2>
-              {selectedModels.length === 0 ? 'First Select Models Below' : 'Enter Your Prompt'}
+              <button
+                type="button"
+                className="select-models-heading-link"
+                onClick={() => {
+                  modelsSectionRef?.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                }}
+                title="Scroll to model selection"
+              >
+                First Select Models Below
+              </button>
             </h2>
+          ) : (
+            <h2>Enter Your Prompt</h2>
           )}
         </div>
 
