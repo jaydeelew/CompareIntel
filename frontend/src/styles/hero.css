@@ -106,6 +106,12 @@
   filter: brightness(1.5) contrast(1.2) hue-rotate(-10deg);
 }
 
+/* Light theme: lighter logo flash for better contrast against hero section */
+[data-theme='light'] .hero-flash-logo-img {
+  opacity: 0.35;
+  filter: brightness(2) contrast(1.1) hue-rotate(-10deg);
+}
+
 /* Hero title line control */
 .hero-title-first-line,
 .hero-title-second-line {
