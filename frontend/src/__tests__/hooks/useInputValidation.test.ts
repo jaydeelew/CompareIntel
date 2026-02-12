@@ -54,22 +54,6 @@ describe('useInputValidation', () => {
       expect(mockSetError).toHaveBeenCalledWith(null)
     })
 
-    it('should clear follow-up error when user types content', () => {
-      const { result } = renderHook(() =>
-        useInputValidation({
-          error: 'Please enter a follow-up question or code',
-          setError: mockSetError,
-          setInput: mockSetInput,
-        })
-      )
-
-      act(() => {
-        result.current.handleInputChange('follow up question')
-      })
-
-      expect(mockSetError).toHaveBeenCalledWith(null)
-    })
-
     it('should NOT clear error when input is whitespace only', () => {
       const { result } = renderHook(() =>
         useInputValidation({
@@ -130,18 +114,6 @@ describe('useInputValidation', () => {
       const { result } = renderHook(() =>
         useInputValidation({
           error: 'Please enter some text to compare',
-          setError: mockSetError,
-          setInput: mockSetInput,
-        })
-      )
-
-      expect(result.current.isInputRelatedError()).toBe(true)
-    })
-
-    it('should return true for "Please enter a follow-up question or code"', () => {
-      const { result } = renderHook(() =>
-        useInputValidation({
-          error: 'Please enter a follow-up question or code',
           setError: mockSetError,
           setInput: mockSetInput,
         })

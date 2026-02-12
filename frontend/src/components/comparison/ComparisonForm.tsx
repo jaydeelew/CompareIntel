@@ -218,12 +218,15 @@ export const ComparisonForm = memo<ComparisonFormProps>(
           } else if (isLoading) {
             message =
               'Please wait for the current comparison to complete before submitting a new one.'
-          } else if (!isFollowUpMode && (!input.trim() || selectedModels.length === 0)) {
+          } else if (!input.trim() || selectedModels.length === 0) {
             if (!input.trim() && selectedModels.length === 0) {
-              message =
-                'To submit, please enter a prompt in the text area and select at least one AI model to compare.'
+              message = isFollowUpMode
+                ? 'To submit a follow-up, please enter your question or code and ensure at least one model is selected.'
+                : 'To submit, please enter a prompt in the text area and select at least one AI model to compare.'
             } else if (!input.trim()) {
-              message = 'Please enter a prompt in the text area before submitting.'
+              message = isFollowUpMode
+                ? 'Please enter your follow-up question or code in the text area before submitting.'
+                : 'Please enter a prompt in the text area before submitting.'
             } else {
               message =
                 'Please select at least one AI model from the model selection area before submitting.'
@@ -1780,7 +1783,8 @@ export const ComparisonForm = memo<ComparisonFormProps>(
                   const isDisabled =
                     isLoading ||
                     creditsRemaining <= 0 ||
-                    (!isFollowUpMode && (!input.trim() || selectedModels.length === 0))
+                    !input.trim() ||
+                    selectedModels.length === 0
                   if (isDisabled) {
                     if (isTouchDevice) {
                       handleDisabledButtonTap('submit')
@@ -1798,12 +1802,14 @@ export const ComparisonForm = memo<ComparisonFormProps>(
                   !isTouchDevice &&
                   (isLoading ||
                     creditsRemaining <= 0 ||
-                    (!isFollowUpMode && (!input.trim() || selectedModels.length === 0)))
+                    !input.trim() ||
+                    selectedModels.length === 0)
                 }
                 className={`textarea-icon-button submit-button ${isAnimatingButton ? 'animate-pulse-glow' : ''} ${
                   (isLoading ||
                     creditsRemaining <= 0 ||
-                    (!isFollowUpMode && (!input.trim() || selectedModels.length === 0))) &&
+                    !input.trim() ||
+                    selectedModels.length === 0) &&
                   isTouchDevice
                     ? 'touch-disabled'
                     : ''
@@ -1815,7 +1821,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
                   if (isLoading) {
                     return 'Submit'
                   }
-                  if (!isFollowUpMode && (!input.trim() || selectedModels.length === 0)) {
+                  if (!input.trim() || selectedModels.length === 0) {
                     return 'Enter prompt and select models'
                   }
                   if (isFollowUpMode && tokenUsageInfo && tokenUsageInfo.isExceeded) {
@@ -1825,9 +1831,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
                 })()}
                 data-testid="comparison-submit-button"
                 aria-disabled={
-                  isLoading ||
-                  creditsRemaining <= 0 ||
-                  (!isFollowUpMode && (!input.trim() || selectedModels.length === 0))
+                  isLoading || creditsRemaining <= 0 || !input.trim() || selectedModels.length === 0
                 }
               >
                 <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">

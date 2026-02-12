@@ -15,10 +15,7 @@
 import { useCallback, useRef } from 'react'
 
 // Errors that should be automatically cleared when user starts typing
-const INPUT_RELATED_ERRORS = [
-  'Please enter some text to compare',
-  'Please enter a follow-up question or code',
-] as const
+const INPUT_RELATED_ERRORS = ['Please enter some text to compare'] as const
 
 // Errors that should be cleared after a timeout
 const AUTO_DISMISS_ERROR_PATTERNS = [

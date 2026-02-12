@@ -1239,12 +1239,7 @@ export function MainPage() {
 
   // Clear textarea errors
   useEffect(() => {
-    if (
-      input.trim().length > 0 &&
-      error &&
-      (error === 'Please enter some text to compare' ||
-        error === 'Please enter a follow-up question or code')
-    ) {
+    if (input.trim().length > 0 && error && error === 'Please enter some text to compare') {
       setError(null)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -1986,10 +1981,6 @@ export function MainPage() {
   }
 
   const handleContinueConversation = () => {
-    if (!input.trim()) {
-      setError('Please enter a follow-up question or code')
-      return
-    }
     handleSubmitClick()
   }
 
