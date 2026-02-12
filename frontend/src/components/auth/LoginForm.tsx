@@ -59,7 +59,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
   return (
     <div className="auth-form-container">
       <div className="auth-form-header">
-        <h2>Welcome Back</h2>
+        <h2 id="auth-dialog-title">Welcome Back</h2>
         <p>Sign in to your CompareIntel account</p>
       </div>
 

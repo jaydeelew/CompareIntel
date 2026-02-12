@@ -73,7 +73,7 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({
     return (
       <div className="auth-form-container">
         <div className="auth-form-header">
-          <h2>Check Your Email</h2>
+          <h2 id="auth-dialog-title">Check Your Email</h2>
           <p>Password reset instructions sent</p>
         </div>
 
@@ -110,7 +110,7 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({
   return (
     <div className="auth-form-container">
       <div className="auth-form-header">
-        <h2>Forgot Password?</h2>
+        <h2 id="auth-dialog-title">Forgot Password?</h2>
         <p>Enter your email to reset your password</p>
       </div>
 

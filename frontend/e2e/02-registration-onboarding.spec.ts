@@ -632,7 +632,18 @@ test.describe('Registration and Onboarding', () => {
       const inputField = page.getByTestId('comparison-input-textarea')
       await expect(inputField).toBeVisible()
 
-      await inputField.fill('Explain machine learning in simple terms.')
+      const promptText = 'Explain machine learning in simple terms.'
+      await inputField.fill(promptText)
+
+      // On Mobile Safari/WebKit, fill() may not trigger React state - verify and retry with pressSequentially
+      const filledValue = await inputField.inputValue().catch(() => '')
+      if (
+        filledValue.trim() !== promptText &&
+        (isWebKit || browserName.includes('Mobile') || browserName.includes('iPhone'))
+      ) {
+        await inputField.click()
+        await inputField.pressSequentially(promptText, { delay: 20 })
+      }
 
       // Wait for loading message to disappear
       const loadingMessage = page.locator('.loading-message:has-text("Loading available models")')
@@ -649,35 +660,44 @@ test.describe('Registration and Onboarding', () => {
         await safeWait(page, 1500) // Wait for overlay to fully disappear (mobile Safari needs longer)
       }
 
-      // Expand first provider dropdown if collapsed (checkboxes are inside dropdowns)
+      // Expand provider dropdowns until we find enabled checkboxes (first provider may have only premium models)
       const providerHeaders = page.locator('.provider-header, button[class*="provider-header"]')
-      if ((await providerHeaders.count()) > 0) {
-        const firstProvider = providerHeaders.first()
-        const isExpanded = await firstProvider.getAttribute('aria-expanded')
+      const providerCount = await providerHeaders.count()
+      let selectedCount = 0
+
+      for (let p = 0; p < providerCount && selectedCount === 0; p++) {
+        const providerHeader = providerHeaders.nth(p)
+        const isExpanded = await providerHeader.getAttribute('aria-expanded')
         if (isExpanded !== 'true') {
-          // On mobile/WebKit, use force click if normal click fails (overlay can linger)
-          await firstProvider.scrollIntoViewIfNeeded().catch(() => {})
+          await providerHeader.scrollIntoViewIfNeeded().catch(() => {})
           await safeWait(page, 300)
           try {
-            await firstProvider.click({ timeout: 5000 })
+            await providerHeader.click({ timeout: 5000 })
           } catch {
-            await firstProvider.click({ timeout: 3000, force: true })
+            await providerHeader.click({ timeout: 3000, force: true })
           }
           await page.waitForTimeout(800) // Wait for dropdown to expand and render checkboxes
         }
+
+        // Select first enabled model from this provider
+        const modelCheckboxes = page.locator(
+          '[data-testid^="model-checkbox-"], input[type="checkbox"].model-checkbox'
+        )
+        await expect(modelCheckboxes.first())
+          .toBeVisible({ timeout: 5000 })
+          .catch(() => {})
+        const checkboxCount = await modelCheckboxes.count()
+        for (let i = 0; i < checkboxCount && selectedCount === 0; i++) {
+          const checkbox = modelCheckboxes.nth(i)
+          const isEnabled = await checkbox.isEnabled().catch(() => false)
+          if (isEnabled) {
+            await checkbox.check({ timeout: 10000 })
+            selectedCount++
+          }
+        }
       }
 
-      // Select models (registered users can select more than 3)
-      const modelCheckboxes = page.locator(
-        '[data-testid^="model-checkbox-"], input[type="checkbox"].model-checkbox'
-      )
-      await expect(modelCheckboxes.first()).toBeVisible({ timeout: 20000 })
-
-      const checkboxCount = await modelCheckboxes.count()
-      expect(checkboxCount).toBeGreaterThan(0)
-
-      // Select first model
-      await modelCheckboxes.first().check()
+      expect(selectedCount).toBeGreaterThan(0)
 
       // Check if tutorial overlay is blocking (especially in WebKit)
       const overlayVisibleBeforeSubmit = await tutorialOverlay
@@ -697,6 +717,9 @@ test.describe('Registration and Onboarding', () => {
       const submitTimeout = isWebKit || isMobile ? 60000 : 15000
 
       const submitButton = page.getByTestId('comparison-submit-button')
+
+      // Wait for button to be enabled (input + model selection must be valid)
+      await expect(submitButton).toBeEnabled({ timeout: submitTimeout })
 
       // Try normal click first
       try {

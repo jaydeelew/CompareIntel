@@ -331,7 +331,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
   return (
     <div className="auth-form-container">
       <div className="auth-form-header">
-        <h2>Create Account</h2>
+        <h2 id="auth-dialog-title">Create Account</h2>
         <p>Get 100 daily credits and access to more models</p>
         <p className="trial-highlight">⭐ PLUS 7 days FREE access to ALL premium models! ⭐</p>
       </div>
