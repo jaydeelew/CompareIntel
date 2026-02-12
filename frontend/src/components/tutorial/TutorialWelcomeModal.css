@@ -127,15 +127,16 @@
   line-height: 1.6;
 }
 
+/* WCAG 2.1 AA: Use primary-color for sufficient contrast on modal background */
 .tutorial-welcome-link {
-  color: var(--accent-color);
+  color: var(--primary-color);
   text-decoration: none;
   font-weight: 500;
   transition: color 0.2s ease;
 }
 
 .tutorial-welcome-link:hover {
-  color: #0284c7;
+  color: var(--primary-light);
   text-decoration: underline;
 }
 

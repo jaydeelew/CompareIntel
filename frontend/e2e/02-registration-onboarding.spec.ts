@@ -641,6 +641,14 @@ test.describe('Registration and Onboarding', () => {
       // Dismiss verification code overlay if it's blocking interactions
       await dismissVerificationCodeOverlay(page)
 
+      // Dismiss tutorial overlay first if it's blocking (new users see it after registration)
+      const tutorialOverlay = page.locator('.tutorial-backdrop, .tutorial-welcome-backdrop')
+      const overlayVisible = await tutorialOverlay.isVisible({ timeout: 1000 }).catch(() => false)
+      if (overlayVisible && !page.isClosed()) {
+        await dismissTutorialOverlay(page)
+        await safeWait(page, 1000) // Wait for overlay to fully disappear
+      }
+
       // Expand first provider dropdown if collapsed (checkboxes are inside dropdowns)
       const providerHeaders = page.locator('.provider-header, button[class*="provider-header"]')
       if ((await providerHeaders.count()) > 0) {
