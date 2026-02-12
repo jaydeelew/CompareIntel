@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 
 export const Footer: React.FC = () => {
   const linkStyle: React.CSSProperties = {
-    color: '#22d3ee',
+    color: 'var(--primary-color)',
     textDecoration: 'none',
     transition: 'color 0.2s',
     cursor: 'pointer',
@@ -15,10 +15,10 @@ export const Footer: React.FC = () => {
         textAlign: 'center',
         padding: '20px 20px 22px',
         marginTop: 0,
-        color: '#94a3b8',
+        color: 'var(--text-secondary)',
         fontSize: '14px',
-        backgroundColor: '#0a0a0f',
-        borderTop: '1px solid rgba(255, 255, 255, 0.08)',
+        backgroundColor: 'var(--bg-secondary)',
+        borderTop: '1px solid var(--border-color)',
       }}
     >
       {/* Navigation Links */}
@@ -61,17 +61,17 @@ export const Footer: React.FC = () => {
         <a
           href="mailto:support@compareintel.com"
           style={{
-            color: '#22d3ee',
+            color: 'var(--primary-color)',
             textDecoration: 'underline',
             textDecorationThickness: '1px',
             textUnderlineOffset: '2px',
           }}
           onMouseOver={e => {
-            e.currentTarget.style.color = '#06b6d4'
+            e.currentTarget.style.color = 'var(--primary-hover)'
             e.currentTarget.style.textDecorationThickness = '2px'
           }}
           onMouseOut={e => {
-            e.currentTarget.style.color = '#22d3ee'
+            e.currentTarget.style.color = 'var(--primary-color)'
             e.currentTarget.style.textDecorationThickness = '1px'
           }}
         >
@@ -80,7 +80,7 @@ export const Footer: React.FC = () => {
       </p>
 
       {/* Copyright */}
-      <p style={{ margin: '8px 0', fontSize: '12px', color: '#94a3b8' }}>
+      <p style={{ margin: '8px 0', fontSize: '12px', color: 'var(--text-secondary)' }}>
         © 2026 CompareIntel. All rights reserved.
       </p>
     </footer>
