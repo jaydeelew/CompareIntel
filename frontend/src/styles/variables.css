@@ -282,6 +282,9 @@
 
   /* Hero capability tile icons - theme-aware */
   --capability-icon-color: var(--primary-light);
+
+  /* Modal overlay - theme-aware */
+  --modal-overlay-bg: rgba(0, 0, 0, 0.7);
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -348,6 +351,9 @@
 
   /* Capability tile icons - brighter for better contrast on dark hero gradient */
   --capability-icon-color: #93c5fd;
+
+  /* Modal overlay - slightly lighter for light theme */
+  --modal-overlay-bg: rgba(0, 0, 0, 0.5);
 
   /* Hero - Blue gradient (original light theme hero) */
   --hero-background: linear-gradient(
