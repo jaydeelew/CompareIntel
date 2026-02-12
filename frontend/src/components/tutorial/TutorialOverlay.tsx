@@ -3,7 +3,10 @@ import { createPortal } from 'react-dom'
 
 import type { TutorialStep } from '../../hooks/useTutorial'
 
+import { TutorialBackdrop } from './TutorialBackdrop'
 import { TUTORIAL_STEPS_CONFIG } from './tutorialSteps'
+import { TutorialTooltip } from './TutorialTooltip'
+import { getComposerCutoutRects, getComposerElement } from './tutorialUtils'
 import './TutorialOverlay.css'
 
 interface TutorialOverlayProps {
@@ -17,24 +20,6 @@ interface TutorialOverlayProps {
 interface HTMLElementWithTutorialProps extends HTMLElement {
   __tutorialHeightObserver?: MutationObserver
   __tutorialHeightInterval?: number
-}
-
-function getComposerElement(): HTMLElement | null {
-  const composer = document.querySelector('.composer') as HTMLElement | null
-  if (composer) return composer
-  const textarea = document.querySelector(
-    '[data-testid="comparison-input-textarea"]'
-  ) as HTMLElement | null
-  return (textarea?.closest('.composer') as HTMLElement | null) || null
-}
-
-function getComposerCutoutRects(composerElement: HTMLElement): DOMRect[] {
-  const inputWrapper = composerElement.querySelector(
-    '.composer-input-wrapper'
-  ) as HTMLElement | null
-  const toolbar = composerElement.querySelector('.composer-toolbar') as HTMLElement | null
-  const parts = [inputWrapper, toolbar].filter(Boolean) as HTMLElement[]
-  return (parts.length > 0 ? parts : [composerElement]).map(el => el.getBoundingClientRect())
 }
 
 export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
@@ -2364,7 +2349,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
   // Check if we're in loading/streaming phase on submit-comparison step
   // This needs to be calculated before the early return so we can allow rendering during this phase
   const isSubmitStep = step === 'submit-comparison' || step === 'submit-comparison-2'
-  const isLoadingStreamingPhase = isSubmitStep && isLoading && loadingStreamingCutout
+  const isLoadingStreamingPhase = Boolean(isSubmitStep && isLoading && loadingStreamingCutout)
 
   // During loading/streaming phase, we only need loadingStreamingCutout to render the backdrop
   // We don't need targetElement since we hide the tooltip anyway
@@ -2417,291 +2402,34 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
 
   const overlayUi = (
     <>
-      {/* Backdrop - loading/streaming cutout takes priority during submit steps */}
-      {isLoadingStreamingPhase ? (
-        <div
-          className="tutorial-backdrop-cutout"
-          style={{
-            position: 'fixed',
-            top: `${loadingStreamingCutout.top}px`,
-            left: `${loadingStreamingCutout.left}px`,
-            width: `${loadingStreamingCutout.width}px`,
-            height: `${loadingStreamingCutout.height}px`,
-            borderRadius: '16px',
-            boxShadow: '0 0 0 9999px rgba(0, 0, 0, 0.6)',
-            zIndex: 9998,
-            pointerEvents: 'none',
-          }}
-          onClick={e => {
-            const target = e.target as HTMLElement
-            if (target.classList.contains('tutorial-backdrop-cutout')) {
-              e.stopPropagation()
-            }
-          }}
-        />
-      ) : useRoundedCutout && textareaCutoutToUse ? (
-        <div
-          className="tutorial-backdrop-cutout"
-          style={{
-            position: 'fixed',
-            top: `${textareaCutoutToUse.top}px`,
-            left: `${textareaCutoutToUse.left}px`,
-            width: `${textareaCutoutToUse.width}px`,
-            height: `${textareaCutoutToUse.height}px`,
-            // Border-radius: textarea has 1.5rem (24px), cutout is 8px from element edge, so radius = 24px + 8px = 32px
-            borderRadius: '32px',
-            // Use huge box-shadow to create the dim overlay effect around the cutout
-            boxShadow: '0 0 0 9999px rgba(0, 0, 0, 0.6)',
-            zIndex: 9998,
-            pointerEvents: 'none',
-          }}
-          onClick={e => {
-            const target = e.target as HTMLElement
-            if (target.classList.contains('tutorial-backdrop-cutout')) {
-              e.stopPropagation()
-            }
-          }}
-        />
-      ) : shouldExcludeTextarea && textareaCutoutToUse ? (
-        <>
-          {/* Top backdrop section */}
-          <div
-            className="tutorial-backdrop tutorial-backdrop-top"
-            style={{
-              height: `${textareaCutoutToUse.top}px`,
-            }}
-            onClick={e => {
-              const target = e.target as HTMLElement
-              if (target.classList.contains('tutorial-backdrop')) {
-                e.stopPropagation()
-              }
-            }}
-          />
-          {/* Bottom backdrop section */}
-          <div
-            className="tutorial-backdrop tutorial-backdrop-bottom"
-            style={{
-              top: `${textareaCutoutToUse.top + textareaCutoutToUse.height}px`,
-            }}
-            onClick={e => {
-              const target = e.target as HTMLElement
-              if (target.classList.contains('tutorial-backdrop')) {
-                e.stopPropagation()
-              }
-            }}
-          />
-          {/* Left backdrop section */}
-          <div
-            className="tutorial-backdrop tutorial-backdrop-left"
-            style={{
-              top: `${textareaCutoutToUse.top}px`,
-              left: '0',
-              width: `${textareaCutoutToUse.left}px`,
-              height: `${textareaCutoutToUse.height}px`,
-            }}
-            onClick={e => {
-              const target = e.target as HTMLElement
-              if (target.classList.contains('tutorial-backdrop')) {
-                e.stopPropagation()
-              }
-            }}
-          />
-          {/* Right backdrop section */}
-          <div
-            className="tutorial-backdrop tutorial-backdrop-right"
-            style={{
-              top: `${textareaCutoutToUse.top}px`,
-              left: `${textareaCutoutToUse.left + textareaCutoutToUse.width}px`,
-              height: `${textareaCutoutToUse.height}px`,
-            }}
-            onClick={e => {
-              const target = e.target as HTMLElement
-              if (target.classList.contains('tutorial-backdrop')) {
-                e.stopPropagation()
-              }
-            }}
-          />
-        </>
-      ) : shouldExcludeDropdown && dropdownCutout ? (
-        <div
-          className="tutorial-backdrop-cutout"
-          style={{
-            position: 'fixed',
-            top: `${dropdownCutout.top}px`,
-            left: `${dropdownCutout.left}px`,
-            width: `${dropdownCutout.width}px`,
-            height: `${dropdownCutout.height}px`,
-            // Border-radius: textarea container has 1.5rem (24px), cutout is 8px from element edge, so radius = 24px + 8px = 32px
-            borderRadius: '32px',
-            // Use huge box-shadow to create the dim overlay effect around the cutout
-            boxShadow: '0 0 0 9999px rgba(0, 0, 0, 0.6)',
-            zIndex: 9998,
-            pointerEvents: 'none',
-          }}
-          onClick={e => {
-            const target = e.target as HTMLElement
-            if (target.classList.contains('tutorial-backdrop-cutout')) {
-              e.stopPropagation()
-            }
-          }}
-        />
-      ) : targetCutout ? (
-        <div
-          className="tutorial-backdrop-cutout"
-          style={{
-            position: 'fixed',
-            top: `${targetCutout.top}px`,
-            left: `${targetCutout.left}px`,
-            width: `${targetCutout.width}px`,
-            height: `${targetCutout.height}px`,
-            borderRadius: `${targetCutout.borderRadius}px`,
-            // Use huge box-shadow to create the dim overlay effect around the cutout
-            boxShadow: '0 0 0 9999px rgba(0, 0, 0, 0.6)',
-            zIndex: 9998,
-            pointerEvents: 'none',
-          }}
-          onClick={e => {
-            const target = e.target as HTMLElement
-            if (target.classList.contains('tutorial-backdrop-cutout')) {
-              e.stopPropagation()
-            }
-          }}
-        />
-      ) : (
-        <div
-          className="tutorial-backdrop"
-          style={
-            buttonCutout
-              ? {
-                  maskImage: `radial-gradient(circle ${buttonCutout.radius + 1}px at ${buttonCutout.left}px ${buttonCutout.top}px, transparent ${buttonCutout.radius}px, black ${buttonCutout.radius + 1}px)`,
-                  WebkitMaskImage: `radial-gradient(circle ${buttonCutout.radius + 1}px at ${buttonCutout.left}px ${buttonCutout.top}px, transparent ${buttonCutout.radius}px, black ${buttonCutout.radius + 1}px)`,
-                }
-              : undefined
-          }
-          onClick={e => {
-            const target = e.target as HTMLElement
-            if (target.classList.contains('tutorial-backdrop')) {
-              e.stopPropagation()
-            }
-          }}
-        />
-      )}
+      <TutorialBackdrop
+        isLoadingStreamingPhase={isLoadingStreamingPhase}
+        loadingStreamingCutout={loadingStreamingCutout}
+        useRoundedCutout={useRoundedCutout}
+        textareaCutoutToUse={textareaCutoutToUse}
+        shouldExcludeTextarea={shouldExcludeTextarea}
+        shouldExcludeDropdown={shouldExcludeDropdown}
+        dropdownCutout={dropdownCutout}
+        targetCutout={targetCutout}
+        buttonCutout={buttonCutout}
+      />
 
-      {/* Tooltip bubble - hidden during loading/streaming phase on submit steps.
-          Also gate on isVisible so steps that require scrolling/layout settle (e.g. enter-prompt)
-          don't render a mis-positioned tooltip while the page is moving. */}
       {!isLoadingStreamingPhase && isVisible && (
-        <div
-          ref={overlayRef}
-          className={`tutorial-tooltip tutorial-tooltip-${(step === 'expand-provider' || step === 'select-models' || step === 'enter-prompt' || step === 'follow-up' || step === 'enter-prompt-2' || step === 'view-follow-up-results' || step === 'history-dropdown' || step === 'save-selection') && effectivePosition ? effectivePosition : config.position}`}
-          style={{
-            top: `${overlayPosition.top}px`,
-            left: `${overlayPosition.left}px`,
-            // Ensure z-index is high enough to appear above other elements
-            zIndex: 10000,
-            // Add smooth transition for position changes (steps 1, 2, 3, 5, 6, 8, 9, and 10)
-            // Only enable AFTER initial placement is complete (positionStabilized) to
-            // prevent the tooltip from visibly animating through intermediate positions
-            // during the scroll + post-scroll adjustment phase.
-            transition:
-              positionStabilized &&
-              (step === 'expand-provider' ||
-                step === 'select-models' ||
-                step === 'enter-prompt' ||
-                step === 'follow-up' ||
-                step === 'enter-prompt-2' ||
-                step === 'view-follow-up-results' ||
-                step === 'history-dropdown' ||
-                step === 'save-selection')
-                ? 'top 0.3s ease-in-out, transform 0.3s ease-in-out'
-                : 'none',
-          }}
-        >
-          <div className="tutorial-tooltip-content">
-            <div className="tutorial-tooltip-header">
-              <span className="tutorial-step-indicator">
-                Step {stepIndex} of {totalSteps}
-              </span>
-              <button className="tutorial-close-button" onClick={onSkip} aria-label="Skip tutorial">
-                ×
-              </button>
-            </div>
-            <h3 className="tutorial-tooltip-title">{config.title}</h3>
-            <p className="tutorial-tooltip-description">{config.description}</p>
-            <div className="tutorial-tooltip-actions">
-              {/* Show "Done with input" button for step 3 (enter-prompt) and step 6 (enter-prompt-2) */}
-              {(step === 'enter-prompt' || step === 'enter-prompt-2') && (
-                <button
-                  className="tutorial-button tutorial-button-primary"
-                  onClick={onComplete}
-                  disabled={!isStepCompleted}
-                  title={!isStepCompleted ? 'Enter at least 1 character to continue' : undefined}
-                >
-                  Done with input
-                </button>
-              )}
-              {/* Show "Done" button for step 8 (view-follow-up-results) - always enabled */}
-              {step === 'view-follow-up-results' && (
-                <button
-                  className="tutorial-button tutorial-button-primary tutorial-button-highlight"
-                  onClick={e => {
-                    e.stopPropagation()
-                    e.preventDefault()
-                    onComplete()
-                  }}
-                >
-                  Done
-                </button>
-              )}
-              {/* Show "Done" button for step 9 (history-dropdown) - enabled when dropdown is open */}
-              {step === 'history-dropdown' && (
-                <button
-                  className="tutorial-button tutorial-button-primary tutorial-button-highlight"
-                  onClick={e => {
-                    e.stopPropagation()
-                    e.preventDefault()
-                    // Always call onComplete - handleComplete will check if dropdown was opened
-                    onComplete()
-                  }}
-                  disabled={!dropdownWasOpenedRef.current}
-                  title={
-                    !dropdownWasOpenedRef.current
-                      ? 'Open the history dropdown to continue'
-                      : 'Continue to next step'
-                  }
-                >
-                  Done
-                </button>
-              )}
-              {/* Show "Done" button for step 10 (save-selection) - enabled only after user clicks "Save or load model selections" */}
-              {step === 'save-selection' && (
-                <button
-                  className="tutorial-button tutorial-button-primary tutorial-button-highlight"
-                  onClick={e => {
-                    e.stopPropagation()
-                    e.preventDefault()
-                    // Guard: only complete when dropdown was opened (in case of disabled click bypass)
-                    if (saveSelectionDropdownOpened) {
-                      onComplete()
-                    }
-                  }}
-                  disabled={!saveSelectionDropdownOpened}
-                  title={
-                    !saveSelectionDropdownOpened
-                      ? 'Click "Save or load model selections" to expand the dropdown first'
-                      : 'Complete the tutorial'
-                  }
-                >
-                  Done
-                </button>
-              )}
-            </div>
-          </div>
-          {/* Arrow pointing to target */}
-          <div
-            className={`tutorial-arrow tutorial-arrow-${(step === 'expand-provider' || step === 'select-models' || step === 'enter-prompt' || step === 'follow-up' || step === 'enter-prompt-2' || step === 'view-follow-up-results' || step === 'history-dropdown' || step === 'save-selection') && effectivePosition ? effectivePosition : config.position}`}
-          />
-        </div>
+        <TutorialTooltip
+          step={step}
+          config={config}
+          stepIndex={stepIndex}
+          totalSteps={totalSteps}
+          onComplete={onComplete}
+          onSkip={onSkip}
+          isStepCompleted={isStepCompleted}
+          saveSelectionDropdownOpened={saveSelectionDropdownOpened}
+          isHistoryDropdownOpened={dropdownWasOpenedRef.current}
+          overlayRef={overlayRef}
+          overlayPosition={overlayPosition}
+          effectivePosition={effectivePosition}
+          positionStabilized={positionStabilized}
+        />
       )}
     </>
   )
