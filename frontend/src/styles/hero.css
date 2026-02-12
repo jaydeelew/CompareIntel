@@ -180,6 +180,14 @@
   animation: fadeInUp 0.8s ease-out 0.1s both;
 }
 
+/* Light mode: use lighter hero text to reduce harsh contrast with background */
+[data-theme='light'] .hero-section .hero-subtitle,
+[data-theme='light'] .hero-section .hero-input-section h2,
+[data-theme='light'] .hero-section .capability-title,
+[data-theme='light'] .hero-section .capability-description {
+  color: var(--hero-text-color);
+}
+
 .hero-subtitle-first-line,
 .hero-subtitle-second-line {
   display: inline;
