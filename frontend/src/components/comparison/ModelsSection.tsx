@@ -40,6 +40,12 @@ export interface ModelsSectionProps {
   onToggleAllForProvider: (provider: string) => void
   /** Callback to show an error message */
   onError: (message: string) => void
+  /** Callback when a disabled/restricted model is clicked (for unregistered/free tiers) */
+  onShowDisabledModelModal?: (info: {
+    userTier: 'unregistered' | 'free'
+    modelTierAccess: 'free' | 'paid'
+    modelName?: string
+  }) => void
 }
 
 /**
@@ -67,6 +73,7 @@ export const ModelsSection: React.FC<ModelsSectionProps> = ({
   onToggleModel,
   onToggleAllForProvider,
   onError,
+  onShowDisabledModelModal,
 }) => {
   const { isMobileLayout: _isMobileLayout } = useResponsive()
 
@@ -227,11 +234,19 @@ export const ModelsSection: React.FC<ModelsSectionProps> = ({
 
                     const handleModelClick = () => {
                       if (isRestricted && requiresUpgrade) {
-                        // Open upgrade modal or show upgrade message
-                        onError(
-                          `${model.name} is a premium model. Paid subscriptions are coming soon — stay tuned!`
-                        )
-                        window.scrollTo({ top: 0, behavior: 'smooth' })
+                        // Show modal for unregistered/free tiers, or fallback to error message
+                        if (onShowDisabledModelModal) {
+                          onShowDisabledModelModal({
+                            userTier: userTier as 'unregistered' | 'free',
+                            modelTierAccess: model.tier_access === 'paid' ? 'paid' : 'free',
+                            modelName: model.name,
+                          })
+                        } else {
+                          onError(
+                            `${model.name} is a premium model. Paid subscriptions are coming soon — stay tuned!`
+                          )
+                          window.scrollTo({ top: 0, behavior: 'smooth' })
+                        }
                         return
                       }
                       if (!isDisabled) {
@@ -243,6 +258,14 @@ export const ModelsSection: React.FC<ModelsSectionProps> = ({
                       <label
                         key={model.id}
                         className={`model-option ${isSelected ? 'selected' : ''} ${isDisabled ? 'disabled' : ''} ${isRestricted ? 'restricted' : ''}`}
+                        onClick={e => {
+                          // When restricted, clicking anywhere on the label should show the modal
+                          // (checkbox onChange doesn't fire when disabled)
+                          if (isRestricted && requiresUpgrade) {
+                            e.preventDefault()
+                            handleModelClick()
+                          }
+                        }}
                       >
                         <div className="model-info">
                           <h4>

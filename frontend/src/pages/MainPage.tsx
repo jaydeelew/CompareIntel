@@ -13,6 +13,7 @@ import {
   ComparisonView,
   PremiumModelsToggleInfoModal,
   DisabledButtonInfoModal,
+  DisabledModelInfoModal,
   LoadingSection,
   type AttachedFile,
   type StoredAttachedFile,
@@ -183,6 +184,11 @@ export function MainPage() {
     button: 'collapse-all' | 'clear-all' | null
     message: string
   }>({ button: null, message: '' })
+  const [disabledModelModalInfo, setDisabledModelModalInfo] = useState<{
+    userTier: 'unregistered' | 'free'
+    modelTierAccess: 'free' | 'paid'
+    modelName?: string
+  } | null>(null)
   const [modelErrors, setModelErrors] = useState<{ [key: string]: boolean }>({})
   const [anonymousCreditsRemaining, setAnonymousCreditsRemaining] = useState<number | null>(null)
   const [creditBalance, setCreditBalance] = useState<CreditBalance | null>(null)
@@ -2354,6 +2360,7 @@ export function MainPage() {
               onClearResponse={() => setResponse(null)}
               onExpandModelsSection={() => setIsModelsHidden(false)}
               onError={setError}
+              onShowDisabledModelModal={info => setDisabledModelModalInfo(info)}
             />
 
             {isLoading && (
@@ -2452,6 +2459,17 @@ export function MainPage() {
             onClose={() => setDisabledButtonInfo({ button: null, message: '' })}
             buttonType={disabledButtonInfo.button}
             message={disabledButtonInfo.message}
+          />
+
+          <DisabledModelInfoModal
+            isOpen={disabledModelModalInfo !== null}
+            info={disabledModelModalInfo}
+            onClose={() => setDisabledModelModalInfo(null)}
+            onToggleHidePremiumModels={() => setHidePremiumModels(true)}
+            onOpenSignUp={() => {
+              setAuthModalMode('register')
+              setIsAuthModalOpen(true)
+            }}
           />
 
           <TrialWelcomeModal

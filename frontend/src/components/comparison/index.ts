@@ -16,6 +16,9 @@ export { PremiumModelsToggleInfoModal } from './PremiumModelsToggleInfoModal'
 
 export { DisabledButtonInfoModal } from './DisabledButtonInfoModal'
 
+export { DisabledModelInfoModal } from './DisabledModelInfoModal'
+export type { DisabledModelModalInfo } from './DisabledModelInfoModal'
+
 export { UsageIndicatorInfoModal } from './UsageIndicatorInfoModal'
 
 export { ModelsSection } from './ModelsSection'
