@@ -114,16 +114,7 @@ body:has(.tutorial-backdrop) .hero-section {
   isolation: isolate;
 }
 
-/* During steps 9 & 10, make composer area (textarea + toolbar) match dropdown items visually */
-.composer.tutorial-dropdown-container-active .composer-input-wrapper,
-.composer.tutorial-dropdown-container-active .composer-toolbar,
-.composer.tutorial-dropdown-container-active .hero-input-textarea {
-  background: rgba(6, 182, 212, 0.08) !important;
-}
-
-.composer.tutorial-dropdown-container-active .composer-toolbar {
-  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.2);
-}
+/* During steps 9 & 10, keep composer above backdrop but do not change its background */
 
 /* Highlight effect on target element */
 .tutorial-highlight {
