@@ -253,7 +253,7 @@ check_ssl_certificates() {
     
     if [ "$DAYS_UNTIL_EXPIRY" -lt 90 ]; then
         log_warning "SSL certificate expires in $DAYS_UNTIL_EXPIRY days. Consider renewing soon."
-        if [ "$DAYS_UNTIL_EXPIRY" -lt 30 ]; then
+        if [ "$DAYS_UNTIL_EXPIRY" -lt 14 ]; then
             log_error "SSL certificate expires in $DAYS_UNTIL_EXPIRY days! Renew immediately!"
         fi
     else
