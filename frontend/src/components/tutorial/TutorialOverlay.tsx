@@ -53,10 +53,6 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
   const hasAttemptedElementFindRef = useRef<boolean>(false)
   const tooltipClampAttemptsRef = useRef<number>(0)
   const initialScrollCompleteRef = useRef<boolean>(false)
-  // Lock the tooltip position (top/bottom) for enter-prompt steps after the first calculation.
-  // This prevents the tooltip from jumping between top and bottom as subsequent recalculations
-  // (post-scroll timers, dedicated step effects, viewport clamping) make slightly different decisions.
-  const lockedEnterPromptPositionRef = useRef<'top' | 'bottom' | null>(null)
   const targetElementRef = useRef<HTMLElement | null>(null)
   const [targetElement, setTargetElement] = useState<HTMLElement | null>(null)
   const [highlightedElements, setHighlightedElements] = useState<HTMLElement[]>([])
@@ -207,11 +203,10 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
     }
   }, [])
 
-  // Reset clamp attempts, effective position, and locked position when the step changes.
+  // Reset clamp attempts and effective position when the step changes.
   useEffect(() => {
     tooltipClampAttemptsRef.current = 0
     setEffectivePosition(null)
-    lockedEnterPromptPositionRef.current = null
   }, [step])
 
   // After the tooltip renders, clamp it fully into the viewport (regardless of content height/transform).
@@ -740,68 +735,18 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
       const isSaveSelectionStep = step === 'save-selection' && config.position === 'top'
 
       if (isEnterPromptStep) {
-        // Steps 3 and 6: Default to 'bottom', switch to 'top' when not enough space below.
-        // Once the position is determined, lock it so subsequent recalculations (post-scroll
-        // timers, dedicated step effects, viewport clamping) don't flip it, which causes
-        // the tooltip to visibly jump between top and bottom.
+        // Steps 3 and 6: Always position tooltip below the composer.
+        // The scroll logic already ensures there is room below the composer for the tooltip.
         const viewportHeight = window.innerHeight
         const estimatedTooltipHeight = viewportHeight < 700 ? 160 : 210 // Smaller estimate for small screens
-        const minSpaceNeeded = estimatedTooltipHeight + offset + 40 // Space needed for tooltip + margin
 
-        let shouldUseTop: boolean
-
-        if (lockedEnterPromptPositionRef.current !== null) {
-          // Position already locked from first calculation - use it consistently
-          shouldUseTop = lockedEnterPromptPositionRef.current === 'top'
-        } else {
-          // First calculation: determine position and lock it
-          // Calculate available space below the composer
-          const spaceBelow = viewportHeight - rect.bottom
-          // Calculate available space above the composer
-          const spaceAbove = rect.top
-
-          // Determine which position to use:
-          // - Default to 'bottom' (tooltip below composer)
-          // - Switch to 'top' (tooltip above composer) if not enough space below
-          // - Fallback to whichever direction has more space when neither has enough
-          const hasEnoughSpaceBelow = spaceBelow >= minSpaceNeeded
-          const hasEnoughSpaceAbove = spaceAbove >= minSpaceNeeded
-
-          if (hasEnoughSpaceBelow) {
-            shouldUseTop = false // Use bottom (preferred)
-          } else if (hasEnoughSpaceAbove) {
-            shouldUseTop = true // Use top
-          } else {
-            // Neither direction has enough space - use whichever has more room
-            shouldUseTop = spaceAbove > spaceBelow
-          }
-
-          // Lock the position so subsequent calls don't flip
-          lockedEnterPromptPositionRef.current = shouldUseTop ? 'top' : 'bottom'
-        }
-
-        if (shouldUseTop) {
-          // Position tooltip above the composer
-          setEffectivePosition('top')
-          top = rect.top - offset
-          left = rect.left + rect.width / 2
-        } else {
-          // Position tooltip below the composer (default)
-          setEffectivePosition('bottom')
-          top = rect.bottom + offset
-          left = rect.left + rect.width / 2
-        }
+        setEffectivePosition('bottom')
+        top = rect.bottom + offset
+        left = rect.left + rect.width / 2
 
         // Final safety: clamp to viewport
         const margin = 12
-        if (shouldUseTop) {
-          const tooltipTopEdge = top - estimatedTooltipHeight
-          if (tooltipTopEdge < margin) {
-            top = margin + estimatedTooltipHeight
-          }
-        } else {
-          top = Math.min(top, viewportHeight - estimatedTooltipHeight - margin)
-        }
+        top = Math.min(top, viewportHeight - estimatedTooltipHeight - margin)
       } else if (
         isExpandProviderStep ||
         isSelectModelsStep ||
@@ -1664,23 +1609,12 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
 
         // Only update position AFTER initial scroll is complete to avoid jarring movement
         if (initialScrollCompleteRef.current) {
-          // Use locked position from the main updatePosition() call to stay consistent.
-          // This prevents the tooltip from jumping between top/bottom as the dedicated
-          // step effect recalculates position every 100ms with potentially different results.
+          // Always position tooltip below the composer (consistent with scroll logic)
           const rect = composerElement.getBoundingClientRect()
           const offset = 16
 
-          const lockedPos = lockedEnterPromptPositionRef.current
-          const shouldUseTop = lockedPos === 'top'
-
-          let top: number
-          if (shouldUseTop) {
-            setEffectivePosition('top')
-            top = rect.top - offset
-          } else {
-            setEffectivePosition('bottom')
-            top = rect.bottom + offset
-          }
+          setEffectivePosition('bottom')
+          const top = rect.bottom + offset
           const left = Math.max(200, Math.min(rect.left + rect.width / 2, window.innerWidth - 200))
           setOverlayPosition({ top, left })
         }
@@ -1744,23 +1678,12 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
 
         // Only update position AFTER initial scroll is complete to avoid jarring movement
         if (initialScrollCompleteRef.current) {
-          // Use locked position from the main updatePosition() call to stay consistent.
-          // This prevents the tooltip from jumping between top/bottom as the dedicated
-          // step effect recalculates position every 100ms with potentially different results.
+          // Always position tooltip below the composer (consistent with scroll logic)
           const rect = composerElement.getBoundingClientRect()
           const offset = 16
 
-          const lockedPos = lockedEnterPromptPositionRef.current
-          const shouldUseTop = lockedPos === 'top'
-
-          let top: number
-          if (shouldUseTop) {
-            setEffectivePosition('top')
-            top = rect.top - offset
-          } else {
-            setEffectivePosition('bottom')
-            top = rect.bottom + offset
-          }
+          setEffectivePosition('bottom')
+          const top = rect.bottom + offset
           const left = Math.max(200, Math.min(rect.left + rect.width / 2, window.innerWidth - 200))
           setOverlayPosition({ top, left })
         }
