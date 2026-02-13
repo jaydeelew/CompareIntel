@@ -196,7 +196,6 @@ export const ComparisonForm = memo<ComparisonFormProps>(
     // Note: We'll need to check provider status from API, but for now assume it can be enabled
     // if models support it
     const canEnableWebSearch = selectedModelsWithWebSearch.length > 0
-    const messageCount = conversations.length > 0 ? conversations[0]?.messages.length || 0 : 0
 
     // Responsive state including touch detection
     const { isTouchDevice, isSmallLayout } = useResponsive()
@@ -1461,7 +1460,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
                 }}
                 title="Scroll to model selection"
               >
-                First Select Models Below
+                Scroll Down to Select Models
               </button>
             </h2>
           ) : (
@@ -2267,11 +2266,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
         </div>
 
         {/* Usage Preview - Regular Mode */}
-        {!isFollowUpMode && (
-          <div className="usage-preview-container">
-            {(input.trim() || selectedModels.length > 0) && renderUsagePreview()}
-          </div>
-        )}
+        {!isFollowUpMode && <div className="usage-preview-container">{renderUsagePreview()}</div>}
 
         {/* Context Warning & Usage Preview - Follow-up Mode */}
         {isFollowUpMode &&
@@ -2325,9 +2320,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
 
             return (
               <>
-                {messageCount > 0 && (
-                  <div className="usage-preview-container">{renderUsagePreview()}</div>
-                )}
+                <div className="usage-preview-container">{renderUsagePreview()}</div>
 
                 {warningLevel && (
                   <div className={`context-warning ${warningLevel}`}>
