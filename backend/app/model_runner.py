@@ -39,6 +39,58 @@ OPENROUTER_API_KEY = settings.openrouter_api_key
 # List of model IDs available to unregistered users
 # Classification criteria: Models costing < $0.50 per million tokens (input+output average)
 # Generally includes: models with ":free" suffix, nano/mini versions, budget options
+# Image generation models - require modalities=["image","text"] for OpenRouter
+# Credits calculated per image (IMAGE_CREDITS_PER_OUTPUT) rather than tokens
+IMAGE_GENERATION_MODELS = {
+    "google/gemini-2.5-flash-image-preview-05-20",
+    "google/gemini-2.5-flash-image",
+    "google/gemini-3-pro-image-preview",
+    "openai/gpt-5-image-mini",
+    "openai/gpt-5-image",
+    "black-forest-labs/flux-1.1-pro",
+    "black-forest-labs/flux-1.1-dev",
+    "black-forest-labs/flux-2-klein-4b",
+    "black-forest-labs/flux-2-max",
+    "sourceful/riverflow-v2-fast",
+    "sourceful/riverflow-v2-pro",
+    "sourceful/riverflow-v2-standard-preview",
+    "sourceful/riverflow-v2-fast-preview",
+    "sourceful/riverflow-v2-max-preview",
+    "bytedance-seed/seedream-4.5",
+}
+
+# Credits per generated image (covers typical $0.02-$0.15/image provider costs)
+IMAGE_CREDITS_PER_OUTPUT = 15
+
+
+def is_image_generation_model(model_id: str) -> bool:
+    """Check if model supports image generation via OpenRouter modalities."""
+    return model_id in IMAGE_GENERATION_MODELS
+
+
+def _extract_image_url(img: Any) -> str | None:
+    """
+    Extract base64 data URL from OpenRouter image response.
+    Handles both object (image_url.url) and dict (image_url["url"]) formats.
+    """
+    if img is None:
+        return None
+    try:
+        if isinstance(img, dict):
+            image_url = img.get("image_url") or img.get("imageUrl")
+            if image_url:
+                url = image_url.get("url") if isinstance(image_url, dict) else None
+                return str(url) if url else None
+        else:
+            image_url = getattr(img, "image_url", None) or getattr(img, "imageUrl", None)
+            if image_url:
+                url = getattr(image_url, "url", None)
+                return str(url) if url else None
+    except (AttributeError, TypeError, KeyError):
+        pass
+    return None
+
+
 UNREGISTERED_TIER_MODELS = {
     # Anthropic - OVERRIDING PRICE CLASSIFICATION
     "anthropic/claude-3.5-haiku",
@@ -357,6 +409,36 @@ MODELS_BY_PROVIDER = {
             "supports_web_search": True,  # All Gemini models support function calling
             "knowledge_cutoff": "August 2025",
         },
+        {
+            "id": "google/gemini-2.5-flash-image-preview-05-20",
+            "name": "Gemini 2.5 Flash Image (Preview)",
+            "description": "State-of-the-art image generation model with contextual understanding. Supports generation, edits, and multi-turn conversations.",
+            "category": "Image Generation",
+            "provider": "Google",
+            "supports_web_search": False,
+            "supports_image_generation": True,
+            "knowledge_cutoff": "May 2025",
+        },
+        {
+            "id": "google/gemini-2.5-flash-image",
+            "name": "Gemini 2.5 Flash Image (Nano Banana)",
+            "description": "Image generation, editing, and multi-turn conversations with controllable aspect ratios.",
+            "category": "Image Generation",
+            "provider": "Google",
+            "supports_web_search": False,
+            "supports_image_generation": True,
+            "knowledge_cutoff": "January 2025",
+        },
+        {
+            "id": "google/gemini-3-pro-image-preview",
+            "name": "Gemini 3 Pro Image (Nano Banana Pro)",
+            "description": "Google's most advanced image-generation model with improved multimodal reasoning and 2K/4K outputs.",
+            "category": "Image Generation",
+            "provider": "Google",
+            "supports_web_search": False,
+            "supports_image_generation": True,
+            "knowledge_cutoff": "August 2025",
+        },
     ],
     "Kwaipilot": [],
     "Meta": [
@@ -657,6 +739,132 @@ MODELS_BY_PROVIDER = {
             "provider": "OpenAI",
             "supports_web_search": True,  # All GPT-5 models support function calling
             "knowledge_cutoff": "August 2025",
+        },
+        {
+            "id": "openai/gpt-5-image-mini",
+            "name": "GPT-5 Image Mini",
+            "description": "Combines GPT-5 Mini with efficient image generation. Superior instruction following and text rendering.",
+            "category": "Image Generation",
+            "provider": "OpenAI",
+            "supports_web_search": False,
+            "supports_image_generation": True,
+            "knowledge_cutoff": "September 2024",
+        },
+        {
+            "id": "openai/gpt-5-image",
+            "name": "GPT-5 Image",
+            "description": "GPT-5 with state-of-the-art image generation. Superior instruction following, text rendering, and image editing.",
+            "category": "Image Generation",
+            "provider": "OpenAI",
+            "supports_web_search": False,
+            "supports_image_generation": True,
+            "knowledge_cutoff": "September 2024",
+        },
+    ],
+    "Black Forest Labs": [
+        {
+            "id": "black-forest-labs/flux-1.1-pro",
+            "name": "FLUX 1.1 Pro",
+            "description": "High-quality image generation with excellent prompt understanding and composition.",
+            "category": "Image Generation",
+            "provider": "Black Forest Labs",
+            "supports_web_search": False,
+            "supports_image_generation": True,
+            "knowledge_cutoff": None,
+        },
+        {
+            "id": "black-forest-labs/flux-1.1-dev",
+            "name": "FLUX 1.1 Dev",
+            "description": "FLUX Dev variant for image generation with fine control.",
+            "category": "Image Generation",
+            "provider": "Black Forest Labs",
+            "supports_web_search": False,
+            "supports_image_generation": True,
+            "knowledge_cutoff": None,
+        },
+        {
+            "id": "black-forest-labs/flux-2-klein-4b",
+            "name": "FLUX 2 Klein 4B",
+            "description": "Fast, cost-effective image generation for high-throughput use cases.",
+            "category": "Image Generation",
+            "provider": "Black Forest Labs",
+            "supports_web_search": False,
+            "supports_image_generation": True,
+            "knowledge_cutoff": None,
+        },
+        {
+            "id": "black-forest-labs/flux-2-max",
+            "name": "FLUX 2 Max",
+            "description": "Top-tier image model for highest quality, prompt understanding, and editing consistency.",
+            "category": "Image Generation",
+            "provider": "Black Forest Labs",
+            "supports_web_search": False,
+            "supports_image_generation": True,
+            "knowledge_cutoff": None,
+        },
+    ],
+    "Sourceful": [
+        {
+            "id": "sourceful/riverflow-v2-fast",
+            "name": "Riverflow V2 Fast",
+            "description": "Fast image generation variant for production deployments and latency-critical workflows.",
+            "category": "Image Generation",
+            "provider": "Sourceful",
+            "supports_web_search": False,
+            "supports_image_generation": True,
+            "knowledge_cutoff": None,
+        },
+        {
+            "id": "sourceful/riverflow-v2-pro",
+            "name": "Riverflow V2 Pro",
+            "description": "Most powerful Riverflow variant for top-tier control and perfect text rendering in images.",
+            "category": "Image Generation",
+            "provider": "Sourceful",
+            "supports_web_search": False,
+            "supports_image_generation": True,
+            "knowledge_cutoff": None,
+        },
+        {
+            "id": "sourceful/riverflow-v2-standard-preview",
+            "name": "Riverflow V2 Standard Preview",
+            "description": "Standard preview of Sourceful's unified text-to-image and image-to-image model family.",
+            "category": "Image Generation",
+            "provider": "Sourceful",
+            "supports_web_search": False,
+            "supports_image_generation": True,
+            "knowledge_cutoff": None,
+        },
+        {
+            "id": "sourceful/riverflow-v2-fast-preview",
+            "name": "Riverflow V2 Fast Preview",
+            "description": "Fastest Riverflow V2 preview variant for rapid image generation.",
+            "category": "Image Generation",
+            "provider": "Sourceful",
+            "supports_web_search": False,
+            "supports_image_generation": True,
+            "knowledge_cutoff": None,
+        },
+        {
+            "id": "sourceful/riverflow-v2-max-preview",
+            "name": "Riverflow V2 Max Preview",
+            "description": "Most powerful Riverflow V2 preview for complex image generation tasks.",
+            "category": "Image Generation",
+            "provider": "Sourceful",
+            "supports_web_search": False,
+            "supports_image_generation": True,
+            "knowledge_cutoff": None,
+        },
+    ],
+    "ByteDance": [
+        {
+            "id": "bytedance-seed/seedream-4.5",
+            "name": "Seedream 4.5",
+            "description": "Latest ByteDance image model with improved editing consistency, portrait refinement, and multi-image composition.",
+            "category": "Image Generation",
+            "provider": "ByteDance",
+            "supports_web_search": False,
+            "supports_image_generation": True,
+            "knowledge_cutoff": None,
         },
     ],
     "Qwen": [
@@ -1727,6 +1935,7 @@ def call_openrouter_streaming(
     max_tokens_override: int | None = None,
     credits_limited: bool = False,
     enable_web_search: bool = False,
+    enable_image_generation: bool = False,
     search_provider: Any | None = None,  # SearchProvider instance
     user_timezone: str | None = None,  # Optional: IANA timezone string (e.g., "America/Chicago")
     user_location: str | None = None,  # Optional: Location string (e.g., "New York, NY, USA")
@@ -1752,6 +1961,7 @@ def call_openrouter_streaming(
         max_tokens_override: Optional override for max output tokens (uses model limit if not provided)
         credits_limited: If True, indicates max_tokens_override was reduced due to low credits
         enable_web_search: If True, enable web search tool calling for models that support it
+        enable_image_generation: If True and model supports it, request image output via modalities
         search_provider: Optional SearchProvider instance for executing web searches
         user_timezone: Optional IANA timezone string (e.g., "America/Chicago") for context
         user_location: Optional location string (e.g., "New York, NY, USA") for context
@@ -1883,6 +2093,10 @@ def call_openrouter_streaming(
                 "presence_penalty": 0.5,  # Reduce topic/concept repetition (0.0-2.0, higher = less repetition)
             }
 
+            # Add modalities for image generation (OpenRouter image models)
+            if enable_image_generation and is_image_generation_model(model_id):
+                api_params["modalities"] = ["image", "text"]
+
             # Add tools if web search is enabled
             if tools:
                 api_params["tools"] = tools
@@ -1927,6 +2141,7 @@ def call_openrouter_streaming(
             full_content = ""
             finish_reason = None
             usage_data = None
+            image_count = 0  # Track generated images for credit calculation
             tool_calls_accumulated = {}  # Dict to accumulate tool calls by index
             tool_call_ids_seen = set()  # Track tool call IDs to prevent duplicates across indices
             all_tool_call_ids_ever_seen = (
@@ -2031,6 +2246,17 @@ def call_openrouter_streaming(
 
                         yield content_chunk
 
+                    # Handle image output (OpenRouter image generation models)
+                    # Images arrive in delta.images as {image_url: {url: "data:image/..."}}
+                    if hasattr(delta, "images") and delta.images:
+                        for img in delta.images:
+                            url = _extract_image_url(img)
+                            if url and url.startswith("data:"):
+                                image_count += 1
+                                markdown = "\n\n![Generated image]({})\n\n".format(url)
+                                full_content += markdown
+                                yield markdown
+
                     # Also check message.content in final chunk (some models like GPT-5 return content here)
                     # This handles cases where content is only in the final chunk's message object
                     if hasattr(chunk.choices[0], "message") and chunk.choices[0].message:
@@ -2077,6 +2303,16 @@ def call_openrouter_streaming(
                                         break
 
                                 yield content_chunk
+
+                        # Handle message.images in final chunk (non-streaming image delivery)
+                        if hasattr(message, "images") and message.images:
+                            for img in message.images:
+                                url = _extract_image_url(img)
+                                if url and url.startswith("data:") and url not in full_content:
+                                    image_count += 1
+                                    markdown = "\n\n![Generated image]({})\n\n".format(url)
+                                    full_content += markdown
+                                    yield markdown
 
                         # Also check message.tool_calls in final chunk (some models like GPT-5 Chat return tool_calls here)
                         # This handles cases where tool_calls are only in the final chunk's message object
@@ -4047,6 +4283,27 @@ def call_openrouter_streaming(
                     yield "\n\n⚠️ Response truncated - model reached maximum output length."
             elif finish_reason == "content_filter":
                 yield "\n\n⚠️ **Note:** Response stopped by content filter."
+
+            # Add image generation credits to usage data
+            if image_count > 0:
+                image_credits = Decimal(IMAGE_CREDITS_PER_OUTPUT * image_count)
+                image_effective_tokens = IMAGE_CREDITS_PER_OUTPUT * image_count * 1000
+                if usage_data:
+                    usage_data = TokenUsage(
+                        prompt_tokens=usage_data.prompt_tokens,
+                        completion_tokens=usage_data.completion_tokens,
+                        total_tokens=usage_data.total_tokens,
+                        effective_tokens=usage_data.effective_tokens + image_effective_tokens,
+                        credits=usage_data.credits + image_credits,
+                    )
+                else:
+                    usage_data = TokenUsage(
+                        prompt_tokens=0,
+                        completion_tokens=0,
+                        total_tokens=0,
+                        effective_tokens=image_effective_tokens,
+                        credits=image_credits,
+                    )
 
             # Return usage data (generator return value)
             return usage_data

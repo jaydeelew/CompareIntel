@@ -113,6 +113,7 @@ export function MainPage() {
   const [accurateInputTokens, setAccurateInputTokens] = useState<number | null>(null)
   const [attachedFiles, setAttachedFilesState] = useState<(AttachedFile | StoredAttachedFile)[]>([])
   const [webSearchEnabled, setWebSearchEnabled] = useState(false)
+  const [imageGenerationEnabled, setImageGenerationEnabled] = useState(false)
   const [defaultSelectionOverridden, setDefaultSelectionOverridden] = useState(false)
   const [userLocation, setUserLocation] = useState<string | null>(null)
   const geolocationDetectedRef = useRef(false)
@@ -2039,6 +2040,7 @@ export function MainPage() {
       attachedFiles,
       accurateInputTokens,
       webSearchEnabled,
+      imageGenerationEnabled,
       userLocation,
       conversations,
       isFollowUpMode,
@@ -2281,6 +2283,8 @@ export function MainPage() {
                   onExpandFiles={expandFiles}
                   webSearchEnabled={webSearchEnabled}
                   onWebSearchEnabledChange={setWebSearchEnabled}
+                  imageGenerationEnabled={imageGenerationEnabled}
+                  onImageGenerationEnabledChange={setImageGenerationEnabled}
                   tutorialStep={tutorialState.currentStep}
                   tutorialIsActive={tutorialState.isActive}
                   modelsSectionRef={modelsSectionRef}

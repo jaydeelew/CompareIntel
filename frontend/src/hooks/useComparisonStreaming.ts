@@ -144,6 +144,7 @@ export interface UseComparisonStreamingConfig {
   attachedFiles: (AttachedFile | StoredAttachedFile)[]
   accurateInputTokens: number | null
   webSearchEnabled: boolean
+  imageGenerationEnabled: boolean
   userLocation: string | null
 
   // Conversation state
@@ -344,6 +345,7 @@ export function useComparisonStreaming(
     attachedFiles,
     accurateInputTokens,
     webSearchEnabled,
+    imageGenerationEnabled,
     userLocation,
     conversations,
     isFollowUpMode,
@@ -800,6 +802,7 @@ export function useComparisonStreaming(
           timezone: userTimezone,
           location: userLocation || undefined,
           enable_web_search: webSearchEnabled || false,
+          enable_image_generation: imageGenerationEnabled || false,
         },
         controller.signal
       )
