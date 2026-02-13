@@ -3,9 +3,9 @@
  * Manages light/dark theme state with localStorage persistence
  */
 
-import React, { createContext, useContext, useEffect, useState } from 'react'
+import React, { createContext, useCallback, useContext, useEffect, useState } from 'react'
 
-const THEME_STORAGE_KEY = 'compareintel-theme'
+export const THEME_STORAGE_KEY = 'compareintel-theme'
 
 export type Theme = 'light' | 'dark'
 
@@ -25,7 +25,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     return 'light'
   })
 
-  const setTheme = (newTheme: Theme) => {
+  const setTheme = useCallback((newTheme: Theme) => {
     setThemeState(newTheme)
     document.documentElement.setAttribute('data-theme', newTheme)
     localStorage.setItem(THEME_STORAGE_KEY, newTheme)
@@ -38,11 +38,11 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
     // Update color-scheme for browser UI (scrollbars, etc.)
     document.documentElement.style.colorScheme = newTheme
-  }
+  }, [])
 
-  const toggleTheme = () => {
+  const toggleTheme = useCallback(() => {
     setTheme(theme === 'dark' ? 'light' : 'dark')
-  }
+  }, [theme, setTheme])
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme)
