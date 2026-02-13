@@ -246,12 +246,16 @@ async function dismissTutorialOverlay(page: Page) {
 test.describe('Registration and Onboarding', () => {
   test.beforeEach(async ({ page, context, browserName }) => {
     // Detect mobile devices and adjust timeouts accordingly
+    // Use project name - browserName is always chromium/firefox/webkit
+    const projectName = test.info().project.name || ''
     const isFirefox = browserName === 'firefox'
     const isWebKit = browserName === 'webkit'
     const isMobile =
-      browserName.includes('Mobile') ||
-      browserName.includes('iPhone') ||
-      browserName.includes('iPad')
+      projectName.includes('Mobile') ||
+      projectName.includes('iPhone') ||
+      projectName.includes('iPad') ||
+      projectName.includes('Pixel') ||
+      projectName.includes('Galaxy')
 
     // Mobile devices and WebKit/Firefox need longer timeouts
     const navigationTimeout = isFirefox || isWebKit || isMobile ? 60000 : 30000
@@ -551,9 +555,16 @@ test.describe('Registration and Onboarding', () => {
 
   test('New user can perform first comparison', async ({ page, browserName }) => {
     // Increase timeout for registration + comparison test
-    // WebKit needs longer timeout
+    // WebKit and mobile need longer timeout
     const isWebKit = browserName === 'webkit'
-    test.setTimeout(isWebKit ? 120000 : 60000)
+    const projectName = test.info().project.name || ''
+    const isMobileProject =
+      projectName.includes('Mobile') ||
+      projectName.includes('iPhone') ||
+      projectName.includes('iPad') ||
+      projectName.includes('Pixel') ||
+      projectName.includes('Galaxy')
+    test.setTimeout(isWebKit || isMobileProject ? 120000 : 60000)
     const timestamp = Date.now()
     const testEmail = `firstcomp-${timestamp}@example.com`
     const testPassword = 'TestPassword123!'
@@ -633,21 +644,41 @@ test.describe('Registration and Onboarding', () => {
       await expect(inputField).toBeVisible()
 
       const promptText = 'Explain machine learning in simple terms.'
+      // On mobile/WebKit, tap or click first to focus - fill() can fail to trigger React state
+      if (isMobileProject || isWebKit) {
+        try {
+          await inputField.tap({ timeout: 5000 })
+        } catch {
+          await inputField.click({ timeout: 5000 })
+        }
+        await safeWait(page, 200)
+      }
       await inputField.fill(promptText)
 
-      // On Mobile Safari/WebKit, fill() may not trigger React state - verify and retry with pressSequentially
-      const filledValue = await inputField.inputValue().catch(() => '')
-      if (
-        filledValue.trim() !== promptText &&
-        (isWebKit || browserName.includes('Mobile') || browserName.includes('iPhone'))
-      ) {
+      // On Mobile Safari/WebKit/mobile projects, fill() may not trigger React state - verify and retry
+      let filledValue = await inputField.inputValue().catch(() => '')
+      if (filledValue.trim() !== promptText && (isWebKit || isMobileProject)) {
         await inputField.click()
-        await inputField.pressSequentially(promptText, { delay: 20 })
+        await inputField.pressSequentially(promptText, { delay: isWebKit ? 50 : 20 })
+        await safeWait(page, 300)
+        filledValue = await inputField.inputValue().catch(() => '')
+      }
+      // WebKit/mobile nuclear fallback: use evaluate to set value and dispatch input event (bypasses automation quirks)
+      if (filledValue.trim() !== promptText && (isWebKit || isMobileProject)) {
+        await inputField.evaluate((el: HTMLTextAreaElement, text: string) => {
+          el.focus()
+          el.value = text
+          el.dispatchEvent(new Event('input', { bubbles: true }))
+        }, promptText)
+        await safeWait(page, 500)
       }
 
       // Wait for loading message to disappear
       const loadingMessage = page.locator('.loading-message:has-text("Loading available models")')
       await loadingMessage.waitFor({ state: 'hidden', timeout: 10000 }).catch(() => {})
+      if (isMobileProject) {
+        await safeWait(page, 500) // Extra settle time for models to render on mobile
+      }
 
       // Dismiss verification code overlay if it's blocking interactions
       await dismissVerificationCodeOverlay(page)
@@ -661,8 +692,25 @@ test.describe('Registration and Onboarding', () => {
       }
 
       // Expand provider dropdowns until we find enabled checkboxes (first provider may have only premium models)
-      const providerHeaders = page.locator('.provider-header, button[class*="provider-header"]')
-      const providerCount = await providerHeaders.count()
+      let providerHeaders = page.locator('.provider-header, button[class*="provider-header"]')
+      let providerCount = await providerHeaders.count()
+      // If models section is collapsed on mobile, expand it first
+      if (providerCount === 0 && (isMobileProject || isWebKit)) {
+        const showModelsBtn = page.locator('button[title="Show model selection"]')
+        if (await showModelsBtn.isVisible({ timeout: 3000 }).catch(() => false)) {
+          await showModelsBtn.click({ timeout: 5000 })
+          await safeWait(page, 800)
+        }
+        providerHeaders = page.locator('.provider-header, button[class*="provider-header"]')
+        providerCount = await providerHeaders.count()
+      }
+      if (isMobileProject && providerCount > 0) {
+        await providerHeaders
+          .first()
+          .scrollIntoViewIfNeeded()
+          .catch(() => {})
+        await safeWait(page, 300)
+      }
       let selectedCount = 0
 
       for (let p = 0; p < providerCount && selectedCount === 0; p++) {
@@ -670,13 +718,21 @@ test.describe('Registration and Onboarding', () => {
         const isExpanded = await providerHeader.getAttribute('aria-expanded')
         if (isExpanded !== 'true') {
           await providerHeader.scrollIntoViewIfNeeded().catch(() => {})
-          await safeWait(page, 300)
+          await safeWait(page, isMobileProject ? 500 : 300)
           try {
-            await providerHeader.click({ timeout: 5000 })
+            if (isMobileProject) {
+              try {
+                await providerHeader.tap({ timeout: 5000 })
+              } catch {
+                await providerHeader.click({ timeout: 5000 })
+              }
+            } else {
+              await providerHeader.click({ timeout: 5000 })
+            }
           } catch {
             await providerHeader.click({ timeout: 3000, force: true })
           }
-          await page.waitForTimeout(800) // Wait for dropdown to expand and render checkboxes
+          await page.waitForTimeout(isMobileProject ? 1200 : 800) // Mobile needs longer for dropdown to expand and render
         }
 
         // Select first enabled model from this provider
@@ -691,13 +747,35 @@ test.describe('Registration and Onboarding', () => {
           const checkbox = modelCheckboxes.nth(i)
           const isEnabled = await checkbox.isEnabled().catch(() => false)
           if (isEnabled) {
-            await checkbox.check({ timeout: 10000 })
+            if (isMobileProject || isWebKit) {
+              await checkbox.scrollIntoViewIfNeeded().catch(() => {})
+              await safeWait(page, 200)
+            }
+            // WebKit: click() can trigger React onChange more reliably than check()
+            if (isWebKit) {
+              await checkbox.click({ timeout: 10000 })
+            } else {
+              await checkbox.check({ timeout: 10000 })
+            }
             selectedCount++
+            if (isMobileProject) {
+              await safeWait(page, 400) // Allow React state to settle after checkbox change
+            }
           }
         }
       }
 
       expect(selectedCount).toBeGreaterThan(0)
+
+      // On mobile, wait for selected models UI to reflect state (React re-render)
+      if (isMobileProject) {
+        const selectedModelsGrid = page.locator('.selected-models-section .selected-model-card')
+        await selectedModelsGrid
+          .first()
+          .waitFor({ state: 'visible', timeout: 5000 })
+          .catch(() => {})
+        await safeWait(page, 500)
+      }
 
       // Check if tutorial overlay is blocking (especially in WebKit)
       const overlayVisibleBeforeSubmit = await tutorialOverlay
@@ -710,11 +788,7 @@ test.describe('Registration and Onboarding', () => {
       }
 
       // Submit comparison - WebKit and mobile need longer timeout
-      const isMobile =
-        browserName.includes('Mobile') ||
-        browserName.includes('iPhone') ||
-        browserName.includes('iPad')
-      const submitTimeout = isWebKit || isMobile ? 60000 : 15000
+      const submitTimeout = isWebKit || isMobileProject ? 60000 : 15000
 
       const submitButton = page.getByTestId('comparison-submit-button')
 
