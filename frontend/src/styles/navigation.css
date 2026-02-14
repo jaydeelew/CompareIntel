@@ -307,6 +307,11 @@
     font-size: 0.6875rem !important;
   }
 
+  /* Hide theme toggle in navbar on mobile - moved to hero section */
+  .nav-actions > .theme-toggle {
+    display: none !important;
+  }
+
   .nav-actions {
     gap: 0.375rem !important;
     flex-shrink: 0 !important;

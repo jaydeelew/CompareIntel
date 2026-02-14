@@ -3,6 +3,11 @@
    Immersive dark design with subtle depth and glow effects
    ═══════════════════════════════════════════════════════════ */
 
+/* Hero Theme Toggle - hidden on desktop, shown on mobile */
+.hero-theme-toggle-mobile {
+  display: none;
+}
+
 .hero-section {
   padding: 5rem 1.5rem 6rem;
   margin: 0;
@@ -1296,7 +1301,47 @@
   }
 
   .hero-section {
-    padding: 3rem 1rem 4rem;
+    padding: 1rem 1rem 4rem;
+  }
+
+  /* Mobile theme toggle - visible only on mobile */
+  .hero-theme-toggle-mobile {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 1rem;
+  }
+
+  .hero-theme-toggle-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border: none;
+    border-radius: var(--radius-full, 9999px);
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: color 0.2s ease;
+    line-height: 1;
+  }
+
+  .hero-theme-toggle-button:hover {
+    color: var(--text-primary);
+  }
+
+  .hero-theme-toggle-button:active {
+    transform: scale(0.92);
+  }
+
+  .hero-theme-toggle-button svg {
+    flex-shrink: 0;
+    opacity: 0.7;
+  }
+
+  .hero-theme-toggle-button:hover svg {
+    opacity: 1;
   }
 
   .hero-title {
