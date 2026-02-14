@@ -27,6 +27,105 @@ function getModelNamesFromIds(modelIds: string[], modelsByProvider: ModelsByProv
   return names.length > 0 ? names.join(', ') : modelIds.join(', ')
 }
 
+function SavedSelectionCard({
+  selection,
+  modelsByProvider,
+  isFollowUpMode,
+  isDefault,
+  onLoad,
+  onSetDefault,
+  onDelete,
+  setShowSavedSelectionsDropdown,
+  showNotification,
+}: {
+  selection: SavedModelSelection
+  modelsByProvider: ModelsByProvider
+  isFollowUpMode: boolean
+  isDefault: boolean
+  onLoad: (id: string) => void
+  onSetDefault: (id: string | null) => void
+  onDelete: (id: string) => void
+  setShowSavedSelectionsDropdown: (show: boolean) => void
+  showNotification: (message: string, type: 'success' | 'error') => void
+}) {
+  const metaRef = useRef<HTMLDivElement>(null)
+  const [isTruncated, setIsTruncated] = useState(false)
+
+  useEffect(() => {
+    const el = metaRef.current
+    if (!el) return
+    const check = () => setIsTruncated(el.scrollWidth > el.clientWidth)
+    check()
+    const ro = new ResizeObserver(check)
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [selection.modelIds, modelsByProvider])
+
+  const modelNames = getModelNamesFromIds(selection.modelIds, modelsByProvider)
+  const tooltipTitle =
+    isTruncated && modelNames
+      ? isFollowUpMode
+        ? `Cannot load during follow-up. Models: ${modelNames}`
+        : modelNames
+      : undefined
+
+  return (
+    <div className="saved-selection-item">
+      <input
+        type="checkbox"
+        checked={isDefault}
+        onChange={e => {
+          e.stopPropagation()
+          if (e.target.checked) {
+            onSetDefault(selection.id)
+            showNotification(`"${selection.name}" set as default selection`, 'success')
+          } else {
+            onSetDefault(null)
+            showNotification('Default selection removed', 'success')
+          }
+        }}
+        onClick={e => e.stopPropagation()}
+        title={isDefault ? `Default model selection` : `Set as default model selection`}
+        className="saved-selection-default-checkbox"
+      />
+      <div
+        className="saved-selection-info"
+        onClick={() => {
+          if (isFollowUpMode) {
+            showNotification('Cannot load saved selections during follow-up mode', 'error')
+            return
+          }
+          onLoad(selection.id)
+          setShowSavedSelectionsDropdown(false)
+          showNotification(
+            `Loaded "${selection.name}" (${selection.modelIds.length} model${selection.modelIds.length !== 1 ? 's' : ''})`,
+            'success'
+          )
+        }}
+        title={tooltipTitle}
+        style={{ cursor: isFollowUpMode ? 'not-allowed' : 'pointer' }}
+      >
+        <div className="saved-selection-name">{selection.name}</div>
+        <div ref={metaRef} className="saved-selection-meta">
+          {modelNames}
+        </div>
+      </div>
+      <button
+        type="button"
+        className="saved-selection-delete"
+        onClick={e => {
+          e.stopPropagation()
+          onDelete(selection.id)
+          showNotification(`Deleted "${selection.name}"`, 'success')
+        }}
+        title={`Delete "${selection.name}"`}
+      >
+        ×
+      </button>
+    </div>
+  )
+}
+
 // File attachment interface
 export interface AttachedFile {
   id: string // Unique identifier for the file
@@ -2201,92 +2300,20 @@ export const ComparisonForm = memo<ComparisonFormProps>(
                         it later!
                       </div>
                     ) : (
-                      savedModelSelections.map(selection => {
-                        const defaultSelectionId = getDefaultSelectionId()
-                        const isDefault = defaultSelectionId === selection.id
-                        return (
-                          <div key={selection.id} className="saved-selection-item">
-                            {/* Default selection checkbox - available for all users */}
-                            <input
-                              type="checkbox"
-                              checked={isDefault}
-                              onChange={e => {
-                                e.stopPropagation()
-                                if (e.target.checked) {
-                                  // Set this selection as default
-                                  onSetDefaultSelection(selection.id)
-                                  showNotification(
-                                    `"${selection.name}" set as default selection`,
-                                    'success'
-                                  )
-                                } else {
-                                  // Unset default
-                                  onSetDefaultSelection(null)
-                                  showNotification('Default selection removed', 'success')
-                                }
-                              }}
-                              onClick={e => e.stopPropagation()}
-                              title={
-                                isDefault
-                                  ? `Default model selection`
-                                  : `Set as default model selection`
-                              }
-                              className="saved-selection-default-checkbox"
-                            />
-                            <div
-                              className="saved-selection-info"
-                              onClick={() => {
-                                if (isFollowUpMode) {
-                                  showNotification(
-                                    'Cannot load saved selections during follow-up mode',
-                                    'error'
-                                  )
-                                  return
-                                }
-                                onLoadModelSelection(selection.id)
-                                setShowSavedSelectionsDropdown(false)
-                                showNotification(
-                                  `Loaded "${selection.name}" (${selection.modelIds.length} model${selection.modelIds.length !== 1 ? 's' : ''})`,
-                                  'success'
-                                )
-                              }}
-                              title={(() => {
-                                const modelNames = getModelNamesFromIds(
-                                  selection.modelIds,
-                                  modelsByProvider
-                                )
-                                if (isFollowUpMode) {
-                                  return modelNames
-                                    ? `Cannot load during follow-up. Models: ${modelNames}`
-                                    : 'Cannot load selections during follow-up mode'
-                                }
-                                return modelNames
-                                  ? `${modelNames}`
-                                  : `Click to load "${selection.name}"`
-                              })()}
-                              style={{ cursor: isFollowUpMode ? 'not-allowed' : 'pointer' }}
-                            >
-                              <div className="saved-selection-name">{selection.name}</div>
-                              <div className="saved-selection-meta">
-                                {selection.modelIds.length} model
-                                {selection.modelIds.length !== 1 ? 's' : ''}
-                              </div>
-                            </div>
-                            <button
-                              type="button"
-                              className="saved-selection-delete"
-                              onClick={e => {
-                                e.stopPropagation()
-                                onDeleteModelSelection(selection.id)
-                                showNotification(`Deleted "${selection.name}"`, 'success')
-                              }}
-                              title={`Delete "${selection.name}"`}
-                            >
-                              ×
-                            </button>
-                          </div>
-                        )
-                      })
+                      savedModelSelections.map(selection => (
+                        <SavedSelectionCard
+                          key={selection.id}
+                          selection={selection}
+                          modelsByProvider={modelsByProvider}
+                          isFollowUpMode={isFollowUpMode}
+                          isDefault={getDefaultSelectionId() === selection.id}
+                          onLoad={onLoadModelSelection}
+                          onSetDefault={onSetDefaultSelection}
+                          onDelete={onDeleteModelSelection}
+                          setShowSavedSelectionsDropdown={setShowSavedSelectionsDropdown}
+                          showNotification={showNotification}
+                        />
+                      ))
                     )}
                   </div>
                 </div>
