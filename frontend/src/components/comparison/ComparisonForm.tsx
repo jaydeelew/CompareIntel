@@ -13,6 +13,20 @@ import { showNotification } from '../../utils/error'
 import { DisabledButtonInfoModal } from './DisabledButtonInfoModal'
 import { UsageIndicatorInfoModal } from './UsageIndicatorInfoModal'
 
+/** Resolve model IDs to display names for tooltips */
+function getModelNamesFromIds(modelIds: string[], modelsByProvider: ModelsByProvider): string {
+  const names: string[] = []
+  for (const providerModels of Object.values(modelsByProvider)) {
+    for (const model of providerModels) {
+      if (modelIds.includes(String(model.id))) {
+        names.push(model.name)
+        break
+      }
+    }
+  }
+  return names.length > 0 ? names.join(', ') : modelIds.join(', ')
+}
+
 // File attachment interface
 export interface AttachedFile {
   id: string // Unique identifier for the file
@@ -1567,8 +1581,15 @@ export const ComparisonForm = memo<ComparisonFormProps>(
                 (() => {
                   const defaultSelection = getDefaultSelection()
                   if (!defaultSelection) return null
+                  const modelNamesTooltip = getModelNamesFromIds(
+                    defaultSelection.modelIds,
+                    modelsByProvider
+                  )
                   return (
-                    <span className="default-selection-name" title={`Default model selection`}>
+                    <span
+                      className="default-selection-name"
+                      title={modelNamesTooltip || 'Default model selection'}
+                    >
                       {defaultSelection.name}
                     </span>
                   )
@@ -2229,11 +2250,20 @@ export const ComparisonForm = memo<ComparisonFormProps>(
                                   'success'
                                 )
                               }}
-                              title={
-                                isFollowUpMode
-                                  ? 'Cannot load selections during follow-up mode'
+                              title={(() => {
+                                const modelNames = getModelNamesFromIds(
+                                  selection.modelIds,
+                                  modelsByProvider
+                                )
+                                if (isFollowUpMode) {
+                                  return modelNames
+                                    ? `Cannot load during follow-up. Models: ${modelNames}`
+                                    : 'Cannot load selections during follow-up mode'
+                                }
+                                return modelNames
+                                  ? `${modelNames}`
                                   : `Click to load "${selection.name}"`
-                              }
+                              })()}
                               style={{ cursor: isFollowUpMode ? 'not-allowed' : 'pointer' }}
                             >
                               <div className="saved-selection-name">{selection.name}</div>
