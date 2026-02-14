@@ -133,7 +133,9 @@ export const ModelsSection: React.FC<ModelsSectionProps> = ({
                 <div className="provider-left">
                   <span className="provider-name">{provider}</span>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <div
+                  style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexShrink: 0 }}
+                >
                   {(() => {
                     const selectedCount = visibleModels.filter(model =>
                       selectedModels.includes(model.id)

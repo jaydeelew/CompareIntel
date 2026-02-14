@@ -122,12 +122,18 @@
   display: flex;
   align-items: center;
   gap: 0.75rem;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .provider-name {
   font-size: 1rem;
   font-weight: var(--font-semibold);
   color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
 }
 
 /* Provider Count Badge */
@@ -142,6 +148,7 @@
   transition: all 0.2s ease;
   color: var(--text-muted);
   background: var(--bg-card);
+  white-space: nowrap;
 }
 
 .provider-count.has-selected {
