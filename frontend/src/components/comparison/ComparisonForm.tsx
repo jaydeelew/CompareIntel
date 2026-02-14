@@ -103,10 +103,6 @@ interface ComparisonFormProps {
   webSearchEnabled?: boolean
   onWebSearchEnabledChange?: (enabled: boolean) => void
 
-  // Image generation (for models that support it)
-  imageGenerationEnabled?: boolean
-  onImageGenerationEnabledChange?: (enabled: boolean) => void
-
   // Tutorial step - used to block submit button during step 3 (enter-prompt)
   tutorialStep?: TutorialStep | null
   // Whether tutorial is currently active - used to disable "start over" button without visual indication
@@ -172,8 +168,6 @@ export const ComparisonForm = memo<ComparisonFormProps>(
     onExpandFiles,
     webSearchEnabled: webSearchEnabledProp,
     onWebSearchEnabledChange,
-    imageGenerationEnabled: imageGenerationEnabledProp,
-    onImageGenerationEnabledChange,
     tutorialStep,
     tutorialIsActive = false,
     modelsSectionRef,
@@ -183,15 +177,6 @@ export const ComparisonForm = memo<ComparisonFormProps>(
     const webSearchEnabled =
       webSearchEnabledProp !== undefined ? webSearchEnabledProp : webSearchEnabledInternal
     const setWebSearchEnabled = onWebSearchEnabledChange || setWebSearchEnabledInternal
-
-    // Internal state for image generation if not controlled via props
-    const [imageGenerationEnabledInternal, setImageGenerationEnabledInternal] = useState(false)
-    const imageGenerationEnabled =
-      imageGenerationEnabledProp !== undefined
-        ? imageGenerationEnabledProp
-        : imageGenerationEnabledInternal
-    const setImageGenerationEnabled =
-      onImageGenerationEnabledChange || setImageGenerationEnabledInternal
 
     // Calculate which selected models support web search
     const selectedModelsWithWebSearch = useMemo(() => {
@@ -207,22 +192,6 @@ export const ComparisonForm = memo<ComparisonFormProps>(
       })
     }, [selectedModels, modelsByProvider])
 
-    // Calculate which selected models support image generation
-    const selectedModelsWithImageGeneration = useMemo(() => {
-      return selectedModels.filter(modelId => {
-        const modelIdStr = String(modelId)
-        for (const providerModels of Object.values(modelsByProvider)) {
-          const model = providerModels.find(m => String(m.id) === modelIdStr)
-          if (model && model.supports_image_generation) {
-            return true
-          }
-        }
-        return false
-      })
-    }, [selectedModels, modelsByProvider])
-
-    const canEnableImageGeneration = selectedModelsWithImageGeneration.length > 0
-
     // Check if web search can be enabled (provider configured and models support it)
     // Note: We'll need to check provider status from API, but for now assume it can be enabled
     // if models support it
@@ -233,7 +202,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
 
     // Handler for disabled button taps on touch devices
     const handleDisabledButtonTap = useCallback(
-      (button: 'websearch' | 'imagegen' | 'submit') => {
+      (button: 'websearch' | 'submit') => {
         if (!isTouchDevice) return // Only show modal on touch devices
 
         let message = ''
@@ -244,14 +213,6 @@ export const ComparisonForm = memo<ComparisonFormProps>(
           } else if (isLoading) {
             message =
               'Web search cannot be toggled while a comparison is in progress. Please wait for the current comparison to complete.'
-          }
-        } else if (button === 'imagegen') {
-          if (!canEnableImageGeneration) {
-            message =
-              'Image generation requires at least one model that supports image generation (e.g. Gemini 2.5 Flash Image, GPT-5 Image Mini). Select an image-capable model to enable this feature.'
-          } else if (isLoading) {
-            message =
-              'Image generation cannot be toggled while a comparison is in progress. Please wait for the current comparison to complete.'
           }
         } else if (button === 'submit') {
           if (creditsRemaining <= 0) {
@@ -283,7 +244,6 @@ export const ComparisonForm = memo<ComparisonFormProps>(
       [
         isTouchDevice,
         canEnableWebSearch,
-        canEnableImageGeneration,
         isLoading,
         creditsRemaining,
         isFollowUpMode,
@@ -1821,58 +1781,6 @@ export const ComparisonForm = memo<ComparisonFormProps>(
                   />
                   <path
                     d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              </button>
-              {/* Enable Image Generation Toggle - for image-capable models */}
-              <button
-                type="button"
-                onClick={() => {
-                  const isDisabled = !canEnableImageGeneration || isLoading
-                  if (isDisabled) {
-                    if (isTouchDevice) {
-                      handleDisabledButtonTap('imagegen')
-                    }
-                    return
-                  }
-                  setImageGenerationEnabled(!imageGenerationEnabled)
-                }}
-                className={`textarea-icon-button image-gen-button ${imageGenerationEnabled ? 'active' : ''} ${(!canEnableImageGeneration || isLoading) && isTouchDevice ? 'touch-disabled' : ''}`}
-                title={
-                  !canEnableImageGeneration
-                    ? 'Select an image-capable model (e.g. Gemini 2.5 Flash Image, GPT-5 Image)'
-                    : imageGenerationEnabled
-                      ? 'Image generation enabled'
-                      : 'Enable image generation'
-                }
-                disabled={!isTouchDevice && (!canEnableImageGeneration || isLoading)}
-                aria-disabled={!canEnableImageGeneration || isLoading}
-              >
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                  style={{
-                    width: '20px',
-                    height: '20px',
-                  }}
-                >
-                  <rect
-                    x="3"
-                    y="3"
-                    width="18"
-                    height="18"
-                    rx="2"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                  <circle cx="8.5" cy="8.5" r="1.5" fill="currentColor" />
-                  <path
-                    d="M21 15l-5-5L5 21"
                     strokeWidth="2"
                     strokeLinecap="round"
                     strokeLinejoin="round"

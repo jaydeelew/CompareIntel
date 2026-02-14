@@ -33,7 +33,6 @@ export interface Model {
   max_output_tokens?: number
   /** Whether the model supports web search via function calling */
   supports_web_search?: boolean
-  supports_image_generation?: boolean
   /** Knowledge cutoff date for the model's training data (e.g., "March 2025") */
   knowledge_cutoff?: string
 }

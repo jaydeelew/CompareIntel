@@ -1140,60 +1140,6 @@
   stroke: var(--text-subtle) !important;
 }
 
-/* Image Generation Button - shares styles with web search button */
-.image-gen-button {
-  background: var(--bg-card);
-  border: 2px solid var(--border-strong);
-  color: var(--text-muted);
-  box-sizing: border-box;
-  transition: all 0.3s ease;
-  position: relative;
-  box-shadow: none;
-}
-
-.image-gen-button svg {
-  display: block;
-  margin: 0;
-  padding: 0;
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  pointer-events: none;
-}
-
-.image-gen-button:not(.active) svg rect,
-.image-gen-button:not(.active) svg circle,
-.image-gen-button:not(.active) svg path {
-  stroke: var(--text-muted);
-  fill: var(--text-muted);
-  transition:
-    stroke 0.3s ease,
-    fill 0.3s ease;
-}
-
-.image-gen-button.active {
-  background: var(--gradient-button);
-  border-color: var(--primary-color);
-  color: white;
-  box-shadow: 0 4px 16px rgba(6, 182, 212, 0.4);
-}
-
-.image-gen-button.active svg rect,
-.image-gen-button.active svg circle,
-.image-gen-button.active svg path {
-  stroke: white;
-  fill: white;
-}
-
-.image-gen-button:disabled,
-.image-gen-button.touch-disabled {
-  background: var(--bg-card);
-  border-color: var(--border-color);
-  opacity: 0.5;
-  cursor: default;
-}
-
 /* Note styling */
 .note-icon svg {
   width: 18px;

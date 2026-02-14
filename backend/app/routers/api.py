@@ -32,7 +32,6 @@ from ..model_runner import (
     call_openrouter_streaming,
     clean_model_response,
     estimate_token_count,
-    is_image_generation_model,
 )
 from ..models import (
     AppSettings,
@@ -104,7 +103,6 @@ class CompareRequest(BaseModel):
         None  # Optional: User-provided location (e.g., "Granbury, TX, USA") - most accurate, takes priority over IP-based detection
     )
     enable_web_search: bool = False  # Optional: Enable web search tool for models that support it
-    enable_image_generation: bool = False  # Optional: Enable image generation for models that support it
 
     model_config = ConfigDict(
         json_schema_extra={
@@ -1313,6 +1311,7 @@ async def compare_stream(
                     search_provider_instance = None
 
                     if req.enable_web_search:
+                        # Check if this model supports web search
                         model_supports_web_search = False
                         for provider_models in MODELS_BY_PROVIDER.values():
                             for model in provider_models:
@@ -1371,10 +1370,6 @@ async def compare_stream(
                                             filtered_history.append(msg)
 
                             # Manually iterate generator to capture return value (TokenUsage)
-                            enable_image_for_model = (
-                                req.enable_image_generation
-                                and is_image_generation_model(model_id)
-                            )
                             gen = call_openrouter_streaming(
                                 req.input_data,
                                 model_id,
@@ -1383,7 +1378,6 @@ async def compare_stream(
                                 max_tokens_override=effective_max_tokens,
                                 credits_limited=credits_limited,
                                 enable_web_search=enable_web_search_for_model,
-                                enable_image_generation=enable_image_for_model,
                                 search_provider=search_provider_instance,
                                 user_timezone=user_timezone,
                                 user_location=user_location,
