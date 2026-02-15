@@ -428,7 +428,7 @@ The AI must update this table after completing each session (see Instructions fo
 | 6 | Done | Extracted 7 HTML templates to backend/app/templates/. email_service.py reduced from ~850 to ~325 lines. Uses Python string.Template for variable substitution. |
 | 7 | Done | Created backend/app/llm/ (named llm to avoid shadowing app.models). registry.py, tokens.py, text_processing.py, streaming.py, connection.py. model_runner.py is ~70-line shim re-exporting from llm. Updated test_model_runner_edge_cases to patch app.llm.streaming.client. All backend tests pass. |
 | 8 | Done | Admin model add/delete/update now use JSON registry. Removed find_matching_brace, find_provider_list_bounds, find_models_by_provider_end, extract_providers_from_content. Added load_registry, save_registry, get_registry_path to llm/registry.py. reload_registry propagates to llm and model_runner namespaces. add_model_stream backups models_registry.json for rollback. All 259 backend tests pass. |
-| 9 | Pending | |
+| 9 | Done | Split admin.py into backend/app/routers/admin/ package. Created helpers.py, analytics.py, users.py, settings.py, models_management.py, search_providers.py. __init__.py combines sub-routers. Deleted old admin.py. All 21 admin integration tests pass. |
 | 10 | Pending | |
 | 11 | Pending | |
 | 12 | Pending | |
