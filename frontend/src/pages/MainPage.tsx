@@ -1611,7 +1611,10 @@ export function MainPage() {
     setIsModelsHidden(false)
   }
 
-  // Track model selection changes for default override
+  // Track model selection changes for default override.
+  // When user deselects models (via checkbox or model card close) so that current
+  // selection no longer matches the default, hide the default selection name from
+  // the toolbar. When selections match again, show it.
   useEffect(() => {
     const defaultSelection = getDefaultSelection()
     if (!defaultSelection) {
@@ -1619,6 +1622,8 @@ export function MainPage() {
     }
 
     if (selectedModels.length === 0) {
+      // User deselected all models - hide default name since selection doesn't match
+      setDefaultSelectionOverridden(true)
       return
     }
 
