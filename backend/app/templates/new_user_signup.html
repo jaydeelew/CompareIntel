@@ -1,0 +1,73 @@
+<html>
+  <head>
+    <meta name="color-scheme" content="light">
+    <meta name="supported-color-schemes" content="light">
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        line-height: 1.6;
+        color: #333 !important;
+        background-color: #ffffff !important;
+      }
+      .container {
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+      .header {
+        background-color: #10b981 !important;
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+        color: white !important;
+        padding: 30px;
+        text-align: center;
+        border-radius: 8px 8px 0 0;
+      }
+      .content {
+        background-color: #f9f9f9 !important;
+        background: #f9f9f9 !important;
+        padding: 30px;
+        border-radius: 0 0 8px 8px;
+      }
+      .info-box {
+        background-color: white !important;
+        background: white !important;
+        border: 2px solid #10b981;
+        padding: 20px;
+        border-radius: 8px;
+        margin: 20px 0;
+      }
+      .info-row {
+        padding: 8px 0;
+        border-bottom: 1px solid #e5e7eb;
+      }
+      .info-row:last-child {
+        border-bottom: none;
+      }
+      .footer {
+        text-align: center;
+        margin-top: 20px;
+        color: #666 !important;
+        font-size: 12px;
+      }
+    </style>
+  </head>
+  <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; background-color: #ffffff;">
+    <div class="container">
+      <div class="header" style="background-color: #10b981 !important; background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important; color: white !important; padding: 30px; text-align: center; border-radius: 8px 8px 0 0;">
+        <h1 style="color: white !important; margin: 0;">🎉 New User Signup</h1>
+      </div>
+      <div class="content" style="background-color: #f9f9f9 !important; background: #f9f9f9 !important; padding: 30px; border-radius: 0 0 8px 8px;">
+        <p>A new user has registered at CompareIntel (compareintel.com).</p>
+        <div class="info-box" style="background-color: white !important; background: white !important; border: 2px solid #10b981; padding: 20px; border-radius: 8px; margin: 20px 0;">
+          <div class="info-row"><strong>Email:</strong> $user_email</div>
+          <div class="info-row"><strong>User ID:</strong> $user_id</div>
+          <div class="info-row"><strong>Registered:</strong> $formatted_time</div>
+        </div>
+      </div>
+      <div class="footer">
+        <p>CompareIntel Admin Notification</p>
+        <p>&copy; 2026 CompareIntel. All rights reserved.</p>
+      </div>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,118 @@
+<html>
+  <head>
+    <meta name="color-scheme" content="light">
+    <meta name="supported-color-schemes" content="light">
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        line-height: 1.6;
+        color: #333 !important;
+        background-color: #ffffff !important;
+      }
+      .container {
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+      .header {
+        background-color: #1e40af !important;
+        background: linear-gradient(135deg, #1e40af 0%, #0ea5e9 100%) !important;
+        color: white !important;
+        padding: 30px;
+        text-align: center;
+        border-radius: 8px 8px 0 0;
+      }
+      .content {
+        background-color: #f9f9f9 !important;
+        background: #f9f9f9 !important;
+        padding: 30px;
+        border-radius: 0 0 8px 8px;
+      }
+      .button {
+        display: inline-block;
+        padding: 12px 30px;
+        background-color: #1e40af !important;
+        background: linear-gradient(135deg, #1e40af 0%, #0ea5e9 100%) !important;
+        color: white !important;
+        text-decoration: none;
+        border-radius: 6px;
+        margin: 20px 0;
+      }
+      .subscription-box {
+        background-color: white !important;
+        background: white !important;
+        border: 2px solid #0ea5e9;
+        padding: 20px;
+        border-radius: 8px;
+        margin: 20px 0;
+      }
+      .benefits {
+        background-color: white !important;
+        background: white !important;
+        padding: 20px;
+        border-radius: 8px;
+        margin: 20px 0;
+      }
+      .benefits ul {
+        list-style: none;
+        padding: 0;
+      }
+      .benefits li {
+        padding: 8px 0;
+        padding-left: 25px;
+        position: relative;
+      }
+      .benefits li:before {
+        content: "✓";
+        position: absolute;
+        left: 0;
+        color: #0ea5e9;
+        font-weight: bold;
+      }
+      .footer {
+        text-align: center;
+        margin-top: 20px;
+        color: #666 !important;
+        font-size: 12px;
+      }
+    </style>
+  </head>
+  <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; background-color: #ffffff;">
+    <div class="container">
+      <div class="header" style="background-color: #1e40af !important; background: linear-gradient(135deg, #1e40af 0%, #0ea5e9 100%) !important; color: white !important; padding: 30px; text-align: center; border-radius: 8px 8px 0 0;">
+        <h1 style="color: white !important; margin: 0;">🎉 Subscription Confirmed!</h1>
+      </div>
+      <div class="content" style="background-color: #f9f9f9 !important; background: #f9f9f9 !important; padding: 30px; border-radius: 0 0 8px 8px;">
+        <p>Thank you for upgrading to CompareIntel <strong>$tier_display</strong>!</p>
+
+        <div class="subscription-box" style="background-color: white !important; background: white !important; border: 2px solid #0ea5e9; padding: 20px; border-radius: 8px; margin: 20px 0;">
+          <h3 style="margin-top: 0;">Subscription Details</h3>
+          <p><strong>Plan:</strong> $tier_display</p>
+          <p><strong>Billing:</strong> $period_display</p>
+          <p><strong>Amount:</strong> $amount_formatted</p>
+        </div>
+
+        <div class="benefits" style="background-color: white !important; background: white !important; padding: 20px; border-radius: 8px; margin: 20px 0;">
+          <h3>Your $tier_display Benefits</h3>
+          <ul>
+            $benefits_html
+          </ul>
+        </div>
+
+        <p>Your subscription is now active and you have full access to all $tier_display features.</p>
+
+        <div style="text-align: center;">
+          <a href="$dashboard_url" class="button" style="display: inline-block; padding: 12px 30px; background-color: #1e40af !important; background: linear-gradient(135deg, #1e40af 0%, #0ea5e9 100%) !important; color: white !important; text-decoration: none; border-radius: 6px; margin: 20px 0;">Go to Dashboard</a>
+        </div>
+
+        <p style="margin-top: 30px; color: #666 !important; font-size: 14px;">
+          You can manage your subscription and billing from your account dashboard at any time.
+        </p>
+      </div>
+      <div class="footer">
+        <p>Need help? Contact us at <a href="mailto:support@compareintel.com" style="color: #0ea5e9;">support@compareintel.com</a></p>
+        <p>&copy; 2026 CompareIntel. All rights reserved.</p>
+      </div>
+    </div>
+  </body>
+</html>

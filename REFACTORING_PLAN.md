@@ -424,7 +424,7 @@ The AI must update this table after completing each session (see Instructions fo
 | 3 | Done | Verified: no # ==== in .github/workflows, shell scripts use 1-2 line headers (deploy-production.sh, setup-compareintel-ssl.sh, GoogleBingSearchRank.sh). |
 | 4 | Done | Registry in `backend/data/models_registry.json`. `model_runner.py` loads via JSON. Admin model add/delete still edits Python source; Session 8 will switch to JSON. |
 | 5 | Done | faqData moved to frontend/src/data/faq.tsx. glossaryTerms, categoryLabels, categoryDescriptions moved to frontend/src/data/glossary.ts. FAQ.tsx ~148 lines, Glossary.tsx ~324 lines. |
-| 6 | Pending | |
+| 6 | Done | Extracted 7 HTML templates to backend/app/templates/. email_service.py reduced from ~850 to ~325 lines. Uses Python string.Template for variable substitution. |
 | 7 | Pending | |
 | 8 | Pending | |
 | 9 | Pending | |

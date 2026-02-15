@@ -1,12 +1,11 @@
 """
 Email service for sending verification and notification emails.
-
-This module handles all email communications including verification,
-password resets, and subscription notifications.
 """
 
 import os
 from datetime import datetime
+from pathlib import Path
+from string import Template
 from typing import Any
 
 from fastapi_mail import ConnectionConfig, FastMail, MessageSchema
@@ -36,116 +35,25 @@ else:
     conf = None
     fm = None
 
+_TEMPLATES_DIR = Path(__file__).resolve().parent / "templates"
+
+
+def _load_template(name: str) -> Template:
+    path = _TEMPLATES_DIR / name
+    return Template(path.read_text())
+
 
 async def send_verification_email(email: EmailStr, code: str) -> None:
-    """
-    Send email verification code to user.
-
-    Args:
-        email: User's email address
-        code: 6-digit verification code
-    """
-    # Skip sending email if not configured (development mode)
     if not EMAIL_CONFIGURED:
         print(f"Email service not configured - skipping verification email for {email}")
         print(f"Verification code: {code}")
         return
 
-    html = f"""
-    <html>
-      <head>
-        <meta name="color-scheme" content="light">
-        <meta name="supported-color-schemes" content="light">
-        <style>
-          body {{
-            font-family: Arial, sans-serif;
-            line-height: 1.6;
-            color: #333 !important;
-            background-color: #ffffff !important;
-          }}
-          .container {{
-            max-width: 600px;
-            margin: 0 auto;
-            padding: 20px;
-          }}
-          .header {{
-            background-color: #1e40af !important;
-            background: linear-gradient(135deg, #1e40af 0%, #0ea5e9 100%) !important;
-            color: white !important;
-            padding: 30px;
-            text-align: center;
-            border-radius: 8px 8px 0 0;
-          }}
-          .content {{
-            background-color: #f9f9f9 !important;
-            background: #f9f9f9 !important;
-            padding: 30px;
-            border-radius: 0 0 8px 8px;
-          }}
-          .code-box {{
-            background-color: #1e40af !important;
-            background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%) !important;
-            color: white !important;
-            font-size: 36px;
-            font-weight: bold;
-            letter-spacing: 8px;
-            padding: 20px 30px;
-            border-radius: 12px;
-            margin: 25px auto;
-            display: inline-block;
-            font-family: 'Courier New', monospace;
-            box-shadow: 0 4px 14px rgba(59, 130, 246, 0.4);
-          }}
-          .footer {{
-            text-align: center;
-            margin-top: 20px;
-            color: #666 !important;
-            font-size: 12px;
-          }}
-          .warning {{
-            background-color: #fef3c7 !important;
-            background: #fef3c7 !important;
-            border: 1px solid #f59e0b;
-            color: #92400e !important;
-            padding: 12px;
-            border-radius: 6px;
-            margin: 15px 0;
-            font-size: 14px;
-          }}
-        </style>
-      </head>
-      <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; background-color: #ffffff;">
-        <div class="container">
-          <div class="header" style="background-color: #1e40af !important; background: linear-gradient(135deg, #1e40af 0%, #0ea5e9 100%) !important; color: white !important; padding: 30px; text-align: center; border-radius: 8px 8px 0 0;">
-            <h1 style="color: white !important; margin: 0;">Welcome to CompareIntel!</h1>
-          </div>
-          <div class="content" style="background-color: #f9f9f9 !important; background: #f9f9f9 !important; padding: 30px; border-radius: 0 0 8px 8px;">
-            <p>Thank you for registering with CompareIntel, the AI model comparison platform.</p>
-            <p>To complete your registration and start comparing AI models, enter the verification code below:</p>
-            <div style="text-align: center;">
-              <div class="code-box" style="background-color: #1e40af !important; background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%) !important; color: white !important; font-size: 36px; font-weight: bold; letter-spacing: 8px; padding: 20px 30px; border-radius: 12px; margin: 25px auto; display: inline-block; font-family: 'Courier New', monospace; box-shadow: 0 4px 14px rgba(59, 130, 246, 0.4);">{code}</div>
-            </div>
-            <p style="text-align: center; color: #6b7280 !important; font-size: 14px;">
-              Copy and paste this code into the verification modal on CompareIntel.
-            </p>
-            <div class="warning" style="background-color: #fef3c7 !important; background: #fef3c7 !important; border: 1px solid #f59e0b; color: #92400e !important; padding: 12px; border-radius: 6px; margin: 15px 0; font-size: 14px;">
-              <strong>⏰ This code expires in 15 minutes.</strong>
-            </div>
-            <p>If you didn't create an account with CompareIntel, you can safely ignore this email.</p>
-          </div>
-          <div class="footer">
-            <p>Need help? Contact us at <a href="mailto:support@compareintel.com" style="color: #0ea5e9;">support@compareintel.com</a></p>
-            <p>&copy; 2026 CompareIntel. All rights reserved.</p>
-          </div>
-        </div>
-      </body>
-    </html>
-    """
+    html = _load_template("verification_email.html").substitute(code=code)
 
     message = MessageSchema(
         subject="Your CompareIntel Verification Code", recipients=[email], body=html, subtype="html"
     )
-
     try:
         await fm.send_message(message)
     except Exception as e:
@@ -154,18 +62,6 @@ async def send_verification_email(email: EmailStr, code: str) -> None:
 
 
 async def send_password_reset_email(email: EmailStr, token: str) -> None:
-    """
-    Send password reset link to user.
-
-    Args:
-        email: User's email address
-        token: Password reset token
-
-    Note: The password reset link uses clicktracking="off" attribute to prevent
-    email providers from wrapping the link in a subdomain which would cause SSL
-    certificate errors. This ensures users can directly access the reset URL.
-    """
-    # Skip sending email if not configured (development mode)
     if not EMAIL_CONFIGURED:
         frontend_url = os.getenv("FRONTEND_URL", "http://localhost:5173")
         reset_url = f"{frontend_url}/reset-password?token={token}"
@@ -177,95 +73,11 @@ async def send_password_reset_email(email: EmailStr, token: str) -> None:
     frontend_url = os.getenv("FRONTEND_URL", "http://localhost:5173")
     reset_url = f"{frontend_url}/reset-password?token={token}"
 
-    html = f"""
-    <html>
-      <head>
-        <meta name="color-scheme" content="light">
-        <meta name="supported-color-schemes" content="light">
-        <style>
-          body {{
-            font-family: Arial, sans-serif;
-            line-height: 1.6;
-            color: #333 !important;
-            background-color: #ffffff !important;
-          }}
-          .container {{
-            max-width: 600px;
-            margin: 0 auto;
-            padding: 20px;
-          }}
-          .header {{
-            background-color: #1e40af !important;
-            background: linear-gradient(135deg, #1e40af 0%, #0ea5e9 100%) !important;
-            color: white !important;
-            padding: 30px;
-            text-align: center;
-            border-radius: 8px 8px 0 0;
-          }}
-          .content {{
-            background-color: #f9f9f9 !important;
-            background: #f9f9f9 !important;
-            padding: 30px;
-            border-radius: 0 0 8px 8px;
-          }}
-          .button {{
-            display: inline-block;
-            padding: 12px 30px;
-            background-color: #1e40af !important;
-            background: linear-gradient(135deg, #1e40af 0%, #0ea5e9 100%) !important;
-            color: white !important;
-            text-decoration: none;
-            border-radius: 6px;
-            margin: 20px 0;
-          }}
-          .footer {{
-            text-align: center;
-            margin-top: 20px;
-            color: #666 !important;
-            font-size: 12px;
-          }}
-          .warning {{
-            background-color: #fff3cd !important;
-            background: #fff3cd !important;
-            border: 1px solid #ffeaa7;
-            color: #856404 !important;
-            padding: 12px;
-            border-radius: 6px;
-            margin: 15px 0;
-          }}
-        </style>
-      </head>
-      <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; background-color: #ffffff;">
-        <div class="container">
-          <div class="header" style="background-color: #1e40af !important; background: linear-gradient(135deg, #1e40af 0%, #0ea5e9 100%) !important; color: white !important; padding: 30px; text-align: center; border-radius: 8px 8px 0 0;">
-            <h1 style="color: white !important; margin: 0;">Password Reset Request</h1>
-          </div>
-          <div class="content" style="background-color: #f9f9f9 !important; background: #f9f9f9 !important; padding: 30px; border-radius: 0 0 8px 8px;">
-            <p>You requested to reset your password for your CompareIntel account.</p>
-            <p>Click the button below to create a new password:</p>
-            <div style="text-align: center;">
-              <a href="{reset_url}" class="button" clicktracking="off" style="display: inline-block; padding: 12px 30px; background-color: #1e40af !important; background: linear-gradient(135deg, #1e40af 0%, #0ea5e9 100%) !important; color: white !important; text-decoration: none; border-radius: 6px; margin: 20px 0;">Reset Password</a>
-            </div>
-            <p>Or copy and paste this link into your browser:</p>
-            <p style="word-break: break-all; color: #0ea5e9 !important;">{reset_url}</p>
-            <div class="warning" style="background-color: #fff3cd !important; background: #fff3cd !important; border: 1px solid #ffeaa7; color: #856404 !important; padding: 12px; border-radius: 6px; margin: 15px 0;">
-              <strong>⚠️ Security Notice:</strong> This link will expire in 1 hour.
-            </div>
-            <p>If you didn't request a password reset, you can safely ignore this email. Your password will remain unchanged.</p>
-          </div>
-          <div class="footer">
-            <p>Need help? Contact us at <a href="mailto:support@compareintel.com" style="color: #0ea5e9;">support@compareintel.com</a></p>
-            <p>&copy; 2026 CompareIntel. All rights reserved.</p>
-          </div>
-        </div>
-      </body>
-    </html>
-    """
+    html = _load_template("password_reset_email.html").substitute(reset_url=reset_url)
 
     message = MessageSchema(
         subject="Reset Your CompareIntel Password", recipients=[email], body=html, subtype="html"
     )
-
     try:
         await fm.send_message(message)
     except Exception as e:
@@ -276,25 +88,15 @@ async def send_password_reset_email(email: EmailStr, token: str) -> None:
 async def send_subscription_confirmation_email(
     email: EmailStr, tier: str, period: str, amount: float
 ) -> None:
-    """
-    Send subscription confirmation email.
+    from .config import get_conversation_limit, get_daily_limit, get_model_limit
 
-    Args:
-        email: User's email address
-        tier: Subscription tier (starter, pro)
-        period: Subscription period (monthly, yearly)
-        amount: Amount paid
-    """
     frontend_url = os.getenv("FRONTEND_URL", "http://localhost:5173")
     dashboard_url = f"{frontend_url}/dashboard"
 
     tier_display = tier.replace("_", " ").title()
     period_display = "Monthly" if period == "monthly" else "Yearly"
+    amount_formatted = f"${amount:.2f}"
 
-    # Import configuration to get tier limits
-    from .config import get_conversation_limit, get_daily_limit, get_model_limit
-
-    # Get tier benefits from configuration
     benefits = {
         "starter": [
             f"{get_daily_limit('starter')} model responses per day",
@@ -330,126 +132,13 @@ async def send_subscription_confirmation_email(
 
     benefits_html = "".join([f"<li>{benefit}</li>" for benefit in benefits.get(tier, [])])
 
-    html = f"""
-    <html>
-      <head>
-        <meta name="color-scheme" content="light">
-        <meta name="supported-color-schemes" content="light">
-        <style>
-          body {{
-            font-family: Arial, sans-serif;
-            line-height: 1.6;
-            color: #333 !important;
-            background-color: #ffffff !important;
-          }}
-          .container {{
-            max-width: 600px;
-            margin: 0 auto;
-            padding: 20px;
-          }}
-          .header {{
-            background-color: #1e40af !important;
-            background: linear-gradient(135deg, #1e40af 0%, #0ea5e9 100%) !important;
-            color: white !important;
-            padding: 30px;
-            text-align: center;
-            border-radius: 8px 8px 0 0;
-          }}
-          .content {{
-            background-color: #f9f9f9 !important;
-            background: #f9f9f9 !important;
-            padding: 30px;
-            border-radius: 0 0 8px 8px;
-          }}
-          .button {{
-            display: inline-block;
-            padding: 12px 30px;
-            background-color: #1e40af !important;
-            background: linear-gradient(135deg, #1e40af 0%, #0ea5e9 100%) !important;
-            color: white !important;
-            text-decoration: none;
-            border-radius: 6px;
-            margin: 20px 0;
-          }}
-          .subscription-box {{
-            background-color: white !important;
-            background: white !important;
-            border: 2px solid #0ea5e9;
-            padding: 20px;
-            border-radius: 8px;
-            margin: 20px 0;
-          }}
-          .benefits {{
-            background-color: white !important;
-            background: white !important;
-            padding: 20px;
-            border-radius: 8px;
-            margin: 20px 0;
-          }}
-          .benefits ul {{
-            list-style: none;
-            padding: 0;
-          }}
-          .benefits li {{
-            padding: 8px 0;
-            padding-left: 25px;
-            position: relative;
-          }}
-          .benefits li:before {{
-            content: "✓";
-            position: absolute;
-            left: 0;
-            color: #0ea5e9;
-            font-weight: bold;
-          }}
-          .footer {{
-            text-align: center;
-            margin-top: 20px;
-            color: #666 !important;
-            font-size: 12px;
-          }}
-        </style>
-      </head>
-      <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; background-color: #ffffff;">
-        <div class="container">
-          <div class="header" style="background-color: #1e40af !important; background: linear-gradient(135deg, #1e40af 0%, #0ea5e9 100%) !important; color: white !important; padding: 30px; text-align: center; border-radius: 8px 8px 0 0;">
-            <h1 style="color: white !important; margin: 0;">🎉 Subscription Confirmed!</h1>
-          </div>
-          <div class="content" style="background-color: #f9f9f9 !important; background: #f9f9f9 !important; padding: 30px; border-radius: 0 0 8px 8px;">
-            <p>Thank you for upgrading to CompareIntel <strong>{tier_display}</strong>!</p>
-            
-            <div class="subscription-box" style="background-color: white !important; background: white !important; border: 2px solid #0ea5e9; padding: 20px; border-radius: 8px; margin: 20px 0;">
-              <h3 style="margin-top: 0;">Subscription Details</h3>
-              <p><strong>Plan:</strong> {tier_display}</p>
-              <p><strong>Billing:</strong> {period_display}</p>
-              <p><strong>Amount:</strong> ${amount:.2f}</p>
-            </div>
-            
-            <div class="benefits" style="background-color: white !important; background: white !important; padding: 20px; border-radius: 8px; margin: 20px 0;">
-              <h3>Your {tier_display} Benefits</h3>
-              <ul>
-                {benefits_html}
-              </ul>
-            </div>
-            
-            <p>Your subscription is now active and you have full access to all {tier_display} features.</p>
-            
-            <div style="text-align: center;">
-              <a href="{dashboard_url}" class="button" style="display: inline-block; padding: 12px 30px; background-color: #1e40af !important; background: linear-gradient(135deg, #1e40af 0%, #0ea5e9 100%) !important; color: white !important; text-decoration: none; border-radius: 6px; margin: 20px 0;">Go to Dashboard</a>
-            </div>
-            
-            <p style="margin-top: 30px; color: #666 !important; font-size: 14px;">
-              You can manage your subscription and billing from your account dashboard at any time.
-            </p>
-          </div>
-          <div class="footer">
-            <p>Need help? Contact us at <a href="mailto:support@compareintel.com" style="color: #0ea5e9;">support@compareintel.com</a></p>
-            <p>&copy; 2026 CompareIntel. All rights reserved.</p>
-          </div>
-        </div>
-      </body>
-    </html>
-    """
+    html = _load_template("subscription_confirmation.html").substitute(
+        tier_display=tier_display,
+        period_display=period_display,
+        amount_formatted=amount_formatted,
+        benefits_html=benefits_html,
+        dashboard_url=dashboard_url,
+    )
 
     message = MessageSchema(
         subject=f"Subscription Confirmed - CompareIntel {tier_display}",
@@ -457,162 +146,41 @@ async def send_subscription_confirmation_email(
         body=html,
         subtype="html",
     )
-
     try:
         await fm.send_message(message)
     except Exception as e:
         print(f"Failed to send subscription confirmation email to {email}: {str(e)}")
-        # Don't raise exception here - subscription is already confirmed
 
 
 async def send_usage_limit_warning_email(
     email: EmailStr, usage_count: int, daily_limit: int, tier: str
 ) -> None:
-    """
-    Send warning email when user is approaching their daily limit.
-
-    Args:
-        email: User's email address
-        usage_count: Current usage count
-        daily_limit: Daily limit for their tier
-        tier: Current subscription tier
-    """
     frontend_url = os.getenv("FRONTEND_URL", "http://localhost:5173")
     upgrade_url = f"{frontend_url}/subscription"
 
     percentage_used = (usage_count / daily_limit) * 100
+    percentage_used_int = int(percentage_used)
 
-    html = f"""
-    <html>
-      <head>
-        <meta name="color-scheme" content="light">
-        <meta name="supported-color-schemes" content="light">
-        <style>
-          body {{
-            font-family: Arial, sans-serif;
-            line-height: 1.6;
-            color: #333 !important;
-            background-color: #ffffff !important;
-          }}
-          .container {{
-            max-width: 600px;
-            margin: 0 auto;
-            padding: 20px;
-          }}
-          .header {{
-            background-color: #f59e0b !important;
-            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
-            color: white !important;
-            padding: 30px;
-            text-align: center;
-            border-radius: 8px 8px 0 0;
-          }}
-          .content {{
-            background-color: #f9f9f9 !important;
-            background: #f9f9f9 !important;
-            padding: 30px;
-            border-radius: 0 0 8px 8px;
-          }}
-          .button {{
-            display: inline-block;
-            padding: 12px 30px;
-            background-color: #1e40af !important;
-            background: linear-gradient(135deg, #1e40af 0%, #0ea5e9 100%) !important;
-            color: white !important;
-            text-decoration: none;
-            border-radius: 6px;
-            margin: 20px 0;
-          }}
-          .usage-bar {{
-            background-color: #e0e0e0 !important;
-            background: #e0e0e0 !important;
-            border-radius: 10px;
-            height: 30px;
-            position: relative;
-            margin: 20px 0;
-          }}
-          .usage-fill {{
-            background-color: #f59e0b !important;
-            background: linear-gradient(90deg, #f59e0b 0%, #d97706 100%) !important;
-            height: 100%;
-            border-radius: 10px;
-            width: {percentage_used}%;
-          }}
-          .footer {{
-            text-align: center;
-            margin-top: 20px;
-            color: #666 !important;
-            font-size: 12px;
-          }}
-        </style>
-      </head>
-      <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; background-color: #ffffff;">
-        <div class="container">
-          <div class="header" style="background-color: #f59e0b !important; background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important; color: white !important; padding: 30px; text-align: center; border-radius: 8px 8px 0 0;">
-            <h1 style="color: white !important; margin: 0;">⚠️ Usage Limit Warning</h1>
-          </div>
-          <div class="content" style="background-color: #f9f9f9 !important; background: #f9f9f9 !important; padding: 30px; border-radius: 0 0 8px 8px;">
-            <p>You've used <strong>{usage_count}</strong> out of <strong>{
-        daily_limit
-    }</strong> daily comparisons ({percentage_used:.0f}%).</p>
-            
-            <div class="usage-bar" style="background-color: #e0e0e0 !important; background: #e0e0e0 !important; border-radius: 10px; height: 30px; position: relative; margin: 20px 0;">
-              <div class="usage-fill" style="background-color: #f59e0b !important; background: linear-gradient(90deg, #f59e0b 0%, #d97706 100%) !important; height: 100%; border-radius: 10px; width: {
-        percentage_used
-    }%;"></div>
-            </div>
-            
-            <p>You're approaching your daily limit. To continue using CompareIntel without interruption, consider upgrading your plan.</p>
-            
-            {
-        '''
-            <div style="text-align: center;">
-              <a href="'''
-        + upgrade_url
-        + '''" class="button" style="display: inline-block; padding: 12px 30px; background-color: #1e40af !important; background: linear-gradient(135deg, #1e40af 0%, #0ea5e9 100%) !important; color: white !important; text-decoration: none; border-radius: 6px; margin: 20px 0;">Upgrade Your Plan</a>
-            </div>
-            '''
-    }
-            
-            <p style="margin-top: 20px; color: #666 !important; font-size: 14px;">
-              Your daily limit resets at midnight UTC.
-            </p>
-          </div>
-          <div class="footer">
-            <p>Need help? Contact us at <a href="mailto:support@compareintel.com" style="color: #0ea5e9;">support@compareintel.com</a></p>
-            <p>&copy; 2026 CompareIntel. All rights reserved.</p>
-          </div>
-        </div>
-      </body>
-    </html>
-    """
+    html = _load_template("usage_limit_warning.html").substitute(
+        usage_count=usage_count,
+        daily_limit=daily_limit,
+        percentage_used=percentage_used,
+        percentage_used_int=percentage_used_int,
+        upgrade_url=upgrade_url,
+    )
 
     message = MessageSchema(
         subject="CompareIntel Usage Warning", recipients=[email], body=html, subtype="html"
     )
-
     try:
         await fm.send_message(message)
     except Exception as e:
         print(f"Failed to send usage warning email to {email}: {str(e)}")
-        # Don't raise exception - this is just a notification
 
 
 async def send_model_availability_report(check_results: dict[str, Any]) -> None:
-    """
-    Send model availability check report email to support@compareintel.com.
-
-    Args:
-        check_results: Dictionary containing check results with:
-            - total_models: Total number of models checked
-            - available_models: List of available models
-            - unavailable_models: List of unavailable models with details
-            - check_timestamp: When the check was performed
-            - error: Any error that occurred
-    """
     recipient_email = "support@compareintel.com"
 
-    # Skip sending email if not configured (development mode)
     if not EMAIL_CONFIGURED:
         return
 
@@ -622,7 +190,6 @@ async def send_model_availability_report(check_results: dict[str, Any]) -> None:
     check_timestamp = check_results.get("check_timestamp", "")
     error = check_results.get("error")
 
-    # Determine status and subject
     if error:
         status = "error"
         status_color = "#dc2626"
@@ -639,14 +206,12 @@ async def send_model_availability_report(check_results: dict[str, Any]) -> None:
         status_text = "All Models Available"
         subject = f"✓ Model Availability Check - All {total_models} Models Available"
 
-    # Format timestamp
     try:
         dt = datetime.fromisoformat(check_timestamp.replace("Z", "+00:00"))
         formatted_timestamp = dt.strftime("%Y-%m-%d %H:%M:%S UTC")
-    except:
+    except Exception:
         formatted_timestamp = check_timestamp
 
-    # Build unavailable models HTML
     unavailable_html = ""
     if unavailable_models:
         unavailable_html = "<h3 style='color: #dc2626; margin-top: 20px;'>Unavailable Models</h3><ul style='list-style: none; padding: 0;'>"
@@ -664,14 +229,12 @@ async def send_model_availability_report(check_results: dict[str, Any]) -> None:
             """
         unavailable_html += "</ul>"
 
-    # Build available models summary (only show if there are issues)
     available_summary = ""
     if unavailable_models:
         available_summary = (
             f"<p><strong>Available Models:</strong> {len(available_models)}/{total_models}</p>"
         )
 
-    # Build error section if present
     error_html = ""
     if error:
         error_html = f"""
@@ -680,118 +243,21 @@ async def send_model_availability_report(check_results: dict[str, Any]) -> None:
         </div>
         """
 
-    html = f"""
-    <html>
-      <head>
-        <meta name="color-scheme" content="light">
-        <meta name="supported-color-schemes" content="light">
-        <style>
-          body {{
-            font-family: Arial, sans-serif;
-            line-height: 1.6;
-            color: #333 !important;
-            background-color: #ffffff !important;
-          }}
-          .container {{
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-          }}
-          .header {{
-            background-color: #1e40af !important;
-            background: linear-gradient(135deg, #1e40af 0%, #0ea5e9 100%) !important;
-            color: white !important;
-            padding: 30px;
-            text-align: center;
-            border-radius: 8px 8px 0 0;
-          }}
-          .content {{
-            background-color: #f9f9f9 !important;
-            background: #f9f9f9 !important;
-            padding: 30px;
-            border-radius: 0 0 8px 8px;
-          }}
-          .status-box {{
-            background-color: white !important;
-            background: white !important;
-            border: 2px solid {status_color};
-            padding: 20px;
-            border-radius: 8px;
-            margin: 20px 0;
-            text-align: center;
-          }}
-          .status-box h2 {{
-            color: {status_color} !important;
-            margin: 0 0 10px 0;
-          }}
-          .summary {{
-            background-color: white !important;
-            background: white !important;
-            padding: 20px;
-            border-radius: 8px;
-            margin: 20px 0;
-          }}
-          .summary-item {{
-            padding: 10px 0;
-            border-bottom: 1px solid #e0e0e0;
-          }}
-          .summary-item:last-child {{
-            border-bottom: none;
-          }}
-          .footer {{
-            text-align: center;
-            margin-top: 20px;
-            color: #666 !important;
-            font-size: 12px;
-          }}
-        </style>
-      </head>
-      <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; background-color: #ffffff;">
-        <div class="container">
-          <div class="header" style="background-color: #1e40af !important; background: linear-gradient(135deg, #1e40af 0%, #0ea5e9 100%) !important; color: white !important; padding: 30px; text-align: center; border-radius: 8px 8px 0 0;">
-            <h1 style="color: white !important; margin: 0;">Model Availability Check Report</h1>
-          </div>
-          <div class="content" style="background-color: #f9f9f9 !important; background: #f9f9f9 !important; padding: 30px; border-radius: 0 0 8px 8px;">
-            <div class="status-box" style="background-color: white !important; background: white !important; border: 2px solid {status_color}; padding: 20px; border-radius: 8px; margin: 20px 0; text-align: center;">
-              <h2 style="color: {status_color} !important; margin: 0 0 10px 0;">{status_text}</h2>
-              <p style="margin: 0; color: #666 !important;">Check performed on {formatted_timestamp}</p>
-            </div>
-            
-            {error_html}
-            
-            <div class="summary" style="background-color: white !important; background: white !important; padding: 20px; border-radius: 8px; margin: 20px 0;">
-              <h3>Summary</h3>
-              <div class="summary-item">
-                <strong>Total Models Checked:</strong> {total_models}
-              </div>
-              <div class="summary-item">
-                <strong>Available:</strong> <span style="color: #10b981 !important;">{len(available_models)}</span>
-              </div>
-              <div class="summary-item">
-                <strong>Unavailable:</strong> <span style="color: #dc2626 !important;">{len(unavailable_models)}</span>
-              </div>
-            </div>
-            
-            {available_summary}
-            {unavailable_html}
-            
-            <p style="margin-top: 30px; color: #666 !important; font-size: 14px;">
-              This is an automated daily check of model availability from OpenRouter API.
-            </p>
-          </div>
-          <div class="footer">
-            <p>CompareIntel Model Availability Monitor</p>
-            <p>&copy; 2026 CompareIntel. All rights reserved.</p>
-          </div>
-        </div>
-      </body>
-    </html>
-    """
+    html = _load_template("model_availability_report.html").substitute(
+        status_color=status_color,
+        status_text=status_text,
+        formatted_timestamp=formatted_timestamp,
+        error_html=error_html,
+        total_models=total_models,
+        available_count=len(available_models),
+        unavailable_count=len(unavailable_models),
+        available_summary=available_summary,
+        unavailable_html=unavailable_html,
+    )
 
     message = MessageSchema(
         subject=subject, recipients=[recipient_email], body=html, subtype="html"
     )
-
     try:
         await fm.send_message(message)
     except Exception as e:
@@ -802,15 +268,6 @@ async def send_model_availability_report(check_results: dict[str, Any]) -> None:
 async def send_new_user_signup_notification(
     recipient_email: str, user_email: str, user_id: int, created_at: datetime
 ) -> None:
-    """
-    Send notification email to admin when a new user signs up (production only).
-
-    Args:
-        recipient_email: Admin email to receive the notification
-        user_email: The new user's email address
-        user_id: The new user's database ID
-        created_at: When the user registered
-    """
     if not EMAIL_CONFIGURED:
         print(
             f"Email service not configured - skipping new user signup notification for {user_email}"
@@ -825,81 +282,11 @@ async def send_new_user_signup_notification(
 
     formatted_time = created_at.strftime("%Y-%m-%d %H:%M:%S UTC")
 
-    html = f"""
-    <html>
-      <head>
-        <meta name="color-scheme" content="light">
-        <meta name="supported-color-schemes" content="light">
-        <style>
-          body {{
-            font-family: Arial, sans-serif;
-            line-height: 1.6;
-            color: #333 !important;
-            background-color: #ffffff !important;
-          }}
-          .container {{
-            max-width: 600px;
-            margin: 0 auto;
-            padding: 20px;
-          }}
-          .header {{
-            background-color: #10b981 !important;
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
-            color: white !important;
-            padding: 30px;
-            text-align: center;
-            border-radius: 8px 8px 0 0;
-          }}
-          .content {{
-            background-color: #f9f9f9 !important;
-            background: #f9f9f9 !important;
-            padding: 30px;
-            border-radius: 0 0 8px 8px;
-          }}
-          .info-box {{
-            background-color: white !important;
-            background: white !important;
-            border: 2px solid #10b981;
-            padding: 20px;
-            border-radius: 8px;
-            margin: 20px 0;
-          }}
-          .info-row {{
-            padding: 8px 0;
-            border-bottom: 1px solid #e5e7eb;
-          }}
-          .info-row:last-child {{
-            border-bottom: none;
-          }}
-          .footer {{
-            text-align: center;
-            margin-top: 20px;
-            color: #666 !important;
-            font-size: 12px;
-          }}
-        </style>
-      </head>
-      <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; background-color: #ffffff;">
-        <div class="container">
-          <div class="header" style="background-color: #10b981 !important; background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important; color: white !important; padding: 30px; text-align: center; border-radius: 8px 8px 0 0;">
-            <h1 style="color: white !important; margin: 0;">🎉 New User Signup</h1>
-          </div>
-          <div class="content" style="background-color: #f9f9f9 !important; background: #f9f9f9 !important; padding: 30px; border-radius: 0 0 8px 8px;">
-            <p>A new user has registered at CompareIntel (compareintel.com).</p>
-            <div class="info-box" style="background-color: white !important; background: white !important; border: 2px solid #10b981; padding: 20px; border-radius: 8px; margin: 20px 0;">
-              <div class="info-row"><strong>Email:</strong> {user_email}</div>
-              <div class="info-row"><strong>User ID:</strong> {user_id}</div>
-              <div class="info-row"><strong>Registered:</strong> {formatted_time}</div>
-            </div>
-          </div>
-          <div class="footer">
-            <p>CompareIntel Admin Notification</p>
-            <p>&copy; 2026 CompareIntel. All rights reserved.</p>
-          </div>
-        </div>
-      </body>
-    </html>
-    """
+    html = _load_template("new_user_signup.html").substitute(
+        user_email=user_email,
+        user_id=user_id,
+        formatted_time=formatted_time,
+    )
 
     message = MessageSchema(
         subject=f"[CompareIntel] New signup: {user_email}",
@@ -907,25 +294,15 @@ async def send_new_user_signup_notification(
         body=html,
         subtype="html",
     )
-
     try:
         await fm.send_message(message)
     except Exception as e:
         print(
             f"Failed to send new user signup notification to {recipient_email}: {str(e)}"
         )
-        # Don't raise - registration succeeded, this is just a notification
 
 
 async def send_trial_expired_email(email: EmailStr) -> None:
-    """
-    Send email to free tier users when their 7-day trial expires.
-    Reminds them that paid tiers are coming soon and encourages them to email support.
-
-    Args:
-        email: User's email address
-    """
-    # Skip sending email if not configured (development mode)
     if not EMAIL_CONFIGURED:
         print(f"Email service not configured - skipping trial expired email for {email}")
         return
@@ -933,124 +310,7 @@ async def send_trial_expired_email(email: EmailStr) -> None:
     frontend_url = os.getenv("FRONTEND_URL", "http://localhost:5173")
     dashboard_url = f"{frontend_url}/dashboard"
 
-    html = f"""
-    <html>
-      <head>
-        <meta name="color-scheme" content="light">
-        <meta name="supported-color-schemes" content="light">
-        <style>
-          body {{
-            font-family: Arial, sans-serif;
-            line-height: 1.6;
-            color: #333 !important;
-            background-color: #ffffff !important;
-          }}
-          .container {{
-            max-width: 600px;
-            margin: 0 auto;
-            padding: 20px;
-          }}
-          .header {{
-            background-color: #1e40af !important;
-            background: linear-gradient(135deg, #1e40af 0%, #0ea5e9 100%) !important;
-            color: white !important;
-            padding: 30px;
-            text-align: center;
-            border-radius: 8px 8px 0 0;
-          }}
-          .content {{
-            background-color: #f9f9f9 !important;
-            background: #f9f9f9 !important;
-            padding: 30px;
-            border-radius: 0 0 8px 8px;
-          }}
-          .info-box {{
-            background-color: white !important;
-            background: white !important;
-            border: 2px solid #0ea5e9;
-            padding: 20px;
-            border-radius: 8px;
-            margin: 20px 0;
-          }}
-          .cta-box {{
-            background-color: #eff6ff !important;
-            background: #eff6ff !important;
-            border-left: 4px solid #0ea5e9;
-            padding: 20px;
-            border-radius: 6px;
-            margin: 20px 0;
-          }}
-          .button {{
-            display: inline-block;
-            padding: 12px 30px;
-            background-color: #1e40af !important;
-            background: linear-gradient(135deg, #1e40af 0%, #0ea5e9 100%) !important;
-            color: white !important;
-            text-decoration: none;
-            border-radius: 6px;
-            margin: 20px 0;
-          }}
-          .email-link {{
-            color: #0ea5e9 !important;
-            font-weight: bold;
-            text-decoration: none;
-          }}
-          .footer {{
-            text-align: center;
-            margin-top: 20px;
-            color: #666 !important;
-            font-size: 12px;
-          }}
-        </style>
-      </head>
-      <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; background-color: #ffffff;">
-        <div class="container">
-          <div class="header" style="background-color: #1e40af !important; background: linear-gradient(135deg, #1e40af 0%, #0ea5e9 100%) !important; color: white !important; padding: 30px; text-align: center; border-radius: 8px 8px 0 0;">
-            <h1 style="color: white !important; margin: 0;">Your Trial Has Ended</h1>
-          </div>
-          <div class="content" style="background-color: #f9f9f9 !important; background: #f9f9f9 !important; padding: 30px; border-radius: 0 0 8px 8px;">
-            <p>Thank you for trying CompareIntel! Your 7-day premium trial has ended, and we hope you enjoyed exploring all the premium AI models.</p>
-            
-            <div class="info-box" style="background-color: white !important; background: white !important; border: 2px solid #0ea5e9; padding: 20px; border-radius: 8px; margin: 20px 0;">
-              <h3 style="margin-top: 0; color: #1e40af;">What's Next?</h3>
-              <p>You can still use CompareIntel with our free tier, which includes access to a selection of models. However, <strong>paid subscription tiers are coming soon!</strong></p>
-              <p>With paid tiers, you'll get:</p>
-              <ul style="margin: 10px 0; padding-left: 20px;">
-                <li>Access to all premium AI models</li>
-                <li>Higher daily limits for comparisons</li>
-                <li>More models per comparison</li>
-                <li>Priority support</li>
-              </ul>
-            </div>
-            
-            <div class="cta-box" style="background-color: #eff6ff !important; background: #eff6ff !important; border-left: 4px solid #0ea5e9; padding: 20px; border-radius: 6px; margin: 20px 0;">
-              <h3 style="margin-top: 0; color: #1e40af;">Help Us Launch Paid Tiers Sooner!</h3>
-              <p>We're working hard to bring you paid subscription options. Your feedback and interest help us prioritize this feature.</p>
-              <p style="margin-bottom: 0;"><strong>Email us at <a href="mailto:support@compareintel.com" class="email-link" style="color: #0ea5e9 !important; font-weight: bold; text-decoration: none;">support@compareintel.com</a> to:</strong></p>
-              <ul style="margin: 10px 0; padding-left: 20px;">
-                <li>Express your interest in paid tiers</li>
-                <li>Share which features matter most to you</li>
-                <li>Help us understand your needs</li>
-              </ul>
-              <p style="margin-top: 15px; margin-bottom: 0;">Every email helps us prioritize the launch of paid subscriptions!</p>
-            </div>
-            
-            <div style="text-align: center;">
-              <a href="{dashboard_url}" class="button" style="display: inline-block; padding: 12px 30px; background-color: #1e40af !important; background: linear-gradient(135deg, #1e40af 0%, #0ea5e9 100%) !important; color: white !important; text-decoration: none; border-radius: 6px; margin: 20px 0;">Continue Using CompareIntel</a>
-            </div>
-            
-            <p style="margin-top: 30px; color: #666 !important; font-size: 14px;">
-              We appreciate you being part of the CompareIntel community. Stay tuned for updates on paid tiers!
-            </p>
-          </div>
-          <div class="footer">
-            <p>Need help? Contact us at <a href="mailto:support@compareintel.com" style="color: #0ea5e9;">support@compareintel.com</a></p>
-            <p>&copy; 2026 CompareIntel. All rights reserved.</p>
-          </div>
-        </div>
-      </body>
-    </html>
-    """
+    html = _load_template("trial_expired.html").substitute(dashboard_url=dashboard_url)
 
     message = MessageSchema(
         subject="Your CompareIntel Trial Has Ended - Paid Tiers Coming Soon!",
@@ -1058,7 +318,6 @@ async def send_trial_expired_email(email: EmailStr) -> None:
         body=html,
         subtype="html",
     )
-
     try:
         await fm.send_message(message)
     except Exception as e:
