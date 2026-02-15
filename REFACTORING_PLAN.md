@@ -433,7 +433,7 @@ The AI must update this table after completing each session (see Instructions fo
 | 11 | Done | Split AdminPanel.tsx into tab components. Created UsersTab, ModelsTab, ActionLogsTab, VisitorAnalyticsTab, SearchProvidersTab, utils.ts. AdminPanel reduced from 4,333 to ~358 lines; tab logic + stats + active tab rendering. All 709 frontend tests pass. |
 | 12 | Done | Created useGeolocation.ts, useAuthModals.ts, useTooltipManager.ts hooks. Added HistoryProps, SelectionProps, FileProps interfaces; ComparisonForm now accepts historyProps, selectionProps, fileProps. MainPage uses new hooks and passes grouped props. 709 frontend tests pass. |
 | 13 | Done | Created FileUpload.tsx, TokenUsageDisplay.tsx, SavedSelectionsDropdown.tsx. Also added HistoryDropdown, ContextWarning, FormHeader to reach <600 lines. ComparisonForm reduced from 2,361 to 579 lines. ComparisonFormTypes.ts for shared interfaces. All 709 frontend tests pass. |
-| 14 | Pending | |
+| 14 | Done | Created sseProcessor.ts (~600 lines), comparisonValidation.ts, conversationPreparer.ts. useComparisonStreaming reduced from 2,239 to 1,383 lines. SSE processing, validation, and conversation prep extracted. All 709 frontend tests pass. |
 | 15 | Pending | |
 | 16 | Pending | |
 | 17 | Pending | |
