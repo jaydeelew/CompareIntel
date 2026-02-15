@@ -1,16 +1,5 @@
 name: CI
 
-# Configured GitHub Secrets (all secrets are set in GitHub Settings > Secrets and variables > Actions):
-# - TEST_OPENROUTER_API_KEY: OpenRouter API key for E2E tests
-# - TEST_FREE_EMAIL: Test user email (free tier account)
-# - TEST_FREE_PASSWORD: Test user password (free tier account)
-# - TEST_ADMIN_EMAIL: Admin test user email
-# - TEST_ADMIN_PASSWORD: Admin test user password
-#
-# Note: VS Code GitHub Actions extension may show "Context access might be invalid" warnings
-# for these secrets. These are false positives - the secrets are properly configured and
-# workflows will execute successfully.
-
 on:
   push:
     branches: [master]
@@ -26,7 +15,6 @@ on:
       - '.gitignore'
   workflow_dispatch:
 
-# Cancel in-progress runs of the same workflow
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -36,9 +24,6 @@ env:
   PYTHON_VERSION: '3.11'
 
 jobs:
-  # ============================================================================
-  # Detect Changed Paths
-  # ============================================================================
   detect-changes:
     name: Detect Changed Paths
     runs-on: ubuntu-latest
@@ -50,7 +35,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Need full history for path filtering
+          fetch-depth: 0
       
       - name: Detect changed paths
         uses: dorny/paths-filter@v2
@@ -64,9 +49,6 @@ jobs:
               - 'backend/**'
               - '.github/workflows/ci.yml'
 
-  # ============================================================================
-  # Frontend Jobs
-  # ============================================================================
   frontend-lint:
     name: Frontend Lint & Type Check
     needs: detect-changes
@@ -129,8 +111,6 @@ jobs:
       
       - name: Check coverage thresholds
         run: |
-          # Check if coverage meets minimum thresholds (70% for 2026 best practices)
-          # This is a basic check - detailed reports are in artifacts
           echo "Coverage report generated. Check artifacts for detailed metrics."
       
       - name: Upload coverage to Codecov
@@ -215,9 +195,6 @@ jobs:
               body: comment
             });
 
-  # ============================================================================
-  # Backend Jobs
-  # ============================================================================
   backend-lint:
     name: Backend Lint & Type Check
     needs: detect-changes
@@ -318,7 +295,6 @@ jobs:
       
       - name: Check coverage threshold
         run: |
-          # Check if overall coverage meets 70% threshold (2026 best practice)
           python -m coverage report --fail-under=70 || echo "⚠️  Coverage below 70% threshold"
       
       - name: Generate HTML coverage report
@@ -344,9 +320,6 @@ jobs:
           retention-days: 7
           if-no-files-found: ignore
 
-  # ============================================================================
-  # E2E Tests (Full Stack) - Critical User Flows
-  # ============================================================================
   e2e-test-critical:
     name: E2E Tests - Critical User Flows
     needs: [detect-changes, frontend-build, backend-test]
@@ -449,9 +422,6 @@ jobs:
           path: frontend/test-results/
           retention-days: 7
 
-  # ============================================================================
-  # E2E Tests - Cross-Browser & Mobile
-  # ============================================================================
   e2e-test-browsers:
     name: E2E Tests - Cross-Browser & Mobile
     needs: [detect-changes, frontend-build, backend-test]
@@ -570,9 +540,6 @@ jobs:
           path: frontend/test-results/
           retention-days: 7
 
-  # ============================================================================
-  # E2E Tests - Accessibility
-  # ============================================================================
   e2e-test-accessibility:
     name: E2E Tests - Accessibility (WCAG 2.1 AA)
     needs: [detect-changes, frontend-build, backend-test]
@@ -662,9 +629,6 @@ jobs:
           path: frontend/playwright-report/
           retention-days: 7
 
-  # ============================================================================
-  # Security Scanning
-  # ============================================================================
   security-scan:
     name: Security Scan
     needs: detect-changes
@@ -718,9 +682,6 @@ jobs:
             echo "⚠️  Warning: Potential SQL injection risk. Use parameterized queries."
           fi
 
-  # ============================================================================
-  # Dependency Review (PRs only)
-  # ============================================================================
   dependency-review:
     name: Dependency Review
     runs-on: ubuntu-latest
@@ -737,9 +698,6 @@ jobs:
           fail-on-severity: high
           deny-licenses: GPL-3.0, AGPL-3.0
 
-  # ============================================================================
-  # CI Success Gate
-  # ============================================================================
   ci-success:
     name: CI Success
     needs: [

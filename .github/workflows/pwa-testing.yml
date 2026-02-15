@@ -20,9 +20,6 @@ env:
   PYTHON_VERSION: '3.11'
 
 jobs:
-  # ============================================================================
-  # PWA Feature Testing
-  # ============================================================================
   pwa-test:
     name: PWA Feature Tests
     runs-on: ubuntu-latest
@@ -140,11 +137,6 @@ jobs:
           path: frontend/test-results/
           retention-days: 7
 
-  # ============================================================================
-  # PWA Manifest & Assets Validation
-  # ============================================================================
-  # Note: Full Lighthouse audits (including PWA category) run in performance.yml.
-  # This job focuses on structural PWA validation that doesn't need a running server.
   pwa-manifest-validation:
     name: PWA Manifest & Assets Validation
     runs-on: ubuntu-latest

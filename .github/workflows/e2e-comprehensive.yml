@@ -1,16 +1,5 @@
 name: Comprehensive E2E Testing
 
-# Configured GitHub Secrets (all secrets are set in GitHub Settings > Secrets and variables > Actions):
-# - TEST_OPENROUTER_API_KEY: OpenRouter API key for E2E tests
-# - TEST_FREE_EMAIL: Test user email (free tier account)
-# - TEST_FREE_PASSWORD: Test user password (free tier account)
-# - TEST_ADMIN_EMAIL: Admin test user email
-# - TEST_ADMIN_PASSWORD: Admin test user password
-#
-# Note: VS Code GitHub Actions extension may show "Context access might be invalid" warnings
-# for these secrets. These are false positives - the secrets are properly configured and
-# workflows will execute successfully.
-
 on:
   push:
     branches: [master]
@@ -54,9 +43,6 @@ jobs:
             backend:
               - 'backend/**'
 
-  # ============================================================================
-  # E2E Tests - Advanced Features
-  # ============================================================================
   e2e-advanced-features:
     name: E2E Tests - Advanced Features
     needs: detect-changes
@@ -140,9 +126,6 @@ jobs:
           path: frontend/playwright-report/
           retention-days: 7
 
-  # ============================================================================
-  # E2E Tests - Admin Functionality
-  # ============================================================================
   e2e-admin:
     name: E2E Tests - Admin Functionality
     needs: detect-changes
@@ -223,9 +206,6 @@ jobs:
           path: frontend/playwright-report/
           retention-days: 7
 
-  # ============================================================================
-  # E2E Tests - Mobile Platforms
-  # ============================================================================
   e2e-mobile:
     name: E2E Tests - Mobile Platforms
     needs: detect-changes
@@ -315,9 +295,6 @@ jobs:
           path: frontend/playwright-report/
           retention-days: 7
 
-  # ============================================================================
-  # E2E Tests - Error Scenarios & Edge Cases
-  # ============================================================================
   e2e-error-scenarios:
     name: E2E Tests - Error Scenarios
     needs: detect-changes

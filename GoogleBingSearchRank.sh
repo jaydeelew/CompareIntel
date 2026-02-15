@@ -1,27 +1,6 @@
 #!/bin/bash
-
-# GoogleBingSearchRank.sh
-# Script to check the search ranking of compareintel.com for "compare ai models side by side"
-# Uses local Chrome browser via Selenium
-#
-# USAGE:
-#   ./GoogleBingSearchRank.sh
-#
-#   If encountering issues and to see the browser in action (non-headless mode):
-#     HEADLESS_MODE=false ./GoogleBingSearchRank.sh
-#
-# SETUP:
-#   1. Install Python 3
-#   2. Install required packages:
-#      pip install selenium webdriver-manager
-#   3. Chrome browser must be installed
-#
-# REQUIREMENTS:
-#   - Python 3 (required)
-#   - selenium package (pip install selenium)
-#   - webdriver-manager package (pip install webdriver-manager)
-#   - Chrome browser installed
-#   - bash (required)
+# Checks search ranking of compareintel.com for "compare ai models side by side" using Chrome/Selenium.
+# Usage: ./GoogleBingSearchRank.sh  (or HEADLESS_MODE=false for visible browser)
 
 set -e
 
@@ -458,13 +437,7 @@ PYTHON_EOF
 
 # Main execution
 main() {
-    echo -e "${BLUE}========================================${NC}"
-    echo -e "${BLUE}Search Ranking Checker (Browser Mode)${NC}"
-    echo -e "${BLUE}========================================${NC}"
-    echo -e "Query: ${YELLOW}${SEARCH_QUERY}${NC}"
-    echo -e "Target Domain: ${YELLOW}${TARGET_DOMAIN}${NC}"
-    echo -e "Mode: ${YELLOW}Search until domain found or no more results${NC}"
-    echo -e "Headless Mode: ${YELLOW}${HEADLESS_MODE}${NC}"
+    echo -e "Search ranking: ${YELLOW}${SEARCH_QUERY}${NC} → ${TARGET_DOMAIN} (headless=${HEADLESS_MODE})"
     echo ""
     
     # Check if selenium is installed
@@ -513,13 +486,8 @@ main() {
         fi
     done
     
-    # Cleanup
     rm -f "$TEMP_SCRIPT"
-    
     echo ""
-    echo -e "${BLUE}========================================${NC}"
-    echo -e "${BLUE}Search complete${NC}"
-    echo -e "${BLUE}========================================${NC}"
 }
 
 # Run main function

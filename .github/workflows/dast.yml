@@ -43,9 +43,6 @@ jobs:
             backend:
               - 'backend/**'
 
-  # ============================================================================
-  # OWASP ZAP DAST Scan — Backend API
-  # ============================================================================
   zap-api-scan:
     name: OWASP ZAP API Scan
     needs: detect-changes
@@ -119,9 +116,6 @@ jobs:
           retention-days: 30
           if-no-files-found: ignore
 
-  # ============================================================================
-  # OWASP ZAP DAST Scan — Frontend (Full Stack)
-  # ============================================================================
   zap-baseline-scan:
     name: OWASP ZAP Baseline Scan
     needs: detect-changes

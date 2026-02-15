@@ -1,14 +1,5 @@
 name: Visual Regression Testing
 
-# Configured GitHub Secrets (all secrets are set in GitHub Settings > Secrets and variables > Actions):
-# - TEST_OPENROUTER_API_KEY: OpenRouter API key for E2E tests
-# - TEST_FREE_EMAIL: Test user email (free tier account)
-# - TEST_FREE_PASSWORD: Test user password (free tier account)
-#
-# Note: VS Code GitHub Actions extension may show "Context access might be invalid" warnings
-# for these secrets. These are false positives - the secrets are properly configured and
-# workflows will execute successfully.
-
 on:
   push:
     branches: [master]
@@ -29,9 +20,6 @@ env:
   PYTHON_VERSION: '3.11'
 
 jobs:
-  # ============================================================================
-  # Visual Regression Testing with Playwright
-  # ============================================================================
   visual-regression:
     name: Visual Regression Tests
     runs-on: ubuntu-latest

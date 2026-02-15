@@ -22,9 +22,6 @@ env:
   TARGET_URL: ${{ github.event.inputs.target_url || 'https://compareintel.com' }}
 
 jobs:
-  # ============================================================================
-  # Health & Connectivity Checks
-  # ============================================================================
   health-checks:
     name: Health & Connectivity
     runs-on: ubuntu-latest
@@ -108,9 +105,6 @@ jobs:
             echo "Skipping SSL check (not HTTPS)"
           fi
 
-  # ============================================================================
-  # Functional Smoke Tests
-  # ============================================================================
   functional-smoke:
     name: Functional Smoke Tests
     runs-on: ubuntu-latest

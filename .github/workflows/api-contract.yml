@@ -21,9 +21,6 @@ env:
   PYTHON_VERSION: '3.11'
 
 jobs:
-  # ============================================================================
-  # API Contract Testing
-  # ============================================================================
   api-contract-test:
     name: API Contract & Schema Validation
     runs-on: ubuntu-latest
@@ -122,9 +119,6 @@ jobs:
           retention-days: 7
           if-no-files-found: ignore
 
-  # ============================================================================
-  # Database Migration Testing
-  # ============================================================================
   migration-test:
     name: Database Migration Testing
     runs-on: ubuntu-latest

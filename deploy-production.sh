@@ -1,27 +1,6 @@
 #!/bin/bash
-
-# ============================================================================
-# CompareIntel Production Deployment Script
-# ============================================================================
-# This script handles dependency checks and deployment
-# for the CompareIntel application on Ubuntu/PostgreSQL production servers.
-#
-# All Python dependencies and execution happen inside Docker containers.
-# No virtual environment (venv) is used on the host.
-#
-# Available Commands:
-#   check        - Check system requirements and SSL certificates
-#   backup       - Create database backup only (PostgreSQL pg_dump)
-#   build        - Build and deploy without git pull
-#   deploy       - Full deployment with git pull
-#   quick-deploy - Deploy local fixes without git pull
-#   rollback     - Rollback to previous version
-#   restart      - Restart all services
-#   status       - Show current deployment status
-#   logs         - Follow container logs
-#
-# Usage: ./deploy-production.sh [command]
-# ============================================================================
+# CompareIntel production deployment. Handles dependency checks, backup, build, deploy.
+# Usage: ./deploy-production.sh {check|backup|build|deploy|quick-deploy|rollback|restart|status|logs}
 
 set -e  # Exit on any error
 
@@ -512,10 +491,6 @@ rollback_deployment() {
 
 # Main deployment function
 main() {
-    echo ""
-    echo "=========================================="
-    log "CompareIntel Production Deployment"
-    echo "=========================================="
     echo ""
     
     # Parse command line arguments

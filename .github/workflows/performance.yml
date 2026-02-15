@@ -43,9 +43,6 @@ jobs:
             backend:
               - 'backend/**'
 
-  # ============================================================================
-  # Lighthouse Performance Testing
-  # ============================================================================
   lighthouse-performance:
     name: Lighthouse Performance Audit
     needs: detect-changes
@@ -150,9 +147,6 @@ jobs:
           path: .lighthouseci/
           retention-days: 30
 
-  # ============================================================================
-  # Bundle Size Monitoring
-  # ============================================================================
   bundle-size:
     name: Bundle Size Analysis
     needs: detect-changes
@@ -200,9 +194,6 @@ jobs:
           retention-days: 30
           if-no-files-found: ignore
 
-  # ============================================================================
-  # API Performance Testing
-  # ============================================================================
   api-performance:
     name: API Performance & Load Testing
     needs: detect-changes

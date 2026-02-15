@@ -1,18 +1,6 @@
 #!/bin/bash
-
-# ============================================================================
-# CompareIntel SSL Certificate Setup Script
-# ============================================================================
-# This script sets up Let's Encrypt SSL certificates for compareintel.com
-# using Certbot. Run this ONCE on your production server before deploying.
-#
-# Prerequisites:
-#   - Domain compareintel.com must point to this server's IP
-#   - Ports 80 and 443 must be open in security groups/firewall
-#   - No web server should be running on ports 80/443 during initial setup
-#
+# Sets up Let's Encrypt SSL certificates for compareintel.com. Run once before deploying.
 # Usage: sudo ./setup-compareintel-ssl.sh
-# ============================================================================
 
 set -e
 
@@ -222,10 +210,6 @@ show_certificate_info() {
 
 # Main function
 main() {
-    echo ""
-    echo "=========================================="
-    echo "  CompareIntel SSL Certificate Setup"
-    echo "=========================================="
     echo ""
     
     check_root
