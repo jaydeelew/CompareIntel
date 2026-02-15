@@ -1231,7 +1231,6 @@ async def cleanup_usage_logs(
 
 
 
-import importlib
 import logging
 import re
 import subprocess
@@ -1241,8 +1240,8 @@ from pathlib import Path
 from openai import APIConnectionError, APIError, APITimeoutError, NotFoundError, RateLimitError
 from pydantic import BaseModel
 
-from .. import model_runner
 from ..config import settings
+from ..llm.registry import get_registry_path, load_registry, reload_registry, save_registry
 from ..model_runner import (
     FREE_TIER_MODELS,
     MODELS_BY_PROVIDER,
@@ -1253,124 +1252,6 @@ from ..model_runner import (
 )
 
 logger = logging.getLogger(__name__)
-
-
-def find_matching_brace(
-    content: str, start_pos: int, open_char: str = "{", close_char: str = "}"
-) -> int:
-    """
-    Find the position after the matching closing brace/bracket starting from start_pos.
-    Handles nested braces and ignores braces inside strings.
-
-    Args:
-        content: The content to search in
-        start_pos: Position right after the opening brace/bracket
-        open_char: The opening character ('{' or '[')
-        close_char: The closing character ('}' or ']')
-
-    Returns:
-        Position after the closing brace/bracket, or -1 if not found
-    """
-    count = 1
-    pos = start_pos
-    in_string = False
-    string_char = None
-    escape_next = False
-
-    while pos < len(content) and count > 0:
-        char = content[pos]
-
-        if escape_next:
-            escape_next = False
-        elif char == "\\":
-            escape_next = True
-        elif in_string:
-            if char == string_char:
-                in_string = False
-        elif char in ('"', "'"):
-            in_string = True
-            string_char = char
-        elif char == open_char:
-            count += 1
-        elif char == close_char:
-            count -= 1
-
-        pos += 1
-
-    return pos if count == 0 else -1
-
-
-def find_provider_list_bounds(content: str, provider_name: str) -> tuple[int, int] | None:
-    """
-    Find the start and end positions of a provider's model list in the content.
-    Uses bracket counting to handle brackets inside strings correctly.
-
-    Returns (start, end) where start is the position of the opening quote of provider name
-    and end is the position after the closing bracket, or None if not found.
-    """
-    provider_start_pattern = rf'("{re.escape(provider_name)}"\s*:\s*\[)'
-    start_match = re.search(provider_start_pattern, content)
-
-    if not start_match:
-        return None
-
-    # Use bracket counting to find the matching closing bracket
-    list_start = start_match.end()  # Position after the opening [
-    end_pos = find_matching_brace(content, list_start, "[", "]")
-
-    if end_pos > 0:
-        return (start_match.start(), end_pos)
-
-    return None
-
-
-def find_models_by_provider_end(content: str) -> int:
-    """
-    Find the position of the closing brace of MODELS_BY_PROVIDER dict.
-    Uses brace counting to handle nested structures correctly.
-
-    Returns the position of the closing }, or -1 if not found.
-    """
-    pattern = r"MODELS_BY_PROVIDER\s*=\s*\{"
-    match = re.search(pattern, content)
-
-    if not match:
-        return -1
-
-    # Start after the opening brace
-    dict_start = match.end()
-    end_pos = find_matching_brace(content, dict_start, "{", "}")
-
-    # Return position of the closing brace itself (not after it)
-    return end_pos - 1 if end_pos > 0 else -1
-
-
-def extract_providers_from_content(content: str) -> list[str]:
-    """
-    Extract provider names from MODELS_BY_PROVIDER in the file content.
-    Returns list of provider names in the order they appear in the file.
-    """
-    providers = []
-
-    # Find the start and end of MODELS_BY_PROVIDER
-    mbp_start = content.find("MODELS_BY_PROVIDER = {")
-    if mbp_start == -1:
-        return providers
-
-    mbp_end = find_models_by_provider_end(content)
-    if mbp_end == -1:
-        return providers
-
-    # Search within MODELS_BY_PROVIDER section
-    mbp_content = content[mbp_start:mbp_end]
-
-    # Match provider entries like: \n    "Anthropic": [
-    # Using explicit newline + 4 spaces to find top-level provider keys
-    provider_pattern = r'\n    "([^"]+)"\s*:\s*\['
-    for match in re.finditer(provider_pattern, mbp_content):
-        providers.append(match.group(1))
-
-    return providers
 
 
 class AddModelRequest(BaseModel):
@@ -1590,12 +1471,11 @@ async def validate_model(
     if not model_id:
         raise HTTPException(status_code=400, detail="Model ID cannot be empty")
 
-    # Check if model already exists in our system
     for provider, models in MODELS_BY_PROVIDER.items():
         for model in models:
             if model["id"] == model_id:
                 raise HTTPException(
-                    status_code=400, detail=f"Model {model_id} already exists in model_runner.py"
+                    status_code=400, detail=f"Model {model_id} already exists in registry"
                 )
 
     # First, check if model exists in OpenRouter's model list
@@ -1755,12 +1635,11 @@ async def add_model(
     db: Session = Depends(get_db),
 ):
     """
-    Add a new model to model_runner.py and set up its renderer config.
+    Add a new model to the JSON registry and set up its renderer config.
     Only available in development environment.
     """
     import os
 
-    # Prevent adding models in production
     is_development = os.environ.get("ENVIRONMENT") == "development"
     if not is_development:
         raise HTTPException(
@@ -1773,27 +1652,21 @@ async def add_model(
     if not model_id:
         raise HTTPException(status_code=400, detail="Model ID cannot be empty")
 
-    # Check if model already exists (validation will happen via test API call)
-    # The validate endpoint checks OpenRouter, but we also need to check our local list
-
-    # Check if model already exists
     for provider, models in MODELS_BY_PROVIDER.items():
         for model in models:
             if model["id"] == model_id:
                 raise HTTPException(
-                    status_code=400, detail=f"Model {model_id} already exists in model_runner.py"
+                    status_code=400, detail=f"Model {model_id} already exists in registry"
                 )
 
-    # Extract provider from model_id (format: provider/model-name)
     if "/" not in model_id:
         raise HTTPException(
             status_code=400, detail="Invalid model ID format. Expected: provider/model-name"
         )
 
     provider_name = model_id.split("/")[0]
-    original_provider = provider_name  # Save original for special case checks
+    original_provider = provider_name
 
-    # Check for special cases BEFORE transformation
     if original_provider.lower() == "meta-llama":
         provider_name = "Meta"
     elif original_provider.lower() == "x-ai":
@@ -1801,274 +1674,73 @@ async def add_model(
     elif original_provider.lower() == "openai":
         provider_name = "OpenAI"
     else:
-        # Capitalize provider name (e.g., "x-ai" -> "xAI", "openai" -> "OpenAI")
         provider_name = provider_name.replace("-", " ").title().replace(" ", "")
         if provider_name.lower() == "xai":
             provider_name = "xAI"
         elif provider_name.lower() == "openai":
             provider_name = "OpenAI"
 
-    # Get model name - use a formatted version of the model ID
     model_name = model_id.split("/")[-1]
-    # Format the name nicely (e.g., "grok-4.1-fast" -> "Grok 4.1 Fast")
     model_name = model_name.replace("-", " ").replace("_", " ").title()
 
-    # Try to fetch description from OpenRouter's Models API
     model_description = await fetch_model_description_from_openrouter(model_id)
-
-    # Fall back to template-based description if OpenRouter doesn't have it
     if not model_description:
         model_description = f"{provider_name}'s {model_name} model"
 
-    # Check for tool calling support (required for web search)
     from ..services.model_capability import get_capability_service
 
     capability_service = get_capability_service()
     supports_web_search = await capability_service.check_tool_calling_support(model_id)
 
-    # Add model to model_runner.py
-    model_runner_path = Path(__file__).parent.parent / "model_runner.py"
-
     try:
-        with open(model_runner_path, encoding="utf-8") as f:
-            content = f.read()
+        registry = load_registry()
+        mbp = registry["models_by_provider"]
 
-        # Find the provider section in MODELS_BY_PROVIDER
-        # We need to add the model to the appropriate provider list
-        provider_found = False
-
-        # Try to find existing provider - use file content, not in-memory dict
-        existing_providers_in_file = extract_providers_from_content(content)
-        for existing_provider in existing_providers_in_file:
+        for existing_provider in mbp.keys():
             if existing_provider.lower() == provider_name.lower():
-                provider_name = existing_provider  # Use exact case from file
-                provider_found = True
+                provider_name = existing_provider
                 break
 
-        if not provider_found:
-            # Create new provider section - insert in alphabetical order
-            escaped_description = repr(model_description)
-            supports_web_search_str = "True" if supports_web_search else "False"
-            knowledge_cutoff_line = ""
-            if hasattr(req, "knowledge_cutoff") and req.knowledge_cutoff:
-                knowledge_cutoff_line = (
-                    f'\n            "knowledge_cutoff": "{req.knowledge_cutoff}",'
-                )
-            elif hasattr(req, "knowledge_cutoff") and req.knowledge_cutoff is None:
-                knowledge_cutoff_line = (
-                    '\n            "knowledge_cutoff": None,  # Knowledge cutoff date pending'
-                )
-            new_provider_section = f'"{provider_name}": [\n        {{\n            "id": "{model_id}",\n            "name": "{model_name}",\n            "description": {escaped_description},\n            "category": "Language",\n            "provider": "{provider_name}",\n            "supports_web_search": {supports_web_search_str},{knowledge_cutoff_line}\n        }},\n    ]'
+        new_model = {
+            "id": model_id,
+            "name": model_name,
+            "description": model_description,
+            "category": "Language",
+            "provider": provider_name,
+            "supports_web_search": supports_web_search,
+        }
+        if hasattr(req, "available") and not req.available:
+            new_model["available"] = False
+        if hasattr(req, "knowledge_cutoff") and req.knowledge_cutoff:
+            new_model["knowledge_cutoff"] = req.knowledge_cutoff
+        elif hasattr(req, "knowledge_cutoff") and req.knowledge_cutoff is None:
+            new_model["knowledge_cutoff"] = None
 
-            # Get existing providers from file content (not in-memory dict which may be stale)
-            existing_providers = extract_providers_from_content(content)
-            # Sort providers alphabetically (case-insensitive) to ensure correct insertion position
-            all_providers_sorted = sorted(
-                existing_providers + [provider_name], key=lambda x: x.lower()
-            )
-            new_provider_index = all_providers_sorted.index(provider_name)
+        if provider_name not in mbp:
+            mbp[provider_name] = []
+        mbp[provider_name].append(new_model)
+        mbp[provider_name] = sort_models_by_tier_and_version(mbp[provider_name])
 
-            # Find the insertion position based on alphabetical order
-            if new_provider_index == 0:
-                # New provider comes first alphabetically - insert at the beginning
-                mbp_start_pattern = r"MODELS_BY_PROVIDER\s*=\s*\{"
-                mbp_start_match = re.search(mbp_start_pattern, content)
-                if mbp_start_match:
-                    insert_pos = mbp_start_match.end()  # Position after opening brace
-                    new_provider_section = f"\n    {new_provider_section},\n"
-                    content = content[:insert_pos] + new_provider_section + content[insert_pos:]
-                else:
-                    raise HTTPException(
-                        status_code=500, detail="Could not find MODELS_BY_PROVIDER structure"
-                    )
-            elif new_provider_index == len(all_providers_sorted) - 1:
-                # New provider comes last alphabetically - insert before closing brace
-                closing_brace_pos = find_models_by_provider_end(content)
-                if closing_brace_pos > 0:
-                    content_before = content[:closing_brace_pos].rstrip()
-                    if content_before.endswith(","):
-                        new_provider_section = f"\n    {new_provider_section},\n"
-                    else:
-                        new_provider_section = f",\n    {new_provider_section},\n"
-                    content = (
-                        content[:closing_brace_pos]
-                        + new_provider_section
-                        + content[closing_brace_pos:]
-                    )
-                else:
-                    raise HTTPException(
-                        status_code=500, detail="Could not find MODELS_BY_PROVIDER structure"
-                    )
-            else:
-                # Find the provider that should come after the new one (alphabetically)
-                next_provider = all_providers_sorted[new_provider_index + 1]
-                next_provider_bounds = find_provider_list_bounds(content, next_provider)
-                if next_provider_bounds:
-                    insert_pos = next_provider_bounds[0]
-                    # Insert new provider before the next provider
-                    new_provider_section = f"{new_provider_section},\n    "
-                    content = content[:insert_pos] + new_provider_section + content[insert_pos:]
-                else:
-                    raise HTTPException(
-                        status_code=500,
-                        detail=f"Could not find provider {next_provider} in MODELS_BY_PROVIDER",
-                    )
-        else:
-            # Add to existing provider
-            # Use the already-loaded MODELS_BY_PROVIDER to get existing models
-            existing_models = MODELS_BY_PROVIDER.get(provider_name, []).copy()
-
-            # Add the new model
-            new_model_dict = {
-                "id": model_id,
-                "name": model_name,
-                "description": model_description,  # Store as string, will format with repr when writing
-                "category": "Language",
-                "provider": provider_name,
-                "supports_web_search": supports_web_search,
-            }
-            if hasattr(req, "available") and not req.available:
-                new_model_dict["available"] = False
-            # Add knowledge cutoff if provided
-            if hasattr(req, "knowledge_cutoff") and req.knowledge_cutoff:
-                new_model_dict["knowledge_cutoff"] = req.knowledge_cutoff
-            elif hasattr(req, "knowledge_cutoff") and req.knowledge_cutoff is None:
-                # Explicitly set to None to indicate pending
-                new_model_dict["knowledge_cutoff"] = None
-
-            existing_models.append(new_model_dict)
-
-            # Sort models by tier (anonymous first, free second, paid third) and within each tier by version number (ascending - oldest first, newest last)
-            existing_models = sort_models_by_tier_and_version(existing_models)
-
-            # Find the provider's list in the file using bracket counting
-            # This handles brackets inside strings correctly (e.g., descriptions with [feature])
-            bounds = find_provider_list_bounds(content, provider_name)
-            if bounds:
-                start_pos, end_pos = bounds
-                # Reconstruct the provider's list with sorted models
-                models_lines = []
-                for model in existing_models:
-                    model_lines = [
-                        "        {",
-                        f'            "id": "{model["id"]}",',
-                        f'            "name": "{model["name"]}",',
-                        f'            "description": {repr(model["description"])},',
-                        f'            "category": "{model["category"]}",',
-                        f'            "provider": "{model["provider"]}",',
-                    ]
-                    if "supports_web_search" in model:
-                        model_lines.append(
-                            f'            "supports_web_search": {model["supports_web_search"]},'
-                        )
-                    if "available" in model:
-                        model_lines.append(f'            "available": {model["available"]},')
-                    if "knowledge_cutoff" in model:
-                        if model["knowledge_cutoff"]:
-                            model_lines.append(
-                                f'            "knowledge_cutoff": "{model["knowledge_cutoff"]}",'
-                            )
-                        else:
-                            model_lines.append(
-                                '            "knowledge_cutoff": None,  # Knowledge cutoff date pending'
-                            )
-                    model_lines.append("        },")
-                    models_lines.extend(model_lines)
-
-                # Join models with newlines
-                models_str = "\n".join(models_lines)
-
-                # Replace the provider's list with the sorted one
-                new_provider_section = f'"{provider_name}": [\n{models_str}\n    ]'
-                content = content[:start_pos] + new_provider_section + content[end_pos:]
-            else:
-                raise HTTPException(
-                    status_code=500,
-                    detail=f"Could not find provider {provider_name} in MODELS_BY_PROVIDER",
-                )
-
-        # Write back to file
-        with open(model_runner_path, "w", encoding="utf-8") as f:
-            f.write(content)
-
-        # Classify model based on OpenRouter pricing and add to appropriate tier set
         model_data = await fetch_model_data_from_openrouter(model_id)
         tier_classification = await classify_model_by_pricing(model_id, model_data)
 
-        # Read file again to add model to tier sets
-        with open(model_runner_path, encoding="utf-8") as f:
-            content = f.read()
+        unregistered = list(registry["unregistered_tier_models"])
+        free_additional = list(registry["free_tier_additional_models"])
 
-        # Add model to appropriate tier set(s)
-        if tier_classification == "unregistered":
-            # Add to UNREGISTERED_TIER_MODELS
-            # Pattern must match up to the closing brace, but stop before FREE_TIER_MODELS definition
-            anonymous_pattern = r"(UNREGISTERED_TIER_MODELS\s*=\s*\{)(.*?)(\n\})"
-            match = re.search(anonymous_pattern, content, re.DOTALL)
-            if not match:
-                raise HTTPException(
-                    status_code=500,
-                    detail="Could not find UNREGISTERED_TIER_MODELS structure in model_runner.py",
-                )
-            # Check if model already in set
-            if f'"{model_id}"' not in match.group(2):
-                # Find a good insertion point (after last model in the set)
-                # Add before closing brace, but check if last entry has a comma
-                insertion_point = match.start(3)  # Start of closing brace group (newline + brace)
-                # Check if the content before closing brace ends with a comma
-                content_before_brace = match.group(2).rstrip()
-                if content_before_brace and content_before_brace[-1] == ",":
-                    # Last entry already has comma, add new entry with comma
-                    model_entry = f'\n    "{model_id}",  # Auto-classified based on pricing'
-                else:
-                    # Last entry doesn't have comma, add comma before new entry
-                    model_entry = f',\n    "{model_id}",  # Auto-classified based on pricing'
-                content = content[:insertion_point] + model_entry + content[insertion_point:]
-        elif tier_classification == "free":
-            # Add to FREE_TIER_MODELS (which includes anonymous models)
-            # Pattern matches: FREE_TIER_MODELS = UNREGISTERED_TIER_MODELS.union({ ... })
-            free_pattern = (
-                r"(FREE_TIER_MODELS\s*=\s*UNREGISTERED_TIER_MODELS\.union\()(\{)(.*?)(\})(\))"
-            )
-            match = re.search(free_pattern, content, re.DOTALL)
-            if match:
-                # Check if model already in set
-                if f'"{model_id}"' not in match.group(3):
-                    # Find insertion point - add after the comment about additional mid-level models
-                    # Look for the comment about additional mid-level models
-                    mid_level_comment = "# Additional mid-level models"
-                    if mid_level_comment in match.group(3):
-                        insertion_point = match.start(3) + match.group(3).find(mid_level_comment)
-                        model_entry = (
-                            f'\n    "{model_id}",  # Auto-classified based on pricing\n    '
-                        )
-                        content = (
-                            content[:insertion_point] + model_entry + content[insertion_point:]
-                        )
-                    else:
-                        # Add before closing brace of the set literal
-                        insertion_point = match.start(4)  # Position of the closing brace
-                        model_entry = f',\n    "{model_id}",  # Auto-classified based on pricing'
-                        content = (
-                            content[:insertion_point] + model_entry + content[insertion_point:]
-                        )
-        # If tier_classification == "paid", don't add to any tier set (defaults to paid)
+        if tier_classification == "unregistered" and model_id not in unregistered:
+            unregistered.append(model_id)
+            unregistered.sort()
+        elif tier_classification == "free" and model_id not in free_additional:
+            free_additional.append(model_id)
+            free_additional.sort()
 
-        # Write updated content back
-        with open(model_runner_path, "w", encoding="utf-8") as f:
-            f.write(content)
+        registry["unregistered_tier_models"] = unregistered
+        registry["free_tier_additional_models"] = free_additional
+        save_registry(registry)
+        reload_registry()
 
-        # Reload the model_runner module to get updated MODELS_BY_PROVIDER
-        importlib.reload(model_runner)
-        # Update the imported references in this module's namespace
-        sys.modules[__name__].MODELS_BY_PROVIDER = model_runner.MODELS_BY_PROVIDER
-        sys.modules[__name__].OPENROUTER_MODELS = model_runner.OPENROUTER_MODELS
-
-        # Refresh token limits for the newly added model
         refresh_model_token_limits(model_id)
 
-        # Run setup script to generate renderer config
-        # Path from backend/app/routers/admin.py to backend/scripts/setup_model_renderer.py
         script_path = Path(__file__).parent.parent.parent / "scripts" / "setup_model_renderer.py"
         try:
             # Run from backend directory
@@ -2133,7 +1805,7 @@ async def add_model_stream(
     db: Session = Depends(get_db),
 ):
     """
-    Add a new model to model_runner.py and set up its renderer config with progress streaming.
+    Add a new model to the JSON registry and set up its renderer config with progress streaming.
     Uses Server-Sent Events (SSE) to stream progress updates to the frontend.
     Only available in development environment.
     """
@@ -2155,8 +1827,7 @@ async def add_model_stream(
             yield f"data: {json.dumps({'type': 'error', 'message': 'Model ID cannot be empty'})}\n\n"
             return
 
-        # Backup paths for rollback
-        model_runner_path = Path(__file__).parent.parent / "model_runner.py"
+        registry_path = get_registry_path()
         config_path = (
             Path(__file__).parent.parent.parent
             / "frontend"
@@ -2164,22 +1835,19 @@ async def add_model_stream(
             / "config"
             / "model_renderer_configs.json"
         )
-        backup_model_runner_path = model_runner_path.with_suffix(".py.backup")
+        backup_registry_path = registry_path.with_suffix(".json.backup")
         backup_config_path = config_path.with_suffix(".json.backup")
 
-        # Save backups before making any changes
-        model_runner_backup = None
+        registry_backup = None
         config_backup = None
         process = None
 
         try:
-            # Read and backup model_runner.py
-            with open(model_runner_path, encoding="utf-8") as f:
-                model_runner_backup = f.read()
-            with open(backup_model_runner_path, "w", encoding="utf-8") as f:
-                f.write(model_runner_backup)
+            registry_backup = load_registry()
+            with open(backup_registry_path, "w", encoding="utf-8") as f:
+                json.dump(registry_backup, f, indent=2, ensure_ascii=False)
+                f.write("\n")
 
-            # Backup renderer config if it exists
             if config_path.exists():
                 with open(config_path, encoding="utf-8") as f:
                     config_backup = f.read()
@@ -2211,7 +1879,7 @@ async def add_model_stream(
                 for model in models:
                     if model["id"] == model_id:
                         try:
-                            yield f"data: {json.dumps({'type': 'error', 'message': f'Model {model_id} already exists in model_runner.py'})}\n\n"
+                            yield f"data: {json.dumps({'type': 'error', 'message': f'Model {model_id} already exists in registry'})}\n\n"
                         except (
                             BrokenPipeError,
                             ConnectionResetError,
@@ -2297,9 +1965,8 @@ async def add_model_stream(
             capability_service = get_capability_service()
             supports_web_search = await capability_service.check_tool_calling_support(model_id)
 
-            # Add model to model_runner.py
             try:
-                yield f"data: {json.dumps({'type': 'progress', 'stage': 'adding', 'message': 'Adding model to model_runner.py...', 'progress': 20})}\n\n"
+                yield f"data: {json.dumps({'type': 'progress', 'stage': 'adding', 'message': 'Adding model to registry...', 'progress': 20})}\n\n"
             except (
                 BrokenPipeError,
                 ConnectionResetError,
@@ -2314,136 +1981,32 @@ async def add_model_stream(
             ):
                 raise
 
-            with open(model_runner_path, encoding="utf-8") as f:
-                content = f.read()
+            registry = load_registry()
+            mbp = registry["models_by_provider"]
 
-            provider_found = False
-            for existing_provider in MODELS_BY_PROVIDER.keys():
+            for existing_provider in mbp.keys():
                 if existing_provider.lower() == provider_name.lower():
                     provider_name = existing_provider
-                    provider_found = True
                     break
 
-            if not provider_found:
-                # Find the closing brace of MODELS_BY_PROVIDER using brace counting
-                closing_brace_pos = find_models_by_provider_end(content)
-                if closing_brace_pos > 0:
-                    escaped_description = repr(model_description)
-                    supports_web_search_str = "True" if supports_web_search else "False"
-                    knowledge_cutoff_line = ""
-                    if hasattr(req, "knowledge_cutoff") and req.knowledge_cutoff:
-                        knowledge_cutoff_line = (
-                            f'\n            "knowledge_cutoff": "{req.knowledge_cutoff}",'
-                        )
-                    elif hasattr(req, "knowledge_cutoff") and req.knowledge_cutoff is None:
-                        knowledge_cutoff_line = '\n            "knowledge_cutoff": None,  # Knowledge cutoff date pending'
-                    # Check if previous content has a trailing comma (usually it does)
-                    content_before = content[:closing_brace_pos].rstrip()
-                    if content_before.endswith(","):
-                        # Previous entry has trailing comma, don't add leading comma
-                        new_provider_section = f'\n    "{provider_name}": [\n        {{\n            "id": "{model_id}",\n            "name": "{model_name}",\n            "description": {escaped_description},\n            "category": "Language",\n            "provider": "{provider_name}",\n            "supports_web_search": {supports_web_search_str},{knowledge_cutoff_line}\n        }},\n    ],\n'
-                    else:
-                        # Need to add comma separator
-                        new_provider_section = f',\n    "{provider_name}": [\n        {{\n            "id": "{model_id}",\n            "name": "{model_name}",\n            "description": {escaped_description},\n            "category": "Language",\n            "provider": "{provider_name}",\n            "supports_web_search": {supports_web_search_str},{knowledge_cutoff_line}\n        }},\n    ],\n'
-                    content = (
-                        content[:closing_brace_pos]
-                        + new_provider_section
-                        + content[closing_brace_pos:]
-                    )
-                else:
-                    try:
-                        yield f"data: {json.dumps({'type': 'error', 'message': 'Could not find MODELS_BY_PROVIDER structure'})}\n\n"
-                    except (
-                        BrokenPipeError,
-                        ConnectionResetError,
-                        ConnectionAbortedError,
-                        OSError,
-                        TimeoutError,
-                        httpx.ConnectError,
-                        httpx.TimeoutException,
-                        httpx.NetworkError,
-                        httpx.ConnectTimeout,
-                        httpx.ReadTimeout,
-                    ):
-                        raise
-                    return
-            else:
-                existing_models = MODELS_BY_PROVIDER.get(provider_name, []).copy()
-                new_model_dict = {
-                    "id": model_id,
-                    "name": model_name,
-                    "description": model_description,
-                    "category": "Language",
-                    "provider": provider_name,
-                    "supports_web_search": supports_web_search,
-                }
-                # Add knowledge cutoff if provided
-                if hasattr(req, "knowledge_cutoff") and req.knowledge_cutoff:
-                    new_model_dict["knowledge_cutoff"] = req.knowledge_cutoff
-                elif hasattr(req, "knowledge_cutoff") and req.knowledge_cutoff is None:
-                    new_model_dict["knowledge_cutoff"] = None
-                existing_models.append(new_model_dict)
-                # Sort models by tier (anonymous first, free second, paid third) and within each tier by version number (ascending - oldest first, newest last)
-                existing_models = sort_models_by_tier_and_version(existing_models)
+            new_model = {
+                "id": model_id,
+                "name": model_name,
+                "description": model_description,
+                "category": "Language",
+                "provider": provider_name,
+                "supports_web_search": supports_web_search,
+            }
+            if hasattr(req, "knowledge_cutoff") and req.knowledge_cutoff:
+                new_model["knowledge_cutoff"] = req.knowledge_cutoff
+            elif hasattr(req, "knowledge_cutoff") and req.knowledge_cutoff is None:
+                new_model["knowledge_cutoff"] = None
 
-                # Find the provider's list using bracket counting (handles brackets in strings)
-                bounds = find_provider_list_bounds(content, provider_name)
-                if bounds:
-                    start_pos, end_pos = bounds
-                    models_lines = []
-                    for model in existing_models:
-                        model_lines = [
-                            "        {",
-                            f'            "id": "{model["id"]}",',
-                            f'            "name": "{model["name"]}",',
-                            f'            "description": {repr(model["description"])},',
-                            f'            "category": "{model["category"]}",',
-                            f'            "provider": "{model["provider"]}",',
-                        ]
-                        if "supports_web_search" in model:
-                            model_lines.append(
-                                f'            "supports_web_search": {model["supports_web_search"]},'
-                            )
-                        if "available" in model:
-                            model_lines.append(f'            "available": {model["available"]},')
-                        if "knowledge_cutoff" in model:
-                            if model["knowledge_cutoff"]:
-                                model_lines.append(
-                                    f'            "knowledge_cutoff": "{model["knowledge_cutoff"]}",'
-                                )
-                            else:
-                                model_lines.append(
-                                    '            "knowledge_cutoff": None,  # Knowledge cutoff date pending'
-                                )
-                        model_lines.append("        },")
-                        models_lines.extend(model_lines)
+            if provider_name not in mbp:
+                mbp[provider_name] = []
+            mbp[provider_name].append(new_model)
+            mbp[provider_name] = sort_models_by_tier_and_version(mbp[provider_name])
 
-                    models_str = "\n".join(models_lines)
-                    new_provider_section = f'"{provider_name}": [\n{models_str}\n    ]'
-                    content = content[:start_pos] + new_provider_section + content[end_pos:]
-                else:
-                    try:
-                        yield f"data: {json.dumps({'type': 'error', 'message': f'Could not find provider {provider_name} in MODELS_BY_PROVIDER'})}\n\n"
-                    except (
-                        BrokenPipeError,
-                        ConnectionResetError,
-                        ConnectionAbortedError,
-                        OSError,
-                        TimeoutError,
-                        httpx.ConnectError,
-                        httpx.TimeoutException,
-                        httpx.NetworkError,
-                        httpx.ConnectTimeout,
-                        httpx.ReadTimeout,
-                    ):
-                        raise
-                    return
-
-            # Write back to file
-            with open(model_runner_path, "w", encoding="utf-8") as f:
-                f.write(content)
-
-            # Classify model based on OpenRouter pricing and add to appropriate tier set
             try:
                 yield f"data: {json.dumps({'type': 'progress', 'stage': 'classifying', 'message': 'Classifying model tier based on pricing...', 'progress': 25})}\n\n"
             except (
@@ -2474,107 +2037,21 @@ async def add_model_stream(
                 httpx.ConnectTimeout,
                 httpx.ReadTimeout,
             ):
-                # Network error during API call - trigger rollback
                 raise
 
-            # Read file again to add model to tier sets
-            with open(model_runner_path, encoding="utf-8") as f:
-                content = f.read()
+            unregistered = list(registry["unregistered_tier_models"])
+            free_additional = list(registry["free_tier_additional_models"])
+            if tier_classification == "unregistered" and model_id not in unregistered:
+                unregistered.append(model_id)
+                unregistered.sort()
+            elif tier_classification == "free" and model_id not in free_additional:
+                free_additional.append(model_id)
+                free_additional.sort()
+            registry["unregistered_tier_models"] = unregistered
+            registry["free_tier_additional_models"] = free_additional
 
-            # Add model to appropriate tier set(s)
-            if tier_classification == "unregistered":
-                # Add to UNREGISTERED_TIER_MODELS
-                # Pattern must match up to the closing brace, explicitly stopping before FREE_TIER_MODELS
-                anonymous_pattern = r"(UNREGISTERED_TIER_MODELS\s*=\s*\{)(.*?)(\n\}\s*\n\s*# List of model IDs available to free)"
-                match = re.search(anonymous_pattern, content, re.DOTALL)
-                if not match:
-                    # Fallback to simpler pattern if the above doesn't match
-                    anonymous_pattern = r"(UNREGISTERED_TIER_MODELS\s*=\s*\{)(.*?)(\n\})"
-                    match = re.search(anonymous_pattern, content, re.DOTALL)
-                if not match:
-                    try:
-                        yield f"data: {json.dumps({'type': 'error', 'message': 'Could not find UNREGISTERED_TIER_MODELS structure in model_runner.py'})}\n\n"
-                    except (
-                        BrokenPipeError,
-                        ConnectionResetError,
-                        ConnectionAbortedError,
-                        OSError,
-                        TimeoutError,
-                        httpx.ConnectError,
-                        httpx.TimeoutException,
-                        httpx.NetworkError,
-                        httpx.ConnectTimeout,
-                        httpx.ReadTimeout,
-                    ):
-                        raise
-                    return
-                # Check if model already in set
-                if f'"{model_id}"' not in match.group(2):
-                    # Find a good insertion point (after last model in the set)
-                    # Add before closing brace, but check if last entry has a comma
-                    # Use the position before the closing brace (which is in group 3)
-                    insertion_point = match.start(3)  # Start of closing pattern
-                    # Check if the content before closing brace ends with a comma
-                    content_before_brace = match.group(2).rstrip()
-                    if content_before_brace and content_before_brace[-1] == ",":
-                        # Last entry already has comma, add new entry with comma
-                        model_entry = f'\n    "{model_id}",  # Auto-classified based on pricing'
-                    else:
-                        # Last entry doesn't have comma, add comma before new entry
-                        model_entry = f',\n    "{model_id}",  # Auto-classified based on pricing'
-                    # Insert before the closing brace/newline pattern
-                    # If the pattern matched the full closing pattern (with comment), we need to preserve it
-                    # Otherwise, just insert before the closing brace
-                    if (
-                        match.lastindex >= 3
-                        and "# List of model IDs available to free" in match.group(3)
-                    ):
-                        # Pattern matched the full closing with comment, insert before it
-                        content = (
-                            content[:insertion_point] + model_entry + content[insertion_point:]
-                        )
-                    else:
-                        # Simple pattern match, insert before closing brace
-                        content = (
-                            content[:insertion_point] + model_entry + content[insertion_point:]
-                        )
-            elif tier_classification == "free":
-                # Add to FREE_TIER_MODELS (which includes anonymous models)
-                # Pattern matches: FREE_TIER_MODELS = UNREGISTERED_TIER_MODELS.union({ ... })
-                free_pattern = (
-                    r"(FREE_TIER_MODELS\s*=\s*UNREGISTERED_TIER_MODELS\.union\()(\{)(.*?)(\})(\))"
-                )
-                match = re.search(free_pattern, content, re.DOTALL)
-                if match:
-                    # Check if model already in set
-                    if f'"{model_id}"' not in match.group(3):
-                        # Find insertion point - add after the comment about additional mid-level models
-                        # Look for the comment about additional mid-level models
-                        mid_level_comment = "# Additional mid-level models"
-                        if mid_level_comment in match.group(3):
-                            insertion_point = match.start(3) + match.group(3).find(
-                                mid_level_comment
-                            )
-                            model_entry = (
-                                f'\n    "{model_id}",  # Auto-classified based on pricing\n    '
-                            )
-                            content = (
-                                content[:insertion_point] + model_entry + content[insertion_point:]
-                            )
-                        else:
-                            # Add before closing brace of the set literal
-                            insertion_point = match.start(4)  # Position of the closing brace
-                            model_entry = (
-                                f',\n    "{model_id}",  # Auto-classified based on pricing'
-                            )
-                            content = (
-                                content[:insertion_point] + model_entry + content[insertion_point:]
-                            )
-            # If tier_classification == "paid", don't add to any tier set (defaults to paid)
-
-            # Write updated content back
-            with open(model_runner_path, "w", encoding="utf-8") as f:
-                f.write(content)
+            save_registry(registry)
+            reload_registry()
 
             try:
                 yield f"data: {json.dumps({'type': 'progress', 'stage': 'classifying', 'message': f'Model classified as {tier_classification} tier', 'progress': 27})}\n\n"
@@ -2591,63 +2068,6 @@ async def add_model_stream(
                 httpx.ReadTimeout,
             ):
                 raise
-
-            # Reload module
-            try:
-                importlib.reload(model_runner)
-                sys.modules[__name__].MODELS_BY_PROVIDER = model_runner.MODELS_BY_PROVIDER
-                sys.modules[__name__].OPENROUTER_MODELS = model_runner.OPENROUTER_MODELS
-            except SyntaxError as e:
-                # If there's a syntax error in model_runner.py, rollback FIRST before any yield
-                # This ensures the file is restored even if the stream has ended
-                rollback_success = False
-                if model_runner_backup and backup_model_runner_path.exists():
-                    try:
-                        with open(model_runner_path, "w", encoding="utf-8") as f:
-                            f.write(model_runner_backup)
-                        # Verify restoration by attempting reload
-                        try:
-                            importlib.reload(model_runner)
-                            sys.modules[
-                                __name__
-                            ].MODELS_BY_PROVIDER = model_runner.MODELS_BY_PROVIDER
-                            sys.modules[__name__].OPENROUTER_MODELS = model_runner.OPENROUTER_MODELS
-                            rollback_success = True
-                            backup_model_runner_path.unlink()
-                        except Exception as reload_err:
-                            print(
-                                f"Warning: Failed to verify rollback after SyntaxError: {reload_err}",
-                                file=sys.stderr,
-                            )
-                            # File was restored but reload failed - might be a different issue
-                            rollback_success = True  # File was written, consider it successful
-                    except Exception as restore_err:
-                        print(
-                            f"Error restoring backup after SyntaxError: {restore_err}",
-                            file=sys.stderr,
-                        )
-
-                # Now try to yield error message (but rollback already happened)
-                try:
-                    if rollback_success:
-                        yield f"data: {json.dumps({'type': 'error', 'message': f'Syntax error in model_runner.py after modification: {str(e)}. Changes have been rolled back.'})}\n\n"
-                    else:
-                        yield f"data: {json.dumps({'type': 'error', 'message': f'Syntax error in model_runner.py after modification: {str(e)}. Attempted rollback - please check backup file at {backup_model_runner_path}'})}\n\n"
-                except (
-                    BrokenPipeError,
-                    ConnectionResetError,
-                    ConnectionAbortedError,
-                    OSError,
-                    TimeoutError,
-                    httpx.ConnectError,
-                    httpx.TimeoutException,
-                    httpx.NetworkError,
-                    httpx.ConnectTimeout,
-                    httpx.ReadTimeout,
-                ):
-                    # Stream ended, but rollback already happened, so we're good
-                    pass
-                return
 
             # Run setup script with streaming output
             try:
@@ -2841,8 +2261,8 @@ async def add_model_stream(
 
             # Clean up backups on success
             try:
-                if backup_model_runner_path.exists():
-                    backup_model_runner_path.unlink()
+                if backup_registry_path.exists():
+                    backup_registry_path.unlink()
                 if backup_config_path.exists() and config_backup:
                     backup_config_path.unlink()
             except:
@@ -2871,41 +2291,17 @@ async def add_model_stream(
                     except:
                         pass
 
-                # Restore model_runner.py backup
-                if model_runner_backup and backup_model_runner_path.exists():
+                if registry_backup is not None and backup_registry_path.exists():
                     try:
-                        with open(model_runner_path, "w", encoding="utf-8") as f:
-                            f.write(model_runner_backup)
-                        # Verify the file was written correctly before deleting backup
-                        # Try to reload to verify syntax is valid
-                        try:
-                            importlib.reload(model_runner)
-                            sys.modules[
-                                __name__
-                            ].MODELS_BY_PROVIDER = model_runner.MODELS_BY_PROVIDER
-                            sys.modules[__name__].OPENROUTER_MODELS = model_runner.OPENROUTER_MODELS
-                            # Only delete backup if reload succeeded
-                            backup_model_runner_path.unlink()
-                        except (SyntaxError, ImportError, AttributeError) as reload_error:
-                            # If reload fails, the backup might be corrupted or there's a deeper issue
-                            # Keep the backup file for manual inspection
-                            print(
-                                f"Warning: Failed to reload model_runner after rollback: {reload_error}",
-                                file=sys.stderr,
-                            )
-                            print(
-                                f"Backup file kept at: {backup_model_runner_path}", file=sys.stderr
-                            )
-                            # Try to restore from backup again in case write failed
-                            if backup_model_runner_path.exists():
-                                with open(model_runner_path, "w", encoding="utf-8") as f:
-                                    f.write(model_runner_backup)
+                        save_registry(registry_backup)
+                        reload_registry()
+                        backup_registry_path.unlink()
                     except Exception as restore_error:
                         print(
-                            f"Error restoring model_runner.py backup: {restore_error}",
+                            f"Error restoring registry backup: {restore_error}",
                             file=sys.stderr,
                         )
-                        print(f"Backup file location: {backup_model_runner_path}", file=sys.stderr)
+                        print(f"Backup file location: {backup_registry_path}", file=sys.stderr)
 
                 # Restore renderer config backup
                 if config_backup and backup_config_path.exists():
@@ -2974,42 +2370,17 @@ async def add_model_stream(
                         except:
                             pass
 
-                    # Restore backups if we had errors
-                    if backup_model_runner_path.exists():
-                        if model_runner_backup:
-                            try:
-                                with open(model_runner_path, "w", encoding="utf-8") as f:
-                                    f.write(model_runner_backup)
-                                # Verify restoration by attempting reload
-                                try:
-                                    importlib.reload(model_runner)
-                                    sys.modules[
-                                        __name__
-                                    ].MODELS_BY_PROVIDER = model_runner.MODELS_BY_PROVIDER
-                                    sys.modules[
-                                        __name__
-                                    ].OPENROUTER_MODELS = model_runner.OPENROUTER_MODELS
-                                    # Only delete backup if reload succeeded
-                                    backup_model_runner_path.unlink()
-                                except (SyntaxError, ImportError, AttributeError) as reload_error:
-                                    # Keep backup if reload fails
-                                    print(
-                                        f"Warning: Failed to verify rollback: {reload_error}",
-                                        file=sys.stderr,
-                                    )
-                                    print(
-                                        f"Backup file kept at: {backup_model_runner_path}",
-                                        file=sys.stderr,
-                                    )
-                            except Exception as restore_error:
-                                print(
-                                    f"Error restoring backup in finally block: {restore_error}",
-                                    file=sys.stderr,
-                                )
-                                print(
-                                    f"Backup file location: {backup_model_runner_path}",
-                                    file=sys.stderr,
-                                )
+                    if backup_registry_path.exists() and registry_backup is not None:
+                        try:
+                            save_registry(registry_backup)
+                            reload_registry()
+                            backup_registry_path.unlink()
+                        except Exception as restore_error:
+                            print(
+                                f"Error restoring registry backup in finally block: {restore_error}",
+                                file=sys.stderr,
+                            )
+                            print(f"Backup file location: {backup_registry_path}", file=sys.stderr)
 
                     if backup_config_path.exists() and config_backup:
                         with open(config_path, "w", encoding="utf-8") as f:
@@ -3029,12 +2400,11 @@ async def delete_model(
     db: Session = Depends(get_db),
 ):
     """
-    Delete a model from model_runner.py and remove its renderer config.
+    Delete a model from the JSON registry and remove its renderer config.
     Only available in development environment.
     """
     import os
 
-    # Prevent deleting models in production
     is_development = os.environ.get("ENVIRONMENT") == "development"
     if not is_development:
         raise HTTPException(
@@ -3047,7 +2417,6 @@ async def delete_model(
     if not model_id:
         raise HTTPException(status_code=400, detail="Model ID cannot be empty")
 
-    # Check if model exists
     model_found = False
     provider_name = None
     for provider, models in MODELS_BY_PROVIDER.items():
@@ -3061,143 +2430,35 @@ async def delete_model(
 
     if not model_found:
         raise HTTPException(
-            status_code=404, detail=f"Model {model_id} not found in model_runner.py"
+            status_code=404, detail=f"Model {model_id} not found in registry"
         )
-
-    # Remove from model_runner.py
-    model_runner_path = Path(__file__).parent.parent / "model_runner.py"
 
     try:
-        with open(model_runner_path, encoding="utf-8") as f:
-            content = f.read()
+        registry = load_registry()
+        mbp = registry["models_by_provider"]
 
-        # Find and remove the model entry
-        # Model entries are multi-line dictionaries, so we need to match from opening brace to closing brace
-        # Pattern: match from "id": "model_id" to the closing brace and comma (or just closing brace if last item)
-
-        # First, try to match with trailing comma (not last item)
-        # Match: whitespace, opening brace, "id": "model_id", then everything until closing brace and comma
-        # Use a more robust pattern that matches the entire dict structure
-        model_pattern_with_comma = rf'(\s*{{\s*"id":\s*"{re.escape(model_id)}".*?}},\s*\n)'
-        original_content = content
-        content = re.sub(model_pattern_with_comma, "", content, flags=re.DOTALL)
-
-        # If no match, try without comma (last item in list)
-        if content == original_content:
-            model_pattern_no_comma = rf'(\s*{{\s*"id":\s*"{re.escape(model_id)}".*?}}\s*\n)'
-            content = re.sub(model_pattern_no_comma, "", content, flags=re.DOTALL)
-
-        # More robust: match entire dict by finding matching braces
-        # This handles cases where the simple pattern doesn't work
-        model_removed = False
-        if content == original_content:
-            # Find the start of the model dict (need to find the opening brace before "id")
-            # Look for the pattern: whitespace, opening brace, then "id": "model_id"
-            start_pattern = rf'(\s*{{\s*"id":\s*"{re.escape(model_id)}")'
-            start_match = re.search(start_pattern, content)
-            if start_match:
-                # Find the actual start of the dict (the opening brace)
-                # The regex matches: whitespace + { + whitespace + "id": "model_id"
-                # So we need to find the { within the match
-                match_start = start_match.start()
-                match_text = start_match.group(1)
-                # Find the opening brace in the matched text
-                brace_offset = match_text.find("{")
-                if brace_offset >= 0:
-                    start_pos = match_start + brace_offset
-                else:
-                    # Fallback: search backwards from match start
-                    start_pos = match_start
-                    for i in range(match_start - 1, max(0, match_start - 20), -1):
-                        if content[i] == "{":
-                            start_pos = i
-                            break
-                        if not content[i].isspace():
-                            break
-                # Find the matching closing brace
-                brace_count = 0
-                in_string = False
-                escape_next = False
-                for i in range(start_pos, len(content)):
-                    char = content[i]
-                    if escape_next:
-                        escape_next = False
-                        continue
-                    if char == "\\":
-                        escape_next = True
-                        continue
-                    if char == '"' and not escape_next:
-                        in_string = not in_string
-                        continue
-                    if not in_string:
-                        if char == "{":
-                            brace_count += 1
-                        elif char == "}":
-                            brace_count -= 1
-                            if brace_count == 0:
-                                # Found the matching closing brace
-                                end_pos = i + 1
-                                # Check if there's a comma after
-                                if end_pos < len(content) and content[end_pos] == ",":
-                                    end_pos += 1
-                                # Check if there's a newline after the comma/brace
-                                if end_pos < len(content) and content[end_pos] == "\n":
-                                    end_pos += 1
-                                # Remove the model dict (including comma and newline if present)
-                                content = content[:start_pos] + content[end_pos:]
-                                model_removed = True
-                                break
-
-        # Verify that the model was actually removed
-        if content == original_content:
+        if provider_name not in mbp:
             raise HTTPException(
-                status_code=500,
-                detail=f"Failed to remove model {model_id} from model_runner.py. The model entry could not be found or matched.",
+                status_code=404, detail=f"Model {model_id} not found in registry"
             )
 
-        # Verify the model is no longer in the content (double-check)
-        if f'"id": "{model_id}"' in content:
+        models_list = [m for m in mbp[provider_name] if m["id"] != model_id]
+        if len(models_list) == len(mbp[provider_name]):
             raise HTTPException(
-                status_code=500,
-                detail=f"Failed to remove model {model_id} from model_runner.py. Model entry still present after deletion attempt.",
+                status_code=500, detail=f"Failed to remove model {model_id} from registry"
             )
 
-        # Remove model from tier classification sets (UNREGISTERED_TIER_MODELS and FREE_TIER_MODELS)
-        # Remove from UNREGISTERED_TIER_MODELS
-        anonymous_pattern = r"(UNREGISTERED_TIER_MODELS\s*=\s*\{)(.*?)(\s*\})"
-        match = re.search(anonymous_pattern, content, re.DOTALL)
-        if match:
-            anonymous_content = match.group(2)
-            # Remove the model entry (with or without trailing comma)
-            anonymous_content = re.sub(
-                rf'\s*"{re.escape(model_id)}",?\s*(?:#.*)?\n?', "", anonymous_content
-            )
-            content = content[: match.start(2)] + anonymous_content + content[match.end(2) :]
+        mbp[provider_name] = models_list
+        if not models_list:
+            del mbp[provider_name]
 
-        # Remove from FREE_TIER_MODELS
-        # Pattern matches: FREE_TIER_MODELS = UNREGISTERED_TIER_MODELS.union({ ... })
-        free_pattern = (
-            r"(FREE_TIER_MODELS\s*=\s*UNREGISTERED_TIER_MODELS\.union\()(\{)(.*?)(\})(\))"
-        )
-        match = re.search(free_pattern, content, re.DOTALL)
-        if match:
-            free_content = match.group(3)  # The content inside the set literal
-            # Remove the model entry (with or without trailing comma)
-            free_content = re.sub(rf'\s*"{re.escape(model_id)}",?\s*(?:#.*)?\n?', "", free_content)
-            content = content[: match.start(3)] + free_content + content[match.end(3) :]
+        unregistered = [m for m in registry["unregistered_tier_models"] if m != model_id]
+        free_additional = [m for m in registry["free_tier_additional_models"] if m != model_id]
+        registry["unregistered_tier_models"] = unregistered
+        registry["free_tier_additional_models"] = free_additional
 
-        # If provider list becomes empty, remove the provider section
-        # This is more complex, so we'll leave empty provider lists for now
-
-        # Write back to file
-        with open(model_runner_path, "w", encoding="utf-8") as f:
-            f.write(content)
-
-        # Reload the model_runner module to get updated MODELS_BY_PROVIDER
-        importlib.reload(model_runner)
-        # Update the imported references in this module's namespace
-        sys.modules[__name__].MODELS_BY_PROVIDER = model_runner.MODELS_BY_PROVIDER
-        sys.modules[__name__].OPENROUTER_MODELS = model_runner.OPENROUTER_MODELS
+        save_registry(registry)
+        reload_registry()
 
         # Remove renderer config from frontend config file
         project_root = Path(__file__).parent.parent.parent.parent
@@ -3236,14 +2497,12 @@ async def delete_model(
                         f"No renderer config found for {model_id} in {frontend_config_path}"
                     )
             except Exception as e:
-                # Log error but don't fail the deletion - model is already removed from model_runner.py
                 logger.error(
                     f"Failed to remove renderer config for {model_id} from {frontend_config_path}: {e}"
                 )
-                # Still raise the error so admin knows about it, but model deletion from model_runner.py succeeded
                 raise HTTPException(
                     status_code=500,
-                    detail=f"Model removed from model_runner.py, but failed to remove renderer config: {str(e)}",
+                    detail=f"Model removed from registry, but failed to remove renderer config: {str(e)}",
                 )
 
         # Invalidate models cache so fresh data is returned
@@ -3290,7 +2549,6 @@ async def update_model_knowledge_cutoff(
     if not model_id:
         raise HTTPException(status_code=400, detail="Model ID cannot be empty")
 
-    # Find the model in MODELS_BY_PROVIDER
     model_found = False
     provider_name = None
 
@@ -3306,117 +2564,29 @@ async def update_model_knowledge_cutoff(
     if not model_found:
         raise HTTPException(status_code=404, detail=f"Model {model_id} not found")
 
-    # Update model_runner.py
-    model_runner_path = Path(__file__).parent.parent / "model_runner.py"
-
     try:
-        with open(model_runner_path, encoding="utf-8") as f:
-            content = f.read()
+        registry = load_registry()
+        mbp = registry["models_by_provider"]
 
-        # Find the provider's list in the file
-        bounds = find_provider_list_bounds(content, provider_name)
-        if not bounds:
+        if provider_name not in mbp:
             raise HTTPException(
-                status_code=500,
-                detail=f"Could not find provider {provider_name} in MODELS_BY_PROVIDER",
+                status_code=500, detail=f"Could not find provider {provider_name} in registry"
             )
 
-        start_pos, end_pos = bounds
-        provider_content = content[start_pos:end_pos]
-
-        # Find the model within the provider's list
-        model_pattern = rf'"id":\s*"{re.escape(model_id)}"'
-        model_match = re.search(model_pattern, provider_content)
-
-        if not model_match:
-            raise HTTPException(status_code=404, detail=f"Model {model_id} not found in file")
-
-        # Find the model's dictionary boundaries
-        model_start = model_match.start()
-        # Find the opening brace before the id field
-        brace_start = provider_content.rfind("{", 0, model_start)
-        if brace_start == -1:
-            raise HTTPException(status_code=500, detail="Could not find model dictionary start")
-
-        # Find the closing brace for this model
-        brace_count = 0
-        brace_end = brace_start
-        for i in range(brace_start, len(provider_content)):
-            if provider_content[i] == "{":
-                brace_count += 1
-            elif provider_content[i] == "}":
-                brace_count -= 1
-                if brace_count == 0:
-                    brace_end = i + 1
-                    break
-
-        if brace_count != 0:
-            raise HTTPException(status_code=500, detail="Could not find model dictionary end")
-
-        # Extract the model dictionary
-        model_dict_str = provider_content[brace_start:brace_end]
-
-        # Update knowledge_cutoff in the dictionary
-        # Remove existing knowledge_cutoff line if present
-        knowledge_cutoff_pattern = r'\s*"knowledge_cutoff":\s*(?:None|"[^"]*"|"[^"]*"),?\s*'
-        model_dict_str = re.sub(knowledge_cutoff_pattern, "", model_dict_str)
-
-        # Add new knowledge_cutoff if provided
-        if req.knowledge_cutoff:
-            # Find the last field before the closing brace
-            # Insert before the closing brace
-            closing_brace_pos = model_dict_str.rfind("}")
-            if closing_brace_pos > 0:
-                # Check if there's a trailing comma before the closing brace
-                before_brace = model_dict_str[:closing_brace_pos].rstrip()
-                comma_needed = not before_brace.endswith(",")
-                if comma_needed:
-                    model_dict_str = (
-                        model_dict_str[:closing_brace_pos]
-                        + f',\n            "knowledge_cutoff": "{req.knowledge_cutoff}",\n        '
-                        + model_dict_str[closing_brace_pos:]
-                    )
+        for model in mbp[provider_name]:
+            if model["id"] == model_id:
+                if req.knowledge_cutoff == "":
+                    model.pop("knowledge_cutoff", None)
+                elif req.knowledge_cutoff is not None:
+                    model["knowledge_cutoff"] = req.knowledge_cutoff
                 else:
-                    model_dict_str = (
-                        model_dict_str[:closing_brace_pos]
-                        + f'\n            "knowledge_cutoff": "{req.knowledge_cutoff}",\n        '
-                        + model_dict_str[closing_brace_pos:]
-                    )
+                    model["knowledge_cutoff"] = None
+                break
         else:
-            # Set to None (pending)
-            closing_brace_pos = model_dict_str.rfind("}")
-            if closing_brace_pos > 0:
-                before_brace = model_dict_str[:closing_brace_pos].rstrip()
-                comma_needed = not before_brace.endswith(",")
-                if comma_needed:
-                    model_dict_str = (
-                        model_dict_str[:closing_brace_pos]
-                        + ',\n            "knowledge_cutoff": None,  # Knowledge cutoff date pending\n        '
-                        + model_dict_str[closing_brace_pos:]
-                    )
-                else:
-                    model_dict_str = (
-                        model_dict_str[:closing_brace_pos]
-                        + '\n            "knowledge_cutoff": None,  # Knowledge cutoff date pending\n        '
-                        + model_dict_str[closing_brace_pos:]
-                    )
+            raise HTTPException(status_code=404, detail=f"Model {model_id} not found in registry")
 
-        # Replace the model dictionary in the provider content
-        new_provider_content = (
-            provider_content[:brace_start] + model_dict_str + provider_content[brace_end:]
-        )
-
-        # Replace the provider section in the full content
-        new_content = content[:start_pos] + new_provider_content + content[end_pos:]
-
-        # Write back to file
-        with open(model_runner_path, "w", encoding="utf-8") as f:
-            f.write(new_content)
-
-        # Reload the model_runner module
-        importlib.reload(model_runner)
-        sys.modules[__name__].MODELS_BY_PROVIDER = model_runner.MODELS_BY_PROVIDER
-        sys.modules[__name__].OPENROUTER_MODELS = model_runner.OPENROUTER_MODELS
+        save_registry(registry)
+        reload_registry()
 
         # Invalidate models cache
         from ..cache import invalidate_models_cache

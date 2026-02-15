@@ -3,6 +3,7 @@ Model registry: JSON loading, tier filtering, OpenAI client.
 """
 
 import json
+import sys
 from pathlib import Path
 from typing import Any
 
@@ -13,9 +14,23 @@ from ..config import settings
 _REGISTRY_PATH = Path(__file__).resolve().parent.parent.parent / "data" / "models_registry.json"
 
 
-def _load_registry() -> dict[str, Any]:
+def get_registry_path() -> Path:
+    return _REGISTRY_PATH
+
+
+def load_registry() -> dict[str, Any]:
     with _REGISTRY_PATH.open() as f:
         return json.load(f)
+
+
+def save_registry(data: dict[str, Any]) -> None:
+    with _REGISTRY_PATH.open("w", encoding="utf-8") as f:
+        json.dump(data, f, indent=2, ensure_ascii=False)
+        f.write("\n")
+
+
+def _load_registry() -> dict[str, Any]:
+    return load_registry()
 
 
 _registry = _load_registry()
@@ -37,6 +52,19 @@ def reload_registry() -> None:
     OPENROUTER_MODELS = []
     for provider, models in MODELS_BY_PROVIDER.items():
         OPENROUTER_MODELS.extend(models)
+
+    llm_mod = sys.modules.get("app.llm")
+    if llm_mod:
+        llm_mod.MODELS_BY_PROVIDER = MODELS_BY_PROVIDER
+        llm_mod.UNREGISTERED_TIER_MODELS = UNREGISTERED_TIER_MODELS
+        llm_mod.FREE_TIER_MODELS = FREE_TIER_MODELS
+        llm_mod.OPENROUTER_MODELS = OPENROUTER_MODELS
+    mr_mod = sys.modules.get("app.model_runner")
+    if mr_mod:
+        mr_mod.MODELS_BY_PROVIDER = MODELS_BY_PROVIDER
+        mr_mod.UNREGISTERED_TIER_MODELS = UNREGISTERED_TIER_MODELS
+        mr_mod.FREE_TIER_MODELS = FREE_TIER_MODELS
+        mr_mod.OPENROUTER_MODELS = OPENROUTER_MODELS
 
 
 def is_model_available_for_tier(model_id: str, tier: str, is_trial_active: bool = False) -> bool:
