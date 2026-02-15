@@ -81,7 +81,7 @@ logging.getLogger().addFilter(SQLStyleWarningFilter())
 
 # Set INFO level for search-related modules even in production (critical for rate limiting debugging)
 logging.getLogger("app.search").setLevel(logging.INFO)
-logging.getLogger("app.model_runner").setLevel(
+logging.getLogger("app.llm").setLevel(
     logging.INFO if settings.environment == "development" else logging.WARNING
 )
 

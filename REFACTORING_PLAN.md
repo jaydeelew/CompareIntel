@@ -16,6 +16,7 @@ When you receive this document, treat it as a runbook. Each session can be compl
    - Save the change in the same commit as the session work.
 
 4. **Commit** with a message like: `refactor: <short description> (Session N)`.
+   - **Note:** The user makes commits manually. Do not run `git commit` or `git add` for commits. After completing a session, leave the changes staged (or unstaged) for the user to commit.
 
 The goal is that feeding this document to a new AI chat yields continuous progress: each run picks up where the last left off, executes the next session, and updates the progress table so the next run knows what to do.
 
@@ -425,7 +426,7 @@ The AI must update this table after completing each session (see Instructions fo
 | 4 | Done | Registry in `backend/data/models_registry.json`. `model_runner.py` loads via JSON. Admin model add/delete still edits Python source; Session 8 will switch to JSON. |
 | 5 | Done | faqData moved to frontend/src/data/faq.tsx. glossaryTerms, categoryLabels, categoryDescriptions moved to frontend/src/data/glossary.ts. FAQ.tsx ~148 lines, Glossary.tsx ~324 lines. |
 | 6 | Done | Extracted 7 HTML templates to backend/app/templates/. email_service.py reduced from ~850 to ~325 lines. Uses Python string.Template for variable substitution. |
-| 7 | Pending | |
+| 7 | Done | Created backend/app/llm/ (named llm to avoid shadowing app.models). registry.py, tokens.py, text_processing.py, streaming.py, connection.py. model_runner.py is ~70-line shim re-exporting from llm. Updated test_model_runner_edge_cases to patch app.llm.streaming.client. All backend tests pass. |
 | 8 | Pending | |
 | 9 | Pending | |
 | 10 | Pending | |

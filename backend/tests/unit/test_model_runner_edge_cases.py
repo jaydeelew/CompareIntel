@@ -19,39 +19,28 @@ from app.model_runner import (
 class TestStreamingErrorHandling:
     """Tests for error handling in streaming."""
 
-    @patch("app.model_runner.OpenAI")
-    def test_streaming_connection_error(self, mock_openai_class):
+    @patch("app.llm.streaming.client")
+    def test_streaming_connection_error(self, mock_client):
         """Test handling of streaming connection errors."""
-        mock_client = MagicMock()
-        mock_openai_class.return_value = mock_client
-
-        # Simulate connection error during streaming
         mock_client.chat.completions.create.side_effect = Exception("Connection failed")
 
         chunks = list(
             call_openrouter_streaming(prompt="Test prompt", model_id="gpt-4", use_mock=False)
         )
 
-        # Should handle error gracefully
         assert len(chunks) >= 0
-        # May return error message as chunk
         if chunks:
             assert isinstance(chunks[0], str)
 
-    @patch("app.model_runner.OpenAI")
-    def test_streaming_timeout_error(self, mock_openai_class):
+    @patch("app.llm.streaming.client")
+    def test_streaming_timeout_error(self, mock_client):
         """Test handling of streaming timeout errors."""
-        mock_client = MagicMock()
-        mock_openai_class.return_value = mock_client
-
-        # Simulate timeout during streaming
         mock_client.chat.completions.create.side_effect = TimeoutError("Request timed out")
 
         chunks = list(
             call_openrouter_streaming(prompt="Test prompt", model_id="gpt-4", use_mock=False)
         )
 
-        # Should handle timeout gracefully
         assert isinstance(chunks, list)
 
     def test_streaming_empty_response(self):
