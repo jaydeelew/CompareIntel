@@ -392,6 +392,37 @@ Standardize all catch blocks to check ApiError first. Remove console.error calls
 
 ---
 
+## Execution Progress
+
+Track completed sessions here so the next AI chat can continue from the right place. Update after each session.
+
+| Session | Status | Notes |
+|---------|--------|-------|
+| 1 | Pending | |
+| 2 | Pending | |
+| 3 | Pending | |
+| 4 | Done | Registry in `backend/data/models_registry.json`. `model_runner.py` loads via JSON. Admin model add/delete still edits Python source; Session 8 will switch to JSON. |
+| 5 | Pending | |
+| 6 | Pending | |
+| 7 | Pending | |
+| 8 | Pending | |
+| 9 | Pending | |
+| 10 | Pending | |
+| 11 | Pending | |
+| 12 | Pending | |
+| 13 | Pending | |
+| 14 | Pending | |
+| 15 | Pending | |
+| 16 | Pending | |
+| 17 | Pending | |
+| 18 | Pending | |
+| 19 | Pending | |
+| 20 | Pending | |
+| 21 | Pending | |
+| 22 | Pending | |
+
+---
+
 ## Session Execution Order and Dependencies
 
 | Session | Description | Risk | Dependencies |

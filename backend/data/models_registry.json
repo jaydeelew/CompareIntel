@@ -1,0 +1,675 @@
+{
+  "models_by_provider": {
+    "Anthropic": [
+      {
+        "id": "anthropic/claude-3.5-haiku",
+        "name": "Claude Haiku 3.5",
+        "description": "A fast, efficient model optimized for speed, coding accuracy, and tool use at low cost.",
+        "category": "Language",
+        "provider": "Anthropic",
+        "supports_web_search": true,
+        "knowledge_cutoff": "July 2024"
+      },
+      {
+        "id": "anthropic/claude-haiku-4.5",
+        "name": "Claude Haiku 4.5",
+        "description": "Anthropic's fastest model delivering near-frontier intelligence with minimal latency and cost.",
+        "category": "Language",
+        "provider": "Anthropic",
+        "supports_web_search": true,
+        "knowledge_cutoff": "February 2025"
+      },
+      {
+        "id": "anthropic/claude-3.7-sonnet",
+        "name": "Claude Sonnet 3.7",
+        "description": "An advanced model with hybrid extended thinking capabilities for complex reasoning and coding tasks.",
+        "category": "Language/Reasoning",
+        "provider": "Anthropic",
+        "supports_web_search": true,
+        "knowledge_cutoff": "October 2024"
+      },
+      {
+        "id": "anthropic/claude-opus-4",
+        "name": "Claude Opus 4",
+        "description": "A frontier coding model with sustained performance on complex, long-running agentic tasks.",
+        "category": "Language",
+        "provider": "Anthropic",
+        "supports_web_search": true,
+        "knowledge_cutoff": "March 2025"
+      },
+      {
+        "id": "anthropic/claude-sonnet-4",
+        "name": "Claude Sonnet 4",
+        "description": "A high-performance model excelling in coding, reasoning, and instruction-following with improved precision.",
+        "category": "Language",
+        "provider": "Anthropic",
+        "supports_web_search": true,
+        "knowledge_cutoff": "March 2025"
+      },
+      {
+        "id": "anthropic/claude-opus-4.1",
+        "name": "Claude Opus 4.1",
+        "description": "An updated flagship model with enhanced coding, reasoning, and multi-step agentic capabilities.",
+        "category": "Language/Code",
+        "provider": "Anthropic",
+        "supports_web_search": true,
+        "knowledge_cutoff": "March 2025"
+      },
+      {
+        "id": "anthropic/claude-opus-4.5",
+        "name": "Claude Opus 4.5",
+        "description": "Anthropic's most capable model for complex software engineering and long-horizon computer use tasks.",
+        "category": "Language",
+        "provider": "Anthropic",
+        "supports_web_search": true,
+        "knowledge_cutoff": "May 2025"
+      },
+      {
+        "id": "anthropic/claude-sonnet-4.5",
+        "name": "Claude Sonnet 4.5",
+        "description": "Anthropic's most advanced Sonnet optimized for real-world agentic workflows and coding tasks.",
+        "category": "Language",
+        "provider": "Anthropic",
+        "supports_web_search": true,
+        "knowledge_cutoff": "May 2025"
+      }
+    ],
+    "Cohere": [
+      {
+        "id": "cohere/command-r7b-12-2024",
+        "name": "Command R7B",
+        "description": "A compact 7B model optimized for fast, efficient responses in conversational and RAG applications.",
+        "category": "Language",
+        "provider": "Cohere",
+        "supports_web_search": false,
+        "knowledge_cutoff": "December 2024"
+      },
+      {
+        "id": "cohere/command-r-plus-08-2024",
+        "name": "Command R+",
+        "description": "An enterprise-grade model with 50% higher throughput for complex reasoning and generation tasks.",
+        "category": "Language/Reasoning",
+        "provider": "Cohere",
+        "supports_web_search": true,
+        "knowledge_cutoff": "August 2024"
+      },
+      {
+        "id": "cohere/command-a",
+        "name": "Command A",
+        "description": "An open-weights 111B model with 256k context excelling in agentic, multilingual, and coding tasks.",
+        "category": "Language",
+        "provider": "Cohere",
+        "supports_web_search": false,
+        "knowledge_cutoff": "March 2025"
+      }
+    ],
+    "DeepSeek": [
+      {
+        "id": "deepseek/deepseek-chat-v3.1",
+        "name": "DeepSeek Chat V3.1",
+        "description": "A 671B hybrid MoE model (37B active) supporting both thinking and non-thinking modes for versatile reasoning.",
+        "category": "Language/Reasoning",
+        "provider": "DeepSeek",
+        "supports_web_search": true,
+        "knowledge_cutoff": "July 2025"
+      },
+      {
+        "id": "deepseek/deepseek-v3.2-exp",
+        "name": "DeepSeek V3.2 Exp",
+        "description": "An experimental model with enhanced reasoning and coding capabilities bridging V3.1 and future architectures.",
+        "category": "Language/Reasoning",
+        "provider": "DeepSeek",
+        "supports_web_search": true,
+        "knowledge_cutoff": "October 2025"
+      },
+      {
+        "id": "deepseek/deepseek-r1",
+        "name": "DeepSeek R1",
+        "description": "An open-source reasoning model matching OpenAI o1 performance with fully transparent chain-of-thought.",
+        "category": "Reasoning",
+        "provider": "DeepSeek",
+        "supports_web_search": true,
+        "knowledge_cutoff": "January 2025"
+      }
+    ],
+    "Google": [
+      {
+        "id": "google/gemini-2.0-flash-001",
+        "name": "Gemini 2.0 Flash",
+        "description": "A high-speed model with significantly faster time-to-first-token while maintaining Pro-level quality.",
+        "category": "Language",
+        "provider": "Google",
+        "supports_web_search": true,
+        "knowledge_cutoff": "August 2024"
+      },
+      {
+        "id": "google/gemini-2.5-flash",
+        "name": "Gemini 2.5 Flash",
+        "description": "Google's fast, cost-efficient model with built-in thinking capabilities for reasoning, coding, and math tasks.",
+        "category": "Language",
+        "provider": "Google",
+        "supports_web_search": true,
+        "knowledge_cutoff": "January 2025"
+      },
+      {
+        "id": "google/gemini-2.5-pro",
+        "name": "Gemini 2.5 Pro",
+        "description": "Google's most capable model excelling in complex reasoning, coding, mathematics, and scientific analysis.",
+        "category": "Language",
+        "provider": "Google",
+        "supports_web_search": true,
+        "knowledge_cutoff": "January 2025"
+      },
+      {
+        "id": "google/gemini-3-flash-preview",
+        "name": "Gemini 3 Flash Preview",
+        "description": "Gemini 3 Flash Preview is a high speed, high value thinking model designed for agentic workflows, multi turn chat, and coding assistance.",
+        "category": "Language",
+        "provider": "Google",
+        "supports_web_search": true,
+        "knowledge_cutoff": "August 2025"
+      },
+      {
+        "id": "google/gemini-3-pro-preview",
+        "name": "Gemini 3 Pro Preview",
+        "description": "Google's flagship multimodal model with 1M-token context for text, image, video, audio, and code tasks.",
+        "category": "Language",
+        "provider": "Google",
+        "supports_web_search": true,
+        "knowledge_cutoff": "August 2025"
+      }
+    ],
+    "Kwaipilot": [],
+    "Meta": [
+      {
+        "id": "meta-llama/llama-4-maverick",
+        "name": "Llama 4 Maverick",
+        "description": "A high-capacity 400B MoE model (17B active, 128 experts) for complex multimodal reasoning and generation.",
+        "category": "Multimodal",
+        "provider": "Meta",
+        "supports_web_search": true,
+        "knowledge_cutoff": "August 2024"
+      },
+      {
+        "id": "meta-llama/llama-4-scout",
+        "name": "Llama 4 Scout",
+        "description": "A 109B MoE model (17B active) optimized for efficient multimodal understanding and generation tasks.",
+        "category": "Multimodal",
+        "provider": "Meta",
+        "supports_web_search": true,
+        "knowledge_cutoff": "August 2024"
+      },
+      {
+        "id": "meta-llama/llama-3.1-405b-instruct",
+        "name": "Llama 3.1 405B Instruct",
+        "description": "Meta's flagship 405B open-source model excelling in multilingual understanding, coding, and instruction-following.",
+        "category": "Language",
+        "provider": "Meta",
+        "supports_web_search": true,
+        "knowledge_cutoff": "December 2023"
+      },
+      {
+        "id": "meta-llama/llama-3.3-70b-instruct",
+        "name": "Llama 3.3 70B Instruct",
+        "description": "The Meta Llama 3.3 multilingual large language model (LLM) is a pretrained and instruction tuned generative model in 70B.",
+        "category": "Language",
+        "provider": "Meta",
+        "supports_web_search": true,
+        "knowledge_cutoff": "December 2023"
+      }
+    ],
+    "Microsoft": [
+      {
+        "id": "microsoft/phi-4",
+        "name": "Phi 4",
+        "description": "A compact 14B model excelling in complex reasoning while operating efficiently with limited resources.",
+        "category": "Language/Reasoning",
+        "provider": "Microsoft",
+        "supports_web_search": false,
+        "knowledge_cutoff": "June 2024"
+      },
+      {
+        "id": "microsoft/wizardlm-2-8x22b",
+        "name": "WizardLM-2 8x22B",
+        "description": "Microsoft's advanced MoE model with strong performance across reasoning, coding, and creative tasks.",
+        "category": "Language/Reasoning",
+        "provider": "Microsoft",
+        "supports_web_search": false,
+        "knowledge_cutoff": "April 2024"
+      }
+    ],
+    "Minimax": [
+      {
+        "id": "minimax/minimax-m2",
+        "name": "Minimax M2",
+        "description": "A compact, high-efficiency model optimized for end-to-end coding and agentic workflow automation.",
+        "category": "Language",
+        "provider": "Minimax",
+        "supports_web_search": true,
+        "knowledge_cutoff": null
+      }
+    ],
+    "Mistral": [
+      {
+        "id": "mistralai/devstral-medium",
+        "name": "Devstral Medium",
+        "description": "A high-performance model for code generation and agentic reasoning in complex development workflows.",
+        "category": "Code",
+        "provider": "Mistral",
+        "supports_web_search": true,
+        "knowledge_cutoff": "December 2025"
+      },
+      {
+        "id": "mistralai/devstral-small",
+        "name": "Devstral Small",
+        "description": "A 24B open-weight model specialized for software engineering agents and autonomous coding tasks.",
+        "category": "Code",
+        "provider": "Mistral",
+        "supports_web_search": true,
+        "knowledge_cutoff": "April 2024"
+      },
+      {
+        "id": "mistralai/mistral-medium-3.1",
+        "name": "Mistral Medium 3.1",
+        "description": "An enterprise-grade model delivering frontier-level capabilities at significantly reduced operational cost.",
+        "category": "Language",
+        "provider": "Mistral",
+        "supports_web_search": true,
+        "knowledge_cutoff": "October 2024"
+      },
+      {
+        "id": "mistralai/mistral-small-3.2-24b-instruct",
+        "name": "Mistral Small 3.2 24B",
+        "description": "A 24B multimodal model optimized for instruction-following, function calling, and vision tasks.",
+        "category": "Multimodal",
+        "provider": "Mistral",
+        "supports_web_search": true,
+        "knowledge_cutoff": "October 2024"
+      },
+      {
+        "id": "mistralai/mistral-large",
+        "name": "Mistral Large",
+        "description": "Mistral's flagship model with strong multilingual, coding, reasoning, and function-calling capabilities.",
+        "category": "Language/Reasoning",
+        "provider": "Mistral",
+        "supports_web_search": true,
+        "knowledge_cutoff": "July 2024"
+      },
+      {
+        "id": "mistralai/codestral-2508",
+        "name": "Codestral 2508",
+        "description": "Mistral's specialized coding model with state-of-the-art performance on code generation and completion.",
+        "category": "Code",
+        "provider": "Mistral",
+        "supports_web_search": true,
+        "knowledge_cutoff": "August 2025"
+      }
+    ],
+    "Mistralai": [
+      {
+        "id": "mistralai/devstral-2512",
+        "name": "Devstral 2512",
+        "description": "Devstral 2 is a state-of-the-art open-source model by Mistral AI specializing in agentic coding.",
+        "category": "Language",
+        "provider": "Mistralai",
+        "supports_web_search": true,
+        "knowledge_cutoff": null
+      }
+    ],
+    "OpenAI": [
+      {
+        "id": "openai/gpt-oss-120b",
+        "name": "Gpt Oss 120B",
+        "description": "An open-weight 117B MoE model designed for high-reasoning, agentic, and general-purpose production tasks.",
+        "category": "Language",
+        "provider": "OpenAI",
+        "supports_web_search": true,
+        "knowledge_cutoff": "May 2025"
+      },
+      {
+        "id": "openai/o3-mini",
+        "name": "o3 Mini",
+        "description": "A cost-efficient reasoning model optimized for STEM tasks, excelling in science, mathematics, and coding.",
+        "category": "Reasoning",
+        "provider": "OpenAI",
+        "supports_web_search": true,
+        "knowledge_cutoff": "October 2023"
+      },
+      {
+        "id": "openai/gpt-5-mini",
+        "name": "GPT-5 Mini",
+        "description": "A compact GPT-5 variant designed for efficient, lighter-weight reasoning and general tasks.",
+        "category": "Language",
+        "provider": "OpenAI",
+        "supports_web_search": true,
+        "knowledge_cutoff": "September 2024"
+      },
+      {
+        "id": "openai/gpt-5-nano",
+        "name": "GPT-5 Nano",
+        "description": "The smallest GPT-5 variant optimized for ultra-low latency developer tools and rapid interactions.",
+        "category": "Language",
+        "provider": "OpenAI",
+        "supports_web_search": true,
+        "knowledge_cutoff": "September 2024"
+      },
+      {
+        "id": "openai/gpt-5.1-codex-mini",
+        "name": "GPT-5.1-Codex-Mini",
+        "description": "A compact, fast coding model for efficient code generation and software development tasks.",
+        "category": "Code",
+        "provider": "OpenAI",
+        "supports_web_search": true,
+        "knowledge_cutoff": "June 2025"
+      },
+      {
+        "id": "openai/o3",
+        "name": "o3",
+        "description": "OpenAI's advanced reasoning model with state-of-the-art performance across math, science, and coding benchmarks.",
+        "category": "Reasoning",
+        "provider": "OpenAI",
+        "supports_web_search": true,
+        "knowledge_cutoff": "October 2023"
+      },
+      {
+        "id": "openai/gpt-4o-mini",
+        "name": "Gpt 4o Mini",
+        "description": "GPT-4o mini is OpenAI's newest model after [GPT-4 Omni](/models/openai/gpt-4o), supporting both text and image inputs with text outputs.",
+        "category": "Language",
+        "provider": "OpenAI",
+        "supports_web_search": true,
+        "knowledge_cutoff": "October 2023"
+      },
+      {
+        "id": "openai/gpt-4o",
+        "name": "GPT-4o",
+        "description": "An omnimodal model supporting text and image inputs with fast, intelligent multimodal responses.",
+        "category": "Language",
+        "provider": "OpenAI",
+        "supports_web_search": true,
+        "knowledge_cutoff": "October 2023"
+      },
+      {
+        "id": "openai/gpt-5",
+        "name": "GPT-5",
+        "description": "OpenAI's most advanced model with major improvements in reasoning, code quality, and user experience.",
+        "category": "Language",
+        "provider": "OpenAI",
+        "supports_web_search": true,
+        "knowledge_cutoff": "September 2024"
+      },
+      {
+        "id": "openai/gpt-5-chat",
+        "name": "GPT-5 Chat",
+        "description": "A GPT-5 variant optimized for natural, multimodal, and context-aware enterprise conversations.",
+        "category": "Language",
+        "provider": "OpenAI",
+        "supports_web_search": false,
+        "knowledge_cutoff": "September 2024"
+      },
+      {
+        "id": "openai/gpt-5-codex",
+        "name": "GPT-5 Codex",
+        "description": "A specialized GPT-5 variant optimized for software engineering, code generation, and development workflows.",
+        "category": "Code",
+        "provider": "OpenAI",
+        "supports_web_search": true,
+        "knowledge_cutoff": "September 2024"
+      },
+      {
+        "id": "openai/gpt-5.1",
+        "name": "GPT-5.1",
+        "description": "The latest frontier model with stronger reasoning, improved instruction adherence, and natural conversation.",
+        "category": "Language",
+        "provider": "OpenAI",
+        "supports_web_search": true,
+        "knowledge_cutoff": "June 2025"
+      },
+      {
+        "id": "openai/gpt-5.1-chat",
+        "name": "GPT-5.1 Chat",
+        "description": "A fast, lightweight model optimized for low-latency chat while retaining strong general intelligence.",
+        "category": "Language",
+        "provider": "OpenAI",
+        "supports_web_search": true,
+        "knowledge_cutoff": "June 2025"
+      },
+      {
+        "id": "openai/gpt-5.1-codex",
+        "name": "GPT-5.1-Codex",
+        "description": "The most capable GPT-5.1 variant specialized for advanced software engineering and coding workflows.",
+        "category": "Code",
+        "provider": "OpenAI",
+        "supports_web_search": true,
+        "knowledge_cutoff": "June 2025"
+      },
+      {
+        "id": "openai/gpt-5.1-codex-max",
+        "name": "Gpt 5.1 Codex Max",
+        "description": "GPT-5.1-Codex-Max is OpenAI's latest agentic coding model, designed for long-running, high-context software development tasks.",
+        "category": "Language",
+        "provider": "OpenAI",
+        "supports_web_search": true,
+        "knowledge_cutoff": "June 2025"
+      },
+      {
+        "id": "openai/gpt-5.2",
+        "name": "Gpt 5.2",
+        "description": "GPT-5.2 is the latest frontier-grade model in the GPT-5 series, offering stronger agentic and long context perfomance compared to GPT-5.1.",
+        "category": "Language",
+        "provider": "OpenAI",
+        "supports_web_search": true,
+        "knowledge_cutoff": "August 2025"
+      },
+      {
+        "id": "openai/gpt-5.2-chat",
+        "name": "Gpt 5.2 Chat",
+        "description": "GPT-5.2 Chat (AKA Instant) is the fast, lightweight member of the 5.2 family, optimized for low-latency chat while retaining strong general intelligence.",
+        "category": "Language",
+        "provider": "OpenAI",
+        "supports_web_search": true,
+        "knowledge_cutoff": "August 2025"
+      },
+      {
+        "id": "openai/gpt-5.2-pro",
+        "name": "Gpt 5.2 Pro",
+        "description": "GPT-5.2 Pro is OpenAI's most advanced model, offering major improvements in agentic coding and long context performance over GPT-5 Pro.",
+        "category": "Language",
+        "provider": "OpenAI",
+        "supports_web_search": true,
+        "knowledge_cutoff": "August 2025"
+      }
+    ],
+    "Qwen": [
+      {
+        "id": "qwen/qwen3-30b-a3b-instruct-2507",
+        "name": "Qwen3 30B A3B Instruct 2507",
+        "description": "A 30.5B MoE model with 3.3B active parameters for efficient instruction-following and chat.",
+        "category": "Language",
+        "provider": "Qwen",
+        "supports_web_search": true,
+        "knowledge_cutoff": "July 2025"
+      },
+      {
+        "id": "qwen/qwen3-coder-flash",
+        "name": "Qwen3 Coder Flash",
+        "description": "A fast, cost-efficient coding model optimized for rapid code generation and completion tasks.",
+        "category": "Code",
+        "provider": "Qwen",
+        "supports_web_search": true,
+        "knowledge_cutoff": "June 2025"
+      },
+      {
+        "id": "qwen/qwen3-next-80b-a3b-instruct",
+        "name": "Qwen3 Next 80B A3B Instruct",
+        "description": "An 80B MoE instruction-tuned model optimized for fast, stable responses without thinking traces.",
+        "category": "Language",
+        "provider": "Qwen",
+        "supports_web_search": true,
+        "knowledge_cutoff": "September 2025"
+      },
+      {
+        "id": "qwen/qwen3-235b-a22b",
+        "name": "Qwen3 235B A22B",
+        "description": "A 235B MoE model (22B active) with strong reasoning, coding, and multilingual capabilities.",
+        "category": "Language",
+        "provider": "Qwen",
+        "supports_web_search": true,
+        "knowledge_cutoff": "April 2025"
+      },
+      {
+        "id": "qwen/qwen3-coder",
+        "name": "Qwen3 Coder 480B A35B",
+        "description": "A 480B MoE model (35B active) achieving state-of-the-art code generation and agentic coding performance.",
+        "category": "Code",
+        "provider": "Qwen",
+        "supports_web_search": true,
+        "knowledge_cutoff": "June 2025"
+      },
+      {
+        "id": "qwen/qwen3-coder-plus",
+        "name": "Qwen3 Coder Plus",
+        "description": "Alibaba's proprietary coding model with enhanced performance for complex development tasks.",
+        "category": "Code",
+        "provider": "Qwen",
+        "supports_web_search": true,
+        "knowledge_cutoff": "June 2025"
+      },
+      {
+        "id": "qwen/qwen3-max",
+        "name": "Qwen3 Max",
+        "description": "Qwen's most capable model with strong reasoning, instruction-following, and multilingual abilities.",
+        "category": "Language",
+        "provider": "Qwen",
+        "supports_web_search": true,
+        "knowledge_cutoff": "April 2025"
+      },
+      {
+        "id": "qwen/qwen3-next-80b-a3b-thinking",
+        "name": "Qwen3 Next 80B A3B Thinking",
+        "description": "A reasoning-first model with structured chain-of-thought traces for complex problem-solving.",
+        "category": "Language/Reasoning",
+        "provider": "Qwen",
+        "supports_web_search": true,
+        "knowledge_cutoff": "September 2025"
+      },
+      {
+        "id": "qwen/qwen3-vl-235b-a22b-thinking",
+        "name": "Qwen3 VL 235B A22B Thinking",
+        "description": "A multimodal reasoning model unifying text generation with visual understanding across images and video.",
+        "category": "Multimodal/Reasoning",
+        "provider": "Qwen",
+        "supports_web_search": true,
+        "knowledge_cutoff": "April 2025"
+      }
+    ],
+    "xAI": [
+      {
+        "id": "x-ai/grok-code-fast-1",
+        "name": "Grok Code Fast 1",
+        "description": "A speedy, economical reasoning model optimized for agentic coding and development tasks.",
+        "category": "Language",
+        "provider": "xAI",
+        "knowledge_cutoff": "July 2025"
+      },
+      {
+        "id": "x-ai/grok-4-fast",
+        "name": "Grok 4 Fast",
+        "description": "A cost-efficient multimodal model with 2M token context for fast, large-scale processing.",
+        "category": "Language",
+        "provider": "xAI",
+        "knowledge_cutoff": "June 2025"
+      },
+      {
+        "id": "x-ai/grok-3-mini",
+        "name": "Grok 3 Mini",
+        "description": "A lightweight reasoning model with chain-of-thought capabilities for efficient problem-solving.",
+        "category": "Language",
+        "provider": "xAI",
+        "knowledge_cutoff": "March 2025"
+      },
+      {
+        "id": "x-ai/grok-4.1-fast",
+        "name": "Grok 4.1 Fast",
+        "description": "Grok 4.1 Fast is xAI's best agentic tool calling model that shines in real-world use cases like customer support and deep research.",
+        "category": "Language",
+        "provider": "xAI",
+        "knowledge_cutoff": "August 2025"
+      },
+      {
+        "id": "x-ai/grok-4",
+        "name": "Grok 4",
+        "description": "xAI's flagship reasoning model with 256k context for complex analysis and generation tasks.",
+        "category": "Language",
+        "provider": "xAI",
+        "knowledge_cutoff": "June 2025"
+      },
+      {
+        "id": "x-ai/grok-5",
+        "name": "Grok 5 (Coming Soon)",
+        "description": "xAI's upcoming next-generation model expected by end of 2025 (not yet available).",
+        "category": "Language",
+        "provider": "xAI",
+        "available": false,
+        "knowledge_cutoff": null
+      }
+    ],
+    "Xiaomi": [
+      {
+        "id": "xiaomi/mimo-v2-flash",
+        "name": "Mimo V2 Flash",
+        "description": "MiMo-V2-Flash is an open-source foundation language model developed by Xiaomi.",
+        "category": "Language",
+        "provider": "Xiaomi",
+        "supports_web_search": true,
+        "knowledge_cutoff": null
+      }
+    ],
+    "ZAi": [
+      {
+        "id": "z-ai/glm-4.7",
+        "name": "Glm 4.7",
+        "description": "GLM-4.7 is Z.AI's latest flagship model, featuring upgrades in two key areas: enhanced programming capabilities and more stable multi-step reasoning/execution.",
+        "category": "Language",
+        "provider": "ZAi",
+        "supports_web_search": true,
+        "knowledge_cutoff": "June 2025"
+      }
+    ]
+  },
+  "unregistered_tier_models": [
+    "anthropic/claude-3.5-haiku",
+    "cohere/command-r7b-12-2024",
+    "deepseek/deepseek-chat-v3.1",
+    "deepseek/deepseek-v3.2-exp",
+    "google/gemini-2.0-flash-001",
+    "google/gemini-2.5-flash",
+    "microsoft/phi-4",
+    "mistralai/devstral-2512",
+    "openai/gpt-oss-120b",
+    "x-ai/grok-4-fast",
+    "x-ai/grok-code-fast-1",
+    "xiaomi/mimo-v2-flash"
+  ],
+  "free_tier_additional_models": [
+    "anthropic/claude-haiku-4.5",
+    "cohere/command-r-plus-08-2024",
+    "deepseek/deepseek-r1",
+    "meta-llama/llama-4-maverick",
+    "meta-llama/llama-4-scout",
+    "microsoft/phi-4-reasoning-plus",
+    "microsoft/wizardlm-2-8x22b",
+    "mistralai/devstral-medium",
+    "mistralai/devstral-small",
+    "mistralai/mistral-medium-3.1",
+    "mistralai/mistral-small-3.2-24b-instruct",
+    "openai/gpt-5-mini",
+    "openai/gpt-5-nano",
+    "openai/gpt-5.1-codex-mini",
+    "openai/o3-mini",
+    "qwen/qwen3-30b-a3b-instruct-2507",
+    "qwen/qwen3-coder-flash",
+    "qwen/qwen3-next-80b-a3b-instruct",
+    "x-ai/grok-3-mini"
+  ]
+}
