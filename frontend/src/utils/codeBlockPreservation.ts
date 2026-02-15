@@ -116,8 +116,7 @@ export function extractCodeBlocks(text: string): CodeBlockExtraction {
       return match // This is a markdown list, not code
     }
 
-    // CRITICAL: Skip if this contains LaTeX delimiters - it should be processed as math, not code
-    // Check for inline math delimiters: $, \(, \[
+    // Skip if this contains LaTeX delimiters - it should be processed as math, not code
     // Check for display math delimiters: $$, \[, \]
     // This prevents LaTeX formulas from being extracted as code blocks
     const latexDelimiters = [
@@ -136,8 +135,7 @@ export function extractCodeBlocks(text: string): CodeBlockExtraction {
       return match // This is LaTeX/math, not code - let it be processed as math
     }
 
-    // CRITICAL: Skip if this contains mathematical notation without explicit LaTeX delimiters
-    // This catches plain math expressions like "b² = (-4)² = 16" that should be rendered as math, not code
+    // Skip if this contains mathematical notation without explicit LaTeX delimiters
     // Check for mathematical patterns:
     // 1. Mathematical operators and symbols (including Unicode superscripts and subscripts)
     // 2. Variables with exponents (like b², x³) or subscripts (like x₁, x₂)

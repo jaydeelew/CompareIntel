@@ -76,9 +76,7 @@ export interface UseSavedSelectionsCompleteReturn {
   handleLoadSelection: (id: string) => void
 }
 
-// ============================================
 // Helper Functions
-// ============================================
 
 function generateId(): string {
   return `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`
@@ -156,9 +154,7 @@ function saveDefaultSelectionId(defaultKey: string, selectionId: string | null):
   }
 }
 
-// ============================================
 // Main Hook
-// ============================================
 
 export function useSavedSelectionsComplete(
   config: UseSavedSelectionsCompleteConfig,
@@ -187,21 +183,17 @@ export function useSavedSelectionsComplete(
   const [savedSelections, setSavedSelections] = useState<SavedModelSelection[]>([])
   const [defaultSelectionId, setDefaultSelectionIdState] = useState<string | null>(null)
 
-  // Computed values
   const storageKey = useMemo(() => getStorageKey(userId), [userId])
   const defaultSelectionKey = useMemo(() => getDefaultSelectionKey(userId), [userId])
   const maxSelections = useMemo(() => getSavedModelSelectionLimit(tier), [tier])
   const canSaveMore = savedSelections.length < maxSelections
 
-  // Load selections when storage key changes
   useEffect(() => {
     setSavedSelections(loadFromStorage(storageKey))
     setDefaultSelectionIdState(loadDefaultSelectionId(defaultSelectionKey))
   }, [storageKey, defaultSelectionKey])
 
-  // ============================================
   // Core Operations (from useSavedModelSelections)
-  // ============================================
 
   const saveSelection = useCallback(
     (name: string, modelIds: string[]): { success: boolean; error?: string } => {
@@ -321,9 +313,7 @@ export function useSavedSelectionsComplete(
     return savedSelections.find(s => s.id === defaultSelectionId) || null
   }, [defaultSelectionId, savedSelections])
 
-  // ============================================
   // UI Operations (from useSavedSelectionManager)
-  // ============================================
 
   const handleSaveSelection = useCallback(
     (name: string) => {

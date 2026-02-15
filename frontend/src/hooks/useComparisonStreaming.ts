@@ -199,7 +199,6 @@ export interface UseComparisonStreamingConfig {
  * 4. **Explicit dependencies:** Clear contract of what the hook can modify
  */
 export interface UseComparisonStreamingCallbacks {
-  // State setters
   setError: (error: string | null) => void
   setIsLoading: (loading: boolean) => void
   setResponse: (response: CompareResponse | null) => void

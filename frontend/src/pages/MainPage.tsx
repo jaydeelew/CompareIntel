@@ -50,7 +50,6 @@ import {
   useTokenReload,
   useAuthStateEffects,
   useBreakoutConversation,
-  // Combined hooks (2025 best practices)
   useTutorialComplete,
   useSavedSelectionsComplete,
 } from '../hooks'

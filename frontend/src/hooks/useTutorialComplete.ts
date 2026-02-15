@@ -110,12 +110,9 @@ export function useTutorialComplete(config: UseTutorialCompleteConfig): UseTutor
   const [tutorialHasBreakout, setTutorialHasBreakout] = useState(false)
   const [tutorialHasSavedSelection, setTutorialHasSavedSelection] = useState(false)
 
-  // Refs for effect tracking
   const hasShownWelcomeModalRef = useRef(false)
 
-  // ============================================
   // Tutorial Actions
-  // ============================================
 
   const startTutorial = useCallback(() => {
     localStorage.removeItem(TUTORIAL_STORAGE_KEY)
@@ -180,9 +177,7 @@ export function useTutorialComplete(config: UseTutorialCompleteConfig): UseTutor
     }))
   }, [])
 
-  // ============================================
   // Effects (previously in useTutorialEffects)
-  // ============================================
 
   // Welcome modal logic - show for unregistered users on page load
   useEffect(() => {

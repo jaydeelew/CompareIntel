@@ -8,20 +8,14 @@
  * See: backend/app/config.py
  */
 
-// ============================================================================
 // Unregistered User Limits
-// ============================================================================
-// Limits for unregistered users
 
 /** Maximum models per comparison for unregistered users */
 export const ANONYMOUS_MODEL_LIMIT = 3
 
 // Extended tier usage tracking removed - extended mode is now unlimited (only limited by credits)
 
-// ============================================================================
 // Model Limits per Subscription Tier
-// ============================================================================
-// Maximum number of models that can be selected per comparison
 
 export const MODEL_LIMITS = {
   unregistered: 3,
@@ -32,10 +26,7 @@ export const MODEL_LIMITS = {
   pro_plus: 12,
 } as const
 
-// ============================================================================
 // Daily Limits per Subscription Tier
-// ============================================================================
-// Daily model response limits (model responses per day, not comparisons)
 
 export const DAILY_LIMITS = {
   unregistered: 10,
@@ -46,10 +37,7 @@ export const DAILY_LIMITS = {
   pro_plus: 400,
 } as const
 
-// ============================================================================
 // Conversation History Limits
-// ============================================================================
-// Maximum number of conversations stored per subscription tier
 // Each conversation (with or without follow-ups) counts as 1 conversation
 
 export const CONVERSATION_LIMITS = {
@@ -61,10 +49,7 @@ export const CONVERSATION_LIMITS = {
   pro_plus: 80,
 } as const
 
-// ============================================================================
 // Saved Model Selection Limits
-// ============================================================================
-// Maximum number of saved model selections per subscription tier
 
 export const SAVED_MODEL_SELECTION_LIMITS = {
   unregistered: 2,
@@ -75,10 +60,7 @@ export const SAVED_MODEL_SELECTION_LIMITS = {
   pro_plus: 20,
 } as const
 
-// ============================================================================
 // Credit-Based System Configuration
-// ============================================================================
-// Credit allocations for each tier
 // 1 credit = 1,000 effective tokens
 // Effective tokens = input_tokens + (output_tokens × 2.5)
 
@@ -109,16 +91,11 @@ export const TIER_PRICING = {
 // Overage pricing (per 1,000 credits)
 export const OVERAGE_PRICE_PER_1000_CREDITS = 12.0 // $12 per 1,000 credits ($0.012 per credit)
 
-// ============================================================================
 // Type Exports
-// ============================================================================
-// TypeScript types derived from constants for type safety
 
 export type SubscriptionTier = keyof typeof MODEL_LIMITS
 
-// ============================================================================
 // Helper Functions
-// ============================================================================
 
 /**
  * Get maximum models per comparison for a given subscription tier.
@@ -198,10 +175,7 @@ export function getCreditAllocation(tier: SubscriptionTier | string): number {
   return getMonthlyCreditAllocation(tier)
 }
 
-// ============================================================================
 // Responsive Breakpoints
-// ============================================================================
-// Standard breakpoints for responsive design (matches CSS media queries)
 // These should be kept in sync with frontend/src/styles/responsive.css
 
 /**

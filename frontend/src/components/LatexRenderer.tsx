@@ -42,9 +42,7 @@ interface LatexRendererProps {
   modelId?: string
 }
 
-// ============================================================================
 // CONFIGURATION
-// ============================================================================
 
 // Default KaTeX options (fallback if model config doesn't specify)
 const DEFAULT_KATEX_OPTIONS = {
@@ -59,9 +57,7 @@ const DEFAULT_KATEX_OPTIONS = {
   maxExpand: 1000,
 }
 
-// ============================================================================
 // HELPER FUNCTIONS
-// ============================================================================
 
 /**
  * Safely render LaTeX with KaTeX with error handling
@@ -294,9 +290,7 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({ children, className = '',
   const contentRef = useRef<HTMLDivElement>(null)
   const [prismLoaded, setPrismLoaded] = useState(false)
 
-  // ============================================================================
   // PREPROCESSING PIPELINE
-  // ============================================================================
 
   /**
    * Stage 1: Clean malformed content (MathML, SVG, KaTeX artifacts)
@@ -540,7 +534,7 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({ children, className = '',
     fixed = fixed.replace(/√(\d+)/g, '\\sqrt{$1}')
 
     // Fix plus-minus symbol: ± -> \pm
-    // CRITICAL: Convert multiple consecutive ± to single \pm to prevent duplication
+    // Convert multiple consecutive ± to single \pm to prevent duplication
     fixed = fixed.replace(/±+/g, '\\pm')
 
     // Fix multiplication symbol: × -> \times
@@ -965,8 +959,7 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({ children, className = '',
     // Handle single parentheses/braces as fallback
     processed = processed.replace(/\(MDPH\d+\)/g, '')
     processed = processed.replace(/\{MDPH\d+\}/g, '')
-    // NOTE: Horizontal rules (---) are intentionally NOT removed here
-    // They will be processed in Stage 7 (processMarkdown) and converted to <hr> tags
+    // Horizontal rules (---) are processed in Stage 7 (processMarkdown) and converted to <hr> tags
     // The previous code removed all --- which caused headers after --- to be concatenated
     // onto the same line, breaking header detection
 
@@ -981,12 +974,11 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({ children, className = '',
     const processListContent = (content: string): string => {
       let processedContent = convertImplicitMath(content)
 
-      // CRITICAL: Do NOT restore inline math placeholders here
-      // Keep them as __INLINE_MATH_X__ to preserve the list placeholder structure
+      // Keep inline math as __INLINE_MATH_X__ to preserve the list placeholder structure
       // They will be restored and rendered later in the pipeline (Stage 8.5)
 
       // Process bold/italic inside list items, BUT protect inline math placeholders
-      // IMPORTANT: First, temporarily protect inline math placeholders from markdown processing
+      // Temporarily protect inline math placeholders from markdown processing
       const mathPlaceholders = new Map<string, string>()
       let placeholderCounter = 0
       processedContent = processedContent.replace(/__INLINE_MATH_\d+__/g, match => {
@@ -1635,8 +1627,7 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({ children, className = '',
         const lastKatexStart = beforeMatch.lastIndexOf('<span class="katex">')
         const lastKatexEnd = beforeMatch.lastIndexOf('</span>')
 
-        // CRITICAL: Check if we're inside inline code blocks (single backticks)
-        // This prevents processing Unicode symbols that will be handled by processInlineCode in Stage 7
+        // Skip if inside inline code blocks - processInlineCode in Stage 7 handles these
         const backticksBefore = (beforeMatch.match(/`/g) || []).length
         // If odd number of backticks before, we're inside an inline code block
         if (backticksBefore % 2 === 1) {
@@ -1750,7 +1741,7 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({ children, className = '',
     })
 
     // Handle Unicode superscripts
-    // CRITICAL: Only process if not already inside KaTeX HTML or inline code blocks to prevent duplication
+    // Only process if not already inside KaTeX HTML or inline code blocks to prevent duplication
     const superscriptRegex = /([a-zA-Z0-9])([²³⁴⁵⁶⁷⁸⁹⁰¹])/g
     let superscriptMatch
     const superscriptReplacements: Array<{ start: number; end: number; replacement: string }> = []
@@ -1771,8 +1762,7 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({ children, className = '',
         continue // Already rendered, don't process again
       }
 
-      // CRITICAL: Check if we're inside inline code blocks (single backticks)
-      // This prevents processing Unicode superscripts that will be handled by processInlineCode in Stage 7
+      // Skip if inside inline code blocks - processInlineCode in Stage 7 handles these
       const backticksBefore = (beforeMatch.match(/`/g) || []).length
       // If odd number of backticks before, we're inside an inline code block
       if (backticksBefore % 2 === 1) {
@@ -1922,8 +1912,7 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({ children, className = '',
     const markdownRules = config.markdownProcessing || {}
     let processed = text
 
-    // CRITICAL FIX: Some models generate headers without proper line breaks
-    // Fix headers that appear mid-line by adding line breaks before them
+    // Some models generate headers without proper line breaks - add line breaks before them
     // Match: (non-whitespace) followed by (space) followed by (### or #### etc.)
     // Replace with: (text) + (newline) + (newline) + (header)
     processed = processed.replace(/(\S)\s+(#{1,6}\s+)/g, '$1\n\n$2')
@@ -1932,8 +1921,7 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({ children, className = '',
     // This handles cases where headers might have leading whitespace or other issues
     processed = processed.replace(/^(\s*)(#{1,6}\s+)/gm, '$2')
 
-    // CRITICAL: Remove model-generated MDPH placeholders BEFORE we introduce our own
-    // This prevents them from being wrapped in HTML tags like <strong>((MDPH3))</strong>
+    // Remove model-generated MDPH placeholders before we introduce our own to avoid HTML wrapping
     while (processed.includes('((MDPH')) {
       processed = processed.replace(/\(\(MDPH\d+\)\)/g, '')
     }
@@ -1944,15 +1932,13 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({ children, className = '',
     processed = processed.replace(/\{MDPH\d+\}/g, '')
     processed = processed.replace(/(?<!⟨⟨)MDPH\d+(?!⟩⟩)/g, '')
 
-    // CRITICAL: Protect placeholders from markdown processing by temporarily replacing them
-    // This prevents bold/italic regex from matching placeholder patterns
+    // Protect placeholders from markdown processing by temporarily replacing them
     // Use a unique string format that won't be interpreted as HTML or markdown
     // Format: ⟨⟨MDPHN⟩⟩ using Unicode angle brackets to avoid conflicts
     const placeholderMap = new Map<string, string>()
     let placeholderCounter = 0
 
-    // IMPORTANT: Protect full list placeholder patterns FIRST (before inline math)
-    // This ensures that inline math placeholders INSIDE lists are preserved as part of the list block
+    // Protect full list placeholder patterns first so inline math inside lists is preserved
     // Pattern: __UL_X__content__/UL__ or __OL_X_Y__content__/OL__ or __TASK_X__content__/TASK__
     processed = processed.replace(
       /(__UL_\d+__[\s\S]*?__\/UL__|__OL_\d+_\d+__[\s\S]*?__\/OL__|__TASK_(checked|unchecked)__[\s\S]*?__\/TASK__)/g,
@@ -2039,7 +2025,7 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({ children, className = '',
 
     // Bold and italic (if enabled, preserve all spaces)
     // Process BEFORE headings and inline code so formatting works correctly
-    // IMPORTANT: Process bold/italic BEFORE inline code to handle cases like **bold `code` text**
+    // Process bold/italic before inline code to handle cases like **bold `code` text**
     if (markdownRules.processBoldItalic !== false) {
       // Bold: match ** but allow single * inside
       // Use a more robust pattern that handles content with HTML tags or other markdown
@@ -2153,8 +2139,7 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({ children, className = '',
       // 6. It has variable expressions with superscripts and operators (e.g., ax² + bx + c = 0), OR
       // 7. It looks like an equation (has = with math-like content on both sides)
 
-      // CRITICAL: If content has superscripts (²³⁴⁵⁶⁷⁸⁹⁰¹) AND operators, it's definitely math
-      // This catches expressions like "ax² + bx + c = 0" which should always be math
+      // Content with superscripts and operators (e.g. ax² + bx + c = 0) is always math
       const hasSuperscripts = /[²³⁴⁵⁶⁷⁸⁹⁰¹]/.test(trimmedContent)
       const definitelyMathWithSuperscripts = hasSuperscripts && hasMathOperators
 
@@ -2186,12 +2171,10 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({ children, className = '',
         // So we need to convert Unicode to LaTeX, but be careful to avoid double conversion
         let mathContent = content.replace(/\$/g, '').trim()
 
-        // CRITICAL: Check if content already has LaTeX commands (from fixLatexIssues)
-        // If it does, we should still check for remaining Unicode symbols that need conversion
+        // If content has LaTeX commands, still check for remaining Unicode symbols to convert
         const hasLaTeXCommands = /\\[a-zA-Z]+/.test(mathContent)
 
-        // CRITICAL: Convert superscripts FIRST before square root conversion
-        // This prevents issues when superscripts appear inside square root expressions
+        // Convert superscripts before square root conversion
         // Always convert superscripts even if LaTeX commands exist (they might be in different parts)
         // Use braces for better LaTeX compatibility: b² -> b^{2} instead of b^2
         mathContent = mathContent.replace(/([a-zA-Z0-9)\]])²+/g, '$1^{2}')
@@ -2223,8 +2206,7 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({ children, className = '',
         // Only do full Unicode conversion if content doesn't already have LaTeX commands
         // This prevents double conversion if fixLatexIssues already processed it
         if (!hasLaTeXCommands) {
-          // Convert Unicode symbols - CRITICAL: use single replace and handle duplicates
-          // Convert multiple consecutive ± to single \pm to prevent rendering duplication
+          // Use single replace to handle duplicates; convert consecutive ± to single \pm
           mathContent = mathContent.replace(/±+/g, '\\pm')
           mathContent = mathContent.replace(/×/g, '\\times')
           mathContent = mathContent.replace(/÷/g, '\\div')
@@ -2269,8 +2251,7 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({ children, className = '',
     })
 
     // Horizontal rules (if enabled)
-    // NOTE: Horizontal rules are now processed earlier (Stage 2.5) before other markdown processing
-    // This ensures they're converted before line structure is modified by other processing stages
+    // Horizontal rules are processed in Stage 2.5 before other markdown processing
     // This code block is kept for backward compatibility but horizontal rules should already be converted
     if (markdownRules.processHorizontalRules !== false) {
       // Double-check: process any remaining horizontal rules that weren't caught earlier
@@ -2283,8 +2264,7 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({ children, className = '',
     // Headings (if enabled, longest first to avoid partial matches)
     // Process AFTER bold/italic so formatting inside headings is preserved
     if (markdownRules.processHeaders !== false) {
-      // CRITICAL FIX: Ensure headers are at the start of lines before processing
-      // Headers might not be at the start of lines due to HTML inserted by preserveMathLineBreaks
+      // Ensure headers are at the start of lines before processing (preserveMathLineBreaks may have inserted HTML)
       // or other preprocessing steps. Normalize them by ensuring they start on new lines.
       // First, ensure headers after horizontal rules (--- converted to <hr>) are properly separated
       // Match: <hr> tag (with optional newline) followed by header marker
@@ -2424,8 +2404,7 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({ children, className = '',
       processed = processed.replace(/⟨⟨MDPH\d+⟩⟩/g, '')
     }
 
-    // CRITICAL: Remove model-generated MDPH placeholders even if they're inside HTML tags
-    // This catches placeholders that got wrapped in markdown formatting like **((MDPH3))**
+    // Remove model-generated MDPH placeholders even if inside HTML tags (e.g. **((MDPH3))**)
     // Remove all variations aggressively, even inside HTML tags
     // Also handle corrupted formats like <<MDPH (from Unicode angle brackets ⟨⟨)
     while (processed.includes('((MDPH')) {
@@ -2573,8 +2552,7 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({ children, className = '',
   const applyParagraphBreaks = (text: string): string => {
     let processed = text
 
-    // CRITICAL FIX: Ensure proper separation after block-level elements before paragraph processing
-    // This ensures content (including bold text like "Step 2:") after <hr> or closing list tags
+    // Ensure proper separation after block-level elements (e.g. content after <hr> or closing list tags)
     // gets proper line breaks and appears on its own line
     // First, ensure content after <hr> tags is properly separated (add double line breaks)
     // Match: <hr> tag followed by optional whitespace/newlines, then any content that starts
@@ -2590,8 +2568,7 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({ children, className = '',
       '$1\n\n'
     )
 
-    // CRITICAL FIX: Ensure headers are properly separated before paragraph processing
-    // Headers should always be on their own line, with proper line breaks before and after
+    // Ensure headers are on their own line with proper separation
     // This prevents headers from being incorrectly wrapped in paragraph tags
     // First, ensure headers after block-level elements (like <hr>) are properly separated
     // Match: closing tag of block element (hr, div, etc.) or self-closing block element, followed by header
@@ -2610,8 +2587,7 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({ children, className = '',
     // Paragraph breaks
     processed = processed.replace(/\n\n/g, '</p><p>')
 
-    // CRITICAL: Remove paragraph tags that wrap block-level elements
-    // Block-level elements (hr, headings, lists, etc.) should never be inside <p> tags
+    // Remove paragraph tags that wrap block-level elements (hr, headings, lists)
     // Apply patterns multiple times to catch nested cases and ensure all block-level elements are free
 
     // Repeat the cleanup until no more changes occur (handles nested/overlapping cases)
@@ -2659,7 +2635,7 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({ children, className = '',
 
       // Pattern 5: Remove orphaned </p> or <p> tags that are adjacent to block-level elements
       // Matches: </p><hr> or <hr><p> etc. (with optional whitespace)
-      // IMPORTANT: Don't remove <p> after closing header tags if it's starting content (not wrapping another block element)
+      // Don't remove <p> after closing header tags if it's starting content
       processed = processed.replace(
         /<\/p>\s*(<(hr|h[1-6]|ul|ol|blockquote|pre|table|div)[^>]*(\/)?>)/gi,
         '$1'
@@ -2690,8 +2666,7 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({ children, className = '',
       processed = `<p>${processed}</p>`
     }
 
-    // CRITICAL: Remove any MDPH placeholders that might have been exposed during paragraph processing
-    // This ensures placeholders don't leak into the final output
+    // Remove MDPH placeholders exposed during paragraph processing
     processed = processed.replace(/⟨⟨MDPH\d+⟩⟩/g, '')
     processed = processed.replace(/\(\(MDPH\d+\)\)/g, '')
     processed = processed.replace(/\{\{MDPH\d+\}\}/g, '')
@@ -2780,7 +2755,7 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({ children, className = '',
 
         // Stage 5.6: Restore inline math blocks before rendering
         // This ensures the original inline math content is available for rendering
-        // IMPORTANT: Skip restoring inline math inside list placeholders to preserve placeholder structure
+        // Skip restoring inline math inside list placeholders to preserve structure
         processed = restoreInlineMath(processed, inlineMathExtraction.mathBlocks, true)
 
         // Stage 6: Render math content (using model-specific delimiters and KaTeX options)
@@ -3096,9 +3071,7 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({ children, className = '',
     [config]
   )
 
-  // ============================================================================
   // RENDER
-  // ============================================================================
 
   // These hooks depend on renderLatex function which is defined below (around line 2409)
   // renderLatex will be available when hooks execute during render

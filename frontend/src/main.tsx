@@ -14,8 +14,7 @@ import { initSentry } from './utils/sentry'
 // This ensures we capture any errors during startup
 initSentry()
 
-// CRITICAL: Disable browser scroll restoration BEFORE React renders
-// This must happen as early as possible to prevent any scroll position restoration
+// Disable browser scroll restoration before React renders to prevent unwanted scroll restoration
 if ('scrollRestoration' in history) {
   history.scrollRestoration = 'manual'
 }

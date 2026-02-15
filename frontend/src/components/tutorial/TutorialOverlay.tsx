@@ -167,8 +167,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
     }
   }, [isVisible, step, overlayPosition.top, overlayPosition.left])
 
-  // CRITICAL FIX: Force visibility immediately for key tutorial steps
-  // This ensures tooltip appears in production even if main findElement has timing issues
+  // Force visibility immediately for key tutorial steps (handles production findElement timing issues)
   useEffect(() => {
     if (step === 'expand-provider' || step === 'select-models') {
       // Force visibility immediately - tooltip should ALWAYS show for these steps
@@ -306,8 +305,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
 
     if (needsHeroExpansion) {
       heroSection.classList.add('tutorial-dropdown-hero-active')
-      // CRITICAL: Also remove inline styles that were set by the height-locking effect
-      // CSS !important can override inline styles, but removing them ensures no conflicts
+      // Remove inline styles that were set by the height-locking effect
       heroSection.style.removeProperty('height')
       heroSection.style.removeProperty('max-height')
       heroSection.style.removeProperty('min-height')
@@ -1154,10 +1152,8 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
       composerElement = getComposerElement()
       if (composerElement) {
         composerElement.classList.add('tutorial-textarea-active')
-        // Calculate cutout position for backdrop mask.
-        // IMPORTANT: compute using the union of the textarea wrapper + toolbar since the composer
-        // can have negative margins and dynamic layout that makes a single rect less reliable.
-        const padding = 8 // tighter padding for rounded cutout
+        // Use union of textarea wrapper + toolbar for cutout - composer has negative margins and dynamic layout
+        const padding = 8
         const rects = getComposerCutoutRects(composerElement)
         const minTop = Math.min(...rects.map(r => r.top))
         const minLeft = Math.min(...rects.map(r => r.left))
@@ -1349,14 +1345,12 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
         '.provider-dropdown[data-provider-name="Google"]'
       ) as HTMLElement
       if (googleDropdown) {
-        // Add highlight class if not present
         if (!googleDropdown.classList.contains('tutorial-highlight')) {
           googleDropdown.classList.add('tutorial-highlight')
           googleDropdown.style.pointerEvents = 'auto'
           googleDropdown.style.position = 'relative'
         }
-        // CRITICAL: Also ensure visibility, target, and position are set
-        // This fixes production timing issues where main findElement fails but interval finds element
+        // Ensure visibility, target, and position when interval finds element (main findElement may have failed)
         const headerElement = googleDropdown.querySelector('.provider-header') as HTMLElement
         if (headerElement) {
           setTargetElement(headerElement)
@@ -1433,14 +1427,12 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
         '.provider-dropdown[data-provider-name="Google"]'
       ) as HTMLElement
       if (googleDropdown) {
-        // Add highlight class if not present
         if (!googleDropdown.classList.contains('tutorial-highlight')) {
           googleDropdown.classList.add('tutorial-highlight')
           googleDropdown.style.pointerEvents = 'auto'
           googleDropdown.style.position = 'relative'
         }
-        // CRITICAL: Also ensure visibility, target, and position are set
-        // This fixes production timing issues where main findElement fails but interval finds element
+        // Ensure visibility, target, and position when interval finds element (main findElement may have failed)
         setTargetElement(googleDropdown)
         setIsVisible(true)
 
@@ -1713,9 +1705,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
         }
       }
 
-      // CRITICAL: Also ensure visibility and target are set
-      // This fixes production timing issues where main findElement fails but interval finds element
-      // For submit-comparison steps, target the submit button
+      // Ensure visibility and target when interval finds element (main findElement may have failed)
       if (step === 'submit-comparison' || step === 'submit-comparison-2') {
         const submitButton = document.querySelector(
           '[data-testid="comparison-submit-button"]'
@@ -1913,8 +1903,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
         if (!historyToggleButton.classList.contains('tutorial-highlight')) {
           historyToggleButton.classList.add('tutorial-highlight')
         }
-        // CRITICAL: Also ensure visibility and target are set
-        // This fixes production timing issues where main findElement fails but interval finds element
+        // Ensure visibility and target when interval finds element (main findElement may have failed)
         setTargetElement(historyToggleButton)
         setIsVisible(true)
       }
@@ -2019,8 +2008,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
         if (!savedSelectionsButton.classList.contains('tutorial-highlight')) {
           savedSelectionsButton.classList.add('tutorial-highlight')
         }
-        // CRITICAL: Also ensure visibility and target are set
-        // This fixes production timing issues where main findElement fails but interval finds element
+        // Ensure visibility and target when interval finds element (main findElement may have failed)
         setTargetElement(savedSelectionsButton)
         setIsVisible(true)
       }
@@ -2101,8 +2089,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
     }
   }, [step])
 
-  // Update textarea cutout position on scroll/resize for textarea-related steps
-  // NOTE: This hook must be called before any early returns to comply with Rules of Hooks
+  // Update textarea cutout position on scroll/resize for textarea-related steps. Must be called before any early returns (Rules of Hooks).
   useEffect(() => {
     const shouldExcludeTextarea =
       step === 'enter-prompt' ||
@@ -2302,8 +2289,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
   // - CSS loading timing
   // - DOM rendering differences
   // - Minification affecting querySelector behavior
-  // CRITICAL FIX: Allow rendering during initial element finding phase
-  // The findElement effect will find the element and update visibility/position
+  // Allow rendering during initial element finding phase - findElement effect will update visibility/position
   // This prevents tooltips from never appearing in production due to timing issues
   if (!isLoadingStreamingPhase) {
     // Allow rendering if:
