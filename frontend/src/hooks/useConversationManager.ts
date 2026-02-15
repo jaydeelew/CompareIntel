@@ -245,8 +245,16 @@ export function useConversationManager(options: UseConversationManagerOptions) {
           rounds.push(currentRound)
         }
 
+        // Only add a round (user + assistant) to a model's conversation if that model responded.
+        // Failed models should not have the follow-up prompt in their conversation.
         rounds.forEach(round => {
           modelsUsed.forEach((modelId: string) => {
+            const modelAssistant = round.assistants.find(asm => {
+              if (!asm.model_id) return false
+              return String(asm.model_id) === String(modelId)
+            })
+            if (!modelAssistant) return // Don't add follow-up to failed models
+
             messagesByModel[modelId].push({
               id: round.user.id
                 ? typeof round.user.id === 'string'
@@ -258,24 +266,17 @@ export function useConversationManager(options: UseConversationManagerOptions) {
               timestamp: round.user.created_at || new Date().toISOString(),
               input_tokens: round.user.input_tokens,
             })
-
-            const modelAssistant = round.assistants.find(asm => {
-              if (!asm.model_id) return false
-              return String(asm.model_id) === String(modelId)
+            messagesByModel[modelId].push({
+              id: modelAssistant.id
+                ? typeof modelAssistant.id === 'string'
+                  ? createMessageId(modelAssistant.id)
+                  : createMessageId(String(modelAssistant.id))
+                : createMessageId(`${Date.now()}-${Math.random()}`),
+              type: 'assistant' as const,
+              content: modelAssistant.content,
+              timestamp: modelAssistant.created_at || new Date().toISOString(),
+              output_tokens: modelAssistant.output_tokens,
             })
-            if (modelAssistant) {
-              messagesByModel[modelId].push({
-                id: modelAssistant.id
-                  ? typeof modelAssistant.id === 'string'
-                    ? createMessageId(modelAssistant.id)
-                    : createMessageId(String(modelAssistant.id))
-                  : createMessageId(`${Date.now()}-${Math.random()}`),
-                type: 'assistant' as const,
-                content: modelAssistant.content,
-                timestamp: modelAssistant.created_at || new Date().toISOString(),
-                output_tokens: modelAssistant.output_tokens,
-              })
-            }
           })
         })
 

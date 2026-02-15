@@ -261,7 +261,8 @@ export async function processComparisonStream(
         setConversations(prev =>
           prev.map(conv => {
             const content = streamingResults[conv.modelId]
-            if (content === undefined) return conv
+            // Don't add follow-up to failed models: no content (excluded from request) or error response
+            if (content === undefined || isErrorMessage(content)) return conv
             const hasNewUserMessage = conv.messages.some(
               (msg, idx) =>
                 msg.type === 'user' && msg.content === input && idx >= conv.messages.length - 2
