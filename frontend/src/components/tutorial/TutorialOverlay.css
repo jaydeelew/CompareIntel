@@ -351,12 +351,13 @@ body:has(.tutorial-backdrop) .hero-section {
   color: var(--text-primary);
 }
 
-/* Arrow pointing to target */
+/* Arrow pointing to target - pointer-events: none so clicks pass through to highlighted elements */
 .tutorial-arrow {
   position: absolute;
   width: 0;
   height: 0;
   border-style: solid;
+  pointer-events: none;
 }
 
 .tutorial-arrow-top {

@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 
 import type { SavedModelSelection } from '../../hooks/useSavedModelSelections'
 import type { ModelsByProvider } from '../../types/models'
@@ -121,6 +122,8 @@ export interface SavedSelectionsDropdownProps {
   selectedModels: string[]
   modelsByProvider: ModelsByProvider
   isFollowUpMode: boolean
+  /** When provided, the dropdown panel renders into this container (e.g. as sibling of toolbar) instead of inline */
+  dropdownContainerRef?: React.RefObject<HTMLElement | null>
 }
 
 export function SavedSelectionsDropdown({
@@ -128,6 +131,7 @@ export function SavedSelectionsDropdown({
   selectedModels,
   modelsByProvider,
   isFollowUpMode,
+  dropdownContainerRef,
 }: SavedSelectionsDropdownProps) {
   const {
     savedModelSelections,
@@ -210,155 +214,165 @@ export function SavedSelectionsDropdown({
         </span>
       )}
 
-      {showDropdown && (
-        <div className="saved-selections-dropdown">
-          <div className="saved-selections-content">
-            <div className="saved-selections-header">
-              <h4>Saved Model Selections</h4>
-              <span className="saved-selections-count">
-                {savedModelSelections.length} / {maxSavedSelections}
-              </span>
-            </div>
-
-            {isInSaveMode ? (
-              <div className="saved-selections-save-form">
-                <input
-                  type="text"
-                  placeholder="Enter a name for this selection..."
-                  value={saveSelectionName}
-                  onChange={e => {
-                    setSaveSelectionName(e.target.value)
-                    setSaveSelectionError(null)
-                  }}
-                  onKeyDown={e => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault()
-                      const result = onSaveModelSelection(saveSelectionName)
-                      if (result.success) {
-                        setSaveSelectionName('')
-                        setIsInSaveMode(false)
-                        showNotification('Model selection saved successfully!', 'success')
-                      } else {
-                        setSaveSelectionError(result.error || 'Failed to save selection')
-                      }
-                    } else if (e.key === 'Escape') {
-                      setIsInSaveMode(false)
-                      setSaveSelectionName('')
-                      setSaveSelectionError(null)
-                    }
-                  }}
-                  autoFocus
-                  maxLength={50}
-                  className="saved-selections-name-input"
-                />
-                <div className="saved-selections-save-actions">
-                  <button
-                    type="button"
-                    className="saved-selections-save-btn"
-                    onClick={() => {
-                      const result = onSaveModelSelection(saveSelectionName)
-                      if (result.success) {
-                        setSaveSelectionName('')
-                        setIsInSaveMode(false)
-                        showNotification('Model selection saved successfully!', 'success')
-                      } else {
-                        setSaveSelectionError(result.error || 'Failed to save selection')
-                      }
-                    }}
-                    disabled={!saveSelectionName.trim()}
-                  >
-                    Save
-                  </button>
-                  <button
-                    type="button"
-                    className="saved-selections-cancel-btn"
-                    onClick={() => {
-                      setIsInSaveMode(false)
-                      setSaveSelectionName('')
-                      setSaveSelectionError(null)
-                    }}
-                  >
-                    Cancel
-                  </button>
+      {showDropdown &&
+        (() => {
+          const dropdownPanel = (
+            <div className="saved-selections-dropdown">
+              <div className="saved-selections-content">
+                <div className="saved-selections-header">
+                  <h4>Saved Model Selections</h4>
+                  <span className="saved-selections-count">
+                    {savedModelSelections.length} / {maxSavedSelections}
+                  </span>
                 </div>
-                {saveSelectionError && (
-                  <div className="saved-selections-error">{saveSelectionError}</div>
-                )}
-              </div>
-            ) : (
-              <button
-                type="button"
-                className="saved-selections-add-btn"
-                onClick={() => {
-                  if (!canSaveMoreSelections) {
-                    showNotification(
-                      `Maximum of ${maxSavedSelections} saved selections reached. Delete one to save a new selection.`,
-                      'error'
-                    )
-                    return
-                  }
-                  if (selectedModels.length === 0) {
-                    showNotification('Please select at least one model to save', 'error')
-                    return
-                  }
-                  setIsInSaveMode(true)
-                }}
-                disabled={!canSaveMoreSelections || selectedModels.length === 0 || isFollowUpMode}
-                title={
-                  isFollowUpMode
-                    ? 'Cannot save selections during follow-up mode'
-                    : !canSaveMoreSelections
-                      ? `Maximum of ${maxSavedSelections} saved selections reached`
-                      : selectedModels.length === 0
-                        ? 'Select models to save'
-                        : 'Save current model selection'
-                }
-              >
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <line x1="12" y1="5" x2="12" y2="19" />
-                  <line x1="5" y1="12" x2="19" y2="12" />
-                </svg>
-                Save Current Selection ({selectedModels.length} model
-                {selectedModels.length !== 1 ? 's' : ''})
-              </button>
-            )}
 
-            <div className="saved-selections-list-wrapper">
-              <div className="saved-selections-list">
-                {savedModelSelections.length === 0 ? (
-                  <div className="saved-selections-empty">
-                    No saved selections yet. Save your current model selection to quickly load it
-                    later!
+                {isInSaveMode ? (
+                  <div className="saved-selections-save-form">
+                    <input
+                      type="text"
+                      placeholder="Enter a name for this selection..."
+                      value={saveSelectionName}
+                      onChange={e => {
+                        setSaveSelectionName(e.target.value)
+                        setSaveSelectionError(null)
+                      }}
+                      onKeyDown={e => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault()
+                          const result = onSaveModelSelection(saveSelectionName)
+                          if (result.success) {
+                            setSaveSelectionName('')
+                            setIsInSaveMode(false)
+                            showNotification('Model selection saved successfully!', 'success')
+                          } else {
+                            setSaveSelectionError(result.error || 'Failed to save selection')
+                          }
+                        } else if (e.key === 'Escape') {
+                          setIsInSaveMode(false)
+                          setSaveSelectionName('')
+                          setSaveSelectionError(null)
+                        }
+                      }}
+                      autoFocus
+                      maxLength={50}
+                      className="saved-selections-name-input"
+                    />
+                    <div className="saved-selections-save-actions">
+                      <button
+                        type="button"
+                        className="saved-selections-save-btn"
+                        onClick={() => {
+                          const result = onSaveModelSelection(saveSelectionName)
+                          if (result.success) {
+                            setSaveSelectionName('')
+                            setIsInSaveMode(false)
+                            showNotification('Model selection saved successfully!', 'success')
+                          } else {
+                            setSaveSelectionError(result.error || 'Failed to save selection')
+                          }
+                        }}
+                        disabled={!saveSelectionName.trim()}
+                      >
+                        Save
+                      </button>
+                      <button
+                        type="button"
+                        className="saved-selections-cancel-btn"
+                        onClick={() => {
+                          setIsInSaveMode(false)
+                          setSaveSelectionName('')
+                          setSaveSelectionError(null)
+                        }}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                    {saveSelectionError && (
+                      <div className="saved-selections-error">{saveSelectionError}</div>
+                    )}
                   </div>
                 ) : (
-                  savedModelSelections.map(selection => (
-                    <SavedSelectionCard
-                      key={selection.id}
-                      selection={selection}
-                      modelsByProvider={modelsByProvider}
-                      isFollowUpMode={isFollowUpMode}
-                      isDefault={getDefaultSelectionId() === selection.id}
-                      onLoad={onLoadModelSelection}
-                      onSetDefault={onSetDefaultSelection}
-                      onDelete={onDeleteModelSelection}
-                      setShowDropdown={setShowDropdown}
-                    />
-                  ))
+                  <button
+                    type="button"
+                    className="saved-selections-add-btn"
+                    onClick={() => {
+                      if (!canSaveMoreSelections) {
+                        showNotification(
+                          `Maximum of ${maxSavedSelections} saved selections reached. Delete one to save a new selection.`,
+                          'error'
+                        )
+                        return
+                      }
+                      if (selectedModels.length === 0) {
+                        showNotification('Please select at least one model to save', 'error')
+                        return
+                      }
+                      setIsInSaveMode(true)
+                    }}
+                    disabled={
+                      !canSaveMoreSelections || selectedModels.length === 0 || isFollowUpMode
+                    }
+                    title={
+                      isFollowUpMode
+                        ? 'Cannot save selections during follow-up mode'
+                        : !canSaveMoreSelections
+                          ? `Maximum of ${maxSavedSelections} saved selections reached`
+                          : selectedModels.length === 0
+                            ? 'Select models to save'
+                            : 'Save current model selection'
+                    }
+                  >
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <line x1="12" y1="5" x2="12" y2="19" />
+                      <line x1="5" y1="12" x2="19" y2="12" />
+                    </svg>
+                    Save Current Selection ({selectedModels.length} model
+                    {selectedModels.length !== 1 ? 's' : ''})
+                  </button>
                 )}
+
+                <div className="saved-selections-list-wrapper">
+                  <div className="saved-selections-list">
+                    {savedModelSelections.length === 0 ? (
+                      <div className="saved-selections-empty">
+                        No saved selections yet. Save your current model selection to quickly load
+                        it later!
+                      </div>
+                    ) : (
+                      savedModelSelections.map(selection => (
+                        <SavedSelectionCard
+                          key={selection.id}
+                          selection={selection}
+                          modelsByProvider={modelsByProvider}
+                          isFollowUpMode={isFollowUpMode}
+                          isDefault={getDefaultSelectionId() === selection.id}
+                          onLoad={onLoadModelSelection}
+                          onSetDefault={onSetDefaultSelection}
+                          onDelete={onDeleteModelSelection}
+                          setShowDropdown={setShowDropdown}
+                        />
+                      ))
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
-        </div>
-      )}
+          )
+          const container = dropdownContainerRef?.current
+          if (container) {
+            return createPortal(dropdownPanel, container)
+          }
+          return dropdownPanel
+        })()}
     </div>
   )
 }

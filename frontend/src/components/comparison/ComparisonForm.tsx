@@ -112,6 +112,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
 
     const [isDraggingOver, setIsDraggingOver] = useState(false)
     const fileUploadRef = useRef<FileUploadHandle>(null)
+    const savedSelectionsDropdownSlotRef = useRef<HTMLDivElement>(null)
     const baseInputWhenSpeechStartedRef = useRef<string>('')
     const mobileBaseInputRef = useRef<string>('')
     const currentInputRef = useRef<string>(input)
@@ -419,6 +420,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
               selectedModels={selectedModels}
               modelsByProvider={modelsByProvider}
               isFollowUpMode={isFollowUpMode}
+              dropdownContainerRef={savedSelectionsDropdownSlotRef}
             />
 
             <div className="textarea-actions">
@@ -580,6 +582,8 @@ export const ComparisonForm = memo<ComparisonFormProps>(
               </button>
             </div>
           </div>
+
+          <div ref={savedSelectionsDropdownSlotRef} className="saved-selections-dropdown-slot" />
 
           <HistoryDropdown
             historyProps={historyProps}

@@ -2974,7 +2974,12 @@ button.nav-button-primary {
    Saved Model Selections Styles
    ============================================ */
 
-/* Container for the saved selections button */
+/* Slot for saved selections dropdown - direct child of composer, below toolbar */
+.saved-selections-dropdown-slot {
+  min-height: 0;
+}
+
+/* Container for the saved selections button (dropdown panel renders in slot below toolbar) */
 .saved-selections-container {
   position: relative;
   display: flex;
@@ -3040,12 +3045,11 @@ button.nav-button-primary {
   fill-opacity: 0.1;
 }
 
-/* Saved selections dropdown - seamlessly extends textarea container */
+/* Saved selections dropdown - renders in slot below toolbar, extends composer */
 .saved-selections-dropdown {
   width: 100%;
   background: var(--bg-elevated);
   border-top: 1px solid var(--border-color);
-  /* Hide overflow on outer container to clip scrollbar to rounded corners */
   overflow: hidden;
   border-radius: 0 0 1.5rem 1.5rem;
   animation: slideDown 0.2s ease-out;
