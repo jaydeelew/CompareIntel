@@ -142,56 +142,18 @@ export interface StoredAttachedFile {
   content: string // Extracted file content (stored for persistence)
 }
 
-interface ComparisonFormProps {
-  // Input state
-  input: string
-  setInput: (value: string) => void
-  textareaRef: React.RefObject<HTMLTextAreaElement>
-
-  // Mode state
-  isFollowUpMode: boolean
-  isLoading: boolean
-  isAnimatingButton: boolean
-  isAnimatingTextarea: boolean
-
-  // User state
-  isAuthenticated: boolean
-  user: User | null
-
-  // Conversations
-  conversations: ModelConversation[]
-
-  // History
+export interface HistoryProps {
   showHistoryDropdown: boolean
   setShowHistoryDropdown: (show: boolean) => void
   conversationHistory: ConversationSummary[]
   isLoadingHistory: boolean
   historyLimit: number
   currentVisibleComparisonId: string | null
-
-  // Handlers
-  onSubmitClick: () => void
-  onContinueConversation: () => void
-  onNewComparison: () => void
   onLoadConversation: (summary: ConversationSummary) => void
   onDeleteConversation: (summary: ConversationSummary, e: React.MouseEvent) => void
+}
 
-  // Utilities
-  renderUsagePreview: () => React.ReactNode
-
-  // Model selection
-  selectedModels: string[]
-
-  // Models data for token limit calculations
-  modelsByProvider: ModelsByProvider
-
-  // Callback to expose accurate token count to parent (for API calls)
-  onAccurateTokenCountChange?: (totalInputTokens: number | null) => void
-
-  // Credits remaining (used to disable submit button when credits run out)
-  creditsRemaining: number
-
-  // Saved model selections
+export interface SelectionProps {
   savedModelSelections: SavedModelSelection[]
   onSaveModelSelection: (name: string) => { success: boolean; error?: string }
   onLoadModelSelection: (id: string) => void
@@ -202,26 +164,43 @@ interface ComparisonFormProps {
   defaultSelectionOverridden: boolean
   canSaveMoreSelections: boolean
   maxSavedSelections: number
+}
 
-  // File attachments (can be AttachedFile for new uploads or StoredAttachedFile for loaded history)
+export interface FileProps {
   attachedFiles: (AttachedFile | StoredAttachedFile)[]
   setAttachedFiles: (files: (AttachedFile | StoredAttachedFile)[]) => void
-  // Callback to expand files for token counting (takes files and userInput, returns expanded string)
   onExpandFiles?: (
     files: (AttachedFile | StoredAttachedFile)[],
     userInput: string
   ) => Promise<string>
+}
 
-  // Web search
+interface ComparisonFormProps {
+  input: string
+  setInput: (value: string) => void
+  textareaRef: React.RefObject<HTMLTextAreaElement>
+  isFollowUpMode: boolean
+  isLoading: boolean
+  isAnimatingButton: boolean
+  isAnimatingTextarea: boolean
+  isAuthenticated: boolean
+  user: User | null
+  conversations: ModelConversation[]
+  historyProps: HistoryProps
+  onSubmitClick: () => void
+  onContinueConversation: () => void
+  onNewComparison: () => void
+  renderUsagePreview: () => React.ReactNode
+  selectedModels: string[]
+  modelsByProvider: ModelsByProvider
+  onAccurateTokenCountChange?: (totalInputTokens: number | null) => void
+  creditsRemaining: number
+  selectionProps: SelectionProps
+  fileProps: FileProps
   webSearchEnabled?: boolean
   onWebSearchEnabledChange?: (enabled: boolean) => void
-
-  // Tutorial step - used to block submit button during step 3 (enter-prompt)
   tutorialStep?: TutorialStep | null
-  // Whether tutorial is currently active - used to disable "start over" button without visual indication
   tutorialIsActive?: boolean
-
-  // Ref to model selection section (for scroll-into-view when no models selected)
   modelsSectionRef?: React.RefObject<HTMLDivElement | null>
 }
 
@@ -250,41 +229,48 @@ export const ComparisonForm = memo<ComparisonFormProps>(
     isAuthenticated,
     user,
     conversations,
-    showHistoryDropdown,
-    setShowHistoryDropdown,
-    conversationHistory,
-    isLoadingHistory,
-    historyLimit,
-    currentVisibleComparisonId,
+    historyProps,
     onSubmitClick,
     onContinueConversation,
     onNewComparison,
-    onLoadConversation,
-    onDeleteConversation,
     renderUsagePreview,
     selectedModels,
     modelsByProvider,
     onAccurateTokenCountChange,
     creditsRemaining,
-    savedModelSelections,
-    onSaveModelSelection,
-    onLoadModelSelection,
-    onDeleteModelSelection,
-    onSetDefaultSelection,
-    getDefaultSelectionId,
-    getDefaultSelection,
-    defaultSelectionOverridden,
-    canSaveMoreSelections,
-    maxSavedSelections,
-    attachedFiles,
-    setAttachedFiles,
-    onExpandFiles,
+    selectionProps,
+    fileProps,
     webSearchEnabled: webSearchEnabledProp,
     onWebSearchEnabledChange,
     tutorialStep,
     tutorialIsActive = false,
     modelsSectionRef,
   }) => {
+    const {
+      showHistoryDropdown,
+      setShowHistoryDropdown,
+      conversationHistory,
+      isLoadingHistory,
+      historyLimit,
+      currentVisibleComparisonId,
+      onLoadConversation,
+      onDeleteConversation,
+    } = historyProps
+
+    const {
+      savedModelSelections,
+      onSaveModelSelection,
+      onLoadModelSelection,
+      onDeleteModelSelection,
+      onSetDefaultSelection,
+      getDefaultSelectionId,
+      getDefaultSelection,
+      defaultSelectionOverridden,
+      canSaveMoreSelections,
+      maxSavedSelections,
+    } = selectionProps
+
+    const { attachedFiles, setAttachedFiles, onExpandFiles } = fileProps
     // Internal state for web search if not controlled via props
     const [webSearchEnabledInternal, setWebSearchEnabledInternal] = useState(false)
     const webSearchEnabled =

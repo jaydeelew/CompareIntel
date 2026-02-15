@@ -431,7 +431,7 @@ The AI must update this table after completing each session (see Instructions fo
 | 9 | Done | Split admin.py into backend/app/routers/admin/ package. Created helpers.py, analytics.py, users.py, settings.py, models_management.py, search_providers.py. __init__.py combines sub-routers. Deleted old admin.py. All 21 admin integration tests pass. |
 | 10 | Done | Extracted generate_stream to backend/app/services/comparison_stream.py. Consolidated get_client_ip in utils/request.py. Moved get_location_from_ip, get_timezone_from_request to utils/geo.py. Split api into routers/api/ package: core.py, conversations.py, credits.py, preferences.py, dev.py. Slim api down to package with sub-routers. 253 tests pass; 2 streaming tests expect 'done' events (investigate separately). |
 | 11 | Done | Split AdminPanel.tsx into tab components. Created UsersTab, ModelsTab, ActionLogsTab, VisitorAnalyticsTab, SearchProvidersTab, utils.ts. AdminPanel reduced from 4,333 to ~358 lines; tab logic + stats + active tab rendering. All 709 frontend tests pass. |
-| 12 | Pending | |
+| 12 | Done | Created useGeolocation.ts, useAuthModals.ts, useTooltipManager.ts hooks. Added HistoryProps, SelectionProps, FileProps interfaces; ComparisonForm now accepts historyProps, selectionProps, fileProps. MainPage uses new hooks and passes grouped props. 709 frontend tests pass. |
 | 13 | Pending | |
 | 14 | Pending | |
 | 15 | Pending | |

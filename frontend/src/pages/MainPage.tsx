@@ -49,20 +49,18 @@ import {
   useCreditsRemaining,
   useTokenReload,
   useAuthStateEffects,
+  useAuthModals,
   useBreakoutConversation,
+  useGeolocation,
   useTutorialComplete,
   useSavedSelectionsComplete,
+  useTooltipManager,
 } from '../hooks'
 import { ApiError } from '../services/api/errors'
-import {
-  getAnonymousMockModeStatus,
-  getRateLimitStatus,
-  resetRateLimit,
-} from '../services/compareService'
+import { getRateLimitStatus, resetRateLimit } from '../services/compareService'
 import { getCreditBalance } from '../services/creditService'
 import type { CreditBalance } from '../services/creditService'
 import { getAvailableModels } from '../services/modelsService'
-import { getUserPreferences } from '../services/userSettingsService'
 import type { ModelsByProvider, ResultTab, ActiveResultTabs } from '../types'
 import { RESULT_TAB, createModelId } from '../types'
 import { generateBrowserFingerprint, getSafeId } from '../utils'
@@ -113,9 +111,8 @@ export function MainPage() {
   const [attachedFiles, setAttachedFilesState] = useState<(AttachedFile | StoredAttachedFile)[]>([])
   const [webSearchEnabled, setWebSearchEnabled] = useState(false)
   const [defaultSelectionOverridden, setDefaultSelectionOverridden] = useState(false)
-  const [userLocation, setUserLocation] = useState<string | null>(null)
-  const geolocationDetectedRef = useRef(false)
-  const savedLocationLoadedRef = useRef(false)
+
+  const { userLocation } = useGeolocation({ isAuthenticated, user })
 
   const setAttachedFiles = useCallback((files: (AttachedFile | StoredAttachedFile)[]) => {
     setAttachedFilesState(files)
@@ -560,95 +557,26 @@ export function MainPage() {
     }
   }, [showWelcomeModal, isTouchDevice, currentView, tutorialState.isActive, attemptFocusTextarea])
 
-  const [visibleTooltip, setVisibleTooltip] = useState<string | null>(null)
-  const tooltipHideTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const { visibleTooltip, handleCapabilityTileTap } = useTooltipManager({ isMobileLayout })
 
-  useEffect(() => {
-    return () => {
-      if (tooltipHideTimeoutRef.current) {
-        clearTimeout(tooltipHideTimeoutRef.current)
-      }
-    }
-  }, [])
-
-  const handleCapabilityTileTap = (tileId: string) => {
-    if (isMobileLayout) {
-      if (tooltipHideTimeoutRef.current) {
-        clearTimeout(tooltipHideTimeoutRef.current)
-        tooltipHideTimeoutRef.current = null
-      }
-      setVisibleTooltip(tileId)
-      tooltipHideTimeoutRef.current = setTimeout(() => {
-        setVisibleTooltip(null)
-        tooltipHideTimeoutRef.current = null
-      }, 4000)
-    }
-  }
-
-  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false)
-  const [authModalMode, setAuthModalMode] = useState<'login' | 'register'>('login')
-  const [anonymousMockModeEnabled, setAnonymousMockModeEnabled] = useState(false)
-
-  const [loginEmail, setLoginEmail] = useState<string>('')
-
-  // Verification modal state
-  const [showVerificationCodeModal, setShowVerificationCodeModal] = useState(false)
-  const [showVerificationSuccessModal, setShowVerificationSuccessModal] = useState(false)
-
-  // Password reset state (check URL for reset token)
-  const [showPasswordReset, setShowPasswordReset] = useState(() => {
-    const urlParams = new URLSearchParams(window.location.search)
-    const token = urlParams.get('token')
-    const path = window.location.pathname
-    return !!(token && path.includes('reset-password'))
-  })
-
-  const handlePasswordResetClose = (email?: string) => {
-    setShowPasswordReset(false)
-    const url = new URL(window.location.href)
-    url.searchParams.delete('token')
-    window.history.pushState({}, '', url)
-    if (email) {
-      setLoginEmail(email)
-    }
-    setAuthModalMode('login')
-    setIsAuthModalOpen(true)
-  }
-
-  // Show verification modal when user is logged in but not verified
-  useEffect(() => {
-    if (isAuthenticated && user && !user.is_verified && !authLoading) {
-      // Small delay to let page settle
-      const timeout = setTimeout(() => {
-        setShowVerificationCodeModal(true)
-      }, 500)
-      return () => clearTimeout(timeout)
-    }
-  }, [isAuthenticated, user, authLoading])
-
-  useEffect(() => {
-    const fetchAnonymousMockModeSetting = async () => {
-      if (isAuthenticated || !import.meta.env.DEV || authLoading) {
-        if (isAuthenticated || authLoading) {
-          setAnonymousMockModeEnabled(false)
-        }
-        return
-      }
-
-      try {
-        const data = await getAnonymousMockModeStatus()
-        if (data.is_development && data.anonymous_mock_mode_enabled) {
-          setAnonymousMockModeEnabled(true)
-        } else {
-          setAnonymousMockModeEnabled(false)
-        }
-      } catch {
-        // Silently fail - development-only feature
-      }
-    }
-
-    fetchAnonymousMockModeSetting()
-  }, [isAuthenticated, authLoading])
+  const authModals = useAuthModals({ isAuthenticated, user, authLoading })
+  const {
+    isAuthModalOpen,
+    authModalMode,
+    loginEmail,
+    showVerificationCodeModal,
+    setShowVerificationCodeModal,
+    showVerificationSuccessModal,
+    setShowVerificationSuccessModal,
+    showPasswordReset,
+    anonymousMockModeEnabled,
+    openLogin,
+    openRegister,
+    closeAuthModal,
+    handlePasswordResetClose,
+    openLoginAfterVerificationCode,
+    handleVerified,
+  } = authModals
 
   const resetUsage = async () => {
     try {
@@ -1243,162 +1171,6 @@ export function MainPage() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [input, error])
-
-  // Load user's saved location (zipcode) from preferences - takes priority over geolocation
-  useEffect(() => {
-    if (!isAuthenticated || !user) return
-    if (savedLocationLoadedRef.current) return
-
-    const loadSavedLocation = async () => {
-      try {
-        const preferences = await getUserPreferences()
-        if (preferences.zipcode) {
-          // Convert zipcode to city, state using Zippopotam.us API
-          const response = await fetch(
-            `https://api.zippopotam.us/us/${preferences.zipcode.substring(0, 5)}`
-          )
-          if (response.ok) {
-            const data = await response.json()
-            if (data.places && data.places.length > 0) {
-              const place = data.places[0]
-              const city = place['place name'] || ''
-              const state = place['state'] || ''
-              const location = [city, state, 'United States'].filter(Boolean).join(', ')
-              if (import.meta.env.DEV) {
-                console.log(
-                  '[Settings] Using saved zipcode location:',
-                  location,
-                  `(zipcode: ${preferences.zipcode})`
-                )
-              }
-              // Override any previously detected geolocation
-              setUserLocation(location)
-              savedLocationLoadedRef.current = true
-            }
-          } else {
-            if (import.meta.env.DEV) {
-              console.debug('[Settings] Could not lookup zipcode:', preferences.zipcode)
-            }
-          }
-        }
-      } catch (error) {
-        if (import.meta.env.DEV) {
-          console.debug('[Settings] Failed to load saved location preference:', error)
-        }
-      }
-    }
-
-    loadSavedLocation()
-  }, [isAuthenticated, user])
-
-  // Geolocation detection (fallback when no saved zipcode)
-  // Deferred until user interaction to avoid requesting permission on page load
-  useEffect(() => {
-    if (geolocationDetectedRef.current) return
-    // Don't run geolocation if user has a saved location
-    if (savedLocationLoadedRef.current) return
-
-    // Only request geolocation after user interaction (click, touch, scroll)
-    const handleUserInteraction = async () => {
-      if (geolocationDetectedRef.current) return
-      if (savedLocationLoadedRef.current) return
-      geolocationDetectedRef.current = true
-
-      // Check if geolocation is available and accessible (not blocked by permissions policy)
-      if (navigator.geolocation) {
-        // Check permissions first to avoid policy violation warnings
-        let geolocationAllowed = true
-        if (navigator.permissions && navigator.permissions.query) {
-          try {
-            const permissionStatus = await navigator.permissions.query({ name: 'geolocation' })
-            geolocationAllowed = permissionStatus.state !== 'denied'
-          } catch {
-            // Permissions API not supported or geolocation not in queryable permissions
-            // Fall through to try geolocation anyway
-          }
-        }
-
-        if (geolocationAllowed) {
-          try {
-            navigator.geolocation.getCurrentPosition(
-              async position => {
-                // Double-check: don't override if saved location was loaded while we waited
-                if (savedLocationLoadedRef.current) {
-                  if (import.meta.env.DEV) {
-                    console.log('[Geolocation] Skipping - user has saved location in settings')
-                  }
-                  return
-                }
-                try {
-                  const response = await fetch(
-                    `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${position.coords.latitude}&longitude=${position.coords.longitude}&localityLanguage=en`
-                  )
-                  if (response.ok) {
-                    const data = await response.json()
-                    const city = data.city || ''
-                    const region = data.principalSubdivision || ''
-                    let country = data.countryName || ''
-                    country = country.replace(/\s*\(the\)\s*$/i, '').trim()
-                    const parts = [city, region, country].filter(Boolean)
-                    if (parts.length > 0) {
-                      const location = parts.join(', ')
-                      if (import.meta.env.DEV) {
-                        console.log('[Geolocation] Successfully detected location:', location)
-                      }
-                      setUserLocation(location)
-                    }
-                  }
-                } catch (error) {
-                  if (import.meta.env.DEV) {
-                    console.debug('Failed to get location from coordinates:', error)
-                  }
-                }
-              },
-              error => {
-                if (import.meta.env.DEV) {
-                  console.debug('Geolocation not available:', error.message)
-                }
-              },
-              { timeout: 5000, enableHighAccuracy: false }
-            )
-          } catch (error) {
-            // Catch permissions policy violations and other access errors
-            if (import.meta.env.DEV) {
-              console.debug('Geolocation access blocked:', error)
-            }
-          }
-        } else if (import.meta.env.DEV) {
-          console.debug('[Geolocation] Access denied by permissions policy')
-        }
-      }
-
-      // Remove listeners after first interaction
-      window.removeEventListener('click', handleUserInteraction)
-      window.removeEventListener('touchstart', handleUserInteraction)
-      // removeEventListener doesn't accept options, only the handler needs to match
-      window.removeEventListener('scroll', handleUserInteraction)
-    }
-
-    // Listen for user interaction
-    window.addEventListener('click', handleUserInteraction, { once: true })
-    window.addEventListener('touchstart', handleUserInteraction, { once: true })
-    // Also trigger after scroll (user has engaged with page)
-    window.addEventListener('scroll', handleUserInteraction, { once: true, passive: true })
-
-    // Fallback: trigger after 5 seconds if no interaction (for automated tests)
-    const timeoutId = setTimeout(() => {
-      if (!geolocationDetectedRef.current && !savedLocationLoadedRef.current) {
-        handleUserInteraction()
-      }
-    }, 5000)
-
-    return () => {
-      window.removeEventListener('click', handleUserInteraction)
-      window.removeEventListener('touchstart', handleUserInteraction)
-      window.removeEventListener('scroll', handleUserInteraction)
-      clearTimeout(timeoutId)
-    }
-  }, [])
 
   // Listen for save state event (triggered before logout when "remember state" is enabled)
   useEffect(() => {
@@ -2199,31 +1971,15 @@ export function MainPage() {
             isAdmin={user?.is_admin || false}
             currentView={currentView}
             onViewChange={view => navigate(view === 'admin' ? '/admin' : '/')}
-            onSignInClick={() => {
-              setAuthModalMode('login')
-              setIsAuthModalOpen(true)
-            }}
-            onSignUpClick={() => {
-              setAuthModalMode('register')
-              setIsAuthModalOpen(true)
-            }}
+            onSignInClick={openLogin}
+            onSignUpClick={openRegister}
           />
 
-          {/* Verification Code Modal */}
           <VerificationCodeModal
             isOpen={showVerificationCodeModal && !showPasswordReset}
             onClose={() => setShowVerificationCodeModal(false)}
-            onUseDifferentEmail={() => {
-              setShowVerificationCodeModal(false)
-              setAuthModalMode('login')
-              setIsAuthModalOpen(true)
-            }}
-            onVerified={() => {
-              setShowVerificationCodeModal(false)
-              setShowVerificationSuccessModal(true)
-              // Dispatch verification-complete event to trigger model refetch and trial modal
-              window.dispatchEvent(new CustomEvent('verification-complete'))
-            }}
+            onUseDifferentEmail={openLoginAfterVerificationCode}
+            onVerified={handleVerified}
             userEmail={user?.email}
           />
 
@@ -2249,35 +2005,41 @@ export function MainPage() {
                   isAuthenticated={isAuthenticated}
                   user={user}
                   conversations={conversations}
-                  showHistoryDropdown={showHistoryDropdown}
-                  setShowHistoryDropdown={setShowHistoryDropdown}
-                  conversationHistory={conversationHistory}
-                  isLoadingHistory={isLoadingHistory}
-                  historyLimit={historyLimit}
-                  currentVisibleComparisonId={currentVisibleComparisonId}
+                  historyProps={{
+                    showHistoryDropdown,
+                    setShowHistoryDropdown,
+                    conversationHistory,
+                    isLoadingHistory,
+                    historyLimit,
+                    currentVisibleComparisonId,
+                    onLoadConversation: loadConversation,
+                    onDeleteConversation: deleteConversation,
+                  }}
                   onSubmitClick={handleSubmitClick}
                   onContinueConversation={handleContinueConversation}
                   onNewComparison={handleNewComparison}
-                  onLoadConversation={loadConversation}
-                  onDeleteConversation={deleteConversation}
                   renderUsagePreview={renderUsagePreview}
                   selectedModels={selectedModels}
                   modelsByProvider={modelsByProvider}
                   onAccurateTokenCountChange={setAccurateInputTokens}
                   creditsRemaining={creditsRemaining}
-                  savedModelSelections={savedModelSelections}
-                  onSaveModelSelection={handleSaveModelSelection}
-                  onLoadModelSelection={handleLoadModelSelection}
-                  onDeleteModelSelection={deleteModelSelection}
-                  onSetDefaultSelection={setDefaultSelection}
-                  getDefaultSelectionId={getDefaultSelectionId}
-                  getDefaultSelection={getDefaultSelection}
-                  defaultSelectionOverridden={defaultSelectionOverridden}
-                  canSaveMoreSelections={canSaveMoreSelections}
-                  maxSavedSelections={maxSavedSelections}
-                  attachedFiles={attachedFiles}
-                  setAttachedFiles={setAttachedFiles}
-                  onExpandFiles={expandFiles}
+                  selectionProps={{
+                    savedModelSelections,
+                    onSaveModelSelection: handleSaveModelSelection,
+                    onLoadModelSelection: handleLoadModelSelection,
+                    onDeleteModelSelection: deleteModelSelection,
+                    onSetDefaultSelection: setDefaultSelection,
+                    getDefaultSelectionId,
+                    getDefaultSelection,
+                    defaultSelectionOverridden,
+                    canSaveMoreSelections,
+                    maxSavedSelections,
+                  }}
+                  fileProps={{
+                    attachedFiles,
+                    setAttachedFiles,
+                    onExpandFiles: expandFiles,
+                  }}
                   webSearchEnabled={webSearchEnabled}
                   onWebSearchEnabledChange={setWebSearchEnabled}
                   tutorialStep={tutorialState.currentStep}
@@ -2394,10 +2156,7 @@ export function MainPage() {
 
           <AuthModal
             isOpen={isAuthModalOpen}
-            onClose={() => {
-              setIsAuthModalOpen(false)
-              setLoginEmail('')
-            }}
+            onClose={closeAuthModal}
             initialMode={authModalMode}
             initialEmail={loginEmail}
           />
@@ -2457,10 +2216,7 @@ export function MainPage() {
             info={disabledModelModalInfo}
             onClose={() => setDisabledModelModalInfo(null)}
             onToggleHidePremiumModels={() => setHidePremiumModels(true)}
-            onOpenSignUp={() => {
-              setAuthModalMode('register')
-              setIsAuthModalOpen(true)
-            }}
+            onOpenSignUp={openRegister}
           />
 
           <TrialWelcomeModal

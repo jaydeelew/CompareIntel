@@ -26,7 +26,10 @@ export * from './useCreditsRemaining'
 export * from './useTutorialEffects'
 export * from './useTokenReload'
 export * from './useAuthStateEffects'
+export * from './useAuthModals'
 export * from './useBreakoutConversation'
+export * from './useGeolocation'
+export * from './useTooltipManager'
 
 // New hooks for better useEffect patterns (2025 best practices)
 export * from './useInputValidation'
