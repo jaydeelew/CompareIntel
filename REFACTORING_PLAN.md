@@ -432,7 +432,7 @@ The AI must update this table after completing each session (see Instructions fo
 | 10 | Done | Extracted generate_stream to backend/app/services/comparison_stream.py. Consolidated get_client_ip in utils/request.py. Moved get_location_from_ip, get_timezone_from_request to utils/geo.py. Split api into routers/api/ package: core.py, conversations.py, credits.py, preferences.py, dev.py. Slim api down to package with sub-routers. 253 tests pass; 2 streaming tests expect 'done' events (investigate separately). |
 | 11 | Done | Split AdminPanel.tsx into tab components. Created UsersTab, ModelsTab, ActionLogsTab, VisitorAnalyticsTab, SearchProvidersTab, utils.ts. AdminPanel reduced from 4,333 to ~358 lines; tab logic + stats + active tab rendering. All 709 frontend tests pass. |
 | 12 | Done | Created useGeolocation.ts, useAuthModals.ts, useTooltipManager.ts hooks. Added HistoryProps, SelectionProps, FileProps interfaces; ComparisonForm now accepts historyProps, selectionProps, fileProps. MainPage uses new hooks and passes grouped props. 709 frontend tests pass. |
-| 13 | Pending | |
+| 13 | Done | Created FileUpload.tsx, TokenUsageDisplay.tsx, SavedSelectionsDropdown.tsx. Also added HistoryDropdown, ContextWarning, FormHeader to reach <600 lines. ComparisonForm reduced from 2,361 to 579 lines. ComparisonFormTypes.ts for shared interfaces. All 709 frontend tests pass. |
 | 14 | Pending | |
 | 15 | Pending | |
 | 16 | Pending | |
