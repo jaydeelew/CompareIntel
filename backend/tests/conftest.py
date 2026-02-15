@@ -161,11 +161,6 @@ def client(db_session):
     anonymous_rate_limit_storage.clear()
 
 
-# ============================================================================
-# User Fixtures - All Subscription Tiers
-# ============================================================================
-
-
 @pytest.fixture
 def test_user(db_session):
     """
@@ -265,11 +260,6 @@ def test_user_unverified(db_session):
 def test_user_inactive(db_session):
     """Create an inactive user."""
     return create_inactive_user(db_session)
-
-
-# ============================================================================
-# API Client Fixtures
-# ============================================================================
 
 
 @pytest.fixture

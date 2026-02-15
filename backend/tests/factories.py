@@ -38,11 +38,6 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 DEFAULT_TEST_PASSWORD = "test_password_123"
 
 
-# ============================================================================
-# User Factories
-# ============================================================================
-
-
 def create_user(
     db: Session,
     email: str | None = None,
@@ -195,11 +190,6 @@ def create_inactive_user(db: Session, **kwargs) -> User:
     return create_user(db, is_active=False, **kwargs)
 
 
-# ============================================================================
-# User Preference Factories
-# ============================================================================
-
-
 def create_user_preference(
     db: Session,
     user: User,
@@ -237,11 +227,6 @@ def create_user_preference(
     db.refresh(preference)
 
     return preference
-
-
-# ============================================================================
-# Conversation Factories
-# ============================================================================
 
 
 def create_conversation(
@@ -341,11 +326,6 @@ def create_conversation_message(
     return message
 
 
-# ============================================================================
-# Usage Log Factories
-# ============================================================================
-
-
 def create_usage_log(
     db: Session,
     user: User | None = None,
@@ -438,11 +418,6 @@ def create_usage_log(
     return usage_log
 
 
-# ============================================================================
-# Subscription History Factories
-# ============================================================================
-
-
 def create_subscription_history(
     db: Session,
     user: User,
@@ -498,11 +473,6 @@ def create_subscription_history(
     return history
 
 
-# ============================================================================
-# Payment Transaction Factories
-# ============================================================================
-
-
 def create_payment_transaction(
     db: Session,
     user: User,
@@ -550,11 +520,6 @@ def create_payment_transaction(
     db.refresh(transaction)
 
     return transaction
-
-
-# ============================================================================
-# Admin Action Log Factories
-# ============================================================================
 
 
 def create_admin_action_log(
@@ -611,11 +576,6 @@ def create_admin_action_log(
     return log
 
 
-# ============================================================================
-# App Settings Factories
-# ============================================================================
-
-
 def create_app_settings(
     db: Session,
     anonymous_mock_mode_enabled: bool = False,
@@ -654,11 +614,6 @@ def create_app_settings(
         db.refresh(settings)
 
     return settings
-
-
-# ============================================================================
-# Mock API Data Generators
-# ============================================================================
 
 
 def generate_compare_request(

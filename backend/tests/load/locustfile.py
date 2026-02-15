@@ -212,9 +212,6 @@ class AnonymousComparisonUser(HttpUser):
             response.close()
 
 
-# ============================================================================
-# Custom event hooks for CI reporting
-# ============================================================================
 @events.quitting.add_listener
 def check_fail_ratio(environment, **kwargs):
     """

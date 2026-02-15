@@ -27,9 +27,6 @@ logger = logging.getLogger(__name__)
 
 OPENROUTER_API_KEY = settings.openrouter_api_key
 
-# ============================================================================
-# Model Tier Classification System
-# ============================================================================
 # Models are classified into three tiers based on OpenRouter pricing:
 # - "unregistered": Budget models < $0.50/M tokens (available to unregistered users)
 # - "free": Mid-level models $0.50-$3.00/M tokens (available to registered free users)
@@ -40,23 +37,18 @@ OPENROUTER_API_KEY = settings.openrouter_api_key
 # Classification criteria: Models costing < $0.50 per million tokens (input+output average)
 # Generally includes: models with ":free" suffix, nano/mini versions, budget options
 UNREGISTERED_TIER_MODELS = {
-    # Anthropic - OVERRIDING PRICE CLASSIFICATION
     "anthropic/claude-3.5-haiku",
-    # Cohere - OVERRIDING PRICE CLASSIFICATION
     "cohere/command-r7b-12-2024",
-    # DeepSeek - Very affordable models (~$0.14-$0.55/M avg)
-    "deepseek/deepseek-chat-v3.1",  # ~$0.27 input, $1.10 output = ~$0.69/M avg - borderline, keep in unregistered
-    "deepseek/deepseek-v3.2-exp",  # Similar pricing
-    # Meta - Free/open models (~$0.12-$0.30/M)    # Microsoft - Efficient models (~$0.07-$0.14/M)
-    "microsoft/phi-4",  # ~$0.07 input, $0.14 output = ~$0.11/M avg
-    # Google - Flash models (~$0.15-$0.60/M)
+    "deepseek/deepseek-chat-v3.1",
+    "deepseek/deepseek-v3.2-exp",
+    "microsoft/phi-4",
     "google/gemini-2.0-flash-001",
-    "google/gemini-2.5-flash",  # ~$0.15 input, $0.60 output = ~$0.38/M avg
-    "openai/gpt-oss-120b",  # Auto-classified based on pricing,
+    "google/gemini-2.5-flash",
+    "openai/gpt-oss-120b",
     "x-ai/grok-code-fast-1",
     "x-ai/grok-4-fast",
-    "xiaomi/mimo-v2-flash",  # Auto-classified based on pricing,
-    "mistralai/devstral-2512",  # Auto-classified based on pricing
+    "xiaomi/mimo-v2-flash",
+    "mistralai/devstral-2512",
 }
 
 # List of model IDs available to free (registered) users
@@ -65,54 +57,31 @@ UNREGISTERED_TIER_MODELS = {
 # Generally includes: small/medium models, "plus" variants, efficient versions
 FREE_TIER_MODELS = UNREGISTERED_TIER_MODELS.union(
     {
-        # DeepSeek - Reasoning model (~$0.55 input, $2.19 output = ~$1.37/M avg)
         "deepseek/deepseek-r1",
-        # Anthropic - Haiku (efficient) (~$0.80 input, $4.00 output = ~$2.40/M avg)
         "anthropic/claude-haiku-4.5",
-        # OpenAI - Mini/Nano models (~$0.15-$0.60/M avg)
         "openai/gpt-5-mini",
         "openai/gpt-5-nano",
         "openai/gpt-5.1-codex-mini",
         "openai/o3-mini",
-        # Meta - Llama 4 models (~$0.50-$1.50/M avg)
         "meta-llama/llama-4-scout",
         "meta-llama/llama-4-maverick",
-        # Microsoft - Plus variants (~$0.50-$1.50/M avg)
         "microsoft/phi-4-reasoning-plus",
         "microsoft/wizardlm-2-8x22b",
-        # Mistral - Small/Medium models (~$0.20-$2.00/M avg)
         "mistralai/mistral-small-3.2-24b-instruct",
         "mistralai/mistral-medium-3.1",
         "mistralai/devstral-small",
         "mistralai/devstral-medium",
-        # Cohere - Budget models (~$0.15-$2.50/M avg)
         "cohere/command-r-plus-08-2024",
-        # Qwen - Efficient models (~$0.30-$2.00/M avg)
         "qwen/qwen3-coder-flash",
         "qwen/qwen3-30b-a3b-instruct-2507",
         "qwen/qwen3-next-80b-a3b-instruct",
-        # xAI
-        "x-ai/grok-3-mini",  # Auto-classified based on pricing
-        # When adding new models, classify based on OpenRouter pricing:
-        # - Unregistered tier: Models costing < $0.50 per million tokens
-        # - Free tier: Models costing $0.50 - $3.00 per million tokens
-        # - Paid tier: Models costing >= $3.00 per million tokens
+        "x-ai/grok-3-mini",
     }
 )
 
 
 def is_model_available_for_tier(model_id: str, tier: str, is_trial_active: bool = False) -> bool:
-    """
-    Check if a model is available for a given subscription tier.
-
-    Args:
-        model_id: Model identifier (e.g., "openai/gpt-5.1")
-        tier: Subscription tier ("unregistered", "free", "starter", "starter_plus", "pro", "pro_plus")
-        is_trial_active: Whether the user has an active 7-day trial (grants access to all models)
-
-    Returns:
-        True if model is available for the tier, False otherwise
-    """
+    """Check if a model is available for a given subscription tier."""
     # Active trial grants access to all models (like paid tiers)
     if is_trial_active and tier == "free":
         return True
@@ -136,31 +105,14 @@ def is_model_available_for_tier(model_id: str, tier: str, is_trial_active: bool 
 def filter_models_by_tier(
     models: list[dict[str, Any]], tier: str, is_trial_active: bool = False
 ) -> list[dict[str, Any]]:
-    """
-    Return all models with tier_access field indicating availability for the tier.
-
-    This function now returns ALL models from model_runner.py, marking them with
-    tier_access to indicate which tier they're available for. The frontend will
-    display locked models as disabled/restricted for unregistered and free tiers.
-
-    Args:
-        models: List of model dictionaries
-        tier: Subscription tier
-        is_trial_active: Whether the user has an active 7-day trial (grants access to all models)
-
-    Returns:
-        List of all models with tier_access field set appropriately
-    """
+    """Return all models with tier_access field; frontend displays locked models as disabled."""
     result = []
     for model in models:
         model_id = model.get("id")
         if not model_id:
             continue
 
-        # Create a copy of the model with tier_access field
         model_with_access = model.copy()
-
-        # Set tier_access based on model classification
         if model_id in UNREGISTERED_TIER_MODELS:
             model_with_access["tier_access"] = "unregistered"
         elif model_id in FREE_TIER_MODELS:
@@ -186,7 +138,7 @@ MODELS_BY_PROVIDER = {
             "description": "A fast, efficient model optimized for speed, coding accuracy, and tool use at low cost.",
             "category": "Language",
             "provider": "Anthropic",
-            "supports_web_search": True,  # Supports tool use
+            "supports_web_search": True,
             "knowledge_cutoff": "July 2024",
         },
         {
@@ -195,7 +147,7 @@ MODELS_BY_PROVIDER = {
             "description": "Anthropic's fastest model delivering near-frontier intelligence with minimal latency and cost.",
             "category": "Language",
             "provider": "Anthropic",
-            "supports_web_search": True,  # All Claude models support function calling
+            "supports_web_search": True,
             "knowledge_cutoff": "February 2025",
         },
         {
@@ -222,7 +174,7 @@ MODELS_BY_PROVIDER = {
             "description": "A high-performance model excelling in coding, reasoning, and instruction-following with improved precision.",
             "category": "Language",
             "provider": "Anthropic",
-            "supports_web_search": True,  # All Claude models support function calling
+            "supports_web_search": True,
             "knowledge_cutoff": "March 2025",
         },
         {
@@ -231,7 +183,7 @@ MODELS_BY_PROVIDER = {
             "description": "An updated flagship model with enhanced coding, reasoning, and multi-step agentic capabilities.",
             "category": "Language/Code",
             "provider": "Anthropic",
-            "supports_web_search": True,  # All Claude models support function calling
+            "supports_web_search": True,
             "knowledge_cutoff": "March 2025",
         },
         {
@@ -240,7 +192,7 @@ MODELS_BY_PROVIDER = {
             "description": "Anthropic's most capable model for complex software engineering and long-horizon computer use tasks.",
             "category": "Language",
             "provider": "Anthropic",
-            "supports_web_search": True,  # All Claude models support function calling
+            "supports_web_search": True,
             "knowledge_cutoff": "May 2025",
         },
         {
@@ -249,7 +201,7 @@ MODELS_BY_PROVIDER = {
             "description": "Anthropic's most advanced Sonnet optimized for real-world agentic workflows and coding tasks.",
             "category": "Language",
             "provider": "Anthropic",
-            "supports_web_search": True,  # All Claude models support function calling
+            "supports_web_search": True,
             "knowledge_cutoff": "May 2025",
         },
     ],
@@ -269,7 +221,7 @@ MODELS_BY_PROVIDER = {
             "description": "An enterprise-grade model with 50% higher throughput for complex reasoning and generation tasks.",
             "category": "Language/Reasoning",
             "provider": "Cohere",
-            "supports_web_search": True,  # Supports function calling
+            "supports_web_search": True,
             "knowledge_cutoff": "August 2024",
         },
         {
@@ -278,7 +230,7 @@ MODELS_BY_PROVIDER = {
             "description": "An open-weights 111B model with 256k context excelling in agentic, multilingual, and coding tasks.",
             "category": "Language",
             "provider": "Cohere",
-            "supports_web_search": False,  # Does not support function calling
+            "supports_web_search": False,
             "knowledge_cutoff": "March 2025",
         },
     ],
@@ -289,7 +241,7 @@ MODELS_BY_PROVIDER = {
             "description": "A 671B hybrid MoE model (37B active) supporting both thinking and non-thinking modes for versatile reasoning.",
             "category": "Language/Reasoning",
             "provider": "DeepSeek",
-            "supports_web_search": True,  # Supports function calling
+            "supports_web_search": True,
             "knowledge_cutoff": "July 2025",
         },
         {
@@ -298,7 +250,7 @@ MODELS_BY_PROVIDER = {
             "description": "An experimental model with enhanced reasoning and coding capabilities bridging V3.1 and future architectures.",
             "category": "Language/Reasoning",
             "provider": "DeepSeek",
-            "supports_web_search": True,  # Supports function calling
+            "supports_web_search": True,
             "knowledge_cutoff": "October 2025",
         },
         {
@@ -307,7 +259,7 @@ MODELS_BY_PROVIDER = {
             "description": "An open-source reasoning model matching OpenAI o1 performance with fully transparent chain-of-thought.",
             "category": "Reasoning",
             "provider": "DeepSeek",
-            "supports_web_search": True,  # Supports function calling
+            "supports_web_search": True,
             "knowledge_cutoff": "January 2025",
         },
     ],
@@ -318,7 +270,7 @@ MODELS_BY_PROVIDER = {
             "description": "A high-speed model with significantly faster time-to-first-token while maintaining Pro-level quality.",
             "category": "Language",
             "provider": "Google",
-            "supports_web_search": True,  # All Gemini models support function calling
+            "supports_web_search": True,
             "knowledge_cutoff": "August 2024",
         },
         {
@@ -327,7 +279,7 @@ MODELS_BY_PROVIDER = {
             "description": "Google's fast, cost-efficient model with built-in thinking capabilities for reasoning, coding, and math tasks.",
             "category": "Language",
             "provider": "Google",
-            "supports_web_search": True,  # All Gemini models support function calling
+            "supports_web_search": True,
             "knowledge_cutoff": "January 2025",
         },
         {
@@ -345,7 +297,7 @@ MODELS_BY_PROVIDER = {
             "description": "Gemini 3 Flash Preview is a high speed, high value thinking model designed for agentic workflows, multi turn chat, and coding assistance.",
             "category": "Language",
             "provider": "Google",
-            "supports_web_search": True,  # All Gemini models support function calling
+            "supports_web_search": True,
             "knowledge_cutoff": "August 2025",
         },
         {
@@ -354,7 +306,7 @@ MODELS_BY_PROVIDER = {
             "description": "Google's flagship multimodal model with 1M-token context for text, image, video, audio, and code tasks.",
             "category": "Language",
             "provider": "Google",
-            "supports_web_search": True,  # All Gemini models support function calling
+            "supports_web_search": True,
             "knowledge_cutoff": "August 2025",
         },
     ],
@@ -366,7 +318,7 @@ MODELS_BY_PROVIDER = {
             "description": "A high-capacity 400B MoE model (17B active, 128 experts) for complex multimodal reasoning and generation.",
             "category": "Multimodal",
             "provider": "Meta",
-            "supports_web_search": True,  # Supports function calling
+            "supports_web_search": True,
             "knowledge_cutoff": "August 2024",
         },
         {
@@ -375,7 +327,7 @@ MODELS_BY_PROVIDER = {
             "description": "A 109B MoE model (17B active) optimized for efficient multimodal understanding and generation tasks.",
             "category": "Multimodal",
             "provider": "Meta",
-            "supports_web_search": True,  # Supports function calling
+            "supports_web_search": True,
             "knowledge_cutoff": "August 2024",
         },
         {
@@ -384,7 +336,7 @@ MODELS_BY_PROVIDER = {
             "description": "Meta's flagship 405B open-source model excelling in multilingual understanding, coding, and instruction-following.",
             "category": "Language",
             "provider": "Meta",
-            "supports_web_search": True,  # Supports function calling
+            "supports_web_search": True,
             "knowledge_cutoff": "December 2023",
         },
         {
@@ -393,7 +345,7 @@ MODELS_BY_PROVIDER = {
             "description": "The Meta Llama 3.3 multilingual large language model (LLM) is a pretrained and instruction tuned generative model in 70B.",
             "category": "Language",
             "provider": "Meta",
-            "supports_web_search": True,  # Supports function calling
+            "supports_web_search": True,
             "knowledge_cutoff": "December 2023",
         },
     ],
@@ -424,8 +376,8 @@ MODELS_BY_PROVIDER = {
             "description": "A compact, high-efficiency model optimized for end-to-end coding and agentic workflow automation.",
             "category": "Language",
             "provider": "Minimax",
-            "supports_web_search": True,  # Supports function calling
-            "knowledge_cutoff": None,  # Knowledge cutoff date pending
+            "supports_web_search": True,
+            "knowledge_cutoff": None,
         },
     ],
     "Mistral": [
@@ -435,7 +387,7 @@ MODELS_BY_PROVIDER = {
             "description": "A high-performance model for code generation and agentic reasoning in complex development workflows.",
             "category": "Code",
             "provider": "Mistral",
-            "supports_web_search": True,  # Agentic model - supports function calling
+            "supports_web_search": True,
             "knowledge_cutoff": "December 2025",
         },
         {
@@ -444,7 +396,7 @@ MODELS_BY_PROVIDER = {
             "description": "A 24B open-weight model specialized for software engineering agents and autonomous coding tasks.",
             "category": "Code",
             "provider": "Mistral",
-            "supports_web_search": True,  # Agentic model - supports function calling
+            "supports_web_search": True,
             "knowledge_cutoff": "April 2024",
         },
         {
@@ -453,7 +405,7 @@ MODELS_BY_PROVIDER = {
             "description": "An enterprise-grade model delivering frontier-level capabilities at significantly reduced operational cost.",
             "category": "Language",
             "provider": "Mistral",
-            "supports_web_search": True,  # Mistral Medium supports function calling
+            "supports_web_search": True,
             "knowledge_cutoff": "October 2024",
         },
         {
@@ -480,7 +432,7 @@ MODELS_BY_PROVIDER = {
             "description": "Mistral's specialized coding model with state-of-the-art performance on code generation and completion.",
             "category": "Code",
             "provider": "Mistral",
-            "supports_web_search": True,  # Supports function calling
+            "supports_web_search": True,
             "knowledge_cutoff": "August 2025",
         },
     ],
@@ -492,7 +444,7 @@ MODELS_BY_PROVIDER = {
             "category": "Language",
             "provider": "Mistralai",
             "supports_web_search": True,
-            "knowledge_cutoff": None,  # Knowledge cutoff date pending
+            "knowledge_cutoff": None,
         },
     ],
     "OpenAI": [
@@ -502,7 +454,7 @@ MODELS_BY_PROVIDER = {
             "description": "An open-weight 117B MoE model designed for high-reasoning, agentic, and general-purpose production tasks.",
             "category": "Language",
             "provider": "OpenAI",
-            "supports_web_search": True,  # Supports function calling
+            "supports_web_search": True,
             "knowledge_cutoff": "May 2025",
         },
         {
@@ -511,7 +463,7 @@ MODELS_BY_PROVIDER = {
             "description": "A cost-efficient reasoning model optimized for STEM tasks, excelling in science, mathematics, and coding.",
             "category": "Reasoning",
             "provider": "OpenAI",
-            "supports_web_search": True,  # Supports function calling
+            "supports_web_search": True,
             "knowledge_cutoff": "October 2023",
         },
         {
@@ -520,7 +472,7 @@ MODELS_BY_PROVIDER = {
             "description": "A compact GPT-5 variant designed for efficient, lighter-weight reasoning and general tasks.",
             "category": "Language",
             "provider": "OpenAI",
-            "supports_web_search": True,  # All GPT-5 models support function calling
+            "supports_web_search": True,
             "knowledge_cutoff": "September 2024",
         },
         {
@@ -529,7 +481,7 @@ MODELS_BY_PROVIDER = {
             "description": "The smallest GPT-5 variant optimized for ultra-low latency developer tools and rapid interactions.",
             "category": "Language",
             "provider": "OpenAI",
-            "supports_web_search": True,  # All GPT-5 models support function calling
+            "supports_web_search": True,
             "knowledge_cutoff": "September 2024",
         },
         {
@@ -538,7 +490,7 @@ MODELS_BY_PROVIDER = {
             "description": "A compact, fast coding model for efficient code generation and software development tasks.",
             "category": "Code",
             "provider": "OpenAI",
-            "supports_web_search": True,  # All GPT-5 models support function calling
+            "supports_web_search": True,
             "knowledge_cutoff": "June 2025",
         },
         {
@@ -547,7 +499,7 @@ MODELS_BY_PROVIDER = {
             "description": "OpenAI's advanced reasoning model with state-of-the-art performance across math, science, and coding benchmarks.",
             "category": "Reasoning",
             "provider": "OpenAI",
-            "supports_web_search": True,  # Supports function calling
+            "supports_web_search": True,
             "knowledge_cutoff": "October 2023",
         },
         {
@@ -556,7 +508,7 @@ MODELS_BY_PROVIDER = {
             "description": "GPT-4o mini is OpenAI's newest model after [GPT-4 Omni](/models/openai/gpt-4o), supporting both text and image inputs with text outputs.",
             "category": "Language",
             "provider": "OpenAI",
-            "supports_web_search": True,  # All GPT-4o+ models support function calling
+            "supports_web_search": True,
             "knowledge_cutoff": "October 2023",
         },
         {
@@ -583,7 +535,7 @@ MODELS_BY_PROVIDER = {
             "description": "A GPT-5 variant optimized for natural, multimodal, and context-aware enterprise conversations.",
             "category": "Language",
             "provider": "OpenAI",
-            "supports_web_search": False,  # OpenRouter API confirms this model does NOT support function/tool calling
+            "supports_web_search": False,
             "knowledge_cutoff": "September 2024",
         },
         {
@@ -592,7 +544,7 @@ MODELS_BY_PROVIDER = {
             "description": "A specialized GPT-5 variant optimized for software engineering, code generation, and development workflows.",
             "category": "Code",
             "provider": "OpenAI",
-            "supports_web_search": True,  # All GPT-5 models support function calling
+            "supports_web_search": True,
             "knowledge_cutoff": "September 2024",
         },
         {
@@ -601,7 +553,7 @@ MODELS_BY_PROVIDER = {
             "description": "The latest frontier model with stronger reasoning, improved instruction adherence, and natural conversation.",
             "category": "Language",
             "provider": "OpenAI",
-            "supports_web_search": True,  # All GPT-5 models support function calling
+            "supports_web_search": True,
             "knowledge_cutoff": "June 2025",
         },
         {
@@ -610,7 +562,7 @@ MODELS_BY_PROVIDER = {
             "description": "A fast, lightweight model optimized for low-latency chat while retaining strong general intelligence.",
             "category": "Language",
             "provider": "OpenAI",
-            "supports_web_search": True,  # All GPT-5 models support function calling
+            "supports_web_search": True,
             "knowledge_cutoff": "June 2025",
         },
         {
@@ -619,7 +571,7 @@ MODELS_BY_PROVIDER = {
             "description": "The most capable GPT-5.1 variant specialized for advanced software engineering and coding workflows.",
             "category": "Code",
             "provider": "OpenAI",
-            "supports_web_search": True,  # All GPT-5 models support function calling
+            "supports_web_search": True,
             "knowledge_cutoff": "June 2025",
         },
         {
@@ -628,7 +580,7 @@ MODELS_BY_PROVIDER = {
             "description": "GPT-5.1-Codex-Max is OpenAI's latest agentic coding model, designed for long-running, high-context software development tasks.",
             "category": "Language",
             "provider": "OpenAI",
-            "supports_web_search": True,  # All GPT-5 models support function calling
+            "supports_web_search": True,
             "knowledge_cutoff": "June 2025",
         },
         {
@@ -637,7 +589,7 @@ MODELS_BY_PROVIDER = {
             "description": "GPT-5.2 is the latest frontier-grade model in the GPT-5 series, offering stronger agentic and long context perfomance compared to GPT-5.1.",
             "category": "Language",
             "provider": "OpenAI",
-            "supports_web_search": True,  # All GPT-5 models support function calling
+            "supports_web_search": True,
             "knowledge_cutoff": "August 2025",
         },
         {
@@ -646,7 +598,7 @@ MODELS_BY_PROVIDER = {
             "description": "GPT-5.2 Chat (AKA Instant) is the fast, lightweight member of the 5.2 family, optimized for low-latency chat while retaining strong general intelligence.",
             "category": "Language",
             "provider": "OpenAI",
-            "supports_web_search": True,  # All GPT-5 models support function calling
+            "supports_web_search": True,
             "knowledge_cutoff": "August 2025",
         },
         {
@@ -655,7 +607,7 @@ MODELS_BY_PROVIDER = {
             "description": "GPT-5.2 Pro is OpenAI's most advanced model, offering major improvements in agentic coding and long context performance over GPT-5 Pro.",
             "category": "Language",
             "provider": "OpenAI",
-            "supports_web_search": True,  # All GPT-5 models support function calling
+            "supports_web_search": True,
             "knowledge_cutoff": "August 2025",
         },
     ],
@@ -666,7 +618,7 @@ MODELS_BY_PROVIDER = {
             "description": "A 30.5B MoE model with 3.3B active parameters for efficient instruction-following and chat.",
             "category": "Language",
             "provider": "Qwen",
-            "supports_web_search": True,  # Supports function calling
+            "supports_web_search": True,
             "knowledge_cutoff": "July 2025",
         },
         {
@@ -675,7 +627,7 @@ MODELS_BY_PROVIDER = {
             "description": "A fast, cost-efficient coding model optimized for rapid code generation and completion tasks.",
             "category": "Code",
             "provider": "Qwen",
-            "supports_web_search": True,  # Supports function calling
+            "supports_web_search": True,
             "knowledge_cutoff": "June 2025",
         },
         {
@@ -684,7 +636,7 @@ MODELS_BY_PROVIDER = {
             "description": "An 80B MoE instruction-tuned model optimized for fast, stable responses without thinking traces.",
             "category": "Language",
             "provider": "Qwen",
-            "supports_web_search": True,  # Supports function calling
+            "supports_web_search": True,
             "knowledge_cutoff": "September 2025",
         },
         {
@@ -693,7 +645,7 @@ MODELS_BY_PROVIDER = {
             "description": "A 235B MoE model (22B active) with strong reasoning, coding, and multilingual capabilities.",
             "category": "Language",
             "provider": "Qwen",
-            "supports_web_search": True,  # Supports function calling
+            "supports_web_search": True,
             "knowledge_cutoff": "April 2025",
         },
         {
@@ -702,7 +654,7 @@ MODELS_BY_PROVIDER = {
             "description": "A 480B MoE model (35B active) achieving state-of-the-art code generation and agentic coding performance.",
             "category": "Code",
             "provider": "Qwen",
-            "supports_web_search": True,  # Agentic coding model - supports function calling
+            "supports_web_search": True,
             "knowledge_cutoff": "June 2025",
         },
         {
@@ -711,7 +663,7 @@ MODELS_BY_PROVIDER = {
             "description": "Alibaba's proprietary coding model with enhanced performance for complex development tasks.",
             "category": "Code",
             "provider": "Qwen",
-            "supports_web_search": True,  # Supports function calling
+            "supports_web_search": True,
             "knowledge_cutoff": "June 2025",
         },
         {
@@ -720,7 +672,7 @@ MODELS_BY_PROVIDER = {
             "description": "Qwen's most capable model with strong reasoning, instruction-following, and multilingual abilities.",
             "category": "Language",
             "provider": "Qwen",
-            "supports_web_search": True,  # Supports function calling
+            "supports_web_search": True,
             "knowledge_cutoff": "April 2025",
         },
         {
@@ -729,7 +681,7 @@ MODELS_BY_PROVIDER = {
             "description": "A reasoning-first model with structured chain-of-thought traces for complex problem-solving.",
             "category": "Language/Reasoning",
             "provider": "Qwen",
-            "supports_web_search": True,  # Supports function calling
+            "supports_web_search": True,
             "knowledge_cutoff": "September 2025",
         },
         {
@@ -738,7 +690,7 @@ MODELS_BY_PROVIDER = {
             "description": "A multimodal reasoning model unifying text generation with visual understanding across images and video.",
             "category": "Multimodal/Reasoning",
             "provider": "Qwen",
-            "supports_web_search": True,  # Supports function calling
+            "supports_web_search": True,
             "knowledge_cutoff": "April 2025",
         },
     ],
@@ -790,7 +742,7 @@ MODELS_BY_PROVIDER = {
             "category": "Language",
             "provider": "xAI",
             "available": False,
-            "knowledge_cutoff": None,  # Knowledge cutoff date pending
+            "knowledge_cutoff": None,
         },
     ],
     "Xiaomi": [
@@ -801,7 +753,7 @@ MODELS_BY_PROVIDER = {
             "category": "Language",
             "provider": "Xiaomi",
             "supports_web_search": True,
-            "knowledge_cutoff": None,  # Knowledge cutoff date pending
+            "knowledge_cutoff": None,
         },
     ],
     "ZAi": [
@@ -811,7 +763,7 @@ MODELS_BY_PROVIDER = {
             "description": "GLM-4.7 is Z.AI's latest flagship model, featuring upgrades in two key areas: enhanced programming capabilities and more stable multi-step reasoning/execution.",
             "category": "Language",
             "provider": "ZAi",
-            "supports_web_search": True,  # Supports tool calling and web search via OpenRouter
+            "supports_web_search": True,
             "knowledge_cutoff": "June 2025",
         },
     ],
@@ -1046,10 +998,7 @@ def _extract_token_limits(model_data: dict[str, Any]) -> dict[str, int]:
     """
     limits = {}
 
-    # Get context_length (total context window)
     context_length = model_data.get("context_length")
-
-    # Get max_completion_tokens from top_provider
     top_provider = model_data.get("top_provider", {})
     max_completion_tokens = top_provider.get("max_completion_tokens")
 
@@ -1255,25 +1204,13 @@ def get_min_max_output_tokens(model_ids: list[str]) -> int:
     return min(max_outputs) if max_outputs else 8192
 
 
-# ============================================================================
-# Tokenizer Cache for Provider-Specific Token Counting
-# ============================================================================
 # Thread-safe cache for tokenizer instances to avoid repeated loading
 _tokenizer_cache: dict[str, Any] = {}
 _cache_lock = threading.Lock()
 
 
 def _get_huggingface_model_name(model_id: str) -> str | None:
-    """
-    Map OpenRouter model IDs to Hugging Face model names.
-    Returns None if mapping not available.
-
-    Args:
-        model_id: OpenRouter model identifier (e.g., "meta-llama/llama-3.3-70b-instruct")
-
-    Returns:
-        Hugging Face model name or None
-    """
+    """Map OpenRouter model IDs to Hugging Face model names; returns None if mapping unavailable."""
     # Handle :free suffix by removing it
     base_id = model_id.split(":")[0]
 
@@ -1311,13 +1248,7 @@ def _get_huggingface_model_name(model_id: str) -> str | None:
 
 
 def _get_anthropic_tokenizer():
-    """
-    Get or create Anthropic tokenizer (cached).
-    Anthropic tokenizer doesn't require API key for counting tokens.
-
-    Returns:
-        Anthropic client instance or None if import fails
-    """
+    """Get or create cached Anthropic tokenizer (no API key needed for counting)."""
     cache_key = "anthropic"
     with _cache_lock:
         if cache_key not in _tokenizer_cache:
@@ -1338,16 +1269,7 @@ def _get_anthropic_tokenizer():
 
 
 def _get_huggingface_tokenizer(model_id: str) -> Any | None:
-    """
-    Get or create Hugging Face tokenizer (cached).
-    Only loads tokenizer, not the full model (much faster and lighter).
-
-    Args:
-        model_id: OpenRouter model identifier
-
-    Returns:
-        Tokenizer instance or None if unavailable
-    """
+    """Get or create cached Hugging Face tokenizer (loads tokenizer only, not full model)."""
     hf_model_name = _get_huggingface_model_name(model_id)
     if not hf_model_name:
         return None
@@ -1377,26 +1299,10 @@ def _get_huggingface_tokenizer(model_id: str) -> Any | None:
 def detect_repetition(
     content: str, window_size: int = 500, ngram_size: int = 5, repetition_threshold: int = 6
 ) -> bool:
-    """
-    Detect if content contains repetitive patterns that indicate a looping response.
-
-    Uses n-gram analysis on a sliding window to detect when the model is repeating
-    the same sequences of words/tokens. This detection is intentionally conservative
-    to avoid false positives on legitimate structured content.
-
-    Args:
-        content: The content to analyze
-        window_size: Size of sliding window in characters (default: 500)
-        ngram_size: Size of n-grams to check (default: 5 words)
-        repetition_threshold: Number of times an n-gram must repeat to trigger (default: 6)
-
-    Returns:
-        True if repetition is detected, False otherwise
-    """
+    """Detect repetitive n-gram patterns that indicate a looping response."""
     if len(content) < window_size:
         return False
 
-    # Get the last window_size characters
     recent_content = content[-window_size:]
 
     # Split into words (tokens)
@@ -1472,9 +1378,8 @@ def clean_model_response(text: str) -> str:
     Lightweight cleanup for model responses.
     Heavy cleanup moved to frontend LatexRenderer for better performance.
 
-    NOTE: This function strips leading/trailing whitespace, which is fine for
-    complete responses but should NOT be used on streaming chunks (it would
-    remove spaces between words at chunk boundaries).
+    Strips leading/trailing whitespace. Do not use on streaming chunks (would remove
+    spaces between words at chunk boundaries).
     """
     if not text:
         return text
@@ -1527,7 +1432,6 @@ def get_model_max_tokens(model_id: str) -> int:
             model_limits[model_id], max_output
         )  # Use the smaller of override or OpenRouter limit
 
-    # Return OpenRouter limit or default to 8192
     return max_output
 
 
@@ -1770,7 +1674,6 @@ def call_openrouter_streaming(
             yield chunk
         return None
 
-    # Build messages array - use standard format like official AI providers
     messages = []
 
     # Debug logging for location/timezone
@@ -1845,12 +1748,10 @@ def call_openrouter_streaming(
                     }
                 )
 
-    # Add conversation history if provided
     if conversation_history:
         for msg in conversation_history:
             messages.append({"role": msg.role, "content": msg.content})
 
-    # Add the current prompt as user message
     messages.append({"role": "user", "content": prompt})
 
     # Prepare tools if web search is enabled
@@ -2164,11 +2065,9 @@ def call_openrouter_streaming(
                 if hasattr(response, "reasoning_details") and response.reasoning_details:
                     reasoning_details = response.reasoning_details
 
-            # Handle tool calls after streaming completes
-            # Support recursive tool calls (model may make multiple tool calls in sequence)
-            # NOTE: Some models (like Gemini 2.0 Flash) may make more aggressive tool calls,
-            # which can exhaust search API rate limits when multiple models run in parallel.
-            # The rate limiter below coordinates search requests across all concurrent models.
+            # Handle tool calls after streaming completes.
+            # Some models (e.g. Gemini 2.0 Flash) make aggressive tool calls that can exhaust
+            # search API rate limits when models run in parallel; the rate limiter coordinates requests.
             max_tool_call_iterations = (
                 4  # Prevent infinite loops - allows more iterations for complex queries
             )
@@ -2206,11 +2105,8 @@ def call_openrouter_streaming(
                 # This is especially important for slower models that take longer to process tool calls
                 yield " "
 
-                # Execute all tool calls
-                # First, deduplicate tool_calls_accumulated by ID (simplest approach)
-                # This ensures we only process each unique tool call ID once, regardless of index
-                # NOTE: We don't check all_tool_call_ids_ever_seen here because IDs are added to it during accumulation
-                # We only check if we've already added this ID to deduplicated_tool_calls in this pass
+                # Deduplicate tool_calls_accumulated by ID; we only process each unique ID once.
+                # all_tool_call_ids_ever_seen is not checked here because IDs are added during accumulation.
                 deduplicated_tool_calls = {}
                 seen_ids_in_dedup = (
                     set()
@@ -2575,8 +2471,6 @@ def call_openrouter_streaming(
                                         search_exec_error = search_exception
                                     error_msg = str(search_exec_error)
 
-                                    # CRITICAL: Release rate limiter slot even on error/timeout
-                                    # This ensures the counter doesn't get stuck if search fails
                                     try:
                                         provider_name = (
                                             search_provider.get_provider_name()
@@ -3055,10 +2949,6 @@ def call_openrouter_streaming(
                         # Skip tool call handling if no valid tool calls
                         break
 
-                    # Create assistant message with tool calls
-                    # IMPORTANT: Preserve text content if model generated text before tool calls
-                    # This ensures the model remembers what it said when continuing
-                    # For OpenAI API, when tool_calls are present, content can be included if text was generated
                     assistant_message = {
                         "role": "assistant",
                         "content": full_content
@@ -3067,10 +2957,7 @@ def call_openrouter_streaming(
                         "tool_calls": final_valid_tool_call_messages,
                     }
 
-                    # IMPORTANT: Only Gemini models require reasoning_details to be echoed back.
-                    # For OpenAI models, reasoning_details may contain items with "rs_..." IDs; re-sending the same
-                    # reasoning_details across multiple tool-call iterations can trigger:
-                    #   "Duplicate item found with id rs_..."
+                    # Only Gemini models require reasoning_details to be echoed back
                     if reasoning_details is not None and str(model_id).startswith("google/gemini"):
                         assistant_message["reasoning_details"] = reasoning_details
 
@@ -3428,9 +3315,7 @@ def call_openrouter_streaming(
                         "presence_penalty": 0.5,  # Reduce topic/concept repetition (0.0-2.0, higher = less repetition)
                     }
 
-                    # IMPORTANT: Only include tools parameter if this is the first iteration
-                    # In continuation requests, the tools are already defined in the conversation context
-                    # Including tools again might cause the API provider to generate duplicate resource IDs (rs_)
+                    # Only include tools parameter on first iteration; in continuations tools are already in context.
                     if tools and tool_call_iteration == 1:
                         api_params_continue["tools"] = tools
                         logger.debug(
@@ -3500,10 +3385,8 @@ def call_openrouter_streaming(
                             )
                         raise
 
-                    # Reset for continuation response (but keep all_tool_call_ids_ever_seen - never reset it)
                     tool_calls_accumulated = {}
-                    tool_call_ids_seen = set()  # Reset ID tracking for continuation batch
-                    # NOTE: all_tool_call_ids_ever_seen is NOT reset - it tracks IDs across all iterations
+                    tool_call_ids_seen = set()
                     finish_reason = None
                     reasoning_details_continue = None  # Track reasoning details in continuation
 

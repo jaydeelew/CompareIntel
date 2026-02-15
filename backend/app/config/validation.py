@@ -20,11 +20,6 @@ from .settings import settings
 logger = logging.getLogger(__name__)
 
 
-# ============================================================================
-# Configuration Validation
-# ============================================================================
-
-
 def validate_config() -> None:
     """
     Validate configuration on startup.
@@ -48,9 +43,6 @@ def validate_config() -> None:
     errors: list[str] = []
     warnings: list[str] = []
 
-    # ========================================================================
-    # Required Environment Variables
-    # ========================================================================
     if not settings.secret_key:
         errors.append(
             "SECRET_KEY environment variable is not set. "
@@ -68,9 +60,6 @@ def validate_config() -> None:
             "Get your key from: https://openrouter.ai/keys"
         )
 
-    # ========================================================================
-    # Database Configuration
-    # ========================================================================
     if not settings.database_url:
         errors.append("DATABASE_URL environment variable is not set")
     elif not settings.database_url.startswith(
@@ -81,9 +70,6 @@ def validate_config() -> None:
             f"Expected: sqlite:/// or postgresql://. Got: {settings.database_url[:20]}..."
         )
 
-    # ========================================================================
-    # Email Configuration Consistency
-    # ========================================================================
     email_fields = [
         settings.mail_username,
         settings.mail_password,
@@ -118,9 +104,6 @@ def validate_config() -> None:
                 "must be set for email functionality to work."
             )
 
-    # ========================================================================
-    # Tier Limits Consistency
-    # ========================================================================
     if ANONYMOUS_MODEL_LIMIT not in MODEL_LIMITS.values():
         errors.append(
             f"ANONYMOUS_MODEL_LIMIT ({ANONYMOUS_MODEL_LIMIT}) must match a value in MODEL_LIMITS"
@@ -142,9 +125,6 @@ def validate_config() -> None:
     if "unregistered" not in CONVERSATION_LIMITS:
         warnings.append("CONVERSATION_LIMITS missing 'unregistered' tier")
 
-    # ========================================================================
-    # Performance Settings
-    # ========================================================================
     if settings.individual_model_timeout < 1:
         errors.append("individual_model_timeout must be at least 1 second")
     elif settings.individual_model_timeout > 600:
@@ -162,9 +142,6 @@ def validate_config() -> None:
             "to ensure backend completes before frontend timeout. Recommended: 55s for 5-second buffer."
         )
 
-    # ========================================================================
-    # Environment Configuration
-    # ========================================================================
     valid_environments = ["development", "production", "staging", "test"]
     if settings.environment not in valid_environments:
         warnings.append(
@@ -172,9 +149,6 @@ def validate_config() -> None:
             f"Expected one of: {', '.join(valid_environments)}"
         )
 
-    # ========================================================================
-    # Frontend URL Validation
-    # ========================================================================
     if not settings.frontend_url:
         warnings.append("FRONTEND_URL is not set, using default")
     elif not settings.frontend_url.startswith(("http://", "https://")):
@@ -182,9 +156,6 @@ def validate_config() -> None:
             f"FRONTEND_URL should start with http:// or https://. Got: {settings.frontend_url}"
         )
 
-    # ========================================================================
-    # Report Results
-    # ========================================================================
     if warnings:
         for warning in warnings:
             logger.warning(f"Configuration warning: {warning}")

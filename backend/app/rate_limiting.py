@@ -60,11 +60,6 @@ anonymous_rate_limit_storage: dict[str, AnonymousRateLimitData] = defaultdict(
 )
 
 
-# ============================================================================
-# TIMEZONE UTILITY FUNCTIONS
-# ============================================================================
-
-
 def _validate_timezone(timezone_str: str) -> str:
     """
     Validate and return a timezone string, defaulting to UTC if invalid.
@@ -138,12 +133,6 @@ def _can_reset_credits(last_reset_at: datetime | None, min_hours_between_resets:
     return hours_since_reset >= min_hours_between_resets
 
 
-# ============================================================================
-# CREDITS-BASED RATE LIMITING FUNCTIONS
-# ============================================================================
-# Credit-based functions for rate limiting
-
-
 def check_user_credits(user: User, required_credits: Decimal, db: Session) -> tuple[bool, int, int]:
     """
     Check if authenticated user has sufficient credits for a request.
@@ -158,8 +147,6 @@ def check_user_credits(user: User, required_credits: Decimal, db: Session) -> tu
     Returns:
         tuple: (is_allowed, credits_remaining, credits_allocated)
     """
-    # IMPORTANT: Check and reset credits FIRST if reset time has passed,
-    # then ensure credits are allocated (in case they weren't allocated yet)
     check_and_reset_credits_if_needed(user.id, db)
     ensure_credits_allocated(user.id, db)
 

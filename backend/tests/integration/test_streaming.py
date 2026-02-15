@@ -335,11 +335,6 @@ class TestStreamErrorHandling:
         assert response.status_code != status.HTTP_500_INTERNAL_SERVER_ERROR
 
 
-# ============================================================================
-# Helper Functions
-# ============================================================================
-
-
 def _parse_sse_events(response_text: str) -> list[dict]:
     """
     Parse SSE response text into a list of JSON event dicts.

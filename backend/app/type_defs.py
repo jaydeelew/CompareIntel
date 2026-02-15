@@ -8,19 +8,10 @@ custom type aliases for database models and common data structures.
 from datetime import datetime
 from typing import Any, Literal, TypedDict
 
-# ============================================================================
-# Subscription Tier Types
-# ============================================================================
-
 SubscriptionTier = Literal["free", "starter", "starter_plus", "pro", "pro_plus", "unregistered"]
 SubscriptionStatus = Literal["active", "cancelled", "expired"]
 SubscriptionPeriod = Literal["monthly", "yearly"]
 UserRole = Literal["user", "moderator", "admin", "super_admin"]
-
-
-# ============================================================================
-# TypedDict for Configuration Structures
-# ============================================================================
 
 
 class TierConfigDict(TypedDict):
@@ -42,11 +33,6 @@ class ModelInfoDict(TypedDict, total=False):
     category: str
     provider: str
     available: bool  # Optional field
-
-
-# ============================================================================
-# TypedDict for Rate Limiting Structures
-# ============================================================================
 
 
 class AnonymousRateLimitData(TypedDict, total=False):
@@ -92,11 +78,6 @@ class FullUsageStatsDict(TypedDict):
     usage_reset_date: str
 
 
-# ============================================================================
-# TypedDict for Model Runner Structures
-# ============================================================================
-
-
 class ConversationMessageDict(TypedDict):
     """Dictionary representation of a conversation message."""
 
@@ -132,11 +113,6 @@ class ConnectionQualityDict(TypedDict, total=False):
     error: str | None
 
 
-# ============================================================================
-# TypedDict for Admin Structures
-# ============================================================================
-
-
 class AdminActionDetailsDict(TypedDict, total=False):
     """Details for an admin action log entry."""
 
@@ -159,11 +135,6 @@ class AdminStatsDict(TypedDict):
     admin_actions_today: int
 
 
-# ============================================================================
-# TypedDict for Email Structures
-# ============================================================================
-
-
 class EmailConfigDict(TypedDict, total=False):
     """Email configuration dictionary."""
 
@@ -172,11 +143,6 @@ class EmailConfigDict(TypedDict, total=False):
     from_email: str
     server: str
     port: int
-
-
-# ============================================================================
-# TypedDict for Model Stats
-# ============================================================================
 
 
 class ModelStatsDict(TypedDict, total=False):
@@ -188,11 +154,7 @@ class ModelStatsDict(TypedDict, total=False):
     last_success: datetime | None
 
 
-# ============================================================================
-# Type Aliases for Database Models
-# ============================================================================
-
-# These are type aliases that represent SQLAlchemy model instances
+# Type aliases for SQLAlchemy model instances
 # They're used for type hints but don't create actual new types
 # Import the actual models when needed:
 #   from .models import User, Conversation, UsageLog, etc.

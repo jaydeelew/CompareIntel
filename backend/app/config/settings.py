@@ -90,7 +90,7 @@ class Settings(BaseSettings):
     # Can be overridden via environment variables for provider-specific tuning
 
     # Default rate limits (applied to all providers unless provider-specific limits are set)
-    # NOTE: With Redis disabled, each Gunicorn worker has its own rate limiter instance.
+    # With Redis disabled, each Gunicorn worker has its own rate limiter instance.
     # With 4 workers, total capacity = 4 * search_rate_limit_per_minute
     # Set conservatively to account for multiple workers (default: 3 req/min per worker = 12 total with 4 workers)
     # With Redis enabled, these limits apply globally across all workers

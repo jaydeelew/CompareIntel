@@ -1043,9 +1043,6 @@ async def compare_stream(
     credits_allocated = 0
 
     if current_user:
-        # Ensure credits are allocated for authenticated user
-        # IMPORTANT: Check and reset credits FIRST if reset time has passed,
-        # then ensure credits are allocated (in case they weren't allocated yet)
         check_and_reset_credits_if_needed(current_user.id, db)
         ensure_credits_allocated(current_user.id, db)
         db.refresh(current_user)
@@ -1142,8 +1139,6 @@ async def compare_stream(
     # Track start time for processing metrics
     start_time = datetime.now()
 
-    # Store user ID for use inside generator (avoid session detachment issues)
-    # IMPORTANT: Also store whether user exists to prevent anonymous mock mode for authenticated users
     user_id = current_user.id if current_user else None
     has_authenticated_user = current_user is not None
 
@@ -1183,8 +1178,6 @@ async def compare_stream(
         total_effective_tokens = 0
         usage_data_dict = {}  # Store usage data per model
 
-        # Check if mock mode is enabled for this user
-        # IMPORTANT: Authenticated users should NEVER use anonymous mock mode
         # Query user fresh from database to avoid stale mock_mode_enabled value
         # The current_user object captured in closure may have stale data
         is_development = os.environ.get("ENVIRONMENT") == "development"
@@ -1875,12 +1868,8 @@ async def compare_stream(
                 ),  # Convert to int for JSON serialization
             }
 
-            # Log usage to database SYNCHRONOUSLY (not in background) to ensure database is updated
-            # before frontend queries for updated credits. This prevents race condition where
-            # frontend queries /credits/balance before UsageLog is committed.
-            #
-            # IMPORTANT: UsageLog stores the CHARGED credits (minimum 1 per comparison)
-            # Token data (input_tokens, output_tokens, effective_tokens) preserves actual usage for analytics
+            # Log usage synchronously so frontend sees updated credits before next query.
+            # UsageLog stores charged credits (minimum 1 per comparison); token fields preserve actual usage.
             usage_log = UsageLog(
                 user_id=user_id,
                 ip_address=client_ip,
@@ -2420,11 +2409,6 @@ async def get_conversation(
     )
 
 
-# ============================================================================
-# Credit Management Endpoints
-# ============================================================================
-
-
 @router.get("/credits/balance")
 async def get_credit_balance(
     db: Session = Depends(get_db),
@@ -2443,9 +2427,6 @@ async def get_credit_balance(
         fingerprint: Optional browser fingerprint for unregistered users (to check both IP and fingerprint)
     """
     if current_user:
-        # Authenticated user
-        # IMPORTANT: Check and reset credits FIRST if reset time has passed,
-        # then ensure credits are allocated (in case they weren't allocated yet)
         check_and_reset_credits_if_needed(current_user.id, db)
         ensure_credits_allocated(current_user.id, db)
         db.refresh(current_user)

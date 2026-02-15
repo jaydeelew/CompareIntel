@@ -12,9 +12,6 @@ All constants should be imported from this module to maintain a single source of
 
 from ..type_defs import TierConfigDict
 
-# ============================================================================
-# Subscription Tier Configuration
-# ============================================================================
 # MODEL-BASED PRICING: daily_limit = model responses per day (not comparisons)
 # model_limit = max models per comparison (tiered: 3/6/6/9/12)
 # overage_allowed = whether tier can purchase additional interactions beyond daily limit
@@ -77,20 +74,13 @@ MODEL_LIMITS: dict[str, int] = {
 # Extended: 15000 chars input, 8192 tokens output
 
 
-# ============================================================================
-# Unregistered User Limits
-# ============================================================================
 # Limits for unregistered users
-
 ANONYMOUS_DAILY_LIMIT: int = (
     10  # Model responses per day for unregistered users (legacy, use credits instead)
 )
 ANONYMOUS_MODEL_LIMIT: int = 3  # Maximum models per comparison for unregistered users
 
 
-# ============================================================================
-# Conversation History Limits
-# ============================================================================
 # Maximum number of conversations stored per subscription tier
 # Each conversation (with or without follow-ups) counts as 1 conversation
 
@@ -104,9 +94,6 @@ CONVERSATION_LIMITS: dict[str, int] = {
 }
 
 
-# ============================================================================
-# Credit-Based System Configuration
-# ============================================================================
 # Credit allocations for each tier
 # 1 credit = 1,000 effective tokens
 # Effective tokens = input_tokens + (output_tokens × 2.5)

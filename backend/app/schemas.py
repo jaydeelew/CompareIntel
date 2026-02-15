@@ -9,11 +9,6 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 
-# ============================================================================
-# User Schemas
-# ============================================================================
-
-
 class UserRegister(BaseModel):
     """Schema for user registration request."""
 
@@ -115,11 +110,6 @@ class RefreshTokenRequest(BaseModel):
     refresh_token: str
 
 
-# ============================================================================
-# Email Verification Schemas
-# ============================================================================
-
-
 class EmailVerification(BaseModel):
     """Schema for email verification request."""
 
@@ -130,11 +120,6 @@ class ResendVerificationRequest(BaseModel):
     """Schema for resending verification email."""
 
     email: EmailStr
-
-
-# ============================================================================
-# Password Reset Schemas
-# ============================================================================
 
 
 class PasswordResetRequest(BaseModel):
@@ -168,11 +153,6 @@ class PasswordReset(BaseModel):
         return v
 
 
-# ============================================================================
-# Subscription Schemas
-# ============================================================================
-
-
 class SubscriptionUpdate(BaseModel):
     """Schema for updating subscription."""
 
@@ -193,11 +173,6 @@ class SubscriptionInfo(BaseModel):
     daily_limit: int
     daily_usage: int
     remaining_usage: int
-
-
-# ============================================================================
-# Usage Schemas
-# ============================================================================
 
 
 class UsageStats(BaseModel):
@@ -231,11 +206,6 @@ class UsageHistory(BaseModel):
         return v
 
     model_config = ConfigDict(from_attributes=True)
-
-
-# ============================================================================
-# User Preferences Schemas
-# ============================================================================
 
 
 class UserPreferencesUpdate(BaseModel):
@@ -288,11 +258,6 @@ class UserPreferencesResponse(BaseModel):
     remember_state_on_logout: bool = False
 
     model_config = ConfigDict(from_attributes=True)
-
-
-# ============================================================================
-# Conversation Schemas
-# ============================================================================
 
 
 class ConversationListItem(BaseModel):
@@ -409,11 +374,6 @@ class BreakoutConversationCreate(BaseModel):
     model_config = ConfigDict(
         json_schema_extra={"example": {"parent_conversation_id": 123, "model_id": "openai/gpt-4o"}}
     )
-
-
-# ============================================================================
-# Admin Management Schemas
-# ============================================================================
 
 
 class AdminUserResponse(BaseModel):

@@ -1478,9 +1478,7 @@ def calculate_average_cost_per_million_tokens(model_data: dict[str, Any]) -> flo
     if not pricing:
         return None
 
-    # Get input and output pricing from OpenRouter API
-    # IMPORTANT: OpenRouter returns price PER TOKEN, not per million tokens!
-    # We need to multiply by 1,000,000 to get per-million-token pricing
+    # OpenRouter returns price per token; multiply by 1,000,000 for per-million-token pricing
     # Convert to float in case they come as strings from the API
     try:
         input_price_per_token = float(pricing.get("prompt", 0) or 0)
@@ -3448,11 +3446,6 @@ async def update_model_knowledge_cutoff(
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error updating knowledge cutoff: {str(e)}")
-
-
-# ============================================================================
-# Search Provider Management Endpoints
-# ============================================================================
 
 
 @router.get("/search-providers")
