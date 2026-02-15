@@ -255,13 +255,18 @@ export function useComparisonStreaming(
         return true
       }
 
-      // Check if model has error content in conversation
+      // Check if model has error or empty/blank content in conversation
       const conversation = conversations.find(
         conv => conv.modelId === modelId || conv.modelId === formattedModelId
       )
       if (conversation) {
-        const lastMessage = conversation.messages[conversation.messages.length - 1]
-        if (lastMessage?.type === 'assistant' && isErrorMessage(lastMessage.content)) {
+        const assistantMessages = conversation.messages.filter(msg => msg.type === 'assistant')
+        if (assistantMessages.length === 0) return true
+        const lastMessage = assistantMessages[assistantMessages.length - 1]
+        if (
+          lastMessage &&
+          (isErrorMessage(lastMessage.content) || !(lastMessage.content || '').trim())
+        ) {
           return true
         }
       }
@@ -586,7 +591,8 @@ export function useComparisonStreaming(
       if (!isFollowUpMode) {
         setConversations(prevConversations => {
           const updated = prevConversations.map(conv => {
-            const content = streamingResults[conv.modelId] || ''
+            let content = streamingResults[conv.modelId] || ''
+            if (!content.trim()) content = 'Error: No response received'
             const startT = modelStartTimes[conv.modelId]
             const completionTime = modelCompletionTimes[conv.modelId]
             return {
@@ -612,9 +618,15 @@ export function useComparisonStreaming(
       } else {
         setConversations(prevConversations => {
           const updated = prevConversations.map(conv => {
-            const content = streamingResults[conv.modelId] || ''
+            const content = streamingResults[conv.modelId]
+            const contentStr = content ?? ''
+            // Don't add follow-up to failed models: not in response, error, or empty
+            const isFailed =
+              content === undefined || isErrorMessage(contentStr) || !contentStr.trim()
+            if (isFailed) return conv
+
             const completionTime = modelCompletionTimes[conv.modelId]
-            const outputTokens = estimateTokensSimple(content)
+            const outputTokens = estimateTokensSimple(contentStr)
             const hasNewUserMessage = conv.messages.some(
               (msg, idx) =>
                 msg.type === 'user' && msg.content === input && idx >= conv.messages.length - 2
@@ -623,7 +635,7 @@ export function useComparisonStreaming(
               const startT = modelStartTimes[conv.modelId]
               const assistantMessage = createStreamingMessage(
                 'assistant',
-                content,
+                contentStr,
                 completionTime || new Date().toISOString()
               )
               assistantMessage.output_tokens = outputTokens
@@ -642,7 +654,7 @@ export function useComparisonStreaming(
                 if (idx === conv.messages.length - 1 && msg.type === 'assistant') {
                   return {
                     ...msg,
-                    content: content || msg.content,
+                    content: contentStr || msg.content,
                     timestamp: completionTime || msg.timestamp,
                     output_tokens: outputTokens,
                   }

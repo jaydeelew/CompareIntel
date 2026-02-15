@@ -1677,11 +1677,12 @@ export function MainPage() {
     )
     if (conversation) {
       const assistantMessages = conversation.messages.filter(msg => msg.type === 'assistant')
-      if (assistantMessages.length === 0) {
-        return true
-      }
+      if (assistantMessages.length === 0) return true
       const latestMessage = assistantMessages[assistantMessages.length - 1]
-      if (latestMessage && isErrorMessage(latestMessage.content)) {
+      if (
+        latestMessage &&
+        (isErrorMessage(latestMessage.content) || !(latestMessage.content || '').trim())
+      ) {
         return true
       }
     }

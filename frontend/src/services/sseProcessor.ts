@@ -18,6 +18,8 @@ const TIMEOUT_DURATION = 60000
 const ACTIVE_STREAMING_WINDOW = 5000
 const UPDATE_THROTTLE_MS = 50
 
+const EMPTY_RESPONSE_ERROR = 'Error: No response received'
+
 export function estimateTokensSimple(text: string): number {
   if (!text || !text.trim()) return 0
   return Math.max(1, Math.ceil(text.length / 4))
@@ -240,7 +242,8 @@ export async function processComparisonStream(
       if (!isFollowUpMode) {
         setConversations(prev =>
           prev.map(conv => {
-            const content = streamingResults[conv.modelId] || ''
+            let content = streamingResults[conv.modelId] || ''
+            if (!content.trim()) content = EMPTY_RESPONSE_ERROR
             const startT = modelStartTimes[conv.modelId]
             const completionTime = modelCompletionTimes[conv.modelId]
             return {
@@ -261,8 +264,9 @@ export async function processComparisonStream(
         setConversations(prev =>
           prev.map(conv => {
             const content = streamingResults[conv.modelId]
-            // Don't add follow-up to failed models: no content (excluded from request) or error response
-            if (content === undefined || isErrorMessage(content)) return conv
+            // Don't add follow-up to failed models: no content, error response, or empty/blank response
+            if (content === undefined || isErrorMessage(content) || !(content || '').trim())
+              return conv
             const hasNewUserMessage = conv.messages.some(
               (msg, idx) =>
                 msg.type === 'user' && msg.content === input && idx >= conv.messages.length - 2
