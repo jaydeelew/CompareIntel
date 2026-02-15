@@ -420,10 +420,10 @@ The AI must update this table after completing each session (see Instructions fo
 | Session | Status | Notes |
 |---------|--------|-------|
 | 1 | Done | Removed WARNING/CREDITS-BASED markers from rate_limiting.py, database.py. Removed restating comments from api.py, model_runner.py, email_service.py, config/settings.py, admin.py. Shortened docstrings in model_runner.py, rate_limiting.py. No # ==== dividers found (already absent). |
-| 2 | Pending | |
-| 3 | Pending | |
+| 2 | Done | Verified: no // ==== in frontend/src, no marker comments in listed files, "2025 best practices" comment removed from MainPage.tsx. |
+| 3 | Done | Verified: no # ==== in .github/workflows, shell scripts use 1-2 line headers (deploy-production.sh, setup-compareintel-ssl.sh, GoogleBingSearchRank.sh). |
 | 4 | Done | Registry in `backend/data/models_registry.json`. `model_runner.py` loads via JSON. Admin model add/delete still edits Python source; Session 8 will switch to JSON. |
-| 5 | Pending | |
+| 5 | Done | faqData moved to frontend/src/data/faq.tsx. glossaryTerms, categoryLabels, categoryDescriptions moved to frontend/src/data/glossary.ts. FAQ.tsx ~148 lines, Glossary.tsx ~324 lines. |
 | 6 | Pending | |
 | 7 | Pending | |
 | 8 | Pending | |
