@@ -5,8 +5,10 @@ Onboarding flow: WelcomeModal → TutorialOverlay (per-step spotlight + tooltip)
 **Files:**
 
 - `TutorialController` – step logic, completion detection, mounts overlay
-- `TutorialOverlay` – element finding, positioning, backdrop/tooltip render
-- `tutorialSteps.ts` – step config (selector, copy)
+- `TutorialOverlay` – render layer for backdrop/tooltip (uses useTutorialOverlay)
+- `useTutorialOverlay` – element finding, positioning, cutouts, scroll logic
+- `frontend/src/data/tutorialSteps.ts` – step config (selector, copy)
+- `frontend/src/utils/tutorialPositioning.ts` – cutout calculations, tooltip positioning
 - `tutorialUtils.ts` – `getComposerElement`, `getComposerCutoutRects`
 
 **DOM dependencies** (layout changes can break the tutorial):

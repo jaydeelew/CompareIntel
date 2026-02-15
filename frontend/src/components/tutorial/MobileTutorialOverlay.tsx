@@ -1,9 +1,9 @@
 import React, { useEffect, useLayoutEffect, useRef, useState, useCallback } from 'react'
 import { createPortal } from 'react-dom'
 
+import { TUTORIAL_STEPS_CONFIG } from '../../data/tutorialSteps'
 import type { TutorialStep } from '../../hooks/useTutorial'
 
-import { TUTORIAL_STEPS_CONFIG } from './tutorialSteps'
 import './MobileTutorialOverlay.css'
 
 interface MobileTutorialOverlayProps {

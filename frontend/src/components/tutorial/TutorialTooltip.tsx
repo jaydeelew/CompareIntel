@@ -1,8 +1,7 @@
 import React from 'react'
 
+import type { StepConfig } from '../../data/tutorialSteps'
 import type { TutorialStep } from '../../hooks/useTutorial'
-
-import type { StepConfig } from './tutorialSteps'
 
 const STEPS_WITH_DYNAMIC_POSITION: TutorialStep[] = [
   'expand-provider',

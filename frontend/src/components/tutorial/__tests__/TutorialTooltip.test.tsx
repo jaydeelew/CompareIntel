@@ -6,7 +6,7 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, it, expect, vi } from 'vitest'
 
-import type { StepConfig } from '../tutorialSteps'
+import type { StepConfig } from '../../../data/tutorialSteps'
 import { TutorialTooltip } from '../TutorialTooltip'
 
 const mockConfig: StepConfig = {

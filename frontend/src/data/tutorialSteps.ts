@@ -1,4 +1,4 @@
-import type { TutorialStep } from '../../hooks/useTutorial'
+import type { TutorialStep } from '../hooks/useTutorial'
 
 export interface StepConfig {
   step: TutorialStep
@@ -6,7 +6,6 @@ export interface StepConfig {
   title: string
   description: string
   position: 'top' | 'bottom' | 'left' | 'right'
-  // Optional: custom completion detection
   completionCheck?: () => boolean | Promise<boolean>
 }
 
