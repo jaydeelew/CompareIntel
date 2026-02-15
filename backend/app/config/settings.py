@@ -11,9 +11,6 @@ from dotenv import load_dotenv
 from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-# Load environment variables from .env file
-# Only load from backend/.env (not project root)
-# Use override=False to ensure environment variables set by test runners (like Playwright) take precedence
 env_path = Path(__file__).parent.parent.parent / ".env"
 if env_path.exists():
     load_dotenv(env_path, override=False)
@@ -122,5 +119,4 @@ class Settings(BaseSettings):
     )
 
 
-# Create settings instance
 settings = Settings()

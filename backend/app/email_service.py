@@ -12,14 +12,11 @@ from typing import Any
 from fastapi_mail import ConnectionConfig, FastMail, MessageSchema
 from pydantic import EmailStr
 
-# Email configuration from environment variables
-# Only initialize if we have valid email settings
 MAIL_USERNAME = os.getenv("MAIL_USERNAME", "")
 MAIL_PASSWORD = os.getenv("MAIL_PASSWORD", "")
 MAIL_FROM = os.getenv("MAIL_FROM", "noreply@compareintel.com")
 MAIL_SERVER = os.getenv("MAIL_SERVER", "smtp.zeptomail.com")
 
-# Check if email is configured
 EMAIL_CONFIGURED = bool(MAIL_USERNAME and MAIL_PASSWORD and MAIL_FROM and "@" in MAIL_FROM)
 
 if EMAIL_CONFIGURED:
@@ -34,7 +31,6 @@ if EMAIL_CONFIGURED:
         USE_CREDENTIALS=True,
         VALIDATE_CERTS=True,
     )
-    # Initialize FastMail
     fm = FastMail(conf)
 else:
     conf = None

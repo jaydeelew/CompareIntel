@@ -1,14 +1,8 @@
 """
 Hybrid rate limiting for authenticated and unregistered users.
 
-This module provides rate limiting functionality that works with both
-authenticated users (subscription-based limits) and unregistered users
-(IP/fingerprint-based limits).
-
-CREDITS-BASED SYSTEM:
-- Authenticated users: Credit-based monthly allocations (paid tiers) or daily limits (free tier)
-- Unregistered users: Credit-based daily limits
-- All rate limiting uses credits instead of model responses
+Authenticated users: credit-based monthly allocations (paid tiers) or daily limits (free tier).
+Unregistered users: credit-based daily limits. All rate limiting uses credits.
 """
 
 from collections import defaultdict
@@ -49,7 +43,6 @@ from .type_defs import (
 
 # In-memory storage for anonymous rate limiting
 # Structure: { "identifier": { "count": int, "date": str, "first_seen": datetime, "timezone": str, "last_reset_at": datetime } }
-# CREDITS-BASED: Now stores credits used instead of model responses
 def _default_rate_limit_data() -> AnonymousRateLimitData:
     """Default factory for anonymous rate limit storage."""
     return {"count": 0, "date": "", "first_seen": None, "timezone": "UTC", "last_reset_at": None}
@@ -137,8 +130,6 @@ def check_user_credits(user: User, required_credits: Decimal, db: Session) -> tu
     """
     Check if authenticated user has sufficient credits for a request.
 
-    CREDITS-BASED: Replaces check_user_rate_limit() for credit-based system.
-
     Args:
         user: Authenticated user object
         required_credits: Credits needed for the request (as Decimal)
@@ -173,8 +164,6 @@ def deduct_user_credits(
     """
     Deduct credits from authenticated user's balance.
 
-    CREDITS-BASED: Replaces increment_user_usage() for credit-based system.
-
     Args:
         user: Authenticated user object
         credits: Credits to deduct (as Decimal)
@@ -191,9 +180,7 @@ def check_anonymous_credits(
     """
     Check if unregistered user has sufficient credits for a request.
 
-    CREDITS-BASED: Replaces check_anonymous_rate_limit() for credit-based system.
-    Uses in-memory storage to track daily credits for unregistered users.
-    If db session is provided, syncs with database first (persists across restarts).
+    Uses in-memory storage to track daily credits. If db is provided, syncs with database for persistence.
 
     Args:
         identifier: Unique identifier (e.g., "ip:192.168.1.1" or "fp:xxx")
@@ -541,9 +528,7 @@ def should_send_usage_warning(user: User) -> bool:
 def reset_anonymous_rate_limits() -> None:
     """
     Clear all anonymous rate limit storage.
-
-    WARNING: This is for development/testing only.
-    In production, rate limits reset automatically at midnight.
+    For development/testing only. In production, rate limits reset automatically at midnight.
     """
     anonymous_rate_limit_storage.clear()
 

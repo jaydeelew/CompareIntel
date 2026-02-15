@@ -57,12 +57,10 @@ from ..search.factory import SearchProviderFactory
 router = APIRouter(tags=["API"])
 logger = logging.getLogger(__name__)
 
-# Track model success/failure rates - shared with main.py for health checks
 model_stats: dict[str, dict[str, Any]] = defaultdict(
     lambda: {"success": 0, "failure": 0, "last_error": None, "last_success": None}
 )
 
-# Import configuration constants
 from ..config import (
     ANONYMOUS_MODEL_LIMIT,
     get_conversation_limit,
@@ -70,7 +68,6 @@ from ..config import (
 from ..config.constants import DAILY_CREDIT_LIMITS
 
 
-# Pydantic models for request/response
 class ConversationMessage(BaseModel):
     role: str  # "user" or "assistant"
     content: str
@@ -160,8 +157,6 @@ class ResetRateLimitRequest(BaseModel):
     fingerprint: str | None = None
 
 
-# Helper functions
-# get_conversation_limit_for_tier is now get_conversation_limit from config module
 
 
 def get_client_ip(request: Request) -> str:

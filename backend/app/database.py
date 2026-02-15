@@ -206,9 +206,7 @@ def init_db() -> None:
 
 def drop_db() -> None:
     """
-    Drop all database tables.
-    WARNING: This will delete all data!
-    Only use in development/testing.
+    Drop all database tables. This will delete all data; only use in development/testing.
     """
 
     Base.metadata.drop_all(bind=engine)

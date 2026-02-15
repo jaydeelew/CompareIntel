@@ -19,7 +19,6 @@ import tiktoken  # type: ignore[import-untyped]
 from bs4 import BeautifulSoup  # type: ignore[import-untyped]
 from openai import APIError, OpenAI  # type: ignore[import-untyped]
 
-# Import configuration
 from .config import settings
 from .mock_responses import stream_mock_response
 from .search.rate_limiter import get_rate_limiter
@@ -93,8 +92,6 @@ def filter_models_by_tier(
 client = OpenAI(api_key=OPENROUTER_API_KEY, base_url="https://openrouter.ai/api/v1")
 
 
-# Client with headers for tool calling (required by OpenRouter for provider routing)
-# OpenRouter requires HTTP-Referer and X-Title headers when using tools
 client_with_tool_headers = OpenAI(
     api_key=OPENROUTER_API_KEY,
     base_url="https://openrouter.ai/api/v1",
@@ -105,17 +102,8 @@ client_with_tool_headers = OpenAI(
 )
 
 
-# Helper function to detect if a query is time-sensitive and requires web search
 def is_time_sensitive_query(prompt: str) -> bool:
-    """
-    Detect if a query is time-sensitive and requires web search.
-
-    Args:
-        prompt: The user's prompt/question
-
-    Returns:
-        True if the query appears to be time-sensitive, False otherwise
-    """
+    """Return True if the query appears time-sensitive (weather, news, stocks, etc.) and may need web search."""
     prompt_lower = prompt.lower()
 
     # Time-sensitive keywords
@@ -170,7 +158,6 @@ def is_time_sensitive_query(prompt: str) -> bool:
     return has_time_keyword or has_time_pattern
 
 
-# Web search tool definition (for future tool calling integration)
 WEB_SEARCH_TOOL = {
     "type": "function",
     "function": {
@@ -189,7 +176,6 @@ WEB_SEARCH_TOOL = {
     },
 }
 
-# URL fetching tool definition - allows models to fetch actual webpage content
 FETCH_URL_TOOL = {
     "type": "function",
     "function": {
@@ -263,9 +249,6 @@ async def fetch_url_content(url: str, max_length: int = 10000) -> str:
         raise Exception(f"Error fetching URL content: {str(e)}")
 
 
-# In-memory cache for model token limits
-# These limits are relatively static and only change when models are added/updated
-# Cache is populated on application startup and when models are added via admin panel
 _model_token_limits_cache: dict[str, dict[str, int]] = {}
 
 
@@ -485,16 +468,7 @@ def get_model_max_output_tokens(model_id: str) -> int:
 
 
 def get_min_max_input_tokens(model_ids: list[str]) -> int:
-    """
-    Get the minimum maximum input tokens across all selected models.
-    This is used to validate that user input doesn't exceed any model's limit.
-
-    Args:
-        model_ids: List of model identifiers
-
-    Returns:
-        Minimum max input tokens across all models
-    """
+    """Return minimum max input tokens across selected models."""
     if not model_ids:
         return 8192  # Default
 
@@ -503,16 +477,7 @@ def get_min_max_input_tokens(model_ids: list[str]) -> int:
 
 
 def get_min_max_output_tokens(model_ids: list[str]) -> int:
-    """
-    Get the minimum maximum output tokens across all selected models.
-    This is used to cap response length to avoid truncation.
-
-    Args:
-        model_ids: List of model identifiers
-
-    Returns:
-        Minimum max output tokens across all models
-    """
+    """Return minimum max output tokens across selected models (caps response length)."""
     if not model_ids:
         return 8192  # Default
 
@@ -520,7 +485,6 @@ def get_min_max_output_tokens(model_ids: list[str]) -> int:
     return min(max_outputs) if max_outputs else 8192
 
 
-# Thread-safe cache for tokenizer instances to avoid repeated loading
 _tokenizer_cache: dict[str, Any] = {}
 _cache_lock = threading.Lock()
 

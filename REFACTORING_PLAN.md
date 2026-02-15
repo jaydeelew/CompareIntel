@@ -1,5 +1,26 @@
 # CompareIntel Comprehensive Refactoring Plan
 
+## Instructions for AI Sessions
+
+When you receive this document, treat it as a runbook. Each session can be completed in a single chat. Follow this workflow every run:
+
+1. **Read the Execution Progress table** (in the Execution Progress section). Identify the **next session to execute**:
+   - Find the first session with Status `Pending` whose dependencies (per the Session Execution Order table) are all marked `Done`. If no dependencies are listed, the session is available.
+   - If the next session has unmet dependencies, complete those dependency sessions first (they should already be Done; if not, do them in order).
+
+2. **Execute that session** according to its section in this document. Run the specified test commands (e.g. `cd backend && python -m pytest`) and fix any regressions.
+
+3. **After the session is complete and tests pass**, update this document:
+   - In the Execution Progress table, change that session's Status from `Pending` to `Done`.
+   - Add a brief Note summarizing what was accomplished (e.g. files created/changed, key outcomes).
+   - Save the change in the same commit as the session work.
+
+4. **Commit** with a message like: `refactor: <short description> (Session N)`.
+
+The goal is that feeding this document to a new AI chat yields continuous progress: each run picks up where the last left off, executes the next session, and updates the progress table so the next run knows what to do.
+
+---
+
 ## Purpose
 
 This document provides detailed, file-by-file instructions for refactoring the CompareIntel codebase. The goals are:
@@ -394,11 +415,11 @@ Standardize all catch blocks to check ApiError first. Remove console.error calls
 
 ## Execution Progress
 
-Track completed sessions here so the next AI chat can continue from the right place. Update after each session.
+The AI must update this table after completing each session (see Instructions for AI Sessions above). It determines what has been accomplished and what to do next.
 
 | Session | Status | Notes |
 |---------|--------|-------|
-| 1 | Pending | |
+| 1 | Done | Removed WARNING/CREDITS-BASED markers from rate_limiting.py, database.py. Removed restating comments from api.py, model_runner.py, email_service.py, config/settings.py, admin.py. Shortened docstrings in model_runner.py, rate_limiting.py. No # ==== dividers found (already absent). |
 | 2 | Pending | |
 | 3 | Pending | |
 | 4 | Done | Registry in `backend/data/models_registry.json`. `model_runner.py` loads via JSON. Admin model add/delete still edits Python source; Session 8 will switch to JSON. |
