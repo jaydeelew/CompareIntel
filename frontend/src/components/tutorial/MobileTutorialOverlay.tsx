@@ -343,7 +343,7 @@ export const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
     }
 
     if (DROPDOWN_STEPS.includes(step)) {
-      // Keep composer + dropdown visible/bright - union of composer, input wrapper, toolbar, and dropdown
+      // Use same rects as step 3 (inputWrapper + toolbar) for consistent cutout size; add dropdown when open
       const composer = document.querySelector('.composer') as HTMLElement | null
       const dropdownElement =
         step === 'history-dropdown'
@@ -352,9 +352,8 @@ export const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       if (composer) {
         const inputWrapper = composer.querySelector('.composer-input-wrapper') as HTMLElement | null
         const toolbar = composer.querySelector('.composer-toolbar') as HTMLElement | null
-        const elements = [composer, inputWrapper, toolbar, dropdownElement].filter(
-          Boolean
-        ) as HTMLElement[]
+        const parts = [inputWrapper, toolbar, dropdownElement].filter(Boolean) as HTMLElement[]
+        const elements = parts.length > 0 ? parts : [composer]
         const rects = elements.map(el => el.getBoundingClientRect())
         const minTop = Math.min(...rects.map(r => r.top))
         const minLeft = Math.min(...rects.map(r => r.left))
@@ -887,7 +886,7 @@ export const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       ? null
       : (dropdownRect ?? backdropRect ?? targetRect)
 
-  const cutoutPadding = step === 'history-dropdown' || step === 'save-selection' ? 12 : 8
+  const cutoutPadding = 8
   const cutoutStyle =
     cutoutTarget && showBackdrop
       ? {

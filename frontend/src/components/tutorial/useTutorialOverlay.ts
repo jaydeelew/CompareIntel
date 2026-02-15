@@ -1532,7 +1532,6 @@ export function useTutorialOverlay(step: TutorialStep | null, isLoading: boolean
     const ensureDropdownActiveAndVisibility = () => {
       const historyToggleButton = document.querySelector('.history-toggle-button') as HTMLElement
       if (historyToggleButton) {
-        setButtonCutout(computeButtonCutout(historyToggleButton))
         // Add highlight class to the button for visual emphasis
         if (!historyToggleButton.classList.contains('tutorial-highlight')) {
           historyToggleButton.classList.add('tutorial-highlight')
@@ -1542,8 +1541,7 @@ export function useTutorialOverlay(step: TutorialStep | null, isLoading: boolean
         setIsVisible(true)
       }
 
-      // Always set composer cutout from the start (not just when dropdown opens)
-      // This highlights the compose section along with the button
+      // Cutout expands to include dropdown when open (composer + dropdown union)
       const composerElement = document.querySelector('.composer') as HTMLElement
       const historyDropdown = document.querySelector('.history-inline-list') as HTMLElement
       if (composerElement) {
@@ -1596,7 +1594,6 @@ export function useTutorialOverlay(step: TutorialStep | null, isLoading: boolean
         historyButton.classList.remove('tutorial-highlight')
       }
       setDropdownCutout(null)
-      setButtonCutout(null)
     }
   }, [step])
 
@@ -1613,7 +1610,6 @@ export function useTutorialOverlay(step: TutorialStep | null, isLoading: boolean
         '.saved-selections-button'
       ) as HTMLElement
       if (savedSelectionsButton) {
-        setButtonCutout(computeButtonCutout(savedSelectionsButton))
         // Add highlight class to the button for visual emphasis
         if (!savedSelectionsButton.classList.contains('tutorial-highlight')) {
           savedSelectionsButton.classList.add('tutorial-highlight')
@@ -1623,8 +1619,7 @@ export function useTutorialOverlay(step: TutorialStep | null, isLoading: boolean
         setIsVisible(true)
       }
 
-      // Always set composer cutout from the start (not just when dropdown opens)
-      // This highlights the compose section along with the button
+      // Cutout expands to include dropdown when open (composer + dropdown union)
       const composerElement = document.querySelector('.composer') as HTMLElement
       const savedSelectionsDropdown = document.querySelector(
         '.saved-selections-dropdown'
@@ -1680,7 +1675,6 @@ export function useTutorialOverlay(step: TutorialStep | null, isLoading: boolean
         savedButton.classList.remove('tutorial-highlight')
       }
       setDropdownCutout(null)
-      setButtonCutout(null)
     }
   }, [step])
 
@@ -1711,7 +1705,8 @@ export function useTutorialOverlay(step: TutorialStep | null, isLoading: boolean
     }
   }, [step, targetElement])
 
-  // Update dropdown cutout position on scroll/resize for dropdown-related steps
+  // Update dropdown cutout position on scroll/resize for dropdown steps. Cutout expands to include
+  // the dropdown when opened (composer + dropdown union).
   useEffect(() => {
     const shouldExcludeDropdown = step === 'history-dropdown' || step === 'save-selection'
     if (!shouldExcludeDropdown) return
@@ -1730,13 +1725,15 @@ export function useTutorialOverlay(step: TutorialStep | null, isLoading: boolean
     // Update immediately
     updateDropdownCutout()
 
-    // Update on scroll/resize
+    // Update on scroll/resize and periodically so cutout expands when dropdown opens
     window.addEventListener('scroll', updateDropdownCutout, true)
     window.addEventListener('resize', updateDropdownCutout)
+    const interval = setInterval(updateDropdownCutout, 100)
 
     return () => {
       window.removeEventListener('scroll', updateDropdownCutout, true)
       window.removeEventListener('resize', updateDropdownCutout)
+      clearInterval(interval)
     }
   }, [step])
 

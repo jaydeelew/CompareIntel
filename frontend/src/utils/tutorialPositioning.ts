@@ -44,11 +44,11 @@ export function computeTextareaCutout(
 export function computeDropdownCutout(
   composerElement: HTMLElement,
   dropdownElement: HTMLElement | null,
-  padding = 12
+  padding = 8
 ): RectCutout | null {
-  const composerRect = composerElement.getBoundingClientRect()
+  // Use same rects as computeTextareaCutout (step 3) for consistent cutout size
   const cutoutRects = getComposerCutoutRects(composerElement)
-  const allRects: DOMRect[] = [composerRect, ...cutoutRects]
+  const allRects: DOMRect[] = [...cutoutRects]
   if (dropdownElement) {
     allRects.push(dropdownElement.getBoundingClientRect())
   }
