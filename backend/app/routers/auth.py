@@ -57,15 +57,7 @@ MAX_LOGIN_ATTEMPTS = 5
 LOCKOUT_DURATION_MINUTES = 15
 
 
-def get_client_ip(request: Request) -> str:
-    """Extract client IP address from request."""
-    # Check for forwarded IP (when behind proxy/load balancer)
-    forwarded = request.headers.get("X-Forwarded-For")
-    if forwarded:
-        # Take the first IP in the chain
-        return forwarded.split(",")[0].strip()
-    # Fallback to direct client IP
-    return request.client.host if request.client else "unknown"
+from app.utils.request import get_client_ip
 
 
 def check_login_rate_limit(client_ip: str) -> None:

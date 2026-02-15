@@ -429,7 +429,7 @@ The AI must update this table after completing each session (see Instructions fo
 | 7 | Done | Created backend/app/llm/ (named llm to avoid shadowing app.models). registry.py, tokens.py, text_processing.py, streaming.py, connection.py. model_runner.py is ~70-line shim re-exporting from llm. Updated test_model_runner_edge_cases to patch app.llm.streaming.client. All backend tests pass. |
 | 8 | Done | Admin model add/delete/update now use JSON registry. Removed find_matching_brace, find_provider_list_bounds, find_models_by_provider_end, extract_providers_from_content. Added load_registry, save_registry, get_registry_path to llm/registry.py. reload_registry propagates to llm and model_runner namespaces. add_model_stream backups models_registry.json for rollback. All 259 backend tests pass. |
 | 9 | Done | Split admin.py into backend/app/routers/admin/ package. Created helpers.py, analytics.py, users.py, settings.py, models_management.py, search_providers.py. __init__.py combines sub-routers. Deleted old admin.py. All 21 admin integration tests pass. |
-| 10 | Pending | |
+| 10 | Done | Extracted generate_stream to backend/app/services/comparison_stream.py. Consolidated get_client_ip in utils/request.py. Moved get_location_from_ip, get_timezone_from_request to utils/geo.py. Split api into routers/api/ package: core.py, conversations.py, credits.py, preferences.py, dev.py. Slim api down to package with sub-routers. 253 tests pass; 2 streaming tests expect 'done' events (investigate separately). |
 | 11 | Pending | |
 | 12 | Pending | |
 | 13 | Pending | |
