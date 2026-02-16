@@ -17,6 +17,10 @@ frontend/.env
 /*.db
 /compareintel.db
 
+# Backend SQLite DB (runtime data; schema via migrations)
+backend/data/compareintel.db
+backend/data/*.db
+
 # Python
 __pycache__/
 *.py[cod]
