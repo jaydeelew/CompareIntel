@@ -4,27 +4,20 @@
 .env.development
 .env.test
 .env.production
-.env.development.local
-.env.test.local
-.env.production.local
 backend/.env
 frontend/.env
 *.env
 .envrc
-
-# BUT allow example files (templates for developers)
 !.env.example
 !**/.env.example
 
-# Root-level files that should not be in version control
-# Logs are now stored in backend/logs/
+# Root-level
 /backend.log
 /*.log
-# Database files are now stored in backend/data/
 /*.db
 /compareintel.db
 
-# Python Backend
+# Python
 __pycache__/
 *.py[cod]
 *$py.class
@@ -33,304 +26,93 @@ __pycache__/
 build/
 develop-eggs/
 dist/
-downloads/
 eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-share/python-wheels/
 *.egg-info/
-.installed.cfg
 *.egg
 MANIFEST
-
-# Python Virtual Environments
 venv/
 env/
-ENV/
-env.bak/
-venv.bak/
-backend/venv/
 .venv/
-.venv.bak/
-
-# Python Package Managers
-pipenv
-Pipfile.lock
-poetry.lock
-pyenv
-.python-version
-
-# Python Testing & Coverage
+backend/venv/
 .pytest_cache/
 .coverage
 htmlcov/
-.coverage.*
 coverage.xml
 *.cover
-*.py,cover
 .hypothesis/
-.tox/
-.nox/
-nosetests.xml
-coverage/
-
-# Python Type Checking & Analysis
 .mypy_cache/
-.dmypy.json
-dmypy.json
-.pyre/
-.pytype/
-cython_debug/
 .ruff_cache/
-.pytest_cache/
-
-# Python Development Tools
 .ipynb_checkpoints
 *.ipynb
-celerybeat-schedule
-*.sage.py
-.spyderproject
-.spyproject
-.ropeproject
 
-# Node.js Frontend Dependencies
+# Node.js / Frontend
 node_modules/
 .pnp
 .pnp.js
-jspm_packages/
-bower_components
-
-# Frontend Package Managers
 .npm
 .eslintcache
 .yarn-integrity
 .yarn/
 .pnpm-store/
-.yarn/cache
-.yarn/unplugged
-.yarn/build-state.yml
-.yarn/install-state.gz
-.pnp.*
-
-# Frontend Build Outputs
 dist/
 dist-ssr/
 build/
-build/Release
-*.local
-
-# Frontend Development Tools
 .vite/
-vite.config.js.timestamp-*
 .turbo/
-.parcel-cache
-.grunt
-.lock-wscript
-
-# Frontend Framework Builds
-.next/
-out/
-.nuxt/
-.output/
-.svelte-kit/
-.astro/
-.remix/
-storybook-static/
-.out
-.storybook-out
-
-# Frontend Testing & Coverage
+.parcel-cache/
 test-results/
 playwright-report/
 playwright/.cache/
-cypress/videos/
-cypress/screenshots/
-cypress/downloads/
 .nyc_output
 *.lcov
 
-# Frontend Logs & Runtime
+# Logs & Cache
 logs/
 *.log
-*.log.*
-server.log
-dev.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-pnpm-debug.log*
-lerna-debug.log*
-pids
-*.pid
-*.seed
-*.pid.lock
-
-# Frontend Cache & Temporary
 .cache/
-.rpt2_cache/
-.rts2_cache_cjs/
-.rts2_cache_es/
-.rts2_cache_umd/
-.node_repl_history
-*.tgz
 tmp/
 temp/
+*.tgz
 
-# AI/ML Model Files (Large files)
+# AI/ML & Database
 *.pkl
 *.pickle
 *.joblib
-*.h5
-*.hdf5
 *.onnx
-*.pb
-*.tflite
 *.pt
 *.pth
-*.safetensors
 models/
 model_cache/
-models_cache/
 transformers_cache/
-api_cache/
 huggingface/
-openrouter_models.json
-
-# Database Files
-*.db
 *.sqlite
 *.sqlite3
-# SQLite WAL (Write-Ahead Logging) files
 *.db-wal
-*.sqlite-wal
-*.sqlite3-wal
-# SQLite SHM (Shared Memory) files
 *.db-shm
-*.sqlite-shm
-*.sqlite3-shm
 
-# Docker
-# Allow backend/.dockerignore to be tracked (it's needed for builds)
-!backend/.dockerignore
-!frontend/.dockerignore
+# Docker, OS, IDE
 docker-compose.override.yml
 .docker/
 docker-data/
-
-# OS Generated Files
+!backend/.dockerignore
+!frontend/.dockerignore
 .DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
 Thumbs.db
-
-# Temporary Files
-*.tmp
-*.temp
+.idea/
 *.swp
 *.swo
 *~
-
-# Backup Files
 *.bak
-*.backup
-*.old
 
-# IDE and Editor Files
-.vscode/
-.vscode/settings.json
-.vscode/launch.json
-.vscode/tasks.json
-.vscode-test
-.idea/
-*.sublime-project
-*.sublime-workspace
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
-
-# Local Configuration
-config.local.*
-settings.local.*
-.local/
-local/
-
-# Security & Certificates
+# Security
 *.pem
 *.key
 *.crt
-*.p12
-*.pfx
 ssl/
 certs/
-/etc/letsencrypt/
-/var/lib/letsencrypt/
-
-# Monitoring and Analytics
-.sentryclirc
-.datadog/
-
-# Documentation Build
-docs/_build/
-site/
-/site
 
 # TypeScript
 *.tsbuildinfo
-
-# ESLint & Prettier
-.prettierignore
-
-# Webpack & Bundlers
-.webpack/
-.rollup.cache/
-.snowpack/
-
-# Optional npm cache directory
-.npm
-
-# Optional eslint cache
-.eslintcache
-
-# Optional stylelint cache
-.stylelintcache
-
-# Microbundle cache
-.rpt2_cache/
-.rts2_cache_cjs/
-.rts2_cache_es/
-.rts2_cache_umd/
-
-# Optional REPL history
-.node_repl_history
-
-# Output of 'npm pack'
-*.tgz
-
-# Yarn Integrity file
-.yarn-integrity
-
-# dotenv environment variable files
-.env.development.local
-.env.test.local
-.env.production.local
-.env.local
-
-# Stores VSCode versions used for testing VSCode extensions
-.vscode-test
-
-# yarn v2
-.yarn/cache
-.yarn/unplugged
-.yarn/build-state.yml
-.yarn/install-state.gz
-.pnp.*

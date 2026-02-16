@@ -1,9 +1,7 @@
 from contextlib import asynccontextmanager
-from typing import Any
 
 from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel
 
 # Initialize Sentry error monitoring early, before other imports
 from .sentry import init_sentry
@@ -330,46 +328,6 @@ app.include_router(api.router, prefix="/api")
 MAX_MODELS_PER_REQUEST: int = max(MODEL_LIMITS.values()) if MODEL_LIMITS else 9
 
 # Note: model_stats is now imported from .routers.api to share the same storage
-
-
-def get_client_ip(request: Request) -> str:
-    """Extract client IP address from request, handling proxies"""
-    # Check for X-Forwarded-For header (common with proxies/load balancers)
-    forwarded_for = request.headers.get("X-Forwarded-For")
-    if forwarded_for:
-        # Take the first IP if there are multiple
-        return forwarded_for.split(",")[0].strip()
-
-    # Check for X-Real-IP header
-    real_ip = request.headers.get("X-Real-IP")
-    if real_ip:
-        return real_ip.strip()
-
-    # Fall back to direct client connection
-    if request.client:
-        return request.client.host
-
-    return "unknown"
-
-
-class ConversationMessage(BaseModel):
-    role: str  # "user" or "assistant"
-    content: str
-    model_id: str | None = (
-        None  # Optional model ID for assistant messages (used to filter per-model history)
-    )
-
-
-class CompareRequest(BaseModel):
-    input_data: str
-    models: list[str]
-    conversation_history: list[ConversationMessage] = []  # Optional conversation context
-    browser_fingerprint: str | None = None  # Optional browser fingerprint for rate limiting
-
-
-class CompareResponse(BaseModel):
-    results: dict[str, str]
-    metadata: dict[str, Any]
 
 
 @app.get("/")

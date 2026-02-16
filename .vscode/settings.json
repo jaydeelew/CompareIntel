@@ -1,0 +1,17 @@
+{
+  // GitHub Actions extension settings
+  // Suppress false positive warnings for secrets that are configured in GitHub repository settings
+  "github-actions.workflows.pinned.workflows": [],
+  
+  // Note: The "Context access might be invalid" warnings for secrets are false positives.
+  // These warnings occur because the GitHub Actions extension cannot verify secrets exist
+  // at static analysis time. Since all secrets are properly configured in GitHub
+  // Settings > Secrets and variables > Actions, these warnings can be safely ignored.
+  //
+  // Configured secrets:
+  // - TEST_OPENROUTER_API_KEY
+  // - TEST_FREE_EMAIL
+  // - TEST_FREE_PASSWORD
+  // - TEST_ADMIN_EMAIL
+  // - TEST_ADMIN_PASSWORD
+}

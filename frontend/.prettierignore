@@ -1,0 +1,24 @@
+# Dependencies
+node_modules/
+dist/
+build/
+
+# Generated files
+*.min.js
+*.min.css
+
+# Logs
+*.log
+
+# Package files
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Config files
+*.config.js
+*.config.ts
+
+# Coverage
+coverage/
+
