@@ -15,9 +15,11 @@ from decimal import ROUND_CEILING, Decimal
 from typing import TYPE_CHECKING, Any
 
 from openai import OpenAI
-from sqlalchemy.orm import Session
 
 from ..config import get_conversation_limit
+
+if TYPE_CHECKING:
+    from sqlalchemy.orm import Session
 from ..config.settings import settings
 from ..credit_manager import get_user_credits
 from ..database import SessionLocal
@@ -37,9 +39,6 @@ from ..rate_limiting import (
 )
 from ..routers.api.dev import _default_model_stat
 from ..search.factory import SearchProviderFactory
-
-if TYPE_CHECKING:
-    from ..model_runner import count_conversation_tokens
 
 logger = logging.getLogger(__name__)
 
@@ -115,9 +114,7 @@ async def generate_stream(ctx: StreamContext) -> Any:
         model_id = req.models[0] if req.models else None
         input_tokens = estimate_token_count(req.input_data, model_id=model_id)
         if req.conversation_history:
-            input_tokens += count_conversation_tokens(
-                req.conversation_history, model_id=model_id
-            )
+            input_tokens += count_conversation_tokens(req.conversation_history, model_id=model_id)
 
         effective_max_tokens = get_min_max_output_tokens(req.models)
         credits_limited = False
@@ -130,12 +127,10 @@ async def generate_stream(ctx: StreamContext) -> Any:
 
         if credits_remaining[0] > 0 and credits_per_model < 2:
             effective_tokens_per_model = credits_per_model * Decimal(1000)
-            max_output_tokens_calc = (
-                effective_tokens_per_model - Decimal(input_tokens)
-            ) / Decimal(2.5)
-            max_output_tokens_int = max(
-                MIN_USABLE_OUTPUT_TOKENS, int(max_output_tokens_calc)
+            max_output_tokens_calc = (effective_tokens_per_model - Decimal(input_tokens)) / Decimal(
+                2.5
             )
+            max_output_tokens_int = max(MIN_USABLE_OUTPUT_TOKENS, int(max_output_tokens_calc))
             if (
                 max_output_tokens_int == MIN_USABLE_OUTPUT_TOKENS
                 and max_output_tokens_calc < MIN_USABLE_OUTPUT_TOKENS
@@ -150,9 +145,7 @@ async def generate_stream(ctx: StreamContext) -> Any:
                 credits_limited = True
 
         if req.enable_web_search:
-            logger.info(
-                f"Web search requested for comparison with models: {req.models}."
-            )
+            logger.info(f"Web search requested for comparison with models: {req.models}.")
 
         logger.info(f"[MultiModel] Starting comparison for {len(req.models)} models: {req.models}")
         for mid in req.models:
@@ -183,9 +176,7 @@ async def generate_stream(ctx: StreamContext) -> Any:
                             break
 
                     if model_supports_web_search:
-                        search_provider_instance = SearchProviderFactory.get_active_provider(
-                            ctx.db
-                        )
+                        search_provider_instance = SearchProviderFactory.get_active_provider(ctx.db)
                         if search_provider_instance:
                             enable_web_search_for_model = True
 
@@ -206,13 +197,17 @@ async def generate_stream(ctx: StreamContext) -> Any:
                                     if msg.model_id is None or msg.model_id == model_id:
                                         filtered_history.append(msg)
 
-                        per_model_client = None if use_mock else OpenAI(
-                            api_key=settings.openrouter_api_key,
-                            base_url="https://openrouter.ai/api/v1",
-                            default_headers={
-                                "HTTP-Referer": "https://compareintel.com",
-                                "X-Title": "CompareIntel",
-                            },
+                        per_model_client = (
+                            None
+                            if use_mock
+                            else OpenAI(
+                                api_key=settings.openrouter_api_key,
+                                base_url="https://openrouter.ai/api/v1",
+                                default_headers={
+                                    "HTTP-Referer": "https://compareintel.com",
+                                    "X-Title": "CompareIntel",
+                                },
+                            )
                         )
                         gen = call_openrouter_streaming(
                             req.input_data,
@@ -245,9 +240,7 @@ async def generate_stream(ctx: StreamContext) -> Any:
                                 if is_keepalive:
                                     last_chunk_was_keepalive = True
                                     asyncio.run_coroutine_threadsafe(
-                                        chunk_queue.put(
-                                            {"type": "keepalive", "model": model_id}
-                                        ),
+                                        chunk_queue.put({"type": "keepalive", "model": model_id}),
                                         loop,
                                     )
                                 else:
@@ -268,7 +261,9 @@ async def generate_stream(ctx: StreamContext) -> Any:
                         except StopIteration as e:
                             usage_data = e.value
 
-                        logger.info(f"[MultiModel] {model_id}: streaming complete, {count} chunks, content_len={len(content)}")
+                        logger.info(
+                            f"[MultiModel] {model_id}: streaming complete, {count} chunks, content_len={len(content)}"
+                        )
                         return content, False, usage_data
 
                     except Exception as e:
@@ -310,9 +305,8 @@ async def generate_stream(ctx: StreamContext) -> Any:
                         )
                         if matches_pattern:
                             is_error = True
-                        elif (
-                            len(trimmed_content) < 100
-                            and not any(c in trimmed_content for c in ".!?")
+                        elif len(trimmed_content) < 100 and not any(
+                            c in trimmed_content for c in ".!?"
                         ):
                             is_error = True
 
@@ -336,9 +330,7 @@ async def generate_stream(ctx: StreamContext) -> Any:
 
             except Exception as e:
                 error_msg = f"Error: {str(e)[:100]}"
-                await chunk_queue.put(
-                    {"type": "chunk", "model": model_id, "content": error_msg}
-                )
+                await chunk_queue.put({"type": "chunk", "model": model_id, "content": error_msg})
                 return {"model": model_id, "content": error_msg, "error": True, "usage": None}
 
         try:
@@ -371,7 +363,9 @@ async def generate_stream(ctx: StreamContext) -> Any:
                                     "content": "Error: Model timed out after 1 minute of inactivity",
                                 }
                             )
-                            results_dict[mid] = "Error: Model timed out after 1 minute of inactivity"
+                            results_dict[mid] = (
+                                "Error: Model timed out after 1 minute of inactivity"
+                            )
                             done_sent.add(mid)
                             model_stats[mid]["failure"] += 1
                             failed_models += 1
@@ -494,7 +488,9 @@ async def generate_stream(ctx: StreamContext) -> Any:
 
                     results_dict[mid] = result["content"]
                     done_sent.add(mid)
-                    logger.info(f"[MultiModel] {mid}: sending done event, error={result['error']}, content_len={len(result.get('content', ''))}")
+                    logger.info(
+                        f"[MultiModel] {mid}: sending done event, error={result['error']}, content_len={len(result.get('content', ''))}"
+                    )
                     yield f"data: {json.dumps({'model': mid, 'type': 'done', 'error': result['error']})}\n\n"
 
                 if pending_tasks and not chunks_processed:
@@ -505,7 +501,9 @@ async def generate_stream(ctx: StreamContext) -> Any:
         finally:
             executor.shutdown(wait=False)
 
-        logger.info(f"[MultiModel] While loop exited. done_sent={done_sent}, pending_tasks remaining={len(pending_tasks)}")
+        logger.info(
+            f"[MultiModel] While loop exited. done_sent={done_sent}, pending_tasks remaining={len(pending_tasks)}"
+        )
         for mid in req.models:
             if mid not in done_sent:
                 is_err = (
@@ -550,9 +548,7 @@ async def generate_stream(ctx: StreamContext) -> Any:
                         credits_remaining[0] = get_user_credits(ctx.user_id, credit_db)
                 else:
                     ip_identifier = f"ip:{ctx.client_ip}"
-                    deduct_anonymous_credits(
-                        ip_identifier, total_credits_used, ctx.user_timezone
-                    )
+                    deduct_anonymous_credits(ip_identifier, total_credits_used, ctx.user_timezone)
                     _, ip_credits_remaining, _ = check_anonymous_credits(
                         ip_identifier, Decimal(0), ctx.user_timezone
                     )
@@ -718,9 +714,7 @@ async def generate_stream(ctx: StreamContext) -> Any:
                             for conv in all_user_conversations:
                                 try:
                                     conv_models = (
-                                        json.loads(conv.models_used)
-                                        if conv.models_used
-                                        else []
+                                        json.loads(conv.models_used) if conv.models_used else []
                                     )
                                     models_match = sorted(conv_models) == req_models_sorted
                                     input_matches = (
@@ -796,9 +790,7 @@ async def generate_stream(ctx: StreamContext) -> Any:
                                         req.input_data, model_id=None
                                     )
                             else:
-                                user_input_tokens = (
-                                    actual_prompt_tokens - sum_previous_tokens
-                                )
+                                user_input_tokens = actual_prompt_tokens - sum_previous_tokens
                                 if (
                                     user_input_tokens < 0
                                     or user_input_tokens < len(req.input_data) // 10
@@ -823,9 +815,7 @@ async def generate_stream(ctx: StreamContext) -> Any:
                                     req.input_data, model_id=None
                                 )
                         else:
-                            user_input_tokens = estimate_token_count(
-                                req.input_data, model_id=None
-                            )
+                            user_input_tokens = estimate_token_count(req.input_data, model_id=None)
 
                     user_msg = ConversationMessageModel(
                         conversation_id=conversation.id,
@@ -837,11 +827,7 @@ async def generate_stream(ctx: StreamContext) -> Any:
                     conv_db.add(user_msg)
 
                     for mid, content in results_dict.items():
-                        if (
-                            not content.startswith("Error:")
-                            and content
-                            and content.strip()
-                        ):
+                        if not content.startswith("Error:") and content and content.strip():
                             output_tokens = None
                             if mid in usage_data_dict:
                                 output_tokens = usage_data_dict[mid].completion_tokens
@@ -908,9 +894,7 @@ async def generate_stream(ctx: StreamContext) -> Any:
         has_partial_results = successful_models > 0 or len(results_dict) > 0
 
         if has_partial_results:
-            processing_time_ms = int(
-                (datetime.now() - ctx.start_time).total_seconds() * 1000
-            )
+            processing_time_ms = int((datetime.now() - ctx.start_time).total_seconds() * 1000)
             partial_metadata = {
                 "input_length": len(req.input_data),
                 "models_requested": len(req.models),
