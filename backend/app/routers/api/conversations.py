@@ -238,9 +238,7 @@ async def create_breakout_conversation(
 
     try:
         parent_models_used = (
-            json.loads(parent_conversation.models_used)
-            if parent_conversation.models_used
-            else []
+            json.loads(parent_conversation.models_used) if parent_conversation.models_used else []
         )
     except (json.JSONDecodeError, TypeError):
         parent_models_used = []

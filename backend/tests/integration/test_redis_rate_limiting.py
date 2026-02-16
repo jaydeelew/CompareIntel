@@ -16,10 +16,8 @@ Tests cover:
 Skip condition: Tests are skipped if Redis is not available.
 """
 
-import asyncio
 import os
 import time
-from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -152,7 +150,7 @@ class TestRedisRateLimiterAcquireRelease:
     @pytest.mark.asyncio
     async def test_acquire_enforces_per_minute_limit(self, redis_client, rate_limit_config):
         """Acquire should fail when per-minute limit (5) is exceeded."""
-        from app.search.distributed_rate_limiter import RedisRateLimiter, ProviderRateLimitConfig
+        from app.search.distributed_rate_limiter import ProviderRateLimitConfig, RedisRateLimiter
 
         # Use high concurrent limit so we only hit per-minute limit
         config = ProviderRateLimitConfig(
@@ -229,7 +227,11 @@ class TestCircuitBreaker:
 
     def test_circuit_starts_closed(self):
         """Circuit breaker should start in CLOSED state."""
-        from app.search.distributed_rate_limiter import CircuitBreaker, CircuitBreakerConfig, CircuitState
+        from app.search.distributed_rate_limiter import (
+            CircuitBreaker,
+            CircuitBreakerConfig,
+            CircuitState,
+        )
 
         config = CircuitBreakerConfig(failure_threshold=3, timeout_seconds=30.0)
         cb = CircuitBreaker(config)
@@ -238,7 +240,11 @@ class TestCircuitBreaker:
 
     def test_circuit_opens_after_failures(self):
         """Circuit should OPEN after exceeding failure threshold."""
-        from app.search.distributed_rate_limiter import CircuitBreaker, CircuitBreakerConfig, CircuitState
+        from app.search.distributed_rate_limiter import (
+            CircuitBreaker,
+            CircuitBreakerConfig,
+            CircuitState,
+        )
 
         config = CircuitBreakerConfig(failure_threshold=3, timeout_seconds=30.0)
         cb = CircuitBreaker(config)
@@ -252,9 +258,15 @@ class TestCircuitBreaker:
 
     def test_circuit_allows_half_open_after_timeout(self):
         """Circuit should move to HALF_OPEN after recovery timeout."""
-        from app.search.distributed_rate_limiter import CircuitBreaker, CircuitBreakerConfig, CircuitState
+        from app.search.distributed_rate_limiter import (
+            CircuitBreaker,
+            CircuitBreakerConfig,
+            CircuitState,
+        )
 
-        config = CircuitBreakerConfig(failure_threshold=2, timeout_seconds=0.1)  # Very short timeout
+        config = CircuitBreakerConfig(
+            failure_threshold=2, timeout_seconds=0.1
+        )  # Very short timeout
         cb = CircuitBreaker(config)
 
         # Open the circuit
@@ -270,7 +282,11 @@ class TestCircuitBreaker:
 
     def test_circuit_closes_on_success(self):
         """Circuit should close again after successful request in HALF_OPEN."""
-        from app.search.distributed_rate_limiter import CircuitBreaker, CircuitBreakerConfig, CircuitState
+        from app.search.distributed_rate_limiter import (
+            CircuitBreaker,
+            CircuitBreakerConfig,
+            CircuitState,
+        )
 
         config = CircuitBreakerConfig(failure_threshold=2, timeout_seconds=0.1)
         cb = CircuitBreaker(config)

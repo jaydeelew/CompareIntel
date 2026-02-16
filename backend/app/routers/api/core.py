@@ -1,6 +1,5 @@
 """Core API routes: models, compare-stream, estimate-tokens, rate-limit."""
 
-import json
 import logging
 import os
 from datetime import datetime
@@ -112,9 +111,7 @@ async def get_available_models(
         is_trial_active = False
 
     def get_models():
-        all_models = filter_models_by_tier(
-            OPENROUTER_MODELS, tier, is_trial_active
-        )
+        all_models = filter_models_by_tier(OPENROUTER_MODELS, tier, is_trial_active)
         for model in all_models:
             limits = get_model_token_limits_from_openrouter(model["id"])
             if limits:
@@ -126,14 +123,10 @@ async def get_available_models(
 
         models_by_provider = {}
         for provider, models in MODELS_BY_PROVIDER.items():
-            provider_models = filter_models_by_tier(
-                models, tier, is_trial_active
-            )
+            provider_models = filter_models_by_tier(models, tier, is_trial_active)
             if provider_models:
                 for model in provider_models:
-                    limits = get_model_token_limits_from_openrouter(
-                        model["id"]
-                    )
+                    limits = get_model_token_limits_from_openrouter(model["id"])
                     if limits:
                         model["max_input_tokens"] = limits["max_input"]
                         model["max_output_tokens"] = limits["max_output"]
@@ -277,9 +270,7 @@ async def compare_stream(
         raise HTTPException(status_code=400, detail="Input data cannot be empty")
 
     if not req.models:
-        raise HTTPException(
-            status_code=400, detail="At least one model must be selected"
-        )
+        raise HTTPException(status_code=400, detail="At least one model must be selected")
 
     min_max_input_tokens = get_min_max_input_tokens(req.models)
 
@@ -303,12 +294,7 @@ async def compare_stream(
                     if model_name:
                         break
                 if not model_name:
-                    model_name = (
-                        model_id.split("/")[-1]
-                        .replace("-", " ")
-                        .replace("_", " ")
-                        .title()
-                    )
+                    model_name = model_id.split("/")[-1].replace("-", " ").replace("_", " ").title()
                 problem_models.append(model_name)
 
         approx_chars = input_tokens * 4
@@ -363,16 +349,12 @@ async def compare_stream(
                                 try:
                                     user_id_int = int(user_id_from_token)
                                     user_from_token = (
-                                        db.query(User)
-                                        .filter(User.id == user_id_int)
-                                        .first()
+                                        db.query(User).filter(User.id == user_id_int).first()
                                     )
                                     if user_from_token:
                                         db.refresh(user_from_token)
                                         if user_from_token.is_active:
-                                            subscription_tier = (
-                                                user_from_token.subscription_tier
-                                            )
+                                            subscription_tier = user_from_token.subscription_tier
                                             valid_tiers = [
                                                 "free",
                                                 "starter",
@@ -412,17 +394,13 @@ async def compare_stream(
             tier_model_limit = ANONYMOUS_MODEL_LIMIT
             tier_name = "unregistered"
 
-    normalized_tier_name = (
-        "unregistered" if tier_name == "anonymous" else tier_name
-    )
+    normalized_tier_name = "unregistered" if tier_name == "anonymous" else tier_name
     is_trial_active = current_user.is_trial_active if current_user else False
 
     restricted_models = [
         model_id
         for model_id in req.models
-        if not is_model_available_for_tier(
-            model_id, normalized_tier_name, is_trial_active
-        )
+        if not is_model_available_for_tier(model_id, normalized_tier_name, is_trial_active)
     ]
     if restricted_models:
         upgrade_message = ""
@@ -446,7 +424,9 @@ async def compare_stream(
         upgrade_message = ""
         if normalized_tier_name == "unregistered":
             free_model_limit = get_model_limit("free")
-            upgrade_message = f" Sign up for a free account to compare up to {free_model_limit} models."
+            upgrade_message = (
+                f" Sign up for a free account to compare up to {free_model_limit} models."
+            )
         elif normalized_tier_name == "free":
             upgrade_message = " Paid plans with higher model limits are coming soon!"
         elif normalized_tier_name in ["starter", "starter_plus"]:
@@ -460,9 +440,7 @@ async def compare_stream(
 
     num_models = len(req.models)
     client_ip = get_client_ip(request)
-    user_timezone = get_timezone_from_request(
-        req.timezone, current_user, db
-    )
+    user_timezone = get_timezone_from_request(req.timezone, current_user, db)
 
     if current_user and req.timezone:
         if not current_user.preferences:
@@ -512,18 +490,14 @@ async def compare_stream(
                     if current_user.credits_reset_at
                     else "N/A"
                 )
-                error_msg = (
-                    f"You've run out of credits which will reset on {reset_date}."
-                )
+                error_msg = f"You've run out of credits which will reset on {reset_date}."
             else:
                 reset_date = (
                     current_user.credits_reset_at.date().isoformat()
                     if current_user.credits_reset_at
                     else "N/A"
                 )
-                error_msg = (
-                    f"You've run out of credits which will reset on {reset_date}."
-                )
+                error_msg = f"You've run out of credits which will reset on {reset_date}."
             raise HTTPException(status_code=402, detail=error_msg)
     else:
         ip_identifier = f"ip:{client_ip}"
@@ -534,15 +508,11 @@ async def compare_stream(
         if req.browser_fingerprint:
             fp_identifier = f"fp:{req.browser_fingerprint}"
             _, fingerprint_credits_remaining, fingerprint_credits_allocated = (
-                check_anonymous_credits(
-                    fp_identifier, Decimal(0), user_timezone, db
-                )
+                check_anonymous_credits(fp_identifier, Decimal(0), user_timezone, db)
             )
         credits_remaining = min(
             ip_credits_remaining,
-            fingerprint_credits_remaining
-            if req.browser_fingerprint
-            else ip_credits_remaining,
+            fingerprint_credits_remaining if req.browser_fingerprint else ip_credits_remaining,
         )
         credits_allocated = ip_credits_allocated
 

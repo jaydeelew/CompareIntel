@@ -69,7 +69,9 @@ def classify_api_error(exception: Exception) -> ClassifiedError:
                                     )
                                     if raw_msg and isinstance(raw_msg, str):
                                         parsed_message = raw_msg
-                                    provider_error = raw_msg if isinstance(raw_msg, str) else str(raw_err)
+                                    provider_error = (
+                                        raw_msg if isinstance(raw_msg, str) else str(raw_err)
+                                    )
                                 else:
                                     provider_error = str(raw_err)
                         if not parsed_message or parsed_message == str(exception):
@@ -90,8 +92,7 @@ def classify_api_error(exception: Exception) -> ClassifiedError:
     )
 
     if provider_error is None and (
-        "not configured in the Gateway" in parsed_message
-        or "No matching route" in parsed_message
+        "not configured in the Gateway" in parsed_message or "No matching route" in parsed_message
     ):
         provider_error = parsed_message
 
@@ -148,9 +149,7 @@ def format_streaming_error_message(
                     f"Please try again later or use a different model."
                 )
             clean = (
-                err.provider_error[:200]
-                if len(err.provider_error) > 200
-                else err.provider_error
+                err.provider_error[:200] if len(err.provider_error) > 200 else err.provider_error
             )
             return f"Error: Model not available - {clean}"
         if msg and msg != str(err.original_exception):

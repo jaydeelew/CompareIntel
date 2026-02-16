@@ -5,7 +5,8 @@ from fastapi import APIRouter
 from .conversations import router as conversations_router
 from .core import router as core_router
 from .credits import router as credits_router
-from .dev import model_stats, router as dev_router
+from .dev import model_stats
+from .dev import router as dev_router
 from .preferences import router as preferences_router
 
 router = APIRouter(tags=["API"])

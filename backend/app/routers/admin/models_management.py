@@ -31,7 +31,6 @@ from ...model_runner import (
     refresh_model_token_limits,
 )
 from ...models import User
-
 from .helpers import log_admin_action
 
 logger = logging.getLogger(__name__)
@@ -471,13 +470,7 @@ async def add_model_stream(
         registry_path = get_registry_path()
         backend_dir = Path(__file__).parent.parent.parent.parent
         project_root = Path(__file__).parent.parent.parent.parent.parent
-        config_path = (
-            project_root
-            / "frontend"
-            / "src"
-            / "config"
-            / "model_renderer_configs.json"
-        )
+        config_path = project_root / "frontend" / "src" / "config" / "model_renderer_configs.json"
         backup_registry_path = registry_path.with_suffix(".json.backup")
         backup_config_path = config_path.with_suffix(".json.backup")
 
@@ -802,7 +795,10 @@ async def add_model_stream(
                             reload_registry()
                             backup_registry_path.unlink()
                         except Exception as restore_error:
-                            print(f"Error restoring registry backup in finally block: {restore_error}", file=sys.stderr)
+                            print(
+                                f"Error restoring registry backup in finally block: {restore_error}",
+                                file=sys.stderr,
+                            )
 
                     if backup_config_path.exists() and config_backup:
                         with open(config_path, "w", encoding="utf-8") as f:
@@ -877,7 +873,9 @@ async def delete_model(
 
         backend_dir = Path(__file__).parent.parent.parent.parent
         project_root = backend_dir.parent
-        frontend_config_path = project_root / "frontend" / "src" / "config" / "model_renderer_configs.json"
+        frontend_config_path = (
+            project_root / "frontend" / "src" / "config" / "model_renderer_configs.json"
+        )
 
         config_removed = False
         if frontend_config_path.exists():
@@ -899,9 +897,13 @@ async def delete_model(
                     json.dump(configs, f, indent=2, ensure_ascii=False)
 
                 if config_removed:
-                    logger.info(f"Removed renderer config for {model_id} from {frontend_config_path}")
+                    logger.info(
+                        f"Removed renderer config for {model_id} from {frontend_config_path}"
+                    )
             except Exception as e:
-                logger.error(f"Failed to remove renderer config for {model_id} from {frontend_config_path}: {e}")
+                logger.error(
+                    f"Failed to remove renderer config for {model_id} from {frontend_config_path}: {e}"
+                )
                 raise HTTPException(
                     status_code=500,
                     detail=f"Model removed from registry, but failed to remove renderer config: {str(e)}",

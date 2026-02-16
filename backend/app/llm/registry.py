@@ -44,7 +44,12 @@ for provider, models in MODELS_BY_PROVIDER.items():
 
 def reload_registry() -> None:
     """Reload model data from JSON (used after admin modifies registry)."""
-    global _registry, MODELS_BY_PROVIDER, UNREGISTERED_TIER_MODELS, FREE_TIER_MODELS, OPENROUTER_MODELS
+    global \
+        _registry, \
+        MODELS_BY_PROVIDER, \
+        UNREGISTERED_TIER_MODELS, \
+        FREE_TIER_MODELS, \
+        OPENROUTER_MODELS
     _registry = _load_registry()
     MODELS_BY_PROVIDER = _registry["models_by_provider"]
     UNREGISTERED_TIER_MODELS = set(_registry["unregistered_tier_models"])

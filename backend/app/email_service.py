@@ -297,9 +297,7 @@ async def send_new_user_signup_notification(
     try:
         await fm.send_message(message)
     except Exception as e:
-        print(
-            f"Failed to send new user signup notification to {recipient_email}: {str(e)}"
-        )
+        print(f"Failed to send new user signup notification to {recipient_email}: {str(e)}")
 
 
 async def send_trial_expired_email(email: EmailStr) -> None:

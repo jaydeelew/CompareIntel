@@ -19,6 +19,7 @@ from ...utils.request import get_client_ip
 
 router = APIRouter(tags=["API - Dev"])
 
+
 def _default_model_stat() -> dict[str, Any]:
     return {"success": 0, "failure": 0, "last_error": None, "last_success": None}
 
@@ -46,9 +47,7 @@ async def get_model_stats():
     stats = {}
     for model_id, data in model_stats.items():
         total_attempts = data["success"] + data["failure"]
-        success_rate = (
-            (data["success"] / total_attempts * 100) if total_attempts > 0 else 0
-        )
+        success_rate = (data["success"] / total_attempts * 100) if total_attempts > 0 else 0
         stats[model_id] = {
             "success_count": data["success"],
             "failure_count": data["failure"],

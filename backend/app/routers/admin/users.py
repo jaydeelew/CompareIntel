@@ -10,7 +10,11 @@ from sqlalchemy.orm import Session, joinedload
 
 from ...auth import generate_verification_code, get_password_hash
 from ...config.constants import DAILY_CREDIT_LIMITS, MONTHLY_CREDIT_ALLOCATIONS
-from ...credit_manager import allocate_monthly_credits, ensure_credits_allocated, reset_daily_credits
+from ...credit_manager import (
+    allocate_monthly_credits,
+    ensure_credits_allocated,
+    reset_daily_credits,
+)
 from ...database import get_db
 from ...dependencies import get_current_admin_user, require_admin_role
 from ...email_service import send_verification_email
@@ -22,7 +26,6 @@ from ...schemas import (
     AdminUserResponse,
     AdminUserUpdate,
 )
-
 from .helpers import ensure_usage_reset, log_admin_action
 
 router = APIRouter()

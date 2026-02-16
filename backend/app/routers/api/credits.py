@@ -81,9 +81,7 @@ async def get_credit_balance(
     user_timezone = _validate_timezone(user_timezone)
     tz = pytz.timezone(user_timezone)
     now_local = datetime.now(tz)
-    today_start_utc = now_local.replace(
-        hour=0, minute=0, second=0, microsecond=0
-    ).astimezone(UTC)
+    today_start_utc = now_local.replace(hour=0, minute=0, second=0, microsecond=0).astimezone(UTC)
     today_end_utc = (
         (now_local + timedelta(days=1))
         .replace(hour=0, minute=0, second=0, microsecond=0)
@@ -121,23 +119,15 @@ async def get_credit_balance(
             if fp_credits_used > 0
             else 0
         )
-        fingerprint_credits_remaining = max(
-            0, credits_allocated - fp_credits_used_rounded
-        )
+        fingerprint_credits_remaining = max(0, credits_allocated - fp_credits_used_rounded)
 
     ip_identifier = f"ip:{client_ip}"
     today_str = _get_local_date(user_timezone)
 
-    ip_has_admin_reset = anonymous_rate_limit_storage[ip_identifier].get(
-        "_admin_reset", False
-    )
+    ip_has_admin_reset = anonymous_rate_limit_storage[ip_identifier].get("_admin_reset", False)
     if ip_has_admin_reset:
-        ip_credits_used_from_storage = anonymous_rate_limit_storage[
-            ip_identifier
-        ].get("count", 0)
-        ip_credits_remaining = max(
-            0, credits_allocated - ip_credits_used_from_storage
-        )
+        ip_credits_used_from_storage = anonymous_rate_limit_storage[ip_identifier].get("count", 0)
+        ip_credits_remaining = max(0, credits_allocated - ip_credits_used_from_storage)
     else:
         anonymous_rate_limit_storage[ip_identifier] = {
             "count": (
@@ -147,24 +137,18 @@ async def get_credit_balance(
             ),
             "date": today_str,
             "timezone": user_timezone,
-            "first_seen": anonymous_rate_limit_storage[ip_identifier].get(
-                "first_seen"
-            )
+            "first_seen": anonymous_rate_limit_storage[ip_identifier].get("first_seen")
             or datetime.now(UTC),
         }
 
     if fingerprint:
         fp_identifier = f"fp:{fingerprint}"
-        fp_has_admin_reset = anonymous_rate_limit_storage[fp_identifier].get(
-            "_admin_reset", False
-        )
+        fp_has_admin_reset = anonymous_rate_limit_storage[fp_identifier].get("_admin_reset", False)
         if fp_has_admin_reset:
-            fp_credits_used_from_storage = anonymous_rate_limit_storage[
-                fp_identifier
-            ].get("count", 0)
-            fingerprint_credits_remaining = max(
-                0, credits_allocated - fp_credits_used_from_storage
+            fp_credits_used_from_storage = anonymous_rate_limit_storage[fp_identifier].get(
+                "count", 0
             )
+            fingerprint_credits_remaining = max(0, credits_allocated - fp_credits_used_from_storage)
         else:
             anonymous_rate_limit_storage[fp_identifier] = {
                 "count": (
@@ -174,9 +158,7 @@ async def get_credit_balance(
                 ),
                 "date": today_str,
                 "timezone": user_timezone,
-                "first_seen": anonymous_rate_limit_storage[fp_identifier].get(
-                    "first_seen"
-                )
+                "first_seen": anonymous_rate_limit_storage[fp_identifier].get("first_seen")
                 or datetime.now(UTC),
             }
 
@@ -209,12 +191,7 @@ async def get_credit_usage(
 
     query = db.query(UsageLog).filter(UsageLog.user_id == current_user.id)
     total_count = query.count()
-    usage_logs = (
-        query.order_by(UsageLog.created_at.desc())
-        .offset(offset)
-        .limit(per_page)
-        .all()
-    )
+    usage_logs = query.order_by(UsageLog.created_at.desc()).offset(offset).limit(per_page).all()
 
     results = []
     for log in usage_logs:

@@ -32,14 +32,14 @@ def validate_config() -> None:
     - Configuration values are within expected ranges
     - Database URL format is valid
     - Email configuration consistency (if provided)
-    
+
     Can be skipped by setting SKIP_CONFIG_VALIDATION=true environment variable.
     """
     # Check if validation should be skipped (useful for testing/CI)
     if os.getenv("SKIP_CONFIG_VALIDATION", "false").lower() == "true":
         logger.info("Skipping configuration validation (SKIP_CONFIG_VALIDATION=true)")
         return
-    
+
     errors: list[str] = []
     warnings: list[str] = []
 

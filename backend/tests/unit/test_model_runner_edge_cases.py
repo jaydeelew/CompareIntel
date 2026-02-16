@@ -8,7 +8,7 @@ Tests cover:
 - Streaming failures
 """
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 from app.model_runner import (
     call_openrouter_streaming,

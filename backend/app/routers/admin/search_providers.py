@@ -9,7 +9,6 @@ from sqlalchemy.orm import Session
 from ...database import get_db
 from ...dependencies import require_admin_role
 from ...models import AppSettings, User
-
 from .helpers import log_admin_action
 
 router = APIRouter()

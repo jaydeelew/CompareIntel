@@ -49,9 +49,7 @@ async def get_user_preferences(
         email_notifications=preferences.email_notifications
         if preferences.email_notifications is not None
         else True,
-        usage_alerts=preferences.usage_alerts
-        if preferences.usage_alerts is not None
-        else True,
+        usage_alerts=preferences.usage_alerts if preferences.usage_alerts is not None else True,
         zipcode=preferences.zipcode,
         remember_state_on_logout=preferences.remember_state_on_logout
         if preferences.remember_state_on_logout is not None
@@ -116,9 +114,7 @@ async def update_user_preferences(
         email_notifications=preferences.email_notifications
         if preferences.email_notifications is not None
         else True,
-        usage_alerts=preferences.usage_alerts
-        if preferences.usage_alerts is not None
-        else True,
+        usage_alerts=preferences.usage_alerts if preferences.usage_alerts is not None else True,
         zipcode=preferences.zipcode,
         remember_state_on_logout=preferences.remember_state_on_logout
         if preferences.remember_state_on_logout is not None

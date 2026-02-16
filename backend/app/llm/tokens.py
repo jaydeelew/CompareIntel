@@ -11,7 +11,6 @@ import httpx  # type: ignore[import-untyped]
 import tiktoken  # type: ignore[import-untyped]
 
 from ..config import settings
-
 from .registry import OPENROUTER_MODELS
 
 logger = logging.getLogger(__name__)
@@ -82,7 +81,9 @@ def refresh_model_token_limits(model_id: str | None = None) -> bool:
                     limits = _extract_token_limits(all_models[base_id])
                     _model_token_limits_cache[base_id] = limits
                     _model_token_limits_cache[model_id] = limits
-                    logger.info(f"Refreshed token limits for model: {model_id} (using base: {base_id})")
+                    logger.info(
+                        f"Refreshed token limits for model: {model_id} (using base: {base_id})"
+                    )
                     return True
             logger.warning(f"Model {model_id} not found in OpenRouter data")
             return False
@@ -205,6 +206,7 @@ def _get_anthropic_tokenizer():
         if cache_key not in _tokenizer_cache:
             try:
                 from anthropic import Anthropic  # type: ignore[import-untyped]
+
                 client = Anthropic(api_key="dummy")
                 _tokenizer_cache[cache_key] = client
             except ImportError:
@@ -224,6 +226,7 @@ def _get_huggingface_tokenizer(model_id: str) -> Any | None:
         if hf_model_name not in _tokenizer_cache:
             try:
                 from transformers import AutoTokenizer  # type: ignore[import-untyped]
+
                 tokenizer = AutoTokenizer.from_pretrained(
                     hf_model_name,
                     trust_remote_code=True,
@@ -273,7 +276,9 @@ def estimate_token_count(text: str, model_id: str | None = None) -> int:
                 if tokenizer:
                     return len(tokenizer.encode(text, add_special_tokens=False))
             except Exception as e:
-                logger.debug(f"HuggingFace tokenizer failed for {model_id}: {e}, falling back to tiktoken")
+                logger.debug(
+                    f"HuggingFace tokenizer failed for {model_id}: {e}, falling back to tiktoken"
+                )
         elif provider == "openai":
             try:
                 if "gpt-4o" in model_id.lower():

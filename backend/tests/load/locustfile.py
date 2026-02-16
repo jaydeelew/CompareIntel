@@ -17,7 +17,6 @@ Run in CI (see performance.yml):
         --host http://localhost:8000 --csv=load-test-results --html=load-test-report.html
 """
 
-import json
 import random
 import string
 

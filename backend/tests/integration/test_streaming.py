@@ -14,7 +14,6 @@ Tests cover the core differentiating feature of CompareIntel:
 import json
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
-from unittest.mock import MagicMock, patch
 
 from fastapi import status
 
@@ -61,7 +60,7 @@ class TestSSEStreamFormat:
 
             for line in data_lines:
                 # Every data line must be valid JSON after 'data: ' prefix
-                json_str = line[len("data: "):]
+                json_str = line[len("data: ") :]
                 try:
                     event = json.loads(json_str)
                 except json.JSONDecodeError:
@@ -349,7 +348,7 @@ def _parse_sse_events(response_text: str) -> list[dict]:
     for line in response_text.strip().split("\n"):
         line = line.strip()
         if line.startswith("data: "):
-            json_str = line[len("data: "):]
+            json_str = line[len("data: ") :]
             try:
                 events.append(json.loads(json_str))
             except json.JSONDecodeError:

@@ -2,10 +2,7 @@
 OpenRouter streaming API calls, web search tools, URL fetching.
 """
 
-import asyncio
-import json
 import logging
-import queue
 import re
 import threading
 import time
@@ -15,16 +12,14 @@ from typing import Any
 
 import httpx  # type: ignore[import-untyped]
 from bs4 import BeautifulSoup  # type: ignore[import-untyped]
-from openai import APIError
 
 from ..config import settings
+from ..mock_responses import stream_mock_response
+from ..search.rate_limiter import get_rate_limiter
 from ..utils.error_handling import (
     classify_api_error,
     format_streaming_error_message,
 )
-from ..mock_responses import stream_mock_response
-from ..search.rate_limiter import get_rate_limiter
-
 from .registry import client, client_with_tool_headers
 from .text_processing import clean_model_response, detect_repetition
 from .tokens import TokenUsage, calculate_token_usage, get_model_max_tokens
@@ -36,17 +31,45 @@ def is_time_sensitive_query(prompt: str) -> bool:
     """Return True if the query appears time-sensitive and may need web search."""
     prompt_lower = prompt.lower()
     time_sensitive_keywords = [
-        "today", "now", "current", "latest", "recent", "live", "right now",
-        "what is", "what's", "how is", "how's", "weather", "temperature",
-        "news", "score", "price", "stock", "forecast", "prediction",
-        "happening", "going on", "update", "status", "condition",
+        "today",
+        "now",
+        "current",
+        "latest",
+        "recent",
+        "live",
+        "right now",
+        "what is",
+        "what's",
+        "how is",
+        "how's",
+        "weather",
+        "temperature",
+        "news",
+        "score",
+        "price",
+        "stock",
+        "forecast",
+        "prediction",
+        "happening",
+        "going on",
+        "update",
+        "status",
+        "condition",
     ]
     has_time_keyword = any(keyword in prompt_lower for keyword in time_sensitive_keywords)
     time_sensitive_patterns = [
-        r"\bweather\b.*\btoday\b", r"\bcurrent\b.*\bweather\b", r"\bwhat.*\bweather\b",
-        r"\bhow.*\bweather\b", r"\bweather.*\blike\b", r"\bnews\b.*\btoday\b",
-        r"\bcurrent\b.*\bnews\b", r"\blatest\b.*\bnews\b", r"\bstock\b.*\bprice\b",
-        r"\bcurrent\b.*\bprice\b", r"\bscore\b.*\btoday\b", r"\blive\b.*\bscore\b",
+        r"\bweather\b.*\btoday\b",
+        r"\bcurrent\b.*\bweather\b",
+        r"\bwhat.*\bweather\b",
+        r"\bhow.*\bweather\b",
+        r"\bweather.*\blike\b",
+        r"\bnews\b.*\btoday\b",
+        r"\bcurrent\b.*\bnews\b",
+        r"\blatest\b.*\bnews\b",
+        r"\bstock\b.*\bprice\b",
+        r"\bcurrent\b.*\bprice\b",
+        r"\bscore\b.*\btoday\b",
+        r"\blive\b.*\bscore\b",
     ]
     has_time_pattern = any(re.search(p, prompt_lower) for p in time_sensitive_patterns)
     return has_time_keyword or has_time_pattern
@@ -60,7 +83,10 @@ WEB_SEARCH_TOOL = {
         "parameters": {
             "type": "object",
             "properties": {
-                "query": {"type": "string", "description": "The search query to find current information on the Internet."}
+                "query": {
+                    "type": "string",
+                    "description": "The search query to find current information on the Internet.",
+                }
             },
             "required": ["query"],
         },
@@ -75,7 +101,10 @@ FETCH_URL_TOOL = {
         "parameters": {
             "type": "object",
             "properties": {
-                "url": {"type": "string", "description": "The full URL of the webpage to fetch content from (must start with http:// or https://)"}
+                "url": {
+                    "type": "string",
+                    "description": "The full URL of the webpage to fetch content from (must start with http:// or https://)",
+                }
             },
             "required": ["url"],
         },
@@ -123,7 +152,8 @@ def call_openrouter_streaming(
     user_location: str | None = None,  # Optional: Location string (e.g., "New York, NY, USA")
     location_source: str
     | None = None,  # Optional: Source of location - "user_provided" (accurate) or "ip_based" (approximate)
-    _client: Any | None = None,  # Optional: use this OpenAI client instead of global (avoids connection contention in multi-model)
+    _client: Any
+    | None = None,  # Optional: use this OpenAI client instead of global (avoids connection contention in multi-model)
 ) -> Generator[Any, None, TokenUsage | None]:
     """
     Stream OpenRouter responses token-by-token for faster perceived response time.
@@ -1834,15 +1864,11 @@ def call_openrouter_streaming(
                                 )
                             except TypeError:
                                 # extra_headers not supported, use client with default headers
-                                response_continue = (
-                                    _cl_tools.chat.completions.create(
-                                        **api_params_continue
-                                    )
+                                response_continue = _cl_tools.chat.completions.create(
+                                    **api_params_continue
                                 )
                         else:
-                            response_continue = _cl.chat.completions.create(
-                                **api_params_continue
-                            )
+                            response_continue = _cl.chat.completions.create(**api_params_continue)
                     except Exception as api_error:
                         # Log detailed error information for debugging
                         error_str = str(api_error)

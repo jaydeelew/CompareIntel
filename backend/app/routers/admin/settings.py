@@ -11,7 +11,6 @@ from ...database import get_db
 from ...dependencies import get_current_admin_user, require_admin_role
 from ...models import AppSettings, UsageLog
 from ...rate_limiting import anonymous_rate_limit_storage
-
 from .helpers import log_admin_action
 
 router = APIRouter()
@@ -53,11 +52,7 @@ async def get_app_settings(
                 if count > 0:
                     anonymous_users_with_usage += 1
 
-        anonymous_db_usage_count = (
-            db.query(UsageLog)
-            .filter(UsageLog.user_id.is_(None))
-            .count()
-        )
+        anonymous_db_usage_count = db.query(UsageLog).filter(UsageLog.user_id.is_(None)).count()
 
     return {
         "anonymous_mock_mode_enabled": (
@@ -156,11 +151,7 @@ async def zero_anonymous_usage(
                 anonymous_rate_limit_storage[key]["_admin_reset"] = True
                 keys_reset.append(key)
 
-    usage_logs_deleted = (
-        db.query(UsageLog)
-        .filter(UsageLog.user_id.is_(None))
-        .delete()
-    )
+    usage_logs_deleted = db.query(UsageLog).filter(UsageLog.user_id.is_(None)).delete()
     db.commit()
 
     log_admin_action(

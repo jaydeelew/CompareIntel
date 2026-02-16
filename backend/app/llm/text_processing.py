@@ -2,8 +2,8 @@
 Text processing: repetition detection, response cleanup.
 """
 
-import re
 import logging
+import re
 
 logger = logging.getLogger(__name__)
 
@@ -31,9 +31,24 @@ def detect_repetition(
             if any(word.rstrip(".:)").isdigit() for word in ngram):
                 continue
             skip_patterns = [
-                "```", "---", "***", "===", "|", "#", "def ", "class ", "return ",
-                "import ", "function ", "const ", "let ", "var ", "if ", "else ",
-                "for ", "while ",
+                "```",
+                "---",
+                "***",
+                "===",
+                "|",
+                "#",
+                "def ",
+                "class ",
+                "return ",
+                "import ",
+                "function ",
+                "const ",
+                "let ",
+                "var ",
+                "if ",
+                "else ",
+                "for ",
+                "while ",
             ]
             if any(pattern in ngram_text for pattern in skip_patterns):
                 continue

@@ -9,6 +9,7 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 
+
 class UserRegister(BaseModel):
     """Schema for user registration request."""
 
