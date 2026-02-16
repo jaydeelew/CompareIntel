@@ -167,6 +167,7 @@ jobs:
           context: ./frontend
           file: ./frontend/Dockerfile
           push: false
+          load: true
           tags: compareintel-frontend:prod-test
           target: prod
           cache-from: type=gha
