@@ -6,6 +6,7 @@
  */
 
 import type { ApiErrorResponse } from '../../types/api'
+import logger from '../../utils/logger'
 
 import { ApiError, NetworkError, TimeoutError } from './errors'
 import type {
@@ -204,7 +205,7 @@ export const loggingErrorInterceptor: ErrorInterceptor = async (error, config) =
       return error
     }
 
-    console.error('[API Client Error]', {
+    logger.error('[API Client Error]', {
       error: error.message,
       method: config.method || 'GET',
       status,
@@ -224,7 +225,7 @@ export const loggingRequestInterceptor: RequestInterceptor = async (url, config)
     headers.forEach((value, key) => {
       headerEntries.push([key, value])
     })
-    console.log('[API Request]', {
+    logger.debug('[API Request]', {
       method: config.method || 'GET',
       url,
       headers: Object.fromEntries(headerEntries),
@@ -238,7 +239,7 @@ export const loggingRequestInterceptor: RequestInterceptor = async (url, config)
  */
 export const loggingResponseInterceptor: ResponseInterceptor = async (response, _config) => {
   if (import.meta.env.DEV) {
-    console.log('[API Response]', {
+    logger.debug('[API Response]', {
       status: response.status,
       statusText: response.statusText,
       url: response.url,

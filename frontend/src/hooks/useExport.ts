@@ -15,6 +15,7 @@ import {
   downloadJSON,
   downloadHTML,
 } from '../utils'
+import logger from '../utils/logger'
 
 export type ExportFormat = 'pdf' | 'markdown' | 'json' | 'html'
 
@@ -96,7 +97,7 @@ export function useExport({
           showNotification('HTML downloaded successfully!', 'success')
         }
       } catch (err) {
-        console.error('Export error:', err)
+        logger.error('Export error:', err)
         showNotification('Failed to export. Please try again.', 'error')
       }
     },

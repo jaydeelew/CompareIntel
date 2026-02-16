@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react'
 
 import { useAuthHeaders } from '../../contexts/AuthContext'
+import logger from '../../utils/logger'
 
 interface AdminActionLog {
   id: number
@@ -54,7 +55,7 @@ const ActionLogsTab: React.FC<ActionLogsTabProps> = ({ setError }) => {
         const data = await response.json()
         setActionLogs(data)
       } catch (err) {
-        console.error('Error fetching action logs:', err)
+        logger.error('Error fetching action logs:', err)
         setError(err instanceof Error ? err.message : 'Failed to fetch action logs')
       } finally {
         setLogsLoading(false)

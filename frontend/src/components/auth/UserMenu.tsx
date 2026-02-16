@@ -14,6 +14,7 @@ import { getCreditBalance } from '../../services/creditService'
 import type { CreditBalance } from '../../services/creditService'
 import { getUserPreferences, updateUserPreferences } from '../../services/userSettingsService'
 import type { UserPreferences } from '../../services/userSettingsService'
+import logger from '../../utils/logger'
 import { dispatchSaveStateEvent } from '../../utils/sessionState'
 import './UserMenu.css'
 
@@ -59,7 +60,7 @@ export const UserMenu: React.FC = () => {
           setCreditBalance(balance)
         })
         .catch(error => {
-          console.error('Failed to fetch credit balance:', error)
+          logger.error('Failed to fetch credit balance:', error)
           // Fallback to user object data if available
           if (user.monthly_credits_allocated !== undefined) {
             setCreditBalance({
@@ -126,7 +127,7 @@ export const UserMenu: React.FC = () => {
           setRememberState(prefs.remember_state_on_logout)
         })
         .catch(error => {
-          console.error('Failed to load preferences:', error)
+          logger.error('Failed to load preferences:', error)
           setPreferencesError('Failed to load settings')
         })
         .finally(() => {
@@ -149,7 +150,7 @@ export const UserMenu: React.FC = () => {
       setPreferencesSuccess('Settings saved successfully!')
       setTimeout(() => setPreferencesSuccess(null), 3000)
     } catch (error: unknown) {
-      console.error('Failed to save preferences:', error)
+      logger.error('Failed to save preferences:', error)
       const errorMessage = error instanceof Error ? error.message : 'Failed to save settings'
       setPreferencesError(errorMessage)
     } finally {
@@ -169,7 +170,7 @@ export const UserMenu: React.FC = () => {
       setShowDeleteConfirm(false)
       setTimeout(() => setPreferencesSuccess(null), 3000)
     } catch (error: unknown) {
-      console.error('Failed to delete conversations:', error)
+      logger.error('Failed to delete conversations:', error)
       const errorMessage = error instanceof Error ? error.message : 'Failed to delete history'
       setPreferencesError(errorMessage)
     } finally {

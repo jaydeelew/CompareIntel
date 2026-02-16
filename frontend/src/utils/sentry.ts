@@ -11,6 +11,8 @@
 
 import * as Sentry from '@sentry/react'
 
+import logger from './logger'
+
 /**
  * Initialize Sentry error monitoring
  *
@@ -23,15 +25,13 @@ export function initSentry(): void {
 
   // Skip initialization if no DSN is configured
   if (!dsn) {
-    if (import.meta.env.DEV) {
-      console.debug('[Sentry] DSN not configured, skipping initialization')
-    }
+    logger.debug('[Sentry] DSN not configured, skipping initialization')
     return
   }
 
   // Skip in development unless explicitly configured
   if (import.meta.env.DEV && environment !== 'development') {
-    console.debug('[Sentry] Skipping initialization in development mode')
+    logger.debug('[Sentry] Skipping initialization in development')
     return
   }
 
@@ -110,7 +110,7 @@ export function initSentry(): void {
   })
 
   if (import.meta.env.DEV) {
-    console.debug('[Sentry] Initialized with environment:', environment)
+    logger.debug('[Sentry] Initialized with environment:', environment)
   }
 }
 

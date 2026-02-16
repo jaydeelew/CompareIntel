@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react'
 
 import type { ConversationMessage, ModelConversation } from '../types'
 import { createModelId, createMessageId } from '../types'
+import logger from '../utils/logger'
 
 interface UseTokenReloadConfig {
   currentVisibleComparisonId: string | number | null
@@ -129,7 +130,7 @@ export function useTokenReload(config: UseTokenReloadConfig, callbacks: UseToken
             })
           })
         } catch (error) {
-          console.error('Failed to reload conversation with token counts:', error)
+          logger.error('Failed to reload conversation with token counts:', error)
         }
       }, 2000)
 
@@ -226,7 +227,7 @@ export function useTokenReload(config: UseTokenReloadConfig, callbacks: UseToken
             })
           })
         } catch (error) {
-          console.error('Failed to reload conversation with token counts from localStorage:', error)
+          logger.error('Failed to reload conversation with token counts from localStorage:', error)
         }
       }, 500)
 

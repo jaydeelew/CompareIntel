@@ -15,6 +15,7 @@ import type { CompareResponse } from '../types'
 import type { ModelConversation } from '../types/conversation'
 import type { ModelsByProvider } from '../types/models'
 import { showNotification } from '../utils'
+import logger from '../utils/logger'
 
 // Storage keys
 const STORAGE_KEY_PREFIX = 'compareintel_saved_model_selections'
@@ -91,7 +92,7 @@ function getAnonymousId(): string {
     }
     return anonymousId
   } catch (error) {
-    console.warn('Failed to access localStorage for anonymous ID:', error)
+    logger.warn('Failed to access localStorage for anonymous ID:', error)
     return `anon_session_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`
   }
 }
@@ -120,7 +121,7 @@ function loadFromStorage(storageKey: string): SavedModelSelection[] {
       }
     }
   } catch (error) {
-    console.warn('Failed to load saved model selections from localStorage:', error)
+    logger.warn('Failed to load saved model selections from localStorage:', error)
   }
   return []
 }
@@ -129,7 +130,7 @@ function saveToStorage(storageKey: string, selections: SavedModelSelection[]): v
   try {
     localStorage.setItem(storageKey, JSON.stringify(selections))
   } catch (error) {
-    console.warn('Failed to save model selections to localStorage:', error)
+    logger.warn('Failed to save model selections to localStorage:', error)
   }
 }
 
@@ -137,7 +138,7 @@ function loadDefaultSelectionId(defaultKey: string): string | null {
   try {
     return localStorage.getItem(defaultKey) || null
   } catch (error) {
-    console.warn('Failed to load default selection ID:', error)
+    logger.warn('Failed to load default selection ID:', error)
     return null
   }
 }
@@ -150,7 +151,7 @@ function saveDefaultSelectionId(defaultKey: string, selectionId: string | null):
       localStorage.setItem(defaultKey, selectionId)
     }
   } catch (error) {
-    console.warn('Failed to save default selection ID:', error)
+    logger.warn('Failed to save default selection ID:', error)
   }
 }
 
@@ -298,7 +299,7 @@ export function useSavedSelectionsComplete(
   const setDefaultSelection = useCallback(
     (id: string | null): void => {
       if (id !== null && !savedSelections.some(s => s.id === id)) {
-        console.warn('Cannot set default: selection not found')
+        logger.warn('Cannot set default: selection not found')
         return
       }
 

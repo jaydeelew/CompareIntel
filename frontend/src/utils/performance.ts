@@ -8,6 +8,8 @@
 import { onCLS, onFCP, onLCP, onTTFB, onINP } from 'web-vitals'
 import type { Metric } from 'web-vitals'
 
+import logger from './logger'
+
 /**
  * Performance budget thresholds (in milliseconds or score)
  * Based on Core Web Vitals recommendations
@@ -74,11 +76,8 @@ function reportMetric(
     threshold,
   }
 
-  // Log to console in development
-  if (import.meta.env.DEV) {
-    const emoji = rating === 'good' ? '✅' : rating === 'needs-improvement' ? '⚠️' : '❌'
-    console.log(`${emoji} [Performance] ${metric.name}: ${metric.value.toFixed(2)}ms (${rating})`)
-  }
+  const emoji = rating === 'good' ? '✅' : rating === 'needs-improvement' ? '⚠️' : '❌'
+  logger.debug(`${emoji} [Performance] ${metric.name}: ${metric.value.toFixed(2)}ms (${rating})`)
 
   // Call custom callback if provided
   if (callback) {
@@ -88,7 +87,7 @@ function reportMetric(
   // Send to analytics endpoint (if configured)
   if (import.meta.env.PROD && import.meta.env.VITE_PERFORMANCE_ENDPOINT) {
     sendToAnalytics(enhancedMetric).catch(err => {
-      console.error('Failed to send performance metric:', err)
+      logger.error('Failed to send performance metric:', err)
     })
   }
 }
@@ -121,7 +120,7 @@ async function sendToAnalytics(metric: PerformanceMetric): Promise<void> {
     })
   } catch (error) {
     // Silently fail - don't impact user experience
-    console.error('Performance analytics error:', error)
+    logger.error('Performance analytics error:', error)
   }
 }
 
@@ -187,7 +186,7 @@ export class PerformanceMarker {
     if (!startTime) {
       // Only warn in development, and only if it's not a known issue (like cached responses)
       if (import.meta.env.DEV) {
-        console.warn(`Performance marker "${name}" was not started`)
+        logger.warn(`Performance marker "${name}" was not started`)
       }
       return null
     }
@@ -200,10 +199,7 @@ export class PerformanceMarker {
 
     this.marks.delete(name)
 
-    // Log in development
-    if (import.meta.env.DEV) {
-      console.log(`[Performance] ${name}: ${duration.toFixed(2)}ms`)
-    }
+    logger.debug(`[Performance] ${name}: ${duration.toFixed(2)}ms`)
 
     return duration
   }

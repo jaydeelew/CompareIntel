@@ -6,6 +6,7 @@ import { Eye, EyeClosed } from 'lucide-react'
 import React, { useState, useEffect } from 'react'
 
 import { useAuth } from '../../contexts/AuthContext'
+import logger from '../../utils/logger'
 import { validateEmail } from '../../utils/validation'
 import './AuthForms.css'
 
@@ -202,9 +203,9 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
     // If reCAPTCHA is not configured or we're in test environment, skip
     if (!siteKey || isTestEnvironment) {
       if (isTestEnvironment) {
-        console.debug('[reCAPTCHA] Test environment detected, skipping reCAPTCHA')
+        logger.debug('[reCAPTCHA] Test environment detected, skipping reCAPTCHA')
       } else {
-        console.debug('[reCAPTCHA] Site key not configured, skipping')
+        logger.debug('[reCAPTCHA] Site key not configured, skipping')
       }
       return null
     }
@@ -218,7 +219,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
     }
 
     if (!window.grecaptcha) {
-      console.error('[reCAPTCHA] Failed to load reCAPTCHA script after timeout')
+      logger.error('[reCAPTCHA] Failed to load reCAPTCHA script after timeout')
       return null
     }
 
@@ -226,7 +227,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
       return await new Promise<string | null>(resolve => {
         // Set a timeout for the entire operation
         const timeout = setTimeout(() => {
-          console.error('[reCAPTCHA] Token generation timeout')
+          logger.error('[reCAPTCHA] Token generation timeout')
           resolve(null)
         }, 10000) // 10 second timeout
 
@@ -237,21 +238,21 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
             })
             clearTimeout(timeout)
             if (token) {
-              console.debug('[reCAPTCHA] Token generated successfully')
+              logger.debug('[reCAPTCHA] Token generated successfully')
               resolve(token)
             } else {
-              console.error('[reCAPTCHA] Token generation returned empty token')
+              logger.error('[reCAPTCHA] Token generation returned empty token')
               resolve(null)
             }
           } catch (error) {
             clearTimeout(timeout)
-            console.error('[reCAPTCHA] Token generation error:', error)
+            logger.error('[reCAPTCHA] Token generation error:', error)
             resolve(null)
           }
         })
       })
     } catch (error) {
-      console.error('[reCAPTCHA] Unexpected error:', error)
+      logger.error('[reCAPTCHA] Unexpected error:', error)
       return null
     }
   }
@@ -305,7 +306,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
       })
       onSuccess?.()
     } catch (err) {
-      console.error('Registration error:', err)
+      logger.error('Registration error:', err)
       if (err instanceof Error) {
         // Check if it's a network error
         if (err.message.includes('fetch') || err.message.includes('Failed to fetch')) {

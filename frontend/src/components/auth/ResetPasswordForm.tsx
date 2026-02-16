@@ -4,6 +4,8 @@
  */
 
 import React, { useState } from 'react'
+
+import logger from '../../utils/logger'
 import './AuthForms.css'
 
 // API URL with smart fallback
@@ -97,7 +99,7 @@ export const ResetPasswordForm: React.FC<ResetPasswordFormProps> = ({ token, onS
         onSuccess?.(userEmail)
       }, 2000)
     } catch (err) {
-      console.error('Password reset error:', err)
+      logger.error('Password reset error:', err)
       if (err instanceof Error) {
         if (err.message.includes('expired')) {
           setError('Reset link has expired. Please request a new one.')

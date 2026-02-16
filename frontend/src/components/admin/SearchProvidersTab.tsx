@@ -8,6 +8,7 @@ import {
   type SearchProvidersResponse,
   type SearchProviderTestResult,
 } from '../../services/adminService'
+import logger from '../../utils/logger'
 
 interface SearchProvidersTabProps {
   setError: (err: string | null) => void
@@ -29,7 +30,7 @@ const SearchProvidersTab: React.FC<SearchProvidersTabProps> = ({ setError }) => 
       const data = await getSearchProviders()
       setSearchProviders(data)
     } catch (err) {
-      console.error('Error fetching search providers:', err)
+      logger.error('Error fetching search providers:', err)
       setError(err instanceof Error ? err.message : 'Failed to fetch search providers')
     } finally {
       setSearchProvidersLoading(false)
@@ -48,7 +49,7 @@ const SearchProvidersTab: React.FC<SearchProvidersTabProps> = ({ setError }) => 
       setMessageSuccess(`Active search provider set to ${provider}`)
       setTimeout(() => setMessageSuccess(null), 5000)
     } catch (err) {
-      console.error('Error setting active provider:', err)
+      logger.error('Error setting active provider:', err)
       setMessageError(err instanceof Error ? err.message : 'Failed to set active provider')
       setTimeout(() => setMessageError(null), 5000)
     } finally {

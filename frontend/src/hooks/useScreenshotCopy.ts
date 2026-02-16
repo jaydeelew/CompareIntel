@@ -3,6 +3,7 @@ import { useCallback } from 'react'
 import type { ModelConversation, ResultTab, ActiveResultTabs } from '../types'
 import { RESULT_TAB } from '../types'
 import { showNotification, getSafeId, formatConversationMessage } from '../utils'
+import logger from '../utils/logger'
 
 export interface UseScreenshotCopyOptions {
   /** Current conversations */
@@ -140,9 +141,9 @@ export function useScreenshotCopy({
                 break
               } catch (err) {
                 lastError = err instanceof Error ? err : new Error(String(err))
-                // Use console.warn for expected errors (document not focused, permission denied)
+                // Use logger.warn for expected errors (document not focused, permission denied)
                 // to avoid flooding console with errors during normal operation
-                console.warn(`Clipboard copy attempt ${attempt + 1} failed:`, lastError.message)
+                logger.warn(`Clipboard copy attempt ${attempt + 1} failed:`, lastError.message)
 
                 // If it's a permission error or security error, don't retry
                 if (
@@ -170,8 +171,8 @@ export function useScreenshotCopy({
                 ? `Clipboard copy failed: ${lastError.message || lastError.name || 'Unknown error'}. Image downloaded instead.`
                 : 'Clipboard copy failed. Image downloaded instead.'
               copyingNotification.update(errorMsg, 'error')
-              // Use console.warn since clipboard failures are expected when document isn't focused
-              console.warn('Clipboard copy failed after retries:', lastError?.message)
+              // Use logger.warn since clipboard failures are expected when document isn't focused
+              logger.warn('Clipboard copy failed after retries:', lastError?.message)
 
               // Fallback: download the image
               const link = document.createElement('a')
@@ -185,7 +186,7 @@ export function useScreenshotCopy({
             const error = err instanceof Error ? err : new Error(String(err))
             const errorMsg = `Clipboard copy failed: ${error.message || error.name || 'Unknown error'}. Image downloaded instead.`
             copyingNotification.update(errorMsg, 'error')
-            console.error('Unexpected error during clipboard copy:', error)
+            logger.error('Unexpected error during clipboard copy:', error)
 
             // Fallback: download the image
             const link = document.createElement('a')
@@ -202,7 +203,7 @@ export function useScreenshotCopy({
               ? 'ClipboardItem not supported'
               : 'Unknown reason'
           copyingNotification.update(`${reason}. Image downloaded.`, 'error')
-          console.warn('Clipboard not supported:', {
+          logger.warn('Clipboard not supported:', {
             clipboard: !!navigator.clipboard,
             ClipboardItem: !!window.ClipboardItem,
           })
@@ -213,7 +214,7 @@ export function useScreenshotCopy({
           URL.revokeObjectURL(link.href)
         } else {
           copyingNotification.update('Could not create image blob.', 'error')
-          console.error('Failed to create image blob from content element')
+          logger.error('Failed to create image blob from content element')
         }
       } catch (err) {
         copyingNotification.update('Screenshot failed: ' + (err as Error).message, 'error')
@@ -261,7 +262,7 @@ export function useScreenshotCopy({
         showNotification('Raw conversation copied to clipboard!', 'success')
       } catch (err) {
         showNotification('Failed to copy to clipboard.', 'error')
-        console.error('Copy failed:', err)
+        logger.error('Copy failed:', err)
       }
     },
     [conversations]
@@ -448,7 +449,7 @@ export function useScreenshotCopy({
         }
       } catch (err) {
         showNotification('Failed to copy message.', 'error')
-        console.error('Copy failed:', err)
+        logger.error('Copy failed:', err)
       }
     },
     [activeResultTabs]

@@ -10,6 +10,7 @@ import type {
 } from '../types'
 import { createModelId, createMessageId } from '../types'
 import { showNotification } from '../utils'
+import logger from '../utils/logger'
 
 type BreakoutPhase = 'idle' | 'fading-out' | 'hidden' | 'fading-in'
 
@@ -194,7 +195,7 @@ export function useBreakoutConversation(
 
         setTutorialHasBreakout(true)
       } catch (err) {
-        console.error('Failed to create breakout conversation:', err)
+        logger.error('Failed to create breakout conversation:', err)
         setError('Failed to break out conversation. Please try again.')
         setBreakoutPhase('idle')
       }

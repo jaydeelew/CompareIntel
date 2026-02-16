@@ -6,6 +6,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react'
 
 import type { User, AuthContextType, LoginCredentials, RegisterData, AuthResponse } from '../types'
+import logger from '../utils/logger'
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
@@ -73,8 +74,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           setIsLoading(false)
           return
         }
-        // For other unexpected status codes, still handle silently but log
-        console.warn(`Token refresh failed with status ${response.status}`)
+        logger.warn(`Token refresh failed with status ${response.status}`)
         setUser(null)
         setIsLoading(false)
         return
@@ -238,7 +238,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         window.dispatchEvent(new CustomEvent('registration-complete'))
       }, 0)
     } catch (error) {
-      console.error('Registration error:', error)
+      logger.error('Registration error:', error)
       setIsLoading(false)
       throw error
     }
@@ -253,7 +253,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         credentials: 'include', // Important: Include cookies in request
       })
     } catch (error) {
-      console.error('Error during logout:', error)
+      logger.error('Error during logout:', error)
       // Continue with logout even if request fails
     }
 
@@ -287,12 +287,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const abortController = new AbortController()
 
     const initAuth = async () => {
-      // Only log in development mode to reduce console noise
-      if (import.meta.env.DEV) {
-        console.log('[Auth] Initializing auth state...')
-      }
-      const initStartTime = Date.now()
-
       try {
         // Try to fetch user (cookies are automatically sent)
         const response = await fetch(`${API_BASE_URL}/auth/me`, {
@@ -306,18 +300,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           const userData = await response.json()
           if (abortController.signal.aborted) return
 
-          if (import.meta.env.DEV) {
-            const initDuration = Date.now() - initStartTime
-            console.log('[Auth] Auth initialization completed in', initDuration, 'ms')
-          }
           setUser(userData)
           setIsLoading(false)
         } else if (response.status === 401) {
-          // Access token invalid/missing, try to refresh
-          if (import.meta.env.DEV) {
-            console.log('[Auth] Access token invalid, attempting refresh...')
-          }
-
           const refreshResponse = await fetch(`${API_BASE_URL}/auth/refresh`, {
             method: 'POST',
             credentials: 'include',
@@ -340,14 +325,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
               const userData = await retryResponse.json()
               if (abortController.signal.aborted) return
 
-              if (import.meta.env.DEV) {
-                const initDuration = Date.now() - initStartTime
-                console.log(
-                  '[Auth] Auth initialization completed (after refresh) in',
-                  initDuration,
-                  'ms'
-                )
-              }
               setUser(userData)
             }
           }

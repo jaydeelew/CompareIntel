@@ -1,6 +1,7 @@
 import { useCallback } from 'react'
 
 import type { AttachedFile, StoredAttachedFile } from '../components/comparison/ComparisonForm'
+import logger from '../utils/logger'
 
 /**
  * Hook for handling file extraction and processing
@@ -35,7 +36,7 @@ export function useFileHandling() {
 
       return fullText.trim()
     } catch (error) {
-      console.error('Error extracting text from PDF:', error)
+      logger.error('Error extracting text from PDF:', error)
       throw new Error('Failed to extract text from PDF file')
     }
   }, [])
@@ -49,7 +50,7 @@ export function useFileHandling() {
       const result = await mammoth.default.extractRawText({ arrayBuffer })
       return result.value
     } catch (error) {
-      console.error('Error extracting text from DOCX:', error)
+      logger.error('Error extracting text from DOCX:', error)
       throw new Error('Failed to extract text from DOCX file')
     }
   }, [])
@@ -114,7 +115,7 @@ export function useFileHandling() {
             fileContents.push({ name: attachedFile.name, content: content.trim() })
           }
         } catch (error) {
-          console.error(`Error extracting content from ${attachedFile.name}:`, error)
+          logger.error(`Error extracting content from ${attachedFile.name}:`, error)
           // Continue with other files even if one fails
         }
       }
@@ -221,7 +222,7 @@ export function useFileHandling() {
             })
           }
         } catch (error) {
-          console.error(`Error extracting content from ${attachedFile.name} for storage:`, error)
+          logger.error(`Error extracting content from ${attachedFile.name} for storage:`, error)
           // Continue with other files even if one fails
         }
       }

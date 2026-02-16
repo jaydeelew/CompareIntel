@@ -16,6 +16,7 @@ import type {
   StoredMessage,
   User,
 } from '../types'
+import logger from '../utils/logger'
 
 export interface UseConversationHistoryOptions {
   isAuthenticated: boolean
@@ -87,7 +88,7 @@ export function useConversationHistory({
         (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
       )
     } catch (e) {
-      console.error('Failed to load conversation history from localStorage:', e)
+      logger.error('Failed to load conversation history from localStorage:', e)
       return []
     }
   }, [])
@@ -357,7 +358,7 @@ export function useConversationHistory({
 
         return conversationId
       } catch (e) {
-        console.error('Failed to save conversation to localStorage:', e)
+        logger.error('Failed to save conversation to localStorage:', e)
         return ''
       }
     },
@@ -388,9 +389,9 @@ export function useConversationHistory({
       setConversationHistory(formattedData)
     } catch (error) {
       if (error instanceof ApiError) {
-        console.error('Failed to load conversation history:', error.status, error.message)
+        logger.error('Failed to load conversation history:', error.status, error.message)
       } else {
-        console.error('Failed to load conversation history from API:', error)
+        logger.error('Failed to load conversation history from API:', error)
       }
       setConversationHistory([])
     } finally {
@@ -432,9 +433,9 @@ export function useConversationHistory({
           await loadHistoryFromAPI()
         } catch (error) {
           if (error instanceof ApiError) {
-            console.error('Failed to delete conversation:', error.message)
+            logger.error('Failed to delete conversation:', error.message)
           } else {
-            console.error('Failed to delete conversation from API:', error)
+            logger.error('Failed to delete conversation from API:', error)
           }
         }
       } else if (!isAuthenticated && typeof summary.id === 'string') {
@@ -456,7 +457,7 @@ export function useConversationHistory({
             setCurrentVisibleComparisonId(null)
           }
         } catch (error) {
-          console.error('Failed to delete conversation from localStorage:', error)
+          logger.error('Failed to delete conversation from localStorage:', error)
         }
       }
     },
@@ -476,13 +477,13 @@ export function useConversationHistory({
     async (_conversationId: ConversationId): Promise<ModelConversation[] | null> => {
       try {
         // This is a placeholder - actual implementation is in App.tsx
-        console.warn('loadConversationFromAPI called from hook - should use App.tsx version')
+        logger.warn('loadConversationFromAPI called from hook - should use App.tsx version')
         return null
       } catch (error) {
         if (error instanceof ApiError) {
-          console.error('Failed to load conversation:', error.message)
+          logger.error('Failed to load conversation:', error.message)
         } else {
-          console.error('Failed to load conversation from API:', error)
+          logger.error('Failed to load conversation from API:', error)
         }
         return null
       }
@@ -496,7 +497,7 @@ export function useConversationHistory({
       try {
         const conversationJson = localStorage.getItem(`compareintel_conversation_${conversationId}`)
         if (!conversationJson) {
-          console.error('Conversation not found in localStorage:', conversationId)
+          logger.error('Conversation not found in localStorage:', conversationId)
           return []
         }
         const conversationData = JSON.parse(conversationJson) as {
@@ -507,7 +508,7 @@ export function useConversationHistory({
           isStreaming: false,
         }))
       } catch (e) {
-        console.error('Failed to load conversation from localStorage:', e)
+        logger.error('Failed to load conversation from localStorage:', e)
         return []
       }
     },

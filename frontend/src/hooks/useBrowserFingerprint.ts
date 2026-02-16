@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 
 import { generateBrowserFingerprint } from '../utils'
+import logger from '../utils/logger'
 
 export interface UseBrowserFingerprintReturn {
   browserFingerprint: string
@@ -15,7 +16,7 @@ export function useBrowserFingerprint(): UseBrowserFingerprintReturn {
     generateBrowserFingerprint()
       .then(setBrowserFingerprint)
       .catch(err => {
-        console.error('Fingerprint generation failed:', err)
+        logger.error('Fingerprint generation failed:', err)
         // App still works without it, just no anon rate limiting
       })
   }, [])

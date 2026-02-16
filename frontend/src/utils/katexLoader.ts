@@ -3,6 +3,8 @@
  * Similar to prismLoader.ts, this ensures KaTeX styles are only loaded when needed
  */
 
+import logger from './logger'
+
 let katexCssLoaded = false
 let katexCssLoading = false
 
@@ -58,7 +60,7 @@ export async function loadKatexCss(): Promise<void> {
         }
         link.onerror = () => {
           katexCssLoading = false
-          console.warn('Failed to load KaTeX CSS from CDN:', error)
+          logger.warn('Failed to load KaTeX CSS from CDN:', error)
           reject(new Error('Failed to load KaTeX CSS'))
         }
         document.head.appendChild(link)

@@ -1,6 +1,7 @@
 import React, { forwardRef, useCallback, useImperativeHandle, useMemo, useRef } from 'react'
 
 import { showNotification } from '../../utils/error'
+import logger from '../../utils/logger'
 
 export interface AttachedFile {
   id: string
@@ -208,7 +209,7 @@ async function isTextOrCodeFile(file: File): Promise<boolean> {
     const printableRatio = printableCount / Math.min(uint8Array.length, 256)
     if (printableRatio > 0.8) return true
   } catch (error) {
-    console.warn('Error reading file for type detection:', error)
+    logger.warn('Error reading file for type detection:', error)
   }
   return false
 }
@@ -314,7 +315,7 @@ export const FileUpload = forwardRef<FileUploadHandle, FileUploadProps>(function
         const errorMessage =
           error instanceof Error ? error.message : 'Error attaching file. Please try again.'
         showNotification(errorMessage, 'error')
-        console.error('File attachment error:', error)
+        logger.error('File attachment error:', error)
         return false
       }
     },

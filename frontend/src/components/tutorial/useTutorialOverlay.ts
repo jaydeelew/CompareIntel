@@ -2,6 +2,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 
 import { TUTORIAL_STEPS_CONFIG } from '../../data/tutorialSteps'
 import type { TutorialStep } from '../../hooks/useTutorial'
+import logger from '../../utils/logger'
 import {
   getComposerElement,
   computeTextareaCutout,
@@ -365,7 +366,7 @@ export function useTutorialOverlay(step: TutorialStep | null, isLoading: boolean
 
     const config = TUTORIAL_STEPS_CONFIG[step]
     if (!config) {
-      console.warn(`No config found for tutorial step: ${step}`)
+      logger.warn(`No config found for tutorial step: ${step}`)
       return
     }
 
@@ -543,7 +544,7 @@ export function useTutorialOverlay(step: TutorialStep | null, isLoading: boolean
         if (attempts < maxAttempts) {
           setTimeout(tryFind, attemptDelay)
         } else {
-          console.warn(
+          logger.warn(
             `Tutorial target not found after ${maxAttempts} attempts: ${config.targetSelector}`
           )
           // In production, element finding might fail due to timing or DOM differences

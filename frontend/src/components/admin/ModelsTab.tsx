@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuthHeaders } from '../../contexts/AuthContext'
 import type { AvailableModelsResponse } from '../../services/modelsService'
 import type { Model } from '../../types/models'
+import logger from '../../utils/logger'
 import { LoadingSpinner } from '../shared/LoadingSpinner'
 
 import { waitForServerRestart } from './utils'
@@ -63,7 +64,7 @@ const ModelsTab: React.FC<ModelsTabProps> = ({
       const data = await response.json()
       setModels(data)
     } catch (err) {
-      console.error('Error fetching models:', err)
+      logger.error('Error fetching models:', err)
     } finally {
       setModelsLoading(false)
     }
@@ -269,7 +270,7 @@ const ModelsTab: React.FC<ModelsTabProps> = ({
       setModelSuccess(`Knowledge cutoff updated for ${modelId}`)
       setTimeout(() => setModelSuccess(null), 3000)
     } catch (err) {
-      console.error('Error updating knowledge cutoff:', err)
+      logger.error('Error updating knowledge cutoff:', err)
       setModelError(err instanceof Error ? err.message : 'Failed to update knowledge cutoff')
       setTimeout(() => setModelError(null), 5000)
     }

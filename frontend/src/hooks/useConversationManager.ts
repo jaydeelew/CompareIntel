@@ -11,6 +11,7 @@ import type {
 import { createConversationId, createMessageId, createModelId } from '../types'
 import type { ModelConversation, StoredMessage } from '../types/conversation'
 import { isErrorMessage } from '../utils/error'
+import logger from '../utils/logger'
 
 interface UseConversationManagerOptions {
   isAuthenticated: boolean
@@ -108,10 +109,10 @@ export function useConversationManager(options: UseConversationManagerOptions) {
             already_broken_out_models,
           }
         } else {
-          console.warn('No conversation found in localStorage for id:', id)
+          logger.warn('No conversation found in localStorage for id:', id)
         }
       } catch (e) {
-        console.error('Failed to load conversation from localStorage:', e, { id })
+        logger.error('Failed to load conversation from localStorage:', e, { id })
       }
       return null
     },
@@ -160,9 +161,9 @@ export function useConversationManager(options: UseConversationManagerOptions) {
         }
       } catch (error) {
         if (error instanceof Error) {
-          console.error('Failed to load conversation:', error.message)
+          logger.error('Failed to load conversation:', error.message)
         } else {
-          console.error('Failed to load conversation from API:', error)
+          logger.error('Failed to load conversation from API:', error)
         }
       }
       return null
@@ -189,7 +190,7 @@ export function useConversationManager(options: UseConversationManagerOptions) {
         }
 
         if (!conversationData) {
-          console.error('Failed to load conversation data', { summary, isAuthenticated })
+          logger.error('Failed to load conversation data', { summary, isAuthenticated })
           return
         }
 
@@ -236,7 +237,7 @@ export function useConversationManager(options: UseConversationManagerOptions) {
                 currentRound.assistants.push(msg)
               }
             } else {
-              console.warn('Assistant message without preceding user message:', msg)
+              logger.warn('Assistant message without preceding user message:', msg)
             }
           }
         })
@@ -345,7 +346,7 @@ export function useConversationManager(options: UseConversationManagerOptions) {
         justLoadedFromHistoryRef.current = true
         setCurrentVisibleComparisonId(String(summary.id))
       } catch (e) {
-        console.error('Failed to load conversation:', e)
+        logger.error('Failed to load conversation:', e)
       } finally {
         setIsLoadingHistory(false)
       }

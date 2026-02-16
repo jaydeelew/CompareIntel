@@ -28,6 +28,7 @@ import { RESULT_TAB, createModelId } from '../types'
 import { validateComparisonInput } from '../utils/comparisonValidation'
 import { prepareApiConversationHistory } from '../utils/conversationPreparer'
 import { isErrorMessage } from '../utils/error'
+import logger from '../utils/logger'
 
 interface TutorialState {
   isActive: boolean
@@ -424,7 +425,7 @@ export function useComparisonStreaming(
         try {
           expandedInput = await expandFiles(attachedFiles, input)
         } catch (error) {
-          console.error('Error expanding files:', error)
+          logger.error('Error expanding files:', error)
           setError('Failed to process attached files. Please try again.')
           setIsLoading(false)
           return
@@ -436,11 +437,7 @@ export function useComparisonStreaming(
       const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone
       const modelsToUse = isFollowUpMode ? getSuccessfulModels(selectedModels) : selectedModels
 
-      if (userLocation) {
-        console.log('[API Request] Sending user location:', userLocation)
-      } else {
-        console.debug('[API Request] No user location available (will use IP-based fallback)')
-      }
+      logger.debug('[API Request] user location:', userLocation ? 'sending' : 'none (IP fallback)')
 
       const stream = await compareStream(
         {
@@ -834,7 +831,7 @@ export function useComparisonStreaming(
           try {
             await refreshUser()
           } catch (error) {
-            console.error('Failed to refresh user data:', error)
+            logger.error('Failed to refresh user data:', error)
           }
         }
 
@@ -860,7 +857,7 @@ export function useComparisonStreaming(
           if (error instanceof Error && error.name === 'CancellationError') {
             // Silently handle
           } else {
-            console.error('Failed to sync usage count after comparison:', error)
+            logger.error('Failed to sync usage count after comparison:', error)
           }
         }
       } else {
@@ -908,7 +905,7 @@ export function useComparisonStreaming(
                 errorModelErrors[formattedModelId] = true
               }
             } catch (error) {
-              console.error('Error processing model in savePartialResultsOnError:', error)
+              logger.error('Error processing model in savePartialResultsOnError:', error)
             }
           })
         }
@@ -1076,7 +1073,7 @@ export function useComparisonStreaming(
               timeoutModelErrors[formattedModelId] = true
             }
           } catch (error) {
-            console.error('Error processing model in timeout handler:', error)
+            logger.error('Error processing model in timeout handler:', error)
           }
         })
         setModelErrors(timeoutModelErrors)
@@ -1099,7 +1096,7 @@ export function useComparisonStreaming(
               formattedTabs[formattedModelId] = RESULT_TAB.FORMATTED
             }
           } catch (error) {
-            console.error('Error formatting model tab:', error)
+            logger.error('Error formatting model tab:', error)
           }
         })
         setActiveResultTabs(prev => ({ ...prev, ...formattedTabs }))
@@ -1155,7 +1152,7 @@ export function useComparisonStreaming(
             const isError = isErrorMessage(content)
             return hasCompleted && !hasError && !isError && content.trim().length > 0
           } catch (error) {
-            console.error('Error checking successful model:', error)
+            logger.error('Error checking successful model:', error)
             return false
           }
         }).length
@@ -1168,7 +1165,7 @@ export function useComparisonStreaming(
                 setCreditBalance(balance)
               })
               .catch(error =>
-                console.error('Failed to refresh credit balance after timeout:', error)
+                logger.error('Failed to refresh credit balance after timeout:', error)
               )
           } else {
             getCreditBalance(browserFingerprint)
@@ -1177,7 +1174,7 @@ export function useComparisonStreaming(
                 setCreditBalance(balance)
               })
               .catch(error =>
-                console.error('Failed to refresh anonymous credit balance after timeout:', error)
+                logger.error('Failed to refresh anonymous credit balance after timeout:', error)
               )
           }
         }
@@ -1224,7 +1221,7 @@ export function useComparisonStreaming(
                 timedOutCount++
               }
             } catch (modelError) {
-              console.error('Error processing model in timeout handler:', modelError)
+              logger.error('Error processing model in timeout handler:', modelError)
               timedOutCount++
             }
           })
@@ -1272,7 +1269,7 @@ export function useComparisonStreaming(
         try {
           savePartialResultsOnError()
         } catch (saveError) {
-          console.error('Error saving partial results on timeout:', saveError)
+          logger.error('Error saving partial results on timeout:', saveError)
         }
       } else if (err instanceof PaymentRequiredError) {
         if (isFollowUpMode) {

@@ -5,6 +5,8 @@
  * State is saved to localStorage and restored when the user logs back in.
  */
 
+import logger from './logger'
+
 const SESSION_STATE_KEY = 'compareintel_session_state'
 const SAVE_STATE_EVENT = 'compareintel:saveStateBeforeLogout'
 
@@ -32,9 +34,8 @@ export function saveSessionState(state: Omit<PersistedSessionState, 'savedAt'>):
       savedAt: new Date().toISOString(),
     }
     localStorage.setItem(SESSION_STATE_KEY, JSON.stringify(stateToSave))
-    console.log('[SessionState] Saved state for user', state.userId)
   } catch (error) {
-    console.error('[SessionState] Failed to save state:', error)
+    logger.error('[SessionState] Failed to save state:', error)
   }
 }
 
@@ -51,7 +52,6 @@ export function loadSessionState(userId: number): PersistedSessionState | null {
 
     // Only restore state for the same user
     if (state.userId !== userId) {
-      console.log('[SessionState] Stored state is for different user, ignoring')
       clearSessionState()
       return null
     }
@@ -61,15 +61,13 @@ export function loadSessionState(userId: number): PersistedSessionState | null {
     const now = new Date()
     const daysDiff = (now.getTime() - savedAt.getTime()) / (1000 * 60 * 60 * 24)
     if (daysDiff > 7) {
-      console.log('[SessionState] Stored state is too old, ignoring')
       clearSessionState()
       return null
     }
 
-    console.log('[SessionState] Loaded saved state for user', userId)
     return state
   } catch (error) {
-    console.error('[SessionState] Failed to load state:', error)
+    logger.error('[SessionState] Failed to load state:', error)
     return null
   }
 }
@@ -80,9 +78,8 @@ export function loadSessionState(userId: number): PersistedSessionState | null {
 export function clearSessionState(): void {
   try {
     localStorage.removeItem(SESSION_STATE_KEY)
-    console.log('[SessionState] Cleared saved state')
   } catch (error) {
-    console.error('[SessionState] Failed to clear state:', error)
+    logger.error('[SessionState] Failed to clear state:', error)
   }
 }
 

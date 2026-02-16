@@ -104,8 +104,6 @@ export function useAuthStateEffects(
       const savedState = loadSessionState(userId)
 
       if (savedState) {
-        // Restore saved state
-        console.log('[Auth] Restoring saved session state')
         setInput(savedState.input || '')
         setResponse(savedState.response as CompareResponse | null)
         setIsFollowUpMode(savedState.isFollowUpMode || false)

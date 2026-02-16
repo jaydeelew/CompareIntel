@@ -5,6 +5,7 @@ import {
   toggleAnonymousMockMode as toggleAnonymousMockModeService,
   type AppSettings,
 } from '../../services/adminService'
+import logger from '../../utils/logger'
 
 import { formatDateToCST } from './utils'
 
@@ -98,7 +99,7 @@ const UsersTab: React.FC<UsersTabProps> = ({
         const data = await response.json()
         setUsers(data)
       } catch (err) {
-        console.error('Error fetching users:', err)
+        logger.error('Error fetching users:', err)
         setError(err instanceof Error ? err.message : 'Failed to fetch users')
       }
     },
@@ -116,7 +117,7 @@ const UsersTab: React.FC<UsersTabProps> = ({
       try {
         await fetchUsersInitial(currentPage)
       } catch (err) {
-        console.error('Error loading users:', err)
+        logger.error('Error loading users:', err)
       } finally {
         setLoading(false)
       }
@@ -154,7 +155,7 @@ const UsersTab: React.FC<UsersTabProps> = ({
       setUsers(data)
       setCurrentPage(1)
     } catch (err) {
-      console.error('Error searching users:', err)
+      logger.error('Error searching users:', err)
       setError(err instanceof Error ? err.message : 'Failed to search users')
     }
   }
@@ -175,7 +176,7 @@ const UsersTab: React.FC<UsersTabProps> = ({
       }
       await Promise.all([fetchUsersInitial(currentPage), fetchStats()])
     } catch (err) {
-      console.error('Error toggling user status:', err)
+      logger.error('Error toggling user status:', err)
       setError(err instanceof Error ? err.message : 'Failed to toggle user status')
     }
   }
@@ -196,7 +197,7 @@ const UsersTab: React.FC<UsersTabProps> = ({
       }
       await Promise.all([fetchUsersInitial(currentPage), fetchStats()])
     } catch (err) {
-      console.error('Error sending verification:', err)
+      logger.error('Error sending verification:', err)
       setError(err instanceof Error ? err.message : 'Failed to send verification email')
     }
   }
@@ -218,7 +219,7 @@ const UsersTab: React.FC<UsersTabProps> = ({
       await Promise.all([fetchUsersInitial(currentPage), fetchStats()])
       if (user && userId === user.id) await refreshUser()
     } catch (err) {
-      console.error('Error resetting usage:', err)
+      logger.error('Error resetting usage:', err)
       setError(err instanceof Error ? err.message : 'Failed to reset usage')
     }
   }
@@ -228,7 +229,7 @@ const UsersTab: React.FC<UsersTabProps> = ({
       await toggleAnonymousMockModeService()
       await fetchAppSettings()
     } catch (err) {
-      console.error('Error toggling anonymous mock mode:', err)
+      logger.error('Error toggling anonymous mock mode:', err)
       setError(err instanceof Error ? err.message : 'Failed to toggle anonymous mock mode')
     }
   }
@@ -251,7 +252,7 @@ const UsersTab: React.FC<UsersTabProps> = ({
       setCreditsReset(true)
       window.dispatchEvent(new CustomEvent('anonymousCreditsReset'))
     } catch (err) {
-      console.error('Error resetting anonymous credits:', err)
+      logger.error('Error resetting anonymous credits:', err)
       setError(err instanceof Error ? err.message : 'Failed to reset anonymous credits')
     }
   }
@@ -279,7 +280,7 @@ const UsersTab: React.FC<UsersTabProps> = ({
       await Promise.all([fetchUsersInitial(currentPage), fetchStats()])
       if (user && userId === user.id) await refreshUser()
     } catch (err) {
-      console.error('Error toggling mock mode:', err)
+      logger.error('Error toggling mock mode:', err)
       setError(err instanceof Error ? err.message : 'Failed to toggle mock mode')
     }
   }
@@ -323,7 +324,7 @@ const UsersTab: React.FC<UsersTabProps> = ({
       await Promise.all([fetchUsersInitial(currentPage), fetchStats()])
       if (user && tierChangeData.userId === user.id) await refreshUser()
     } catch (err) {
-      console.error('Error changing tier:', err)
+      logger.error('Error changing tier:', err)
       setError(err instanceof Error ? err.message : 'Failed to change tier')
       setShowTierChangeModal(false)
       setTierChangeData(null)
@@ -361,7 +362,7 @@ const UsersTab: React.FC<UsersTabProps> = ({
       setShowCreateModal(false)
       await Promise.all([fetchUsersInitial(currentPage), fetchStats()])
     } catch (err) {
-      console.error('Error creating user:', err)
+      logger.error('Error creating user:', err)
       setError(err instanceof Error ? err.message : 'Failed to create user')
     }
   }
@@ -399,7 +400,7 @@ const UsersTab: React.FC<UsersTabProps> = ({
       setUserToDelete(null)
       await Promise.all([fetchUsersInitial(currentPage), fetchStats()])
     } catch (err) {
-      console.error('Error deleting user:', err)
+      logger.error('Error deleting user:', err)
       setError(err instanceof Error ? err.message : 'Failed to delete user')
       setShowDeleteModal(false)
       setUserToDelete(null)

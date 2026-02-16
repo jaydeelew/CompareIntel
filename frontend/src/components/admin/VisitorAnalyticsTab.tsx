@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react'
 
 import { useAuthHeaders } from '../../contexts/AuthContext'
+import logger from '../../utils/logger'
 
 interface VisitorAnalytics {
   total_unique_visitors: number
@@ -43,7 +44,7 @@ const VisitorAnalyticsTab: React.FC = () => {
       const data = await response.json()
       setVisitorAnalytics(data)
     } catch (err) {
-      console.error('Error fetching visitor analytics:', err)
+      logger.error('Error fetching visitor analytics:', err)
     } finally {
       setAnalyticsLoading(false)
     }

@@ -6,6 +6,7 @@
  */
 
 import type { ModelRendererConfig, MathDelimiterPattern } from '../types/rendererConfig'
+import logger from '../utils/logger'
 
 import {
   registerModelConfig,
@@ -83,7 +84,7 @@ function createDelimiterPatterns(
         name = 'equation-env'
         break
       default:
-        console.warn(`Unknown delimiter type: ${type}`)
+        logger.warn(`Unknown delimiter type: ${type}`)
         continue
     }
 
@@ -172,7 +173,7 @@ function generateConfigFromAnalysis(
  */
 export function loadConfigsFromAnalysis(analysisData: AnalysisData): void {
   if (isRegistryInitialized()) {
-    console.warn('Registry already initialized, skipping load')
+    logger.warn('Registry already initialized, skipping load')
     return
   }
 
@@ -185,11 +186,11 @@ export function loadConfigsFromAnalysis(analysisData: AnalysisData): void {
       registerModelConfig(config)
       loadedCount++
     } catch (error) {
-      console.error(`Failed to load config for ${modelId}:`, error)
+      logger.error(`Failed to load config for ${modelId}:`, error)
     }
   }
 
-  console.log(`Loaded ${loadedCount} model configurations from analysis data`)
+  logger.debug(`Loaded ${loadedCount} model configurations from analysis data`)
   markRegistryInitialized()
 }
 
@@ -260,7 +261,7 @@ function parseRegexPattern(patternStr: string): RegExp {
     try {
       return new RegExp(pattern, flags)
     } catch (e) {
-      console.warn(`Invalid regex pattern: ${patternStr}`, e)
+      logger.warn(`Invalid regex pattern: ${patternStr}`, e)
       // Fallback: try without flags
       return new RegExp(pattern)
     }
@@ -326,7 +327,7 @@ function convertRawConfig(raw: RawConfig): ModelRendererConfig {
  */
 export function loadConfigsFromStatic(rawConfigs: RawConfig[]): void {
   if (isRegistryInitialized()) {
-    console.warn('Registry already initialized, skipping load')
+    logger.warn('Registry already initialized, skipping load')
     return
   }
 
@@ -338,11 +339,11 @@ export function loadConfigsFromStatic(rawConfigs: RawConfig[]): void {
       registerModelConfig(config)
       loadedCount++
     } catch (error) {
-      console.error(`Failed to load config for ${rawConfig.modelId}:`, error)
+      logger.error(`Failed to load config for ${rawConfig.modelId}:`, error)
     }
   }
 
-  console.log(`Loaded ${loadedCount} model configurations from static configs`)
+  logger.debug(`Loaded ${loadedCount} model configurations from static configs`)
   markRegistryInitialized()
 }
 
@@ -366,14 +367,14 @@ export async function initializeRegistry(): Promise<void> {
 
     if (Array.isArray(rawConfigs) && rawConfigs.length > 0) {
       loadConfigsFromStatic(rawConfigs)
-      console.log(`Model renderer registry initialized with ${rawConfigs.length} configurations`)
+      logger.debug(`Model renderer registry initialized with ${rawConfigs.length} configurations`)
     } else {
-      console.warn('No configurations found in config file, using default config for all models')
+      logger.warn('No configurations found in config file, using default config for all models')
       markRegistryInitialized()
     }
   } catch (error) {
-    console.error('Failed to load model configurations:', error)
-    console.warn('Falling back to default configuration for all models')
+    logger.error('Failed to load model configurations:', error)
+    logger.warn('Falling back to default configuration for all models')
     markRegistryInitialized()
   }
 }

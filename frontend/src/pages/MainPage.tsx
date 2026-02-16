@@ -65,6 +65,7 @@ import type { ModelsByProvider, ResultTab, ActiveResultTabs } from '../types'
 import { RESULT_TAB, createModelId } from '../types'
 import { generateBrowserFingerprint, getSafeId } from '../utils'
 import { isErrorMessage } from '../utils/error'
+import logger from '../utils/logger'
 import { saveSessionState, onSaveStateEvent } from '../utils/sessionState'
 
 export function MainPage() {
@@ -623,13 +624,13 @@ export function MainPage() {
         }
       } catch (error) {
         if (error instanceof ApiError) {
-          console.error(`Failed to reset: ${error.message}`)
+          logger.error(`Failed to reset: ${error.message}`)
         } else {
-          console.error('Reset error:', error)
+          logger.error('Reset error:', error)
         }
       }
     } catch (error) {
-      console.error('Unexpected error in resetUsage:', error)
+      logger.error('Unexpected error in resetUsage:', error)
     }
   }
 
@@ -714,7 +715,7 @@ export function MainPage() {
             setAnonymousCreditsRemaining(creditBalance.credits_remaining)
             setCreditBalance(creditBalance)
           } catch (err) {
-            console.error('Failed to refresh credit balance after reset:', err)
+            logger.error('Failed to refresh credit balance after reset:', err)
             setAnonymousCreditsRemaining(50)
           }
         } else {
@@ -1177,9 +1178,6 @@ export function MainPage() {
     if (!user) return
 
     const cleanup = onSaveStateEvent(() => {
-      if (import.meta.env.DEV) {
-        console.log('[SessionState] Saving state before logout...')
-      }
       saveSessionState({
         input,
         isFollowUpMode,
@@ -1208,7 +1206,7 @@ export function MainPage() {
             const creditBalance = await getCreditBalance()
             setCreditBalance(creditBalance)
           } catch (error) {
-            console.error('Failed to fetch authenticated user credit balance:', error)
+            logger.error('Failed to fetch authenticated user credit balance:', error)
             if (user.monthly_credits_allocated !== undefined) {
               setCreditBalance({
                 credits_allocated: user.monthly_credits_allocated || 0,
@@ -1246,13 +1244,13 @@ export function MainPage() {
               setAnonymousCreditsRemaining(creditBalance.credits_remaining)
               setCreditBalance(creditBalance)
             } catch (error) {
-              console.error('Failed to fetch anonymous credit balance:', error)
+              logger.error('Failed to fetch anonymous credit balance:', error)
             }
           } catch (error) {
             if (error instanceof Error && error.name === 'CancellationError') {
               // Expected on unmount
             } else {
-              console.error('Failed to sync usage count from backend, using localStorage:', error)
+              logger.error('Failed to sync usage count from backend, using localStorage:', error)
             }
             const savedUsage = localStorage.getItem('compareintel_usage')
             const today = new Date().toDateString()
@@ -1271,7 +1269,7 @@ export function MainPage() {
         if (error instanceof Error && error.name === 'CancellationError') {
           // Expected
         } else {
-          console.error('Failed to sync usage count with backend:', error)
+          logger.error('Failed to sync usage count with backend:', error)
         }
         const savedUsage = localStorage.getItem('compareintel_usage')
         const today = new Date().toDateString()
@@ -1303,7 +1301,7 @@ export function MainPage() {
         if (data.models_by_provider && Object.keys(data.models_by_provider).length > 0) {
           setModelsByProvider(data.models_by_provider)
         } else {
-          console.error('No models_by_provider data received')
+          logger.error('No models_by_provider data received')
           setError('No model data received from server')
         }
       } catch (error) {
@@ -1311,10 +1309,10 @@ export function MainPage() {
           return
         }
         if (error instanceof ApiError) {
-          console.error('Failed to fetch models:', error.status, error.message)
+          logger.error('Failed to fetch models:', error.status, error.message)
           setError(`Failed to fetch models: ${error.message}`)
         } else {
-          console.error(
+          logger.error(
             'Failed to fetch models:',
             error instanceof Error ? error.message : String(error)
           )
@@ -1426,7 +1424,7 @@ export function MainPage() {
             }
           })
           .catch(error => {
-            console.error('Failed to refetch anonymous credit balance:', error)
+            logger.error('Failed to refetch anonymous credit balance:', error)
           })
       }
     }
@@ -1532,7 +1530,7 @@ export function MainPage() {
           setModelsByProvider(data.models_by_provider)
         }
       } catch (error) {
-        console.error('Failed to refetch models after registration:', error)
+        logger.error('Failed to refetch models after registration:', error)
       }
       // Note: Trial welcome modal is shown after email verification, not registration
     }
@@ -1555,7 +1553,7 @@ export function MainPage() {
           setModelsByProvider(data.models_by_provider)
         }
       } catch (error) {
-        console.error('Failed to refetch models after verification:', error)
+        logger.error('Failed to refetch models after verification:', error)
       }
 
       // Actual modal display is handled in the effect below once user.is_verified updates

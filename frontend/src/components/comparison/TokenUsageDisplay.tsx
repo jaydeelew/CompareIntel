@@ -4,6 +4,7 @@ import { useDebounce } from '../../hooks'
 import { estimateTokens } from '../../services/compareService'
 import type { ModelConversation } from '../../types'
 import type { ModelsByProvider } from '../../types/models'
+import logger from '../../utils/logger'
 
 import type { AttachedFile, StoredAttachedFile } from './FileUpload'
 import { UsageIndicatorInfoModal } from './UsageIndicatorInfoModal'
@@ -118,7 +119,7 @@ export function TokenUsageDisplay({
         try {
           return await onExpandFiles(attachedFiles, debouncedInput)
         } catch (error) {
-          console.warn('Failed to expand files for token counting:', error)
+          logger.warn('Failed to expand files for token counting:', error)
           return debouncedInput
         }
       }
@@ -143,7 +144,7 @@ export function TokenUsageDisplay({
       })
       .catch(error => {
         if (error.name === 'AbortError' || controller.signal.aborted) return
-        console.warn('Failed to get accurate token count from backend:', error)
+        logger.warn('Failed to get accurate token count from backend:', error)
         setIsLoadingAccurateTokens(false)
         onAccurateTokenCountChange?.(null)
       })

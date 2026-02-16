@@ -7,6 +7,7 @@
 
 import { useEffect, useRef, useCallback } from 'react'
 
+import logger from '../utils/logger'
 import { PerformanceMarker, initWebVitals } from '../utils/performance'
 import type { PerformanceCallback } from '../utils/performance'
 
@@ -64,10 +65,7 @@ export function usePerformanceTracking(enabled: boolean = true): void {
     if (!enabled) return
 
     const callback: PerformanceCallback = metric => {
-      // In development, log all metrics
-      if (import.meta.env.DEV) {
-        console.log(`[Performance] ${metric.name}: ${metric.value.toFixed(2)}ms (${metric.rating})`)
-      }
+      logger.debug(`[Performance] ${metric.name}: ${metric.value.toFixed(2)}ms (${metric.rating})`)
 
       // In production, you might want to send to analytics
       // This is handled by the performance utility

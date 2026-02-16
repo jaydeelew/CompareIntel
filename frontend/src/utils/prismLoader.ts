@@ -5,6 +5,8 @@
  * This prevents render-blocking resources and improves initial page load performance.
  */
 
+import logger from './logger'
+
 interface PrismLoaderOptions {
   languages?: string[]
   onLoad?: () => void
@@ -142,7 +144,7 @@ export async function loadPrism(options: PrismLoaderOptions = {}): Promise<void>
       const langFile = `https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-${lang}.min.js`
       return loadScript(langFile).catch(err => {
         // Some languages might not exist, that's okay
-        console.warn(`Failed to load Prism language: ${lang}`, err)
+        logger.warn(`Failed to load Prism language: ${lang}`, err)
       })
     })
 

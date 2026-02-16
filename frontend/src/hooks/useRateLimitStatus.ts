@@ -8,6 +8,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 
 import { getRateLimitStatus, type RateLimitStatus } from '../services/compareService'
+import logger from '../utils/logger'
 
 export interface UseRateLimitStatusOptions {
   isAuthenticated: boolean
@@ -61,7 +62,7 @@ export function useRateLimitStatus({
       if (error instanceof Error && error.name === 'CancellationError') {
         return // Don't log or update state for cancelled requests
       }
-      console.error('Failed to fetch rate limit status:', error)
+      logger.error('Failed to fetch rate limit status:', error)
       setRateLimitStatus(null)
     }
   }, [isAuthenticated, browserFingerprint])
@@ -88,7 +89,7 @@ export function useRateLimitStatus({
             localStorage.removeItem('compareintel_usage')
           }
         } catch (e) {
-          console.error('Failed to parse usage count:', e)
+          logger.error('Failed to parse usage count:', e)
           setUsageCount(0)
         }
       }

@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 
+import logger from '../../utils/logger'
+
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>
   userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>
@@ -167,7 +169,7 @@ export function InstallPrompt() {
         setIsDismissed(true)
       }
     } catch (error) {
-      console.warn('Install prompt error:', error)
+      logger.warn('Install prompt error:', error)
     }
   }
 

@@ -7,6 +7,7 @@ import './index.css'
 // It will be loaded when LatexRenderer component is first used
 import App from './App.tsx'
 import { initializeRegistry } from './config/loadModelConfigs'
+import logger from './utils/logger'
 import { initWebVitals } from './utils/performance'
 import { initSentry } from './utils/sentry'
 
@@ -26,20 +27,17 @@ window.scrollTo(0, 0)
 
 // Initialize model renderer registry before rendering
 initializeRegistry().catch(error => {
-  console.error('Failed to initialize model renderer registry:', error)
+  logger.error('Failed to initialize model renderer registry:', error)
 })
 
 // Initialize performance monitoring
 // Track Web Vitals metrics for Core Web Vitals monitoring
 initWebVitals(metric => {
-  // Log metrics in development
-  if (import.meta.env.DEV) {
-    const emoji =
-      metric.rating === 'good' ? '✅' : metric.rating === 'needs-improvement' ? '⚠️' : '❌'
-    console.log(
-      `${emoji} [Web Vitals] ${metric.name}: ${metric.value.toFixed(2)}ms (${metric.rating})`
-    )
-  }
+  const emoji =
+    metric.rating === 'good' ? '✅' : metric.rating === 'needs-improvement' ? '⚠️' : '❌'
+  logger.debug(
+    `${emoji} [Web Vitals] ${metric.name}: ${metric.value.toFixed(2)}ms (${metric.rating})`
+  )
 
   // In production, metrics are automatically sent to analytics endpoint if configured
   // via VITE_PERFORMANCE_ENDPOINT environment variable
@@ -69,7 +67,7 @@ if ('serviceWorker' in navigator && import.meta.env.PROD) {
             // Handle offline ready
           },
         }).catch((error: unknown) => {
-          console.warn('Service worker registration failed:', error)
+          logger.warn('Service worker registration failed:', error)
         })
       })
       .catch(() => {

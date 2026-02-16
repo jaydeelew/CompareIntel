@@ -5,6 +5,8 @@
  * This system extracts code blocks before processing and restores them after.
  */
 
+import logger from './logger'
+
 /**
  * Represents a code block that has been extracted
  */
@@ -253,7 +255,7 @@ export function verifyCodeBlockPreservation(
 
   // Compare block counts
   if (originalExtraction.blocks.length !== restoredExtraction.blocks.length) {
-    console.warn(
+    logger.warn(
       `Code block count mismatch: original has ${originalExtraction.blocks.length}, ` +
         `restored has ${restoredExtraction.blocks.length}`
     )
@@ -266,7 +268,7 @@ export function verifyCodeBlockPreservation(
     const restoredBlock = restoredExtraction.blocks[i]
 
     if (originalBlock.content !== restoredBlock.content) {
-      console.warn(
+      logger.warn(
         `Code block content mismatch at index ${i}:\n` +
           `Original: ${originalBlock.content.substring(0, 50)}...\n` +
           `Restored: ${restoredBlock.content.substring(0, 50)}...`
@@ -275,7 +277,7 @@ export function verifyCodeBlockPreservation(
     }
 
     if (originalBlock.language !== restoredBlock.language) {
-      console.warn(
+      logger.warn(
         `Code block language mismatch at index ${i}: ` +
           `original="${originalBlock.language}", restored="${restoredBlock.language}"`
       )

@@ -9,6 +9,7 @@
 
 import type { StreamEvent } from '../types'
 import { STREAM_EVENT_TYPE } from '../types'
+import logger from '../utils/logger'
 
 import { apiClient } from './api/client'
 
@@ -174,7 +175,7 @@ export async function processStreamEvents(
               break
           }
         } catch (parseError) {
-          console.error('Error parsing SSE message:', parseError, message)
+          logger.error('Error parsing SSE message:', parseError, message)
           if (callbacks.onError) {
             callbacks.onError(parseError as Error)
           }

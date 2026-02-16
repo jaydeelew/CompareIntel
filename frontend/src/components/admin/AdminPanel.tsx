@@ -4,6 +4,7 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import { BREAKPOINT_MOBILE } from '../../config/constants'
 import { useAuth, useAuthHeaders } from '../../contexts/AuthContext'
 import { getAppSettings, type AppSettings } from '../../services/adminService'
+import logger from '../../utils/logger'
 
 import ActionLogsTab from './ActionLogsTab'
 import ModelsTab from './ModelsTab'
@@ -158,7 +159,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
       const data = await response.json()
       setStats(data)
     } catch (err) {
-      console.error('Error fetching admin stats:', err)
+      logger.error('Error fetching admin stats:', err)
       setError(err instanceof Error ? err.message : 'Failed to fetch stats')
     }
   }, [getAuthHeaders])
@@ -168,7 +169,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
       const data = await getAppSettings()
       setAppSettings(data)
     } catch (err) {
-      console.error('Error fetching app settings:', err)
+      logger.error('Error fetching app settings:', err)
       setError(err instanceof Error ? err.message : 'Failed to fetch app settings')
     }
   }, [])
@@ -184,7 +185,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
       try {
         await Promise.all([fetchStats(), fetchAppSettings()])
       } catch (err) {
-        console.error('Error loading admin data:', err)
+        logger.error('Error loading admin data:', err)
       } finally {
         setLoading(false)
       }

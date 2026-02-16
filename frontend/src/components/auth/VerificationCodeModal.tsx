@@ -6,6 +6,7 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react'
 
 import { useAuth } from '../../contexts/AuthContext'
+import logger from '../../utils/logger'
 import './VerificationCodeModal.css'
 
 // API base URL with smart fallback
@@ -111,7 +112,7 @@ export const VerificationCodeModal: React.FC<VerificationCodeModalProps> = ({
         setError(errorData.detail || 'Verification failed. Please try again.')
       }
     } catch (err) {
-      console.error('Verification error:', err)
+      logger.error('Verification error:', err)
       setError('Failed to verify. Please check your connection and try again.')
     } finally {
       setIsVerifying(false)
@@ -146,7 +147,7 @@ export const VerificationCodeModal: React.FC<VerificationCodeModalProps> = ({
         setError(errorData.detail || 'Failed to resend code. Please try again.')
       }
     } catch (err) {
-      console.error('Resend error:', err)
+      logger.error('Resend error:', err)
       setError('Failed to resend code. Please check your connection.')
     } finally {
       setIsResending(false)

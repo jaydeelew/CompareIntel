@@ -4,6 +4,8 @@
  */
 
 import React, { useState, useEffect } from 'react'
+
+import logger from '../../utils/logger'
 import './AuthForms.css'
 
 // API URL with smart fallback
@@ -58,7 +60,7 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({
       setSuccess(true)
       // Don't auto-close anymore - let user close manually or via reset link
     } catch (err) {
-      console.error('Password reset request error:', err)
+      logger.error('Password reset request error:', err)
       if (err instanceof Error) {
         setError(err.message)
       } else {

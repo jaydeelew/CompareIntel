@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 
 import { getUserPreferences } from '../services/userSettingsService'
 import type { User } from '../types'
+import logger from '../utils/logger'
 
 interface UseGeolocationProps {
   isAuthenticated: boolean
@@ -31,24 +32,20 @@ export function useGeolocation({ isAuthenticated, user }: UseGeolocationProps) {
               const city = place['place name'] || ''
               const state = place['state'] || ''
               const location = [city, state, 'United States'].filter(Boolean).join(', ')
-              if (import.meta.env.DEV) {
-                console.log(
-                  '[Settings] Using saved zipcode location:',
-                  location,
-                  `(zipcode: ${preferences.zipcode})`
-                )
-              }
+              logger.debug(
+                '[Settings] Using saved zipcode location:',
+                location,
+                preferences.zipcode
+              )
               setUserLocation(location)
               savedLocationLoadedRef.current = true
             }
-          } else if (import.meta.env.DEV) {
-            console.debug('[Settings] Could not lookup zipcode:', preferences.zipcode)
+          } else {
+            logger.debug('[Settings] Could not lookup zipcode:', preferences.zipcode)
           }
         }
       } catch (error) {
-        if (import.meta.env.DEV) {
-          console.debug('[Settings] Failed to load saved location preference:', error)
-        }
+        logger.debug('[Settings] Failed to load saved location preference:', error)
       }
     }
 
@@ -80,9 +77,7 @@ export function useGeolocation({ isAuthenticated, user }: UseGeolocationProps) {
             navigator.geolocation.getCurrentPosition(
               async position => {
                 if (savedLocationLoadedRef.current) {
-                  if (import.meta.env.DEV) {
-                    console.log('[Geolocation] Skipping - user has saved location in settings')
-                  }
+                  logger.debug('[Geolocation] Skipping - user has saved location in settings')
                   return
                 }
                 try {
@@ -98,32 +93,24 @@ export function useGeolocation({ isAuthenticated, user }: UseGeolocationProps) {
                     const parts = [city, region, country].filter(Boolean)
                     if (parts.length > 0) {
                       const location = parts.join(', ')
-                      if (import.meta.env.DEV) {
-                        console.log('[Geolocation] Successfully detected location:', location)
-                      }
+                      logger.debug('[Geolocation] Successfully detected location:', location)
                       setUserLocation(location)
                     }
                   }
                 } catch (error) {
-                  if (import.meta.env.DEV) {
-                    console.debug('Failed to get location from coordinates:', error)
-                  }
+                  logger.debug('Failed to get location from coordinates:', error)
                 }
               },
               error => {
-                if (import.meta.env.DEV) {
-                  console.debug('Geolocation not available:', error.message)
-                }
+                logger.debug('Geolocation not available:', error.message)
               },
               { timeout: 5000, enableHighAccuracy: false }
             )
           } catch (error) {
-            if (import.meta.env.DEV) {
-              console.debug('Geolocation access blocked:', error)
-            }
+            logger.debug('Geolocation access blocked:', error)
           }
-        } else if (import.meta.env.DEV) {
-          console.debug('[Geolocation] Access denied by permissions policy')
+        } else {
+          logger.debug('[Geolocation] Access denied by permissions policy')
         }
       }
 

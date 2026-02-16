@@ -436,7 +436,7 @@ The AI must update this table after completing each session (see Instructions fo
 | 14 | Done | Created sseProcessor.ts (~600 lines), comparisonValidation.ts, conversationPreparer.ts. useComparisonStreaming reduced from 2,239 to 1,383 lines. SSE processing, validation, and conversation prep extracted. All 709 frontend tests pass. |
 | 15 | Done | Created frontend/src/utils/latex/ with cleanup.ts, fixSyntax.ts, implicitMath.ts, lists.ts, mathRenderer.ts, codeBlocks.ts, helpers.ts, index.ts. LatexRenderer reduced from 3,224 to 1,377 lines. processMarkdown, convertListsToHTML, applyParagraphBreaks remain in component. All 709 frontend tests pass. |
 | 16 | Done | Created tutorialPositioning.ts (cutout/positioning utilities). Moved tutorialSteps to frontend/src/data/. Extracted useTutorialOverlay hook. TutorialOverlay reduced from 2,381 to 98 lines. All 709 frontend tests pass. |
-| 17 | Pending | |
+| 17 | Done | Created frontend/src/utils/logger.ts (dev-only debug/info, always-on warn/error). Replaced console.log/error/warn/debug with logger across 50+ files. Removed routine state-transition logs. All 709 frontend tests pass. |
 | 18 | Pending | |
 | 19 | Pending | |
 | 20 | Pending | |
