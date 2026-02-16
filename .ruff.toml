@@ -1,7 +1,0 @@
-# Root-level ruff config (for non-backend Python files if any)
-# Most configuration is in backend/pyproject.toml
-
-[ruff]
-line-length = 100
-target-version = "py311"
-

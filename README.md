@@ -203,17 +203,21 @@ CompareIntel/
 ├── backend/
 │   ├── app/
 │   │   ├── config/           # Settings, constants, validation
-│   │   ├── middleware/       # Profiling, CORS
+│   │   ├── llm/              # OpenRouter integration (registry, tokens, streaming)
+│   │   ├── middleware/       # Profiling, CORS, security headers
 │   │   ├── routers/          # API route handlers
-│   │   │   ├── api.py        # Core comparison endpoints
-│   │   │   ├── auth.py       # Authentication endpoints
-│   │   │   └── admin.py      # Admin panel endpoints
-│   │   ├── utils/            # Helper functions
+│   │   │   ├── api/          # Core, conversations, credits, preferences, dev
+│   │   │   ├── admin/        # Users, analytics, settings, models, search providers
+│   │   │   └── auth.py       # Authentication endpoints
+│   │   ├── search/          # Web search providers, rate limiting
+│   │   ├── services/         # Comparison stream, model capability
+│   │   ├── templates/       # Email HTML templates
+│   │   ├── utils/            # Helpers, error handling, geo, request
 │   │   ├── auth.py           # JWT and password utilities
 │   │   ├── credit_manager.py # Credit allocation and tracking
 │   │   ├── database.py       # SQLAlchemy setup
 │   │   ├── models.py         # Database models
-│   │   ├── model_runner.py   # OpenRouter API integration
+│   │   ├── model_runner.py   # OpenRouter shim (re-exports from llm/)
 │   │   ├── rate_limiting.py  # Usage limits
 │   │   └── schemas.py        # Pydantic schemas
 │   ├── tests/                # Backend tests
@@ -222,7 +226,7 @@ CompareIntel/
 ├── frontend/
 │   ├── src/
 │   │   ├── components/       # React components
-│   │   │   ├── admin/        # Admin panel components
+│   │   │   ├── admin/        # Admin panel (tabs: users, models, logs, analytics)
 │   │   │   ├── auth/         # Authentication UI
 │   │   │   ├── comparison/   # Core comparison UI
 │   │   │   ├── conversation/ # Chat history
@@ -230,19 +234,21 @@ CompareIntel/
 │   │   │   ├── layout/       # Navigation, hero, banners
 │   │   │   └── shared/       # Reusable components
 │   │   ├── contexts/         # React Context providers
+│   │   ├── data/             # FAQ, glossary, tutorial steps
 │   │   ├── hooks/            # Custom React hooks
-│   │   ├── services/         # API client and services
+│   │   ├── services/         # API client, SSE processing
 │   │   ├── styles/           # CSS modules
 │   │   ├── types/            # TypeScript type definitions
-│   │   └── utils/            # Utility functions
+│   │   └── utils/            # Utilities (latex, logger, validation)
 │   ├── e2e/                  # Playwright E2E tests
 │   └── package.json
 │
 ├── nginx/                    # Nginx configurations
+├── scripts/deploy/           # Deployment sub-scripts
 ├── docker-compose.yml        # Development setup
 ├── docker-compose.prod.yml   # Production setup
 ├── docker-compose.ssl.yml    # Production with SSL
-└── deploy-production.sh      # Deployment script
+└── deploy-production.sh      # Deployment dispatcher
 ```
 
 ### Data Flow

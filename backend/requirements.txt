@@ -1,89 +1,63 @@
-# ============================================================================
-# CompareIntel Backend - Production Dependencies
-# ============================================================================
-# This file contains only runtime dependencies needed to run the application.
-# For development tools (testing, linting, etc.), see requirements-dev.txt
-# ============================================================================
+# CompareIntel Backend - Production dependencies
+# For dev tools see requirements-dev.txt
 
-# ============================================================================
-# Core FastAPI Framework
-# ============================================================================
+# Core FastAPI
 fastapi>=0.100.0
 starlette>=0.27.0
 pydantic>=2.0.0
 pydantic_core>=2.0.0
-pydantic-settings>=2.0.0  # Settings management for Pydantic v2
+pydantic-settings>=2.0.0
 annotated-types>=0.5.0
 typing_extensions>=4.0.0
 
-# ============================================================================
-# ASGI Server & Production
-# ============================================================================
+# ASGI Server
 uvicorn>=0.20.0
 gunicorn
 click>=8.0.0
 
-# ============================================================================
-# Performance Enhancements
-# ============================================================================
-uvloop>=0.17.0        # Faster event loop (Unix only)
-httptools>=0.5.0      # Faster HTTP parsing
-h11>=0.14.0           # HTTP/1.1 protocol implementation
-websockets>=10.0      # WebSocket support
+# Performance
+uvloop>=0.17.0
+httptools>=0.5.0
+h11>=0.14.0
+websockets>=10.0
 
-# ============================================================================
-# Request Handling & Utilities
-# ============================================================================
-python-multipart>=0.0.5  # Form data parsing
-python-dotenv>=1.0.0     # Environment variables
-PyYAML>=6.0              # YAML configuration
-anyio>=3.6.0,<4.0.0      # Async compatibility layer
-sniffio>=1.3.0           # Async library detection
-idna>=3.0.0              # Internationalized domain names
-httpx>=0.27.0            # Async HTTP client (for reCAPTCHA verification)
-beautifulsoup4>=4.12.0   # HTML parsing for URL content fetching
+# Request handling
+python-multipart>=0.0.5
+python-dotenv>=1.0.0
+PyYAML>=6.0
+anyio>=3.6.0,<4.0.0
+sniffio>=1.3.0
+idna>=3.0.0
+httpx>=0.27.0
+beautifulsoup4>=4.12.0
 
-# ============================================================================
-# API Clients & Tokenizers
-# ============================================================================
-openai>=1.0.0         # OpenRouter API client
-tiktoken>=0.5.0       # Token counting for context management
-anthropic>=0.18.0     # Anthropic Claude tokenizer (free, no API key needed)
-transformers>=4.35.0  # Hugging Face tokenizers for Meta, Mistral, DeepSeek, Qwen
-sentencepiece>=0.1.99 # Required by some tokenizers (e.g., Llama, Qwen)
-requests>=2.25.0      # HTTP client for utility scripts
+# API clients & tokenizers
+openai>=1.0.0
+tiktoken>=0.5.0
+anthropic>=0.18.0
+transformers>=4.35.0
+sentencepiece>=0.1.99
+requests>=2.25.0
 
-# ============================================================================
-# Authentication & Security
-# ============================================================================
-python-jose[cryptography]>=3.3.0  # JWT token handling
-passlib[bcrypt]>=1.7.4            # Password hashing (legacy support)
-bcrypt==4.0.1                      # Password hashing (primary)
+# Auth & security
+python-jose[cryptography]>=3.3.0
+passlib[bcrypt]>=1.7.4
+bcrypt==4.0.1
 
-# ============================================================================
 # Database
-# ============================================================================
-sqlalchemy>=2.0.0        # ORM
-psycopg2-binary>=2.9.9   # PostgreSQL driver
-alembic>=1.13.0          # Database migrations
+sqlalchemy>=2.0.0
+psycopg2-binary>=2.9.9
+alembic>=1.13.0
 
-# ============================================================================
 # Email
-# ============================================================================
-fastapi-mail>=1.4.0      # Email sending
-pydantic[email]>=2.0.0   # Email validation
+fastapi-mail>=1.4.0
+pydantic[email]>=2.0.0
 
-# ============================================================================
-# Timezone Support
-# ============================================================================
-pytz>=2024.1             # Timezone handling for credit resets
+# Timezone
+pytz>=2024.1
 
-# ============================================================================
-# Distributed Rate Limiting (Optional - for multi-worker deployments)
-# ============================================================================
-redis>=5.0.0             # Redis client for distributed rate limiting (optional)
+# Redis (optional, for distributed rate limiting)
+redis>=5.0.0
 
-# ============================================================================
-# Error Monitoring & APM
-# ============================================================================
-sentry-sdk[fastapi]>=2.0.0  # Error tracking and performance monitoring
+# Error monitoring
+sentry-sdk[fastapi]>=2.0.0
