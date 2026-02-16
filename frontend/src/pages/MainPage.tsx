@@ -1601,14 +1601,10 @@ export function MainPage() {
     setIsModelsHidden(false)
   }
 
-  // Track model selection changes for default override.
-  // When user deselects models (via checkbox or model card close) so that current
-  // selection no longer matches the default, hide the default selection name from
-  // the toolbar. When selections match again, show it.
-  // IMPORTANT: When selectedModels is empty during initial load (models still loading
-  // or not yet loaded), do NOT set overridden=true - the Load default selection
-  // effect needs to run first to populate selectedModels. Otherwise we'd block the
-  // load and the default name would never appear after refresh.
+  // Track model selection changes for default override. When user deselects models,
+  // hide the default selection name from the toolbar. When selectedModels is empty
+  // during initial load (models still loading), do not set overridden=true so the
+  // Load default selection effect can run first and populate selectedModels.
   useEffect(() => {
     const defaultSelection = getDefaultSelection()
     if (!defaultSelection) {
