@@ -2,628 +2,97 @@
 # CompareIntel production deployment. Handles dependency checks, backup, build, deploy.
 # Usage: ./deploy-production.sh {check|backup|build|deploy|quick-deploy|rollback|restart|status|logs}
 
-set -e  # Exit on any error
+set -e
 
-# Colors for output
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-NC='\033[0m' # No Color
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+DEPLOY_DIR="$SCRIPT_DIR/scripts/deploy"
 
-# Configuration
-PROJECT_DIR="/home/ubuntu/CompareIntel"
-BACKUP_DIR="/home/ubuntu/backups"
-LOG_FILE="/home/ubuntu/compareintel-deploy.log"
-ENV_FILE="$PROJECT_DIR/backend/.env"
+source "$DEPLOY_DIR/utils.sh"
+source "$DEPLOY_DIR/check.sh"
+source "$DEPLOY_DIR/backup.sh"
+source "$DEPLOY_DIR/pull.sh"
+source "$DEPLOY_DIR/build.sh"
+source "$DEPLOY_DIR/verify.sh"
+source "$DEPLOY_DIR/status.sh"
+source "$DEPLOY_DIR/rollback.sh"
 
-# Global flag to track if code changes were detected
-CODE_CHANGED=false
-
-# Function to log messages
-log() {
-    echo -e "${BLUE}[$(date '+%Y-%m-%d %H:%M:%S')]${NC} $1" | tee -a "$LOG_FILE"
-}
-
-log_success() {
-    echo -e "${GREEN}[$(date '+%Y-%m-%d %H:%M:%S')] ✅ $1${NC}" | tee -a "$LOG_FILE"
-}
-
-log_warning() {
-    echo -e "${YELLOW}[$(date '+%Y-%m-%d %H:%M:%S')] ⚠️  $1${NC}" | tee -a "$LOG_FILE"
-}
-
-log_error() {
-    echo -e "${RED}[$(date '+%Y-%m-%d %H:%M:%S')] ❌ $1${NC}" | tee -a "$LOG_FILE"
-}
-
-# Function to check if command exists
-command_exists() {
-    command -v "$1" >/dev/null 2>&1
-}
-
-# Function to check if service is running
-service_running() {
-    cd "$PROJECT_DIR"
-    docker compose -f docker-compose.ssl.yml ps --services --filter "status=running" 2>/dev/null | grep -q "$1"
-}
-
-# Function to check if service completed successfully (for build-only services)
-service_completed() {
-    cd "$PROJECT_DIR"
-    # Check if service exited successfully (exit code 0)
-    # Get all containers for this service and check their exit codes
-    CONTAINERS=$(docker compose -f docker-compose.ssl.yml ps -a --format "{{.Name}}" 2>/dev/null | grep -i "$1" || true)
-    if [ -z "$CONTAINERS" ]; then
-        return 1
-    fi
-    # Check if any container for this service exited with code 0
-    for container in $CONTAINERS; do
-        EXIT_CODE=$(docker inspect "$container" --format='{{.State.ExitCode}}' 2>/dev/null || echo "1")
-        if [ "$EXIT_CODE" = "0" ]; then
-            return 0
-        fi
-    done
-    return 1
-}
-
-# Function to load environment variables from .env file
-load_env() {
-    if [ -f "$ENV_FILE" ]; then
-        log "Loading environment variables from $ENV_FILE"
-        # Export variables from .env file (handle comments and empty lines)
-        set -a
-        source <(grep -v '^\s*#' "$ENV_FILE" | grep -v '^\s*$')
-        set +a
-        log_success "Environment variables loaded"
-    else
-        log_warning "Environment file not found: $ENV_FILE"
-    fi
-}
-
-# Function to backup database (PostgreSQL)
-backup_database() {
-    log "Creating database backup..."
-    
-    # Create backup directory if it doesn't exist
-    mkdir -p "$BACKUP_DIR"
-    
-    # Load environment to get DATABASE_URL
-    load_env
-    
-    if [ -z "$DATABASE_URL" ]; then
-        log_warning "DATABASE_URL not set, skipping backup"
-        return 0
-    fi
-    
-    BACKUP_FILE="$BACKUP_DIR/compareintel-backup-$(date +%Y%m%d-%H%M%S).sql"
-    
-    # Check if using PostgreSQL
-    if [[ "$DATABASE_URL" == postgres* ]]; then
-        log "Detected PostgreSQL database"
-        
-        # Parse DATABASE_URL: postgresql://user:password@host:port/database
-        DB_USER=$(echo "$DATABASE_URL" | sed -n 's/.*:\/\/\([^:]*\):.*/\1/p')
-        DB_PASS=$(echo "$DATABASE_URL" | sed -n 's/.*:\/\/[^:]*:\([^@]*\)@.*/\1/p')
-        DB_HOST=$(echo "$DATABASE_URL" | sed -n 's/.*@\([^:]*\):.*/\1/p')
-        DB_PORT=$(echo "$DATABASE_URL" | sed -n 's/.*:\([0-9]*\)\/.*/\1/p')
-        DB_NAME=$(echo "$DATABASE_URL" | sed -n 's/.*\/\([^?]*\).*/\1/p')
-        
-        # Create backup using pg_dump
-        PGPASSWORD="$DB_PASS" pg_dump -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -F c -f "$BACKUP_FILE"
-        
-        if [ $? -eq 0 ]; then
-            log_success "PostgreSQL database backed up to: $BACKUP_FILE"
-        else
-            log_error "Failed to backup PostgreSQL database"
-            exit 1
-        fi
-    elif [[ "$DATABASE_URL" == sqlite* ]]; then
-        # SQLite backup (development)
-        DB_PATH=$(echo "$DATABASE_URL" | sed 's/sqlite:\/\/\///')
-        if [ -f "$DB_PATH" ]; then
-            cp "$DB_PATH" "${BACKUP_FILE%.sql}.db"
-            log_success "SQLite database backed up to: ${BACKUP_FILE%.sql}.db"
-        else
-            log_warning "SQLite database file not found: $DB_PATH"
-        fi
-    else
-        log_warning "Unknown database type, skipping backup"
-        return 0
-    fi
-    
-    # Clean up old backups (keep last 10)
-    BACKUP_COUNT=$(ls -1 "$BACKUP_DIR"/compareintel-backup-* 2>/dev/null | wc -l)
-    if [ "$BACKUP_COUNT" -gt 10 ]; then
-        log "Cleaning up old backups (keeping last 10)..."
-        ls -1t "$BACKUP_DIR"/compareintel-backup-* | tail -n +11 | xargs rm -f
-        log_success "Old backups cleaned up"
-    fi
-}
-
-# Function to check system requirements
-check_system_requirements() {
-    log "Checking system requirements..."
-    
-    # Check if running as root or with sudo
-    if [ "$EUID" -eq 0 ]; then
-        log_warning "Running as root. Consider using a non-root user with sudo privileges."
-    fi
-    
-    # Check Docker
-    if ! command_exists docker; then
-        log_error "Docker is not installed. Please install Docker first."
-        exit 1
-    fi
-    log_success "Docker is installed"
-    
-    # Check Docker Compose
-    if ! command_exists docker-compose && ! docker compose version >/dev/null 2>&1; then
-        log_error "Docker Compose is not installed. Please install Docker Compose first."
-        exit 1
-    fi
-    log_success "Docker Compose is installed"
-    
-    # Check pg_dump (needed for PostgreSQL backups)
-    if command_exists pg_dump; then
-        log_success "pg_dump is installed (for PostgreSQL backups)"
-    else
-        log_warning "pg_dump is not installed. Install with: sudo apt-get install postgresql-client"
-    fi
-    
-    # Check curl (needed for health checks)
-    if ! command_exists curl; then
-        log_warning "curl is not installed. Health checks may fail."
-        log "Install with: sudo apt-get install curl"
-    else
-        log_success "curl is installed"
-    fi
-    
-    # Check available disk space (at least 2GB)
-    AVAILABLE_SPACE=$(df / | awk 'NR==2 {print $4}')
-    if [ "$AVAILABLE_SPACE" -lt 2097152 ]; then  # 2GB in KB
-        log_warning "Low disk space detected. At least 2GB recommended."
-    else
-        AVAILABLE_GB=$(echo "scale=1; $AVAILABLE_SPACE / 1048576" | bc 2>/dev/null || echo "unknown")
-        log_success "Disk space: ${AVAILABLE_GB}GB available"
-    fi
-    
-    # Check memory (at least 1GB)
-    TOTAL_MEM=$(free -m | awk 'NR==2{print $2}')
-    if [ "$TOTAL_MEM" -lt 1024 ]; then
-        log_warning "Low memory detected. At least 1GB RAM recommended."
-    else
-        log_success "Memory: ${TOTAL_MEM}MB available"
-    fi
-    
-    # Check if project directory exists
-    if [ ! -d "$PROJECT_DIR" ]; then
-        log_error "Project directory not found: $PROJECT_DIR"
-        exit 1
-    fi
-    log_success "Project directory exists: $PROJECT_DIR"
-    
-    # Check if .env file exists
-    if [ -f "$ENV_FILE" ]; then
-        log_success "Environment file exists: $ENV_FILE"
-    else
-        log_error "Environment file not found: $ENV_FILE"
-        exit 1
-    fi
-    
-    log_success "System requirements check completed"
-}
-
-# Function to check SSL certificates
-check_ssl_certificates() {
-    log "Checking SSL certificates..."
-    
-    # Use sudo to check certificate directory (requires root permissions to read /etc/letsencrypt/live/)
-    if ! sudo test -d "/etc/letsencrypt/live/compareintel.com"; then
-        log_error "SSL certificates not found. Please run setup-compareintel-ssl.sh first."
-        exit 1
-    fi
-    
-    # Check certificate expiration (use sudo to read cert file)
-    CERT_EXPIRY=$(sudo openssl x509 -in /etc/letsencrypt/live/compareintel.com/fullchain.pem -noout -enddate | cut -d= -f2)
-    CERT_EXPIRY_EPOCH=$(date -d "$CERT_EXPIRY" +%s)
-    CURRENT_EPOCH=$(date +%s)
-    DAYS_UNTIL_EXPIRY=$(( (CERT_EXPIRY_EPOCH - CURRENT_EPOCH) / 86400 ))
-    
-    if [ "$DAYS_UNTIL_EXPIRY" -lt 90 ]; then
-        log_warning "SSL certificate expires in $DAYS_UNTIL_EXPIRY days. Consider renewing soon."
-        if [ "$DAYS_UNTIL_EXPIRY" -lt 14 ]; then
-            log_error "SSL certificate expires in $DAYS_UNTIL_EXPIRY days! Renew immediately!"
-        fi
-    else
-        log_success "SSL certificate is valid for $DAYS_UNTIL_EXPIRY more days"
-    fi
-}
-
-# Function to pull latest code
-# Returns: Sets CODE_CHANGED global variable to true if changes were pulled, false otherwise
-pull_latest_code() {
-    log "Checking for updates from repository..."
-    
-    cd "$PROJECT_DIR"
-    
-    # Check if we're in a git repository
-    if [ ! -d ".git" ]; then
-        log_error "Not in a git repository. Please ensure you're in the CompareIntel project directory."
-        exit 1
-    fi
-    
-    # Detect the default branch (main or master)
-    DEFAULT_BRANCH=$(git remote show origin 2>/dev/null | grep 'HEAD branch' | awk '{print $NF}')
-    if [ -z "$DEFAULT_BRANCH" ]; then
-        # Fallback: check if main or master exists
-        if git show-ref --verify --quiet refs/remotes/origin/main; then
-            DEFAULT_BRANCH="main"
-        else
-            DEFAULT_BRANCH="master"
-        fi
-    fi
-    
-    log "Using branch: $DEFAULT_BRANCH"
-    
-    # Fetch latest changes from remote (without merging)
-    log "Fetching latest changes from origin..."
-    git fetch origin
-    
-    # Get current local commit and remote commit
-    LOCAL_COMMIT=$(git rev-parse HEAD 2>/dev/null || echo "")
-    REMOTE_COMMIT=$(git rev-parse "origin/$DEFAULT_BRANCH" 2>/dev/null || echo "")
-    
-    # Check if commits are valid
-    if [ -z "$LOCAL_COMMIT" ] || [ -z "$REMOTE_COMMIT" ]; then
-        log_warning "Could not determine commit hashes. Proceeding with pull..."
-        git pull origin "$DEFAULT_BRANCH"
-        if [ $? -eq 0 ]; then
-            CODE_CHANGED=true
-            log_success "Code updated successfully from $DEFAULT_BRANCH"
-        else
-            log_error "Failed to pull latest code from $DEFAULT_BRANCH"
-            exit 1
-        fi
-        return
-    fi
-    
-    # Check if commits match
-    if [ "$LOCAL_COMMIT" = "$REMOTE_COMMIT" ]; then
-        CODE_CHANGED=false
-        log_success "Already up to date with $DEFAULT_BRANCH (commit: ${LOCAL_COMMIT:0:7})"
-        return 0
-    fi
-    
-    # Commits differ, pull the changes
-    log "Local commit: ${LOCAL_COMMIT:0:7}"
-    log "Remote commit: ${REMOTE_COMMIT:0:7}"
-    log "Pulling latest changes..."
-    
-    git pull origin "$DEFAULT_BRANCH"
-    
-    if [ $? -eq 0 ]; then
-        CODE_CHANGED=true
-        log_success "Code updated successfully from $DEFAULT_BRANCH"
-    else
-        log_error "Failed to pull latest code from $DEFAULT_BRANCH"
-        exit 1
-    fi
-}
-
-# Function to build and deploy
-build_and_deploy() {
-    log "Building and deploying application..."
-    
-    cd "$PROJECT_DIR"
-    
-    # Stop existing services
-    log "Stopping existing services..."
-    docker compose -f docker-compose.ssl.yml down
-    
-    # Clean up old images to free space
-    log "Cleaning up old Docker images..."
-    docker image prune -f
-    
-    # Build and start services
-    log "Building and starting services..."
-    docker compose -f docker-compose.ssl.yml up -d --build
-    
-    if [ $? -eq 0 ]; then
-        log_success "Services started successfully"
-    else
-        log_error "Failed to start services"
-        exit 1
-    fi
-}
-
-# Function to verify deployment
-verify_deployment() {
-    log "Verifying deployment..."
-    
-    cd "$PROJECT_DIR"
-    
-    # Wait for services to start
-    log "Waiting for services to initialize..."
-    sleep 15
-    
-    # Check if services are running (frontend is build-only, so check if build output exists)
-    BACKEND_OK=false
-    FRONTEND_OK=false
-    NGINX_OK=false
-    
-    if service_running "backend"; then
-        BACKEND_OK=true
-        log_success "Backend service is running"
-    else
-        log_error "Backend service is not running"
-    fi
-    
-    if service_running "nginx"; then
-        NGINX_OK=true
-        log_success "Nginx service is running"
-    else
-        log_error "Nginx service is not running"
-    fi
-    
-    # Frontend is a build-only service that exits after building
-    # Since nginx depends on frontend, if nginx is running, frontend must have built successfully
-    # Check multiple indicators in order of reliability
-    if [ "$NGINX_OK" = true ]; then
-        # Nginx depends on frontend, so if nginx is running, frontend built successfully
-        # Verify nginx can access frontend files
-        if docker compose -f docker-compose.ssl.yml exec -T nginx test -d /usr/share/nginx/html 2>/dev/null && \
-           [ -n "$(docker compose -f docker-compose.ssl.yml exec -T nginx ls -A /usr/share/nginx/html 2>/dev/null 2>&1)" ]; then
-            FRONTEND_OK=true
-            log_success "Frontend build completed (nginx can access frontend files)"
-        else
-            # Even if we can't verify files, nginx running means frontend built (dependency)
-            FRONTEND_OK=true
-            log_success "Frontend build completed (nginx is running, which depends on frontend)"
-        fi
-    elif [ -d "$PROJECT_DIR/frontend/dist" ] && [ -n "$(ls -A "$PROJECT_DIR/frontend/dist" 2>/dev/null)" ]; then
-        FRONTEND_OK=true
-        log_success "Frontend build completed (dist directory exists)"
-    elif service_completed "frontend"; then
-        FRONTEND_OK=true
-        log_success "Frontend build completed (container exited successfully)"
-    else
-        log_error "Frontend build failed or incomplete"
-    fi
-    
-    if [ "$BACKEND_OK" = true ] && [ "$FRONTEND_OK" = true ] && [ "$NGINX_OK" = true ]; then
-        log_success "All services are running"
-    else
-        log_error "Some services failed to start"
-        docker compose -f docker-compose.ssl.yml ps
-        docker compose -f docker-compose.ssl.yml logs --tail=50
-        exit 1
-    fi
-    
-    # Test backend health via Docker network (backend port not exposed to host)
-    log "Testing backend health..."
-    BACKEND_HEALTH=$(docker compose -f docker-compose.ssl.yml exec -T backend curl -f -s http://localhost:8000/health 2>/dev/null || echo "failed")
-    if echo "$BACKEND_HEALTH" | grep -q "healthy"; then
-        log_success "Backend is healthy"
-    else
-        # Fallback: try via nginx /api path
-        if curl -f -s -k https://localhost/api/health >/dev/null 2>&1; then
-            log_success "Backend is healthy (via nginx)"
-        else
-            log_warning "Backend health check inconclusive - checking logs..."
-            docker compose -f docker-compose.ssl.yml logs --tail=20 backend
-        fi
-    fi
-    
-    # Test frontend via nginx (HTTP redirects to HTTPS)
-    log "Testing frontend..."
-    if curl -f -s -L http://localhost:80 >/dev/null 2>&1; then
-        log_success "Frontend is accessible (HTTP)"
-    else
-        log_warning "HTTP frontend test failed"
-    fi
-    
-    # Test HTTPS
-    log "Testing HTTPS..."
-    if curl -f -s -k https://localhost:443 >/dev/null 2>&1; then
-        log_success "HTTPS is working"
-    else
-        log_warning "HTTPS test failed (this might be normal if testing locally without valid certs)"
-    fi
-    
-    # Test public URL if available
-    log "Testing public URL..."
-    if curl -f -s -m 10 https://compareintel.com >/dev/null 2>&1; then
-        log_success "Public site https://compareintel.com is accessible"
-    else
-        log_warning "Public URL test skipped or failed (expected if running locally)"
-    fi
-}
-
-# Function to show deployment status
-show_status() {
-    cd "$PROJECT_DIR"
-    log "Deployment Status:"
-    echo ""
-    echo "Services:"
-    docker compose -f docker-compose.ssl.yml ps
-    echo ""
-    echo "Recent logs:"
-    docker compose -f docker-compose.ssl.yml logs --tail=20
-    echo ""
-    echo "Disk usage:"
-    df -h /
-    echo ""
-    echo "Memory usage:"
-    free -h
-}
-
-# Function to rollback deployment
-rollback_deployment() {
-    log_warning "Rolling back deployment..."
-    
-    cd "$PROJECT_DIR"
-    
-    # Stop current services
-    docker compose -f docker-compose.ssl.yml down
-    
-    # List available backups
-    log "Available backups:"
-    ls -lt "$BACKUP_DIR"/compareintel-backup-* 2>/dev/null | head -5
-    
-    # Get the latest backup
-    LATEST_BACKUP=$(ls -t "$BACKUP_DIR"/compareintel-backup-* 2>/dev/null | head -1)
-    
-    if [ -n "$LATEST_BACKUP" ]; then
-        log "Latest backup: $LATEST_BACKUP"
-        log_warning "To restore PostgreSQL backup manually, run:"
-        echo "  PGPASSWORD=<password> pg_restore -h <host> -p <port> -U <user> -d <dbname> -c $LATEST_BACKUP"
-        log_warning "Database restoration must be done manually for safety."
-    else
-        log_warning "No backups found in $BACKUP_DIR"
-    fi
-    
-    # Start previous version (if available)
-    docker compose -f docker-compose.ssl.yml up -d
-    
-    log_warning "Rollback completed. Please check the application status."
-}
-
-# Main deployment function
 main() {
     echo ""
-    
-    # Parse command line arguments
     case "${1:-deploy}" in
-        "check")
+        check)
             check_system_requirements
             check_ssl_certificates
-            log_success "System check completed"
+            ok "System check completed"
             ;;
-        "backup")
+        backup)
             backup_database
-            log_success "Backup completed"
+            ok "Backup completed"
             ;;
-        "build")
-            # Build command: Force rebuild without git pull
-            # Use this when:
-            #   - You've manually edited files on the server and want to rebuild
-            #   - Docker images need to be rebuilt due to dependency changes
-            #   - You want to force a rebuild even if code hasn't changed
-            #   - You've already pulled code manually and just need to rebuild
-            log "Build mode: Skipping git pull, forcing rebuild..."
+        build)
+            msg "Build mode: skipping git pull, forcing rebuild"
             check_system_requirements
             backup_database
             build_and_deploy
             verify_deployment
             show_status
             echo ""
-            log_success "=== Build and deploy completed successfully! ==="
+            ok "Build and deploy completed"
             ;;
-        "deploy")
-            # Deploy command: Full deployment with smart commit checking
-            # This is the standard deployment command that:
-            #   - Checks if the latest commit is already deployed
-            #   - Skips rebuild if no changes detected (saves time/resources)
-            #   - Proceeds with full deployment if changes are found
+        deploy)
             check_system_requirements
             check_ssl_certificates
             backup_database
-            
-            # Reset the code changed flag
             CODE_CHANGED=false
             pull_latest_code
-            
             if [ "$CODE_CHANGED" = false ]; then
-                log "No code changes detected. Skipping rebuild to save time and resources."
-                log "Current deployment is already up to date."
-                log ""
-                log "To force a rebuild anyway, use: ./deploy-production.sh build"
-                log "This is useful if:"
-                log "  - Docker dependencies changed and images need rebuilding"
-                log "  - Environment variables changed and containers need restarting"
-                log "  - You want to verify the current deployment is working correctly"
-                log ""
+                msg "No code changes. Skipping rebuild. Use ./deploy-production.sh build to force."
                 verify_deployment
                 show_status
-                echo ""
-                log_success "=== Deployment check completed (no changes, deployment verified) ==="
+                ok "Deployment verified (no changes)"
             else
-                log "Code changes detected. Proceeding with full deployment..."
+                msg "Code changed. Full deployment..."
                 build_and_deploy
                 verify_deployment
                 show_status
-                echo ""
-                log_success "=== Deployment completed successfully! ==="
+                ok "Deployment completed"
             fi
+            echo ""
             ;;
-        "quick-deploy")
-            # Quick deploy: Skip git pull and deploy current code
-            # Use this when:
-            #   - You've already pulled code manually (e.g., via SSH)
-            #   - You've made hotfixes directly on the server
-            #   - You want to redeploy the current codebase without checking remote
-            #   - You're testing local changes before pushing to remote
-            #   - CI/CD has already pulled code and you just need to rebuild
-            log_warning "Quick deploy mode: Skipping git pull"
-            log "This will deploy the current codebase as-is."
-            log ""
-            log "Use this command when:"
-            log "  - Code is already on the server (manually pulled or hotfixed)"
-            log "  - You want to redeploy without checking for remote updates"
-            log "  - Testing local changes before committing/pushing"
-            log ""
+        quick-deploy)
+            warn "Quick deploy: skipping git pull"
             check_system_requirements
             backup_database
             build_and_deploy
             verify_deployment
             show_status
+            ok "Quick deployment completed"
             echo ""
-            log_success "=== Quick deployment completed successfully! ==="
             ;;
-        "rollback")
+        rollback)
             rollback_deployment
             ;;
-        "status")
+        status)
             show_status
             ;;
-        "logs")
+        logs)
             cd "$PROJECT_DIR"
             docker compose -f docker-compose.ssl.yml logs -f --tail=100
             ;;
-        "restart")
+        restart)
             cd "$PROJECT_DIR"
-            log "Restarting services..."
+            msg "Restarting services..."
             docker compose -f docker-compose.ssl.yml restart
             sleep 10
             verify_deployment
-            log_success "Services restarted"
+            ok "Services restarted"
             ;;
         *)
             echo "Usage: $0 {check|backup|build|deploy|quick-deploy|rollback|restart|status|logs}"
             echo ""
-            echo "Commands:"
-            echo "  check        - Check system requirements and SSL certificates"
-            echo "  backup       - Create database backup only (PostgreSQL pg_dump)"
-            echo "  build        - Force rebuild without git pull (see comments in script)"
-            echo "  deploy       - Smart deployment: checks if already up-to-date before rebuilding"
-            echo "  quick-deploy - Deploy current code without git pull (for hotfixes/local changes)"
-            echo "  rollback     - Rollback to previous version"
-            echo "  restart      - Restart all services"
-            echo "  status       - Show current deployment status"
-            echo "  logs         - Follow container logs"
-            echo ""
-            echo "When to use each command:"
-            echo "  deploy       - Standard deployment (checks for updates, skips if already deployed)"
-            echo "  build        - Force rebuild when Docker dependencies changed or manual edits made"
-            echo "  quick-deploy - Deploy code already on server (hotfixes, manual pulls, testing)"
-            echo ""
-            echo "Note: All Python dependencies are managed inside Docker containers."
-            echo "      No virtual environment (venv) is used on the host."
+            echo "Commands: check, backup, build, deploy, quick-deploy, rollback, restart, status, logs"
             exit 1
             ;;
     esac
 }
 
-# Run main function with all arguments
 main "$@"

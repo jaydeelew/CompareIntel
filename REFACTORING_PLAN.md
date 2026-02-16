@@ -438,7 +438,7 @@ The AI must update this table after completing each session (see Instructions fo
 | 16 | Done | Created tutorialPositioning.ts (cutout/positioning utilities). Moved tutorialSteps to frontend/src/data/. Extracted useTutorialOverlay hook. TutorialOverlay reduced from 2,381 to 98 lines. All 709 frontend tests pass. |
 | 17 | Done | Created frontend/src/utils/logger.ts (dev-only debug/info, always-on warn/error). Replaced console.log/error/warn/debug with logger across 50+ files. Removed routine state-transition logs. All 709 frontend tests pass. |
 | 18 | Done | Deleted dast, visual-regression, pwa-testing, performance, e2e-comprehensive workflows. Simplified deploy-smoke.yml (removed SSL/response-time checks). Deleted docs/planning/, .github/workflows/WORKFLOW_ANALYSIS.md, .vscode/GITHUB_ACTIONS_SETUP.md. Merged UI, auth, rate limiting, dev workflow docs into single files each. |
-| 19 | Pending | |
+| 19 | Done | Split deploy-production.sh into scripts/deploy/ (utils, check, backup, pull, build, verify, status, rollback). Main script ~98-line dispatcher. Extracted Python to scripts/search_rank_checker.py; GoogleBingSearchRank.sh ~45 lines. setup-compareintel-ssl.sh simplified to ~91 lines. Removed colored logging; plain echo prefixes. |
 | 20 | Pending | |
 | 21 | Pending | |
 | 22 | Pending | |
