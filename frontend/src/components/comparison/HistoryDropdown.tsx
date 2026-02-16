@@ -1,5 +1,3 @@
-import React from 'react'
-
 import { getConversationLimit } from '../../config/constants'
 import { truncatePrompt, formatDate } from '../../utils'
 

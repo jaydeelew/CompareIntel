@@ -20,6 +20,7 @@ import {
 } from '../services/sseProcessor'
 import type {
   CompareResponse,
+  ConversationMessage,
   ModelConversation,
   ActiveResultTabs,
   ModelsByProvider,
@@ -481,6 +482,37 @@ export function useComparisonStreaming(
         setConversations(emptyConversations)
       }
 
+      // Adapter: sseProcessor passes partial balance objects; our setter expects CreditBalance | null
+      const adaptedSetCreditBalance = (
+        balance: {
+          credits_allocated?: number
+          credits_used_this_period?: number
+          credits_used_today?: number
+          credits_remaining?: number
+          period_type?: string
+          subscription_tier?: string
+          credits_reset_at?: string
+          billing_period_start?: string
+          billing_period_end?: string
+          total_credits_used?: number
+        } | null
+      ) => {
+        if (!balance || typeof balance !== 'object' || Object.keys(balance).length === 0) {
+          return
+        }
+        const merged: CreditBalance = {
+          ...balance,
+          credits_allocated: balance.credits_allocated ?? creditBalance?.credits_allocated ?? 0,
+          credits_remaining: balance.credits_remaining ?? creditBalance?.credits_remaining ?? 0,
+          period_type: (balance.period_type ?? creditBalance?.period_type ?? 'daily') as
+            | 'daily'
+            | 'monthly',
+          subscription_tier:
+            balance.subscription_tier ?? creditBalance?.subscription_tier ?? 'free',
+        }
+        setCreditBalance(merged)
+      }
+
       streamResult = await processComparisonStream(reader, controller, {
         input,
         selectedModels,
@@ -502,7 +534,7 @@ export function useComparisonStreaming(
         setConversations,
         setResponse,
         setProcessingTime,
-        setCreditBalance,
+        setCreditBalance: adaptedSetCreditBalance,
         setAnonymousCreditsRemaining,
         setupScrollListener,
         getCreditAllocation,
