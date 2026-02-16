@@ -196,35 +196,29 @@ export function useScrollManagement(config: UseScrollManagementConfig): UseScrol
       // Initialize last scroll position
       lastScrollTopRef.current.set(modelId, conversationContent.scrollTop)
 
-      // Handle mouse wheel - immediate indication of user interaction
-      const handleWheel = (e: WheelEvent) => {
-        const isAtTop = conversationContent.scrollTop === 0
-        const isAtBottom = isScrolledToBottom(conversationContent)
+      // Handle mouse wheel - immediate indication of user interaction.
+      // When the card is at its boundary, we let the event propagate so the browser's
+      // native scroll chaining handles the page scroll with full acceleration/momentum.
+      // Manual window.scrollBy() bypasses native physics and feels slow-motion.
+      const handleWheel = () => {
+        // At boundary scrolling outward = page scroll, don't touch auto-scroll state
+        const scrollTop = conversationContent.scrollTop
+        const maxScroll = conversationContent.scrollHeight - conversationContent.clientHeight
+        const scrollableDown = Math.max(0, maxScroll - scrollTop)
+        const scrollableUp = Math.max(0, scrollTop)
 
-        // If at top and scrolling up, or at bottom and scrolling down, manually scroll the window
-        if ((isAtTop && e.deltaY < 0) || (isAtBottom && e.deltaY > 0)) {
-          // Manually scroll the window to allow continuation of scrolling beyond card boundaries
-          window.scrollBy({
-            top: e.deltaY * 0.5, // Scale down the scroll amount slightly for smoother UX
-            left: 0,
-            behavior: 'auto',
-          })
-          // Continue to let the event propagate naturally as well
+        if (scrollableDown < 1 || scrollableUp < 1) {
           return
         }
 
-        // IMMEDIATELY pause auto-scroll when user scrolls
+        // Card is actively scrolling — pause auto-scroll
         autoScrollPausedRef.current.add(modelId)
-
         userInteractingRef.current.add(modelId)
 
-        // Check scroll position after wheel event to potentially resume
         setTimeout(() => {
           if (isScrolledToBottom(conversationContent)) {
-            // User scrolled to bottom - resume auto-scroll
             autoScrollPausedRef.current.delete(modelId)
           }
-          // If not at bottom, keep it paused (already set above)
           userInteractingRef.current.delete(modelId)
         }, 75)
       }
