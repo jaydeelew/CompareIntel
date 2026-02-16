@@ -6,13 +6,14 @@
  * @example
  * ```typescript
  * import { apiClient, ApiError } from '@/services/api';
+ * import logger from '@/utils/logger';
  *
  * try {
  *   const response = await apiClient.get('/models');
  *   console.log(response.data);
  * } catch (error) {
  *   if (error instanceof ApiError) {
- *     console.error('API Error:', error.status, error.message);
+ *     logger.error('API Error:', error.status, error.message);
  *   }
  * }
  * ```

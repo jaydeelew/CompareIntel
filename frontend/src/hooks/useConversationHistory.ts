@@ -388,11 +388,8 @@ export function useConversationHistory({
         : []
       setConversationHistory(formattedData)
     } catch (error) {
-      if (error instanceof ApiError) {
-        logger.error('Failed to load conversation history:', error.status, error.message)
-      } else {
-        logger.error('Failed to load conversation history from API:', error)
-      }
+      const ctx = error instanceof ApiError ? `${error.status}: ${error.message}` : error
+      logger.error('Failed to load conversation history:', ctx)
       setConversationHistory([])
     } finally {
       setIsLoadingHistory(false)
@@ -432,11 +429,8 @@ export function useConversationHistory({
           // Reload history from API to ensure sync (will fetch fresh data due to cache clear)
           await loadHistoryFromAPI()
         } catch (error) {
-          if (error instanceof ApiError) {
-            logger.error('Failed to delete conversation:', error.message)
-          } else {
-            logger.error('Failed to delete conversation from API:', error)
-          }
+          const ctx = error instanceof ApiError ? error.message : error
+          logger.error('Failed to delete conversation:', ctx)
         }
       } else if (!isAuthenticated && typeof summary.id === 'string') {
         // Delete from localStorage
@@ -480,11 +474,8 @@ export function useConversationHistory({
         logger.warn('loadConversationFromAPI called from hook - should use App.tsx version')
         return null
       } catch (error) {
-        if (error instanceof ApiError) {
-          logger.error('Failed to load conversation:', error.message)
-        } else {
-          logger.error('Failed to load conversation from API:', error)
-        }
+        const ctx = error instanceof ApiError ? error.message : error
+        logger.error('Failed to load conversation:', ctx)
         return null
       }
     },

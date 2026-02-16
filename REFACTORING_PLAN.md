@@ -439,7 +439,7 @@ The AI must update this table after completing each session (see Instructions fo
 | 17 | Done | Created frontend/src/utils/logger.ts (dev-only debug/info, always-on warn/error). Replaced console.log/error/warn/debug with logger across 50+ files. Removed routine state-transition logs. All 709 frontend tests pass. |
 | 18 | Done | Deleted dast, visual-regression, pwa-testing, performance, e2e-comprehensive workflows. Simplified deploy-smoke.yml (removed SSL/response-time checks). Deleted docs/planning/, .github/workflows/WORKFLOW_ANALYSIS.md, .vscode/GITHUB_ACTIONS_SETUP.md. Merged UI, auth, rate limiting, dev workflow docs into single files each. |
 | 19 | Done | Split deploy-production.sh into scripts/deploy/ (utils, check, backup, pull, build, verify, status, rollback). Main script ~98-line dispatcher. Extracted Python to scripts/search_rank_checker.py; GoogleBingSearchRank.sh ~45 lines. setup-compareintel-ssl.sh simplified to ~91 lines. Removed colored logging; plain echo prefixes. |
-| 20 | Pending | |
+| 20 | Done | Created backend/app/utils/error_handling.py with ClassifiedError and classify_api_error(). Moved ~190 lines of nested API error parsing from llm/streaming.py into error_handling. Standardized frontend catch blocks in useConversationHistory and MainPage to check ApiError and consolidate logging. Updated api/index.ts example to use logger. Backend model_runner and streaming tests pass. |
 | 21 | Pending | |
 | 22 | Pending | |
 

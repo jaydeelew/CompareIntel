@@ -1308,18 +1308,10 @@ export function MainPage() {
         if (error instanceof Error && error.name === 'CancellationError') {
           return
         }
-        if (error instanceof ApiError) {
-          logger.error('Failed to fetch models:', error.status, error.message)
-          setError(`Failed to fetch models: ${error.message}`)
-        } else {
-          logger.error(
-            'Failed to fetch models:',
-            error instanceof Error ? error.message : String(error)
-          )
-          setError(
-            `Failed to fetch models: ${error instanceof Error ? error.message : String(error)}`
-          )
-        }
+        const msg = error instanceof Error ? error.message : String(error)
+        const ctx = error instanceof ApiError ? `${error.status}: ${msg}` : error
+        logger.error('Failed to fetch models:', ctx)
+        setError(`Failed to fetch models: ${msg}`)
       } finally {
         setIsLoadingModels(false)
         // Update ref after fetch completes

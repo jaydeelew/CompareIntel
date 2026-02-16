@@ -18,6 +18,10 @@ from bs4 import BeautifulSoup  # type: ignore[import-untyped]
 from openai import APIError
 
 from ..config import settings
+from ..utils.error_handling import (
+    classify_api_error,
+    format_streaming_error_message,
+)
 from ..mock_responses import stream_mock_response
 from ..search.rate_limiter import get_rate_limiter
 
@@ -2421,193 +2425,23 @@ def call_openrouter_streaming(
             return usage_data
 
         except Exception as e:
-            error_str = str(e).lower()
-            error_message = str(e)
+            classified = classify_api_error(e)
 
-            # Extract structured error information from OpenAI APIError
-            status_code = None
-            parsed_error_message = None
-
-            if isinstance(e, APIError):
-                # Safely extract status_code - APIError may have it directly or via response
-                if hasattr(e, "status_code"):
-                    status_code = e.status_code
-                elif hasattr(e, "response") and hasattr(e.response, "status_code"):
-                    status_code = e.response.status_code
-                # Try to extract meaningful error message from response body
-                try:
-                    if hasattr(e, "body") and e.body:
-                        import json
-
-                        if isinstance(e.body, dict):
-                            error_body = e.body
-                        elif isinstance(e.body, str):
-                            error_body = json.loads(e.body)
-                        else:
-                            error_body = {}
-
-                        # Extract error message from structured response
-                        if "error" in error_body:
-                            error_obj = error_body["error"]
-                            if isinstance(error_obj, dict):
-                                parsed_error_message = error_obj.get("message", str(e))
-                                # Check metadata for additional context
-                                if "metadata" in error_obj and isinstance(
-                                    error_obj["metadata"], dict
-                                ):
-                                    raw_error = error_obj["metadata"].get("raw", "")
-                                    if raw_error:
-                                        if isinstance(raw_error, str):
-                                            # Use raw error if it's a string
-                                            parsed_error_message = raw_error
-                                        elif isinstance(raw_error, dict):
-                                            # If raw is a dict, try to extract a message from it
-                                            raw_msg = (
-                                                raw_error.get("message")
-                                                or raw_error.get("error")
-                                                or str(raw_error)
-                                            )
-                                            if raw_msg and isinstance(raw_msg, str):
-                                                parsed_error_message = raw_msg
-                                # If we still don't have a good message, use the error message
-                                if not parsed_error_message or parsed_error_message == str(e):
-                                    parsed_error_message = error_obj.get("message", str(e))
-                            else:
-                                parsed_error_message = str(error_obj)
-                        else:
-                            parsed_error_message = str(e)
-                except (json.JSONDecodeError, AttributeError, KeyError):
-                    # Fall back to exception message if parsing fails
-                    parsed_error_message = str(e)
-            else:
-                parsed_error_message = str(e)
-
-            # Use parsed message if available, otherwise use original
-            if parsed_error_message:
-                error_message = parsed_error_message
-                error_str = parsed_error_message.lower()
-
-            # Check for 402 error related to max_tokens (OpenRouter credit/token limit issue)
-            is_402_max_tokens_error = (
-                status_code == 402
-                or "402" in error_message
-                or "payment required" in error_str
-                or ("requires more credits" in error_str and "max_tokens" in error_str)
-            )
-
-            # If it's a 402 max_tokens error and we haven't retried yet, reduce max_tokens and retry
-            if is_402_max_tokens_error and retry_count < max_retries:
-                # Reduce max_tokens by 50% or cap at 2048, whichever is higher
+            if classified.is_402_max_tokens and retry_count < max_retries:
                 reduced_max_tokens = max(2048, int(max_tokens * 0.5))
                 if reduced_max_tokens < max_tokens:
-                    print(
+                    logger.info(
                         f"[API] 402 max_tokens error for {model_id} - retrying with reduced max_tokens: "
                         f"{max_tokens} -> {reduced_max_tokens}"
                     )
                     max_tokens = reduced_max_tokens
                     retry_count += 1
-                    continue  # Retry with reduced max_tokens
+                    continue
 
-            # Handle specific HTTP status codes
-            if status_code == 400:
-                # 400 Bad Request - always prioritize showing the actual parsed error message
-                # This gives users the most accurate information about what went wrong
-                if parsed_error_message and parsed_error_message != str(e):
-                    # We have a parsed error message from the provider - use it (most informative)
-                    clean_message = (
-                        parsed_error_message[:200]
-                        if len(parsed_error_message) > 200
-                        else parsed_error_message
-                    )
-                    yield f"Error: {clean_message}"
-                elif "provider returned error" in error_str:
-                    # Generic provider error - show the actual error message if available
-                    clean_message = (
-                        error_message[:200] if len(error_message) > 200 else error_message
-                    )
-                    yield f"Error: {clean_message}"
-                else:
-                    # Generic 400 error - show the actual error message
-                    clean_message = (
-                        error_message[:200] if len(error_message) > 200 else error_message
-                    )
-                    yield f"Error: Invalid request - {clean_message}"
-            elif status_code == 401 or "unauthorized" in error_str or "401" in error_str:
-                yield "Error: Authentication failed"
-            elif status_code == 404 or "not found" in error_str or "404" in error_str:
-                # Extract provider error message if available
-                provider_error = None
-                provider_name = None
-                if isinstance(e, APIError) and hasattr(e, "body"):
-                    try:
-                        import json
-
-                        if isinstance(e.body, dict):
-                            error_body = e.body
-                        elif isinstance(e.body, str):
-                            error_body = json.loads(e.body)
-                        else:
-                            error_body = {}
-
-                        # Check for provider error in metadata
-                        if "error" in error_body and isinstance(error_body["error"], dict):
-                            metadata = error_body["error"].get("metadata", {})
-                            if isinstance(metadata, dict):
-                                provider_error = metadata.get("raw", "")
-                                provider_name = metadata.get("provider_name", "")
-                    except Exception as parse_err:
-                        logger.debug(f"Failed to parse provider error: {parse_err}")
-
-                # Use parsed_error_message if it contains the raw error (from earlier extraction)
-                if not provider_error and parsed_error_message:
-                    # Check if parsed_error_message contains the gateway error
-                    if (
-                        "not configured in the Gateway" in parsed_error_message
-                        or "No matching route" in parsed_error_message
-                    ):
-                        provider_error = parsed_error_message
-
-                # Provide more detailed error message
-                if provider_error:
-                    # Check if it's a gateway/routing issue
-                    if (
-                        "not configured in the Gateway" in provider_error
-                        or "No matching route" in provider_error
-                    ):
-                        error_msg = f"Error: Model '{model_id}' is not currently available. "
-                        if provider_name:
-                            error_msg += f"The provider ({provider_name}) may not have this model configured in their gateway. "
-                        else:
-                            error_msg += (
-                                "The provider may not have this model configured in their gateway. "
-                            )
-                        error_msg += "This appears in OpenRouter's model list but is not currently routable. Please try again later or use a different model."
-                        yield error_msg
-                    else:
-                        clean_message = (
-                            provider_error[:200] if len(provider_error) > 200 else provider_error
-                        )
-                        yield f"Error: Model not available - {clean_message}"
-                elif parsed_error_message and parsed_error_message != str(e):
-                    clean_message = (
-                        parsed_error_message[:200]
-                        if len(parsed_error_message) > 200
-                        else parsed_error_message
-                    )
-                    yield f"Error: Model not available - {clean_message}"
-                else:
-                    yield "Error: Model not available"
-            elif status_code == 429 or "rate limit" in error_str or "429" in error_str:
-                yield "Error: Rate limited"
-            elif "timeout" in error_str:
-                yield f"Error: Timeout ({settings.individual_model_timeout}s)"
-            elif is_402_max_tokens_error:
-                yield "Error: This request requires more credits or fewer max_tokens. Please try with a shorter prompt or reduce the number of models."
-            else:
-                # Generic error - use parsed message if available, limit length
-                clean_message = error_message[:200] if len(error_message) > 200 else error_message
-                yield f"Error: {clean_message}"
-            # Return None for usage data on error
+            message = format_streaming_error_message(
+                classified, model_id, settings.individual_model_timeout
+            )
+            yield message
             return None
 
 
