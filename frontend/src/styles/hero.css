@@ -501,6 +501,7 @@
 
 .composer-input-wrapper {
   position: relative;
+  z-index: 2;
   display: flex;
   flex-direction: column;
   width: 100%;
@@ -563,9 +564,10 @@
   border-radius: 1.5rem 1.5rem 0 0;
 }
 
-/* Composer Toolbar - Actions area below textarea */
+/* Composer Toolbar - Actions area below textarea (z-index below textarea wrapper so it never overlaps) */
 .composer-toolbar {
   position: relative;
+  z-index: 1;
   width: 100%;
   min-height: 44px;
   height: 44px;

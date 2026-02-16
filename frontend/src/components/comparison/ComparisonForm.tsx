@@ -267,7 +267,6 @@ export const ComparisonForm = memo<ComparisonFormProps>(
       if (!textareaRef.current) return
       const textarea = textareaRef.current
       const isMobile = window.innerWidth <= BREAKPOINT_MOBILE
-      textarea.style.height = 'auto'
       const computedStyle = window.getComputedStyle(textarea)
       const fontSize = parseFloat(computedStyle.fontSize)
       const lineHeight = parseFloat(computedStyle.lineHeight) || fontSize * (isMobile ? 1.25 : 1.6)
@@ -281,6 +280,8 @@ export const ComparisonForm = memo<ComparisonFormProps>(
       const maxHeight = maxLinesHeight + paddingTop + paddingBottom
       const calculatedMinHeight = lineHeight + paddingTop + paddingBottom
       const minHeight = Math.max(calculatedMinHeight, cssMinHeight)
+      // Measure content height (minimal height + read + set final all in sync block - no visible collapse)
+      textarea.style.height = '1px'
       const scrollHeight = textarea.scrollHeight
       const isEmpty = !input.trim()
       const newHeight = isEmpty
