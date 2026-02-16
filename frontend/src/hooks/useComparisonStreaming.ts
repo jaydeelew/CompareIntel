@@ -20,12 +20,12 @@ import {
 } from '../services/sseProcessor'
 import type {
   CompareResponse,
-  ConversationMessage,
   ModelConversation,
   ActiveResultTabs,
   ModelsByProvider,
 } from '../types'
 import { RESULT_TAB, createModelId } from '../types'
+import type { ConversationMessage } from '../types/conversation'
 import { validateComparisonInput } from '../utils/comparisonValidation'
 import { prepareApiConversationHistory } from '../utils/conversationPreparer'
 import { isErrorMessage } from '../utils/error'
@@ -1194,7 +1194,7 @@ export function useComparisonStreaming(
             refreshUser()
               .then(() => getCreditBalance())
               .then(balance => {
-                setCreditBalance(balance)
+                setCreditBalance(balance as CreditBalance)
               })
               .catch(error =>
                 logger.error('Failed to refresh credit balance after timeout:', error)
@@ -1203,7 +1203,7 @@ export function useComparisonStreaming(
             getCreditBalance(browserFingerprint)
               .then(balance => {
                 setAnonymousCreditsRemaining(balance.credits_remaining)
-                setCreditBalance(balance)
+                setCreditBalance(balance as CreditBalance)
               })
               .catch(error =>
                 logger.error('Failed to refresh anonymous credit balance after timeout:', error)
