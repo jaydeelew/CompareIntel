@@ -1615,6 +1615,10 @@ export function MainPage() {
   // When user deselects models (via checkbox or model card close) so that current
   // selection no longer matches the default, hide the default selection name from
   // the toolbar. When selections match again, show it.
+  // IMPORTANT: When selectedModels is empty during initial load (models still loading
+  // or not yet loaded), do NOT set overridden=true - the Load default selection
+  // effect needs to run first to populate selectedModels. Otherwise we'd block the
+  // load and the default name would never appear after refresh.
   useEffect(() => {
     const defaultSelection = getDefaultSelection()
     if (!defaultSelection) {
@@ -1622,6 +1626,12 @@ export function MainPage() {
     }
 
     if (selectedModels.length === 0) {
+      // During initial load, models may not be loaded yet - don't set overridden
+      // so the Load default selection effect can run and populate selectedModels
+      const stillLoading = isLoadingModels || Object.keys(modelsByProvider).length === 0
+      if (stillLoading) {
+        return
+      }
       // User deselected all models - hide default name since selection doesn't match
       setDefaultSelectionOverridden(true)
       return
@@ -1639,7 +1649,7 @@ export function MainPage() {
     } else {
       setDefaultSelectionOverridden(true)
     }
-  }, [selectedModels, getDefaultSelection])
+  }, [selectedModels, getDefaultSelection, isLoadingModels, modelsByProvider])
 
   const handleCancel = () => {
     if (currentAbortController) {
