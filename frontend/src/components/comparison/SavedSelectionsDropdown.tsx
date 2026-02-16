@@ -8,15 +8,13 @@ import { showNotification } from '../../utils/error'
 import type { SelectionProps } from './ComparisonFormTypes'
 
 function getModelNamesFromIds(modelIds: string[], modelsByProvider: ModelsByProvider): string {
-  const names: string[] = []
+  const idToName = new Map<string, string>()
   for (const providerModels of Object.values(modelsByProvider)) {
     for (const model of providerModels) {
-      if (modelIds.includes(String(model.id))) {
-        names.push(model.name)
-        break
-      }
+      idToName.set(String(model.id), model.name)
     }
   }
+  const names = modelIds.map(id => idToName.get(id)).filter((name): name is string => name != null)
   return names.length > 0 ? names.join(', ') : modelIds.join(', ')
 }
 
