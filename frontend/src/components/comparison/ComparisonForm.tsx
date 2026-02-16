@@ -265,7 +265,9 @@ export const ComparisonForm = memo<ComparisonFormProps>(
       const lineHeight = parseFloat(computedStyle.lineHeight) || fontSize * (isMobile ? 1.25 : 1.6)
       const paddingTop = parseFloat(computedStyle.paddingTop)
       const paddingBottom = parseFloat(computedStyle.paddingBottom)
-      const cssMinHeight = parseFloat(computedStyle.minHeight) || (isMobile ? 40 : 0)
+      const parsedMin = parseFloat(computedStyle.minHeight)
+      const cssMinHeight =
+        Number.isFinite(parsedMin) && parsedMin > 0 ? parsedMin : isMobile ? 40 : 44
       const maxLines = isMobile ? 3 : 5
       const maxLinesHeight = lineHeight * maxLines
       const maxHeight = maxLinesHeight + paddingTop + paddingBottom
