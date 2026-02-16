@@ -7,11 +7,14 @@ import json
 import logging
 import os
 import time
+from collections import defaultdict
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import ROUND_CEILING, Decimal
 from typing import TYPE_CHECKING, Any
 
+from openai import OpenAI
 from sqlalchemy.orm import Session
 
 from ..config import get_conversation_limit
@@ -32,6 +35,7 @@ from ..rate_limiting import (
     deduct_anonymous_credits,
     deduct_user_credits,
 )
+from ..routers.api.dev import _default_model_stat
 from ..search.factory import SearchProviderFactory
 
 if TYPE_CHECKING:
@@ -57,7 +61,9 @@ class StreamContext:
     is_overage: bool = False
     overage_charge: float = 0.0
     credits_remaining_ref: list[int] = field(default_factory=lambda: [0])
-    model_stats: dict[str, dict[str, Any]] | None = None
+    model_stats: defaultdict[str, dict[str, Any]] = field(
+        default_factory=lambda: defaultdict(_default_model_stat)
+    )
 
 
 async def generate_stream(ctx: StreamContext) -> Any:
@@ -69,7 +75,7 @@ async def generate_stream(ctx: StreamContext) -> Any:
 
     req = ctx.req
     credits_remaining = ctx.credits_remaining_ref
-    model_stats = ctx.model_stats or {}
+    model_stats = ctx.model_stats
     model_inactivity_timeout = settings.model_inactivity_timeout
 
     successful_models = 0
@@ -148,11 +154,15 @@ async def generate_stream(ctx: StreamContext) -> Any:
                 f"Web search requested for comparison with models: {req.models}."
             )
 
+        logger.info(f"[MultiModel] Starting comparison for {len(req.models)} models: {req.models}")
         for mid in req.models:
             yield f"data: {json.dumps({'model': mid, 'type': 'start'})}\n\n"
 
         chunk_queue = asyncio.Queue()
         loop = asyncio.get_event_loop()
+        executor = ThreadPoolExecutor(max_workers=max(len(req.models), 1))
+        KEEPALIVE_INTERVAL = 10
+        last_keepalive_sent: dict[str, float] = {}
 
         async def stream_single_model(model_id: str):
             model_content = ""
@@ -186,6 +196,7 @@ async def generate_stream(ctx: StreamContext) -> Any:
                     last_chunk_was_keepalive = False
 
                     try:
+                        logger.info(f"[MultiModel] {model_id}: thread started")
                         filtered_history = []
                         if req.conversation_history:
                             for msg in req.conversation_history:
@@ -195,6 +206,14 @@ async def generate_stream(ctx: StreamContext) -> Any:
                                     if msg.model_id is None or msg.model_id == model_id:
                                         filtered_history.append(msg)
 
+                        per_model_client = None if use_mock else OpenAI(
+                            api_key=settings.openrouter_api_key,
+                            base_url="https://openrouter.ai/api/v1",
+                            default_headers={
+                                "HTTP-Referer": "https://compareintel.com",
+                                "X-Title": "CompareIntel",
+                            },
+                        )
                         gen = call_openrouter_streaming(
                             req.input_data,
                             model_id,
@@ -207,8 +226,10 @@ async def generate_stream(ctx: StreamContext) -> Any:
                             user_timezone=ctx.user_timezone,
                             user_location=ctx.user_location,
                             location_source=ctx.location_source,
+                            _client=per_model_client,
                         )
 
+                        logger.info(f"[MultiModel] {model_id}: calling API")
                         try:
                             while True:
                                 chunk = next(gen)
@@ -247,11 +268,12 @@ async def generate_stream(ctx: StreamContext) -> Any:
                         except StopIteration as e:
                             usage_data = e.value
 
+                        logger.info(f"[MultiModel] {model_id}: streaming complete, {count} chunks, content_len={len(content)}")
                         return content, False, usage_data
 
                     except Exception as e:
                         error_msg = f"Error: {str(e)[:100]}"
-                        logger.error(f"Error streaming model {model_id}: {str(e)}", exc_info=True)
+                        logger.error(f"[MultiModel] {model_id}: EXCEPTION: {str(e)}", exc_info=True)
                         asyncio.run_coroutine_threadsafe(
                             chunk_queue.put(
                                 {"type": "chunk", "model": model_id, "content": error_msg}
@@ -261,7 +283,7 @@ async def generate_stream(ctx: StreamContext) -> Any:
                         return error_msg, True, None
 
                 full_content, is_error, usage_data = await loop.run_in_executor(
-                    None, process_stream_to_queue
+                    executor, process_stream_to_queue
                 )
 
                 if not is_error:
@@ -319,118 +341,171 @@ async def generate_stream(ctx: StreamContext) -> Any:
                 )
                 return {"model": model_id, "content": error_msg, "error": True, "usage": None}
 
-        tasks = [asyncio.create_task(stream_single_model(mid)) for mid in req.models]
-        task_to_model = {task: mid for task, mid in zip(tasks, req.models)}
-        pending_tasks = set(tasks)
-        model_last_activity = {mid: time.time() for mid in req.models}
+        try:
+            tasks = [asyncio.create_task(stream_single_model(mid)) for mid in req.models]
+            task_to_model = {task: mid for task, mid in zip(tasks, req.models)}
+            pending_tasks = set(tasks)
+            model_last_activity = {mid: time.time() for mid in req.models}
 
-        while pending_tasks or not chunk_queue.empty():
-            chunks_processed = False
-            current_time = time.time()
+            while pending_tasks or not chunk_queue.empty():
+                chunks_processed = False
+                current_time = time.time()
 
-            timed_out_tasks = set()
-            for task in list(pending_tasks):
-                if task.done():
-                    continue
-                mid = task_to_model.get(task)
-                if mid and mid in model_last_activity:
-                    time_since_activity = current_time - model_last_activity[mid]
-                    if time_since_activity > model_inactivity_timeout:
-                        logger.warning(
-                            f"Model {mid} timed out after {model_inactivity_timeout}s of inactivity"
-                        )
-                        task.cancel()
-                        timed_out_tasks.add(task)
-                        await chunk_queue.put(
-                            {
-                                "type": "chunk",
-                                "model": mid,
-                                "content": "Error: Model timed out after 1 minute of inactivity",
-                            }
-                        )
-                        results_dict[mid] = "Error: Model timed out after 1 minute of inactivity"
-                        done_sent.add(mid)
-                        model_stats[mid]["failure"] += 1
-                        failed_models += 1
-                        yield f"data: {json.dumps({'model': mid, 'type': 'done', 'error': True})}\n\n"
-                        if mid in model_last_activity:
-                            del model_last_activity[mid]
+                timed_out_tasks = set()
+                for task in list(pending_tasks):
+                    if task.done():
+                        continue
+                    mid = task_to_model.get(task)
+                    if mid and mid in model_last_activity:
+                        time_since_activity = current_time - model_last_activity[mid]
+                        if time_since_activity > model_inactivity_timeout:
+                            logger.warning(
+                                f"Model {mid} timed out after {model_inactivity_timeout}s of inactivity"
+                            )
+                            task.cancel()
+                            timed_out_tasks.add(task)
+                            await chunk_queue.put(
+                                {
+                                    "type": "chunk",
+                                    "model": mid,
+                                    "content": "Error: Model timed out after 1 minute of inactivity",
+                                }
+                            )
+                            results_dict[mid] = "Error: Model timed out after 1 minute of inactivity"
+                            done_sent.add(mid)
+                            model_stats[mid]["failure"] += 1
+                            failed_models += 1
+                            yield f"data: {json.dumps({'model': mid, 'type': 'done', 'error': True})}\n\n"
+                            if mid in model_last_activity:
+                                del model_last_activity[mid]
 
-            pending_tasks -= timed_out_tasks
+                pending_tasks -= timed_out_tasks
 
-            while not chunk_queue.empty():
-                try:
-                    chunk_data = await asyncio.wait_for(chunk_queue.get(), timeout=0.001)
-                    chunk_model_id = chunk_data.get("model")
-                    if chunk_model_id:
-                        model_last_activity[chunk_model_id] = time.time()
+                while not chunk_queue.empty():
+                    try:
+                        chunk_data = await asyncio.wait_for(chunk_queue.get(), timeout=0.001)
+                        chunk_model_id = chunk_data.get("model")
+                        if chunk_model_id:
+                            model_last_activity[chunk_model_id] = time.time()
 
-                    if chunk_data["type"] == "chunk":
-                        yield f"data: {json.dumps({'model': chunk_data['model'], 'type': 'chunk', 'content': chunk_data['content']})}\n\n"
-                        chunks_processed = True
-                    elif chunk_data["type"] == "keepalive":
-                        yield f"data: {json.dumps({'model': chunk_data['model'], 'type': 'keepalive'})}\n\n"
-                        chunks_processed = True
-                except TimeoutError:
-                    break
+                        if chunk_data["type"] == "chunk":
+                            yield f"data: {json.dumps({'model': chunk_data['model'], 'type': 'chunk', 'content': chunk_data['content']})}\n\n"
+                            chunks_processed = True
+                        elif chunk_data["type"] == "keepalive":
+                            yield f"data: {json.dumps({'model': chunk_data['model'], 'type': 'keepalive'})}\n\n"
+                            chunks_processed = True
+                    except TimeoutError:
+                        break
 
-            await asyncio.sleep(0)
-            done_tasks = set()
-            for task in list(pending_tasks):
-                if task.done():
-                    done_tasks.add(task)
-                    pending_tasks.remove(task)
+                for task in list(pending_tasks):
+                    mid = task_to_model.get(task)
+                    if not mid:
+                        continue
+                    last_activity = model_last_activity.get(mid, 0)
+                    if current_time - last_activity >= KEEPALIVE_INTERVAL:
+                        last_sent = last_keepalive_sent.get(mid, 0)
+                        if current_time - last_sent >= KEEPALIVE_INTERVAL:
+                            yield f"data: {json.dumps({'model': mid, 'type': 'keepalive'})}\n\n"
+                            last_keepalive_sent[mid] = current_time
+                            model_last_activity[mid] = current_time
+                            chunks_processed = True
 
-            for task in done_tasks:
-                mid = task_to_model.get(task)
-                if not mid:
-                    continue
-
-                if task.cancelled():
-                    continue
-
-                try:
-                    result = await task
-                except asyncio.CancelledError:
-                    continue
-                except Exception as e:
-                    logger.error(f"Task for model {mid} failed: {e}", exc_info=True)
-                    results_dict[mid] = f"Error: {str(e)[:100]}"
-                    done_sent.add(mid)
-                    failed_models += 1
-                    model_stats[mid]["failure"] += 1
-                    yield f"data: {json.dumps({'model': mid, 'type': 'done', 'error': True})}\n\n"
-                    continue
-
-                result_model_id = result.get("model")
-                if result_model_id:
-                    mid = result_model_id
-
-                if result["error"]:
-                    failed_models += 1
-                    model_stats[mid]["failure"] += 1
-                    model_stats[mid]["last_error"] = datetime.now().isoformat()
-                else:
-                    successful_models += 1
-                    model_stats[mid]["success"] += 1
-                    model_stats[mid]["last_success"] = datetime.now().isoformat()
-
-                    usage = result.get("usage")
-                    if usage:
-                        usage_data_dict[mid] = usage
-                        total_input_tokens += usage.prompt_tokens
-                        total_output_tokens += usage.completion_tokens
-                        total_effective_tokens += usage.effective_tokens
-
-                results_dict[mid] = result["content"]
-                done_sent.add(mid)
-                yield f"data: {json.dumps({'model': mid, 'type': 'done', 'error': result['error']})}\n\n"
-
-            if pending_tasks and not chunks_processed:
-                await asyncio.sleep(0.01)
-            elif chunks_processed:
                 await asyncio.sleep(0)
 
+                while not chunk_queue.empty():
+                    try:
+                        chunk_data = await asyncio.wait_for(chunk_queue.get(), timeout=0.001)
+                        chunk_model_id = chunk_data.get("model")
+                        if chunk_model_id:
+                            model_last_activity[chunk_model_id] = time.time()
+                        if chunk_data["type"] == "chunk":
+                            yield f"data: {json.dumps({'model': chunk_data['model'], 'type': 'chunk', 'content': chunk_data['content']})}\n\n"
+                            chunks_processed = True
+                        elif chunk_data["type"] == "keepalive":
+                            yield f"data: {json.dumps({'model': chunk_data['model'], 'type': 'keepalive'})}\n\n"
+                            chunks_processed = True
+                    except TimeoutError:
+                        break
+
+                done_tasks = set()
+                for task in list(pending_tasks):
+                    if task.done():
+                        logger.info(f"[MultiModel] Task done for model {task_to_model.get(task)}")
+                        done_tasks.add(task)
+                        pending_tasks.remove(task)
+
+                if done_tasks:
+                    await asyncio.sleep(0)
+                    while not chunk_queue.empty():
+                        try:
+                            chunk_data = await asyncio.wait_for(chunk_queue.get(), timeout=0.001)
+                            chunk_model_id = chunk_data.get("model")
+                            if chunk_model_id:
+                                model_last_activity[chunk_model_id] = time.time()
+                            if chunk_data["type"] == "chunk":
+                                yield f"data: {json.dumps({'model': chunk_data['model'], 'type': 'chunk', 'content': chunk_data['content']})}\n\n"
+                                chunks_processed = True
+                            elif chunk_data["type"] == "keepalive":
+                                yield f"data: {json.dumps({'model': chunk_data['model'], 'type': 'keepalive'})}\n\n"
+                                chunks_processed = True
+                        except TimeoutError:
+                            break
+
+                for task in done_tasks:
+                    mid = task_to_model.get(task)
+                    if not mid:
+                        continue
+
+                    if task.cancelled():
+                        continue
+
+                    try:
+                        result = await task
+                    except asyncio.CancelledError:
+                        continue
+                    except Exception as e:
+                        logger.error(f"Task for model {mid} failed: {e}", exc_info=True)
+                        results_dict[mid] = f"Error: {str(e)[:100]}"
+                        done_sent.add(mid)
+                        failed_models += 1
+                        model_stats[mid]["failure"] += 1
+                        yield f"data: {json.dumps({'model': mid, 'type': 'done', 'error': True})}\n\n"
+                        continue
+
+                    result_model_id = result.get("model")
+                    if result_model_id:
+                        mid = result_model_id
+
+                    if result["error"]:
+                        failed_models += 1
+                        model_stats[mid]["failure"] += 1
+                        model_stats[mid]["last_error"] = datetime.now().isoformat()
+                    else:
+                        successful_models += 1
+                        model_stats[mid]["success"] += 1
+                        model_stats[mid]["last_success"] = datetime.now().isoformat()
+
+                        usage = result.get("usage")
+                        if usage:
+                            usage_data_dict[mid] = usage
+                            total_input_tokens += usage.prompt_tokens
+                            total_output_tokens += usage.completion_tokens
+                            total_effective_tokens += usage.effective_tokens
+
+                    results_dict[mid] = result["content"]
+                    done_sent.add(mid)
+                    logger.info(f"[MultiModel] {mid}: sending done event, error={result['error']}, content_len={len(result.get('content', ''))}")
+                    yield f"data: {json.dumps({'model': mid, 'type': 'done', 'error': result['error']})}\n\n"
+
+                if pending_tasks and not chunks_processed:
+                    await asyncio.sleep(0.01)
+                elif chunks_processed:
+                    await asyncio.sleep(0)
+
+        finally:
+            executor.shutdown(wait=False)
+
+        logger.info(f"[MultiModel] While loop exited. done_sent={done_sent}, pending_tasks remaining={len(pending_tasks)}")
         for mid in req.models:
             if mid not in done_sent:
                 is_err = (
@@ -438,7 +513,10 @@ async def generate_stream(ctx: StreamContext) -> Any:
                     and isinstance(results_dict.get(mid, ""), str)
                     and str(results_dict.get(mid, "")).startswith("Error:")
                 )
+                logger.info(f"[MultiModel] Safety check: sending done for {mid}, error={is_err}")
                 yield f"data: {json.dumps({'model': mid, 'type': 'done', 'error': is_err})}\n\n"
+            else:
+                logger.info(f"[MultiModel] Safety check: {mid} already in done_sent")
 
         if successful_models > 0:
             if total_effective_tokens > 0:
@@ -825,6 +903,7 @@ async def generate_stream(ctx: StreamContext) -> Any:
         yield f"data: {json.dumps({'type': 'complete', 'metadata': metadata})}\n\n"
 
     except Exception as e:
+        logger.error(f"[MultiModel] Outer exception: {type(e).__name__}: {str(e)}", exc_info=True)
         error_msg = f"Error: {str(e)[:200]}"
         has_partial_results = successful_models > 0 or len(results_dict) > 0
 

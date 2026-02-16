@@ -19,9 +19,11 @@ from ...utils.request import get_client_ip
 
 router = APIRouter(tags=["API - Dev"])
 
-model_stats: dict[str, dict[str, Any]] = defaultdict(
-    lambda: {"success": 0, "failure": 0, "last_error": None, "last_success": None}
-)
+def _default_model_stat() -> dict[str, Any]:
+    return {"success": 0, "failure": 0, "last_error": None, "last_success": None}
+
+
+model_stats: defaultdict[str, dict[str, Any]] = defaultdict(_default_model_stat)
 
 
 class ResetRateLimitRequest(BaseModel):

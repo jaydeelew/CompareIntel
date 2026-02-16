@@ -119,6 +119,7 @@ def call_openrouter_streaming(
     user_location: str | None = None,  # Optional: Location string (e.g., "New York, NY, USA")
     location_source: str
     | None = None,  # Optional: Source of location - "user_provided" (accurate) or "ip_based" (approximate)
+    _client: Any | None = None,  # Optional: use this OpenAI client instead of global (avoids connection contention in multi-model)
 ) -> Generator[Any, None, TokenUsage | None]:
     """
     Stream OpenRouter responses token-by-token for faster perceived response time.
@@ -280,12 +281,14 @@ def call_openrouter_streaming(
             # Enable streaming
             # Use client with tool headers when tools are enabled (required by OpenRouter for provider routing)
             # OpenRouter needs HTTP-Referer and X-Title headers to route to providers that support tool calling
+            _cl = _client if _client is not None else client
+            _cl_tools = _client if _client is not None else client_with_tool_headers
             try:
                 if tools:
                     # Try using extra_headers parameter first (if supported by SDK)
-                    # Fall back to client_with_tool_headers if extra_headers doesn't work
+                    # Fall back to _cl_tools if extra_headers doesn't work
                     try:
-                        response = client.chat.completions.create(
+                        response = _cl.chat.completions.create(
                             **api_params,
                             extra_headers={
                                 "HTTP-Referer": "https://compareintel.com",
@@ -294,9 +297,9 @@ def call_openrouter_streaming(
                         )
                     except TypeError:
                         # extra_headers not supported, use client with default headers
-                        response = client_with_tool_headers.chat.completions.create(**api_params)
+                        response = _cl_tools.chat.completions.create(**api_params)
                 else:
-                    response = client.chat.completions.create(**api_params)
+                    response = _cl.chat.completions.create(**api_params)
             except Exception as api_error:
                 # Log warning if we get a 404 with tools (model may not support tool calling)
                 error_str = str(api_error).lower()
@@ -1816,9 +1819,9 @@ def call_openrouter_streaming(
                         # Use client with tool headers when tools are enabled (required by OpenRouter for provider routing)
                         if tools:
                             # Try using extra_headers parameter first (if supported by SDK)
-                            # Fall back to client_with_tool_headers if extra_headers doesn't work
+                            # Fall back to _cl_tools if extra_headers doesn't work
                             try:
-                                response_continue = client.chat.completions.create(
+                                response_continue = _cl.chat.completions.create(
                                     **api_params_continue,
                                     extra_headers={
                                         "HTTP-Referer": "https://compareintel.com",
@@ -1828,12 +1831,12 @@ def call_openrouter_streaming(
                             except TypeError:
                                 # extra_headers not supported, use client with default headers
                                 response_continue = (
-                                    client_with_tool_headers.chat.completions.create(
+                                    _cl_tools.chat.completions.create(
                                         **api_params_continue
                                     )
                                 )
                         else:
-                            response_continue = client.chat.completions.create(
+                            response_continue = _cl.chat.completions.create(
                                 **api_params_continue
                             )
                     except Exception as api_error:
@@ -2139,7 +2142,7 @@ def call_openrouter_streaming(
 
                 # Make final API call WITHOUT tools to force completion
                 try:
-                    final_response = client.chat.completions.create(
+                    final_response = _cl.chat.completions.create(
                         model=model_id,
                         messages=messages,
                         timeout=settings.individual_model_timeout,
@@ -2303,7 +2306,7 @@ def call_openrouter_streaming(
 
                             # Make completion call WITHOUT tools
                             try:
-                                completion_response = client.chat.completions.create(
+                                completion_response = _cl.chat.completions.create(
                                     model=model_id,
                                     messages=messages,
                                     timeout=settings.individual_model_timeout,

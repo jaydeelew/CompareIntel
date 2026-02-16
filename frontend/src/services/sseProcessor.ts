@@ -351,6 +351,8 @@ export async function processComparisonStream(
           if (event.type === 'start') {
             if (!streamingResults[event.model]) streamingResults[event.model] = ''
             modelStartTimes[event.model] = new Date().toISOString()
+            modelLastChunkTimes[event.model] = Date.now()
+            resetStreamingTimeout()
             shouldUpdate = true
           } else if (event.type === 'chunk') {
             streamingResults[event.model] = (streamingResults[event.model] || '') + event.content
