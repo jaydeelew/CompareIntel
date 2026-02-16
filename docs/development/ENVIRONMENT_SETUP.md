@@ -378,5 +378,5 @@ VITE_API_URL=/api
 ---
 
 **Last Updated:** January 2025  
-**Related:** [Quick Start Guide](QUICKSTART.md) | [Development Workflow](../development/DEV_WORKFLOW.md)
+**Related:** [Quick Start Guide](QUICKSTART.md) | [Development Workflow](WORKFLOW.md)
 

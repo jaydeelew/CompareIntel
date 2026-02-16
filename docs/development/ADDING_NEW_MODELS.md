@@ -278,7 +278,7 @@ python scripts/collect_model_responses.py --models model1 model2
 
 - [Model-Specific Rendering](../features/MODEL_SPECIFIC_RENDERING.md) - Complete implementation guide
 - [Scripts README](../../backend/scripts/README.md) - Detailed script documentation
-- [Development Workflow](DEV_WORKFLOW.md) - General development practices
+- [Development Workflow](WORKFLOW.md) - General development practices
 
 ## Quick Reference
 

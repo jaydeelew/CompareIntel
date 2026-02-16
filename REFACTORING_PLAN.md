@@ -437,7 +437,7 @@ The AI must update this table after completing each session (see Instructions fo
 | 15 | Done | Created frontend/src/utils/latex/ with cleanup.ts, fixSyntax.ts, implicitMath.ts, lists.ts, mathRenderer.ts, codeBlocks.ts, helpers.ts, index.ts. LatexRenderer reduced from 3,224 to 1,377 lines. processMarkdown, convertListsToHTML, applyParagraphBreaks remain in component. All 709 frontend tests pass. |
 | 16 | Done | Created tutorialPositioning.ts (cutout/positioning utilities). Moved tutorialSteps to frontend/src/data/. Extracted useTutorialOverlay hook. TutorialOverlay reduced from 2,381 to 98 lines. All 709 frontend tests pass. |
 | 17 | Done | Created frontend/src/utils/logger.ts (dev-only debug/info, always-on warn/error). Replaced console.log/error/warn/debug with logger across 50+ files. Removed routine state-transition logs. All 709 frontend tests pass. |
-| 18 | Pending | |
+| 18 | Done | Deleted dast, visual-regression, pwa-testing, performance, e2e-comprehensive workflows. Simplified deploy-smoke.yml (removed SSL/response-time checks). Deleted docs/planning/, .github/workflows/WORKFLOW_ANALYSIS.md, .vscode/GITHUB_ACTIONS_SETUP.md. Merged UI, auth, rate limiting, dev workflow docs into single files each. |
 | 19 | Pending | |
 | 20 | Pending | |
 | 21 | Pending | |

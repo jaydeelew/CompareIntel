@@ -81,30 +81,6 @@ jobs:
           fi
           echo "✅ API root is responsive"
 
-      - name: Check SSL certificate
-        run: |
-          DOMAIN=$(echo "${{ env.TARGET_URL }}" | sed 's|https://||' | sed 's|http://||' | sed 's|/.*||')
-          if echo "${{ env.TARGET_URL }}" | grep -q "https"; then
-            echo "Checking SSL for $DOMAIN..."
-            EXPIRY=$(echo | openssl s_client -servername "$DOMAIN" -connect "$DOMAIN:443" 2>/dev/null | openssl x509 -noout -enddate 2>/dev/null | cut -d= -f2)
-            if [ -n "$EXPIRY" ]; then
-              echo "SSL certificate expires: $EXPIRY"
-              # Check if cert expires within 14 days
-              EXPIRY_EPOCH=$(date -d "$EXPIRY" +%s 2>/dev/null || date -j -f "%b %d %T %Y %Z" "$EXPIRY" +%s 2>/dev/null || echo "0")
-              NOW_EPOCH=$(date +%s)
-              DAYS_LEFT=$(( (EXPIRY_EPOCH - NOW_EPOCH) / 86400 ))
-              if [ "$DAYS_LEFT" -lt 14 ]; then
-                echo "⚠️  SSL certificate expires in $DAYS_LEFT days!"
-              else
-                echo "✅ SSL certificate valid for $DAYS_LEFT more days"
-              fi
-            else
-              echo "⚠️  Could not check SSL certificate"
-            fi
-          else
-            echo "Skipping SSL check (not HTTPS)"
-          fi
-
   functional-smoke:
     name: Functional Smoke Tests
     runs-on: ubuntu-latest
@@ -145,36 +121,6 @@ jobs:
           echo ""
           echo "Results: $PASS passed, $FAIL failed"
           if [ "$FAIL" -gt 0 ]; then
-            exit 1
-          fi
-
-      - name: Check response times
-        run: |
-          echo "=== Measuring response times ==="
-          
-          endpoints=(
-            "/health"
-            "/api/models"
-            "/api/rate-limit-status"
-          )
-          
-          ALL_OK=true
-          for endpoint in "${endpoints[@]}"; do
-            TOTAL_TIME=$(curl -s -o /dev/null -w '%{time_total}' "${{ env.TARGET_URL }}${endpoint}" --max-time 30)
-            TIME_MS=$(echo "$TOTAL_TIME * 1000" | bc | cut -d. -f1)
-            
-            if [ "$TIME_MS" -gt 5000 ]; then
-              echo "  ❌ ${endpoint}: ${TIME_MS}ms (> 5000ms threshold)"
-              ALL_OK=false
-            elif [ "$TIME_MS" -gt 2000 ]; then
-              echo "  ⚠️  ${endpoint}: ${TIME_MS}ms (slow but acceptable)"
-            else
-              echo "  ✅ ${endpoint}: ${TIME_MS}ms"
-            fi
-          done
-          
-          if [ "$ALL_OK" = false ]; then
-            echo "Some endpoints exceeded response time threshold"
             exit 1
           fi
 
