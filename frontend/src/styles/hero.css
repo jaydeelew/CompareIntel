@@ -505,6 +505,7 @@
   flex-direction: column;
   width: 100%;
   min-height: 44px;
+  flex-shrink: 0;
   overflow: hidden;
   border-radius: 1.5rem;
 }
@@ -537,10 +538,12 @@
   font-family: inherit;
   line-height: 1.6;
   resize: none;
+  flex-shrink: 0;
   transition: all 0.3s var(--ease-spring);
   background: var(--bg-card);
   color: var(--text-primary);
   min-height: 44px;
+  height: 44px;
   font-weight: var(--font-medium);
   overflow-y: auto;
   overflow-x: auto;

@@ -1,4 +1,12 @@
-import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import React, {
+  memo,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
 
 import { BREAKPOINT_MOBILE } from '../../config/constants'
 import { useSpeechRecognition, useResponsive } from '../../hooks'
@@ -297,13 +305,11 @@ export const ComparisonForm = memo<ComparisonFormProps>(
       }
     }, [textareaRef])
 
-    useEffect(() => {
-      requestAnimationFrame(() => {
-        adjustTextareaHeight()
-        if (isSpeechListening) {
-          requestAnimationFrame(() => scrollToCurrentLine())
-        }
-      })
+    useLayoutEffect(() => {
+      adjustTextareaHeight()
+      if (isSpeechListening) {
+        scrollToCurrentLine()
+      }
     }, [input, adjustTextareaHeight, isSpeechListening, scrollToCurrentLine])
 
     useEffect(() => {
