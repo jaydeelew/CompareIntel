@@ -3,30 +3,21 @@ import { useNavigate, useLocation } from 'react-router-dom'
 
 const AdminPanel = lazy(() => import('../components/admin/AdminPanel'))
 import {
-  AuthModal,
-  VerificationCodeModal,
-  VerificationSuccessModal,
-  ResetPassword,
-} from '../components/auth'
-import {
   ComparisonForm,
   ComparisonView,
-  PremiumModelsToggleInfoModal,
-  DisabledButtonInfoModal,
-  DisabledModelInfoModal,
   LoadingSection,
   type AttachedFile,
   type StoredAttachedFile,
 } from '../components/comparison'
 import { Navigation, Hero, MockModeBanner, InstallPrompt } from '../components/layout'
-import { ModelsArea, ResultsArea } from '../components/main-page'
+import { ModelsArea, ModalManager, ResultsArea } from '../components/main-page'
 import {
   CreditWarningBanner,
   DoneSelectingCard,
   ErrorBoundary,
   LoadingSpinner,
 } from '../components/shared'
-import { TrialWelcomeModal, TrialExpiredBanner } from '../components/trial'
+import { TrialExpiredBanner } from '../components/trial'
 import { TutorialManager } from '../components/tutorial'
 import { getCreditAllocation, getDailyCreditLimit } from '../config/constants'
 import { useAuth } from '../contexts/AuthContext'
@@ -1977,21 +1968,43 @@ export function MainPage() {
             onSignUpClick={openRegister}
           />
 
-          <VerificationCodeModal
-            isOpen={showVerificationCodeModal && !showPasswordReset}
-            onClose={() => setShowVerificationCodeModal(false)}
-            onUseDifferentEmail={openLoginAfterVerificationCode}
-            onVerified={handleVerified}
+          <ModalManager
+            isAuthModalOpen={isAuthModalOpen}
+            authModalMode={authModalMode}
+            loginEmail={loginEmail}
+            onAuthModalClose={closeAuthModal}
+            showVerificationCodeModal={showVerificationCodeModal}
+            showVerificationSuccessModal={showVerificationSuccessModal}
+            showPasswordReset={showPasswordReset}
             userEmail={user?.email}
+            onVerificationCodeModalClose={() => setShowVerificationCodeModal(false)}
+            onVerificationCodeModalUseDifferentEmail={openLoginAfterVerificationCode}
+            onVerificationComplete={handleVerified}
+            onVerificationSuccessModalClose={() => setShowVerificationSuccessModal(false)}
+            onPasswordResetClose={handlePasswordResetClose}
+            showPremiumModelsToggleModal={showPremiumModelsToggleModal}
+            onPremiumModelsModalClose={() => {
+              setShowPremiumModelsToggleModal(false)
+              setHidePremiumModels(!hidePremiumModels)
+            }}
+            onPremiumModelsDontShowAgain={checked => {
+              if (checked) {
+                localStorage.setItem('premium-models-toggle-info-dismissed', 'true')
+              } else {
+                localStorage.removeItem('premium-models-toggle-info-dismissed')
+              }
+            }}
+            disabledButtonInfo={disabledButtonInfo}
+            onDisabledButtonInfoClose={() => setDisabledButtonInfo({ button: null, message: '' })}
+            showTrialWelcomeModal={showTrialWelcomeModal}
+            trialEndsAt={user?.trial_ends_at}
+            trialUserEmail={user?.email}
+            onTrialWelcomeModalClose={() => setShowTrialWelcomeModal(false)}
+            disabledModelModalInfo={disabledModelModalInfo}
+            onDisabledModelModalClose={() => setDisabledModelModalInfo(null)}
+            onToggleHidePremiumModels={() => setHidePremiumModels(true)}
+            onOpenSignUp={openRegister}
           />
-
-          {/* Verification Success Modal */}
-          <VerificationSuccessModal
-            isOpen={showVerificationSuccessModal}
-            onClose={() => setShowVerificationSuccessModal(false)}
-          />
-
-          {showPasswordReset && <ResetPassword onClose={handlePasswordResetClose} />}
 
           <ComparisonView>
             <Hero visibleTooltip={visibleTooltip} onCapabilityTileTap={handleCapabilityTileTap}>
@@ -2156,13 +2169,6 @@ export function MainPage() {
             )}
           </ComparisonView>
 
-          <AuthModal
-            isOpen={isAuthModalOpen}
-            onClose={closeAuthModal}
-            initialMode={authModalMode}
-            initialEmail={loginEmail}
-          />
-
           {import.meta.env.PROD && <InstallPrompt />}
 
           <TutorialManager
@@ -2189,43 +2195,6 @@ export function MainPage() {
             setTutorialHasCompletedComparison={setTutorialHasCompletedComparison}
             setTutorialHasBreakout={setTutorialHasBreakout}
             setTutorialHasSavedSelection={setTutorialHasSavedSelection}
-          />
-
-          <PremiumModelsToggleInfoModal
-            isOpen={showPremiumModelsToggleModal}
-            onClose={() => {
-              setShowPremiumModelsToggleModal(false)
-              setHidePremiumModels(!hidePremiumModels)
-            }}
-            onDontShowAgain={checked => {
-              if (checked) {
-                localStorage.setItem('premium-models-toggle-info-dismissed', 'true')
-              } else {
-                localStorage.removeItem('premium-models-toggle-info-dismissed')
-              }
-            }}
-          />
-
-          <DisabledButtonInfoModal
-            isOpen={disabledButtonInfo.button !== null}
-            onClose={() => setDisabledButtonInfo({ button: null, message: '' })}
-            buttonType={disabledButtonInfo.button}
-            message={disabledButtonInfo.message}
-          />
-
-          <DisabledModelInfoModal
-            isOpen={disabledModelModalInfo !== null}
-            info={disabledModelModalInfo}
-            onClose={() => setDisabledModelModalInfo(null)}
-            onToggleHidePremiumModels={() => setHidePremiumModels(true)}
-            onOpenSignUp={openRegister}
-          />
-
-          <TrialWelcomeModal
-            isOpen={showTrialWelcomeModal}
-            onClose={() => setShowTrialWelcomeModal(false)}
-            trialEndsAt={user?.trial_ends_at}
-            userEmail={user?.email}
           />
         </>
       )}

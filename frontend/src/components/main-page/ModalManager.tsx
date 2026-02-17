@@ -10,7 +10,12 @@
  */
 
 import { AuthModal, VerificationCodeModal, VerificationSuccessModal, ResetPassword } from '../auth'
-import { PremiumModelsToggleInfoModal, DisabledButtonInfoModal } from '../comparison'
+import {
+  PremiumModelsToggleInfoModal,
+  DisabledButtonInfoModal,
+  DisabledModelInfoModal,
+  type DisabledModelModalInfo,
+} from '../comparison'
 import { TrialWelcomeModal } from '../trial'
 
 export interface ModalManagerProps {
@@ -48,6 +53,12 @@ export interface ModalManagerProps {
   trialEndsAt: string | undefined
   trialUserEmail: string | undefined
   onTrialWelcomeModalClose: () => void
+
+  // Disabled model info modal
+  disabledModelModalInfo: DisabledModelModalInfo | null
+  onDisabledModelModalClose: () => void
+  onToggleHidePremiumModels: () => void
+  onOpenSignUp: () => void
 }
 
 export function ModalManager({
@@ -82,6 +93,12 @@ export function ModalManager({
   trialEndsAt,
   trialUserEmail,
   onTrialWelcomeModalClose,
+
+  // Disabled model info modal
+  disabledModelModalInfo,
+  onDisabledModelModalClose,
+  onToggleHidePremiumModels,
+  onOpenSignUp,
 }: ModalManagerProps) {
   return (
     <>
@@ -132,6 +149,15 @@ export function ModalManager({
         onClose={onTrialWelcomeModalClose}
         trialEndsAt={trialEndsAt}
         userEmail={trialUserEmail}
+      />
+
+      {/* Disabled Model Info Modal */}
+      <DisabledModelInfoModal
+        isOpen={disabledModelModalInfo !== null}
+        info={disabledModelModalInfo}
+        onClose={onDisabledModelModalClose}
+        onToggleHidePremiumModels={onToggleHidePremiumModels}
+        onOpenSignUp={onOpenSignUp}
       />
     </>
   )
