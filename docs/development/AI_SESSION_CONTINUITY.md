@@ -58,7 +58,8 @@ The CompareIntel web application (compareintel.com) is being refactored to meet 
 3. **Scope work to session length** — Prioritize 1–2 high-impact items. Avoid large refactors that span multiple sessions without clear handoff.
 4. **Update the checklist when done** — Mark items as completed with the date. Add brief notes if helpful.
 5. **Run tests before finishing** — Ensure `npm run test:run` (frontend) and `pytest tests/unit/` (backend) pass. Run `npm run type-check` and lint.
-6. **Preserve project voice** — Code should feel product-specific. Avoid generic AI patterns (excessive JSDoc, verbose names, unnecessary abstraction).
+6. **Provide a concise git commit statement** — At the end of each session that produces code changes, supply a single-line commit message (50–72 chars). Example: `refactor: extract useMainPageEffects, add QUICKSTART, fix coverage CI`.
+7. **Preserve project voice** — Code should feel product-specific. Avoid generic AI patterns (excessive JSDoc, verbose names, unnecessary abstraction).
 
 ---
 
@@ -71,16 +72,15 @@ The CompareIntel web application (compareintel.com) is being refactored to meet 
 - [x] **Pre-commit backend checks** — Added ruff, ruff format, mypy to `.husky/pre-commit` when backend `.py` files are staged. (2025-02)
 - [x] **CONTRIBUTING.md** — Created with setup, workflow, code style, testing, and PR guidelines. (2025-02)
 - [x] **Modal consolidation** — MainPage now uses `ModalManager` for auth, verification, reset, premium, disabled button, trial welcome, and disabled model modals. Reduced MainPage by ~30 lines. (2025-02)
+- [x] **Extract `useMainPageEffects`** — Moved scroll, focus, history sync, error handling, and 13 other useEffects into `useMainPageEffects` hook. Reduced MainPage by ~260 lines. (2025-02)
+- [x] **Add QUICKSTART.md** — Minimal "clone → install → run → first comparison" guide. (2025-02)
+- [x] **Coverage fails CI** — Backend CI now fails when coverage is below 70%. (2025-02)
+- [x] **Fix REFACTORING_TODO reference** — ARCHITECTURE.md now references `AI_SESSION_CONTINUITY.md` instead of the missing `REFACTORING_TODO.md`. (2025-02)
 
 ### Pending
-
-- [ ] **Extract `useMainPageEffects`** — Move scroll, focus, history sync, and other useEffects from MainPage into a dedicated hook. Target: reduce MainPage by ~300–400 lines.
-- [ ] **Add QUICKSTART.md** — Minimal "clone → install → run → first comparison" guide. Referenced by ENVIRONMENT_SETUP but missing.
-- [ ] **Coverage fails CI** — Change backend CI so coverage below 70% fails the build instead of only logging a warning.
 - [ ] **Extract `ComparisonPageContent`** — Move comparison view (form + models + results) into a component to reduce MainPage size.
 - [ ] **Add ONBOARDING.md** — First-day checklist for new developers: key files, common tasks, where to look.
 - [ ] **Backend in lint-staged** — Add backend Python files to lint-staged (or equivalent) so staged backend changes run ruff/mypy on commit.
-- [ ] **Fix REFACTORING_TODO reference** — ARCHITECTURE.md references `docs/development/REFACTORING_TODO.md` which does not exist. Remove reference or create the file.
 - [ ] **Split `useComparisonStreaming`** — Break into smaller hooks (e.g. `useStreamConnection`, `useStreamTimeout`, `useStreamCompletion`).
 - [ ] **Simplify streaming config** — Reduce `SSEProcessorConfig` and `UseComparisonStreamingConfig` via composition or context.
 - [ ] **Feature-based routes** — Add routes like `/compare`, `/history` to avoid MainPage as single growing entry point.
@@ -107,3 +107,5 @@ When ending a session with incomplete work, you may add a short handoff note:
 | Date | Change |
 |------|--------|
 | 2025-02 | Initial creation. Documented goals, context, instructions, and checklist from evaluation and first implementation round. |
+| 2025-02-17 | Session: Fixed REFACTORING_TODO ref, coverage CI fail, QUICKSTART.md, useMainPageEffects extraction (~258 lines from MainPage). |
+| 2025-02-17 | Added instruction: AI sessions must provide a concise git commit statement for each code-update. |

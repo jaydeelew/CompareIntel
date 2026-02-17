@@ -674,4 +674,4 @@ Server-Sent Events (SSE) for streaming because:
 
 ---
 
-*This document is maintained as part of the Phase 2 Developer Experience initiative. See `docs/development/REFACTORING_TODO.md` for the full improvement plan.*
+*This document is maintained as part of the Phase 2 Developer Experience initiative. See `docs/development/AI_SESSION_CONTINUITY.md` for the improvement plan and session progress.*

@@ -46,6 +46,7 @@ import {
   useTutorialComplete,
   useSavedSelectionsComplete,
   useTooltipManager,
+  useMainPageEffects,
 } from '../hooks'
 import { ApiError } from '../services/api/errors'
 import { getRateLimitStatus, resetRateLimit } from '../services/compareService'
@@ -53,8 +54,8 @@ import { getCreditBalance } from '../services/creditService'
 import type { CreditBalance } from '../services/creditService'
 import { getAvailableModels } from '../services/modelsService'
 import type { ModelsByProvider, ResultTab, ActiveResultTabs } from '../types'
-import { RESULT_TAB, createModelId } from '../types'
-import { generateBrowserFingerprint, getSafeId } from '../utils'
+import { createModelId } from '../types'
+import { generateBrowserFingerprint } from '../utils'
 import { isErrorMessage } from '../utils/error'
 import logger from '../utils/logger'
 import { saveSessionState, onSaveStateEvent } from '../utils/sessionState'
@@ -334,7 +335,6 @@ export function MainPage() {
   const getDefaultSelectionId = useCallback(() => defaultSelectionId, [defaultSelectionId])
 
   const errorMessageRef = useRef<HTMLDivElement>(null)
-  const prevErrorRef = useRef<string | null>(null)
 
   const scrollToCenterElement = useCallback((element: HTMLElement | null) => {
     if (!element) return
@@ -353,25 +353,6 @@ export function MainPage() {
       })
     }, 100)
   }, [])
-
-  useEffect(() => {
-    if (error && !prevErrorRef.current) {
-      scrollToCenterElement(errorMessageRef.current)
-    }
-    prevErrorRef.current = error
-  }, [error, scrollToCenterElement])
-
-  useEffect(() => {
-    if (error && error.includes('Your input is too long for one or more of the selected models')) {
-      const timeoutId = setTimeout(() => {
-        setError(null)
-      }, 20000)
-
-      return () => {
-        clearTimeout(timeoutId)
-      }
-    }
-  }, [error, setError])
 
   const handleDeleteActiveConversation = useCallback(() => {
     setIsFollowUpMode(false)
@@ -483,12 +464,6 @@ export function MainPage() {
     return { modelErrorStates: errorStates, modelProcessingStates: processingStates }
   }, [conversations, selectedModels, modelErrors, isLoading])
 
-  useEffect(() => {
-    if (activeTabIndex >= visibleConversations.length && visibleConversations.length > 0) {
-      setActiveTabIndex(0)
-    }
-  }, [activeTabIndex, visibleConversations.length])
-
   const attemptFocusTextarea = useCallback(() => {
     if (!isTouchDevice && currentView === 'main' && textareaRef.current) {
       const textarea = textareaRef.current
@@ -510,44 +485,40 @@ export function MainPage() {
     return false
   }, [isTouchDevice, currentView])
 
-  useEffect(() => {
-    if (!isTouchDevice && currentView === 'main' && !showWelcomeModal && !tutorialState.isActive) {
-      let timeout1: ReturnType<typeof setTimeout> | null = null
-      let timeout2: ReturnType<typeof setTimeout> | null = null
-      let timeout3: ReturnType<typeof setTimeout> | null = null
-
-      requestAnimationFrame(() => {
-        if (attemptFocusTextarea()) return
-
-        timeout1 = setTimeout(() => {
-          if (attemptFocusTextarea()) return
-
-          timeout2 = setTimeout(() => {
-            if (attemptFocusTextarea()) return
-
-            timeout3 = setTimeout(() => {
-              attemptFocusTextarea()
-            }, 500)
-          }, 300)
-        }, 100)
-      })
-
-      return () => {
-        if (timeout1) clearTimeout(timeout1)
-        if (timeout2) clearTimeout(timeout2)
-        if (timeout3) clearTimeout(timeout3)
-      }
-    }
-  }, [isTouchDevice, currentView, showWelcomeModal, tutorialState.isActive, attemptFocusTextarea])
-
-  useEffect(() => {
-    if (!isTouchDevice && currentView === 'main' && !showWelcomeModal && !tutorialState.isActive) {
-      const timeout = setTimeout(() => {
-        attemptFocusTextarea()
-      }, 200)
-      return () => clearTimeout(timeout)
-    }
-  }, [showWelcomeModal, isTouchDevice, currentView, tutorialState.isActive, attemptFocusTextarea])
+  useMainPageEffects({
+    error,
+    setError,
+    errorMessageRef,
+    scrollToCenterElement,
+    activeTabIndex,
+    visibleConversationsLength: visibleConversations.length,
+    setActiveTabIndex,
+    isTouchDevice,
+    currentView,
+    showWelcomeModal,
+    tutorialState,
+    attemptFocusTextarea,
+    showHistoryDropdown,
+    setShowHistoryDropdown,
+    conversations,
+    currentVisibleComparisonId,
+    isAuthenticated,
+    conversationHistory,
+    selectedModels,
+    setCurrentVisibleComparisonId,
+    isLoading,
+    userVerified: user?.is_verified ?? false,
+    isFollowUpMode,
+    activeResultTabs,
+    scrolledToTopRef,
+    conversationsForScroll: conversations,
+    response,
+    hasScrolledToResultsRef,
+    followUpJustActivatedRef,
+    shouldScrollToTopAfterFormattingRef,
+    selectedModelsForScroll: selectedModels,
+    input,
+  })
 
   const { visibleTooltip, handleCapabilityTileTap } = useTooltipManager({ isMobileLayout })
 
@@ -734,61 +705,6 @@ export function MainPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated, browserFingerprint])
 
-  // Track visible comparison ID
-  useEffect(() => {
-    if (conversations.length === 0 && !currentVisibleComparisonId) {
-      return
-    }
-
-    if (isAuthenticated && conversationHistory.length > 0 && conversations.length > 0) {
-      const firstUserMessage = conversations
-        .flatMap(conv => conv.messages)
-        .filter(msg => msg.type === 'user')
-        .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())[0]
-
-      if (firstUserMessage && firstUserMessage.content) {
-        if (currentVisibleComparisonId) {
-          const currentConversation = conversationHistory.find(
-            summary => String(summary.id) === currentVisibleComparisonId
-          )
-
-          if (currentConversation) {
-            const currentModelsMatch =
-              JSON.stringify([...currentConversation.models_used].sort()) ===
-              JSON.stringify([...selectedModels].sort())
-            const currentInputMatches = currentConversation.input_data === firstUserMessage.content
-
-            if (currentModelsMatch && currentInputMatches) {
-              return
-            }
-          }
-        }
-
-        const matchingConversation = conversationHistory.find(summary => {
-          const modelsMatch =
-            JSON.stringify([...summary.models_used].sort()) ===
-            JSON.stringify([...selectedModels].sort())
-          const inputMatches = summary.input_data === firstUserMessage.content
-          return modelsMatch && inputMatches
-        })
-
-        if (matchingConversation) {
-          const matchingId = String(matchingConversation.id)
-          if (currentVisibleComparisonId !== matchingId) {
-            setCurrentVisibleComparisonId(matchingId)
-          }
-        }
-      }
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    isAuthenticated,
-    conversationHistory,
-    conversations,
-    selectedModels,
-    currentVisibleComparisonId,
-  ])
-
   // Token count reload effect
   useTokenReload(
     {
@@ -802,171 +718,6 @@ export function MainPage() {
       setConversations,
     }
   )
-
-  // History dropdown close on outside click
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as HTMLElement
-      if (
-        showHistoryDropdown &&
-        !target.closest('.history-toggle-button') &&
-        !target.closest('.history-inline-list')
-      ) {
-        setShowHistoryDropdown(false)
-      }
-    }
-
-    if (showHistoryDropdown) {
-      document.addEventListener('mousedown', handleClickOutside)
-      return () => {
-        document.removeEventListener('mousedown', handleClickOutside)
-      }
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [showHistoryDropdown])
-
-  // Scroll to loading section
-  useEffect(() => {
-    if (isLoading) {
-      setTimeout(() => {
-        const loadingSection = document.querySelector('.loading-section')
-        if (loadingSection) {
-          loadingSection.scrollIntoView({
-            behavior: 'smooth',
-            block: 'center',
-          })
-        }
-      }, 100)
-    }
-  }, [isLoading])
-
-  // Clear verification errors
-  useEffect(() => {
-    if (user?.is_verified && error?.includes('verify your email')) {
-      setError(null)
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.is_verified, error])
-
-  // Scroll cards to top on formatting
-  useEffect(() => {
-    if (isFollowUpMode) return
-
-    Object.entries(activeResultTabs).forEach(([modelId, tab]) => {
-      if (
-        tab === RESULT_TAB.FORMATTED &&
-        !scrolledToTopRef.current.has(modelId) &&
-        conversations.some(conv => conv.modelId === modelId)
-      ) {
-        scrolledToTopRef.current.add(modelId)
-
-        setTimeout(() => {
-          const safeId = getSafeId(modelId)
-          const conversationContent = document.querySelector(
-            `#conversation-content-${safeId}`
-          ) as HTMLElement
-          if (conversationContent) {
-            conversationContent.scrollTop = 0
-          }
-        }, 200)
-      }
-    })
-  }, [activeResultTabs, isFollowUpMode, conversations])
-
-  // Scroll to results
-  useEffect(() => {
-    const isTutorialSubmitOrFollowUpStep =
-      tutorialState.isActive &&
-      (tutorialState.currentStep === 'submit-comparison' ||
-        tutorialState.currentStep === 'follow-up')
-    if (
-      response &&
-      !isFollowUpMode &&
-      !hasScrolledToResultsRef.current &&
-      !error &&
-      !isTutorialSubmitOrFollowUpStep
-    ) {
-      const allModelsFailed = response.metadata?.models_successful === 0
-      if (allModelsFailed) {
-        return
-      }
-
-      hasScrolledToResultsRef.current = true
-
-      setTimeout(() => {
-        const resultsSection = document.querySelector('.results-section')
-        if (resultsSection) {
-          resultsSection.scrollIntoView({
-            behavior: 'smooth',
-            block: 'start',
-          })
-        }
-      }, 300)
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [response, isFollowUpMode, error, tutorialState.currentStep])
-
-  // Scroll all cards to top after formatting
-  useEffect(() => {
-    if (isFollowUpMode || !shouldScrollToTopAfterFormattingRef.current) return
-
-    const allModelsFormatted = selectedModels.every(modelId => {
-      const modelIdFormatted = createModelId(modelId)
-      const tab = activeResultTabs[modelIdFormatted]
-      return tab === RESULT_TAB.FORMATTED
-    })
-
-    const allConversationsExist = selectedModels.every(modelId => {
-      const modelIdFormatted = createModelId(modelId)
-      return conversations.some(conv => conv.modelId === modelIdFormatted)
-    })
-
-    if (allModelsFormatted && allConversationsExist) {
-      shouldScrollToTopAfterFormattingRef.current = false
-
-      setTimeout(() => {
-        selectedModels.forEach(modelId => {
-          const safeId = createModelId(modelId).replace(/[^a-zA-Z0-9_-]/g, '-')
-          const conversationContent = document.querySelector(
-            `#conversation-content-${safeId}`
-          ) as HTMLElement
-          if (conversationContent) {
-            conversationContent.scrollTo({
-              top: 0,
-              behavior: 'smooth',
-            })
-          }
-        })
-      }, 300)
-    }
-  }, [activeResultTabs, isFollowUpMode, conversations, selectedModels])
-
-  // Scroll after follow-up
-  useEffect(() => {
-    const isTutorialLateStep =
-      tutorialState.isActive &&
-      (tutorialState.currentStep === 'submit-comparison-2' ||
-        tutorialState.currentStep === 'view-follow-up-results' ||
-        tutorialState.currentStep === 'history-dropdown' ||
-        tutorialState.currentStep === 'save-selection')
-    if (
-      conversations.length > 0 &&
-      isFollowUpMode &&
-      !followUpJustActivatedRef.current &&
-      !isTutorialLateStep
-    ) {
-      setTimeout(() => {
-        const resultsSection = document.querySelector('.results-section')
-        if (resultsSection) {
-          resultsSection.scrollIntoView({
-            behavior: 'smooth',
-            block: 'start',
-          })
-        }
-      }, 400)
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [conversations, isFollowUpMode, tutorialState.currentStep, tutorialState.isActive])
 
   // Refresh usage on model selection
   useEffect(() => {
@@ -1155,14 +906,6 @@ export function MainPage() {
       setIsAnimatingTextarea(false)
     }
   }, [input, isAnimatingButton, isAnimatingTextarea])
-
-  // Clear textarea errors
-  useEffect(() => {
-    if (input.trim().length > 0 && error && error === 'Please enter some text to compare') {
-      setError(null)
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [input, error])
 
   // Listen for save state event (triggered before logout when "remember state" is enabled)
   useEffect(() => {
