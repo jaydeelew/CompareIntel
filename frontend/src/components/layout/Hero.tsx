@@ -42,7 +42,8 @@ function CapabilityTile({
           <div className={`capability-tooltip ${isVisible ? 'visible' : ''}`}>{tooltipText}</div>
         </div>
         <div className="capability-tile-back">
-          <img src={backImage} alt="" className="capability-tile-back-image" />
+          <p className="capability-tile-back-label">{title}</p>
+          <img src={backImage} alt={`${title} example`} className="capability-tile-back-image" />
           <p className="capability-tile-back-text">{backText}</p>
         </div>
       </div>
@@ -167,7 +168,7 @@ export function Hero({ visibleTooltip, onCapabilityTileTap, children }: HeroProp
             description="Compare conversational responses"
             tooltipText="Natural Language: Compare conversational responses"
             backImage="/images/tile-natural-language.png"
-            backText="See how different models answer the same question—compare tone, depth, and style in real time."
+            backText="Ask any question and instantly compare how each model responds — notice the differences in tone, detail, and perspective."
             isVisible={visibleTooltip === 'natural-language'}
             isFlipped={flippedTile === 'natural-language'}
             onTileClick={handleTileClick}
@@ -194,7 +195,7 @@ export function Hero({ visibleTooltip, onCapabilityTileTap, children }: HeroProp
             description="Evaluate programming capabilities"
             tooltipText="Code Generation: Evaluate programming capabilities"
             backImage="/images/tile-code-generation.png"
-            backText="Side-by-side code output lets you evaluate syntax, structure, and best practices across models."
+            backText="Submit a coding prompt and compare the generated implementations — evaluate syntax, style, and correctness side by side."
             isVisible={visibleTooltip === 'code-generation'}
             isFlipped={flippedTile === 'code-generation'}
             onTileClick={handleTileClick}
@@ -220,7 +221,7 @@ export function Hero({ visibleTooltip, onCapabilityTileTap, children }: HeroProp
             description="Render math equations beautifully"
             tooltipText="Formatted Math: Render mathematical equations beautifully"
             backImage="/images/tile-formatted-math.png"
-            backText="LaTeX and math rendering vary by model—compare clarity and accuracy of equations."
+            backText="Request a derivation or formula and see how each model renders mathematical notation — compare clarity and step-by-step accuracy."
             isVisible={visibleTooltip === 'formatted-math'}
             isFlipped={flippedTile === 'formatted-math'}
             onTileClick={handleTileClick}
