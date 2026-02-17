@@ -36,7 +36,7 @@ class CreateTestUserRequest(BaseModel):
     password: str
     role: str | None = "user"
     is_admin: bool | None = False
-    subscription_tier: str | None = "free"
+    subscription_tier: str | None = None  # None = preserve on update, "free" on create
     is_verified: bool | None = True
     is_active: bool | None = True
 
@@ -144,7 +144,8 @@ async def create_test_user_dev(
         existing_user.password_hash = get_password_hash(user_data.password)
         existing_user.role = user_data.role
         existing_user.is_admin = user_data.is_admin
-        existing_user.subscription_tier = user_data.subscription_tier
+        if user_data.subscription_tier is not None:
+            existing_user.subscription_tier = user_data.subscription_tier
         existing_user.is_verified = user_data.is_verified
         existing_user.is_active = user_data.is_active
         existing_user.subscription_status = "active"
@@ -165,7 +166,7 @@ async def create_test_user_dev(
         password_hash=get_password_hash(user_data.password),
         role=user_data.role,
         is_admin=user_data.is_admin,
-        subscription_tier=user_data.subscription_tier,
+        subscription_tier=user_data.subscription_tier or "free",
         subscription_status="active",
         subscription_period="monthly",
         is_verified=user_data.is_verified,

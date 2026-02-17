@@ -526,6 +526,7 @@ async function ensureTestUserExists(
         password,
         role: isAdmin ? 'admin' : 'user',
         is_admin: isAdmin,
+        subscription_tier: isAdmin ? 'pro_plus' : undefined,
         is_verified: true,
         is_active: true,
       }),

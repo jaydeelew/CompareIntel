@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react'
+import { useCallback, useEffect, useState, type ReactNode } from 'react'
 
 import { useTheme } from '../../contexts/ThemeContext'
 
@@ -8,8 +8,11 @@ interface CapabilityTileProps {
   title: string
   description: string
   tooltipText: string
+  backImage: string
+  backText: string
   isVisible: boolean
-  onTap: (id: string) => void
+  isFlipped: boolean
+  onTileClick: (id: string) => void
 }
 
 function CapabilityTile({
@@ -18,27 +21,31 @@ function CapabilityTile({
   title,
   description,
   tooltipText,
+  backImage,
+  backText,
   isVisible,
-  onTap,
+  isFlipped,
+  onTileClick,
 }: CapabilityTileProps) {
-  const [tapAnimating, setTapAnimating] = useState(false)
-
-  const handleClick = () => {
-    // Trigger tap animation class that auto-resets via CSS animation
-    setTapAnimating(true)
-    // Remove the class after animation completes (300ms)
-    setTimeout(() => {
-      setTapAnimating(false)
-    }, 300)
-    onTap(id)
+  const handleClick = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    onTileClick(id)
   }
 
   return (
-    <div className={`capability-tile ${tapAnimating ? 'tap-animate' : ''}`} onClick={handleClick}>
-      <div className="capability-icon">{icon}</div>
-      <h3 className="capability-title">{title}</h3>
-      <p className="capability-description">{description}</p>
-      <div className={`capability-tooltip ${isVisible ? 'visible' : ''}`}>{tooltipText}</div>
+    <div className="capability-tile-wrapper">
+      <div className={`capability-tile ${isFlipped ? 'flipped' : ''}`} onClick={handleClick}>
+        <div className="capability-tile-front">
+          <div className="capability-icon">{icon}</div>
+          <h3 className="capability-title">{title}</h3>
+          <p className="capability-description">{description}</p>
+          <div className={`capability-tooltip ${isVisible ? 'visible' : ''}`}>{tooltipText}</div>
+        </div>
+        <div className="capability-tile-back">
+          <img src={backImage} alt="" className="capability-tile-back-image" />
+          <p className="capability-tile-back-text">{backText}</p>
+        </div>
+      </div>
     </div>
   )
 }
@@ -54,19 +61,33 @@ interface HeroProps {
  */
 export function Hero({ visibleTooltip, onCapabilityTileTap, children }: HeroProps) {
   const [showFlash, setShowFlash] = useState(false)
+  const [flippedTile, setFlippedTile] = useState<string | null>(null)
   const { theme, toggleTheme } = useTheme()
 
-  // Handle capability tile tap with flash animation
-  const handleTileTap = (tileId: string) => {
-    // Trigger flash animation
-    setShowFlash(true)
-    // Hide flash after animation completes (less than 1 second)
-    setTimeout(() => {
-      setShowFlash(false)
-    }, 800)
-    // Call original handler
-    onCapabilityTileTap(tileId)
-  }
+  const dismissFlip = useCallback(() => {
+    setFlippedTile(null)
+  }, [])
+
+  useEffect(() => {
+    if (!flippedTile) return
+    const handleClickOutside = () => dismissFlip()
+    document.addEventListener('click', handleClickOutside)
+    return () => document.removeEventListener('click', handleClickOutside)
+  }, [flippedTile, dismissFlip])
+
+  const handleTileClick = useCallback(
+    (tileId: string) => {
+      if (flippedTile === tileId) {
+        setFlippedTile(null)
+        return
+      }
+      setFlippedTile(tileId)
+      setShowFlash(true)
+      setTimeout(() => setShowFlash(false), 800)
+      onCapabilityTileTap(tileId)
+    },
+    [flippedTile, onCapabilityTileTap]
+  )
 
   return (
     <div className="hero-section">
@@ -145,8 +166,11 @@ export function Hero({ visibleTooltip, onCapabilityTileTap, children }: HeroProp
             title="Natural Language"
             description="Compare conversational responses"
             tooltipText="Natural Language: Compare conversational responses"
+            backImage="/images/tile-natural-language.png"
+            backText="See how different models answer the same question—compare tone, depth, and style in real time."
             isVisible={visibleTooltip === 'natural-language'}
-            onTap={handleTileTap}
+            isFlipped={flippedTile === 'natural-language'}
+            onTileClick={handleTileClick}
           />
 
           <CapabilityTile
@@ -169,8 +193,11 @@ export function Hero({ visibleTooltip, onCapabilityTileTap, children }: HeroProp
             title="Code Generation"
             description="Evaluate programming capabilities"
             tooltipText="Code Generation: Evaluate programming capabilities"
+            backImage="/images/tile-code-generation.png"
+            backText="Side-by-side code output lets you evaluate syntax, structure, and best practices across models."
             isVisible={visibleTooltip === 'code-generation'}
-            onTap={handleTileTap}
+            isFlipped={flippedTile === 'code-generation'}
+            onTileClick={handleTileClick}
           />
 
           <CapabilityTile
@@ -192,8 +219,11 @@ export function Hero({ visibleTooltip, onCapabilityTileTap, children }: HeroProp
             title="Formatted Math"
             description="Render math equations beautifully"
             tooltipText="Formatted Math: Render mathematical equations beautifully"
+            backImage="/images/tile-formatted-math.png"
+            backText="LaTeX and math rendering vary by model—compare clarity and accuracy of equations."
             isVisible={visibleTooltip === 'formatted-math'}
-            onTap={handleTileTap}
+            isFlipped={flippedTile === 'formatted-math'}
+            onTileClick={handleTileClick}
           />
         </div>
 
