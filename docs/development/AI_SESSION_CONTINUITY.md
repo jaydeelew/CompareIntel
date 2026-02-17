@@ -83,7 +83,7 @@ The CompareIntel web application (compareintel.com) is being refactored to meet 
 - [x] **Split useComparisonStreaming (partial)** — Extracted `useStreamConnection` (abort controller, cancel) and `useModelFailureCheck` (isModelFailed, getSuccessfulModels). Reduced main hook by ~50 lines. (2025-02-17)
 - [x] **Split useComparisonStreaming (remaining)** — Extracted `useStreamTimeout` (timeout/abort error handling) and `useStreamCompletion` (post-stream result application). Reduced main hook by ~380 lines. (2025-02-17)
 - [x] **Simplify streaming config** — Refactored `UseComparisonStreamingConfig` and `UseComparisonStreamingCallbacks` via composition. Config now groups auth, models, input, conversation, credit, refs; callbacks group state, credit, helpers. Created `types/streamingConfig.ts` with composed types. MainPage passes `streamingConfig` and `streamingCallbacks` built with useMemo. (2025-02-17)
-- [x] **Feature-based routes** — Added `/compare`, `/history`, `/admin` as explicit routes. MainPage handles only comparison flow; AdminPage at `/admin` with route guard; HistoryPage at `/history` with conversation list and load-on-navigate to /compare. Navigation updated to use `/compare`. (2025-02-17)
+- [x] **Feature-based routes** — Added `/admin` as explicit route. Main page at `/`; AdminPage at `/admin` with route guard. History dropdown in comparison form suffices for history access; standalone HistoryPage removed. Removed redundant `/compare`; single main page at `/`. (2025-02-17)
 
 ### Pending
 - [ ] **Document scaling assumptions** — Note load, concurrency, and retention expectations for future scaling.
@@ -117,4 +117,5 @@ When ending a session with incomplete work, you may add a short handoff note:
 | 2025-02-17 | Session: Split useComparisonStreaming — extracted useStreamConnection, useModelFailureCheck. |
 | 2025-02-17 | Session: Split useComparisonStreaming (remaining) — extracted useStreamTimeout, useStreamCompletion. |
 | 2025-02-17 | Session: Simplify streaming config — composed UseComparisonStreamingConfig and UseComparisonStreamingCallbacks; added types/streamingConfig.ts. |
-| 2025-02-17 | Session: Feature-based routes — /compare, /history, /admin explicit routes; AdminPage, HistoryPage; MainPage comparison-only; History load-on-navigate. |
+| 2025-02-17 | Session: Feature-based routes — /admin explicit route; MainPage at /; AdminPage. |
+| 2025-02-17 | Session: Removed HistoryPage; history dropdown sufficient. Removed /compare; single main page at /. |

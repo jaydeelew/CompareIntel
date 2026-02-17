@@ -32,7 +32,7 @@ export function Navigation({
     if (onViewChange) {
       onViewChange(view)
     } else {
-      navigate(view === 'admin' ? '/admin' : '/compare')
+      navigate(view === 'admin' ? '/admin' : '/')
     }
   }
 

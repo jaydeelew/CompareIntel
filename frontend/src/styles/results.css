@@ -2878,21 +2878,6 @@ button.nav-button-primary {
   box-shadow: var(--shadow-glow-md);
 }
 
-.history-view-all-link {
-  display: block;
-  padding: 0.6rem 1rem;
-  margin-top: 0.5rem;
-  font-size: 0.85rem;
-  color: var(--accent-primary, #06b6d4);
-  text-decoration: none;
-  border-top: 1px solid var(--border-color, rgba(255, 255, 255, 0.08));
-  transition: color 0.2s ease;
-}
-
-.history-view-all-link:hover {
-  color: var(--accent-primary-hover, #22d3ee);
-}
-
 @media (max-width: 768px) {
   .history-inline-list {
     border-radius: 0 0 1.25rem 1.25rem;

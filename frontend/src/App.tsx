@@ -18,7 +18,7 @@ import { Layout, ThemeSync } from './components'
 import { ErrorBoundary, LoadingSpinner } from './components/shared'
 import { AuthProvider } from './contexts/AuthContext'
 import { ThemeProvider } from './contexts/ThemeContext'
-import { MainPage, AdminPage, HistoryPage } from './pages'
+import { MainPage, AdminPage } from './pages'
 
 const About = lazy(() =>
   import('./components/pages/About').then(module => ({ default: module.About }))
@@ -105,10 +105,8 @@ function App() {
                 }
               />
               <Route path="/" element={<MainPage />} />
-              <Route path="/compare" element={<MainPage />} />
-              <Route path="/history" element={<HistoryPage />} />
               <Route path="/admin" element={<AdminPage />} />
-              <Route path="*" element={<Navigate to="/compare" replace />} />
+              <Route path="*" element={<Navigate to="/" replace />} />
             </Route>
           </Routes>
         </AuthProvider>

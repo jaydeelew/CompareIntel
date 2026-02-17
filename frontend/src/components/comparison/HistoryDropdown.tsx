@@ -1,5 +1,3 @@
-import { Link } from 'react-router-dom'
-
 import { getConversationLimit } from '../../config/constants'
 import { truncatePrompt, formatDate } from '../../utils'
 
@@ -127,11 +125,6 @@ export function HistoryDropdown({
                 </div>
               )}
           </>
-        )}
-        {!isLoadingHistory && (
-          <Link to="/history" className="history-view-all-link">
-            View full history →
-          </Link>
         )}
       </div>
     </div>

@@ -9,7 +9,7 @@ const AdminPanel = lazy(() => import('../components/admin/AdminPanel'))
 
 /**
  * Admin page - protected route for admin users.
- * Renders the admin panel with navigation. Non-admin users are redirected to /compare.
+ * Renders the admin panel with navigation. Non-admin users are redirected to /.
  */
 export function AdminPage() {
   const { isAuthenticated, user, isLoading: authLoading } = useAuth()
@@ -18,7 +18,7 @@ export function AdminPage() {
   useEffect(() => {
     if (authLoading) return
     if (!isAuthenticated || !user?.is_admin) {
-      navigate('/compare', { replace: true })
+      navigate('/', { replace: true })
     }
   }, [isAuthenticated, user, authLoading, navigate])
 
@@ -42,7 +42,7 @@ export function AdminPage() {
       <Suspense
         fallback={<LoadingSpinner size="large" modern={true} message="Loading admin panel..." />}
       >
-        <AdminPanel onClose={() => navigate('/compare')} />
+        <AdminPanel onClose={() => navigate('/')} />
       </Suspense>
     </div>
   )

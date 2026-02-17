@@ -29,25 +29,6 @@ const PAGE_META: Record<string, PageMeta> = {
       'Compare 65+ AI models side-by-side from leading providers. Test prompts simultaneously and find the best AI for your needs. New models added as released. Free tier available.',
     ogImage: DEFAULT_OG_IMAGE,
   },
-  '/compare': {
-    title: 'Compare AI Models - CompareIntel',
-    description:
-      'Compare the latest AI models side-by-side. Test models from OpenAI, Anthropic, Google, Meta, xAI, and more simultaneously. New models added regularly. Free tier available.',
-    canonical: `${BASE_URL}/compare`,
-    ogTitle: 'CompareIntel - Compare 65+ AI Models Side-by-Side',
-    ogDescription:
-      'Compare 65+ AI models side-by-side from leading providers. Test prompts simultaneously and find the best AI for your needs. New models added as released. Free tier available.',
-    ogImage: DEFAULT_OG_IMAGE,
-  },
-  '/history': {
-    title: 'Conversation History - CompareIntel',
-    description: 'View and manage your CompareIntel conversation history. Access past comparisons.',
-    canonical: `${BASE_URL}/history`,
-    ogTitle: 'Conversation History - CompareIntel',
-    ogDescription:
-      'View and manage your CompareIntel conversation history. Access past comparisons.',
-    ogImage: DEFAULT_OG_IMAGE,
-  },
   '/about': {
     title: 'About - CompareIntel',
     description:

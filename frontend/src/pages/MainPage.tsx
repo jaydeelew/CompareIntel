@@ -42,7 +42,6 @@ import type { CreditBalance } from '../services/creditService'
 import { getAvailableModels } from '../services/modelsService'
 import {
   createModelId,
-  type ConversationSummary,
   type ModelsByProvider,
   type ResultTab,
   type ActiveResultTabs,
@@ -640,15 +639,6 @@ export function MainPage() {
       setCurrentVisibleComparisonId,
       setModelErrors,
     })
-
-  // Load conversation when navigated from History page
-  useEffect(() => {
-    const summary = (location.state as { loadConversation?: ConversationSummary })?.loadConversation
-    if (summary && loadConversation) {
-      loadConversation(summary)
-      navigate(location.pathname, { replace: true, state: {} })
-    }
-  }, [location.state, location.pathname, loadConversation, navigate])
 
   // Note: Tutorial effects are now handled by useTutorialComplete hook
 
@@ -1758,7 +1748,7 @@ export function MainPage() {
           isAuthenticated={isAuthenticated}
           isAdmin={user?.is_admin || false}
           currentView={currentView}
-          onViewChange={view => navigate(view === 'admin' ? '/admin' : '/compare')}
+          onViewChange={view => navigate(view === 'admin' ? '/admin' : '/')}
           onSignInClick={openLogin}
           onSignUpClick={openRegister}
         />
