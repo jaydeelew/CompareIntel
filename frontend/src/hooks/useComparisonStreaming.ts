@@ -1,7 +1,7 @@
 /**
  * useComparisonStreaming - Core streaming logic for AI model comparisons.
  * Uses SSE for streaming, activity-based timeout, partial result recovery.
- * Composes useStreamConnection, useModelFailureCheck; parent owns state.
+ * Composes useStreamConnection, useModelFailureCheck, useStreamCompletion, useStreamTimeout.
  */
 
 import { useCallback } from 'react'
@@ -9,15 +9,10 @@ import { useCallback } from 'react'
 import type { AttachedFile, StoredAttachedFile } from '../components/comparison'
 import { getCreditAllocation, getDailyCreditLimit } from '../config/constants'
 import { apiClient } from '../services/api/client'
-import { ApiError, PaymentRequiredError } from '../services/api/errors'
-import { compareStream, getRateLimitStatus } from '../services/compareService'
+import { compareStream } from '../services/compareService'
 import { getCreditBalance } from '../services/creditService'
 import type { CreditBalance } from '../services/creditService'
-import {
-  processComparisonStream,
-  createStreamingMessage,
-  estimateTokensSimple,
-} from '../services/sseProcessor'
+import { processComparisonStream, createStreamingMessage } from '../services/sseProcessor'
 import type {
   CompareResponse,
   ModelConversation,
@@ -28,11 +23,12 @@ import { RESULT_TAB, createModelId } from '../types'
 import type { ConversationMessage } from '../types/conversation'
 import { validateComparisonInput } from '../utils/comparisonValidation'
 import { prepareApiConversationHistory } from '../utils/conversationPreparer'
-import { isErrorMessage } from '../utils/error'
 import logger from '../utils/logger'
 
 import { useModelFailureCheck } from './useModelFailureCheck'
+import { useStreamCompletion } from './useStreamCompletion'
 import { useStreamConnection } from './useStreamConnection'
+import { useStreamTimeout } from './useStreamTimeout'
 
 interface TutorialState {
   isActive: boolean
@@ -187,6 +183,64 @@ export function useComparisonStreaming(
   const { isModelFailed, getSuccessfulModels } = useModelFailureCheck(
     config.modelErrors,
     config.conversations
+  )
+
+  const { applyStreamCompletion } = useStreamCompletion(
+    {
+      selectedModels: config.selectedModels,
+      input: config.input,
+      isFollowUpMode: config.isFollowUpMode,
+      isAuthenticated: config.isAuthenticated,
+      attachedFiles: config.attachedFiles,
+      browserFingerprint: config.browserFingerprint,
+      lastSubmittedInputRef: config.lastSubmittedInputRef,
+    },
+    {
+      setError: callbacks.setError,
+      setModelErrors: callbacks.setModelErrors,
+      setActiveResultTabs: callbacks.setActiveResultTabs,
+      setResponse: callbacks.setResponse,
+      setConversations: callbacks.setConversations,
+      setInput: callbacks.setInput,
+      setCurrentVisibleComparisonId: callbacks.setCurrentVisibleComparisonId,
+      setUsageCount: callbacks.setUsageCount,
+      extractFileContentForStorage: callbacks.extractFileContentForStorage,
+      saveConversationToLocalStorage: callbacks.saveConversationToLocalStorage,
+      syncHistoryAfterComparison: callbacks.syncHistoryAfterComparison,
+      getFirstUserMessage: callbacks.getFirstUserMessage,
+      scrollConversationsToBottom: callbacks.scrollConversationsToBottom,
+      refreshUser: callbacks.refreshUser,
+    }
+  )
+
+  const { handleStreamError } = useStreamTimeout(
+    {
+      selectedModels: config.selectedModels,
+      input: config.input,
+      isFollowUpMode: config.isFollowUpMode,
+      isAuthenticated: config.isAuthenticated,
+      creditWarningType: config.creditWarningType,
+      attachedFiles: config.attachedFiles,
+      browserFingerprint: config.browserFingerprint,
+      userCancelledRef: config.userCancelledRef,
+      lastSubmittedInputRef: config.lastSubmittedInputRef,
+    },
+    {
+      setError: callbacks.setError,
+      setModelErrors: callbacks.setModelErrors,
+      setActiveResultTabs: callbacks.setActiveResultTabs,
+      setResponse: callbacks.setResponse,
+      setConversations: callbacks.setConversations,
+      setCurrentVisibleComparisonId: callbacks.setCurrentVisibleComparisonId,
+      setCreditBalance: callbacks.setCreditBalance,
+      setAnonymousCreditsRemaining: callbacks.setAnonymousCreditsRemaining,
+      setIsFollowUpMode: callbacks.setIsFollowUpMode,
+      extractFileContentForStorage: callbacks.extractFileContentForStorage,
+      saveConversationToLocalStorage: callbacks.saveConversationToLocalStorage,
+      syncHistoryAfterComparison: callbacks.syncHistoryAfterComparison,
+      getFirstUserMessage: callbacks.getFirstUserMessage,
+      refreshUser: callbacks.refreshUser,
+    }
   )
 
   const {
@@ -514,789 +568,9 @@ export function useComparisonStreaming(
         apiClientDeleteCache: (key: string) => apiClient.deleteCache(key),
       })
 
-      const {
-        streamingResults,
-        completedModels,
-        localModelErrors,
-        modelStartTimes,
-        modelCompletionTimes,
-        streamingMetadata,
-        streamError,
-      } = streamResult
-
-      if (streamError) {
-        const errorModelErrors: { [key: string]: boolean } = { ...localModelErrors }
-        selectedModels.forEach(modelId => {
-          const createdModelId = createModelId(modelId)
-          if (!completedModels.has(createdModelId)) {
-            errorModelErrors[createdModelId] = true
-          }
-        })
-        setModelErrors(errorModelErrors)
-        setError(`Streaming error: ${streamError.message}. Partial results have been saved.`)
-        setTimeout(() => setError(null), 10000)
-      }
-
-      const finalModelErrors: { [key: string]: boolean } = { ...localModelErrors }
-      selectedModels.forEach(modelId => {
-        const createdModelId = createModelId(modelId)
-        if (!completedModels.has(createdModelId)) {
-          const content = streamingResults[createdModelId] || ''
-          if (content.trim().length === 0) {
-            finalModelErrors[createdModelId] = true
-          }
-        }
-      })
-      setModelErrors(finalModelErrors)
-
-      const formattedTabs: ActiveResultTabs = {} as ActiveResultTabs
-      selectedModels.forEach(modelId => {
-        const createdModelId = createModelId(modelId)
-        const content = streamingResults[createdModelId] || ''
-        const hasError = finalModelErrors[createdModelId] === true || isErrorMessage(content)
-        if (!hasError && content.trim().length > 0) {
-          formattedTabs[createdModelId] = RESULT_TAB.FORMATTED
-        }
-      })
-      setActiveResultTabs(prev => ({ ...prev, ...formattedTabs }))
-
-      setResponse({
-        results: { ...streamingResults },
-        metadata: {
-          input_length: input.length,
-          models_requested: selectedModels.length,
-          models_successful: Object.keys(streamingResults).filter(
-            modelId =>
-              !isErrorMessage(streamingResults[modelId]) &&
-              (streamingResults[modelId] || '').trim().length > 0
-          ).length,
-          models_failed: Object.keys(streamingResults).filter(
-            modelId =>
-              isErrorMessage(streamingResults[modelId]) ||
-              (streamingResults[modelId] || '').trim().length === 0
-          ).length,
-          timestamp: new Date().toISOString(),
-          processing_time_ms: Date.now() - startTime,
-        },
-      })
-
-      if (!isFollowUpMode) {
-        setConversations(prevConversations => {
-          const updated = prevConversations.map(conv => {
-            let content = streamingResults[conv.modelId] || ''
-            if (!content.trim()) content = 'Error: No response received'
-            const startT = modelStartTimes[conv.modelId]
-            const completionTime = modelCompletionTimes[conv.modelId]
-            return {
-              ...conv,
-              messages: conv.messages.map((msg, idx) => {
-                if (idx === 0 && msg.type === 'user') {
-                  return { ...msg, timestamp: startT || msg.timestamp }
-                }
-                if (idx === 1 && msg.type === 'assistant') {
-                  return {
-                    ...msg,
-                    content,
-                    timestamp: completionTime || msg.timestamp,
-                    output_tokens: msg.output_tokens || estimateTokensSimple(content),
-                  }
-                }
-                return msg
-              }),
-            }
-          })
-          return updated
-        })
-      } else {
-        setConversations(prevConversations => {
-          const updated = prevConversations.map(conv => {
-            const content = streamingResults[conv.modelId]
-            const contentStr = content ?? ''
-            // Don't add follow-up to failed models: not in response, error, or empty
-            const isFailed =
-              content === undefined || isErrorMessage(contentStr) || !contentStr.trim()
-            if (isFailed) return conv
-
-            const completionTime = modelCompletionTimes[conv.modelId]
-            const outputTokens = estimateTokensSimple(contentStr)
-            const hasNewUserMessage = conv.messages.some(
-              (msg, idx) =>
-                msg.type === 'user' && msg.content === input && idx >= conv.messages.length - 2
-            )
-            if (!hasNewUserMessage) {
-              const startT = modelStartTimes[conv.modelId]
-              const assistantMessage = createStreamingMessage(
-                'assistant',
-                contentStr,
-                completionTime || new Date().toISOString()
-              )
-              assistantMessage.output_tokens = outputTokens
-              return {
-                ...conv,
-                messages: [
-                  ...conv.messages,
-                  createStreamingMessage('user', input, startT || userTimestamp),
-                  assistantMessage,
-                ],
-              }
-            }
-            return {
-              ...conv,
-              messages: conv.messages.map((msg, idx) => {
-                if (idx === conv.messages.length - 1 && msg.type === 'assistant') {
-                  return {
-                    ...msg,
-                    content: contentStr || msg.content,
-                    timestamp: completionTime || msg.timestamp,
-                    output_tokens: outputTokens,
-                  }
-                }
-                return msg
-              }),
-            }
-          })
-          return updated
-        })
-      }
-
-      const saveToHistoryAfterStream = () => {
-        if (!isAuthenticated && !isFollowUpMode) {
-          setTimeout(() => {
-            setConversations(currentConversations => {
-              const conversationsWithMessages = currentConversations.filter(
-                conv => selectedModels.includes(conv.modelId) && conv.messages.length > 0
-              )
-              const hasCompleteMessages = conversationsWithMessages.some(conv => {
-                const assistantMessages = conv.messages.filter(msg => msg.type === 'assistant')
-                return (
-                  assistantMessages.length > 0 &&
-                  assistantMessages.some(msg => msg.content.trim().length > 0)
-                )
-              })
-              if (hasCompleteMessages && conversationsWithMessages.length > 0) {
-                const firstUserMessage = conversationsWithMessages
-                  .flatMap(conv => conv.messages)
-                  .filter(msg => msg.type === 'user')
-                  .sort(
-                    (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
-                  )[0]
-                if (firstUserMessage) {
-                  const inputData = firstUserMessage.content
-                  ;(async () => {
-                    let fileContentsForSave: Array<{
-                      name: string
-                      content: string
-                      placeholder: string
-                    }> = []
-                    const attachedFilesToExtract = attachedFiles.filter(
-                      (f): f is AttachedFile => 'file' in f
-                    )
-                    if (attachedFilesToExtract.length > 0) {
-                      fileContentsForSave =
-                        await extractFileContentForStorage(attachedFilesToExtract)
-                    } else {
-                      const storedFiles = attachedFiles.filter(
-                        (f): f is StoredAttachedFile => 'content' in f
-                      )
-                      fileContentsForSave = storedFiles.map(f => ({
-                        name: f.name,
-                        content: f.content,
-                        placeholder: f.placeholder,
-                      }))
-                    }
-                    const savedId = saveConversationToLocalStorage(
-                      inputData,
-                      selectedModels,
-                      conversationsWithMessages,
-                      false,
-                      fileContentsForSave
-                    )
-                    if (savedId) setCurrentVisibleComparisonId(savedId)
-                  })()
-                }
-              }
-              return currentConversations
-            })
-          }, 200)
-        } else if (isAuthenticated && !isFollowUpMode) {
-          setTimeout(async () => {
-            const inputToMatch =
-              lastSubmittedInputRef.current || getFirstUserMessage()?.content || input
-            if (inputToMatch) await syncHistoryAfterComparison(inputToMatch, selectedModels)
-          }, 500)
-        } else if (!isAuthenticated && isFollowUpMode) {
-          setTimeout(() => {
-            setConversations(currentConversations => {
-              const conversationsWithMessages = currentConversations.filter(
-                conv => selectedModels.includes(conv.modelId) && conv.messages.length > 0
-              )
-              const hasCompleteMessages = conversationsWithMessages.some(conv => {
-                const assistantMessages = conv.messages.filter(msg => msg.type === 'assistant')
-                return (
-                  assistantMessages.length > 0 &&
-                  assistantMessages.some(msg => msg.content.trim().length > 0)
-                )
-              })
-              if (hasCompleteMessages && conversationsWithMessages.length > 0) {
-                const firstUserMessage = conversationsWithMessages
-                  .flatMap(conv => conv.messages)
-                  .filter(msg => msg.type === 'user')
-                  .sort(
-                    (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
-                  )[0]
-                if (firstUserMessage) {
-                  const inputData = firstUserMessage.content
-                  ;(async () => {
-                    let fileContentsForSave: Array<{
-                      name: string
-                      content: string
-                      placeholder: string
-                    }> = []
-                    const attachedFilesToExtract = attachedFiles.filter(
-                      (f): f is AttachedFile => 'file' in f
-                    )
-                    if (attachedFilesToExtract.length > 0) {
-                      fileContentsForSave =
-                        await extractFileContentForStorage(attachedFilesToExtract)
-                    } else {
-                      const storedFiles = attachedFiles.filter(
-                        (f): f is StoredAttachedFile => 'content' in f
-                      )
-                      fileContentsForSave = storedFiles.map(f => ({
-                        name: f.name,
-                        content: f.content,
-                        placeholder: f.placeholder,
-                      }))
-                    }
-                    const savedId = saveConversationToLocalStorage(
-                      inputData,
-                      selectedModels,
-                      conversationsWithMessages,
-                      true,
-                      fileContentsForSave
-                    )
-                    if (savedId) setCurrentVisibleComparisonId(savedId)
-                  })()
-                }
-              }
-              return currentConversations
-            })
-          }, 200)
-        } else if (isAuthenticated && isFollowUpMode) {
-          setTimeout(async () => {
-            const inputToMatch =
-              lastSubmittedInputRef.current || getFirstUserMessage()?.content || input
-            if (inputToMatch) await syncHistoryAfterComparison(inputToMatch, selectedModels)
-          }, 500)
-        }
-      }
-      saveToHistoryAfterStream()
-
-      // Set final response with metadata
-      const filteredData = {
-        results: streamingResults,
-        metadata: streamingMetadata || {
-          input_length: input.length,
-          models_requested: selectedModels.length,
-          models_successful: Object.keys(streamingResults).filter(
-            modelId =>
-              !isErrorMessage(streamingResults[modelId]) &&
-              (streamingResults[modelId] || '').trim().length > 0
-          ).length,
-          models_failed: Object.keys(streamingResults).filter(
-            modelId =>
-              isErrorMessage(streamingResults[modelId]) ||
-              (streamingResults[modelId] || '').trim().length === 0
-          ).length,
-          timestamp: new Date().toISOString(),
-          processing_time_ms: Date.now() - startTime,
-        },
-      }
-
-      setResponse(filteredData)
-
-      // Clear input field only if at least one model succeeded
-      if (filteredData.metadata.models_successful > 0) {
-        setInput('')
-      }
-
-      // Track usage only if at least one model succeeded
-      if (filteredData.metadata.models_successful > 0) {
-        if (isAuthenticated) {
-          try {
-            await refreshUser()
-          } catch (error) {
-            logger.error('Failed to refresh user data:', error)
-          }
-        }
-
-        try {
-          const cacheKey = browserFingerprint
-            ? `GET:/rate-limit-status?fingerprint=${encodeURIComponent(browserFingerprint)}`
-            : 'GET:/rate-limit-status'
-          apiClient.deleteCache(cacheKey)
-
-          const data = await getRateLimitStatus(browserFingerprint)
-          const newCount = data.fingerprint_usage || data.daily_usage || 0
-          setUsageCount(newCount)
-
-          const today = new Date().toDateString()
-          localStorage.setItem(
-            'compareintel_usage',
-            JSON.stringify({
-              count: newCount,
-              date: today,
-            })
-          )
-        } catch (error) {
-          if (error instanceof Error && error.name === 'CancellationError') {
-            // Silently handle
-          } else {
-            logger.error('Failed to sync usage count after comparison:', error)
-          }
-        }
-      } else {
-        setError(
-          'All models failed to respond. This comparison did not count towards your daily limit. Please try again in a moment.'
-        )
-        setTimeout(() => {
-          setError(null)
-        }, 8000)
-      }
-
-      // Scroll conversations to show the results
-      if (isFollowUpMode) {
-        setTimeout(() => {
-          scrollConversationsToBottom()
-        }, 600)
-      } else {
-        setTimeout(() => {
-          scrollConversationsToBottom()
-        }, 500)
-      }
+      await applyStreamCompletion(streamResult, startTime, userTimestamp)
     } catch (err) {
-      const sr = streamResult
-      const streamingResults = sr?.streamingResults ?? {}
-      const completedModels = sr?.completedModels ?? new Set<string>()
-      const localModelErrors = sr?.localModelErrors ?? {}
-      const modelStartTimes = sr?.modelStartTimes ?? {}
-      const modelCompletionTimes = sr?.modelCompletionTimes ?? {}
-
-      const savePartialResultsOnError = () => {
-        const hasAnyResults = Object.keys(streamingResults).some(
-          modelId => (streamingResults[modelId] || '').trim().length > 0
-        )
-
-        if (!hasAnyResults) return
-
-        const errorModelErrors: { [key: string]: boolean } = { ...localModelErrors }
-        if (selectedModels && Array.isArray(selectedModels)) {
-          selectedModels.forEach(modelId => {
-            try {
-              const rawModelId = modelId
-              const formattedModelId = createModelId(modelId)
-              if (!completedModels.has(rawModelId) && !completedModels.has(formattedModelId)) {
-                errorModelErrors[rawModelId] = true
-                errorModelErrors[formattedModelId] = true
-              }
-            } catch (error) {
-              logger.error('Error processing model in savePartialResultsOnError:', error)
-            }
-          })
-        }
-        setModelErrors(errorModelErrors)
-
-        setResponse({
-          results: { ...streamingResults },
-          metadata: {
-            input_length: input.length,
-            models_requested: selectedModels.length,
-            models_successful: Object.keys(streamingResults).filter(
-              modelId =>
-                !isErrorMessage(streamingResults[modelId]) &&
-                (streamingResults[modelId] || '').trim().length > 0
-            ).length,
-            models_failed: Object.keys(streamingResults).filter(
-              modelId =>
-                isErrorMessage(streamingResults[modelId]) ||
-                (streamingResults[modelId] || '').trim().length === 0
-            ).length,
-            timestamp: new Date().toISOString(),
-            processing_time_ms: Date.now() - startTime,
-          },
-        })
-
-        // Update conversations with partial results
-        if (!isFollowUpMode) {
-          setConversations(prevConversations => {
-            return prevConversations.map(conv => {
-              const rawModelId =
-                selectedModels && Array.isArray(selectedModels)
-                  ? selectedModels.find(m => createModelId(m) === conv.modelId) || conv.modelId
-                  : conv.modelId
-              const content =
-                (streamingResults &&
-                  (streamingResults[rawModelId] || streamingResults[conv.modelId])) ||
-                ''
-              const startT =
-                (modelStartTimes &&
-                  (modelStartTimes[rawModelId] || modelStartTimes[conv.modelId])) ||
-                undefined
-              const completionTime =
-                (modelCompletionTimes &&
-                  (modelCompletionTimes[rawModelId] || modelCompletionTimes[conv.modelId])) ||
-                undefined
-
-              return {
-                ...conv,
-                messages: conv.messages.map((msg, idx) => {
-                  if (idx === 0 && msg.type === 'user') {
-                    return { ...msg, timestamp: startT || msg.timestamp }
-                  } else if (idx === 1 && msg.type === 'assistant') {
-                    return {
-                      ...msg,
-                      content,
-                      timestamp: completionTime || msg.timestamp,
-                    }
-                  }
-                  return msg
-                }),
-              }
-            })
-          })
-        }
-
-        // Save to history
-        setTimeout(() => {
-          if (!isAuthenticated && !isFollowUpMode) {
-            setConversations(currentConversations => {
-              const conversationsWithMessages = currentConversations.filter(
-                conv => selectedModels.includes(conv.modelId) && conv.messages.length > 0
-              )
-
-              const hasCompleteMessages = conversationsWithMessages.some(conv => {
-                const assistantMessages = conv.messages.filter(msg => msg.type === 'assistant')
-                return (
-                  assistantMessages.length > 0 &&
-                  assistantMessages.some(msg => msg.content.trim().length > 0)
-                )
-              })
-
-              if (hasCompleteMessages && conversationsWithMessages.length > 0) {
-                const allUserMessages = conversationsWithMessages
-                  .flatMap(conv => conv.messages)
-                  .filter(msg => msg.type === 'user')
-                  .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
-
-                const firstUserMessage = allUserMessages[0]
-
-                if (firstUserMessage) {
-                  const inputData = firstUserMessage.content
-                  ;(async () => {
-                    let fileContentsForSave: Array<{
-                      name: string
-                      content: string
-                      placeholder: string
-                    }> = []
-                    const attachedFilesToExtract = attachedFiles.filter(
-                      (f): f is AttachedFile => 'file' in f && f.file instanceof File
-                    )
-                    if (attachedFilesToExtract.length > 0) {
-                      fileContentsForSave =
-                        await extractFileContentForStorage(attachedFilesToExtract)
-                    } else {
-                      const storedFiles = attachedFiles.filter(
-                        (f): f is StoredAttachedFile => 'content' in f && !('file' in f)
-                      )
-                      fileContentsForSave = storedFiles.map(f => ({
-                        name: f.name,
-                        content: f.content,
-                        placeholder: f.placeholder,
-                      }))
-                    }
-                    const savedId = saveConversationToLocalStorage(
-                      inputData,
-                      selectedModels,
-                      conversationsWithMessages,
-                      false,
-                      fileContentsForSave
-                    )
-                    if (savedId) {
-                      setCurrentVisibleComparisonId(savedId)
-                    }
-                  })()
-                }
-              }
-
-              return currentConversations
-            })
-          } else if (isAuthenticated && !isFollowUpMode) {
-            setTimeout(async () => {
-              const inputToMatch =
-                lastSubmittedInputRef.current || getFirstUserMessage()?.content || input
-              if (inputToMatch) {
-                await syncHistoryAfterComparison(inputToMatch, selectedModels)
-              }
-            }, 500)
-          }
-        }, 200)
-      }
-
-      // Handle cancellation errors
-      if (
-        (err instanceof Error && err.name === 'AbortError') ||
-        (err instanceof Error && err.name === 'CancellationError')
-      ) {
-        if (userCancelledRef.current) {
-          setError('Model comparison cancelled by user.')
-          return
-        }
-
-        // Handle timeout
-        if (!selectedModels || !Array.isArray(selectedModels) || selectedModels.length === 0) {
-          setError('Request timed out after 1 minute of inactivity.')
-          return
-        }
-
-        const timeoutModelErrors: { [key: string]: boolean } = { ...(localModelErrors || {}) }
-        selectedModels.forEach(modelId => {
-          try {
-            const rawModelId = modelId
-            const formattedModelId = createModelId(modelId)
-            if (!completedModels.has(rawModelId) && !completedModels.has(formattedModelId)) {
-              timeoutModelErrors[rawModelId] = true
-              timeoutModelErrors[formattedModelId] = true
-            }
-          } catch (error) {
-            logger.error('Error processing model in timeout handler:', error)
-          }
-        })
-        setModelErrors(timeoutModelErrors)
-
-        // Switch successful models to formatted view even on timeout
-        const formattedTabs: ActiveResultTabs = {} as ActiveResultTabs
-        selectedModels.forEach(modelId => {
-          try {
-            const rawModelId = modelId
-            const formattedModelId = createModelId(modelId)
-            const content =
-              (streamingResults &&
-                (streamingResults[rawModelId] || streamingResults[formattedModelId])) ||
-              ''
-            const hasError =
-              timeoutModelErrors[rawModelId] === true ||
-              timeoutModelErrors[formattedModelId] === true ||
-              isErrorMessage(content)
-            if (!hasError && content.trim().length > 0) {
-              formattedTabs[formattedModelId] = RESULT_TAB.FORMATTED
-            }
-          } catch (error) {
-            logger.error('Error formatting model tab:', error)
-          }
-        })
-        setActiveResultTabs(prev => ({ ...prev, ...formattedTabs }))
-
-        // Final state update for conversations with timeout handling
-        if (!isFollowUpMode) {
-          setConversations(prevConversations => {
-            return prevConversations.map(conv => {
-              const rawModelId =
-                selectedModels.find(m => createModelId(m) === conv.modelId) || conv.modelId
-              const content = streamingResults[rawModelId] || streamingResults[conv.modelId] || ''
-              const startT = modelStartTimes[rawModelId] || modelStartTimes[conv.modelId]
-              const completionTime =
-                modelCompletionTimes[rawModelId] || modelCompletionTimes[conv.modelId]
-
-              return {
-                ...conv,
-                messages: conv.messages.map((msg, idx) => {
-                  if (idx === 0 && msg.type === 'user') {
-                    return { ...msg, timestamp: startT || msg.timestamp }
-                  } else if (idx === 1 && msg.type === 'assistant') {
-                    return {
-                      ...msg,
-                      content,
-                      timestamp: completionTime || msg.timestamp,
-                    }
-                  }
-                  return msg
-                }),
-              }
-            })
-          })
-        }
-
-        // Refresh credits if any models completed successfully before timeout
-        const successfulModelsCount = (
-          selectedModels && Array.isArray(selectedModels) ? selectedModels : []
-        ).filter(modelId => {
-          try {
-            const rawModelId = modelId
-            const formattedModelId = createModelId(modelId)
-            const hasCompleted =
-              completedModels.has(rawModelId) || completedModels.has(formattedModelId)
-            const hasError =
-              (timeoutModelErrors &&
-                (timeoutModelErrors[rawModelId] === true ||
-                  timeoutModelErrors[formattedModelId] === true)) ||
-              false
-            const content =
-              (streamingResults &&
-                (streamingResults[rawModelId] || streamingResults[formattedModelId])) ||
-              ''
-            const isError = isErrorMessage(content)
-            return hasCompleted && !hasError && !isError && content.trim().length > 0
-          } catch (error) {
-            logger.error('Error checking successful model:', error)
-            return false
-          }
-        }).length
-
-        if (successfulModelsCount > 0) {
-          if (isAuthenticated) {
-            refreshUser()
-              .then(() => getCreditBalance())
-              .then(balance => {
-                setCreditBalance(balance as CreditBalance)
-              })
-              .catch(error =>
-                logger.error('Failed to refresh credit balance after timeout:', error)
-              )
-          } else {
-            getCreditBalance(browserFingerprint)
-              .then(balance => {
-                setAnonymousCreditsRemaining(balance.credits_remaining)
-                setCreditBalance(balance as CreditBalance)
-              })
-              .catch(error =>
-                logger.error('Failed to refresh anonymous credit balance after timeout:', error)
-              )
-          }
-        }
-
-        if (userCancelledRef.current) {
-          const elapsedTime = Date.now() - startTime
-          const elapsedSeconds = (elapsedTime / 1000).toFixed(1)
-          setError(`Comparison cancelled by user after ${elapsedSeconds} seconds`)
-        } else {
-          if (!selectedModels || !Array.isArray(selectedModels) || selectedModels.length === 0) {
-            setError('Request timed out after 1 minute of inactivity.')
-            return
-          }
-
-          const totalCount = selectedModels.length
-          let successfulCount = 0
-          let failedCount = 0
-          let timedOutCount = 0
-
-          selectedModels.forEach(modelId => {
-            try {
-              const rawModelId = modelId
-              const formattedModelId = createModelId(modelId)
-              const modelIdToCheck = completedModels.has(rawModelId) ? rawModelId : formattedModelId
-
-              if (completedModels.has(modelIdToCheck)) {
-                const hasError =
-                  (localModelErrors &&
-                    (localModelErrors[rawModelId] === true ||
-                      localModelErrors[formattedModelId] === true)) ||
-                  false
-                const content =
-                  (streamingResults &&
-                    (streamingResults[rawModelId] || streamingResults[formattedModelId])) ||
-                  ''
-                const isError = hasError || isErrorMessage(content)
-
-                if (isError || content.trim().length === 0) {
-                  failedCount++
-                } else {
-                  successfulCount++
-                }
-              } else {
-                timedOutCount++
-              }
-            } catch (modelError) {
-              logger.error('Error processing model in timeout handler:', modelError)
-              timedOutCount++
-            }
-          })
-
-          let errorMessage: string
-
-          if (successfulCount === 0 && failedCount === 0 && timedOutCount === totalCount) {
-            const modelText = totalCount === 1 ? 'model' : 'models'
-            const suggestionText =
-              totalCount === 1
-                ? 'Please wait a moment and try again.'
-                : 'Try selecting fewer models, or wait a moment and try again.'
-            errorMessage = `Request timed out after 1 minute with no response (${totalCount} ${modelText}). ${suggestionText}`
-          } else {
-            const parts: string[] = []
-
-            if (successfulCount > 0) {
-              const text =
-                successfulCount === 1
-                  ? 'model completed successfully'
-                  : 'models completed successfully'
-              parts.push(`${successfulCount} ${text}`)
-            }
-
-            if (failedCount > 0) {
-              const text = failedCount === 1 ? 'model failed' : 'models failed'
-              parts.push(`${failedCount} ${text}`)
-            }
-
-            if (timedOutCount > 0) {
-              const text = timedOutCount === 1 ? 'model timed out' : 'models timed out'
-              parts.push(`${timedOutCount} ${text} after 1 minute of inactivity`)
-            }
-
-            if (parts.length > 0) {
-              errorMessage = parts.join(', ') + '.'
-            } else {
-              errorMessage = 'Request timed out after 1 minute of inactivity.'
-            }
-          }
-
-          setError(errorMessage)
-        }
-
-        try {
-          savePartialResultsOnError()
-        } catch (saveError) {
-          logger.error('Error saving partial results on timeout:', saveError)
-        }
-      } else if (err instanceof PaymentRequiredError) {
-        if (isFollowUpMode) {
-          setIsFollowUpMode(false)
-        }
-        if (creditWarningType !== 'none') {
-          setError(
-            err.message ||
-              'Insufficient credits for this request. Please upgrade your plan or wait for credits to reset.'
-          )
-          window.scrollTo({ top: 0, behavior: 'smooth' })
-        }
-      } else if (err instanceof ApiError && err.status === 402) {
-        if (isFollowUpMode) {
-          setIsFollowUpMode(false)
-        }
-        if (creditWarningType !== 'none') {
-          const errorMessage =
-            err.response?.detail || err.message || 'Insufficient credits for this request.'
-          setError(errorMessage)
-          window.scrollTo({ top: 0, behavior: 'smooth' })
-        }
-      } else if (err instanceof Error && err.message.includes('Failed to fetch')) {
-        setError('Unable to connect to the server. Please check if the backend is running.')
-        savePartialResultsOnError()
-      } else if (err instanceof Error) {
-        setError(err.message || 'An unexpected error occurred')
-        savePartialResultsOnError()
-      } else {
-        setError('An unexpected error occurred')
-        savePartialResultsOnError()
-      }
+      handleStreamError(err, streamResult, startTime)
     } finally {
       currentAbortControllerRef.current = null
       setCurrentAbortController(null)
@@ -1375,6 +649,8 @@ export function useComparisonStreaming(
     // Helper functions
     getSuccessfulModels,
     isModelFailed,
+    applyStreamCompletion,
+    handleStreamError,
   ])
 
   return {
