@@ -81,8 +81,11 @@ export function useGeolocation({ isAuthenticated, user }: UseGeolocationProps) {
                   return
                 }
                 try {
+                  // Round to 6 decimal places (~0.1m) to avoid floating-point string issues
+                  const lat = Number(position.coords.latitude.toFixed(6))
+                  const lon = Number(position.coords.longitude.toFixed(6))
                   const response = await fetch(
-                    `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${position.coords.latitude}&longitude=${position.coords.longitude}&localityLanguage=en`
+                    `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=en`
                   )
                   if (response.ok) {
                     const data = await response.json()
@@ -94,6 +97,24 @@ export function useGeolocation({ isAuthenticated, user }: UseGeolocationProps) {
                     if (parts.length > 0) {
                       const location = parts.join(', ')
                       logger.debug('[Geolocation] Successfully detected location:', location)
+                      setUserLocation(location)
+                      return
+                    }
+                  }
+                  // Fallback: BigDataCloud supports calling without coords for IP-based geolocation
+                  const fallbackResponse = await fetch(
+                    'https://api.bigdatacloud.net/data/reverse-geocode-client?localityLanguage=en'
+                  )
+                  if (fallbackResponse.ok) {
+                    const data = await fallbackResponse.json()
+                    const city = data.city || ''
+                    const region = data.principalSubdivision || ''
+                    let country = data.countryName || ''
+                    country = country.replace(/\s*\(the\)\s*$/i, '').trim()
+                    const parts = [city, region, country].filter(Boolean)
+                    if (parts.length > 0) {
+                      const location = parts.join(', ')
+                      logger.debug('[Geolocation] Using IP fallback location:', location)
                       setUserLocation(location)
                     }
                   }
