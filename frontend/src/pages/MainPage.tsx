@@ -1522,8 +1522,45 @@ export function MainPage() {
     }, 100)
   }
 
-  const { submitComparison } = useComparisonStreaming(
-    {
+  const streamingConfig = useMemo(
+    () => ({
+      auth: { isAuthenticated, user, browserFingerprint },
+      models: { selectedModels, modelsByProvider, originalSelectedModels },
+      input: {
+        input,
+        attachedFiles,
+        accurateInputTokens,
+        webSearchEnabled,
+        userLocation,
+      },
+      conversation: {
+        conversations,
+        isFollowUpMode,
+        currentVisibleComparisonId,
+      },
+      credit: {
+        creditBalance,
+        anonymousCreditsRemaining,
+        creditWarningType,
+      },
+      refs: {
+        userCancelledRef,
+        hasScrolledToResultsRef,
+        hasScrolledToResultsOnFirstChunkRef,
+        scrolledToTopRef,
+        shouldScrollToTopAfterFormattingRef,
+        autoScrollPausedRef,
+        userInteractingRef,
+        lastScrollTopRef,
+        lastAlignedRoundRef,
+        isPageScrollingRef,
+        scrollListenersRef,
+        lastSubmittedInputRef,
+      },
+      modelErrors,
+      tutorialState,
+    }),
+    [
       isAuthenticated,
       user,
       browserFingerprint,
@@ -1543,20 +1580,55 @@ export function MainPage() {
       creditWarningType,
       modelErrors,
       tutorialState,
-      userCancelledRef,
-      hasScrolledToResultsRef,
-      hasScrolledToResultsOnFirstChunkRef,
-      scrolledToTopRef,
-      shouldScrollToTopAfterFormattingRef,
-      autoScrollPausedRef,
-      userInteractingRef,
-      lastScrollTopRef,
-      lastAlignedRoundRef,
-      isPageScrollingRef,
-      scrollListenersRef,
-      lastSubmittedInputRef,
-    },
-    {
+    ]
+  )
+
+  const streamingCallbacks = useMemo(
+    () => ({
+      state: {
+        setError,
+        setIsLoading,
+        setResponse,
+        setProcessingTime,
+        setClosedCards,
+        setModelErrors,
+        setActiveResultTabs,
+        setConversations,
+        setInput,
+        setIsModelsHidden,
+        setShowDoneSelectingCard,
+        setUserMessageTimestamp,
+        setCurrentAbortController,
+        setOriginalSelectedModels,
+        setCurrentVisibleComparisonId,
+        setAlreadyBrokenOutModels,
+        setIsScrollLocked,
+        setUsageCount,
+        setIsFollowUpMode,
+      },
+      credit: {
+        setAnonymousCreditsRemaining,
+        setCreditBalance,
+        setCreditWarningMessage,
+        setCreditWarningType,
+        setCreditWarningDismissible,
+      },
+      helpers: {
+        expandFiles,
+        extractFileContentForStorage,
+        setupScrollListener,
+        cleanupScrollListener,
+        saveConversationToLocalStorage,
+        syncHistoryAfterComparison,
+        loadHistoryFromAPI,
+        getFirstUserMessage,
+        getCreditWarningMessage,
+        isLowCreditWarningDismissed,
+        scrollConversationsToBottom,
+        refreshUser,
+      },
+    }),
+    [
       setError,
       setIsLoading,
       setResponse,
@@ -1593,8 +1665,10 @@ export function MainPage() {
       isLowCreditWarningDismissed,
       scrollConversationsToBottom,
       refreshUser,
-    }
+    ]
   )
+
+  const { submitComparison } = useComparisonStreaming(streamingConfig, streamingCallbacks)
 
   const handleSubmitClick = () => {
     if (error && error.includes('Your input is too long for one or more of the selected models')) {

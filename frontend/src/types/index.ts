@@ -63,6 +63,19 @@ export type {
   NotificationType,
 } from './config'
 
+// Streaming config (composed types for useComparisonStreaming)
+export type {
+  StreamingAuthInfo,
+  StreamingModelSelection,
+  StreamingInputState,
+  StreamingConversationState,
+  StreamingCreditState,
+  StreamingRefs,
+  StreamingStateCallbacks,
+  StreamingCreditCallbacks,
+  StreamingHelperCallbacks,
+} from './streamingConfig'
+
 // Renderer config types
 export type {
   MathDelimiterType,

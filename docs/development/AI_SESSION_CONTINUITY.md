@@ -34,7 +34,7 @@ The CompareIntel web application (compareintel.com) is being refactored to meet 
 
 1. **MainPage.tsx** — "God" component with many hooks and effects. Target: extract `useMainPageEffects`, `ComparisonPageContent`, or use context to reduce size and coupling.
 2. **useComparisonStreaming.ts** — Large hook with many concerns. Consider splitting into smaller hooks.
-3. **SSEProcessorConfig / UseComparisonStreamingConfig** — Oversized config objects (~80+ fields). Consider composition or context.
+3. **SSEProcessorConfig** — Still large (~50 fields). `UseComparisonStreamingConfig` was simplified via composition (2025-02-17). Optional future: compose SSEProcessorConfig similarly.
 4. **Coverage enforcement** — CI currently logs a warning but does not fail when coverage is below 70%. Should fail.
 
 ### Important Documents
@@ -82,9 +82,9 @@ The CompareIntel web application (compareintel.com) is being refactored to meet 
 - [x] **Backend in lint-staged** — Root lint-staged runs ruff (check + format) and mypy on staged backend .py files via `backend/scripts/lint-staged.sh`. (2025-02-17)
 - [x] **Split useComparisonStreaming (partial)** — Extracted `useStreamConnection` (abort controller, cancel) and `useModelFailureCheck` (isModelFailed, getSuccessfulModels). Reduced main hook by ~50 lines. (2025-02-17)
 - [x] **Split useComparisonStreaming (remaining)** — Extracted `useStreamTimeout` (timeout/abort error handling) and `useStreamCompletion` (post-stream result application). Reduced main hook by ~380 lines. (2025-02-17)
+- [x] **Simplify streaming config** — Refactored `UseComparisonStreamingConfig` and `UseComparisonStreamingCallbacks` via composition. Config now groups auth, models, input, conversation, credit, refs; callbacks group state, credit, helpers. Created `types/streamingConfig.ts` with composed types. MainPage passes `streamingConfig` and `streamingCallbacks` built with useMemo. (2025-02-17)
 
 ### Pending
-- [ ] **Simplify streaming config** — Reduce `SSEProcessorConfig` and `UseComparisonStreamingConfig` via composition or context.
 - [ ] **Feature-based routes** — Add routes like `/compare`, `/history` to avoid MainPage as single growing entry point.
 - [ ] **Document scaling assumptions** — Note load, concurrency, and retention expectations for future scaling.
 
@@ -116,3 +116,4 @@ When ending a session with incomplete work, you may add a short handoff note:
 | 2025-02-17 | Session: Backend in lint-staged — ruff + mypy on staged .py files via root lint-staged. |
 | 2025-02-17 | Session: Split useComparisonStreaming — extracted useStreamConnection, useModelFailureCheck. |
 | 2025-02-17 | Session: Split useComparisonStreaming (remaining) — extracted useStreamTimeout, useStreamCompletion. |
+| 2025-02-17 | Session: Simplify streaming config — composed UseComparisonStreamingConfig and UseComparisonStreamingCallbacks; added types/streamingConfig.ts. |

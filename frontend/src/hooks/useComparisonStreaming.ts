@@ -6,21 +6,25 @@
 
 import { useCallback } from 'react'
 
-import type { AttachedFile, StoredAttachedFile } from '../components/comparison'
 import { getCreditAllocation, getDailyCreditLimit } from '../config/constants'
 import { apiClient } from '../services/api/client'
 import { compareStream } from '../services/compareService'
 import { getCreditBalance } from '../services/creditService'
 import type { CreditBalance } from '../services/creditService'
 import { processComparisonStream, createStreamingMessage } from '../services/sseProcessor'
-import type {
-  CompareResponse,
-  ModelConversation,
-  ActiveResultTabs,
-  ModelsByProvider,
-} from '../types'
+import type { ModelConversation, ActiveResultTabs } from '../types'
 import { RESULT_TAB, createModelId } from '../types'
-import type { ConversationMessage } from '../types/conversation'
+import type {
+  StreamingAuthInfo,
+  StreamingModelSelection,
+  StreamingInputState,
+  StreamingConversationState,
+  StreamingCreditState,
+  StreamingRefs,
+  StreamingStateCallbacks,
+  StreamingCreditCallbacks,
+  StreamingHelperCallbacks,
+} from '../types/streamingConfig'
 import { validateComparisonInput } from '../utils/comparisonValidation'
 import { prepareApiConversationHistory } from '../utils/conversationPreparer'
 import logger from '../utils/logger'
@@ -30,137 +34,21 @@ import { useStreamCompletion } from './useStreamCompletion'
 import { useStreamConnection } from './useStreamConnection'
 import { useStreamTimeout } from './useStreamTimeout'
 
-interface TutorialState {
-  isActive: boolean
-  currentStep: string | null
-}
-
 export interface UseComparisonStreamingConfig {
-  // User/Auth state
-  isAuthenticated: boolean
-  user: {
-    is_verified?: boolean
-    subscription_tier?: string
-    monthly_credits_allocated?: number
-    billing_period_start?: string
-    billing_period_end?: string
-    credits_reset_at?: string
-    total_credits_used?: number
-  } | null
-  browserFingerprint: string
-
-  // Model state
-  selectedModels: string[]
-  modelsByProvider: ModelsByProvider
-  originalSelectedModels: string[]
-
-  // Input state
-  input: string
-  attachedFiles: (AttachedFile | StoredAttachedFile)[]
-  accurateInputTokens: number | null
-  webSearchEnabled: boolean
-  userLocation: string | null
-
-  // Conversation state
-  conversations: ModelConversation[]
-  isFollowUpMode: boolean
-  currentVisibleComparisonId: string | number | null
-
-  // Credit state
-  creditBalance: CreditBalance | null
-  anonymousCreditsRemaining: number | null
-  creditWarningType: 'none' | 'low' | 'insufficient'
-
-  // Model errors state
+  auth: StreamingAuthInfo
+  models: StreamingModelSelection
+  input: StreamingInputState
+  conversation: StreamingConversationState
+  credit: StreamingCreditState
+  refs: StreamingRefs
   modelErrors: { [key: string]: boolean }
-
-  // Tutorial state
-  tutorialState: TutorialState
-
-  // Refs
-  userCancelledRef: React.MutableRefObject<boolean>
-  hasScrolledToResultsRef: React.MutableRefObject<boolean>
-  hasScrolledToResultsOnFirstChunkRef: React.MutableRefObject<boolean>
-  scrolledToTopRef: React.MutableRefObject<Set<string>>
-  shouldScrollToTopAfterFormattingRef: React.MutableRefObject<boolean>
-  autoScrollPausedRef: React.MutableRefObject<Set<string>>
-  userInteractingRef: React.MutableRefObject<Set<string>>
-  lastScrollTopRef: React.MutableRefObject<Map<string, number>>
-  lastAlignedRoundRef: React.MutableRefObject<number>
-  isPageScrollingRef: React.MutableRefObject<boolean>
-  scrollListenersRef: React.MutableRefObject<
-    Map<
-      string,
-      {
-        scroll: () => void
-        wheel: (e: WheelEvent) => void
-        touchstart: () => void
-        mousedown: () => void
-      }
-    >
-  >
-  lastSubmittedInputRef: React.MutableRefObject<string>
+  tutorialState: { isActive: boolean; currentStep: string | null }
 }
 
 export interface UseComparisonStreamingCallbacks {
-  setError: (error: string | null) => void
-  setIsLoading: (loading: boolean) => void
-  setResponse: (response: CompareResponse | null) => void
-  setProcessingTime: (time: number | null) => void
-  setClosedCards: (cards: Set<string>) => void
-  setModelErrors: React.Dispatch<React.SetStateAction<{ [key: string]: boolean }>>
-  setActiveResultTabs: React.Dispatch<React.SetStateAction<ActiveResultTabs>>
-  setConversations: React.Dispatch<React.SetStateAction<ModelConversation[]>>
-  setInput: (input: string) => void
-  setIsModelsHidden: (hidden: boolean) => void
-  setShowDoneSelectingCard: (show: boolean) => void
-  setUserMessageTimestamp: (timestamp: string) => void
-  setCurrentAbortController: (controller: AbortController | null) => void
-  setOriginalSelectedModels: (models: string[]) => void
-  setCurrentVisibleComparisonId: React.Dispatch<React.SetStateAction<string | null>>
-  setAlreadyBrokenOutModels: (models: Set<string>) => void
-  setIsScrollLocked: (locked: boolean) => void
-  setUsageCount: React.Dispatch<React.SetStateAction<number>>
-  setIsFollowUpMode: (mode: boolean) => void
-
-  // Credit state setters
-  setAnonymousCreditsRemaining: (credits: number | null) => void
-  setCreditBalance: (balance: CreditBalance | null) => void
-  setCreditWarningMessage: (message: string | null) => void
-  setCreditWarningType: (type: 'none' | 'low' | 'insufficient') => void
-  setCreditWarningDismissible: (dismissible: boolean) => void
-
-  // Helper functions
-  expandFiles: (files: (AttachedFile | StoredAttachedFile)[], text: string) => Promise<string>
-  extractFileContentForStorage: (
-    files: AttachedFile[]
-  ) => Promise<Array<{ name: string; content: string; placeholder: string }>>
-  setupScrollListener: (modelId: string) => boolean
-  cleanupScrollListener: (modelId: string) => void
-  saveConversationToLocalStorage: (
-    inputData: string,
-    models: string[],
-    conversations: ModelConversation[],
-    isUpdate: boolean,
-    fileContents?: Array<{ name: string; content: string; placeholder: string }>
-  ) => string | null
-  syncHistoryAfterComparison: (input: string, models: string[]) => Promise<void>
-  loadHistoryFromAPI: () => Promise<void>
-  getFirstUserMessage: () => ConversationMessage | undefined
-  getCreditWarningMessage: (
-    type: 'low' | 'insufficient' | 'none',
-    tier: string,
-    remaining: number,
-    estimated?: number,
-    resetAt?: string
-  ) => string
-  isLowCreditWarningDismissed: (
-    tier: string,
-    periodType: 'daily' | 'monthly',
-    resetAt?: string
-  ) => boolean
-  scrollConversationsToBottom: () => void
-  refreshUser: () => Promise<void>
+  state: StreamingStateCallbacks
+  credit: StreamingCreditCallbacks
+  helpers: StreamingHelperCallbacks
 }
 
 export interface UseComparisonStreamingReturn {
@@ -172,95 +60,94 @@ export function useComparisonStreaming(
   config: UseComparisonStreamingConfig,
   callbacks: UseComparisonStreamingCallbacks
 ): UseComparisonStreamingReturn {
+  const {
+    auth,
+    models,
+    input: inputState,
+    conversation,
+    credit,
+    refs,
+    modelErrors,
+    tutorialState,
+  } = config
+  const { state: stateCb, credit: creditCb, helpers } = callbacks
+
   const { currentAbortControllerRef, cancelComparison } = useStreamConnection(
     {
-      setIsLoading: callbacks.setIsLoading,
-      setCurrentAbortController: callbacks.setCurrentAbortController,
+      setIsLoading: stateCb.setIsLoading,
+      setCurrentAbortController: stateCb.setCurrentAbortController,
     },
-    config.userCancelledRef
+    refs.userCancelledRef
   )
 
   const { isModelFailed, getSuccessfulModels } = useModelFailureCheck(
-    config.modelErrors,
-    config.conversations
+    modelErrors,
+    conversation.conversations
   )
 
   const { applyStreamCompletion } = useStreamCompletion(
     {
-      selectedModels: config.selectedModels,
-      input: config.input,
-      isFollowUpMode: config.isFollowUpMode,
-      isAuthenticated: config.isAuthenticated,
-      attachedFiles: config.attachedFiles,
-      browserFingerprint: config.browserFingerprint,
-      lastSubmittedInputRef: config.lastSubmittedInputRef,
+      selectedModels: models.selectedModels,
+      input: inputState.input,
+      isFollowUpMode: conversation.isFollowUpMode,
+      isAuthenticated: auth.isAuthenticated,
+      attachedFiles: inputState.attachedFiles,
+      browserFingerprint: auth.browserFingerprint,
+      lastSubmittedInputRef: refs.lastSubmittedInputRef,
     },
     {
-      setError: callbacks.setError,
-      setModelErrors: callbacks.setModelErrors,
-      setActiveResultTabs: callbacks.setActiveResultTabs,
-      setResponse: callbacks.setResponse,
-      setConversations: callbacks.setConversations,
-      setInput: callbacks.setInput,
-      setCurrentVisibleComparisonId: callbacks.setCurrentVisibleComparisonId,
-      setUsageCount: callbacks.setUsageCount,
-      extractFileContentForStorage: callbacks.extractFileContentForStorage,
-      saveConversationToLocalStorage: callbacks.saveConversationToLocalStorage,
-      syncHistoryAfterComparison: callbacks.syncHistoryAfterComparison,
-      getFirstUserMessage: callbacks.getFirstUserMessage,
-      scrollConversationsToBottom: callbacks.scrollConversationsToBottom,
-      refreshUser: callbacks.refreshUser,
+      setError: stateCb.setError,
+      setModelErrors: stateCb.setModelErrors,
+      setActiveResultTabs: stateCb.setActiveResultTabs,
+      setResponse: stateCb.setResponse,
+      setConversations: stateCb.setConversations,
+      setInput: stateCb.setInput,
+      setCurrentVisibleComparisonId: stateCb.setCurrentVisibleComparisonId,
+      setUsageCount: stateCb.setUsageCount,
+      extractFileContentForStorage: helpers.extractFileContentForStorage,
+      saveConversationToLocalStorage: helpers.saveConversationToLocalStorage,
+      syncHistoryAfterComparison: helpers.syncHistoryAfterComparison,
+      getFirstUserMessage: helpers.getFirstUserMessage,
+      scrollConversationsToBottom: helpers.scrollConversationsToBottom,
+      refreshUser: helpers.refreshUser,
     }
   )
 
   const { handleStreamError } = useStreamTimeout(
     {
-      selectedModels: config.selectedModels,
-      input: config.input,
-      isFollowUpMode: config.isFollowUpMode,
-      isAuthenticated: config.isAuthenticated,
-      creditWarningType: config.creditWarningType,
-      attachedFiles: config.attachedFiles,
-      browserFingerprint: config.browserFingerprint,
-      userCancelledRef: config.userCancelledRef,
-      lastSubmittedInputRef: config.lastSubmittedInputRef,
+      selectedModels: models.selectedModels,
+      input: inputState.input,
+      isFollowUpMode: conversation.isFollowUpMode,
+      isAuthenticated: auth.isAuthenticated,
+      creditWarningType: credit.creditWarningType,
+      attachedFiles: inputState.attachedFiles,
+      browserFingerprint: auth.browserFingerprint,
+      userCancelledRef: refs.userCancelledRef,
+      lastSubmittedInputRef: refs.lastSubmittedInputRef,
     },
     {
-      setError: callbacks.setError,
-      setModelErrors: callbacks.setModelErrors,
-      setActiveResultTabs: callbacks.setActiveResultTabs,
-      setResponse: callbacks.setResponse,
-      setConversations: callbacks.setConversations,
-      setCurrentVisibleComparisonId: callbacks.setCurrentVisibleComparisonId,
-      setCreditBalance: callbacks.setCreditBalance,
-      setAnonymousCreditsRemaining: callbacks.setAnonymousCreditsRemaining,
-      setIsFollowUpMode: callbacks.setIsFollowUpMode,
-      extractFileContentForStorage: callbacks.extractFileContentForStorage,
-      saveConversationToLocalStorage: callbacks.saveConversationToLocalStorage,
-      syncHistoryAfterComparison: callbacks.syncHistoryAfterComparison,
-      getFirstUserMessage: callbacks.getFirstUserMessage,
-      refreshUser: callbacks.refreshUser,
+      setError: stateCb.setError,
+      setModelErrors: stateCb.setModelErrors,
+      setActiveResultTabs: stateCb.setActiveResultTabs,
+      setResponse: stateCb.setResponse,
+      setConversations: stateCb.setConversations,
+      setCurrentVisibleComparisonId: stateCb.setCurrentVisibleComparisonId,
+      setCreditBalance: creditCb.setCreditBalance,
+      setAnonymousCreditsRemaining: creditCb.setAnonymousCreditsRemaining,
+      setIsFollowUpMode: stateCb.setIsFollowUpMode,
+      extractFileContentForStorage: helpers.extractFileContentForStorage,
+      saveConversationToLocalStorage: helpers.saveConversationToLocalStorage,
+      syncHistoryAfterComparison: helpers.syncHistoryAfterComparison,
+      getFirstUserMessage: helpers.getFirstUserMessage,
+      refreshUser: helpers.refreshUser,
     }
   )
 
+  const { selectedModels, modelsByProvider, originalSelectedModels } = models
+  const { input, attachedFiles, accurateInputTokens, webSearchEnabled, userLocation } = inputState
+  const { conversations, isFollowUpMode, currentVisibleComparisonId } = conversation
+  const { creditBalance, creditWarningType } = credit
   const {
-    isAuthenticated,
-    user,
-    browserFingerprint,
-    selectedModels,
-    modelsByProvider,
-    originalSelectedModels,
-    input,
-    attachedFiles,
-    accurateInputTokens,
-    webSearchEnabled,
-    userLocation,
-    conversations,
-    isFollowUpMode,
-    currentVisibleComparisonId,
-    creditBalance,
-    creditWarningType,
-    tutorialState,
     userCancelledRef,
     hasScrolledToResultsOnFirstChunkRef,
     scrolledToTopRef,
@@ -272,57 +159,18 @@ export function useComparisonStreaming(
     isPageScrollingRef,
     scrollListenersRef,
     lastSubmittedInputRef,
-  } = config
-
-  const {
-    setError,
-    setIsLoading,
-    setResponse,
-    setProcessingTime,
-    setClosedCards,
-    setModelErrors,
-    setActiveResultTabs,
-    setConversations,
-    setInput,
-    setIsModelsHidden,
-    setShowDoneSelectingCard,
-    setUserMessageTimestamp,
-    setCurrentAbortController,
-    setOriginalSelectedModels,
-    setCurrentVisibleComparisonId,
-    setAlreadyBrokenOutModels,
-    setIsScrollLocked,
-    setUsageCount,
-    setIsFollowUpMode,
-    setAnonymousCreditsRemaining,
-    setCreditBalance,
-    setCreditWarningMessage,
-    setCreditWarningType,
-    setCreditWarningDismissible,
-    expandFiles,
-    extractFileContentForStorage,
-    setupScrollListener,
-    cleanupScrollListener,
-    saveConversationToLocalStorage,
-    syncHistoryAfterComparison,
-    loadHistoryFromAPI,
-    getFirstUserMessage,
-    getCreditWarningMessage,
-    isLowCreditWarningDismissed,
-    scrollConversationsToBottom,
-    refreshUser,
-  } = callbacks
+  } = refs
 
   const submitComparison = useCallback(async () => {
     const validation = validateComparisonInput({
-      user,
+      user: auth.user,
       input,
       selectedModels,
       modelsByProvider,
       accurateInputTokens,
     })
     if (!validation.valid) {
-      setError(validation.error)
+      stateCb.setError(validation.error)
       if (validation.error?.includes('verify') || validation.error?.includes('too long')) {
         window.scrollTo({ top: 0, behavior: 'smooth' })
       }
@@ -332,14 +180,14 @@ export function useComparisonStreaming(
     // Store original selected models for follow-up comparison logic (only for new comparisons, not follow-ups)
     if (!isFollowUpMode) {
       // Clear the currently visible comparison ID so the previous one will appear in history
-      setCurrentVisibleComparisonId(null)
+      stateCb.setCurrentVisibleComparisonId(null)
       // Clear already broken out models for new comparison
-      setAlreadyBrokenOutModels(new Set())
+      stateCb.setAlreadyBrokenOutModels(new Set())
 
-      setOriginalSelectedModels([...selectedModels])
+      stateCb.setOriginalSelectedModels([...selectedModels])
 
       // If there's an active conversation and we're starting a new one, save the previous one first
-      if (!isAuthenticated && conversations.length > 0) {
+      if (!auth.isAuthenticated && conversations.length > 0) {
         const previousModels =
           originalSelectedModels.length > 0
             ? originalSelectedModels
@@ -368,7 +216,7 @@ export function useComparisonStreaming(
 
           if (firstUserMessage) {
             const inputData = firstUserMessage.content
-            saveConversationToLocalStorage(
+            helpers.saveConversationToLocalStorage(
               inputData,
               previousModels,
               conversationsWithMessages,
@@ -384,29 +232,29 @@ export function useComparisonStreaming(
       conversations,
       selectedModels,
       attachedFiles,
-      expandFiles,
+      expandFiles: helpers.expandFiles,
       getSuccessfulModels,
       isModelFailed,
     })
 
-    setIsLoading(true)
-    setError(null)
+    stateCb.setIsLoading(true)
+    stateCb.setError(null)
     // Clear insufficient/low credit warnings on submission
     if (creditWarningType === 'insufficient' || creditWarningType === 'low') {
-      setCreditWarningMessage(null)
-      setCreditWarningType('none')
-      setCreditWarningDismissible(false)
+      creditCb.setCreditWarningMessage(null)
+      creditCb.setCreditWarningType('none')
+      creditCb.setCreditWarningDismissible(false)
     }
-    setIsModelsHidden(true)
-    setShowDoneSelectingCard(false)
+    stateCb.setIsModelsHidden(true)
+    stateCb.setShowDoneSelectingCard(false)
 
     // Capture user timestamp when they actually submit
     const userTimestamp = new Date().toISOString()
-    setUserMessageTimestamp(userTimestamp)
+    stateCb.setUserMessageTimestamp(userTimestamp)
 
-    setResponse(null)
-    setClosedCards(new Set())
-    setProcessingTime(null)
+    stateCb.setResponse(null)
+    stateCb.setClosedCards(new Set())
+    stateCb.setProcessingTime(null)
     userCancelledRef.current = false
     hasScrolledToResultsOnFirstChunkRef.current = false
     scrolledToTopRef.current.clear()
@@ -415,11 +263,11 @@ export function useComparisonStreaming(
     userInteractingRef.current.clear()
     lastScrollTopRef.current.clear()
     lastAlignedRoundRef.current = 0
-    setIsScrollLocked(false)
+    stateCb.setIsScrollLocked(false)
 
     // Clean up any existing scroll listeners from previous comparison
     scrollListenersRef.current.forEach((_listener, modelId) => {
-      cleanupScrollListener(modelId)
+      helpers.cleanupScrollListener(modelId)
     })
 
     const startTime = Date.now()
@@ -428,10 +276,10 @@ export function useComparisonStreaming(
     try {
       const controller = new AbortController()
       currentAbortControllerRef.current = controller
-      setCurrentAbortController(controller)
+      stateCb.setCurrentAbortController(controller)
 
       const conversationId =
-        isAuthenticated && currentVisibleComparisonId
+        auth.isAuthenticated && currentVisibleComparisonId
           ? typeof currentVisibleComparisonId === 'string'
             ? parseInt(currentVisibleComparisonId, 10)
             : currentVisibleComparisonId
@@ -441,11 +289,11 @@ export function useComparisonStreaming(
       let expandedInput = input
       if (attachedFiles.length > 0) {
         try {
-          expandedInput = await expandFiles(attachedFiles, input)
+          expandedInput = await helpers.expandFiles(attachedFiles, input)
         } catch (error) {
           logger.error('Error expanding files:', error)
-          setError('Failed to process attached files. Please try again.')
-          setIsLoading(false)
+          stateCb.setError('Failed to process attached files. Please try again.')
+          stateCb.setIsLoading(false)
           return
         }
       }
@@ -462,7 +310,7 @@ export function useComparisonStreaming(
           input_data: expandedInput,
           models: modelsToUse,
           conversation_history: apiConversationHistory,
-          browser_fingerprint: browserFingerprint,
+          browser_fingerprint: auth.browserFingerprint,
           conversation_id: conversationId || undefined,
           estimated_input_tokens: accurateInputTokens || undefined,
           timezone: userTimezone,
@@ -478,14 +326,14 @@ export function useComparisonStreaming(
 
       const reader = stream.getReader()
 
-      setModelErrors({})
+      stateCb.setModelErrors({})
 
       // Set all selected models to 'raw' tab to show streaming content immediately
       const rawTabs: ActiveResultTabs = {} as ActiveResultTabs
       selectedModels.forEach(modelId => {
         rawTabs[createModelId(modelId)] = RESULT_TAB.RAW
       })
-      setActiveResultTabs(rawTabs)
+      stateCb.setActiveResultTabs(rawTabs)
 
       // Initialize empty conversations immediately so cards appear during streaming
       if (!isFollowUpMode) {
@@ -496,7 +344,7 @@ export function useComparisonStreaming(
             createStreamingMessage('assistant', '', userTimestamp),
           ],
         }))
-        setConversations(emptyConversations)
+        stateCb.setConversations(emptyConversations)
       }
 
       // Adapter: sseProcessor passes partial balance objects; our setter expects CreditBalance | null
@@ -527,17 +375,17 @@ export function useComparisonStreaming(
           subscription_tier:
             balance.subscription_tier ?? creditBalance?.subscription_tier ?? 'free',
         }
-        setCreditBalance(merged)
+        creditCb.setCreditBalance(merged)
       }
 
       streamResult = await processComparisonStream(reader, controller, {
         input,
         selectedModels,
         isFollowUpMode,
-        isAuthenticated,
-        user,
+        isAuthenticated: auth.isAuthenticated,
+        user: auth.user,
         creditBalance,
-        browserFingerprint,
+        browserFingerprint: auth.browserFingerprint,
         startTime,
         userTimestamp,
         userCancelledRef,
@@ -546,25 +394,25 @@ export function useComparisonStreaming(
         autoScrollPausedRef,
         isPageScrollingRef,
         tutorialState,
-        setModelErrors,
-        setActiveResultTabs,
-        setConversations,
-        setResponse,
-        setProcessingTime,
+        setModelErrors: stateCb.setModelErrors,
+        setActiveResultTabs: stateCb.setActiveResultTabs,
+        setConversations: stateCb.setConversations,
+        setResponse: stateCb.setResponse,
+        setProcessingTime: stateCb.setProcessingTime,
         setCreditBalance: adaptedSetCreditBalance,
-        setAnonymousCreditsRemaining,
-        setupScrollListener,
+        setAnonymousCreditsRemaining: creditCb.setAnonymousCreditsRemaining,
+        setupScrollListener: helpers.setupScrollListener,
         getCreditAllocation,
         getDailyCreditLimit,
         getCreditBalance,
-        refreshUser,
-        getCreditWarningMessage,
-        isLowCreditWarningDismissed,
-        setCreditWarningMessage,
-        setCreditWarningType,
-        setCreditWarningDismissible,
-        setIsFollowUpMode,
-        loadHistoryFromAPI,
+        refreshUser: helpers.refreshUser,
+        getCreditWarningMessage: helpers.getCreditWarningMessage,
+        isLowCreditWarningDismissed: helpers.isLowCreditWarningDismissed,
+        setCreditWarningMessage: creditCb.setCreditWarningMessage,
+        setCreditWarningType: creditCb.setCreditWarningType,
+        setCreditWarningDismissible: creditCb.setCreditWarningDismissible,
+        setIsFollowUpMode: stateCb.setIsFollowUpMode,
+        loadHistoryFromAPI: helpers.loadHistoryFromAPI,
         apiClientDeleteCache: (key: string) => apiClient.deleteCache(key),
       })
 
@@ -573,80 +421,14 @@ export function useComparisonStreaming(
       handleStreamError(err, streamResult, startTime)
     } finally {
       currentAbortControllerRef.current = null
-      setCurrentAbortController(null)
+      stateCb.setCurrentAbortController(null)
       userCancelledRef.current = false
-      setIsLoading(false)
+      stateCb.setIsLoading(false)
     }
   }, [
-    // Config dependencies
-    isAuthenticated,
-    user,
-    browserFingerprint,
-    selectedModels,
-    modelsByProvider,
-    originalSelectedModels,
-    input,
-    attachedFiles,
-    accurateInputTokens,
-    webSearchEnabled,
-    userLocation,
-    conversations,
-    isFollowUpMode,
-    currentVisibleComparisonId,
-    creditBalance,
-    creditWarningType,
-    tutorialState,
-    // Refs (stable, but included for clarity)
+    config,
+    callbacks,
     currentAbortControllerRef,
-    userCancelledRef,
-    hasScrolledToResultsOnFirstChunkRef,
-    scrolledToTopRef,
-    shouldScrollToTopAfterFormattingRef,
-    autoScrollPausedRef,
-    userInteractingRef,
-    lastScrollTopRef,
-    lastAlignedRoundRef,
-    isPageScrollingRef,
-    scrollListenersRef,
-    lastSubmittedInputRef,
-    // Callback dependencies
-    setError,
-    setIsLoading,
-    setResponse,
-    setProcessingTime,
-    setClosedCards,
-    setModelErrors,
-    setActiveResultTabs,
-    setConversations,
-    setInput,
-    setIsModelsHidden,
-    setShowDoneSelectingCard,
-    setUserMessageTimestamp,
-    setCurrentAbortController,
-    setOriginalSelectedModels,
-    setCurrentVisibleComparisonId,
-    setAlreadyBrokenOutModels,
-    setIsScrollLocked,
-    setUsageCount,
-    setIsFollowUpMode,
-    setAnonymousCreditsRemaining,
-    setCreditBalance,
-    setCreditWarningMessage,
-    setCreditWarningType,
-    setCreditWarningDismissible,
-    expandFiles,
-    extractFileContentForStorage,
-    setupScrollListener,
-    cleanupScrollListener,
-    saveConversationToLocalStorage,
-    syncHistoryAfterComparison,
-    loadHistoryFromAPI,
-    getFirstUserMessage,
-    getCreditWarningMessage,
-    isLowCreditWarningDismissed,
-    scrollConversationsToBottom,
-    refreshUser,
-    // Helper functions
     getSuccessfulModels,
     isModelFailed,
     applyStreamCompletion,
