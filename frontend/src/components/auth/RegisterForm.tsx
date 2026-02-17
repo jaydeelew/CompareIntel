@@ -46,9 +46,14 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
   }, [initialEmail])
 
   // Load reCAPTCHA script with site key on component mount
+  // Skip loading on localhost to avoid 401 errors (site key not configured for dev domain)
   useEffect(() => {
     const siteKey = import.meta.env.VITE_RECAPTCHA_SITE_KEY
-    if (siteKey && !window.grecaptcha) {
+    const isLocalhost =
+      typeof window !== 'undefined' &&
+      (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+
+    if (siteKey && !window.grecaptcha && !isLocalhost) {
       // Check if script is already being loaded
       const existingScript = document.querySelector(`script[src*="recaptcha/api.js"]`)
       if (existingScript) {
