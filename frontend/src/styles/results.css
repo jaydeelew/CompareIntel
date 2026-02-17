@@ -2508,7 +2508,7 @@ button.nav-button-primary {
   align-items: center;
   justify-content: center;
   transition: color 0.2s ease;
-  color: var(--text-muted);
+  color: #9ca3af;
   box-sizing: border-box;
   padding: 0;
   flex-shrink: 0;
@@ -2531,7 +2531,7 @@ button.nav-button-primary {
   align-items: center;
   justify-content: center;
   transition: color 0.2s ease;
-  color: var(--text-muted);
+  color: #9ca3af;
   box-sizing: border-box;
   padding: 0;
   flex-shrink: 0;
@@ -2544,12 +2544,12 @@ button.nav-button-primary {
 }
 
 .history-toggle-button:hover {
-  color: var(--text-secondary);
+  color: #6b7280;
   /* No transform to prevent position shifting */
 }
 
 .history-toggle-button.active:hover {
-  color: var(--text-secondary);
+  color: #6b7280;
 }
 
 .history-toggle-button svg {
@@ -3017,7 +3017,7 @@ button.nav-button-primary {
   align-items: center;
   justify-content: center;
   transition: color 0.2s ease;
-  color: var(--text-muted);
+  color: #9ca3af;
   box-sizing: border-box;
   padding: 0;
   flex-shrink: 0;
@@ -3027,11 +3027,11 @@ button.nav-button-primary {
 }
 
 .saved-selections-button:hover {
-  color: var(--text-secondary);
+  color: #6b7280;
 }
 
 .saved-selections-button.active {
-  color: var(--primary-color);
+  color: #3b82f6;
 }
 
 .saved-selections-button svg {
