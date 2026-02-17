@@ -1,11 +1,10 @@
-import { useState, useEffect, useRef, useCallback, useMemo, lazy, Suspense } from 'react'
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 
-const AdminPanel = lazy(() => import('../components/admin/AdminPanel'))
 import { type AttachedFile, type StoredAttachedFile } from '../components/comparison'
 import { Navigation, MockModeBanner, InstallPrompt } from '../components/layout'
 import { ComparisonPageContent, ModalManager } from '../components/main-page'
-import { DoneSelectingCard, LoadingSpinner } from '../components/shared'
+import { DoneSelectingCard } from '../components/shared'
 import { TutorialManager } from '../components/tutorial'
 import { getCreditAllocation, getDailyCreditLimit } from '../config/constants'
 import { useAuth } from '../contexts/AuthContext'
@@ -41,8 +40,13 @@ import { getRateLimitStatus, resetRateLimit } from '../services/compareService'
 import { getCreditBalance } from '../services/creditService'
 import type { CreditBalance } from '../services/creditService'
 import { getAvailableModels } from '../services/modelsService'
-import type { ModelsByProvider, ResultTab, ActiveResultTabs } from '../types'
-import { createModelId } from '../types'
+import {
+  createModelId,
+  type ConversationSummary,
+  type ModelsByProvider,
+  type ResultTab,
+  type ActiveResultTabs,
+} from '../types'
 import { generateBrowserFingerprint } from '../utils'
 import { isErrorMessage } from '../utils/error'
 import logger from '../utils/logger'
@@ -53,23 +57,7 @@ export function MainPage() {
   const navigate = useNavigate()
   const location = useLocation()
 
-  const currentView = location.pathname === '/admin' ? 'admin' : 'main'
-
-  // Admin route guard
-  useEffect(() => {
-    if (location.pathname === '/admin' && !authLoading) {
-      if (isAuthenticated === false) {
-        navigate('/', { replace: true })
-      } else if (
-        isAuthenticated === true &&
-        user !== null &&
-        user !== undefined &&
-        user.is_admin === false
-      ) {
-        navigate('/', { replace: true })
-      }
-    }
-  }, [location.pathname, isAuthenticated, user, authLoading, navigate])
+  const currentView = 'main'
 
   const { browserFingerprint, setBrowserFingerprint } = useBrowserFingerprint()
   const { setUsageCount, fetchRateLimitStatus } = useRateLimitStatus({
@@ -652,6 +640,15 @@ export function MainPage() {
       setCurrentVisibleComparisonId,
       setModelErrors,
     })
+
+  // Load conversation when navigated from History page
+  useEffect(() => {
+    const summary = (location.state as { loadConversation?: ConversationSummary })?.loadConversation
+    if (summary && loadConversation) {
+      loadConversation(summary)
+      navigate(location.pathname, { replace: true, state: {} })
+    }
+  }, [location.state, location.pathname, loadConversation, navigate])
 
   // Note: Tutorial effects are now handled by useTutorialComplete hook
 
@@ -1746,235 +1743,227 @@ export function MainPage() {
 
   return (
     <div className="app">
-      {user?.mock_mode_enabled && currentView === 'main' && (
+      {user?.mock_mode_enabled && (
         <MockModeBanner isAnonymous={false} isDev={import.meta.env.DEV} />
       )}
 
-      {!authLoading && !user && anonymousMockModeEnabled && currentView === 'main' && (
+      {!authLoading && !user && anonymousMockModeEnabled && (
         <MockModeBanner isAnonymous={true} isDev={true} />
       )}
 
-      {currentView === 'admin' && user?.is_admin ? (
-        <Suspense
-          fallback={<LoadingSpinner size="large" modern={true} message="Loading admin panel..." />}
-        >
-          <AdminPanel onClose={() => navigate('/')} />
-        </Suspense>
-      ) : (
-        <>
-          {showDoneSelectingCard && <DoneSelectingCard onDone={handleDoneSelecting} />}
+      <>
+        {showDoneSelectingCard && <DoneSelectingCard onDone={handleDoneSelecting} />}
 
-          <Navigation
-            isAuthenticated={isAuthenticated}
-            isAdmin={user?.is_admin || false}
-            currentView={currentView}
-            onViewChange={view => navigate(view === 'admin' ? '/admin' : '/')}
-            onSignInClick={openLogin}
-            onSignUpClick={openRegister}
-          />
+        <Navigation
+          isAuthenticated={isAuthenticated}
+          isAdmin={user?.is_admin || false}
+          currentView={currentView}
+          onViewChange={view => navigate(view === 'admin' ? '/admin' : '/compare')}
+          onSignInClick={openLogin}
+          onSignUpClick={openRegister}
+        />
 
-          <ModalManager
-            isAuthModalOpen={isAuthModalOpen}
-            authModalMode={authModalMode}
-            loginEmail={loginEmail}
-            onAuthModalClose={closeAuthModal}
-            showVerificationCodeModal={showVerificationCodeModal}
-            showVerificationSuccessModal={showVerificationSuccessModal}
-            showPasswordReset={showPasswordReset}
-            userEmail={user?.email}
-            onVerificationCodeModalClose={() => setShowVerificationCodeModal(false)}
-            onVerificationCodeModalUseDifferentEmail={openLoginAfterVerificationCode}
-            onVerificationComplete={handleVerified}
-            onVerificationSuccessModalClose={() => setShowVerificationSuccessModal(false)}
-            onPasswordResetClose={handlePasswordResetClose}
-            showPremiumModelsToggleModal={showPremiumModelsToggleModal}
-            onPremiumModelsModalClose={() => {
-              setShowPremiumModelsToggleModal(false)
-              setHidePremiumModels(!hidePremiumModels)
-            }}
-            onPremiumModelsDontShowAgain={checked => {
-              if (checked) {
-                localStorage.setItem('premium-models-toggle-info-dismissed', 'true')
-              } else {
-                localStorage.removeItem('premium-models-toggle-info-dismissed')
-              }
-            }}
-            disabledButtonInfo={disabledButtonInfo}
-            onDisabledButtonInfoClose={() => setDisabledButtonInfo({ button: null, message: '' })}
-            showTrialWelcomeModal={showTrialWelcomeModal}
-            trialEndsAt={user?.trial_ends_at}
-            trialUserEmail={user?.email}
-            onTrialWelcomeModalClose={() => setShowTrialWelcomeModal(false)}
-            disabledModelModalInfo={disabledModelModalInfo}
-            onDisabledModelModalClose={() => setDisabledModelModalInfo(null)}
-            onToggleHidePremiumModels={() => setHidePremiumModels(true)}
-            onOpenSignUp={openRegister}
-          />
+        <ModalManager
+          isAuthModalOpen={isAuthModalOpen}
+          authModalMode={authModalMode}
+          loginEmail={loginEmail}
+          onAuthModalClose={closeAuthModal}
+          showVerificationCodeModal={showVerificationCodeModal}
+          showVerificationSuccessModal={showVerificationSuccessModal}
+          showPasswordReset={showPasswordReset}
+          userEmail={user?.email}
+          onVerificationCodeModalClose={() => setShowVerificationCodeModal(false)}
+          onVerificationCodeModalUseDifferentEmail={openLoginAfterVerificationCode}
+          onVerificationComplete={handleVerified}
+          onVerificationSuccessModalClose={() => setShowVerificationSuccessModal(false)}
+          onPasswordResetClose={handlePasswordResetClose}
+          showPremiumModelsToggleModal={showPremiumModelsToggleModal}
+          onPremiumModelsModalClose={() => {
+            setShowPremiumModelsToggleModal(false)
+            setHidePremiumModels(!hidePremiumModels)
+          }}
+          onPremiumModelsDontShowAgain={checked => {
+            if (checked) {
+              localStorage.setItem('premium-models-toggle-info-dismissed', 'true')
+            } else {
+              localStorage.removeItem('premium-models-toggle-info-dismissed')
+            }
+          }}
+          disabledButtonInfo={disabledButtonInfo}
+          onDisabledButtonInfoClose={() => setDisabledButtonInfo({ button: null, message: '' })}
+          showTrialWelcomeModal={showTrialWelcomeModal}
+          trialEndsAt={user?.trial_ends_at}
+          trialUserEmail={user?.email}
+          onTrialWelcomeModalClose={() => setShowTrialWelcomeModal(false)}
+          disabledModelModalInfo={disabledModelModalInfo}
+          onDisabledModelModalClose={() => setDisabledModelModalInfo(null)}
+          onToggleHidePremiumModels={() => setHidePremiumModels(true)}
+          onOpenSignUp={openRegister}
+        />
 
-          <ComparisonPageContent
-            visibleTooltip={visibleTooltip}
-            onCapabilityTileTap={handleCapabilityTileTap}
-            input={input}
-            setInput={setInput}
-            textareaRef={textareaRef}
-            isFollowUpMode={isFollowUpMode}
-            isLoading={isLoading}
-            isAnimatingButton={isAnimatingButton}
-            isAnimatingTextarea={isAnimatingTextarea}
-            isAuthenticated={isAuthenticated}
-            user={user}
-            conversations={conversations}
-            historyProps={{
-              showHistoryDropdown,
-              setShowHistoryDropdown,
-              conversationHistory,
-              isLoadingHistory,
-              historyLimit,
-              currentVisibleComparisonId,
-              onLoadConversation: loadConversation,
-              onDeleteConversation: deleteConversation,
-            }}
-            onSubmitClick={handleSubmitClick}
-            onContinueConversation={handleContinueConversation}
-            onNewComparison={handleNewComparison}
-            renderUsagePreview={renderUsagePreview}
-            selectedModels={selectedModels}
-            modelsByProvider={modelsByProvider}
-            onAccurateTokenCountChange={setAccurateInputTokens}
-            creditsRemaining={creditsRemaining}
-            selectionProps={{
-              savedModelSelections,
-              onSaveModelSelection: handleSaveModelSelection,
-              onLoadModelSelection: handleLoadModelSelection,
-              onDeleteModelSelection: deleteModelSelection,
-              onSetDefaultSelection: setDefaultSelection,
-              getDefaultSelectionId,
-              getDefaultSelection,
-              defaultSelectionOverridden,
-              canSaveMoreSelections,
-              maxSavedSelections,
-            }}
-            fileProps={{
-              attachedFiles,
-              setAttachedFiles,
-              onExpandFiles: expandFiles,
-            }}
-            webSearchEnabled={webSearchEnabled}
-            onWebSearchEnabledChange={setWebSearchEnabled}
-            tutorialStep={tutorialState.currentStep}
-            tutorialIsActive={tutorialState.isActive}
-            modelsSectionRef={modelsSectionRef}
-            creditWarningMessage={creditWarningMessage}
-            creditWarningMessageRef={creditWarningMessageRef}
-            creditWarningDismissible={creditWarningDismissible}
-            creditBalance={creditBalance}
-            onDismissCreditWarning={() => {
-              const userTier = isAuthenticated ? user?.subscription_tier || 'free' : 'unregistered'
-              const periodType =
-                userTier === 'unregistered' || userTier === 'free' ? 'daily' : 'monthly'
-              dismissLowCreditWarning(userTier, periodType, creditBalance?.credits_reset_at)
-            }}
-            error={error}
-            errorMessageRef={errorMessageRef}
-            modelsAreaProps={{
-              modelsByProvider,
-              selectedModels,
-              originalSelectedModels,
-              openDropdowns,
-              allModels,
-              isLoadingModels,
-              isFollowUpMode,
-              maxModelsLimit,
-              hidePremiumModels,
-              isModelsHidden,
-              isAuthenticated,
-              user,
-              isWideLayout,
-              isMobileLayout,
-              response,
-              conversations,
-              modelsSectionRef,
-              selectedModelsGridRef,
-              onToggleDropdown: toggleDropdown,
-              onToggleModel: handleModelToggle,
-              onToggleAllForProvider: toggleAllForProvider,
-              onToggleModelsHidden: () => setIsModelsHidden(!isModelsHidden),
-              onToggleHidePremiumModels: () => setHidePremiumModels(!hidePremiumModels),
-              onShowPremiumModelsModal: () => setShowPremiumModelsToggleModal(true),
-              onCollapseAllDropdowns: collapseAllDropdowns,
-              onShowDisabledButtonInfo: setDisabledButtonInfo,
-              onClearAllModels: () => setSelectedModels([]),
-              onSetDefaultSelectionOverridden: setDefaultSelectionOverridden,
-              onClearConversations: () => setConversations([]),
-              onClearResponse: () => setResponse(null),
-              onExpandModelsSection: () => setIsModelsHidden(false),
-              onError: setError,
-              onShowDisabledModelModal: info => setDisabledModelModalInfo(info),
-            }}
-            onCancel={handleCancel}
-            showResults={!!(response || conversations.length > 0)}
-            resultsAreaProps={{
-              conversations,
-              selectedModels,
-              closedCards,
-              allModels,
-              activeResultTabs,
-              modelProcessingStates,
-              modelErrorStates,
-              breakoutPhase,
-              isScrollLocked,
-              isFollowUpMode,
-              isFollowUpDisabled: isFollowUpDisabled(),
-              followUpDisabledReason:
-                'Cannot follow up when new models are selected. You can follow up if you only deselect models from the original comparison.',
-              showExportMenu,
-              isMobileLayout,
-              isTutorialActive: tutorialState.isActive,
-              exportMenuRef,
-              onToggleScrollLock: () => setIsScrollLocked(!isScrollLocked),
-              onFollowUp: handleFollowUp,
-              onToggleExportMenu: () => setShowExportMenu(!showExportMenu),
-              onExport: handleExport,
-              onShowAllResults: showAllResults,
-              onScreenshot: handleScreenshot,
-              onCopyResponse: handleCopyResponse,
-              onCloseCard: closeResultCard,
-              onSwitchTab: switchResultTab,
-              onBreakout: handleBreakout,
-              onHideOthers: hideAllOtherModels,
-              onCopyMessage: handleCopyMessage,
-            }}
-          />
+        <ComparisonPageContent
+          visibleTooltip={visibleTooltip}
+          onCapabilityTileTap={handleCapabilityTileTap}
+          input={input}
+          setInput={setInput}
+          textareaRef={textareaRef}
+          isFollowUpMode={isFollowUpMode}
+          isLoading={isLoading}
+          isAnimatingButton={isAnimatingButton}
+          isAnimatingTextarea={isAnimatingTextarea}
+          isAuthenticated={isAuthenticated}
+          user={user}
+          conversations={conversations}
+          historyProps={{
+            showHistoryDropdown,
+            setShowHistoryDropdown,
+            conversationHistory,
+            isLoadingHistory,
+            historyLimit,
+            currentVisibleComparisonId,
+            onLoadConversation: loadConversation,
+            onDeleteConversation: deleteConversation,
+          }}
+          onSubmitClick={handleSubmitClick}
+          onContinueConversation={handleContinueConversation}
+          onNewComparison={handleNewComparison}
+          renderUsagePreview={renderUsagePreview}
+          selectedModels={selectedModels}
+          modelsByProvider={modelsByProvider}
+          onAccurateTokenCountChange={setAccurateInputTokens}
+          creditsRemaining={creditsRemaining}
+          selectionProps={{
+            savedModelSelections,
+            onSaveModelSelection: handleSaveModelSelection,
+            onLoadModelSelection: handleLoadModelSelection,
+            onDeleteModelSelection: deleteModelSelection,
+            onSetDefaultSelection: setDefaultSelection,
+            getDefaultSelectionId,
+            getDefaultSelection,
+            defaultSelectionOverridden,
+            canSaveMoreSelections,
+            maxSavedSelections,
+          }}
+          fileProps={{
+            attachedFiles,
+            setAttachedFiles,
+            onExpandFiles: expandFiles,
+          }}
+          webSearchEnabled={webSearchEnabled}
+          onWebSearchEnabledChange={setWebSearchEnabled}
+          tutorialStep={tutorialState.currentStep}
+          tutorialIsActive={tutorialState.isActive}
+          modelsSectionRef={modelsSectionRef}
+          creditWarningMessage={creditWarningMessage}
+          creditWarningMessageRef={creditWarningMessageRef}
+          creditWarningDismissible={creditWarningDismissible}
+          creditBalance={creditBalance}
+          onDismissCreditWarning={() => {
+            const userTier = isAuthenticated ? user?.subscription_tier || 'free' : 'unregistered'
+            const periodType =
+              userTier === 'unregistered' || userTier === 'free' ? 'daily' : 'monthly'
+            dismissLowCreditWarning(userTier, periodType, creditBalance?.credits_reset_at)
+          }}
+          error={error}
+          errorMessageRef={errorMessageRef}
+          modelsAreaProps={{
+            modelsByProvider,
+            selectedModels,
+            originalSelectedModels,
+            openDropdowns,
+            allModels,
+            isLoadingModels,
+            isFollowUpMode,
+            maxModelsLimit,
+            hidePremiumModels,
+            isModelsHidden,
+            isAuthenticated,
+            user,
+            isWideLayout,
+            isMobileLayout,
+            response,
+            conversations,
+            modelsSectionRef,
+            selectedModelsGridRef,
+            onToggleDropdown: toggleDropdown,
+            onToggleModel: handleModelToggle,
+            onToggleAllForProvider: toggleAllForProvider,
+            onToggleModelsHidden: () => setIsModelsHidden(!isModelsHidden),
+            onToggleHidePremiumModels: () => setHidePremiumModels(!hidePremiumModels),
+            onShowPremiumModelsModal: () => setShowPremiumModelsToggleModal(true),
+            onCollapseAllDropdowns: collapseAllDropdowns,
+            onShowDisabledButtonInfo: setDisabledButtonInfo,
+            onClearAllModels: () => setSelectedModels([]),
+            onSetDefaultSelectionOverridden: setDefaultSelectionOverridden,
+            onClearConversations: () => setConversations([]),
+            onClearResponse: () => setResponse(null),
+            onExpandModelsSection: () => setIsModelsHidden(false),
+            onError: setError,
+            onShowDisabledModelModal: info => setDisabledModelModalInfo(info),
+          }}
+          onCancel={handleCancel}
+          showResults={!!(response || conversations.length > 0)}
+          resultsAreaProps={{
+            conversations,
+            selectedModels,
+            closedCards,
+            allModels,
+            activeResultTabs,
+            modelProcessingStates,
+            modelErrorStates,
+            breakoutPhase,
+            isScrollLocked,
+            isFollowUpMode,
+            isFollowUpDisabled: isFollowUpDisabled(),
+            followUpDisabledReason:
+              'Cannot follow up when new models are selected. You can follow up if you only deselect models from the original comparison.',
+            showExportMenu,
+            isMobileLayout,
+            isTutorialActive: tutorialState.isActive,
+            exportMenuRef,
+            onToggleScrollLock: () => setIsScrollLocked(!isScrollLocked),
+            onFollowUp: handleFollowUp,
+            onToggleExportMenu: () => setShowExportMenu(!showExportMenu),
+            onExport: handleExport,
+            onShowAllResults: showAllResults,
+            onScreenshot: handleScreenshot,
+            onCopyResponse: handleCopyResponse,
+            onCloseCard: closeResultCard,
+            onSwitchTab: switchResultTab,
+            onBreakout: handleBreakout,
+            onHideOthers: hideAllOtherModels,
+            onCopyMessage: handleCopyMessage,
+          }}
+        />
 
-          {import.meta.env.PROD && <InstallPrompt />}
+        {import.meta.env.PROD && <InstallPrompt />}
 
-          <TutorialManager
-            showWelcomeModal={showWelcomeModal}
-            setShowWelcomeModal={setShowWelcomeModal}
-            resetAppStateForTutorial={resetAppStateForTutorial}
-            startTutorial={startTutorial}
-            skipTutorial={skipTutorial}
-            isTouchDevice={isTouchDevice}
-            currentView={currentView}
-            isMobileLayout={isMobileLayout}
-            modelsByProvider={modelsByProvider}
-            openDropdowns={openDropdowns}
-            selectedModels={selectedModels}
-            input={input}
-            tutorialState={tutorialState}
-            completeStep={completeStep}
-            isFollowUpMode={isFollowUpMode}
-            tutorialHasCompletedComparison={tutorialHasCompletedComparison}
-            tutorialHasBreakout={tutorialHasBreakout}
-            tutorialHasSavedSelection={tutorialHasSavedSelection}
-            showHistoryDropdown={showHistoryDropdown}
-            isLoading={isLoading}
-            setTutorialHasCompletedComparison={setTutorialHasCompletedComparison}
-            setTutorialHasBreakout={setTutorialHasBreakout}
-            setTutorialHasSavedSelection={setTutorialHasSavedSelection}
-          />
-        </>
-      )}
+        <TutorialManager
+          showWelcomeModal={showWelcomeModal}
+          setShowWelcomeModal={setShowWelcomeModal}
+          resetAppStateForTutorial={resetAppStateForTutorial}
+          startTutorial={startTutorial}
+          skipTutorial={skipTutorial}
+          isTouchDevice={isTouchDevice}
+          currentView={currentView}
+          isMobileLayout={isMobileLayout}
+          modelsByProvider={modelsByProvider}
+          openDropdowns={openDropdowns}
+          selectedModels={selectedModels}
+          input={input}
+          tutorialState={tutorialState}
+          completeStep={completeStep}
+          isFollowUpMode={isFollowUpMode}
+          tutorialHasCompletedComparison={tutorialHasCompletedComparison}
+          tutorialHasBreakout={tutorialHasBreakout}
+          tutorialHasSavedSelection={tutorialHasSavedSelection}
+          showHistoryDropdown={showHistoryDropdown}
+          isLoading={isLoading}
+          setTutorialHasCompletedComparison={setTutorialHasCompletedComparison}
+          setTutorialHasBreakout={setTutorialHasBreakout}
+          setTutorialHasSavedSelection={setTutorialHasSavedSelection}
+        />
+      </>
     </div>
   )
 }

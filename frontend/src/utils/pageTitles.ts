@@ -13,6 +13,8 @@ const BASE_TITLE = 'CompareIntel'
  */
 const ROUTE_TITLES: Record<string, string> = {
   '/': 'CompareIntel - Compare AI Models Side-by-Side',
+  '/compare': 'Compare AI Models - CompareIntel',
+  '/history': 'Conversation History - CompareIntel',
   '/about': 'About - CompareIntel',
   '/features': 'Features - CompareIntel',
   '/how-it-works': 'How It Works - CompareIntel',

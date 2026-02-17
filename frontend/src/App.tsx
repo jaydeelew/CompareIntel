@@ -1,5 +1,5 @@
 import { lazy, Suspense } from 'react'
-import { Routes, Route } from 'react-router-dom'
+import { Routes, Route, Navigate } from 'react-router-dom'
 
 import './styles/variables.css'
 import './styles/base.css'
@@ -18,7 +18,7 @@ import { Layout, ThemeSync } from './components'
 import { ErrorBoundary, LoadingSpinner } from './components/shared'
 import { AuthProvider } from './contexts/AuthContext'
 import { ThemeProvider } from './contexts/ThemeContext'
-import { MainPage } from './pages'
+import { MainPage, AdminPage, HistoryPage } from './pages'
 
 const About = lazy(() =>
   import('./components/pages/About').then(module => ({ default: module.About }))
@@ -104,7 +104,11 @@ function App() {
                   </Suspense>
                 }
               />
-              <Route path="*" element={<MainPage />} />
+              <Route path="/" element={<MainPage />} />
+              <Route path="/compare" element={<MainPage />} />
+              <Route path="/history" element={<HistoryPage />} />
+              <Route path="/admin" element={<AdminPage />} />
+              <Route path="*" element={<Navigate to="/compare" replace />} />
             </Route>
           </Routes>
         </AuthProvider>
