@@ -149,7 +149,8 @@
 }
 
 .hide-premium-button-preview svg path,
-.hide-premium-button-preview svg circle {
+.hide-premium-button-preview svg circle,
+.hide-premium-button-preview svg line {
   stroke: currentColor;
 }
 

@@ -72,6 +72,24 @@
   gap: 0.5rem;
 }
 
+.premium-models-toggle-info-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.premium-models-toggle-info-icon svg {
+  width: 24px;
+  height: 24px;
+  color: var(--text-secondary);
+}
+
+.premium-models-toggle-info-icon svg path,
+.premium-models-toggle-info-icon svg line {
+  stroke: currentColor;
+}
+
 .premium-models-toggle-info-close {
   background: var(--bg-tertiary);
   border: 1px solid var(--border-color);

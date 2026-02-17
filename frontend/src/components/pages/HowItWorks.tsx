@@ -61,6 +61,9 @@ export const HowItWorks: React.FC = () => {
                   Browse models from OpenAI, Anthropic, Google, Meta, Mistral, xAI, and more.
                   Unregistered and Free users can select up to 3 models; paid tiers allow more.
                   Model availability varies by tier. Premium models are coming soon for paid users.
+                  Free and unregistered users can use the hide/show premium models button (eye icon)
+                  in the "Select Models to Compare" header to focus on models available to their
+                  tier.
                 </p>
                 <p>
                   <strong>Save your favorite combinations:</strong> Save a model selection with a
