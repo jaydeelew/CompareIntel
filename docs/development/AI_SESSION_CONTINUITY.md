@@ -76,9 +76,9 @@ The CompareIntel web application (compareintel.com) is being refactored to meet 
 - [x] **Add QUICKSTART.md** — Minimal "clone → install → run → first comparison" guide. (2025-02)
 - [x] **Coverage fails CI** — Backend CI now fails when coverage is below 70%. (2025-02)
 - [x] **Fix REFACTORING_TODO reference** — ARCHITECTURE.md now references `AI_SESSION_CONTINUITY.md` instead of the missing `REFACTORING_TODO.md`. (2025-02)
+- [x] **Extract `ComparisonPageContent`** — Moved comparison view (form + models + results) into `frontend/src/components/main-page/ComparisonPageContent.tsx`. Composes Hero, ComparisonForm, CreditWarningBanner, ModelsArea, LoadingSection, ResultsArea. (2025-02-17)
 
 ### Pending
-- [ ] **Extract `ComparisonPageContent`** — Move comparison view (form + models + results) into a component to reduce MainPage size.
 - [ ] **Add ONBOARDING.md** — First-day checklist for new developers: key files, common tasks, where to look.
 - [ ] **Backend in lint-staged** — Add backend Python files to lint-staged (or equivalent) so staged backend changes run ruff/mypy on commit.
 - [ ] **Split `useComparisonStreaming`** — Break into smaller hooks (e.g. `useStreamConnection`, `useStreamTimeout`, `useStreamCompletion`).
@@ -109,3 +109,4 @@ When ending a session with incomplete work, you may add a short handoff note:
 | 2025-02 | Initial creation. Documented goals, context, instructions, and checklist from evaluation and first implementation round. |
 | 2025-02-17 | Session: Fixed REFACTORING_TODO ref, coverage CI fail, QUICKSTART.md, useMainPageEffects extraction (~258 lines from MainPage). |
 | 2025-02-17 | Added instruction: AI sessions must provide a concise git commit statement for each code-update. |
+| 2025-02-17 | Session: Extracted ComparisonPageContent (form + models + results) into main-page component. |

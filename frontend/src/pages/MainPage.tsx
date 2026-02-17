@@ -2,22 +2,10 @@ import { useState, useEffect, useRef, useCallback, useMemo, lazy, Suspense } fro
 import { useNavigate, useLocation } from 'react-router-dom'
 
 const AdminPanel = lazy(() => import('../components/admin/AdminPanel'))
-import {
-  ComparisonForm,
-  ComparisonView,
-  LoadingSection,
-  type AttachedFile,
-  type StoredAttachedFile,
-} from '../components/comparison'
-import { Navigation, Hero, MockModeBanner, InstallPrompt } from '../components/layout'
-import { ModelsArea, ModalManager, ResultsArea } from '../components/main-page'
-import {
-  CreditWarningBanner,
-  DoneSelectingCard,
-  ErrorBoundary,
-  LoadingSpinner,
-} from '../components/shared'
-import { TrialExpiredBanner } from '../components/trial'
+import { type AttachedFile, type StoredAttachedFile } from '../components/comparison'
+import { Navigation, MockModeBanner, InstallPrompt } from '../components/layout'
+import { ComparisonPageContent, ModalManager } from '../components/main-page'
+import { DoneSelectingCard, LoadingSpinner } from '../components/shared'
 import { TutorialManager } from '../components/tutorial'
 import { getCreditAllocation, getDailyCreditLimit } from '../config/constants'
 import { useAuth } from '../contexts/AuthContext'
@@ -1749,168 +1737,140 @@ export function MainPage() {
             onOpenSignUp={openRegister}
           />
 
-          <ComparisonView>
-            <Hero visibleTooltip={visibleTooltip} onCapabilityTileTap={handleCapabilityTileTap}>
-              <ErrorBoundary>
-                <ComparisonForm
-                  input={input}
-                  setInput={setInput}
-                  textareaRef={textareaRef}
-                  isFollowUpMode={isFollowUpMode}
-                  isLoading={isLoading}
-                  isAnimatingButton={isAnimatingButton}
-                  isAnimatingTextarea={isAnimatingTextarea}
-                  isAuthenticated={isAuthenticated}
-                  user={user}
-                  conversations={conversations}
-                  historyProps={{
-                    showHistoryDropdown,
-                    setShowHistoryDropdown,
-                    conversationHistory,
-                    isLoadingHistory,
-                    historyLimit,
-                    currentVisibleComparisonId,
-                    onLoadConversation: loadConversation,
-                    onDeleteConversation: deleteConversation,
-                  }}
-                  onSubmitClick={handleSubmitClick}
-                  onContinueConversation={handleContinueConversation}
-                  onNewComparison={handleNewComparison}
-                  renderUsagePreview={renderUsagePreview}
-                  selectedModels={selectedModels}
-                  modelsByProvider={modelsByProvider}
-                  onAccurateTokenCountChange={setAccurateInputTokens}
-                  creditsRemaining={creditsRemaining}
-                  selectionProps={{
-                    savedModelSelections,
-                    onSaveModelSelection: handleSaveModelSelection,
-                    onLoadModelSelection: handleLoadModelSelection,
-                    onDeleteModelSelection: deleteModelSelection,
-                    onSetDefaultSelection: setDefaultSelection,
-                    getDefaultSelectionId,
-                    getDefaultSelection,
-                    defaultSelectionOverridden,
-                    canSaveMoreSelections,
-                    maxSavedSelections,
-                  }}
-                  fileProps={{
-                    attachedFiles,
-                    setAttachedFiles,
-                    onExpandFiles: expandFiles,
-                  }}
-                  webSearchEnabled={webSearchEnabled}
-                  onWebSearchEnabledChange={setWebSearchEnabled}
-                  tutorialStep={tutorialState.currentStep}
-                  tutorialIsActive={tutorialState.isActive}
-                  modelsSectionRef={modelsSectionRef}
-                />
-              </ErrorBoundary>
-            </Hero>
-
-            <CreditWarningBanner
-              message={creditWarningMessage}
-              messageRef={creditWarningMessageRef}
-              isDismissible={creditWarningDismissible}
-              creditBalance={creditBalance}
-              onDismiss={() => {
-                const userTier = isAuthenticated
-                  ? user?.subscription_tier || 'free'
-                  : 'unregistered'
-                const periodType =
-                  userTier === 'unregistered' || userTier === 'free' ? 'daily' : 'monthly'
-                dismissLowCreditWarning(userTier, periodType, creditBalance?.credits_reset_at)
-              }}
-            />
-
-            {/* Trial expired banner - show when user has trial_ends_at but is_trial_active is false */}
-            {isAuthenticated && user?.trial_ends_at && !user?.is_trial_active && (
-              <TrialExpiredBanner
-                trialEndsAt={user.trial_ends_at}
-                onDismiss={() => {
-                  // Banner handles its own localStorage dismissal
-                }}
-              />
-            )}
-
-            {error && (
-              <div className="error-message" ref={errorMessageRef}>
-                <span>⚠️ {error}</span>
-              </div>
-            )}
-
-            <ModelsArea
-              modelsByProvider={modelsByProvider}
-              selectedModels={selectedModels}
-              originalSelectedModels={originalSelectedModels}
-              openDropdowns={openDropdowns}
-              allModels={allModels}
-              isLoadingModels={isLoadingModels}
-              isFollowUpMode={isFollowUpMode}
-              maxModelsLimit={maxModelsLimit}
-              hidePremiumModels={hidePremiumModels}
-              isModelsHidden={isModelsHidden}
-              isAuthenticated={isAuthenticated}
-              user={user}
-              isWideLayout={isWideLayout}
-              isMobileLayout={isMobileLayout}
-              response={response}
-              conversations={conversations}
-              modelsSectionRef={modelsSectionRef}
-              selectedModelsGridRef={selectedModelsGridRef}
-              onToggleDropdown={toggleDropdown}
-              onToggleModel={handleModelToggle}
-              onToggleAllForProvider={toggleAllForProvider}
-              onToggleModelsHidden={() => setIsModelsHidden(!isModelsHidden)}
-              onToggleHidePremiumModels={() => setHidePremiumModels(!hidePremiumModels)}
-              onShowPremiumModelsModal={() => setShowPremiumModelsToggleModal(true)}
-              onCollapseAllDropdowns={collapseAllDropdowns}
-              onShowDisabledButtonInfo={setDisabledButtonInfo}
-              onClearAllModels={() => setSelectedModels([])}
-              onSetDefaultSelectionOverridden={setDefaultSelectionOverridden}
-              onClearConversations={() => setConversations([])}
-              onClearResponse={() => setResponse(null)}
-              onExpandModelsSection={() => setIsModelsHidden(false)}
-              onError={setError}
-              onShowDisabledModelModal={info => setDisabledModelModalInfo(info)}
-            />
-
-            {isLoading && (
-              <LoadingSection selectedModelsCount={selectedModels.length} onCancel={handleCancel} />
-            )}
-
-            {(response || conversations.length > 0) && (
-              <ResultsArea
-                conversations={conversations}
-                selectedModels={selectedModels}
-                closedCards={closedCards}
-                allModels={allModels}
-                activeResultTabs={activeResultTabs}
-                modelProcessingStates={modelProcessingStates}
-                modelErrorStates={modelErrorStates}
-                breakoutPhase={breakoutPhase}
-                isScrollLocked={isScrollLocked}
-                isFollowUpMode={isFollowUpMode}
-                isFollowUpDisabled={isFollowUpDisabled()}
-                followUpDisabledReason="Cannot follow up when new models are selected. You can follow up if you only deselect models from the original comparison."
-                showExportMenu={showExportMenu}
-                isMobileLayout={isMobileLayout}
-                isTutorialActive={tutorialState.isActive}
-                exportMenuRef={exportMenuRef}
-                onToggleScrollLock={() => setIsScrollLocked(!isScrollLocked)}
-                onFollowUp={handleFollowUp}
-                onToggleExportMenu={() => setShowExportMenu(!showExportMenu)}
-                onExport={handleExport}
-                onShowAllResults={showAllResults}
-                onScreenshot={handleScreenshot}
-                onCopyResponse={handleCopyResponse}
-                onCloseCard={closeResultCard}
-                onSwitchTab={switchResultTab}
-                onBreakout={handleBreakout}
-                onHideOthers={hideAllOtherModels}
-                onCopyMessage={handleCopyMessage}
-              />
-            )}
-          </ComparisonView>
+          <ComparisonPageContent
+            visibleTooltip={visibleTooltip}
+            onCapabilityTileTap={handleCapabilityTileTap}
+            input={input}
+            setInput={setInput}
+            textareaRef={textareaRef}
+            isFollowUpMode={isFollowUpMode}
+            isLoading={isLoading}
+            isAnimatingButton={isAnimatingButton}
+            isAnimatingTextarea={isAnimatingTextarea}
+            isAuthenticated={isAuthenticated}
+            user={user}
+            conversations={conversations}
+            historyProps={{
+              showHistoryDropdown,
+              setShowHistoryDropdown,
+              conversationHistory,
+              isLoadingHistory,
+              historyLimit,
+              currentVisibleComparisonId,
+              onLoadConversation: loadConversation,
+              onDeleteConversation: deleteConversation,
+            }}
+            onSubmitClick={handleSubmitClick}
+            onContinueConversation={handleContinueConversation}
+            onNewComparison={handleNewComparison}
+            renderUsagePreview={renderUsagePreview}
+            selectedModels={selectedModels}
+            modelsByProvider={modelsByProvider}
+            onAccurateTokenCountChange={setAccurateInputTokens}
+            creditsRemaining={creditsRemaining}
+            selectionProps={{
+              savedModelSelections,
+              onSaveModelSelection: handleSaveModelSelection,
+              onLoadModelSelection: handleLoadModelSelection,
+              onDeleteModelSelection: deleteModelSelection,
+              onSetDefaultSelection: setDefaultSelection,
+              getDefaultSelectionId,
+              getDefaultSelection,
+              defaultSelectionOverridden,
+              canSaveMoreSelections,
+              maxSavedSelections,
+            }}
+            fileProps={{
+              attachedFiles,
+              setAttachedFiles,
+              onExpandFiles: expandFiles,
+            }}
+            webSearchEnabled={webSearchEnabled}
+            onWebSearchEnabledChange={setWebSearchEnabled}
+            tutorialStep={tutorialState.currentStep}
+            tutorialIsActive={tutorialState.isActive}
+            modelsSectionRef={modelsSectionRef}
+            creditWarningMessage={creditWarningMessage}
+            creditWarningMessageRef={creditWarningMessageRef}
+            creditWarningDismissible={creditWarningDismissible}
+            creditBalance={creditBalance}
+            onDismissCreditWarning={() => {
+              const userTier = isAuthenticated ? user?.subscription_tier || 'free' : 'unregistered'
+              const periodType =
+                userTier === 'unregistered' || userTier === 'free' ? 'daily' : 'monthly'
+              dismissLowCreditWarning(userTier, periodType, creditBalance?.credits_reset_at)
+            }}
+            error={error}
+            errorMessageRef={errorMessageRef}
+            modelsAreaProps={{
+              modelsByProvider,
+              selectedModels,
+              originalSelectedModels,
+              openDropdowns,
+              allModels,
+              isLoadingModels,
+              isFollowUpMode,
+              maxModelsLimit,
+              hidePremiumModels,
+              isModelsHidden,
+              isAuthenticated,
+              user,
+              isWideLayout,
+              isMobileLayout,
+              response,
+              conversations,
+              modelsSectionRef,
+              selectedModelsGridRef,
+              onToggleDropdown: toggleDropdown,
+              onToggleModel: handleModelToggle,
+              onToggleAllForProvider: toggleAllForProvider,
+              onToggleModelsHidden: () => setIsModelsHidden(!isModelsHidden),
+              onToggleHidePremiumModels: () => setHidePremiumModels(!hidePremiumModels),
+              onShowPremiumModelsModal: () => setShowPremiumModelsToggleModal(true),
+              onCollapseAllDropdowns: collapseAllDropdowns,
+              onShowDisabledButtonInfo: setDisabledButtonInfo,
+              onClearAllModels: () => setSelectedModels([]),
+              onSetDefaultSelectionOverridden: setDefaultSelectionOverridden,
+              onClearConversations: () => setConversations([]),
+              onClearResponse: () => setResponse(null),
+              onExpandModelsSection: () => setIsModelsHidden(false),
+              onError: setError,
+              onShowDisabledModelModal: info => setDisabledModelModalInfo(info),
+            }}
+            onCancel={handleCancel}
+            showResults={!!(response || conversations.length > 0)}
+            resultsAreaProps={{
+              conversations,
+              selectedModels,
+              closedCards,
+              allModels,
+              activeResultTabs,
+              modelProcessingStates,
+              modelErrorStates,
+              breakoutPhase,
+              isScrollLocked,
+              isFollowUpMode,
+              isFollowUpDisabled: isFollowUpDisabled(),
+              followUpDisabledReason:
+                'Cannot follow up when new models are selected. You can follow up if you only deselect models from the original comparison.',
+              showExportMenu,
+              isMobileLayout,
+              isTutorialActive: tutorialState.isActive,
+              exportMenuRef,
+              onToggleScrollLock: () => setIsScrollLocked(!isScrollLocked),
+              onFollowUp: handleFollowUp,
+              onToggleExportMenu: () => setShowExportMenu(!showExportMenu),
+              onExport: handleExport,
+              onShowAllResults: showAllResults,
+              onScreenshot: handleScreenshot,
+              onCopyResponse: handleCopyResponse,
+              onCloseCard: closeResultCard,
+              onSwitchTab: switchResultTab,
+              onBreakout: handleBreakout,
+              onHideOthers: hideAllOtherModels,
+              onCopyMessage: handleCopyMessage,
+            }}
+          />
 
           {import.meta.env.PROD && <InstallPrompt />}
 
