@@ -79,9 +79,9 @@ The CompareIntel web application (compareintel.com) is being refactored to meet 
 - [x] **Fix REFACTORING_TODO reference** — ARCHITECTURE.md now references `AI_SESSION_CONTINUITY.md` instead of the missing `REFACTORING_TODO.md`. (2025-02)
 - [x] **Extract `ComparisonPageContent`** — Moved comparison view (form + models + results) into `frontend/src/components/main-page/ComparisonPageContent.tsx`. Composes Hero, ComparisonForm, CreditWarningBanner, ModelsArea, LoadingSection, ResultsArea. (2025-02-17)
 - [x] **Add ONBOARDING.md** — First-day checklist for new developers: key files, common tasks, where to look. (2025-02-17)
+- [x] **Backend in lint-staged** — Root lint-staged runs ruff (check + format) and mypy on staged backend .py files via `backend/scripts/lint-staged.sh`. (2025-02-17)
 
 ### Pending
-- [ ] **Backend in lint-staged** — Add backend Python files to lint-staged (or equivalent) so staged backend changes run ruff/mypy on commit.
 - [ ] **Split `useComparisonStreaming`** — Break into smaller hooks (e.g. `useStreamConnection`, `useStreamTimeout`, `useStreamCompletion`).
 - [ ] **Simplify streaming config** — Reduce `SSEProcessorConfig` and `UseComparisonStreamingConfig` via composition or context.
 - [ ] **Feature-based routes** — Add routes like `/compare`, `/history` to avoid MainPage as single growing entry point.
@@ -112,3 +112,4 @@ When ending a session with incomplete work, you may add a short handoff note:
 | 2025-02-17 | Added instruction: AI sessions must provide a concise git commit statement for each code-update. |
 | 2025-02-17 | Session: Extracted ComparisonPageContent (form + models + results) into main-page component. |
 | 2025-02-17 | Session: Added ONBOARDING.md first-day developer checklist. |
+| 2025-02-17 | Session: Backend in lint-staged — ruff + mypy on staged .py files via root lint-staged. |

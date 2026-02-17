@@ -1,10 +1,8 @@
 #!/usr/bin/env sh
 . "$(dirname -- "$0")/_/husky.sh"
 
-# Backend: lint, format check, type check (when backend files staged)
-if git diff --cached --name-only | grep -q '^backend/.*\.py$'; then
-  (cd backend && ruff check . && ruff format --check . && mypy app --ignore-missing-imports) || exit 1
-fi
+# Backend: lint-staged (ruff + mypy on staged .py files)
+npm run lint-staged || exit 1
 
 # Frontend: lint-staged
 (cd frontend && npm run lint-staged) || exit 1
