@@ -1,10 +1,10 @@
 /**
  * useComparisonStreaming - Core streaming logic for AI model comparisons.
  * Uses SSE for streaming, activity-based timeout, partial result recovery.
- * Receives config/callbacks; parent owns state, hook orchestrates mutations.
+ * Composes useStreamConnection, useModelFailureCheck; parent owns state.
  */
 
-import { useCallback, useRef } from 'react'
+import { useCallback } from 'react'
 
 import type { AttachedFile, StoredAttachedFile } from '../components/comparison'
 import { getCreditAllocation, getDailyCreditLimit } from '../config/constants'
@@ -30,6 +30,9 @@ import { validateComparisonInput } from '../utils/comparisonValidation'
 import { prepareApiConversationHistory } from '../utils/conversationPreparer'
 import { isErrorMessage } from '../utils/error'
 import logger from '../utils/logger'
+
+import { useModelFailureCheck } from './useModelFailureCheck'
+import { useStreamConnection } from './useStreamConnection'
 
 interface TutorialState {
   isActive: boolean
@@ -173,8 +176,18 @@ export function useComparisonStreaming(
   config: UseComparisonStreamingConfig,
   callbacks: UseComparisonStreamingCallbacks
 ): UseComparisonStreamingReturn {
-  /** Tracks the current AbortController for cancellation support */
-  const currentAbortControllerRef = useRef<AbortController | null>(null)
+  const { currentAbortControllerRef, cancelComparison } = useStreamConnection(
+    {
+      setIsLoading: callbacks.setIsLoading,
+      setCurrentAbortController: callbacks.setCurrentAbortController,
+    },
+    config.userCancelledRef
+  )
+
+  const { isModelFailed, getSuccessfulModels } = useModelFailureCheck(
+    config.modelErrors,
+    config.conversations
+  )
 
   const {
     isAuthenticated,
@@ -193,7 +206,6 @@ export function useComparisonStreaming(
     currentVisibleComparisonId,
     creditBalance,
     creditWarningType,
-    modelErrors,
     tutorialState,
     userCancelledRef,
     hasScrolledToResultsOnFirstChunkRef,
@@ -246,55 +258,6 @@ export function useComparisonStreaming(
     scrollConversationsToBottom,
     refreshUser,
   } = callbacks
-
-  // Helper to check if a model has failed
-  const isModelFailed = useCallback(
-    (modelId: string): boolean => {
-      const formattedModelId = createModelId(modelId)
-
-      // Check if model has error flag (check both raw and formatted IDs)
-      if (modelErrors[modelId] === true || modelErrors[formattedModelId] === true) {
-        return true
-      }
-
-      // Check if model has error or empty/blank content in conversation
-      const conversation = conversations.find(
-        conv => conv.modelId === modelId || conv.modelId === formattedModelId
-      )
-      if (conversation) {
-        const assistantMessages = conversation.messages.filter(msg => msg.type === 'assistant')
-        if (assistantMessages.length === 0) return true
-        const lastMessage = assistantMessages[assistantMessages.length - 1]
-        if (
-          lastMessage &&
-          (isErrorMessage(lastMessage.content) || !(lastMessage.content || '').trim())
-        ) {
-          return true
-        }
-      }
-
-      return false
-    },
-    [modelErrors, conversations]
-  )
-
-  // Helper to get successful models (filter out failed ones)
-  const getSuccessfulModels = useCallback(
-    (models: string[]): string[] => {
-      return models.filter(modelId => !isModelFailed(modelId))
-    },
-    [isModelFailed]
-  )
-
-  const cancelComparison = useCallback(() => {
-    if (currentAbortControllerRef.current) {
-      userCancelledRef.current = true
-      currentAbortControllerRef.current.abort()
-      currentAbortControllerRef.current = null
-    }
-    setIsLoading(false)
-    setCurrentAbortController(null)
-  }, [setIsLoading, setCurrentAbortController, userCancelledRef])
 
   const submitComparison = useCallback(async () => {
     const validation = validateComparisonInput({
@@ -1360,6 +1323,7 @@ export function useComparisonStreaming(
     creditWarningType,
     tutorialState,
     // Refs (stable, but included for clarity)
+    currentAbortControllerRef,
     userCancelledRef,
     hasScrolledToResultsOnFirstChunkRef,
     scrolledToTopRef,
