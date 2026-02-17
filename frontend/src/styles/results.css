@@ -565,6 +565,7 @@
   background: transparent;
   padding: 0;
   border: none;
+  color: inherit;
 }
 
 /* Preserve whitespace for specific elements that need it */
