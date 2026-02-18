@@ -1,4 +1,4 @@
-# AI Session Continuity Guide
+
 
 **Purpose:** This document instructs AI chat sessions on the CompareIntel project's goals, context, and progress. Use it to maintain continuity across sessions, since each chat has limited context and cannot remember prior conversations.
 
@@ -47,6 +47,7 @@ The CompareIntel web application (compareintel.com) is being refactored to meet 
 | [ENVIRONMENT_SETUP.md](ENVIRONMENT_SETUP.md) | Environment variables |
 | [WORKFLOW.md](WORKFLOW.md) | Dev environments, deployment |
 | [ONBOARDING.md](ONBOARDING.md) | First-day checklist: key files, common tasks |
+| [SCALING_ASSUMPTIONS.md](SCALING_ASSUMPTIONS.md) | Load, concurrency, and retention expectations |
 | [FRONTEND_TESTING.md](../testing/FRONTEND_TESTING.md) | Frontend test guide |
 | [BACKEND_TESTING.md](../testing/BACKEND_TESTING.md) | Backend test guide |
 
@@ -86,7 +87,7 @@ The CompareIntel web application (compareintel.com) is being refactored to meet 
 - [x] **Feature-based routes** — Added `/admin` as explicit route. Main page at `/`; AdminPage at `/admin` with route guard. History dropdown in comparison form suffices for history access; standalone HistoryPage removed. Removed redundant `/compare`; single main page at `/`. (2025-02-17)
 
 ### Pending
-- [ ] **Document scaling assumptions** — Note load, concurrency, and retention expectations for future scaling.
+- [x] **Document scaling assumptions** — Added `docs/development/SCALING_ASSUMPTIONS.md` with load, concurrency, retention expectations. (2025-02-17)
 
 ---
 
@@ -119,3 +120,4 @@ When ending a session with incomplete work, you may add a short handoff note:
 | 2025-02-17 | Session: Simplify streaming config — composed UseComparisonStreamingConfig and UseComparisonStreamingCallbacks; added types/streamingConfig.ts. |
 | 2025-02-17 | Session: Feature-based routes — /admin explicit route; MainPage at /; AdminPage. |
 | 2025-02-17 | Session: Removed HistoryPage; history dropdown sufficient. Removed /compare; single main page at /. |
+| 2025-02-17 | Session: Document scaling assumptions — SCALING_ASSUMPTIONS.md (load, concurrency, retention). |
