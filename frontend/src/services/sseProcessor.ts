@@ -243,7 +243,11 @@ export async function processComparisonStream(
         setConversations(prev =>
           prev.map(conv => {
             let content = streamingResults[conv.modelId] || ''
-            if (!content.trim()) content = EMPTY_RESPONSE_ERROR
+            // Only show "No response received" when the model has completed but has no content.
+            // During streaming, models that haven't received content yet should not show this error.
+            if (!content.trim() && completedModels.has(conv.modelId)) {
+              content = EMPTY_RESPONSE_ERROR
+            }
             const startT = modelStartTimes[conv.modelId]
             const completionTime = modelCompletionTimes[conv.modelId]
             return {
