@@ -20,6 +20,8 @@ frontend/.env
 # Backend SQLite DB (runtime data; schema via migrations)
 backend/data/compareintel.db
 backend/data/*.db
+backend/test.db
+backend/test-*.db
 
 # Python
 __pycache__/
@@ -69,6 +71,8 @@ playwright-report/
 playwright/.cache/
 .nyc_output
 *.lcov
+coverage/
+frontend/coverage/
 
 # Logs & Cache
 logs/
