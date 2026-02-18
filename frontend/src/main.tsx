@@ -51,6 +51,14 @@ createRoot(document.getElementById('root')!).render(
   </StrictMode>
 )
 
+// Remove the preload class after first paint so CSS transitions can work normally.
+// Double rAF ensures the browser has completed the initial render before enabling transitions.
+requestAnimationFrame(() => {
+  requestAnimationFrame(() => {
+    document.documentElement.classList.remove('preload')
+  })
+})
+
 // Defer service worker registration until after page load to prevent render-blocking
 // This improves FCP and LCP by not blocking the main thread during initial render
 if ('serviceWorker' in navigator && import.meta.env.PROD) {

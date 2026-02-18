@@ -2,6 +2,16 @@
    BASE STYLES - Premium Dark Theme Foundation
    ═══════════════════════════════════════════════════════════ */
 
+/* Suppress transitions during initial page load to prevent flicker on mobile.
+   The 'preload' class is added by the inline script in index.html and removed
+   after first paint in main.tsx. */
+html.preload,
+html.preload *,
+html.preload *::before,
+html.preload *::after {
+  transition-duration: 0s !important;
+}
+
 /* CSS Reset */
 *,
 *::before,

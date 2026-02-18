@@ -10,6 +10,7 @@
       var theme = (stored === 'light' || stored === 'dark') ? stored : 'light';
       document.documentElement.setAttribute('data-theme', theme);
       document.documentElement.style.colorScheme = theme;
+      document.documentElement.classList.add('preload');
     })();
   </script>
   <!-- Favicons - SVG first for modern browsers, PNG fallbacks for older browsers -->
