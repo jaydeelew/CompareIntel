@@ -368,6 +368,40 @@
   flex-shrink: 0;
 }
 
+/* Light theme: flipped tile back face */
+[data-theme='light'] .capability-tile-back {
+  background: rgba(248, 250, 252, 0.82);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+[data-theme='light'] .capability-tile-back-label {
+  color: var(--primary-color);
+}
+
+[data-theme='light'] .capability-tile-back-text {
+  color: var(--text-secondary);
+}
+
+[data-theme='light'] .capability-tile-back-image-wrap {
+  background: rgba(241, 245, 249, 0.85);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+[data-theme='light']
+  .capability-tile-back[data-tile='natural-language']
+  .capability-tile-back-image,
+[data-theme='light'] .capability-tile-back[data-tile='formatted-math'] .capability-tile-back-image {
+  filter: brightness(1) contrast(1.02);
+}
+
+[data-theme='light'] .capability-tile.flipped {
+  border-color: rgba(37, 99, 235, 0.35);
+  box-shadow:
+    0 20px 60px rgba(0, 0, 0, 0.12),
+    0 0 40px rgba(37, 99, 235, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
 /* Glow effect on hover */
 .capability-tile::before {
   content: '';
