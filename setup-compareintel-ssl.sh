@@ -1,12 +1,15 @@
 #!/bin/bash
 # Set up Let's Encrypt SSL certificates for compareintel.com. Run once before deploying.
-# Usage: sudo ./setup-compareintel-ssl.sh
+# Usage: sudo ./setup-compareintel-ssl.sh [renewal]
+#   (no args)  Full setup: obtain certs and configure auto-renewal
+#   renewal    Fix renewal config for existing certs (switch to webroot, no downtime)
 
 set -e
 
 DOMAIN="compareintel.com"
 WWW_DOMAIN="www.compareintel.com"
 EMAIL="${LETSENCRYPT_EMAIL:-}"
+WEBROOT_PATH="/var/www/certbot"
 
 msg() { echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1"; }
 ok() { echo "[$(date '+%Y-%m-%d %H:%M:%S')] OK: $1"; }
@@ -55,6 +58,12 @@ obtain_certs() {
 
 setup_renewal() {
     msg "Setting up renewal..."
+
+    # Create webroot directory for ACME HTTP-01 challenge (avoids port 80 conflict with nginx)
+    mkdir -p "$WEBROOT_PATH/.well-known/acme-challenge"
+    chmod -R 755 "$WEBROOT_PATH"
+
+    # Deploy hook: reload nginx after successful renewal so it picks up new certs
     mkdir -p /etc/letsencrypt/renewal-hooks/deploy
     cat > /etc/letsencrypt/renewal-hooks/deploy/restart-nginx.sh << 'EOF'
 #!/bin/bash
@@ -62,12 +71,45 @@ cd /home/ubuntu/CompareIntel 2>/dev/null || cd ~/CompareIntel
 docker compose -f docker-compose.ssl.yml exec -T nginx nginx -s reload 2>/dev/null || true
 EOF
     chmod +x /etc/letsencrypt/renewal-hooks/deploy/restart-nginx.sh
-    certbot renew --dry-run 2>/dev/null && ok "Renewal configured" || warn "Renewal dry-run had issues"
-    systemctl enable certbot.timer 2>/dev/null && systemctl start certbot.timer 2>/dev/null || true
+
+    # Switch renewal from standalone to webroot so certbot can renew while nginx runs
+    RENEWAL_CONF="/etc/letsencrypt/renewal/${DOMAIN}.conf"
+    if [ -f "$RENEWAL_CONF" ]; then
+        if grep -q 'authenticator = standalone' "$RENEWAL_CONF" 2>/dev/null; then
+            msg "Switching renewal from standalone to webroot (no downtime)..."
+            sed -i 's/^authenticator = standalone$/authenticator = webroot/' "$RENEWAL_CONF"
+            grep -q 'webroot_path' "$RENEWAL_CONF" || \
+                sed -i "/^authenticator = webroot$/a webroot_path = $WEBROOT_PATH" "$RENEWAL_CONF"
+            ok "Renewal config updated for webroot"
+        fi
+    fi
+
+    # Enable certbot timer for automatic renewal (twice daily)
+    if systemctl enable certbot.timer 2>/dev/null; then
+        systemctl enable certbot.timer 2>/dev/null && systemctl start certbot.timer 2>/dev/null && \
+            ok "certbot.timer enabled for auto-renewal" || warn "Failed to enable certbot.timer"
+    else
+        warn "certbot.timer not found. Add a cron job: 0 0,12 * * * certbot renew --quiet"
+    fi
+
+    msg "Testing renewal (dry-run)..."
+    certbot renew --dry-run 2>/dev/null && ok "Renewal dry-run succeeded" || \
+        warn "Renewal dry-run had issues. Ensure nginx is running and serving /.well-known/acme-challenge/"
 }
 
 main() {
     echo ""
+    case "${1:-}" in
+        renewal)
+            msg "Fixing SSL renewal config for existing certificates..."
+            [ ! -d "/etc/letsencrypt/live/$DOMAIN" ] && { err "No certificates found. Run setup without 'renewal' first."; exit 1; }
+            install_certbot
+            setup_renewal
+            ok "Renewal config updated. Run 'certbot renew --dry-run' after starting services to verify."
+            echo ""
+            exit 0
+            ;;
+    esac
     if [ -d "/etc/letsencrypt/live/$DOMAIN" ]; then
         warn "Certificates already exist. certbot certificates:"
         certbot certificates 2>/dev/null

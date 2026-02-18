@@ -28,7 +28,12 @@ check_ssl_certificates() {
     CERT_EXPIRY_EPOCH=$(date -d "$CERT_EXPIRY" +%s 2>/dev/null)
     CURRENT_EPOCH=$(date +%s)
     DAYS_UNTIL_EXPIRY=$(( (CERT_EXPIRY_EPOCH - CURRENT_EPOCH) / 86400 ))
-    [ "$DAYS_UNTIL_EXPIRY" -lt 14 ] && { err "SSL certificate expires in $DAYS_UNTIL_EXPIRY days. Renew immediately."; exit 1; }
+    if [ "$DAYS_UNTIL_EXPIRY" -lt 14 ]; then
+        err "SSL certificate expires in $DAYS_UNTIL_EXPIRY days. Renew immediately."
+        err "Run: sudo certbot renew"
+        err "If renewal fails (port 80 conflict), run: sudo ./setup-compareintel-ssl.sh renewal"
+        exit 1
+    fi
     [ "$DAYS_UNTIL_EXPIRY" -lt 90 ] && warn "SSL certificate expires in $DAYS_UNTIL_EXPIRY days"
     ok "SSL certificate valid for $DAYS_UNTIL_EXPIRY days"
 }

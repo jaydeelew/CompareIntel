@@ -43,6 +43,12 @@ docker compose -f docker-compose.ssl.yml up -d --build
 
 SSL via Let's Encrypt; initial setup: `./setup-compareintel-ssl.sh` from home dir.
 
+**SSL auto-renewal:** Uses webroot so certbot can renew while nginx runs. `certbot.timer` runs twice daily. If renewal fails (e.g. certs from older standalone setup), run:
+```bash
+sudo ./setup-compareintel-ssl.sh renewal
+```
+Then `sudo certbot renew --dry-run` to verify. Deployment status (`./deploy-production.sh status`) shows certbot timer/cron state.
+
 ---
 
 ## Git Workflow (Feature Branches + PRs)
