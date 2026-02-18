@@ -1335,10 +1335,37 @@
    RESPONSIVE STYLES
    ═══════════════════════════════════════════════════════════ */
 
+/* Intermediate screens: shift flipped outer tiles inward so they stay fully visible.
+   The 2.4× scale can push the left/right tiles past the viewport edge; this computes
+   exactly how much overflow there is and translates the wrapper inward by that amount,
+   keeping tiles hugging their respective screen edge with a 0.75rem margin. */
+@media (max-width: 1280px) and (min-width: 769px) {
+  .hero-capabilities {
+    --_grid-max: 900px;
+    --_gw: min(var(--_grid-max), 100vw);
+    --_col: calc((var(--_gw) - 4.5rem) / 3);
+    --_tile-center: calc((100vw - var(--_gw)) / 2 + 1rem + var(--_col) / 2);
+    --_shift: max(0px, calc(1.2 * var(--_col) - var(--_tile-center) + 0.75rem));
+  }
+
+  .capability-tile-wrapper {
+    transition: transform 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .hero-capabilities .capability-tile-wrapper:first-child:has(.flipped) {
+    transform: translateX(var(--_shift));
+  }
+
+  .hero-capabilities .capability-tile-wrapper:last-child:has(.flipped) {
+    transform: translateX(calc(-1 * var(--_shift)));
+  }
+}
+
 @media (max-width: 1024px) and (min-width: 769px) {
   .hero-capabilities {
     grid-template-columns: repeat(3, 1fr);
     max-width: 800px;
+    --_grid-max: 800px;
   }
 }
 
