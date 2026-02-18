@@ -256,10 +256,10 @@
   transform-style: preserve-3d;
 }
 
-/* Whole tile rotates and scales up */
 .capability-tile.flipped {
-  transform: rotateY(180deg) scale(2);
-  z-index: 50;
+  transform: rotateY(180deg) scale(2.4);
+  transform-origin: center center;
+  z-index: 200;
   border-color: rgba(6, 182, 212, 0.4);
   box-shadow:
     0 20px 60px rgba(0, 0, 0, 0.5),
@@ -280,6 +280,8 @@
   border-radius: 18px;
   margin: -1.5rem -1.25rem;
   padding: 1.5rem 1.25rem;
+  opacity: 1;
+  transition: opacity 0.25s ease;
 }
 
 /* Back face — absolutely positioned over front, pre-rotated.
@@ -297,16 +299,30 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 0.6rem;
+  padding: 0.5rem;
   border-radius: 18px;
-  gap: 0.35rem;
-  background: rgba(15, 23, 42, 0.92);
+  gap: 0.25rem;
+  background: rgba(15, 23, 42, 0.95);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+}
+
+/* Force clear front/back switching so screenshots always appear on flip */
+.capability-tile.flipped .capability-tile-front {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.capability-tile.flipped .capability-tile-back {
+  opacity: 1;
+  pointer-events: auto;
 }
 
 .capability-tile-back-label {
-  font-size: 0.5rem;
+  font-size: 0.45rem;
   font-weight: var(--font-semibold);
   color: var(--primary-light);
   margin: 0;
@@ -316,17 +332,35 @@
   line-height: 1;
 }
 
-.capability-tile-back-image {
+.capability-tile-back-image-wrap {
   width: 100%;
   flex: 1;
   min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(15, 23, 42, 0.95);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  overflow: hidden;
+}
+
+.capability-tile-back-image {
+  width: 100%;
+  height: 100%;
+  flex: 1;
+  min-height: 0;
   object-fit: contain;
-  border-radius: 6px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Natural Language and Formatted Math: darken screenshots to match Code Generation tile */
+.capability-tile-back[data-tile='natural-language'] .capability-tile-back-image,
+.capability-tile-back[data-tile='formatted-math'] .capability-tile-back-image {
+  filter: brightness(0.88) contrast(1.12);
 }
 
 .capability-tile-back-text {
-  font-size: 0.4rem;
+  font-size: 0.35rem;
   line-height: 1.3;
   color: rgba(226, 232, 240, 0.95);
   margin: 0;
@@ -1458,14 +1492,8 @@
   }
 
   .capability-tile.flipped {
-    position: fixed;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%) rotateY(180deg);
-    width: min(320px, calc(100vw - 2rem));
-    max-width: 320px;
-    padding: 1rem;
-    min-height: 220px;
+    transform: rotateY(180deg) scale(2.6);
+    transform-origin: center center;
   }
 
   .hero-capabilities {

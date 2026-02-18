@@ -41,9 +41,11 @@ function CapabilityTile({
           <p className="capability-description">{description}</p>
           <div className={`capability-tooltip ${isVisible ? 'visible' : ''}`}>{tooltipText}</div>
         </div>
-        <div className="capability-tile-back">
+        <div className="capability-tile-back" data-tile={id}>
           <p className="capability-tile-back-label">{title}</p>
-          <img src={backImage} alt={`${title} example`} className="capability-tile-back-image" />
+          <div className="capability-tile-back-image-wrap">
+            <img src={backImage} alt={`${title} example`} className="capability-tile-back-image" />
+          </div>
           <p className="capability-tile-back-text">{backText}</p>
         </div>
       </div>
