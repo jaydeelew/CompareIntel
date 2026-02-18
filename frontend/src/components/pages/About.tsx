@@ -151,40 +151,6 @@ export const About: React.FC = () => {
           </section>
 
           <section className="seo-section">
-            <h2>Who Uses CompareIntel?</h2>
-            <p>
-              CompareIntel serves a diverse community of users across various industries and use
-              cases:
-            </p>
-            <ul className="seo-list">
-              <li>
-                <strong>Software Developers:</strong> Evaluate AI coding assistants for code
-                generation, debugging, and code review tasks.
-              </li>
-              <li>
-                <strong>Data Scientists:</strong> Compare models for data analysis, explanation
-                generation, and research assistance.
-              </li>
-              <li>
-                <strong>Content Creators:</strong> Find the best AI for writing, editing, and
-                creative content generation.
-              </li>
-              <li>
-                <strong>Educators:</strong> Assess AI models for educational content, tutoring
-                assistance, and curriculum development.
-              </li>
-              <li>
-                <strong>Business Professionals:</strong> Evaluate AI solutions for customer service,
-                document analysis, and business intelligence.
-              </li>
-              <li>
-                <strong>Researchers:</strong> Benchmark AI capabilities and study model behavior
-                across different domains.
-              </li>
-            </ul>
-          </section>
-
-          <section className="seo-section">
             <h2>Getting Started</h2>
             <p>Ready to compare AI models? Getting started with CompareIntel is easy:</p>
             <ol className="seo-list numbered">
