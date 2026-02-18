@@ -35,7 +35,7 @@ export type { HistoryProps, SelectionProps, FileProps } from './ComparisonFormTy
 interface ComparisonFormProps {
   input: string
   setInput: (value: string) => void
-  textareaRef: React.RefObject<HTMLTextAreaElement>
+  textareaRef: React.RefObject<HTMLTextAreaElement | null>
   isFollowUpMode: boolean
   isLoading: boolean
   isAnimatingButton: boolean
@@ -373,7 +373,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
         <div className={`composer ${isAnimatingTextarea ? 'animate-pulse-border' : ''}`}>
           <div className="composer-input-wrapper">
             <textarea
-              ref={textareaRef}
+              ref={textareaRef as React.RefObject<HTMLTextAreaElement>}
               value={input}
               onChange={e => setInput(e.target.value)}
               onKeyDown={e => {

@@ -22,7 +22,7 @@ export interface FileUploadProps {
   setAttachedFiles: (files: (AttachedFile | StoredAttachedFile)[]) => void
   input: string
   setInput: (value: string) => void
-  textareaRef: React.RefObject<HTMLTextAreaElement>
+  textareaRef: React.RefObject<HTMLTextAreaElement | null>
   disabled?: boolean
 }
 

@@ -172,7 +172,7 @@ export function ComparisonPageContent({
       )}
 
       {error && (
-        <div className="error-message" ref={errorMessageRef}>
+        <div className="error-message" ref={errorMessageRef as React.RefObject<HTMLDivElement>}>
           <span>⚠️ {error}</span>
         </div>
       )}
