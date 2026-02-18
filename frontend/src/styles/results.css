@@ -616,6 +616,80 @@
   font-family: 'Consolas', 'Monaco', 'Courier New', monospace !important;
 }
 
+/* High-contrast scrollbar for code blocks (dark bg #0d1117) - dark theme */
+[data-theme='dark'] .message-content .latex-content .code-block,
+[data-theme='dark'] .code-block-direct {
+  scrollbar-width: thin;
+  scrollbar-color: #6e7681 #21262d;
+}
+
+[data-theme='dark'] .message-content .latex-content .code-block::-webkit-scrollbar,
+[data-theme='dark'] .code-block-direct::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+[data-theme='dark'] .message-content .latex-content .code-block::-webkit-scrollbar-track,
+[data-theme='dark'] .code-block-direct::-webkit-scrollbar-track {
+  background: #21262d;
+  border-radius: 4px;
+}
+
+[data-theme='dark'] .message-content .latex-content .code-block::-webkit-scrollbar-thumb,
+[data-theme='dark'] .code-block-direct::-webkit-scrollbar-thumb {
+  background: #6e7681;
+  border-radius: 4px;
+}
+
+[data-theme='dark'] .message-content .latex-content .code-block::-webkit-scrollbar-thumb:hover,
+[data-theme='dark'] .code-block-direct::-webkit-scrollbar-thumb:hover {
+  background: #8b949e;
+}
+
+/* Light theme: darker track and thumb so scrollbar is visible on dark code blocks */
+html[data-theme='light'] .message-content .latex-content .code-block,
+html[data-theme='light'] .message-content .latex-content pre:not(.code-block),
+html[data-theme='light'] .code-block-direct {
+  scrollbar-width: thin;
+  scrollbar-color: #5c6370 #21262d;
+}
+
+html[data-theme='light'] .message-content .latex-content .code-block::-webkit-scrollbar,
+html[data-theme='light'] .message-content .latex-content pre:not(.code-block)::-webkit-scrollbar,
+html[data-theme='light'] .code-block-direct::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+html[data-theme='light'] .message-content .latex-content .code-block::-webkit-scrollbar-track,
+html[data-theme='light']
+  .message-content
+  .latex-content
+  pre:not(.code-block)::-webkit-scrollbar-track,
+html[data-theme='light'] .code-block-direct::-webkit-scrollbar-track {
+  background: #21262d !important;
+  border-radius: 4px;
+}
+
+html[data-theme='light'] .message-content .latex-content .code-block::-webkit-scrollbar-thumb,
+html[data-theme='light']
+  .message-content
+  .latex-content
+  pre:not(.code-block)::-webkit-scrollbar-thumb,
+html[data-theme='light'] .code-block-direct::-webkit-scrollbar-thumb {
+  background: #5c6370 !important;
+  border-radius: 4px;
+}
+
+html[data-theme='light'] .message-content .latex-content .code-block::-webkit-scrollbar-thumb:hover,
+html[data-theme='light']
+  .message-content
+  .latex-content
+  pre:not(.code-block)::-webkit-scrollbar-thumb:hover,
+html[data-theme='light'] .code-block-direct::-webkit-scrollbar-thumb:hover {
+  background: #6e7681 !important;
+}
+
 .code-block-direct pre {
   margin: 0 !important;
   white-space: pre !important;
