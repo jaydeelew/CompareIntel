@@ -218,7 +218,6 @@ All must pass before merge.
 | [docs/development/ENVIRONMENT_SETUP.md](docs/development/ENVIRONMENT_SETUP.md) | Environment variables |
 | [docs/development/ONBOARDING.md](docs/development/ONBOARDING.md) | First-day checklist: key files, common tasks, where to look |
 | [docs/development/ADDING_NEW_MODELS.md](docs/development/ADDING_NEW_MODELS.md) | Adding AI models |
-| [docs/development/AI_SESSION_CONTINUITY.md](docs/development/AI_SESSION_CONTINUITY.md) | **For AI assistants:** Goals, context, and checklist for cross-session continuity |
 
 ---
 
