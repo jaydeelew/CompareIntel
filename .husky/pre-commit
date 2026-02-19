@@ -1,6 +1,3 @@
-#!/usr/bin/env sh
-. "$(dirname -- "$0")/_/husky.sh"
-
 # Backend: lint-staged (ruff + mypy on staged .py files)
 npm run lint-staged || exit 1
 

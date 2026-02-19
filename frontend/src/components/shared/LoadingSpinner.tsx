@@ -5,7 +5,7 @@ import React from 'react'
  */
 export interface LoadingSpinnerProps {
   /** Size of the spinner */
-  size?: 'small' | 'medium' | 'large'
+  size?: 'small' | 'medium' | 'large' | 'xlarge'
   /** Custom className */
   className?: string
   /** Loading message to display */

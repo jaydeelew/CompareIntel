@@ -5,6 +5,7 @@ import { BREAKPOINT_MOBILE } from '../../config/constants'
 import { useAuth, useAuthHeaders } from '../../contexts/AuthContext'
 import { getAppSettings, type AppSettings } from '../../services/adminService'
 import logger from '../../utils/logger'
+import { LoadingSpinner } from '../shared'
 
 import ActionLogsTab from './ActionLogsTab'
 import ModelsTab from './ModelsTab'
@@ -208,8 +209,10 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
 
   if (loading) {
     return (
-      <div className="admin-panel" data-testid="admin-panel">
-        <div className="loading-message">Loading admin panel...</div>
+      <div className="admin-panel admin-panel-loading" data-testid="admin-panel">
+        <div className="admin-loading-center">
+          <LoadingSpinner size="xlarge" modern={true} message="Loading admin panel..." />
+        </div>
       </div>
     )
   }

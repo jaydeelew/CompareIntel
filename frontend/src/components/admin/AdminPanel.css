@@ -23,6 +23,16 @@ button:hover {
     sans-serif;
 }
 
+/* Admin panel loading state - use full height within panel */
+.admin-panel-loading {
+  display: flex;
+  flex-direction: column;
+}
+
+.admin-panel-loading .admin-loading-center {
+  min-height: calc(100vh - 4rem);
+}
+
 /* Header Section */
 .admin-header {
   background: var(--bg-primary);

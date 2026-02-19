@@ -404,6 +404,12 @@
   border-width: 4px;
 }
 
+.spinner-xlarge {
+  width: 96px;
+  height: 96px;
+  border-width: 5px;
+}
+
 .loading-spinner-container {
   display: flex;
   flex-direction: column;

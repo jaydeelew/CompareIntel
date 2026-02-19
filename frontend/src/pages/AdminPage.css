@@ -1,0 +1,13 @@
+/* Admin page loading state - centered spinner */
+.admin-loading-center {
+  flex: 1;
+  min-height: 60vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.app > .admin-loading-center:only-child {
+  min-height: 100vh;
+}

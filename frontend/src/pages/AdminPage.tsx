@@ -5,6 +5,8 @@ import { Navigation } from '../components/layout'
 import { LoadingSpinner } from '../components/shared'
 import { useAuth } from '../contexts/AuthContext'
 
+import './AdminPage.css'
+
 const AdminPanel = lazy(() => import('../components/admin/AdminPanel'))
 
 /**
@@ -25,7 +27,9 @@ export function AdminPage() {
   if (authLoading || !user?.is_admin) {
     return (
       <div className="app">
-        <LoadingSpinner size="large" message="Loading..." />
+        <div className="admin-loading-center">
+          <LoadingSpinner size="xlarge" modern={true} message="Loading..." />
+        </div>
       </div>
     )
   }
@@ -40,7 +44,11 @@ export function AdminPage() {
         onSignUpClick={() => {}}
       />
       <Suspense
-        fallback={<LoadingSpinner size="large" modern={true} message="Loading admin panel..." />}
+        fallback={
+          <div className="admin-loading-center">
+            <LoadingSpinner size="xlarge" modern={true} message="Loading admin panel..." />
+          </div>
+        }
       >
         <AdminPanel onClose={() => navigate('/')} />
       </Suspense>
