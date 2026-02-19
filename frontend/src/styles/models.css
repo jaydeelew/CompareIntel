@@ -821,6 +821,25 @@
   text-align: center;
 }
 
+.error-message .retry-models-btn {
+  margin-top: 0.75rem;
+  padding: 0.5rem 1.25rem;
+  background: var(--primary-color, #06b6d4);
+  color: white;
+  border: none;
+  border-radius: var(--radius-lg);
+  font-weight: 500;
+  cursor: pointer;
+  transition:
+    opacity 0.2s,
+    background 0.2s;
+}
+
+.error-message .retry-models-btn:hover {
+  opacity: 0.9;
+  background: var(--primary-hover, #0891b2);
+}
+
 /* ═══════════════════════════════════════════════════════════
    FOLLOW-UP & CONVERSATION BUTTONS
    ═══════════════════════════════════════════════════════════ */

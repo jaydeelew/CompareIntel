@@ -61,6 +61,7 @@ export interface ModelsAreaProps {
   onClearResponse: () => void
   onExpandModelsSection: () => void
   onError: (error: string | null) => void
+  onRetryModels?: () => void
   onShowDisabledModelModal?: (info: {
     userTier: 'unregistered' | 'free'
     modelTierAccess: 'free' | 'paid'
@@ -112,6 +113,7 @@ export function ModelsArea({
   onClearResponse,
   onExpandModelsSection,
   onError,
+  onRetryModels,
   onShowDisabledModelModal,
 }: ModelsAreaProps) {
   return (
@@ -160,6 +162,7 @@ export function ModelsArea({
             onToggleModel={onToggleModel}
             onToggleAllForProvider={onToggleAllForProvider}
             onError={onError}
+            onRetryModels={onRetryModels}
             onShowDisabledModelModal={onShowDisabledModelModal}
           />
         )}

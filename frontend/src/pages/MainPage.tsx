@@ -134,6 +134,43 @@ export function MainPage() {
   const [isLoadingModels, setIsLoadingModels] = useState(true)
   // Track previous auth state to skip cache when auth changes (e.g., after login/registration)
   const prevIsAuthenticatedRef = useRef<boolean | null>(null)
+
+  const refetchModels = useCallback(
+    (forceSkipCache = false) => {
+      setIsLoadingModels(true)
+      if (forceSkipCache) {
+        setError(null)
+      }
+      const authStateChanged =
+        prevIsAuthenticatedRef.current !== null &&
+        prevIsAuthenticatedRef.current !== isAuthenticated
+      const skipCache = forceSkipCache || authStateChanged
+      const doFetch = async () => {
+        try {
+          const data = await getAvailableModels(skipCache)
+          if (data.models_by_provider && Object.keys(data.models_by_provider).length > 0) {
+            setModelsByProvider(data.models_by_provider)
+            setError(null)
+          } else {
+            logger.error('No models_by_provider data received')
+            setError('No model data received from server')
+          }
+        } catch (err) {
+          if (err instanceof Error && err.name === 'CancellationError') return
+          const msg = err instanceof Error ? err.message : String(err)
+          logger.error('Failed to fetch models:', msg)
+          setError(`Failed to fetch models: ${msg}`)
+        } finally {
+          setIsLoadingModels(false)
+          prevIsAuthenticatedRef.current = isAuthenticated
+        }
+      }
+      doFetch()
+    },
+    [isAuthenticated, setError, setModelsByProvider]
+  )
+  const fetchModelsRef = useRef(refetchModels)
+  fetchModelsRef.current = refetchModels
   const [, setUserMessageTimestamp] = useState<string>('')
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const { isTouchDevice, isWideLayout, isMobileLayout } = useResponsive()
@@ -996,39 +1033,7 @@ export function MainPage() {
 
     initFingerprint()
 
-    const fetchModels = async () => {
-      try {
-        // Skip cache when auth state changes (e.g., after login/registration/logout)
-        // This ensures we get fresh model data with correct trial_unlocked status
-        const authStateChanged =
-          prevIsAuthenticatedRef.current !== null &&
-          prevIsAuthenticatedRef.current !== isAuthenticated
-        const skipCache = authStateChanged
-
-        const data = await getAvailableModels(skipCache)
-
-        if (data.models_by_provider && Object.keys(data.models_by_provider).length > 0) {
-          setModelsByProvider(data.models_by_provider)
-        } else {
-          logger.error('No models_by_provider data received')
-          setError('No model data received from server')
-        }
-      } catch (error) {
-        if (error instanceof Error && error.name === 'CancellationError') {
-          return
-        }
-        const msg = error instanceof Error ? error.message : String(error)
-        const ctx = error instanceof ApiError ? `${error.status}: ${msg}` : error
-        logger.error('Failed to fetch models:', ctx)
-        setError(`Failed to fetch models: ${msg}`)
-      } finally {
-        setIsLoadingModels(false)
-        // Update ref after fetch completes
-        prevIsAuthenticatedRef.current = isAuthenticated
-      }
-    }
-
-    fetchModels()
+    fetchModelsRef.current()
   }, [isAuthenticated, user, setBrowserFingerprint, setError, setUsageCount])
 
   // Load default selection
@@ -1890,6 +1895,7 @@ export function MainPage() {
             onExpandModelsSection: () => setIsModelsHidden(false),
             onError: setError,
             onShowDisabledModelModal: info => setDisabledModelModalInfo(info),
+            onRetryModels: () => refetchModels(true),
           }}
           onCancel={handleCancel}
           showResults={!!(response || conversations.length > 0)}

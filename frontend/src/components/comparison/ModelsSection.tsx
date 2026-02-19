@@ -40,6 +40,8 @@ export interface ModelsSectionProps {
   onToggleAllForProvider: (provider: string) => void
   /** Callback to show an error message */
   onError: (message: string) => void
+  /** Callback to retry loading models (e.g. when connection fails) */
+  onRetryModels?: () => void
   /** Callback when a disabled/restricted model is clicked (for unregistered/free tiers) */
   onShowDisabledModelModal?: (info: {
     userTier: 'unregistered' | 'free'
@@ -73,6 +75,7 @@ export const ModelsSection: React.FC<ModelsSectionProps> = ({
   onToggleModel,
   onToggleAllForProvider,
   onError,
+  onRetryModels,
   onShowDisabledModelModal,
 }) => {
   const { isMobileLayout: _isMobileLayout } = useResponsive()
@@ -89,6 +92,16 @@ export const ModelsSection: React.FC<ModelsSectionProps> = ({
     return (
       <div className="error-message">
         <p>No models available. Please check the server connection.</p>
+        {onRetryModels && (
+          <button
+            type="button"
+            className="retry-models-btn"
+            onClick={onRetryModels}
+            aria-label="Retry loading models"
+          >
+            Retry
+          </button>
+        )}
       </div>
     )
   }
