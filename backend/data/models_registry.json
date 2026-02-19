@@ -72,6 +72,15 @@
         "provider": "Anthropic",
         "supports_web_search": true,
         "knowledge_cutoff": "May 2025"
+      },
+      {
+        "id": "anthropic/claude-sonnet-4.6",
+        "name": "Claude Sonnet 4.6",
+        "description": "Sonnet 4.6 is Anthropic's most capable Sonnet-class model yet, with frontier performance across coding, agents, and professional work.",
+        "category": "Language",
+        "provider": "Anthropic",
+        "supports_web_search": true,
+        "knowledge_cutoff": null
       }
     ],
     "Cohere": [
@@ -243,6 +252,15 @@
         "id": "minimax/minimax-m2",
         "name": "Minimax M2",
         "description": "A compact, high-efficiency model optimized for end-to-end coding and agentic workflow automation.",
+        "category": "Language",
+        "provider": "Minimax",
+        "supports_web_search": true,
+        "knowledge_cutoff": null
+      },
+      {
+        "id": "minimax/minimax-m2.5",
+        "name": "Minimax M2.5",
+        "description": "MiniMax-M2.5 is a SOTA large language model designed for real-world productivity.",
         "category": "Language",
         "provider": "Minimax",
         "supports_web_search": true,
@@ -659,6 +677,7 @@
     "meta-llama/llama-4-scout",
     "microsoft/phi-4-reasoning-plus",
     "microsoft/wizardlm-2-8x22b",
+    "minimax/minimax-m2.5",
     "mistralai/devstral-medium",
     "mistralai/devstral-small",
     "mistralai/mistral-medium-3.1",

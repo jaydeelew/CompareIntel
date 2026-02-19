@@ -114,6 +114,7 @@ Thumbs.db
 *.swo
 *~
 *.bak
+*.backup
 
 # Security
 *.pem
