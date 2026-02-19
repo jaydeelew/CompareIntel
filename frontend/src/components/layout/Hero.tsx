@@ -6,6 +6,7 @@ interface CapabilityTileProps {
   id: string
   icon: ReactNode
   title: string
+  backTitle: string
   description: string
   tooltipText: string
   backImage: string
@@ -19,6 +20,7 @@ function CapabilityTile({
   id,
   icon,
   title,
+  backTitle,
   description,
   tooltipText,
   backImage,
@@ -42,7 +44,7 @@ function CapabilityTile({
           <div className={`capability-tooltip ${isVisible ? 'visible' : ''}`}>{tooltipText}</div>
         </div>
         <div className="capability-tile-back" data-tile={id}>
-          <p className="capability-tile-back-label">{title}</p>
+          <p className="capability-tile-back-label">{backTitle}</p>
           <div className="capability-tile-back-image-wrap">
             <img src={backImage} alt={`${title} example`} className="capability-tile-back-image" />
           </div>
@@ -166,9 +168,10 @@ export function Hero({ visibleTooltip, onCapabilityTileTap, children }: HeroProp
                 <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
               </svg>
             }
-            title="Natural Language COMPARISON"
+            title="Natural Language"
+            backTitle="Natural Language COMPARISON"
             description="Compare conversational responses"
-            tooltipText="Natural Language COMPARISON: Compare conversational responses"
+            tooltipText="Natural Language: Compare conversational responses"
             backImage="/images/tile-natural-language.png"
             backText="Ask any question and instantly compare how each model responds — notice the differences in tone, detail, and perspective."
             isVisible={visibleTooltip === 'natural-language'}
@@ -193,9 +196,10 @@ export function Hero({ visibleTooltip, onCapabilityTileTap, children }: HeroProp
                 <polyline points="8 6 2 12 8 18"></polyline>
               </svg>
             }
-            title="Code Generation COMPARISON"
+            title="Code Generation"
+            backTitle="Code Generation COMPARISON"
             description="Evaluate programming capabilities"
-            tooltipText="Code Generation COMPARISON: Evaluate programming capabilities"
+            tooltipText="Code Generation: Evaluate programming capabilities"
             backImage="/images/tile-code-generation.png"
             backText="Submit a coding prompt and compare the generated implementations — evaluate syntax, style, and correctness side by side."
             isVisible={visibleTooltip === 'code-generation'}
@@ -219,9 +223,10 @@ export function Hero({ visibleTooltip, onCapabilityTileTap, children }: HeroProp
                 <path d="M3 12h3l3 7 5-14h7"></path>
               </svg>
             }
-            title="Formatted Math COMPARISON"
+            title="Formatted Math"
+            backTitle="Formatted Math COMPARISON"
             description="Render math equations beautifully"
-            tooltipText="Formatted Math COMPARISON: Render mathematical equations beautifully"
+            tooltipText="Formatted Math: Render mathematical equations beautifully"
             backImage="/images/tile-formatted-math.png"
             backText="Request a derivation or formula and see how each model renders mathematical notation — compare clarity and step-by-step accuracy."
             isVisible={visibleTooltip === 'formatted-math'}
