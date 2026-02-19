@@ -612,6 +612,15 @@
         "knowledge_cutoff": "April 2025"
       },
       {
+        "id": "qwen/qwen3-max-thinking",
+        "name": "Qwen3 Max Thinking",
+        "description": "Qwen3-Max-Thinking is the flagship reasoning model in the Qwen3 series, designed for high-stakes cognitive tasks that require deep, multi-step reasoning.",
+        "category": "Language",
+        "provider": "Qwen",
+        "supports_web_search": true,
+        "knowledge_cutoff": null
+      },
+      {
         "id": "qwen/qwen3-next-80b-a3b-thinking",
         "name": "Qwen3 Next 80B A3B Thinking",
         "description": "A reasoning-first model with structured chain-of-thought traces for complex problem-solving.",
