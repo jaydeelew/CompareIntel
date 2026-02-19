@@ -289,8 +289,8 @@ export default defineConfig({
     target: 'esnext',
     // Minify with esbuild (faster than terser, produces smaller bundles)
     minify: 'esbuild',
-    // Enable source maps for production debugging (required for Lighthouse)
-    sourcemap: true,
+    // Disable source maps in production to avoid exposing source code
+    sourcemap: false,
     // Enable CSS code splitting and minification
     cssCodeSplit: true,
     cssMinify: true,
