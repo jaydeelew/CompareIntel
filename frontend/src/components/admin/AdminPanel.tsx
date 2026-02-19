@@ -183,10 +183,15 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
     const load = async () => {
       setLoading(true)
       setError(null)
+      const ADMIN_LOAD_TIMEOUT_MS = 20000
       try {
-        await Promise.all([fetchStats(), fetchAppSettings()])
+        const timeoutPromise = new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error('Request timed out')), ADMIN_LOAD_TIMEOUT_MS)
+        )
+        await Promise.race([Promise.all([fetchStats(), fetchAppSettings()]), timeoutPromise])
       } catch (err) {
         logger.error('Error loading admin data:', err)
+        setError(err instanceof Error ? err.message : 'Failed to load admin data')
       } finally {
         setLoading(false)
       }

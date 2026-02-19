@@ -290,6 +290,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     authInitializedRef.current = true
 
     const abortController = new AbortController()
+    const AUTH_TIMEOUT_MS = 15000
+
+    const timeoutId = setTimeout(() => {
+      abortController.abort()
+      setIsLoading(false)
+      setUser(null)
+    }, AUTH_TIMEOUT_MS)
 
     const initAuth = async () => {
       try {
@@ -302,6 +309,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         if (abortController.signal.aborted) return
 
         if (response.ok) {
+          clearTimeout(timeoutId)
           const userData = await response.json()
           if (abortController.signal.aborted) return
 
@@ -327,20 +335,25 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             if (abortController.signal.aborted) return
 
             if (retryResponse.ok) {
+              clearTimeout(timeoutId)
               const userData = await retryResponse.json()
               if (abortController.signal.aborted) return
 
               setUser(userData)
+              setIsLoading(false)
             }
           }
-          // If refresh failed, user remains null (not authenticated)
+          // If refresh failed or retry didn't return user, user remains null
+          clearTimeout(timeoutId)
           setIsLoading(false)
         } else {
           // Other error, user not authenticated
+          clearTimeout(timeoutId)
           setIsLoading(false)
         }
       } catch (error) {
-        // Ignore abort errors, handle other errors silently
+        clearTimeout(timeoutId)
+        // Ignore abort errors (from cleanup or timeout - timeout handler sets loading false)
         if (error instanceof Error && error.name === 'AbortError') {
           return
         }
@@ -352,7 +365,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     initAuth()
 
     return () => {
+      clearTimeout(timeoutId)
       abortController.abort()
+      // Reset so initAuth can run again on remount (e.g. React StrictMode double-mount)
+      // Without this, the first run gets aborted and the second run exits early, leaving isLoading stuck true
+      authInitializedRef.current = false
     }
   }, []) // Only run once on mount
 
