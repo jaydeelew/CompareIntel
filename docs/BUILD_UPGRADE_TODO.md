@@ -36,10 +36,10 @@
 ---
 
 ### 3. Run Containers as Non-Root
-- [ ] **Frontend (prod stage):** Add `USER nginx` (or appropriate user) before CMD in `frontend/Dockerfile` prod stage. Verify nginx:alpine has an nginx user.
+- [x] **Frontend (prod stage):** Add `USER nginx` (or appropriate user) before CMD in `frontend/Dockerfile` prod stage. Verify nginx:alpine has an nginx user.
 - [x] **Backend:** Create a non-root user in `backend/Dockerfile`, switch to it before CMD, ensure entrypoint.sh and app dirs are readable.
 
-**Notes when complete:** Backend runs as `appuser` (uid 1000). Frontend/nginx skipped—requires listen port change (80→8080) for non-root binding.
+**Notes when complete:** Backend runs as `appuser` (uid 1000). Frontend prod stage now runs as `USER nginx`; nginx listens on 8080 (non-privileged port), pid/logs use /tmp and /dev/stdout.
 
 ---
 
@@ -118,7 +118,7 @@ Examples:
 
 | Date | Items Completed | Commit |
 |------|-----------------|--------|
-| 2025-02-19 | 1, 2, 3 (backend), 5, 7, 8, 9 | (pending) |
+| 2025-02-19 | 1, 2, 3 (backend+frontend), 5, 7, 8, 9 | (pending) |
 
 ---
 

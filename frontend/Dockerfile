@@ -34,8 +34,9 @@ COPY . .
 EXPOSE 5173
 CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
 
-# For production
+# For production (runs as non-root nginx user)
 FROM nginx:alpine as prod
 COPY --from=build /app/dist /usr/share/nginx/html
-EXPOSE 80
+EXPOSE 8080
+USER nginx
 CMD ["nginx", "-g", "daemon off;"]

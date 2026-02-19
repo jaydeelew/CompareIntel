@@ -58,7 +58,7 @@ services:
       dockerfile: Dockerfile
       target: prod
     ports:
-      - "8080:80"
+      - "8080:8080"
     volumes:
       - ./nginx/nginx.prod.conf:/etc/nginx/nginx.conf:ro
     depends_on:
