@@ -4,10 +4,10 @@ Pydantic schemas for request/response validation.
 This module defines all data models for API requests and responses.
 """
 
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any, Literal
 
-from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_serializer, field_validator
 
 
 class UserRegister(BaseModel):
@@ -398,6 +398,15 @@ class AdminUserResponse(BaseModel):
     last_access: datetime | None = None  # Last time user accessed the website
 
     model_config = ConfigDict(from_attributes=True)
+
+    @field_serializer("created_at", "updated_at", "last_access")
+    def serialize_datetime_utc(self, dt: datetime | None) -> str | None:
+        """Serialize datetimes as ISO8601 with explicit UTC (Z) so the frontend parses correctly."""
+        if dt is None:
+            return None
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=UTC)
+        return dt.isoformat().replace("+00:00", "Z")
 
 
 class AdminUserCreate(BaseModel):

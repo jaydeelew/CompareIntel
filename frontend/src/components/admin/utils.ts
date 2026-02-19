@@ -1,5 +1,14 @@
+/**
+ * Format a UTC date string for display in CST (America/Chicago).
+ * If the string lacks timezone info (Z or +00:00), it is treated as UTC
+ * since the backend stores all timestamps in UTC.
+ */
 export function formatDateToCST(utcDateString: string): string {
-  const date = new Date(utcDateString)
+  // Ensure UTC interpretation: ISO strings without timezone are parsed as local time in JS.
+  // Append Z if missing so the frontend consistently treats backend timestamps as UTC.
+  const hasTimezone = /Z$|[-+]\d{2}:?\d{2}$/.test(utcDateString.trim())
+  const normalized = hasTimezone ? utcDateString : utcDateString.replace(/\.\d+Z?$/, '') + 'Z'
+  const date = new Date(normalized)
   const formatter = new Intl.DateTimeFormat('en-US', {
     timeZone: 'America/Chicago',
     year: 'numeric',
