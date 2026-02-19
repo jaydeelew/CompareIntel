@@ -21,12 +21,16 @@ from sqlalchemy.orm import Session
 from ...config import settings
 from ...database import get_db
 from ...dependencies import require_admin_role
-from ...llm.registry import get_registry_path, load_registry, reload_registry, save_registry
+from ...llm.registry import (
+    get_registry_path,
+    load_registry,
+    reload_registry,
+    save_registry,
+    sort_models_by_tier_and_version,
+)
 from ...model_runner import (
-    FREE_TIER_MODELS,
     MODELS_BY_PROVIDER,
     OPENROUTER_MODELS,
-    UNREGISTERED_TIER_MODELS,
     client,
     refresh_model_token_limits,
 )
@@ -148,50 +152,6 @@ async def classify_model_by_pricing(model_id: str, model_data: dict[str, Any] | 
     if avg_cost < 3.0:
         return "free"
     return "paid"
-
-
-def get_model_tier(model_id: str) -> int:
-    """Get tier classification: 0=unregistered, 1=free, 2=paid."""
-    if model_id in UNREGISTERED_TIER_MODELS:
-        return 0
-    if model_id in FREE_TIER_MODELS:
-        return 1
-    return 2
-
-
-def extract_version_number(model_name: str) -> tuple:
-    """Extract version numbers from model name for sorting."""
-    version_patterns = [
-        r"(\d+)\.(\d+)\.(\d+)",
-        r"(\d+)\.(\d+)",
-        r"(\d+)",
-    ]
-
-    for pattern in version_patterns:
-        match = re.search(pattern, model_name)
-        if match:
-            groups = match.groups()
-            if len(groups) == 3:
-                return (int(groups[0]), int(groups[1]), int(groups[2]))
-            if len(groups) == 2:
-                return (int(groups[0]), int(groups[1]), 0)
-            if len(groups) == 1:
-                return (int(groups[0]), 0, 0)
-
-    return (0, 0, 0)
-
-
-def sort_models_by_tier_and_version(models: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    """Sort models by tier and version."""
-
-    def sort_key(model: dict[str, Any]) -> tuple:
-        model_id = model.get("id", "")
-        model_name = model.get("name", "")
-        tier = get_model_tier(model_id)
-        version = extract_version_number(model_name)
-        return (tier, version, model_name)
-
-    return sorted(models, key=sort_key)
 
 
 def _sort_providers_alphabetically(mbp: dict[str, list]) -> dict[str, list]:
@@ -390,10 +350,13 @@ async def add_model(
                 status_code=400, detail=f"Model {model_id} already exists in {provider_name}"
             )
         mbp[provider_name].append(new_model)
-        mbp[provider_name] = sort_models_by_tier_and_version(mbp[provider_name])
 
         model_data = await fetch_model_data_from_openrouter(model_id)
         tier_classification = await classify_model_by_pricing(model_id, model_data)
+        mbp[provider_name] = sort_models_by_tier_and_version(
+            mbp[provider_name],
+            tier_overrides={model_id: tier_classification},
+        )
 
         unregistered = list(registry["unregistered_tier_models"])
         free_additional = list(registry["free_tier_additional_models"])
@@ -612,7 +575,6 @@ async def add_model_stream(
             if provider_name not in mbp:
                 mbp[provider_name] = []
             mbp[provider_name].append(new_model)
-            mbp[provider_name] = sort_models_by_tier_and_version(mbp[provider_name])
 
             try:
                 yield f"data: {json.dumps({'type': 'progress', 'stage': 'classifying', 'message': 'Classifying model tier based on pricing...', 'progress': 25})}\n\n"
@@ -624,6 +586,11 @@ async def add_model_stream(
                 tier_classification = await classify_model_by_pricing(model_id, model_data)
             except disconnect_exceptions:
                 raise
+
+            mbp[provider_name] = sort_models_by_tier_and_version(
+                mbp[provider_name],
+                tier_overrides={model_id: tier_classification},
+            )
 
             unregistered = list(registry["unregistered_tier_models"])
             free_additional = list(registry["free_tier_additional_models"])

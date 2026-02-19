@@ -14,6 +14,7 @@ from .registry import (
     filter_models_by_tier,
     is_model_available_for_tier,
     reload_registry,
+    sort_models_by_tier_and_version,
 )
 from .streaming import (
     FETCH_URL_TOOL,
@@ -72,6 +73,7 @@ __all__ = [
     "get_model_token_limits_from_openrouter",
     "is_model_available_for_tier",
     "is_time_sensitive_query",
+    "sort_models_by_tier_and_version",
     "preload_model_token_limits",
     "reload_registry",
     "refresh_model_token_limits",

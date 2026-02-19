@@ -3,6 +3,7 @@ Model registry: JSON loading, tier filtering, OpenAI client.
 """
 
 import json
+import re
 import sys
 from pathlib import Path
 from typing import Any
@@ -91,6 +92,58 @@ def reload_registry() -> None:
         mr_mod.UNREGISTERED_TIER_MODELS = UNREGISTERED_TIER_MODELS
         mr_mod.FREE_TIER_MODELS = FREE_TIER_MODELS
         mr_mod.OPENROUTER_MODELS = OPENROUTER_MODELS
+
+
+def _get_model_tier_for_sort(model_id: str) -> int:
+    """Get tier classification for sorting: 0=unregistered, 1=free, 2=paid."""
+    if model_id in UNREGISTERED_TIER_MODELS:
+        return 0
+    if model_id in FREE_TIER_MODELS:
+        return 1
+    return 2
+
+
+def _extract_version_number(model_name: str) -> tuple[int, int, int]:
+    """Extract version numbers from model name for sorting. Returns (major, minor, patch)."""
+    version_patterns = [
+        r"(\d+)\.(\d+)\.(\d+)",
+        r"(\d+)\.(\d+)",
+        r"(\d+)",
+    ]
+    for pattern in version_patterns:
+        match = re.search(pattern, model_name)
+        if match:
+            groups = match.groups()
+            if len(groups) == 3:
+                return (int(groups[0]), int(groups[1]), int(groups[2]))
+            if len(groups) == 2:
+                return (int(groups[0]), int(groups[1]), 0)
+            if len(groups) == 1:
+                return (int(groups[0]), 0, 0)
+    return (0, 0, 0)
+
+
+def sort_models_by_tier_and_version(
+    models: list[dict[str, Any]],
+    tier_overrides: dict[str, str] | None = None,
+) -> list[dict[str, Any]]:
+    """Sort models by tier (Unregistered, Free, Premium) then by version ascending.
+
+    tier_overrides: Optional map of model_id -> 'unregistered'|'free'|'paid' for models
+    not yet in the registry (e.g., newly added).
+    """
+    tier_overrides = tier_overrides or {}
+    tier_order = {"unregistered": 0, "free": 1, "paid": 2}
+
+    def sort_key(model: dict[str, Any]) -> tuple:
+        model_id = model.get("id", "")
+        model_name = model.get("name", "")
+        tier = tier_overrides.get(model_id)
+        tier_num = tier_order[tier] if tier is not None else _get_model_tier_for_sort(model_id)
+        version = _extract_version_number(model_name)
+        return (tier_num, version, model_name)
+
+    return sorted(models, key=sort_key)
 
 
 def is_model_available_for_tier(model_id: str, tier: str, is_trial_active: bool = False) -> bool:

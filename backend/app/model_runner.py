@@ -31,6 +31,7 @@ from app.llm import (
     is_time_sensitive_query,
     preload_model_token_limits,
     refresh_model_token_limits,
+    sort_models_by_tier_and_version,
     test_connection_quality,
 )
 from app.llm.tokens import TokenUsage
@@ -65,5 +66,6 @@ __all__ = [
     "is_time_sensitive_query",
     "preload_model_token_limits",
     "refresh_model_token_limits",
+    "sort_models_by_tier_and_version",
     "test_connection_quality",
 ]

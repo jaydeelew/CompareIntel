@@ -121,9 +121,12 @@ async def get_available_models(
                 model["max_input_tokens"] = 8192
                 model["max_output_tokens"] = 8192
 
+        from ...model_runner import sort_models_by_tier_and_version
+
         models_by_provider = {}
         for provider, models in MODELS_BY_PROVIDER.items():
-            provider_models = filter_models_by_tier(models, tier, is_trial_active)
+            sorted_models = sort_models_by_tier_and_version(models)
+            provider_models = filter_models_by_tier(sorted_models, tier, is_trial_active)
             if provider_models:
                 seen_ids: set[str] = set()
                 deduped_models = []

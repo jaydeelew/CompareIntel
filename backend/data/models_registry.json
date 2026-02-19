@@ -269,18 +269,18 @@
     ],
     "Minimax": [
       {
-        "id": "minimax/minimax-m2",
-        "name": "Minimax M2",
-        "description": "A compact, high-efficiency model optimized for end-to-end coding and agentic workflow automation.",
+        "id": "minimax/minimax-m2.5",
+        "name": "Minimax M2.5",
+        "description": "MiniMax-M2.5 is a SOTA large language model designed for real-world productivity.",
         "category": "Language",
         "provider": "Minimax",
         "supports_web_search": true,
         "knowledge_cutoff": null
       },
       {
-        "id": "minimax/minimax-m2.5",
-        "name": "Minimax M2.5",
-        "description": "MiniMax-M2.5 is a SOTA large language model designed for real-world productivity.",
+        "id": "minimax/minimax-m2",
+        "name": "Minimax M2",
+        "description": "A compact, high-efficiency model optimized for end-to-end coding and agentic workflow automation.",
         "category": "Language",
         "provider": "Minimax",
         "supports_web_search": true,
@@ -421,18 +421,18 @@
         "knowledge_cutoff": "October 2023"
       },
       {
-        "id": "openai/gpt-4o-mini",
-        "name": "Gpt 4o Mini",
-        "description": "GPT-4o mini is OpenAI's newest model after [GPT-4 Omni](/models/openai/gpt-4o), supporting both text and image inputs with text outputs.",
+        "id": "openai/gpt-4o",
+        "name": "GPT-4o",
+        "description": "An omnimodal model supporting text and image inputs with fast, intelligent multimodal responses.",
         "category": "Language",
         "provider": "OpenAI",
         "supports_web_search": true,
         "knowledge_cutoff": "October 2023"
       },
       {
-        "id": "openai/gpt-4o",
-        "name": "GPT-4o",
-        "description": "An omnimodal model supporting text and image inputs with fast, intelligent multimodal responses.",
+        "id": "openai/gpt-4o-mini",
+        "name": "Gpt 4o Mini",
+        "description": "GPT-4o mini is OpenAI's newest model after [GPT-4 Omni](/models/openai/gpt-4o), supporting both text and image inputs with text outputs.",
         "category": "Language",
         "provider": "OpenAI",
         "supports_web_search": true,
@@ -649,20 +649,20 @@
         "knowledge_cutoff": "March 2025"
       },
       {
-        "id": "x-ai/grok-4.1-fast",
-        "name": "Grok 4.1 Fast",
-        "description": "Grok 4.1 Fast is xAI's best agentic tool calling model that shines in real-world use cases like customer support and deep research.",
-        "category": "Language",
-        "provider": "xAI",
-        "knowledge_cutoff": "August 2025"
-      },
-      {
         "id": "x-ai/grok-4",
         "name": "Grok 4",
         "description": "xAI's flagship reasoning model with 256k context for complex analysis and generation tasks.",
         "category": "Language",
         "provider": "xAI",
         "knowledge_cutoff": "June 2025"
+      },
+      {
+        "id": "x-ai/grok-4.1-fast",
+        "name": "Grok 4.1 Fast",
+        "description": "Grok 4.1 Fast is xAI's best agentic tool calling model that shines in real-world use cases like customer support and deep research.",
+        "category": "Language",
+        "provider": "xAI",
+        "knowledge_cutoff": "August 2025"
       },
       {
         "id": "x-ai/grok-5",
@@ -687,15 +687,6 @@
     ],
     "ZAi": [
       {
-        "id": "z-ai/glm-4.7",
-        "name": "Glm 4.7",
-        "description": "GLM-4.7 is Z.AI's latest flagship model, featuring upgrades in two key areas: enhanced programming capabilities and more stable multi-step reasoning/execution.",
-        "category": "Language",
-        "provider": "ZAi",
-        "supports_web_search": true,
-        "knowledge_cutoff": "June 2025"
-      },
-      {
         "id": "z-ai/glm-5",
         "name": "Glm 5",
         "description": "GLM-5 is Z.ai’s flagship open-source foundation model engineered for complex systems design and long-horizon agent workflows.",
@@ -703,6 +694,15 @@
         "provider": "ZAi",
         "supports_web_search": true,
         "knowledge_cutoff": null
+      },
+      {
+        "id": "z-ai/glm-4.7",
+        "name": "Glm 4.7",
+        "description": "GLM-4.7 is Z.AI's latest flagship model, featuring upgrades in two key areas: enhanced programming capabilities and more stable multi-step reasoning/execution.",
+        "category": "Language",
+        "provider": "ZAi",
+        "supports_web_search": true,
+        "knowledge_cutoff": "June 2025"
       }
     ]
   },
