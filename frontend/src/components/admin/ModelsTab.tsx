@@ -200,7 +200,9 @@ const ModelsTab: React.FC<ModelsTabProps> = ({
       addModelAbortControllerRef.current = null
     }
     if (addModelReaderRef.current) {
-      addModelReaderRef.current.cancel()
+      addModelReaderRef.current.cancel().catch(() => {
+        // Intentionally ignored: stream was aborted, rejection is expected
+      })
       addModelReaderRef.current = null
     }
     setModelProgress(null)

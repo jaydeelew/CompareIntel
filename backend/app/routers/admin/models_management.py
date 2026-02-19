@@ -510,11 +510,12 @@ async def add_model_stream(
             except disconnect_exceptions:
                 raise
 
-            for provider, models in MODELS_BY_PROVIDER.items():
+            fresh_registry = load_registry()
+            for provider, models in fresh_registry.get("models_by_provider", {}).items():
                 for model in models:
-                    if model["id"] == model_id:
+                    if model.get("id") == model_id:
                         try:
-                            yield f"data: {json.dumps({'type': 'error', 'message': f'Model {model_id} already exists in registry'})}\n\n"
+                            yield f"data: {json.dumps({'type': 'error', 'message': f'Model {model_id} already exists in registry. You can update its knowledge cutoff in the models list below.'})}\n\n"
                         except disconnect_exceptions:
                             raise
                         return
@@ -629,79 +630,104 @@ async def add_model_stream(
             except disconnect_exceptions:
                 raise
 
+            def _has_model_config(mid: str, path: Path) -> bool:
+                """Check if model already has a renderer configuration."""
+                if not path.exists():
+                    return False
+                try:
+                    with open(path, encoding="utf-8") as f:
+                        configs = json.load(f)
+                except Exception:
+                    return False
+                if isinstance(configs, list):
+                    return any(c.get("modelId") == mid for c in configs if isinstance(c, dict))
+                if isinstance(configs, dict):
+                    return mid in configs
+                return False
+
             backend_dir = Path(__file__).parent.parent.parent.parent
             script_path = backend_dir / "scripts" / "setup_model_renderer.py"
 
-            process = await asyncio.create_subprocess_exec(
-                sys.executable,
-                str(script_path),
-                model_id,
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE,
-                cwd=str(backend_dir),
-            )
-
-            stderr_lines = []
-
-            while True:
+            if _has_model_config(model_id, config_path):
                 try:
-                    line_bytes = await process.stdout.readline()
+                    yield f"data: {json.dumps({'type': 'progress', 'stage': 'setup', 'message': 'Renderer config already exists, skipping setup...', 'progress': 90})}\n\n"
                 except disconnect_exceptions:
-                    if process:
-                        try:
-                            process.kill()
-                        except Exception:
-                            pass
                     raise
-                if not line_bytes:
-                    break
+                process = None
+            else:
+                process = await asyncio.create_subprocess_exec(
+                    sys.executable,
+                    str(script_path),
+                    model_id,
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.PIPE,
+                    cwd=str(backend_dir),
+                )
 
-                line_str = line_bytes.decode("utf-8").strip()
-                if line_str.startswith("PROGRESS:"):
+            if process is not None:
+                stderr_lines = []
+
+                while True:
                     try:
-                        progress_json = json.loads(line_str[9:])
-                        stage = progress_json.get("stage", "processing")
-                        message = progress_json.get("message", "Processing...")
-                        script_progress = progress_json.get("progress", 0)
+                        line_bytes = await process.stdout.readline()
+                    except disconnect_exceptions:
+                        if process:
+                            try:
+                                process.kill()
+                            except Exception:
+                                pass
+                        raise
+                    if not line_bytes:
+                        break
 
-                        if stage == "starting":
-                            mapped_progress = 30
-                        elif stage == "collecting":
-                            mapped_progress = 30 + (script_progress * 0.3)
-                        elif stage == "analyzing":
-                            mapped_progress = 60 + (script_progress * 0.2)
-                        elif stage == "generating":
-                            mapped_progress = 80 + (script_progress * 0.1)
-                        elif stage == "saving":
-                            mapped_progress = 90 + (script_progress * 0.05)
-                        else:
-                            mapped_progress = 30 + (script_progress * 0.65)
-
+                    line_str = line_bytes.decode("utf-8").strip()
+                    if line_str.startswith("PROGRESS:"):
                         try:
-                            yield f"data: {json.dumps({'type': 'progress', 'stage': stage, 'message': message, 'progress': mapped_progress})}\n\n"
-                        except disconnect_exceptions:
-                            if process:
-                                try:
-                                    process.kill()
-                                except Exception:
-                                    pass
-                            raise
-                    except json.JSONDecodeError:
-                        pass
+                            progress_json = json.loads(line_str[9:])
+                            stage = progress_json.get("stage", "processing")
+                            message = progress_json.get("message", "Processing...")
+                            script_progress = progress_json.get("progress", 0)
 
-            stderr_data = await process.stderr.read()
-            if stderr_data:
-                stderr_lines = stderr_data.decode("utf-8").split("\n")
+                            if stage == "starting":
+                                mapped_progress = 30
+                            elif stage == "collecting":
+                                mapped_progress = 30 + (script_progress * 0.3)
+                            elif stage == "analyzing":
+                                mapped_progress = 60 + (script_progress * 0.2)
+                            elif stage == "generating":
+                                mapped_progress = 80 + (script_progress * 0.1)
+                            elif stage == "saving":
+                                mapped_progress = 90 + (script_progress * 0.05)
+                            else:
+                                mapped_progress = 30 + (script_progress * 0.65)
 
-            return_code = await process.wait()
+                            try:
+                                yield f"data: {json.dumps({'type': 'progress', 'stage': stage, 'message': message, 'progress': mapped_progress})}\n\n"
+                            except disconnect_exceptions:
+                                if process:
+                                    try:
+                                        process.kill()
+                                    except Exception:
+                                        pass
+                                raise
+                        except json.JSONDecodeError:
+                            pass
 
-            if return_code != 0:
-                error_msg = "\n".join(stderr_lines[-10:])[:500] if stderr_lines else "Unknown error"
-                try:
-                    yield f"data: {json.dumps({'type': 'error', 'message': f'Renderer config generation failed: {error_msg}'})}\n\n"
-                except disconnect_exceptions:
-                    raise
-                return
+                stderr_data = await process.stderr.read()
+                if stderr_data:
+                    stderr_lines = stderr_data.decode("utf-8").split("\n")
+
+                return_code = await process.wait()
+
+                if return_code != 0:
+                    error_msg = (
+                        "\n".join(stderr_lines[-10:])[:500] if stderr_lines else "Unknown error"
+                    )
+                    try:
+                        yield f"data: {json.dumps({'type': 'error', 'message': f'Renderer config generation failed: {error_msg}'})}\n\n"
+                    except disconnect_exceptions:
+                        raise
+                    return
 
             try:
                 yield f"data: {json.dumps({'type': 'progress', 'stage': 'finalizing', 'message': 'Finalizing model addition...', 'progress': 95})}\n\n"
