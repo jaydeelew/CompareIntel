@@ -194,6 +194,14 @@ def sort_models_by_tier_and_version(models: list[dict[str, Any]]) -> list[dict[s
     return sorted(models, key=sort_key)
 
 
+def _sort_providers_alphabetically(mbp: dict[str, list]) -> dict[str, list]:
+    """Return a new dict with providers sorted alphabetically (case-insensitive).
+    Used when adding a model that introduces a new provider, so the model provider
+    dropdown (Select Models for Comparison) displays providers in alphabetical order.
+    """
+    return dict(sorted(mbp.items(), key=lambda x: x[0].lower()))
+
+
 @router.get("/models")
 async def get_admin_models(
     current_user: User = Depends(require_admin_role("admin")),
@@ -399,6 +407,10 @@ async def add_model(
 
         registry["unregistered_tier_models"] = unregistered
         registry["free_tier_additional_models"] = free_additional
+        # Sort providers alphabetically so new providers appear in order in the model dropdown
+        registry["models_by_provider"] = _sort_providers_alphabetically(
+            registry["models_by_provider"]
+        )
         save_registry(registry)
         reload_registry()
 
@@ -623,6 +635,10 @@ async def add_model_stream(
                 free_additional.sort()
             registry["unregistered_tier_models"] = unregistered
             registry["free_tier_additional_models"] = free_additional
+            # Sort providers alphabetically so new providers appear in order in the model dropdown
+            registry["models_by_provider"] = _sort_providers_alphabetically(
+                registry["models_by_provider"]
+            )
 
             save_registry(registry)
             reload_registry()

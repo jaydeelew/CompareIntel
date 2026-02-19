@@ -812,9 +812,9 @@
    ═══════════════════════════════════════════════════════════ */
 
 .error-message {
-  background: rgba(239, 68, 68, 0.1);
-  border: 1px solid rgba(239, 68, 68, 0.3);
-  color: #fca5a5;
+  background: var(--error-message-bg);
+  border: 1px solid var(--error-message-border);
+  color: var(--error-message-text);
   padding: 1rem;
   border-radius: var(--radius-xl);
   margin-bottom: 1rem;

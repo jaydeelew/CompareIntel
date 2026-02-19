@@ -171,11 +171,11 @@ button:hover {
   box-shadow: var(--shadow-md);
 }
 
-/* Error Messages - Dark Theme */
+/* Error Messages - theme-aware contrast */
 .error-message {
-  background: rgba(239, 68, 68, 0.1);
-  border: 1px solid rgba(239, 68, 68, 0.3);
-  color: #fca5a5;
+  background: var(--error-message-bg);
+  border: 1px solid var(--error-message-border);
+  color: var(--error-message-text);
   padding: 1.5rem;
   border-radius: var(--radius-lg);
   margin-bottom: 2rem;

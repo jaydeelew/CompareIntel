@@ -29,6 +29,11 @@
   --error-color: #ef4444;
   --info-color: #06b6d4;
 
+  /* Error message - theme-aware for WCAG contrast */
+  --error-message-bg: rgba(239, 68, 68, 0.2);
+  --error-message-text: #fecaca;
+  --error-message-border: rgba(239, 68, 68, 0.45);
+
   /* ═══════════════════════════════════════════════════════════
      BACKGROUND SYSTEM - Rich Dark Surfaces
      ═══════════════════════════════════════════════════════════ */
@@ -315,6 +320,11 @@
   --warning-color: #f59e0b;
   --error-color: #ef4444;
   --info-color: #0ea5e9;
+
+  /* Error message - dark text on light bg for light theme */
+  --error-message-bg: #fef2f2;
+  --error-message-text: #b91c1c;
+  --error-message-border: rgba(239, 68, 68, 0.5);
 
   /* Backgrounds - Light surfaces */
   --bg-primary: #ffffff;
