@@ -326,6 +326,16 @@
   pointer-events: auto;
 }
 
+.capability-tile-back-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  flex-shrink: 0;
+  width: 100%;
+  font-size: 0.45rem;
+}
+
 .capability-tile-back-label {
   font-size: 0.45rem;
   font-weight: var(--font-semibold);
@@ -335,6 +345,49 @@
   letter-spacing: 0.08em;
   flex-shrink: 0;
   line-height: 1;
+}
+
+/* Enlarge button - to the right of the comparison title when tile is flipped */
+.capability-tile-enlarge-btn {
+  flex-shrink: 0;
+  width: 1.1em;
+  height: 1.1em;
+  min-width: 1.1em;
+  min-height: 1.1em;
+  padding: 0;
+  font-size: inherit;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 4px;
+  color: #fff;
+  cursor: pointer;
+  transition:
+    background 0.2s,
+    border-color 0.2s;
+}
+
+.capability-tile-enlarge-btn:hover {
+  background: rgba(255, 255, 255, 0.35);
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+[data-theme='light'] .capability-tile-enlarge-btn {
+  background: rgba(37, 99, 235, 0.15);
+  border-color: rgba(37, 99, 235, 0.3);
+  color: var(--primary-color);
+}
+
+[data-theme='light'] .capability-tile-enlarge-btn:hover {
+  background: rgba(37, 99, 235, 0.25);
+  border-color: rgba(37, 99, 235, 0.5);
+}
+
+.capability-tile-enlarge-btn svg {
+  width: 75%;
+  height: 75%;
 }
 
 .capability-tile-back-image-wrap {
@@ -397,6 +450,38 @@
   .capability-tile-back-image,
 [data-theme='light'] .capability-tile-back[data-tile='formatted-math'] .capability-tile-back-image {
   filter: brightness(1) contrast(1.02);
+}
+
+/* Image lightbox - enlarge capability tile images when flipped */
+.capability-tile-image-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-modal);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  cursor: pointer;
+  animation: capability-tile-lightbox-fade-in 0.2s ease-out;
+}
+
+@keyframes capability-tile-lightbox-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.capability-tile-image-lightbox-img {
+  max-width: 90vw;
+  max-height: 90vh;
+  object-fit: contain;
+  cursor: pointer;
+  border-radius: 12px;
+  box-shadow: 0 25px 80px rgba(0, 0, 0, 0.5);
+  pointer-events: none;
 }
 
 [data-theme='light'] .capability-tile.flipped {
@@ -1604,6 +1689,10 @@
     border-radius: 18px;
     box-shadow: none;
     justify-content: flex-start;
+  }
+
+  .capability-tile.flipped .capability-tile-back-label-row {
+    font-size: 0.7rem;
   }
 
   .capability-tile.flipped .capability-tile-back-label {

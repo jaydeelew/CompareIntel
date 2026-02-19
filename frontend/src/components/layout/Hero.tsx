@@ -14,6 +14,7 @@ interface CapabilityTileProps {
   isVisible: boolean
   isFlipped: boolean
   onTileClick: (id: string) => void
+  onImageEnlarge?: (src: string) => void
 }
 
 function CapabilityTile({
@@ -28,10 +29,16 @@ function CapabilityTile({
   isVisible,
   isFlipped,
   onTileClick,
+  onImageEnlarge,
 }: CapabilityTileProps) {
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation()
     onTileClick(id)
+  }
+
+  const handleEnlargeClick = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    onImageEnlarge?.(backImage)
   }
 
   return (
@@ -44,7 +51,35 @@ function CapabilityTile({
           <div className={`capability-tooltip ${isVisible ? 'visible' : ''}`}>{tooltipText}</div>
         </div>
         <div className="capability-tile-back" data-tile={id}>
-          <p className="capability-tile-back-label">{backTitle}</p>
+          <div className="capability-tile-back-label-row">
+            <p className="capability-tile-back-label">{backTitle}</p>
+            {isFlipped && onImageEnlarge && (
+              <button
+                type="button"
+                className="capability-tile-enlarge-btn"
+                onClick={handleEnlargeClick}
+                title="Enlarge image"
+                aria-label={`Enlarge ${title} example image`}
+              >
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden
+                >
+                  <path d="M8 3H5a2 2 0 0 0-2 2v3" />
+                  <path d="M21 8V5a2 2 0 0 0-2-2h-3" />
+                  <path d="M3 16v3a2 2 0 0 0 2 2h3" />
+                  <path d="M16 21h3a2 2 0 0 0 2-2v-3" />
+                </svg>
+              </button>
+            )}
+          </div>
           <div className="capability-tile-back-image-wrap">
             <img src={backImage} alt={`${title} example`} className="capability-tile-back-image" />
           </div>
@@ -67,10 +102,15 @@ interface HeroProps {
 export function Hero({ visibleTooltip, onCapabilityTileTap, children }: HeroProps) {
   const [showFlash, setShowFlash] = useState(false)
   const [flippedTile, setFlippedTile] = useState<string | null>(null)
+  const [enlargedImageSrc, setEnlargedImageSrc] = useState<string | null>(null)
   const { theme, toggleTheme } = useTheme()
 
   const dismissFlip = useCallback(() => {
     setFlippedTile(null)
+  }, [])
+
+  const closeEnlargedImage = useCallback(() => {
+    setEnlargedImageSrc(null)
   }, [])
 
   useEffect(() => {
@@ -79,6 +119,15 @@ export function Hero({ visibleTooltip, onCapabilityTileTap, children }: HeroProp
     document.addEventListener('click', handleClickOutside)
     return () => document.removeEventListener('click', handleClickOutside)
   }, [flippedTile, dismissFlip])
+
+  useEffect(() => {
+    if (!enlargedImageSrc) return
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') closeEnlargedImage()
+    }
+    document.addEventListener('keydown', handleEscape)
+    return () => document.removeEventListener('keydown', handleEscape)
+  }, [enlargedImageSrc, closeEnlargedImage])
 
   const handleTileClick = useCallback(
     (tileId: string) => {
@@ -177,6 +226,7 @@ export function Hero({ visibleTooltip, onCapabilityTileTap, children }: HeroProp
             isVisible={visibleTooltip === 'natural-language'}
             isFlipped={flippedTile === 'natural-language'}
             onTileClick={handleTileClick}
+            onImageEnlarge={setEnlargedImageSrc}
           />
 
           <CapabilityTile
@@ -205,6 +255,7 @@ export function Hero({ visibleTooltip, onCapabilityTileTap, children }: HeroProp
             isVisible={visibleTooltip === 'code-generation'}
             isFlipped={flippedTile === 'code-generation'}
             onTileClick={handleTileClick}
+            onImageEnlarge={setEnlargedImageSrc}
           />
 
           <CapabilityTile
@@ -232,8 +283,25 @@ export function Hero({ visibleTooltip, onCapabilityTileTap, children }: HeroProp
             isVisible={visibleTooltip === 'formatted-math'}
             isFlipped={flippedTile === 'formatted-math'}
             onTileClick={handleTileClick}
+            onImageEnlarge={setEnlargedImageSrc}
           />
         </div>
+
+        {enlargedImageSrc && (
+          <div
+            className="capability-tile-image-lightbox"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Enlarged image — click to close"
+            onClick={closeEnlargedImage}
+          >
+            <img
+              src={enlargedImageSrc}
+              alt="Enlarged preview — click to close"
+              className="capability-tile-image-lightbox-img"
+            />
+          </div>
+        )}
 
         {/* Render children (comparison form) inside hero-input-section */}
         {children && <div className="hero-input-section">{children}</div>}
