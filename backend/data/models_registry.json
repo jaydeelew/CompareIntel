@@ -76,7 +76,7 @@
       {
         "id": "anthropic/claude-opus-4.6",
         "name": "Claude Opus 4.6",
-        "description": "Opus 4.6 is Anthropic’s strongest model for coding and long-running professional tasks.",
+        "description": "Opus 4.6 is Anthropic\u2019s strongest model for coding and long-running professional tasks.",
         "category": "Language",
         "provider": "Anthropic",
         "supports_web_search": true,
@@ -665,16 +665,7 @@
       {
         "id": "z-ai/glm-5",
         "name": "Glm 5",
-        "description": "GLM-5 is Z.ai’s flagship open-source foundation model engineered for complex systems design and long-horizon agent workflows.",
-        "category": "Language",
-        "provider": "ZAi",
-        "supports_web_search": true,
-        "knowledge_cutoff": null
-      },
-      {
-        "id": "z-ai/glm-5",
-        "name": "Glm 5",
-        "description": "GLM-5 is Z.ai’s flagship open-source foundation model engineered for complex systems design and long-horizon agent workflows.",
+        "description": "GLM-5 is Z.ai\u2019s flagship open-source foundation model engineered for complex systems design and long-horizon agent workflows.",
         "category": "Language",
         "provider": "ZAi",
         "supports_web_search": true,
@@ -690,13 +681,15 @@
         "provider": "Moonshotai",
         "supports_web_search": true,
         "knowledge_cutoff": null
-      },
+      }
+    ],
+    "ArceeAi": [
       {
-        "id": "moonshotai/kimi-k2.5",
-        "name": "Kimi K2.5",
-        "description": "Kimi K2.5 is Moonshot AI's native multimodal model, delivering state-of-the-art visual coding capability and a self-directed agent swarm paradigm.",
+        "id": "arcee-ai/trinity-large-preview:free",
+        "name": "Trinity Large Preview:Free",
+        "description": "Trinity-Large-Preview is a frontier-scale open-weight language model from Arcee, built as a 400B-parameter sparse Mixture-of-Experts with 13B active parameters per token using 4-of-256 expert routing.",
         "category": "Language",
-        "provider": "Moonshotai",
+        "provider": "ArceeAi",
         "supports_web_search": true,
         "knowledge_cutoff": null
       }
@@ -704,6 +697,7 @@
   },
   "unregistered_tier_models": [
     "anthropic/claude-3.5-haiku",
+    "arcee-ai/trinity-large-preview:free",
     "cohere/command-r7b-12-2024",
     "deepseek/deepseek-chat-v3.1",
     "deepseek/deepseek-v3.2-exp",

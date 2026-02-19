@@ -308,7 +308,9 @@ async def add_model(
     if not model_id:
         raise HTTPException(status_code=400, detail="Model ID cannot be empty")
 
-    for provider, models in MODELS_BY_PROVIDER.items():
+    # Check against fresh registry (avoids stale MODELS_BY_PROVIDER from import caching)
+    registry = load_registry()
+    for provider, models in registry["models_by_provider"].items():
         for model in models:
             if model["id"] == model_id:
                 raise HTTPException(
@@ -349,7 +351,6 @@ async def add_model(
     supports_web_search = await capability_service.check_tool_calling_support(model_id)
 
     try:
-        registry = load_registry()
         mbp = registry["models_by_provider"]
 
         for existing_provider in mbp.keys():
@@ -374,6 +375,12 @@ async def add_model(
 
         if provider_name not in mbp:
             mbp[provider_name] = []
+        # Defensive check: ensure no duplicate within this provider (idempotent safety)
+        existing_ids = [m["id"] for m in mbp[provider_name]]
+        if model_id in existing_ids:
+            raise HTTPException(
+                status_code=400, detail=f"Model {model_id} already exists in {provider_name}"
+            )
         mbp[provider_name].append(new_model)
         mbp[provider_name] = sort_models_by_tier_and_version(mbp[provider_name])
 

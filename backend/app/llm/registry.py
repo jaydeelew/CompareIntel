@@ -29,8 +29,29 @@ def save_registry(data: dict[str, Any]) -> None:
         f.write("\n")
 
 
+def _deduplicate_models_by_provider(
+    mbp: dict[str, list[dict[str, Any]]],
+) -> dict[str, list[dict[str, Any]]]:
+    """Remove duplicate models (by id) within each provider. Keeps first occurrence."""
+    result = {}
+    for provider, models in mbp.items():
+        seen_ids: set[str] = set()
+        deduped = []
+        for m in models:
+            mid = m.get("id")
+            if mid and mid not in seen_ids:
+                seen_ids.add(mid)
+                deduped.append(m)
+        result[provider] = deduped
+    return result
+
+
 def _load_registry() -> dict[str, Any]:
-    return load_registry()
+    data = load_registry()
+    # Deduplicate models to prevent duplicate entries in UI
+    if "models_by_provider" in data:
+        data["models_by_provider"] = _deduplicate_models_by_provider(data["models_by_provider"])
+    return data
 
 
 _registry = _load_registry()

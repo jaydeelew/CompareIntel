@@ -125,7 +125,14 @@ async def get_available_models(
         for provider, models in MODELS_BY_PROVIDER.items():
             provider_models = filter_models_by_tier(models, tier, is_trial_active)
             if provider_models:
+                seen_ids: set[str] = set()
+                deduped_models = []
                 for model in provider_models:
+                    mid = model.get("id")
+                    if mid and mid in seen_ids:
+                        continue
+                    if mid:
+                        seen_ids.add(mid)
                     limits = get_model_token_limits_from_openrouter(model["id"])
                     if limits:
                         model["max_input_tokens"] = limits["max_input"]
@@ -133,7 +140,9 @@ async def get_available_models(
                     else:
                         model["max_input_tokens"] = 8192
                         model["max_output_tokens"] = 8192
-                models_by_provider[provider] = provider_models
+                    deduped_models.append(model)
+                if deduped_models:
+                    models_by_provider[provider] = deduped_models
 
         return {
             "models": all_models,
