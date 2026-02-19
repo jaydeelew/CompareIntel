@@ -28,6 +28,7 @@ from ..model_runner import (
     call_openrouter_streaming,
     clean_model_response,
     estimate_token_count,
+    get_min_max_input_tokens,
     get_min_max_output_tokens,
 )
 from ..models import AppSettings, Conversation, User
@@ -117,6 +118,10 @@ async def generate_stream(ctx: StreamContext) -> Any:
             input_tokens += count_conversation_tokens(req.conversation_history, model_id=model_id)
 
         effective_max_tokens = get_min_max_output_tokens(req.models)
+        # Cap output by (context - input): some providers (e.g. StepFun) enforce input+output <= context_length
+        min_max_input = get_min_max_input_tokens(req.models)
+        context_safe_output_cap = max(1, min_max_input - input_tokens)
+        effective_max_tokens = min(effective_max_tokens, context_safe_output_cap)
         credits_limited = False
         credits_per_model = (
             Decimal(credits_remaining[0]) / Decimal(ctx.num_models)

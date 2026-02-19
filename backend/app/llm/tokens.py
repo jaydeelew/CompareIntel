@@ -15,6 +15,10 @@ from .registry import OPENROUTER_MODELS
 
 logger = logging.getLogger(__name__)
 
+# Ceiling for default max_output: OpenRouter may report inflated values (e.g. 256k for StepFun)
+# that cause "input+output exceeds context" errors. Typical chat responses need far less.
+_REASONABLE_MAX_OUTPUT_CEILING = 32768
+
 _model_token_limits_cache: dict[str, dict[str, int]] = {}
 
 
@@ -51,12 +55,22 @@ def _extract_token_limits(model_data: dict[str, Any]) -> dict[str, int]:
     max_completion_tokens = top_provider.get("max_completion_tokens")
     if context_length:
         limits["max_input"] = context_length
-        if max_completion_tokens:
+        if max_completion_tokens and max_completion_tokens < context_length:
             limits["max_output"] = max_completion_tokens
         else:
-            limits["max_output"] = int(context_length * 0.2)
+            # OpenRouter sometimes reports max_completion_tokens=context_length (e.g. StepFun);
+            # that's wrong: providers enforce input+output <= context_length. Cap output.
+            limits["max_output"] = min(
+                int(context_length * 0.2),
+                _REASONABLE_MAX_OUTPUT_CEILING,
+            )
     elif max_completion_tokens:
-        limits["max_output"] = max_completion_tokens
+        # When no context_length, still sanity-check: output cannot exceed a reasonable ceiling
+        # (some providers report inflated max_completion_tokens that cause context overflow)
+        limits["max_output"] = min(
+            max_completion_tokens,
+            _REASONABLE_MAX_OUTPUT_CEILING,
+        )
         limits["max_input"] = max_completion_tokens * 4
     else:
         limits["max_input"] = 8192

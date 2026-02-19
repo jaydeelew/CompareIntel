@@ -612,6 +612,17 @@
         "knowledge_cutoff": "April 2025"
       }
     ],
+    "Stepfun": [
+      {
+        "id": "stepfun/step-3.5-flash:free",
+        "name": "Step 3.5 Flash:Free",
+        "description": "Step 3.5 Flash is StepFun's most capable open-source foundation model.",
+        "category": "Language",
+        "provider": "Stepfun",
+        "supports_web_search": true,
+        "knowledge_cutoff": null
+      }
+    ],
     "xAI": [
       {
         "id": "x-ai/grok-code-fast-1",
@@ -706,6 +717,7 @@
     "microsoft/phi-4",
     "mistralai/devstral-2512",
     "openai/gpt-oss-120b",
+    "stepfun/step-3.5-flash:free",
     "x-ai/grok-4-fast",
     "x-ai/grok-code-fast-1",
     "xiaomi/mimo-v2-flash"
