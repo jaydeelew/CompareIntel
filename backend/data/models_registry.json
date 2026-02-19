@@ -74,6 +74,15 @@
         "knowledge_cutoff": "May 2025"
       },
       {
+        "id": "anthropic/claude-opus-4.6",
+        "name": "Claude Opus 4.6",
+        "description": "Opus 4.6 is Anthropic’s strongest model for coding and long-running professional tasks.",
+        "category": "Language",
+        "provider": "Anthropic",
+        "supports_web_search": true,
+        "knowledge_cutoff": null
+      },
+      {
         "id": "anthropic/claude-sonnet-4.6",
         "name": "Claude Sonnet 4.6",
         "description": "Sonnet 4.6 is Anthropic's most capable Sonnet-class model yet, with frontier performance across coding, agents, and professional work.",
@@ -652,6 +661,35 @@
         "provider": "ZAi",
         "supports_web_search": true,
         "knowledge_cutoff": "June 2025"
+      },
+      {
+        "id": "z-ai/glm-5",
+        "name": "Glm 5",
+        "description": "GLM-5 is Z.ai’s flagship open-source foundation model engineered for complex systems design and long-horizon agent workflows.",
+        "category": "Language",
+        "provider": "ZAi",
+        "supports_web_search": true,
+        "knowledge_cutoff": null
+      },
+      {
+        "id": "z-ai/glm-5",
+        "name": "Glm 5",
+        "description": "GLM-5 is Z.ai’s flagship open-source foundation model engineered for complex systems design and long-horizon agent workflows.",
+        "category": "Language",
+        "provider": "ZAi",
+        "supports_web_search": true,
+        "knowledge_cutoff": null
+      }
+    ],
+    "Moonshotai": [
+      {
+        "id": "moonshotai/kimi-k2.5",
+        "name": "Kimi K2.5",
+        "description": "Kimi K2.5 is Moonshot AI's native multimodal model, delivering state-of-the-art visual coding capability and a self-directed agent swarm paradigm.",
+        "category": "Language",
+        "provider": "Moonshotai",
+        "supports_web_search": true,
+        "knowledge_cutoff": null
       }
     ]
   },
@@ -682,6 +720,7 @@
     "mistralai/devstral-small",
     "mistralai/mistral-medium-3.1",
     "mistralai/mistral-small-3.2-24b-instruct",
+    "moonshotai/kimi-k2.5",
     "openai/gpt-5-mini",
     "openai/gpt-5-nano",
     "openai/gpt-5.1-codex-mini",
@@ -689,6 +728,7 @@
     "qwen/qwen3-30b-a3b-instruct-2507",
     "qwen/qwen3-coder-flash",
     "qwen/qwen3-next-80b-a3b-instruct",
-    "x-ai/grok-3-mini"
+    "x-ai/grok-3-mini",
+    "z-ai/glm-5"
   ]
 }
