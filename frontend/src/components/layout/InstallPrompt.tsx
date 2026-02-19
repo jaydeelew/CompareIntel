@@ -1,183 +1,61 @@
-import { useState, useEffect, useRef } from 'react'
-
-import logger from '../../utils/logger'
-
-interface BeforeInstallPromptEvent extends Event {
-  prompt: () => Promise<void>
-  userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>
-}
-
-interface NavigatorStandalone extends Navigator {
-  standalone?: boolean
-}
-
-interface WindowMSStream extends Window {
-  MSStream?: unknown
-}
-
-interface WindowGtag extends Window {
-  gtag?: (...args: unknown[]) => void
-}
-
 /**
  * InstallPrompt - Prompts users to install the PWA
- * Follows 2025 best practices:
+ *
+ * Follows web.dev best practices:
  * - Waits for user engagement before showing
+ * - Android: Only shows after beforeinstallprompt has fired
+ * - iOS: Shows manual Add to Home Screen instructions
  * - Respects reduced motion preferences
  * - Uses safe area insets for mobile devices
- * - Better accessibility support
  */
+
+import { useEffect, useRef } from 'react'
+
+import { usePWAInstall } from '../../contexts/PWAInstallContext'
+
 export function InstallPrompt() {
-  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null)
-  const [isIOS, setIsIOS] = useState(false)
-  const [isStandalone, setIsStandalone] = useState(false)
-  const [isDismissed, setIsDismissed] = useState(false)
-  const [showIOSInstructions, setShowIOSInstructions] = useState(false)
-  const [shouldShow, setShouldShow] = useState(false)
-  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false)
-  const engagementTimerRef = useRef<NodeJS.Timeout | null>(null)
-  const hasShownRef = useRef(false)
+  const {
+    showInstallBanner,
+    showIOSInstructions,
+    triggerInstall,
+    dismissBanner,
+    closeIOSInstructions,
+    prefersReducedMotion,
+  } = usePWAInstall()
+
   const modalRef = useRef<HTMLDivElement>(null)
   const previousActiveElementRef = useRef<HTMLElement | null>(null)
   const installButtonRef = useRef<HTMLButtonElement>(null)
 
+  // Focus trap for iOS instructions modal
   useEffect(() => {
-    // Check for reduced motion preference
-    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
-    setPrefersReducedMotion(mediaQuery.matches)
+    if (!showIOSInstructions || !modalRef.current) return
 
-    const handleReducedMotionChange = (e: MediaQueryListEvent) => {
-      setPrefersReducedMotion(e.matches)
-    }
-
-    mediaQuery.addEventListener('change', handleReducedMotionChange)
-
-    return () => {
-      mediaQuery.removeEventListener('change', handleReducedMotionChange)
-    }
-  }, [])
-
-  useEffect(() => {
-    // Check if already installed (standalone mode)
-    const navigatorStandalone = window.navigator as NavigatorStandalone
-    const isStandaloneMode =
-      window.matchMedia('(display-mode: standalone)').matches ||
-      navigatorStandalone.standalone === true ||
-      document.referrer.includes('android-app://')
-
-    setIsStandalone(isStandaloneMode)
-
-    // Check if iOS
-    const windowMSStream = window as WindowMSStream
-    const iOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !windowMSStream.MSStream
-    setIsIOS(iOS)
-
-    // Check if user previously dismissed
-    const dismissed = localStorage.getItem('pwa-install-dismissed')
-    if (dismissed) {
-      const dismissedTime = parseInt(dismissed, 10)
-      // Show again after 7 days
-      if (Date.now() - dismissedTime < 7 * 24 * 60 * 60 * 1000) {
-        setIsDismissed(true)
-        return
-      } else {
-        // Clear old dismissal after 7 days
-        localStorage.removeItem('pwa-install-dismissed')
-      }
-    }
-
-    // Track user engagement before showing prompt
-    // Best practice: Wait for user engagement (scroll, interaction, or time)
-    let engagementCount = 0
-    const engagementThreshold = 2 // Require 2 interactions
-
-    const trackEngagement = () => {
-      engagementCount++
-      if (engagementCount >= engagementThreshold && !hasShownRef.current) {
-        hasShownRef.current = true
-        setShouldShow(true)
-        // Remove listeners once threshold is met
-        window.removeEventListener('scroll', trackEngagement)
-        window.removeEventListener('click', trackEngagement)
-        window.removeEventListener('touchstart', trackEngagement)
-        window.removeEventListener('keydown', trackEngagement)
-      }
-    }
-
-    // Also show after 30 seconds of page time (fallback)
-    engagementTimerRef.current = setTimeout(() => {
-      if (!hasShownRef.current && engagementCount === 0) {
-        hasShownRef.current = true
-        setShouldShow(true)
-      }
-    }, 30000) // 30 seconds
-
-    // Listen for user engagement
-    window.addEventListener('scroll', trackEngagement, { passive: true })
-    window.addEventListener('click', trackEngagement, { once: true })
-    window.addEventListener('touchstart', trackEngagement, { once: true })
-    window.addEventListener('keydown', trackEngagement, { once: true })
-
-    // Listen for beforeinstallprompt event (Android Chrome)
-    const handleBeforeInstallPrompt = (e: Event) => {
-      e.preventDefault()
-      setDeferredPrompt(e as BeforeInstallPromptEvent)
-    }
-
-    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
-
-    return () => {
-      if (engagementTimerRef.current) {
-        clearTimeout(engagementTimerRef.current)
-      }
-      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
-      window.removeEventListener('scroll', trackEngagement)
-      window.removeEventListener('click', trackEngagement)
-      window.removeEventListener('touchstart', trackEngagement)
-      window.removeEventListener('keydown', trackEngagement)
-    }
-  }, [])
-
-  const handleInstallClick = async () => {
-    if (!deferredPrompt) {
-      // iOS - show instructions
-      if (isIOS) {
-        setShowIOSInstructions(true)
-      }
-      return
-    }
-
-    // Android Chrome - trigger install prompt
-    try {
-      deferredPrompt.prompt()
-      const { outcome } = await deferredPrompt.userChoice
-
-      if (outcome === 'accepted') {
-        setDeferredPrompt(null)
-        setIsDismissed(true)
-        // Track successful installation (optional analytics)
-        const windowGtag = window as WindowGtag
-        if (typeof windowGtag.gtag !== 'undefined') {
-          windowGtag.gtag('event', 'pwa_installed', {
-            event_category: 'PWA',
-            event_label: 'Install Prompt',
-          })
+    previousActiveElementRef.current = document.activeElement as HTMLElement
+    const focusable = 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+    const elements = Array.from(modalRef.current.querySelectorAll<HTMLElement>(focusable))
+    if (elements.length > 0) {
+      elements[0].focus()
+      const first = elements[0]
+      const last = elements[elements.length - 1]
+      const handleTab = (e: KeyboardEvent) => {
+        if (e.key !== 'Tab') return
+        const current = document.activeElement as HTMLElement
+        if (e.shiftKey && current === first) {
+          e.preventDefault()
+          last.focus()
+        } else if (!e.shiftKey && current === last) {
+          e.preventDefault()
+          first.focus()
         }
-      } else {
-        // User dismissed, don't show again for 7 days
-        localStorage.setItem('pwa-install-dismissed', Date.now().toString())
-        setIsDismissed(true)
       }
-    } catch (error) {
-      logger.warn('Install prompt error:', error)
+      document.addEventListener('keydown', handleTab)
+      return () => document.removeEventListener('keydown', handleTab)
     }
-  }
+  }, [showIOSInstructions])
 
   const handleDismiss = () => {
-    setIsDismissed(true)
-    localStorage.setItem('pwa-install-dismissed', Date.now().toString())
-    setShowIOSInstructions(false)
-    // Return focus to install button if modal was open
+    dismissBanner()
     if (previousActiveElementRef.current) {
       previousActiveElementRef.current.focus()
       previousActiveElementRef.current = null
@@ -186,61 +64,8 @@ export function InstallPrompt() {
     }
   }
 
-  // Focus trap effect for modal
-  useEffect(() => {
-    if (!showIOSInstructions || !modalRef.current) return
-
-    // Store the previously focused element
-    previousActiveElementRef.current = document.activeElement as HTMLElement
-
-    // Get all focusable elements within the modal
-    const focusableSelectors =
-      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-    const focusableElements = Array.from(
-      modalRef.current.querySelectorAll<HTMLElement>(focusableSelectors)
-    )
-
-    if (focusableElements.length === 0) return
-
-    const firstElement = focusableElements[0]
-    const lastElement = focusableElements[focusableElements.length - 1]
-
-    // Focus the first element
-    firstElement.focus()
-
-    // Handle Tab key to trap focus
-    const handleTab = (e: KeyboardEvent) => {
-      if (e.key !== 'Tab') return
-
-      const currentFocus = document.activeElement as HTMLElement
-
-      if (e.shiftKey) {
-        // Shift + Tab
-        if (currentFocus === firstElement) {
-          e.preventDefault()
-          lastElement.focus()
-        }
-      } else {
-        // Tab
-        if (currentFocus === lastElement) {
-          e.preventDefault()
-          firstElement.focus()
-        }
-      }
-    }
-
-    document.addEventListener('keydown', handleTab)
-
-    return () => {
-      document.removeEventListener('keydown', handleTab)
-    }
-  }, [showIOSInstructions])
-
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Escape') {
-      handleDismiss()
-    }
-    // Allow Enter and Space to activate buttons
+    if (e.key === 'Escape') handleDismiss()
     if ((e.key === 'Enter' || e.key === ' ') && e.target === e.currentTarget) {
       e.preventDefault()
       if (e.currentTarget instanceof HTMLButtonElement) {
@@ -249,17 +74,16 @@ export function InstallPrompt() {
     }
   }
 
-  // Don't show if already installed, dismissed, or not engaged yet
-  if (isStandalone || isDismissed || !shouldShow) {
+  if (!showInstallBanner && !showIOSInstructions) {
     return null
   }
 
-  // Show iOS instructions modal
+  // iOS manual instructions modal
   if (showIOSInstructions) {
     return (
       <div
         className="install-prompt-overlay"
-        onClick={handleDismiss}
+        onClick={closeIOSInstructions}
         role="dialog"
         aria-modal="true"
         aria-labelledby="install-prompt-title"
@@ -272,7 +96,7 @@ export function InstallPrompt() {
         >
           <button
             className="install-prompt-close"
-            onClick={handleDismiss}
+            onClick={closeIOSInstructions}
             onKeyDown={handleKeyDown}
             aria-label="Close install instructions"
             type="button"
@@ -303,7 +127,7 @@ export function InstallPrompt() {
     )
   }
 
-  // Show install banner/button
+  // Install banner
   return (
     <div
       className={`install-prompt-banner ${prefersReducedMotion ? 'no-animation' : ''}`}
@@ -324,7 +148,7 @@ export function InstallPrompt() {
           <button
             ref={installButtonRef}
             className="install-prompt-button"
-            onClick={handleInstallClick}
+            onClick={triggerInstall}
             onKeyDown={handleKeyDown}
             type="button"
             aria-label="Install CompareIntel app"

@@ -160,6 +160,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           userData = await fetchCurrentUser()
           if (userData) {
             setUser(userData)
+            // Re-allow PWA install prompt (best practice: re-prompt after meaningful engagement)
+            window.dispatchEvent(new CustomEvent('auth-signed-in'))
             break // Success, exit retry loop
           }
         } catch (_userFetchError) {
@@ -223,6 +225,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       setUser(responseData.user)
       setIsLoading(false)
+
+      // Re-allow PWA install prompt (best practice: re-prompt after meaningful engagement)
+      window.dispatchEvent(new CustomEvent('auth-signed-in'))
 
       // Clear trial welcome modal flag for this email to ensure new registrations see the modal
       // This handles the case where a user deletes their account and re-registers with the same email

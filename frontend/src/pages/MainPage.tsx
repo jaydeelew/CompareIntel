@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 
 import { type AttachedFile, type StoredAttachedFile } from '../components/comparison'
-import { Navigation, MockModeBanner, InstallPrompt } from '../components/layout'
+import { Navigation, MockModeBanner } from '../components/layout'
 import { ComparisonPageContent, ModalManager } from '../components/main-page'
 import { DoneSelectingCard } from '../components/shared'
 import { TutorialManager } from '../components/tutorial'
@@ -1931,8 +1931,6 @@ export function MainPage() {
             onCopyMessage: handleCopyMessage,
           }}
         />
-
-        {import.meta.env.PROD && <InstallPrompt />}
 
         <TutorialManager
           showWelcomeModal={showWelcomeModal}
