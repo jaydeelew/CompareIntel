@@ -44,10 +44,10 @@
 ---
 
 ### 4. Pin Python Dependencies for Production
-- [ ] In `backend/requirements.txt`, replace `>=` with exact versions (e.g., `==`) for production-critical packages.
-- [ ] Consider using `pip-compile` (from pip-tools) to generate a locked `requirements.txt` from a `requirements.in`.
+- [x] In `backend/requirements.txt`, replace `>=` with exact versions (e.g., `==`) for production-critical packages.
+- [x] Consider using `pip-compile` (from pip-tools) to generate a locked `requirements.txt` from a `requirements.in`.
 
-**Notes when complete:**
+**Notes when complete:** Created `requirements.in` with original constraints; pip-compile generates pinned `requirements.txt`. Run `pip-compile requirements.in -o requirements.txt` to update.
 
 ---
 
@@ -60,10 +60,10 @@
 ---
 
 ### 6. Fail CI on Security Vulnerabilities
-- [ ] In `.github/workflows/ci.yml`, remove `|| true` from `safety check` and `npm audit` so failures block the pipeline.
-- [ ] Optionally use `--audit-level=high` for npm and configure safety to fail on high/critical.
+- [x] In `.github/workflows/ci.yml`, remove `|| true` from `safety check` and `npm audit` so failures block the pipeline.
+- [x] Optionally use `--audit-level=high` for npm and configure safety to fail on high/critical.
 
-**Notes when complete:**
+**Notes when complete:** Removed `|| true` from safety check and npm audit. npm uses `--audit-level=high` so high/critical vulnerabilities fail the pipeline.
 
 ---
 
@@ -91,10 +91,10 @@
 ---
 
 ### 10. Clarify Frontend Service Role in docker-compose.prod.yml
-- [ ] Remove redundant frontend service if nginx prod stage already builds and serves static files, OR document and fix its role (e.g., single-run build step).
-- [ ] Ensure the production stack (backend + nginx) runs without a permanently running frontend container if it is redundant.
+- [x] Remove redundant frontend service if nginx prod stage already builds and serves static files, OR document and fix its role (e.g., single-run build step).
+- [x] Ensure the production stack (backend + nginx) runs without a permanently running frontend container if it is redundant.
 
-**Notes when complete:**
+**Notes when complete:** Removed redundant frontend service. Nginx prod stage builds frontend via multi-stage Dockerfile and serves static files. Prod stack: redis, backend, nginx.
 
 ---
 
@@ -119,11 +119,13 @@ Examples:
 | Date | Items Completed | Commit |
 |------|-----------------|--------|
 | 2025-02-19 | 1, 2, 3 (backend+frontend), 5, 7, 8, 9 | (pending) |
+| 2026-02-19 | 4, 6, 10 | (pending) |
 
 ---
 
 ## References
 
+- Backend requirements: `backend/requirements.txt` (pinned), `backend/requirements.in` (source for pip-compile)
 - Frontend Dockerfile: `frontend/Dockerfile`
 - Backend Dockerfile: `backend/Dockerfile`
 - Backend .dockerignore: `backend/.dockerignore`

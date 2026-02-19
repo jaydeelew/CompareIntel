@@ -36,21 +36,8 @@ services:
     networks:
       - compareintel-network
 
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-      target: build
-      args:
-        - VITE_API_URL=/api
-        - VITE_RECAPTCHA_SITE_KEY=${VITE_RECAPTCHA_SITE_KEY:-}
-    volumes:
-      - ./frontend/dist:/app/dist
-    depends_on:
-      backend:
-        condition: service_healthy
-    networks:
-      - compareintel-network
+  # Frontend is built inside nginx's multi-stage Dockerfile (prod stage copies from build).
+  # No separate frontend container needed—nginx builds and serves static files.
 
   nginx:
     build:
@@ -64,8 +51,6 @@ services:
     depends_on:
       backend:
         condition: service_healthy
-      frontend:
-        condition: service_started
     restart: unless-stopped
     networks:
       - compareintel-network

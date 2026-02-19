@@ -657,12 +657,12 @@ jobs:
       - name: Check Python dependencies for vulnerabilities
         run: |
           cd backend
-          safety check -r requirements.txt --continue-on-error || true
+          safety check -r requirements.txt
       
       - name: Run npm audit
         run: |
           cd frontend
-          npm audit --audit-level=moderate --production || true
+          npm audit --audit-level=high --production
       
       - name: Check for hardcoded secrets
         run: |
