@@ -479,7 +479,7 @@ export const ModelsSection: React.FC<ModelsSectionProps> = ({
                             strokeLinecap="round"
                             strokeLinejoin="round"
                             style={{
-                              color: 'var(--primary-color, #007bff)',
+                              color: 'white',
                             }}
                           >
                             <circle cx="12" cy="12" r="10" />
