@@ -558,6 +558,15 @@
         "knowledge_cutoff": "September 2025"
       },
       {
+        "id": "qwen/qwen3.5-plus-02-15",
+        "name": "Qwen3.5 Plus 02 15",
+        "description": "The Qwen3.5 native vision-language series Plus models are built on a hybrid architecture that integrates linear attention mechanisms with sparse mixture-of-experts models, achieving higher inference efficiency.",
+        "category": "Language",
+        "provider": "Qwen",
+        "supports_web_search": true,
+        "knowledge_cutoff": null
+      },
+      {
         "id": "qwen/qwen3-235b-a22b",
         "name": "Qwen3 235B A22B",
         "description": "A 235B MoE model (22B active) with strong reasoning, coding, and multilingual capabilities.",
@@ -743,6 +752,7 @@
     "qwen/qwen3-30b-a3b-instruct-2507",
     "qwen/qwen3-coder-flash",
     "qwen/qwen3-next-80b-a3b-instruct",
+    "qwen/qwen3.5-plus-02-15",
     "x-ai/grok-3-mini",
     "z-ai/glm-5"
   ]

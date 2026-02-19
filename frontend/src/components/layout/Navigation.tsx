@@ -1,6 +1,5 @@
 import { useNavigate, useLocation } from 'react-router-dom'
 
-import { usePWAInstall } from '../../contexts/PWAInstallContext'
 import { useTheme } from '../../contexts/ThemeContext'
 import { UserMenu } from '../auth'
 
@@ -27,7 +26,6 @@ export function Navigation({
   const navigate = useNavigate()
   const location = useLocation()
   const { theme, toggleTheme } = useTheme()
-  const { canInstall, triggerInstall } = usePWAInstall()
 
   // Use React Router navigation if available, fallback to onViewChange prop
   const handleViewChange = (view: 'main' | 'admin') => {
@@ -100,17 +98,6 @@ export function Navigation({
               </svg>
             )}
           </button>
-          {import.meta.env.PROD && canInstall && (
-            <button
-              className="nav-button-text"
-              onClick={triggerInstall}
-              type="button"
-              aria-label="Install CompareIntel app"
-              title="Install app"
-            >
-              Install
-            </button>
-          )}
           {isAuthenticated ? (
             <>
               {isAdmin && (

@@ -4336,5 +4336,59 @@
       "createdAt": "2026-02-19T15:44:53.678618+00:00Z",
       "needsManualReview": true
     }
+  },
+  {
+    "modelId": "qwen/qwen3.5-plus-02-15",
+    "version": "1.0.0",
+    "displayMathDelimiters": [
+      {
+        "pattern": "/\\$\\$([^\\$]+?)\\$\\$/gs",
+        "name": "double-dollar",
+        "priority": 1
+      }
+    ],
+    "inlineMathDelimiters": [
+      {
+        "pattern": "/(?<!\\$)\\$([^\\$\\n]+?)\\$(?!\\$)/g",
+        "name": "single-dollar",
+        "priority": 1
+      }
+    ],
+    "preprocessing": {
+      "fixEscapedDollars": true,
+      "removeHtmlFromMath": false,
+      "removeMathML": true,
+      "removeSVG": true
+    },
+    "markdownProcessing": {
+      "processLinks": true,
+      "fixBrokenLinks": false,
+      "processTables": true,
+      "processBlockquotes": true,
+      "processHorizontalRules": true,
+      "processHeaders": true,
+      "processBoldItalic": true,
+      "processLists": true,
+      "processInlineCode": true
+    },
+    "katexOptions": {
+      "throwOnError": false,
+      "strict": false,
+      "trust": ["\\url", "\\href", "\\includegraphics"],
+      "macros": {
+        "\\eqref": "\\href{###1}{(\\text{#1})}"
+      },
+      "maxSize": 500,
+      "maxExpand": 1000
+    },
+    "codeBlockPreservation": {
+      "enabled": true,
+      "extractBeforeProcessing": true,
+      "restoreAfterProcessing": true
+    },
+    "metadata": {
+      "createdAt": "2026-02-19T18:19:50.489047+00:00Z",
+      "needsManualReview": true
+    }
   }
 ]
