@@ -269,8 +269,7 @@ export function useTutorialOverlay(step: TutorialStep | null, isLoading: boolean
 
       heroHeightLockedRef.current = true
 
-      // Note: Removed MutationObserver and interval that were causing infinite loops
-      // The initial lock should be sufficient for the tutorial duration
+      // Initial lock is sufficient for the tutorial duration
     }
 
     // Cleanup function for this effect

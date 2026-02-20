@@ -107,8 +107,7 @@ export const Layout: React.FC = () => {
     <>
       {/* Skip link for keyboard navigation accessibility */}
       <SkipLink />
-      {/* Removed SEO H1 - Hero component provides the main H1 on homepage */}
-      {/* Other pages have their own H1s in their page components */}
+      {/* Hero provides H1 on homepage; other pages define their own */}
       <Outlet />
       <Footer />
     </>
