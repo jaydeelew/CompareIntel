@@ -58,7 +58,7 @@ function CapabilityTile({
                 type="button"
                 className="capability-tile-enlarge-btn"
                 onClick={handleEnlargeClick}
-                title="Enlarge image"
+                title="Enlarge screenshot"
                 aria-label={`Enlarge ${title} example image`}
               >
                 <svg
@@ -67,15 +67,13 @@ function CapabilityTile({
                   viewBox="0 0 24 24"
                   fill="none"
                   stroke="currentColor"
-                  strokeWidth="2"
+                  strokeWidth="2.5"
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   aria-hidden
                 >
-                  <path d="M8 3H5a2 2 0 0 0-2 2v3" />
-                  <path d="M21 8V5a2 2 0 0 0-2-2h-3" />
-                  <path d="M3 16v3a2 2 0 0 0 2 2h3" />
-                  <path d="M16 21h3a2 2 0 0 0 2-2v-3" />
+                  <circle cx="11" cy="11" r="8" />
+                  <line x1="16.65" y1="16.65" x2="21" y2="21" />
                 </svg>
               </button>
             )}
