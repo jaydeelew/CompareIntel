@@ -17,7 +17,6 @@ repos:
       - id: mypy
         additional_dependencies: [
           types-sqlalchemy,
-          types-python-jose,
           types-passlib,
           types-bcrypt,
           types-PyYAML,

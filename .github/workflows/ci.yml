@@ -657,7 +657,7 @@ jobs:
       - name: Check Python dependencies for vulnerabilities
         run: |
           cd backend
-          safety check -r requirements.txt
+          safety scan
       
       - name: Run npm audit
         run: |

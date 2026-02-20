@@ -10,7 +10,7 @@ from datetime import UTC, datetime, timedelta
 from typing import Any
 
 import bcrypt
-from jose import JWTError, jwt
+import jwt
 from passlib.context import CryptContext
 
 # Password hashing configuration
@@ -132,7 +132,7 @@ def verify_token(token: str, token_type: str = "access") -> dict[str, Any] | Non
             return None
 
         return payload
-    except JWTError:
+    except jwt.PyJWTError:
         # JWT-specific errors (expired, invalid signature, etc.)
         return None
     except (ValueError, TypeError):

@@ -79,7 +79,7 @@ The platform integrates with [OpenRouter](https://openrouter.ai/) to access mode
 | **Transformers** | Tokenizers for Meta, Mistral, DeepSeek, Qwen |
 | **BeautifulSoup4** | HTML parsing for web search |
 | **Passlib + Bcrypt** | Password hashing |
-| **python-jose** | JWT handling |
+| **PyJWT** | JWT handling |
 
 ### Infrastructure
 | Technology | Purpose |

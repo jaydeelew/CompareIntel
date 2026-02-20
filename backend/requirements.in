@@ -25,7 +25,7 @@ websockets>=10.0
 python-multipart>=0.0.5
 python-dotenv>=1.0.0
 PyYAML>=6.0
-anyio>=3.6.0,<4.0.0
+anyio>=4.4.0
 sniffio>=1.3.0
 idna>=3.0.0
 httpx>=0.27.0
@@ -40,7 +40,7 @@ sentencepiece>=0.1.99
 requests>=2.25.0
 
 # Auth & security
-python-jose[cryptography]>=3.3.0
+PyJWT>=2.8.0
 passlib[bcrypt]>=1.7.4
 bcrypt==4.0.1
 
