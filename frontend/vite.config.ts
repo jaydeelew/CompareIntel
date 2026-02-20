@@ -185,22 +185,10 @@ export default defineConfig({
         // Don't precache source maps or large screenshots
         globIgnores: ['**/node_modules/**', '**/*.map', '**/screenshot-*.png'],
         // Runtime caching strategies
+        // Note: API routes (/api/*) are NOT cached - they need real-time data
+        // (rate-limit-status, credits/balance). Caching caused Workbox "no-response"
+        // errors when the network failed and no cached response existed.
         runtimeCaching: [
-          {
-            // Cache API responses with network-first strategy
-            urlPattern: /^https:\/\/compareintel\.com\/api\/.*/i,
-            handler: 'NetworkFirst',
-            options: {
-              cacheName: 'api-cache',
-              expiration: {
-                maxEntries: 100,
-                maxAgeSeconds: 60 * 60 * 24, // 24 hours
-              },
-              cacheableResponse: {
-                statuses: [0, 200],
-              },
-            },
-          },
           {
             // Cache images with cache-first strategy
             urlPattern: /\.(?:png|jpg|jpeg|svg|gif|webp|avif)$/i,
