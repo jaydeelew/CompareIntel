@@ -49,6 +49,12 @@ sudo ./setup-compareintel-ssl.sh renewal
 ```
 Then `sudo certbot renew --dry-run` to verify. Deployment status (`./deploy-production.sh status`) shows certbot timer/cron state.
 
+**Nginx "Permission denied" on certs:** If nginx fails to start with SSL certificate permission errors, run:
+```bash
+sudo ./setup-compareintel-ssl.sh fix-permissions
+```
+Then `docker compose -f docker-compose.ssl.yml restart nginx`. A deploy hook ensures permissions stay correct after future renewals.
+
 ---
 
 ## Git Workflow (Feature Branches + PRs)

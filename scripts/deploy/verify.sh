@@ -23,6 +23,13 @@ verify_deployment() {
     if [ "$BACKEND_OK" != true ] || [ "$FRONTEND_OK" != true ] || [ "$NGINX_OK" != true ]; then
         docker compose -f docker-compose.ssl.yml ps
         docker compose -f docker-compose.ssl.yml logs --tail=50
+        if [ "$NGINX_OK" != true ]; then
+            NGINX_LOGS=$(docker compose -f docker-compose.ssl.yml logs nginx 2>/dev/null || true)
+            if echo "$NGINX_LOGS" | grep -q "Permission denied"; then
+                echo ""
+                warn "Nginx SSL certificate permission error. Try: sudo ./setup-compareintel-ssl.sh fix-permissions"
+            fi
+        fi
         exit 1
     fi
     ok "All services running"

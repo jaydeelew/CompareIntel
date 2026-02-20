@@ -26,7 +26,7 @@ The PWA is configured in `frontend/vite.config.ts` using `vite-plugin-pwa`.
 
 | Resource Type        | Strategy      | Cache Duration    |
 | -------------------- | ------------- | ----------------- |
-| API calls (`/api/*`) | Network First | 24 hours          |
+| API calls (`/api/*`) | Not cached    | — (real-time data) |
 | Images               | Cache First   | 30 days           |
 | Fonts                | Cache First   | 1 year            |
 | Static assets        | Precache      | Until new version |

@@ -1,8 +1,9 @@
 #!/bin/bash
 # Set up Let's Encrypt SSL certificates for compareintel.com. Run once before deploying.
-# Usage: sudo ./setup-compareintel-ssl.sh [renewal]
+# Usage: sudo ./setup-compareintel-ssl.sh [renewal|fix-permissions]
 #   (no args)  Full setup: obtain certs and configure auto-renewal
 #   renewal    Fix renewal config for existing certs (switch to webroot, no downtime)
+#   fix-permissions  Make certs readable by nginx container (run once if nginx fails with permission denied)
 
 set -e
 
@@ -56,6 +57,16 @@ obtain_certs() {
     ok "Certificates obtained"
 }
 
+# Make certs readable by nginx container (runs as UID 101).
+# Certbot creates 0600/0700 by default; nginx in Docker needs read access.
+fix_cert_permissions() {
+    [ ! -d "/etc/letsencrypt/live/$DOMAIN" ] && { err "No certificates found at /etc/letsencrypt/live/$DOMAIN"; exit 1; }
+    msg "Fixing certificate permissions for nginx container..."
+    find /etc/letsencrypt -type d -exec chmod 755 {} \;
+    find /etc/letsencrypt -type f -exec chmod 644 {} \;
+    ok "Certificate permissions updated"
+}
+
 setup_renewal() {
     msg "Setting up renewal..."
 
@@ -63,8 +74,16 @@ setup_renewal() {
     mkdir -p "$WEBROOT_PATH/.well-known/acme-challenge"
     chmod -R 755 "$WEBROOT_PATH"
 
-    # Deploy hook: reload nginx after successful renewal so it picks up new certs
+    # Deploy hooks: run after every successful cert issuance/renewal
     mkdir -p /etc/letsencrypt/renewal-hooks/deploy
+    # Fix permissions so nginx container (UID 101) can read certs
+    cat > /etc/letsencrypt/renewal-hooks/deploy/fix-cert-permissions.sh << 'EOF'
+#!/bin/bash
+find /etc/letsencrypt -type d -exec chmod 755 {} \;
+find /etc/letsencrypt -type f -exec chmod 644 {} \;
+EOF
+    chmod +x /etc/letsencrypt/renewal-hooks/deploy/fix-cert-permissions.sh
+    # Reload nginx to pick up new certs
     cat > /etc/letsencrypt/renewal-hooks/deploy/restart-nginx.sh << 'EOF'
 #!/bin/bash
 cd /home/ubuntu/CompareIntel 2>/dev/null || cd ~/CompareIntel
@@ -109,6 +128,13 @@ main() {
             echo ""
             exit 0
             ;;
+        fix-permissions)
+            msg "Fixing certificate permissions for nginx container..."
+            fix_cert_permissions
+            ok "Done. Restart nginx: docker compose -f docker-compose.ssl.yml restart nginx"
+            echo ""
+            exit 0
+            ;;
     esac
     if [ -d "/etc/letsencrypt/live/$DOMAIN" ]; then
         warn "Certificates already exist. certbot certificates:"
@@ -120,6 +146,7 @@ main() {
     install_certbot
     stop_services
     obtain_certs
+    fix_cert_permissions
     setup_renewal
     msg "Certificate info:"
     certbot certificates 2>/dev/null
