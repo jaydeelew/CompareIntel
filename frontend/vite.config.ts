@@ -64,6 +64,7 @@ export default defineConfig({
       injectRegister: null,
       includeAssets: [
         'CI_favicon.svg', // Logo used in Header and Navigation
+        'CI_favicon_circle_safe.svg', // Circle-safe favicon for Google search results
         'CI_favicon_192x192.png',
         'CI_favicon_512x512.png',
         'maskable_icon.png',

@@ -19,6 +19,7 @@ const __dirname = dirname(__filename);
 const PUBLIC_DIR = join(__dirname, '..', 'public');
 const SOURCE_SVG = join(PUBLIC_DIR, 'CI_Icon.svg');
 const WINDOWS_SVG = join(PUBLIC_DIR, 'CI_favicon_tab.svg'); // Lighter colors for Windows
+const CIRCLE_SAFE_SVG = join(PUBLIC_DIR, 'CI_favicon_circle_safe.svg'); // Circle-safe for Google search
 
 // Favicon sizes (standard + apple-touch)
 const FAVICON_SIZES = [16, 32, 180, 192, 512];
@@ -32,6 +33,7 @@ const WINDOWS_SIZES = [192, 512];
 // Read the SVG sources
 const svgContent = readFileSync(SOURCE_SVG, 'utf-8');
 const windowsSvgContent = readFileSync(WINDOWS_SVG, 'utf-8');
+const circleSafeSvgContent = readFileSync(CIRCLE_SAFE_SVG, 'utf-8');
 
 /**
  * Generate a PNG from SVG at specified size
@@ -143,6 +145,11 @@ async function main() {
     process.exit(1);
   }
 
+  if (!existsSync(CIRCLE_SAFE_SVG)) {
+    console.error(`❌ Circle-safe SVG not found: ${CIRCLE_SAFE_SVG}`);
+    process.exit(1);
+  }
+
   // Generate standard favicons (transparent background)
   // Note: 192x192 and 512x512 are generated separately with lighter colors for Windows
   // 16x16, 32x32, and 180x180 use lighter colors for better browser tab visibility
@@ -161,9 +168,9 @@ async function main() {
     });
   }
 
-  // Generate base CI_favicon.png (512x512) - using lighter colors for Windows compatibility
+  // Generate base CI_favicon.png (512x512) - circle-safe for Google search results
   await generatePNG(512, join(PUBLIC_DIR, 'CI_favicon.png'), {
-    sourceSvg: windowsSvgContent
+    sourceSvg: circleSafeSvgContent
   });
 
   // Generate maskable icons (with 20% padding for safe zone)
@@ -185,13 +192,14 @@ async function main() {
     background: { r: 255, g: 255, b: 255, alpha: 1 }
   });
 
-  // Generate Windows-specific icons (lighter colors for taskbar)
-  // These are used in PWA manifest and Windows tile, so they need lighter colors for visibility
-  console.log('\n📁 Generating Windows taskbar icons (lighter colors)...');
+  // Generate standard large icons (circle-safe for Google search results)
+  // Google Search applies a circular mask to favicons, so these need the icon
+  // scaled down to fit within the inscribed circle with margin
+  console.log('\n📁 Generating circle-safe large icons (for Google search / PWA)...');
   for (const size of WINDOWS_SIZES) {
     const filename = size === 512 ? 'CI_favicon_512x512.png' : 'CI_favicon_192x192.png';
     await generatePNG(size, join(PUBLIC_DIR, filename), {
-      sourceSvg: windowsSvgContent
+      sourceSvg: circleSafeSvgContent
     });
   }
 
