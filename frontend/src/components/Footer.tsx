@@ -1,11 +1,7 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
 
-import { usePWAInstall } from '../contexts/PWAInstallContext'
-
 export const Footer: React.FC = () => {
-  const { canInstall, triggerInstall } = usePWAInstall()
-
   const linkStyle: React.CSSProperties = {
     color: 'var(--primary-color)',
     textDecoration: 'none',
@@ -57,22 +53,6 @@ export const Footer: React.FC = () => {
         <Link to="/terms-of-service" style={linkStyle}>
           Terms of Service
         </Link>
-        {import.meta.env.PROD && canInstall && (
-          <button
-            type="button"
-            onClick={triggerInstall}
-            style={{
-              ...linkStyle,
-              background: 'none',
-              border: 'none',
-              padding: 0,
-              font: 'inherit',
-            }}
-            aria-label="Install CompareIntel app"
-          >
-            Install App
-          </button>
-        )}
       </nav>
 
       {/* Support Email */}

@@ -13,7 +13,7 @@ import { updatePageMeta } from '../utils/pageMeta'
 import { updatePageTitle } from '../utils/pageTitles'
 
 import { Footer } from './Footer'
-import { InstallPrompt, SkipLink } from './layout'
+import { SkipLink } from './layout'
 
 export const Layout: React.FC = () => {
   const { pathname } = useLocation()
@@ -111,8 +111,6 @@ export const Layout: React.FC = () => {
       {/* Other pages have their own H1s in their page components */}
       <Outlet />
       <Footer />
-      {/* PWA install prompt - site-wide, follows web.dev best practices */}
-      {import.meta.env.PROD && <InstallPrompt />}
     </>
   )
 }
