@@ -272,6 +272,10 @@
     inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
+.hero-capabilities.lightbox-open .capability-tile.flipped {
+  visibility: hidden;
+}
+
 /* Front face — in normal flow, determines tile height.
    rotateY(0deg) establishes a 3D layer so backface-visibility works.
    Glassmorphism lives here (not on .capability-tile) to preserve 3D context. */
@@ -468,9 +472,13 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: transparent;
+  background: rgba(0, 0, 0, 0.75);
   cursor: pointer;
   animation: capability-tile-lightbox-fade-in 0.2s ease-out;
+}
+
+[data-theme='light'] .capability-tile-image-lightbox {
+  background: rgba(0, 0, 0, 0.55);
 }
 
 @keyframes capability-tile-lightbox-fade-in {

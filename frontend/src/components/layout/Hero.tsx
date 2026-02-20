@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState, type ReactNode } from 'react'
+import { createPortal } from 'react-dom'
 
 import { useTheme } from '../../contexts/ThemeContext'
 
@@ -111,6 +112,12 @@ export function Hero({ visibleTooltip, onCapabilityTileTap, children }: HeroProp
     setEnlargedImageSrc(null)
   }, [])
 
+  /** Close enlarged screenshot and unflip the tile so the rotation animation plays consistently */
+  const closeEnlargedAndUnflip = useCallback(() => {
+    closeEnlargedImage()
+    dismissFlip()
+  }, [closeEnlargedImage, dismissFlip])
+
   useEffect(() => {
     if (!flippedTile) return
     const handleClickOutside = () => dismissFlip()
@@ -121,11 +128,16 @@ export function Hero({ visibleTooltip, onCapabilityTileTap, children }: HeroProp
   useEffect(() => {
     if (!enlargedImageSrc) return
     const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') closeEnlargedImage()
+      if (e.key === 'Escape') closeEnlargedAndUnflip()
     }
+    const handleClickAnywhere = () => closeEnlargedAndUnflip()
     document.addEventListener('keydown', handleEscape)
-    return () => document.removeEventListener('keydown', handleEscape)
-  }, [enlargedImageSrc, closeEnlargedImage])
+    document.addEventListener('click', handleClickAnywhere)
+    return () => {
+      document.removeEventListener('keydown', handleEscape)
+      document.removeEventListener('click', handleClickAnywhere)
+    }
+  }, [enlargedImageSrc, closeEnlargedAndUnflip])
 
   const handleTileClick = useCallback(
     (tileId: string) => {
@@ -198,7 +210,7 @@ export function Hero({ visibleTooltip, onCapabilityTileTap, children }: HeroProp
           <span className="hero-subtitle-second-line"> at the same time</span>
         </p>
 
-        <div className="hero-capabilities">
+        <div className={`hero-capabilities${enlargedImageSrc ? ' lightbox-open' : ''}`}>
           <CapabilityTile
             id="natural-language"
             icon={
@@ -285,25 +297,27 @@ export function Hero({ visibleTooltip, onCapabilityTileTap, children }: HeroProp
           />
         </div>
 
-        {enlargedImageSrc && (
+        {/* Render children (comparison form) inside hero-input-section */}
+        {children && <div className="hero-input-section">{children}</div>}
+      </div>
+
+      {enlargedImageSrc &&
+        createPortal(
           <div
             className="capability-tile-image-lightbox"
             role="dialog"
             aria-modal="true"
             aria-label="Enlarged image — click to close"
-            onClick={closeEnlargedImage}
+            onClick={closeEnlargedAndUnflip}
           >
             <img
               src={enlargedImageSrc}
               alt="Enlarged preview — click to close"
               className="capability-tile-image-lightbox-img"
             />
-          </div>
+          </div>,
+          document.body
         )}
-
-        {/* Render children (comparison form) inside hero-input-section */}
-        {children && <div className="hero-input-section">{children}</div>}
-      </div>
     </div>
   )
 }
