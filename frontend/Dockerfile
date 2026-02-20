@@ -34,9 +34,8 @@ COPY . .
 EXPOSE 5173
 CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
 
-# For production (runs as non-root nginx user)
+# For production with SSL (runs as root so nginx can read host-mounted certs and write to /var/cache/nginx)
 FROM nginx:alpine as prod
 COPY --from=build /app/dist /usr/share/nginx/html
 EXPOSE 8080
-USER nginx
 CMD ["nginx", "-g", "daemon off;"]
