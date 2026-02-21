@@ -665,7 +665,7 @@ jobs:
       - name: Run npm audit
         run: |
           cd frontend
-          npm audit --audit-level=high --production
+          npm audit --audit-level=high --omit=dev
       
       - name: Check for hardcoded secrets
         run: |
