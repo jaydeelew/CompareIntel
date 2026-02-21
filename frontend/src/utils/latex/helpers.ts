@@ -20,10 +20,15 @@ export const safeRenderKatex = (
   katexOptions?: ModelRendererConfig['katexOptions']
 ): string => {
   try {
-    const cleanLatex = latex
+    let cleanLatex = latex
       .trim()
       .replace(/<[^>]*>/g, '')
       .replace(/style="[^"]*"/g, '')
+
+    cleanLatex = cleanLatex
+      .replace(/\\\)\s*$/, '')
+      .replace(/\\\]\s*$/, '')
+      .trim()
 
     if (!cleanLatex) return ''
 

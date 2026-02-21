@@ -29,8 +29,8 @@ export function fixLatexIssues(text: string): string {
     'exp',
   ]
   commands.forEach(cmd => {
-    fixed = fixed.replace(new RegExp(`\\b${cmd}\\{`, 'g'), `\\${cmd}{`)
-    fixed = fixed.replace(new RegExp(`\\b${cmd}([_^])`, 'g'), `\\${cmd}$1`)
+    fixed = fixed.replace(new RegExp(`(?<!\\\\)\\b${cmd}\\{`, 'g'), `\\${cmd}{`)
+    fixed = fixed.replace(new RegExp(`(?<!\\\\)\\b${cmd}([_^])`, 'g'), `\\${cmd}$1`)
   })
 
   const operators = [
@@ -48,7 +48,7 @@ export function fixLatexIssues(text: string): string {
     'infty',
   ]
   operators.forEach(op => {
-    fixed = fixed.replace(new RegExp(`\\b${op}\\b`, 'g'), `\\${op}`)
+    fixed = fixed.replace(new RegExp(`(?<!\\\\)\\b${op}\\b`, 'g'), `\\${op}`)
   })
 
   fixed = fixed.replace(/\\left\(/g, '(').replace(/\\right\)/g, ')')

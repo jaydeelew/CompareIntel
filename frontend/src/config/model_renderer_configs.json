@@ -1821,7 +1821,7 @@
     ],
     "inlineMathDelimiters": [
       {
-        "pattern": "/\\\\\\(\\s*([^\\\\]*?)\\s*\\\\\\)/g",
+        "pattern": "/\\\\\\(\\s*([\\s\\S]*?)\\s*\\\\\\)/g",
         "name": "paren",
         "priority": 1
       },
@@ -1885,7 +1885,7 @@
     ],
     "inlineMathDelimiters": [
       {
-        "pattern": "/\\\\\\(\\s*([^\\\\]*?)\\s*\\\\\\)/g",
+        "pattern": "/\\\\\\(\\s*([\\s\\S]*?)\\s*\\\\\\)/g",
         "name": "paren",
         "priority": 1
       },
@@ -1949,7 +1949,7 @@
     ],
     "inlineMathDelimiters": [
       {
-        "pattern": "/\\\\\\(\\s*([^\\\\]*?)\\s*\\\\\\)/g",
+        "pattern": "/\\\\\\(\\s*([\\s\\S]*?)\\s*\\\\\\)/g",
         "name": "paren",
         "priority": 1
       },
@@ -2013,7 +2013,7 @@
     ],
     "inlineMathDelimiters": [
       {
-        "pattern": "/\\\\\\(\\s*([^\\\\]*?)\\s*\\\\\\)/g",
+        "pattern": "/\\\\\\(\\s*([\\s\\S]*?)\\s*\\\\\\)/g",
         "name": "paren",
         "priority": 1
       },
@@ -2834,7 +2834,7 @@
     ],
     "inlineMathDelimiters": [
       {
-        "pattern": "/\\\\\\(\\s*([^\\\\]*?)\\s*\\\\\\)/g",
+        "pattern": "/\\\\\\(\\s*([\\s\\S]*?)\\s*\\\\\\)/g",
         "name": "paren",
         "priority": 1
       },
@@ -3119,7 +3119,7 @@
     ],
     "inlineMathDelimiters": [
       {
-        "pattern": "/\\\\\\(\\s*([^\\\\]*?)\\s*\\\\\\)/g",
+        "pattern": "/\\\\\\(\\s*([\\s\\S]*?)\\s*\\\\\\)/g",
         "name": "paren",
         "priority": 1
       },
@@ -3188,7 +3188,7 @@
     ],
     "inlineMathDelimiters": [
       {
-        "pattern": "/\\\\\\(\\s*([^\\\\]*?)\\s*\\\\\\)/g",
+        "pattern": "/\\\\\\(\\s*([\\s\\S]*?)\\s*\\\\\\)/g",
         "name": "paren",
         "priority": 1
       },
@@ -3252,7 +3252,7 @@
     ],
     "inlineMathDelimiters": [
       {
-        "pattern": "/\\\\\\(\\s*([^\\\\]*?)\\s*\\\\\\)/g",
+        "pattern": "/\\\\\\(\\s*([\\s\\S]*?)\\s*\\\\\\)/g",
         "name": "paren",
         "priority": 1
       },
@@ -3483,7 +3483,7 @@
     ],
     "inlineMathDelimiters": [
       {
-        "pattern": "/\\\\\\(\\s*([^\\\\]*?)\\s*\\\\\\)/g",
+        "pattern": "/\\\\\\(\\s*([\\s\\S]*?)\\s*\\\\\\)/g",
         "name": "paren",
         "priority": 1
       },
@@ -3547,7 +3547,7 @@
     ],
     "inlineMathDelimiters": [
       {
-        "pattern": "/\\\\\\(\\s*([^\\\\]*?)\\s*\\\\\\)/g",
+        "pattern": "/\\\\\\(\\s*([\\s\\S]*?)\\s*\\\\\\)/g",
         "name": "paren",
         "priority": 1
       },
@@ -3611,7 +3611,7 @@
     ],
     "inlineMathDelimiters": [
       {
-        "pattern": "/\\\\\\(\\s*([^\\\\]*?)\\s*\\\\\\)/g",
+        "pattern": "/\\\\\\(\\s*([\\s\\S]*?)\\s*\\\\\\)/g",
         "name": "paren",
         "priority": 1
       },
@@ -3675,7 +3675,7 @@
     ],
     "inlineMathDelimiters": [
       {
-        "pattern": "/\\\\\\(\\s*([^\\\\]*?)\\s*\\\\\\)/g",
+        "pattern": "/\\\\\\(\\s*([\\s\\S]*?)\\s*\\\\\\)/g",
         "name": "paren",
         "priority": 1
       },
@@ -3739,7 +3739,7 @@
     ],
     "inlineMathDelimiters": [
       {
-        "pattern": "/\\\\\\(\\s*([^\\\\]*?)\\s*\\\\\\)/g",
+        "pattern": "/\\\\\\(\\s*([\\s\\S]*?)\\s*\\\\\\)/g",
         "name": "paren",
         "priority": 1
       },
@@ -3803,7 +3803,7 @@
     ],
     "inlineMathDelimiters": [
       {
-        "pattern": "/\\\\\\(\\s*([^\\\\]*?)\\s*\\\\\\)/g",
+        "pattern": "/\\\\\\(\\s*([\\s\\S]*?)\\s*\\\\\\)/g",
         "name": "paren",
         "priority": 1
       },
@@ -3921,7 +3921,7 @@
     ],
     "inlineMathDelimiters": [
       {
-        "pattern": "/\\\\\\(\\s*([^\\\\]*?)\\s*\\\\\\)/g",
+        "pattern": "/\\\\\\(\\s*([\\s\\S]*?)\\s*\\\\\\)/g",
         "name": "paren",
         "priority": 1
       },
@@ -3985,7 +3985,7 @@
     ],
     "inlineMathDelimiters": [
       {
-        "pattern": "/\\\\\\(\\s*([^\\\\]*?)\\s*\\\\\\)/g",
+        "pattern": "/\\\\\\(\\s*([\\s\\S]*?)\\s*\\\\\\)/g",
         "name": "paren",
         "priority": 1
       },
@@ -4098,7 +4098,7 @@
     ],
     "inlineMathDelimiters": [
       {
-        "pattern": "/\\\\\\(\\s*([^\\\\]*?)\\s*\\\\\\)/g",
+        "pattern": "/\\\\\\(\\s*([\\s\\S]*?)\\s*\\\\\\)/g",
         "name": "paren",
         "priority": 1
       },
@@ -4516,7 +4516,7 @@
     ],
     "inlineMathDelimiters": [
       {
-        "pattern": "/\\\\\\(\\s*([^\\\\]*?)\\s*\\\\\\)/g",
+        "pattern": "/\\\\\\(\\s*([\\s\\S]*?)\\s*\\\\\\)/g",
         "name": "paren",
         "priority": 1
       },

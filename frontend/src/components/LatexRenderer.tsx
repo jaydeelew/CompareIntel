@@ -869,6 +869,15 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({ children, className = '',
         const codeBlockExtraction = extractCodeBlocks(processed)
         processed = codeBlockExtraction.text
 
+        // Normalize double-escaped LaTeX in non-code content (e.g., \\( ... \\), \\frac)
+        // Some models/providers emit extra escaping; collapse one slash so delimiters/commands parse.
+        processed = processed
+          .replace(/\\\\(?=[()[\]])/g, '\\')
+          .replace(
+            /\\\\(?=(?:frac|sqrt|left|right|boxed|pm|mp|neq|leq|geq|cdot|times|div|Rightarrow|Leftarrow|rightarrow|leftarrow|alpha|beta|gamma|delta|theta|pi|infty|displaystyle)\b)/g,
+            '\\'
+          )
+
         // Stage 0.5: Extract display math blocks BEFORE any processing
         // This protects math content from being modified by preprocessing stages
         const displayMathExtraction = extractDisplayMath(processed, config.displayMathDelimiters)
@@ -1084,11 +1093,25 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({ children, className = '',
         // Don't remove backslashes that are part of LaTeX commands
         processed = processed.replace(/\\([`*_#+\-.!|])/g, '$1')
 
-        // Remove orphaned \( and \) delimiters that weren't processed as math
-        // These can occur if the content inside wasn't recognized as math or if the pattern didn't match
-        // We'll remove the delimiters but keep the content
-        // Match \( followed by any content (non-greedy) followed by \)
-        processed = processed.replace(/\\\(\s*([\s\S]*?)\s*\\\)/g, '$1')
+        // Render any remaining \\( \\) delimited math (double-escaped variant)
+        processed = processed.replace(/\\\\\(\s*([\s\S]*?)\s*\\\\\)/g, (_match, math) => {
+          if (_match.includes('<span class="katex">')) return math.trim()
+          const trimmed = math.trim()
+          if (!trimmed) return ''
+          return safeRenderKatex(trimmed, false, config.katexOptions)
+        })
+
+        // Render any remaining \( \) delimited math that wasn't processed earlier
+        processed = processed.replace(/\\\(\s*([\s\S]*?)\s*\\\)/g, (_match, math) => {
+          if (_match.includes('<span class="katex">')) return math.trim()
+          const trimmed = math.trim()
+          if (!trimmed) return ''
+          return safeRenderKatex(trimmed, false, config.katexOptions)
+        })
+
+        // Remove orphan opening delimiters before already-rendered KaTeX spans
+        // (can occur when upstream patterns consume a closing \) unexpectedly).
+        processed = processed.replace(/\\\\?\(\s*(?=<span class="katex">)/g, '')
 
         // Final aggressive cleanup: Remove ANY remaining MDPH or internal placeholders
         // This catches placeholders that might have escaped earlier stages

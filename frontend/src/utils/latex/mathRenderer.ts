@@ -162,12 +162,71 @@ export function renderMathContent(text: string, config: MathRendererConfig): str
   let rendered = text
   const displayDelimiters = sortDelimiters(config.displayMathDelimiters)
   const inlineDelimiters = sortDelimiters(config.inlineMathDelimiters)
+  let renderedFromDelimiters = false
 
+  // Process delimiter-based math FIRST - this ensures \( \displaystyle ... \), \( \frac{}{} \), etc.
+  // are rendered correctly. Ad-hoc patterns below (e.g. standalone \displaystyle, ^x =) must run
+  // AFTER so they don't steal/corrupt content that belongs to delimited math.
   displayDelimiters.forEach(({ pattern }) => {
     rendered = rendered.replace(pattern, (_match, math) => {
+      renderedFromDelimiters = true
       return safeRenderKatex(math, true, config.katexOptions)
     })
   })
+
+  inlineDelimiters.forEach(({ pattern }) => {
+    rendered = rendered.replace(pattern, (_match, math) => {
+      renderedFromDelimiters = true
+      return safeRenderKatex(math, false, config.katexOptions)
+    })
+  })
+
+  // If we successfully rendered any delimiter-based math, stop here.
+  // The ad-hoc regex passes below are intended for naked math fallback and can
+  // inadvertently mutate already-rendered KaTeX/MathML structure.
+  if (renderedFromDelimiters) {
+    return rendered
+  }
+
+  // Protect KaTeX MathML annotation blocks from subsequent regex-based post-processing.
+  // These blocks intentionally contain raw LaTeX source, and mutating them can corrupt
+  // rendered output structure in the browser.
+  const annotationBlocks: string[] = []
+  rendered = rendered.replace(/<annotation[^>]*>[\s\S]*?<\/annotation>/g, match => {
+    const idx = annotationBlocks.length
+    annotationBlocks.push(match)
+    return `__KATEX_ANNOTATION_${idx}__`
+  })
+
+  // Ad-hoc patterns for naked math (no delimiters) - run after delimiter processing
+  rendered = rendered.replace(
+    /\\displaystyle\s+(.+?)(\n+|$)/g,
+    (_match, expression, newlines, offset, fullText) => {
+      // Skip if this \displaystyle is inside inline delimiters like \( ... \)
+      // (that case should be handled by delimiter-based rendering above).
+      const before = fullText.substring(0, offset)
+      const lastInlineOpen = Math.max(before.lastIndexOf('\\('), before.lastIndexOf('\\\\('))
+      const lastInlineClose = Math.max(before.lastIndexOf('\\)'), before.lastIndexOf('\\\\)'))
+      if (lastInlineOpen > lastInlineClose) {
+        return _match
+      }
+
+      const alreadyRendered =
+        expression.includes('<span class="katex">') || expression.includes('katex')
+      if (!alreadyRendered) {
+        const clean = expression
+          .replace(/<[^>]*>/g, '')
+          .replace(/style="[^"]*"/g, '')
+          .replace(/\.?\s*$/, '')
+          .trim()
+        if (clean) {
+          const newlineHtml = newlines ? '<br>'.repeat(newlines.length) : ''
+          return safeRenderKatex(clean, true, config.katexOptions) + newlineHtml
+        }
+      }
+      return _match
+    }
+  )
 
   rendered = rendered.replace(/^x\s*=\s*(.+?)(\n+|$)/gm, (_match, rightSide, newlines) => {
     const fullExpression = `x = ${rightSide}`
@@ -313,40 +372,94 @@ export function renderMathContent(text: string, config: MathRendererConfig): str
     }
   )
 
-  inlineDelimiters.forEach(({ pattern }) => {
-    rendered = rendered.replace(pattern, (_match, math) => {
-      return safeRenderKatex(math, false, config.katexOptions)
-    })
-  })
-
-  const sqrtRegex = /\\sqrt\{([^}]+)\}/g
-  let sqrtMatch
-  const sqrtReplacements: Array<{ start: number; end: number; replacement: string }> = []
-
-  while ((sqrtMatch = sqrtRegex.exec(rendered)) !== null) {
-    const start = sqrtMatch.index
-    const end = start + sqrtMatch[0].length
-    const content = sqrtMatch[1]
-    const beforeMatch = rendered.substring(0, start)
-    const lastKatexStart = beforeMatch.lastIndexOf('<span class="katex">')
-    const lastKatexEnd = beforeMatch.lastIndexOf('</span>')
-    if (lastKatexStart <= lastKatexEnd) {
-      sqrtReplacements.push({
-        start,
-        end,
-        replacement: safeRenderKatex(`\\sqrt{${content}}`, false, config.katexOptions),
-      })
+  const findMatchingBrace = (t: string, openPos: number): number => {
+    let depth = 1
+    let pos = openPos + 1
+    while (depth > 0 && pos < t.length) {
+      if (t[pos] === '{') depth++
+      else if (t[pos] === '}') depth--
+      pos++
     }
+    return depth === 0 ? pos - 1 : -1
   }
 
-  sqrtReplacements.reverse().forEach(({ start, end, replacement }) => {
-    rendered = rendered.substring(0, start) + replacement + rendered.substring(end)
-  })
+  const isInsideKatex = (t: string, pos: number): boolean => {
+    const before = t.substring(0, pos)
+    return before.lastIndexOf('<span class="katex">') > before.lastIndexOf('</span>')
+  }
 
-  rendered = rendered.replace(/\\frac\{([^}]+)\}\{([^}]+)\}/g, (_match, num, den) => {
-    if (_match.includes('<span') || _match.includes('katex')) return _match
-    return safeRenderKatex(`\\frac{${num}}{${den}}`, false, config.katexOptions)
-  })
+  const cleanHtmlFromLatex = (s: string): string =>
+    s
+      .replace(/<[^>]*>/g, '')
+      .replace(/style="[^"]*"/g, '')
+      .replace(/\bclass="[^"]*"/g, '')
+      .trim()
+
+  const processSqrt = (t: string): string => {
+    let result = ''
+    let i = 0
+    while (i < t.length) {
+      if (t.substring(i).startsWith('\\sqrt{') && !isInsideKatex(t, i)) {
+        const braceStart = i + 5
+        const braceEnd = findMatchingBrace(t, braceStart)
+        if (braceEnd !== -1) {
+          const content = t.substring(braceStart + 1, braceEnd)
+          result += safeRenderKatex(
+            `\\sqrt{${cleanHtmlFromLatex(content)}}`,
+            false,
+            config.katexOptions
+          )
+          i = braceEnd + 1
+        } else {
+          result += t[i]
+          i++
+        }
+      } else {
+        result += t[i]
+        i++
+      }
+    }
+    return result
+  }
+
+  rendered = processSqrt(rendered)
+
+  const processFrac = (t: string): string => {
+    let result = ''
+    let i = 0
+    while (i < t.length) {
+      if (t.substring(i).startsWith('\\frac{') && !isInsideKatex(t, i)) {
+        const numBraceStart = i + 5
+        const numBraceEnd = findMatchingBrace(t, numBraceStart)
+        if (numBraceEnd !== -1 && numBraceEnd + 1 < t.length && t[numBraceEnd + 1] === '{') {
+          const denBraceStart = numBraceEnd + 1
+          const denBraceEnd = findMatchingBrace(t, denBraceStart)
+          if (denBraceEnd !== -1) {
+            const num = t.substring(numBraceStart + 1, numBraceEnd)
+            const den = t.substring(denBraceStart + 1, denBraceEnd)
+            result += safeRenderKatex(
+              `\\frac{${cleanHtmlFromLatex(num)}}{${cleanHtmlFromLatex(den)}}`,
+              false,
+              config.katexOptions
+            )
+            i = denBraceEnd + 1
+          } else {
+            result += t[i]
+            i++
+          }
+        } else {
+          result += t[i]
+          i++
+        }
+      } else {
+        result += t[i]
+        i++
+      }
+    }
+    return result
+  }
+
+  rendered = processFrac(rendered)
 
   const processBoxed = (t: string): string => {
     let result = ''
@@ -453,6 +566,14 @@ export function renderMathContent(text: string, config: MathRendererConfig): str
     { pattern: /\\Omega/g, latex: '\\Omega' },
   ]
 
+  // Skip replacement when inside KaTeX annotation (contains raw LaTeX - would corrupt structure)
+  const isInsideAnnotation = (str: string, pos: number): boolean => {
+    const before = str.substring(0, pos)
+    const lastOpen = before.lastIndexOf('<annotation')
+    const lastClose = before.lastIndexOf('</annotation>')
+    return lastOpen > lastClose && lastOpen !== -1
+  }
+
   symbols.forEach(({ pattern, latex }) => {
     const symbolRegex = new RegExp(pattern.source, pattern.flags)
     let symbolMatch
@@ -465,6 +586,7 @@ export function renderMathContent(text: string, config: MathRendererConfig): str
       const lastKatexEnd = beforeMatch.lastIndexOf('</span>')
       const backticksBefore = (beforeMatch.match(/`/g) || []).length
       if (backticksBefore % 2 === 1) continue
+      if (isInsideAnnotation(rendered, start)) continue
       if (lastKatexStart <= lastKatexEnd) {
         symbolReplacements.push({
           start,
@@ -575,6 +697,7 @@ export function renderMathContent(text: string, config: MathRendererConfig): str
     const lastKatexStart = beforeMatch.lastIndexOf('<span class="katex">')
     const lastKatexEnd = beforeMatch.lastIndexOf('</span>')
     if (lastKatexStart > lastKatexEnd) continue
+    if (isInsideAnnotation(rendered, start)) continue
     const backticksBefore = (beforeMatch.match(/`/g) || []).length
     if (backticksBefore % 2 === 1) continue
     const afterMatch = rendered.substring(end)
@@ -589,12 +712,29 @@ export function renderMathContent(text: string, config: MathRendererConfig): str
     rendered = rendered.substring(0, start) + replacement + rendered.substring(end)
   })
 
-  rendered = rendered.replace(/([a-zA-Z0-9]+)\^\{([^}]+)\}/g, (_match, base, exp) => {
+  rendered = rendered.replace(/([a-zA-Z0-9)\]])\^\{([^}]+)\}/g, (match, base, exp, offset) => {
+    if (match.includes('<span') || match.includes('katex')) return match
+    if (isInsideAnnotation(rendered, offset)) return match
     return safeRenderKatex(`${base}^{${exp}}`, false, config.katexOptions)
   })
-  rendered = rendered.replace(/([a-zA-Z0-9])\^(\d+|[a-zA-Z])/g, (_match, base, exp) => {
+  rendered = rendered.replace(/([a-zA-Z0-9])\^(\d+|[a-zA-Z])/g, (match, base, exp, offset) => {
+    if (match.includes('<span') || match.includes('katex')) return match
+    if (isInsideAnnotation(rendered, offset)) return match
     return safeRenderKatex(`${base}^{${exp}}`, false, config.katexOptions)
   })
+
+  // Restore protected KaTeX annotations.
+  rendered = rendered.replace(/__KATEX_ANNOTATION_(\d+)__/g, (_match, index) => {
+    const blockIndex = parseInt(index, 10)
+    if (blockIndex >= 0 && blockIndex < annotationBlocks.length) {
+      return annotationBlocks[blockIndex]
+    }
+    return _match
+  })
+
+  // Safety cleanup: \displaystyle should not appear in final rendered text.
+  // If any residual token survives the main rendering passes, drop just the command.
+  rendered = rendered.replace(/\\displaystyle\s*/g, '')
 
   return rendered
 }
