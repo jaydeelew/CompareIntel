@@ -52,7 +52,7 @@ export const TutorialBackdrop: React.FC<TutorialBackdropProps> = ({
       <div
         className="tutorial-backdrop-cutout"
         style={{
-          position: 'fixed',
+          position: 'absolute',
           top: `${loadingStreamingCutout.top}px`,
           left: `${loadingStreamingCutout.left}px`,
           width: `${loadingStreamingCutout.width}px`,
@@ -72,7 +72,7 @@ export const TutorialBackdrop: React.FC<TutorialBackdropProps> = ({
       <div
         className="tutorial-backdrop-cutout"
         style={{
-          position: 'fixed',
+          position: 'absolute',
           top: `${textareaCutoutToUse.top}px`,
           left: `${textareaCutoutToUse.left}px`,
           width: `${textareaCutoutToUse.width}px`,
@@ -88,24 +88,27 @@ export const TutorialBackdrop: React.FC<TutorialBackdropProps> = ({
   }
 
   if (shouldExcludeTextarea && textareaCutoutToUse) {
+    // Convert document-relative cutout back to viewport-relative for fixed-position split backdrop
+    const vTop = textareaCutoutToUse.top - window.scrollY
+    const vLeft = textareaCutoutToUse.left - window.scrollX
     return (
       <>
         <div
           className="tutorial-backdrop tutorial-backdrop-top"
-          style={{ height: `${textareaCutoutToUse.top}px` }}
+          style={{ height: `${vTop}px` }}
           onClick={e => handleBackdropClick(e, 'tutorial-backdrop')}
         />
         <div
           className="tutorial-backdrop tutorial-backdrop-bottom"
-          style={{ top: `${textareaCutoutToUse.top + textareaCutoutToUse.height}px` }}
+          style={{ top: `${vTop + textareaCutoutToUse.height}px` }}
           onClick={e => handleBackdropClick(e, 'tutorial-backdrop')}
         />
         <div
           className="tutorial-backdrop tutorial-backdrop-left"
           style={{
-            top: `${textareaCutoutToUse.top}px`,
+            top: `${vTop}px`,
             left: '0',
-            width: `${textareaCutoutToUse.left}px`,
+            width: `${vLeft}px`,
             height: `${textareaCutoutToUse.height}px`,
           }}
           onClick={e => handleBackdropClick(e, 'tutorial-backdrop')}
@@ -113,8 +116,8 @@ export const TutorialBackdrop: React.FC<TutorialBackdropProps> = ({
         <div
           className="tutorial-backdrop tutorial-backdrop-right"
           style={{
-            top: `${textareaCutoutToUse.top}px`,
-            left: `${textareaCutoutToUse.left + textareaCutoutToUse.width}px`,
+            top: `${vTop}px`,
+            left: `${vLeft + textareaCutoutToUse.width}px`,
             height: `${textareaCutoutToUse.height}px`,
           }}
           onClick={e => handleBackdropClick(e, 'tutorial-backdrop')}
@@ -128,7 +131,7 @@ export const TutorialBackdrop: React.FC<TutorialBackdropProps> = ({
       <div
         className="tutorial-backdrop-cutout"
         style={{
-          position: 'fixed',
+          position: 'absolute',
           top: `${dropdownCutout.top}px`,
           left: `${dropdownCutout.left}px`,
           width: `${dropdownCutout.width}px`,
@@ -143,12 +146,12 @@ export const TutorialBackdrop: React.FC<TutorialBackdropProps> = ({
     )
   }
 
-  if (targetCutout) {
+  if (targetCutout && !shouldExcludeTextarea && !shouldExcludeDropdown && !useRoundedCutout) {
     return (
       <div
         className="tutorial-backdrop-cutout"
         style={{
-          position: 'fixed',
+          position: 'absolute',
           top: `${targetCutout.top}px`,
           left: `${targetCutout.left}px`,
           width: `${targetCutout.width}px`,

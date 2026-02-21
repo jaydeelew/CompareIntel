@@ -890,9 +890,9 @@ export const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
   const cutoutStyle =
     cutoutTarget && showBackdrop
       ? {
-          position: 'fixed' as const,
-          top: `${cutoutTarget.top - cutoutPadding}px`,
-          left: `${cutoutTarget.left - cutoutPadding}px`,
+          position: 'absolute' as const,
+          top: `${cutoutTarget.top + window.scrollY - cutoutPadding}px`,
+          left: `${cutoutTarget.left + window.scrollX - cutoutPadding}px`,
           width: `${cutoutTarget.width + cutoutPadding * 2}px`,
           height: `${cutoutTarget.height + cutoutPadding * 2}px`,
           borderRadius: isLoadingStreamingPhase

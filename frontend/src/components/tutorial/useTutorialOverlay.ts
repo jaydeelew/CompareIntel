@@ -93,6 +93,17 @@ export function useTutorialOverlay(step: TutorialStep | null, isLoading: boolean
     }
   }, [step])
 
+  // Clear all cutouts synchronously before paint when step changes. Prevents a single
+  // frame with stale cutouts from the previous step (e.g. step 2's cutout flashing on step 3).
+  useLayoutEffect(() => {
+    if (!step) return
+    setTextareaCutout(null)
+    setDropdownCutout(null)
+    setButtonCutout(null)
+    setTargetCutout(null)
+    setLoadingStreamingCutout(null)
+  }, [step])
+
   useEffect(() => {
     targetElementRef.current = targetElement
   }, [targetElement])
@@ -381,6 +392,8 @@ export function useTutorialOverlay(step: TutorialStep | null, isLoading: boolean
     setTextareaCutout(null)
     setDropdownCutout(null)
     setButtonCutout(null)
+    setTargetCutout(null)
+    setLoadingStreamingCutout(null)
 
     // Wait for element to be available
     const findElement = () => {
@@ -462,7 +475,12 @@ export function useTutorialOverlay(step: TutorialStep | null, isLoading: boolean
           composerElement.classList.add('tutorial-textarea-active')
           composerElement.style.pointerEvents = 'auto'
           composerElement.style.position = 'relative'
-          setTextareaCutout(computeTextareaCutout(composerElement))
+          const submitCutout = computeTextareaCutout(composerElement)
+          if (submitCutout) {
+            submitCutout.top += window.scrollY
+            submitCutout.left += window.scrollX
+          }
+          setTextareaCutout(submitCutout)
         }
         // Use default selector for the submit button as target element
         element = document.querySelector(config.targetSelector) as HTMLElement
@@ -883,7 +901,12 @@ export function useTutorialOverlay(step: TutorialStep | null, isLoading: boolean
     let composerElement: HTMLElement | null = null
     if (shouldExcludeTextarea) {
       composerElement = getComposerElement()
-      setTextareaCutout(composerElement ? computeTextareaCutout(composerElement) : null)
+      const cutout = composerElement ? computeTextareaCutout(composerElement) : null
+      if (cutout) {
+        cutout.top += window.scrollY
+        cutout.left += window.scrollX
+      }
+      setTextareaCutout(cutout)
     } else if (!isDropdownStep) {
       // Only clear textarea cutout if we're not on a dropdown step
       setTextareaCutout(null)
@@ -902,7 +925,12 @@ export function useTutorialOverlay(step: TutorialStep | null, isLoading: boolean
         if (historyDropdown) {
           historyDropdown.classList.add('tutorial-dropdown-active')
         }
-        setDropdownCutout(computeDropdownCutout(dropdownContainer, historyDropdown))
+        const historyCutout = computeDropdownCutout(dropdownContainer, historyDropdown)
+        if (historyCutout) {
+          historyCutout.top += window.scrollY
+          historyCutout.left += window.scrollX
+        }
+        setDropdownCutout(historyCutout)
       }
     } else if (step === 'save-selection') {
       savedSelectionsDropdown = document.querySelector('.saved-selections-dropdown') as HTMLElement
@@ -912,7 +940,12 @@ export function useTutorialOverlay(step: TutorialStep | null, isLoading: boolean
         if (savedSelectionsDropdown) {
           savedSelectionsDropdown.classList.add('tutorial-dropdown-active')
         }
-        setDropdownCutout(computeDropdownCutout(dropdownContainer, savedSelectionsDropdown))
+        const saveCutout = computeDropdownCutout(dropdownContainer, savedSelectionsDropdown)
+        if (saveCutout) {
+          saveCutout.top += window.scrollY
+          saveCutout.left += window.scrollX
+        }
+        setDropdownCutout(saveCutout)
       }
     } else if (!isDropdownStep) {
       // Only clear cutout when NOT on a dropdown step
@@ -1185,9 +1218,13 @@ export function useTutorialOverlay(step: TutorialStep | null, isLoading: boolean
         composerElement.classList.add('tutorial-highlight')
         composerElement.style.pointerEvents = 'auto'
         composerElement.style.position = 'relative'
-        // Ensure textarea-active class is present
         composerElement.classList.add('tutorial-textarea-active')
-        setTextareaCutout(computeTextareaCutout(composerElement))
+        const cutout = computeTextareaCutout(composerElement)
+        if (cutout) {
+          cutout.top += window.scrollY
+          cutout.left += window.scrollX
+        }
+        setTextareaCutout(cutout)
         // Set target element only when needed; avoid re-triggering scroll during the initial phase
         const currentTarget = targetElementRef.current
         if (!currentTarget) {
@@ -1246,9 +1283,13 @@ export function useTutorialOverlay(step: TutorialStep | null, isLoading: boolean
         composerElement.classList.add('tutorial-highlight')
         composerElement.style.pointerEvents = 'auto'
         composerElement.style.position = 'relative'
-        // Ensure textarea-active class is present
         composerElement.classList.add('tutorial-textarea-active')
-        setTextareaCutout(computeTextareaCutout(composerElement))
+        const cutout = computeTextareaCutout(composerElement)
+        if (cutout) {
+          cutout.top += window.scrollY
+          cutout.left += window.scrollX
+        }
+        setTextareaCutout(cutout)
         // Set target element if not set
         setTargetElement(composerElement)
 
@@ -1344,7 +1385,12 @@ export function useTutorialOverlay(step: TutorialStep | null, isLoading: boolean
             composerElement.style.pointerEvents = 'auto'
             composerElement.style.position = 'relative'
           }
-          setTextareaCutout(computeTextareaCutout(composerElement))
+          const cutout = computeTextareaCutout(composerElement)
+          if (cutout) {
+            cutout.top += window.scrollY
+            cutout.left += window.scrollX
+          }
+          setTextareaCutout(cutout)
         }
       }
 
@@ -1479,12 +1525,12 @@ export function useTutorialOverlay(step: TutorialStep | null, isLoading: boolean
           })
         }
 
-        // Update cutout for results section
+        // Update cutout for results section (document-relative for absolute positioning)
         const rect = resultsSection.getBoundingClientRect()
         const padding = 12
         setLoadingStreamingCutout({
-          top: rect.top - padding,
-          left: rect.left - padding,
+          top: rect.top + window.scrollY - padding,
+          left: rect.left + window.scrollX - padding,
           width: rect.width + padding * 2,
           height: rect.height + padding * 2,
         })
@@ -1494,8 +1540,8 @@ export function useTutorialOverlay(step: TutorialStep | null, isLoading: boolean
         const rect = loadingSection.getBoundingClientRect()
         const padding = 12
         setLoadingStreamingCutout({
-          top: rect.top - padding,
-          left: rect.left - padding,
+          top: rect.top + window.scrollY - padding,
+          left: rect.left + window.scrollX - padding,
           width: rect.width + padding * 2,
           height: rect.height + padding * 2,
         })
@@ -1552,7 +1598,12 @@ export function useTutorialOverlay(step: TutorialStep | null, isLoading: boolean
         if (!composerElement.classList.contains('tutorial-highlight')) {
           composerElement.classList.add('tutorial-highlight')
         }
-        setDropdownCutout(computeDropdownCutout(composerElement, historyDropdown))
+        const histCutout = computeDropdownCutout(composerElement, historyDropdown)
+        if (histCutout) {
+          histCutout.top += window.scrollY
+          histCutout.left += window.scrollX
+        }
+        setDropdownCutout(histCutout)
       }
 
       if (historyDropdown) {
@@ -1632,7 +1683,12 @@ export function useTutorialOverlay(step: TutorialStep | null, isLoading: boolean
         if (!composerElement.classList.contains('tutorial-highlight')) {
           composerElement.classList.add('tutorial-highlight')
         }
-        setDropdownCutout(computeDropdownCutout(composerElement, savedSelectionsDropdown))
+        const selCutout = computeDropdownCutout(composerElement, savedSelectionsDropdown)
+        if (selCutout) {
+          selCutout.top += window.scrollY
+          selCutout.left += window.scrollX
+        }
+        setDropdownCutout(selCutout)
       }
 
       if (savedSelectionsDropdown) {
@@ -1678,7 +1734,8 @@ export function useTutorialOverlay(step: TutorialStep | null, isLoading: boolean
     }
   }, [step])
 
-  // Update textarea cutout position on scroll/resize for textarea-related steps. Must be called before any early returns (Rules of Hooks).
+  // Update textarea cutout position for textarea-related steps. Must be called before any early returns (Rules of Hooks).
+  // Cutout uses document-relative (absolute) coordinates so it scrolls with the page without JS updates.
   useEffect(() => {
     const shouldExcludeTextarea =
       step === 'enter-prompt' ||
@@ -1689,24 +1746,28 @@ export function useTutorialOverlay(step: TutorialStep | null, isLoading: boolean
 
     const updateTextareaCutout = () => {
       const composerElement = getComposerElement()
-      setTextareaCutout(composerElement ? computeTextareaCutout(composerElement) : null)
+      const cutout = composerElement ? computeTextareaCutout(composerElement) : null
+      if (cutout) {
+        cutout.top += window.scrollY
+        cutout.left += window.scrollX
+      }
+      setTextareaCutout(cutout)
     }
 
-    // Update immediately
     updateTextareaCutout()
 
-    // Update on scroll/resize
-    window.addEventListener('scroll', updateTextareaCutout, true)
     window.addEventListener('resize', updateTextareaCutout)
+    const interval = setInterval(updateTextareaCutout, 100)
 
     return () => {
-      window.removeEventListener('scroll', updateTextareaCutout, true)
       window.removeEventListener('resize', updateTextareaCutout)
+      clearInterval(interval)
     }
   }, [step, targetElement])
 
-  // Update dropdown cutout position on scroll/resize for dropdown steps. Cutout expands to include
+  // Update dropdown cutout position for dropdown steps. Cutout expands to include
   // the dropdown when opened (composer + dropdown union).
+  // Uses document-relative (absolute) coordinates so it scrolls with the page.
   useEffect(() => {
     const shouldExcludeDropdown = step === 'history-dropdown' || step === 'save-selection'
     if (!shouldExcludeDropdown) return
@@ -1719,26 +1780,27 @@ export function useTutorialOverlay(step: TutorialStep | null, isLoading: boolean
         step === 'history-dropdown'
           ? (document.querySelector('.history-inline-list') as HTMLElement)
           : (document.querySelector('.saved-selections-dropdown') as HTMLElement)
-      setDropdownCutout(computeDropdownCutout(composer, dropdown))
+      const cutout = computeDropdownCutout(composer, dropdown)
+      if (cutout) {
+        cutout.top += window.scrollY
+        cutout.left += window.scrollX
+      }
+      setDropdownCutout(cutout)
     }
 
-    // Update immediately
     updateDropdownCutout()
 
-    // Update on scroll/resize and periodically so cutout expands when dropdown opens
-    window.addEventListener('scroll', updateDropdownCutout, true)
     window.addEventListener('resize', updateDropdownCutout)
     const interval = setInterval(updateDropdownCutout, 100)
 
     return () => {
-      window.removeEventListener('scroll', updateDropdownCutout, true)
       window.removeEventListener('resize', updateDropdownCutout)
       clearInterval(interval)
     }
   }, [step])
 
-  // Calculate target cutout for steps that don't have special cutout handling
-  // This ensures the target element is not dimmed by the backdrop
+  // Calculate target cutout for steps that don't have special cutout handling.
+  // Uses document-relative (absolute) coordinates so it scrolls with the page.
   useEffect(() => {
     const needsTargetCutout =
       step === 'expand-provider' ||
@@ -1746,8 +1808,6 @@ export function useTutorialOverlay(step: TutorialStep | null, isLoading: boolean
       step === 'follow-up' ||
       step === 'view-follow-up-results'
 
-    // For submit-comparison steps, we need to show the textarea container
-    // This serves as a fallback in case textareaCutout timing is off
     const isSubmitStep = step === 'submit-comparison' || step === 'submit-comparison-2'
 
     if (!needsTargetCutout && !isSubmitStep) {
@@ -1770,21 +1830,20 @@ export function useTutorialOverlay(step: TutorialStep | null, isLoading: boolean
       }
       const padding = 8
       const borderRadius = step === 'view-follow-up-results' ? 16 : isSubmitStep ? 32 : 12
-      setTargetCutout(computeTargetCutout(elementsToUse, padding, borderRadius))
+      const cutout = computeTargetCutout(elementsToUse, padding, borderRadius)
+      if (cutout) {
+        cutout.top += window.scrollY
+        cutout.left += window.scrollX
+      }
+      setTargetCutout(cutout)
     }
 
-    // Update immediately
     updateTargetCutout()
 
-    // Update on scroll/resize
-    window.addEventListener('scroll', updateTargetCutout, true)
     window.addEventListener('resize', updateTargetCutout)
-
-    // Also update periodically to handle dynamic content
     const interval = setInterval(updateTargetCutout, 100)
 
     return () => {
-      window.removeEventListener('scroll', updateTargetCutout, true)
       window.removeEventListener('resize', updateTargetCutout)
       clearInterval(interval)
     }
