@@ -1935,6 +1935,7 @@ export function MainPage() {
         <TutorialManager
           showWelcomeModal={showWelcomeModal}
           setShowWelcomeModal={setShowWelcomeModal}
+          isAuthenticated={isAuthenticated}
           resetAppStateForTutorial={resetAppStateForTutorial}
           startTutorial={startTutorial}
           skipTutorial={skipTutorial}

@@ -8,6 +8,7 @@ import { TutorialWelcomeModal } from './TutorialWelcomeModal'
 interface TutorialManagerProps {
   showWelcomeModal: boolean
   setShowWelcomeModal: (value: boolean) => void
+  isAuthenticated: boolean
   resetAppStateForTutorial: () => void
   startTutorial: () => void
   skipTutorial: () => void
@@ -34,6 +35,7 @@ interface TutorialManagerProps {
 export function TutorialManager({
   showWelcomeModal,
   setShowWelcomeModal,
+  isAuthenticated,
   resetAppStateForTutorial,
   startTutorial,
   skipTutorial,
@@ -62,7 +64,7 @@ export function TutorialManager({
 
   return (
     <>
-      {showWelcomeModal && (
+      {showWelcomeModal && !isAuthenticated && (
         <TutorialWelcomeModal
           onStart={() => {
             setShowWelcomeModal(false)
