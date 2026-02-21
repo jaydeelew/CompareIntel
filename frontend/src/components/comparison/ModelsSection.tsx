@@ -340,7 +340,7 @@ export const ModelsSection: React.FC<ModelsSectionProps> = ({
                                 title={
                                   userTier === 'unregistered' && model.tier_access === 'free'
                                     ? "Click 'Sign Up' above"
-                                    : 'Premium model - upgrade after registration'
+                                    : 'Premium model - paid tiers coming soon'
                                 }
                               >
                                 <svg
