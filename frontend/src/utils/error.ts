@@ -285,6 +285,15 @@ export function isErrorMessage(content: string | null | undefined): boolean {
     return false
   }
 
+  // Exclude content that looks like code - "Error:" in code is usually user-facing
+  // error strings (e.g. return "Error: Invalid"), not a system/infrastructure error
+  const looksLikeCode =
+    trimmed.includes('```') || // Markdown code blocks
+    /\b(def |import |return |raise |class |function |const |var |let )/i.test(trimmed)
+  if (looksLikeCode) {
+    return false
+  }
+
   // Find the last occurrence of "Error:" (errors are typically appended at the end)
   const errorIndex = trimmed.toLowerCase().lastIndexOf('error:')
 
