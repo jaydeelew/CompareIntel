@@ -727,6 +727,10 @@
   animation: fadeInUp 0.8s ease-out 0.3s both;
 }
 
+.hero-input-section > * {
+  flex-shrink: 0;
+}
+
 .hero-input-section h2 {
   font-size: clamp(1.25rem, 3vw, 1.5rem);
   font-weight: var(--font-bold);
@@ -753,6 +757,17 @@
   text-underline-offset: 0.2em;
 }
 
+/* Follow-up header (Start over, etc.) - prevent layout squeeze */
+.follow-up-header {
+  flex-shrink: 0;
+  min-height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  visibility: visible;
+  opacity: 1;
+}
+
 /* Composer - Combined textarea + toolbar component */
 .composer {
   position: relative;
@@ -772,6 +787,11 @@
      above the hero section's animated gradient pseudo-elements. */
   isolation: isolate;
   z-index: 1;
+  /* Promote to own compositor layer to prevent gradient bleed-through
+     during hero animations; fallback ensures opaque background. */
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  background: var(--bg-card, #12121c);
 }
 
 .composer:hover {
@@ -826,7 +846,9 @@
     border-color 0.3s var(--ease-spring),
     box-shadow 0.3s var(--ease-spring),
     background-color 0.3s var(--ease-spring);
-  background: var(--bg-card);
+  /* Explicit fallback prevents transparent background during repaints */
+  background: var(--bg-card, #12121c);
+  background-color: var(--bg-card, #12121c);
   color: var(--text-primary);
   min-height: 44px;
   height: 44px;
@@ -841,7 +863,8 @@
   border-radius: 1.5rem 1.5rem 0 0;
   border-bottom: none;
   margin-bottom: -1px;
-  background: var(--bg-card);
+  background: var(--bg-card, #12121c);
+  background-color: var(--bg-card, #12121c);
   transition:
     border-color 0.3s var(--ease-spring),
     box-shadow 0.3s var(--ease-spring),
@@ -864,7 +887,9 @@
   border-top: none;
   margin-top: -1px;
   border-radius: 0 0 1.5rem 1.5rem;
-  background: var(--bg-card);
+  /* Explicit fallback prevents transparent background during repaints */
+  background: var(--bg-card, #12121c);
+  background-color: var(--bg-card, #12121c);
   transition:
     border-color 0.3s var(--ease-spring),
     background-color 0.3s var(--ease-spring);
@@ -872,6 +897,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  overflow: visible;
+  flex-shrink: 0;
 }
 
 /* When history dropdown is visible */
@@ -923,22 +950,21 @@
   opacity: 0.8;
 }
 
-/* Usage Preview Container */
+/* Usage Preview Container - enough height to prevent "X models • credits" cutoff */
 .usage-preview-container {
-  height: 1.5rem;
-  min-height: 1.5rem;
-  max-height: 1.5rem;
+  min-height: 2rem;
   display: block;
   margin-top: 0;
-  overflow: hidden;
+  overflow: visible;
   position: relative;
   visibility: visible;
   text-align: center;
+  flex-shrink: 0;
 }
 
 .usage-preview-container > div {
   margin-top: 0 !important;
-  line-height: 1.2;
+  line-height: 1.4;
   font-size: 0.825rem;
   display: inline-block;
   max-width: 100%;
@@ -959,6 +985,8 @@
   transform: translateZ(0);
   will-change: auto;
   margin-left: auto;
+  flex-shrink: 0;
+  overflow: visible;
 }
 
 /* Token usage indicator */
@@ -1866,9 +1894,7 @@
   }
 
   .usage-preview-container {
-    height: 1.5rem;
-    min-height: 1.5rem;
-    max-height: 1.5rem;
+    min-height: 2rem;
   }
 
   .usage-preview-container .usage-preview-extended {
