@@ -304,10 +304,6 @@
   opacity: 1;
 }
 
-.error-message + .models-section {
-  margin-top: -1rem;
-}
-
 .loading-message {
   background: var(--bg-elevated);
   border: 1px solid var(--border-color);

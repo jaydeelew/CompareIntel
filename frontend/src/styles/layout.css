@@ -80,8 +80,6 @@
 /* Models Section Specific Styling */
 .models-section {
   padding: var(--spacing-8) var(--spacing-6) var(--spacing-6) var(--spacing-6);
-  margin-top: var(--spacing-8);
-  margin-bottom: 2rem;
 }
 
 /* Section Hover Effects */
@@ -191,11 +189,6 @@
   padding: var(--spacing-6) var(--spacing-8);
 }
 
-/* Error spacing fix */
-.error-message + .models-section {
-  margin-top: -1rem;
-}
-
 /* ═══════════════════════════════════════════════════════════
    RESPONSIVE LAYOUT
    ═══════════════════════════════════════════════════════════ */
@@ -229,11 +222,6 @@
     padding: var(--spacing-6) var(--spacing-4);
     max-width: none;
     border-radius: var(--radius-xl);
-  }
-
-  .models-section {
-    margin-top: var(--spacing-4);
-    margin-bottom: var(--spacing-4);
   }
 
   .input-section h2,
