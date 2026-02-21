@@ -21,7 +21,7 @@ export const TUTORIAL_STEPS_CONFIG: Record<TutorialStep, StepConfig> = {
     step: 'select-models',
     targetSelector: '.provider-dropdown[data-provider-name="Google"]',
     title: 'Select Models',
-    description: 'Click on both highlighted Google models to select them for comparison.',
+    description: 'Click on the Google models in bold to select them for comparison.',
     position: 'top',
   },
   'enter-prompt': {
