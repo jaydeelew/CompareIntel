@@ -151,11 +151,26 @@ export function PWAInstallProvider({ children }: { children: React.ReactNode }) 
       e.preventDefault()
       setDeferredPrompt(e as BeforeInstallPromptEvent)
     }
+    const handleAppInstalled = () => {
+      setDeferredPrompt(null)
+      setIsDismissed(true)
+      localStorage.setItem(DISMISSED_KEY, Date.now().toString())
+      const gtag = (window as WindowGtag).gtag
+      if (typeof gtag === 'function') {
+        gtag('event', 'pwa_installed', {
+          event_category: 'PWA',
+          event_label: 'appinstalled',
+        })
+      }
+    }
+
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
+    window.addEventListener('appinstalled', handleAppInstalled)
 
     return () => {
       if (engagementTimerRef.current) clearTimeout(engagementTimerRef.current)
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
+      window.removeEventListener('appinstalled', handleAppInstalled)
       window.removeEventListener('scroll', trackEngagement)
       window.removeEventListener('click', trackEngagement)
       window.removeEventListener('touchstart', trackEngagement)
@@ -172,13 +187,7 @@ export function PWAInstallProvider({ children }: { children: React.ReactNode }) 
           setDeferredPrompt(null)
           setIsDismissed(true)
           localStorage.setItem(DISMISSED_KEY, Date.now().toString())
-          const gtag = (window as WindowGtag).gtag
-          if (typeof gtag === 'function') {
-            gtag('event', 'pwa_installed', {
-              event_category: 'PWA',
-              event_label: 'Install Prompt',
-            })
-          }
+          // Analytics tracked via appinstalled event (fires for all install methods)
         } else {
           localStorage.setItem(DISMISSED_KEY, Date.now().toString())
           setIsDismissed(true)

@@ -13,7 +13,7 @@ import { updatePageMeta } from '../utils/pageMeta'
 import { updatePageTitle } from '../utils/pageTitles'
 
 import { Footer } from './Footer'
-import { SkipLink } from './layout'
+import { InstallPrompt, SkipLink } from './layout'
 
 export const Layout: React.FC = () => {
   const { pathname } = useLocation()
@@ -110,6 +110,8 @@ export const Layout: React.FC = () => {
       {/* Hero provides H1 on homepage; other pages define their own */}
       <Outlet />
       <Footer />
+      {/* PWA install banner - shows after engagement, respects dismissal */}
+      <InstallPrompt />
     </>
   )
 }
