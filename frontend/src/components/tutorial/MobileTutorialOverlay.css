@@ -63,19 +63,20 @@
   border-radius: var(--radius-lg) !important;
 }
 
-/* Pulsing effect for model results tab text on step 5 (follow-up) - draws attention to tabs */
+/* Pulsing effect for model results tab text on step 5 (follow-up) - draws attention to tabs via size pulse */
 .results-tabs-header.mobile-tutorial-tabs-pulse .results-tab-name {
-  animation: mobile-tutorial-tabs-text-pulse 1.5s ease-in-out infinite !important;
+  display: inline-block; /* Required for transform to affect inline content */
+  animation: mobile-tutorial-tabs-size-pulse 1.5s ease-in-out infinite !important;
 }
 
-@keyframes mobile-tutorial-tabs-text-pulse {
+@keyframes mobile-tutorial-tabs-size-pulse {
   0%,
   100% {
-    color: inherit;
+    transform: scale(1);
   }
 
   50% {
-    color: var(--accent-color);
+    transform: scale(1.08);
   }
 }
 
