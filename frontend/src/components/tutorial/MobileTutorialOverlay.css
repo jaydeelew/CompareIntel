@@ -63,7 +63,7 @@
   border-radius: var(--radius-lg) !important;
 }
 
-/* Pulsing effect for model results tab text on step 5 (follow-up) - draws attention to tabs via size pulse */
+/* Pulsing effect for model results tab text on steps 5 (follow-up) and 8 (view-follow-up-results) - draws attention to tabs via size pulse */
 .results-tabs-header.mobile-tutorial-tabs-pulse .results-tab-name {
   display: inline-block; /* Required for transform to affect inline content */
   animation: mobile-tutorial-tabs-size-pulse 1.5s ease-in-out infinite !important;

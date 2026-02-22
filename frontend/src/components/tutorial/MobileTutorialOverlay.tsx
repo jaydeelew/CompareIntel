@@ -645,9 +645,11 @@ export const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       }
     }
 
-    // For follow-up step, highlight the full results section and add pulsing to model tabs
+    // For follow-up (step 5) and view-follow-up-results (step 8), highlight the full results section and add pulsing to model tabs
     const resultsSection =
-      step === 'follow-up' ? (document.querySelector('.results-section') as HTMLElement) : null
+      step === 'follow-up' || step === 'view-follow-up-results'
+        ? (document.querySelector('.results-section') as HTMLElement)
+        : null
     if (resultsSection) {
       resultsSection.classList.add('mobile-tutorial-highlight')
       // Add pulsing effect to model results tabs to draw attention
