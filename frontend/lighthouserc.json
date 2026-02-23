@@ -9,7 +9,10 @@
         "http://localhost:4173/about",
         "http://localhost:4173/features"
       ],
-      "numberOfRuns": 3
+      "numberOfRuns": 3,
+      "settings": {
+        "formFactor": "desktop"
+      }
     },
     "assert": {
       "assertions": {
