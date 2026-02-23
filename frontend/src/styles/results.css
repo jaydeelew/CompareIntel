@@ -374,7 +374,6 @@
   background: #10b981;
   color: white;
   transform: scale(1.1);
-  box-shadow: 0 0 16px rgba(16, 185, 129, 0.5);
 }
 
 .breakout-card-btn:active {
