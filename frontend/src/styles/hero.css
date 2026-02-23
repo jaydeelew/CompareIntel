@@ -971,6 +971,24 @@
   color: var(--text-muted);
 }
 
+/* Higher contrast for usage preview in hero – dark gradient needs bright text */
+.hero-section .usage-preview-container > div {
+  color: rgba(255, 255, 255, 0.95);
+}
+
+/* Credits remaining link – very light blue for contrast on hero gradient */
+.hero-section .credits-remaining-link {
+  color: #e0f2fe;
+  text-decoration: none;
+  display: inline-block;
+  transition: transform 0.2s ease;
+}
+
+.hero-section .credits-remaining-link:hover {
+  color: #e0f2fe;
+  transform: scale(1.05);
+}
+
 /* Textarea Actions */
 .textarea-actions {
   display: flex;

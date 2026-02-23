@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
-import { useNavigate, useLocation } from 'react-router-dom'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
 
 import { type AttachedFile, type StoredAttachedFile } from '../components/comparison'
 import { Navigation, MockModeBanner } from '../components/layout'
@@ -1726,12 +1726,13 @@ export function MainPage() {
         style={{
           marginTop: '0.5rem',
           fontSize: '0.825rem',
-          color: 'rgba(255, 255, 255, 0.85)',
         }}
       >
         <span>
           <strong>{regularToUse}</strong> {regularToUse === 1 ? 'model' : 'models'} selected •{' '}
-          <strong>{Math.round(creditsRemaining)}</strong> credits remaining
+          <Link to="/faq#credits-system" className="credits-remaining-link">
+            <strong>{Math.round(creditsRemaining)}</strong> credits remaining
+          </Link>
         </span>
       </div>
     )
