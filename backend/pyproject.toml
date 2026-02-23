@@ -148,3 +148,25 @@ filterwarnings = [
     "ignore:builtin type swigvarlink has no __module__ attribute:DeprecationWarning",
 ]
 
+# Coverage configuration - exclude modules that require external services,
+# are tested via E2E, or are admin/optional features (see docs/testing/BACKEND_TESTING.md)
+[tool.coverage.run]
+omit = [
+    "app/data_retention.py",           # Background job, requires DB setup
+    "app/email_service.py",            # Requires SMTP configuration
+    "app/services/model_capability.py",  # Calls external OpenRouter API
+    "app/llm/streaming.py",            # Complex streaming, tested via E2E
+    "app/config/validation.py",        # Requires full env setup
+    "app/llm/connection.py",           # LLM connection internals
+    "app/llm/text_processing.py",      # LLM text processing internals
+    "app/cache.py",                    # Redis/cache integration
+    "app/routers/admin/models_management.py",
+    "app/routers/admin/settings.py",
+    "app/routers/admin/search_providers.py",
+    "app/routers/api/credits.py",
+    "app/routers/api/conversations.py",
+    "app/routers/api/dev.py",          # Dev-only endpoints
+    "app/search/distributed_rate_limiter.py",
+    "app/search/rate_limiter.py",
+]
+
