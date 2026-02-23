@@ -544,6 +544,59 @@
   font-weight: 600;
 }
 
+/* Result icon explanations (How It Works) */
+.result-icon-explanations {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 1.25rem;
+}
+
+.result-icon-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  background: white;
+  border-radius: 0.5rem;
+  border: 1px solid #e2e8f0;
+}
+
+.result-icon-visual {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+  border-radius: 0.5rem;
+  color: #64748b;
+}
+
+.result-icon-visual svg {
+  width: 22px;
+  height: 22px;
+}
+
+.result-icon-content {
+  font-size: 0.9375rem;
+  color: #475569;
+  line-height: 1.6;
+}
+
+.result-icon-content strong {
+  color: #1e293b;
+  font-weight: 600;
+}
+
+.step-content h4 {
+  font-size: 1.0625rem;
+  font-weight: 600;
+  color: #334155;
+  margin: 1.5rem 0 0.75rem;
+}
+
 /* Use case grid (How It Works) */
 .use-case-grid {
   display: grid;
