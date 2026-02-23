@@ -244,6 +244,7 @@ export function MainPage() {
     error,
     setError,
     accurateInputTokens,
+    onDeselectToEmpty: () => setDefaultSelectionOverridden(true),
   })
 
   const switchResultTab = useCallback(

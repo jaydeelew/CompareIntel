@@ -90,6 +90,8 @@ export interface UseModelManagementOptions {
   setError: (error: string | null) => void
   /** Accurate token count for input validation */
   accurateInputTokens: number | null
+  /** Called when user deselects to empty selection (e.g. to mark default selection as overridden) */
+  onDeselectToEmpty?: () => void
 }
 
 export interface UseModelManagementReturn {
@@ -178,6 +180,7 @@ export function useModelManagement({
   error,
   setError,
   accurateInputTokens,
+  onDeselectToEmpty,
 }: UseModelManagementOptions): UseModelManagementReturn {
   const [openDropdowns, setOpenDropdowns] = useState<Set<string>>(new Set())
 
@@ -233,6 +236,11 @@ export function useModelManagement({
           setError('Must have at least one model to process')
           setTimeout(() => setError(null), 5000)
           return
+        }
+
+        // When deselecting to empty, notify so default selection can be marked overridden
+        if (modelsAfterDeselect.length === 0) {
+          onDeselectToEmpty?.()
         }
       }
 
@@ -308,6 +316,7 @@ export function useModelManagement({
       setSelectedModels,
       setError,
       error,
+      onDeselectToEmpty,
     ]
   )
 
@@ -323,6 +332,9 @@ export function useModelManagement({
 
         // Allow deselection in both normal and follow-up mode
         const updatedSelectedModels = selectedModels.filter(id => id !== modelId)
+        if (updatedSelectedModels.length === 0) {
+          onDeselectToEmpty?.()
+        }
         setSelectedModels(updatedSelectedModels)
 
         // Clear "input too long" error only if all problematic models are deselected
@@ -440,6 +452,7 @@ export function useModelManagement({
       accurateInputTokens,
       setSelectedModels,
       setError,
+      onDeselectToEmpty,
     ]
   )
 
