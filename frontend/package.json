@@ -26,6 +26,7 @@
     "test:e2e:mobile:android": "playwright test --project='Mobile Chrome - Pixel 5'",
     "test:e2e:mobile:all": "playwright test --grep 'Mobile Platform Tests'",
     "bundle:size": "node scripts/check-bundle-size.js",
+    "lighthouse:ci": "lhci autorun",
     "generate:icons": "node scripts/generate-icons.js"
   },
   "dependencies": {
@@ -47,6 +48,7 @@
     "minimatch": ">=10.2.1"
   },
   "devDependencies": {
+    "@lhci/cli": "^0.13.0",
     "@axe-core/playwright": "^4.10.0",
     "@eslint/js": "^9.30.1",
     "@playwright/test": "^1.45.0",

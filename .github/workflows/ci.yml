@@ -198,6 +198,52 @@ jobs:
               body: comment
             });
 
+  frontend-lighthouse:
+    name: Lighthouse Performance
+    needs: [detect-changes, frontend-build]
+    if: |
+      (needs.detect-changes.outputs.frontend == 'true' || github.event_name == 'workflow_dispatch') &&
+      needs.frontend-build.result == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-dist
+
+      - name: Prepare dist for preview
+        run: mv ../frontend-dist dist
+
+      - name: Run Lighthouse CI
+        run: npm run lighthouse:ci
+
+      - name: Upload Lighthouse report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse-report
+          path: frontend/.lighthouseci/
+          retention-days: 7
+          if-no-files-found: ignore
+
   backend-lint:
     name: Backend Lint & Type Check
     needs: detect-changes
@@ -707,6 +753,7 @@ jobs:
       frontend-lint,
       frontend-test,
       frontend-build,
+      frontend-lighthouse,
       backend-lint,
       backend-test,
       e2e-test-critical,
@@ -727,6 +774,7 @@ jobs:
           echo "| Frontend Lint | ${{ needs.frontend-lint.result }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Frontend Tests | ${{ needs.frontend-test.result }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Frontend Build | ${{ needs.frontend-build.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Lighthouse | ${{ needs.frontend-lighthouse.result }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Backend Lint | ${{ needs.backend-lint.result }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Backend Tests | ${{ needs.backend-test.result }} |" >> $GITHUB_STEP_SUMMARY
           echo "| E2E Tests (Critical) | ${{ needs.e2e-test-critical.result }} |" >> $GITHUB_STEP_SUMMARY
@@ -739,6 +787,7 @@ jobs:
           if [[ "${{ needs.frontend-lint.result }}" == "failure" ]]; then FAILED=1; fi
           if [[ "${{ needs.frontend-test.result }}" == "failure" ]]; then FAILED=1; fi
           if [[ "${{ needs.frontend-build.result }}" == "failure" ]]; then FAILED=1; fi
+          if [[ "${{ needs.frontend-lighthouse.result }}" == "failure" ]]; then FAILED=1; fi
           if [[ "${{ needs.backend-lint.result }}" == "failure" ]]; then FAILED=1; fi
           if [[ "${{ needs.backend-test.result }}" == "failure" ]]; then FAILED=1; fi
           if [[ "${{ needs.e2e-test-critical.result }}" == "failure" ]]; then FAILED=1; fi
