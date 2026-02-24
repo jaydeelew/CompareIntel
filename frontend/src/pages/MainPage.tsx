@@ -1901,6 +1901,18 @@ export function MainPage() {
           }}
           onCancel={handleCancel}
           showResults={!!(response || conversations.length > 0)}
+          showFloatingComposer={
+            isFollowUpMode &&
+            ((response?.metadata?.models_successful ?? 0) >= 1 ||
+              conversations.some(c =>
+                c.messages?.some(
+                  m =>
+                    m.type === 'assistant' &&
+                    (m.content || '').trim().length > 0 &&
+                    !isErrorMessage(m.content)
+                )
+              ))
+          }
           resultsAreaProps={{
             conversations,
             selectedModels,
