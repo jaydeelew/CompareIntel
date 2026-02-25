@@ -920,27 +920,30 @@ export const faqData: FAQItemData[] = [
             <strong>Effective Tokens</strong> = Input Tokens + (Output Tokens × 2.5)
           </li>
           <li>
-            <strong>Credits Used</strong> = Effective Tokens ÷ 1,000
+            <strong>Credits</strong> = Effective Tokens ÷ 1,000
           </li>
         </ul>
         <p>
           The 2.5× multiplier on output tokens reflects the higher computational cost of generating
           text compared to processing input. This industry-standard weighting ensures our pricing
-          aligns with actual AI provider costs.
+          aligns with actual AI provider costs. One credit equals 1,000 effective tokens.
         </p>
         <p>
           <strong>Practical Example:</strong> Suppose you send a 500-word prompt (≈400 input tokens)
-          and receive a detailed 800-word response (≈600 output tokens). Your usage would be:
+          and receive a detailed 800-word response (≈600 output tokens):
         </p>
         <ul>
           <li>Effective Tokens: 400 + (600 × 2.5) = 1,900</li>
+          <li>Credits (raw): 1,900 ÷ 1,000 = 1.9</li>
           <li>
-            Credits Used: 1,900 ÷ 1,000 = <strong>1.9 credits</strong>
+            <strong>Credits charged: 2</strong> (rounded up to the nearest whole credit; minimum 1
+            credit per successful comparison)
           </li>
         </ul>
         <p>
-          When comparing multiple models simultaneously, credits are calculated separately for each
-          model's response and summed together.
+          When comparing multiple models simultaneously, effective tokens are calculated separately
+          for each model's response and summed; the total is then converted to credits and rounded
+          up.
         </p>
         <p>
           <strong>Credit Allocations:</strong>
@@ -948,7 +951,8 @@ export const faqData: FAQItemData[] = [
         <ul>
           <li>
             <strong>Free tiers:</strong> Unregistered users receive 50 credits/day; registered free
-            users receive 100 credits/day. Credits reset daily at midnight UTC.
+            users receive 100 credits/day. Credits reset daily at midnight in your timezone (UTC if
+            not set).
           </li>
           <li>
             <strong>Paid tiers:</strong> Monthly allocations from 1,200 credits (Starter) to 10,000
