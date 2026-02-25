@@ -303,6 +303,17 @@ export function useComparisonStreaming(
       const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone
       const modelsToUse = isFollowUpMode ? getSuccessfulModels(selectedModels) : selectedModels
 
+      // In follow-up mode, we only send models that succeeded previously. If all selected models
+      // failed, modelsToUse is empty and the API would return 400. Validate before calling.
+      if (isFollowUpMode && modelsToUse.length === 0) {
+        stateCb.setError(
+          'All selected models failed in the previous attempt. Please select different models or start a new comparison to retry.'
+        )
+        stateCb.setIsLoading(false)
+        stateCb.setIsModelsHidden(false)
+        return
+      }
+
       logger.debug('[API Request] user location:', userLocation ? 'sending' : 'none (IP fallback)')
 
       const stream = await compareStream(
