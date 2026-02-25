@@ -226,6 +226,7 @@ async def generate_stream(ctx: StreamContext) -> Any:
                             user_timezone=ctx.user_timezone,
                             user_location=ctx.user_location,
                             location_source=ctx.location_source,
+                            temperature=req.temperature,
                             _client=per_model_client,
                         )
 

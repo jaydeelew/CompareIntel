@@ -36,6 +36,7 @@ export interface StreamingInputState {
   accurateInputTokens: number | null
   webSearchEnabled: boolean
   userLocation: string | null
+  temperature: number // 0.0-2.0, controls response randomness
 }
 
 export interface StreamingConversationState {

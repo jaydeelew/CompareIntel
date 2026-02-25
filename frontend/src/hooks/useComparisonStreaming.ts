@@ -144,7 +144,8 @@ export function useComparisonStreaming(
   )
 
   const { selectedModels, modelsByProvider, originalSelectedModels } = models
-  const { input, attachedFiles, accurateInputTokens, webSearchEnabled, userLocation } = inputState
+  const { input, attachedFiles, accurateInputTokens, webSearchEnabled, userLocation, temperature } =
+    inputState
   const { conversations, isFollowUpMode, currentVisibleComparisonId } = conversation
   const { creditBalance, creditWarningType } = credit
   const {
@@ -327,6 +328,7 @@ export function useComparisonStreaming(
           timezone: userTimezone,
           location: userLocation || undefined,
           enable_web_search: webSearchEnabled || false,
+          temperature,
         },
         controller.signal
       )

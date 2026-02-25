@@ -27,6 +27,10 @@ export type { DisabledModelModalInfo } from './DisabledModelInfoModal'
 
 export { UsageIndicatorInfoModal } from './UsageIndicatorInfoModal'
 
+export { AdvancedSettings } from './AdvancedSettings'
+export type { AdvancedSettingsProps } from './AdvancedSettings'
+export { TemperatureInfoModal } from './TemperatureInfoModal'
+
 export { ModelsSection } from './ModelsSection'
 export type { ModelsSectionProps } from './ModelsSection'
 

@@ -57,6 +57,7 @@ class CompareRequest(BaseModel):
     timezone: str | None = None
     location: str | None = None
     enable_web_search: bool = False
+    temperature: float | None = None  # 0.0-2.0, controls response randomness
 
     model_config = ConfigDict(
         json_schema_extra={

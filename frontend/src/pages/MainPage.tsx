@@ -78,6 +78,7 @@ export function MainPage() {
   const [accurateInputTokens, setAccurateInputTokens] = useState<number | null>(null)
   const [attachedFiles, setAttachedFilesState] = useState<(AttachedFile | StoredAttachedFile)[]>([])
   const [webSearchEnabled, setWebSearchEnabled] = useState(false)
+  const [temperature, setTemperature] = useState(0.7) // 0.0-2.0, controls response randomness
   const [defaultSelectionOverridden, setDefaultSelectionOverridden] = useState(false)
 
   const { userLocation } = useGeolocation({ isAuthenticated, user })
@@ -929,6 +930,7 @@ export function MainPage() {
         input,
         isFollowUpMode,
         webSearchEnabled,
+        temperature,
         response,
         selectedModels,
         conversations,
@@ -937,7 +939,16 @@ export function MainPage() {
     })
 
     return cleanup
-  }, [user, input, isFollowUpMode, webSearchEnabled, response, selectedModels, conversations])
+  }, [
+    user,
+    input,
+    isFollowUpMode,
+    webSearchEnabled,
+    temperature,
+    response,
+    selectedModels,
+    conversations,
+  ])
 
   // Load usage and models on mount
   useEffect(() => {
@@ -1193,6 +1204,7 @@ export function MainPage() {
       setAnonymousCreditsRemaining,
       setCurrentAbortController,
       setWebSearchEnabled,
+      setTemperature,
       hasScrolledToResultsRef,
       shouldScrollToTopAfterFormattingRef,
     }
@@ -1525,6 +1537,7 @@ export function MainPage() {
         accurateInputTokens,
         webSearchEnabled,
         userLocation,
+        temperature,
       },
       conversation: {
         conversations,
@@ -1565,6 +1578,7 @@ export function MainPage() {
       accurateInputTokens,
       webSearchEnabled,
       userLocation,
+      temperature,
       conversations,
       isFollowUpMode,
       currentVisibleComparisonId,
@@ -1870,6 +1884,7 @@ export function MainPage() {
             openDropdowns,
             allModels,
             isLoadingModels,
+            isLoading,
             isFollowUpMode,
             maxModelsLimit,
             hidePremiumModels,
@@ -1898,6 +1913,8 @@ export function MainPage() {
             onError: setError,
             onShowDisabledModelModal: info => setDisabledModelModalInfo(info),
             onRetryModels: () => refetchModels(true),
+            temperature,
+            onTemperatureChange: setTemperature,
           }}
           onCancel={handleCancel}
           showResults={!!(response || conversations.length > 0)}

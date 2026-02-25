@@ -11,7 +11,7 @@
 
 import type { User, ModelsByProvider, CompareResponse, Model } from '../../types'
 import type { ModelConversation } from '../../types/conversation'
-import { ModelsSection, ModelsSectionHeader } from '../comparison'
+import { AdvancedSettings, ModelsSection, ModelsSectionHeader } from '../comparison'
 import { ErrorBoundary } from '../shared'
 
 export interface ModelsAreaProps {
@@ -24,6 +24,7 @@ export interface ModelsAreaProps {
   isLoadingModels: boolean
 
   // State
+  isLoading: boolean
   isFollowUpMode: boolean
   maxModelsLimit: number
   hidePremiumModels: boolean
@@ -67,6 +68,10 @@ export interface ModelsAreaProps {
     modelTierAccess: 'free' | 'paid'
     modelName?: string
   }) => void
+
+  // Advanced settings
+  temperature: number
+  onTemperatureChange: (temp: number) => void
 }
 
 export function ModelsArea({
@@ -79,6 +84,7 @@ export function ModelsArea({
   isLoadingModels,
 
   // State
+  isLoading,
   isFollowUpMode,
   maxModelsLimit,
   hidePremiumModels,
@@ -115,6 +121,8 @@ export function ModelsArea({
   onError,
   onRetryModels,
   onShowDisabledModelModal,
+  temperature,
+  onTemperatureChange,
 }: ModelsAreaProps) {
   return (
     <ErrorBoundary>
@@ -145,26 +153,34 @@ export function ModelsArea({
         />
 
         {!isModelsHidden && (
-          <ModelsSection
-            modelsByProvider={modelsByProvider}
-            selectedModels={selectedModels}
-            originalSelectedModels={originalSelectedModels}
-            openDropdowns={openDropdowns}
-            allModels={allModels}
-            isLoadingModels={isLoadingModels}
-            isFollowUpMode={isFollowUpMode}
-            maxModelsLimit={maxModelsLimit}
-            hidePremiumModels={hidePremiumModels}
-            isAuthenticated={isAuthenticated}
-            user={user}
-            selectedModelsGridRef={selectedModelsGridRef}
-            onToggleDropdown={onToggleDropdown}
-            onToggleModel={onToggleModel}
-            onToggleAllForProvider={onToggleAllForProvider}
-            onError={onError}
-            onRetryModels={onRetryModels}
-            onShowDisabledModelModal={onShowDisabledModelModal}
-          />
+          <>
+            <AdvancedSettings
+              temperature={temperature}
+              onTemperatureChange={onTemperatureChange}
+              disabled={isLoading}
+              isMobileLayout={isMobileLayout}
+            />
+            <ModelsSection
+              modelsByProvider={modelsByProvider}
+              selectedModels={selectedModels}
+              originalSelectedModels={originalSelectedModels}
+              openDropdowns={openDropdowns}
+              allModels={allModels}
+              isLoadingModels={isLoadingModels}
+              isFollowUpMode={isFollowUpMode}
+              maxModelsLimit={maxModelsLimit}
+              hidePremiumModels={hidePremiumModels}
+              isAuthenticated={isAuthenticated}
+              user={user}
+              selectedModelsGridRef={selectedModelsGridRef}
+              onToggleDropdown={onToggleDropdown}
+              onToggleModel={onToggleModel}
+              onToggleAllForProvider={onToggleAllForProvider}
+              onError={onError}
+              onRetryModels={onRetryModels}
+              onShowDisabledModelModal={onShowDisabledModelModal}
+            />
+          </>
         )}
       </section>
     </ErrorBoundary>

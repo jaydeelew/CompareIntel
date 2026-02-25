@@ -26,6 +26,7 @@ export interface CompareRequestPayload {
   timezone?: string // Optional: IANA timezone string (e.g., "America/Chicago") for credit reset timing
   location?: string // Optional: User-provided location (e.g., "Granbury, TX, USA") - most accurate, takes priority over IP-based detection
   enable_web_search?: boolean // Optional: Enable web search tool for models that support it
+  temperature?: number // Optional: 0.0-2.0, controls response randomness (lower = more deterministic)
 }
 
 /**

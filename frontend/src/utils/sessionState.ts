@@ -17,6 +17,7 @@ export interface PersistedSessionState {
   input: string
   isFollowUpMode: boolean
   webSearchEnabled: boolean
+  temperature?: number // 0.0-2.0, optional for backward compat
   response: unknown | null
   selectedModels: string[]
   conversations: unknown[]
