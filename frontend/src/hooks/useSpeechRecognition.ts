@@ -60,6 +60,12 @@ export function useSpeechRecognition(
   const isSupported = hasNativeSupport
 
   const startListening = useCallback(() => {
+    // Clear any previous error so that when the same error occurs again,
+    // the state change triggers the notification (useEffect in consumer).
+    // This ensures the "enable microphone" banner appears every time the
+    // user clicks while the microphone is unavailable.
+    setError(null)
+
     if (!isSupported) {
       setError(
         'Speech recognition is not supported in your browser. Please use a Chromium-based browser (Chrome, Edge, or Safari).'
@@ -135,9 +141,9 @@ export function useSpeechRecognition(
           event.error === 'no-speech'
             ? 'No speech detected. Please try again.'
             : event.error === 'audio-capture'
-              ? 'Microphone not found or access denied.'
+              ? "Microphone not found or access denied. To enable: click the lock or info icon in your browser's address bar, then allow microphone access for this site."
               : event.error === 'not-allowed'
-                ? 'Microphone access denied. Please enable microphone permissions.'
+                ? "Microphone access denied. To enable: click the lock or info icon in your browser's address bar, then allow microphone access for this site."
                 : `Speech recognition error: ${event.error}`
 
         setError(errorMessage)

@@ -62,7 +62,7 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
             "gyroscope=(), "
             "keyboard-map=(), "
             "magnetometer=(), "
-            "microphone=(), "
+            "microphone=(self), "
             "midi=(), "
             "payment=(), "
             "picture-in-picture=(), "
