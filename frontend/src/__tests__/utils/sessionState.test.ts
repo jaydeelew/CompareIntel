@@ -21,6 +21,7 @@ describe('sessionState', () => {
     input: 'Test input text',
     isFollowUpMode: true,
     webSearchEnabled: false,
+    temperature: 0.7,
     response: { results: { 'model-1': 'Response text' } },
     selectedModels: ['gpt-4', 'claude-3'],
     conversations: [{ id: 1, model_id: 'gpt-4', messages: [] }],
@@ -165,6 +166,41 @@ describe('sessionState', () => {
       expect(consoleSpy).toHaveBeenCalled()
 
       consoleSpy.mockRestore()
+    })
+  })
+
+  describe('temperature persistence', () => {
+    it('should save temperature to localStorage', () => {
+      saveSessionState(mockState)
+
+      const stored = localStorage.getItem('compareintel_session_state')
+      const parsed = JSON.parse(stored!)
+      expect(parsed.temperature).toBe(0.7)
+    })
+
+    it('should load temperature for matching user', () => {
+      saveSessionState(mockState)
+
+      const loaded = loadSessionState(123)
+      expect(loaded).not.toBeNull()
+      expect(loaded!.temperature).toBe(0.7)
+    })
+
+    it('should handle missing temperature (backward compatibility)', () => {
+      const stateWithoutTemp: Omit<PersistedSessionState, 'savedAt'> = {
+        input: 'Test',
+        isFollowUpMode: false,
+        webSearchEnabled: false,
+        response: null,
+        selectedModels: [],
+        conversations: [],
+        userId: 123,
+      }
+      saveSessionState(stateWithoutTemp)
+
+      const loaded = loadSessionState(123)
+      expect(loaded).not.toBeNull()
+      expect(loaded!.temperature).toBeUndefined()
     })
   })
 

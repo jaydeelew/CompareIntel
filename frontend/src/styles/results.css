@@ -2180,6 +2180,11 @@ html[data-theme='light'] .code-block-direct::-webkit-scrollbar-thumb:hover {
   animation: fadeInScale 0.3s ease-out;
 }
 
+/* Hide Done Selecting card when any modal is open so it never covers modals */
+body:has([role='dialog'][aria-modal='true']) .done-selecting-card {
+  display: none !important;
+}
+
 .done-selecting-content {
   background: rgba(128, 128, 128, 0.08);
   backdrop-filter: blur(4px);

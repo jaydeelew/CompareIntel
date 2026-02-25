@@ -1779,6 +1779,31 @@
   cursor: pointer;
 }
 
+/* Tappable indicator buttons on mobile (temperature, internet access) */
+.indicator-tappable {
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Temperature and web search indicators: icon only, no outline/box */
+.temperature-adjustable-indicator,
+.web-search-indicator {
+  background: none !important;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  padding: 0;
+}
+
+.temperature-adjustable-indicator:focus,
+.temperature-adjustable-indicator:focus-visible,
+.web-search-indicator:focus,
+.web-search-indicator:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
 .advanced-settings-info-hint {
   font-size: 0.75rem;
   color: var(--text-muted);

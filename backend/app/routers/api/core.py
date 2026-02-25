@@ -101,6 +101,7 @@ async def get_available_models(
     """Get list of all AI models with tier_access field."""
     from ...model_runner import (
         filter_models_by_tier,
+        get_model_supports_temperature,
         get_model_token_limits_from_openrouter,
     )
 
@@ -114,6 +115,7 @@ async def get_available_models(
     def get_models():
         all_models = filter_models_by_tier(OPENROUTER_MODELS, tier, is_trial_active)
         for model in all_models:
+            model["supports_temperature"] = get_model_supports_temperature(model["id"])
             limits = get_model_token_limits_from_openrouter(model["id"])
             if limits:
                 model["max_input_tokens"] = limits["max_input"]
@@ -137,6 +139,7 @@ async def get_available_models(
                         continue
                     if mid:
                         seen_ids.add(mid)
+                    model["supports_temperature"] = get_model_supports_temperature(model["id"])
                     limits = get_model_token_limits_from_openrouter(model["id"])
                     if limits:
                         model["max_input_tokens"] = limits["max_input"]
@@ -284,6 +287,9 @@ async def compare_stream(
 
     if not req.models:
         raise HTTPException(status_code=400, detail="At least one model must be selected")
+
+    if req.temperature is not None and (req.temperature < 0.0 or req.temperature > 2.0):
+        raise HTTPException(status_code=400, detail="Temperature must be between 0.0 and 2.0")
 
     min_max_input_tokens = get_min_max_input_tokens(req.models)
 

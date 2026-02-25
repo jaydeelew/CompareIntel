@@ -13,6 +13,40 @@ from openai import OpenAI
 from ..config import settings
 
 _REGISTRY_PATH = Path(__file__).resolve().parent.parent.parent / "data" / "models_registry.json"
+_OPENROUTER_MODELS_PATH = Path(__file__).resolve().parent.parent.parent / "openrouter_models.json"
+
+# Cache for model temperature support (model_id -> bool)
+_temperature_support_cache: dict[str, bool] | None = None
+
+
+def _load_temperature_support_map() -> dict[str, bool]:
+    """Load model_id -> supports_temperature from openrouter_models.json."""
+    global _temperature_support_cache
+    if _temperature_support_cache is not None:
+        return _temperature_support_cache
+
+    result: dict[str, bool] = {}
+    try:
+        if _OPENROUTER_MODELS_PATH.exists():
+            with _OPENROUTER_MODELS_PATH.open() as f:
+                data = json.load(f)
+            for model in data.get("data", []):
+                model_id = model.get("id")
+                if model_id:
+                    params = model.get("supported_parameters", [])
+                    result[model_id] = (
+                        "temperature" in params if isinstance(params, list) else False
+                    )
+    except Exception:
+        pass
+
+    _temperature_support_cache = result
+    return result
+
+
+def get_model_supports_temperature(model_id: str) -> bool:
+    """Return True if the model supports the temperature parameter."""
+    return _load_temperature_support_map().get(model_id, True)  # Default True if unknown
 
 
 def get_registry_path() -> Path:

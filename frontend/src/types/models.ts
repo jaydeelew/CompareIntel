@@ -33,6 +33,8 @@ export interface Model {
   max_output_tokens?: number
   /** Whether the model supports web search via function calling */
   supports_web_search?: boolean
+  /** Whether the model supports the temperature parameter (false = fixed/deterministic) */
+  supports_temperature?: boolean
   /** Knowledge cutoff date for the model's training data (e.g., "March 2025") */
   knowledge_cutoff?: string
 }

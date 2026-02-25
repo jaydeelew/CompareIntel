@@ -1,8 +1,11 @@
-import React from 'react'
+import React, { useState } from 'react'
 
 import { useResponsive } from '../../hooks'
 import type { Model, ModelsByProvider, User } from '../../types'
 import { formatTokenCount } from '../../utils/format'
+
+import { TemperatureInfoModal } from './TemperatureInfoModal'
+import { WebSearchInfoModal } from './WebSearchInfoModal'
 
 /**
  * Props for the ModelsSection component
@@ -78,7 +81,9 @@ export const ModelsSection: React.FC<ModelsSectionProps> = ({
   onRetryModels,
   onShowDisabledModelModal,
 }) => {
-  const { isMobileLayout: _isMobileLayout } = useResponsive()
+  const { isMobileLayout } = useResponsive()
+  const [showTemperatureInfoModal, setShowTemperatureInfoModal] = useState(false)
+  const [showWebSearchInfoModal, setShowWebSearchInfoModal] = useState(false)
 
   // Determine user tier
   const userTier = isAuthenticated ? user?.subscription_tier || 'free' : 'unregistered'
@@ -385,43 +390,123 @@ export const ModelsSection: React.FC<ModelsSectionProps> = ({
                             flexShrink: 0,
                           }}
                         >
-                          {model.supports_web_search && (
-                            <span
-                              className="web-search-indicator"
-                              title="This model can access the Internet"
-                              style={{
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
+                          {model.supports_temperature === true &&
+                            (() => {
+                              const indicator = (
+                                <svg
+                                  width="16"
+                                  height="16"
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  strokeWidth="2"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  style={{
+                                    color: isSelected
+                                      ? 'var(--primary-color, #007bff)'
+                                      : 'var(--text-secondary, #666)',
+                                    display: 'block',
+                                  }}
+                                >
+                                  <path d="M14 4v10.54a4 4 0 1 1-4 0V4a2 2 0 0 1 4 0z" />
+                                </svg>
+                              )
+                              const commonStyle = {
+                                display: 'inline-flex' as const,
+                                alignItems: 'center' as const,
+                                justifyContent: 'center' as const,
                                 width: '16px',
                                 height: '16px',
                                 opacity: isSelected ? 1 : 0.6,
                                 transition: 'opacity 0.2s',
                                 margin: 0,
                                 flexShrink: 0,
-                              }}
-                            >
-                              <svg
-                                width="16"
-                                height="16"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke={isSelected ? 'currentColor' : 'currentColor'}
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                style={{
-                                  color: isSelected
-                                    ? 'var(--primary-color, #007bff)'
-                                    : 'var(--text-secondary, #666)',
-                                  display: 'block',
-                                }}
-                              >
-                                <circle cx="12" cy="12" r="10" />
-                                <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
-                              </svg>
-                            </span>
-                          )}
+                              }
+                              return isMobileLayout ? (
+                                <button
+                                  type="button"
+                                  className="temperature-adjustable-indicator indicator-tappable"
+                                  title="Temperature adjustable — tap for info"
+                                  style={commonStyle}
+                                  onClick={e => {
+                                    e.preventDefault()
+                                    e.stopPropagation()
+                                    setShowTemperatureInfoModal(true)
+                                  }}
+                                  aria-label="Temperature adjustable — tap for info"
+                                >
+                                  {indicator}
+                                </button>
+                              ) : (
+                                <span
+                                  className="temperature-adjustable-indicator"
+                                  title="Temperature adjustable"
+                                  style={commonStyle}
+                                >
+                                  {indicator}
+                                </span>
+                              )
+                            })()}
+                          {model.supports_web_search &&
+                            (() => {
+                              const indicator = (
+                                <svg
+                                  width="16"
+                                  height="16"
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  strokeWidth="2"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  style={{
+                                    color: isSelected
+                                      ? 'var(--primary-color, #007bff)'
+                                      : 'var(--text-secondary, #666)',
+                                    display: 'block',
+                                  }}
+                                >
+                                  <circle cx="12" cy="12" r="10" />
+                                  <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+                                </svg>
+                              )
+                              const commonStyle = {
+                                display: 'inline-flex' as const,
+                                alignItems: 'center' as const,
+                                justifyContent: 'center' as const,
+                                width: '16px',
+                                height: '16px',
+                                opacity: isSelected ? 1 : 0.6,
+                                transition: 'opacity 0.2s',
+                                margin: 0,
+                                flexShrink: 0,
+                              }
+                              return isMobileLayout ? (
+                                <button
+                                  type="button"
+                                  className="web-search-indicator indicator-tappable"
+                                  title="This model can access the Internet — tap for info"
+                                  style={commonStyle}
+                                  onClick={e => {
+                                    e.preventDefault()
+                                    e.stopPropagation()
+                                    setShowWebSearchInfoModal(true)
+                                  }}
+                                  aria-label="Internet access — tap for info"
+                                >
+                                  {indicator}
+                                </button>
+                              ) : (
+                                <span
+                                  className="web-search-indicator"
+                                  title="This model can access the Internet"
+                                  style={commonStyle}
+                                >
+                                  {indicator}
+                                </span>
+                              )
+                            })()}
                           <input
                             type="checkbox"
                             checked={isSelected}
@@ -459,34 +544,114 @@ export const ModelsSection: React.FC<ModelsSectionProps> = ({
                   <div className="selected-model-header">
                     <h4>{model.name}</h4>
                     <div className="selected-model-actions">
-                      {model.supports_web_search && (
-                        <span
-                          className="web-search-indicator"
-                          title="This model can access the Internet"
-                          style={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            opacity: 1,
-                          }}
-                        >
-                          <svg
-                            width="16"
-                            height="16"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
+                      {model.supports_temperature === true &&
+                        (isMobileLayout ? (
+                          <button
+                            type="button"
+                            className="temperature-adjustable-indicator indicator-tappable"
+                            title="Temperature adjustable — tap for info"
                             style={{
-                              color: 'white',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              opacity: 1,
+                              background: 'none',
+                              border: 'none',
+                              padding: 0,
+                              cursor: 'pointer',
                             }}
+                            onClick={() => setShowTemperatureInfoModal(true)}
+                            aria-label="Temperature adjustable — tap for info"
                           >
-                            <circle cx="12" cy="12" r="10" />
-                            <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
-                          </svg>
-                        </span>
-                      )}
+                            <svg
+                              width="16"
+                              height="16"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              style={{ color: 'white', display: 'block' }}
+                            >
+                              <path d="M14 4v10.54a4 4 0 1 1-4 0V4a2 2 0 0 1 4 0z" />
+                            </svg>
+                          </button>
+                        ) : (
+                          <span
+                            className="temperature-adjustable-indicator"
+                            title="Temperature adjustable"
+                            style={{ display: 'inline-flex', alignItems: 'center', opacity: 1 }}
+                          >
+                            <svg
+                              width="16"
+                              height="16"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              style={{ color: 'white', display: 'block' }}
+                            >
+                              <path d="M14 4v10.54a4 4 0 1 1-4 0V4a2 2 0 0 1 4 0z" />
+                            </svg>
+                          </span>
+                        ))}
+                      {model.supports_web_search &&
+                        (isMobileLayout ? (
+                          <button
+                            type="button"
+                            className="web-search-indicator indicator-tappable"
+                            title="This model can access the Internet — tap for info"
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              opacity: 1,
+                              background: 'none',
+                              border: 'none',
+                              padding: 0,
+                              cursor: 'pointer',
+                            }}
+                            onClick={() => setShowWebSearchInfoModal(true)}
+                            aria-label="Internet access — tap for info"
+                          >
+                            <svg
+                              width="16"
+                              height="16"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              style={{ color: 'white', display: 'block' }}
+                            >
+                              <circle cx="12" cy="12" r="10" />
+                              <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+                            </svg>
+                          </button>
+                        ) : (
+                          <span
+                            className="web-search-indicator"
+                            title="This model can access the Internet"
+                            style={{ display: 'inline-flex', alignItems: 'center', opacity: 1 }}
+                          >
+                            <svg
+                              width="16"
+                              height="16"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              style={{ color: 'white', display: 'block' }}
+                            >
+                              <circle cx="12" cy="12" r="10" />
+                              <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+                            </svg>
+                          </span>
+                        ))}
                       <button
                         className="remove-model-btn"
                         onClick={() => onToggleModel(modelId)}
@@ -505,6 +670,15 @@ export const ModelsSection: React.FC<ModelsSectionProps> = ({
           </div>
         </div>
       )}
+
+      <TemperatureInfoModal
+        isOpen={showTemperatureInfoModal}
+        onClose={() => setShowTemperatureInfoModal(false)}
+      />
+      <WebSearchInfoModal
+        isOpen={showWebSearchInfoModal}
+        onClose={() => setShowWebSearchInfoModal(false)}
+      />
     </div>
   )
 }
