@@ -4,22 +4,23 @@
  */
 
 import React, { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 
 import { faqData } from '../../data/faq'
 import { BackToMainCTA } from '../shared'
 import './Pages.css'
 
 interface FAQItemProps {
+  id: string
   question: string
   answer: React.ReactNode
   isOpen: boolean
   onToggle: () => void
 }
 
-const FAQItem: React.FC<FAQItemProps> = ({ question, answer, isOpen, onToggle }) => {
+const FAQItem: React.FC<FAQItemProps> = ({ id, question, answer, isOpen, onToggle }) => {
   return (
-    <div className={`faq-item ${isOpen ? 'open' : ''}`}>
+    <div id={id} className={`faq-item ${isOpen ? 'open' : ''}`}>
       <button className="faq-question" onClick={onToggle} aria-expanded={isOpen}>
         <span>{question}</span>
         <svg
@@ -62,6 +63,21 @@ const generateFAQStructuredData = () => {
 
 export const FAQ: React.FC = () => {
   const [openItems, setOpenItems] = useState<Set<string>>(new Set())
+  const location = useLocation()
+
+  // Open and scroll to FAQ item when navigating with hash (e.g. /faq#credits-system)
+  useEffect(() => {
+    const hash = location.hash.slice(1)
+    if (hash && faqData.some(item => item.id === hash)) {
+      setOpenItems(prev => new Set([...prev, hash]))
+      // Scroll element into view after accordion opens (delay allows React to render)
+      const id = setTimeout(() => {
+        const el = document.getElementById(hash)
+        el?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      }, 150)
+      return () => clearTimeout(id)
+    }
+  }, [location.hash])
 
   // Inject FAQ structured data for SEO
   useEffect(() => {
@@ -115,6 +131,7 @@ export const FAQ: React.FC = () => {
               {faqData.map(item => (
                 <FAQItem
                   key={item.id}
+                  id={item.id}
                   question={item.question}
                   answer={item.answer}
                   isOpen={openItems.has(item.id)}

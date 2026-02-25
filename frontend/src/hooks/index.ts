@@ -31,6 +31,7 @@ export * from './useAuthModals'
 export * from './useBreakoutConversation'
 export * from './useGeolocation'
 export * from './useTooltipManager'
+export * from './useComposerFloat'
 
 // New hooks for better useEffect patterns (2025 best practices)
 export * from './useInputValidation'

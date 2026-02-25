@@ -801,6 +801,78 @@
     0 0 50px rgba(6, 182, 212, 0.06);
 }
 
+/* Wrapper for floating composer - matches hero size (700px), draggable from anywhere */
+.composer-floating-wrapper {
+  position: fixed;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 700px;
+  padding: 0 var(--page-gutter);
+  z-index: 9999;
+  box-sizing: border-box;
+}
+
+/* Dragging state - disable child interactions, show grab cursor */
+.composer-floating-wrapper.composer-dragging {
+  cursor: grabbing;
+}
+
+.composer-floating-wrapper.composer-dragging > * {
+  pointer-events: none;
+}
+
+.composer-floating-wrapper {
+  cursor: grab;
+}
+
+/* Floating composer - enhanced shadow when floating */
+.composer.composer-floating {
+  animation: composer-float-in 0.35s var(--ease-spring) forwards;
+  box-shadow:
+    0 -4px 24px rgba(0, 0, 0, 0.2),
+    0 0 0 1px rgba(6, 182, 212, 0.2),
+    0 0 30px rgba(6, 182, 212, 0.1);
+}
+
+@keyframes composer-float-in {
+  from {
+    opacity: 0;
+    transform: translateY(20px) translateZ(0);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) translateZ(0);
+  }
+}
+
+/* Smooth return to hero when user scrolls back up - opacity only to avoid layout shift/shaking */
+.composer.composer-returning {
+  animation: composer-return-to-hero 0.35s ease-out forwards;
+}
+
+@keyframes composer-return-to-hero {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Placeholder preserves hero layout when composer is floating */
+.composer.composer-placeholder {
+  min-height: 108px;
+  visibility: hidden;
+  pointer-events: none;
+  margin: 0;
+  padding: 0;
+  border: none;
+  box-shadow: none;
+  background: transparent;
+}
+
 .composer-input-wrapper {
   position: relative;
   z-index: 2;
@@ -857,6 +929,12 @@
   overflow-x: auto;
   vertical-align: top;
   box-sizing: border-box;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.hero-input-textarea::-webkit-scrollbar {
+  display: none;
 }
 
 .composer:has(.composer-toolbar) .hero-input-textarea {
@@ -969,6 +1047,24 @@
   display: inline-block;
   max-width: 100%;
   color: var(--text-muted);
+}
+
+/* Higher contrast for usage preview in hero – dark gradient needs bright text */
+.hero-section .usage-preview-container > div {
+  color: rgba(255, 255, 255, 0.95);
+}
+
+/* Credits remaining link – very light blue for contrast on hero gradient */
+.hero-section .credits-remaining-link {
+  color: #e0f2fe;
+  text-decoration: none;
+  display: inline-block;
+  transition: transform 0.2s ease;
+}
+
+.hero-section .credits-remaining-link:hover {
+  color: #e0f2fe;
+  transform: scale(1.05);
 }
 
 /* Textarea Actions */

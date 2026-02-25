@@ -68,6 +68,13 @@ export function processMarkdownLists(text: string): string {
     return `__UL_${level}__${processedContent}__/UL__`
   })
 
+  // Unicode bullet character (•) used by some models (e.g., Claude Haiku 3.5)
+  processed = processed.replace(/^(\s*)•\s*(.+)$/gm, (_, indent, content) => {
+    const level = indent.length
+    const processedContent = processListContent(content)
+    return `__UL_${level}__${processedContent}__/UL__`
+  })
+
   processed = processed.replace(/^(\s*)(\d+)\.\s+(.+?)$/gm, (_match, indent, num, content) => {
     const level = indent.length
     const processedContent = processListContent(content)

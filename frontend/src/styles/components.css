@@ -34,28 +34,24 @@
   background: var(--primary-color);
   color: white;
   transform: scale(1.1);
-  box-shadow: 0 0 16px var(--primary-glow);
 }
 
 .copy-response-btn:hover {
   background: var(--accent-color);
   color: white;
   transform: scale(1.1);
-  box-shadow: 0 0 16px rgba(16, 185, 129, 0.4);
 }
 
 .hide-others-btn:hover {
   background: var(--warning-color);
   color: white;
   transform: scale(1.1);
-  box-shadow: 0 0 16px rgba(245, 158, 11, 0.4);
 }
 
 .close-card-btn:hover {
   background: var(--error-color);
   color: white;
   transform: scale(1.1);
-  box-shadow: 0 0 16px rgba(239, 68, 68, 0.4);
 }
 
 .screenshot-card-btn:active,

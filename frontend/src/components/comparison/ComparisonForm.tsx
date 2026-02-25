@@ -7,6 +7,7 @@ import React, {
   useRef,
   useState,
 } from 'react'
+import { createPortal } from 'react-dom'
 
 import { BREAKPOINT_MOBILE } from '../../config/constants'
 import { useSpeechRecognition, useResponsive } from '../../hooks'
@@ -24,6 +25,7 @@ import {
   type FileUploadHandle,
   type StoredAttachedFile,
 } from './FileUpload'
+import { FloatingComposerWrapper } from './FloatingComposerWrapper'
 import { FormHeader } from './FormHeader'
 import { HistoryDropdown } from './HistoryDropdown'
 import { SavedSelectionsDropdown } from './SavedSelectionsDropdown'
@@ -59,6 +61,7 @@ interface ComparisonFormProps {
   tutorialStep?: TutorialStep | null
   tutorialIsActive?: boolean
   modelsSectionRef?: React.RefObject<HTMLDivElement | null>
+  composerFloating?: boolean
 }
 
 export const ComparisonForm = memo<ComparisonFormProps>(
@@ -89,6 +92,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
     tutorialStep,
     tutorialIsActive = false,
     modelsSectionRef,
+    composerFloating = false,
   }) => {
     const { showHistoryDropdown, setShowHistoryDropdown } = historyProps
     const { attachedFiles, setAttachedFiles, onExpandFiles } = fileProps
@@ -359,6 +363,246 @@ export const ComparisonForm = memo<ComparisonFormProps>(
       return () => clearTimeout(timer)
     }, [adjustTextareaHeight])
 
+    const prevComposerFloatingRef = useRef(composerFloating)
+    const [isReturningToHero, setIsReturningToHero] = useState(false)
+    useEffect(() => {
+      const wasFloating = prevComposerFloatingRef.current
+      prevComposerFloatingRef.current = composerFloating
+      if (wasFloating && !composerFloating) {
+        setIsReturningToHero(true)
+        const t = setTimeout(() => setIsReturningToHero(false), 450)
+        return () => clearTimeout(t)
+      }
+    }, [composerFloating])
+
+    const composerContent = (
+      <div
+        className={`composer ${isAnimatingTextarea ? 'animate-pulse-border' : ''} ${composerFloating ? 'composer-floating' : ''} ${isReturningToHero ? 'composer-returning' : ''}`}
+      >
+        <div className="composer-input-wrapper">
+          <textarea
+            ref={textareaRef as React.RefObject<HTMLTextAreaElement>}
+            value={input}
+            onChange={e => setInput(e.target.value)}
+            onKeyDown={e => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault()
+                if (tutorialStep === 'enter-prompt' || tutorialStep === 'enter-prompt-2') return
+                if (isFollowUpMode) onContinueConversation()
+                else onSubmitClick()
+              }
+            }}
+            onDragEnter={handleDragEnter}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+            placeholder={
+              isFollowUpMode ? 'Continue your conversation here' : 'Enter your input here...'
+            }
+            className={`hero-input-textarea ${isDraggingOver ? 'drag-over' : ''}`}
+            rows={1}
+            data-testid="comparison-input-textarea"
+          />
+        </div>
+
+        <div
+          className={`composer-toolbar ${isDraggingOver ? 'drag-over' : ''}`}
+          onDragEnter={handleDragEnter}
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
+        >
+          <button
+            type="button"
+            className={`history-toggle-button ${showHistoryDropdown ? 'active' : ''}`}
+            onClick={() => setShowHistoryDropdown(!showHistoryDropdown)}
+            title="Load previous conversations"
+          >
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M6 9l6 6 6-6" />
+            </svg>
+          </button>
+
+          <SavedSelectionsDropdown
+            selectionProps={selectionProps}
+            selectedModels={selectedModels}
+            modelsByProvider={modelsByProvider}
+            isFollowUpMode={isFollowUpMode}
+            dropdownContainerRef={savedSelectionsDropdownSlotRef}
+          />
+
+          <div className="textarea-actions">
+            <FileUpload
+              ref={fileUploadRef}
+              attachedFiles={attachedFiles}
+              setAttachedFiles={setAttachedFiles}
+              input={input}
+              setInput={setInput}
+              textareaRef={textareaRef}
+              disabled={isLoading}
+            />
+
+            {(isFollowUpMode || input.trim().length > 0) && (
+              <TokenUsageDisplay
+                input={input}
+                selectedModels={selectedModels}
+                conversations={conversations}
+                modelsByProvider={modelsByProvider}
+                isFollowUpMode={isFollowUpMode}
+                attachedFiles={attachedFiles}
+                onExpandFiles={onExpandFiles}
+                onAccurateTokenCountChange={onAccurateTokenCountChange}
+                onTokenUsageInfoChange={setTokenUsageInfo}
+                tutorialIsActive={tutorialIsActive}
+              />
+            )}
+
+            {isSpeechSupported && speechBrowserSupport === 'native' && (
+              <button
+                type="button"
+                onClick={() => (isSpeechListening ? stopSpeechListening() : startSpeechListening())}
+                className={`textarea-icon-button voice-button ${isSpeechListening ? 'active' : ''}`}
+                title={isSpeechListening ? 'Stop recording' : 'Start voice input'}
+                disabled={isLoading}
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                  style={{ width: '20px', height: '20px', display: 'block' }}
+                >
+                  <path
+                    d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    fill={isSpeechListening ? 'currentColor' : 'none'}
+                  />
+                  <path
+                    d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v4M8 23h8"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </button>
+            )}
+
+            <button
+              type="button"
+              onClick={() => {
+                const isDisabled = !canEnableWebSearch || isLoading
+                if (isDisabled && isTouchDevice) handleDisabledButtonTap('websearch')
+                else if (!isDisabled) setWebSearchEnabled(!webSearchEnabled)
+              }}
+              className={`textarea-icon-button web-search-button ${webSearchEnabled ? 'active' : ''} ${(!canEnableWebSearch || isLoading) && isTouchDevice ? 'touch-disabled' : ''}`}
+              title={
+                !canEnableWebSearch
+                  ? 'Select a web-enabled model'
+                  : webSearchEnabled
+                    ? 'Web search enabled'
+                    : 'Enable web search'
+              }
+              disabled={!isTouchDevice && (!canEnableWebSearch || isLoading)}
+              aria-disabled={!canEnableWebSearch || isLoading}
+            >
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                style={{ width: '20px', height: '20px' }}
+              >
+                <circle
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  fill="none"
+                />
+                <path
+                  d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </button>
+
+            <button
+              onClick={() => {
+                if (tutorialStep === 'enter-prompt' || tutorialStep === 'enter-prompt-2') return
+                const isDisabled =
+                  isLoading || creditsRemaining <= 0 || !input.trim() || selectedModels.length === 0
+                if (isDisabled && isTouchDevice) handleDisabledButtonTap('submit')
+                else if (!isDisabled) {
+                  if (isFollowUpMode) onContinueConversation()
+                  else onSubmitClick()
+                }
+              }}
+              disabled={
+                !isTouchDevice &&
+                (isLoading || creditsRemaining <= 0 || !input.trim() || selectedModels.length === 0)
+              }
+              className={`textarea-icon-button submit-button ${isAnimatingButton ? 'animate-pulse-glow' : ''} ${
+                (isLoading ||
+                  creditsRemaining <= 0 ||
+                  !input.trim() ||
+                  selectedModels.length === 0) &&
+                isTouchDevice
+                  ? 'touch-disabled'
+                  : ''
+              }`}
+              title={(() => {
+                if (creditsRemaining <= 0) return 'You have run out of credits'
+                if (isLoading) return 'Submit'
+                if (!input.trim() || selectedModels.length === 0)
+                  return 'Enter prompt and select models'
+                if (isFollowUpMode && tokenUsageInfo?.isExceeded)
+                  return 'Input capacity exceeded - inputs may be truncated'
+                return 'Submit'
+              })()}
+              data-testid="comparison-submit-button"
+              aria-disabled={
+                isLoading || creditsRemaining <= 0 || !input.trim() || selectedModels.length === 0
+              }
+            >
+              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path
+                  d="M7 14l5-5 5 5"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <div ref={savedSelectionsDropdownSlotRef} className="saved-selections-dropdown-slot" />
+
+        <HistoryDropdown
+          historyProps={historyProps}
+          isAuthenticated={isAuthenticated}
+          userSubscriptionTier={user?.subscription_tier}
+          isSmallLayout={isSmallLayout}
+        />
+      </div>
+    )
+
     return (
       <>
         <FormHeader
@@ -370,237 +614,19 @@ export const ComparisonForm = memo<ComparisonFormProps>(
           modelsSectionRef={modelsSectionRef}
         />
 
-        <div className={`composer ${isAnimatingTextarea ? 'animate-pulse-border' : ''}`}>
-          <div className="composer-input-wrapper">
-            <textarea
-              ref={textareaRef as React.RefObject<HTMLTextAreaElement>}
-              value={input}
-              onChange={e => setInput(e.target.value)}
-              onKeyDown={e => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault()
-                  if (tutorialStep === 'enter-prompt' || tutorialStep === 'enter-prompt-2') return
-                  if (isFollowUpMode) onContinueConversation()
-                  else onSubmitClick()
-                }
-              }}
-              onDragEnter={handleDragEnter}
-              onDragOver={handleDragOver}
-              onDragLeave={handleDragLeave}
-              onDrop={handleDrop}
-              placeholder={
-                isFollowUpMode ? 'Continue your conversation here' : 'Enter your input here...'
-              }
-              className={`hero-input-textarea ${isDraggingOver ? 'drag-over' : ''}`}
-              rows={1}
-              data-testid="comparison-input-textarea"
-            />
-          </div>
-
-          <div
-            className={`composer-toolbar ${isDraggingOver ? 'drag-over' : ''}`}
-            onDragEnter={handleDragEnter}
-            onDragOver={handleDragOver}
-            onDragLeave={handleDragLeave}
-            onDrop={handleDrop}
-          >
-            <button
-              type="button"
-              className={`history-toggle-button ${showHistoryDropdown ? 'active' : ''}`}
-              onClick={() => setShowHistoryDropdown(!showHistoryDropdown)}
-              title="Load previous conversations"
-            >
-              <svg
-                width="18"
-                height="18"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M6 9l6 6 6-6" />
-              </svg>
-            </button>
-
-            <SavedSelectionsDropdown
-              selectionProps={selectionProps}
-              selectedModels={selectedModels}
-              modelsByProvider={modelsByProvider}
-              isFollowUpMode={isFollowUpMode}
-              dropdownContainerRef={savedSelectionsDropdownSlotRef}
-            />
-
-            <div className="textarea-actions">
-              <FileUpload
-                ref={fileUploadRef}
-                attachedFiles={attachedFiles}
-                setAttachedFiles={setAttachedFiles}
-                input={input}
-                setInput={setInput}
-                textareaRef={textareaRef}
-                disabled={isLoading}
-              />
-
-              {(isFollowUpMode || input.trim().length > 0) && (
-                <TokenUsageDisplay
-                  input={input}
-                  selectedModels={selectedModels}
-                  conversations={conversations}
-                  modelsByProvider={modelsByProvider}
-                  isFollowUpMode={isFollowUpMode}
-                  attachedFiles={attachedFiles}
-                  onExpandFiles={onExpandFiles}
-                  onAccurateTokenCountChange={onAccurateTokenCountChange}
-                  onTokenUsageInfoChange={setTokenUsageInfo}
-                  tutorialIsActive={tutorialIsActive}
-                />
-              )}
-
-              {isSpeechSupported && speechBrowserSupport === 'native' && (
-                <button
-                  type="button"
-                  onClick={() =>
-                    isSpeechListening ? stopSpeechListening() : startSpeechListening()
-                  }
-                  className={`textarea-icon-button voice-button ${isSpeechListening ? 'active' : ''}`}
-                  title={isSpeechListening ? 'Stop recording' : 'Start voice input'}
-                  disabled={isLoading}
-                >
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                    style={{ width: '20px', height: '20px', display: 'block' }}
-                  >
-                    <path
-                      d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      fill={isSpeechListening ? 'currentColor' : 'none'}
-                    />
-                    <path
-                      d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v4M8 23h8"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                </button>
-              )}
-
-              <button
-                type="button"
-                onClick={() => {
-                  const isDisabled = !canEnableWebSearch || isLoading
-                  if (isDisabled && isTouchDevice) handleDisabledButtonTap('websearch')
-                  else if (!isDisabled) setWebSearchEnabled(!webSearchEnabled)
-                }}
-                className={`textarea-icon-button web-search-button ${webSearchEnabled ? 'active' : ''} ${(!canEnableWebSearch || isLoading) && isTouchDevice ? 'touch-disabled' : ''}`}
-                title={
-                  !canEnableWebSearch
-                    ? 'Select a web-enabled model'
-                    : webSearchEnabled
-                      ? 'Web search enabled'
-                      : 'Enable web search'
-                }
-                disabled={!isTouchDevice && (!canEnableWebSearch || isLoading)}
-                aria-disabled={!canEnableWebSearch || isLoading}
-              >
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                  style={{ width: '20px', height: '20px' }}
-                >
-                  <circle
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    fill="none"
-                  />
-                  <path
-                    d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              </button>
-
-              <button
-                onClick={() => {
-                  if (tutorialStep === 'enter-prompt' || tutorialStep === 'enter-prompt-2') return
-                  const isDisabled =
-                    isLoading ||
-                    creditsRemaining <= 0 ||
-                    !input.trim() ||
-                    selectedModels.length === 0
-                  if (isDisabled && isTouchDevice) handleDisabledButtonTap('submit')
-                  else if (!isDisabled) {
-                    if (isFollowUpMode) onContinueConversation()
-                    else onSubmitClick()
-                  }
-                }}
-                disabled={
-                  !isTouchDevice &&
-                  (isLoading ||
-                    creditsRemaining <= 0 ||
-                    !input.trim() ||
-                    selectedModels.length === 0)
-                }
-                className={`textarea-icon-button submit-button ${isAnimatingButton ? 'animate-pulse-glow' : ''} ${
-                  (isLoading ||
-                    creditsRemaining <= 0 ||
-                    !input.trim() ||
-                    selectedModels.length === 0) &&
-                  isTouchDevice
-                    ? 'touch-disabled'
-                    : ''
-                }`}
-                title={(() => {
-                  if (creditsRemaining <= 0) return 'You have run out of credits'
-                  if (isLoading) return 'Submit'
-                  if (!input.trim() || selectedModels.length === 0)
-                    return 'Enter prompt and select models'
-                  if (isFollowUpMode && tokenUsageInfo?.isExceeded)
-                    return 'Input capacity exceeded - inputs may be truncated'
-                  return 'Submit'
-                })()}
-                data-testid="comparison-submit-button"
-                aria-disabled={
-                  isLoading || creditsRemaining <= 0 || !input.trim() || selectedModels.length === 0
-                }
-              >
-                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path
-                    d="M7 14l5-5 5 5"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              </button>
-            </div>
-          </div>
-
-          <div ref={savedSelectionsDropdownSlotRef} className="saved-selections-dropdown-slot" />
-
-          <HistoryDropdown
-            historyProps={historyProps}
-            isAuthenticated={isAuthenticated}
-            userSubscriptionTier={user?.subscription_tier}
-            isSmallLayout={isSmallLayout}
-          />
-        </div>
+        {composerFloating ? (
+          <>
+            <div className="composer composer-placeholder" aria-hidden="true" />
+            {createPortal(
+              <FloatingComposerWrapper resetPositionOnMount={isFollowUpMode}>
+                {composerContent}
+              </FloatingComposerWrapper>,
+              document.body
+            )}
+          </>
+        ) : (
+          composerContent
+        )}
 
         {!isFollowUpMode && <div className="usage-preview-container">{renderUsagePreview()}</div>}
 

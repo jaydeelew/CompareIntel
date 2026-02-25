@@ -7,6 +7,7 @@
 
 import type { ReactNode, RefObject } from 'react'
 
+import { useComposerFloat } from '../../hooks/useComposerFloat'
 import type { TutorialStep } from '../../hooks/useTutorial'
 import type { CreditBalance } from '../../services/creditService'
 import type { User, ModelsByProvider } from '../../types'
@@ -80,6 +81,7 @@ export interface ComparisonPageContentProps {
 
   // Results
   showResults: boolean
+  showFloatingComposer?: boolean
   resultsAreaProps: ResultsAreaProps
 }
 
@@ -122,8 +124,14 @@ export function ComparisonPageContent({
   modelsAreaProps,
   onCancel,
   showResults,
+  showFloatingComposer = false,
   resultsAreaProps,
 }: ComparisonPageContentProps) {
+  const composerFloating = useComposerFloat(
+    showFloatingComposer !== undefined ? showFloatingComposer : showResults,
+    tutorialIsActive ?? false
+  )
+
   return (
     <ComparisonView>
       <Hero visibleTooltip={visibleTooltip} onCapabilityTileTap={onCapabilityTileTap}>
@@ -155,6 +163,7 @@ export function ComparisonPageContent({
             tutorialStep={tutorialStep}
             tutorialIsActive={tutorialIsActive}
             modelsSectionRef={modelsSectionRef}
+            composerFloating={composerFloating}
           />
         </ErrorBoundary>
       </Hero>

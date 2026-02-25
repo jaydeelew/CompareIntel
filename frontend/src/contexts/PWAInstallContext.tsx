@@ -5,7 +5,7 @@
  * Follows web.dev best practices:
  * - Only show promotion after beforeinstallprompt (Android) or engagement (iOS)
  * - Re-prompt after meaningful engagement (e.g. sign-in)
- * - Install option available in multiple places (banner + footer link)
+ * - Install option available via banner
  */
 
 import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react'

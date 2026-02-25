@@ -137,6 +137,128 @@ export const HowItWorks: React.FC = () => {
                   <li>Full Markdown formatting with headings, lists, and emphasis</li>
                   <li>Response time metrics to compare model speed</li>
                 </ul>
+
+                <h4>Result card actions</h4>
+                <p>
+                  Each result card includes action buttons in its header. Here's what each icon
+                  does:
+                </p>
+                <div className="result-icon-explanations">
+                  <div className="result-icon-item">
+                    <span className="result-icon-visual" aria-hidden>
+                      <svg
+                        width="24"
+                        height="24"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <rect x="2" y="3" width="20" height="14" rx="2" />
+                        <path d="M8 21h8" />
+                        <path d="M12 17v4" />
+                      </svg>
+                    </span>
+                    <div className="result-icon-content">
+                      <strong>Copy formatted</strong> — Copies the chat history as rendered (with
+                      Markdown, LaTeX, and code highlighting) to your clipboard. Ideal for pasting
+                      into documents or sharing.
+                    </div>
+                  </div>
+                  <div className="result-icon-item">
+                    <span className="result-icon-visual" aria-hidden>
+                      <svg
+                        width="24"
+                        height="24"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                      </svg>
+                    </span>
+                    <div className="result-icon-content">
+                      <strong>Copy raw</strong> — Copies the raw chat history (plain text/Markdown
+                      source) to your clipboard. Useful for developers or when you need unformatted
+                      content.
+                    </div>
+                  </div>
+                  <div className="result-icon-item">
+                    <span className="result-icon-visual" aria-hidden>
+                      <svg
+                        width="24"
+                        height="24"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <rect x="3" y="3" width="7" height="7" fill="currentColor" opacity="0.8" />
+                        <rect x="14" y="3" width="7" height="7" />
+                        <rect x="14" y="14" width="7" height="7" />
+                        <rect x="3" y="14" width="7" height="7" />
+                      </svg>
+                    </span>
+                    <div className="result-icon-content">
+                      <strong>Focus on this result</strong> — Hides all other result cards so you
+                      can view this model's response in full width. Use "Show All Results" to bring
+                      them back.
+                    </div>
+                  </div>
+                  <div className="result-icon-item">
+                    <span className="result-icon-visual" aria-hidden>
+                      <svg
+                        width="24"
+                        height="24"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+                        <line x1="1" y1="1" x2="23" y2="23" />
+                      </svg>
+                    </span>
+                    <div className="result-icon-content">
+                      <strong>Hide this result</strong> — Collapses this card from the comparison
+                      view. Hidden cards can be restored with the "Show All Results" button above
+                      the grid.
+                    </div>
+                  </div>
+                  <div className="result-icon-item">
+                    <span className="result-icon-visual" aria-hidden>
+                      <svg
+                        width="24"
+                        height="24"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <path d="M7 17L17 7" />
+                        <path d="M7 7h10v10" />
+                        <path d="M3 12v8a1 1 0 0 0 1 1h8" />
+                      </svg>
+                    </span>
+                    <div className="result-icon-content">
+                      <strong>Break out</strong> — Opens a new conversation with only this model,
+                      carrying over the current context. Perfect when you want to continue with the
+                      model that gave the best response.
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
 
