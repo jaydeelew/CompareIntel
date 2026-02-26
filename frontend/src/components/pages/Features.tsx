@@ -67,6 +67,22 @@ export const Features: React.FC = () => {
                   transparency and customization options.
                 </p>
               </div>
+
+              <div className="provider-card">
+                <h3>xAI</h3>
+                <p>
+                  Compare xAI's Grok models, known for real-time knowledge, strong reasoning, and
+                  agentic tool-calling capabilities.
+                </p>
+              </div>
+
+              <div className="provider-card">
+                <h3>Mistral</h3>
+                <p>
+                  Evaluate Mistral's models, including Mistral Large and specialized coding models,
+                  with strong multilingual and reasoning performance.
+                </p>
+              </div>
             </div>
           </section>
 
