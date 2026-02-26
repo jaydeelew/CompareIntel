@@ -18,12 +18,21 @@ export interface AdvancedSettingsProps {
   onTopPChange: (v: number) => void
   maxTokens: number | null
   onMaxTokensChange: (v: number | null) => void
+  /** Cap based on selected models' max_output_tokens (min across selection) */
+  maxTokensCap: number
   disabled?: boolean
 }
 
 const DEFAULTS = { temperature: 0.7, topP: 1.0, maxTokens: null as number | null }
 const MAX_TOKENS_MIN = 256
-const MAX_TOKENS_MAX = 16384
+
+function stepForRange(min: number, max: number): number {
+  const range = max - min
+  if (range <= 4096) return 256
+  if (range <= 16384) return 512
+  if (range <= 65536) return 1024
+  return 2048
+}
 
 const PARAM_INFO: Record<string, { title: string; description: string }> = {
   temperature: {
@@ -141,8 +150,10 @@ export function AdvancedSettings({
   onTopPChange,
   maxTokens,
   onMaxTokensChange,
+  maxTokensCap,
   disabled = false,
 }: AdvancedSettingsProps) {
+  const effectiveMax = Math.max(MAX_TOKENS_MIN, maxTokensCap)
   const [isExpanded, setIsExpanded] = useState(false)
   const [mobileInfoKey, setMobileInfoKey] = useState<string | null>(null)
   const { isMobileLayout } = useResponsive()
@@ -171,7 +182,7 @@ export function AdvancedSettings({
     }
     const n = parseInt(v, 10)
     if (!Number.isNaN(n)) {
-      onMaxTokensChange(Math.max(MAX_TOKENS_MIN, Math.min(MAX_TOKENS_MAX, n)))
+      onMaxTokensChange(Math.max(MAX_TOKENS_MIN, Math.min(effectiveMax, n)))
     }
   }
 
@@ -314,7 +325,9 @@ export function AdvancedSettings({
             <div className="advanced-settings-label-row">
               <label htmlFor="max-tokens-slider" className="advanced-settings-label">
                 Max tokens
-                <span className="advanced-settings-hint">(Auto or 256–16,384)</span>
+                <span className="advanced-settings-hint">
+                  (Auto or 256–{effectiveMax.toLocaleString()})
+                </span>
               </label>
               {renderInfoTrigger('maxTokens')}
             </div>
@@ -323,23 +336,23 @@ export function AdvancedSettings({
                 id="max-tokens-slider"
                 type="range"
                 min={MAX_TOKENS_MIN}
-                max={MAX_TOKENS_MAX}
-                step={256}
-                value={maxTokensSliderValue}
+                max={effectiveMax}
+                step={stepForRange(MAX_TOKENS_MIN, effectiveMax)}
+                value={Math.min(maxTokensSliderValue, effectiveMax)}
                 onChange={handleMaxTokensSlider}
                 disabled={disabled}
                 className="advanced-settings-slider"
                 aria-valuemin={MAX_TOKENS_MIN}
-                aria-valuemax={MAX_TOKENS_MAX}
-                aria-valuenow={maxTokensSliderValue}
+                aria-valuemax={effectiveMax}
+                aria-valuenow={Math.min(maxTokensSliderValue, effectiveMax)}
                 aria-valuetext={maxTokens ? String(maxTokens) : 'Auto'}
               />
               <input
                 id="max-tokens-input"
                 type="number"
                 min={MAX_TOKENS_MIN}
-                max={MAX_TOKENS_MAX}
-                step={256}
+                max={effectiveMax}
+                step={stepForRange(MAX_TOKENS_MIN, effectiveMax)}
                 value={maxTokens ?? ''}
                 onChange={handleMaxTokensInput}
                 disabled={disabled}

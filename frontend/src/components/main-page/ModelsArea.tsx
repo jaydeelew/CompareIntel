@@ -77,6 +77,8 @@ export interface ModelsAreaProps {
   maxTokens: number | null
   onMaxTokensChange: (v: number | null) => void
   advancedSettings: { temperature: number; topP: number; maxTokens: number | null }
+  /** Cap for max tokens based on selected models (min of their max_output_tokens) */
+  maxTokensCap: number
 }
 
 export function ModelsArea({
@@ -133,6 +135,7 @@ export function ModelsArea({
   maxTokens,
   onMaxTokensChange,
   advancedSettings: _advancedSettings,
+  maxTokensCap,
 }: ModelsAreaProps) {
   return (
     <ErrorBoundary>
@@ -171,6 +174,7 @@ export function ModelsArea({
               onTopPChange={onTopPChange}
               maxTokens={maxTokens}
               onMaxTokensChange={onMaxTokensChange}
+              maxTokensCap={maxTokensCap}
               disabled={isLoading}
             />
             {selectedModels.length > 0 &&

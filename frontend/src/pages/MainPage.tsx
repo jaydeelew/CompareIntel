@@ -618,6 +618,22 @@ export function MainPage() {
 
   const allModels = Object.values(modelsByProvider).flat()
 
+  // Effective max tokens cap: minimum of selected models' limits (matches backend logic)
+  const effectiveMaxTokens = useMemo(() => {
+    if (selectedModels.length === 0) return 8192
+    const caps = selectedModels
+      .map(id => allModels.find(m => m.id === id)?.max_output_tokens ?? 8192)
+      .filter((n): n is number => typeof n === 'number')
+    return caps.length > 0 ? Math.max(256, Math.min(...caps)) : 8192
+  }, [selectedModels, allModels])
+
+  // Clamp maxTokens when selection changes and effective cap drops below current value
+  useEffect(() => {
+    if (maxTokens !== null && maxTokens > effectiveMaxTokens) {
+      setMaxTokens(effectiveMaxTokens)
+    }
+  }, [effectiveMaxTokens, maxTokens, setMaxTokens])
+
   // Breakout conversation hook - must be after allModels is defined
   const { breakoutPhase, handleBreakout } = useBreakoutConversation(
     {
@@ -1940,6 +1956,7 @@ export function MainPage() {
             maxTokens,
             onMaxTokensChange: setMaxTokens,
             advancedSettings: { temperature, topP, maxTokens },
+            maxTokensCap: effectiveMaxTokens,
           }}
           onCancel={handleCancel}
           showResults={!!(response || conversations.length > 0)}
