@@ -1537,6 +1537,42 @@ export const faqData: FAQItemData[] = [
             If you need consistency, be very specific in your prompts about exactly what you want
           </li>
         </ul>
+        <p>
+          <a href="/glossary#temperature">Learn more about Temperature in our Glossary →</a>
+        </p>
+      </>
+    ),
+  },
+  {
+    id: 'advanced-settings',
+    question: 'What do Temperature, Top P, and Max output tokens do?',
+    answer: (
+      <>
+        <p>
+          These are <strong>advanced settings</strong> in the model selection area. Expand the
+          "Advanced" dropdown to adjust them:
+        </p>
+        <ul>
+          <li>
+            <strong>Temperature</strong> (0–2): Controls how random or creative responses are. Lower
+            values (e.g., 0.2) give focused, predictable output—good for code, math, and factual
+            questions. Higher values (e.g., 1.5) produce more varied, creative responses.
+          </li>
+          <li>
+            <strong>Top P</strong> (0–1): Nucleus sampling. Limits the model to the most likely
+            tokens. Lower values make output more focused; 1.0 means no limit. Adjust either
+            Temperature or Top P, not both.
+          </li>
+          <li>
+            <strong>Max output tokens</strong>: Caps the response length. Lower values produce
+            shorter answers and use fewer credits. "Auto" uses each model's default.
+          </li>
+        </ul>
+        <p>
+          <a href="/glossary">See our AI Glossary</a> for detailed definitions of{' '}
+          <a href="/glossary#temperature">Temperature</a>, <a href="/glossary#top-p">Top P</a>, and{' '}
+          <a href="/glossary#max-output-tokens">Max Output Tokens</a>.
+        </p>
       </>
     ),
   },

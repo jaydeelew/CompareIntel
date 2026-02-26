@@ -218,17 +218,27 @@ export const glossaryTerms: GlossaryTerm[] = [
       "A setting that controls how random or creative an AI's responses are. Lower temperature (e.g., 0.0) makes responses more focused and deterministic; higher temperature (e.g., 1.0) makes them more varied and creative.",
     example:
       'For factual questions, use low temperature for consistent answers. For creative writing or brainstorming, higher temperature produces more diverse ideas.',
-    relatedTerms: ['Top-P', 'Response', 'Inference'],
+    relatedTerms: ['Top P', 'Max Output Tokens', 'Response', 'Inference'],
     category: 'technical',
   },
   {
     id: 'top-p',
-    term: 'Top-P (Nucleus Sampling)',
+    term: 'Top P (Nucleus Sampling)',
     definition:
       'A setting that controls response diversity by limiting the AI to consider only the most likely tokens whose cumulative probability reaches a threshold P. It works alongside temperature to balance creativity and coherence.',
     example:
-      'With Top-P of 0.9, the AI only considers tokens that together make up 90% of the probability, ignoring unlikely options.',
-    relatedTerms: ['Temperature', 'Token', 'Inference'],
+      'With Top P of 0.9, the AI only considers tokens that together make up 90% of the probability, ignoring unlikely options.',
+    relatedTerms: ['Temperature', 'Max Output Tokens', 'Token', 'Inference'],
+    category: 'technical',
+  },
+  {
+    id: 'max-output-tokens',
+    term: 'Max Output Tokens',
+    definition:
+      'A setting that caps the maximum length of the AI response in tokens. Lower values produce shorter, more concise answers and use fewer credits. "Auto" lets the system use each model\'s default limit.',
+    example:
+      'Setting max output tokens to 1,024 limits responses to roughly 750 words. Useful when you want brief answers or need to control credit usage.',
+    relatedTerms: ['Token', 'Output Tokens', 'Temperature', 'Top P', 'Credits'],
     category: 'technical',
   },
   {
