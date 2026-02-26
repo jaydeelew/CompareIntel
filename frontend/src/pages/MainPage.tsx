@@ -79,6 +79,8 @@ export function MainPage() {
   const [attachedFiles, setAttachedFilesState] = useState<(AttachedFile | StoredAttachedFile)[]>([])
   const [webSearchEnabled, setWebSearchEnabled] = useState(false)
   const [temperature, setTemperature] = useState(0.7) // 0.0-2.0, controls response randomness
+  const [topP, setTopP] = useState(1) // 0.0-1.0, nucleus sampling
+  const [maxTokens, setMaxTokens] = useState<number | null>(null) // cap on output length
   const [defaultSelectionOverridden, setDefaultSelectionOverridden] = useState(false)
 
   const { userLocation } = useGeolocation({ isAuthenticated, user })
@@ -931,6 +933,8 @@ export function MainPage() {
         isFollowUpMode,
         webSearchEnabled,
         temperature,
+        topP,
+        maxTokens,
         response,
         selectedModels,
         conversations,
@@ -945,6 +949,8 @@ export function MainPage() {
     isFollowUpMode,
     webSearchEnabled,
     temperature,
+    topP,
+    maxTokens,
     response,
     selectedModels,
     conversations,
@@ -1205,6 +1211,8 @@ export function MainPage() {
       setCurrentAbortController,
       setWebSearchEnabled,
       setTemperature,
+      setTopP,
+      setMaxTokens,
       hasScrolledToResultsRef,
       shouldScrollToTopAfterFormattingRef,
     }
@@ -1504,7 +1512,7 @@ export function MainPage() {
     setAttachedFiles([])
   }
 
-  const scrollConversationsToBottom = () => {
+  const scrollConversationsToBottom = useCallback(() => {
     setTimeout(() => {
       const conversationContents = document.querySelectorAll('.conversation-content')
       conversationContents.forEach(content => {
@@ -1525,7 +1533,7 @@ export function MainPage() {
         }
       })
     }, 100)
-  }
+  }, [])
 
   const streamingConfig = useMemo(
     () => ({
@@ -1538,6 +1546,8 @@ export function MainPage() {
         webSearchEnabled,
         userLocation,
         temperature,
+        topP,
+        maxTokens,
       },
       conversation: {
         conversations,
@@ -1579,6 +1589,8 @@ export function MainPage() {
       webSearchEnabled,
       userLocation,
       temperature,
+      topP,
+      maxTokens,
       conversations,
       isFollowUpMode,
       currentVisibleComparisonId,
@@ -1587,6 +1599,14 @@ export function MainPage() {
       creditWarningType,
       modelErrors,
       tutorialState,
+      autoScrollPausedRef,
+      hasScrolledToResultsRef,
+      isPageScrollingRef,
+      lastAlignedRoundRef,
+      lastScrollTopRef,
+      scrollListenersRef,
+      userCancelledRef,
+      userInteractingRef,
     ]
   )
 
@@ -1915,6 +1935,11 @@ export function MainPage() {
             onRetryModels: () => refetchModels(true),
             temperature,
             onTemperatureChange: setTemperature,
+            topP,
+            onTopPChange: setTopP,
+            maxTokens,
+            onMaxTokensChange: setMaxTokens,
+            advancedSettings: { temperature, topP, maxTokens },
           }}
           onCancel={handleCancel}
           showResults={!!(response || conversations.length > 0)}

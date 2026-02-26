@@ -58,6 +58,8 @@ class CompareRequest(BaseModel):
     location: str | None = None
     enable_web_search: bool = False
     temperature: float | None = None  # 0.0-2.0, controls response randomness
+    top_p: float | None = None  # 0.0-1.0, nucleus sampling
+    max_tokens: int | None = None  # cap on output length, None = use model default
 
     model_config = ConfigDict(
         json_schema_extra={
@@ -290,6 +292,12 @@ async def compare_stream(
 
     if req.temperature is not None and (req.temperature < 0.0 or req.temperature > 2.0):
         raise HTTPException(status_code=400, detail="Temperature must be between 0.0 and 2.0")
+
+    if req.top_p is not None and (req.top_p < 0.0 or req.top_p > 1.0):
+        raise HTTPException(status_code=400, detail="top_p must be between 0.0 and 1.0")
+
+    if req.max_tokens is not None and (req.max_tokens < 256 or req.max_tokens > 65536):
+        raise HTTPException(status_code=400, detail="max_tokens must be between 256 and 65536")
 
     min_max_input_tokens = get_min_max_input_tokens(req.models)
 

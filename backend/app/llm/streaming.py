@@ -153,6 +153,7 @@ def call_openrouter_streaming(
     location_source: str
     | None = None,  # Optional: Source of location - "user_provided" (accurate) or "ip_based" (approximate)
     temperature: float | None = None,  # Optional: 0.0-2.0, controls response randomness
+    top_p: float | None = None,  # Optional: 0.0-1.0, nucleus sampling
     _client: Any
     | None = None,  # Optional: use this OpenAI client instead of global (avoids connection contention in multi-model)
 ) -> Generator[Any, None, TokenUsage | None]:
@@ -304,6 +305,8 @@ def call_openrouter_streaming(
             }
             if temperature is not None:
                 api_params["temperature"] = max(0.0, min(2.0, temperature))
+            if top_p is not None:
+                api_params["top_p"] = max(0.0, min(1.0, top_p))
 
             # Add tools if web search is enabled
             if tools:
@@ -1839,6 +1842,8 @@ def call_openrouter_streaming(
                     }
                     if temperature is not None:
                         api_params_continue["temperature"] = max(0.0, min(2.0, temperature))
+                    if top_p is not None:
+                        api_params_continue["top_p"] = max(0.0, min(1.0, top_p))
 
                     # Only include tools parameter on first iteration; in continuations tools are already in context.
                     if tools and tool_call_iteration == 1:
@@ -2188,6 +2193,8 @@ def call_openrouter_streaming(
                     }
                     if temperature is not None:
                         final_params["temperature"] = max(0.0, min(2.0, temperature))
+                    if top_p is not None:
+                        final_params["top_p"] = max(0.0, min(1.0, top_p))
                     final_response = _cl.chat.completions.create(**final_params)
 
                     # Stream the final response
@@ -2356,6 +2363,8 @@ def call_openrouter_streaming(
                                     completion_params["temperature"] = max(
                                         0.0, min(2.0, temperature)
                                     )
+                                if top_p is not None:
+                                    completion_params["top_p"] = max(0.0, min(1.0, top_p))
                                 completion_response = _cl.chat.completions.create(
                                     **completion_params
                                 )

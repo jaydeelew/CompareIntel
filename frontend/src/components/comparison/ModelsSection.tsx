@@ -4,7 +4,6 @@ import { useResponsive } from '../../hooks'
 import type { Model, ModelsByProvider, User } from '../../types'
 import { formatTokenCount } from '../../utils/format'
 
-import { TemperatureInfoModal } from './TemperatureInfoModal'
 import { WebSearchInfoModal } from './WebSearchInfoModal'
 
 /**
@@ -82,7 +81,6 @@ export const ModelsSection: React.FC<ModelsSectionProps> = ({
   onShowDisabledModelModal,
 }) => {
   const { isMobileLayout } = useResponsive()
-  const [showTemperatureInfoModal, setShowTemperatureInfoModal] = useState(false)
   const [showWebSearchInfoModal, setShowWebSearchInfoModal] = useState(false)
 
   // Determine user tier
@@ -390,64 +388,6 @@ export const ModelsSection: React.FC<ModelsSectionProps> = ({
                             flexShrink: 0,
                           }}
                         >
-                          {model.supports_temperature === true &&
-                            (() => {
-                              const indicator = (
-                                <svg
-                                  width="16"
-                                  height="16"
-                                  viewBox="0 0 24 24"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  strokeWidth="2"
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  style={{
-                                    color: isSelected
-                                      ? 'var(--primary-color, #007bff)'
-                                      : 'var(--text-secondary, #666)',
-                                    display: 'block',
-                                  }}
-                                >
-                                  <path d="M14 4v10.54a4 4 0 1 1-4 0V4a2 2 0 0 1 4 0z" />
-                                </svg>
-                              )
-                              const commonStyle = {
-                                display: 'inline-flex' as const,
-                                alignItems: 'center' as const,
-                                justifyContent: 'center' as const,
-                                width: '16px',
-                                height: '16px',
-                                opacity: isSelected ? 1 : 0.6,
-                                transition: 'opacity 0.2s',
-                                margin: 0,
-                                flexShrink: 0,
-                              }
-                              return isMobileLayout ? (
-                                <button
-                                  type="button"
-                                  className="temperature-adjustable-indicator indicator-tappable"
-                                  title="Temperature adjustable — tap for info"
-                                  style={commonStyle}
-                                  onClick={e => {
-                                    e.preventDefault()
-                                    e.stopPropagation()
-                                    setShowTemperatureInfoModal(true)
-                                  }}
-                                  aria-label="Temperature adjustable — tap for info"
-                                >
-                                  {indicator}
-                                </button>
-                              ) : (
-                                <span
-                                  className="temperature-adjustable-indicator"
-                                  title="Temperature adjustable"
-                                  style={commonStyle}
-                                >
-                                  {indicator}
-                                </span>
-                              )
-                            })()}
                           {model.supports_web_search &&
                             (() => {
                               const indicator = (
@@ -544,59 +484,6 @@ export const ModelsSection: React.FC<ModelsSectionProps> = ({
                   <div className="selected-model-header">
                     <h4>{model.name}</h4>
                     <div className="selected-model-actions">
-                      {model.supports_temperature === true &&
-                        (isMobileLayout ? (
-                          <button
-                            type="button"
-                            className="temperature-adjustable-indicator indicator-tappable"
-                            title="Temperature adjustable — tap for info"
-                            style={{
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              opacity: 1,
-                              background: 'none',
-                              border: 'none',
-                              padding: 0,
-                              cursor: 'pointer',
-                            }}
-                            onClick={() => setShowTemperatureInfoModal(true)}
-                            aria-label="Temperature adjustable — tap for info"
-                          >
-                            <svg
-                              width="16"
-                              height="16"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              style={{ color: 'white', display: 'block' }}
-                            >
-                              <path d="M14 4v10.54a4 4 0 1 1-4 0V4a2 2 0 0 1 4 0z" />
-                            </svg>
-                          </button>
-                        ) : (
-                          <span
-                            className="temperature-adjustable-indicator"
-                            title="Temperature adjustable"
-                            style={{ display: 'inline-flex', alignItems: 'center', opacity: 1 }}
-                          >
-                            <svg
-                              width="16"
-                              height="16"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              style={{ color: 'white', display: 'block' }}
-                            >
-                              <path d="M14 4v10.54a4 4 0 1 1-4 0V4a2 2 0 0 1 4 0z" />
-                            </svg>
-                          </span>
-                        ))}
                       {model.supports_web_search &&
                         (isMobileLayout ? (
                           <button
@@ -671,10 +558,6 @@ export const ModelsSection: React.FC<ModelsSectionProps> = ({
         </div>
       )}
 
-      <TemperatureInfoModal
-        isOpen={showTemperatureInfoModal}
-        onClose={() => setShowTemperatureInfoModal(false)}
-      />
       <WebSearchInfoModal
         isOpen={showWebSearchInfoModal}
         onClose={() => setShowWebSearchInfoModal(false)}

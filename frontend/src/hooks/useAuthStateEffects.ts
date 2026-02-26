@@ -33,6 +33,8 @@ interface UseAuthStateEffectsCallbacks {
   setCurrentAbortController: (controller: AbortController | null) => void
   setWebSearchEnabled: (enabled: boolean) => void
   setTemperature: (temp: number) => void
+  setTopP: (v: number) => void
+  setMaxTokens: (v: number | null) => void
   hasScrolledToResultsRef: React.MutableRefObject<boolean>
   shouldScrollToTopAfterFormattingRef: React.MutableRefObject<boolean>
 }
@@ -65,6 +67,8 @@ export function useAuthStateEffects(
     setCurrentAbortController,
     setWebSearchEnabled,
     setTemperature,
+    setTopP,
+    setMaxTokens,
     hasScrolledToResultsRef,
     shouldScrollToTopAfterFormattingRef,
   } = callbacks
@@ -113,6 +117,12 @@ export function useAuthStateEffects(
         if (savedState.temperature != null) {
           setTemperature(Math.max(0, Math.min(2, savedState.temperature)))
         }
+        if (savedState.topP != null) {
+          setTopP(Math.max(0, Math.min(1, savedState.topP)))
+        }
+        if (savedState.maxTokens != null) {
+          setMaxTokens(savedState.maxTokens)
+        }
 
         // Restore model selections
         if (savedState.selectedModels && savedState.selectedModels.length > 0) {
@@ -143,6 +153,8 @@ export function useAuthStateEffects(
         setIsFollowUpMode(false)
         setWebSearchEnabled(false)
         setTemperature(0.7)
+        setTopP(1)
+        setMaxTokens(null)
         setSelectedModels([])
         setOriginalSelectedModels([])
         setConversations([])

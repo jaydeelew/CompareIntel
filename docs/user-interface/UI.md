@@ -4,6 +4,11 @@ All GUI components for CompareIntel, organized by Main and Admin sections.
 
 ## Main Section
 
+### AdvancedSettings
+- **Parent:** `ModelsArea`
+- **Description:** Collapsible section under model selection. Temperature (0–2), Top P (0–1), and Max tokens (256–16384 or Auto). Model cards show a sliders icon when the model supports these settings; hover shows current values, tap opens a modal with details.
+- **File:** `frontend/src/components/comparison/AdvancedSettings.tsx`
+
 ### AuthModal
 - **Parent:** `App.tsx` (AppContent)
 - **Description:** Login or register form in a modal. Handles login, register, and forgot password modes.

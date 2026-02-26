@@ -27,6 +27,8 @@ export interface CompareRequestPayload {
   location?: string // Optional: User-provided location (e.g., "Granbury, TX, USA") - most accurate, takes priority over IP-based detection
   enable_web_search?: boolean // Optional: Enable web search tool for models that support it
   temperature?: number // Optional: 0.0-2.0, controls response randomness (lower = more deterministic)
+  top_p?: number // Optional: 0.0-1.0, nucleus sampling
+  max_tokens?: number | null // Optional: cap on output length, null = use model default
 }
 
 /**

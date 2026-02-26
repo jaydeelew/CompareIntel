@@ -354,9 +354,19 @@ Compare multiple AI models with a single prompt using Server-Sent Events (SSE) s
   "conversation_id": 123,
   "browser_fingerprint": "abc123",
   "estimated_input_tokens": 50,
-  "timezone": "America/Chicago"
+  "timezone": "America/Chicago",
+  "location": "Granbury, TX, USA",
+  "enable_web_search": false,
+  "temperature": 0.7,
+  "top_p": 1.0,
+  "max_tokens": null
 }
 ```
+
+**Optional parameters:**
+- `temperature` (0.0–2.0): Response randomness. Lower = more deterministic.
+- `top_p` (0.0–1.0): Nucleus sampling. 1.0 = no limit.
+- `max_tokens` (256–65536): Cap on output length. Omit or null = model default.
 
 **Conversation History Filtering:**
 - Each model receives **only its own conversation history** for independent comparisons

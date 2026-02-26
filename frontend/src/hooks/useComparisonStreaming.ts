@@ -144,8 +144,16 @@ export function useComparisonStreaming(
   )
 
   const { selectedModels, modelsByProvider, originalSelectedModels } = models
-  const { input, attachedFiles, accurateInputTokens, webSearchEnabled, userLocation, temperature } =
-    inputState
+  const {
+    input,
+    attachedFiles,
+    accurateInputTokens,
+    webSearchEnabled,
+    userLocation,
+    temperature,
+    topP,
+    maxTokens,
+  } = inputState
   const { conversations, isFollowUpMode, currentVisibleComparisonId } = conversation
   const { creditBalance, creditWarningType } = credit
   const {
@@ -329,6 +337,8 @@ export function useComparisonStreaming(
           location: userLocation || undefined,
           enable_web_search: webSearchEnabled || false,
           temperature,
+          top_p: topP !== 1 ? topP : undefined,
+          max_tokens: maxTokens ?? undefined,
         },
         controller.signal
       )
@@ -438,6 +448,8 @@ export function useComparisonStreaming(
       userCancelledRef.current = false
       stateCb.setIsLoading(false)
     }
+    // config/callbacks contain all values; listing each would be redundant and cause unnecessary re-runs
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     config,
     callbacks,

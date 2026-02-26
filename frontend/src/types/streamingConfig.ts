@@ -37,6 +37,8 @@ export interface StreamingInputState {
   webSearchEnabled: boolean
   userLocation: string | null
   temperature: number // 0.0-2.0, controls response randomness
+  topP: number // 0.0-1.0, nucleus sampling
+  maxTokens: number | null // cap on output length, null = use model default
 }
 
 export interface StreamingConversationState {

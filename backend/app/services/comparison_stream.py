@@ -122,6 +122,9 @@ async def generate_stream(ctx: StreamContext) -> Any:
         min_max_input = get_min_max_input_tokens(req.models)
         context_safe_output_cap = max(1, min_max_input - input_tokens)
         effective_max_tokens = min(effective_max_tokens, context_safe_output_cap)
+        # User override: cap output length if requested
+        if req.max_tokens is not None:
+            effective_max_tokens = min(effective_max_tokens, max(256, req.max_tokens))
         credits_limited = False
         credits_per_model = (
             Decimal(credits_remaining[0]) / Decimal(ctx.num_models)
@@ -227,6 +230,7 @@ async def generate_stream(ctx: StreamContext) -> Any:
                             user_location=ctx.user_location,
                             location_source=ctx.location_source,
                             temperature=req.temperature,
+                            top_p=req.top_p,
                             _client=per_model_client,
                         )
 

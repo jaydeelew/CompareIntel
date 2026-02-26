@@ -1,10 +1,11 @@
 """
-Integration tests for temperature parameter in comparison endpoint.
+Integration tests for advanced parameters in comparison endpoint.
 
 Tests cover:
 - Temperature accepted in compare-stream request
 - Temperature validation (range enforcement)
 - Temperature optional (request works without it)
+- top_p and max_tokens validation
 """
 
 from fastapi import status
@@ -103,6 +104,55 @@ class TestTemperatureValidation:
             json={
                 "input_data": "Test prompt",
                 "models": ["anthropic/claude-3.5-haiku"],
+            },
+        )
+        assert response.status_code in [
+            status.HTTP_200_OK,
+            status.HTTP_429_TOO_MANY_REQUESTS,
+        ]
+
+
+class TestTopPAndMaxTokensValidation:
+    """Tests for top_p and max_tokens parameter validation."""
+
+    def test_streaming_rejects_top_p_too_high(self, authenticated_client):
+        """Reject top_p > 1.0."""
+        client, _, _, _ = authenticated_client
+        response = client.post(
+            "/api/compare-stream",
+            json={
+                "input_data": "Test",
+                "models": ["anthropic/claude-3.5-haiku"],
+                "top_p": 1.5,
+            },
+        )
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert "top_p" in response.json()["detail"].lower()
+
+    def test_streaming_rejects_max_tokens_too_low(self, authenticated_client):
+        """Reject max_tokens < 256."""
+        client, _, _, _ = authenticated_client
+        response = client.post(
+            "/api/compare-stream",
+            json={
+                "input_data": "Test",
+                "models": ["anthropic/claude-3.5-haiku"],
+                "max_tokens": 100,
+            },
+        )
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert "max_tokens" in response.json()["detail"].lower()
+
+    def test_streaming_accepts_valid_top_p_and_max_tokens(self, authenticated_client):
+        """Accept valid top_p and max_tokens."""
+        client, _, _, _ = authenticated_client
+        response = client.post(
+            "/api/compare-stream",
+            json={
+                "input_data": "Test",
+                "models": ["anthropic/claude-3.5-haiku"],
+                "top_p": 0.95,
+                "max_tokens": 2048,
             },
         )
         assert response.status_code in [

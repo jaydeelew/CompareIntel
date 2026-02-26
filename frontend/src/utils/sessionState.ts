@@ -18,6 +18,8 @@ export interface PersistedSessionState {
   isFollowUpMode: boolean
   webSearchEnabled: boolean
   temperature?: number // 0.0-2.0, optional for backward compat
+  topP?: number // 0.0-1.0, nucleus sampling
+  maxTokens?: number | null // cap on output length
   response: unknown | null
   selectedModels: string[]
   conversations: unknown[]
