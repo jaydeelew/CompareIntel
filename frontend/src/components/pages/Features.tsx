@@ -101,6 +101,12 @@ export const Features: React.FC = () => {
                 scroll through all responses simultaneously, making it easier to compare responses
                 side-by-side as you read through longer outputs.
               </li>
+              <li>
+                <strong>Advanced Controls:</strong> Fine-tune responses with Temperature (creativity
+                vs. consistency), Top P (response focus), and Max output tokens (response length).
+                Expand the Advanced dropdown next to model selection to adjust these—useful for
+                code, math, or when you want shorter answers.
+              </li>
             </ul>
           </section>
 

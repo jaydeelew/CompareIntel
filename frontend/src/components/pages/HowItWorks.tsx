@@ -72,6 +72,11 @@ export const HowItWorks: React.FC = () => {
                   <strong>Set a default:</strong> Mark any selection as default to auto-load when
                   you return.
                 </p>
+                <p>
+                  <strong>Advanced settings (optional):</strong> Expand the Advanced dropdown to
+                  adjust Temperature, Top P, and Max output tokens. Lower temperature for code or
+                  math; cap max tokens for shorter, cheaper responses.
+                </p>
               </div>
             </div>
 
