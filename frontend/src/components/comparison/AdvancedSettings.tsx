@@ -46,7 +46,7 @@ const PARAM_INFO: Record<string, { title: string; description: string }> = {
       'Limits the model to only consider tokens whose cumulative probability exceeds this threshold. Lower values make output more focused and deterministic. 1.0 means no filtering — the model considers all tokens. Generally, adjust either Temperature or Top P, not both.',
   },
   maxTokens: {
-    title: 'Max Tokens',
+    title: 'Max Output Tokens',
     description:
       'Sets the maximum length of the generated response in tokens (roughly ¾ of a word each). "Auto" lets the system choose the best limit for each model. Lower values produce shorter responses and use fewer credits.',
   },
@@ -324,7 +324,7 @@ export function AdvancedSettings({
           <div className="advanced-settings-row">
             <div className="advanced-settings-label-row">
               <label htmlFor="max-tokens-slider" className="advanced-settings-label">
-                Max tokens
+                Max output tokens
                 <span className="advanced-settings-hint">
                   (Auto or 256–{effectiveMax.toLocaleString()})
                 </span>
@@ -358,7 +358,7 @@ export function AdvancedSettings({
                 disabled={disabled}
                 placeholder="Auto"
                 className="advanced-settings-number-input"
-                aria-label="Max tokens value"
+                aria-label="Max output tokens value"
               />
             </div>
           </div>
@@ -372,7 +372,7 @@ export function AdvancedSettings({
               disabled={disabled || !isNonDefault}
               title={
                 isNonDefault
-                  ? 'Restore Temperature 0.7, Top P 1.0, Max tokens Auto'
+                  ? 'Restore Temperature 0.7, Top P 1.0, Max output tokens Auto'
                   : 'Already using default values'
               }
             >

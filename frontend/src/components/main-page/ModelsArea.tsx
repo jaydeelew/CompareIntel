@@ -198,7 +198,7 @@ export function ModelsArea({
                     {names} {withoutAdvanced.length === 1 ? 'ignores' : 'ignore'} advanced settings
                     because {withoutAdvanced.length === 1 ? 'it uses' : 'they use'} fixed parameters
                     for reasoning and {withoutAdvanced.length === 1 ? 'does' : 'do'} not accept
-                    temperature, Top P, or max tokens from the API.
+                    temperature, Top P, or max output tokens from the API.
                   </p>
                 )
               })()}

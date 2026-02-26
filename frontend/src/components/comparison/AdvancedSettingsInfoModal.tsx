@@ -114,7 +114,7 @@ export function AdvancedSettingsInfoModal({
             </p>
 
             <div className="advanced-settings-info-row">
-              <dt>Max tokens</dt>
+              <dt>Max output tokens</dt>
               <dd>{maxTokens ?? 'Auto'}</dd>
             </div>
             <p className="advanced-settings-info-desc">
