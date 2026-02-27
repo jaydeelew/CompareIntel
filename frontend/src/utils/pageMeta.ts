@@ -22,11 +22,11 @@ const PAGE_META: Record<string, PageMeta> = {
   '/': {
     title: 'CompareIntel - Compare AI Models Side-by-Side',
     description:
-      'Compare the latest AI models side-by-side. Test models from OpenAI, Anthropic, Google, Meta, xAI, and more simultaneously. New models added regularly. Free tier available.',
+      'Compare the latest AI models side-by-side. Test models from OpenAI, Anthropic, Google, Meta, xAI, and more. New models added regularly. Free tier available.',
     canonical: `${BASE_URL}/`,
     ogTitle: 'CompareIntel - Compare 65+ AI Models Side-by-Side',
     ogDescription:
-      'Compare 65+ AI models side-by-side from leading providers. Test prompts simultaneously and find the best AI for your needs. New models added as released. Free tier available.',
+      'Compare 65+ AI models side-by-side from leading providers. Test prompts and find the best AI for your needs. New models added as released. Free tier available.',
     ogImage: DEFAULT_OG_IMAGE,
   },
   '/about': {
@@ -91,7 +91,7 @@ const PAGE_META: Record<string, PageMeta> = {
   },
   '/admin': {
     title: 'Admin Panel - CompareIntel',
-    description: 'CompareIntel admin panel',
+    description: 'CompareIntel admin dashboard for site management.',
     canonical: `${BASE_URL}/admin`,
   },
 }
