@@ -48,7 +48,7 @@ const PARAM_INFO: Record<string, { title: string; description: string }> = {
   maxTokens: {
     title: 'Max Output Tokens',
     description:
-      'Sets the maximum length of the generated response in tokens (roughly ¾ of a word each). "Auto" lets the system choose the best limit for each model. Lower values produce shorter responses and use fewer credits.',
+      'Sets the maximum length of the generated response in tokens (roughly ¾ of a word each). "Auto" lets the system choose the best limit for each model. Lower values produce shorter responses and use fewer credits. The slider range (256 to the maximum) depends on your selected models: when comparing multiple models, the upper limit is the lowest max supported by any selected model, so all models can honor your setting.',
   },
 }
 

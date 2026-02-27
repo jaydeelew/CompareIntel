@@ -235,7 +235,7 @@ export const glossaryTerms: GlossaryTerm[] = [
     id: 'max-output-tokens',
     term: 'Max Output Tokens',
     definition:
-      'A setting that caps the maximum length of the AI response in tokens. Lower values produce shorter, more concise answers and use fewer credits. "Auto" lets the system use each model\'s default limit.',
+      'A setting that caps the maximum length of the AI response in tokens. Lower values produce shorter, more concise answers and use fewer credits. "Auto" lets the system use each model\'s default limit. In the Advanced dropdown, the slider range (256 to the maximum) depends on your selected models: when comparing multiple models, the upper limit is the lowest max supported by any selected model.',
     example:
       'Setting max output tokens to 1,024 limits responses to roughly 750 words. Useful when you want brief answers or need to control credit usage.',
     relatedTerms: ['Token', 'Output Tokens', 'Temperature', 'Top P', 'Credits'],

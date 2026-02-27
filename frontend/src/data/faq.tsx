@@ -1565,7 +1565,9 @@ export const faqData: FAQItemData[] = [
           </li>
           <li>
             <strong>Max output tokens</strong>: Caps the response length. Lower values produce
-            shorter answers and use fewer credits. "Auto" uses each model's default.
+            shorter answers and use fewer credits. "Auto" uses each model's default. The slider
+            range (256 to the maximum) changes based on your model selection: when comparing
+            multiple models, the upper limit is the lowest max supported by any selected model.
           </li>
         </ul>
         <p>

@@ -121,7 +121,8 @@ export const Features: React.FC = () => {
                 <strong>Advanced Controls:</strong> Fine-tune responses with Temperature (creativity
                 vs. consistency), Top P (response focus), and Max output tokens (response length).
                 Expand the Advanced dropdown next to model selection to adjust these—useful for
-                code, math, or when you want shorter answers.
+                code, math, or when you want shorter answers. The max tokens slider range adapts to
+                your selected models (the upper limit is the lowest max supported by any model).
               </li>
             </ul>
           </section>
