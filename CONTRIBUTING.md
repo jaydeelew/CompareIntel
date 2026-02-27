@@ -2,6 +2,8 @@
 
 Thank you for your interest in contributing to CompareIntel. This document covers how to get started, our workflow, and what we expect from contributors.
 
+> **Quick Start:** For the fastest "clone → install → run" path, see [docs/development/QUICKSTART.md](docs/development/QUICKSTART.md).
+
 ---
 
 ## Table of Contents
@@ -27,32 +29,45 @@ Thank you for your interest in contributing to CompareIntel. This document cover
 
 ### First-Time Setup
 
-1. **Fork and clone** the repository
-2. **Set up the backend:**
+1. **Fork and clone** the repository (clone your fork, not the upstream repo)
+2. **Enable pre-commit hooks** (run from repo root):
+   ```bash
+   npm install
+   ```
+   This installs Husky, which runs lint/format checks on `git commit`.
+3. **Set up the backend:**
    ```bash
    cd backend
+   python -m venv venv
+   source venv/bin/activate   # Windows: venv\Scripts\activate
    cp .env.example .env
    # Add SECRET_KEY and OPENROUTER_API_KEY to .env
    pip install -r requirements-dev.txt
    ```
-3. **Set up the frontend:**
+4. **Set up the frontend:**
    ```bash
    cd frontend
    npm install
    ```
-4. **Verify everything works:**
+5. **Verify everything works:**
    ```bash
    # Terminal 1
-   cd backend && uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
+   cd backend && source venv/bin/activate && uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
 
    # Terminal 2
    cd frontend && npm run dev
    ```
-5. **Run tests:**
+6. **Run tests:**
    ```bash
    cd backend && pytest
    cd frontend && npm run test:run
    ```
+
+**Optional:** Add the upstream remote to sync with the main repo:
+```bash
+git remote add upstream https://github.com/ORIGINAL_OWNER/CompareIntel.git
+git fetch upstream
+```
 
 See [docs/development/ENVIRONMENT_SETUP.md](docs/development/ENVIRONMENT_SETUP.md) for detailed environment configuration.
 
@@ -63,8 +78,8 @@ See [docs/development/ENVIRONMENT_SETUP.md](docs/development/ENVIRONMENT_SETUP.m
 ### Local Development (HTTP)
 
 ```bash
-# Terminal 1 - Backend
-cd backend && python -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
+# Terminal 1 - Backend (Windows: use venv\Scripts\activate)
+cd backend && source venv/bin/activate && uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
 
 # Terminal 2 - Frontend
 cd frontend && npm run dev
@@ -139,6 +154,18 @@ For documentation-only commits: `git commit -m "Update README [skip ci]"`
 - **TypeScript** strict mode
 - Config: `frontend/eslint.config.js`, `frontend/.prettierrc` (if present)
 
+### Database Migrations
+
+When adding or changing database models:
+
+```bash
+cd backend
+alembic revision --autogenerate -m "description of changes"
+alembic upgrade head
+```
+
+See [backend/migrations/README.md](backend/migrations/README.md) for details.
+
 ### General Guidelines
 
 - Follow existing patterns and structure
@@ -169,7 +196,12 @@ See [docs/testing/BACKEND_TESTING.md](docs/testing/BACKEND_TESTING.md).
 cd frontend
 npm run test:run          # Unit tests
 npm run test:coverage     # With coverage
-npm run test:e2e         # E2E (Playwright)
+npm run test:e2e          # E2E (Playwright)
+```
+
+**E2E tests:** Before running `npm run test:e2e`, install Playwright browsers:
+```bash
+npx playwright install
 ```
 
 See [docs/testing/FRONTEND_TESTING.md](docs/testing/FRONTEND_TESTING.md).
@@ -213,6 +245,7 @@ All must pass before merge.
 | Document | Description |
 |----------|-------------|
 | [README.md](README.md) | Project overview, quick start, API reference |
+| [docs/development/QUICKSTART.md](docs/development/QUICKSTART.md) | Minimal clone → install → run guide |
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Architecture, data flow, key files |
 | [docs/development/WORKFLOW.md](docs/development/WORKFLOW.md) | Dev environments, deployment |
 | [docs/development/ENVIRONMENT_SETUP.md](docs/development/ENVIRONMENT_SETUP.md) | Environment variables |
