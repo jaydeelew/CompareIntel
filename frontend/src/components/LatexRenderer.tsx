@@ -552,7 +552,8 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({ children, className = '',
         // Using 16:9 as default for unknown dimensions
         const styleAttr =
           'style="max-width: 100%; height: auto; aspect-ratio: 16/9; transition: opacity 0.3s ease-in-out;"'
-        return `<img src="${optimizedUrl}" alt="${alt.replace(/"/g, '&quot;')}"${titleAttr} ${loadingAttr} ${decodingAttr} ${styleAttr} />`
+        const altText = alt && alt.trim() ? alt.replace(/"/g, '&quot;') : 'Image'
+        return `<img src="${optimizedUrl}" alt="${altText}"${titleAttr} ${loadingAttr} ${decodingAttr} ${styleAttr} />`
       }
     )
 

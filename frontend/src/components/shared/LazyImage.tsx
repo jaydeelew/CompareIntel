@@ -170,7 +170,7 @@ export const LazyImage: React.FC<LazyImageProps> = ({
         {placeholder && !isLoaded && (
           <img
             src={placeholder}
-            alt=""
+            alt="Loading placeholder"
             aria-hidden="true"
             style={{
               position: 'absolute',
@@ -220,7 +220,7 @@ export const LazyImage: React.FC<LazyImageProps> = ({
       {placeholder && !isLoaded && (
         <img
           src={placeholder}
-          alt=""
+          alt="Loading placeholder"
           aria-hidden="true"
           style={{
             position: 'absolute',
@@ -238,7 +238,7 @@ export const LazyImage: React.FC<LazyImageProps> = ({
       {blurDataURL && !isLoaded && (
         <img
           src={blurDataURL}
-          alt=""
+          alt="Loading placeholder"
           aria-hidden="true"
           style={{
             position: 'absolute',

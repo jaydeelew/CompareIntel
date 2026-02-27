@@ -157,7 +157,7 @@ export function Hero({ visibleTooltip, onCapabilityTileTap, children }: HeroProp
     <div className="hero-section">
       {/* Flash logo background */}
       <div className={`hero-logo-flash ${showFlash ? 'active' : ''}`}>
-        <img src="/CI_favicon.svg" alt="" className="hero-flash-logo-img" />
+        <img src="/CI_favicon.svg" alt="CompareIntel logo" className="hero-flash-logo-img" />
       </div>
       <div className="hero-content">
         {/* Mobile-only theme toggle - moved from navbar for better visibility */}
