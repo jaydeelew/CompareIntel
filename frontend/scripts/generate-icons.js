@@ -108,6 +108,7 @@ async function generatePNG(size, outputPath, options = {}) {
 /**
  * Generate ICO file from multiple PNG sizes
  * Creates a multi-resolution ICO with 16x16, 32x32, and 48x48 sizes
+ * Uses circle-safe SVG so favicon.ico displays correctly in Google Search's circular mask
  */
 async function generateICO(outputPath) {
   // Generate temporary PNGs for ICO
@@ -115,7 +116,7 @@ async function generateICO(outputPath) {
   const pngBuffers = [];
 
   for (const size of sizes) {
-    const buffer = await sharp(Buffer.from(svgContent))
+    const buffer = await sharp(Buffer.from(circleSafeSvgContent))
       .resize(size, size, {
         fit: 'contain',
         background: { r: 0, g: 0, b: 0, alpha: 0 }

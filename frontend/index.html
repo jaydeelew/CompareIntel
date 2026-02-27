@@ -13,9 +13,11 @@
       document.documentElement.classList.add('preload');
     })();
   </script>
-  <!-- Favicons - SVG first for modern browsers, PNG fallbacks for older browsers -->
+  <!-- Favicons - ICO first for crawlers (e.g. Google), SVG for modern browsers, PNG fallbacks -->
+  <!-- favicon.ico: circle-safe for Google Search's circular mask (many crawlers request /favicon.ico by default) -->
+  <link rel="icon" type="image/x-icon" href="/favicon.ico" />
   <!-- SVG favicon - modern browsers (Chrome 80+, Firefox 41+, Safari 16.4+) -->
-  <!-- Circle-safe version: content scaled to 82% to survive Google Search's circular crop -->
+  <!-- Circle-safe version: content scaled to 75% to survive Google Search's circular crop -->
   <link rel="icon" type="image/svg+xml" href="/CI_favicon_circle_safe.svg" />
   <!-- PNG fallbacks for older browsers and specific contexts -->
   <link rel="icon" type="image/png" sizes="512x512" href="/CI_favicon_512x512.png" />
