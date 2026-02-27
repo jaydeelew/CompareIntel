@@ -221,7 +221,7 @@ export function AdvancedSettings({
   }
 
   return (
-    <div className="advanced-settings">
+    <div className={`advanced-settings${isExpanded ? ' advanced-settings-expanded' : ''}`}>
       <button
         type="button"
         className="advanced-settings-toggle"

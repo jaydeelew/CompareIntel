@@ -1781,6 +1781,13 @@
   transform: rotate(180deg);
 }
 
+/* Toggle button when Advanced is open - subtle emphasis */
+.advanced-settings-expanded .advanced-settings-toggle {
+  color: var(--text-primary);
+  background: var(--bg-hover);
+  border-color: var(--border-color);
+}
+
 .advanced-settings-content {
   margin-top: 0.75rem;
   padding: 1rem 1.25rem;
@@ -1793,6 +1800,30 @@
   border: 1px solid var(--border-color);
   border-radius: var(--radius-xl);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+/* When Advanced is open: stand out from the rest of the section */
+.advanced-settings-expanded .advanced-settings-content {
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-md);
+}
+
+/* Light theme: subtle tint and stronger definition when open */
+[data-theme='light'] .advanced-settings-expanded .advanced-settings-content {
+  background: linear-gradient(to bottom, rgba(37, 99, 235, 0.04) 0%, var(--bg-elevated) 100%);
+  border-color: rgba(37, 99, 235, 0.2);
+  box-shadow:
+    0 2px 8px rgba(37, 99, 235, 0.08),
+    0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+/* Dark theme: subtle primary glow and stronger border when open */
+[data-theme='dark'] .advanced-settings-expanded .advanced-settings-content {
+  background: linear-gradient(to bottom, rgba(6, 182, 212, 0.06) 0%, var(--bg-elevated) 100%);
+  border-color: rgba(6, 182, 212, 0.25);
+  box-shadow:
+    0 2px 12px rgba(0, 0, 0, 0.4),
+    0 0 0 1px rgba(6, 182, 212, 0.1);
 }
 
 .advanced-settings-row {
