@@ -21,7 +21,28 @@ function socialImageVersionPlugin(): Plugin {
 
 // https://vite.dev/config/
 export default defineConfig({
+  logLevel: 'warn',
   plugins: [
+    {
+      name: 'concise-startup',
+      configureServer(server) {
+        const printUrl = () => {
+          const addr = server.httpServer?.address()
+          if (addr && typeof addr === 'object') {
+            const port = addr.port
+            const host =
+              addr.address === '::' || addr.address === '127.0.0.1'
+                ? 'localhost'
+                : addr.address
+            process.stdout.write(`Frontend: http://${host}:${port}\n`)
+          } else {
+            const port = server.config.server?.port ?? 5173
+            process.stdout.write(`Frontend: http://localhost:${port}\n`)
+          }
+        }
+        server.httpServer?.once('listening', printUrl)
+      },
+    },
     // Add security headers to dev server responses (for ZAP compliance)
     securityHeadersPlugin(),
     // Auto-version social sharing images on every build (cache busting for OG/Twitter images)

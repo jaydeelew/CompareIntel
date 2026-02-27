@@ -96,6 +96,9 @@ sqlalchemy_logger.addFilter(SQLStyleWarningFilter())
 logging.getLogger("sqlalchemy.engine").setLevel(logging.WARNING)
 logging.getLogger("sqlalchemy.pool").setLevel(logging.WARNING)
 
+# Suppress httpx request logs (noise during model preload, etc.)
+logging.getLogger("httpx").setLevel(logging.WARNING)
+
 # Get logger for this module
 logger = logging.getLogger(__name__)
 
@@ -111,32 +114,18 @@ async def lifespan(app: FastAPI):
     """
     # Startup
     try:
-        # Validate configuration
-        logger.info("Validating configuration...")
         validate_config()
-
-        # Log configuration (with masked secrets)
         log_configuration()
 
-        # Initialize database tables
         environment = os.getenv("ENVIRONMENT", "development")
         if environment != "production":
-            logger.info("Initializing database tables (development mode)...")
             Base.metadata.create_all(bind=engine, checkfirst=True)
-            logger.info("Database initialization complete")
-        else:
-            logger.info("Skipping create_all in production (tables should already exist)")
 
-        # Preload model token limits from OpenRouter
-        logger.info("Preloading model token limits...")
         preload_model_token_limits()
 
-        # Initialize search rate limiter early to ensure it's ready and logs are visible
-        logger.info("Initializing search rate limiter...")
         from .search.rate_limiter import get_rate_limiter
 
-        rate_limiter = get_rate_limiter()  # This will log initialization details
-        logger.info("Search rate limiter initialized successfully")
+        get_rate_limiter()
 
         logger.info("Application startup complete")
     except ValueError as e:

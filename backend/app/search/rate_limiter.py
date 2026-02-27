@@ -343,12 +343,7 @@ def get_rate_limiter():
                         )
 
                         logger.info(
-                            f"🚀 Initialized DISTRIBUTED search rate limiter with Redis: "
-                            f"{settings.search_rate_limit_per_minute} req/min, "
-                            f"{settings.search_max_concurrent} concurrent, "
-                            f"{settings.search_delay_between_requests}s delay. "
-                            f"Cache: {'enabled' if settings.search_cache_enabled else 'disabled'}. "
-                            f"Circuit breaker: {'enabled' if settings.search_circuit_breaker_enabled else 'disabled'}."
+                            f"Search rate limiter: Redis ({settings.search_rate_limit_per_minute} req/min)"
                         )
                         return _global_rate_limiter
                     except Exception as e:
@@ -367,15 +362,9 @@ def get_rate_limiter():
                 )
                 worker_count = os.getenv("GUNICORN_WORKERS", "4")
                 total_capacity = settings.search_rate_limit_per_minute * int(worker_count)
-                logger.warning(
-                    f"🔧 Initialized search rate limiter (per-worker, in-memory): "
-                    f"{settings.search_rate_limit_per_minute} req/min, "
-                    f"{settings.search_max_concurrent} concurrent, "
-                    f"{settings.search_delay_between_requests}s delay. "
-                    f"Cache: {'enabled' if settings.search_cache_enabled else 'disabled'}. "
-                    f"⚠️ WARNING: Each Gunicorn worker ({worker_count} workers) has its own rate limiter instance. "
-                    f"Total capacity across all workers: ~{total_capacity} req/min. "
-                    f"Enable Redis (REDIS_ENABLED=true, REDIS_URL=...) for distributed rate limiting."
+                logger.info(
+                    f"Search rate limiter: in-memory ({settings.search_rate_limit_per_minute} req/min, "
+                    f"{worker_count} workers)"
                 )
     return _global_rate_limiter
 

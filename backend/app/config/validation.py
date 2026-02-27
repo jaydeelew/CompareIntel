@@ -164,7 +164,7 @@ def validate_config() -> None:
         error_msg = "Configuration validation failed:\n" + "\n".join(f"  - {e}" for e in errors)
         raise ValueError(error_msg)
 
-    logger.info("Configuration validation passed successfully")
+    logger.debug("Configuration validation passed")
 
 
 def mask_secret(value: str, show_chars: int = 4) -> str:
@@ -186,73 +186,37 @@ def mask_secret(value: str, show_chars: int = 4) -> str:
 
 def log_configuration() -> None:
     """
-    Log configuration on startup with sensitive values masked.
+    Log essential configuration on startup (concise, developer-focused).
 
-    This function logs all configuration settings for debugging purposes,
-    but masks sensitive information like API keys and passwords.
+    Full configuration details are available at DEBUG level.
     """
-    logger.info("=" * 80)
-    logger.info("Application Configuration")
-    logger.info("=" * 80)
-
-    # Environment
-    logger.info(f"Environment: {settings.environment}")
-    logger.info(f"Frontend URL: {settings.frontend_url}")
-
-    # Database
-    # Mask database password if present in URL
-    db_url = settings.database_url
-    if "://" in db_url and "@" in db_url:
-        # Mask password in database URL (format: scheme://user:password@host/db)
-        parts = db_url.split("://", 1)
+    # Database type for quick reference (mask password in URL)
+    db_display = settings.database_url
+    if "://" in db_display and "@" in db_display:
+        parts = db_display.split("://", 1)
         if len(parts) == 2:
-            scheme = parts[0]
-            rest = parts[1]
+            scheme, rest = parts[0], parts[1]
             if "@" in rest:
                 auth_part, host_part = rest.split("@", 1)
                 if ":" in auth_part:
-                    user, password = auth_part.split(":", 1)
-                    masked_auth = f"{user}:***"
-                    db_url = f"{scheme}://{masked_auth}@{host_part}"
+                    user, _ = auth_part.split(":", 1)
+                    db_display = f"{scheme}://{user}:***@{host_part}"
 
-    logger.info(f"Database URL: {db_url}")
-
-    # Security (masked)
-    logger.info(f"Secret Key: {mask_secret(settings.secret_key)}")
-
-    # API Keys (masked)
-    logger.info(f"OpenRouter API Key: {mask_secret(settings.openrouter_api_key)}")
-
-    # Email Configuration
-    if (
-        settings.mail_username
-        or settings.mail_password
-        or settings.mail_from
-        or settings.mail_server
-    ):
-        logger.info("Email Configuration:")
-        logger.info(f"  Mail Server: {settings.mail_server or '(not set)'}")
-        logger.info(f"  Mail Port: {settings.mail_port or '(not set)'}")
-        logger.info(f"  Mail Username: {settings.mail_username or '(not set)'}")
-        logger.info(f"  Mail Password: {'***' if settings.mail_password else '(not set)'}")
-        logger.info(f"  Mail From: {settings.mail_from or '(not set)'}")
-    else:
-        logger.info("Email Configuration: (not configured)")
-
-    # Performance Settings
-    logger.info("Performance Settings:")
-    logger.info(f"  Individual Model Timeout: {settings.individual_model_timeout}s")
-    logger.info(f"  Model Inactivity Timeout: {settings.model_inactivity_timeout}s")
-
-    # Subscription Configuration Summary
-    logger.info("Subscription Tiers:")
-    for tier, config in SUBSCRIPTION_CONFIG.items():
-        logger.info(
-            f"  {tier}: {config['daily_limit']} daily, "
-            f"{config['model_limit']} models/comparison, "
-            f"overage: {config['overage_allowed']}"
+    email_status = (
+        "configured"
+        if (
+            settings.mail_username
+            and settings.mail_password
+            and settings.mail_server
+            and settings.mail_from
         )
+        else "not configured"
+    )
 
-    # Response tier limits removed - now using model-specific limits
-
-    logger.info("=" * 80)
+    logger.info(
+        f"Config: env={settings.environment} | "
+        f"frontend={settings.frontend_url} | "
+        f"db={db_display} | "
+        f"openrouter={'ok' if settings.openrouter_api_key else 'missing'} | "
+        f"email={email_status}"
+    )

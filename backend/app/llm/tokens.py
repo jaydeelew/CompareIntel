@@ -23,7 +23,6 @@ _model_token_limits_cache: dict[str, dict[str, int]] = {}
 
 
 def preload_model_token_limits() -> None:
-    logger.info("Preloading model token limits from OpenRouter...")
     try:
         all_models = fetch_all_models_from_openrouter()
         if all_models:
@@ -37,11 +36,10 @@ def preload_model_token_limits() -> None:
                 else:
                     missing_models.append(mid)
             _model_token_limits_cache.update(limits_dict)
-            logger.info(f"Preloaded token limits for {len(limits_dict)} configured models")
+            msg = f"Models: {len(limits_dict)} preloaded"
             if missing_models:
-                logger.info(
-                    f"Skipped {len(missing_models)} model(s) not available from OpenRouter: {', '.join(missing_models)}"
-                )
+                msg += f", {len(missing_models)} unavailable"
+            logger.info(msg)
         else:
             logger.warning("Failed to preload model token limits from OpenRouter")
     except Exception as e:

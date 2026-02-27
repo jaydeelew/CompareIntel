@@ -419,7 +419,7 @@ class DistributedSearchRateLimiter:
                 health_check_interval=30,
             )
             self.use_redis = True
-            logger.info("✅ Redis client created - will test connection on first use")
+            logger.debug("Redis client created - will test connection on first use")
         except Exception as e:
             logger.warning(f"Redis client creation failed: {e}. Using in-memory fallback.")
             self.use_redis = False
