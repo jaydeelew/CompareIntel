@@ -44,10 +44,14 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 
   <!-- Google Fonts: Sora (headings) + Plus Jakarta Sans (body) -->
-  <!-- Standard stylesheet - preload caused "not used" warnings and ERR_SOCKET_NOT_CONNECTED in some environments -->
+  <!-- Load asynchronously to avoid render-blocking (improves FCP/LCP for Lighthouse) -->
+  <!-- media="print" defers load; onload switches to "all" when ready. display=swap shows fallback until loaded. -->
   <!-- crossorigin enables JS access to stylesheet rules (needed by html-to-image for screenshots) -->
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap"
-    crossorigin />
+    media="print" onload="this.media='all'" crossorigin />
+  <noscript>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" crossorigin />
+  </noscript>
 
   <!-- PWA Meta Tags -->
   <meta name="theme-color" content="#0f172a" />
