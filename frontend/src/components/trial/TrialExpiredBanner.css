@@ -52,19 +52,6 @@
   flex-shrink: 0;
 }
 
-.trial-expired-coming-soon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.5rem 1rem;
-  background: linear-gradient(135deg, #059669 0%, #10b981 100%);
-  color: white;
-  font-size: 0.875rem;
-  font-weight: 600;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(16, 185, 129, 0.3);
-}
-
 .trial-expired-upgrade-btn {
   display: inline-flex;
   align-items: center;

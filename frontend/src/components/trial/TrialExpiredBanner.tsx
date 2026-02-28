@@ -53,7 +53,6 @@ export const TrialExpiredBanner: React.FC<TrialExpiredBannerProps> = ({
           </span>
         </div>
         <div className="trial-expired-actions">
-          <span className="trial-expired-coming-soon">Paid plans coming soon!</span>
           <button
             className="trial-expired-dismiss-btn"
             onClick={handleDismiss}
