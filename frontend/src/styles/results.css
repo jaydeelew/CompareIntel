@@ -351,6 +351,7 @@
 }
 
 /* Breakout button - for breaking out a model from a multi-model comparison */
+/* touch-action, tap-highlight, min size: Safari iOS tap reliability (see Safari Mobile click bug) */
 .breakout-card-btn {
   background: none;
   border: none;
@@ -363,11 +364,16 @@
   line-height: 1;
   width: 28px;
   height: 28px;
+  /* 40px min touch target for Safari iOS (fits 40px header); Apple recommends 44pt */
+  min-width: 40px;
+  min-height: 40px;
   z-index: 10;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: rgba(16, 185, 129, 0.2);
 }
 
 .breakout-card-btn:hover {

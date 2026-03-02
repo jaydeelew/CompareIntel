@@ -592,21 +592,26 @@ test.describe('Results Display Regression Tests', () => {
         await authenticatedPage.getByTestId('comparison-submit-button').click()
       })
 
-      await test.step('Verify breakout button exists', async () => {
+      await test.step('Verify breakout button exists and is clickable', async () => {
         const resultCard = authenticatedPage.locator('.result-card').first()
         await expect(resultCard).toBeVisible({ timeout: 30000 })
 
         // Wait for streaming to complete
         await authenticatedPage.waitForTimeout(5000)
 
-        // Look for breakout button
         const breakoutBtn = resultCard.locator(
-          '.breakout-button, button[title*="breakout"], button[title*="Breakout"]'
+          '[data-testid="breakout-button"], .breakout-card-btn, button[aria-label*="Break out"]'
         )
-        const breakoutVisible = await breakoutBtn.isVisible({ timeout: 5000 }).catch(() => false)
+        await expect(breakoutBtn).toBeVisible({ timeout: 5000 })
 
-        // Breakout should be available with multiple models
-        expect(breakoutVisible || true).toBe(true) // Soft assertion
+        // Click breakout and verify single-model view (breakout succeeded)
+        await breakoutBtn.click()
+        await authenticatedPage.waitForTimeout(1500) // Allow breakout animation
+
+        // After breakout: only one model visible, follow-up mode active
+        const resultCardsAfter = authenticatedPage.locator('.result-card')
+        const cardsCount = await resultCardsAfter.count()
+        expect(cardsCount).toBe(1)
       })
     })
   })

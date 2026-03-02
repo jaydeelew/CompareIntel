@@ -188,11 +188,19 @@ export const ResultCard: React.FC<ResultCardProps> = ({
             )}
             {showBreakoutButton && onBreakout && !isError && (
               <button
+                type="button"
                 className="breakout-card-btn"
                 disabled={isTutorialActive}
+                data-testid="breakout-button"
                 onClick={e => {
                   onBreakout(modelId)
-                  e.currentTarget.blur()
+                  setTimeout(() => e.currentTarget.blur(), 0)
+                }}
+                onTouchEnd={e => {
+                  // Safari iOS: click often doesn't fire when finger moves slightly during tap.
+                  // Handle touch directly; preventDefault stops synthesized click (avoids double-fire).
+                  e.preventDefault()
+                  if (!isTutorialActive) onBreakout(modelId)
                 }}
                 title="Continue with this model only"
                 aria-label={`Break out conversation with ${model?.name || modelId}`}
