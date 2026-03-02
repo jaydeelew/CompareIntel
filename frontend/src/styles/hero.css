@@ -1058,13 +1058,14 @@
 .hero-section .credits-remaining-link {
   color: #e0f2fe;
   text-decoration: none;
-  display: inline-block;
-  transition: transform 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
 }
 
-.hero-section .credits-remaining-link:hover {
-  color: #e0f2fe;
-  transform: scale(1.05);
+.hero-section .credits-remaining-link .credits-info-icon {
+  flex-shrink: 0;
+  opacity: 0.9;
 }
 
 /* Textarea Actions */

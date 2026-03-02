@@ -1782,6 +1782,22 @@ export function MainPage() {
           <strong>{regularToUse}</strong> {regularToUse === 1 ? 'model' : 'models'} selected •{' '}
           <Link to="/faq#credits-system" className="credits-remaining-link">
             <strong>{Math.round(creditsRemaining)}</strong> credits remaining
+            <svg
+              className="credits-info-icon"
+              width="12"
+              height="12"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <circle cx="12" cy="12" r="10" />
+              <path d="M12 16v-4" />
+              <path d="M12 8h.01" />
+            </svg>
           </Link>
         </span>
       </div>
