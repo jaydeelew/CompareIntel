@@ -38,17 +38,17 @@ The "Help me choose" feature provides decision support for model selection. The 
 **Date:** February 2026  
 **Updated:** February 2026 (evidence-based revision)
 
-**Description:** Define default model selections for various categories based on published benchmarks and reliable sources. Each category lists exactly 2–3 top models.
+**Description:** Define default model selections for various categories based on published benchmarks and reliable sources. Each category must have at least 2 models (2–3 recommended).
 
 **Accomplished:**
 - Created `frontend/src/data/helpMeChooseRecommendations.ts`
-- Six categories, each with 2–3 models backed by benchmarks:
+- Six categories, each with at least 2 models (2–3 per category) backed by benchmarks. Display order: free-tier-available first, then Premium. Free-tier categories use distinct model sets so selections differ meaningfully:
+  - **Most cost-effective:** DeepSeek Chat v3.1, Gemini 2.5 Flash (unregistered), DeepSeek R1 (free) — OpenRouter $/1M tokens, quality-per-dollar
+  - **Fastest responses:** Gemini 2.0 Flash, Claude 3.5 Haiku (unregistered), Claude Haiku 4.5 (free) — AILatency, Artificial Analysis TTFT benchmarks
   - **Best for coding:** Claude Opus 4.6, Claude Opus 4.5, MiniMax M2.5 (SWE-Bench Verified 80.8–80.9%, LMSys Coding Arena #1–2)
   - **Best for writing:** Claude Opus 4.6, Claude Opus 4.5, GPT-5.2 (Creative Writing Arena, Mazur Writing Score)
   - **Best for reasoning:** o3, DeepSeek R1, Claude Opus 4.6 (MMLU-Pro, chain-of-thought SOTA)
-  - **Most cost-effective:** DeepSeek R1, Gemini 2.5 Flash, Claude Haiku 4.5 (OpenRouter value leaders)
   - **Best for web search:** Claude Sonnet 4.6, GPT-5.1, Gemini 2.5 Pro (retrieval, citation)
-  - **Fastest responses:** Claude Haiku 4.5, GPT-5 Nano, Gemini 2.0 Flash, Gemini 2.5 Flash (latency benchmarks)
 - Model IDs must match `backend/data/models_registry.json`
 - See **Evidence Sources** section below for benchmark references
 
@@ -100,6 +100,7 @@ The "Help me choose" feature provides decision support for model selection. The 
 - **Both dropdowns open:** Click-outside excludes sibling toggles so Help me choose and Advanced can both stay open
 - **Dropdown background:** Help me choose content matches Advanced (transparent option backgrounds, separator lines, light/dark theme gradients when expanded)
 - **Toggle emphasis:** Both buttons appear bold when expanded (`font-weight: var(--font-semibold)`)
+- **Dropdown order:** Free-tier-available options (Most cost-effective, Fastest responses) appear first, then Premium options. This surfaces accessible recommendations at the top for unregistered and free users.
 
 ---
 
@@ -112,9 +113,9 @@ Recommendations are based on the following benchmarks and sources. Update this s
 | **Coding** | [SWE-Bench Verified](https://www.swebench.com/verified.html) (500 human-filtered GitHub issues), [LMSys Coding Arena](https://lmarena.ai/) | % Resolved, Elo on code-specific evals |
 | **Writing** | [Creative Writing Arena](https://kearai.com/leaderboard/creative-writing), [WritingBench](https://arxiv.org/abs/2503.05244), Mazur Writing Score | Human preference, voice, character consistency |
 | **Reasoning** | [MMLU-Pro](https://awesomeagents.ai/leaderboards/mmlu-pro-leaderboard/) (12k+ harder questions), chain-of-thought evals | STEM accuracy, multi-step reasoning |
-| **Cost-effective** | [OpenRouter pricing](https://openrouter.ai/docs/overview/models), cost-per-token calculators | $/1M tokens, quality-per-dollar |
+| **Cost-effective** | [OpenRouter pricing](https://openrouter.ai/docs/overview/models), cost-per-token calculators | $/1M tokens, quality-per-dollar; DeepSeek, Gemini Flash as value leaders |
 | **Web search** | Provider docs (`supports_web_search`), retrieval benchmarks | Citation quality, grounded answers |
-| **Fastest** | [Anthropic Haiku 4.5](https://www.anthropic.com/news/claude-haiku-4-5), [Artificial Analysis](https://artificialanalysis.ai/) latency benchmarks | Time-to-first-token, throughput |
+| **Fastest** | [AILatency](https://www.ailatency.com/), [Artificial Analysis](https://artificialanalysis.ai/), [Anthropic Haiku 4.5](https://www.anthropic.com/news/claude-haiku-4-5) | Time-to-first-token, throughput; Gemini Flash, Claude Haiku as latency leaders |
 
 **General rankings:** [LMSys Chatbot Arena](https://lmarena.ai/leaderboard/) (pairwise human preference, Elo) provides overall model quality; specialized leaderboards (Coding, Creative Writing) refine by use case.
 
@@ -181,7 +182,7 @@ Recommendations are based on the following benchmarks and sources. Update this s
 | Integration | `frontend/src/components/main-page/ModelsArea.tsx`, `frontend/src/pages/MainPage.tsx` |
 | Models registry | `backend/data/models_registry.json` |
 
-**Recommendation rule:** Each category must have exactly 2–3 models. Order indicates preference (best first). Model IDs must exist in the registry.
+**Recommendation rule:** Each category must have at least 2 models (2–3 recommended). Order indicates preference (best first). Model IDs must exist in the registry. Free-tier-available categories (Most cost-effective, Fastest responses) must use distinct model sets so each selection yields different models; list unregistered-tier models first so unregistered users receive ≥2 models.
 
 ---
 

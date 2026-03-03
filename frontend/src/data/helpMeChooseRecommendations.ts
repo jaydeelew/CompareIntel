@@ -21,7 +21,32 @@ export interface HelpMeChooseRecommendation {
   modelIds: string[]
 }
 
+/**
+ * Order: Free-tier-available options first (Most cost-effective, Fastest responses),
+ * then Premium options. This surfaces accessible recommendations at the top for
+ * unregistered and free users.
+ */
 export const HELP_ME_CHOOSE_RECOMMENDATIONS: HelpMeChooseRecommendation[] = [
+  {
+    id: 'cost-effective',
+    label: 'Most cost-effective',
+    description: 'Best quality-per-dollar: OpenRouter value leaders for high-volume use',
+    modelIds: [
+      'deepseek/deepseek-chat-v3.1', // Unregistered: DeepSeek value leader, low $/1M tokens
+      'google/gemini-2.5-flash', // Unregistered: quality score 51, built-in thinking
+      'deepseek/deepseek-r1', // Free: quality score 51, $0.70/$2.50 per 1M tokens
+    ],
+  },
+  {
+    id: 'fast',
+    label: 'Fastest responses',
+    description: 'Optimized for low latency and quick time-to-first-token',
+    modelIds: [
+      'google/gemini-2.0-flash-001', // Unregistered: AILatency/Artificial Analysis TTFT leader
+      'anthropic/claude-3.5-haiku', // Unregistered: Anthropic's fastest, low latency
+      'anthropic/claude-haiku-4.5', // Free: 2× Sonnet speed, 4–5× Sonnet 4.5
+    ],
+  },
   {
     id: 'coding',
     label: 'Best for coding',
@@ -55,16 +80,6 @@ export const HELP_ME_CHOOSE_RECOMMENDATIONS: HelpMeChooseRecommendation[] = [
     ],
   },
   {
-    id: 'cost-effective',
-    label: 'Most cost-effective',
-    description: 'Best quality-per-dollar: OpenRouter value leaders for high-volume use',
-    modelIds: [
-      'deepseek/deepseek-r1', // Quality score 51, $0.70/$2.50 per 1M tokens
-      'google/gemini-2.5-flash', // Quality score 51, built-in thinking
-      'anthropic/claude-haiku-4.5', // Near-frontier at fraction of cost
-    ],
-  },
-  {
     id: 'web-search',
     label: 'Best for web search',
     description: 'Models with strong real-time retrieval, source citation, and grounded answers',
@@ -72,17 +87,6 @@ export const HELP_ME_CHOOSE_RECOMMENDATIONS: HelpMeChooseRecommendation[] = [
       'anthropic/claude-sonnet-4.6', // Frontier quality + web search
       'openai/gpt-5.1', // Strong retrieval, citation
       'google/gemini-2.5-pro', // Complex reasoning + search
-    ],
-  },
-  {
-    id: 'fast',
-    label: 'Fastest responses',
-    description: 'Optimized for low latency and quick time-to-first-token',
-    modelIds: [
-      'anthropic/claude-haiku-4.5', // 2× Sonnet speed, 4–5× Sonnet 4.5
-      'openai/gpt-5-nano', // Ultra-low latency, high throughput
-      'google/gemini-2.0-flash-001', // High-speed, Pro-level quality
-      'google/gemini-2.5-flash', // Fast, cost-efficient, built-in thinking
     ],
   },
 ]
