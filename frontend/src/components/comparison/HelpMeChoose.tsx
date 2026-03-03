@@ -34,9 +34,9 @@ function isModelRestricted(
 
 function getDisabledTooltip(userTier: 'unregistered' | 'free'): string {
   if (userTier === 'unregistered') {
-    return 'All recommended models require registration or a paid tier. Sign up for a free account to unlock more models and get a 7-day trial of all premium models.'
+    return 'Sign up for a free account to unlock more models and get a 7-day trial of all premium models.'
   }
-  return 'All recommended models require a paid subscription. Paid tiers are coming soon — stay tuned to access all models.'
+  return 'Paid tiers are coming soon — stay tuned to access all models.'
 }
 
 export interface HelpMeChooseProps {
