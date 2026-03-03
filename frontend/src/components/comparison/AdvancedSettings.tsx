@@ -226,7 +226,9 @@ export function AdvancedSettings({
         type="button"
         className="advanced-settings-toggle"
         onClick={() => setIsExpanded(!isExpanded)}
+        disabled={disabled}
         aria-expanded={isExpanded}
+        aria-haspopup="true"
         aria-controls="advanced-settings-content"
         title={isNonDefault && !isExpanded ? 'Advanced: custom settings applied' : undefined}
       >

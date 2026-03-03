@@ -28,6 +28,8 @@ export type { DisabledModelModalInfo } from './DisabledModelInfoModal'
 export { UsageIndicatorInfoModal } from './UsageIndicatorInfoModal'
 
 export { AdvancedSettings } from './AdvancedSettings'
+export { HelpMeChoose } from './HelpMeChoose'
+export type { HelpMeChooseProps } from './HelpMeChoose'
 export type { AdvancedSettingsProps } from './AdvancedSettings'
 export { TemperatureInfoModal } from './TemperatureInfoModal'
 export { WebSearchInfoModal } from './WebSearchInfoModal'

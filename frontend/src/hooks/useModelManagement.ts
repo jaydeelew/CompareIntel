@@ -92,6 +92,8 @@ export interface UseModelManagementOptions {
   accurateInputTokens: number | null
   /** Called when user deselects to empty selection (e.g. to mark default selection as overridden) */
   onDeselectToEmpty?: () => void
+  /** When true, only allow selecting models visible to free tier (hide premium) */
+  hidePremiumModels?: boolean
 }
 
 export interface UseModelManagementReturn {
@@ -107,6 +109,8 @@ export interface UseModelManagementReturn {
   toggleAllForProvider: (provider: string) => void
   /** Toggle a single model selection */
   handleModelToggle: (modelId: string) => void
+  /** Apply a bulk model selection (e.g. from Help me choose): filters by tier, availability, limit */
+  handleApplyRecommendation: (modelIds: string[]) => void
 }
 
 /**
@@ -181,6 +185,7 @@ export function useModelManagement({
   setError,
   accurateInputTokens,
   onDeselectToEmpty,
+  hidePremiumModels = false,
 }: UseModelManagementOptions): UseModelManagementReturn {
   const [openDropdowns, setOpenDropdowns] = useState<Set<string>>(new Set())
 
@@ -456,6 +461,71 @@ export function useModelManagement({
     ]
   )
 
+  const handleApplyRecommendation = useCallback(
+    (modelIds: string[]) => {
+      if (isFollowUpMode) {
+        setError(
+          'Cannot change models during follow-up. Start a new comparison to use recommendations.'
+        )
+        setTimeout(() => setError(null), 5000)
+        return
+      }
+
+      const { userTier, isPaidTier } = getUserTierInfo(isAuthenticated, user)
+
+      const filtered: string[] = []
+      for (const id of modelIds) {
+        if (filtered.length >= maxModelsLimit) break
+        const model = findModelById(modelsByProvider, id)
+        if (!model || model.available === false) continue
+        if (isModelRestricted(model, userTier, isPaidTier)) continue
+        if (hidePremiumModels) {
+          if (isPaidTier) {
+            // ok
+          } else if (model.trial_unlocked) {
+            // ok
+          } else if (userTier === 'unregistered') {
+            if (model.tier_access !== 'unregistered') continue
+          } else if (userTier === 'free') {
+            if (model.tier_access === 'paid') continue
+          }
+        }
+        filtered.push(id)
+      }
+
+      if (filtered.length === 0) {
+        setError(
+          'No recommended models are available for your tier. Try a different recommendation or sign up for more access.'
+        )
+        setTimeout(() => setError(null), 6000)
+        return
+      }
+
+      setSelectedModels(filtered)
+      onDeselectToEmpty?.()
+      if (
+        error &&
+        (error.includes('Maximum') ||
+          error.includes('Must have at least one model') ||
+          error.includes('Please select at least one model'))
+      ) {
+        setError(null)
+      }
+    },
+    [
+      isFollowUpMode,
+      isAuthenticated,
+      user,
+      modelsByProvider,
+      maxModelsLimit,
+      hidePremiumModels,
+      setSelectedModels,
+      setError,
+      error,
+      onDeselectToEmpty,
+    ]
+  )
+
   return {
     openDropdowns,
     setOpenDropdowns,
@@ -463,5 +533,6 @@ export function useModelManagement({
     collapseAllDropdowns,
     toggleAllForProvider,
     handleModelToggle,
+    handleApplyRecommendation,
   }
 }

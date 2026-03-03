@@ -11,7 +11,7 @@
 
 import type { User, ModelsByProvider, CompareResponse, Model } from '../../types'
 import type { ModelConversation } from '../../types/conversation'
-import { AdvancedSettings, ModelsSection, ModelsSectionHeader } from '../comparison'
+import { AdvancedSettings, HelpMeChoose, ModelsSection, ModelsSectionHeader } from '../comparison'
 import { ErrorBoundary } from '../shared'
 
 export interface ModelsAreaProps {
@@ -68,6 +68,8 @@ export interface ModelsAreaProps {
     modelTierAccess: 'free' | 'paid'
     modelName?: string
   }) => void
+  /** Apply model selection from Help me choose recommendation */
+  onApplyRecommendation?: (modelIds: string[]) => void
 
   // Advanced settings
   temperature: number
@@ -128,6 +130,7 @@ export function ModelsArea({
   onError,
   onRetryModels,
   onShowDisabledModelModal,
+  onApplyRecommendation,
   temperature,
   onTemperatureChange,
   topP,
@@ -167,16 +170,27 @@ export function ModelsArea({
 
         {!isModelsHidden && (
           <>
-            <AdvancedSettings
-              temperature={temperature}
-              onTemperatureChange={onTemperatureChange}
-              topP={topP}
-              onTopPChange={onTopPChange}
-              maxTokens={maxTokens}
-              onMaxTokensChange={onMaxTokensChange}
-              maxTokensCap={maxTokensCap}
-              disabled={isLoading}
-            />
+            <div className="models-section-buttons-row">
+              <HelpMeChoose
+                onApplyRecommendation={
+                  onApplyRecommendation ? modelIds => onApplyRecommendation(modelIds) : () => {}
+                }
+                disabled={isLoading || !onApplyRecommendation}
+                modelsByProvider={modelsByProvider}
+                isAuthenticated={isAuthenticated}
+                user={user}
+              />
+              <AdvancedSettings
+                temperature={temperature}
+                onTemperatureChange={onTemperatureChange}
+                topP={topP}
+                onTopPChange={onTopPChange}
+                maxTokens={maxTokens}
+                onMaxTokensChange={onMaxTokensChange}
+                maxTokensCap={maxTokensCap}
+                disabled={isLoading}
+              />
+            </div>
             {selectedModels.length > 0 &&
               (() => {
                 const advancedCustomized = temperature !== 0.7 || topP !== 1 || maxTokens !== null

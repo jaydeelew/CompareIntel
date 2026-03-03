@@ -234,6 +234,7 @@ export function MainPage() {
     collapseAllDropdowns,
     toggleAllForProvider,
     handleModelToggle,
+    handleApplyRecommendation,
   } = useModelManagement({
     selectedModels,
     setSelectedModels,
@@ -247,6 +248,7 @@ export function MainPage() {
     setError,
     accurateInputTokens,
     onDeselectToEmpty: () => setDefaultSelectionOverridden(true),
+    hidePremiumModels,
   })
 
   const switchResultTab = useCallback(
@@ -1960,6 +1962,7 @@ export function MainPage() {
             onError: setError,
             onShowDisabledModelModal: info => setDisabledModelModalInfo(info),
             onRetryModels: () => refetchModels(true),
+            onApplyRecommendation: handleApplyRecommendation,
             temperature,
             onTemperatureChange: setTemperature,
             topP,
