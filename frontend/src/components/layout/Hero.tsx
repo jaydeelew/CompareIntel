@@ -106,13 +106,19 @@ function CapabilityTile({
 interface HeroProps {
   visibleTooltip: string | null
   onCapabilityTileTap: (tileId: string) => void
+  onCapabilityTileUnflip?: () => void
   children?: ReactNode
 }
 
 /**
  * Hero - Main hero section with title, capabilities, and comparison form
  */
-export function Hero({ visibleTooltip, onCapabilityTileTap, children }: HeroProps) {
+export function Hero({
+  visibleTooltip,
+  onCapabilityTileTap,
+  onCapabilityTileUnflip,
+  children,
+}: HeroProps) {
   const [showFlash, setShowFlash] = useState(false)
   const [flippedTile, setFlippedTile] = useState<string | null>(null)
   const [enlargedImageSrc, setEnlargedImageSrc] = useState<string | null>(null)
@@ -120,10 +126,11 @@ export function Hero({ visibleTooltip, onCapabilityTileTap, children }: HeroProp
 
   const dismissFlip = useCallback(() => {
     setFlippedTile(null)
+    onCapabilityTileUnflip?.()
     if (document.activeElement instanceof HTMLElement) {
       document.activeElement.blur()
     }
-  }, [])
+  }, [onCapabilityTileUnflip])
 
   const closeEnlargedImage = useCallback(() => {
     setEnlargedImageSrc(null)
@@ -160,6 +167,7 @@ export function Hero({ visibleTooltip, onCapabilityTileTap, children }: HeroProp
     (tileId: string) => {
       if (flippedTile === tileId) {
         setFlippedTile(null)
+        onCapabilityTileUnflip?.()
         return
       }
       setFlippedTile(tileId)
@@ -167,7 +175,7 @@ export function Hero({ visibleTooltip, onCapabilityTileTap, children }: HeroProp
       setTimeout(() => setShowFlash(false), 800)
       onCapabilityTileTap(tileId)
     },
-    [flippedTile, onCapabilityTileTap]
+    [flippedTile, onCapabilityTileTap, onCapabilityTileUnflip]
   )
 
   return (

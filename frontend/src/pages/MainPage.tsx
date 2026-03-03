@@ -536,7 +536,11 @@ export function MainPage() {
     input,
   })
 
-  const { visibleTooltip, handleCapabilityTileTap } = useTooltipManager({ isMobileLayout })
+  const { visibleTooltip, handleCapabilityTileTap, handleCapabilityTileUnflip } = useTooltipManager(
+    {
+      isMobileLayout,
+    }
+  )
 
   const authModals = useAuthModals({ isAuthenticated, user, authLoading })
   const {
@@ -1867,6 +1871,7 @@ export function MainPage() {
         <ComparisonPageContent
           visibleTooltip={visibleTooltip}
           onCapabilityTileTap={handleCapabilityTileTap}
+          onCapabilityTileUnflip={handleCapabilityTileUnflip}
           input={input}
           setInput={setInput}
           textareaRef={textareaRef}

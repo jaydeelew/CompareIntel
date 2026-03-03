@@ -33,5 +33,13 @@ export function useTooltipManager({ isMobileLayout }: UseTooltipManagerProps) {
     [isMobileLayout]
   )
 
-  return { visibleTooltip, handleCapabilityTileTap }
+  const handleCapabilityTileUnflip = useCallback(() => {
+    if (tooltipHideTimeoutRef.current) {
+      clearTimeout(tooltipHideTimeoutRef.current)
+      tooltipHideTimeoutRef.current = null
+    }
+    setVisibleTooltip(null)
+  }, [])
+
+  return { visibleTooltip, handleCapabilityTileTap, handleCapabilityTileUnflip }
 }
