@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, type ReactNode } from 'react'
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 
 import { useTheme } from '../../contexts/ThemeContext'
@@ -32,6 +32,16 @@ function CapabilityTile({
   onTileClick,
   onImageEnlarge,
 }: CapabilityTileProps) {
+  const tileRef = useRef<HTMLDivElement>(null)
+  const prevFlipped = useRef(isFlipped)
+
+  useEffect(() => {
+    if (prevFlipped.current && !isFlipped) {
+      tileRef.current?.blur()
+    }
+    prevFlipped.current = isFlipped
+  }, [isFlipped])
+
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation()
     onTileClick(id)
@@ -44,7 +54,11 @@ function CapabilityTile({
 
   return (
     <div className="capability-tile-wrapper">
-      <div className={`capability-tile ${isFlipped ? 'flipped' : ''}`} onClick={handleClick}>
+      <div
+        ref={tileRef}
+        className={`capability-tile ${isFlipped ? 'flipped' : ''}`}
+        onClick={handleClick}
+      >
         <div className="capability-tile-front">
           <div className="capability-icon">{icon}</div>
           <h3 className="capability-title">{title}</h3>
@@ -106,6 +120,9 @@ export function Hero({ visibleTooltip, onCapabilityTileTap, children }: HeroProp
 
   const dismissFlip = useCallback(() => {
     setFlippedTile(null)
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur()
+    }
   }, [])
 
   const closeEnlargedImage = useCallback(() => {

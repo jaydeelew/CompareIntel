@@ -1813,17 +1813,28 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    box-shadow: none;
-    border: none;
+    /* Same border/shadow for all tiles so default, focus, and active states match */
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 20px;
+    box-shadow:
+      0 4px 24px rgba(0, 0, 0, 0.2),
+      inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    outline: none;
   }
 
   .capability-tile-front {
-    background: none;
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
     margin: -0.5rem;
     padding: 0.5rem;
-    border-radius: 0;
+  }
+
+  [data-theme='light'] .capability-tile:not(.flipped),
+  [data-theme='light'] .capability-tile:not(.flipped):hover,
+  [data-theme='light'] .capability-tile:not(.flipped):active,
+  [data-theme='light'] .capability-tile:not(.flipped):focus {
+    border-color: rgba(0, 0, 0, 0.08) !important;
+    box-shadow:
+      0 4px 24px rgba(0, 0, 0, 0.08),
+      inset 0 1px 0 rgba(255, 255, 255, 0.6) !important;
   }
 
   .capability-tile.flipped {
@@ -1831,12 +1842,12 @@
     height: auto;
     transform: rotateY(180deg);
     transform-origin: center center;
-    border: 1px solid rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
     border-radius: 20px;
     box-shadow:
       0 16px 48px rgba(0, 0, 0, 0.4),
       0 0 0 1px rgba(6, 182, 212, 0.15),
-      inset 0 1px 0 rgba(255, 255, 255, 0.08);
+      inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
   }
 
   /* Hide front face completely when flipped so it doesn't take space */
