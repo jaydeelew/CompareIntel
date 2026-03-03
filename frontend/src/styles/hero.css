@@ -1813,6 +1813,17 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
+    box-shadow: none;
+    border: none;
+  }
+
+  .capability-tile-front {
+    background: none;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    margin: -0.5rem;
+    padding: 0.5rem;
+    border-radius: 0;
   }
 
   .capability-tile.flipped {
