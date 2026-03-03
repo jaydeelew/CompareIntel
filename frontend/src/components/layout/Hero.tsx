@@ -9,10 +9,8 @@ interface CapabilityTileProps {
   title: string
   backTitle: string
   description: string
-  tooltipText: string
   backImage: string
   backText: string
-  isVisible: boolean
   isFlipped: boolean
   onTileClick: (id: string) => void
   onImageEnlarge?: (src: string) => void
@@ -24,10 +22,8 @@ function CapabilityTile({
   title,
   backTitle,
   description,
-  tooltipText,
   backImage,
   backText,
-  isVisible,
   isFlipped,
   onTileClick,
   onImageEnlarge,
@@ -63,7 +59,6 @@ function CapabilityTile({
           <div className="capability-icon">{icon}</div>
           <h3 className="capability-title">{title}</h3>
           <p className="capability-description">{description}</p>
-          <div className={`capability-tooltip ${isVisible ? 'visible' : ''}`}>{tooltipText}</div>
         </div>
         <div className="capability-tile-back" data-tile={id}>
           <div className="capability-tile-back-label-row">
@@ -104,21 +99,13 @@ function CapabilityTile({
 }
 
 interface HeroProps {
-  visibleTooltip: string | null
-  onCapabilityTileTap: (tileId: string) => void
-  onCapabilityTileUnflip?: () => void
   children?: ReactNode
 }
 
 /**
  * Hero - Main hero section with title, capabilities, and comparison form
  */
-export function Hero({
-  visibleTooltip,
-  onCapabilityTileTap,
-  onCapabilityTileUnflip,
-  children,
-}: HeroProps) {
+export function Hero({ children }: HeroProps) {
   const [showFlash, setShowFlash] = useState(false)
   const [flippedTile, setFlippedTile] = useState<string | null>(null)
   const [enlargedImageSrc, setEnlargedImageSrc] = useState<string | null>(null)
@@ -126,11 +113,10 @@ export function Hero({
 
   const dismissFlip = useCallback(() => {
     setFlippedTile(null)
-    onCapabilityTileUnflip?.()
     if (document.activeElement instanceof HTMLElement) {
       document.activeElement.blur()
     }
-  }, [onCapabilityTileUnflip])
+  }, [])
 
   const closeEnlargedImage = useCallback(() => {
     setEnlargedImageSrc(null)
@@ -167,15 +153,13 @@ export function Hero({
     (tileId: string) => {
       if (flippedTile === tileId) {
         setFlippedTile(null)
-        onCapabilityTileUnflip?.()
         return
       }
       setFlippedTile(tileId)
       setShowFlash(true)
       setTimeout(() => setShowFlash(false), 800)
-      onCapabilityTileTap(tileId)
     },
-    [flippedTile, onCapabilityTileTap, onCapabilityTileUnflip]
+    [flippedTile]
   )
 
   return (
@@ -255,10 +239,8 @@ export function Hero({
             title="Natural Language"
             backTitle="Natural Language COMPARISON"
             description="Compare conversational responses"
-            tooltipText="Natural Language: Compare conversational responses"
             backImage="/images/tile-natural-language.png"
             backText="Ask any question and instantly compare how each model responds — notice the differences in tone, detail, and perspective."
-            isVisible={visibleTooltip === 'natural-language'}
             isFlipped={flippedTile === 'natural-language'}
             onTileClick={handleTileClick}
             onImageEnlarge={setEnlargedImageSrc}
@@ -284,10 +266,8 @@ export function Hero({
             title="Code Generation"
             backTitle="Code Generation COMPARISON"
             description="Evaluate programming capabilities"
-            tooltipText="Code Generation: Evaluate programming capabilities"
             backImage="/images/tile-code-generation.png"
             backText="Submit a coding prompt and compare the generated implementations — evaluate syntax, style, and correctness side by side."
-            isVisible={visibleTooltip === 'code-generation'}
             isFlipped={flippedTile === 'code-generation'}
             onTileClick={handleTileClick}
             onImageEnlarge={setEnlargedImageSrc}
@@ -312,10 +292,8 @@ export function Hero({
             title="Formatted Math"
             backTitle="Formatted Math COMPARISON"
             description="Render math equations beautifully"
-            tooltipText="Formatted Math: Render mathematical equations beautifully"
             backImage="/images/tile-formatted-math.png"
             backText="Request a derivation or formula and see how each model renders mathematical notation — compare clarity and step-by-step accuracy."
-            isVisible={visibleTooltip === 'formatted-math'}
             isFlipped={flippedTile === 'formatted-math'}
             onTileClick={handleTileClick}
             onImageEnlarge={setEnlargedImageSrc}

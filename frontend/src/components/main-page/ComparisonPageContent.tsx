@@ -30,11 +30,6 @@ import type { ResultsAreaProps } from './ResultsArea'
 import { ResultsArea } from './ResultsArea'
 
 export interface ComparisonPageContentProps {
-  // Hero / tooltip
-  visibleTooltip: string | null
-  onCapabilityTileTap: (capability: string) => void
-  onCapabilityTileUnflip?: () => void
-
   // Form
   input: string
   setInput: (value: string) => void
@@ -87,9 +82,6 @@ export interface ComparisonPageContentProps {
 }
 
 export function ComparisonPageContent({
-  visibleTooltip,
-  onCapabilityTileTap,
-  onCapabilityTileUnflip,
   input,
   setInput,
   textareaRef,
@@ -136,11 +128,7 @@ export function ComparisonPageContent({
 
   return (
     <ComparisonView>
-      <Hero
-        visibleTooltip={visibleTooltip}
-        onCapabilityTileTap={onCapabilityTileTap}
-        onCapabilityTileUnflip={onCapabilityTileUnflip}
-      >
+      <Hero>
         <ErrorBoundary>
           <ComparisonForm
             input={input}

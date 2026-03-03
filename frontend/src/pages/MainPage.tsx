@@ -32,7 +32,6 @@ import {
   useGeolocation,
   useTutorialComplete,
   useSavedSelectionsComplete,
-  useTooltipManager,
   useMainPageEffects,
 } from '../hooks'
 import { ApiError } from '../services/api/errors'
@@ -535,12 +534,6 @@ export function MainPage() {
     selectedModelsForScroll: selectedModels,
     input,
   })
-
-  const { visibleTooltip, handleCapabilityTileTap, handleCapabilityTileUnflip } = useTooltipManager(
-    {
-      isMobileLayout,
-    }
-  )
 
   const authModals = useAuthModals({ isAuthenticated, user, authLoading })
   const {
@@ -1869,9 +1862,6 @@ export function MainPage() {
         />
 
         <ComparisonPageContent
-          visibleTooltip={visibleTooltip}
-          onCapabilityTileTap={handleCapabilityTileTap}
-          onCapabilityTileUnflip={handleCapabilityTileUnflip}
           input={input}
           setInput={setInput}
           textareaRef={textareaRef}
