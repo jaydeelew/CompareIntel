@@ -190,6 +190,25 @@ The "Help me choose" feature provides decision support for model selection. The 
 
 ---
 
+### Goal 11: Category expansion
+
+**Status:** ✅ Completed  
+**Date:** March 2026
+
+**Description:** Add categories such as: multilingual, long context, specific domains (legal, medical, etc.). Image/vision models are deferred until ready to implement.
+
+**Accomplished:**
+- **Multilingual:** Models with strong performance across many languages (Llama 3.1 405B, Mistral Large, Command A, Qwen 3.5, Claude Opus 4.6, Gemini 2.5 Pro) — provider docs, LMSys Arena
+- **Long context:** Models with large context windows 128K–1M+ tokens (Gemini 2.5 Pro, Claude Opus 4.6, Gemini 3 Pro, Gemini 2.0 Flash, Kimi K2.5, Command A) — Michelangelo Long-Context 1M (llmdb.com), provider docs
+- **Legal:** Models for legal reasoning, contract analysis (Gemini 3 Pro 87.04%, Gemini 3 Flash 86.86%, GPT-5.2 86.02%, Claude Opus 4.6) — LegalBench (vals.ai)
+- **Medical:** Models for medical QA, clinical reasoning (o3, GPT-5.2, GPT-5 Mini, Claude Opus 4.6, Grok 4) — MedQA (vals.ai)
+- Updated `helpMeChooseRecommendations.ts` with four new categories
+- Updated `HelpMeChooseMethodology.tsx` with evidence sources table rows
+- Updated `research_model_benchmarks.py`: CATEGORY_IDS, determine_categories (multilingual, long-context auto-detection)
+- Legal/medical categories: no auto-detection (added manually based on benchmark scores)
+
+---
+
 ### Goal 12: Sync with models registry
 
 **Status:** ✅ Completed  
@@ -206,6 +225,23 @@ The "Help me choose" feature provides decision support for model selection. The 
 - CI path filter: `frontend/src/data/**` added to backend trigger so sync runs when recommendations change
 - Unit tests: `backend/tests/unit/test_sync_help_me_choose_with_registry.py` (6 tests)
 - Free-tier ordering validation: `test_free_tier_categories_have_unregistered_models_first` enforces that cost-effective and fast categories list unregistered-tier models first (≥2) so unregistered users receive ≥2 recommendations
+
+---
+
+### Goal 14: Quick-apply presets per category
+
+**Status:** ✅ Completed  
+**Date:** March 2026
+
+**Description:** Add a "Select top 3" (or similar) button per category so users can quickly apply the top N recommendations from that category without checking each model individually. Respects `maxModelsLimit` and tier restrictions; only selects models the user can access.
+
+**Accomplished:**
+- Added "Select top 3" button per category in `HelpMeChoose.tsx` (next to category header)
+- Uses `onApplyCategoryPreset` callback → `handleApplyRecommendation` from `useModelManagement`
+- Filters out tier-restricted models before applying; respects `maxModelsLimit`
+- Disabled in follow-up mode (tooltip explains why)
+- Button hidden for categories with no accessible models
+- CSS: `.help-me-choose-preset-btn`, `.help-me-choose-category-header-row`; touch-friendly on mobile
 
 ---
 
@@ -246,23 +282,7 @@ Recommendations are based on the following benchmarks and sources. Update this s
 
 **Status:** ⬜ Pending (deferred)
 
-**Description:** Add a category for image/vision-capable models when ready to implement.
-
-**Status:** ✅ Completed  
-**Date:** March 2026
-
-**Description:** Add categories such as: multilingual, long context, specific domains (legal, medical, etc.). Image/vision models are deferred until ready to implement.
-
-**Accomplished:**
-- **Multilingual:** Models with strong performance across many languages (Llama 3.1 405B, Mistral Large, Command A, Qwen 3.5, Claude Opus 4.6, Gemini 2.5 Pro) — provider docs, LMSys Arena
-- **Long context:** Models with large context windows 128K–1M+ tokens (Gemini 2.5 Pro, Claude Opus 4.6, Gemini 3 Pro, Gemini 2.0 Flash, Kimi K2.5, Command A) — Michelangelo Long-Context 1M (llmdb.com), provider docs
-- **Legal:** Models for legal reasoning, contract analysis (Gemini 3 Pro 87.04%, Gemini 3 Flash 86.86%, GPT-5.2 86.02%, Claude Opus 4.6) — LegalBench (vals.ai)
-- **Medical:** Models for medical QA, clinical reasoning (o3, GPT-5.2, GPT-5 Mini, Claude Opus 4.6, Grok 4) — MedQA (vals.ai)
-- Updated `helpMeChooseRecommendations.ts` with four new categories
-- Updated `HelpMeChooseMethodology.tsx` with evidence sources table rows
-- Updated `research_model_benchmarks.py`: CATEGORY_IDS, determine_categories (multilingual, long-context auto-detection)
-- Legal/medical categories: no auto-detection (added manually based on benchmark scores)
-- Image/vision models deferred per original scope
+**Description:** Add a category for image/vision-capable models when ready to implement. Deferred until vision/multimodal capabilities are supported in the comparison flow.
 
 ---
 

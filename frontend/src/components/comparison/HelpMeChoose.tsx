@@ -9,7 +9,7 @@
  * selection via stronger styling, category-level summary, and scroll-to-match.
  */
 
-import { useState, useRef, useEffect, useMemo, type RefObject } from 'react'
+import { useState, useRef, useEffect, useMemo, useCallback, type RefObject } from 'react'
 
 import {
   HELP_ME_CHOOSE_CATEGORIES,
@@ -44,11 +44,18 @@ function getDisabledTooltip(userTier: 'unregistered' | 'free'): string {
   return 'Paid tiers are coming soon — stay tuned to access all models.'
 }
 
+/** Number of models to select when using "Select top N" preset */
+export const HELP_ME_CHOOSE_PRESET_COUNT = 3
+
 export interface HelpMeChooseProps {
   /** Toggle model selection (same as main model selection - applies immediately) */
   onToggleModel: (modelId: string) => void
+  /** Apply a preset selection (e.g. top N models from a category). Replaces current selection. */
+  onApplyCategoryPreset?: (modelIds: string[]) => void
   /** Whether the control is disabled (e.g. during loading) */
   disabled?: boolean
+  /** Whether in follow-up mode (preset button disabled) */
+  isFollowUpMode?: boolean
   /** Models by provider (for tier restriction check) */
   modelsByProvider?: ModelsByProvider
   /** Whether user is authenticated */
@@ -67,7 +74,9 @@ export interface HelpMeChooseProps {
 
 export function HelpMeChoose({
   onToggleModel,
+  onApplyCategoryPreset,
   disabled = false,
+  isFollowUpMode = false,
   modelsByProvider = {},
   isAuthenticated = false,
   user = null,
@@ -117,6 +126,93 @@ export function HelpMeChoose({
 
   const contentRef = useRef<HTMLDivElement>(null)
   const firstSelectedRef = useRef<HTMLLIElement | null>(null)
+  const categoriesRef = useRef<HTMLDivElement>(null)
+  const scrollbarTrackRef = useRef<HTMLDivElement>(null)
+  const scrollbarThumbRef = useRef<HTMLDivElement>(null)
+  const isDraggingRef = useRef(false)
+  const dragStartXRef = useRef(0)
+  const dragStartScrollLeftRef = useRef(0)
+
+  const [hasHorizontalOverflow, setHasHorizontalOverflow] = useState(false)
+
+  /** Scrollbar at top: sync thumb with categories scroll, handle drag */
+  const updateScrollbarThumb = useCallback(() => {
+    const el = categoriesRef.current
+    const track = scrollbarTrackRef.current
+    const thumb = scrollbarThumbRef.current
+    if (!el || !track || !thumb) return
+    const scrollWidth = el.scrollWidth
+    const clientWidth = el.clientWidth
+    const overflow = scrollWidth > clientWidth
+    setHasHorizontalOverflow(overflow)
+    if (!overflow) return
+    const scrollLeft = el.scrollLeft
+    const trackWidth = track.clientWidth
+    const thumbWidth = Math.max(40, (clientWidth / scrollWidth) * trackWidth)
+    const maxThumbLeft = trackWidth - thumbWidth
+    const thumbLeft = (scrollLeft / (scrollWidth - clientWidth)) * maxThumbLeft
+    thumb.style.width = `${thumbWidth}px`
+    thumb.style.transform = `translateX(${thumbLeft}px)`
+  }, [])
+
+  useEffect(() => {
+    const el = categoriesRef.current
+    if (!el) return
+    updateScrollbarThumb()
+    const ro = new ResizeObserver(updateScrollbarThumb)
+    ro.observe(el)
+    el.addEventListener('scroll', updateScrollbarThumb)
+    return () => {
+      ro.disconnect()
+      el.removeEventListener('scroll', updateScrollbarThumb)
+    }
+  }, [isExpanded, updateScrollbarThumb])
+
+  const handleScrollbarMouseDown = useCallback((e: React.MouseEvent) => {
+    const el = categoriesRef.current
+    const track = scrollbarTrackRef.current
+    if (!el || !track) return
+    e.preventDefault()
+    const rect = track.getBoundingClientRect()
+    const x = e.clientX - rect.left
+    const scrollWidth = el.scrollWidth
+    const clientWidth = el.clientWidth
+    const maxScroll = scrollWidth - clientWidth
+    const isOnThumb = scrollbarThumbRef.current?.contains(e.target as Node)
+    if (!isOnThumb && maxScroll > 0 && rect.width > 0) {
+      const pct = x / rect.width
+      el.scrollLeft = pct * maxScroll
+    }
+    isDraggingRef.current = true
+    dragStartXRef.current = e.clientX
+    dragStartScrollLeftRef.current = el.scrollLeft
+  }, [])
+
+  useEffect(() => {
+    if (!isExpanded) return
+    const onMouseMove = (e: MouseEvent) => {
+      if (!isDraggingRef.current || !categoriesRef.current) return
+      const dx = e.clientX - dragStartXRef.current
+      const el = categoriesRef.current
+      const scrollWidth = el.scrollWidth
+      const clientWidth = el.clientWidth
+      const maxScroll = scrollWidth - clientWidth
+      if (maxScroll <= 0) return
+      const track = scrollbarTrackRef.current
+      const trackWidth = track?.clientWidth ?? clientWidth
+      const scale = trackWidth > 0 ? maxScroll / trackWidth : 0
+      el.scrollLeft = Math.max(0, Math.min(maxScroll, dragStartScrollLeftRef.current + dx * scale))
+    }
+    const onMouseUp = () => {
+      isDraggingRef.current = false
+    }
+    document.addEventListener('mousemove', onMouseMove)
+    document.addEventListener('mouseup', onMouseUp)
+    return () => {
+      document.removeEventListener('mousemove', onMouseMove)
+      document.removeEventListener('mouseup', onMouseUp)
+    }
+  }, [isExpanded])
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -147,6 +243,17 @@ export function HelpMeChoose({
   const handleModelToggle = (modelId: string) => {
     if (modelRestrictedByModelId.get(modelId)) return
     onToggleModel(modelId)
+  }
+
+  const handleApplyPreset = (cat: HelpMeChooseCategory) => {
+    if (!onApplyCategoryPreset || isFollowUpMode) return
+    const available = cat.models
+      .filter(entry => !modelRestrictedByModelId.get(entry.modelId))
+      .slice(0, HELP_ME_CHOOSE_PRESET_COUNT)
+      .map(entry => entry.modelId)
+    if (available.length > 0) {
+      onApplyCategoryPreset(available)
+    }
   }
 
   const getModelDisplayName = (modelId: string): string => {
@@ -196,7 +303,7 @@ export function HelpMeChoose({
         >
           <p className="help-me-choose-intro">
             <span className="help-me-choose-ordering-hint">
-              <span className="help-me-choose-ordering-label">Best at top ↓</span>
+              <span className="help-me-choose-ordering-label">Best at top</span>
               <span
                 className="help-me-choose-ordering-info"
                 title="Models are ordered from best (top) to least recommended (bottom) based on published benchmarks. Hover over a model for evidence."
@@ -220,71 +327,104 @@ export function HelpMeChoose({
               </span>
             </span>
           </p>
-          <div className="help-me-choose-categories">
-            {(() => {
-              let foundFirstSelected = false
-              return HELP_ME_CHOOSE_CATEGORIES.map((cat: HelpMeChooseCategory) => {
-                const hasMatch = matchingCategories.some(m => m.id === cat.id)
-                return (
-                  <div
-                    key={cat.id}
-                    className={`help-me-choose-category ${hasMatch ? 'has-match' : ''}`}
-                  >
-                    <h3 className="help-me-choose-category-header">{cat.label}</h3>
-                    <p className="help-me-choose-category-desc">{cat.description}</p>
-                    <ul className="help-me-choose-models-list" role="none">
-                      {cat.models.map((entry, idx) => {
-                        const modelRestricted = modelRestrictedByModelId.get(entry.modelId) ?? false
-                        const isSelected = selectedModels.includes(entry.modelId)
-                        const displayName = getModelDisplayName(entry.modelId)
-                        const isFirstSelectedInDom = isSelected && !foundFirstSelected
-                        if (isSelected) foundFirstSelected = true
-                        return (
-                          <li
-                            key={`${cat.id}-${entry.modelId}-${idx}`}
-                            role="none"
-                            ref={isFirstSelectedInDom ? firstSelectedRef : undefined}
-                          >
-                            <label
-                              className={`help-me-choose-model-entry ${modelRestricted ? 'restricted' : ''} ${isSelected ? 'selected' : ''}`}
-                              title={modelRestricted ? disabledTooltip : entry.evidence}
+          <div
+            className={`help-me-choose-categories-wrapper${hasHorizontalOverflow ? '' : ' help-me-choose-scrollbar-hidden'}`}
+          >
+            <div
+              ref={scrollbarTrackRef}
+              className="help-me-choose-scrollbar-top"
+              role="scrollbar"
+              aria-orientation="horizontal"
+              aria-label="Scroll categories horizontally"
+              onMouseDown={handleScrollbarMouseDown}
+            >
+              <div ref={scrollbarThumbRef} className="help-me-choose-scrollbar-thumb" />
+            </div>
+            <div ref={categoriesRef} className="help-me-choose-categories">
+              {(() => {
+                let foundFirstSelected = false
+                return HELP_ME_CHOOSE_CATEGORIES.map((cat: HelpMeChooseCategory) => {
+                  const hasMatch = matchingCategories.some(m => m.id === cat.id)
+                  return (
+                    <div
+                      key={cat.id}
+                      className={`help-me-choose-category ${hasMatch ? 'has-match' : ''}`}
+                    >
+                      <div className="help-me-choose-category-header-row">
+                        <h3 className="help-me-choose-category-header">{cat.label}</h3>
+                        {onApplyCategoryPreset &&
+                          cat.models.some(e => !modelRestrictedByModelId.get(e.modelId)) && (
+                            <button
+                              type="button"
+                              className="help-me-choose-preset-btn"
+                              onClick={() => handleApplyPreset(cat)}
+                              disabled={disabled || isFollowUpMode}
+                              title={
+                                isFollowUpMode
+                                  ? 'Cannot change models during follow-up'
+                                  : `Select top ${HELP_ME_CHOOSE_PRESET_COUNT} from this category`
+                              }
                             >
-                              <input
-                                type="checkbox"
-                                className="help-me-choose-checkbox"
-                                disabled={modelRestricted}
-                                checked={isSelected}
-                                onChange={() => handleModelToggle(entry.modelId)}
-                                aria-label={`Select ${displayName}`}
-                                aria-disabled={modelRestricted}
-                              />
-                              <span className="help-me-choose-model-name">{displayName}</span>
-                              {modelRestricted && (
-                                <span className="help-me-choose-model-lock" aria-hidden>
-                                  <svg
-                                    width="10"
-                                    height="10"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    strokeWidth="2"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                  >
-                                    <rect x="5" y="11" width="14" height="10" rx="2" ry="2" />
-                                    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                                  </svg>
-                                </span>
-                              )}
-                            </label>
-                          </li>
-                        )
-                      })}
-                    </ul>
-                  </div>
-                )
-              })
-            })()}
+                              Select top {HELP_ME_CHOOSE_PRESET_COUNT}
+                            </button>
+                          )}
+                      </div>
+                      <p className="help-me-choose-category-desc">{cat.description}</p>
+                      <ul className="help-me-choose-models-list" role="none">
+                        {cat.models.map((entry, idx) => {
+                          const modelRestricted =
+                            modelRestrictedByModelId.get(entry.modelId) ?? false
+                          const isSelected = selectedModels.includes(entry.modelId)
+                          const displayName = getModelDisplayName(entry.modelId)
+                          const isFirstSelectedInDom = isSelected && !foundFirstSelected
+                          if (isSelected) foundFirstSelected = true
+                          return (
+                            <li
+                              key={`${cat.id}-${entry.modelId}-${idx}`}
+                              role="none"
+                              ref={isFirstSelectedInDom ? firstSelectedRef : undefined}
+                            >
+                              <label
+                                className={`help-me-choose-model-entry ${modelRestricted ? 'restricted' : ''} ${isSelected ? 'selected' : ''}`}
+                                title={modelRestricted ? disabledTooltip : entry.evidence}
+                              >
+                                <input
+                                  type="checkbox"
+                                  className="help-me-choose-checkbox"
+                                  disabled={modelRestricted}
+                                  checked={isSelected}
+                                  onChange={() => handleModelToggle(entry.modelId)}
+                                  aria-label={`Select ${displayName}`}
+                                  aria-disabled={modelRestricted}
+                                />
+                                <span className="help-me-choose-model-name">{displayName}</span>
+                                {modelRestricted && (
+                                  <span className="help-me-choose-model-lock" aria-hidden>
+                                    <svg
+                                      width="10"
+                                      height="10"
+                                      viewBox="0 0 24 24"
+                                      fill="none"
+                                      stroke="currentColor"
+                                      strokeWidth="2"
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                    >
+                                      <rect x="5" y="11" width="14" height="10" rx="2" ry="2" />
+                                      <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                                    </svg>
+                                  </span>
+                                )}
+                              </label>
+                            </li>
+                          )
+                        })}
+                      </ul>
+                    </div>
+                  )
+                })
+              })()}
+            </div>
           </div>
         </div>
       )}

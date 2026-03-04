@@ -234,6 +234,7 @@ export function MainPage() {
     collapseAllDropdowns,
     toggleAllForProvider,
     handleModelToggle,
+    handleApplyRecommendation,
   } = useModelManagement({
     selectedModels,
     setSelectedModels,
@@ -1952,6 +1953,7 @@ export function MainPage() {
             selectedModelsGridRef,
             onToggleDropdown: toggleDropdown,
             onToggleModel: handleModelToggle,
+            onApplyCategoryPreset: handleApplyRecommendation,
             onToggleAllForProvider: toggleAllForProvider,
             onToggleModelsHidden: () => setIsModelsHidden(!isModelsHidden),
             onToggleHidePremiumModels: () => setHidePremiumModels(!hidePremiumModels),

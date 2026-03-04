@@ -47,6 +47,7 @@ export interface ModelsAreaProps {
   // Handlers
   onToggleDropdown: (provider: string) => void
   onToggleModel: (modelId: string) => void
+  onApplyCategoryPreset?: (modelIds: string[]) => void
   onToggleAllForProvider: (provider: string) => void
   onToggleModelsHidden: () => void
   onToggleHidePremiumModels: () => void
@@ -117,6 +118,7 @@ export function ModelsArea({
   // Handlers
   onToggleDropdown,
   onToggleModel,
+  onApplyCategoryPreset,
   onToggleAllForProvider,
   onToggleModelsHidden,
   onToggleHidePremiumModels,
@@ -175,7 +177,9 @@ export function ModelsArea({
             <div className="models-section-buttons-row">
               <HelpMeChoose
                 onToggleModel={onToggleModel}
+                onApplyCategoryPreset={onApplyCategoryPreset}
                 disabled={isLoading}
+                isFollowUpMode={isFollowUpMode}
                 modelsByProvider={modelsByProvider}
                 isAuthenticated={isAuthenticated}
                 user={user}
