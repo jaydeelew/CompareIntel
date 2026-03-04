@@ -163,22 +163,27 @@ def determine_categories(
     return entries
 
 
+def _unescape_evidence(s: str) -> str:
+    """Unescape JS/TS string escapes in parsed evidence."""
+    return s.replace("\\'", "'").replace('\\"', '"').replace("\\n", "\n").replace("\\t", "\t")
+
+
 def parse_recommendations_ts(content: str) -> list[dict]:
     """Parse the HELP_ME_CHOOSE_CATEGORIES array from the TS file.
 
     Returns a list of category dicts with id, label, description, and models.
+    Handles: single/double-quoted evidence, multiline evidence, trailing commas.
     """
     categories = []
-    cat_pattern = re.compile(
-        r"\{\s*id:\s*'([^']+)',\s*label:\s*'([^']+)',\s*description:\s*'([^']+)',",
-        re.DOTALL,
-    )
-    model_pattern = re.compile(
-        r"\{\s*modelId:\s*'([^']+)',\s*evidence:\s*'([^']+)'\s*\}",
-    )
-
     cat_block_pattern = re.compile(
         r"\{\s*id:\s*'([^']+)'.*?models:\s*\[(.*?)\]\s*,?\s*\}",
+        re.DOTALL,
+    )
+    # Match modelId + evidence; evidence can be single- or double-quoted, multiline,
+    # and may contain escaped quotes. Trailing comma before } is optional.
+    model_pattern = re.compile(
+        r"\{\s*modelId:\s*'([^']+)',\s*evidence:\s*"
+        r"(?:'((?:[^'\\]|\\.)*)'|\"((?:[^\"\\]|\\.)*)\")\s*,?\s*\}",
         re.DOTALL,
     )
 
@@ -191,10 +196,11 @@ def parse_recommendations_ts(content: str) -> list[dict]:
 
         models = []
         for m_match in model_pattern.finditer(models_block):
+            evidence = m_match.group(2) or m_match.group(3) or ""
             models.append(
                 {
                     "modelId": m_match.group(1),
-                    "evidence": m_match.group(2),
+                    "evidence": _unescape_evidence(evidence),
                 }
             )
 

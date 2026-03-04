@@ -255,6 +255,50 @@ class TestParseRecommendationsTs:
         cats = parse_recommendations_ts("")
         assert cats == []
 
+    def test_parses_multiline_evidence(self):
+        """Multiline evidence (evidence: on one line, string on next) parses correctly."""
+        ts = textwrap.dedent("""\
+            export const HELP_ME_CHOOSE_CATEGORIES = [
+              { id: 'test', label: 'Test', description: 'D', models: [
+                { modelId: 'a/b', evidence:
+                  'Multiline evidence with newline.',
+                },
+              ] },
+            ]
+        """)
+        cats = parse_recommendations_ts(ts)
+        assert len(cats) == 1
+        assert len(cats[0]["models"]) == 1
+        assert cats[0]["models"][0]["evidence"] == "Multiline evidence with newline."
+
+    def test_parses_double_quoted_evidence(self):
+        """Double-quoted evidence (e.g. with apostrophes) parses correctly."""
+        ts = textwrap.dedent("""\
+            export const HELP_ME_CHOOSE_CATEGORIES = [
+              { id: 'test', label: 'Test', description: 'D', models: [
+                { modelId: 'a/b', evidence: "Anthropic's fastest. Low latency." },
+              ] },
+            ]
+        """)
+        cats = parse_recommendations_ts(ts)
+        assert len(cats) == 1
+        assert len(cats[0]["models"]) == 1
+        assert "Anthropic's" in cats[0]["models"][0]["evidence"]
+
+    def test_parses_trailing_comma_on_model(self):
+        """Model entries with trailing comma before } parse correctly."""
+        ts = textwrap.dedent("""\
+            export const HELP_ME_CHOOSE_CATEGORIES = [
+              { id: 'test', label: 'Test', description: 'D', models: [
+                { modelId: 'x/y', evidence: 'With comma.',
+                },
+              ] },
+            ]
+        """)
+        cats = parse_recommendations_ts(ts)
+        assert len(cats[0]["models"]) == 1
+        assert cats[0]["models"][0]["modelId"] == "x/y"
+
 
 # --- Tests for model_exists_in_category ---
 

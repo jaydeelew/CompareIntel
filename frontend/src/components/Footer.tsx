@@ -45,7 +45,7 @@ export const Footer: React.FC = () => {
           AI Glossary
         </Link>
         <Link to="/help-me-choose-methodology" style={linkStyle}>
-          Help Me Choose
+          Help Me Choose Methodology
         </Link>
         <Link to="/faq" style={linkStyle}>
           FAQ
