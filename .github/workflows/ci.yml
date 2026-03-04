@@ -47,6 +47,7 @@ jobs:
               - '.github/workflows/ci.yml'
             backend:
               - 'backend/**'
+              - 'frontend/src/data/**'
               - '.github/workflows/ci.yml'
 
   frontend-lint:
@@ -333,6 +334,9 @@ jobs:
       
       - name: Run unit tests
         run: pytest tests/unit/ -v --cov=app --cov-report=xml --cov-report=term-missing
+
+      - name: Sync Help Me Choose with registry
+        run: python scripts/sync_help_me_choose_with_registry.py
       
       - name: Run integration tests (including Redis rate limiting)
         run: pytest tests/integration/ -v --cov=app --cov-report=xml --cov-report=term-missing --cov-append

@@ -190,6 +190,25 @@ The "Help me choose" feature provides decision support for model selection. The 
 
 ---
 
+### Goal 12: Sync with models registry
+
+**Status:** ✅ Completed  
+**Date:** March 2026
+
+**Description:** Validate or auto-update recommendation model IDs against the live models registry; handle deprecated or renamed models.
+
+**Accomplished:**
+- Created `backend/scripts/sync_help_me_choose_with_registry.py`:
+  - **Validate mode (default):** Checks that all model IDs in `helpMeChooseRecommendations.ts` exist in `models_registry.json`; exits 1 if any are missing
+  - **Fix mode (`--fix`):** Removes models not in registry; applies `MODEL_ID_ALIASES` for renamed models (old_id → new_id)
+  - **Dry run (`--dry-run`):** With `--fix`, shows changes without writing
+- Integrated into CI: `Sync Help Me Choose with registry` step runs in backend-test job
+- CI path filter: `frontend/src/data/**` added to backend trigger so sync runs when recommendations change
+- Unit tests: `backend/tests/unit/test_sync_help_me_choose_with_registry.py` (6 tests)
+- Free-tier ordering validation: `test_free_tier_categories_have_unregistered_models_first` enforces that cost-effective and fast categories list unregistered-tier models first (≥2) so unregistered users receive ≥2 recommendations
+
+---
+
 ## Methodology Page
 
 A public-facing page at `/help-me-choose-methodology` (linked in the footer as "Help Me Choose Methodology") explains:
@@ -219,27 +238,33 @@ Recommendations are based on the following benchmarks and sources. Update this s
 
 ## Future Goals (To Be Completed)
 
-### Goal 11: Personalized recommendations
+### Goal 11: Category expansion
 
 **Status:** ⬜ Pending
 
-**Description:** Adjust recommendations based on user tier, usage history, or preferences (e.g., favor cost-effective for free tier).
+**Description:** Add categories such as: multilingual, long context, specific domains (legal, medical, etc.). Image/vision models are deferred until ready to implement.
 
 ---
 
-### Goal 12: Category expansion
+## Additional Findings and Resolutions
 
-**Status:** ⬜ Pending
+The following items were identified during review. Resolutions are tracked here for future implementation.
 
-**Description:** Add categories such as: multilingual, long context, vision/multimodal, specific domains (legal, medical, etc.).
+| Finding | Resolution | Status |
+|---------|------------|--------|
+| **Parser test failure** | `parse_recommendations_ts` in `research_model_benchmarks.py` may fail to parse multiline evidence strings (e.g. `evidence:\n  '...'`) or mixed quote styles (e.g. `evidence: "Anthropic's..."`). This causes `test_each_category_has_models` to fail. | ✅ Fixed March 2026: regex now handles multiline evidence, single/double quotes, trailing commas, escaped quotes |
+| **Footer link label** | Document specifies "Help Me Choose Methodology" but Footer uses "Help Me Choose". Align for consistency. | ✅ Fixed March 2026: Footer link text updated to "Help Me Choose Methodology" |
+| **Free-tier ordering validation** | Recommendation rule: "Most cost-effective" and "Fastest responses" must list unregistered-tier models first so unregistered users receive ≥2 models. Add validation to enforce. | ✅ Fixed March 2026: `test_free_tier_categories_have_unregistered_models_first` in `test_research_model_benchmarks.py` |
 
 ---
 
-### Goal 13: Sync with models registry
+## Suggested Order of Work
 
-**Status:** ⬜ Pending
+When implementing the remaining goals and resolutions, use this order:
 
-**Description:** Validate or auto-update recommendation model IDs against the live models registry; handle deprecated or renamed models. (Partially addressed by Goal 9's automated benchmark research, but full sync/cleanup is pending.)
+1. ~~**Fix parser**~~ — ✅ Done March 2026. `parse_recommendations_ts` now handles multiline evidence, single/double quotes, trailing commas, escaped quotes. All tests pass.
+2. ~~**Goal 12: Sync with models registry**~~ — ✅ Done March 2026. `sync_help_me_choose_with_registry.py` script, CI integration, free-tier ordering validation.
+3. **Goal 11: Category expansion** — Add multilingual, long context, specific domains, etc. (Best done after registry sync is stable. Image/vision deferred.)
 
 ---
 
@@ -255,8 +280,9 @@ Recommendations are based on the following benchmarks and sources. Update this s
 | Models registry | `backend/data/models_registry.json` |
 | Methodology page | `frontend/src/components/pages/HelpMeChooseMethodology.tsx` (route: `/help-me-choose-methodology`) |
 | Benchmark research script | `backend/scripts/research_model_benchmarks.py` |
+| Registry sync script | `backend/scripts/sync_help_me_choose_with_registry.py` |
 | Admin integration | `backend/app/routers/admin/models_management.py` (both `add_model` and `add_model_stream`) |
-| Tests | `backend/tests/unit/test_research_model_benchmarks.py` (39 tests) |
+| Tests | `backend/tests/unit/test_research_model_benchmarks.py`, `backend/tests/unit/test_sync_help_me_choose_with_registry.py` |
 | Done Selecting hook | `frontend/src/hooks/useDoneSelectingCard.ts` (`isHelpMeChooseExpanded` prop) |
 
 **Recommendation rule:** Each category must have at least 2 models. Order indicates preference (best first). Model IDs must exist in the registry. Only models with publicly verifiable benchmark data are included. Free-tier-available categories (Most cost-effective, Fastest responses) must list unregistered-tier models first so unregistered users receive ≥2 models.

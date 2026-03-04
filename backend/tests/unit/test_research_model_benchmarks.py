@@ -605,3 +605,37 @@ class TestActualRecommendationsFile:
                 assert m["modelId"] in all_registry_ids, (
                     f"Model {m['modelId']} in category '{cat['id']}' not found in models registry"
                 )
+
+    def test_free_tier_categories_have_unregistered_models_first(self, real_ts_content):
+        """Cost-effective and Fastest must list unregistered-tier models first (≥2 for unregistered users)."""
+        registry_path = (
+            Path(__file__).resolve().parent.parent.parent / "data" / "models_registry.json"
+        )
+        if not registry_path.exists():
+            pytest.skip("Registry file not found")
+
+        with open(registry_path, encoding="utf-8") as f:
+            registry = json.load(f)
+
+        unregistered = set(registry.get("unregistered_tier_models", []))
+
+        free_tier_categories = ["cost-effective", "fast"]
+        cats = parse_recommendations_ts(real_ts_content)
+
+        for cat in cats:
+            if cat["id"] not in free_tier_categories:
+                continue
+            models = cat["models"]
+            # First 2 or more models must be unregistered-tier so unregistered users get ≥2 options
+            unregistered_count = sum(1 for m in models if m["modelId"] in unregistered)
+            assert unregistered_count >= 2, (
+                f"Category '{cat['id']}' has {unregistered_count} unregistered-tier models; "
+                "needs ≥2 so unregistered users receive ≥2 recommendations"
+            )
+            # First 2 models in the list must be unregistered
+            first_two = [m["modelId"] for m in models[:2]]
+            for mid in first_two:
+                assert mid in unregistered, (
+                    f"Category '{cat['id']}': first 2 models must be unregistered-tier; "
+                    f"'{mid}' is not in unregistered_tier_models"
+                )
