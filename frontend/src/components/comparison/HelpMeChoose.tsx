@@ -17,6 +17,8 @@ import {
 } from '../../data/helpMeChooseRecommendations'
 import type { ModelsByProvider, User } from '../../types'
 
+import { BestAtTopInfoModal } from './BestAtTopInfoModal'
+
 function findModelById(modelsByProvider: ModelsByProvider, modelId: string) {
   for (const providerModels of Object.values(modelsByProvider)) {
     const model = providerModels.find(m => m.id === modelId)
@@ -86,6 +88,7 @@ export function HelpMeChoose({
   modelsSectionRef,
 }: HelpMeChooseProps) {
   const [internalExpanded, setInternalExpanded] = useState(false)
+  const [showBestAtTopModal, setShowBestAtTopModal] = useState(false)
   const isExpanded = controlledExpanded !== undefined ? controlledExpanded : internalExpanded
   const setIsExpanded =
     onExpandChange !== undefined
@@ -334,10 +337,12 @@ export function HelpMeChoose({
           <p className="help-me-choose-intro">
             <span className="help-me-choose-ordering-hint">
               <span className="help-me-choose-ordering-label">Best at top</span>
-              <span
+              <button
+                type="button"
                 className="help-me-choose-ordering-info"
+                onClick={() => setShowBestAtTopModal(true)}
                 title="Models are ordered from best (top) to least recommended (bottom) based on published benchmarks. Hover over a model for evidence."
-                aria-label="Ordering info"
+                aria-label="Ordering info — tap for details"
               >
                 <svg
                   width="14"
@@ -354,7 +359,7 @@ export function HelpMeChoose({
                   <path d="M12 16v-4" />
                   <path d="M12 8h.01" />
                 </svg>
-              </span>
+              </button>
             </span>
           </p>
           <div
@@ -459,6 +464,11 @@ export function HelpMeChoose({
           </div>
         </div>
       )}
+
+      <BestAtTopInfoModal
+        isOpen={showBestAtTopModal}
+        onClose={() => setShowBestAtTopModal(false)}
+      />
     </div>
   )
 }

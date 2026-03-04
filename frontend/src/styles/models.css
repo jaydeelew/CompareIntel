@@ -1858,13 +1858,24 @@
 .help-me-choose-ordering-info {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   color: var(--text-muted);
   cursor: help;
   transition: color 0.2s;
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
 }
 
 .help-me-choose-ordering-info:hover {
   color: var(--primary-color);
+}
+
+.help-me-choose-ordering-info:focus {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+  border-radius: 50%;
 }
 
 .help-me-choose-list {
@@ -2326,6 +2337,13 @@
     min-height: 44px;
     padding: 0.5rem 1.5rem;
   }
+
+  /* Info icon: adequate touch target for modal trigger */
+  .help-me-choose-ordering-info {
+    min-width: 44px;
+    min-height: 44px;
+    cursor: pointer;
+  }
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -2424,6 +2442,14 @@
   border: 1px solid var(--border-color);
   border-radius: var(--radius-xl);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+/* Mobile: Advanced dropdown fills section width instead of right-justified */
+@media (max-width: 768px) {
+  .advanced-settings-content {
+    justify-self: stretch;
+    max-width: none;
+  }
 }
 
 /* When Advanced is open: stand out from the rest of the section */
