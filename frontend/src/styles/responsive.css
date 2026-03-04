@@ -64,6 +64,8 @@
     min-width: unset;
     height: auto;
     align-self: auto;
+    /* Model cards above provider dropdowns (matches mobile layout) */
+    order: -1;
   }
 
   .selected-models-grid {
