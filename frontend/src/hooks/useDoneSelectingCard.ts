@@ -6,6 +6,8 @@ interface UseDoneSelectingCardProps {
   isFollowUpMode: boolean
   modelsSectionRef: RefObject<HTMLDivElement>
   tutorialIsActive: boolean
+  /** Hide card when Help me choose dropdown is expanded */
+  isHelpMeChooseExpanded?: boolean
 }
 
 interface UseDoneSelectingCardCallbacks {
@@ -39,6 +41,7 @@ export function useDoneSelectingCard(
     isFollowUpMode,
     modelsSectionRef,
     tutorialIsActive,
+    isHelpMeChooseExpanded = false,
   } = props
 
   const { onCollapseAllDropdowns, onSetIsModelsHidden, onFocusTextarea } = callbacks
@@ -324,7 +327,7 @@ export function useDoneSelectingCard(
   }, [onCollapseAllDropdowns, onSetIsModelsHidden, onFocusTextarea])
 
   return {
-    showDoneSelectingCard: showDoneSelectingCard && !tutorialIsActive,
+    showDoneSelectingCard: showDoneSelectingCard && !tutorialIsActive && !isHelpMeChooseExpanded,
     setShowDoneSelectingCard,
     handleDoneSelecting,
   }

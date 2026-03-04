@@ -68,9 +68,6 @@ export interface ModelsAreaProps {
     modelTierAccess: 'free' | 'paid'
     modelName?: string
   }) => void
-  /** Apply model selection from Help me choose recommendation */
-  onApplyRecommendation?: (modelIds: string[]) => void
-
   // Advanced settings
   temperature: number
   onTemperatureChange: (temp: number) => void
@@ -81,6 +78,10 @@ export interface ModelsAreaProps {
   advancedSettings: { temperature: number; topP: number; maxTokens: number | null }
   /** Cap for max tokens based on selected models (min of their max_output_tokens) */
   maxTokensCap: number
+  /** Which dropdown is open (Help me choose or Advanced); controlled by parent */
+  modelsDropdownOpen: 'help-me-choose' | 'advanced' | null
+  /** Called when dropdown open state changes */
+  onModelsDropdownChange: (open: 'help-me-choose' | 'advanced' | null) => void
 }
 
 export function ModelsArea({
@@ -130,7 +131,6 @@ export function ModelsArea({
   onError,
   onRetryModels,
   onShowDisabledModelModal,
-  onApplyRecommendation,
   temperature,
   onTemperatureChange,
   topP,
@@ -139,6 +139,8 @@ export function ModelsArea({
   onMaxTokensChange,
   advancedSettings: _advancedSettings,
   maxTokensCap,
+  modelsDropdownOpen: openDropdown,
+  onModelsDropdownChange: setOpenDropdown,
 }: ModelsAreaProps) {
   return (
     <ErrorBoundary>
@@ -172,13 +174,15 @@ export function ModelsArea({
           <>
             <div className="models-section-buttons-row">
               <HelpMeChoose
-                onApplyRecommendation={
-                  onApplyRecommendation ? modelIds => onApplyRecommendation(modelIds) : () => {}
-                }
-                disabled={isLoading || !onApplyRecommendation}
+                onToggleModel={onToggleModel}
+                disabled={isLoading}
                 modelsByProvider={modelsByProvider}
                 isAuthenticated={isAuthenticated}
                 user={user}
+                selectedModels={selectedModels}
+                isExpanded={openDropdown === 'help-me-choose'}
+                onExpandChange={expanded => setOpenDropdown(expanded ? 'help-me-choose' : null)}
+                modelsSectionRef={modelsSectionRef}
               />
               <AdvancedSettings
                 temperature={temperature}
@@ -189,6 +193,8 @@ export function ModelsArea({
                 onMaxTokensChange={onMaxTokensChange}
                 maxTokensCap={maxTokensCap}
                 disabled={isLoading}
+                isExpanded={openDropdown === 'advanced'}
+                onExpandChange={expanded => setOpenDropdown(expanded ? 'advanced' : null)}
               />
             </div>
             {selectedModels.length > 0 &&

@@ -60,7 +60,7 @@
  * ```
  */
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, startTransition } from 'react'
 
 import type { Model, ModelsByProvider, User } from '../types'
 
@@ -327,7 +327,9 @@ export function useModelManagement({
 
   const handleModelToggle = useCallback(
     (modelId: string) => {
-      if (selectedModels.includes(modelId)) {
+      const idStr = String(modelId)
+      const isSelected = selectedModels.some(id => String(id) === idStr)
+      if (isSelected) {
         // Check if this is the last selected model - only prevent in follow-up mode
         if (selectedModels.length === 1 && isFollowUpMode) {
           setError('Must have at least one model to process')
@@ -336,7 +338,7 @@ export function useModelManagement({
         }
 
         // Allow deselection in both normal and follow-up mode
-        const updatedSelectedModels = selectedModels.filter(id => id !== modelId)
+        const updatedSelectedModels = selectedModels.filter(id => String(id) !== idStr)
         if (updatedSelectedModels.length === 0) {
           onDeselectToEmpty?.()
         }
@@ -501,16 +503,19 @@ export function useModelManagement({
         return
       }
 
-      setSelectedModels(filtered)
-      onDeselectToEmpty?.()
-      if (
-        error &&
-        (error.includes('Maximum') ||
-          error.includes('Must have at least one model') ||
-          error.includes('Please select at least one model'))
-      ) {
-        setError(null)
-      }
+      // Defer state update to avoid blocking scroll/interaction (React 18 startTransition)
+      startTransition(() => {
+        setSelectedModels(filtered)
+        onDeselectToEmpty?.()
+        if (
+          error &&
+          (error.includes('Maximum') ||
+            error.includes('Must have at least one model') ||
+            error.includes('Please select at least one model'))
+        ) {
+          setError(null)
+        }
+      })
     },
     [
       isFollowUpMode,

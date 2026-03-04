@@ -21,6 +21,10 @@ export interface AdvancedSettingsProps {
   /** Cap based on selected models' max_output_tokens (min across selection) */
   maxTokensCap: number
   disabled?: boolean
+  /** Controlled expanded state (when set, parent controls open/close) */
+  isExpanded?: boolean
+  /** Called when expand state should change (for mutual exclusivity with other dropdowns) */
+  onExpandChange?: (expanded: boolean) => void
 }
 
 const DEFAULTS = { temperature: 0.7, topP: 1.0, maxTokens: null as number | null }
@@ -152,9 +156,17 @@ export function AdvancedSettings({
   onMaxTokensChange,
   maxTokensCap,
   disabled = false,
+  isExpanded: controlledExpanded,
+  onExpandChange,
 }: AdvancedSettingsProps) {
   const effectiveMax = Math.max(MAX_TOKENS_MIN, maxTokensCap)
-  const [isExpanded, setIsExpanded] = useState(false)
+  const [internalExpanded, setInternalExpanded] = useState(false)
+  const isExpanded = controlledExpanded !== undefined ? controlledExpanded : internalExpanded
+  const setIsExpanded =
+    onExpandChange !== undefined
+      ? (v: boolean) => onExpandChange(v)
+      : (v: boolean) => setInternalExpanded(v)
+  const containerRef = useRef<HTMLDivElement>(null)
   const [mobileInfoKey, setMobileInfoKey] = useState<string | null>(null)
   const { isMobileLayout } = useResponsive()
 
@@ -220,8 +232,23 @@ export function AdvancedSettings({
     )
   }
 
+  useEffect(() => {
+    if (!isExpanded) return
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as Node
+      if (!containerRef.current?.contains(target)) {
+        setIsExpanded(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [isExpanded])
+
   return (
-    <div className={`advanced-settings${isExpanded ? ' advanced-settings-expanded' : ''}`}>
+    <div
+      ref={containerRef}
+      className={`advanced-settings${isExpanded ? ' advanced-settings-expanded' : ''}`}
+    >
       <button
         type="button"
         className="advanced-settings-toggle"

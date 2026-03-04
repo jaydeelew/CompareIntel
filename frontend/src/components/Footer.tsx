@@ -44,6 +44,9 @@ export const Footer: React.FC = () => {
         <Link to="/glossary" style={linkStyle}>
           AI Glossary
         </Link>
+        <Link to="/help-me-choose-methodology" style={linkStyle}>
+          Help Me Choose
+        </Link>
         <Link to="/faq" style={linkStyle}>
           FAQ
         </Link>

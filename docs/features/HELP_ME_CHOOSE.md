@@ -27,7 +27,8 @@ The "Help me choose" feature provides decision support for model selection. The 
 - Button styled to match Advanced button
 - Dropdown with click-outside-to-close behavior
 - CSS classes: `help-me-choose`, `help-me-choose-toggle`, `help-me-choose-content`, etc.
-- Layout: `models-section-buttons-row` contains both Help me choose and Advanced
+- Layout: `models-section-buttons-row` grid with both Help me choose and Advanced
+- Both buttons use `display: contents` + `grid-row: 1` so they stay on the same line regardless of which dropdown is open
 - Exported from `frontend/src/components/comparison/index.ts`
 
 ---
@@ -36,40 +37,43 @@ The "Help me choose" feature provides decision support for model selection. The 
 
 **Status:** ✅ Completed  
 **Date:** February 2026  
-**Updated:** February 2026 (evidence-based revision)
+**Updated:** March 2026 (horizontal layout, evidence tooltips, Grok/xAI models, explicit source citations)
 
 **Description:** Define default model selections for various categories based on published benchmarks and reliable sources. Each category must have at least 2 models (2–3 recommended).
 
+**Inclusion rule:** Only models with well-respected, publicly available benchmarks or user-ratings (SWE-Bench, LMSys Arena, MMLU-Pro, OpenRouter pricing, etc.) are included. Models without verifiable data are excluded until such data exists.
+
 **Accomplished:**
-- Created `frontend/src/data/helpMeChooseRecommendations.ts`
-- Six categories, each with at least 2 models (2–3 per category) backed by benchmarks. Display order: free-tier-available first, then Premium. Free-tier categories use distinct model sets so selections differ meaningfully:
-  - **Most cost-effective:** DeepSeek Chat v3.1, Gemini 2.5 Flash (unregistered), DeepSeek R1 (free) — OpenRouter $/1M tokens, quality-per-dollar
-  - **Fastest responses:** Gemini 2.0 Flash, Claude 3.5 Haiku (unregistered), Claude Haiku 4.5 (free) — AILatency, Artificial Analysis TTFT benchmarks
-  - **Best for coding:** Claude Opus 4.6, Claude Opus 4.5, MiniMax M2.5 (SWE-Bench Verified 80.8–80.9%, LMSys Coding Arena #1–2)
-  - **Best for writing:** Claude Opus 4.6, Claude Opus 4.5, GPT-5.2 (Creative Writing Arena, Mazur Writing Score)
-  - **Best for reasoning:** o3, DeepSeek R1, Claude Opus 4.6 (MMLU-Pro, chain-of-thought SOTA)
-  - **Best for web search:** Claude Sonnet 4.6, GPT-5.1, Gemini 2.5 Pro (retrieval, citation)
+- Created `frontend/src/data/helpMeChooseRecommendations.ts` with `HELP_ME_CHOOSE_CATEGORIES`
+- Six categories displayed **horizontally** in the dropdown, each with models ordered best-to-worst:
+  - **Most cost-effective:** DeepSeek Chat v3.1, Gemini 2.5 Flash, DeepSeek R1, Mistral Small, Phi-4, GPT-4o Mini, Step 3.5 Flash, Claude 3.5 Haiku — OpenRouter $/1M tokens
+  - **Fastest responses:** Gemini 2.0 Flash, Gemini 2.5 Flash, Grok 4.1 Fast, Claude 3.5 Haiku, Claude Haiku 4.5, GPT-4o Mini, Mistral Small — AILatency, Artificial Analysis, LMSys Arena
+  - **Best for coding:** Claude Opus 4.5 (80.9%), Claude Opus 4.6 (80.8%), Gemini 3.1 Pro (80.6%), MiniMax M2.5 (80.2%), GPT-5.2 (80.0%), …, Grok 4 (70.6%) — SWE-Bench Verified, OpenLM
+  - **Best for writing:** Claude Opus 4.6, Claude Opus 4.5, GPT-5.2, DeepSeek R1, Claude Sonnet 4.6, Claude 3.7 Sonnet, GPT-5.1, Gemini 2.5 Pro — Creative Writing Arena, Mazur Writing Score
+  - **Best for reasoning:** o3, o3-mini, Gemini 3.1 Pro (MMLU-Pro 90.1%), DeepSeek R1, Claude Opus 4.6, GPT-5.2 Pro, Grok 4.1 Fast, Claude Opus 4.5, Gemini 2.5 Pro, Qwen3-Max Thinking, Qwen3-Next Thinking — MMLU-Pro, LMSys Arena
+  - **Best for web search:** Claude Sonnet 4.6, GPT-5.1, Gemini 2.5 Pro, Claude Opus 4.6, Claude Haiku 4.5, Gemini 2.5 Flash, GPT-5.2, Command R+ — Provider docs
+- **Evidence tooltips:** Each model shows benchmark/citation with source on hover (`title` attribute). Format: "Source (url): Score/metric."
+- **Explicit source citations:** Every evidence string names the benchmark and source (e.g., "SWE-Bench Verified (swebench.com): 80.9%")
+- Models may appear in multiple categories; selection is deduplicated
 - Model IDs must match `backend/data/models_registry.json`
 - See **Evidence Sources** section below for benchmark references
 
 ---
 
-### Goal 3: Checkbox selection and auto-apply models
+### Goal 3: Immediate model selection (no Apply button)
 
 **Status:** ✅ Completed  
-**Date:** February 2026
+**Date:** February 2026  
+**Updated:** March 2026 (removed Apply button; selections apply immediately)
 
-**Description:** When a user selects/checks a recommendation in the dropdown, the appropriate models are selected automatically.
+**Description:** When a user checks/unchecks a model in the dropdown, the model is toggled immediately — same as the main "Select Models to Compare" area.
 
 **Accomplished:**
-- Each recommendation is a checkbox; checking applies that recommendation
-- `handleApplyRecommendation` in `useModelManagement`:
-  - Filters model IDs by: existence in registry, `available !== false`, user tier access, `hidePremiumModels`
-  - Limits to `maxModelsLimit`
-  - Disabled in follow-up mode (shows error)
-  - Sets `defaultSelectionOverridden` via `onDeselectToEmpty`
-- `ModelsArea` receives `onApplyRecommendation` and passes it to `HelpMeChoose`
-- `MainPage` wires `handleApplyRecommendation` from `useModelManagement` into `modelsAreaProps`
+- Each model has a checkbox; `onToggleModel(modelId)` called on change for immediate selection
+- Apply button removed; intro text: "Select models below — changes apply immediately, same as the main model selection."
+- `handleModelToggle` in `useModelManagement` uses `String()` normalization for reliable ID comparison (fixes close-button bug for models selected via Help me choose)
+- Close (X) button on model cards works for models selected from either Help me choose or the main selection area
+- Click-outside handler in HelpMeChoose ignores clicks inside `modelsSectionRef` to prevent the dropdown from closing when clicking model card X buttons
 
 ---
 
@@ -89,18 +93,96 @@ The "Help me choose" feature provides decision support for model selection. The 
 ### Goal 5: Tier restrictions and UX polish
 
 **Status:** ✅ Completed  
-**Date:** February 2026
+**Date:** February 2026  
+**Updated:** March 2026 (horizontal layout, responsive, button stability)
 
 **Description:** Disable recommendations unavailable to unregistered/free tiers; align Help me choose styling and behavior with Advanced and the model selection area.
 
 **Accomplished:**
-- **Tier restrictions:** Options where all models are restricted for the user's tier are disabled (same logic as model selection: `tier_access`, `trial_unlocked`)
-- **Tooltips:** Hover over disabled options shows tier-appropriate message (sign up for free account / paid tiers coming soon)
-- **Styling:** Disabled options use same theme as restricted models (opacity, cursor, Premium badge with lock icon next to text)
-- **Both dropdowns open:** Click-outside excludes sibling toggles so Help me choose and Advanced can both stay open
-- **Dropdown background:** Help me choose content matches Advanced (transparent option backgrounds, separator lines, light/dark theme gradients when expanded)
+- **Tier restrictions:** Models restricted for the user's tier are disabled (same logic as model selection: `tier_access`, `trial_unlocked`)
+- **Tooltips:** Hover over disabled models shows tier-appropriate message (sign up for free account / paid tiers coming soon)
+- **Styling:** Disabled models use same theme as restricted models (opacity, cursor, lock icon)
+- **Mutual exclusivity:** Only one of Help me choose / Advanced can be open at a time (parent `modelsDropdownOpen` state)
+- **Dropdown background:** Help me choose content matches Advanced (light/dark theme gradients when expanded)
 - **Toggle emphasis:** Both buttons appear bold when expanded (`font-weight: var(--font-semibold)`)
-- **Dropdown order:** Free-tier-available options (Most cost-effective, Fastest responses) appear first, then Premium options. This surfaces accessible recommendations at the top for unregistered and free users.
+- **Button stability:** Both toggle buttons use `display: contents` + `grid-row: 1` so neither moves when any dropdown opens. Advanced content uses `grid-column: 1 / -1; justify-self: end` to expand in-flow below the buttons.
+- **Help me choose dropdown width:** Full width matching the model-provider dropdowns (`width: 100%`, no `max-width` cap)
+- **Horizontal layout (March 2026):** Categories displayed as columns across the dropdown; models listed under each category header.
+- **Responsive:** At 768px and below, categories stack vertically; `max-height: 70vh` with scroll. Touch targets ≥44px on `pointer: coarse` (mobile/touchscreen).
+- **Done Selecting card:** Hidden when Help me choose dropdown is expanded (`isHelpMeChooseExpanded` prop in `useDoneSelectingCard`).
+
+---
+
+### Goal 6: Multi-select recommendations
+
+**Status:** ✅ Completed  
+**Date:** March 2026
+
+**Description:** Allow users to check multiple models across categories (with deduplication and `maxModelsLimit` cap).
+
+**Accomplished:** Individual model checkboxes across all categories. Selections apply immediately via `onToggleModel`. Deduplicated by model ID.
+
+---
+
+### Goal 7: Benchmark citations and evidence
+
+**Status:** ✅ Completed  
+**Date:** March 2026
+
+**Description:** Add links or citations to benchmarks (LMSys, SWE-Bench, etc.) so users can see why models are recommended.
+
+**Accomplished:** Each model has a tooltip (`title`) with evidence text including the benchmark name, score, and source. Data in `helpMeChooseRecommendations.ts` per `HelpMeChooseModelEntry.evidence`. All entries now include explicit source attribution.
+
+---
+
+### Goal 8: Methodology page
+
+**Status:** ✅ Completed  
+**Date:** March 2026
+
+**Description:** Create a public-facing page explaining the ranking methodology, linked from the footer.
+
+**Accomplished:**
+- Created `frontend/src/components/pages/HelpMeChooseMethodology.tsx` at route `/help-me-choose-methodology`
+- Page covers: inclusion criteria, evidence sources by category (with links), ordering rules, categorization logic, update process
+- Added "Help Me Choose Methodology" link to the site footer (`Footer.tsx`)
+- Added route in `App.tsx` with lazy loading
+- Added URL to `sitemap.xml`
+
+---
+
+### Goal 9: Automated benchmark research on model addition
+
+**Status:** ✅ Completed  
+**Date:** March 2026
+
+**Description:** When a new model is added via the admin panel, automatically research its benchmarks and add it to the appropriate Help Me Choose categories.
+
+**Accomplished:**
+- Created `backend/scripts/research_model_benchmarks.py`:
+  - Fetches model data from registry and OpenRouter
+  - Determines category placements based on: pricing (cost-effective), model ID patterns (fast, coding), description keywords (reasoning), `supports_web_search` flag
+  - Parses `helpMeChooseRecommendations.ts`, adds the model to qualifying categories, writes back
+  - Generates evidence strings citing the source
+  - Supports `--dry-run` mode and standalone CLI usage
+- Integrated into both admin model-adding endpoints in `backend/app/routers/admin/models_management.py`:
+  - Non-streaming (`/models/add`): runs as subprocess after renderer setup
+  - Streaming (`/models/add-stream`): runs as async subprocess with SSE progress ("Researching benchmarks for Help Me Choose...")
+  - Fails gracefully (logs warning, does not block model addition)
+- Created comprehensive test suite: `backend/tests/unit/test_research_model_benchmarks.py` (39 tests):
+  - Unit tests: cost calculation, category determination, TS parsing, model existence checks, add/duplicate prevention, round-trip serialization
+  - Integration tests: full research-and-update flow with mocked externals (code model → coding, web search → web-search, not-in-registry → skipped, duplicates, free → multiple categories, dry-run)
+  - Validation tests: real `helpMeChooseRecommendations.ts` file (parses, all 6 categories exist, each has ≥2 models, all evidence non-empty, all model IDs exist in registry)
+
+---
+
+## Methodology Page
+
+A public-facing page at `/help-me-choose-methodology` (linked in the footer as "Help Me Choose Methodology") explains:
+- Inclusion criteria (only models with well-respected, publicly available benchmarks)
+- Evidence sources by category (with clickable links to SWE-Bench, LMSys, OpenRouter, etc.)
+- How ordering and categorization work
+- How recommendations are updated
 
 ---
 
@@ -110,12 +192,12 @@ Recommendations are based on the following benchmarks and sources. Update this s
 
 | Category | Primary sources | Key metrics |
 |----------|-----------------|-------------|
-| **Coding** | [SWE-Bench Verified](https://www.swebench.com/verified.html) (500 human-filtered GitHub issues), [LMSys Coding Arena](https://lmarena.ai/) | % Resolved, Elo on code-specific evals |
-| **Writing** | [Creative Writing Arena](https://kearai.com/leaderboard/creative-writing), [WritingBench](https://arxiv.org/abs/2503.05244), Mazur Writing Score | Human preference, voice, character consistency |
-| **Reasoning** | [MMLU-Pro](https://awesomeagents.ai/leaderboards/mmlu-pro-leaderboard/) (12k+ harder questions), chain-of-thought evals | STEM accuracy, multi-step reasoning |
-| **Cost-effective** | [OpenRouter pricing](https://openrouter.ai/docs/overview/models), cost-per-token calculators | $/1M tokens, quality-per-dollar; DeepSeek, Gemini Flash as value leaders |
+| **Coding** | [SWE-Bench Verified](https://www.swebench.com/verified.html) (500 human-filtered GitHub issues), [OpenLM SWE-bench+](https://openlm.ai/swe-bench/), [LMSys Coding Arena](https://lmarena.ai/) | % Resolved, Elo on code-specific evals |
+| **Writing** | [Creative Writing Arena](https://kearai.com/leaderboard/creative-writing), Mazur Writing Score | Human preference, voice, character consistency |
+| **Reasoning** | [MMLU-Pro](https://awesomeagents.ai/leaderboards/mmlu-pro-leaderboard/) (12k+ harder questions), chain-of-thought evals, [LMSys Chatbot Arena](https://lmarena.ai/leaderboard/) | STEM accuracy, multi-step reasoning, Elo |
+| **Cost-effective** | [OpenRouter pricing](https://openrouter.ai/docs/overview/models), [Artificial Analysis](https://artificialanalysis.ai/) Quality Score | $/1M tokens, quality-per-dollar |
 | **Web search** | Provider docs (`supports_web_search`), retrieval benchmarks | Citation quality, grounded answers |
-| **Fastest** | [AILatency](https://www.ailatency.com/), [Artificial Analysis](https://artificialanalysis.ai/), [Anthropic Haiku 4.5](https://www.anthropic.com/news/claude-haiku-4-5) | Time-to-first-token, throughput; Gemini Flash, Claude Haiku as latency leaders |
+| **Fastest** | [AILatency](https://www.ailatency.com/), [Artificial Analysis](https://artificialanalysis.ai/), [LMSys Chatbot Arena](https://lmarena.ai/) | Time-to-first-token, throughput, Elo |
 
 **General rankings:** [LMSys Chatbot Arena](https://lmarena.ai/leaderboard/) (pairwise human preference, Elo) provides overall model quality; specialized leaderboards (Coding, Creative Writing) refine by use case.
 
@@ -123,31 +205,15 @@ Recommendations are based on the following benchmarks and sources. Update this s
 
 ## Future Goals (To Be Completed)
 
-### Goal 6: Multi-select recommendations
+### Goal 10: Show which recommendation matches current selection
 
 **Status:** ⬜ Pending
 
-**Description:** Allow users to check multiple recommendations and combine model sets (with deduplication and `maxModelsLimit` cap).
+**Description:** Visually indicate which recommendation(s) best match the user's current model selection (e.g., checked state or highlight).
 
 ---
 
-### Goal 7: Show which recommendation matches current selection
-
-**Status:** ⬜ Pending
-
-**Description:** Visually indicate which recommendation(s) best match the user’s current model selection (e.g., checked state or highlight).
-
----
-
-### Goal 8: Benchmark citations and evidence
-
-**Status:** ⬜ Pending
-
-**Description:** Add links or citations to benchmarks (LMSys, SWE-Bench, etc.) so users can see why models are recommended.
-
----
-
-### Goal 9: Personalized recommendations
+### Goal 11: Personalized recommendations
 
 **Status:** ⬜ Pending
 
@@ -155,7 +221,7 @@ Recommendations are based on the following benchmarks and sources. Update this s
 
 ---
 
-### Goal 10: Category expansion
+### Goal 12: Category expansion
 
 **Status:** ⬜ Pending
 
@@ -163,11 +229,11 @@ Recommendations are based on the following benchmarks and sources. Update this s
 
 ---
 
-### Goal 11: Sync with models registry
+### Goal 13: Sync with models registry
 
 **Status:** ⬜ Pending
 
-**Description:** Validate or auto-update recommendation model IDs against the live models registry; handle deprecated or renamed models.
+**Description:** Validate or auto-update recommendation model IDs against the live models registry; handle deprecated or renamed models. (Partially addressed by Goal 9's automated benchmark research, but full sync/cleanup is pending.)
 
 ---
 
@@ -177,12 +243,17 @@ Recommendations are based on the following benchmarks and sources. Update this s
 |------|----------|
 | Component | `frontend/src/components/comparison/HelpMeChoose.tsx` |
 | Recommendations data | `frontend/src/data/helpMeChooseRecommendations.ts` |
-| Styles | `frontend/src/styles/models.css` (`.help-me-choose*`, `.models-section-buttons-row`) |
-| Hook logic | `frontend/src/hooks/useModelManagement.ts` (`handleApplyRecommendation`) |
+| Styles | `frontend/src/styles/models.css` (`.help-me-choose*`, `.models-section-buttons-row`, `.advanced-settings*`) |
+| Hook logic | `frontend/src/hooks/useModelManagement.ts` (`handleModelToggle`, `handleApplyRecommendation`) |
 | Integration | `frontend/src/components/main-page/ModelsArea.tsx`, `frontend/src/pages/MainPage.tsx` |
 | Models registry | `backend/data/models_registry.json` |
+| Methodology page | `frontend/src/components/pages/HelpMeChooseMethodology.tsx` (route: `/help-me-choose-methodology`) |
+| Benchmark research script | `backend/scripts/research_model_benchmarks.py` |
+| Admin integration | `backend/app/routers/admin/models_management.py` (both `add_model` and `add_model_stream`) |
+| Tests | `backend/tests/unit/test_research_model_benchmarks.py` (39 tests) |
+| Done Selecting hook | `frontend/src/hooks/useDoneSelectingCard.ts` (`isHelpMeChooseExpanded` prop) |
 
-**Recommendation rule:** Each category must have at least 2 models (2–3 recommended). Order indicates preference (best first). Model IDs must exist in the registry. Free-tier-available categories (Most cost-effective, Fastest responses) must use distinct model sets so each selection yields different models; list unregistered-tier models first so unregistered users receive ≥2 models.
+**Recommendation rule:** Each category must have at least 2 models. Order indicates preference (best first). Model IDs must exist in the registry. Only models with publicly verifiable benchmark data are included. Free-tier-available categories (Most cost-effective, Fastest responses) must list unregistered-tier models first so unregistered users receive ≥2 models.
 
 ---
 

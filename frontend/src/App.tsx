@@ -40,6 +40,11 @@ const Glossary = lazy(() =>
 const TermsOfService = lazy(() =>
   import('./components/TermsOfService').then(module => ({ default: module.TermsOfService }))
 )
+const HelpMeChooseMethodology = lazy(() =>
+  import('./components/pages/HelpMeChooseMethodology').then(module => ({
+    default: module.HelpMeChooseMethodology,
+  }))
+)
 
 function App() {
   return (
@@ -103,6 +108,14 @@ function App() {
                   element={
                     <Suspense fallback={<LoadingSpinner />}>
                       <TermsOfService />
+                    </Suspense>
+                  }
+                />
+                <Route
+                  path="/help-me-choose-methodology"
+                  element={
+                    <Suspense fallback={<LoadingSpinner />}>
+                      <HelpMeChooseMethodology />
                     </Suspense>
                   }
                 />

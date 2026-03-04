@@ -1,15 +1,17 @@
 /**
  * HelpMeChoose - Decision support dropdown for model selection
  *
- * Offers curated model recommendations by use case (coding, writing,
- * reasoning, etc.). Selecting a recommendation auto-selects the
- * appropriate models. Designed to evolve into a full decision-support
- * feature competitive with top AI comparison sites.
+ * Displays categories horizontally. Each category lists models ordered
+ * best-to-worst with evidence tooltips. Selections apply immediately,
+ * same as the main Select Models to Compare section.
  */
 
-import { useState, useRef, useEffect, useMemo } from 'react'
+import { useState, useRef, useEffect, useMemo, type RefObject } from 'react'
 
-import { HELP_ME_CHOOSE_RECOMMENDATIONS } from '../../data/helpMeChooseRecommendations'
+import {
+  HELP_ME_CHOOSE_CATEGORIES,
+  type HelpMeChooseCategory,
+} from '../../data/helpMeChooseRecommendations'
 import type { ModelsByProvider, User } from '../../types'
 
 function findModelById(modelsByProvider: ModelsByProvider, modelId: string) {
@@ -40,8 +42,8 @@ function getDisabledTooltip(userTier: 'unregistered' | 'free'): string {
 }
 
 export interface HelpMeChooseProps {
-  /** Apply selected recommendation (model IDs) */
-  onApplyRecommendation: (modelIds: string[]) => void
+  /** Toggle model selection (same as main model selection - applies immediately) */
+  onToggleModel: (modelId: string) => void
   /** Whether the control is disabled (e.g. during loading) */
   disabled?: boolean
   /** Models by provider (for tier restriction check) */
@@ -50,36 +52,53 @@ export interface HelpMeChooseProps {
   isAuthenticated?: boolean
   /** Current user (for tier) */
   user?: User | null
+  /** Current models selected in the comparison */
+  selectedModels?: string[]
+  /** Controlled expanded state (when set, parent controls open/close) */
+  isExpanded?: boolean
+  /** Called when expand state should change (for mutual exclusivity with other dropdowns) */
+  onExpandChange?: (expanded: boolean) => void
+  /** Ref to the models section - clicks inside it should NOT close the dropdown (e.g. model card X) */
+  modelsSectionRef?: RefObject<HTMLElement | null>
 }
 
 export function HelpMeChoose({
-  onApplyRecommendation,
+  onToggleModel,
   disabled = false,
   modelsByProvider = {},
   isAuthenticated = false,
   user = null,
+  selectedModels = [],
+  isExpanded: controlledExpanded,
+  onExpandChange,
+  modelsSectionRef,
 }: HelpMeChooseProps) {
-  const [isExpanded, setIsExpanded] = useState(false)
+  const [internalExpanded, setInternalExpanded] = useState(false)
+  const isExpanded = controlledExpanded !== undefined ? controlledExpanded : internalExpanded
+  const setIsExpanded =
+    onExpandChange !== undefined
+      ? (v: boolean) => onExpandChange(v)
+      : (v: boolean) => setInternalExpanded(v)
   const containerRef = useRef<HTMLDivElement>(null)
 
   const userTier = isAuthenticated ? user?.subscription_tier || 'free' : 'unregistered'
   const isPaidTier = ['starter', 'starter_plus', 'pro', 'pro_plus'].includes(userTier)
   const isRestrictedTier = userTier === 'unregistered' || userTier === 'free'
 
-  const restrictedRecIds = useMemo(() => {
-    if (!isRestrictedTier || isPaidTier) return new Set<string>()
-    const hasAnyModels = Object.keys(modelsByProvider).length > 0
-    if (!hasAnyModels) return new Set<string>() // Can't determine without model data
-    const restricted = new Set<string>()
-    for (const rec of HELP_ME_CHOOSE_RECOMMENDATIONS) {
-      const hasAccessibleModel = rec.modelIds.some(modelId => {
-        const model = findModelById(modelsByProvider, modelId)
-        if (!model || model.available === false) return false
-        return !isModelRestricted(model, userTier, isPaidTier)
-      })
-      if (!hasAccessibleModel) restricted.add(rec.id)
+  const modelRestrictedByModelId = useMemo(() => {
+    const map = new Map<string, boolean>()
+    if (!isRestrictedTier || isPaidTier) return map
+    for (const cat of HELP_ME_CHOOSE_CATEGORIES) {
+      for (const entry of cat.models) {
+        if (map.has(entry.modelId)) continue
+        const model = findModelById(modelsByProvider, entry.modelId)
+        map.set(
+          entry.modelId,
+          !model || model.available === false || isModelRestricted(model, userTier, isPaidTier)
+        )
+      }
     }
-    return restricted
+    return map
   }, [modelsByProvider, userTier, isPaidTier, isRestrictedTier])
 
   const disabledTooltip = getDisabledTooltip(userTier as 'unregistered' | 'free')
@@ -87,22 +106,25 @@ export function HelpMeChoose({
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       const target = e.target as Node
-      if (!containerRef.current?.contains(target)) {
-        // Don't close when clicking sibling toggles (e.g. Advanced) so both can stay open
-        if ((target as Element).closest?.('.advanced-settings')) return
-        setIsExpanded(false)
-      }
+      if (containerRef.current?.contains(target)) return
+      // Don't close when clicking inside the models section (e.g. model card X button).
+      // Closing on mousedown would collapse the dropdown before the click fires,
+      // causing layout shift, scroll-to-bottom, and the close handler to miss.
+      if (modelsSectionRef?.current?.contains(target)) return
+      setIsExpanded(false)
     }
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [])
+  }, [modelsSectionRef])
 
-  const handleRecommendationChange = (modelIds: string[], recId: string, checked: boolean) => {
-    if (restrictedRecIds.has(recId)) return
-    if (checked) {
-      onApplyRecommendation(modelIds)
-      setIsExpanded(false)
-    }
+  const handleModelToggle = (modelId: string) => {
+    if (modelRestrictedByModelId.get(modelId)) return
+    onToggleModel(modelId)
+  }
+
+  const getModelDisplayName = (modelId: string): string => {
+    const model = findModelById(modelsByProvider, modelId)
+    return model?.name ?? modelId.split('/').pop() ?? modelId
   }
 
   return (
@@ -141,57 +163,83 @@ export function HelpMeChoose({
       {isExpanded && (
         <div id="help-me-choose-content" className="help-me-choose-content" role="menu">
           <p className="help-me-choose-intro">
-            Select a use case to auto-select recommended models:
+            <span className="help-me-choose-ordering-hint">
+              <span className="help-me-choose-ordering-label">Best at top ↓</span>
+              <span
+                className="help-me-choose-ordering-info"
+                title="Models are ordered from best (top) to least recommended (bottom) based on published benchmarks. Hover over a model for evidence."
+                aria-label="Ordering info"
+              >
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden
+                >
+                  <circle cx="12" cy="12" r="10" />
+                  <path d="M12 16v-4" />
+                  <path d="M12 8h.01" />
+                </svg>
+              </span>
+            </span>
+            Select models below — changes apply immediately, same as the main model selection.
           </p>
-          <ul className="help-me-choose-list" role="none">
-            {HELP_ME_CHOOSE_RECOMMENDATIONS.map(rec => {
-              const isRestricted = restrictedRecIds.has(rec.id)
-              return (
-                <li key={rec.id} role="none">
-                  <label
-                    className={`help-me-choose-item ${isRestricted ? 'disabled restricted' : ''}`}
-                    title={isRestricted ? disabledTooltip : undefined}
-                  >
-                    <input
-                      type="checkbox"
-                      className="help-me-choose-checkbox"
-                      disabled={isRestricted}
-                      onChange={e =>
-                        handleRecommendationChange(rec.modelIds, rec.id, e.target.checked)
-                      }
-                      aria-label={`Apply recommendation: ${rec.label}`}
-                      aria-disabled={isRestricted}
-                    />
-                    <span className="help-me-choose-item-text">
-                      <span className="help-me-choose-item-label">
-                        {rec.label}
-                        {isRestricted && (
-                          <span className="model-badge premium help-me-choose-premium-badge">
-                            <svg
-                              width="12"
-                              height="12"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              aria-hidden
-                            >
-                              <rect x="5" y="11" width="14" height="10" rx="2" ry="2" />
-                              <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                            </svg>
-                            Premium
-                          </span>
-                        )}
-                      </span>
-                      <span className="help-me-choose-item-desc">{rec.description}</span>
-                    </span>
-                  </label>
-                </li>
-              )
-            })}
-          </ul>
+          <div className="help-me-choose-categories">
+            {HELP_ME_CHOOSE_CATEGORIES.map((cat: HelpMeChooseCategory) => (
+              <div key={cat.id} className="help-me-choose-category">
+                <h3 className="help-me-choose-category-header">{cat.label}</h3>
+                <p className="help-me-choose-category-desc">{cat.description}</p>
+                <ul className="help-me-choose-models-list" role="none">
+                  {cat.models.map((entry, idx) => {
+                    const modelRestricted = modelRestrictedByModelId.get(entry.modelId) ?? false
+                    const isSelected = selectedModels.includes(entry.modelId)
+                    const displayName = getModelDisplayName(entry.modelId)
+                    return (
+                      <li key={`${cat.id}-${entry.modelId}-${idx}`} role="none">
+                        <label
+                          className={`help-me-choose-model-entry ${modelRestricted ? 'restricted' : ''} ${isSelected ? 'selected' : ''}`}
+                          title={modelRestricted ? disabledTooltip : entry.evidence}
+                        >
+                          <input
+                            type="checkbox"
+                            className="help-me-choose-checkbox"
+                            disabled={modelRestricted}
+                            checked={isSelected}
+                            onChange={() => handleModelToggle(entry.modelId)}
+                            aria-label={`Select ${displayName}`}
+                            aria-disabled={modelRestricted}
+                          />
+                          <span className="help-me-choose-model-name">{displayName}</span>
+                          {modelRestricted && (
+                            <span className="help-me-choose-model-lock" aria-hidden>
+                              <svg
+                                width="10"
+                                height="10"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              >
+                                <rect x="5" y="11" width="14" height="10" rx="2" ry="2" />
+                                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                              </svg>
+                            </span>
+                          )}
+                        </label>
+                      </li>
+                    )
+                  })}
+                </ul>
+              </div>
+            ))}
+          </div>
         </div>
       )}
     </div>

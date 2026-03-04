@@ -234,7 +234,6 @@ export function MainPage() {
     collapseAllDropdowns,
     toggleAllForProvider,
     handleModelToggle,
-    handleApplyRecommendation,
   } = useModelManagement({
     selectedModels,
     setSelectedModels,
@@ -297,6 +296,10 @@ export function MainPage() {
     useState(false)
   const verificationCompletedAtRef = useRef<number | null>(null)
 
+  const [modelsDropdownOpen, setModelsDropdownOpen] = useState<
+    'help-me-choose' | 'advanced' | null
+  >(null)
+
   const { showDoneSelectingCard, setShowDoneSelectingCard, handleDoneSelecting } =
     useDoneSelectingCard(
       {
@@ -305,6 +308,7 @@ export function MainPage() {
         isFollowUpMode,
         modelsSectionRef,
         tutorialIsActive: tutorialState.isActive,
+        isHelpMeChooseExpanded: modelsDropdownOpen === 'help-me-choose',
       },
       {
         onCollapseAllDropdowns: collapseAllDropdowns,
@@ -1962,7 +1966,6 @@ export function MainPage() {
             onError: setError,
             onShowDisabledModelModal: info => setDisabledModelModalInfo(info),
             onRetryModels: () => refetchModels(true),
-            onApplyRecommendation: handleApplyRecommendation,
             temperature,
             onTemperatureChange: setTemperature,
             topP,
@@ -1971,6 +1974,8 @@ export function MainPage() {
             onMaxTokensChange: setMaxTokens,
             advancedSettings: { temperature, topP, maxTokens },
             maxTokensCap: effectiveMaxTokens,
+            modelsDropdownOpen,
+            onModelsDropdownChange: setModelsDropdownOpen,
           }}
           onCancel={handleCancel}
           showResults={!!(response || conversations.length > 0)}
