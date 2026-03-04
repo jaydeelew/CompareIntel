@@ -4,6 +4,9 @@
  * Displays categories horizontally. Each category lists models ordered
  * best-to-worst with evidence tooltips. Selections apply immediately,
  * same as the main Select Models to Compare section.
+ *
+ * Goal 10: Visually indicates which recommendations match the user's current
+ * selection via stronger styling, category-level summary, and scroll-to-match.
  */
 
 import { useState, useRef, useEffect, useMemo, type RefObject } from 'react'
@@ -103,6 +106,18 @@ export function HelpMeChoose({
 
   const disabledTooltip = getDisabledTooltip(userTier as 'unregistered' | 'free')
 
+  /** Categories that contain at least one selected model (for Goal 10: match summary) */
+  const matchingCategories = useMemo(() => {
+    if (selectedModels.length === 0) return []
+    const selectedSet = new Set(selectedModels)
+    return HELP_ME_CHOOSE_CATEGORIES.filter(cat =>
+      cat.models.some(entry => selectedSet.has(entry.modelId))
+    )
+  }, [selectedModels])
+
+  const contentRef = useRef<HTMLDivElement>(null)
+  const firstSelectedRef = useRef<HTMLLIElement | null>(null)
+
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       const target = e.target as Node
@@ -116,6 +131,18 @@ export function HelpMeChoose({
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [modelsSectionRef])
+
+  /** Scroll to first selected model when dropdown opens (Goal 10) */
+  useEffect(() => {
+    if (!isExpanded || selectedModels.length === 0) return
+    const el = firstSelectedRef.current
+    const container = contentRef.current
+    if (!el || !container) return
+    const timer = requestAnimationFrame(() => {
+      el.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+    })
+    return () => cancelAnimationFrame(timer)
+  }, [isExpanded, selectedModels])
 
   const handleModelToggle = (modelId: string) => {
     if (modelRestrictedByModelId.get(modelId)) return
@@ -161,7 +188,12 @@ export function HelpMeChoose({
       </button>
 
       {isExpanded && (
-        <div id="help-me-choose-content" className="help-me-choose-content" role="menu">
+        <div
+          id="help-me-choose-content"
+          ref={contentRef}
+          className="help-me-choose-content"
+          role="menu"
+        >
           <p className="help-me-choose-intro">
             <span className="help-me-choose-ordering-hint">
               <span className="help-me-choose-ordering-label">Best at top ↓</span>
@@ -189,55 +221,70 @@ export function HelpMeChoose({
             </span>
           </p>
           <div className="help-me-choose-categories">
-            {HELP_ME_CHOOSE_CATEGORIES.map((cat: HelpMeChooseCategory) => (
-              <div key={cat.id} className="help-me-choose-category">
-                <h3 className="help-me-choose-category-header">{cat.label}</h3>
-                <p className="help-me-choose-category-desc">{cat.description}</p>
-                <ul className="help-me-choose-models-list" role="none">
-                  {cat.models.map((entry, idx) => {
-                    const modelRestricted = modelRestrictedByModelId.get(entry.modelId) ?? false
-                    const isSelected = selectedModels.includes(entry.modelId)
-                    const displayName = getModelDisplayName(entry.modelId)
-                    return (
-                      <li key={`${cat.id}-${entry.modelId}-${idx}`} role="none">
-                        <label
-                          className={`help-me-choose-model-entry ${modelRestricted ? 'restricted' : ''} ${isSelected ? 'selected' : ''}`}
-                          title={modelRestricted ? disabledTooltip : entry.evidence}
-                        >
-                          <input
-                            type="checkbox"
-                            className="help-me-choose-checkbox"
-                            disabled={modelRestricted}
-                            checked={isSelected}
-                            onChange={() => handleModelToggle(entry.modelId)}
-                            aria-label={`Select ${displayName}`}
-                            aria-disabled={modelRestricted}
-                          />
-                          <span className="help-me-choose-model-name">{displayName}</span>
-                          {modelRestricted && (
-                            <span className="help-me-choose-model-lock" aria-hidden>
-                              <svg
-                                width="10"
-                                height="10"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              >
-                                <rect x="5" y="11" width="14" height="10" rx="2" ry="2" />
-                                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                              </svg>
-                            </span>
-                          )}
-                        </label>
-                      </li>
-                    )
-                  })}
-                </ul>
-              </div>
-            ))}
+            {(() => {
+              let foundFirstSelected = false
+              return HELP_ME_CHOOSE_CATEGORIES.map((cat: HelpMeChooseCategory) => {
+                const hasMatch = matchingCategories.some(m => m.id === cat.id)
+                return (
+                  <div
+                    key={cat.id}
+                    className={`help-me-choose-category ${hasMatch ? 'has-match' : ''}`}
+                  >
+                    <h3 className="help-me-choose-category-header">{cat.label}</h3>
+                    <p className="help-me-choose-category-desc">{cat.description}</p>
+                    <ul className="help-me-choose-models-list" role="none">
+                      {cat.models.map((entry, idx) => {
+                        const modelRestricted = modelRestrictedByModelId.get(entry.modelId) ?? false
+                        const isSelected = selectedModels.includes(entry.modelId)
+                        const displayName = getModelDisplayName(entry.modelId)
+                        const isFirstSelectedInDom = isSelected && !foundFirstSelected
+                        if (isSelected) foundFirstSelected = true
+                        return (
+                          <li
+                            key={`${cat.id}-${entry.modelId}-${idx}`}
+                            role="none"
+                            ref={isFirstSelectedInDom ? firstSelectedRef : undefined}
+                          >
+                            <label
+                              className={`help-me-choose-model-entry ${modelRestricted ? 'restricted' : ''} ${isSelected ? 'selected' : ''}`}
+                              title={modelRestricted ? disabledTooltip : entry.evidence}
+                            >
+                              <input
+                                type="checkbox"
+                                className="help-me-choose-checkbox"
+                                disabled={modelRestricted}
+                                checked={isSelected}
+                                onChange={() => handleModelToggle(entry.modelId)}
+                                aria-label={`Select ${displayName}`}
+                                aria-disabled={modelRestricted}
+                              />
+                              <span className="help-me-choose-model-name">{displayName}</span>
+                              {modelRestricted && (
+                                <span className="help-me-choose-model-lock" aria-hidden>
+                                  <svg
+                                    width="10"
+                                    height="10"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="2"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                  >
+                                    <rect x="5" y="11" width="14" height="10" rx="2" ry="2" />
+                                    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                                  </svg>
+                                </span>
+                              )}
+                            </label>
+                          </li>
+                        )
+                      })}
+                    </ul>
+                  </div>
+                )
+              })
+            })()}
           </div>
         </div>
       )}

@@ -176,6 +176,20 @@ The "Help me choose" feature provides decision support for model selection. The 
 
 ---
 
+### Goal 10: Show which recommendation matches current selection
+
+**Status:** ✅ Completed  
+**Date:** March 2026
+
+**Description:** Visually indicate which recommendation(s) best match the user's current model selection (e.g., checked state or highlight).
+
+**Accomplished:**
+- **Model-level emphasis:** Selected models in the dropdown use stronger styling: primary-tinted background, left border accent, medium font weight. Hover state darkens the tint.
+- **Category header highlight:** Category headers that contain selected models are colored with the primary accent.
+- **Scroll-to-match:** When the dropdown opens with models selected, it scrolls smoothly to bring the first selected model (in DOM order) into view.
+
+---
+
 ## Methodology Page
 
 A public-facing page at `/help-me-choose-methodology` (linked in the footer as "Help Me Choose Methodology") explains:
@@ -204,14 +218,6 @@ Recommendations are based on the following benchmarks and sources. Update this s
 ---
 
 ## Future Goals (To Be Completed)
-
-### Goal 10: Show which recommendation matches current selection
-
-**Status:** ⬜ Pending
-
-**Description:** Visually indicate which recommendation(s) best match the user's current model selection (e.g., checked state or highlight).
-
----
 
 ### Goal 11: Personalized recommendations
 
