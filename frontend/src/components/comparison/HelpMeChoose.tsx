@@ -135,6 +135,8 @@ export function HelpMeChoose({
   const isDraggingRef = useRef(false)
   const dragStartXRef = useRef(0)
   const dragStartScrollLeftRef = useRef(0)
+  /** When dragging the thumb: offset from thumb's left edge to the click point (in track pixels). Keeps cursor locked to thumb. */
+  const dragOffsetWithinThumbRef = useRef<number | null>(null)
 
   const [hasHorizontalOverflow, setHasHorizontalOverflow] = useState(false)
 
@@ -174,13 +176,14 @@ export function HelpMeChoose({
   const handleScrollbarPointerDown = useCallback((clientX: number, target: EventTarget) => {
     const el = categoriesRef.current
     const track = scrollbarTrackRef.current
-    if (!el || !track) return
+    const thumb = scrollbarThumbRef.current
+    if (!el || !track || !thumb) return
     const rect = track.getBoundingClientRect()
     const x = clientX - rect.left
     const scrollWidth = el.scrollWidth
     const clientWidth = el.clientWidth
     const maxScroll = scrollWidth - clientWidth
-    const isOnThumb = scrollbarThumbRef.current?.contains(target as Node)
+    const isOnThumb = thumb.contains(target as Node)
     if (!isOnThumb && maxScroll > 0 && rect.width > 0) {
       const pct = x / rect.width
       el.scrollLeft = pct * maxScroll
@@ -188,6 +191,16 @@ export function HelpMeChoose({
     isDraggingRef.current = true
     dragStartXRef.current = clientX
     dragStartScrollLeftRef.current = el.scrollLeft
+    // Store offset within thumb so cursor stays locked to the click point during drag
+    if (maxScroll > 0 && rect.width > 0) {
+      const trackWidth = track.clientWidth
+      const thumbWidth = Math.max(40, (clientWidth / scrollWidth) * trackWidth)
+      const maxThumbLeft = trackWidth - thumbWidth
+      const thumbLeft = (el.scrollLeft / maxScroll) * maxThumbLeft
+      dragOffsetWithinThumbRef.current = x - thumbLeft
+    } else {
+      dragOffsetWithinThumbRef.current = null
+    }
   }, [])
 
   const handleScrollbarMouseDown = useCallback(
@@ -211,16 +224,33 @@ export function HelpMeChoose({
     if (!isExpanded) return
     const applyScrollFromClientX = (clientX: number) => {
       if (!isDraggingRef.current || !categoriesRef.current) return
-      const dx = clientX - dragStartXRef.current
       const el = categoriesRef.current
+      const track = scrollbarTrackRef.current
+      if (!track) return
+      const rect = track.getBoundingClientRect()
       const scrollWidth = el.scrollWidth
       const clientWidth = el.clientWidth
       const maxScroll = scrollWidth - clientWidth
       if (maxScroll <= 0) return
-      const track = scrollbarTrackRef.current
-      const trackWidth = track?.clientWidth ?? clientWidth
-      const scale = trackWidth > 0 ? maxScroll / trackWidth : 0
-      el.scrollLeft = Math.max(0, Math.min(maxScroll, dragStartScrollLeftRef.current + dx * scale))
+      const trackWidth = track.clientWidth
+      const thumbWidth = Math.max(40, (clientWidth / scrollWidth) * trackWidth)
+      const maxThumbLeft = trackWidth - thumbWidth
+      if (maxThumbLeft <= 0) return
+      const offset = dragOffsetWithinThumbRef.current
+      if (offset !== null) {
+        // Cursor-locked: thumb follows cursor so the click point stays under it
+        const x = clientX - rect.left
+        const desiredThumbLeft = Math.max(0, Math.min(maxThumbLeft, x - offset))
+        el.scrollLeft = (desiredThumbLeft / maxThumbLeft) * maxScroll
+      } else {
+        // Fallback: delta-based (e.g. if offset wasn't set)
+        const dx = clientX - dragStartXRef.current
+        const scale = trackWidth > 0 ? maxScroll / trackWidth : 0
+        el.scrollLeft = Math.max(
+          0,
+          Math.min(maxScroll, dragStartScrollLeftRef.current + dx * scale)
+        )
+      }
     }
     const onMouseMove = (e: MouseEvent) => {
       applyScrollFromClientX(e.clientX)
@@ -232,6 +262,7 @@ export function HelpMeChoose({
     }
     const onPointerUp = () => {
       isDraggingRef.current = false
+      dragOffsetWithinThumbRef.current = null
     }
     document.addEventListener('mousemove', onMouseMove)
     document.addEventListener('mouseup', onPointerUp)
