@@ -168,31 +168,47 @@ export function HelpMeChoose({
     }
   }, [isExpanded, updateScrollbarThumb])
 
-  const handleScrollbarMouseDown = useCallback((e: React.MouseEvent) => {
+  const handleScrollbarPointerDown = useCallback((clientX: number, target: EventTarget) => {
     const el = categoriesRef.current
     const track = scrollbarTrackRef.current
     if (!el || !track) return
-    e.preventDefault()
     const rect = track.getBoundingClientRect()
-    const x = e.clientX - rect.left
+    const x = clientX - rect.left
     const scrollWidth = el.scrollWidth
     const clientWidth = el.clientWidth
     const maxScroll = scrollWidth - clientWidth
-    const isOnThumb = scrollbarThumbRef.current?.contains(e.target as Node)
+    const isOnThumb = scrollbarThumbRef.current?.contains(target as Node)
     if (!isOnThumb && maxScroll > 0 && rect.width > 0) {
       const pct = x / rect.width
       el.scrollLeft = pct * maxScroll
     }
     isDraggingRef.current = true
-    dragStartXRef.current = e.clientX
+    dragStartXRef.current = clientX
     dragStartScrollLeftRef.current = el.scrollLeft
   }, [])
 
+  const handleScrollbarMouseDown = useCallback(
+    (e: React.MouseEvent) => {
+      e.preventDefault()
+      handleScrollbarPointerDown(e.clientX, e.target)
+    },
+    [handleScrollbarPointerDown]
+  )
+
+  const handleScrollbarTouchStart = useCallback(
+    (e: React.TouchEvent) => {
+      if (e.touches.length === 0) return
+      e.preventDefault()
+      handleScrollbarPointerDown(e.touches[0].clientX, e.target)
+    },
+    [handleScrollbarPointerDown]
+  )
+
   useEffect(() => {
     if (!isExpanded) return
-    const onMouseMove = (e: MouseEvent) => {
+    const applyScrollFromClientX = (clientX: number) => {
       if (!isDraggingRef.current || !categoriesRef.current) return
-      const dx = e.clientX - dragStartXRef.current
+      const dx = clientX - dragStartXRef.current
       const el = categoriesRef.current
       const scrollWidth = el.scrollWidth
       const clientWidth = el.clientWidth
@@ -203,14 +219,28 @@ export function HelpMeChoose({
       const scale = trackWidth > 0 ? maxScroll / trackWidth : 0
       el.scrollLeft = Math.max(0, Math.min(maxScroll, dragStartScrollLeftRef.current + dx * scale))
     }
-    const onMouseUp = () => {
+    const onMouseMove = (e: MouseEvent) => {
+      applyScrollFromClientX(e.clientX)
+    }
+    const onTouchMove = (e: TouchEvent) => {
+      if (!isDraggingRef.current || e.touches.length === 0) return
+      e.preventDefault()
+      applyScrollFromClientX(e.touches[0].clientX)
+    }
+    const onPointerUp = () => {
       isDraggingRef.current = false
     }
     document.addEventListener('mousemove', onMouseMove)
-    document.addEventListener('mouseup', onMouseUp)
+    document.addEventListener('mouseup', onPointerUp)
+    document.addEventListener('touchmove', onTouchMove, { passive: false })
+    document.addEventListener('touchend', onPointerUp)
+    document.addEventListener('touchcancel', onPointerUp)
     return () => {
       document.removeEventListener('mousemove', onMouseMove)
-      document.removeEventListener('mouseup', onMouseUp)
+      document.removeEventListener('mouseup', onPointerUp)
+      document.removeEventListener('touchmove', onTouchMove)
+      document.removeEventListener('touchend', onPointerUp)
+      document.removeEventListener('touchcancel', onPointerUp)
     }
   }, [isExpanded])
 
@@ -337,6 +367,7 @@ export function HelpMeChoose({
               aria-orientation="horizontal"
               aria-label="Scroll categories horizontally"
               onMouseDown={handleScrollbarMouseDown}
+              onTouchStart={handleScrollbarTouchStart}
             >
               <div ref={scrollbarThumbRef} className="help-me-choose-scrollbar-thumb" />
             </div>

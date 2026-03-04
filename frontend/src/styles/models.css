@@ -1990,6 +1990,7 @@
   cursor: pointer;
   position: relative;
   min-height: 8px;
+  touch-action: none;
 }
 
 .help-me-choose-scrollbar-thumb {
@@ -2002,6 +2003,7 @@
   border-radius: 4px;
   cursor: grab;
   pointer-events: auto;
+  touch-action: none;
 }
 
 .help-me-choose-scrollbar-thumb:active {
@@ -2175,21 +2177,129 @@
   cursor: not-allowed;
 }
 
-/* Responsive: stack categories on narrow screens */
+/* Responsive: stack categories on narrow screens + enhanced mobile presentation */
 @media (max-width: 768px) {
   .help-me-choose-content {
     max-height: 70vh;
     overflow-y: auto;
+    position: relative;
   }
 
+  /* Theme-aligned gradient overlay for mobile - matches site's mesh/gradient identity */
+  .help-me-choose-content::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+    z-index: 0;
+    border-radius: inherit;
+  }
+
+  [data-theme='dark'] .help-me-choose-content::before {
+    background:
+      radial-gradient(ellipse 80% 40% at 50% 0%, rgba(6, 182, 212, 0.12) 0%, transparent 50%),
+      radial-gradient(ellipse 60% 30% at 20% 100%, rgba(139, 92, 246, 0.06) 0%, transparent 50%),
+      radial-gradient(ellipse 60% 30% at 80% 80%, rgba(16, 185, 129, 0.04) 0%, transparent 50%);
+  }
+
+  [data-theme='light'] .help-me-choose-content::before,
+  html:not([data-theme]) .help-me-choose-content::before {
+    background:
+      radial-gradient(ellipse 80% 40% at 50% 0%, rgba(37, 99, 235, 0.08) 0%, transparent 50%),
+      radial-gradient(ellipse 60% 30% at 20% 100%, rgba(14, 165, 233, 0.05) 0%, transparent 50%),
+      radial-gradient(ellipse 60% 30% at 80% 80%, rgba(37, 99, 235, 0.03) 0%, transparent 50%);
+  }
+
+  /* Ensure content sits above overlay */
+  .help-me-choose-content > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Allow horizontal overflow in flex layout */
+  .help-me-choose-categories-wrapper {
+    min-width: 0;
+  }
+
+  /* Horizontal scrolling like desktop - categories in a row with touch-friendly scroll */
   .help-me-choose-categories {
-    flex-direction: column;
+    flex-direction: row;
     flex-wrap: nowrap;
+    gap: 1rem 1.25rem;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding-bottom: 0.25rem;
+  }
+
+  .help-me-choose-categories::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Slightly taller custom scrollbar for touch */
+  .help-me-choose-scrollbar-top {
+    height: 10px;
+    min-height: 10px;
   }
 
   .help-me-choose-category {
-    flex: 1 1 auto;
-    min-width: 100%;
+    flex: 0 0 200px;
+    min-width: 200px;
+    /* Enhanced category cards - subtle gradient border and depth */
+    background: rgba(0, 0, 0, 0.03);
+    border: 1px solid var(--border-color);
+    padding: 0.75rem 1rem;
+    border-radius: var(--radius-lg);
+    transition:
+      border-color 0.2s ease,
+      box-shadow 0.2s ease;
+  }
+
+  [data-theme='dark'] .help-me-choose-category {
+    background: rgba(255, 255, 255, 0.04);
+    border-color: rgba(255, 255, 255, 0.08);
+  }
+
+  [data-theme='dark'] .help-me-choose-category:hover,
+  [data-theme='dark'] .help-me-choose-category.has-match {
+    border-color: rgba(6, 182, 212, 0.25);
+    box-shadow: 0 0 0 1px rgba(6, 182, 212, 0.08);
+  }
+
+  [data-theme='light'] .help-me-choose-category:hover,
+  [data-theme='light'] .help-me-choose-category.has-match,
+  html:not([data-theme]) .help-me-choose-category:hover,
+  html:not([data-theme]) .help-me-choose-category.has-match {
+    border-color: rgba(37, 99, 235, 0.2);
+    box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.06);
+  }
+
+  /* Stronger expanded dropdown styling on mobile */
+  .help-me-choose-expanded .help-me-choose-content {
+    box-shadow:
+      var(--shadow-lg),
+      0 0 24px rgba(6, 182, 212, 0.08);
+  }
+
+  [data-theme='light'] .help-me-choose-expanded .help-me-choose-content {
+    box-shadow:
+      0 4px 12px rgba(37, 99, 235, 0.12),
+      0 2px 6px rgba(0, 0, 0, 0.06),
+      0 0 24px rgba(37, 99, 235, 0.06);
+  }
+
+  /* Preset button - gradient fill on mobile for stronger CTA */
+  .help-me-choose-preset-btn {
+    background: color-mix(in srgb, var(--primary-color) 12%, transparent);
+    font-weight: var(--font-semibold);
+  }
+
+  .help-me-choose-preset-btn:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--primary-color) 20%, transparent);
   }
 }
 
