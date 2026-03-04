@@ -2136,7 +2136,8 @@
 }
 
 .help-me-choose-model-entry.selected {
-  background: var(--bg-hover); /* fallback for older browsers */
+  background: var(--bg-hover);
+  /* fallback for older browsers */
   background: color-mix(in srgb, var(--primary-color) 12%, var(--bg-elevated));
   font-weight: var(--font-medium);
 }
@@ -2338,10 +2339,15 @@
     padding: 0.5rem 1.5rem;
   }
 
-  /* Info icon: adequate touch target for modal trigger */
+  /* Info icon: adequate touch target for modal trigger; pull closer to label text */
+  .help-me-choose-ordering-hint {
+    gap: 0;
+  }
+
   .help-me-choose-ordering-info {
     min-width: 44px;
     min-height: 44px;
+    margin-left: -0.625rem;
     cursor: pointer;
   }
 }
