@@ -184,7 +184,7 @@ The "Help me choose" feature provides decision support for model selection. The 
 **Description:** Visually indicate which recommendation(s) best match the user's current model selection (e.g., checked state or highlight).
 
 **Accomplished:**
-- **Model-level emphasis:** Selected models in the dropdown use stronger styling: primary-tinted background, left border accent, medium font weight. Hover state darkens the tint.
+- **Model-level emphasis:** Selected models in the dropdown use stronger styling: primary-tinted background, medium font weight. Hover state darkens the tint.
 - **Category header highlight:** Category headers that contain selected models are colored with the primary accent.
 - **Scroll-to-match:** When the dropdown opens with models selected, it scrolls smoothly to bring the first selected model (in DOM order) into view.
 
