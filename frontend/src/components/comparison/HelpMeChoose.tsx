@@ -187,7 +187,6 @@ export function HelpMeChoose({
                 </svg>
               </span>
             </span>
-            Select models below — changes apply immediately, same as the main model selection.
           </p>
           <div className="help-me-choose-categories">
             {HELP_ME_CHOOSE_CATEGORIES.map((cat: HelpMeChooseCategory) => (
