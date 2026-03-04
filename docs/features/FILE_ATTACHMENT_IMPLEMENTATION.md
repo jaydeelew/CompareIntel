@@ -1,12 +1,8 @@
-# File Attachment Feature with Stored Content Approach
+# File Attachment Feature
 
-**Date:** January 2025  
-**Status:** ✅ Complete  
-**Related Feature:** File attachments in model comparisons with conversation history persistence
+File attachments in model comparisons with conversation history persistence.
 
----
-
-## 🎯 Overview
+## Overview
 
 Implemented a file attachment system that allows users to attach text, code, and document files (PDF, DOCX, DOC, ODT) to their model comparison queries. The system uses a **"Stored Content Approach"** where file contents are extracted and stored separately from placeholders, enabling file content to persist across conversation sessions and be available for follow-up questions.
 
@@ -38,7 +34,7 @@ Implemented a file attachment system that allows users to attach text, code, and
 
 ---
 
-## 🏗️ Architecture
+## Architecture
 
 ### Stored Content Approach
 
@@ -88,7 +84,7 @@ Models see file content in history and can answer questions
 
 ---
 
-## 📋 Implementation Details
+## Implementation Details
 
 ### Frontend Components
 
@@ -275,7 +271,7 @@ if (isFollowUpMode && conversations.length > 0) {
 
 ---
 
-## 🎯 Key Features
+## Key Features
 
 ### 1. Placeholder Display
 
@@ -315,7 +311,7 @@ if (isFollowUpMode && conversations.length > 0) {
 
 ---
 
-## 🔧 Technical Details
+## Technical Details
 
 ### State Management
 
@@ -399,7 +395,7 @@ const [attachedFiles, setAttachedFiles] = useState<
 
 ---
 
-## 📊 Token Counting
+## Token Counting
 
 ### Accurate Token Estimation
 
@@ -546,11 +542,9 @@ const [attachedFiles, setAttachedFiles] = useState<
 
 ---
 
-## ✅ Status
+## Status
 
-**Implementation Status:** ✅ Complete
-
-**Features Implemented:**
+**Features implemented:**
 
 - ✅ File attachment (drag & drop, file picker)
 - ✅ Placeholder display in textarea

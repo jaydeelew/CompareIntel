@@ -1,6 +1,6 @@
 # First-Day Developer Checklist
 
-**Purpose:** A first-day guide for new developers. Use this to orient yourself, find key files, and know where to look for common tasks. For setup, see [QUICKSTART.md](QUICKSTART.md). For workflow and PRs, see [CONTRIBUTING.md](../../CONTRIBUTING.md).
+A first-day guide for new developers: key files, common tasks, and orientation. For setup, see [QUICKSTART.md](QUICKSTART.md). For workflow and PRs, see [CONTRIBUTING.md](../../CONTRIBUTING.md).
 
 ---
 

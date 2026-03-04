@@ -1,6 +1,6 @@
 # Scaling Assumptions
 
-**Purpose:** Document load, concurrency, and retention expectations for CompareIntel. Use this when planning infrastructure, capacity, or future scaling work.
+Load, concurrency, and retention expectations for CompareIntel infrastructure and capacity planning.
 
 ---
 

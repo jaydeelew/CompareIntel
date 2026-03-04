@@ -1,18 +1,12 @@
-# 📊 Data Retention Implementation
+# Data Retention Implementation
 
-**Date:** November 2025  
-**Status:** ✅ **FULLY IMPLEMENTED**  
-**Version:** 1.0
-
----
-
-## 🎯 Overview
+## Overview
 
 The data retention system manages database growth by aggregating old `UsageLog` entries into monthly summaries while preserving detailed data needed for token estimation and analysis. This ensures the database remains manageable as user traffic grows, while never deleting user conversations or losing valuable analytics data.
 
 ---
 
-## 📋 Problem Statement
+## Problem Statement
 
 ### The Challenge
 - `UsageLog` entries accumulate indefinitely (~1KB per entry)
@@ -29,7 +23,7 @@ The data retention system manages database growth by aggregating old `UsageLog` 
 
 ---
 
-## 🏗️ Architecture
+## Architecture
 
 ### Components
 
@@ -64,7 +58,7 @@ The aggregate table is created with:
 
 ---
 
-## 🔧 Usage
+## Usage
 
 ### Manual Cleanup (Admin Endpoint)
 
@@ -139,7 +133,7 @@ Add to crontab to run monthly on the 1st at 2 AM:
 
 ---
 
-## 📊 Data Preservation
+## Data Preservation
 
 ### What Gets Preserved
 
@@ -234,7 +228,7 @@ Total:  ~90MB + 6KB/year
 
 ---
 
-## ⚙️ Configuration
+## Configuration
 
 ### Retention Period
 
@@ -267,7 +261,7 @@ cleanup_old_usage_logs(db, keep_days=180)
 
 ---
 
-## 🛡️ Safety Features
+## Safety Features
 
 ### Dry Run Mode
 Always test with `dry_run=True` first:
@@ -414,7 +408,7 @@ SELECT MIN(created_at) FROM usage_logs;
 
 ---
 
-## 🎯 Best Practices
+## Best Practices
 
 1. **Always Dry Run First**
    - Test with `dry_run=True` before actual cleanup

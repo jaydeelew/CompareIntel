@@ -1,18 +1,14 @@
 # Per-Model Conversation History Filtering
 
-**Date:** January 2025  
-**Status:** ✅ Complete  
-**Related Feature:** Multi-model comparison with follow-up conversations
+Independent conversation history filtering for each model in multi-model comparisons with follow-up conversations.
 
----
-
-## 🎯 Overview
+## Overview
 
 Implemented independent conversation history filtering for each model in multi-model comparisons. Each model now receives only its own conversation history (all user messages + only its own assistant messages), ensuring fair, independent model comparisons.
 
 ---
 
-## 🐛 The Problem
+## The Problem
 
 Previously, when multiple models were compared in follow-up conversations:
 
@@ -21,14 +17,12 @@ Previously, when multiple models were compared in follow-up conversations:
 3. **Result**: All models received the same history, including other models' responses
 
 This created several issues:
-- ❌ Models could see and be influenced by other models' responses
-- ❌ Not a fair comparison - models weren't responding independently
-- ❌ Models that weren't the first selected didn't see their own previous responses
-- ❌ Follow-ups became about inter-model conversation rather than the original question
+- Models could see and be influenced by other models' responses
+- Not a fair comparison — models weren't responding independently
+- Models that weren't the first selected didn't see their own previous responses
+- Follow-ups became about inter-model conversation rather than the original question
 
----
-
-## ✅ The Solution
+## The Solution
 
 ### Architecture
 
@@ -40,8 +34,8 @@ This created several issues:
 **Backend:**
 - Filters conversation history per model before sending to OpenRouter
 - Each model receives:
-  - ✅ All user messages (shared context)
-  - ✅ Only assistant messages where `model_id` matches the current model
+  - All user messages (shared context)
+  - Only assistant messages where `model_id` matches the current model
 
 ### Implementation Details
 
@@ -124,7 +118,7 @@ interface CompareRequestPayload {
 
 ---
 
-## 📊 Example Flow
+## Example Flow
 
 ### Initial Comparison
 
@@ -172,14 +166,9 @@ Assistant: "Quantum computing is..." (its own response)
 User: "How does it relate to cryptography?"
 ```
 
-**Result:**
-- ✅ Each model continues its own conversation independently
-- ✅ Fair comparison - models aren't influenced by each other
-- ✅ True test of how each model handles follow-ups
+**Result:** Each model continues its own conversation independently. Fair comparison — models aren't influenced by each other. True test of how each model handles follow-ups.
 
----
-
-## 🔑 Key Benefits
+## Key Benefits
 
 1. **Fair Comparisons**: Each model responds independently without seeing other models' responses
 2. **True Quality Assessment**: Users can evaluate how each model handles follow-ups on its own
@@ -188,7 +177,7 @@ User: "How does it relate to cryptography?"
 
 ---
 
-## 🔄 Backward Compatibility
+## Backward Compatibility
 
 - Messages without `model_id` are sent to all models (legacy support)
 - Existing conversations continue to work
@@ -196,7 +185,7 @@ User: "How does it relate to cryptography?"
 
 ---
 
-## 📝 Related Documentation
+## Related Documentation
 
 - [API Documentation](../architecture/API.md) - Request/response formats
 - [Database Schema](../architecture/DATABASE.md) - Message storage structure

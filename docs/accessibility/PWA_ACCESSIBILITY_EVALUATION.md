@@ -2,7 +2,6 @@
 ## CompareIntel Progressive Web App - Desktop & Mobile
 
 **Evaluation Date:** January 2026  
-**Evaluator:** AI Assistant  
 **Standards:** WCAG 2.1 Level AA, 2026 PWA Best Practices
 
 ---
