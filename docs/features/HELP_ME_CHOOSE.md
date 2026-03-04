@@ -172,7 +172,7 @@ The "Help me choose" feature provides decision support for model selection. The 
 - Created comprehensive test suite: `backend/tests/unit/test_research_model_benchmarks.py` (39 tests):
   - Unit tests: cost calculation, category determination, TS parsing, model existence checks, add/duplicate prevention, round-trip serialization
   - Integration tests: full research-and-update flow with mocked externals (code model → coding, web search → web-search, not-in-registry → skipped, duplicates, free → multiple categories, dry-run)
-  - Validation tests: real `helpMeChooseRecommendations.ts` file (parses, all 6 categories exist, each has ≥2 models, all evidence non-empty, all model IDs exist in registry)
+  - Validation tests: real `helpMeChooseRecommendations.ts` file (parses, all 10 categories exist, each has ≥2 models, all evidence non-empty, all model IDs exist in registry)
 
 ---
 
@@ -231,6 +231,10 @@ Recommendations are based on the following benchmarks and sources. Update this s
 | **Cost-effective** | [OpenRouter pricing](https://openrouter.ai/docs/overview/models), [Artificial Analysis](https://artificialanalysis.ai/) Quality Score | $/1M tokens, quality-per-dollar |
 | **Web search** | Provider docs (`supports_web_search`), retrieval benchmarks | Citation quality, grounded answers |
 | **Fastest** | [AILatency](https://www.ailatency.com/), [Artificial Analysis](https://artificialanalysis.ai/), [LMSys Chatbot Arena](https://lmarena.ai/) | Time-to-first-token, throughput, Elo |
+| **Multilingual** | Provider docs, [LMSys Arena](https://lmarena.ai/) | Language coverage, multilingual benchmarks |
+| **Long context** | [Michelangelo Long-Context 1M](https://llmdb.com/benchmarks/mrcr-1m), provider docs | Context window size, MRCR score (0–100) |
+| **Legal** | [LegalBench](https://www.vals.ai/benchmarks/legal_bench-09-08-2025) | Legal reasoning accuracy, six task categories |
+| **Medical** | [MedQA](https://www.vals.ai/benchmarks/medqa-08-12-2025) | USMLE-style medical QA, clinical reasoning |
 
 **General rankings:** [LMSys Chatbot Arena](https://lmarena.ai/leaderboard/) (pairwise human preference, Elo) provides overall model quality; specialized leaderboards (Coding, Creative Writing) refine by use case.
 
@@ -238,11 +242,27 @@ Recommendations are based on the following benchmarks and sources. Update this s
 
 ## Future Goals (To Be Completed)
 
-### Goal 11: Category expansion
+### Goal 13: Image/vision models (deferred)
 
-**Status:** ⬜ Pending
+**Status:** ⬜ Pending (deferred)
+
+**Description:** Add a category for image/vision-capable models when ready to implement.
+
+**Status:** ✅ Completed  
+**Date:** March 2026
 
 **Description:** Add categories such as: multilingual, long context, specific domains (legal, medical, etc.). Image/vision models are deferred until ready to implement.
+
+**Accomplished:**
+- **Multilingual:** Models with strong performance across many languages (Llama 3.1 405B, Mistral Large, Command A, Qwen 3.5, Claude Opus 4.6, Gemini 2.5 Pro) — provider docs, LMSys Arena
+- **Long context:** Models with large context windows 128K–1M+ tokens (Gemini 2.5 Pro, Claude Opus 4.6, Gemini 3 Pro, Gemini 2.0 Flash, Kimi K2.5, Command A) — Michelangelo Long-Context 1M (llmdb.com), provider docs
+- **Legal:** Models for legal reasoning, contract analysis (Gemini 3 Pro 87.04%, Gemini 3 Flash 86.86%, GPT-5.2 86.02%, Claude Opus 4.6) — LegalBench (vals.ai)
+- **Medical:** Models for medical QA, clinical reasoning (o3, GPT-5.2, GPT-5 Mini, Claude Opus 4.6, Grok 4) — MedQA (vals.ai)
+- Updated `helpMeChooseRecommendations.ts` with four new categories
+- Updated `HelpMeChooseMethodology.tsx` with evidence sources table rows
+- Updated `research_model_benchmarks.py`: CATEGORY_IDS, determine_categories (multilingual, long-context auto-detection)
+- Legal/medical categories: no auto-detection (added manually based on benchmark scores)
+- Image/vision models deferred per original scope
 
 ---
 
@@ -264,7 +284,7 @@ When implementing the remaining goals and resolutions, use this order:
 
 1. ~~**Fix parser**~~ — ✅ Done March 2026. `parse_recommendations_ts` now handles multiline evidence, single/double quotes, trailing commas, escaped quotes. All tests pass.
 2. ~~**Goal 12: Sync with models registry**~~ — ✅ Done March 2026. `sync_help_me_choose_with_registry.py` script, CI integration, free-tier ordering validation.
-3. **Goal 11: Category expansion** — Add multilingual, long context, specific domains, etc. (Best done after registry sync is stable. Image/vision deferred.)
+3. ~~**Goal 11: Category expansion**~~ — ✅ Done March 2026. Multilingual, long context, legal, medical categories added.
 
 ---
 

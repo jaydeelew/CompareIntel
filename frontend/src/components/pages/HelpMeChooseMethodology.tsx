@@ -173,6 +173,56 @@ export const HelpMeChooseMethodology: React.FC = () => {
                   <td>Provider documentation</td>
                   <td>supports_web_search, citation quality</td>
                 </tr>
+                <tr>
+                  <td>Best for multilingual</td>
+                  <td>
+                    Provider documentation,{' '}
+                    <a href="https://lmarena.ai/" target="_blank" rel="noopener noreferrer">
+                      LMSys Arena
+                    </a>
+                  </td>
+                  <td>Language coverage, multilingual benchmarks</td>
+                </tr>
+                <tr>
+                  <td>Best for long context</td>
+                  <td>
+                    <a
+                      href="https://llmdb.com/benchmarks/mrcr-1m"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      Michelangelo Long-Context 1M
+                    </a>
+                    , Provider documentation
+                  </td>
+                  <td>Context window size, MRCR score (0–100)</td>
+                </tr>
+                <tr>
+                  <td>Best for legal</td>
+                  <td>
+                    <a
+                      href="https://www.vals.ai/benchmarks/legal_bench-09-08-2025"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      LegalBench
+                    </a>
+                  </td>
+                  <td>Legal reasoning accuracy, six task categories</td>
+                </tr>
+                <tr>
+                  <td>Best for medical</td>
+                  <td>
+                    <a
+                      href="https://www.vals.ai/benchmarks/medqa-08-12-2025"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      MedQA
+                    </a>
+                  </td>
+                  <td>USMLE-style medical QA, clinical reasoning</td>
+                </tr>
               </tbody>
             </table>
           </section>
@@ -215,8 +265,8 @@ export const HelpMeChooseMethodology: React.FC = () => {
             </p>
             <p>
               Categories are chosen to reflect common use cases: coding, writing, reasoning,
-              cost-effectiveness, speed, and web-augmented search. We avoid categories that lack
-              robust public benchmarks.
+              cost-effectiveness, speed, web-augmented search, multilingual, long context, legal,
+              and medical. We avoid categories that lack robust public benchmarks.
             </p>
           </section>
 

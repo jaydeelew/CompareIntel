@@ -204,6 +204,24 @@ class TestDetermineCategories:
         cat_ids = [e["category_id"] for e in entries]
         assert "web-search" not in cat_ids
 
+    def test_multilingual_model_gets_multilingual(self):
+        model = make_registry_model(
+            "test/multi-model",
+            description="A model excelling in multilingual understanding across 90+ languages.",
+        )
+        entries = determine_categories("test/multi-model", model, None)
+        cat_ids = [e["category_id"] for e in entries]
+        assert "multilingual" in cat_ids
+
+    def test_long_context_model_gets_long_context(self):
+        model = make_registry_model(
+            "test/long-model",
+            description="Flagship model with 1M-token context for text and code.",
+        )
+        entries = determine_categories("test/long-model", model, None)
+        cat_ids = [e["category_id"] for e in entries]
+        assert "long-context" in cat_ids
+
     def test_flash_model_gets_fast(self):
         model = make_registry_model("google/gemini-3-flash-preview")
         entries = determine_categories("google/gemini-3-flash-preview", model, None)
@@ -555,13 +573,25 @@ class TestActualRecommendationsFile:
 
     def test_real_file_parses(self, real_ts_content):
         cats = parse_recommendations_ts(real_ts_content)
-        assert len(cats) >= 6
+        assert len(cats) >= 10
 
     def test_all_expected_categories_exist(self, real_ts_content):
         cats = parse_recommendations_ts(real_ts_content)
         cat_ids = {c["id"] for c in cats}
-        for expected in ["cost-effective", "fast", "coding", "writing", "reasoning", "web-search"]:
-            assert expected in cat_ids, f"Missing category: {expected}"
+        expected = [
+            "cost-effective",
+            "fast",
+            "coding",
+            "writing",
+            "reasoning",
+            "multilingual",
+            "long-context",
+            "legal",
+            "medical",
+            "web-search",
+        ]
+        for cat_id in expected:
+            assert cat_id in cat_ids, f"Missing category: {cat_id}"
 
     def test_each_category_has_models(self, real_ts_content):
         cats = parse_recommendations_ts(real_ts_content)

@@ -26,7 +26,18 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 RECOMMENDATIONS_PATH = PROJECT_ROOT / "frontend" / "src" / "data" / "helpMeChooseRecommendations.ts"
 REGISTRY_PATH = PROJECT_ROOT / "backend" / "data" / "models_registry.json"
 
-CATEGORY_IDS = ["cost-effective", "fast", "coding", "writing", "reasoning", "web-search"]
+CATEGORY_IDS = [
+    "cost-effective",
+    "fast",
+    "coding",
+    "writing",
+    "reasoning",
+    "multilingual",
+    "long-context",
+    "legal",
+    "medical",
+    "web-search",
+]
 
 SWE_BENCH_URL = "https://openlm.ai/swe-bench/"
 LMARENA_URL = "https://lmarena.ai/"
@@ -159,6 +170,40 @@ def determine_categories(
                 "score": 10,
             }
         )
+
+    # Multilingual: description mentions multilingual or model is known for many languages
+    multi_keywords = ["multilingual", "many languages", "90+ languages", "100+ languages"]
+    if any(k in description for k in multi_keywords):
+        entries.append(
+            {
+                "category_id": "multilingual",
+                "evidence": "Provider docs: Multilingual support. Evaluate on LMSys Arena.",
+                "score": 10,
+            }
+        )
+
+    # Long context: description mentions large context (128k, 256k, 1M, etc.)
+    long_ctx_keywords = [
+        "1m",
+        "1m+",
+        "128k",
+        "256k",
+        "128k context",
+        "256k context",
+        "long context",
+        "extended context",
+    ]
+    if any(k in description for k in long_ctx_keywords):
+        entries.append(
+            {
+                "category_id": "long-context",
+                "evidence": "Provider docs: Large context window. Michelangelo Long-Context (llmdb.com).",
+                "score": 10,
+            }
+        )
+
+    # Legal/Medical: no reliable auto-detection from description; these are typically
+    # added manually based on LegalBench/MedQA scores. Skip auto-categorization.
 
     return entries
 

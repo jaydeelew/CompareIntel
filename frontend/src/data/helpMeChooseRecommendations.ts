@@ -245,6 +245,148 @@ export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
     ],
   },
   {
+    id: 'multilingual',
+    label: 'Best for multilingual',
+    description: 'Strong performance across many languages',
+    models: [
+      {
+        modelId: 'meta-llama/llama-3.1-405b-instruct',
+        evidence: 'Meta docs: Excels in multilingual understanding. 128K context, 90+ languages.',
+      },
+      {
+        modelId: 'mistralai/mistral-large',
+        evidence:
+          'Mistral docs: Strong multilingual, coding, reasoning. Native multilingual support.',
+      },
+      {
+        modelId: 'cohere/command-a',
+        evidence: 'Cohere docs: 256k context excelling in agentic, multilingual, and coding tasks.',
+      },
+      {
+        modelId: 'meta-llama/llama-3.3-70b-instruct',
+        evidence: 'Meta docs: Multilingual large language model. 70B, broad language coverage.',
+      },
+      {
+        modelId: 'qwen/qwen3.5-397b-a17b',
+        evidence: 'Qwen docs: Frontier multilingual. Strong across Chinese, English, and more.',
+      },
+      {
+        modelId: 'anthropic/claude-opus-4.6',
+        evidence: 'LMSys Arena: Strong multilingual. Frontier model with broad language support.',
+      },
+      {
+        modelId: 'google/gemini-2.5-pro',
+        evidence: 'Google docs: 1M+ context. Multilingual across 100+ languages.',
+      },
+    ],
+  },
+  {
+    id: 'long-context',
+    label: 'Best for long context',
+    description: 'Large context windows (128K–1M+ tokens)',
+    models: [
+      {
+        modelId: 'google/gemini-2.5-pro',
+        evidence: 'Michelangelo Long-Context 1M (llmdb.com): 93/100. MRCR leader. 1M+ tokens.',
+      },
+      {
+        modelId: 'anthropic/claude-opus-4.6',
+        evidence:
+          'Michelangelo Long-Context 1M (llmdb.com): 76/100. Strong long-context reasoning.',
+      },
+      {
+        modelId: 'google/gemini-3-pro-preview',
+        evidence: 'Provider docs: 1M-token context. Text, image, video, audio, code.',
+      },
+      {
+        modelId: 'google/gemini-2.0-flash-001',
+        evidence: 'Michelangelo Long-Context (llmdb.com): 70.5. Fast with large context.',
+      },
+      {
+        modelId: 'google/gemini-2.5-flash',
+        evidence: 'Provider docs: Large context. Built-in thinking for long documents.',
+      },
+      {
+        modelId: 'anthropic/claude-3.7-sonnet',
+        evidence: 'Anthropic docs: Extended thinking for long-form. Hybrid reasoning.',
+      },
+      {
+        modelId: 'moonshotai/kimi-k2.5',
+        evidence: 'Moonshot docs: Native long-context. Self-directed agent swarm paradigm.',
+      },
+      {
+        modelId: 'cohere/command-a',
+        evidence: 'Cohere docs: 256k context. Agentic, multilingual, coding.',
+      },
+    ],
+  },
+  {
+    id: 'legal',
+    label: 'Best for legal',
+    description: 'Legal reasoning, contract analysis, compliance',
+    models: [
+      {
+        modelId: 'google/gemini-3-pro-preview',
+        evidence: 'LegalBench (vals.ai): 87.04%. Top legal reasoning. Six task categories.',
+      },
+      {
+        modelId: 'google/gemini-3-flash-preview',
+        evidence: 'LegalBench (vals.ai): 86.86%. Fast frontier legal reasoning.',
+      },
+      {
+        modelId: 'openai/gpt-5.2',
+        evidence: 'LegalBench (vals.ai): 86.02%. Strong legal reasoning across task types.',
+      },
+      {
+        modelId: 'openai/gpt-5.1',
+        evidence: 'LegalBench (vals.ai): 85.68%. Enterprise legal analysis.',
+      },
+      {
+        modelId: 'anthropic/claude-opus-4.6',
+        evidence: 'LegalBench: Strong on rhetorical understanding, rule-application.',
+      },
+      {
+        modelId: 'anthropic/claude-opus-4.5',
+        evidence: 'LegalBench: Frontier legal reasoning. Complex document analysis.',
+      },
+    ],
+  },
+  {
+    id: 'medical',
+    label: 'Best for medical',
+    description: 'Medical QA, clinical reasoning, healthcare',
+    models: [
+      {
+        modelId: 'openai/o3',
+        evidence: 'MedQA (vals.ai): Top performer. USMLE-style medical reasoning.',
+      },
+      {
+        modelId: 'openai/gpt-5.2',
+        evidence: 'MedQA (vals.ai): Dominant medical QA. Graduate-level clinical reasoning.',
+      },
+      {
+        modelId: 'openai/gpt-5-mini',
+        evidence: 'MedQA (vals.ai): Strong medical QA at efficient cost.',
+      },
+      {
+        modelId: 'anthropic/claude-opus-4.6',
+        evidence: 'MedQA: Frontier clinical reasoning. Complex medical analysis.',
+      },
+      {
+        modelId: 'anthropic/claude-opus-4.1',
+        evidence: 'MedQA (vals.ai): Strongest non-OpenAI performer. Clinical reasoning.',
+      },
+      {
+        modelId: 'x-ai/grok-4',
+        evidence: 'MedQA (vals.ai): Strong medical QA at lower cost.',
+      },
+      {
+        modelId: 'google/gemini-2.5-pro',
+        evidence: 'MedQA: Complex reasoning. Scientific and medical analysis.',
+      },
+    ],
+  },
+  {
     id: 'web-search',
     label: 'Best for web search',
     description: 'Real-time retrieval, source citation',
