@@ -10,6 +10,7 @@
  */
 
 import { useState, useRef, useEffect, useMemo, useCallback, type RefObject } from 'react'
+import { createPortal } from 'react-dom'
 
 import {
   HELP_ME_CHOOSE_CATEGORIES,
@@ -18,6 +19,20 @@ import {
 import type { ModelsByProvider, User } from '../../types'
 
 import { BestAtTopInfoModal } from './BestAtTopInfoModal'
+
+/** Returns { top, left } for a fixed-position tooltip above the anchor, centered and clamped to viewport */
+function getEvidenceTooltipPosition(anchor: HTMLElement): { top: number; left: number } {
+  const rect = anchor.getBoundingClientRect()
+  const gap = 10
+  const maxW = Math.min(320, window.innerWidth - 32)
+  const halfW = maxW / 2
+  const centerX = rect.left + rect.width / 2
+  const left = Math.max(halfW + 16, Math.min(window.innerWidth - halfW - 16, centerX))
+  return {
+    top: rect.top - gap,
+    left,
+  }
+}
 
 function findModelById(modelsByProvider: ModelsByProvider, modelId: string) {
   for (const providerModels of Object.values(modelsByProvider)) {
@@ -89,6 +104,11 @@ export function HelpMeChoose({
 }: HelpMeChooseProps) {
   const [internalExpanded, setInternalExpanded] = useState(false)
   const [showBestAtTopModal, setShowBestAtTopModal] = useState(false)
+  const [hoveredEvidence, setHoveredEvidence] = useState<{
+    text: string
+    anchor: HTMLElement
+    pos: { top: number; left: number }
+  } | null>(null)
   const isExpanded = controlledExpanded !== undefined ? controlledExpanded : internalExpanded
   const setIsExpanded =
     onExpandChange !== undefined
@@ -302,6 +322,35 @@ export function HelpMeChoose({
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [modelsSectionRef, setIsExpanded])
 
+  /** Update portaled evidence tooltip position when scroll/resize occurs */
+  useEffect(() => {
+    if (!hoveredEvidence) return
+    const update = () => {
+      setHoveredEvidence(prev => {
+        if (!prev) return null
+        const pos = getEvidenceTooltipPosition(prev.anchor)
+        if (pos.top === prev.pos.top && pos.left === prev.pos.left) return prev
+        return { ...prev, pos }
+      })
+    }
+    update()
+    const el = categoriesRef.current
+    const content = contentRef.current
+    el?.addEventListener('scroll', update)
+    content?.addEventListener('scroll', update)
+    window.addEventListener('resize', update)
+    return () => {
+      el?.removeEventListener('scroll', update)
+      content?.removeEventListener('scroll', update)
+      window.removeEventListener('resize', update)
+    }
+  }, [hoveredEvidence])
+
+  /** Clear portaled tooltip when dropdown closes */
+  useEffect(() => {
+    if (!isExpanded) setHoveredEvidence(null)
+  }, [isExpanded])
+
   /** Scroll to first selected model when dropdown opens only—not on selection changes (Goal 10) */
   const prevExpandedRef = useRef(false)
   useEffect(() => {
@@ -476,10 +525,20 @@ export function HelpMeChoose({
                                 className={`help-me-choose-model-entry ${modelRestricted ? 'restricted' : ''} ${isSelected ? 'selected' : ''}`}
                                 aria-describedby={`hmc-evidence-${cat.id}-${entry.modelId}-${idx}`}
                                 onMouseDown={e => e.preventDefault()}
+                                onMouseEnter={e => {
+                                  const anchor = e.currentTarget
+                                  const text = modelRestricted ? disabledTooltip : entry.evidence
+                                  setHoveredEvidence({
+                                    text,
+                                    anchor,
+                                    pos: getEvidenceTooltipPosition(anchor),
+                                  })
+                                }}
+                                onMouseLeave={() => setHoveredEvidence(null)}
                               >
                                 <span
                                   id={`hmc-evidence-${cat.id}-${entry.modelId}-${idx}`}
-                                  className="help-me-choose-evidence-tooltip"
+                                  className="sr-only"
                                   role="tooltip"
                                 >
                                   {modelRestricted ? disabledTooltip : entry.evidence}
@@ -525,6 +584,25 @@ export function HelpMeChoose({
           </div>
         </div>
       )}
+
+      {hoveredEvidence &&
+        createPortal(
+          <div
+            className="help-me-choose-evidence-tooltip-portaled"
+            role="tooltip"
+            style={{
+              position: 'fixed',
+              left: hoveredEvidence.pos.left,
+              top: hoveredEvidence.pos.top,
+              transform: 'translate(-50%, -100%)',
+              opacity: 1,
+              visibility: 'visible',
+            }}
+          >
+            {hoveredEvidence.text}
+          </div>,
+          document.body
+        )}
 
       <BestAtTopInfoModal
         isOpen={showBestAtTopModal}

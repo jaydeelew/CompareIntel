@@ -2169,7 +2169,7 @@
   transition: background 0.15s ease;
 }
 
-/* Same style/layout/theme as advanced-settings-tooltip */
+/* Match help-me-choose-ordering-tooltip (Best at top) exactly */
 .help-me-choose-evidence-tooltip {
   position: absolute;
   bottom: calc(100% + 10px);
@@ -2183,6 +2183,8 @@
   font-weight: var(--font-normal);
   line-height: 1.5;
   white-space: normal;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
   width: max-content;
   max-width: min(320px, calc(100vw - 2rem));
   box-shadow: var(--shadow-xl);
@@ -2194,6 +2196,8 @@
     opacity 0.15s,
     visibility 0.15s;
   pointer-events: none;
+  box-sizing: border-box;
+  overflow: visible;
 }
 
 .help-me-choose-evidence-tooltip::after {
@@ -2209,6 +2213,38 @@
 .help-me-choose-model-entry:hover .help-me-choose-evidence-tooltip {
   opacity: 1;
   visibility: visible;
+}
+
+/* Portaled evidence tooltip - standalone class so it does not inherit the
+   hidden/transition behavior used by hover-only in-place tooltips. */
+.help-me-choose-evidence-tooltip-portaled {
+  background: var(--bg-elevated);
+  color: var(--text-secondary);
+  padding: 0.625rem 0.875rem;
+  border-radius: var(--radius-lg);
+  font-size: 0.8125rem;
+  font-weight: var(--font-normal);
+  line-height: 1.5;
+  white-space: normal;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  width: max-content;
+  max-width: min(320px, calc(100vw - 2rem));
+  box-shadow: var(--shadow-xl);
+  border: 1px solid var(--border-color);
+  box-sizing: border-box;
+  pointer-events: none;
+  z-index: 10000;
+}
+
+.help-me-choose-evidence-tooltip-portaled::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-top-color: var(--bg-elevated);
 }
 
 .help-me-choose-model-entry:hover {
