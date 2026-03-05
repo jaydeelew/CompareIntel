@@ -40,7 +40,7 @@ export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
     models: [
       {
         modelId: 'deepseek/deepseek-chat-v3.1',
-        evidence: 'OpenRouter pricing (openrouter.ai): Value leader, low $/1M tokens.',
+        evidence: 'Value leader, competitive pricing.',
       },
       {
         modelId: 'google/gemini-2.5-flash',
@@ -49,20 +49,19 @@ export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
       },
       {
         modelId: 'deepseek/deepseek-r1',
-        evidence:
-          'OpenRouter pricing: ~$0.70–$2.50 per 1M tokens. Frontier reasoning at value pricing.',
+        evidence: 'Frontier reasoning at competitive value pricing.',
       },
       {
         modelId: 'mistralai/mistral-small-3.2-24b-instruct',
-        evidence: 'OpenRouter pricing: Low cost. LMSys Chatbot Arena: Strong performance.',
+        evidence: 'Low cost. LMSys Chatbot Arena: Strong performance.',
       },
       {
         modelId: 'microsoft/phi-4',
-        evidence: 'OpenRouter pricing: Efficient small model. Good cost-per-token.',
+        evidence: 'Efficient small model. Good value.',
       },
       {
         modelId: 'openai/gpt-4o-mini',
-        evidence: 'OpenRouter pricing: OpenAI value leader. Fast and affordable.',
+        evidence: 'OpenAI value leader. Fast and affordable.',
       },
       {
         modelId: 'stepfun/step-3.5-flash:free',
@@ -70,7 +69,7 @@ export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
       },
       {
         modelId: 'anthropic/claude-3.5-haiku',
-        evidence: 'OpenRouter pricing: Anthropic value tier. Low latency + cost.',
+        evidence: 'Anthropic value tier. Low latency.',
       },
     ],
   },

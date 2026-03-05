@@ -72,24 +72,24 @@ export const DAILY_CREDIT_LIMITS = {
 
 // Monthly credit allocations for paid tiers
 export const MONTHLY_CREDIT_ALLOCATIONS = {
-  starter: 1_200, // $9.95/month - ~240 exchanges/month (~8/day)
-  starter_plus: 2_500, // $19.95/month - ~500 exchanges/month (~17/day)
-  pro: 5_000, // $39.95/month - ~1,000 exchanges/month (~33/day)
-  pro_plus: 10_000, // $79.95/month - ~2,000 exchanges/month (~67/day)
+  starter: 1_200,
+  starter_plus: 2_500,
+  pro: 5_000,
+  pro_plus: 10_000,
 } as const
 
-// Subscription pricing (monthly)
+// Subscription pricing (monthly) - placeholder values, not yet established
 export const TIER_PRICING = {
   unregistered: 0.0,
   free: 0.0,
-  starter: 9.95,
-  starter_plus: 19.95,
-  pro: 39.95,
-  pro_plus: 79.95,
+  starter: 0,
+  starter_plus: 0,
+  pro: 0,
+  pro_plus: 0,
 } as const
 
 // Overage pricing (per 1,000 credits)
-export const OVERAGE_PRICE_PER_1000_CREDITS = 12.0 // $12 per 1,000 credits ($0.012 per credit)
+export const OVERAGE_PRICE_PER_1000_CREDITS = 12.0 // TBD - overage pricing not yet established
 
 // Type Exports
 

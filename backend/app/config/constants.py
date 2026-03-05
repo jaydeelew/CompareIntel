@@ -107,21 +107,21 @@ DAILY_CREDIT_LIMITS: dict[str, int] = {
 
 # Monthly credit allocations for paid tiers
 MONTHLY_CREDIT_ALLOCATIONS: dict[str, int] = {
-    "starter": 1_200,  # $9.95/month - ~240 exchanges/month (~8/day)
-    "starter_plus": 2_500,  # $19.95/month - ~500 exchanges/month (~17/day)
-    "pro": 5_000,  # $39.95/month - ~1,000 exchanges/month (~33/day)
-    "pro_plus": 10_000,  # $79.95/month - ~2,000 exchanges/month (~67/day)
+    "starter": 1_200,
+    "starter_plus": 2_500,
+    "pro": 5_000,
+    "pro_plus": 10_000,
 }
 
-# Subscription pricing (monthly)
+# Subscription pricing (monthly) - placeholder values, not yet established
 TIER_PRICING: dict[str, float] = {
     "unregistered": 0.0,
     "free": 0.0,
-    "starter": 9.95,
-    "starter_plus": 19.95,
-    "pro": 39.95,
-    "pro_plus": 79.95,
+    "starter": 0.0,
+    "starter_plus": 0.0,
+    "pro": 0.0,
+    "pro_plus": 0.0,
 }
 
 # Overage pricing (per 1,000 credits)
-OVERAGE_PRICE_PER_1000_CREDITS: float = 12.0  # $12 per 1,000 credits ($0.012 per credit)
+OVERAGE_PRICE_PER_1000_CREDITS: float = 12.0  # TBD - overage pricing not yet established

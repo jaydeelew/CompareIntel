@@ -320,10 +320,9 @@ curl "http://localhost:8000/api/rate-limit-status"
    - Pro Plus: 12 models per comparison, 400 responses/day
 
 4. **Better Cost Alignment:** 
-   - Our cost: $0.0166 per model response
-   - Model-based tracking directly reflects our costs
+   - Model-based tracking aligns with usage
    - More predictable profitability
-   - Fairer overage pricing (when implemented)
+   - Fairer overage pricing (when paid tiers launch)
 
 **Example Scenarios:**
 

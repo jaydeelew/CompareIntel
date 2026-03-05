@@ -380,10 +380,10 @@ export const faqData: FAQItemData[] = [
           card is required to sign up.
         </p>
         <p>
-          <strong>Paid subscription tiers are available</strong> for users who need more credits and
-          access to premium AI models. Paid tiers include Starter ($9.95/month), Starter+
-          ($19.95/month), Pro ($39.95/month), and Pro+ ($79.95/month), each with increasing credit
-          allocations, more models per comparison, and more conversation history storage.
+          <strong>Paid subscription tiers are coming soon</strong> for users who need more credits
+          and access to premium AI models. Paid tiers will include Starter, Starter+, Pro, and Pro+,
+          each with increasing credit allocations, more models per comparison, and more conversation
+          history storage. Pricing will be announced when available.
         </p>
       </>
     ),
@@ -894,10 +894,10 @@ export const faqData: FAQItemData[] = [
           Registration is quick and only requires an email address—no credit card needed.
         </p>
         <p>
-          <strong>Paid subscription tiers are available</strong> that unlock access to all premium
-          AI models, higher credit allocations (monthly instead of daily), more models per
-          comparison (up to 12 for Pro+), and more conversation history storage (up to 80
-          conversations for Pro+).
+          <strong>Paid tiers (Starter, Starter+, Pro, Pro+) are coming soon.</strong> They will
+          unlock access to all premium AI models, higher credit allocations (monthly instead of
+          daily), more models per comparison (up to 12 for Pro+), and more conversation history
+          storage (up to 80 conversations for Pro+). Pricing will be announced when available.
         </p>
       </>
     ),
@@ -984,26 +984,26 @@ export const faqData: FAQItemData[] = [
             3 saved model selections
           </li>
           <li>
-            <strong>Starter ($9.95/month):</strong> 1,200 credits/month, 6 models per comparison, 10
-            saved conversations, 5 saved model selections, access to all premium models
+            <strong>Starter:</strong> 1,200 credits/month, 6 models per comparison, 10 saved
+            conversations, 5 saved model selections, access to all premium models
           </li>
           <li>
-            <strong>Starter+ ($19.95/month):</strong> 2,500 credits/month, 6 models per comparison,
-            20 saved conversations, 10 saved model selections, access to all premium models
+            <strong>Starter+:</strong> 2,500 credits/month, 6 models per comparison, 20 saved
+            conversations, 10 saved model selections, access to all premium models
           </li>
           <li>
-            <strong>Pro ($39.95/month):</strong> 5,000 credits/month, 9 models per comparison, 40
-            saved conversations, 15 saved model selections, access to all premium models
+            <strong>Pro:</strong> 5,000 credits/month, 9 models per comparison, 40 saved
+            conversations, 15 saved model selections, access to all premium models
           </li>
           <li>
-            <strong>Pro+ ($79.95/month):</strong> 10,000 credits/month, 12 models per comparison, 80
-            saved conversations, 20 saved model selections, access to all premium models
+            <strong>Pro+:</strong> 10,000 credits/month, 12 models per comparison, 80 saved
+            conversations, 20 saved model selections, access to all premium models
           </li>
         </ul>
         <p>
           All paid tiers include access to premium AI models that aren't available to free users.
           Paid tiers also allow purchasing additional credits beyond your monthly allocation if
-          needed.
+          needed. Pricing will be announced when paid tiers launch.
         </p>
       </>
     ),
@@ -1134,21 +1134,20 @@ export const faqData: FAQItemData[] = [
             per day.
           </li>
           <li>
-            <strong>Starter ($9.95/month) and Starter+ ($19.95/month):</strong> Up to 6 models per
-            comparison. These paid tiers unlock the ability to compare more models simultaneously,
-            giving you access to all premium AI models, monthly credit allocations (1,200 credits
-            for Starter, 2,500 for Starter+), and more saved conversations.
+            <strong>Starter and Starter+:</strong> Up to 6 models per comparison. These paid tiers
+            unlock the ability to compare more models simultaneously, giving you access to all
+            premium AI models, monthly credit allocations (1,200 credits for Starter, 2,500 for
+            Starter+), and more saved conversations.
           </li>
           <li>
-            <strong>Pro ($39.95/month):</strong> Up to 9 models per comparison. The Pro tier
-            provides 5,000 credits per month and allows you to compare nearly double the number of
-            models compared to free tiers, making it ideal for power users who need comprehensive
-            model comparisons.
+            <strong>Pro:</strong> Up to 9 models per comparison. The Pro tier provides 5,000 credits
+            per month and allows you to compare nearly double the number of models compared to free
+            tiers, making it ideal for power users who need comprehensive model comparisons.
           </li>
           <li>
-            <strong>Pro+ ($79.95/month):</strong> Up to 12 models per comparison. The highest tier
-            allows you to compare the maximum number of models simultaneously, with 10,000 credits
-            per month and the most generous limits for saved conversations and model selections.
+            <strong>Pro+:</strong> Up to 12 models per comparison. The highest tier allows you to
+            compare the maximum number of models simultaneously, with 10,000 credits per month and
+            the most generous limits for saved conversations and model selections.
           </li>
         </ul>
         <p>

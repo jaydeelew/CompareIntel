@@ -38,7 +38,7 @@ The platform integrates with [OpenRouter](https://openrouter.ai/) to access mode
 
 ### Users & Billing
 - Email/password auth with JWT (HTTP-only cookies)
-- Tiered subscriptions: Free, Starter, Starter+, Pro, Pro+
+- Tiered subscriptions: Free, Starter, Starter+, Pro, Pro+ (pricing TBD)
 - Credit system (daily for free users, monthly for paid)
 - Admin panel
 
@@ -352,10 +352,10 @@ Both prefixes currently route to the same v1 handlers.
 |------|-------|----------------------|----------------------|---------------------|
 | **Anonymous** | Free | 50/day | 3 | 2 |
 | **Free** | Free | 100/day | 3 | 3 |
-| **Starter** | $9.95/mo | 1,200/month | 6 | 10 |
-| **Starter+** | $19.95/mo | 2,500/month | 6 | 20 |
-| **Pro** | $39.95/mo | 5,000/month | 9 | 40 |
-| **Pro+** | $79.95/mo | 10,000/month | 12 | 80 |
+| **Starter** | TBD | 1,200/month | 6 | 10 |
+| **Starter+** | TBD | 2,500/month | 6 | 20 |
+| **Pro** | TBD | 5,000/month | 9 | 40 |
+| **Pro+** | TBD | 10,000/month | 12 | 80 |
 
 ### Credit System
 

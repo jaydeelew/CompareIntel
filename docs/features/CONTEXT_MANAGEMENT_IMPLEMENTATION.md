@@ -153,7 +153,7 @@ The UserMenu displays usage statistics:
 
 **Current Pricing Model:**
 
-- **Fixed cost per model**: $0.0166 per model response
+- **Cost structure**: TBD (pricing not yet established)
 - **Standard tier**: 5K chars, 4K tokens per model
 - **Extended tier**: 15K chars, 8K tokens per model
 - **Same price**: Extended tier provides more context capacity at no additional cost
@@ -176,10 +176,8 @@ The UserMenu displays usage statistics:
 
 ```
 User starts 20-message conversation with 3 models:
-- Message 1: 3 models × $0.0166 = $0.05
-- Message 10: 3 models × $0.0166 = $0.05 (same cost)
-- Message 20: 3 models × $0.0166 = $0.05 (same cost)
-Total for 20 follow-ups: $1.00 (user charged per model response)
+- Per-model response cost (pricing TBD)
+- Same cost per message regardless of position in conversation
 ```
 
 ### After Implementation
@@ -193,7 +191,7 @@ User starts conversation with 3 models:
 - Message 20: Backend truncates to 20 messages (context capped)
 - Messages 20-23: Critical warning approaching limit
 - Message 24: Frontend prevents submission
-Total cost controlled: Max 20 messages × $0.05 = $1.00
+Total cost controlled: Max 20 messages (context cap)
 ```
 
 ---
@@ -212,7 +210,7 @@ Total cost controlled: Max 20 messages × $0.05 = $1.00
 
 - **Free tier**: No overage options (must upgrade)
 - **Paid tiers**: Can purchase additional regular interactions beyond daily limit
-- **Pricing**: TBD - based on current $0.0166 per model response
+- **Pricing**: TBD (paid tiers coming soon)
 
 ### Implementation Status
 

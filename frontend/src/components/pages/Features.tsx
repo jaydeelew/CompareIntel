@@ -329,6 +329,9 @@ export const Features: React.FC = () => {
                     </ul>
                   </div>
                 </div>
+                <p style={{ marginTop: '1rem', fontSize: '0.9rem', color: '#666' }}>
+                  Pricing will be announced when paid tiers launch.
+                </p>
               </div>
             </div>
           </section>

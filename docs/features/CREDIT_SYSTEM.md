@@ -16,12 +16,12 @@ The 2.5 multiplier accounts for the higher cost of output tokens relative to inp
 |------|-------|---------|--------|--------------|
 | Anonymous | Free | 50/day | Daily | Free-tier models only |
 | Free | Free | 100/day | Daily | Free-tier models only |
-| Starter | $9.95/mo | 1,200/month | Monthly | All models |
-| Starter+ | $19.95/mo | 2,500/month | Monthly | All models |
-| Pro | $39.95/mo | 5,000/month | Monthly | All models |
-| Pro+ | $79.95/mo | 10,000/month | Monthly | All models |
+| Starter | TBD | 1,200/month | Monthly | All models |
+| Starter+ | TBD | 2,500/month | Monthly | All models |
+| Pro | TBD | 5,000/month | Monthly | All models |
+| Pro+ | TBD | 10,000/month | Monthly | All models |
 
-**Overage Pricing:** $12 per 1,000 credits ($0.012 per credit)
+**Note:** Paid tier pricing has not yet been established.
 
 ## Credit Reset Timing
 
