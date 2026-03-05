@@ -33,6 +33,7 @@ export type { HelpMeChooseProps } from './HelpMeChoose'
 export type { AdvancedSettingsProps } from './AdvancedSettings'
 export { TemperatureInfoModal } from './TemperatureInfoModal'
 export { WebSearchInfoModal } from './WebSearchInfoModal'
+export { CreditsInfoModal, CREDITS_MESSAGE } from './CreditsInfoModal'
 
 export { ModelsSection } from './ModelsSection'
 export type { ModelsSectionProps } from './ModelsSection'

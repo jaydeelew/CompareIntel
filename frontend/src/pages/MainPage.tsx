@@ -1,7 +1,12 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 
-import { type AttachedFile, type StoredAttachedFile } from '../components/comparison'
+import {
+  type AttachedFile,
+  type StoredAttachedFile,
+  CreditsInfoModal,
+  CREDITS_MESSAGE,
+} from '../components/comparison'
 import { Navigation, MockModeBanner } from '../components/layout'
 import { ComparisonPageContent, ModalManager } from '../components/main-page'
 import { DoneSelectingCard } from '../components/shared'
@@ -183,6 +188,7 @@ export function MainPage() {
   const [isModelsHidden, setIsModelsHidden] = useState(false)
   const [hidePremiumModels, setHidePremiumModels] = useState(false)
   const [showPremiumModelsToggleModal, setShowPremiumModelsToggleModal] = useState(false)
+  const [showCreditsInfoModal, setShowCreditsInfoModal] = useState(false)
   const [disabledButtonInfo, setDisabledButtonInfo] = useState<{
     button: 'collapse-all' | 'clear-all' | null
     message: string
@@ -1782,10 +1788,23 @@ export function MainPage() {
           fontSize: '0.825rem',
         }}
       >
-        <span>
+        <span className="credits-remaining-wrapper">
           <strong>{regularToUse}</strong> {regularToUse === 1 ? 'model' : 'models'} selected •{' '}
           <Link to="/faq#credits-system" className="credits-remaining-link">
             <strong>{Math.round(creditsRemaining)}</strong> credits remaining
+          </Link>
+          <button
+            type="button"
+            className="credits-info-trigger"
+            onClick={e => {
+              e.preventDefault()
+              setShowCreditsInfoModal(true)
+            }}
+            aria-label="Learn about credits"
+          >
+            <span className="credits-info-tooltip" role="tooltip">
+              {CREDITS_MESSAGE}
+            </span>
             <svg
               className="credits-info-icon"
               width="12"
@@ -1802,11 +1821,11 @@ export function MainPage() {
               <path d="M12 16v-4" />
               <path d="M12 8h.01" />
             </svg>
-          </Link>
+          </button>
         </span>
       </div>
     )
-  }, [selectedModels, creditsRemaining])
+  }, [selectedModels, creditsRemaining, setShowCreditsInfoModal])
 
   return (
     <div className="app">
@@ -1866,6 +1885,11 @@ export function MainPage() {
           onDisabledModelModalClose={() => setDisabledModelModalInfo(null)}
           onToggleHidePremiumModels={() => setHidePremiumModels(true)}
           onOpenSignUp={openRegister}
+        />
+
+        <CreditsInfoModal
+          isOpen={showCreditsInfoModal}
+          onClose={() => setShowCreditsInfoModal(false)}
         />
 
         <ComparisonPageContent

@@ -998,18 +998,82 @@
   color: rgba(255, 255, 255, 0.95);
 }
 
-/* Credits remaining link – very light blue for contrast on hero gradient */
-.hero-section .credits-remaining-link {
-  color: #e0f2fe;
-  text-decoration: none;
+/* Credits remaining – wrapper, link, and info trigger */
+.credits-remaining-wrapper {
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
 }
 
-.hero-section .credits-remaining-link .credits-info-icon {
+.credits-info-trigger {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  cursor: help;
+  transition:
+    opacity 0.2s,
+    color 0.2s;
+}
+
+.credits-info-trigger .credits-info-icon {
   flex-shrink: 0;
-  opacity: 0.9;
+}
+
+/* Tooltip on hover – same style as Advanced settings info trigger */
+.credits-info-tooltip {
+  position: absolute;
+  bottom: calc(100% + 10px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--bg-elevated);
+  color: var(--text-secondary);
+  padding: 0.625rem 0.875rem;
+  border-radius: var(--radius-lg);
+  font-size: 0.8125rem;
+  font-weight: var(--font-normal);
+  line-height: 1.5;
+  white-space: normal;
+  width: max-content;
+  max-width: min(320px, calc(100vw - 2rem));
+  box-shadow: var(--shadow-xl);
+  border: 1px solid var(--border-color);
+  z-index: var(--z-tooltip);
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 0.15s,
+    visibility 0.15s;
+  pointer-events: none;
+}
+
+.credits-info-tooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-top-color: var(--bg-elevated);
+}
+
+.credits-info-trigger:hover .credits-info-tooltip {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Credits remaining link – very light blue for contrast on hero gradient */
+.hero-section .credits-remaining-link {
+  color: #e0f2fe;
+  text-decoration: none;
+}
+
+.hero-section .credits-info-trigger {
+  color: #e0f2fe;
 }
 
 /* Textarea Actions */
