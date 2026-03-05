@@ -420,6 +420,7 @@ export function HelpMeChoose({
                       <div className="help-me-choose-category-header-row">
                         <h3 className="help-me-choose-category-header">{cat.label}</h3>
                         {onApplyCategoryPreset &&
+                          !isRestrictedTier &&
                           cat.models.some(e => !modelRestrictedByModelId.get(e.modelId)) && (
                             <button
                               type="button"
