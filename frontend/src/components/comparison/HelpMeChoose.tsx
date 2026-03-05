@@ -64,6 +64,9 @@ function getDisabledTooltip(userTier: 'unregistered' | 'free'): string {
 /** Number of models to select when using "Select top N" preset */
 export const HELP_ME_CHOOSE_PRESET_COUNT = 3
 
+/** Tooltip auto-dismiss duration (ms) */
+const EVIDENCE_TOOLTIP_DURATION_MS = 3000
+
 export interface HelpMeChooseProps {
   /** Toggle model selection (same as main model selection - applies immediately) */
   onToggleModel: (modelId: string) => void
@@ -138,6 +141,32 @@ export function HelpMeChoose({
 
   const disabledTooltip = getDisabledTooltip(userTier as 'unregistered' | 'free')
 
+  /** Clear evidence tooltip and cancel any auto-dismiss timeout */
+  const clearEvidenceTooltip = useCallback(() => {
+    if (tooltipTimeoutRef.current) {
+      clearTimeout(tooltipTimeoutRef.current)
+      tooltipTimeoutRef.current = null
+    }
+    setHoveredEvidence(null)
+  }, [])
+
+  /** Show evidence tooltip with 3s auto-dismiss; clears previous timeout when switching models */
+  const showEvidenceTooltip = useCallback((text: string, anchor: HTMLElement) => {
+    if (tooltipTimeoutRef.current) {
+      clearTimeout(tooltipTimeoutRef.current)
+      tooltipTimeoutRef.current = null
+    }
+    setHoveredEvidence({
+      text,
+      anchor,
+      pos: getEvidenceTooltipPosition(anchor),
+    })
+    tooltipTimeoutRef.current = setTimeout(() => {
+      tooltipTimeoutRef.current = null
+      setHoveredEvidence(null)
+    }, EVIDENCE_TOOLTIP_DURATION_MS)
+  }, [])
+
   /** Categories that contain at least one selected model (for Goal 10: match summary) */
   const matchingCategories = useMemo(() => {
     if (selectedModels.length === 0) return []
@@ -150,6 +179,7 @@ export function HelpMeChoose({
   const contentRef = useRef<HTMLDivElement>(null)
   const firstSelectedRef = useRef<HTMLLIElement | null>(null)
   const categoriesRef = useRef<HTMLDivElement>(null)
+  const tooltipTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const scrollbarTrackRef = useRef<HTMLDivElement>(null)
   const scrollbarThumbRef = useRef<HTMLDivElement>(null)
   const isDraggingRef = useRef(false)
@@ -322,7 +352,20 @@ export function HelpMeChoose({
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [modelsSectionRef, setIsExpanded])
 
-  /** Update portaled evidence tooltip position when scroll/resize occurs */
+  /** Hide tooltip immediately on horizontal scroll (especially important for mobile) */
+  useEffect(() => {
+    const el = categoriesRef.current
+    const content = contentRef.current
+    const hideOnScroll = () => clearEvidenceTooltip()
+    el?.addEventListener('scroll', hideOnScroll)
+    content?.addEventListener('scroll', hideOnScroll)
+    return () => {
+      el?.removeEventListener('scroll', hideOnScroll)
+      content?.removeEventListener('scroll', hideOnScroll)
+    }
+  }, [clearEvidenceTooltip])
+
+  /** Update portaled evidence tooltip position on resize (scroll hides tooltip) */
   useEffect(() => {
     if (!hoveredEvidence) return
     const update = () => {
@@ -334,22 +377,14 @@ export function HelpMeChoose({
       })
     }
     update()
-    const el = categoriesRef.current
-    const content = contentRef.current
-    el?.addEventListener('scroll', update)
-    content?.addEventListener('scroll', update)
     window.addEventListener('resize', update)
-    return () => {
-      el?.removeEventListener('scroll', update)
-      content?.removeEventListener('scroll', update)
-      window.removeEventListener('resize', update)
-    }
+    return () => window.removeEventListener('resize', update)
   }, [hoveredEvidence])
 
   /** Clear portaled tooltip when dropdown closes */
   useEffect(() => {
-    if (!isExpanded) setHoveredEvidence(null)
-  }, [isExpanded])
+    if (!isExpanded) clearEvidenceTooltip()
+  }, [isExpanded, clearEvidenceTooltip])
 
   /** Scroll to first selected model when dropdown opens only—not on selection changes (Goal 10) */
   const prevExpandedRef = useRef(false)
@@ -528,13 +563,9 @@ export function HelpMeChoose({
                                 onMouseEnter={e => {
                                   const anchor = e.currentTarget
                                   const text = modelRestricted ? disabledTooltip : entry.evidence
-                                  setHoveredEvidence({
-                                    text,
-                                    anchor,
-                                    pos: getEvidenceTooltipPosition(anchor),
-                                  })
+                                  showEvidenceTooltip(text, anchor)
                                 }}
-                                onMouseLeave={() => setHoveredEvidence(null)}
+                                onMouseLeave={clearEvidenceTooltip}
                               >
                                 <span
                                   id={`hmc-evidence-${cat.id}-${entry.modelId}-${idx}`}
