@@ -710,6 +710,11 @@ jobs:
           cd backend
           pip-audit -r requirements.txt
       
+      - name: Install frontend dependencies
+        run: |
+          cd frontend
+          npm ci
+      
       - name: Run npm audit
         run: |
           cd frontend
