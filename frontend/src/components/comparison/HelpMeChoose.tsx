@@ -162,12 +162,22 @@ export function HelpMeChoose({
 
   useEffect(() => {
     const el = categoriesRef.current
-    if (!el) return
+    const track = scrollbarTrackRef.current
+    if (!el || !track) return
     updateScrollbarThumb()
+    // Re-measure after layout settles when dropdown first opens (thumb otherwise
+    // appears short until user scrolls)
+    let raf2: number
+    const raf1 = requestAnimationFrame(() => {
+      raf2 = requestAnimationFrame(updateScrollbarThumb)
+    })
     const ro = new ResizeObserver(updateScrollbarThumb)
     ro.observe(el)
+    ro.observe(track)
     el.addEventListener('scroll', updateScrollbarThumb)
     return () => {
+      cancelAnimationFrame(raf1)
+      cancelAnimationFrame(raf2)
       ro.disconnect()
       el.removeEventListener('scroll', updateScrollbarThumb)
     }
@@ -290,7 +300,7 @@ export function HelpMeChoose({
     }
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [modelsSectionRef])
+  }, [modelsSectionRef, setIsExpanded])
 
   /** Scroll to first selected model when dropdown opens only—not on selection changes (Goal 10) */
   const prevExpandedRef = useRef(false)
