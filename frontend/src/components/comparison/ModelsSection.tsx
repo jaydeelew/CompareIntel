@@ -142,8 +142,10 @@ export const ModelsSection: React.FC<ModelsSectionProps> = ({
               data-provider-name={provider}
             >
               <button
+                type="button"
                 className="provider-header"
                 onClick={() => onToggleDropdown(provider)}
+                onMouseDown={e => e.preventDefault()}
                 aria-expanded={openDropdowns.has(provider)}
               >
                 <div className="provider-left">
@@ -186,6 +188,7 @@ export const ModelsSection: React.FC<ModelsSectionProps> = ({
                     return (
                       <div
                         className={`provider-select-all ${isDisabled ? 'disabled' : ''} ${allProviderModelsSelected ? 'all-selected' : ''}`}
+                        onMouseDown={e => e.preventDefault()}
                         onClick={e => {
                           e.stopPropagation()
                           if (!isDisabled) {
@@ -263,7 +266,6 @@ export const ModelsSection: React.FC<ModelsSectionProps> = ({
                           onError(
                             `${model.name} is a premium model. Paid subscriptions are coming soon — stay tuned!`
                           )
-                          window.scrollTo({ top: 0, behavior: 'smooth' })
                         }
                         return
                       }
@@ -276,6 +278,7 @@ export const ModelsSection: React.FC<ModelsSectionProps> = ({
                       <label
                         key={model.id}
                         className={`model-option ${isSelected ? 'selected' : ''} ${isDisabled ? 'disabled' : ''} ${isRestricted ? 'restricted' : ''}`}
+                        onMouseDown={e => e.preventDefault()}
                         onClick={e => {
                           // When restricted, clicking anywhere on the label should show the modal
                           // (checkbox onChange doesn't fire when disabled)
@@ -452,6 +455,7 @@ export const ModelsSection: React.FC<ModelsSectionProps> = ({
                             checked={isSelected}
                             disabled={isDisabled}
                             onChange={handleModelClick}
+                            onMouseDown={e => e.preventDefault()}
                             className={`model-checkbox ${isFollowUpMode && !isSelected && wasOriginallySelected ? 'follow-up-deselected' : ''}`}
                             data-testid={`model-checkbox-${model.id}`}
                             style={{
@@ -540,8 +544,10 @@ export const ModelsSection: React.FC<ModelsSectionProps> = ({
                           </span>
                         ))}
                       <button
+                        type="button"
                         className="remove-model-btn"
                         onClick={() => onToggleModel(modelId)}
+                        onMouseDown={e => e.preventDefault()}
                         aria-label={`Remove ${model.name}`}
                       >
                         ✕

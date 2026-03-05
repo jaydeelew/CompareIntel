@@ -292,9 +292,12 @@ export function HelpMeChoose({
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [modelsSectionRef])
 
-  /** Scroll to first selected model when dropdown opens (Goal 10) */
+  /** Scroll to first selected model when dropdown opens only—not on selection changes (Goal 10) */
+  const prevExpandedRef = useRef(false)
   useEffect(() => {
-    if (!isExpanded || selectedModels.length === 0) return
+    const justOpened = isExpanded && !prevExpandedRef.current
+    prevExpandedRef.current = isExpanded
+    if (!justOpened || selectedModels.length === 0) return
     const el = firstSelectedRef.current
     const container = contentRef.current
     if (!el || !container) return
@@ -463,6 +466,7 @@ export function HelpMeChoose({
                               <label
                                 className={`help-me-choose-model-entry ${modelRestricted ? 'restricted' : ''} ${isSelected ? 'selected' : ''}`}
                                 aria-describedby={`hmc-evidence-${cat.id}-${entry.modelId}-${idx}`}
+                                onMouseDown={e => e.preventDefault()}
                               >
                                 <span
                                   id={`hmc-evidence-${cat.id}-${entry.modelId}-${idx}`}
@@ -477,6 +481,7 @@ export function HelpMeChoose({
                                   disabled={modelRestricted}
                                   checked={isSelected}
                                   onChange={() => handleModelToggle(entry.modelId)}
+                                  onMouseDown={e => e.preventDefault()}
                                   aria-label={`Select ${displayName}`}
                                   aria-disabled={modelRestricted}
                                 />
