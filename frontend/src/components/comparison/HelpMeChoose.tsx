@@ -372,9 +372,17 @@ export function HelpMeChoose({
                 type="button"
                 className="help-me-choose-ordering-info"
                 onClick={() => setShowBestAtTopModal(true)}
-                title="Models are ordered from best (top) to least recommended (bottom) based on published benchmarks. Hover over a model for evidence."
                 aria-label="Ordering info — tap for details"
+                aria-describedby="hmc-ordering-tooltip"
               >
+                <span
+                  id="hmc-ordering-tooltip"
+                  className="help-me-choose-ordering-tooltip"
+                  role="tooltip"
+                >
+                  Models are ordered from best (top) to least recommended (bottom) based on
+                  published benchmarks. Hover over a model for evidence.
+                </span>
                 <svg
                   width="14"
                   height="14"
@@ -454,8 +462,15 @@ export function HelpMeChoose({
                             >
                               <label
                                 className={`help-me-choose-model-entry ${modelRestricted ? 'restricted' : ''} ${isSelected ? 'selected' : ''}`}
-                                title={modelRestricted ? disabledTooltip : entry.evidence}
+                                aria-describedby={`hmc-evidence-${cat.id}-${entry.modelId}-${idx}`}
                               >
+                                <span
+                                  id={`hmc-evidence-${cat.id}-${entry.modelId}-${idx}`}
+                                  className="help-me-choose-evidence-tooltip"
+                                  role="tooltip"
+                                >
+                                  {modelRestricted ? disabledTooltip : entry.evidence}
+                                </span>
                                 <input
                                   type="checkbox"
                                   className="help-me-choose-checkbox"

@@ -6,6 +6,7 @@
  */
 
 import { useEffect, useRef, useState } from 'react'
+import { Link } from 'react-router-dom'
 
 import { useResponsive } from '../../hooks'
 
@@ -136,6 +137,11 @@ function ParamInfoModal({ paramKey, onClose }: { paramKey: string; onClose: () =
         </div>
         <div className="disabled-button-info-content">
           <p>{info.description}</p>
+          <p className="param-info-methodology-link">
+            <Link to="/faq#advanced-settings" onClick={onClose}>
+              Learn more about advanced settings
+            </Link>
+          </p>
         </div>
         <div className="disabled-button-info-footer">
           <button className="disabled-button-info-button" onClick={onClose} type="button" autoFocus>
@@ -167,7 +173,7 @@ export function AdvancedSettings({
       ? (v: boolean) => onExpandChange(v)
       : (v: boolean) => setInternalExpanded(v)
   const containerRef = useRef<HTMLDivElement>(null)
-  const [mobileInfoKey, setMobileInfoKey] = useState<string | null>(null)
+  const [infoKey, setInfoKey] = useState<string | null>(null)
   const { isMobileLayout } = useResponsive()
 
   const clampedTemp = Math.max(0, Math.min(2, temperature))
@@ -210,12 +216,13 @@ export function AdvancedSettings({
   const maxTokensSliderValue = maxTokens ?? MAX_TOKENS_MIN
 
   const renderInfoTrigger = (paramKey: string) => {
+    const openModal = () => setInfoKey(paramKey)
     if (isMobileLayout) {
       return (
         <button
           type="button"
           className="advanced-settings-info-btn"
-          onClick={() => setMobileInfoKey(paramKey)}
+          onClick={openModal}
           aria-label={`Learn about ${PARAM_INFO[paramKey].title}`}
         >
           <InfoIcon />
@@ -223,12 +230,17 @@ export function AdvancedSettings({
       )
     }
     return (
-      <span className="advanced-settings-info-trigger">
+      <button
+        type="button"
+        className="advanced-settings-info-trigger"
+        onClick={openModal}
+        aria-label={`Learn about ${PARAM_INFO[paramKey].title}`}
+      >
         <InfoIcon />
         <span className="advanced-settings-tooltip" role="tooltip">
           {PARAM_INFO[paramKey].description}
         </span>
-      </span>
+      </button>
     )
   }
 
@@ -411,9 +423,7 @@ export function AdvancedSettings({
         </div>
       )}
 
-      {mobileInfoKey && (
-        <ParamInfoModal paramKey={mobileInfoKey} onClose={() => setMobileInfoKey(null)} />
-      )}
+      {infoKey && <ParamInfoModal paramKey={infoKey} onClose={() => setInfoKey(null)} />}
     </div>
   )
 }

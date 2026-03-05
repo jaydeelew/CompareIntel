@@ -1856,6 +1856,7 @@
 }
 
 .help-me-choose-ordering-info {
+  position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -1870,6 +1871,48 @@
 
 .help-me-choose-ordering-info:hover {
   color: var(--primary-color);
+}
+
+/* Same style/layout/theme as advanced-settings-tooltip */
+.help-me-choose-ordering-tooltip {
+  position: absolute;
+  bottom: calc(100% + 10px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--bg-elevated);
+  color: var(--text-secondary);
+  padding: 0.625rem 0.875rem;
+  border-radius: var(--radius-lg);
+  font-size: 0.8125rem;
+  font-weight: var(--font-normal);
+  line-height: 1.5;
+  white-space: normal;
+  width: max-content;
+  max-width: min(320px, calc(100vw - 2rem));
+  box-shadow: var(--shadow-xl);
+  border: 1px solid var(--border-color);
+  z-index: 1000;
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 0.15s,
+    visibility 0.15s;
+  pointer-events: none;
+}
+
+.help-me-choose-ordering-tooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-top-color: var(--bg-elevated);
+}
+
+.help-me-choose-ordering-info:hover .help-me-choose-ordering-tooltip {
+  opacity: 1;
+  visibility: visible;
 }
 
 .help-me-choose-ordering-info:focus {
@@ -2029,7 +2072,7 @@
   gap: 1rem 1.5rem;
   align-items: flex-start;
   overflow-x: auto;
-  overflow-y: hidden;
+  overflow-y: visible;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
 }
@@ -2114,6 +2157,7 @@
 }
 
 .help-me-choose-model-entry {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -2123,6 +2167,48 @@
   padding: 0.25rem 0.375rem;
   border-radius: var(--radius-sm);
   transition: background 0.15s ease;
+}
+
+/* Same style/layout/theme as advanced-settings-tooltip */
+.help-me-choose-evidence-tooltip {
+  position: absolute;
+  bottom: calc(100% + 10px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--bg-elevated);
+  color: var(--text-secondary);
+  padding: 0.625rem 0.875rem;
+  border-radius: var(--radius-lg);
+  font-size: 0.8125rem;
+  font-weight: var(--font-normal);
+  line-height: 1.5;
+  white-space: normal;
+  width: max-content;
+  max-width: min(320px, calc(100vw - 2rem));
+  box-shadow: var(--shadow-xl);
+  border: 1px solid var(--border-color);
+  z-index: 1000;
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 0.15s,
+    visibility 0.15s;
+  pointer-events: none;
+}
+
+.help-me-choose-evidence-tooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-top-color: var(--bg-elevated);
+}
+
+.help-me-choose-model-entry:hover .help-me-choose-evidence-tooltip {
+  opacity: 1;
+  visibility: visible;
 }
 
 .help-me-choose-model-entry:hover {
@@ -2515,11 +2601,15 @@
   font-size: 0.75rem;
 }
 
-/* ── Desktop: CSS tooltip on hover ── */
+/* ── Desktop: CSS tooltip on hover + click opens modal ── */
 .advanced-settings-info-trigger {
   position: relative;
   display: inline-flex;
   align-items: center;
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
   color: var(--text-muted);
   cursor: help;
   transition: color 0.2s;
