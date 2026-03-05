@@ -2522,26 +2522,18 @@
 
 .advanced-settings-content {
   grid-column: 1 / -1;
-  justify-self: end;
   margin-top: 0.75rem;
   padding: 1rem 1.25rem;
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  width: 100%;
   min-width: 280px;
-  max-width: 360px;
+  box-sizing: border-box;
   background: var(--bg-elevated);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-xl);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
-}
-
-/* Mobile: Advanced dropdown fills section width instead of right-justified */
-@media (max-width: 768px) {
-  .advanced-settings-content {
-    justify-self: stretch;
-    max-width: none;
-  }
 }
 
 /* When Advanced is open: stand out from the rest of the section */
