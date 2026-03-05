@@ -420,7 +420,7 @@ export function useModelManagement({
           const tierName = !isAuthenticated ? 'Unregistered' : user?.subscription_tier || 'free'
           const upgradeMsg =
             tierName === 'Unregistered'
-              ? ' Sign up for a free account to get 3 models.'
+              ? ' Sign up for a free account to get more credits, saved conversations, and a trial to premium models.'
               : tierName === 'free'
                 ? ' Upgrade to Starter for 6 models or Pro for 9 models.'
                 : tierName === 'starter' || tierName === 'starter_plus'
