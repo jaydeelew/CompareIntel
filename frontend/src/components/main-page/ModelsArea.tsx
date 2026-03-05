@@ -187,6 +187,7 @@ export function ModelsArea({
                 isExpanded={openDropdown === 'help-me-choose'}
                 onExpandChange={expanded => setOpenDropdown(expanded ? 'help-me-choose' : null)}
                 modelsSectionRef={modelsSectionRef}
+                isMobileLayout={isMobileLayout}
               />
               <AdvancedSettings
                 temperature={temperature}

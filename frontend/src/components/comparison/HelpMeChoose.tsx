@@ -90,6 +90,8 @@ export interface HelpMeChooseProps {
   onExpandChange?: (expanded: boolean) => void
   /** Ref to the models section - clicks inside it should NOT close the dropdown (e.g. model card X) */
   modelsSectionRef?: RefObject<HTMLElement | null>
+  /** When true, evidence tooltips are hidden (mobile/touchscreen layout) */
+  isMobileLayout?: boolean
 }
 
 export function HelpMeChoose({
@@ -104,6 +106,7 @@ export function HelpMeChoose({
   isExpanded: controlledExpanded,
   onExpandChange,
   modelsSectionRef,
+  isMobileLayout = false,
 }: HelpMeChooseProps) {
   const [internalExpanded, setInternalExpanded] = useState(false)
   const [showBestAtTopModal, setShowBestAtTopModal] = useState(false)
@@ -386,6 +389,11 @@ export function HelpMeChoose({
     if (!isExpanded) clearEvidenceTooltip()
   }, [isExpanded, clearEvidenceTooltip])
 
+  /** Clear tooltip when switching to mobile layout (e.g. window resize) */
+  useEffect(() => {
+    if (isMobileLayout) clearEvidenceTooltip()
+  }, [isMobileLayout, clearEvidenceTooltip])
+
   /** Scroll to first selected model when dropdown opens only—not on selection changes (Goal 10) */
   const prevExpandedRef = useRef(false)
   useEffect(() => {
@@ -561,6 +569,7 @@ export function HelpMeChoose({
                                 aria-describedby={`hmc-evidence-${cat.id}-${entry.modelId}-${idx}`}
                                 onMouseDown={e => e.preventDefault()}
                                 onMouseEnter={e => {
+                                  if (isMobileLayout) return
                                   const anchor = e.currentTarget
                                   const text = modelRestricted ? disabledTooltip : entry.evidence
                                   showEvidenceTooltip(text, anchor)
@@ -617,6 +626,7 @@ export function HelpMeChoose({
       )}
 
       {hoveredEvidence &&
+        !isMobileLayout &&
         createPortal(
           <div
             className="help-me-choose-evidence-tooltip-portaled"
