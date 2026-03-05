@@ -341,7 +341,6 @@ export function HelpMeChoose({
         aria-expanded={isExpanded}
         aria-haspopup="true"
         aria-controls="help-me-choose-content"
-        title="Get model recommendations by use case"
       >
         <span className="help-me-choose-toggle-text">Help me choose</span>
         <svg
