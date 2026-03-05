@@ -5,6 +5,7 @@
  */
 
 import { useEffect, useRef } from 'react'
+import { Link } from 'react-router-dom'
 import './DisabledButtonInfoModal.css'
 
 interface BestAtTopInfoModalProps {
@@ -86,6 +87,11 @@ export function BestAtTopInfoModal({ isOpen, onClose }: BestAtTopInfoModalProps)
         </div>
         <div className="disabled-button-info-content">
           <p id="best-at-top-info-message">{BEST_AT_TOP_MESSAGE}</p>
+          <p className="best-at-top-methodology-link">
+            <Link to="/help-me-choose-methodology" onClick={onClose}>
+              Help Me Choose Methodology
+            </Link>
+          </p>
         </div>
         <div className="disabled-button-info-footer">
           <button className="disabled-button-info-button" onClick={onClose} type="button" autoFocus>

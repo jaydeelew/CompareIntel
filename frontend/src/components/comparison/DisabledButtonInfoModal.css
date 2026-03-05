@@ -109,6 +109,22 @@
   color: var(--text-secondary);
 }
 
+.disabled-button-info-content p + p {
+  margin-top: 0.75rem;
+}
+
+.disabled-button-info-content .best-at-top-methodology-link a {
+  color: var(--primary-color);
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+.disabled-button-info-content .best-at-top-methodology-link a:hover {
+  color: var(--primary-hover, var(--primary-color));
+  text-decoration: underline;
+}
+
 .disabled-button-info-footer {
   padding: 1rem 1.5rem;
   border-top: 1px solid var(--border-color);
