@@ -14,7 +14,7 @@ interface BestAtTopInfoModalProps {
 }
 
 const BEST_AT_TOP_MESSAGE =
-  'Models are ordered from best (top) to least recommended (bottom) based on published benchmarks. Tap or hover over a model to see its evidence.'
+  'Models are ordered from best (top) to least recommended (bottom) based on published benchmarks. Tap the info icon next to a model to see its evidence.'
 
 export function BestAtTopInfoModal({ isOpen, onClose }: BestAtTopInfoModalProps) {
   const closeButtonRef = useRef<HTMLButtonElement>(null)

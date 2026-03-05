@@ -10,7 +10,7 @@
  */
 
 import { useState, useRef, useEffect, useMemo, useCallback, type RefObject } from 'react'
-import { createPortal } from 'react-dom'
+import { Link } from 'react-router-dom'
 
 import {
   HELP_ME_CHOOSE_CATEGORIES,
@@ -20,18 +20,24 @@ import type { ModelsByProvider, User } from '../../types'
 
 import { BestAtTopInfoModal } from './BestAtTopInfoModal'
 
-/** Returns { top, left } for a fixed-position tooltip above the anchor, centered and clamped to viewport */
-function getEvidenceTooltipPosition(anchor: HTMLElement): { top: number; left: number } {
-  const rect = anchor.getBoundingClientRect()
-  const gap = 10
-  const maxW = Math.min(320, window.innerWidth - 32)
-  const halfW = maxW / 2
-  const centerX = rect.left + rect.width / 2
-  const left = Math.max(halfW + 16, Math.min(window.innerWidth - halfW - 16, centerX))
-  return {
-    top: rect.top - gap,
-    left,
-  }
+function InfoIcon() {
+  return (
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <circle cx="12" cy="12" r="10" />
+      <path d="M12 16v-4" />
+      <path d="M12 8h.01" />
+    </svg>
+  )
 }
 
 function findModelById(modelsByProvider: ModelsByProvider, modelId: string) {
@@ -61,11 +67,89 @@ function getDisabledTooltip(userTier: 'unregistered' | 'free'): string {
   return 'Paid tiers are coming soon — stay tuned to access all models.'
 }
 
+function EvidenceInfoModal({
+  modelName,
+  evidence,
+  onClose,
+}: {
+  modelName: string
+  evidence: string
+  onClose: () => void
+}) {
+  const closeRef = useRef<HTMLButtonElement>(null)
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose()
+    }
+    document.addEventListener('keydown', handleEscape)
+    closeRef.current?.focus()
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.removeEventListener('keydown', handleEscape)
+      document.body.style.overflow = ''
+    }
+  }, [onClose])
+
+  return (
+    <div
+      className="disabled-button-info-overlay"
+      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="evidence-modal-title"
+      aria-describedby="evidence-modal-message"
+    >
+      <div
+        className="disabled-button-info-modal"
+        onClick={e => e.stopPropagation()}
+        onKeyDown={e => {
+          if (e.key === 'Escape') onClose()
+        }}
+      >
+        <div className="disabled-button-info-header">
+          <h3 id="evidence-modal-title">{modelName}</h3>
+          <button
+            ref={closeRef}
+            className="disabled-button-info-close"
+            onClick={onClose}
+            aria-label="Close"
+            type="button"
+          >
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        </div>
+        <div className="disabled-button-info-content">
+          <p id="evidence-modal-message">{evidence}</p>
+          <p className="best-at-top-methodology-link">
+            <Link to="/help-me-choose-methodology" onClick={onClose}>
+              Help Me Choose Methodology
+            </Link>
+          </p>
+        </div>
+        <div className="disabled-button-info-footer">
+          <button className="disabled-button-info-button" onClick={onClose} type="button" autoFocus>
+            Got it
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 /** Number of models to select when using "Select top N" preset */
 export const HELP_ME_CHOOSE_PRESET_COUNT = 3
-
-/** Tooltip auto-dismiss duration (ms) */
-const EVIDENCE_TOOLTIP_DURATION_MS = 3000
 
 export interface HelpMeChooseProps {
   /** Toggle model selection (same as main model selection - applies immediately) */
@@ -90,7 +174,7 @@ export interface HelpMeChooseProps {
   onExpandChange?: (expanded: boolean) => void
   /** Ref to the models section - clicks inside it should NOT close the dropdown (e.g. model card X) */
   modelsSectionRef?: RefObject<HTMLElement | null>
-  /** When true, evidence tooltips are hidden (mobile/touchscreen layout) */
+  /** When true, layout adjusts for mobile/touchscreen */
   isMobileLayout?: boolean
 }
 
@@ -106,20 +190,25 @@ export function HelpMeChoose({
   isExpanded: controlledExpanded,
   onExpandChange,
   modelsSectionRef,
-  isMobileLayout = false,
+  isMobileLayout: _isMobileLayout = false,
 }: HelpMeChooseProps) {
   const [internalExpanded, setInternalExpanded] = useState(false)
   const [showBestAtTopModal, setShowBestAtTopModal] = useState(false)
-  const [hoveredEvidence, setHoveredEvidence] = useState<{
-    text: string
-    anchor: HTMLElement
-    pos: { top: number; left: number }
+  const [evidenceModal, setEvidenceModal] = useState<{
+    modelName: string
+    evidence: string
   } | null>(null)
   const isExpanded = controlledExpanded !== undefined ? controlledExpanded : internalExpanded
-  const setIsExpanded =
-    onExpandChange !== undefined
-      ? (v: boolean) => onExpandChange(v)
-      : (v: boolean) => setInternalExpanded(v)
+  const setIsExpanded = useCallback(
+    (v: boolean) => {
+      if (onExpandChange !== undefined) {
+        onExpandChange(v)
+      } else {
+        setInternalExpanded(v)
+      }
+    },
+    [onExpandChange]
+  )
   const containerRef = useRef<HTMLDivElement>(null)
 
   const userTier = isAuthenticated ? user?.subscription_tier || 'free' : 'unregistered'
@@ -144,32 +233,6 @@ export function HelpMeChoose({
 
   const disabledTooltip = getDisabledTooltip(userTier as 'unregistered' | 'free')
 
-  /** Clear evidence tooltip and cancel any auto-dismiss timeout */
-  const clearEvidenceTooltip = useCallback(() => {
-    if (tooltipTimeoutRef.current) {
-      clearTimeout(tooltipTimeoutRef.current)
-      tooltipTimeoutRef.current = null
-    }
-    setHoveredEvidence(null)
-  }, [])
-
-  /** Show evidence tooltip with 3s auto-dismiss; clears previous timeout when switching models */
-  const showEvidenceTooltip = useCallback((text: string, anchor: HTMLElement) => {
-    if (tooltipTimeoutRef.current) {
-      clearTimeout(tooltipTimeoutRef.current)
-      tooltipTimeoutRef.current = null
-    }
-    setHoveredEvidence({
-      text,
-      anchor,
-      pos: getEvidenceTooltipPosition(anchor),
-    })
-    tooltipTimeoutRef.current = setTimeout(() => {
-      tooltipTimeoutRef.current = null
-      setHoveredEvidence(null)
-    }, EVIDENCE_TOOLTIP_DURATION_MS)
-  }, [])
-
   /** Categories that contain at least one selected model (for Goal 10: match summary) */
   const matchingCategories = useMemo(() => {
     if (selectedModels.length === 0) return []
@@ -182,7 +245,6 @@ export function HelpMeChoose({
   const contentRef = useRef<HTMLDivElement>(null)
   const firstSelectedRef = useRef<HTMLLIElement | null>(null)
   const categoriesRef = useRef<HTMLDivElement>(null)
-  const tooltipTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const scrollbarTrackRef = useRef<HTMLDivElement>(null)
   const scrollbarThumbRef = useRef<HTMLDivElement>(null)
   const isDraggingRef = useRef(false)
@@ -355,45 +417,6 @@ export function HelpMeChoose({
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [modelsSectionRef, setIsExpanded])
 
-  /** Hide tooltip immediately on horizontal scroll (especially important for mobile) */
-  useEffect(() => {
-    const el = categoriesRef.current
-    const content = contentRef.current
-    const hideOnScroll = () => clearEvidenceTooltip()
-    el?.addEventListener('scroll', hideOnScroll)
-    content?.addEventListener('scroll', hideOnScroll)
-    return () => {
-      el?.removeEventListener('scroll', hideOnScroll)
-      content?.removeEventListener('scroll', hideOnScroll)
-    }
-  }, [clearEvidenceTooltip])
-
-  /** Update portaled evidence tooltip position on resize (scroll hides tooltip) */
-  useEffect(() => {
-    if (!hoveredEvidence) return
-    const update = () => {
-      setHoveredEvidence(prev => {
-        if (!prev) return null
-        const pos = getEvidenceTooltipPosition(prev.anchor)
-        if (pos.top === prev.pos.top && pos.left === prev.pos.left) return prev
-        return { ...prev, pos }
-      })
-    }
-    update()
-    window.addEventListener('resize', update)
-    return () => window.removeEventListener('resize', update)
-  }, [hoveredEvidence])
-
-  /** Clear portaled tooltip when dropdown closes */
-  useEffect(() => {
-    if (!isExpanded) clearEvidenceTooltip()
-  }, [isExpanded, clearEvidenceTooltip])
-
-  /** Clear tooltip when switching to mobile layout (e.g. window resize) */
-  useEffect(() => {
-    if (isMobileLayout) clearEvidenceTooltip()
-  }, [isMobileLayout, clearEvidenceTooltip])
-
   /** Scroll to first selected model when dropdown opens only—not on selection changes (Goal 10) */
   const prevExpandedRef = useRef(false)
   useEffect(() => {
@@ -485,7 +508,7 @@ export function HelpMeChoose({
                   role="tooltip"
                 >
                   Models are ordered from best (top) to least recommended (bottom) based on
-                  published benchmarks. Hover over a model for evidence.
+                  published benchmarks. Tap the info icon next to a model for evidence.
                 </span>
                 <svg
                   width="14"
@@ -566,23 +589,8 @@ export function HelpMeChoose({
                             >
                               <label
                                 className={`help-me-choose-model-entry ${modelRestricted ? 'restricted' : ''} ${isSelected ? 'selected' : ''}`}
-                                aria-describedby={`hmc-evidence-${cat.id}-${entry.modelId}-${idx}`}
                                 onMouseDown={e => e.preventDefault()}
-                                onMouseEnter={e => {
-                                  if (isMobileLayout) return
-                                  const anchor = e.currentTarget
-                                  const text = modelRestricted ? disabledTooltip : entry.evidence
-                                  showEvidenceTooltip(text, anchor)
-                                }}
-                                onMouseLeave={clearEvidenceTooltip}
                               >
-                                <span
-                                  id={`hmc-evidence-${cat.id}-${entry.modelId}-${idx}`}
-                                  className="sr-only"
-                                  role="tooltip"
-                                >
-                                  {modelRestricted ? disabledTooltip : entry.evidence}
-                                </span>
                                 <input
                                   type="checkbox"
                                   className="help-me-choose-checkbox"
@@ -611,6 +619,29 @@ export function HelpMeChoose({
                                     </svg>
                                   </span>
                                 )}
+                                <button
+                                  type="button"
+                                  className="help-me-choose-model-evidence-btn help-me-choose-model-evidence-trigger"
+                                  onClick={e => {
+                                    e.preventDefault()
+                                    e.stopPropagation()
+                                    setEvidenceModal({
+                                      modelName: displayName,
+                                      evidence: modelRestricted ? disabledTooltip : entry.evidence,
+                                    })
+                                  }}
+                                  aria-label={`Benchmark evidence for ${displayName}`}
+                                  aria-describedby={`hmc-evidence-tooltip-${cat.id}-${entry.modelId}-${idx}`}
+                                >
+                                  <span
+                                    id={`hmc-evidence-tooltip-${cat.id}-${entry.modelId}-${idx}`}
+                                    className="help-me-choose-model-evidence-tooltip"
+                                    role="tooltip"
+                                  >
+                                    {modelRestricted ? disabledTooltip : entry.evidence}
+                                  </span>
+                                  <InfoIcon />
+                                </button>
                               </label>
                             </li>
                           )
@@ -625,25 +656,13 @@ export function HelpMeChoose({
         </div>
       )}
 
-      {hoveredEvidence &&
-        !isMobileLayout &&
-        createPortal(
-          <div
-            className="help-me-choose-evidence-tooltip-portaled"
-            role="tooltip"
-            style={{
-              position: 'fixed',
-              left: hoveredEvidence.pos.left,
-              top: hoveredEvidence.pos.top,
-              transform: 'translate(-50%, -100%)',
-              opacity: 1,
-              visibility: 'visible',
-            }}
-          >
-            {hoveredEvidence.text}
-          </div>,
-          document.body
-        )}
+      {evidenceModal && (
+        <EvidenceInfoModal
+          modelName={evidenceModal.modelName}
+          evidence={evidenceModal.evidence}
+          onClose={() => setEvidenceModal(null)}
+        />
+      )}
 
       <BestAtTopInfoModal
         isOpen={showBestAtTopModal}

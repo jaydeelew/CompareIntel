@@ -2081,8 +2081,8 @@
 }
 
 .help-me-choose-category {
-  flex: 0 0 180px;
-  min-width: 180px;
+  flex: 0 0 260px;
+  min-width: 260px;
   display: flex;
   flex-direction: column;
   gap: 0.375rem;
@@ -2095,14 +2095,17 @@
     border-color 0.2s ease,
     box-shadow 0.2s ease,
     transform 0.2s ease;
+  position: relative;
+  z-index: 0;
 }
 
 [data-theme='dark'] .help-me-choose-category {
   background: rgba(255, 255, 255, 0.03);
 }
 
-/* Desktop: hover matches model-card / model-option pattern */
+/* Desktop: hover matches model-card / model-option pattern; z-index brings tooltip above adjacent columns */
 .help-me-choose-category:hover {
+  z-index: 10;
   background: var(--bg-hover);
   transform: translateY(-2px);
 }
@@ -2201,84 +2204,6 @@ html:not([data-theme]) .help-me-choose-category.has-match {
     border-color 0.15s ease;
 }
 
-/* Match help-me-choose-ordering-tooltip (Best at top) exactly */
-.help-me-choose-evidence-tooltip {
-  position: absolute;
-  bottom: calc(100% + 10px);
-  left: 50%;
-  transform: translateX(-50%);
-  background: var(--bg-elevated);
-  color: var(--text-secondary);
-  padding: 0.625rem 0.875rem;
-  border-radius: var(--radius-lg);
-  font-size: 0.8125rem;
-  font-weight: var(--font-normal);
-  line-height: 1.5;
-  white-space: normal;
-  word-wrap: break-word;
-  overflow-wrap: break-word;
-  width: max-content;
-  max-width: min(320px, calc(100vw - 2rem));
-  box-shadow: var(--shadow-xl);
-  border: 1px solid var(--border-color);
-  z-index: 1000;
-  opacity: 0;
-  visibility: hidden;
-  transition:
-    opacity 0.15s,
-    visibility 0.15s;
-  pointer-events: none;
-  box-sizing: border-box;
-  overflow: visible;
-}
-
-.help-me-choose-evidence-tooltip::after {
-  content: '';
-  position: absolute;
-  top: 100%;
-  left: 50%;
-  transform: translateX(-50%);
-  border: 6px solid transparent;
-  border-top-color: var(--bg-elevated);
-}
-
-.help-me-choose-model-entry:hover .help-me-choose-evidence-tooltip {
-  opacity: 1;
-  visibility: visible;
-}
-
-/* Portaled evidence tooltip - standalone class so it does not inherit the
-   hidden/transition behavior used by hover-only in-place tooltips. */
-.help-me-choose-evidence-tooltip-portaled {
-  background: var(--bg-elevated);
-  color: var(--text-secondary);
-  padding: 0.625rem 0.875rem;
-  border-radius: var(--radius-lg);
-  font-size: 0.8125rem;
-  font-weight: var(--font-normal);
-  line-height: 1.5;
-  white-space: normal;
-  word-wrap: break-word;
-  overflow-wrap: break-word;
-  width: max-content;
-  max-width: min(320px, calc(100vw - 2rem));
-  box-shadow: var(--shadow-xl);
-  border: 1px solid var(--border-color);
-  box-sizing: border-box;
-  pointer-events: none;
-  z-index: 10000;
-}
-
-.help-me-choose-evidence-tooltip-portaled::after {
-  content: '';
-  position: absolute;
-  top: 100%;
-  left: 50%;
-  transform: translateX(-50%);
-  border: 6px solid transparent;
-  border-top-color: var(--bg-elevated);
-}
-
 .help-me-choose-model-entry:hover {
   background: var(--bg-hover);
   border-color: var(--border-color);
@@ -2288,6 +2213,12 @@ html:not([data-theme]) .help-me-choose-category.has-match {
 .help-me-choose-model-entry.restricted {
   cursor: not-allowed;
   color: var(--text-secondary);
+}
+
+/* Apply opacity only to label content, not the info button/tooltip */
+.help-me-choose-model-entry.restricted .help-me-choose-checkbox,
+.help-me-choose-model-entry.restricted .help-me-choose-model-name,
+.help-me-choose-model-entry.restricted .help-me-choose-model-lock {
   opacity: 0.7;
 }
 
@@ -2315,6 +2246,82 @@ html:not([data-theme]) .help-me-choose-category.has-match {
   align-items: center;
   margin-left: 0.25rem;
   opacity: 0.7;
+}
+
+/* Info icon for model evidence - matches advanced-settings-info-btn pattern */
+.help-me-choose-model-evidence-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  padding: 0.125rem;
+  margin-left: 0.25rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  transition: color 0.2s;
+  flex-shrink: 0;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.help-me-choose-model-evidence-btn:hover,
+.help-me-choose-model-evidence-btn:active {
+  color: var(--primary-color);
+}
+
+.help-me-choose-model-evidence-btn:focus {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+}
+
+/* Tooltip on hover - matches advanced-settings-tooltip pattern */
+.help-me-choose-model-evidence-trigger {
+  position: relative;
+}
+
+.help-me-choose-model-evidence-tooltip {
+  position: absolute;
+  bottom: calc(100% + 10px);
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: var(--bg-card);
+  color: var(--text-secondary);
+  padding: 0.625rem 0.875rem;
+  border-radius: var(--radius-lg);
+  font-size: 0.8125rem;
+  font-weight: var(--font-normal);
+  line-height: 1.5;
+  white-space: normal;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  width: max-content;
+  max-width: min(320px, calc(100vw - 2rem));
+  box-shadow: var(--shadow-xl);
+  border: 1px solid var(--border-color);
+  z-index: 10000;
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 0.15s,
+    visibility 0.15s;
+  pointer-events: none;
+}
+
+.help-me-choose-model-evidence-tooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-top-color: var(--bg-card);
+}
+
+.help-me-choose-model-evidence-trigger:hover .help-me-choose-model-evidence-tooltip {
+  opacity: 1;
+  visibility: visible;
 }
 
 .help-me-choose-actions {
@@ -2383,8 +2390,8 @@ html:not([data-theme]) .help-me-choose-category.has-match {
   }
 
   .help-me-choose-category {
-    flex: 0 0 200px;
-    min-width: 200px;
+    flex: 0 0 260px;
+    min-width: 260px;
     /* Enhanced category cards - subtle gradient border and depth */
     background: rgba(0, 0, 0, 0.03);
     border: 1px solid var(--border-color);
@@ -2470,6 +2477,13 @@ html:not([data-theme]) .help-me-choose-category.has-match {
     min-height: 44px;
     margin-left: -0.625rem;
     cursor: pointer;
+  }
+
+  /* Model evidence info icon: adequate touch target for modal trigger */
+  .help-me-choose-model-evidence-btn {
+    min-width: 28px;
+    min-height: 28px;
+    padding: 0.25rem;
   }
 }
 
