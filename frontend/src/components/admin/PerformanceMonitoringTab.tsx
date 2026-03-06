@@ -34,7 +34,7 @@ const PerformanceMonitoringTab: React.FC = () => {
   > | null>(null)
   const [apiMarkers, setApiMarkers] = useState<PerformanceMarkerEntry[]>([])
   const [autoRefresh, setAutoRefresh] = useState(false)
-  const refreshIntervalRef = useRef<NodeJS.Timeout | null>(null)
+  const refreshIntervalRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Collect Web Vitals metrics
   useEffect(() => {

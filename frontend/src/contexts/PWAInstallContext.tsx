@@ -62,7 +62,7 @@ export function PWAInstallProvider({ children }: { children: React.ReactNode }) 
   const [showIOSInstructions, setShowIOSInstructions] = useState(false)
   const [shouldShowBanner, setShouldShowBanner] = useState(false)
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false)
-  const engagementTimerRef = useRef<NodeJS.Timeout | null>(null)
+  const engagementTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const hasShownRef = useRef(false)
 
   const canInstall = !isStandalone

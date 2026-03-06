@@ -18,7 +18,7 @@ import { InstallPrompt, SkipLink } from './layout'
 export const Layout: React.FC = () => {
   const { pathname } = useLocation()
   const prevPathnameRef = useRef<string>(pathname)
-  const timeoutRefs = useRef<NodeJS.Timeout[]>([])
+  const timeoutRefs = useRef<ReturnType<typeof setTimeout>[]>([])
   const rafRef = useRef<number | null>(null)
 
   // Set page title and meta tags when route changes

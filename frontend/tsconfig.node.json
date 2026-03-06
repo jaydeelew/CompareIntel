@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "types": [],
     "target": "esnext",
     "lib": ["ES2023", "DOM"],
     "module": "ESNext",
