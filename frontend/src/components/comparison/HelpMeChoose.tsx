@@ -190,7 +190,7 @@ export function HelpMeChoose({
   isExpanded: controlledExpanded,
   onExpandChange,
   modelsSectionRef,
-  isMobileLayout: _isMobileLayout = false,
+  isMobileLayout = false,
 }: HelpMeChooseProps) {
   const [internalExpanded, setInternalExpanded] = useState(false)
   const [showBestAtTopModal, setShowBestAtTopModal] = useState(false)
@@ -500,16 +500,18 @@ export function HelpMeChoose({
                 className="help-me-choose-ordering-info"
                 onClick={() => setShowBestAtTopModal(true)}
                 aria-label="Ordering info — tap for details"
-                aria-describedby="hmc-ordering-tooltip"
+                aria-describedby={isMobileLayout ? undefined : 'hmc-ordering-tooltip'}
               >
-                <span
-                  id="hmc-ordering-tooltip"
-                  className="help-me-choose-ordering-tooltip"
-                  role="tooltip"
-                >
-                  Models are ordered from best (top) to least recommended (bottom) based on
-                  published benchmarks. Tap the info icon next to a model for evidence.
-                </span>
+                {!isMobileLayout && (
+                  <span
+                    id="hmc-ordering-tooltip"
+                    className="help-me-choose-ordering-tooltip"
+                    role="tooltip"
+                  >
+                    Models are ordered from best (top) to least recommended (bottom) based on
+                    published benchmarks. Tap the info icon next to a model for evidence.
+                  </span>
+                )}
                 <svg
                   width="14"
                   height="14"
@@ -631,15 +633,21 @@ export function HelpMeChoose({
                                     })
                                   }}
                                   aria-label={`Benchmark evidence for ${displayName}`}
-                                  aria-describedby={`hmc-evidence-tooltip-${cat.id}-${entry.modelId}-${idx}`}
+                                  aria-describedby={
+                                    isMobileLayout
+                                      ? undefined
+                                      : `hmc-evidence-tooltip-${cat.id}-${entry.modelId}-${idx}`
+                                  }
                                 >
-                                  <span
-                                    id={`hmc-evidence-tooltip-${cat.id}-${entry.modelId}-${idx}`}
-                                    className="help-me-choose-model-evidence-tooltip"
-                                    role="tooltip"
-                                  >
-                                    {modelRestricted ? disabledTooltip : entry.evidence}
-                                  </span>
+                                  {!isMobileLayout && (
+                                    <span
+                                      id={`hmc-evidence-tooltip-${cat.id}-${entry.modelId}-${idx}`}
+                                      className="help-me-choose-model-evidence-tooltip"
+                                      role="tooltip"
+                                    >
+                                      {modelRestricted ? disabledTooltip : entry.evidence}
+                                    </span>
+                                  )}
                                   <InfoIcon />
                                 </button>
                               </label>
