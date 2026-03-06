@@ -299,11 +299,12 @@ export const HowItWorks: React.FC = () => {
             <div className="step-card">
               <div className="step-number">6</div>
               <div className="step-content">
-                <h3>Export Your Comparisons</h3>
+                <h3>Break Out Individual Models</h3>
                 <p>
-                  Click "Export" above your results to save as PDF, Markdown, HTML, or JSON. All
-                  formats include the prompt, model responses, metadata, and statistics. The
-                  filename is auto-generated from your prompt.
+                  Found a model that stands out? Click the breakout button (↗) on any response card
+                  to start a separate conversation with just that model. Your comparison context
+                  carries over, and the original comparison stays in your history. You can create
+                  multiple breakouts from the same comparison. Available for all users.
                 </p>
               </div>
             </div>
@@ -311,12 +312,11 @@ export const HowItWorks: React.FC = () => {
             <div className="step-card">
               <div className="step-number">7</div>
               <div className="step-content">
-                <h3>Break Out Individual Models</h3>
+                <h3>Export Your Comparisons</h3>
                 <p>
-                  Found a model that stands out? Click the breakout button (↗) on any response card
-                  to start a separate conversation with just that model. Your comparison context
-                  carries over, and the original comparison stays in your history. You can create
-                  multiple breakouts from the same comparison. Available for all users.
+                  Click "Export" above your results to save as PDF, Markdown, HTML, or JSON. All
+                  formats include the prompt, model responses, metadata, and statistics. The
+                  filename is auto-generated from your prompt.
                 </p>
               </div>
             </div>
