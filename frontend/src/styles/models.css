@@ -2235,6 +2235,11 @@ html:not([data-theme]) .help-me-choose-category.has-match {
   border-color: color-mix(in srgb, var(--primary-color) 50%, transparent);
 }
 
+/* Space between outline and checkbox - shift content right without expanding outline */
+.help-me-choose-model-entry .help-me-choose-checkbox {
+  margin-left: 0.375rem;
+}
+
 .help-me-choose-model-name {
   flex: 1;
   min-width: 0;
