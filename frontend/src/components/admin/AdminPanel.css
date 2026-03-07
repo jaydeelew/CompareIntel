@@ -11,7 +11,8 @@ button:hover {
 }
 
 .admin-panel {
-  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  /* Dark mode: match main page gradient */
+  background: linear-gradient(135deg, var(--bg-primary) 0%, #0f172a 100%);
   padding: 2rem;
   font-family:
     'Inter',
@@ -20,6 +21,11 @@ button:hover {
     'Segoe UI',
     'Roboto',
     sans-serif;
+}
+
+/* Light mode: light gradient */
+[data-theme='light'] .admin-panel {
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
 }
 
 /* Admin panel loading state - use full height within panel */
