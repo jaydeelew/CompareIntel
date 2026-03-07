@@ -1,3 +1,11 @@
+/* Override full-height forcing on admin page so footer renders naturally */
+.admin-page-wrapper {
+  min-height: auto !important;
+  height: auto;
+  width: 100%;
+  overflow: visible;
+}
+
 /* Admin page loading state - centered spinner */
 .admin-loading-center {
   flex: 1;
@@ -8,6 +16,6 @@
   padding: 2rem;
 }
 
-.app > .admin-loading-center:only-child {
+.admin-page-wrapper > .admin-loading-center:only-child {
   min-height: 100vh;
 }

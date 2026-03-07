@@ -26,7 +26,7 @@ export function AdminPage() {
 
   if (authLoading || !user?.is_admin) {
     return (
-      <div className="app">
+      <div className="admin-page-wrapper">
         <div className="admin-loading-center">
           <LoadingSpinner size="xlarge" modern={true} message="Loading..." />
         </div>
@@ -35,7 +35,7 @@ export function AdminPage() {
   }
 
   return (
-    <div className="app">
+    <div className="admin-page-wrapper">
       <Navigation
         isAuthenticated={isAuthenticated}
         isAdmin={true}
