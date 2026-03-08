@@ -545,6 +545,15 @@
         "provider": "OpenAI",
         "supports_web_search": true,
         "knowledge_cutoff": null
+      },
+      {
+        "id": "openai/gpt-5.4",
+        "name": "Gpt 5.4",
+        "description": "GPT-5.4 is OpenAI’s latest frontier model, unifying the Codex and GPT lines into a single system.",
+        "category": "Language",
+        "provider": "OpenAI",
+        "supports_web_search": true,
+        "knowledge_cutoff": null
       }
     ],
     "Qwen": [
