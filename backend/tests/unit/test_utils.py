@@ -147,6 +147,59 @@ class TestErrorHandling:
             assert str(e) == "Test exception"
 
 
+class TestConfigHelpers:
+    """Tests for config helper functions."""
+
+    def test_get_model_limit_known_tier(self):
+        """Test get_model_limit with known tier."""
+        from app.config.helpers import get_model_limit
+
+        assert get_model_limit("pro") > 0
+        assert get_model_limit("free") > 0
+
+    def test_get_model_limit_unknown_tier_defaults_to_3(self):
+        """Test get_model_limit with unknown tier defaults to 3."""
+        from app.config.helpers import get_model_limit
+
+        assert get_model_limit("unknown_tier") == 3
+
+    def test_get_daily_limit_with_tier_variations(self):
+        """Test get_daily_limit with pro+ and starter+ variations."""
+        from app.config.helpers import get_daily_limit
+
+        # Standard tier names
+        pro_plus_limit = get_daily_limit("pro_plus")
+        assert pro_plus_limit > 0
+
+        # Tier name variations (pro+, pro +, pro-plus)
+        assert get_daily_limit("pro+") == pro_plus_limit
+        assert get_daily_limit("pro +") == pro_plus_limit
+        assert get_daily_limit("pro-plus") == pro_plus_limit
+        assert get_daily_limit("starter+") == get_daily_limit("starter_plus")
+        assert get_daily_limit("starter +") == get_daily_limit("starter_plus")
+
+    def test_get_daily_limit_none_or_empty(self):
+        """Test get_daily_limit with None or empty string."""
+        from app.config.helpers import get_daily_limit
+
+        # Should return anonymous limit for None/empty
+        limit = get_daily_limit(None)
+        assert limit > 0
+        assert get_daily_limit("") == limit
+
+    def test_get_conversation_limit_known_tier(self):
+        """Test get_conversation_limit with known tier."""
+        from app.config.helpers import get_conversation_limit
+
+        assert get_conversation_limit("pro") >= 0
+
+    def test_get_conversation_limit_unknown_defaults_to_2(self):
+        """Test get_conversation_limit with unknown tier defaults to 2."""
+        from app.config.helpers import get_conversation_limit
+
+        assert get_conversation_limit("unknown") == 2
+
+
 class TestConstants:
     """Tests for application constants."""
 
