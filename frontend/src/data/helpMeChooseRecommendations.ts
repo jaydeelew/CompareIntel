@@ -32,6 +32,11 @@ export interface HelpMeChooseCategory {
  * Order within each category: best model first, descending by benchmark.
  * All top models per category; no limit.
  */
+/**
+ * EDITING: When adding or updating models, edit ONLY the array below (after "= [").
+ * The declaration must stay as: HelpMeChooseCategory[] = [
+ * Do NOT add a duplicate block or put content between the type and "= [".
+ */
 export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
   {
     id: 'cost-effective',
@@ -241,6 +246,10 @@ export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
         modelId: 'qwen/qwen3-next-80b-a3b-thinking',
         evidence: 'Thinking architecture. Multi-step logic.',
       },
+      {
+        modelId: 'openai/gpt-5.4-pro',
+        evidence: 'Reasoning/thinking model. Evaluate on MMLU-Pro (awesomeagents.ai).',
+      },
     ],
   },
   {
@@ -421,6 +430,10 @@ export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
       {
         modelId: 'cohere/command-r-plus-08-2024',
         evidence: 'Cohere docs: RAG-optimized. Native citation support.',
+      },
+      {
+        modelId: 'openai/gpt-5.4-pro',
+        evidence: 'Provider docs: supports_web_search. Retrieval and citation.',
       },
     ],
   },

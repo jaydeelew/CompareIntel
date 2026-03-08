@@ -554,6 +554,15 @@
         "provider": "OpenAI",
         "supports_web_search": true,
         "knowledge_cutoff": null
+      },
+      {
+        "id": "openai/gpt-5.4-pro",
+        "name": "Gpt 5.4 Pro",
+        "description": "GPT-5.4 Pro is OpenAI's most advanced model, building on GPT-5.4's unified architecture with enhanced reasoning capabilities for complex, high-stakes tasks.",
+        "category": "Language",
+        "provider": "OpenAI",
+        "supports_web_search": true,
+        "knowledge_cutoff": null
       }
     ],
     "Qwen": [

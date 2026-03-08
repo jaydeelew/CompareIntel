@@ -1,0 +1,41 @@
+---
+description: How to safely add/edit models in Help Me Choose recommendations
+globs: frontend/src/data/helpMeChooseRecommendations.ts
+alwaysApply: false
+---
+
+# Help Me Choose Recommendations - Editing Guide
+
+When adding or updating models in `helpMeChooseRecommendations.ts`:
+
+## Critical: Single Source of Truth
+
+The file has **one** array: `HELP_ME_CHOOSE_CATEGORIES`. Edit **only** the array value (the content after `= [`).
+
+## Correct Structure
+
+```typescript
+export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
+  {
+    id: 'cost-effective',
+    models: [ { modelId: '...', evidence: '...' }, ... ],
+  },
+  // ... more categories
+]
+```
+
+## Do NOT
+
+- Add a duplicate block of categories above or below the array
+- Put content between `HelpMeChooseCategory[` and `= [`
+- Create a "type annotation block" that looks like the data (e.g. `HelpMeChooseCategory[ { ... }, ] = [`)
+
+## Adding a Model
+
+1. Find the category (e.g. `id: 'reasoning'`) in the array after `= [`
+2. Add a new entry to that category's `models` array: `{ modelId: 'provider/model-name', evidence: '...' }`
+3. Save. There is only one place to edit.
+
+## If You See "Expected ] but found ,"
+
+The file has been corrupted with a duplicate block. The fix: remove the duplicate so the declaration is `HelpMeChooseCategory[] = [` followed directly by the array content, with no extra block in between.

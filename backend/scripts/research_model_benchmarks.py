@@ -218,7 +218,12 @@ def parse_recommendations_ts(content: str) -> list[dict]:
 
     Returns a list of category dicts with id, label, description, and models.
     Handles: single/double-quoted evidence, multiline evidence, trailing commas.
+    Only parses the array value (after "= ["), not any duplicate block in the type position.
     """
+    # Restrict to content after "= [" to avoid parsing a corrupted duplicate block
+    assign_bracket = content.find("= [")
+    parse_content = content[assign_bracket:] if assign_bracket != -1 else content
+
     categories = []
     cat_block_pattern = re.compile(
         r"\{\s*id:\s*'([^']+)'.*?models:\s*\[(.*?)\]\s*,?\s*\}",
@@ -232,7 +237,7 @@ def parse_recommendations_ts(content: str) -> list[dict]:
         re.DOTALL,
     )
 
-    for cat_match in cat_block_pattern.finditer(content):
+    for cat_match in cat_block_pattern.finditer(parse_content):
         cat_id = cat_match.group(1)
         models_block = cat_match.group(2)
 
@@ -311,7 +316,12 @@ def update_recommendations_file(categories: list[dict]) -> None:
     if array_start == -1:
         raise ValueError("Could not find HELP_ME_CHOOSE_CATEGORIES in file")
 
-    bracket_start = content.find("[", array_start)
+    # Target the array value's "[" (after "= ["), not the type's "[" in "HelpMeChooseCategory[]"
+    assign_bracket = content.find("= [", array_start)
+    if assign_bracket != -1:
+        bracket_start = assign_bracket + 2  # position of the "["
+    else:
+        bracket_start = content.find("[", array_start)
     if bracket_start == -1:
         raise ValueError("Could not find opening bracket of categories array")
 
