@@ -1,7 +1,7 @@
 /**
  * Modal explaining the credits system.
  * Shown when user taps the info icon next to "credits remaining".
- * Matches the pattern used by Help me choose (Best at top) and Advanced settings.
+ * Matches the pattern used by Help me choose (ranking info) and Advanced settings.
  */
 
 import { useEffect, useRef } from 'react'

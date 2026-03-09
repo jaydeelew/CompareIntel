@@ -232,10 +232,10 @@ export const HelpMeChooseMethodology: React.FC = () => {
           <section className="seo-section">
             <h2>How We Order Models</h2>
             <p>
-              Within each category, models are ordered <strong>best to worst</strong> (top to
-              bottom) using the benchmark or metric for that category. Higher scores rank higher,
-              except for cost (where lower cost = better value) and speed (where higher throughput =
-              faster).
+              Within each category, models are ordered by benchmark score (highest first). Every
+              model listed is strong in its category—we rank them to help you choose, not to imply
+              any are lacking. Higher scores rank higher, except for cost (where lower cost = better
+              value) and speed (where higher throughput = faster).
             </p>
           </section>
 

@@ -4,7 +4,7 @@ The "Help me choose" feature provides decision support for model selection. User
 
 ## Overview
 
-A "Help me choose" button sits next to the Advanced button in the model selection area. Clicking it opens a dropdown with six categories displayed horizontally (stacking vertically on mobile). Each category lists models ordered best-to-worst based on published benchmarks. Users can check individual models or use "Select top 3" per category; selections apply immediately and respect tier restrictions and `maxModelsLimit`.
+A "Help me choose" button sits next to the Advanced button in the model selection area. Clicking it opens a dropdown with six categories displayed horizontally (stacking vertically on mobile). Each category lists models ranked by benchmark score (highest first). All models shown are strong in their category. Users can check individual models or use "Select top 3" per category; selections apply immediately and respect tier restrictions and `maxModelsLimit`.
 
 **Categories:** Best for coding, Best for writing, Best for reasoning, Best for long context, Best value (cost-effective), Fastest responses, Best for multilingual, Best for legal, Best for medical.
 

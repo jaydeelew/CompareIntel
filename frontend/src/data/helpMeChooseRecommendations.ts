@@ -2,7 +2,7 @@
  * Help Me Choose - Model recommendations by use case
  *
  * Categories are displayed horizontally. Each category lists models ordered
- * best-to-worst based on published benchmarks. Models may appear in multiple
+ * ranked by benchmark score based on published benchmarks. Models may appear in multiple
  * categories; users select individual models.
  *
  * Inclusion rule: Only models with numeric benchmark scores from well-respected,

@@ -2,7 +2,7 @@
  * HelpMeChoose - Decision support dropdown for model selection
  *
  * Displays categories horizontally. Each category lists models ordered
- * best-to-worst with evidence tooltips. Selections apply immediately,
+ * ranked by benchmark score with evidence tooltips. Selections apply immediately,
  * same as the main Select Models to Compare section.
  *
  * Goal 10: Visually indicates which recommendations match the user's current
@@ -523,12 +523,12 @@ export function HelpMeChoose({
         >
           <p className="help-me-choose-intro">
             <span className="help-me-choose-ordering-hint">
-              <span className="help-me-choose-ordering-label">Best at top</span>
+              <span className="help-me-choose-ordering-label">Ranked by score</span>
               <button
                 type="button"
                 className="help-me-choose-ordering-info"
                 onClick={() => setShowBestAtTopModal(true)}
-                aria-label="Ordering info — tap for details"
+                aria-label="How models are ranked — tap for details"
                 aria-describedby={isMobileLayout ? undefined : 'hmc-ordering-tooltip'}
               >
                 {!isMobileLayout && (
@@ -537,9 +537,8 @@ export function HelpMeChoose({
                     className="help-me-choose-ordering-tooltip"
                     role="tooltip"
                   >
-                    Models are ordered from best (top) to least recommended (bottom) using each
-                    category's benchmark (for example SWE-Bench for coding or MMLU-Pro for
-                    reasoning). Tap the info icon next to a model for evidence.
+                    Models are ordered by benchmark score (highest first). Every model shown is
+                    strong in its category. Tap the info icon next to a model for evidence.
                   </span>
                 )}
                 <svg

@@ -1,5 +1,5 @@
 /**
- * Modal to explain the "Best at top" ordering in Help Me Choose.
+ * Modal to explain how models are ranked in Help Me Choose.
  * Shown when user taps the info icon on mobile (tooltips don't work on touch).
  * Reuses DisabledButtonInfoModal styling for consistency with other mobile modals.
  */
@@ -14,7 +14,7 @@ interface BestAtTopInfoModalProps {
 }
 
 const BEST_AT_TOP_MESSAGE =
-  'Models are ordered from best (top) to least recommended (bottom) based on published benchmarks. Tap the info icon next to a model to see its evidence.'
+  'Models are ordered by benchmark score (highest first). Every model shown is strong in its category. Tap the info icon next to a model to see its evidence.'
 
 export function BestAtTopInfoModal({ isOpen, onClose }: BestAtTopInfoModalProps) {
   const closeButtonRef = useRef<HTMLButtonElement>(null)
@@ -62,7 +62,7 @@ export function BestAtTopInfoModal({ isOpen, onClose }: BestAtTopInfoModalProps)
         }}
       >
         <div className="disabled-button-info-header">
-          <h3 id="best-at-top-info-title">Best at top</h3>
+          <h3 id="best-at-top-info-title">How models are ranked</h3>
           <button
             ref={closeButtonRef}
             className="disabled-button-info-close"
