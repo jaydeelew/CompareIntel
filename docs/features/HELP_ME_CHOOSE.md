@@ -8,7 +8,7 @@ A "Help me choose" button sits next to the Advanced button in the model selectio
 
 **Categories:** Best for coding, Best for writing, Best for reasoning, Best for long context, Best value (cost-effective), Fastest responses, Best for multilingual, Best for legal, Best for medical.
 
-**Inclusion rule:** Only models with numeric benchmark scores from well-respected, publicly available sources (SWE-Bench, MMLU-Pro, Mazur Writing Score, Michelangelo MRCR, OpenRouter pricing, LMSpeed, Global-MMLU, LegalBench, HealthBench) are included. Models without benchmark scores are not added. Each category has at least two models. Model IDs must exist in `models_registry.json`.
+**Inclusion rule:** Only models with numeric benchmark scores from well-respected, publicly available sources are included. Models without benchmark scores are not added. Each category has at least two models. Model IDs must exist in `models_registry.json`.
 
 ## Key Behaviors
 
@@ -24,17 +24,17 @@ A public page at `/help-me-choose-methodology` (linked in the footer) explains i
 
 ## Evidence Sources
 
-| Category | Primary sources | Key metrics |
-|----------|-----------------|-------------|
-| **Coding** | [SWE-Bench Verified](https://www.swebench.com/verified.html), [OpenLM SWE-bench+](https://openlm.ai/swe-bench/), [LMSys Coding Arena](https://lmarena.ai/) | % Resolved |
-| **Writing** | [Creative Writing Arena](https://kearai.com/leaderboard/creative-writing), Mazur Writing Score | Human preference, voice |
-| **Reasoning** | [MMLU-Pro](https://awesomeagents.ai/leaderboards/mmlu-pro-leaderboard/), [LMSys Chatbot Arena](https://lmarena.ai/leaderboard/) | STEM accuracy |
-| **Long context** | [Michelangelo Long-Context 1M](https://llmdb.com/benchmarks/mrcr-1m) | Context window, MRCR (0–100) |
-| **Best value** | [OpenRouter pricing](https://openrouter.ai/models) | Avg cost per 1M tokens (lower = better) |
-| **Fastest responses** | [LMSpeed](https://lmspeed.net/leaderboard/best-throughput-models-weekly) | Throughput (tokens/second) |
-| **Multilingual** | [Global-MMLU (llmdb.com)](https://llmdb.com/benchmarks/global-mmlu) | 42 languages (0–100) |
-| **Legal** | [LegalBench (VALS.ai)](https://www.vals.ai/benchmarks/legal_bench-01-30-2025) | Accuracy across 161 legal tasks |
-| **Medical** | [HealthBench](https://openai.com/index/healthbench), HealthBench Hard | Physician-evaluated clinical conversations |
+| Category | Primary source | URL | Key metric | Automated? |
+|----------|---------------|-----|------------|------------|
+| **Coding** | SWE-Bench Verified (OpenLM) | https://openlm.ai/swe-bench/ | % Resolved | Yes |
+| **Writing** | Creative Writing Arena | https://kearai.com/leaderboard/creative-writing | Elo rating | Yes |
+| **Reasoning** | MMLU-Pro | https://awesomeagents.ai/leaderboards/mmlu-pro-leaderboard/ | Overall % | Yes |
+| **Long context** | MRCR 1M (llmdb) | https://llmdb.com/benchmarks/mrcr-1m | Score /100 | Yes |
+| **Best value** | OpenRouter pricing API | https://openrouter.ai/api/v1/models | Avg $/1M tokens | Yes |
+| **Fastest responses** | LMSpeed | https://lmspeed.net/leaderboard/best-throughput-models-weekly | Tokens/second | Yes |
+| **Multilingual** | Global-MMLU (llmdb) | https://llmdb.com/benchmarks/global-mmlu | 42-language score | Yes (sparse) |
+| **Legal** | LegalBench (VALS.ai) | https://www.vals.ai/benchmarks/legal_bench | % across 161 tasks | Yes |
+| **Medical** | HealthBench (OpenAI) | https://openai.com/index/healthbench | Physician-rated % | **Manual only** |
 
 ## Technical Reference
 
@@ -49,11 +49,123 @@ A public page at `/help-me-choose-methodology` (linked in the footer) explains i
 | Registry sync script | `backend/scripts/sync_help_me_choose_with_registry.py` |
 | Admin integration | `backend/app/routers/admin/models_management.py` |
 
-**Recommendation rules:** Each category has ≥2 models. Order indicates preference (best first) using the category's primary benchmark metric. Cost-effective sorts ascending (cheapest first). Only models with numeric benchmark scores are included. The research script adds models when it can fetch benchmark scores (SWE-bench for coding, LegalBench for legal, OpenRouter for cost-effective, LMSpeed for fast, Global-MMLU for multilingual).
+## Automation
 
-**Registry sync:** CI runs `sync_help_me_choose_with_registry.py` to validate model IDs against `models_registry.json`. Use `--fix` to remove missing models or apply `MODEL_ID_ALIASES` for renames.
+### How `--refresh-all` works
 
-**New model automation:** When models are added via the admin panel, `research_model_benchmarks.py` runs. It fetches SWE-bench (coding), LegalBench (legal), OpenRouter pricing (cost-effective), LMSpeed (fast), and Global-MMLU (multilingual) scores, adding models to categories when data is available. Writing, long-context, and medical categories are maintained manually with benchmark evidence from published sources.
+```bash
+python scripts/research_model_benchmarks.py --refresh-all [--dry-run]
+```
+
+This command re-evaluates ALL registry models against ALL data-driven categories:
+
+1. **Fetches** current data from 8 external sources (SWE-bench, OpenRouter, LMSpeed, MMLU-Pro, Creative Writing Arena, MRCR, LegalBench, Global-MMLU)
+2. **Syncs evidence** — updates stale evidence strings on existing models (e.g. price changes, new throughput data)
+3. **Prunes** models that no longer meet category thresholds
+4. **Adds** missing models that now qualify
+5. **Re-sorts** all data-driven categories by score
+
+Use `--dry-run` to preview changes without writing. Run periodically (e.g. weekly) to keep categories current.
+
+### Single-model mode
+
+```bash
+python scripts/research_model_benchmarks.py <model_id> [--dry-run]
+```
+
+Called automatically when models are added via the admin panel. Evaluates one model against all data-driven categories.
+
+### Category thresholds
+
+Data-driven categories apply qualification thresholds to maintain quality:
+
+| Category | Threshold | Constant |
+|----------|-----------|----------|
+| Best value | ≤ $3.00/1M tokens avg | `COST_EFFECTIVE_MAX_PRICE` |
+| Fastest responses | ≥ 50 tokens/sec | `FAST_MIN_THROUGHPUT` |
+| Coding | ≥ 55% SWE-Bench Verified | `CODING_MIN_SWE_BENCH` |
+| Reasoning | ≥ 80% MMLU-Pro | `REASONING_MIN_MMLU_PRO` |
+| Writing | ≥ 1390 Elo | `WRITING_MIN_ELO` |
+| Long context | ≥ 30/100 MRCR | `LONG_CONTEXT_MIN_MRCR` |
+| Legal | No threshold (all scored models included) | — |
+| Multilingual | No threshold (all scored models included) | — |
+| Medical | Manual only — no scraper | — |
+
+### Scraper notes
+
+- **LMSpeed** renders as a Next.js React Server Components stream. The scraper parses RSC-encoded JSX rather than static HTML tables.
+- **LegalBench** URL changed from `/legal_bench-01-30-2025` to `/legal_bench` (no date suffix). The scraper follows redirects.
+- **Global-MMLU** and **MRCR 1M** leaderboards on llmdb.com have sparse coverage (few models listed).
+- **Creative Writing Arena** lists many model variants (thinking, non-thinking, dated snapshots). The scraper takes the best score per registry model.
+- **Name mapping dicts** (`LMSPEED_NAME_TO_MODEL_ID`, `WRITING_NAME_TO_MODEL_ID`, `MMLU_PRO_NAME_TO_MODEL_ID`, etc.) resolve leaderboard display names that don't match registry names. Update these when adding new models or when leaderboard names change.
+
+### Registry sync
+
+CI runs `sync_help_me_choose_with_registry.py` to validate model IDs against `models_registry.json`. Use `--fix` to remove missing models or apply `MODEL_ID_ALIASES` for renames.
+
+## Manual Curation Guide
+
+Some categories cannot be fully automated because their data sources don't expose structured, scrapable leaderboards. These categories require periodic manual review.
+
+### When to manually curate
+
+- After a major model release (new frontier model from OpenAI, Anthropic, Google, etc.)
+- When a benchmark source publishes updated results
+- When `--refresh-all` reports 0 models fetched for a category that should have data (indicates a broken scraper)
+
+### Categories requiring manual attention
+
+#### Medical (HealthBench)
+**Why manual:** OpenAI's HealthBench page returns 403 (no public API). Scores come from OpenAI's published research papers and blog posts.
+
+**How to update:**
+1. Check https://openai.com/index/healthbench for updated results
+2. Search for "HealthBench" in recent model announcement blog posts
+3. Add entries to the `medical` category in `helpMeChooseRecommendations.ts`:
+   ```
+   { modelId: 'provider/model-id', evidence: 'HealthBench (OpenAI): XX%.' }
+   ```
+4. Run `python scripts/sync_help_me_choose_with_registry.py` to validate
+
+#### Multilingual (Global-MMLU)
+**Why semi-manual:** The llmdb.com leaderboard has very sparse coverage (often only 1-2 models). The scraper works but most models aren't listed.
+
+**How to supplement:**
+1. Check https://llmdb.com/benchmarks/global-mmlu for new entries
+2. Check model release announcements for Global-MMLU scores
+3. Add entries with evidence like: `'Global-MMLU (llmdb.com): XX.X%.'`
+
+#### Long context (MRCR 1M)
+**Why semi-manual:** The llmdb.com MRCR leaderboard only lists ~7 models, mostly from Google. Non-Google models with strong long-context capabilities may not appear.
+
+**How to supplement:**
+1. Check https://llmdb.com/benchmarks/mrcr-1m for new entries
+2. Look for MRCR or "needle-in-a-haystack" scores in model announcements
+3. Add entries with evidence like: `'MRCR 1M (llmdb.com): XX/100.'`
+
+### Manual curation workflow
+
+1. **Find the benchmark score** from a published, well-respected source
+2. **Verify the model exists** in `backend/data/models_registry.json`
+3. **Edit** `frontend/src/data/helpMeChooseRecommendations.ts` — find the category and add an entry:
+   ```typescript
+   { modelId: 'provider/model-name', evidence: 'BenchmarkName (source): SCORE.' },
+   ```
+4. **Validate** by running:
+   ```bash
+   cd backend
+   python scripts/sync_help_me_choose_with_registry.py
+   ```
+5. **Sort** will happen automatically on the next `--refresh-all` run, or you can manually place the entry in score order
+
+### Evidence format conventions
+
+- Always include the source name and URL context: `'BenchmarkName (source.com): SCORE.'`
+- Use `%` for percentage scores: `'MMLU-Pro (awesomeagents.ai): 89.5%.'`
+- Use `Elo` for arena rankings: `'Creative Writing Arena (kearai.com): 1478 Elo.'`
+- Use `/100` for normalized scores: `'MRCR 1M (llmdb.com): 93/100.'`
+- Use `$/1M tokens` for pricing: `'OpenRouter avg: $0.22/1M tokens.'`
+- Use `t/s` for throughput: `'LMSpeed (lmspeed.net): 1742 t/s.'`
 
 ## Future Enhancements
 

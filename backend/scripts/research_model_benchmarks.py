@@ -4,14 +4,21 @@ Research model benchmarks and update Help Me Choose recommendations.
 This script is called automatically when a new model is added via the admin panel.
 It can also be run standalone:
 
-    python scripts/research_model_benchmarks.py <model_id>
+    python scripts/research_model_benchmarks.py <model_id> [--dry-run]
+    python scripts/research_model_benchmarks.py --refresh-all [--dry-run]
 
-The script:
+Single-model mode:
 1. Fetches the model's OpenRouter data (description, pricing, capabilities)
 2. Fetches benchmark scores from public sources (OpenLM SWE-bench, etc.) when available
 3. Determines which Help Me Choose categories the model qualifies for
 4. Adds the model and sorts each category by benchmark score (best first)
 5. Updates frontend/src/data/helpMeChooseRecommendations.ts with proper ranking
+
+Refresh-all mode (--refresh-all):
+  Re-evaluates ALL registry models against ALL data-driven categories
+  (cost-effective, fast, coding, reasoning, writing, long-context, legal,
+  multilingual). Ensures no qualifying model is missing from its category.
+  Run periodically to keep categories comprehensive as leaderboards update.
 
 Only models with verifiable, publicly available benchmark data are added.
 """
@@ -46,10 +53,13 @@ SORT_ASCENDING_CATEGORIES = {"cost-effective"}
 
 SWE_BENCH_URL = "https://openlm.ai/swe-bench/"
 LMARENA_URL = "https://lmarena.ai/"
-VALS_LEGAL_BENCH_URL = "https://www.vals.ai/benchmarks/legal_bench-01-30-2025"
+VALS_LEGAL_BENCH_URL = "https://www.vals.ai/benchmarks/legal_bench"
 LMSPEED_URL = "https://lmspeed.net/leaderboard/best-throughput-models-weekly"
 OPENROUTER_MODELS_URL = "https://openrouter.ai/api/v1/models"
 GLOBAL_MMLU_URL = "https://llmdb.com/benchmarks/global-mmlu"
+MMLU_PRO_URL = "https://awesomeagents.ai/leaderboards/mmlu-pro-leaderboard/"
+CREATIVE_WRITING_URL = "https://kearai.com/leaderboard/creative-writing"
+MRCR_URL = "https://llmdb.com/benchmarks/mrcr-1m"
 
 
 def extract_primary_score(category_id: str, evidence: str) -> float | None:
@@ -58,15 +68,18 @@ def extract_primary_score(category_id: str, evidence: str) -> float | None:
     pct = re.search(r"(\d+\.?\d*)\s*%", evidence)
     if pct:
         return float(pct.group(1))
-    # Mazur Writing Score (e.g. 8.561)
+    # Writing: Creative Writing Arena Elo (e.g. "1478 Elo") or Mazur score (e.g. 8.561)
     if category_id == "writing":
+        elo = re.search(r"(\d{4})\s*Elo", evidence, re.I)
+        if elo:
+            return float(elo.group(1))
         mazur = re.search(r"Mazur[^:]*:\s*(\d+\.\d+)", evidence, re.I)
         if mazur:
             return float(mazur.group(1))
-        # Creative Writing Arena Elo (e.g. 1455–1461)
-        elo = re.search(r"(\d+)\s*[–\-]\s*\d+\s*Elo", evidence, re.I)
-        if elo:
-            return float(elo.group(1))
+        # Legacy range format (e.g. 1455–1461 Elo)
+        elo_range = re.search(r"(\d{4})\s*[–\-]\s*\d+\s*Elo", evidence, re.I)
+        if elo_range:
+            return float(elo_range.group(1))
     # MRCR /100 (e.g. 93/100) or Michelangelo score (e.g. 70.5)
     frac = re.search(r"(\d+)\s*/\s*100\b", evidence)
     if frac:
@@ -239,10 +252,47 @@ def fetch_global_mmlu_scores() -> dict[str, tuple[float, str]]:
     return result
 
 
+def _normalize_lmspeed_name(name: str) -> str:
+    """Normalize LMSpeed model names for matching against registry model IDs.
+
+    Strips common prefixes/suffixes added by LMSpeed (self-, date stamps, API slugs)
+    and normalizes separators so that e.g. 'claude-haiku-4-5-20251001' matches
+    'claude haiku 4.5'.
+    """
+    s = name.strip()
+    s = re.sub(r"^self-", "", s, flags=re.I)
+    # Remove date suffixes like -20251001
+    s = re.sub(r"-\d{8,}$", "", s)
+    # Remove provider prefix if present (e.g. "Qwen/Qwen3..." -> "Qwen3...")
+    if "/" in s:
+        s = s.split("/", 1)[-1]
+    return _normalize_name_for_match(s)
+
+
+# Explicit LMSpeed display name -> registry model_id overrides for names
+# that automated matching can't resolve.
+LMSPEED_NAME_TO_MODEL_ID: dict[str, str] = {
+    "claude-haiku-4-5-20251001": "anthropic/claude-haiku-4.5",
+    "gpt-5-chat-latest": "openai/gpt-5-chat",
+    "self-deepseek-v3.2": "deepseek/deepseek-v3.2-exp",
+    "Step-3.5-Flash": "stepfun/step-3.5-flash:free",
+}
+
+
 def fetch_lmspeed_scores() -> dict[str, tuple[float, str]]:
-    """Fetch LMSpeed throughput (tokens/sec). Returns model_id -> (tps, evidence)."""
+    """Fetch LMSpeed throughput (tokens/sec). Returns model_id -> (tps, evidence).
+
+    LMSpeed renders as a Next.js React Server Components stream. Throughput
+    values are embedded in RSC JSX structures rather than plain HTML tables.
+    """
     model_id_to_name = get_model_id_to_name_map()
     name_to_model_id = {_normalize_name_for_match(n): mid for mid, n in model_id_to_name.items()}
+    # Also map the slug part of model_id (e.g. 'gpt-oss-120b') -> model_id
+    slug_to_model_id: dict[str, str] = {}
+    for mid in model_id_to_name:
+        parts = mid.split("/")
+        if len(parts) == 2:
+            slug_to_model_id[_normalize_name_for_match(parts[1])] = mid
 
     result: dict[str, tuple[float, str]] = {}
     try:
@@ -250,23 +300,39 @@ def fetch_lmspeed_scores() -> dict[str, tuple[float, str]]:
         if resp.status_code != 200:
             return result
         text = resp.text
-        # LMSpeed table: Model | Throughput (e.g. 1742.03t/s)
-        for m in re.finditer(
-            r"\|([^|]+)\|\s*(\d+\.?\d*)\s*t/s",
-            text,
-            re.I,
-        ):
-            model_name = m.group(1).strip()
+
+        # Unescape RSC-encoded JSON strings
+        unesc = text.replace('\\"', '"')
+
+        # Parse row key (model name) + throughput from RSC stream.
+        # Row pattern: "tr","MODEL-ENDPOINT-RANK" ... font-mono...children:"MODEL"
+        #              ... font-mono text-concrete-900 ... children:["THROUGHPUT"
+        row_pattern = re.compile(
+            r'"tr","([^"]+?)-https?://[^"]+?".*?'
+            r'font-mono text-concrete-600[^"]*"[^}]*"children":"([^"]+)".*?'
+            r'font-mono text-concrete-900"[^}]*"children":\["(\d+\.?\d*)"',
+            re.DOTALL,
+        )
+
+        # Collect best throughput per model name
+        best_by_name: dict[str, float] = {}
+        for m in row_pattern.finditer(unesc):
+            model_name = m.group(2).strip()
             try:
-                tps = float(m.group(2))
+                tps = float(m.group(3))
             except ValueError:
                 continue
-            norm = _normalize_name_for_match(model_name)
-            mid = name_to_model_id.get(norm)
+            if model_name not in best_by_name or tps > best_by_name[model_name]:
+                best_by_name[model_name] = tps
+
+        for model_name, tps in best_by_name.items():
+            mid = LMSPEED_NAME_TO_MODEL_ID.get(model_name)
             if not mid:
-                # Try provider/model format: "gpt-oss-120b" -> openai/gpt-oss-120b
+                norm = _normalize_lmspeed_name(model_name)
+                mid = name_to_model_id.get(norm) or slug_to_model_id.get(norm)
+            if not mid:
                 for pid, n in model_id_to_name.items():
-                    if _normalize_name_for_match(n) == norm:
+                    if _normalize_name_for_match(n) == _normalize_lmspeed_name(model_name):
                         mid = pid
                         break
             if mid:
@@ -311,6 +377,177 @@ def fetch_swebench_scores() -> dict[str, tuple[float, str]]:
                 result[mid] = (score, f"SWE-Bench Verified (openlm.ai): {score}%.")
     except Exception as e:
         print(f"Warning: Could not fetch SWE-bench scores: {e}", file=sys.stderr)
+    return result
+
+
+MMLU_PRO_NAME_TO_MODEL_ID: dict[str, str] = {
+    "Gemini 3 Pro": "google/gemini-3.1-pro-preview",
+    "Claude Opus 4.5 Reasoning": "anthropic/claude-opus-4.5",
+    "DeepSeek V3.2-Speciale": "deepseek/deepseek-v3.2-exp",
+    "Qwen 3.5": "qwen/qwen3.5-397b-a17b",
+}
+
+
+def fetch_mmlu_pro_scores() -> dict[str, tuple[float, str]]:
+    """Fetch MMLU-Pro scores from awesomeagents.ai. Returns model_id -> (score, evidence)."""
+    model_id_to_name = get_model_id_to_name_map()
+    name_to_model_id = {_normalize_name_for_match(n): mid for mid, n in model_id_to_name.items()}
+
+    result: dict[str, tuple[float, str]] = {}
+    try:
+        resp = httpx.get(MMLU_PRO_URL, timeout=15.0, follow_redirects=True)
+        if resp.status_code != 200:
+            return result
+        soup = BeautifulSoup(resp.text, "html.parser")
+        table = soup.find("table")
+        if not table:
+            return result
+        for row in table.find_all("tr"):
+            cells = row.find_all("td")
+            if len(cells) < 4:
+                continue
+            model_name = cells[1].get_text(strip=True)
+            score_text = cells[3].get_text(strip=True).rstrip("%")
+            try:
+                score = float(score_text)
+            except ValueError:
+                continue
+            mid = MMLU_PRO_NAME_TO_MODEL_ID.get(model_name)
+            if not mid:
+                norm = _normalize_name_for_match(model_name)
+                mid = name_to_model_id.get(norm)
+            if mid:
+                result[mid] = (score, f"MMLU-Pro (awesomeagents.ai): {score}%.")
+    except Exception as e:
+        print(f"Warning: Could not fetch MMLU-Pro scores: {e}", file=sys.stderr)
+    return result
+
+
+WRITING_NAME_TO_MODEL_ID: dict[str, str] = {
+    "Claude Opus 4 6": "anthropic/claude-opus-4.6",
+    "Claude Opus 4 5 20251101 Thinking 32k": "anthropic/claude-opus-4.5",
+    "Claude Opus 4 5 20251101": "anthropic/claude-opus-4.5",
+    "Claude Sonnet 4 5 20250929": "anthropic/claude-sonnet-4.5",
+    "Claude Sonnet 4 5 20250929 Thinking 32k": "anthropic/claude-sonnet-4.5",
+    "Claude Opus 4 1 20250805 Thinking 16k": "anthropic/claude-opus-4.1",
+    "Claude Opus 4 1 20250805": "anthropic/claude-opus-4.1",
+    "Claude Opus 4 20250514 Thinking 16k": "anthropic/claude-opus-4",
+    "Claude Opus 4 20250514": "anthropic/claude-opus-4",
+    "Gpt 4.5 Preview 2025 02 27": "openai/gpt-4o",
+    "Gpt 5.1 High": "openai/gpt-5.1",
+    "Gpt 5.1": "openai/gpt-5.1",
+    "Chatgpt 4o Latest 20250326": "openai/gpt-4o",
+    "Kimi K2.5 Thinking": "moonshotai/kimi-k2.5",
+    "Kimi K2.5 Instant": "moonshotai/kimi-k2.5",
+    "Deepseek V3.1 Terminus": "deepseek/deepseek-chat-v3.1",
+    "Deepseek V3.1 Thinking": "deepseek/deepseek-chat-v3.1",
+    "Deepseek V3.2 Exp": "deepseek/deepseek-v3.2-exp",
+    "Deepseek V3.2": "deepseek/deepseek-v3.2-exp",
+    "Grok 4 1 Fast Reasoning": "x-ai/grok-4.1-fast",
+    "Grok 4.1 Thinking": "x-ai/grok-4.1-fast",
+    "Grok 4.1": "x-ai/grok-4.1-fast",
+    "Grok 3 Preview 02 24": "x-ai/grok-3-mini",
+    "Gemini 3 Pro": "google/gemini-3.1-pro-preview",
+    "Gemini 3 Flash": "google/gemini-3-flash-preview",
+    "Gemini 3 Flash (thinking Minimal)": "google/gemini-3-flash-preview",
+    "Gpt 4.1 2025 04 14": "openai/gpt-4o",
+    "Glm 4.7": "z-ai/glm-4.7",
+    "Glm 4.6": "z-ai/glm-4.7",
+}
+
+WRITING_MIN_ELO = 1390
+
+
+def fetch_creative_writing_scores() -> dict[str, tuple[float, str]]:
+    """Fetch Creative Writing Arena Elo from kearai.com. Returns model_id -> (elo, evidence).
+
+    Takes the best Elo for each registry model when multiple variants exist
+    (e.g. thinking vs non-thinking).
+    """
+    model_id_to_name = get_model_id_to_name_map()
+    name_to_model_id = {_normalize_name_for_match(n): mid for mid, n in model_id_to_name.items()}
+
+    result: dict[str, tuple[float, str]] = {}
+    try:
+        resp = httpx.get(CREATIVE_WRITING_URL, timeout=15.0, follow_redirects=True)
+        if resp.status_code != 200:
+            return result
+        soup = BeautifulSoup(resp.text, "html.parser")
+        table = soup.find("table")
+        if not table:
+            return result
+        for row in table.find_all("tr"):
+            cells = row.find_all("td")
+            if len(cells) < 3:
+                continue
+            model_name = cells[1].get_text(strip=True)
+            score_text = cells[2].get_text(strip=True).replace(",", "")
+            try:
+                elo = float(score_text)
+            except ValueError:
+                continue
+            if elo < 1000:
+                continue
+            mid = WRITING_NAME_TO_MODEL_ID.get(model_name)
+            if not mid:
+                norm = _normalize_name_for_match(model_name)
+                mid = name_to_model_id.get(norm)
+            if mid:
+                if mid not in result or elo > result[mid][0]:
+                    result[mid] = (elo, f"Creative Writing Arena (kearai.com): {elo:.0f} Elo.")
+    except Exception as e:
+        print(f"Warning: Could not fetch Creative Writing scores: {e}", file=sys.stderr)
+    return result
+
+
+MRCR_NAME_TO_MODEL_ID: dict[str, str] = {
+    "Gemini 2.0 Flash": "google/gemini-2.0-flash-001",
+    "Gemini 2.0 Pro": "google/gemini-2.5-pro",
+    "Gemini 2.0 Flash-Lite": "google/gemini-2.0-flash-001",
+}
+
+
+def fetch_mrcr_scores() -> dict[str, tuple[float, str]]:
+    """Fetch MRCR 1M scores from llmdb.com. Returns model_id -> (score, evidence).
+
+    Table columns: Rank | Model | Provider | Score | ...
+    """
+    model_id_to_name = get_model_id_to_name_map()
+    name_to_model_id = {_normalize_name_for_match(n): mid for mid, n in model_id_to_name.items()}
+
+    result: dict[str, tuple[float, str]] = {}
+    try:
+        resp = httpx.get(MRCR_URL, timeout=15.0, follow_redirects=True)
+        if resp.status_code != 200:
+            return result
+        soup = BeautifulSoup(resp.text, "html.parser")
+        for link in soup.find_all("a", href=True):
+            href = link.get("href", "")
+            if "/models/" not in href:
+                continue
+            display_name = link.get_text(strip=True) or ""
+            parent_row = link.find_parent("tr")
+            if not parent_row:
+                continue
+            cells = parent_row.find_all("td")
+            if len(cells) < 4:
+                continue
+            score_text = cells[3].get_text(strip=True)
+            try:
+                score = float(score_text)
+            except ValueError:
+                continue
+            if score < 0 or score > 100:
+                continue
+            mid = MRCR_NAME_TO_MODEL_ID.get(display_name)
+            if not mid:
+                norm = _normalize_name_for_match(display_name)
+                mid = name_to_model_id.get(norm)
+            if mid:
+                if mid not in result or score > result[mid][0]:
+                    result[mid] = (score, f"MRCR 1M (llmdb.com): {score}/100.")
+    except Exception as e:
+        print(f"Warning: Could not fetch MRCR scores: {e}", file=sys.stderr)
     return result
 
 
@@ -387,6 +624,14 @@ def calculate_avg_cost(model_data: dict) -> float | None:
     return inp_m or out_m or None
 
 
+# Category qualification thresholds.  Models must meet these to be included.
+COST_EFFECTIVE_MAX_PRICE = 3.00  # max avg $/1M tokens
+FAST_MIN_THROUGHPUT = 50.0  # min tokens/sec
+CODING_MIN_SWE_BENCH = 55.0  # min SWE-bench Verified %
+REASONING_MIN_MMLU_PRO = 80.0  # min MMLU-Pro %
+LONG_CONTEXT_MIN_MRCR = 30.0  # min MRCR 1M score
+
+
 def determine_categories(
     model_id: str,
     registry_model: dict,
@@ -396,6 +641,9 @@ def determine_categories(
     openrouter_pricing: dict[str, tuple[float, str]] | None = None,
     lmspeed_scores: dict[str, tuple[float, str]] | None = None,
     global_mmlu_scores: dict[str, tuple[float, str]] | None = None,
+    mmlu_pro_scores: dict[str, tuple[float, str]] | None = None,
+    creative_writing_scores: dict[str, tuple[float, str]] | None = None,
+    mrcr_scores: dict[str, tuple[float, str]] | None = None,
 ) -> list[dict]:
     """Determine which Help Me Choose categories this model qualifies for.
 
@@ -405,19 +653,34 @@ def determine_categories(
     entries = []
     if model_id in swebench_scores:
         score, evidence = swebench_scores[model_id]
-        entries.append({"category_id": "coding", "evidence": evidence, "score": score})
+        if score >= CODING_MIN_SWE_BENCH:
+            entries.append({"category_id": "coding", "evidence": evidence, "score": score})
     if legalbench_scores and model_id in legalbench_scores:
         score, evidence = legalbench_scores[model_id]
         entries.append({"category_id": "legal", "evidence": evidence, "score": score})
     if openrouter_pricing and model_id in openrouter_pricing:
         cost, evidence = openrouter_pricing[model_id]
-        entries.append({"category_id": "cost-effective", "evidence": evidence, "score": cost})
+        if cost <= COST_EFFECTIVE_MAX_PRICE:
+            entries.append({"category_id": "cost-effective", "evidence": evidence, "score": cost})
     if lmspeed_scores and model_id in lmspeed_scores:
         tps, evidence = lmspeed_scores[model_id]
-        entries.append({"category_id": "fast", "evidence": evidence, "score": tps})
+        if tps >= FAST_MIN_THROUGHPUT:
+            entries.append({"category_id": "fast", "evidence": evidence, "score": tps})
     if global_mmlu_scores and model_id in global_mmlu_scores:
         score, evidence = global_mmlu_scores[model_id]
         entries.append({"category_id": "multilingual", "evidence": evidence, "score": score})
+    if mmlu_pro_scores and model_id in mmlu_pro_scores:
+        score, evidence = mmlu_pro_scores[model_id]
+        if score >= REASONING_MIN_MMLU_PRO:
+            entries.append({"category_id": "reasoning", "evidence": evidence, "score": score})
+    if creative_writing_scores and model_id in creative_writing_scores:
+        elo, evidence = creative_writing_scores[model_id]
+        if elo >= WRITING_MIN_ELO:
+            entries.append({"category_id": "writing", "evidence": evidence, "score": elo})
+    if mrcr_scores and model_id in mrcr_scores:
+        score, evidence = mrcr_scores[model_id]
+        if score >= LONG_CONTEXT_MIN_MRCR:
+            entries.append({"category_id": "long-context", "evidence": evidence, "score": score})
     return entries
 
 
@@ -720,12 +983,202 @@ def research_and_update(model_id: str, dry_run: bool = False) -> dict:
     }
 
 
-if __name__ == "__main__":
-    if len(sys.argv) < 2:
-        print(f"Usage: {sys.argv[0]} <model_id> [--dry-run]", file=sys.stderr)
-        sys.exit(1)
+def _sync_evidence_and_prune(
+    categories: list[dict],
+    fetched_by_cat: dict[str, dict[str, tuple[float, str]]],
+) -> tuple[dict[str, list[str]], dict[str, list[str]]]:
+    """Update stale evidence strings and remove models that no longer qualify.
 
-    mid = sys.argv[1]
-    dry = "--dry-run" in sys.argv
-    result = research_and_update(mid, dry_run=dry)
-    print(json.dumps(result, indent=2))
+    For data-driven categories (cost-effective, fast, coding), replaces the
+    stored evidence with the latest fetched value so prices/throughput stay
+    accurate.  Also removes models whose current score falls outside the
+    category threshold.
+
+    Returns (updated, removed) dicts mapping category_id -> [model_ids].
+    """
+    thresholds: dict[str, tuple[str, float]] = {
+        "cost-effective": ("max", COST_EFFECTIVE_MAX_PRICE),
+        "fast": ("min", FAST_MIN_THROUGHPUT),
+        "coding": ("min", CODING_MIN_SWE_BENCH),
+        "reasoning": ("min", REASONING_MIN_MMLU_PRO),
+        "writing": ("min", WRITING_MIN_ELO),
+        "long-context": ("min", LONG_CONTEXT_MIN_MRCR),
+    }
+
+    updated: dict[str, list[str]] = {}
+    removed: dict[str, list[str]] = {}
+
+    for cat in categories:
+        cat_id = cat["id"]
+        fetched = fetched_by_cat.get(cat_id)
+        if not fetched:
+            continue
+        threshold = thresholds.get(cat_id)
+        to_remove: list[int] = []
+
+        for i, m in enumerate(cat["models"]):
+            mid = m["modelId"]
+            if mid not in fetched:
+                continue
+            score, new_evidence = fetched[mid]
+
+            if threshold:
+                kind, limit = threshold
+                if (kind == "max" and score > limit) or (kind == "min" and score < limit):
+                    to_remove.append(i)
+                    removed.setdefault(cat_id, []).append(mid)
+                    continue
+
+            if m["evidence"] != new_evidence:
+                m["evidence"] = new_evidence
+                updated.setdefault(cat_id, []).append(mid)
+
+        for i in reversed(to_remove):
+            cat["models"].pop(i)
+
+    return updated, removed
+
+
+def refresh_all_categories(dry_run: bool = False) -> dict:
+    """Re-evaluate ALL registry models for data-driven categories.
+
+    Fetches current benchmark data from all sources and:
+    1. Adds missing models that now qualify
+    2. Updates stale evidence (e.g. outdated prices) on existing models
+    3. Removes models that no longer meet category thresholds
+    4. Re-sorts all data-driven categories
+
+    Returns {"added": {...}, "updated": {...}, "removed": {...}, "total_changes": int}.
+    """
+    registry = load_registry()
+    all_model_ids: list[str] = []
+    for provider_models in registry.get("models_by_provider", {}).values():
+        for m in provider_models:
+            if mid := m.get("id"):
+                all_model_ids.append(mid)
+
+    print(f"Refreshing categories for {len(all_model_ids)} registry models...")
+    print("Fetching benchmark data from all sources...")
+
+    swebench_scores = fetch_swebench_scores()
+    print(f"  SWE-bench: {len(swebench_scores)} models")
+    legalbench_scores = fetch_legalbench_scores()
+    print(f"  LegalBench: {len(legalbench_scores)} models")
+    openrouter_pricing = fetch_openrouter_pricing()
+    print(f"  OpenRouter pricing: {len(openrouter_pricing)} models")
+    lmspeed_scores = fetch_lmspeed_scores()
+    print(f"  LMSpeed: {len(lmspeed_scores)} models")
+    global_mmlu_scores = fetch_global_mmlu_scores()
+    print(f"  Global-MMLU: {len(global_mmlu_scores)} models")
+    mmlu_pro_scores = fetch_mmlu_pro_scores()
+    print(f"  MMLU-Pro: {len(mmlu_pro_scores)} models")
+    creative_writing_scores = fetch_creative_writing_scores()
+    print(f"  Creative Writing Arena: {len(creative_writing_scores)} models")
+    mrcr_scores = fetch_mrcr_scores()
+    print(f"  MRCR 1M: {len(mrcr_scores)} models")
+
+    if not RECOMMENDATIONS_PATH.exists():
+        print(f"Error: {RECOMMENDATIONS_PATH} not found", file=sys.stderr)
+        return {"added": {}, "updated": {}, "removed": {}, "total_changes": 0}
+
+    content = RECOMMENDATIONS_PATH.read_text(encoding="utf-8")
+    categories = parse_recommendations_ts(content)
+    if not categories:
+        print("Error: could not parse categories", file=sys.stderr)
+        return {"added": {}, "updated": {}, "removed": {}, "total_changes": 0}
+
+    fetched_by_cat: dict[str, dict] = {}
+    if swebench_scores:
+        fetched_by_cat["coding"] = swebench_scores
+    if legalbench_scores:
+        fetched_by_cat["legal"] = legalbench_scores
+    if openrouter_pricing:
+        fetched_by_cat["cost-effective"] = openrouter_pricing
+    if lmspeed_scores:
+        fetched_by_cat["fast"] = lmspeed_scores
+    if global_mmlu_scores:
+        fetched_by_cat["multilingual"] = global_mmlu_scores
+    if mmlu_pro_scores:
+        fetched_by_cat["reasoning"] = mmlu_pro_scores
+    if creative_writing_scores:
+        fetched_by_cat["writing"] = creative_writing_scores
+    if mrcr_scores:
+        fetched_by_cat["long-context"] = mrcr_scores
+
+    # Step 1: Sync evidence and prune models that no longer qualify
+    ev_updated, ev_removed = _sync_evidence_and_prune(categories, fetched_by_cat)
+    for cat_id, mids in ev_updated.items():
+        for mid in mids:
+            print(f"  ~ {mid} [{cat_id}]: evidence updated")
+    for cat_id, mids in ev_removed.items():
+        for mid in mids:
+            print(f"  - {mid} [{cat_id}]: no longer meets threshold")
+
+    # Step 2: Add missing models
+    added: dict[str, list[str]] = {}
+    for model_id in all_model_ids:
+        registry_model = get_model_from_registry(model_id)
+        if not registry_model:
+            continue
+        entries = determine_categories(
+            model_id,
+            registry_model,
+            None,
+            swebench_scores,
+            legalbench_scores,
+            openrouter_pricing,
+            lmspeed_scores,
+            global_mmlu_scores,
+            mmlu_pro_scores,
+            creative_writing_scores,
+            mrcr_scores,
+        )
+        for entry in entries:
+            cat_id = entry["category_id"]
+            evidence = entry["evidence"]
+            if add_model_to_category(categories, cat_id, model_id, evidence):
+                added.setdefault(cat_id, []).append(model_id)
+                print(f"  + {model_id} -> {cat_id}: {evidence}")
+
+    # Step 3: Re-sort all data-driven categories
+    for cat in categories:
+        if cat["id"] in fetched_by_cat:
+            sort_category_by_scores(cat, fetched_by_cat.get(cat["id"]))
+
+    total = (
+        sum(len(v) for v in added.values())
+        + sum(len(v) for v in ev_updated.values())
+        + sum(len(v) for v in ev_removed.values())
+    )
+    if total > 0 and not dry_run:
+        update_recommendations_file(categories)
+        print(
+            f"\nWrote changes: {sum(len(v) for v in added.values())} added, "
+            f"{sum(len(v) for v in ev_updated.values())} updated, "
+            f"{sum(len(v) for v in ev_removed.values())} removed."
+        )
+    elif total > 0:
+        print(f"\n(Dry run) Would make {total} changes.")
+    else:
+        print("\nAll models already up to date.")
+
+    return {"added": added, "updated": ev_updated, "removed": ev_removed, "total_changes": total}
+
+
+if __name__ == "__main__":
+    if "--refresh-all" in sys.argv:
+        dry = "--dry-run" in sys.argv
+        result = refresh_all_categories(dry_run=dry)
+        print(json.dumps(result, indent=2))
+    elif len(sys.argv) < 2:
+        print(
+            f"Usage: {sys.argv[0]} <model_id> [--dry-run]\n"
+            f"       {sys.argv[0]} --refresh-all [--dry-run]",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+    else:
+        mid = sys.argv[1]
+        dry = "--dry-run" in sys.argv
+        result = research_and_update(mid, dry_run=dry)
+        print(json.dumps(result, indent=2))

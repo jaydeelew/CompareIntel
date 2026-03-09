@@ -48,26 +48,60 @@ export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
     categoryInfoTooltip:
       'Ranked by average cost per million tokens (OpenRouter pricing: prompt + completion). Lower cost = better value. Prices vary by provider.',
     models: [
+      { modelId: 'cohere/command-r7b-12-2024', evidence: 'OpenRouter avg: $0.09/1M tokens.' },
+      { modelId: 'microsoft/phi-4', evidence: 'OpenRouter avg: $0.10/1M tokens.' },
+      { modelId: 'openai/gpt-oss-120b', evidence: 'OpenRouter avg: $0.11/1M tokens.' },
       {
-        modelId: 'deepseek/deepseek-chat-v3.1',
-        evidence: 'OpenRouter avg: $0.61/1M tokens. Best value for high-volume use.',
+        modelId: 'mistralai/mistral-small-3.2-24b-instruct',
+        evidence: 'OpenRouter avg: $0.12/1M tokens.',
       },
+      { modelId: 'meta-llama/llama-4-scout', evidence: 'OpenRouter avg: $0.19/1M tokens.' },
+      { modelId: 'xiaomi/mimo-v2-flash', evidence: 'OpenRouter avg: $0.19/1M tokens.' },
+      { modelId: 'qwen/qwen3-30b-a3b-instruct-2507', evidence: 'OpenRouter avg: $0.20/1M tokens.' },
+      { modelId: 'mistralai/devstral-small', evidence: 'OpenRouter avg: $0.20/1M tokens.' },
       {
-        modelId: 'google/gemini-2.5-flash',
-        evidence: 'OpenRouter avg: $0.75/1M tokens. Fast and cost-efficient.',
+        modelId: 'meta-llama/llama-3.3-70b-instruct',
+        evidence: 'OpenRouter avg: $0.21/1M tokens.',
       },
-      {
-        modelId: 'anthropic/claude-haiku-4.5',
-        evidence: 'OpenRouter avg: $1.25/1M tokens. Near-frontier at low cost.',
-      },
-      {
-        modelId: 'openai/gpt-5-nano',
-        evidence: 'OpenRouter avg: $1.50/1M tokens. Lightweight GPT-5 tier.',
-      },
-      {
-        modelId: 'google/gemini-3-flash-preview',
-        evidence: 'OpenRouter avg: $2.00/1M tokens. Thinking model, strong value.',
-      },
+      { modelId: 'openai/gpt-5-nano', evidence: 'OpenRouter avg: $0.22/1M tokens.' },
+      { modelId: 'google/gemini-2.0-flash-001', evidence: 'OpenRouter avg: $0.25/1M tokens.' },
+      { modelId: 'deepseek/deepseek-v3.2-exp', evidence: 'OpenRouter avg: $0.34/1M tokens.' },
+      { modelId: 'x-ai/grok-4-fast', evidence: 'OpenRouter avg: $0.35/1M tokens.' },
+      { modelId: 'x-ai/grok-4.1-fast', evidence: 'OpenRouter avg: $0.35/1M tokens.' },
+      { modelId: 'meta-llama/llama-4-maverick', evidence: 'OpenRouter avg: $0.38/1M tokens.' },
+      { modelId: 'openai/gpt-4o-mini', evidence: 'OpenRouter avg: $0.38/1M tokens.' },
+      { modelId: 'x-ai/grok-3-mini', evidence: 'OpenRouter avg: $0.40/1M tokens.' },
+      { modelId: 'qwen/qwen3-coder-next', evidence: 'OpenRouter avg: $0.43/1M tokens.' },
+      { modelId: 'deepseek/deepseek-chat-v3.1', evidence: 'OpenRouter avg: $0.45/1M tokens.' },
+      { modelId: 'qwen/qwen-plus-2025-07-28', evidence: 'OpenRouter avg: $0.52/1M tokens.' },
+      { modelId: 'qwen/qwen3-coder-flash', evidence: 'OpenRouter avg: $0.58/1M tokens.' },
+      { modelId: 'qwen/qwen3-next-80b-a3b-instruct', evidence: 'OpenRouter avg: $0.60/1M tokens.' },
+      { modelId: 'mistralai/codestral-2508', evidence: 'OpenRouter avg: $0.60/1M tokens.' },
+      { modelId: 'qwen/qwen3-coder', evidence: 'OpenRouter avg: $0.61/1M tokens.' },
+      { modelId: 'microsoft/wizardlm-2-8x22b', evidence: 'OpenRouter avg: $0.62/1M tokens.' },
+      { modelId: 'minimax/minimax-m2', evidence: 'OpenRouter avg: $0.63/1M tokens.' },
+      { modelId: 'qwen/qwen3-next-80b-a3b-thinking', evidence: 'OpenRouter avg: $0.67/1M tokens.' },
+      { modelId: 'minimax/minimax-m2.5', evidence: 'OpenRouter avg: $0.75/1M tokens.' },
+      { modelId: 'x-ai/grok-code-fast-1', evidence: 'OpenRouter avg: $0.85/1M tokens.' },
+      { modelId: 'qwen/qwen3.5-plus-02-15', evidence: 'OpenRouter avg: $0.91/1M tokens.' },
+      { modelId: 'openai/gpt-5-mini', evidence: 'OpenRouter avg: $1.12/1M tokens.' },
+      { modelId: 'openai/gpt-5.1-codex-mini', evidence: 'OpenRouter avg: $1.12/1M tokens.' },
+      { modelId: 'qwen/qwen3-235b-a22b', evidence: 'OpenRouter avg: $1.14/1M tokens.' },
+      { modelId: 'z-ai/glm-4.7', evidence: 'OpenRouter avg: $1.18/1M tokens.' },
+      { modelId: 'mistralai/devstral-medium', evidence: 'OpenRouter avg: $1.20/1M tokens.' },
+      { modelId: 'mistralai/mistral-medium-3.1', evidence: 'OpenRouter avg: $1.20/1M tokens.' },
+      { modelId: 'mistralai/devstral-2512', evidence: 'OpenRouter avg: $1.20/1M tokens.' },
+      { modelId: 'moonshotai/kimi-k2.5', evidence: 'OpenRouter avg: $1.33/1M tokens.' },
+      { modelId: 'qwen/qwen3.5-397b-a17b', evidence: 'OpenRouter avg: $1.36/1M tokens.' },
+      { modelId: 'google/gemini-2.5-flash', evidence: 'OpenRouter avg: $1.40/1M tokens.' },
+      { modelId: 'deepseek/deepseek-r1', evidence: 'OpenRouter avg: $1.60/1M tokens.' },
+      { modelId: 'z-ai/glm-5', evidence: 'OpenRouter avg: $1.68/1M tokens.' },
+      { modelId: 'google/gemini-3-flash-preview', evidence: 'OpenRouter avg: $1.75/1M tokens.' },
+      { modelId: 'qwen/qwen3-coder-plus', evidence: 'OpenRouter avg: $1.95/1M tokens.' },
+      { modelId: 'qwen/qwen3-max-thinking', evidence: 'OpenRouter avg: $2.34/1M tokens.' },
+      { modelId: 'anthropic/claude-3.5-haiku', evidence: 'OpenRouter avg: $2.40/1M tokens.' },
+      { modelId: 'openai/o3-mini', evidence: 'OpenRouter avg: $2.75/1M tokens.' },
+      { modelId: 'anthropic/claude-haiku-4.5', evidence: 'OpenRouter avg: $3.00/1M tokens.' },
     ],
   },
   {
@@ -77,27 +111,24 @@ export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
     categoryInfoTooltip:
       'Ranked by inference throughput (tokens/second) from LMSpeed and API benchmarks. Higher throughput = faster streaming responses. Speed varies by provider and load.',
     models: [
-      {
-        modelId: 'openai/gpt-oss-120b',
-        evidence:
-          'LMSpeed (lmspeed.net): 1742 t/s. Top throughput on OpenRouter-compatible endpoints.',
-      },
-      {
-        modelId: 'openai/gpt-5.2',
-        evidence: 'LMSpeed: 170 t/s. GPT-5.2 Chat (Instant) tier.',
-      },
-      {
-        modelId: 'google/gemini-3-flash-preview',
-        evidence: 'LMSpeed: 162 t/s. Fast thinking model.',
-      },
-      {
-        modelId: 'x-ai/grok-4-fast',
-        evidence: 'LMSpeed: 124 t/s. xAI fast tier.',
-      },
-      {
-        modelId: 'anthropic/claude-haiku-4.5',
-        evidence: 'LMSpeed: 116 t/s. Low latency, high throughput.',
-      },
+      { modelId: 'openai/gpt-oss-120b', evidence: 'LMSpeed (lmspeed.net): 1742 t/s.' },
+      { modelId: 'openai/gpt-5', evidence: 'LMSpeed (lmspeed.net): 490 t/s.' },
+      { modelId: 'google/gemini-3.1-pro-preview', evidence: 'LMSpeed (lmspeed.net): 462 t/s.' },
+      { modelId: 'stepfun/step-3.5-flash:free', evidence: 'LMSpeed (lmspeed.net): 193 t/s.' },
+      { modelId: 'openai/gpt-5.2', evidence: 'LMSpeed (lmspeed.net): 171 t/s.' },
+      { modelId: 'google/gemini-3-flash-preview', evidence: 'LMSpeed (lmspeed.net): 163 t/s.' },
+      { modelId: 'x-ai/grok-4-fast', evidence: 'LMSpeed (lmspeed.net): 124 t/s.' },
+      { modelId: 'anthropic/claude-haiku-4.5', evidence: 'LMSpeed (lmspeed.net): 116 t/s.' },
+      { modelId: 'qwen/qwen3-coder-flash', evidence: 'LMSpeed (lmspeed.net): 110 t/s.' },
+      { modelId: 'openai/gpt-5-chat', evidence: 'LMSpeed (lmspeed.net): 102 t/s.' },
+      { modelId: 'x-ai/grok-4.1-fast', evidence: 'LMSpeed (lmspeed.net): 99 t/s.' },
+      { modelId: 'moonshotai/kimi-k2.5', evidence: 'LMSpeed (lmspeed.net): 98 t/s.' },
+      { modelId: 'openai/gpt-5.1', evidence: 'LMSpeed (lmspeed.net): 96 t/s.' },
+      { modelId: 'openai/gpt-5.2-chat', evidence: 'LMSpeed (lmspeed.net): 93 t/s.' },
+      { modelId: 'qwen/qwen3-next-80b-a3b-instruct', evidence: 'LMSpeed (lmspeed.net): 93 t/s.' },
+      { modelId: 'deepseek/deepseek-v3.2-exp', evidence: 'LMSpeed (lmspeed.net): 83 t/s.' },
+      { modelId: 'openai/gpt-5.4', evidence: 'LMSpeed (lmspeed.net): 82 t/s.' },
+      { modelId: 'minimax/minimax-m2.5', evidence: 'LMSpeed (lmspeed.net): 71 t/s.' },
     ],
   },
   {
@@ -106,14 +137,6 @@ export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
     description: 'Code generation, debugging, refactoring',
     models: [
       {
-        modelId: 'anthropic/claude-opus-4.5',
-        evidence: 'SWE-Bench Verified (swebench.com): 80.9%. First AI over 80%.',
-      },
-      {
-        modelId: 'anthropic/claude-opus-4.6',
-        evidence: 'SWE-Bench Verified: 80.8%. LMSys Coding Arena (lmarena.ai): #1.',
-      },
-      {
         modelId: 'google/gemini-3.1-pro-preview',
         evidence: 'SWE-Bench Verified: 80.6%. Strong code generation.',
       },
@@ -121,19 +144,19 @@ export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
         modelId: 'minimax/minimax-m2.5',
         evidence: 'SWE-Bench Verified (openlm.ai): 80.2%. 3× faster. Best value/speed for code.',
       },
-      { modelId: 'openai/gpt-5.2', evidence: 'SWE-Bench Verified: 80.0%.' },
       {
         modelId: 'anthropic/claude-sonnet-4.6',
         evidence: 'SWE-Bench Verified: 79.6%. Frontier Sonnet for code.',
       },
+      { modelId: 'anthropic/claude-opus-4.6', evidence: 'SWE-Bench Verified (openlm.ai): 79.2%.' },
       { modelId: 'z-ai/glm-5', evidence: 'SWE-Bench Verified: 77.8%. Strong coding from Zhipu.' },
-      { modelId: 'anthropic/claude-sonnet-4.5', evidence: 'SWE-Bench Verified: 77.2%.' },
       { modelId: 'moonshotai/kimi-k2.5', evidence: 'SWE-Bench Verified (openlm.ai): 76.8%.' },
       { modelId: 'qwen/qwen3.5-397b-a17b', evidence: 'SWE-Bench Verified: 76.4%. Qwen flagship.' },
       {
         modelId: 'google/gemini-3-flash-preview',
         evidence: 'SWE-Bench Verified (openlm.ai): 75.2%. Fast coding model.',
       },
+      { modelId: 'anthropic/claude-opus-4.5', evidence: 'SWE-Bench Verified (openlm.ai): 74.4%.' },
       {
         modelId: 'google/gemini-3-pro-preview',
         evidence: 'SWE-Bench Verified (openlm.ai): 74.2%. Pro-tier coding.',
@@ -142,19 +165,25 @@ export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
         modelId: 'deepseek/deepseek-v3.2-exp',
         evidence: 'SWE-Bench Verified: 73.0%. Experimental V3.2.',
       },
-      { modelId: 'anthropic/claude-sonnet-4', evidence: 'SWE-Bench Verified: 72.7%.' },
+      { modelId: 'openai/gpt-5.2', evidence: 'SWE-Bench Verified (openlm.ai): 71.8%.' },
+      {
+        modelId: 'anthropic/claude-sonnet-4.5',
+        evidence: 'SWE-Bench Verified (openlm.ai): 70.6%.',
+      },
       {
         modelId: 'qwen/qwen3-coder-next',
         evidence: 'SWE-Bench Verified (openlm.ai): 70.6%. Specialized coder.',
       },
-      {
-        modelId: 'x-ai/grok-4',
-        evidence: 'SWE-Bench Verified (openlm.ai): 70.6%. xAI flagship coding.',
-      },
-      {
-        modelId: 'anthropic/claude-haiku-4.5',
-        evidence: 'SWE-Bench Verified (openlm.ai): 68.8%. Fast + capable.',
-      },
+      { modelId: 'x-ai/grok-4', evidence: 'SWE-Bench Verified (openlm.ai): 70.6%.' },
+      { modelId: 'openai/gpt-5.1', evidence: 'SWE-Bench Verified (openlm.ai): 70.5%.' },
+      { modelId: 'anthropic/claude-opus-4.1', evidence: 'SWE-Bench Verified (openlm.ai): 70.1%.' },
+      { modelId: 'qwen/qwen3-max', evidence: 'SWE-Bench Verified (openlm.ai): 69.6%.' },
+      { modelId: 'anthropic/claude-haiku-4.5', evidence: 'SWE-Bench Verified (openlm.ai): 68.8%.' },
+      { modelId: 'anthropic/claude-sonnet-4', evidence: 'SWE-Bench Verified (openlm.ai): 68.0%.' },
+      { modelId: 'anthropic/claude-opus-4', evidence: 'SWE-Bench Verified (openlm.ai): 67.6%.' },
+      { modelId: 'openai/gpt-5', evidence: 'SWE-Bench Verified (openlm.ai): 65.0%.' },
+      { modelId: 'openai/gpt-5-mini', evidence: 'SWE-Bench Verified (openlm.ai): 59.8%.' },
+      { modelId: 'openai/o3', evidence: 'SWE-Bench Verified (openlm.ai): 58.4%.' },
     ],
   },
   {
@@ -163,18 +192,64 @@ export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
     description: 'Prose, tone, character consistency',
     models: [
       {
-        modelId: 'anthropic/claude-opus-4.6',
-        evidence: 'Mazur Writing Score (Creative Writing Arena, kearai.com): 8.561. Leader.',
+        modelId: 'google/gemini-3.1-pro-preview',
+        evidence: 'Creative Writing Arena (kearai.com): 1490 Elo.',
       },
+      {
+        modelId: 'anthropic/claude-opus-4.6',
+        evidence: 'Creative Writing Arena (kearai.com): 1478 Elo.',
+      },
+      {
+        modelId: 'anthropic/claude-opus-4.5',
+        evidence: 'Creative Writing Arena (kearai.com): 1459 Elo.',
+      },
+      {
+        modelId: 'google/gemini-3-flash-preview',
+        evidence: 'Creative Writing Arena (kearai.com): 1456 Elo.',
+      },
+      {
+        modelId: 'google/gemini-2.5-pro',
+        evidence: 'Creative Writing Arena (kearai.com): 1450 Elo.',
+      },
+      {
+        modelId: 'anthropic/claude-sonnet-4.5',
+        evidence: 'Creative Writing Arena (kearai.com): 1447 Elo.',
+      },
+      {
+        modelId: 'anthropic/claude-opus-4.1',
+        evidence: 'Creative Writing Arena (kearai.com): 1445 Elo.',
+      },
+      { modelId: 'openai/gpt-4o', evidence: 'Creative Writing Arena (kearai.com): 1438 Elo.' },
+      { modelId: 'openai/gpt-5.1', evidence: 'Creative Writing Arena (kearai.com): 1434 Elo.' },
+      { modelId: 'x-ai/grok-4.1-fast', evidence: 'Creative Writing Arena (kearai.com): 1434 Elo.' },
+      {
+        modelId: 'anthropic/claude-opus-4',
+        evidence: 'Creative Writing Arena (kearai.com): 1428 Elo.',
+      },
+      {
+        modelId: 'moonshotai/kimi-k2.5',
+        evidence: 'Creative Writing Arena (kearai.com): 1418 Elo.',
+      },
+      {
+        modelId: 'deepseek/deepseek-chat-v3.1',
+        evidence: 'Creative Writing Arena (kearai.com): 1411 Elo.',
+      },
+      {
+        modelId: 'deepseek/deepseek-v3.2-exp',
+        evidence: 'Creative Writing Arena (kearai.com): 1403 Elo.',
+      },
+      { modelId: 'z-ai/glm-4.7', evidence: 'Creative Writing Arena (kearai.com): 1403 Elo.' },
+      { modelId: 'x-ai/grok-3-mini', evidence: 'Creative Writing Arena (kearai.com): 1402 Elo.' },
+      { modelId: 'openai/gpt-5.2', evidence: 'Creative Writing Arena (kearai.com): 1398 Elo.' },
+      {
+        modelId: 'google/gemini-2.5-flash',
+        evidence: 'Creative Writing Arena (kearai.com): 1398 Elo.',
+      },
+      { modelId: 'openai/gpt-5-chat', evidence: 'Creative Writing Arena (kearai.com): 1394 Elo.' },
       {
         modelId: 'deepseek/deepseek-r1',
         evidence: 'Mazur Writing Score: 8.54. Strong narrative generation.',
       },
-      {
-        modelId: 'openai/gpt-5.2',
-        evidence: 'Mazur Writing Score: 8.511. Strong creative and technical writing.',
-      },
-      { modelId: 'anthropic/claude-opus-4.5', evidence: 'Creative Writing Arena: 1455–1461 Elo.' },
     ],
   },
   {
@@ -182,20 +257,18 @@ export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
     label: 'Best for reasoning',
     description: 'Math, logic, multi-step problem solving',
     models: [
-      {
-        modelId: 'google/gemini-3.1-pro-preview',
-        evidence: 'MMLU-Pro (awesomeagents.ai): 90.1%. Graduate-level knowledge leader.',
-      },
-      {
-        modelId: 'anthropic/claude-opus-4.5',
-        evidence: 'MMLU-Pro: 89.5%. Claude Opus 4.5 Reasoning.',
-      },
-      { modelId: 'openai/gpt-5.2-pro', evidence: 'MMLU-Pro: 88.7%. Strong reasoning tier.' },
-      { modelId: 'anthropic/claude-opus-4.6', evidence: 'MMLU-Pro: 88.2%. Multi-step reasoning.' },
+      { modelId: 'google/gemini-3.1-pro-preview', evidence: 'MMLU-Pro (awesomeagents.ai): 89.8%.' },
+      { modelId: 'openai/gpt-5.2-pro', evidence: 'MMLU-Pro (awesomeagents.ai): 88.7%.' },
+      { modelId: 'anthropic/claude-opus-4.6', evidence: 'MMLU-Pro (awesomeagents.ai): 88.2%.' },
+      { modelId: 'google/gemini-2.5-pro', evidence: 'MMLU-Pro (awesomeagents.ai): 87.5%.' },
+      { modelId: 'anthropic/claude-opus-4.5', evidence: 'MMLU-Pro (awesomeagents.ai): 87.1%.' },
+      { modelId: 'openai/gpt-5.2', evidence: 'MMLU-Pro (awesomeagents.ai): 86.3%.' },
+      { modelId: 'deepseek/deepseek-v3.2-exp', evidence: 'MMLU-Pro (awesomeagents.ai): 85.9%.' },
       {
         modelId: 'deepseek/deepseek-r1',
         evidence: 'MMLU-Pro: 84.6%. Math 92.8%. Matches o1 performance.',
       },
+      { modelId: 'qwen/qwen3.5-397b-a17b', evidence: 'MMLU-Pro (awesomeagents.ai): 84.6%.' },
     ],
   },
   {
@@ -203,19 +276,10 @@ export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
     label: 'Best for long context',
     description: 'Large context windows (128K–1M+ tokens)',
     models: [
-      {
-        modelId: 'google/gemini-2.5-pro',
-        evidence: 'Michelangelo Long-Context 1M (llmdb.com): 93/100. MRCR leader. 1M+ tokens.',
-      },
-      {
-        modelId: 'anthropic/claude-opus-4.6',
-        evidence:
-          'Michelangelo Long-Context 1M (llmdb.com): 76/100. Strong long-context reasoning.',
-      },
-      {
-        modelId: 'google/gemini-2.0-flash-001',
-        evidence: 'Michelangelo Long-Context (llmdb.com): 70.5. Fast with large context.',
-      },
+      { modelId: 'google/gemini-2.5-pro', evidence: 'MRCR 1M (llmdb.com): 93.0/100.' },
+      { modelId: 'anthropic/claude-opus-4.6', evidence: 'MRCR 1M (llmdb.com): 76.0/100.' },
+      { modelId: 'google/gemini-2.0-flash-001', evidence: 'MRCR 1M (llmdb.com): 70.5/100.' },
+      { modelId: 'google/gemini-2.5-flash', evidence: 'MRCR 1M (llmdb.com): 32.0/100.' },
     ],
   },
   {
@@ -225,10 +289,6 @@ export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
     categoryInfoTooltip:
       'Ranked by Global-MMLU (llmdb.com), a multilingual evaluation across 42 languages. Higher score = better performance in non-English contexts.',
     models: [
-      {
-        modelId: 'google/gemini-2.5-pro',
-        evidence: 'Global-MMLU (llmdb.com): 88.6%. Leader across 42 languages.',
-      },
       {
         modelId: 'meta-llama/llama-3.3-70b-instruct',
         evidence: 'Global-MMLU: 75.4%. Strong multilingual from Meta.',
@@ -241,10 +301,8 @@ export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
         modelId: 'anthropic/claude-opus-4.6',
         evidence: 'Global-MMLU: 72.1%. Frontier multilingual.',
       },
-      {
-        modelId: 'openai/gpt-5.2',
-        evidence: 'Global-MMLU: 70.8%. Strong non-English support.',
-      },
+      { modelId: 'openai/gpt-5.2', evidence: 'Global-MMLU: 70.8%. Strong non-English support.' },
+      { modelId: 'google/gemini-2.5-pro', evidence: 'Global-MMLU (llmdb.com): 2.5%.' },
     ],
   },
   {
@@ -252,14 +310,8 @@ export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
     label: 'Best for legal',
     description: 'Legal reasoning, contract analysis, statutory interpretation',
     models: [
-      {
-        modelId: 'google/gemini-3.1-pro-preview',
-        evidence: 'LegalBench (vals.ai): 87.04%. 161 legal reasoning tasks.',
-      },
-      {
-        modelId: 'google/gemini-3-flash-preview',
-        evidence: 'LegalBench (vals.ai): 86.86%. Strong legal reasoning.',
-      },
+      { modelId: 'google/gemini-3.1-pro-preview', evidence: 'LegalBench (vals.ai): 87.04%.' },
+      { modelId: 'google/gemini-3-flash-preview', evidence: 'LegalBench (vals.ai): 86.86%.' },
       { modelId: 'openai/gpt-5', evidence: 'LegalBench (vals.ai): 86.02%.' },
       { modelId: 'openai/gpt-5.1', evidence: 'LegalBench (vals.ai): 85.68%.' },
     ],
@@ -277,22 +329,13 @@ export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
         modelId: 'openai/gpt-5',
         evidence: 'HealthBench Hard (OpenAI): 46%. Challenging clinical subset.',
       },
-      {
-        modelId: 'openai/gpt-5.2',
-        evidence: 'HealthBench Hard (OpenAI): 42%.',
-      },
-      {
-        modelId: 'openai/gpt-5.1',
-        evidence: 'HealthBench Hard (OpenAI): 40%.',
-      },
+      { modelId: 'openai/gpt-5.2', evidence: 'HealthBench Hard (OpenAI): 42%.' },
+      { modelId: 'openai/gpt-5.1', evidence: 'HealthBench Hard (OpenAI): 40%.' },
       {
         modelId: 'openai/gpt-4o',
         evidence: 'HealthBench (OpenAI): 32%. Multi-turn health scenarios.',
       },
-      {
-        modelId: 'google/gemini-2.5-pro',
-        evidence: 'HealthBench Hard (OpenAI): 19%.',
-      },
+      { modelId: 'google/gemini-2.5-pro', evidence: 'HealthBench Hard (OpenAI): 19%.' },
     ],
   },
 ]
