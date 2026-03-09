@@ -1734,8 +1734,11 @@
   display: contents;
 }
 
-.models-section-buttons-row .help-me-choose-toggle {
+.models-section-buttons-row .help-me-choose-toggle-wrap {
   grid-row: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
 }
 
 .help-me-choose-toggle {
@@ -1807,6 +1810,73 @@
   background: var(--bg-hover);
   border-color: var(--border-color);
   font-weight: var(--font-semibold);
+}
+
+/* Info icon next to Help me choose button - tooltip on hover (non-mobile), modal on click */
+.help-me-choose-toggle-info {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  padding: 0.25rem;
+  color: var(--text-muted);
+  cursor: help;
+  transition: color 0.2s;
+  flex-shrink: 0;
+}
+
+.help-me-choose-toggle-info:hover,
+.help-me-choose-toggle-info:active {
+  color: var(--primary-color);
+}
+
+.help-me-choose-toggle-info:focus {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+  border-radius: 50%;
+}
+
+.help-me-choose-toggle-info-tooltip {
+  position: absolute;
+  bottom: calc(100% + 10px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--bg-elevated);
+  color: var(--text-secondary);
+  padding: 0.625rem 0.875rem;
+  border-radius: var(--radius-lg);
+  font-size: 0.8125rem;
+  font-weight: var(--font-normal);
+  line-height: 1.5;
+  white-space: normal;
+  width: max-content;
+  max-width: min(320px, calc(100vw - 2rem));
+  box-shadow: var(--shadow-xl);
+  border: 1px solid var(--border-color);
+  z-index: 1000;
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 0.15s,
+    visibility 0.15s;
+  pointer-events: none;
+}
+
+.help-me-choose-toggle-info-tooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-top-color: var(--bg-elevated);
+}
+
+.help-me-choose-toggle-info-trigger:hover .help-me-choose-toggle-info-tooltip {
+  opacity: 1;
+  visibility: visible;
 }
 
 .help-me-choose-expanded .help-me-choose-content {
@@ -2545,6 +2615,14 @@ html:not([data-theme]) .help-me-choose-category.has-match {
   .help-me-choose-apply-btn {
     min-height: 44px;
     padding: 0.5rem 1.5rem;
+  }
+
+  /* Help me choose toggle info icon: adequate touch target for modal trigger */
+  .help-me-choose-toggle-info {
+    min-width: 36px;
+    min-height: 36px;
+    padding: 0.375rem;
+    cursor: pointer;
   }
 
   /* Info icon: adequate touch target for modal trigger; pull closer to label text */

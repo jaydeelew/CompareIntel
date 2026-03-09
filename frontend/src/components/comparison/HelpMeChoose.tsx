@@ -19,6 +19,7 @@ import {
 import type { ModelsByProvider, User } from '../../types'
 
 import { BestAtTopInfoModal } from './BestAtTopInfoModal'
+import { HelpMeChooseScopeInfoModal } from './HelpMeChooseScopeInfoModal'
 
 function InfoIcon() {
   return (
@@ -194,6 +195,7 @@ export function HelpMeChoose({
 }: HelpMeChooseProps) {
   const [internalExpanded, setInternalExpanded] = useState(false)
   const [showBestAtTopModal, setShowBestAtTopModal] = useState(false)
+  const [showScopeInfoModal, setShowScopeInfoModal] = useState(false)
   const [evidenceModal, setEvidenceModal] = useState<{
     modelName: string
     evidence: string
@@ -458,32 +460,59 @@ export function HelpMeChoose({
       ref={containerRef}
       className={`help-me-choose${isExpanded ? ' help-me-choose-expanded' : ''}`}
     >
-      <button
-        type="button"
-        className="help-me-choose-toggle"
-        onClick={() => setIsExpanded(!isExpanded)}
-        disabled={disabled}
-        aria-expanded={isExpanded}
-        aria-haspopup="true"
-        aria-controls="help-me-choose-content"
-      >
-        <span className="help-me-choose-toggle-text">Help me choose</span>
-        <svg
-          className={`help-me-choose-chevron ${isExpanded ? 'expanded' : ''}`}
-          viewBox="0 0 24 24"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-          aria-hidden
+      <div className="help-me-choose-toggle-wrap">
+        <button
+          type="button"
+          className="help-me-choose-toggle"
+          onClick={() => setIsExpanded(!isExpanded)}
+          disabled={disabled}
+          aria-expanded={isExpanded}
+          aria-haspopup="true"
+          aria-controls="help-me-choose-content"
         >
-          <path
-            d="M7 10l5 5 5-5"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
-      </button>
+          <span className="help-me-choose-toggle-text">Help me choose</span>
+          <svg
+            className={`help-me-choose-chevron ${isExpanded ? 'expanded' : ''}`}
+            viewBox="0 0 24 24"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            aria-hidden
+          >
+            <path
+              d="M7 10l5 5 5-5"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </button>
+        <button
+          type="button"
+          className="help-me-choose-toggle-info help-me-choose-toggle-info-trigger"
+          onClick={e => {
+            e.preventDefault()
+            e.stopPropagation()
+            setShowScopeInfoModal(true)
+          }}
+          aria-label="Learn about which models appear in Help me choose"
+          aria-describedby={isMobileLayout ? undefined : 'hmc-toggle-scope-tooltip'}
+        >
+          {!isMobileLayout && (
+            <span
+              id="hmc-toggle-scope-tooltip"
+              className="help-me-choose-toggle-info-tooltip"
+              role="tooltip"
+            >
+              The models in this dropdown only include those with a trustworthy benchmarking source
+              or other reliable means to determine their status. Newer releases may not appear here
+              until they have sufficient benchmark data. For the full catalog—including the latest
+              models—use the Select Models to Compare section below.
+            </span>
+          )}
+          <InfoIcon />
+        </button>
+      </div>
 
       {isExpanded && (
         <div
@@ -705,6 +734,11 @@ export function HelpMeChoose({
       <BestAtTopInfoModal
         isOpen={showBestAtTopModal}
         onClose={() => setShowBestAtTopModal(false)}
+      />
+
+      <HelpMeChooseScopeInfoModal
+        isOpen={showScopeInfoModal}
+        onClose={() => setShowScopeInfoModal(false)}
       />
     </div>
   )
