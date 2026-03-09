@@ -295,6 +295,7 @@ export function MainPage() {
     isLoading,
     isFollowUpMode,
     isAuthenticated,
+    authLoading,
   })
 
   // Trial modal state (not part of tutorial)

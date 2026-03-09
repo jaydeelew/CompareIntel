@@ -60,6 +60,8 @@ export interface UseTutorialCompleteConfig {
   isFollowUpMode: boolean
   /** Whether user is authenticated */
   isAuthenticated: boolean
+  /** Whether auth state is still loading - do not show welcome modal until this is false */
+  authLoading: boolean
 }
 
 export interface UseTutorialCompleteReturn {
@@ -90,6 +92,7 @@ export function useTutorialComplete(config: UseTutorialCompleteConfig): UseTutor
     isLoading,
     isFollowUpMode,
     isAuthenticated,
+    authLoading,
   } = config
 
   // Core tutorial state
@@ -179,8 +182,15 @@ export function useTutorialComplete(config: UseTutorialCompleteConfig): UseTutor
 
   // Effects (previously in useTutorialEffects)
 
-  // Welcome modal logic - show for unregistered users on page load
+  // Welcome modal logic - show for unregistered users after auth has loaded
+  // Must wait for authLoading to be false to avoid flashing for logged-in users in production
+  // (when auth resolves quickly, isAuthenticated can transition from false to true very fast)
   useEffect(() => {
+    // Don't show until auth has finished loading - prevents modal flash for logged-in users
+    if (authLoading) {
+      return
+    }
+
     // Don't show if already shown this session
     if (hasShownWelcomeModalRef.current) {
       return
@@ -197,7 +207,7 @@ export function useTutorialComplete(config: UseTutorialCompleteConfig): UseTutor
       setShowWelcomeModal(true)
       hasShownWelcomeModalRef.current = true
     }
-  }, [isAuthenticated, tutorialState.isActive, currentView])
+  }, [authLoading, isAuthenticated, tutorialState.isActive, currentView])
 
   // Track comparison completion for tutorial
   useEffect(() => {

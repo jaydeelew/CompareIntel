@@ -37,6 +37,7 @@ describe('useTutorialComplete', () => {
     isLoading: false,
     isFollowUpMode: false,
     isAuthenticated: false,
+    authLoading: false,
   }
 
   beforeEach(() => {
@@ -201,11 +202,12 @@ describe('useTutorialComplete', () => {
   describe('welcome modal', () => {
     it('should show welcome modal for unauthenticated users on main view when not dismissed', () => {
       // The welcome modal is shown via an effect based on localStorage
-      // When "don't show again" is not set, the modal should appear
+      // When "don't show again" is not set and auth has loaded, the modal should appear
       const { result } = renderHook(() =>
         useTutorialComplete({
           ...defaultConfig,
           isAuthenticated: false,
+          authLoading: false,
           currentView: 'main',
         })
       )
@@ -214,6 +216,20 @@ describe('useTutorialComplete', () => {
       // Since localStorage doesn't have 'compareintel_welcome_dont_show_again' = 'true',
       // the modal should be shown
       expect(result.current.showWelcomeModal).toBe(true)
+    })
+
+    it('should not show welcome modal while auth is loading', () => {
+      // Prevents flash for logged-in users when auth resolves quickly in production
+      const { result } = renderHook(() =>
+        useTutorialComplete({
+          ...defaultConfig,
+          isAuthenticated: false,
+          authLoading: true,
+          currentView: 'main',
+        })
+      )
+
+      expect(result.current.showWelcomeModal).toBe(false)
     })
 
     it('should not show welcome modal when dismissed via localStorage', () => {
