@@ -3,7 +3,7 @@
  *
  * Shared layout wrapper that provides consistent UI elements (footer)
  * across all pages using React Router's Outlet pattern.
- * Includes scroll-to-top behavior on route changes.
+ * Includes scroll-to-top behavior on route changes (skipped when URL has a hash).
  */
 
 import React, { useEffect, useLayoutEffect, useRef } from 'react'
@@ -15,11 +15,37 @@ import { updatePageTitle } from '../utils/pageTitles'
 import { Footer } from './Footer'
 import { InstallPrompt, SkipLink } from './layout'
 
+function getScrollTop(): number {
+  return (
+    window.scrollY ??
+    window.pageYOffset ??
+    document.documentElement.scrollTop ??
+    document.body.scrollTop ??
+    0
+  )
+}
+
+function scrollAllToTop(): void {
+  const opts: ScrollToOptions = { top: 0, left: 0, behavior: 'auto' }
+  window.scrollTo(opts)
+  const el = document.scrollingElement ?? document.documentElement
+  el.scrollTop = 0
+  el.scrollLeft = 0
+  document.documentElement.scrollTop = 0
+  document.body.scrollTop = 0
+  const app = document.querySelector('.app') as HTMLElement
+  if (app) app.scrollTop = 0
+  const root = document.getElementById('root')
+  if (root) root.scrollTop = 0
+}
+
 export const Layout: React.FC = () => {
-  const { pathname } = useLocation()
+  const location = useLocation()
+  const { pathname, hash } = location
   const prevPathnameRef = useRef<string>(pathname)
   const timeoutRefs = useRef<ReturnType<typeof setTimeout>[]>([])
   const rafRef = useRef<number | null>(null)
+  const scrollGuardEndRef = useRef<number>(0)
 
   // Set page title and meta tags when route changes
   useEffect(() => {
@@ -34,63 +60,41 @@ export const Layout: React.FC = () => {
     }
   }, [])
 
-  // Comprehensive scroll-to-top function
+  // Reset scroll position to top on route change. Skip when URL has a hash.
   const scrollToTop = () => {
-    // Scroll the .app container (which has overflow-y: auto) to top
-    const appContainer = document.querySelector('.app') as HTMLElement
-    if (appContainer) {
-      appContainer.scrollTop = 0
-    }
-
-    // Scroll window/document as fallback
-    window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
-    document.documentElement.scrollTop = 0
-    document.body.scrollTop = 0
-
-    // Also try scrolling any other scrollable containers
-    const scrollableContainers = document.querySelectorAll(
-      '[style*="overflow"], [style*="overflow-y"]'
-    )
-    scrollableContainers.forEach(container => {
-      const el = container as HTMLElement
-      if (el.scrollTop !== undefined) {
-        el.scrollTop = 0
-      }
-    })
+    if (hash) return
+    scrollAllToTop()
   }
 
   // Update page title, meta tags, and scroll to top on route change - immediate attempt
   useLayoutEffect(() => {
     if (prevPathnameRef.current !== pathname) {
       prevPathnameRef.current = pathname
-      // Update page title immediately (synchronously before paint)
       updatePageTitle(pathname)
-      // Update page meta tags immediately (synchronously before paint)
       updatePageMeta(pathname)
-      // Scroll immediately (synchronously before paint)
+      if ('scrollRestoration' in history) {
+        history.scrollRestoration = 'manual'
+      }
       scrollToTop()
+      // Start scroll guard for 800ms after navigation
+      scrollGuardEndRef.current = Date.now() + 800
     }
-  }, [pathname])
+  }, [pathname, hash])
 
-  // Multiple fallback attempts to ensure scroll happens after DOM updates
-  // This catches cases where components render asynchronously
+  // Delayed attempts after DOM updates (lazy-loaded content, layout shifts)
   useEffect(() => {
-    // Clear any existing timeouts/RAF from previous renders
     if (rafRef.current !== null) {
       cancelAnimationFrame(rafRef.current)
     }
     timeoutRefs.current.forEach(timeout => clearTimeout(timeout))
     timeoutRefs.current = []
 
-    // Use requestAnimationFrame for the first attempt (after paint)
     rafRef.current = requestAnimationFrame(() => {
       scrollToTop()
-
-      // Additional attempts with small delays to catch late renders
-      timeoutRefs.current.push(setTimeout(() => scrollToTop(), 0))
-      timeoutRefs.current.push(setTimeout(() => scrollToTop(), 10))
-      timeoutRefs.current.push(setTimeout(() => scrollToTop(), 50))
-      timeoutRefs.current.push(setTimeout(() => scrollToTop(), 100))
+      const delays = [0, 50, 100, 150, 200, 300, 400, 500]
+      delays.forEach(delay => {
+        timeoutRefs.current.push(setTimeout(() => scrollToTop(), delay))
+      })
     })
 
     return () => {
@@ -101,7 +105,30 @@ export const Layout: React.FC = () => {
       timeoutRefs.current.forEach(timeout => clearTimeout(timeout))
       timeoutRefs.current = []
     }
-  }, [pathname])
+  }, [pathname, hash])
+
+  // Scroll guard: for a short period after navigation, force scroll to top whenever
+  // we detect scroll position has drifted (e.g. from browser restoration or layout).
+  useEffect(() => {
+    if (hash) return
+
+    let rafId: number
+    const tick = () => {
+      if (Date.now() > scrollGuardEndRef.current) return
+      if (getScrollTop() > 0) {
+        scrollAllToTop()
+      }
+      rafId = requestAnimationFrame(tick)
+    }
+    rafId = requestAnimationFrame(tick)
+
+    const t = setTimeout(() => cancelAnimationFrame(rafId), 900)
+
+    return () => {
+      clearTimeout(t)
+      cancelAnimationFrame(rafId)
+    }
+  }, [pathname, hash])
 
   return (
     <>

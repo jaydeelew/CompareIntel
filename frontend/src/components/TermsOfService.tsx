@@ -4,14 +4,22 @@
  */
 
 import React from 'react'
+import { Link } from 'react-router-dom'
 
 import { BackToMainCTA } from './shared'
 import './TermsOfService.css'
+import './pages/Pages.css'
 
 export const TermsOfService: React.FC = () => {
   return (
     <div className="terms-of-service">
       <div className="terms-container">
+        <nav className="breadcrumb" aria-label="Breadcrumb">
+          <Link to="/">Home</Link>
+          <span className="breadcrumb-separator">/</span>
+          <span aria-current="page">Terms of Service</span>
+        </nav>
+
         <div className="terms-header">
           <h1>Terms of Service</h1>
           <p className="last-updated">Last Updated: {new Date().toLocaleDateString()}</p>

@@ -1,6 +1,14 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
 
+function scrollToTop(): void {
+  window.scrollTo({ top: 0, left: 0, behavior: 'auto' })
+  document.documentElement.scrollTop = 0
+  document.body.scrollTop = 0
+  const app = document.querySelector('.app') as HTMLElement
+  if (app) app.scrollTop = 0
+}
+
 export const Footer: React.FC = () => {
   const linkStyle: React.CSSProperties = {
     color: 'var(--primary-color)',
@@ -32,28 +40,28 @@ export const Footer: React.FC = () => {
         }}
         aria-label="Footer navigation"
       >
-        <Link to="/about" style={linkStyle}>
+        <Link to="/about" style={linkStyle} onClick={scrollToTop}>
           About
         </Link>
-        <Link to="/features" style={linkStyle}>
+        <Link to="/features" style={linkStyle} onClick={scrollToTop}>
           Features
         </Link>
-        <Link to="/how-it-works" style={linkStyle}>
+        <Link to="/how-it-works" style={linkStyle} onClick={scrollToTop}>
           How It Works
         </Link>
-        <Link to="/glossary" style={linkStyle}>
+        <Link to="/glossary" style={linkStyle} onClick={scrollToTop}>
           AI Glossary
         </Link>
-        <Link to="/help-me-choose-methodology" style={linkStyle}>
+        <Link to="/help-me-choose-methodology" style={linkStyle} onClick={scrollToTop}>
           Help Me Choose Methodology
         </Link>
-        <Link to="/faq" style={linkStyle}>
+        <Link to="/faq" style={linkStyle} onClick={scrollToTop}>
           FAQ
         </Link>
-        <Link to="/privacy-policy" style={linkStyle}>
+        <Link to="/privacy-policy" style={linkStyle} onClick={scrollToTop}>
           Privacy Policy
         </Link>
-        <Link to="/terms-of-service" style={linkStyle}>
+        <Link to="/terms-of-service" style={linkStyle} onClick={scrollToTop}>
           Terms of Service
         </Link>
       </nav>

@@ -29,6 +29,11 @@ export const HelpMeChooseMethodology: React.FC = () => {
               companies that make them. A benchmark is a standard test (like an exam) that gives us
               comparable scores so we can rank models fairly.
             </p>
+            <p>
+              Why independent? Companies often report their own cherry-picked results. Benchmarks
+              run by third parties use the same tasks for every model, so you can compare apples to
+              apples. We link to each source so you can verify the numbers yourself.
+            </p>
             <p className="last-updated">Last updated: March 2026</p>
           </header>
 
@@ -191,6 +196,67 @@ export const HelpMeChooseMethodology: React.FC = () => {
                 </tr>
               </tbody>
             </table>
+          </section>
+
+          <section className="seo-section">
+            <h2>What the Benchmarks Actually Test</h2>
+            <p>Curious what these scores mean in practice? Here’s a quick overview:</p>
+            <ul className="seo-list">
+              <li>
+                <strong>SWE-Bench (coding)</strong> — Real GitHub issues from open-source projects.
+                Models must produce patches that pass the project’s test suite. No toy problems.
+              </li>
+              <li>
+                <strong>Creative Writing Arena (writing)</strong> — Human raters compare model
+                outputs head-to-head and assign Elo ratings, similar to chess rankings. Higher Elo =
+                better style and consistency.
+              </li>
+              <li>
+                <strong>MMLU-Pro (reasoning)</strong> — Expert-level multiple-choice questions
+                across math, science, law, and more. Tests broad knowledge and logical reasoning.
+              </li>
+              <li>
+                <strong>Long context (MRCR, LongBench)</strong> — “Needle in a haystack” style
+                tests: can the model find and use specific information buried in documents up to 1M
+                tokens?
+              </li>
+              <li>
+                <strong>Best value</strong> — We only include models under $1 per million tokens
+                (input + output average). Pricing changes frequently; we update regularly.
+              </li>
+              <li>
+                <strong>Fastest responses</strong> — Measured in tokens per second. Higher = quicker
+                replies. Useful when latency matters more than raw capability.
+              </li>
+              <li>
+                <strong>Global-MMLU (multilingual)</strong> — Tests performance across 42 languages.
+                Useful if you work in non-English contexts.
+              </li>
+              <li>
+                <strong>LegalBench (legal)</strong> — 161 legal reasoning tasks: contract analysis,
+                statutory interpretation, and more. Geared toward legal professionals.
+              </li>
+              <li>
+                <strong>HealthBench (medical)</strong> — Physician-evaluated medical conversations.
+                Scores come from published research; useful for healthcare-related use cases.
+              </li>
+            </ul>
+          </section>
+
+          <section className="seo-section">
+            <h2>Limitations</h2>
+            <p>
+              Benchmarks are helpful, but they’re not perfect. They test specific skills under
+              controlled conditions—your real-world tasks may differ. A model that excels at
+              SWE-Bench may still struggle with your codebase; a “best for writing” model might not
+              match your preferred tone. Use these rankings as a starting point, then try the models
+              yourself.
+            </p>
+            <p>
+              Some categories have sparse benchmark coverage (e.g., long context, multilingual). We
+              supplement automated data with published scores from model announcements when
+              available.
+            </p>
           </section>
 
           <section className="seo-section">
