@@ -337,45 +337,45 @@ export function useModelManagement({
           return
         }
 
-        // Allow deselection in both normal and follow-up mode
-        const updatedSelectedModels = selectedModels.filter(id => String(id) !== idStr)
-        if (updatedSelectedModels.length === 0) {
-          onDeselectToEmpty?.()
-        }
-        setSelectedModels(updatedSelectedModels)
+        // Use functional update so rapid consecutive toggles (e.g. "Deselect top 3")
+        // each see the latest state and correctly chain
+        setSelectedModels(prev => {
+          const updated = prev.filter(id => String(id) !== idStr)
+          if (updated.length === 0) {
+            onDeselectToEmpty?.()
+          }
+          // Clear errors as side effect (batched with this update)
+          if (
+            error &&
+            error.includes('Your input is too long for one or more of the selected models')
+          ) {
+            if (accurateInputTokens !== null && updated.length > 0) {
+              const remainingModelInfo = updated
+                .map(id => {
+                  const model = findModelById(modelsByProvider, id)
+                  if (model?.max_input_tokens) {
+                    return { id, maxInputTokens: model.max_input_tokens }
+                  }
+                  return null
+                })
+                .filter((info): info is { id: string; maxInputTokens: number } => info !== null)
 
-        // Clear "input too long" error only if all problematic models are deselected
-        if (
-          error &&
-          error.includes('Your input is too long for one or more of the selected models')
-        ) {
-          if (accurateInputTokens !== null && updatedSelectedModels.length > 0) {
-            const remainingModelInfo = updatedSelectedModels
-              .map(id => {
-                const model = findModelById(modelsByProvider, id)
-                if (model?.max_input_tokens) {
-                  return { id, maxInputTokens: model.max_input_tokens }
-                }
-                return null
-              })
-              .filter((info): info is { id: string; maxInputTokens: number } => info !== null)
+              const stillHasProblemModels = remainingModelInfo.some(
+                m => m.maxInputTokens < accurateInputTokens
+              )
 
-            const stillHasProblemModels = remainingModelInfo.some(
-              m => m.maxInputTokens < accurateInputTokens
-            )
-
-            if (!stillHasProblemModels) {
+              if (!stillHasProblemModels) {
+                setError(null)
+              }
+            } else {
               setError(null)
             }
-          } else {
+          }
+          if (error && error.includes('Maximum')) {
             setError(null)
           }
-        }
-
-        // Clear any previous error when deselecting a model
-        if (error && error.includes('Maximum')) {
-          setError(null)
-        }
+          return updated
+        })
       } else {
         // In follow-up mode, only allow reselecting models that were originally selected
         if (isFollowUpMode) {

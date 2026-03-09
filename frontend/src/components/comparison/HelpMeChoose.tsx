@@ -473,12 +473,19 @@ export function HelpMeChoose({
   }
 
   const handleApplyPreset = (cat: HelpMeChooseCategory) => {
-    if (!onApplyCategoryPreset || isFollowUpMode) return
+    if (isFollowUpMode) return
     const available = cat.models
       .filter(entry => !modelRestrictedByModelId.get(entry.modelId))
       .slice(0, HELP_ME_CHOOSE_PRESET_COUNT)
       .map(entry => entry.modelId)
-    if (available.length > 0) {
+    if (available.length === 0) return
+
+    const selectedSet = new Set(selectedModels)
+    const allTopSelected = available.every(id => selectedSet.has(id))
+
+    if (allTopSelected) {
+      available.forEach(id => onToggleModel(id))
+    } else if (onApplyCategoryPreset) {
       onApplyCategoryPreset(available)
     }
   }
@@ -610,6 +617,12 @@ export function HelpMeChoose({
                 let foundFirstSelected = false
                 return HELP_ME_CHOOSE_CATEGORIES.map((cat: HelpMeChooseCategory) => {
                   const hasMatch = matchingCategories.some(m => m.id === cat.id)
+                  const topIds = cat.models
+                    .filter(e => !modelRestrictedByModelId.get(e.modelId))
+                    .slice(0, HELP_ME_CHOOSE_PRESET_COUNT)
+                    .map(e => e.modelId)
+                  const allTopSelected =
+                    topIds.length > 0 && topIds.every(id => selectedModels.includes(id))
                   return (
                     <div
                       key={cat.id}
@@ -663,23 +676,25 @@ export function HelpMeChoose({
                             </button>
                           )}
                         </h3>
-                        {onApplyCategoryPreset &&
-                          !isRestrictedTier &&
-                          cat.models.some(e => !modelRestrictedByModelId.get(e.modelId)) && (
-                            <button
-                              type="button"
-                              className="help-me-choose-preset-btn"
-                              onClick={() => handleApplyPreset(cat)}
-                              disabled={disabled || isFollowUpMode}
-                              title={
-                                isFollowUpMode
-                                  ? 'Cannot change models during follow-up'
+                        {onApplyCategoryPreset && !isRestrictedTier && topIds.length > 0 && (
+                          <button
+                            type="button"
+                            className="help-me-choose-preset-btn"
+                            onClick={() => handleApplyPreset(cat)}
+                            disabled={disabled || isFollowUpMode}
+                            title={
+                              isFollowUpMode
+                                ? 'Cannot change models during follow-up'
+                                : allTopSelected
+                                  ? `Deselect top ${HELP_ME_CHOOSE_PRESET_COUNT} from this category`
                                   : `Select top ${HELP_ME_CHOOSE_PRESET_COUNT} from this category`
-                              }
-                            >
-                              Select top {HELP_ME_CHOOSE_PRESET_COUNT}
-                            </button>
-                          )}
+                            }
+                          >
+                            {allTopSelected
+                              ? `Deselect top ${HELP_ME_CHOOSE_PRESET_COUNT}`
+                              : `Select top ${HELP_ME_CHOOSE_PRESET_COUNT}`}
+                          </button>
+                        )}
                       </div>
                       <p className="help-me-choose-category-desc">{cat.description}</p>
                       <ul className="help-me-choose-models-list" role="none">
