@@ -2525,6 +2525,10 @@ html:not([data-theme]) .help-me-choose-category.has-match {
 
 /* Responsive: stack categories on narrow screens + enhanced mobile presentation */
 @media (max-width: 768px) {
+  .models-section-buttons-row .help-me-choose-toggle-wrap {
+    gap: 0.125rem;
+  }
+
   .help-me-choose-content {
     max-height: 70vh;
     overflow-y: auto;
