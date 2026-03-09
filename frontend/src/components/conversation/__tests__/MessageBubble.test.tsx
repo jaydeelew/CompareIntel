@@ -62,7 +62,7 @@ describe('MessageBubble', () => {
       expect(messageType?.textContent).toContain('You')
     })
 
-    it('should display "AI" label for assistant messages', () => {
+    it('should display "AI" label for assistant messages when modelName is not provided', () => {
       render(
         <MessageBubble
           id={String(mockAssistantMessage.id)}
@@ -72,6 +72,19 @@ describe('MessageBubble', () => {
         />
       )
       expect(screen.getByText(/ai/i)).toBeInTheDocument()
+    })
+
+    it('should display model name for assistant messages when modelName is provided', () => {
+      render(
+        <MessageBubble
+          id={String(mockAssistantMessage.id)}
+          type="assistant"
+          content={mockAssistantMessage.content}
+          timestamp={mockAssistantMessage.timestamp}
+          modelName="Claude 3.5 Sonnet"
+        />
+      )
+      expect(screen.getByText('Claude 3.5 Sonnet')).toBeInTheDocument()
     })
 
     it('should display timestamp', () => {

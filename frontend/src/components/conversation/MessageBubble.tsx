@@ -14,6 +14,8 @@ export interface MessageBubbleProps {
   activeTab?: ResultTab
   className?: string
   modelId?: string
+  /** Display name for assistant messages (e.g. model name). Falls back to "AI" if not provided. */
+  modelName?: string
   /** Callback when copy button is clicked - receives message content */
   onCopyMessage?: (content: string) => void
   /** When true, copy button is visible but disabled (e.g. during tutorial) */
@@ -29,6 +31,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
   activeTab = RESULT_TAB.FORMATTED,
   className = '',
   modelId,
+  modelName,
   onCopyMessage,
   copyButtonDisabled = false,
 }) => {
@@ -99,7 +102,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
                 <line x1="2" y1="9" x2="4" y2="9" />
                 <line x1="2" y1="15" x2="4" y2="15" />
               </svg>
-              <span>AI</span>
+              <span>{modelName || 'AI'}</span>
             </>
           )}
         </span>

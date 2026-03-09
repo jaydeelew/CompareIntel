@@ -264,6 +264,7 @@ export const ResultCard: React.FC<ResultCardProps> = ({
               timestamp={message.timestamp || new Date().toISOString()}
               activeTab={activeTab}
               modelId={modelId}
+              modelName={model?.name}
               onCopyMessage={
                 onCopyMessage ? content => onCopyMessage(modelId, messageId, content) : undefined
               }
