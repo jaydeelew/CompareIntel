@@ -486,7 +486,48 @@ export const ModelsSection: React.FC<ModelsSectionProps> = ({
               return (
                 <div key={modelId} className="selected-model-card">
                   <div className="selected-model-header">
-                    <h4>{model.name}</h4>
+                    <h4>
+                      <span className="model-name-tooltip-wrapper">
+                        <span className="model-name-text">{model.name}</span>
+                        <svg
+                          className="knowledge-cutoff-icon"
+                          width="14"
+                          height="14"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <circle cx="12" cy="12" r="10" />
+                          <path d="M12 16v-4" />
+                          <path d="M12 8h.01" />
+                        </svg>
+                        <span className="model-info-tooltip">
+                          <span className="tooltip-section">
+                            <span className="tooltip-row">
+                              <span className="tooltip-label">Context window:</span>
+                              <span className="tooltip-value context-window">
+                                {formatTokenCount(model.max_input_tokens)} tokens
+                              </span>
+                            </span>
+                          </span>
+                          <span className="tooltip-section">
+                            <span className="tooltip-row">
+                              <span className="tooltip-label">Knowledge cutoff:</span>
+                              {model.knowledge_cutoff ? (
+                                <span className="tooltip-value cutoff-date">
+                                  {model.knowledge_cutoff}
+                                </span>
+                              ) : (
+                                <span className="tooltip-value cutoff-pending">Date pending</span>
+                              )}
+                            </span>
+                          </span>
+                        </span>
+                      </span>
+                    </h4>
                     <div className="selected-model-actions">
                       {model.supports_web_search &&
                         (isMobileLayout ? (
