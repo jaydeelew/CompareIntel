@@ -26,6 +26,7 @@ Only models with verifiable, publicly available benchmark data are added.
 import json
 import re
 import sys
+from datetime import datetime
 from pathlib import Path
 
 import httpx
@@ -33,6 +34,9 @@ from bs4 import BeautifulSoup
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 RECOMMENDATIONS_PATH = PROJECT_ROOT / "frontend" / "src" / "data" / "helpMeChooseRecommendations.ts"
+METHODOLOGY_PATH = (
+    PROJECT_ROOT / "frontend" / "src" / "components" / "pages" / "HelpMeChooseMethodology.tsx"
+)
 REGISTRY_PATH = PROJECT_ROOT / "backend" / "data" / "models_registry.json"
 
 # Categories with fetchable benchmark sources. Only these are auto-populated.
@@ -931,6 +935,25 @@ def update_recommendations_file(categories: list[dict]) -> None:
     RECOMMENDATIONS_PATH.write_text(new_content, encoding="utf-8")
 
 
+def update_methodology_last_updated() -> None:
+    """Update the 'Last updated' date in the Help Me Choose methodology page."""
+    if not METHODOLOGY_PATH.exists():
+        print(f"Warning: Methodology file not found at {METHODOLOGY_PATH}", file=sys.stderr)
+        return
+    content = METHODOLOGY_PATH.read_text(encoding="utf-8")
+    date_str = datetime.now().strftime("%B %Y")
+    pattern = r'(<p className="last-updated">Last updated: )[^<]+(</p>)'
+    if not re.search(pattern, content):
+        print(
+            f"Warning: Could not find last-updated pattern in {METHODOLOGY_PATH.name}",
+            file=sys.stderr,
+        )
+        return
+    new_content = re.sub(pattern, r"\1" + date_str + r"\2", content)
+    METHODOLOGY_PATH.write_text(new_content, encoding="utf-8")
+    print(f"  Updated methodology page: Last updated: {date_str}")
+
+
 def research_and_update(model_id: str, dry_run: bool = False) -> dict:
     """Research benchmarks for a model and update Help Me Choose recommendations.
 
@@ -1301,6 +1324,9 @@ def refresh_all_categories(dry_run: bool = False) -> dict:
         print(f"\n(Dry run) Would make {total} changes.")
     else:
         print("\nAll models already up to date.")
+
+    if not dry_run:
+        update_methodology_last_updated()
 
     return {"added": added, "updated": ev_updated, "removed": ev_removed, "total_changes": total}
 

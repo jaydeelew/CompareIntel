@@ -69,6 +69,8 @@ This command re-evaluates ALL registry models against ALL data-driven categories
 
 Use `--dry-run` to preview changes without writing. Run periodically (e.g. weekly) to keep categories current.
 
+When `--refresh-all` runs successfully (not with `--dry-run`), it also updates the "Last updated" date on the methodology page (`/help-me-choose-methodology`).
+
 ### Single-model mode
 
 ```bash
