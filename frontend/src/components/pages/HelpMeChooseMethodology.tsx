@@ -23,18 +23,11 @@ export const HelpMeChooseMethodology: React.FC = () => {
 
         <article className="seo-page-content">
           <header className="seo-page-header">
-            <h1>Help Me Choose: Ranking Methodology</h1>
+            <h1>Help Me Choose: How We Rank Models</h1>
             <p className="seo-page-intro">
-              This page explains how we rank and recommend AI models in the "Help me choose"
-              dropdown. In short: we only include models that have been tested and scored by
-              independent, publicly available benchmarks—not claims from the companies that make the
-              models.
-            </p>
-            <p>
-              <strong>What is a benchmark?</strong> A benchmark is a standardized test that measures
-              how well an AI model performs on specific tasks (e.g., writing code, answering
-              exam-style questions). Benchmarks give us comparable numbers so we can rank models
-              fairly.
+              We only recommend models that have been tested by independent benchmarks—not by the
+              companies that make them. A benchmark is a standard test (like an exam) that gives us
+              comparable scores so we can rank models fairly.
             </p>
             <p className="last-updated">Last updated: March 2026</p>
           </header>
@@ -42,45 +35,24 @@ export const HelpMeChooseMethodology: React.FC = () => {
           <section className="seo-section">
             <h2>Which Models Are Included?</h2>
             <p>
-              A model appears in "Help me choose" only if it meets <strong>all</strong> of the
-              following:
+              A model appears only if it is on our platform and has a published score from an
+              independent source.
             </p>
-            <ul className="seo-list">
-              <li>
-                <strong>Available on CompareIntel:</strong> The model is on our platform and you can
-                compare it with others.
-              </li>
-              <li>
-                <strong>Published test score:</strong> We require a numeric score from a public
-                benchmark (e.g., SWE-Bench for coding, MMLU-Pro for reasoning). Models without
-                verifiable scores are not included.
-              </li>
-              <li>
-                <strong>Trustworthy source:</strong> Scores must come from established, independent
-                sources—not the model maker's own claims.
-              </li>
-            </ul>
             <p>
-              Very new models often don't appear until independent benchmarks have been run and
-              published. For the full list of models, including the latest releases, use the Select
-              Models to Compare section on the main page.
+              New models often don't appear until benchmarks have been run. For the full model list,
+              use the main comparison page.
             </p>
           </section>
 
           <section className="seo-section">
-            <h2>Evidence Sources by Category</h2>
-            <p>
-              Each category uses one or more primary sources. Hover over (or tap the info icon next
-              to) a model in "Help me choose" to see the specific evidence and source for that
-              recommendation.
-            </p>
+            <h2>How Each Category Is Measured</h2>
+            <p>Hover over any model in "Help me choose" to see its score and source.</p>
 
             <table className="methodology-table">
               <thead>
                 <tr>
                   <th>Category</th>
-                  <th>Primary Sources</th>
-                  <th>Key Metrics</th>
+                  <th>How we measure it</th>
                 </tr>
               </thead>
               <tbody>
@@ -88,26 +60,14 @@ export const HelpMeChooseMethodology: React.FC = () => {
                   <td>Best for coding</td>
                   <td>
                     <a
-                      href="https://www.swebench.com/verified.html"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      SWE-Bench Verified
-                    </a>
-                    ,{' '}
-                    <a
                       href="https://openlm.ai/swe-bench/"
                       target="_blank"
                       rel="noopener noreferrer"
                     >
-                      OpenLM SWE-bench+
-                    </a>
-                    ,{' '}
-                    <a href="https://lmarena.ai/" target="_blank" rel="noopener noreferrer">
-                      LMSys Coding Arena
-                    </a>
+                      SWE-Bench
+                    </a>{' '}
+                    — real coding tasks solved correctly
                   </td>
-                  <td>% of real coding tasks solved correctly</td>
                 </tr>
                 <tr>
                   <td>Best for writing</td>
@@ -118,10 +78,9 @@ export const HelpMeChooseMethodology: React.FC = () => {
                       rel="noopener noreferrer"
                     >
                       Creative Writing Arena
-                    </a>
-                    , Mazur Writing Score
+                    </a>{' '}
+                    — human ratings for style and consistency
                   </td>
-                  <td>Human ratings for style and consistency</td>
                 </tr>
                 <tr>
                   <td>Best for reasoning</td>
@@ -132,17 +91,9 @@ export const HelpMeChooseMethodology: React.FC = () => {
                       rel="noopener noreferrer"
                     >
                       MMLU-Pro
-                    </a>
-                    ,{' '}
-                    <a
-                      href="https://lmarena.ai/leaderboard"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      LMSys Chatbot Arena
-                    </a>
+                    </a>{' '}
+                    — expert-level questions (math, science, logic)
                   </td>
-                  <td>Accuracy on expert-level questions (math, science, logic)</td>
                 </tr>
                 <tr>
                   <td>Best for long context</td>
@@ -152,26 +103,38 @@ export const HelpMeChooseMethodology: React.FC = () => {
                       target="_blank"
                       rel="noopener noreferrer"
                     >
-                      Michelangelo Long-Context 1M
+                      MRCR
                     </a>
-                    , Provider documentation
+                    ,{' '}
+                    <a
+                      href="https://awesomeagents.ai/leaderboards/long-context-benchmarks-leaderboard/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      Awesome Agents
+                    </a>
+                    ,{' '}
+                    <a
+                      href="https://longbench2.github.io/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      LongBench v2
+                    </a>{' '}
+                    — how well the model finds and uses information in long documents
                   </td>
-                  <td>How well the model handles long documents (0–100 score)</td>
                 </tr>
                 <tr>
-                  <td>Best value (cost-effective)</td>
+                  <td>Best value</td>
                   <td>
                     <a
                       href="https://openrouter.ai/models"
                       target="_blank"
                       rel="noopener noreferrer"
                     >
-                      OpenRouter pricing
-                    </a>
-                  </td>
-                  <td>
-                    Average cost per million tokens. Only models under $1/1M are included. Lower =
-                    better value.
+                      OpenRouter
+                    </a>{' '}
+                    — current pricing; only models under $1 per million tokens
                   </td>
                 </tr>
                 <tr>
@@ -183,10 +146,9 @@ export const HelpMeChooseMethodology: React.FC = () => {
                       rel="noopener noreferrer"
                     >
                       LMSpeed
-                    </a>
-                    , API benchmarks
+                    </a>{' '}
+                    — response speed
                   </td>
-                  <td>Speed of response (tokens per second). Higher = faster.</td>
                 </tr>
                 <tr>
                   <td>Best for multilingual</td>
@@ -196,23 +158,23 @@ export const HelpMeChooseMethodology: React.FC = () => {
                       target="_blank"
                       rel="noopener noreferrer"
                     >
-                      Global-MMLU (llmdb.com)
-                    </a>
+                      Global-MMLU
+                    </a>{' '}
+                    — performance across 42 languages
                   </td>
-                  <td>Performance across 42 languages (0–100 score).</td>
                 </tr>
                 <tr>
                   <td>Best for legal</td>
                   <td>
                     <a
-                      href="https://www.vals.ai/benchmarks/legal_bench-01-30-2025"
+                      href="https://www.vals.ai/benchmarks/legal_bench"
                       target="_blank"
                       rel="noopener noreferrer"
                     >
-                      LegalBench (VALS.ai)
-                    </a>
+                      LegalBench
+                    </a>{' '}
+                    — 161 legal reasoning tasks
                   </td>
-                  <td>Accuracy on 161 legal reasoning tasks</td>
                 </tr>
                 <tr>
                   <td>Best for medical</td>
@@ -223,10 +185,9 @@ export const HelpMeChooseMethodology: React.FC = () => {
                       rel="noopener noreferrer"
                     >
                       HealthBench
-                    </a>
-                    , HealthBench Hard
+                    </a>{' '}
+                    — doctor-evaluated medical conversations
                   </td>
-                  <td>Doctor-evaluated medical conversations</td>
                 </tr>
               </tbody>
             </table>
@@ -235,29 +196,25 @@ export const HelpMeChooseMethodology: React.FC = () => {
           <section className="seo-section">
             <h2>How We Order Models</h2>
             <p>
-              Within each category, models are ordered by benchmark score (highest first). Every
-              model listed is strong in its category—we rank them to help you choose, not to imply
-              any are lacking. Higher scores rank higher, except for cost (where lower cost = better
-              value) and speed (where higher throughput = faster).
+              Within each category, models are ranked by score (highest first). Every model listed
+              is strong—we rank them to help you choose. For cost, lower is better; for speed,
+              higher is better.
             </p>
           </section>
 
           <section className="seo-section">
             <h2>Multiple Categories</h2>
             <p>
-              A model can appear in multiple categories if it has benchmark scores for each. For
-              example, a strong model might rank well for coding, writing, and reasoning. We don't
-              limit models to a single category.
+              A model can appear in multiple categories if it scores well in each. A strong model
+              might rank for coding, writing, and reasoning.
             </p>
           </section>
 
           <section className="seo-section">
             <h2>When We Update</h2>
             <p>
-              We update recommendations when new benchmarks are published, leaderboards change, or
-              pricing shifts. If you notice a model that should be included based on public data, or
-              if you spot an error in our citations, please{' '}
-              <a href="mailto:support@compareintel.com">contact us</a>.
+              We update when new benchmarks or pricing data are published. See an error or missing
+              model? <a href="mailto:support@compareintel.com">Contact us</a>.
             </p>
           </section>
 

@@ -60,6 +60,9 @@ GLOBAL_MMLU_URL = "https://llmdb.com/benchmarks/global-mmlu"
 MMLU_PRO_URL = "https://awesomeagents.ai/leaderboards/mmlu-pro-leaderboard/"
 CREATIVE_WRITING_URL = "https://kearai.com/leaderboard/creative-writing"
 MRCR_URL = "https://llmdb.com/benchmarks/mrcr-1m"
+AWESOME_AGENTS_LONG_CONTEXT_URL = (
+    "https://awesomeagents.ai/leaderboards/long-context-benchmarks-leaderboard/"
+)
 
 
 def extract_primary_score(category_id: str, evidence: str) -> float | None:
@@ -506,6 +509,104 @@ MRCR_NAME_TO_MODEL_ID: dict[str, str] = {
     "Gemini 2.0 Flash-Lite": "google/gemini-2.0-flash-001",
 }
 
+# Awesome Agents long-context: model display name -> registry model_id
+AWESOME_AGENTS_LONG_CONTEXT_NAME_TO_MODEL_ID: dict[str, str] = {
+    "Gemini 3 Pro": "google/gemini-3.1-pro-preview",
+    "Claude Opus 4.6": "anthropic/claude-opus-4.6",
+    "GPT-5.2": "openai/gpt-5.2",
+    "Claude Sonnet 4.6": "anthropic/claude-sonnet-4.6",
+    "Grok 4 Fast": "x-ai/grok-4-fast",
+    "Llama 4 Scout": "meta-llama/llama-4-scout",
+    "GPT-4.1": "openai/gpt-4o",  # GPT-4.1 maps to gpt-4o in registry
+    "DeepSeek V3.2": "deepseek/deepseek-v3.2-exp",
+}
+
+
+def _parse_percentage_from_cell(text: str) -> float | None:
+    """Extract best numeric percentage from cell (e.g. '76%', '~85%', '26.3% (1M) / 77% (128K)')."""
+    if not text or text.strip() == "-":
+        return None
+    # Match XX.X% or XX% patterns, take the highest
+    matches = re.findall(r"~?(\d+\.?\d*)\s*%", text.strip())
+    if not matches:
+        return None
+    try:
+        return max(float(m) for m in matches)
+    except ValueError:
+        return None
+
+
+def fetch_awesome_agents_long_context_scores() -> dict[str, tuple[float, str]]:
+    """Fetch MRCR v2 and LongBench v2 scores from Awesome Agents. Returns model_id -> (score, evidence).
+
+    Table columns: Rank | Model | MRCR v2 (8-needle, 1M) | MRCR v2 (4-needle, 256K) | LongBench v2 | ...
+    Uses best available score. Prefers MRCR 8-needle 1M for evidence when tied.
+    """
+    model_id_to_name = get_model_id_to_name_map()
+    name_to_model_id = {_normalize_name_for_match(n): mid for mid, n in model_id_to_name.items()}
+
+    result: dict[str, tuple[float, str]] = {}
+    try:
+        resp = httpx.get(AWESOME_AGENTS_LONG_CONTEXT_URL, timeout=15.0, follow_redirects=True)
+        if resp.status_code != 200:
+            return result
+        soup = BeautifulSoup(resp.text, "html.parser")
+        tables = soup.find_all("table")
+        if not tables:
+            return result
+        # First table is the long-context rankings
+        for row in tables[0].find_all("tr")[1:]:  # skip header
+            cells = row.find_all("td")
+            if len(cells) < 7:
+                continue
+            model_name = cells[1].get_text(strip=True)
+            mrcr_1m_raw = cells[4].get_text(strip=True)
+            mrcr_256k_raw = cells[5].get_text(strip=True)
+            longbench_raw = cells[6].get_text(strip=True)
+
+            mrcr_1m = _parse_percentage_from_cell(mrcr_1m_raw)
+            mrcr_256k = _parse_percentage_from_cell(mrcr_256k_raw)
+            longbench = _parse_percentage_from_cell(longbench_raw)
+
+            scores: list[tuple[float, str]] = []
+            if mrcr_1m is not None:
+                scores.append((mrcr_1m, f"MRCR v2 8-needle 1M (awesomeagents.ai): {mrcr_1m}%."))
+            if mrcr_256k is not None:
+                scores.append(
+                    (mrcr_256k, f"MRCR v2 4-needle 256K (awesomeagents.ai): {mrcr_256k:.0f}%.")
+                )
+            if longbench is not None:
+                scores.append((longbench, f"LongBench v2 (awesomeagents.ai): {longbench}%."))
+
+            if not scores:
+                continue
+
+            best_score, best_evidence = max(scores, key=lambda x: x[0])
+            if best_score < 30:
+                continue
+            mid = AWESOME_AGENTS_LONG_CONTEXT_NAME_TO_MODEL_ID.get(model_name)
+            if not mid:
+                norm = _normalize_name_for_match(model_name)
+                mid = name_to_model_id.get(norm)
+            if mid:
+                if mid not in result or best_score > result[mid][0]:
+                    result[mid] = (best_score, best_evidence)
+    except Exception as e:
+        print(f"Warning: Could not fetch Awesome Agents long-context scores: {e}", file=sys.stderr)
+    return result
+
+
+def merge_long_context_scores(
+    mrcr_scores: dict[str, tuple[float, str]],
+    awesome_agents_scores: dict[str, tuple[float, str]],
+) -> dict[str, tuple[float, str]]:
+    """Merge MRCR 1M (primary) with Awesome Agents (MRCR v2, LongBench v2). MRCR 1M wins on overlap."""
+    merged: dict[str, tuple[float, str]] = dict(mrcr_scores)
+    for mid, (score, evidence) in awesome_agents_scores.items():
+        if mid not in merged and score >= LONG_CONTEXT_MIN_MRCR:
+            merged[mid] = (score, evidence)
+    return merged
+
 
 def fetch_mrcr_scores() -> dict[str, tuple[float, str]]:
     """Fetch MRCR 1M scores from llmdb.com. Returns model_id -> (score, evidence).
@@ -870,6 +971,20 @@ def research_and_update(model_id: str, dry_run: bool = False) -> dict:
     global_mmlu_scores = fetch_global_mmlu_scores()
     if global_mmlu_scores:
         print(f"  Fetched Global-MMLU scores for {len(global_mmlu_scores)} models.")
+    mmlu_pro_scores = fetch_mmlu_pro_scores()
+    if mmlu_pro_scores:
+        print(f"  Fetched MMLU-Pro scores for {len(mmlu_pro_scores)} models.")
+    creative_writing_scores = fetch_creative_writing_scores()
+    if creative_writing_scores:
+        print(f"  Fetched Creative Writing scores for {len(creative_writing_scores)} models.")
+    mrcr_scores = fetch_mrcr_scores()
+    awesome_agents_long_context = fetch_awesome_agents_long_context_scores()
+    long_context_scores = merge_long_context_scores(mrcr_scores, awesome_agents_long_context)
+    if long_context_scores:
+        print(
+            f"  Fetched long-context scores for {len(long_context_scores)} models "
+            f"(MRCR 1M + Awesome Agents)."
+        )
 
     print(
         f"PROGRESS:{json.dumps({'stage': 'researching', 'message': 'Determining category placements...', 'progress': 40})}"
@@ -883,6 +998,9 @@ def research_and_update(model_id: str, dry_run: bool = False) -> dict:
         openrouter_pricing,
         lmspeed_scores,
         global_mmlu_scores,
+        mmlu_pro_scores,
+        creative_writing_scores,
+        long_context_scores,
     )
 
     if not category_entries:
@@ -941,6 +1059,12 @@ def research_and_update(model_id: str, dry_run: bool = False) -> dict:
             evidence = lmspeed_scores[model_id][1]
         if cat_id == "multilingual" and global_mmlu_scores and model_id in global_mmlu_scores:
             evidence = global_mmlu_scores[model_id][1]
+        if cat_id == "reasoning" and mmlu_pro_scores and model_id in mmlu_pro_scores:
+            evidence = mmlu_pro_scores[model_id][1]
+        if cat_id == "writing" and creative_writing_scores and model_id in creative_writing_scores:
+            evidence = creative_writing_scores[model_id][1]
+        if cat_id == "long-context" and long_context_scores and model_id in long_context_scores:
+            evidence = long_context_scores[model_id][1]
         if add_model_to_category(categories, cat_id, model_id, evidence):
             added.append(cat_id)
             print(f"  Added to '{cat_id}': {evidence}")
@@ -957,6 +1081,12 @@ def research_and_update(model_id: str, dry_run: bool = False) -> dict:
         fetched_by_cat["fast"] = lmspeed_scores
     if global_mmlu_scores:
         fetched_by_cat["multilingual"] = global_mmlu_scores
+    if mmlu_pro_scores:
+        fetched_by_cat["reasoning"] = mmlu_pro_scores
+    if creative_writing_scores:
+        fetched_by_cat["writing"] = creative_writing_scores
+    if long_context_scores:
+        fetched_by_cat["long-context"] = long_context_scores
     for cat in categories:
         if cat["id"] in added:
             fetched = fetched_by_cat.get(cat["id"])
@@ -1080,6 +1210,10 @@ def refresh_all_categories(dry_run: bool = False) -> dict:
     print(f"  Creative Writing Arena: {len(creative_writing_scores)} models")
     mrcr_scores = fetch_mrcr_scores()
     print(f"  MRCR 1M: {len(mrcr_scores)} models")
+    awesome_agents_long_context = fetch_awesome_agents_long_context_scores()
+    print(f"  Awesome Agents long-context: {len(awesome_agents_long_context)} models")
+    long_context_scores = merge_long_context_scores(mrcr_scores, awesome_agents_long_context)
+    print(f"  Long-context (merged): {len(long_context_scores)} models")
 
     if not RECOMMENDATIONS_PATH.exists():
         print(f"Error: {RECOMMENDATIONS_PATH} not found", file=sys.stderr)
@@ -1106,8 +1240,10 @@ def refresh_all_categories(dry_run: bool = False) -> dict:
         fetched_by_cat["reasoning"] = mmlu_pro_scores
     if creative_writing_scores:
         fetched_by_cat["writing"] = creative_writing_scores
-    if mrcr_scores:
-        fetched_by_cat["long-context"] = mrcr_scores
+    awesome_agents_long_context = fetch_awesome_agents_long_context_scores()
+    long_context_scores = merge_long_context_scores(mrcr_scores, awesome_agents_long_context)
+    if long_context_scores:
+        fetched_by_cat["long-context"] = long_context_scores
 
     # Step 1: Sync evidence and prune models that no longer qualify
     ev_updated, ev_removed = _sync_evidence_and_prune(categories, fetched_by_cat)
@@ -1135,7 +1271,7 @@ def refresh_all_categories(dry_run: bool = False) -> dict:
             global_mmlu_scores,
             mmlu_pro_scores,
             creative_writing_scores,
-            mrcr_scores,
+            long_context_scores,
         )
         for entry in entries:
             cat_id = entry["category_id"]

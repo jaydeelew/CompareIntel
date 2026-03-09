@@ -111,6 +111,7 @@ export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
       { modelId: 'deepseek/deepseek-v3.2-exp', evidence: 'LMSpeed (lmspeed.net): 83 t/s.' },
       { modelId: 'openai/gpt-5.4', evidence: 'LMSpeed (lmspeed.net): 82 t/s.' },
       { modelId: 'minimax/minimax-m2.5', evidence: 'LMSpeed (lmspeed.net): 71 t/s.' },
+      { modelId: 'openai/gpt-5.3-chat', evidence: 'LMSpeed (lmspeed.net): 64 t/s.' },
     ],
   },
   {
@@ -264,9 +265,19 @@ export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
     label: 'Best for long context',
     description: 'Large context windows (128K–1M+ tokens)',
     categoryInfoTooltip:
-      'Ranked by MRCR 1M (llmdb.com), measuring retrieval accuracy over 1M-token contexts. Higher score = better long-context understanding.',
+      'Ranked by MRCR 1M (llmdb.com), MRCR v2, and LongBench v2. Higher score = better long-context retrieval and reasoning.',
     models: [
+      { modelId: 'openai/gpt-5.2', evidence: 'MRCR v2 4-needle 256K (awesomeagents.ai): 98%.' },
       { modelId: 'google/gemini-2.5-pro', evidence: 'MRCR 1M (llmdb.com): 93.0/100.' },
+      {
+        modelId: 'google/gemini-3.1-pro-preview',
+        evidence: 'MRCR v2 4-needle 256K (awesomeagents.ai): 85%.',
+      },
+      {
+        modelId: 'anthropic/claude-sonnet-4.6',
+        evidence: 'MRCR v2 4-needle 256K (awesomeagents.ai): 82%.',
+      },
+      { modelId: 'openai/gpt-4o', evidence: 'MRCR v2 4-needle 256K (awesomeagents.ai): 80%.' },
       { modelId: 'anthropic/claude-opus-4.6', evidence: 'MRCR 1M (llmdb.com): 76.0/100.' },
       { modelId: 'google/gemini-2.0-flash-001', evidence: 'MRCR 1M (llmdb.com): 70.5/100.' },
       { modelId: 'google/gemini-2.5-flash', evidence: 'MRCR 1M (llmdb.com): 32.0/100.' },

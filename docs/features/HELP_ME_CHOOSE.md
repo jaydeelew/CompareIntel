@@ -29,12 +29,14 @@ A public page at `/help-me-choose-methodology` (linked in the footer) explains i
 | **Coding** | SWE-Bench Verified (OpenLM) | https://openlm.ai/swe-bench/ | % Resolved | Yes |
 | **Writing** | Creative Writing Arena | https://kearai.com/leaderboard/creative-writing | Elo rating | Yes |
 | **Reasoning** | MMLU-Pro | https://awesomeagents.ai/leaderboards/mmlu-pro-leaderboard/ | Overall % | Yes |
-| **Long context** | MRCR 1M (llmdb) | https://llmdb.com/benchmarks/mrcr-1m | Score /100 | Yes |
+| **Long context** | MRCR 1M (llmdb) | https://llmdb.com/benchmarks/mrcr-1m | Score /100 | Yes (sparse) |
 | **Best value** | OpenRouter pricing API | https://openrouter.ai/api/v1/models | Avg $/1M tokens | Yes |
 | **Fastest responses** | LMSpeed | https://lmspeed.net/leaderboard/best-throughput-models-weekly | Tokens/second | Yes |
 | **Multilingual** | Global-MMLU (llmdb) | https://llmdb.com/benchmarks/global-mmlu | 42-language score | Yes (sparse) |
 | **Legal** | LegalBench (VALS.ai) | https://www.vals.ai/benchmarks/legal_bench | % across 161 tasks | Yes |
 | **Medical** | HealthBench (OpenAI) | https://openai.com/index/healthbench | Physician-rated % | **Manual only** |
+
+**Long context note:** MRCR 1M has sparse coverage (~7 models). See "Long context (MRCR 1M and alternatives)" in Manual Curation Guide for secondary sources: Awesome Agents (MRCR v2, LongBench v2), model announcements, LongBench v2, RULER.
 
 ## Technical Reference
 
@@ -59,7 +61,7 @@ python scripts/research_model_benchmarks.py --refresh-all [--dry-run]
 
 This command re-evaluates ALL registry models against ALL data-driven categories:
 
-1. **Fetches** current data from 8 external sources (SWE-bench, OpenRouter, LMSpeed, MMLU-Pro, Creative Writing Arena, MRCR, LegalBench, Global-MMLU)
+1. **Fetches** current data from 9 external sources (SWE-bench, OpenRouter, LMSpeed, MMLU-Pro, Creative Writing Arena, MRCR 1M, Awesome Agents long-context, LegalBench, Global-MMLU)
 2. **Syncs evidence** — updates stale evidence strings on existing models (e.g. price changes, new throughput data)
 3. **Prunes** models that no longer meet category thresholds
 4. **Adds** missing models that now qualify
@@ -97,7 +99,8 @@ Data-driven categories apply qualification thresholds to maintain quality:
 - **LegalBench** URL changed from `/legal_bench-01-30-2025` to `/legal_bench` (no date suffix). The scraper follows redirects.
 - **Global-MMLU** and **MRCR 1M** leaderboards on llmdb.com have sparse coverage (few models listed).
 - **Creative Writing Arena** lists many model variants (thinking, non-thinking, dated snapshots). The scraper takes the best score per registry model.
-- **Name mapping dicts** (`LMSPEED_NAME_TO_MODEL_ID`, `WRITING_NAME_TO_MODEL_ID`, `MMLU_PRO_NAME_TO_MODEL_ID`, etc.) resolve leaderboard display names that don't match registry names. Update these when adding new models or when leaderboard names change.
+- **Name mapping dicts** (`LMSPEED_NAME_TO_MODEL_ID`, `WRITING_NAME_TO_MODEL_ID`, `MMLU_PRO_NAME_TO_MODEL_ID`, `AWESOME_AGENTS_LONG_CONTEXT_NAME_TO_MODEL_ID`, etc.) resolve leaderboard display names that don't match registry names. Update these when adding new models or when leaderboard names change.
+- **Long context** merges MRCR 1M (llmdb) with Awesome Agents (MRCR v2, LongBench v2). MRCR 1M is primary; Awesome Agents adds models not on the llmdb leaderboard. Threshold ≥ 30 applies to both sources.
 
 ### Registry sync
 
@@ -135,13 +138,25 @@ Some categories cannot be fully automated because their data sources don't expos
 2. Check model release announcements for Global-MMLU scores
 3. Add entries with evidence like: `'Global-MMLU (llmdb.com): XX.X%.'`
 
-#### Long context (MRCR 1M)
-**Why semi-manual:** The llmdb.com MRCR leaderboard only lists ~7 models, mostly from Google. Non-Google models with strong long-context capabilities may not appear.
+#### Long context (MRCR 1M and alternatives)
+**Why semi-manual:** The llmdb.com MRCR 1M (Michelangelo) leaderboard lists ~7 models, mostly from Google. Many strong long-context models—including those excelling at 256K context—are absent from this 1M-only benchmark. Non-Google and frontier models (OpenAI, Anthropic, xAI, etc.) often publish long-context scores only in announcements.
+
+**Determining factors for inclusion:**
+- **Primary automated source:** MRCR 1M (llmdb.com) — 0–100 scale; measures retrieval at 1M tokens. Threshold: ≥ 30/100.
+- **Secondary sources for manual curation** (when a model has no llmdb MRCR 1M entry):
+  1. **Awesome Agents Long-Context Leaderboard** (https://awesomeagents.ai/leaderboards/long-context-benchmarks-leaderboard/) — Curated table combining MRCR v2 (8-needle 1M, 4-needle 256K), RULER, and LongBench v2. Use published scores from model rows; evidence format: `'MRCR v2 8-needle 1M (awesomeagents.ai): XX%.'` or `'MRCR v2 4-needle 256K (awesomeagents.ai): XX%.'` for models strong at 256K.
+  2. **Model announcement blogs** — Anthropic, OpenAI, Google, xAI often publish MRCR, needle-in-a-haystack, or LongBench scores. Evidence: `'MRCR (OpenAI/Anthropic/Google): XX%.'` with source URL where possible.
+  3. **LongBench v2** (https://longbench2.github.io/) — Tsinghua benchmark; 503 questions at 8K–2M words. Evidence: `'LongBench v2 (longbench2.github.io): XX%.'`
+  4. **RULER** (NVIDIA) — Synthetic benchmark; 13 task types. Use if scores are published in papers or leaderboards.
+  5. **Stanford HELM Long Context** — When available, check https://crfm.stanford.edu/ for multi-benchmark evaluations.
+
+**Note on score scales:** MRCR 1M (llmdb) uses 0–100; MRCR v2 (Awesome Agents) typically uses 0–100%. When combining sources, preserve the original scale in the evidence string for clarity.
 
 **How to supplement:**
 1. Check https://llmdb.com/benchmarks/mrcr-1m for new entries
-2. Look for MRCR or "needle-in-a-haystack" scores in model announcements
-3. Add entries with evidence like: `'MRCR 1M (llmdb.com): XX/100.'`
+2. Review https://awesomeagents.ai/leaderboards/long-context-benchmarks-leaderboard/ for models with MRCR v2 or LongBench v2 scores
+3. Search model release announcements for "MRCR", "needle-in-a-haystack", "LongBench", or "NIAH"
+4. Add entries with evidence like: `'MRCR 1M (llmdb.com): XX/100.'` or `'MRCR v2 4-needle 256K (awesomeagents.ai): XX%.'`
 
 ### Manual curation workflow
 
@@ -162,6 +177,7 @@ Some categories cannot be fully automated because their data sources don't expos
 
 - Always include the source name and URL context: `'BenchmarkName (source.com): SCORE.'`
 - Use `%` for percentage scores: `'MMLU-Pro (awesomeagents.ai): 89.5%.'`
+- Use `%` for MRCR v2 / LongBench v2: `'MRCR v2 4-needle 256K (awesomeagents.ai): 98%.'`
 - Use `Elo` for arena rankings: `'Creative Writing Arena (kearai.com): 1478 Elo.'`
 - Use `/100` for normalized scores: `'MRCR 1M (llmdb.com): 93/100.'`
 - Use `$/1M tokens` for pricing: `'OpenRouter avg: $0.22/1M tokens.'`
