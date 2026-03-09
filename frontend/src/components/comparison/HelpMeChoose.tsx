@@ -10,6 +10,7 @@
  */
 
 import { useState, useRef, useEffect, useMemo, useCallback, type RefObject } from 'react'
+import { createPortal } from 'react-dom'
 import { Link } from 'react-router-dom'
 
 import {
@@ -200,6 +201,18 @@ export function HelpMeChoose({
     modelName: string
     evidence: string
   } | null>(null)
+  /** Portal tooltip for category info (desktop only) - avoids overflow clipping from scroll container */
+  const [categoryTooltip, setCategoryTooltip] = useState<{
+    content: string
+    centerX: number
+    bottomY: number
+  } | null>(null)
+  /** Portal tooltip for model evidence (desktop only) - avoids overflow clipping from scroll container */
+  const [modelEvidenceTooltip, setModelEvidenceTooltip] = useState<{
+    content: string
+    centerX: number
+    bottomY: number
+  } | null>(null)
   const isExpanded = controlledExpanded !== undefined ? controlledExpanded : internalExpanded
   const setIsExpanded = useCallback(
     (v: boolean) => {
@@ -338,14 +351,18 @@ export function HelpMeChoose({
     [handleScrollbarPointerDown]
   )
 
-  const handleScrollbarTouchStart = useCallback(
-    (e: React.TouchEvent) => {
+  useEffect(() => {
+    if (!isExpanded) return
+    const track = scrollbarTrackRef.current
+    if (!track) return
+    const handler = (e: TouchEvent) => {
       if (e.touches.length === 0) return
       e.preventDefault()
-      handleScrollbarPointerDown(e.touches[0].clientX, e.target)
-    },
-    [handleScrollbarPointerDown]
-  )
+      handleScrollbarPointerDown(e.touches[0].clientX, e.target as EventTarget)
+    }
+    track.addEventListener('touchstart', handler, { passive: false })
+    return () => track.removeEventListener('touchstart', handler)
+  }, [isExpanded, handleScrollbarPointerDown])
 
   useEffect(() => {
     if (!isExpanded) return
@@ -418,6 +435,22 @@ export function HelpMeChoose({
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [modelsSectionRef, setIsExpanded])
+
+  /** Clear portal tooltips when categories scroll or dropdown closes */
+  useEffect(() => {
+    if (!isExpanded || (!categoryTooltip && !modelEvidenceTooltip)) return
+    const el = categoriesRef.current
+    const onScroll = () => {
+      setCategoryTooltip(null)
+      setModelEvidenceTooltip(null)
+    }
+    el?.addEventListener('scroll', onScroll)
+    return () => {
+      el?.removeEventListener('scroll', onScroll)
+      setCategoryTooltip(null)
+      setModelEvidenceTooltip(null)
+    }
+  }, [isExpanded, categoryTooltip, modelEvidenceTooltip])
 
   /** Scroll to first selected model when dropdown opens only—not on selection changes (Goal 10) */
   const prevExpandedRef = useRef(false)
@@ -569,7 +602,6 @@ export function HelpMeChoose({
               aria-orientation="horizontal"
               aria-label="Scroll categories horizontally"
               onMouseDown={handleScrollbarMouseDown}
-              onTouchStart={handleScrollbarTouchStart}
             >
               <div ref={scrollbarThumbRef} className="help-me-choose-scrollbar-thumb" />
             </div>
@@ -596,6 +628,23 @@ export function HelpMeChoose({
                                   evidence: cat.categoryInfoTooltip!,
                                 })
                               }
+                              onMouseEnter={
+                                !isMobileLayout
+                                  ? e => {
+                                      const rect = (
+                                        e.currentTarget as HTMLButtonElement
+                                      ).getBoundingClientRect()
+                                      setCategoryTooltip({
+                                        content: cat.categoryInfoTooltip!,
+                                        centerX: rect.left + rect.width / 2,
+                                        bottomY: window.innerHeight - rect.top + 10,
+                                      })
+                                    }
+                                  : undefined
+                              }
+                              onMouseLeave={
+                                !isMobileLayout ? () => setCategoryTooltip(null) : undefined
+                              }
                               aria-label={`${cat.label} — how this category is ranked`}
                               aria-describedby={
                                 isMobileLayout ? undefined : `hmc-category-info-${cat.id}`
@@ -604,7 +653,7 @@ export function HelpMeChoose({
                               {!isMobileLayout && (
                                 <span
                                   id={`hmc-category-info-${cat.id}`}
-                                  className="help-me-choose-category-info-tooltip"
+                                  className="sr-only"
                                   role="tooltip"
                                 >
                                   {cat.categoryInfoTooltip}
@@ -690,6 +739,27 @@ export function HelpMeChoose({
                                       evidence: modelRestricted ? disabledTooltip : entry.evidence,
                                     })
                                   }}
+                                  onMouseEnter={
+                                    !isMobileLayout
+                                      ? e => {
+                                          const rect = (
+                                            e.currentTarget as HTMLButtonElement
+                                          ).getBoundingClientRect()
+                                          setModelEvidenceTooltip({
+                                            content: modelRestricted
+                                              ? disabledTooltip
+                                              : entry.evidence,
+                                            centerX: rect.left + rect.width / 2,
+                                            bottomY: window.innerHeight - rect.top + 10,
+                                          })
+                                        }
+                                      : undefined
+                                  }
+                                  onMouseLeave={
+                                    !isMobileLayout
+                                      ? () => setModelEvidenceTooltip(null)
+                                      : undefined
+                                  }
                                   aria-label={`Benchmark evidence for ${displayName}`}
                                   aria-describedby={
                                     isMobileLayout
@@ -700,7 +770,7 @@ export function HelpMeChoose({
                                   {!isMobileLayout && (
                                     <span
                                       id={`hmc-evidence-tooltip-${cat.id}-${entry.modelId}-${idx}`}
-                                      className="help-me-choose-model-evidence-tooltip"
+                                      className="sr-only"
                                       role="tooltip"
                                     >
                                       {modelRestricted ? disabledTooltip : entry.evidence}
@@ -729,6 +799,40 @@ export function HelpMeChoose({
           onClose={() => setEvidenceModal(null)}
         />
       )}
+
+      {!isMobileLayout &&
+        categoryTooltip &&
+        createPortal(
+          <div
+            className="help-me-choose-category-info-tooltip help-me-choose-category-info-tooltip-portal"
+            role="tooltip"
+            style={{
+              left: categoryTooltip.centerX,
+              bottom: categoryTooltip.bottomY,
+              transform: 'translateX(-50%)',
+            }}
+          >
+            {categoryTooltip.content}
+          </div>,
+          document.body
+        )}
+
+      {!isMobileLayout &&
+        modelEvidenceTooltip &&
+        createPortal(
+          <div
+            className="help-me-choose-model-evidence-tooltip help-me-choose-category-info-tooltip-portal"
+            role="tooltip"
+            style={{
+              left: modelEvidenceTooltip.centerX,
+              bottom: modelEvidenceTooltip.bottomY,
+              transform: 'translateX(-50%)',
+            }}
+          >
+            {modelEvidenceTooltip.content}
+          </div>,
+          document.body
+        )}
 
       <BestAtTopInfoModal
         isOpen={showBestAtTopModal}

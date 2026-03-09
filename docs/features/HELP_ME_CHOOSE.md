@@ -81,7 +81,7 @@ Data-driven categories apply qualification thresholds to maintain quality:
 
 | Category | Threshold | Constant |
 |----------|-----------|----------|
-| Best value | ≤ $3.00/1M tokens avg | `COST_EFFECTIVE_MAX_PRICE` |
+| Best value | &lt; $1.00/1M tokens avg | `COST_EFFECTIVE_MAX_PRICE` |
 | Fastest responses | ≥ 50 tokens/sec | `FAST_MIN_THROUGHPUT` |
 | Coding | ≥ 55% SWE-Bench Verified | `CODING_MIN_SWE_BENCH` |
 | Reasoning | ≥ 80% MMLU-Pro | `REASONING_MIN_MMLU_PRO` |

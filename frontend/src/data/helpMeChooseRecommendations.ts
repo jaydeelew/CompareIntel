@@ -44,9 +44,9 @@ export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
   {
     id: 'cost-effective',
     label: 'Best value',
-    description: 'Lowest cost per 1M tokens for high-volume use',
+    description: 'Lowest cost per 1M tokens for high-volume use (under $1/1M)',
     categoryInfoTooltip:
-      'Ranked by average cost per million tokens (OpenRouter pricing: prompt + completion). Lower cost = better value. Prices vary by provider.',
+      'Ranked by average cost per million tokens (OpenRouter pricing: prompt + completion). Only models under $1/1M tokens are included. Lower cost = better value. Prices vary by provider.',
     models: [
       { modelId: 'cohere/command-r7b-12-2024', evidence: 'OpenRouter avg: $0.09/1M tokens.' },
       { modelId: 'microsoft/phi-4', evidence: 'OpenRouter avg: $0.10/1M tokens.' },
@@ -84,24 +84,6 @@ export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
       { modelId: 'minimax/minimax-m2.5', evidence: 'OpenRouter avg: $0.75/1M tokens.' },
       { modelId: 'x-ai/grok-code-fast-1', evidence: 'OpenRouter avg: $0.85/1M tokens.' },
       { modelId: 'qwen/qwen3.5-plus-02-15', evidence: 'OpenRouter avg: $0.91/1M tokens.' },
-      { modelId: 'openai/gpt-5-mini', evidence: 'OpenRouter avg: $1.12/1M tokens.' },
-      { modelId: 'openai/gpt-5.1-codex-mini', evidence: 'OpenRouter avg: $1.12/1M tokens.' },
-      { modelId: 'qwen/qwen3-235b-a22b', evidence: 'OpenRouter avg: $1.14/1M tokens.' },
-      { modelId: 'z-ai/glm-4.7', evidence: 'OpenRouter avg: $1.18/1M tokens.' },
-      { modelId: 'mistralai/devstral-medium', evidence: 'OpenRouter avg: $1.20/1M tokens.' },
-      { modelId: 'mistralai/mistral-medium-3.1', evidence: 'OpenRouter avg: $1.20/1M tokens.' },
-      { modelId: 'mistralai/devstral-2512', evidence: 'OpenRouter avg: $1.20/1M tokens.' },
-      { modelId: 'moonshotai/kimi-k2.5', evidence: 'OpenRouter avg: $1.33/1M tokens.' },
-      { modelId: 'qwen/qwen3.5-397b-a17b', evidence: 'OpenRouter avg: $1.36/1M tokens.' },
-      { modelId: 'google/gemini-2.5-flash', evidence: 'OpenRouter avg: $1.40/1M tokens.' },
-      { modelId: 'deepseek/deepseek-r1', evidence: 'OpenRouter avg: $1.60/1M tokens.' },
-      { modelId: 'z-ai/glm-5', evidence: 'OpenRouter avg: $1.68/1M tokens.' },
-      { modelId: 'google/gemini-3-flash-preview', evidence: 'OpenRouter avg: $1.75/1M tokens.' },
-      { modelId: 'qwen/qwen3-coder-plus', evidence: 'OpenRouter avg: $1.95/1M tokens.' },
-      { modelId: 'qwen/qwen3-max-thinking', evidence: 'OpenRouter avg: $2.34/1M tokens.' },
-      { modelId: 'anthropic/claude-3.5-haiku', evidence: 'OpenRouter avg: $2.40/1M tokens.' },
-      { modelId: 'openai/o3-mini', evidence: 'OpenRouter avg: $2.75/1M tokens.' },
-      { modelId: 'anthropic/claude-haiku-4.5', evidence: 'OpenRouter avg: $3.00/1M tokens.' },
     ],
   },
   {
@@ -135,6 +117,8 @@ export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
     id: 'coding',
     label: 'Best for coding',
     description: 'Code generation, debugging, refactoring',
+    categoryInfoTooltip:
+      'Ranked by SWE-Bench Verified (OpenLM): real-world code-repair on GitHub issues. Higher % = better at resolving bugs. See openlm.ai/swe-bench.',
     models: [
       {
         modelId: 'google/gemini-3.1-pro-preview',
@@ -190,6 +174,8 @@ export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
     id: 'writing',
     label: 'Best for writing',
     description: 'Prose, tone, character consistency',
+    categoryInfoTooltip:
+      'Ranked by Creative Writing Arena (kearai.com) Elo ratings and Mazur Writing Score. Higher score = stronger prose and narrative generation.',
     models: [
       {
         modelId: 'google/gemini-3.1-pro-preview',
@@ -256,6 +242,8 @@ export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
     id: 'reasoning',
     label: 'Best for reasoning',
     description: 'Math, logic, multi-step problem solving',
+    categoryInfoTooltip:
+      'Ranked by MMLU-Pro (awesomeagents.ai), a broad multi-domain reasoning benchmark. Higher % = better general knowledge and problem-solving.',
     models: [
       { modelId: 'google/gemini-3.1-pro-preview', evidence: 'MMLU-Pro (awesomeagents.ai): 89.8%.' },
       { modelId: 'openai/gpt-5.2-pro', evidence: 'MMLU-Pro (awesomeagents.ai): 88.7%.' },
@@ -275,6 +263,8 @@ export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
     id: 'long-context',
     label: 'Best for long context',
     description: 'Large context windows (128K–1M+ tokens)',
+    categoryInfoTooltip:
+      'Ranked by MRCR 1M (llmdb.com), measuring retrieval accuracy over 1M-token contexts. Higher score = better long-context understanding.',
     models: [
       { modelId: 'google/gemini-2.5-pro', evidence: 'MRCR 1M (llmdb.com): 93.0/100.' },
       { modelId: 'anthropic/claude-opus-4.6', evidence: 'MRCR 1M (llmdb.com): 76.0/100.' },
@@ -309,6 +299,8 @@ export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
     id: 'legal',
     label: 'Best for legal',
     description: 'Legal reasoning, contract analysis, statutory interpretation',
+    categoryInfoTooltip:
+      'Ranked by LegalBench (vals.ai) across 161 legal reasoning tasks. Higher % = stronger legal analysis and statutory interpretation.',
     models: [
       { modelId: 'google/gemini-3.1-pro-preview', evidence: 'LegalBench (vals.ai): 87.04%.' },
       { modelId: 'google/gemini-3-flash-preview', evidence: 'LegalBench (vals.ai): 86.86%.' },
@@ -320,6 +312,8 @@ export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
     id: 'medical',
     label: 'Best for medical',
     description: 'Clinical knowledge, health information, medical reasoning',
+    categoryInfoTooltip:
+      'Ranked by HealthBench (OpenAI), physician-evaluated clinical conversation quality. Higher % = better medical reasoning. Scores from published research.',
     models: [
       {
         modelId: 'openai/o3',

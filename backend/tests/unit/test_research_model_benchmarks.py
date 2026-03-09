@@ -163,6 +163,33 @@ class TestDetermineCategories:
         entries = determine_categories("test/code-model", model, None, {})
         assert len(entries) == 0
 
+    def test_cost_effective_included_when_under_one_dollar(self):
+        """Best value category only includes models under $1/1M tokens."""
+        model = make_registry_model("test/cheap-model")
+        pricing = {
+            "test/cheap-model": (0.61, "OpenRouter avg: $0.61/1M tokens."),
+        }
+        entries = determine_categories(
+            "test/cheap-model", model, None, {}, openrouter_pricing=pricing
+        )
+        cost_eff = [e for e in entries if e["category_id"] == "cost-effective"]
+        assert len(cost_eff) == 1
+        assert cost_eff[0]["evidence"] == "OpenRouter avg: $0.61/1M tokens."
+
+    def test_cost_effective_excluded_at_or_above_one_dollar(self):
+        """Models at $1/1M or above are excluded from Best value."""
+        model = make_registry_model("test/expensive-model")
+        for cost, evidence in [
+            (1.0, "OpenRouter avg: $1.00/1M tokens."),
+            (1.12, "OpenRouter avg: $1.12/1M tokens."),
+        ]:
+            pricing = {"test/expensive-model": (cost, evidence)}
+            entries = determine_categories(
+                "test/expensive-model", model, None, {}, openrouter_pricing=pricing
+            )
+            cost_eff = [e for e in entries if e["category_id"] == "cost-effective"]
+            assert len(cost_eff) == 0, f"Expected exclusion for cost={cost}"
+
 
 # --- Tests for TS parsing ---
 

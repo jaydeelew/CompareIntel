@@ -625,7 +625,7 @@ def calculate_avg_cost(model_data: dict) -> float | None:
 
 
 # Category qualification thresholds.  Models must meet these to be included.
-COST_EFFECTIVE_MAX_PRICE = 3.00  # max avg $/1M tokens
+COST_EFFECTIVE_MAX_PRICE = 1.00  # max avg $/1M tokens (exclusive: under $1)
 FAST_MIN_THROUGHPUT = 50.0  # min tokens/sec
 CODING_MIN_SWE_BENCH = 55.0  # min SWE-bench Verified %
 REASONING_MIN_MMLU_PRO = 80.0  # min MMLU-Pro %
@@ -660,7 +660,7 @@ def determine_categories(
         entries.append({"category_id": "legal", "evidence": evidence, "score": score})
     if openrouter_pricing and model_id in openrouter_pricing:
         cost, evidence = openrouter_pricing[model_id]
-        if cost <= COST_EFFECTIVE_MAX_PRICE:
+        if cost < COST_EFFECTIVE_MAX_PRICE:
             entries.append({"category_id": "cost-effective", "evidence": evidence, "score": cost})
     if lmspeed_scores and model_id in lmspeed_scores:
         tps, evidence = lmspeed_scores[model_id]
@@ -997,7 +997,7 @@ def _sync_evidence_and_prune(
     Returns (updated, removed) dicts mapping category_id -> [model_ids].
     """
     thresholds: dict[str, tuple[str, float]] = {
-        "cost-effective": ("max", COST_EFFECTIVE_MAX_PRICE),
+        "cost-effective": ("max_exclusive", COST_EFFECTIVE_MAX_PRICE),  # under $1/1M
         "fast": ("min", FAST_MIN_THROUGHPUT),
         "coding": ("min", CODING_MIN_SWE_BENCH),
         "reasoning": ("min", REASONING_MIN_MMLU_PRO),
@@ -1024,7 +1024,11 @@ def _sync_evidence_and_prune(
 
             if threshold:
                 kind, limit = threshold
-                if (kind == "max" and score > limit) or (kind == "min" and score < limit):
+                if (
+                    (kind == "max" and score > limit)
+                    or (kind == "max_exclusive" and score >= limit)
+                    or (kind == "min" and score < limit)
+                ):
                     to_remove.append(i)
                     removed.setdefault(cat_id, []).append(mid)
                     continue

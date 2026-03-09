@@ -169,7 +169,10 @@ export const HelpMeChooseMethodology: React.FC = () => {
                       OpenRouter pricing
                     </a>
                   </td>
-                  <td>Average cost per million tokens. Lower = better value.</td>
+                  <td>
+                    Average cost per million tokens. Only models under $1/1M are included. Lower =
+                    better value.
+                  </td>
                 </tr>
                 <tr>
                   <td>Fastest responses</td>

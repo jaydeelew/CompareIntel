@@ -2151,8 +2151,8 @@
 }
 
 .help-me-choose-category {
-  flex: 0 0 260px;
-  min-width: 260px;
+  flex: 0 0 300px;
+  min-width: 300px;
   display: flex;
   flex-direction: column;
   gap: 0.375rem;
@@ -2199,7 +2199,7 @@ html:not([data-theme]) .help-me-choose-category.has-match {
   align-items: center;
   justify-content: space-between;
   gap: 0.5rem;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
 }
 
 .help-me-choose-category-header {
@@ -2207,6 +2207,7 @@ html:not([data-theme]) .help-me-choose-category.has-match {
   font-size: 0.875rem;
   font-weight: var(--font-semibold);
   color: var(--text-primary);
+  min-width: 0;
 }
 
 .help-me-choose-preset-btn {
@@ -2474,6 +2475,24 @@ html:not([data-theme]) .help-me-choose-category.has-match {
   visibility: visible;
 }
 
+/* Portal-rendered tooltip (desktop) - escapes overflow clipping from scroll container */
+.help-me-choose-category-info-tooltip-portal {
+  position: fixed;
+  opacity: 1;
+  visibility: visible;
+  pointer-events: none;
+}
+
+.help-me-choose-category-info-tooltip-portal::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-top-color: var(--bg-card);
+}
+
 .help-me-choose-actions {
   display: flex;
   justify-content: flex-end;
@@ -2540,8 +2559,8 @@ html:not([data-theme]) .help-me-choose-category.has-match {
   }
 
   .help-me-choose-category {
-    flex: 0 0 260px;
-    min-width: 260px;
+    flex: 0 0 300px;
+    min-width: 300px;
     /* Enhanced category cards - subtle gradient border and depth */
     background: rgba(0, 0, 0, 0.03);
     border: 1px solid var(--border-color);
