@@ -508,8 +508,9 @@ export function HelpMeChoose({
                     className="help-me-choose-ordering-tooltip"
                     role="tooltip"
                   >
-                    Models are ordered from best (top) to least recommended (bottom) based on
-                    published benchmarks. Tap the info icon next to a model for evidence.
+                    Models are ordered from best (top) to least recommended (bottom) using each
+                    category's benchmark (for example SWE-Bench for coding or MMLU-Pro for
+                    reasoning). Tap the info icon next to a model for evidence.
                   </span>
                 )}
                 <svg
@@ -555,7 +556,36 @@ export function HelpMeChoose({
                       className={`help-me-choose-category ${hasMatch ? 'has-match' : ''}`}
                     >
                       <div className="help-me-choose-category-header-row">
-                        <h3 className="help-me-choose-category-header">{cat.label}</h3>
+                        <h3 className="help-me-choose-category-header">
+                          {cat.label}
+                          {cat.categoryInfoTooltip && (
+                            <button
+                              type="button"
+                              className="help-me-choose-category-info-trigger"
+                              onClick={() =>
+                                setEvidenceModal({
+                                  modelName: cat.label,
+                                  evidence: cat.categoryInfoTooltip!,
+                                })
+                              }
+                              aria-label={`${cat.label} — how this category is ranked`}
+                              aria-describedby={
+                                isMobileLayout ? undefined : `hmc-category-info-${cat.id}`
+                              }
+                            >
+                              {!isMobileLayout && (
+                                <span
+                                  id={`hmc-category-info-${cat.id}`}
+                                  className="help-me-choose-category-info-tooltip"
+                                  role="tooltip"
+                                >
+                                  {cat.categoryInfoTooltip}
+                                </span>
+                              )}
+                              <InfoIcon />
+                            </button>
+                          )}
+                        </h3>
                         {onApplyCategoryPreset &&
                           !isRestrictedTier &&
                           cat.models.some(e => !modelRestrictedByModelId.get(e.modelId)) && (

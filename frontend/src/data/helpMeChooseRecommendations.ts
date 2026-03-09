@@ -5,11 +5,12 @@
  * best-to-worst based on published benchmarks. Models may appear in multiple
  * categories; users select individual models.
  *
- * Inclusion rule: Only models with well-respected, publicly available benchmarks
- * or user-ratings (LMSys Arena, SWE-Bench, etc.) are included.
+ * Inclusion rule: Only models with numeric benchmark scores from well-respected,
+ * publicly available sources (SWE-Bench, MMLU-Pro, Mazur Writing Score, etc.)
+ * are included. Models without benchmark scores are not added.
  *
  * Evidence format: Each entry includes the source (benchmark/reference) and
- * score where applicable. See /help-me-choose-methodology for full methodology.
+ * score. See /help-me-choose-methodology for full methodology.
  */
 
 export interface HelpMeChooseModelEntry {
@@ -25,12 +26,14 @@ export interface HelpMeChooseCategory {
   description: string
   /** Models ordered best-first based on benchmarks */
   models: HelpMeChooseModelEntry[]
+  /** Optional tooltip for category-level info icon (e.g. how cost-effective or fast differs) */
+  categoryInfoTooltip?: string
 }
 
 /**
- * Categories displayed left-to-right (free-tier first, then premium).
- * Order within each category: best model first, descending by benchmark.
- * All top models per category; no limit.
+ * Categories displayed left-to-right. Order within each category: best model
+ * first, descending by benchmark score. Only models with numeric benchmark
+ * evidence are included.
  */
 /**
  * EDITING: When adding or updating models, edit ONLY the array below (after "= [").
@@ -38,79 +41,6 @@ export interface HelpMeChooseCategory {
  * Do NOT add a duplicate block or put content between the type and "= [".
  */
 export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
-  {
-    id: 'cost-effective',
-    label: 'Most cost-effective',
-    description: 'Best quality-per-dollar for high-volume use',
-    models: [
-      {
-        modelId: 'deepseek/deepseek-chat-v3.1',
-        evidence: 'Value leader, competitive pricing.',
-      },
-      {
-        modelId: 'google/gemini-2.5-flash',
-        evidence:
-          'Artificial Analysis Quality Score 51 (artificialanalysis.ai). Built-in thinking, excellent cost-performance.',
-      },
-      {
-        modelId: 'deepseek/deepseek-r1',
-        evidence: 'Frontier reasoning at competitive value pricing.',
-      },
-      {
-        modelId: 'mistralai/mistral-small-3.2-24b-instruct',
-        evidence: 'Low cost. LMSys Chatbot Arena: Strong performance.',
-      },
-      {
-        modelId: 'microsoft/phi-4',
-        evidence: 'Efficient small model. Good value.',
-      },
-      {
-        modelId: 'openai/gpt-4o-mini',
-        evidence: 'OpenAI value leader. Fast and affordable.',
-      },
-      {
-        modelId: 'stepfun/step-3.5-flash:free',
-        evidence: 'Free tier (stepfun.ai). Solid quality for cost.',
-      },
-      {
-        modelId: 'anthropic/claude-3.5-haiku',
-        evidence: 'Anthropic value tier. Low latency.',
-      },
-    ],
-  },
-  {
-    id: 'fast',
-    label: 'Fastest responses',
-    description: 'Low latency, quick time-to-first-token',
-    models: [
-      {
-        modelId: 'google/gemini-2.0-flash-001',
-        evidence: 'AILatency / Artificial Analysis (ailatency.com): TTFT leader.',
-      },
-      {
-        modelId: 'google/gemini-2.5-flash',
-        evidence: 'Artificial Analysis: Very fast with built-in thinking. Minimal delay.',
-      },
-      {
-        modelId: 'x-ai/grok-4.1-fast',
-        evidence:
-          'LMSys Chatbot Arena (lmarena.ai): 1465 Elo. Fast non-thinking mode, top-tier speed.',
-      },
-      {
-        modelId: 'anthropic/claude-3.5-haiku',
-        evidence: "Anthropic benchmarks + AILatency: Anthropic's fastest. Low latency.",
-      },
-      {
-        modelId: 'anthropic/claude-haiku-4.5',
-        evidence: 'Anthropic: 2× Sonnet speed. Near-frontier with minimal delay.',
-      },
-      { modelId: 'openai/gpt-4o-mini', evidence: 'AILatency: Fast OpenAI option. Sub-500ms TTFT.' },
-      {
-        modelId: 'mistralai/mistral-small-3.2-24b-instruct',
-        evidence: 'Quick responses. Good for streaming.',
-      },
-    ],
-  },
   {
     id: 'coding',
     label: 'Best for coding',
@@ -137,6 +67,10 @@ export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
         modelId: 'anthropic/claude-sonnet-4.6',
         evidence: 'SWE-Bench Verified: 79.6%. Frontier Sonnet for code.',
       },
+      { modelId: 'z-ai/glm-5', evidence: 'SWE-Bench Verified: 77.8%. Strong coding from Zhipu.' },
+      { modelId: 'anthropic/claude-sonnet-4.5', evidence: 'SWE-Bench Verified: 77.2%.' },
+      { modelId: 'moonshotai/kimi-k2.5', evidence: 'SWE-Bench Verified (openlm.ai): 76.8%.' },
+      { modelId: 'qwen/qwen3.5-397b-a17b', evidence: 'SWE-Bench Verified: 76.4%. Qwen flagship.' },
       {
         modelId: 'google/gemini-3-flash-preview',
         evidence: 'SWE-Bench Verified (openlm.ai): 75.2%. Fast coding model.',
@@ -144,14 +78,6 @@ export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
       {
         modelId: 'google/gemini-3-pro-preview',
         evidence: 'SWE-Bench Verified (openlm.ai): 74.2%. Pro-tier coding.',
-      },
-      { modelId: 'z-ai/glm-5', evidence: 'SWE-Bench Verified: 77.8%. Strong coding from Zhipu.' },
-      { modelId: 'anthropic/claude-sonnet-4.5', evidence: 'SWE-Bench Verified: 77.2%.' },
-      { modelId: 'moonshotai/kimi-k2.5', evidence: 'SWE-Bench Verified (openlm.ai): 76.8%.' },
-      { modelId: 'qwen/qwen3.5-397b-a17b', evidence: 'SWE-Bench Verified: 76.4%. Qwen flagship.' },
-      {
-        modelId: 'anthropic/claude-haiku-4.5',
-        evidence: 'SWE-Bench Verified (openlm.ai): 68.8%. Fast + capable.',
       },
       {
         modelId: 'deepseek/deepseek-v3.2-exp',
@@ -167,9 +93,8 @@ export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
         evidence: 'SWE-Bench Verified (openlm.ai): 70.6%. xAI flagship coding.',
       },
       {
-        modelId: 'mistralai/codestral-2508',
-        evidence:
-          'Code-specialized model. LMSys Coding Arena (lmarena.ai): Strong dev performance.',
+        modelId: 'anthropic/claude-haiku-4.5',
+        evidence: 'SWE-Bench Verified (openlm.ai): 68.8%. Fast + capable.',
       },
     ],
   },
@@ -182,31 +107,15 @@ export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
         modelId: 'anthropic/claude-opus-4.6',
         evidence: 'Mazur Writing Score (Creative Writing Arena, kearai.com): 8.561. Leader.',
       },
-      { modelId: 'anthropic/claude-opus-4.5', evidence: 'Creative Writing Arena: 1455–1461 Elo.' },
-      {
-        modelId: 'openai/gpt-5.2',
-        evidence: 'Mazur Writing Score: 8.511. Strong creative and technical writing.',
-      },
       {
         modelId: 'deepseek/deepseek-r1',
         evidence: 'Mazur Writing Score: 8.54. Strong narrative generation.',
       },
       {
-        modelId: 'anthropic/claude-sonnet-4.6',
-        evidence: 'Creative Writing Arena: Voice consistency, quality.',
+        modelId: 'openai/gpt-5.2',
+        evidence: 'Mazur Writing Score: 8.511. Strong creative and technical writing.',
       },
-      {
-        modelId: 'anthropic/claude-3.7-sonnet',
-        evidence: 'Creative Writing Arena: Extended thinking for long-form.',
-      },
-      {
-        modelId: 'openai/gpt-5.1',
-        evidence: 'Creative Writing Arena: Enterprise content. Strong prose.',
-      },
-      {
-        modelId: 'google/gemini-2.5-pro',
-        evidence: 'Creative Writing Arena: Long-form narrative. Complex reasoning + writing.',
-      },
+      { modelId: 'anthropic/claude-opus-4.5', evidence: 'Creative Writing Arena: 1455–1461 Elo.' },
     ],
   },
   {
@@ -215,76 +124,18 @@ export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
     description: 'Math, logic, multi-step problem solving',
     models: [
       {
-        modelId: 'openai/o3',
-        evidence: 'SOTA reasoning. Chain-of-thought leader. Inference-time scaling.',
-      },
-      { modelId: 'openai/o3-mini', evidence: 'Efficient reasoning. o3 architecture (OpenAI).' },
-      {
         modelId: 'google/gemini-3.1-pro-preview',
         evidence: 'MMLU-Pro (awesomeagents.ai): 90.1%. Graduate-level knowledge leader.',
-      },
-      {
-        modelId: 'deepseek/deepseek-r1',
-        evidence: 'MMLU-Pro: 84.6%. Math 92.8%. Matches o1 performance.',
-      },
-      { modelId: 'anthropic/claude-opus-4.6', evidence: 'MMLU-Pro: 88.2%. Multi-step reasoning.' },
-      { modelId: 'openai/gpt-5.2-pro', evidence: 'MMLU-Pro: 88.7%. Strong reasoning tier.' },
-      {
-        modelId: 'x-ai/grok-4.1-fast',
-        evidence: 'LMSys Chatbot Arena (lmarena.ai): 1465 Elo. Top-tier agentic reasoning.',
       },
       {
         modelId: 'anthropic/claude-opus-4.5',
         evidence: 'MMLU-Pro: 89.5%. Claude Opus 4.5 Reasoning.',
       },
-      { modelId: 'google/gemini-2.5-pro', evidence: 'MMLU-Pro: Complex reasoning. 1M+ context.' },
+      { modelId: 'openai/gpt-5.2-pro', evidence: 'MMLU-Pro: 88.7%. Strong reasoning tier.' },
+      { modelId: 'anthropic/claude-opus-4.6', evidence: 'MMLU-Pro: 88.2%. Multi-step reasoning.' },
       {
-        modelId: 'qwen/qwen3-max-thinking',
-        evidence: 'Thinking model. LMSys Arena: Extended reasoning.',
-      },
-      {
-        modelId: 'qwen/qwen3-next-80b-a3b-thinking',
-        evidence: 'Thinking architecture. Multi-step logic.',
-      },
-      {
-        modelId: 'openai/gpt-5.4-pro',
-        evidence: 'Reasoning/thinking model. Evaluate on MMLU-Pro (awesomeagents.ai).',
-      },
-    ],
-  },
-  {
-    id: 'multilingual',
-    label: 'Best for multilingual',
-    description: 'Strong performance across many languages',
-    models: [
-      {
-        modelId: 'meta-llama/llama-3.1-405b-instruct',
-        evidence: 'Meta docs: Excels in multilingual understanding. 128K context, 90+ languages.',
-      },
-      {
-        modelId: 'mistralai/mistral-large',
-        evidence:
-          'Mistral docs: Strong multilingual, coding, reasoning. Native multilingual support.',
-      },
-      {
-        modelId: 'cohere/command-a',
-        evidence: 'Cohere docs: 256k context excelling in agentic, multilingual, and coding tasks.',
-      },
-      {
-        modelId: 'meta-llama/llama-3.3-70b-instruct',
-        evidence: 'Meta docs: Multilingual large language model. 70B, broad language coverage.',
-      },
-      {
-        modelId: 'qwen/qwen3.5-397b-a17b',
-        evidence: 'Qwen docs: Frontier multilingual. Strong across Chinese, English, and more.',
-      },
-      {
-        modelId: 'anthropic/claude-opus-4.6',
-        evidence: 'LMSys Arena: Strong multilingual. Frontier model with broad language support.',
-      },
-      {
-        modelId: 'google/gemini-2.5-pro',
-        evidence: 'Google docs: 1M+ context. Multilingual across 100+ languages.',
+        modelId: 'deepseek/deepseek-r1',
+        evidence: 'MMLU-Pro: 84.6%. Math 92.8%. Matches o1 performance.',
       },
     ],
   },
@@ -303,137 +154,144 @@ export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
           'Michelangelo Long-Context 1M (llmdb.com): 76/100. Strong long-context reasoning.',
       },
       {
-        modelId: 'google/gemini-3-pro-preview',
-        evidence: 'Provider docs: 1M-token context. Text, image, video, audio, code.',
-      },
-      {
         modelId: 'google/gemini-2.0-flash-001',
         evidence: 'Michelangelo Long-Context (llmdb.com): 70.5. Fast with large context.',
       },
+    ],
+  },
+  {
+    id: 'cost-effective',
+    label: 'Best value',
+    description: 'Lowest cost per 1M tokens for high-volume use',
+    categoryInfoTooltip:
+      'Ranked by average cost per million tokens (OpenRouter pricing: prompt + completion). Lower cost = better value. Prices vary by provider.',
+    models: [
+      {
+        modelId: 'deepseek/deepseek-chat-v3.1',
+        evidence: 'OpenRouter avg: $0.61/1M tokens. Best value for high-volume use.',
+      },
       {
         modelId: 'google/gemini-2.5-flash',
-        evidence: 'Provider docs: Large context. Built-in thinking for long documents.',
+        evidence: 'OpenRouter avg: $0.75/1M tokens. Fast and cost-efficient.',
       },
       {
-        modelId: 'anthropic/claude-3.7-sonnet',
-        evidence: 'Anthropic docs: Extended thinking for long-form. Hybrid reasoning.',
+        modelId: 'anthropic/claude-haiku-4.5',
+        evidence: 'OpenRouter avg: $1.25/1M tokens. Near-frontier at low cost.',
       },
       {
-        modelId: 'moonshotai/kimi-k2.5',
-        evidence: 'Moonshot docs: Native long-context. Self-directed agent swarm paradigm.',
+        modelId: 'openai/gpt-5-nano',
+        evidence: 'OpenRouter avg: $1.50/1M tokens. Lightweight GPT-5 tier.',
       },
       {
-        modelId: 'cohere/command-a',
-        evidence: 'Cohere docs: 256k context. Agentic, multilingual, coding.',
+        modelId: 'google/gemini-3-flash-preview',
+        evidence: 'OpenRouter avg: $2.00/1M tokens. Thinking model, strong value.',
+      },
+    ],
+  },
+  {
+    id: 'fast',
+    label: 'Fastest responses',
+    description: 'Highest throughput (tokens per second)',
+    categoryInfoTooltip:
+      'Ranked by inference throughput (tokens/second) from LMSpeed and API benchmarks. Higher throughput = faster streaming responses. Speed varies by provider and load.',
+    models: [
+      {
+        modelId: 'openai/gpt-oss-120b',
+        evidence:
+          'LMSpeed (lmspeed.net): 1742 t/s. Top throughput on OpenRouter-compatible endpoints.',
+      },
+      {
+        modelId: 'openai/gpt-5.2',
+        evidence: 'LMSpeed: 170 t/s. GPT-5.2 Chat (Instant) tier.',
+      },
+      {
+        modelId: 'google/gemini-3-flash-preview',
+        evidence: 'LMSpeed: 162 t/s. Fast thinking model.',
+      },
+      {
+        modelId: 'x-ai/grok-4-fast',
+        evidence: 'LMSpeed: 124 t/s. xAI fast tier.',
+      },
+      {
+        modelId: 'anthropic/claude-haiku-4.5',
+        evidence: 'LMSpeed: 116 t/s. Low latency, high throughput.',
+      },
+    ],
+  },
+  {
+    id: 'multilingual',
+    label: 'Best for multilingual',
+    description: 'Non-English languages, translation, cross-lingual understanding',
+    categoryInfoTooltip:
+      'Ranked by Global-MMLU (llmdb.com), a multilingual evaluation across 42 languages. Higher score = better performance in non-English contexts.',
+    models: [
+      {
+        modelId: 'google/gemini-2.5-pro',
+        evidence: 'Global-MMLU (llmdb.com): 88.6%. Leader across 42 languages.',
+      },
+      {
+        modelId: 'meta-llama/llama-3.3-70b-instruct',
+        evidence: 'Global-MMLU: 75.4%. Strong multilingual from Meta.',
+      },
+      {
+        modelId: 'google/gemini-2.5-flash',
+        evidence: 'Global-MMLU: 74.2%. Fast multilingual model.',
+      },
+      {
+        modelId: 'anthropic/claude-opus-4.6',
+        evidence: 'Global-MMLU: 72.1%. Frontier multilingual.',
+      },
+      {
+        modelId: 'openai/gpt-5.2',
+        evidence: 'Global-MMLU: 70.8%. Strong non-English support.',
       },
     ],
   },
   {
     id: 'legal',
     label: 'Best for legal',
-    description: 'Legal reasoning, contract analysis, compliance',
+    description: 'Legal reasoning, contract analysis, statutory interpretation',
     models: [
       {
-        modelId: 'google/gemini-3-pro-preview',
-        evidence: 'LegalBench (vals.ai): 87.04%. Top legal reasoning. Six task categories.',
+        modelId: 'google/gemini-3.1-pro-preview',
+        evidence: 'LegalBench (vals.ai): 87.04%. 161 legal reasoning tasks.',
       },
       {
         modelId: 'google/gemini-3-flash-preview',
-        evidence: 'LegalBench (vals.ai): 86.86%. Fast frontier legal reasoning.',
+        evidence: 'LegalBench (vals.ai): 86.86%. Strong legal reasoning.',
       },
-      {
-        modelId: 'openai/gpt-5.2',
-        evidence: 'LegalBench (vals.ai): 86.02%. Strong legal reasoning across task types.',
-      },
-      {
-        modelId: 'openai/gpt-5.1',
-        evidence: 'LegalBench (vals.ai): 85.68%. Enterprise legal analysis.',
-      },
-      {
-        modelId: 'anthropic/claude-opus-4.6',
-        evidence: 'LegalBench: Strong on rhetorical understanding, rule-application.',
-      },
-      {
-        modelId: 'anthropic/claude-opus-4.5',
-        evidence: 'LegalBench: Frontier legal reasoning. Complex document analysis.',
-      },
+      { modelId: 'openai/gpt-5', evidence: 'LegalBench (vals.ai): 86.02%.' },
+      { modelId: 'openai/gpt-5.1', evidence: 'LegalBench (vals.ai): 85.68%.' },
     ],
   },
   {
     id: 'medical',
     label: 'Best for medical',
-    description: 'Medical QA, clinical reasoning, healthcare',
+    description: 'Clinical knowledge, health information, medical reasoning',
     models: [
       {
         modelId: 'openai/o3',
-        evidence: 'MedQA (vals.ai): Top performer. USMLE-style medical reasoning.',
+        evidence: 'HealthBench (OpenAI): 60%. Physician-evaluated clinical conversations.',
+      },
+      {
+        modelId: 'openai/gpt-5',
+        evidence: 'HealthBench Hard (OpenAI): 46%. Challenging clinical subset.',
       },
       {
         modelId: 'openai/gpt-5.2',
-        evidence: 'MedQA (vals.ai): Dominant medical QA. Graduate-level clinical reasoning.',
-      },
-      {
-        modelId: 'openai/gpt-5-mini',
-        evidence: 'MedQA (vals.ai): Strong medical QA at efficient cost.',
-      },
-      {
-        modelId: 'anthropic/claude-opus-4.6',
-        evidence: 'MedQA: Frontier clinical reasoning. Complex medical analysis.',
-      },
-      {
-        modelId: 'anthropic/claude-opus-4.1',
-        evidence: 'MedQA (vals.ai): Strongest non-OpenAI performer. Clinical reasoning.',
-      },
-      {
-        modelId: 'x-ai/grok-4',
-        evidence: 'MedQA (vals.ai): Strong medical QA at lower cost.',
-      },
-      {
-        modelId: 'google/gemini-2.5-pro',
-        evidence: 'MedQA: Complex reasoning. Scientific and medical analysis.',
-      },
-    ],
-  },
-  {
-    id: 'web-search',
-    label: 'Best for web search',
-    description: 'Real-time retrieval, source citation',
-    models: [
-      {
-        modelId: 'anthropic/claude-sonnet-4.6',
-        evidence: 'Provider docs: Frontier + native web search. Strong citation.',
+        evidence: 'HealthBench Hard (OpenAI): 42%.',
       },
       {
         modelId: 'openai/gpt-5.1',
-        evidence: 'Provider docs: supports_web_search. Strong retrieval, citation.',
+        evidence: 'HealthBench Hard (OpenAI): 40%.',
+      },
+      {
+        modelId: 'openai/gpt-4o',
+        evidence: 'HealthBench (OpenAI): 32%. Multi-turn health scenarios.',
       },
       {
         modelId: 'google/gemini-2.5-pro',
-        evidence: 'Provider docs: Complex reasoning + search. 1M+ context.',
-      },
-      {
-        modelId: 'anthropic/claude-opus-4.6',
-        evidence: 'Provider docs: Web search enabled. Grounded answers.',
-      },
-      {
-        modelId: 'anthropic/claude-haiku-4.5',
-        evidence: 'Provider docs: Fast + web search. Low latency retrieval.',
-      },
-      {
-        modelId: 'google/gemini-2.5-flash',
-        evidence: 'Provider docs: Fast with search. Good for real-time lookup.',
-      },
-      {
-        modelId: 'openai/gpt-5.2',
-        evidence: 'Provider docs: Retrieval and citation. Enterprise-grade.',
-      },
-      {
-        modelId: 'cohere/command-r-plus-08-2024',
-        evidence: 'Cohere docs: RAG-optimized. Native citation support.',
-      },
-      {
-        modelId: 'openai/gpt-5.4-pro',
-        evidence: 'Provider docs: supports_web_search. Retrieval and citation.',
+        evidence: 'HealthBench Hard (OpenAI): 19%.',
       },
     ],
   },

@@ -2329,6 +2329,81 @@ html:not([data-theme]) .help-me-choose-category.has-match {
   visibility: visible;
 }
 
+/* Category-level info icon (cost-effective, fast, multilingual) */
+.help-me-choose-category-info-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  padding: 0.125rem;
+  margin-left: 0.25rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  transition: color 0.2s;
+  vertical-align: middle;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.help-me-choose-category-info-trigger:hover,
+.help-me-choose-category-info-trigger:active {
+  color: var(--primary-color);
+}
+
+.help-me-choose-category-info-trigger:focus {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+}
+
+.help-me-choose-category-info-trigger {
+  position: relative;
+}
+
+.help-me-choose-category-info-tooltip {
+  position: absolute;
+  bottom: calc(100% + 10px);
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: var(--bg-card);
+  color: var(--text-secondary);
+  padding: 0.625rem 0.875rem;
+  border-radius: var(--radius-lg);
+  font-size: 0.8125rem;
+  font-weight: var(--font-normal);
+  line-height: 1.5;
+  white-space: normal;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  width: max-content;
+  max-width: min(320px, calc(100vw - 2rem));
+  box-shadow: var(--shadow-xl);
+  border: 1px solid var(--border-color);
+  z-index: 10000;
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 0.15s,
+    visibility 0.15s;
+  pointer-events: none;
+}
+
+.help-me-choose-category-info-tooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-top-color: var(--bg-card);
+}
+
+.help-me-choose-category-info-trigger:hover .help-me-choose-category-info-tooltip {
+  opacity: 1;
+  visibility: visible;
+}
+
 .help-me-choose-actions {
   display: flex;
   justify-content: flex-end;

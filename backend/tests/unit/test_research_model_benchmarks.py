@@ -27,32 +27,17 @@ from scripts.research_model_benchmarks import (
     add_model_to_category,
     calculate_avg_cost,
     determine_categories,
+    extract_primary_score,
     model_exists_in_category,
     parse_recommendations_ts,
     rebuild_categories_ts,
+    sort_category_by_scores,
 )
 
 # --- Fixtures ---
 
 SAMPLE_TS_CONTENT = textwrap.dedent("""\
     export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
-      {
-        id: 'cost-effective',
-        label: 'Most cost-effective',
-        description: 'Best quality-per-dollar for high-volume use',
-        models: [
-          { modelId: 'deepseek/deepseek-chat-v3.1', evidence: 'OpenRouter pricing: Value leader.' },
-          { modelId: 'google/gemini-2.5-flash', evidence: 'Artificial Analysis Quality Score 51.' },
-        ],
-      },
-      {
-        id: 'fast',
-        label: 'Fastest responses',
-        description: 'Low latency, quick time-to-first-token',
-        models: [
-          { modelId: 'google/gemini-2.0-flash-001', evidence: 'AILatency: TTFT leader.' },
-        ],
-      },
       {
         id: 'coding',
         label: 'Best for coding',
@@ -74,15 +59,15 @@ SAMPLE_TS_CONTENT = textwrap.dedent("""\
         label: 'Best for reasoning',
         description: 'Math, logic, multi-step problem solving',
         models: [
-          { modelId: 'openai/o3', evidence: 'SOTA reasoning.' },
+          { modelId: 'openai/gpt-5.2-pro', evidence: 'MMLU-Pro: 88.7%.' },
         ],
       },
       {
-        id: 'web-search',
-        label: 'Best for web search',
-        description: 'Real-time retrieval, source citation',
+        id: 'long-context',
+        label: 'Best for long context',
+        description: 'Large context windows',
         models: [
-          { modelId: 'anthropic/claude-sonnet-4.6', evidence: 'Provider docs: Frontier + native web search.' },
+          { modelId: 'google/gemini-2.5-pro', evidence: 'Michelangelo Long-Context 1M (llmdb.com): 93/100.' },
         ],
       },
     ]
@@ -149,96 +134,34 @@ class TestCalculateAvgCost:
 
 
 class TestDetermineCategories:
-    def test_free_model_gets_cost_effective_and_fast(self):
-        model = make_registry_model("test/model:free")
-        entries = determine_categories("test/model:free", model, None)
-        cat_ids = [e["category_id"] for e in entries]
-        assert "cost-effective" in cat_ids
-        assert "fast" in cat_ids
+    """Only models with fetched benchmark scores are added. Categories: coding (SWE-bench), legal (LegalBench)."""
 
-    def test_cheap_model_gets_cost_effective(self):
-        model = make_registry_model("test/cheap-model")
-        or_data = make_openrouter_data("test/cheap-model", 0.0000005, 0.0000005)
-        entries = determine_categories("test/cheap-model", model, or_data)
-        cat_ids = [e["category_id"] for e in entries]
-        assert "cost-effective" in cat_ids
+    def test_model_in_swebench_gets_coding(self):
+        model = make_registry_model("anthropic/claude-opus-4.5")
+        swebench = {"anthropic/claude-opus-4.5": (80.9, "SWE-Bench Verified: 80.9%.")}
+        entries = determine_categories("anthropic/claude-opus-4.5", model, None, swebench)
+        assert len(entries) == 1
+        assert entries[0]["category_id"] == "coding"
+        assert entries[0]["evidence"] == "SWE-Bench Verified: 80.9%."
 
-    def test_expensive_model_no_cost_effective(self):
-        model = make_registry_model("test/expensive-model")
-        or_data = make_openrouter_data("test/expensive-model", 0.00005, 0.00005)
-        entries = determine_categories("test/expensive-model", model, or_data)
-        cat_ids = [e["category_id"] for e in entries]
-        assert "cost-effective" not in cat_ids
+    def test_model_not_in_swebench_gets_no_categories(self):
+        model = make_registry_model("test/unknown-model")
+        swebench = {"anthropic/claude-opus-4.5": (80.9, "SWE-Bench Verified: 80.9%.")}
+        entries = determine_categories("test/unknown-model", model, None, swebench)
+        assert len(entries) == 0
 
-    def test_code_model_gets_coding(self):
-        model = make_registry_model(
-            "test/code-model", description="A coding model for code generation."
-        )
-        entries = determine_categories("test/code-model", model, None)
-        cat_ids = [e["category_id"] for e in entries]
-        assert "coding" in cat_ids
+    def test_model_in_legalbench_gets_legal(self):
+        model = make_registry_model("openai/gpt-5")
+        legalbench = {"openai/gpt-5": (86.02, "LegalBench (vals.ai): 86.02%.")}
+        entries = determine_categories("openai/gpt-5", model, None, {}, legalbench)
+        assert len(entries) == 1
+        assert entries[0]["category_id"] == "legal"
+        assert entries[0]["evidence"] == "LegalBench (vals.ai): 86.02%."
 
-    def test_coder_in_id_gets_coding(self):
-        model = make_registry_model("qwen/qwen3-coder-plus")
-        entries = determine_categories("qwen/qwen3-coder-plus", model, None)
-        cat_ids = [e["category_id"] for e in entries]
-        assert "coding" in cat_ids
-
-    def test_reasoning_model_gets_reasoning(self):
-        model = make_registry_model(
-            "test/think-model", description="A reasoning and thinking model."
-        )
-        entries = determine_categories("test/think-model", model, None)
-        cat_ids = [e["category_id"] for e in entries]
-        assert "reasoning" in cat_ids
-
-    def test_web_search_model_gets_web_search(self):
-        model = make_registry_model("test/search-model", supports_web_search=True)
-        entries = determine_categories("test/search-model", model, None)
-        cat_ids = [e["category_id"] for e in entries]
-        assert "web-search" in cat_ids
-
-    def test_no_web_search_no_category(self):
-        model = make_registry_model("test/plain-model", supports_web_search=False)
-        entries = determine_categories("test/plain-model", model, None)
-        cat_ids = [e["category_id"] for e in entries]
-        assert "web-search" not in cat_ids
-
-    def test_multilingual_model_gets_multilingual(self):
-        model = make_registry_model(
-            "test/multi-model",
-            description="A model excelling in multilingual understanding across 90+ languages.",
-        )
-        entries = determine_categories("test/multi-model", model, None)
-        cat_ids = [e["category_id"] for e in entries]
-        assert "multilingual" in cat_ids
-
-    def test_long_context_model_gets_long_context(self):
-        model = make_registry_model(
-            "test/long-model",
-            description="Flagship model with 1M-token context for text and code.",
-        )
-        entries = determine_categories("test/long-model", model, None)
-        cat_ids = [e["category_id"] for e in entries]
-        assert "long-context" in cat_ids
-
-    def test_flash_model_gets_fast(self):
-        model = make_registry_model("google/gemini-3-flash-preview")
-        entries = determine_categories("google/gemini-3-flash-preview", model, None)
-        cat_ids = [e["category_id"] for e in entries]
-        assert "fast" in cat_ids
-
-    def test_mini_model_gets_fast(self):
-        model = make_registry_model("openai/gpt-5-mini")
-        entries = determine_categories("openai/gpt-5-mini", model, None)
-        cat_ids = [e["category_id"] for e in entries]
-        assert "fast" in cat_ids
-
-    def test_generic_model_may_get_no_categories(self):
-        model = make_registry_model("test/generic-model")
-        or_data = make_openrouter_data("test/generic-model", 0.00005, 0.00005)
-        entries = determine_categories("test/generic-model", model, or_data)
-        assert isinstance(entries, list)
+    def test_empty_swebench_returns_empty(self):
+        model = make_registry_model("test/code-model")
+        entries = determine_categories("test/code-model", model, None, {})
+        assert len(entries) == 0
 
 
 # --- Tests for TS parsing ---
@@ -247,27 +170,23 @@ class TestDetermineCategories:
 class TestParseRecommendationsTs:
     def test_parses_categories(self):
         cats = parse_recommendations_ts(SAMPLE_TS_CONTENT)
-        assert len(cats) == 6
-        assert cats[0]["id"] == "cost-effective"
-        assert cats[1]["id"] == "fast"
-        assert cats[2]["id"] == "coding"
-        assert cats[3]["id"] == "writing"
-        assert cats[4]["id"] == "reasoning"
-        assert cats[5]["id"] == "web-search"
+        assert len(cats) == 4
+        assert cats[0]["id"] == "coding"
+        assert cats[1]["id"] == "writing"
+        assert cats[2]["id"] == "reasoning"
+        assert cats[3]["id"] == "long-context"
 
     def test_parses_models_in_category(self):
         cats = parse_recommendations_ts(SAMPLE_TS_CONTENT)
-        cost_effective = cats[0]
-        assert len(cost_effective["models"]) == 2
-        assert cost_effective["models"][0]["modelId"] == "deepseek/deepseek-chat-v3.1"
-        assert cost_effective["models"][1]["modelId"] == "google/gemini-2.5-flash"
+        coding = cats[0]
+        assert len(coding["models"]) == 1
+        assert coding["models"][0]["modelId"] == "anthropic/claude-opus-4.5"
 
     def test_parses_labels_and_descriptions(self):
         cats = parse_recommendations_ts(SAMPLE_TS_CONTENT)
-        assert cats[0]["label"] == "Most cost-effective"
-        assert cats[1]["label"] == "Fastest responses"
-        assert cats[2]["label"] == "Best for coding"
-        assert cats[0]["description"] == "Best quality-per-dollar for high-volume use"
+        assert cats[0]["label"] == "Best for coding"
+        assert cats[1]["label"] == "Best for writing"
+        assert cats[0]["description"] == "Code generation, debugging, refactoring"
 
     def test_empty_content_returns_empty(self):
         cats = parse_recommendations_ts("")
@@ -317,6 +236,21 @@ class TestParseRecommendationsTs:
         assert len(cats[0]["models"]) == 1
         assert cats[0]["models"][0]["modelId"] == "x/y"
 
+    def test_parses_category_info_tooltip(self):
+        """categoryInfoTooltip is parsed and preserved."""
+        ts = textwrap.dedent("""\
+            export const HELP_ME_CHOOSE_CATEGORIES = [
+              { id: 'cost-effective', label: 'Best value', description: 'D',
+                categoryInfoTooltip: 'Ranked by OpenRouter pricing. Lower = better.',
+                models: [
+                  { modelId: 'a/b', evidence: 'OpenRouter avg: $0.61/1M tokens.' },
+                ] },
+            ]
+        """)
+        cats = parse_recommendations_ts(ts)
+        assert len(cats) == 1
+        assert cats[0].get("categoryInfoTooltip") == "Ranked by OpenRouter pricing. Lower = better."
+
 
 # --- Tests for model_exists_in_category ---
 
@@ -324,15 +258,15 @@ class TestParseRecommendationsTs:
 class TestModelExistsInCategory:
     def test_exists(self):
         cats = parse_recommendations_ts(SAMPLE_TS_CONTENT)
-        assert model_exists_in_category(cats, "cost-effective", "deepseek/deepseek-chat-v3.1")
+        assert model_exists_in_category(cats, "coding", "anthropic/claude-opus-4.5")
 
     def test_not_exists(self):
         cats = parse_recommendations_ts(SAMPLE_TS_CONTENT)
-        assert not model_exists_in_category(cats, "cost-effective", "openai/gpt-5.2")
+        assert not model_exists_in_category(cats, "coding", "openai/gpt-5.2")
 
     def test_wrong_category(self):
         cats = parse_recommendations_ts(SAMPLE_TS_CONTENT)
-        assert not model_exists_in_category(cats, "coding", "deepseek/deepseek-chat-v3.1")
+        assert not model_exists_in_category(cats, "writing", "anthropic/claude-opus-4.5")
 
 
 # --- Tests for add_model_to_category ---
@@ -341,23 +275,118 @@ class TestModelExistsInCategory:
 class TestAddModelToCategory:
     def test_adds_new_model(self):
         cats = parse_recommendations_ts(SAMPLE_TS_CONTENT)
-        result = add_model_to_category(cats, "cost-effective", "test/new-model", "Test evidence.")
+        result = add_model_to_category(cats, "coding", "test/new-model", "SWE-Bench: 75%.")
         assert result is True
         assert cats[0]["models"][-1]["modelId"] == "test/new-model"
-        assert cats[0]["models"][-1]["evidence"] == "Test evidence."
+        assert cats[0]["models"][-1]["evidence"] == "SWE-Bench: 75%."
 
     def test_does_not_add_duplicate(self):
         cats = parse_recommendations_ts(SAMPLE_TS_CONTENT)
-        result = add_model_to_category(
-            cats, "cost-effective", "deepseek/deepseek-chat-v3.1", "Dup."
-        )
+        result = add_model_to_category(cats, "coding", "anthropic/claude-opus-4.5", "Dup.")
         assert result is False
-        assert len(cats[0]["models"]) == 2
+        assert len(cats[0]["models"]) == 1
 
     def test_returns_false_for_unknown_category(self):
         cats = parse_recommendations_ts(SAMPLE_TS_CONTENT)
         result = add_model_to_category(cats, "nonexistent-category", "test/model", "Ev.")
         assert result is False
+
+
+# --- Tests for extract_primary_score ---
+
+
+class TestExtractPrimaryScore:
+    def test_extracts_percentage(self):
+        assert extract_primary_score("coding", "SWE-Bench Verified: 80.9%.") == 80.9
+        assert extract_primary_score("reasoning", "MMLU-Pro: 89.5%.") == 89.5
+
+    def test_extracts_mazur_writing_score(self):
+        assert extract_primary_score("writing", "Mazur Writing Score: 8.561.") == 8.561
+
+    def test_extracts_mrcr_fraction(self):
+        assert extract_primary_score("long-context", "Michelangelo: 93/100.") == 93.0
+
+    def test_extracts_legalbench_percentage(self):
+        assert extract_primary_score("legal", "LegalBench (vals.ai): 87.04%.") == 87.04
+
+    def test_extracts_healthbench_percentage(self):
+        assert extract_primary_score("medical", "HealthBench (OpenAI): 60%.") == 60.0
+
+    def test_extracts_cost_effective_dollar_per_million(self):
+        assert extract_primary_score("cost-effective", "OpenRouter avg: $0.61/1M tokens.") == 0.61
+        assert extract_primary_score("cost-effective", "OpenRouter avg: $1.50/1M tokens.") == 1.5
+
+    def test_extracts_fast_tokens_per_second(self):
+        assert extract_primary_score("fast", "LMSpeed (lmspeed.net): 1742 t/s.") == 1742.0
+        assert extract_primary_score("fast", "LMSpeed: 116 t/s.") == 116.0
+
+    def test_extracts_multilingual_global_mmlu_percentage(self):
+        assert extract_primary_score("multilingual", "Global-MMLU (llmdb.com): 88.6%.") == 88.6
+        assert extract_primary_score("multilingual", "Global-MMLU: 75.4%.") == 75.4
+
+    def test_returns_none_for_no_score(self):
+        assert extract_primary_score("coding", "Provider docs: Code-specialized.") is None
+
+
+# --- Tests for sort_category_by_scores ---
+
+
+class TestSortCategoryByScores:
+    def test_sorts_by_extracted_score_descending(self):
+        cat = {
+            "id": "coding",
+            "label": "Coding",
+            "description": "D",
+            "models": [
+                {"modelId": "a/low", "evidence": "SWE-Bench: 70%."},
+                {"modelId": "b/high", "evidence": "SWE-Bench: 85%."},
+                {"modelId": "c/mid", "evidence": "SWE-Bench: 75%."},
+            ],
+        }
+        sort_category_by_scores(cat, None)
+        assert [m["modelId"] for m in cat["models"]] == ["b/high", "c/mid", "a/low"]
+
+    def test_uses_fetched_scores_when_provided(self):
+        cat = {
+            "id": "coding",
+            "label": "Coding",
+            "description": "D",
+            "models": [
+                {"modelId": "a/old", "evidence": "No score."},
+                {"modelId": "b/fetched", "evidence": "No score."},
+            ],
+        }
+        fetched = {"b/fetched": (90.0, "SWE-Bench: 90%.")}
+        sort_category_by_scores(cat, fetched)
+        assert cat["models"][0]["modelId"] == "b/fetched"
+
+    def test_models_without_scores_at_end(self):
+        cat = {
+            "id": "coding",
+            "label": "Coding",
+            "description": "D",
+            "models": [
+                {"modelId": "a/no", "evidence": "Qualitative."},
+                {"modelId": "b/yes", "evidence": "SWE-Bench: 80%."},
+            ],
+        }
+        sort_category_by_scores(cat, None)
+        assert cat["models"][0]["modelId"] == "b/yes"
+        assert cat["models"][1]["modelId"] == "a/no"
+
+    def test_cost_effective_sorts_ascending_cheaper_first(self):
+        cat = {
+            "id": "cost-effective",
+            "label": "Best value",
+            "description": "D",
+            "models": [
+                {"modelId": "a/expensive", "evidence": "OpenRouter avg: $2.00/1M tokens."},
+                {"modelId": "b/cheap", "evidence": "OpenRouter avg: $0.61/1M tokens."},
+            ],
+        }
+        sort_category_by_scores(cat, None)
+        assert cat["models"][0]["modelId"] == "b/cheap"
+        assert cat["models"][1]["modelId"] == "a/expensive"
 
 
 # --- Tests for rebuild_categories_ts ---
@@ -391,6 +420,26 @@ class TestRebuildCategoriesTs:
         coding = next(c for c in reparsed if c["id"] == "coding")
         assert any(m["modelId"] == "x-ai/grok-4" for m in coding["models"])
 
+    def test_category_info_tooltip_survives_roundtrip(self):
+        """categoryInfoTooltip is preserved through parse -> rebuild -> parse."""
+        ts = textwrap.dedent("""\
+            export const HELP_ME_CHOOSE_CATEGORIES = [
+              { id: 'cost-effective', label: 'Best value', description: 'D',
+                categoryInfoTooltip: 'Ranked by OpenRouter pricing.',
+                models: [
+                  { modelId: 'a/b', evidence: 'OpenRouter avg: $0.61/1M tokens.' },
+                ] },
+            ]
+        """)
+        cats = parse_recommendations_ts(ts)
+        assert cats[0].get("categoryInfoTooltip") == "Ranked by OpenRouter pricing."
+        rebuilt = rebuild_categories_ts(cats)
+        wrapped = (
+            f"export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [\n{rebuilt}\n]"
+        )
+        reparsed = parse_recommendations_ts(wrapped)
+        assert reparsed[0].get("categoryInfoTooltip") == "Ranked by OpenRouter pricing."
+
 
 # --- Integration-level tests ---
 
@@ -398,8 +447,8 @@ class TestRebuildCategoriesTs:
 class TestResearchAndUpdateIntegration:
     """Tests the full research_and_update flow with mocked external calls."""
 
-    def test_code_model_added_to_coding_category(self, tmp_path):
-        """A code-specialized model should be added to the coding category."""
+    def test_model_with_swebench_score_added_to_coding(self, tmp_path):
+        """A model with SWE-bench score should be added to the coding category."""
         from scripts.research_model_benchmarks import research_and_update
 
         ts_file = tmp_path / "helpMeChooseRecommendations.ts"
@@ -416,11 +465,19 @@ class TestResearchAndUpdateIntegration:
                 ]
             }
         }
+        swebench_scores = {"test/code-wizard": (75.0, "SWE-Bench Verified (openlm.ai): 75.0%.")}
 
         with (
             patch("scripts.research_model_benchmarks.RECOMMENDATIONS_PATH", ts_file),
             patch("scripts.research_model_benchmarks.load_registry", return_value=registry_data),
-            patch("scripts.research_model_benchmarks.fetch_openrouter_model", return_value=None),
+            patch(
+                "scripts.research_model_benchmarks.fetch_swebench_scores",
+                return_value=swebench_scores,
+            ),
+            patch("scripts.research_model_benchmarks.fetch_legalbench_scores", return_value={}),
+            patch("scripts.research_model_benchmarks.fetch_openrouter_pricing", return_value={}),
+            patch("scripts.research_model_benchmarks.fetch_lmspeed_scores", return_value={}),
+            patch("scripts.research_model_benchmarks.fetch_global_mmlu_scores", return_value={}),
         ):
             result = research_and_update("test/code-wizard")
 
@@ -432,8 +489,8 @@ class TestResearchAndUpdateIntegration:
         coding = next(c for c in cats if c["id"] == "coding")
         assert any(m["modelId"] == "test/code-wizard" for m in coding["models"])
 
-    def test_web_search_model_added_correctly(self, tmp_path):
-        """A model with web search should be added to the web-search category."""
+    def test_model_without_benchmark_not_added(self, tmp_path):
+        """A model without SWE-bench score should not be added (skipped)."""
         from scripts.research_model_benchmarks import research_and_update
 
         ts_file = tmp_path / "helpMeChooseRecommendations.ts"
@@ -454,11 +511,16 @@ class TestResearchAndUpdateIntegration:
         with (
             patch("scripts.research_model_benchmarks.RECOMMENDATIONS_PATH", ts_file),
             patch("scripts.research_model_benchmarks.load_registry", return_value=registry_data),
-            patch("scripts.research_model_benchmarks.fetch_openrouter_model", return_value=None),
+            patch("scripts.research_model_benchmarks.fetch_swebench_scores", return_value={}),
+            patch("scripts.research_model_benchmarks.fetch_legalbench_scores", return_value={}),
+            patch("scripts.research_model_benchmarks.fetch_openrouter_pricing", return_value={}),
+            patch("scripts.research_model_benchmarks.fetch_lmspeed_scores", return_value={}),
+            patch("scripts.research_model_benchmarks.fetch_global_mmlu_scores", return_value={}),
         ):
             result = research_and_update("test/search-pro")
 
-        assert "web-search" in result["categories_added"]
+        assert result["skipped"] is True
+        assert result["reason"] == "no_benchmark_data"
 
     def test_model_not_in_registry_is_skipped(self, tmp_path):
         """A model not in the registry should be skipped."""
@@ -472,6 +534,10 @@ class TestResearchAndUpdateIntegration:
         with (
             patch("scripts.research_model_benchmarks.RECOMMENDATIONS_PATH", ts_file),
             patch("scripts.research_model_benchmarks.load_registry", return_value=registry_data),
+            patch("scripts.research_model_benchmarks.fetch_legalbench_scores", return_value={}),
+            patch("scripts.research_model_benchmarks.fetch_openrouter_pricing", return_value={}),
+            patch("scripts.research_model_benchmarks.fetch_lmspeed_scores", return_value={}),
+            patch("scripts.research_model_benchmarks.fetch_global_mmlu_scores", return_value={}),
         ):
             result = research_and_update("test/nonexistent")
 
@@ -486,41 +552,25 @@ class TestResearchAndUpdateIntegration:
         ts_file.write_text(SAMPLE_TS_CONTENT, encoding="utf-8")
 
         registry_data = {
-            "models_by_provider": {"DeepSeek": [make_registry_model("deepseek/deepseek-chat-v3.1")]}
+            "models_by_provider": {"Anthropic": [make_registry_model("anthropic/claude-opus-4.5")]}
         }
-        or_data = make_openrouter_data("deepseek/deepseek-chat-v3.1", 0.0000001, 0.0000001)
+        swebench = {"anthropic/claude-opus-4.5": (80.9, "SWE-Bench Verified: 80.9%.")}
 
         with (
             patch("scripts.research_model_benchmarks.RECOMMENDATIONS_PATH", ts_file),
             patch("scripts.research_model_benchmarks.load_registry", return_value=registry_data),
-            patch("scripts.research_model_benchmarks.fetch_openrouter_model", return_value=or_data),
+            patch(
+                "scripts.research_model_benchmarks.fetch_swebench_scores",
+                return_value=swebench,
+            ),
+            patch("scripts.research_model_benchmarks.fetch_legalbench_scores", return_value={}),
+            patch("scripts.research_model_benchmarks.fetch_openrouter_pricing", return_value={}),
+            patch("scripts.research_model_benchmarks.fetch_lmspeed_scores", return_value={}),
+            patch("scripts.research_model_benchmarks.fetch_global_mmlu_scores", return_value={}),
         ):
-            result = research_and_update("deepseek/deepseek-chat-v3.1")
+            result = research_and_update("anthropic/claude-opus-4.5")
 
-        # cost-effective should not be in categories_added since it already exists
-        assert "cost-effective" not in result["categories_added"]
-
-    def test_free_model_gets_multiple_categories(self, tmp_path):
-        """A free model should be added to both cost-effective and fast."""
-        from scripts.research_model_benchmarks import research_and_update
-
-        ts_file = tmp_path / "helpMeChooseRecommendations.ts"
-        ts_file.write_text(SAMPLE_TS_CONTENT, encoding="utf-8")
-
-        registry_data = {
-            "models_by_provider": {"TestProvider": [make_registry_model("test/free-model:free")]}
-        }
-
-        with (
-            patch("scripts.research_model_benchmarks.RECOMMENDATIONS_PATH", ts_file),
-            patch("scripts.research_model_benchmarks.load_registry", return_value=registry_data),
-            patch("scripts.research_model_benchmarks.fetch_openrouter_model", return_value=None),
-        ):
-            result = research_and_update("test/free-model:free")
-
-        assert result["skipped"] is False
-        assert "cost-effective" in result["categories_added"]
-        assert "fast" in result["categories_added"]
+        assert "coding" not in result["categories_added"]
 
     def test_dry_run_does_not_write(self, tmp_path):
         """Dry run should not modify the TS file."""
@@ -540,11 +590,19 @@ class TestResearchAndUpdateIntegration:
                 ]
             }
         }
+        swebench = {"test/dry-run-model": (72.0, "SWE-Bench Verified: 72.0%.")}
 
         with (
             patch("scripts.research_model_benchmarks.RECOMMENDATIONS_PATH", ts_file),
             patch("scripts.research_model_benchmarks.load_registry", return_value=registry_data),
-            patch("scripts.research_model_benchmarks.fetch_openrouter_model", return_value=None),
+            patch(
+                "scripts.research_model_benchmarks.fetch_swebench_scores",
+                return_value=swebench,
+            ),
+            patch("scripts.research_model_benchmarks.fetch_legalbench_scores", return_value={}),
+            patch("scripts.research_model_benchmarks.fetch_openrouter_pricing", return_value={}),
+            patch("scripts.research_model_benchmarks.fetch_lmspeed_scores", return_value={}),
+            patch("scripts.research_model_benchmarks.fetch_global_mmlu_scores", return_value={}),
         ):
             result = research_and_update("test/dry-run-model", dry_run=True)
 
@@ -573,22 +631,21 @@ class TestActualRecommendationsFile:
 
     def test_real_file_parses(self, real_ts_content):
         cats = parse_recommendations_ts(real_ts_content)
-        assert len(cats) >= 10
+        assert len(cats) >= 4
 
     def test_all_expected_categories_exist(self, real_ts_content):
         cats = parse_recommendations_ts(real_ts_content)
         cat_ids = {c["id"] for c in cats}
         expected = [
-            "cost-effective",
-            "fast",
             "coding",
             "writing",
             "reasoning",
-            "multilingual",
             "long-context",
+            "cost-effective",
+            "fast",
+            "multilingual",
             "legal",
             "medical",
-            "web-search",
         ]
         for cat_id in expected:
             assert cat_id in cat_ids, f"Missing category: {cat_id}"
@@ -636,36 +693,15 @@ class TestActualRecommendationsFile:
                     f"Model {m['modelId']} in category '{cat['id']}' not found in models registry"
                 )
 
-    def test_free_tier_categories_have_unregistered_models_first(self, real_ts_content):
-        """Cost-effective and Fastest must list unregistered-tier models first (≥2 for unregistered users)."""
-        registry_path = (
-            Path(__file__).resolve().parent.parent.parent / "data" / "models_registry.json"
-        )
-        if not registry_path.exists():
-            pytest.skip("Registry file not found")
+    def test_each_model_has_benchmark_score(self, real_ts_content):
+        """Each model must have numeric benchmark evidence (extract_primary_score returns non-null)."""
+        from scripts.research_model_benchmarks import extract_primary_score
 
-        with open(registry_path, encoding="utf-8") as f:
-            registry = json.load(f)
-
-        unregistered = set(registry.get("unregistered_tier_models", []))
-
-        free_tier_categories = ["cost-effective", "fast"]
         cats = parse_recommendations_ts(real_ts_content)
-
         for cat in cats:
-            if cat["id"] not in free_tier_categories:
-                continue
-            models = cat["models"]
-            # First 2 or more models must be unregistered-tier so unregistered users get ≥2 options
-            unregistered_count = sum(1 for m in models if m["modelId"] in unregistered)
-            assert unregistered_count >= 2, (
-                f"Category '{cat['id']}' has {unregistered_count} unregistered-tier models; "
-                "needs ≥2 so unregistered users receive ≥2 recommendations"
-            )
-            # First 2 models in the list must be unregistered
-            first_two = [m["modelId"] for m in models[:2]]
-            for mid in first_two:
-                assert mid in unregistered, (
-                    f"Category '{cat['id']}': first 2 models must be unregistered-tier; "
-                    f"'{mid}' is not in unregistered_tier_models"
+            for m in cat["models"]:
+                score = extract_primary_score(cat["id"], m["evidence"])
+                assert score is not None, (
+                    f"Category '{cat['id']}', model '{m['modelId']}': "
+                    "must have numeric benchmark score in evidence"
                 )

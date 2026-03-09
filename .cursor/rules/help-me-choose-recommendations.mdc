@@ -17,12 +17,14 @@ The file has **one** array: `HELP_ME_CHOOSE_CATEGORIES`. Edit **only** the array
 ```typescript
 export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
   {
-    id: 'cost-effective',
-    models: [ { modelId: '...', evidence: '...' }, ... ],
+    id: 'coding',
+    models: [ { modelId: '...', evidence: 'SWE-Bench Verified: 80.9%.' }, ... ],
   },
-  // ... more categories
+  // ... more categories (writing, reasoning, long-context, legal, medical)
 ]
 ```
+
+**Important:** Only add models with numeric benchmark scores in evidence. Models without scores are excluded.
 
 ## Do NOT
 

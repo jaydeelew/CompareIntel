@@ -26,8 +26,8 @@ export const HelpMeChooseMethodology: React.FC = () => {
             <h1>Help Me Choose: Ranking Methodology</h1>
             <p className="seo-page-intro">
               This page explains how we rank, order, and categorize AI models in the "Help me
-              choose" dropdown. We use only well-respected, publicly available benchmarks and
-              user-ratings—never proprietary or unverifiable claims.
+              choose" dropdown. We include only models with numeric benchmark scores from
+              well-respected, publicly available sources—never proprietary or unverifiable claims.
             </p>
             <p className="last-updated">Last updated: March 2026</p>
           </header>
@@ -44,10 +44,9 @@ export const HelpMeChooseMethodology: React.FC = () => {
                 registry and be available for comparison.
               </li>
               <li>
-                <strong>Public benchmark or user-rating data:</strong> We require at least one of: a
-                published benchmark score (e.g., SWE-Bench, MMLU-Pro), a public leaderboard ranking
-                (e.g., LMSys Chatbot Arena), or verifiable pricing data (e.g., OpenRouter) for
-                cost-effectiveness.
+                <strong>Numeric benchmark score:</strong> We require a published numeric score from
+                a public benchmark (e.g., SWE-Bench %, MMLU-Pro %, Mazur Writing Score, MRCR).
+                Models without numeric benchmark evidence are not included.
               </li>
               <li>
                 <strong>Reputable source:</strong> Benchmarks must come from established,
@@ -125,7 +124,7 @@ export const HelpMeChooseMethodology: React.FC = () => {
                     >
                       MMLU-Pro
                     </a>
-                    , Chain-of-thought evals,{' '}
+                    ,{' '}
                     <a
                       href="https://lmarena.ai/leaderboard"
                       target="_blank"
@@ -134,54 +133,7 @@ export const HelpMeChooseMethodology: React.FC = () => {
                       LMSys Chatbot Arena
                     </a>
                   </td>
-                  <td>STEM accuracy, multi-step reasoning, Elo</td>
-                </tr>
-                <tr>
-                  <td>Most cost-effective</td>
-                  <td>
-                    <a
-                      href="https://openrouter.ai/docs/overview/models"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      OpenRouter pricing
-                    </a>
-                    , Artificial Analysis Quality Score
-                  </td>
-                  <td>$/1M tokens, quality-per-dollar</td>
-                </tr>
-                <tr>
-                  <td>Fastest responses</td>
-                  <td>
-                    <a href="https://www.ailatency.com/" target="_blank" rel="noopener noreferrer">
-                      AILatency
-                    </a>
-                    ,{' '}
-                    <a
-                      href="https://artificialanalysis.ai/"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      Artificial Analysis
-                    </a>
-                    , LMSys Chatbot Arena
-                  </td>
-                  <td>Time-to-first-token, throughput, Elo</td>
-                </tr>
-                <tr>
-                  <td>Best for web search</td>
-                  <td>Provider documentation</td>
-                  <td>supports_web_search, citation quality</td>
-                </tr>
-                <tr>
-                  <td>Best for multilingual</td>
-                  <td>
-                    Provider documentation,{' '}
-                    <a href="https://lmarena.ai/" target="_blank" rel="noopener noreferrer">
-                      LMSys Arena
-                    </a>
-                  </td>
-                  <td>Language coverage, multilingual benchmarks</td>
+                  <td>STEM accuracy, multi-step reasoning</td>
                 </tr>
                 <tr>
                   <td>Best for long context</td>
@@ -198,30 +150,71 @@ export const HelpMeChooseMethodology: React.FC = () => {
                   <td>Context window size, MRCR score (0–100)</td>
                 </tr>
                 <tr>
-                  <td>Best for legal</td>
+                  <td>Best value (cost-effective)</td>
                   <td>
                     <a
-                      href="https://www.vals.ai/benchmarks/legal_bench-09-08-2025"
+                      href="https://openrouter.ai/models"
                       target="_blank"
                       rel="noopener noreferrer"
                     >
-                      LegalBench
+                      OpenRouter pricing
                     </a>
                   </td>
-                  <td>Legal reasoning accuracy, six task categories</td>
+                  <td>Average cost per 1M tokens (prompt + completion). Lower = better value.</td>
+                </tr>
+                <tr>
+                  <td>Fastest responses</td>
+                  <td>
+                    <a
+                      href="https://lmspeed.net/leaderboard/best-throughput-models-weekly"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      LMSpeed
+                    </a>
+                    , API benchmarks
+                  </td>
+                  <td>Throughput (tokens/second). Higher = faster streaming.</td>
+                </tr>
+                <tr>
+                  <td>Best for multilingual</td>
+                  <td>
+                    <a
+                      href="https://llmdb.com/benchmarks/global-mmlu"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      Global-MMLU (llmdb.com)
+                    </a>
+                  </td>
+                  <td>Multilingual evaluation across 42 languages (0–100).</td>
+                </tr>
+                <tr>
+                  <td>Best for legal</td>
+                  <td>
+                    <a
+                      href="https://www.vals.ai/benchmarks/legal_bench-01-30-2025"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      LegalBench (VALS.ai)
+                    </a>
+                  </td>
+                  <td>Accuracy across 161 legal reasoning tasks</td>
                 </tr>
                 <tr>
                   <td>Best for medical</td>
                   <td>
                     <a
-                      href="https://www.vals.ai/benchmarks/medqa-08-12-2025"
+                      href="https://openai.com/index/healthbench"
                       target="_blank"
                       rel="noopener noreferrer"
                     >
-                      MedQA
+                      HealthBench
                     </a>
+                    , HealthBench Hard
                   </td>
-                  <td>USMLE-style medical QA, clinical reasoning</td>
+                  <td>Physician-evaluated clinical conversations</td>
                 </tr>
               </tbody>
             </table>
@@ -231,42 +224,60 @@ export const HelpMeChooseMethodology: React.FC = () => {
             <h2>Ordering Within Categories</h2>
             <p>
               Within each category, models are ordered <strong>best-to-worst</strong> (top to
-              bottom) based on the primary benchmark or metric for that category. For example:
+              bottom) based on the primary benchmark or metric for that category.
             </p>
             <ul className="seo-list">
               <li>
                 <strong>Coding:</strong> Ordered by SWE-Bench Verified % resolved (highest first).
               </li>
               <li>
-                <strong>Reasoning:</strong> Ordered by MMLU-Pro score or LMSys Arena Elo.
+                <strong>Writing:</strong> Ordered by Mazur Writing Score or Creative Writing Arena
+                Elo (highest first).
               </li>
               <li>
-                <strong>Cost-effective:</strong> Ordered by quality-per-dollar (best value first).
+                <strong>Reasoning:</strong> Ordered by MMLU-Pro score (highest first).
               </li>
               <li>
-                <strong>Fast:</strong> Ordered by latency / time-to-first-token (fastest first).
+                <strong>Long context:</strong> Ordered by MRCR score (highest first).
+              </li>
+              <li>
+                <strong>Best value:</strong> Ordered by OpenRouter cost per 1M tokens (lowest
+                first).
+              </li>
+              <li>
+                <strong>Fastest responses:</strong> Ordered by LMSpeed throughput, tokens/second
+                (highest first).
+              </li>
+              <li>
+                <strong>Multilingual:</strong> Ordered by Global-MMLU score (highest first).
+              </li>
+              <li>
+                <strong>Legal:</strong> Ordered by LegalBench accuracy (highest first).
+              </li>
+              <li>
+                <strong>Medical:</strong> Ordered by HealthBench score (highest first).
               </li>
             </ul>
             <p>
-              When multiple sources exist for a category, we use the most recent, widely cited
-              leaderboard. Different evaluation frameworks (e.g., mini-SWE-agent vs OpenHands for
-              SWE-Bench) may yield different scores; we cite the specific source in each model's
-              tooltip.
+              Only models with numeric benchmark scores are included. We do not add models without
+              verifiable benchmark data.
             </p>
           </section>
 
           <section className="seo-section">
             <h2>Categorization</h2>
             <p>
-              A model can appear in multiple categories if it ranks highly in each. For example,
-              Claude Opus 4.6 appears in coding, writing, reasoning, and web search because it
-              scores well on the relevant benchmarks for each. We do not limit models to a single
-              category.
+              A model can appear in multiple categories if it has benchmark scores for each. For
+              example, Claude Opus 4.6 appears in coding, writing, and reasoning because it has
+              numeric scores on SWE-Bench, Mazur Writing Score, and MMLU-Pro. We do not limit models
+              to a single category.
             </p>
             <p>
-              Categories are chosen to reflect common use cases: coding, writing, reasoning,
-              cost-effectiveness, speed, web-augmented search, multilingual, long context, legal,
-              and medical. We avoid categories that lack robust public benchmarks.
+              We include only categories with reliable, publicly available benchmark sources: coding
+              (SWE-Bench), writing (Creative Writing Arena), reasoning (MMLU-Pro), long context
+              (Michelangelo MRCR), cost-effective (OpenRouter pricing), fast (LMSpeed), multilingual
+              (Global-MMLU), legal (LegalBench), and medical (HealthBench). Categories without
+              robust numeric benchmarks are not included.
             </p>
           </section>
 
