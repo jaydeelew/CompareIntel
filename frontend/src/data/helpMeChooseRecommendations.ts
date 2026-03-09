@@ -42,6 +42,65 @@ export interface HelpMeChooseCategory {
  */
 export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
   {
+    id: 'cost-effective',
+    label: 'Best value',
+    description: 'Lowest cost per 1M tokens for high-volume use',
+    categoryInfoTooltip:
+      'Ranked by average cost per million tokens (OpenRouter pricing: prompt + completion). Lower cost = better value. Prices vary by provider.',
+    models: [
+      {
+        modelId: 'deepseek/deepseek-chat-v3.1',
+        evidence: 'OpenRouter avg: $0.61/1M tokens. Best value for high-volume use.',
+      },
+      {
+        modelId: 'google/gemini-2.5-flash',
+        evidence: 'OpenRouter avg: $0.75/1M tokens. Fast and cost-efficient.',
+      },
+      {
+        modelId: 'anthropic/claude-haiku-4.5',
+        evidence: 'OpenRouter avg: $1.25/1M tokens. Near-frontier at low cost.',
+      },
+      {
+        modelId: 'openai/gpt-5-nano',
+        evidence: 'OpenRouter avg: $1.50/1M tokens. Lightweight GPT-5 tier.',
+      },
+      {
+        modelId: 'google/gemini-3-flash-preview',
+        evidence: 'OpenRouter avg: $2.00/1M tokens. Thinking model, strong value.',
+      },
+    ],
+  },
+  {
+    id: 'fast',
+    label: 'Fastest responses',
+    description: 'Highest throughput (tokens per second)',
+    categoryInfoTooltip:
+      'Ranked by inference throughput (tokens/second) from LMSpeed and API benchmarks. Higher throughput = faster streaming responses. Speed varies by provider and load.',
+    models: [
+      {
+        modelId: 'openai/gpt-oss-120b',
+        evidence:
+          'LMSpeed (lmspeed.net): 1742 t/s. Top throughput on OpenRouter-compatible endpoints.',
+      },
+      {
+        modelId: 'openai/gpt-5.2',
+        evidence: 'LMSpeed: 170 t/s. GPT-5.2 Chat (Instant) tier.',
+      },
+      {
+        modelId: 'google/gemini-3-flash-preview',
+        evidence: 'LMSpeed: 162 t/s. Fast thinking model.',
+      },
+      {
+        modelId: 'x-ai/grok-4-fast',
+        evidence: 'LMSpeed: 124 t/s. xAI fast tier.',
+      },
+      {
+        modelId: 'anthropic/claude-haiku-4.5',
+        evidence: 'LMSpeed: 116 t/s. Low latency, high throughput.',
+      },
+    ],
+  },
+  {
     id: 'coding',
     label: 'Best for coding',
     description: 'Code generation, debugging, refactoring',
@@ -156,65 +215,6 @@ export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
       {
         modelId: 'google/gemini-2.0-flash-001',
         evidence: 'Michelangelo Long-Context (llmdb.com): 70.5. Fast with large context.',
-      },
-    ],
-  },
-  {
-    id: 'cost-effective',
-    label: 'Best value',
-    description: 'Lowest cost per 1M tokens for high-volume use',
-    categoryInfoTooltip:
-      'Ranked by average cost per million tokens (OpenRouter pricing: prompt + completion). Lower cost = better value. Prices vary by provider.',
-    models: [
-      {
-        modelId: 'deepseek/deepseek-chat-v3.1',
-        evidence: 'OpenRouter avg: $0.61/1M tokens. Best value for high-volume use.',
-      },
-      {
-        modelId: 'google/gemini-2.5-flash',
-        evidence: 'OpenRouter avg: $0.75/1M tokens. Fast and cost-efficient.',
-      },
-      {
-        modelId: 'anthropic/claude-haiku-4.5',
-        evidence: 'OpenRouter avg: $1.25/1M tokens. Near-frontier at low cost.',
-      },
-      {
-        modelId: 'openai/gpt-5-nano',
-        evidence: 'OpenRouter avg: $1.50/1M tokens. Lightweight GPT-5 tier.',
-      },
-      {
-        modelId: 'google/gemini-3-flash-preview',
-        evidence: 'OpenRouter avg: $2.00/1M tokens. Thinking model, strong value.',
-      },
-    ],
-  },
-  {
-    id: 'fast',
-    label: 'Fastest responses',
-    description: 'Highest throughput (tokens per second)',
-    categoryInfoTooltip:
-      'Ranked by inference throughput (tokens/second) from LMSpeed and API benchmarks. Higher throughput = faster streaming responses. Speed varies by provider and load.',
-    models: [
-      {
-        modelId: 'openai/gpt-oss-120b',
-        evidence:
-          'LMSpeed (lmspeed.net): 1742 t/s. Top throughput on OpenRouter-compatible endpoints.',
-      },
-      {
-        modelId: 'openai/gpt-5.2',
-        evidence: 'LMSpeed: 170 t/s. GPT-5.2 Chat (Instant) tier.',
-      },
-      {
-        modelId: 'google/gemini-3-flash-preview',
-        evidence: 'LMSpeed: 162 t/s. Fast thinking model.',
-      },
-      {
-        modelId: 'x-ai/grok-4-fast',
-        evidence: 'LMSpeed: 124 t/s. xAI fast tier.',
-      },
-      {
-        modelId: 'anthropic/claude-haiku-4.5',
-        evidence: 'LMSpeed: 116 t/s. Low latency, high throughput.',
       },
     ],
   },
