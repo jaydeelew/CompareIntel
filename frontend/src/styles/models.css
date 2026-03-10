@@ -2918,10 +2918,14 @@ html:not([data-theme]) .help-me-choose-category.has-match {
   }
 }
 
-/* When Advanced is open: match Help me choose */
+/* When Advanced is open: match Help me choose + subtle open-state emphasis */
 .advanced-settings-expanded .advanced-settings-content {
   border-color: var(--border-strong);
-  box-shadow: var(--shadow-md);
+  border-left-width: 3px;
+  border-left-color: color-mix(in srgb, var(--primary-color) 45%, var(--border-strong));
+  box-shadow:
+    var(--shadow-md),
+    0 0 0 1px color-mix(in srgb, var(--primary-color) 12%, transparent);
 }
 
 .advanced-settings-expanded .advanced-settings-content::before {
@@ -2945,9 +2949,11 @@ html:not([data-theme]) .help-me-choose-category.has-match {
     var(--bg-elevated) 100%
   );
   border-color: rgba(37, 99, 235, 0.25);
+  border-left-color: rgba(37, 99, 235, 0.5);
   box-shadow:
     0 2px 8px rgba(37, 99, 235, 0.06),
-    0 1px 3px rgba(0, 0, 0, 0.06);
+    0 1px 3px rgba(0, 0, 0, 0.06),
+    0 0 0 1px rgba(37, 99, 235, 0.08);
 }
 
 /* Dark theme: match Help me choose when open */
@@ -2959,10 +2965,11 @@ html:not([data-theme]) .help-me-choose-category.has-match {
     var(--bg-elevated) 100%
   );
   border-color: rgba(6, 182, 212, 0.3);
+  border-left-color: rgba(6, 182, 212, 0.55);
   box-shadow:
     0 2px 12px rgba(0, 0, 0, 0.4),
     0 0 16px color-mix(in srgb, var(--primary-glow) 20%, transparent),
-    0 0 0 1px rgba(6, 182, 212, 0.12);
+    0 0 0 1px rgba(6, 182, 212, 0.15);
 }
 
 .advanced-settings-row {
