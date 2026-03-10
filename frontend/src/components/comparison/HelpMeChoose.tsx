@@ -263,10 +263,15 @@ export function HelpMeChoose({
   const isDraggingRef = useRef(false)
   const dragStartXRef = useRef(0)
   const dragStartScrollLeftRef = useRef(0)
+  /** Desktop: click-and-drag on categories area to scroll horizontally */
+  const isCategoriesDragRef = useRef(false)
+  const categoriesDragStartXRef = useRef(0)
+  const categoriesDragStartScrollLeftRef = useRef(0)
   /** When dragging the thumb: offset from thumb's left edge to the click point (in track pixels). Keeps cursor locked to thumb. */
   const dragOffsetWithinThumbRef = useRef<number | null>(null)
 
   const [hasHorizontalOverflow, setHasHorizontalOverflow] = useState(false)
+  const [isCategoriesDragging, setIsCategoriesDragging] = useState(false)
 
   /** Scrollbar at top: sync thumb with categories scroll, handle drag */
   const updateScrollbarThumb = useCallback(() => {
@@ -362,6 +367,19 @@ export function HelpMeChoose({
     return () => track.removeEventListener('touchstart', handler)
   }, [isExpanded, handleScrollbarPointerDown])
 
+  /** Desktop: mousedown on categories area to start click-and-drag scroll */
+  const handleCategoriesMouseDown = useCallback(
+    (e: React.MouseEvent) => {
+      if (isMobileLayout || !hasHorizontalOverflow || !categoriesRef.current) return
+      if ((e.target as HTMLElement).closest('button, a, input, label, p')) return
+      isCategoriesDragRef.current = true
+      categoriesDragStartXRef.current = e.clientX
+      categoriesDragStartScrollLeftRef.current = categoriesRef.current.scrollLeft
+      setIsCategoriesDragging(true)
+    },
+    [isMobileLayout, hasHorizontalOverflow]
+  )
+
   useEffect(() => {
     if (!isExpanded) return
     const applyScrollFromClientX = (clientX: number) => {
@@ -417,6 +435,36 @@ export function HelpMeChoose({
       document.removeEventListener('touchmove', onTouchMove)
       document.removeEventListener('touchend', onPointerUp)
       document.removeEventListener('touchcancel', onPointerUp)
+    }
+  }, [isExpanded])
+
+  /** Desktop: click-and-drag on categories area to scroll horizontally */
+  useEffect(() => {
+    if (!isExpanded) return
+    const onMouseMove = (e: MouseEvent) => {
+      if (!isCategoriesDragRef.current || !categoriesRef.current) return
+      e.preventDefault()
+      const dx = e.clientX - categoriesDragStartXRef.current
+      const el = categoriesRef.current
+      el.scrollLeft = Math.max(
+        0,
+        Math.min(el.scrollWidth - el.clientWidth, categoriesDragStartScrollLeftRef.current - dx)
+      )
+      /* Keep refs in sync for smooth continuous drag (user may drag past one movement) */
+      categoriesDragStartXRef.current = e.clientX
+      categoriesDragStartScrollLeftRef.current = el.scrollLeft
+    }
+    const onMouseUp = () => {
+      if (isCategoriesDragRef.current) {
+        isCategoriesDragRef.current = false
+        setIsCategoriesDragging(false)
+      }
+    }
+    document.addEventListener('mousemove', onMouseMove, { passive: false })
+    document.addEventListener('mouseup', onMouseUp)
+    return () => {
+      document.removeEventListener('mousemove', onMouseMove)
+      document.removeEventListener('mouseup', onMouseUp)
     }
   }, [isExpanded])
 
@@ -572,7 +620,11 @@ export function HelpMeChoose({
             >
               <div ref={scrollbarThumbRef} className="help-me-choose-scrollbar-thumb" />
             </div>
-            <div ref={categoriesRef} className="help-me-choose-categories">
+            <div
+              ref={categoriesRef}
+              className={`help-me-choose-categories${!isMobileLayout && hasHorizontalOverflow ? ' help-me-choose-categories-drag-scroll' : ''}${isCategoriesDragging ? ' help-me-choose-categories-dragging' : ''}`}
+              onMouseDown={handleCategoriesMouseDown}
+            >
               {(() => {
                 let foundFirstSelected = false
                 return HELP_ME_CHOOSE_CATEGORIES.map((cat: HelpMeChooseCategory) => {

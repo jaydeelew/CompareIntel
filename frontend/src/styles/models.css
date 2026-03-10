@@ -2226,6 +2226,16 @@
   padding-bottom: 4px;
 }
 
+/* Desktop: click-and-drag to scroll horizontally */
+.help-me-choose-categories.help-me-choose-categories-drag-scroll {
+  cursor: grab;
+}
+
+.help-me-choose-categories.help-me-choose-categories-dragging {
+  cursor: grabbing;
+  user-select: none;
+}
+
 .help-me-choose-categories::-webkit-scrollbar {
   display: none;
 }
