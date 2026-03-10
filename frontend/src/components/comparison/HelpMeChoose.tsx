@@ -266,6 +266,7 @@ export function HelpMeChoose({
   /** Desktop: click-and-drag on categories area to scroll horizontally */
   const isCategoriesArmedRef = useRef(false)
   const isCategoriesDragRef = useRef(false)
+  const categoriesJustFinishedDragRef = useRef(false)
   const categoriesDragStartXRef = useRef(0)
   const categoriesDragStartScrollLeftRef = useRef(0)
 
@@ -370,6 +371,15 @@ export function HelpMeChoose({
     return () => track.removeEventListener('touchstart', handler)
   }, [isExpanded, handleScrollbarPointerDown])
 
+  /** Desktop: suppress click when user just finished a drag-to-scroll (prevents unintended model selection) */
+  const handleCategoriesClickCapture = useCallback((e: React.MouseEvent) => {
+    if (categoriesJustFinishedDragRef.current) {
+      categoriesJustFinishedDragRef.current = false
+      e.preventDefault()
+      e.stopPropagation()
+    }
+  }, [])
+
   /** Desktop: mousedown on categories area to arm click-and-drag scroll (commit on move past threshold) */
   const handleCategoriesMouseDown = useCallback(
     (e: React.MouseEvent) => {
@@ -467,9 +477,11 @@ export function HelpMeChoose({
     }
     const onMouseUp = () => {
       if (isCategoriesArmedRef.current || isCategoriesDragRef.current) {
+        const hadDrag = isCategoriesDragRef.current
         isCategoriesArmedRef.current = false
         isCategoriesDragRef.current = false
         setIsCategoriesDragging(false)
+        if (hadDrag) categoriesJustFinishedDragRef.current = true
       }
     }
     document.addEventListener('mousemove', onMouseMove, { passive: false })
@@ -636,6 +648,7 @@ export function HelpMeChoose({
               ref={categoriesRef}
               className={`help-me-choose-categories${!isMobileLayout && hasHorizontalOverflow ? ' help-me-choose-categories-drag-scroll' : ''}${isCategoriesDragging ? ' help-me-choose-categories-dragging' : ''}`}
               onMouseDown={handleCategoriesMouseDown}
+              onClickCapture={handleCategoriesClickCapture}
             >
               {(() => {
                 let foundFirstSelected = false
