@@ -2696,6 +2696,17 @@ html:not([data-theme]) .help-me-choose-category.has-match {
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
   }
 
+  /* Stronger expanded dropdown styling on mobile - match Help me choose */
+  .advanced-settings-expanded .advanced-settings-content {
+    box-shadow:
+      var(--shadow-lg),
+      0 0 24px rgba(6, 182, 212, 0.08);
+  }
+
+  [data-theme='light'] .advanced-settings-expanded .advanced-settings-content {
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+  }
+
   /* Preset button - gradient fill on mobile for stronger CTA */
   .help-me-choose-preset-btn {
     background: color-mix(in srgb, var(--primary-color) 12%, transparent);
@@ -2779,7 +2790,7 @@ html:not([data-theme]) .help-me-choose-category.has-match {
   align-items: center;
   gap: 0.5rem;
   background: var(--bg-tertiary);
-  border: 1px solid transparent;
+  border: 1px solid var(--border-color);
   color: var(--text-secondary);
   font-size: 0.8125rem;
   font-weight: var(--font-medium);
@@ -2789,13 +2800,15 @@ html:not([data-theme]) .help-me-choose-category.has-match {
   transition:
     color 0.2s ease,
     background 0.2s ease,
-    border-color 0.2s ease;
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .advanced-settings-toggle:hover:not(:disabled) {
   color: var(--text-primary);
   background: var(--bg-hover);
-  border-color: var(--border-color);
+  border-color: color-mix(in srgb, var(--primary-color) 35%, var(--border-color));
+  box-shadow: 0 0 12px color-mix(in srgb, var(--primary-glow) 30%, transparent);
 }
 
 .advanced-settings-toggle:disabled {
@@ -2820,25 +2833,34 @@ html:not([data-theme]) .help-me-choose-category.has-match {
   width: 14px;
   height: 14px;
   opacity: 0.7;
+  color: inherit;
   transition:
     transform 0.2s ease,
-    opacity 0.2s ease;
+    opacity 0.2s ease,
+    color 0.2s ease;
 }
 
 .advanced-settings-toggle:hover:not(:disabled) .advanced-settings-chevron {
   opacity: 1;
+  color: var(--primary-color);
 }
 
 .advanced-settings-chevron.expanded {
   transform: rotate(180deg);
 }
 
-/* Toggle button when Advanced is open - subtle emphasis */
+/* Toggle button when Advanced is open - match Help me choose emphasis */
 .advanced-settings-expanded .advanced-settings-toggle {
   color: var(--text-primary);
   background: var(--bg-hover);
-  border-color: var(--border-color);
+  border-color: color-mix(in srgb, var(--primary-color) 40%, var(--border-color));
   font-weight: var(--font-semibold);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--primary-glow) 25%, transparent);
+}
+
+.advanced-settings-expanded .advanced-settings-toggle .advanced-settings-chevron {
+  color: var(--primary-color);
+  opacity: 1;
 }
 
 .advanced-settings-content {
@@ -2854,31 +2876,83 @@ html:not([data-theme]) .help-me-choose-category.has-match {
   background: var(--bg-elevated);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-xl);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  box-shadow: var(--shadow-sm);
+  position: relative;
+  overflow: hidden;
 }
 
-/* When Advanced is open: stand out from the rest of the section */
+/* Subtle top accent bar - match Help me choose */
+.advanced-settings-content::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    color-mix(in srgb, var(--primary-color) 25%, transparent) 20%,
+    color-mix(in srgb, var(--primary-color) 40%, transparent) 50%,
+    color-mix(in srgb, var(--primary-color) 25%, transparent) 80%,
+    transparent 100%
+  );
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+/* Non-mobile: allow info tooltips to extend above container */
+@media (min-width: 769px) {
+  .advanced-settings-content {
+    overflow: visible;
+  }
+}
+
+/* When Advanced is open: match Help me choose */
 .advanced-settings-expanded .advanced-settings-content {
   border-color: var(--border-strong);
   box-shadow: var(--shadow-md);
 }
 
-/* Light theme: subtle tint and stronger definition when open */
+.advanced-settings-expanded .advanced-settings-content::before {
+  opacity: 1;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    color-mix(in srgb, var(--primary-color) 40%, transparent) 20%,
+    var(--primary-color) 50%,
+    color-mix(in srgb, var(--primary-color) 40%, transparent) 80%,
+    transparent 100%
+  );
+}
+
+/* Light theme: match Help me choose when open */
 [data-theme='light'] .advanced-settings-expanded .advanced-settings-content {
-  background: linear-gradient(to bottom, rgba(37, 99, 235, 0.04) 0%, var(--bg-elevated) 100%);
-  border-color: rgba(37, 99, 235, 0.2);
+  background: linear-gradient(
+    to bottom,
+    rgba(37, 99, 235, 0.05) 0%,
+    rgba(37, 99, 235, 0.02) 30%,
+    var(--bg-elevated) 100%
+  );
+  border-color: rgba(37, 99, 235, 0.25);
   box-shadow:
-    0 2px 8px rgba(37, 99, 235, 0.08),
+    0 2px 8px rgba(37, 99, 235, 0.06),
     0 1px 3px rgba(0, 0, 0, 0.06);
 }
 
-/* Dark theme: subtle primary glow and stronger border when open */
+/* Dark theme: match Help me choose when open */
 [data-theme='dark'] .advanced-settings-expanded .advanced-settings-content {
-  background: linear-gradient(to bottom, rgba(6, 182, 212, 0.06) 0%, var(--bg-elevated) 100%);
-  border-color: rgba(6, 182, 212, 0.25);
+  background: linear-gradient(
+    to bottom,
+    rgba(6, 182, 212, 0.08) 0%,
+    rgba(6, 182, 212, 0.03) 30%,
+    var(--bg-elevated) 100%
+  );
+  border-color: rgba(6, 182, 212, 0.3);
   box-shadow:
     0 2px 12px rgba(0, 0, 0, 0.4),
-    0 0 0 1px rgba(6, 182, 212, 0.1);
+    0 0 16px color-mix(in srgb, var(--primary-glow) 20%, transparent),
+    0 0 0 1px rgba(6, 182, 212, 0.12);
 }
 
 .advanced-settings-row {
