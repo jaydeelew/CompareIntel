@@ -19,7 +19,6 @@ import {
 } from '../../data/helpMeChooseRecommendations'
 import type { ModelsByProvider, User } from '../../types'
 
-import { BestAtTopInfoModal } from './BestAtTopInfoModal'
 import { HelpMeChooseScopeInfoModal } from './HelpMeChooseScopeInfoModal'
 
 function InfoIcon() {
@@ -195,7 +194,6 @@ export function HelpMeChoose({
   isMobileLayout = false,
 }: HelpMeChooseProps) {
   const [internalExpanded, setInternalExpanded] = useState(false)
-  const [showBestAtTopModal, setShowBestAtTopModal] = useState(false)
   const [showScopeInfoModal, setShowScopeInfoModal] = useState(false)
   const [evidenceModal, setEvidenceModal] = useState<{
     modelName: string
@@ -561,44 +559,6 @@ export function HelpMeChoose({
           className="help-me-choose-content"
           role="menu"
         >
-          <p className="help-me-choose-intro">
-            <span className="help-me-choose-ordering-hint">
-              <span className="help-me-choose-ordering-label">Ranked by score</span>
-              <button
-                type="button"
-                className="help-me-choose-ordering-info"
-                onClick={() => setShowBestAtTopModal(true)}
-                aria-label="How models are ranked — tap for details"
-                aria-describedby={isMobileLayout ? undefined : 'hmc-ordering-tooltip'}
-              >
-                {!isMobileLayout && (
-                  <span
-                    id="hmc-ordering-tooltip"
-                    className="help-me-choose-ordering-tooltip"
-                    role="tooltip"
-                  >
-                    Models are ordered by benchmark score (highest first). Every model shown is
-                    strong in its category. Tap the info icon next to a model for evidence.
-                  </span>
-                )}
-                <svg
-                  width="14"
-                  height="14"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  aria-hidden
-                >
-                  <circle cx="12" cy="12" r="10" />
-                  <path d="M12 16v-4" />
-                  <path d="M12 8h.01" />
-                </svg>
-              </button>
-            </span>
-          </p>
           <div
             className={`help-me-choose-categories-wrapper${hasHorizontalOverflow ? '' : ' help-me-choose-scrollbar-hidden'}`}
           >
@@ -848,11 +808,6 @@ export function HelpMeChoose({
           </div>,
           document.body
         )}
-
-      <BestAtTopInfoModal
-        isOpen={showBestAtTopModal}
-        onClose={() => setShowBestAtTopModal(false)}
-      />
 
       <HelpMeChooseScopeInfoModal
         isOpen={showScopeInfoModal}
