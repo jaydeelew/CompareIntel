@@ -53,7 +53,7 @@ export const Footer: React.FC = () => {
           AI Glossary
         </Link>
         <Link to="/help-me-choose-methodology" style={linkStyle} onClick={scrollToTop}>
-          Help Me Choose Methodology
+          Help me choose
         </Link>
         <Link to="/faq" style={linkStyle} onClick={scrollToTop}>
           FAQ
