@@ -8,6 +8,9 @@
 .user-avatar {
   width: 36px;
   height: 36px;
+  min-width: 36px;
+  min-height: 36px;
+  aspect-ratio: 1;
   border-radius: 50%;
   background: linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%);
   color: white;
@@ -20,6 +23,7 @@
   cursor: pointer;
   outline: none;
   transition: transform 0.2s ease;
+  flex-shrink: 0;
 }
 
 .user-avatar:hover {
