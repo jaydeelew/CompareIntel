@@ -264,9 +264,12 @@ export function HelpMeChoose({
   const dragStartXRef = useRef(0)
   const dragStartScrollLeftRef = useRef(0)
   /** Desktop: click-and-drag on categories area to scroll horizontally */
+  const isCategoriesArmedRef = useRef(false)
   const isCategoriesDragRef = useRef(false)
   const categoriesDragStartXRef = useRef(0)
   const categoriesDragStartScrollLeftRef = useRef(0)
+
+  const CATEGORIES_DRAG_THRESHOLD_PX = 5
   /** When dragging the thumb: offset from thumb's left edge to the click point (in track pixels). Keeps cursor locked to thumb. */
   const dragOffsetWithinThumbRef = useRef<number | null>(null)
 
@@ -367,15 +370,14 @@ export function HelpMeChoose({
     return () => track.removeEventListener('touchstart', handler)
   }, [isExpanded, handleScrollbarPointerDown])
 
-  /** Desktop: mousedown on categories area to start click-and-drag scroll */
+  /** Desktop: mousedown on categories area to arm click-and-drag scroll (commit on move past threshold) */
   const handleCategoriesMouseDown = useCallback(
     (e: React.MouseEvent) => {
       if (isMobileLayout || !hasHorizontalOverflow || !categoriesRef.current) return
-      if ((e.target as HTMLElement).closest('button, a, input, label, p')) return
-      isCategoriesDragRef.current = true
+      if ((e.target as HTMLElement).closest('button, a, input, p')) return
+      isCategoriesArmedRef.current = true
       categoriesDragStartXRef.current = e.clientX
       categoriesDragStartScrollLeftRef.current = categoriesRef.current.scrollLeft
-      setIsCategoriesDragging(true)
     },
     [isMobileLayout, hasHorizontalOverflow]
   )
@@ -442,20 +444,30 @@ export function HelpMeChoose({
   useEffect(() => {
     if (!isExpanded) return
     const onMouseMove = (e: MouseEvent) => {
-      if (!isCategoriesDragRef.current || !categoriesRef.current) return
-      e.preventDefault()
-      const dx = e.clientX - categoriesDragStartXRef.current
+      if (!isCategoriesArmedRef.current || !categoriesRef.current) return
       const el = categoriesRef.current
+      const dx = e.clientX - categoriesDragStartXRef.current
+      if (!isCategoriesDragRef.current) {
+        if (Math.abs(dx) >= CATEGORIES_DRAG_THRESHOLD_PX) {
+          isCategoriesDragRef.current = true
+          setIsCategoriesDragging(true)
+          categoriesDragStartXRef.current = e.clientX
+          categoriesDragStartScrollLeftRef.current = el.scrollLeft
+        } else {
+          return
+        }
+      }
+      e.preventDefault()
       el.scrollLeft = Math.max(
         0,
         Math.min(el.scrollWidth - el.clientWidth, categoriesDragStartScrollLeftRef.current - dx)
       )
-      /* Keep refs in sync for smooth continuous drag (user may drag past one movement) */
       categoriesDragStartXRef.current = e.clientX
       categoriesDragStartScrollLeftRef.current = el.scrollLeft
     }
     const onMouseUp = () => {
-      if (isCategoriesDragRef.current) {
+      if (isCategoriesArmedRef.current || isCategoriesDragRef.current) {
+        isCategoriesArmedRef.current = false
         isCategoriesDragRef.current = false
         setIsCategoriesDragging(false)
       }
