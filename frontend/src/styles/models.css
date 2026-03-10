@@ -1811,6 +1811,13 @@
   overflow: hidden;
 }
 
+/* Non-mobile: allow ordering tooltip to extend above container (mobile uses modal only) */
+@media (min-width: 769px) {
+  .help-me-choose-content {
+    overflow: visible;
+  }
+}
+
 /* Subtle top accent bar - theme accent without overpowering */
 .help-me-choose-content::before {
   content: '';
@@ -2026,7 +2033,7 @@
   max-width: min(320px, calc(100vw - 2rem));
   box-shadow: var(--shadow-xl);
   border: 1px solid var(--border-color);
-  z-index: 1000;
+  z-index: 10000;
   opacity: 0;
   visibility: hidden;
   transition:
