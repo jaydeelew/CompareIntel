@@ -20,13 +20,13 @@ interface PageMeta {
 
 const PAGE_META: Record<string, PageMeta> = {
   '/': {
-    title: 'CompareIntel - Compare AI Models Side-by-Side',
+    title: 'CompareIntel - Compare AI Models Side-by-Side | Free Tier',
     description:
       'Compare the latest AI models side-by-side. Test models from OpenAI, Anthropic, Google, Meta, xAI, and more. New models added regularly. Free tier available.',
     canonical: `${BASE_URL}/`,
-    ogTitle: 'CompareIntel - Compare 65+ AI Models Side-by-Side',
+    ogTitle: 'CompareIntel - Compare AI Models Side-by-Side | Free Tier',
     ogDescription:
-      'Compare 65+ AI models side-by-side from leading providers. Test prompts and find the best AI for your needs. New models added as released. Free tier available.',
+      'Compare the latest AI models side-by-side from leading providers. Test prompts and find the best AI for your needs. New models added as released. Free tier available.',
     ogImage: DEFAULT_OG_IMAGE,
   },
   '/about': {
@@ -42,11 +42,11 @@ const PAGE_META: Record<string, PageMeta> = {
   '/features': {
     title: 'Features - CompareIntel',
     description:
-      'Explore CompareIntel features: compare 65+ AI models, real-time streaming, LaTeX rendering, syntax highlighting, conversation history, and more.',
+      'Explore CompareIntel features: compare AI models from leading providers, real-time streaming, LaTeX rendering, syntax highlighting, conversation history, and more.',
     canonical: `${BASE_URL}/features`,
     ogTitle: 'Features - CompareIntel',
     ogDescription:
-      'Explore CompareIntel features: compare 65+ AI models, real-time streaming, LaTeX rendering, syntax highlighting, conversation history, and more.',
+      'Explore CompareIntel features: compare AI models from leading providers, real-time streaming, LaTeX rendering, syntax highlighting, conversation history, and more.',
     ogImage: DEFAULT_OG_IMAGE,
   },
   '/how-it-works': {
@@ -117,7 +117,7 @@ export function getPageMeta(pathname: string): PageMeta {
 
   // Default fallback
   return {
-    title: 'CompareIntel',
+    title: 'CompareIntel - Compare AI Models Side-by-Side | Free Tier',
     description:
       'Compare the latest AI models side-by-side from OpenAI, Anthropic, Google, Meta, xAI, and more simultaneously.',
     canonical: `${BASE_URL}${normalizedPath}`,

@@ -334,9 +334,9 @@ export const faqData: FAQItemData[] = [
     answer: (
       <>
         <p>
-          CompareIntel provides access to 65+ of the latest AI models from leading providers
-          including OpenAI, Anthropic, Google, Meta, Mistral AI, xAI, and many more. We continuously
-          add new models as they're released, so you always have access to the newest AI technology.
+          CompareIntel provides access to the latest AI models from leading providers including
+          OpenAI, Anthropic, Google, Meta, Mistral AI, xAI, and many more. We continuously add new
+          models as they're released, so you always have access to the newest AI technology.
         </p>
         <p>
           <strong>
@@ -474,8 +474,8 @@ export const faqData: FAQItemData[] = [
             and features
           </li>
           <li>
-            Select the AI models you want to compare from our library of 65+ models (up to 3 models
-            for free users, more for paid tiers)
+            Select the AI models you want to compare from our model library (up to 3 models for free
+            users, more for paid tiers)
           </li>
           <li>
             Enter your prompt or question in the input field—you can also attach files like PDFs or

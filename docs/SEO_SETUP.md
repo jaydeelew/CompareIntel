@@ -144,7 +144,7 @@ For multiple pages or site-wide changes:
 For effective SEO, place keywords naturally in these locations (in order of importance):
 
 1. **Title Tag** (`<title>`) - ✅ Already optimized
-   - Your current title: "CompareIntel - Compare 65+ AI Models Side-by-Side"
+   - Your current title: "CompareIntel - Compare AI Models Side-by-Side | Free Tier"
    - Contains key terms: "Compare", "AI Models", "Side-by-Side"
 
 2. **Meta Description** - ✅ Already optimized
