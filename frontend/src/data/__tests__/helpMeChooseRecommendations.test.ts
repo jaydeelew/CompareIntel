@@ -19,14 +19,14 @@ function extractPrimaryScore(categoryId: string, evidence: string): number | nul
   if (categoryId === 'writing') {
     const mazurMatch = evidence.match(/Mazur[^:]*:\s*(\d+\.\d+)/i)
     if (mazurMatch) return parseFloat(mazurMatch[1])
-    // Creative Writing Arena Elo (e.g. 1455–1461)
-    const eloMatch = evidence.match(/(\d+)\s*[–-]\s*\d+\s*Elo/i)
+    // Creative Writing Arena Elo (e.g. 1490 Elo or 1455–1461 Elo)
+    const eloMatch = evidence.match(/(\d+)(?:\s*[–-]\s*\d+)?\s*Elo/i)
     if (eloMatch) return parseInt(eloMatch[1], 10)
   }
 
-  // MRCR /100 (e.g. 93/100, 76/100) or Michelangelo score (e.g. 70.5)
-  const fracMatch = evidence.match(/(\d+)\s*\/\s*100\b/)
-  if (fracMatch) return parseInt(fracMatch[1], 10)
+  // MRCR /100 (e.g. 93/100, 93.0/100, 76/100) - capture full number to avoid matching "0" from "93.0/100"
+  const fracMatch = evidence.match(/(\d+\.?\d*)\s*\/\s*100\b/)
+  if (fracMatch) return parseFloat(fracMatch[1])
   if (categoryId === 'long-context') {
     const mrcrMatch = evidence.match(/(?:llmdb|Michelangelo)[^:]*:\s*(\d+\.?\d*)/i)
     if (mrcrMatch) return parseFloat(mrcrMatch[1])

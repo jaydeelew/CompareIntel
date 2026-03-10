@@ -37,7 +37,7 @@ describe('ResultCard', () => {
   describe('Rendering', () => {
     it('should render result card with model name', () => {
       render(<ResultCard modelId={mockModel.id} model={mockModel} messages={mockMessages} />)
-      expect(screen.getByText(/gpt-4/i)).toBeInTheDocument()
+      expect(screen.getByRole('heading', { name: /gpt-4/i })).toBeInTheDocument()
     })
 
     it('should render with modelId when model is not provided', () => {
