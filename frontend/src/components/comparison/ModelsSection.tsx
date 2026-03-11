@@ -391,6 +391,21 @@ export const ModelsSection: React.FC<ModelsSectionProps> = ({
                             flexShrink: 0,
                           }}
                         >
+                          {/* Checkbox must be first so the label activates it (not the globe button) when clicking anywhere on the model option */}
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            disabled={isDisabled}
+                            onChange={handleModelClick}
+                            onMouseDown={e => e.preventDefault()}
+                            className={`model-checkbox ${isFollowUpMode && !isSelected && wasOriginallySelected ? 'follow-up-deselected' : ''}`}
+                            data-testid={`model-checkbox-${model.id}`}
+                            style={{
+                              margin: 0,
+                              width: '16px',
+                              height: '16px',
+                            }}
+                          />
                           {model.supports_web_search &&
                             (() => {
                               const indicator = (
@@ -450,20 +465,6 @@ export const ModelsSection: React.FC<ModelsSectionProps> = ({
                                 </span>
                               )
                             })()}
-                          <input
-                            type="checkbox"
-                            checked={isSelected}
-                            disabled={isDisabled}
-                            onChange={handleModelClick}
-                            onMouseDown={e => e.preventDefault()}
-                            className={`model-checkbox ${isFollowUpMode && !isSelected && wasOriginallySelected ? 'follow-up-deselected' : ''}`}
-                            data-testid={`model-checkbox-${model.id}`}
-                            style={{
-                              margin: 0,
-                              width: '16px',
-                              height: '16px',
-                            }}
-                          />
                         </div>
                       </label>
                     )
@@ -544,7 +545,11 @@ export const ModelsSection: React.FC<ModelsSectionProps> = ({
                               padding: 0,
                               cursor: 'pointer',
                             }}
-                            onClick={() => setShowWebSearchInfoModal(true)}
+                            onClick={e => {
+                              e.preventDefault()
+                              e.stopPropagation()
+                              setShowWebSearchInfoModal(true)
+                            }}
                             aria-label="Internet access — tap for info"
                           >
                             <svg
