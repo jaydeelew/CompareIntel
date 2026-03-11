@@ -2288,6 +2288,21 @@ html:not([data-theme]) .help-me-choose-category.has-match {
   box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.06);
 }
 
+/* Sticky category bar: always visible when scrolling (mobile vertical scroll hides in-column headers) */
+.help-me-choose-sticky-category {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  flex-shrink: 0;
+  padding: 0.5rem 0;
+  margin-bottom: -0.5rem;
+  font-size: 0.875rem;
+  font-weight: var(--font-semibold);
+  color: var(--text-primary);
+  background: var(--bg-elevated);
+  border-bottom: 1px solid var(--border-color);
+}
+
 .help-me-choose-category-header-row {
   display: flex;
   align-items: center;

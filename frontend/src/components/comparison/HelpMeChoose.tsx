@@ -276,6 +276,8 @@ export function HelpMeChoose({
 
   const [hasHorizontalOverflow, setHasHorizontalOverflow] = useState(false)
   const [isCategoriesDragging, setIsCategoriesDragging] = useState(false)
+  /** Category label shown in sticky bar when user scrolls (mobile: vertical scroll can hide headers) */
+  const [visibleCategoryLabel, setVisibleCategoryLabel] = useState<string | null>(null)
 
   /** Scrollbar at top: sync thumb with categories scroll, handle drag */
   const updateScrollbarThumb = useCallback(() => {
@@ -319,6 +321,44 @@ export function HelpMeChoose({
       el.removeEventListener('scroll', updateScrollbarThumb)
     }
   }, [isExpanded, updateScrollbarThumb])
+
+  /** Update visible category label for sticky bar based on horizontal scroll (which column is in view) */
+  const updateVisibleCategory = useCallback(() => {
+    const el = categoriesRef.current
+    if (!el) return
+    const categories = el.querySelectorAll<HTMLElement>('.help-me-choose-category')
+    if (categories.length === 0) {
+      setVisibleCategoryLabel(HELP_ME_CHOOSE_CATEGORIES[0]?.label ?? null)
+      return
+    }
+    const scrollLeft = el.scrollLeft
+    const first = categories[0]
+    const second = categories[1]
+    const gap = second ? second.offsetLeft - first.offsetLeft - first.offsetWidth : 16
+    const categoryWidth = first.offsetWidth + gap
+    const index = Math.min(
+      HELP_ME_CHOOSE_CATEGORIES.length - 1,
+      Math.max(0, Math.round(scrollLeft / categoryWidth))
+    )
+    setVisibleCategoryLabel(HELP_ME_CHOOSE_CATEGORIES[index]?.label ?? null)
+  }, [])
+
+  useEffect(() => {
+    if (!isMobileLayout || !isExpanded) {
+      setVisibleCategoryLabel(null)
+      return
+    }
+    const el = categoriesRef.current
+    if (!el) return
+    const run = () => updateVisibleCategory()
+    run()
+    const raf = requestAnimationFrame(run)
+    el.addEventListener('scroll', updateVisibleCategory)
+    return () => {
+      cancelAnimationFrame(raf)
+      el.removeEventListener('scroll', updateVisibleCategory)
+    }
+  }, [isMobileLayout, isExpanded, updateVisibleCategory])
 
   const handleScrollbarPointerDown = useCallback((clientX: number, target: EventTarget) => {
     const el = categoriesRef.current
@@ -631,6 +671,11 @@ export function HelpMeChoose({
           className="help-me-choose-content"
           role="menu"
         >
+          {isMobileLayout && visibleCategoryLabel && (
+            <div className="help-me-choose-sticky-category" aria-live="polite">
+              {visibleCategoryLabel}
+            </div>
+          )}
           <div
             className={`help-me-choose-categories-wrapper${hasHorizontalOverflow ? '' : ' help-me-choose-scrollbar-hidden'}`}
           >
