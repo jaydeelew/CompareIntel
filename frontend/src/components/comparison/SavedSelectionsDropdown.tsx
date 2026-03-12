@@ -4,6 +4,7 @@ import { createPortal } from 'react-dom'
 import type { SavedModelSelection } from '../../hooks/useSavedModelSelections'
 import type { ModelsByProvider } from '../../types/models'
 import { showNotification } from '../../utils/error'
+import { StyledTooltip } from '../shared'
 
 import type { SelectionProps } from './ComparisonFormTypes'
 
@@ -176,30 +177,31 @@ export function SavedSelectionsDropdown({
 
   return (
     <div className="saved-selections-container" ref={containerRef}>
-      <button
-        type="button"
-        className={`saved-selections-button ${showDropdown ? 'active' : ''}`}
-        onClick={() => {
-          setShowDropdown(!showDropdown)
-          setIsInSaveMode(false)
-          setSaveSelectionName('')
-          setSaveSelectionError(null)
-        }}
-        title="Save or load model selections"
-      >
-        <svg
-          width="18"
-          height="18"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
+      <StyledTooltip text="Save or load model selections">
+        <button
+          type="button"
+          className={`saved-selections-button ${showDropdown ? 'active' : ''}`}
+          onClick={() => {
+            setShowDropdown(!showDropdown)
+            setIsInSaveMode(false)
+            setSaveSelectionName('')
+            setSaveSelectionError(null)
+          }}
         >
-          <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
-        </svg>
-      </button>
+          <svg
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+          </svg>
+        </button>
+      </StyledTooltip>
       {!defaultSelectionOverridden && defaultSelection && (
         <span
           className="default-selection-name"

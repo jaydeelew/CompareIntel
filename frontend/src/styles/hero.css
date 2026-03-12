@@ -1081,11 +1081,13 @@
   flex-shrink: 0;
 }
 
-/* When a toolbar button is hovered/focused, raise toolbar above input-wrapper so outline/glow isn't cut off */
+/* When a toolbar button is hovered/focused, raise toolbar above input-wrapper so outline/glow/tooltip isn't cut off */
 .composer-toolbar:has(.textarea-icon-button:hover),
 .composer-toolbar:has(.textarea-icon-button:focus-visible),
 .composer-toolbar:has(.history-toggle-button:hover),
-.composer-toolbar:has(.history-toggle-button:focus-visible) {
+.composer-toolbar:has(.history-toggle-button:focus-visible),
+.composer-toolbar:has(.saved-selections-button:hover),
+.composer-toolbar:has(.saved-selections-button:focus-visible) {
   z-index: 3;
 }
 
