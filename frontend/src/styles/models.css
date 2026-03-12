@@ -2653,7 +2653,7 @@ html:not([data-theme]) .help-me-choose-category.has-match {
   bottom: calc(100% + 10px);
   left: 50%;
   transform: translateX(-50%);
-  background-color: var(--bg-card);
+  background: var(--bg-elevated);
   color: var(--text-secondary);
   padding: 0.625rem 0.875rem;
   border-radius: var(--radius-lg);
@@ -2683,7 +2683,7 @@ html:not([data-theme]) .help-me-choose-category.has-match {
   left: 50%;
   transform: translateX(-50%);
   border: 6px solid transparent;
-  border-top-color: var(--bg-card);
+  border-top-color: var(--bg-elevated);
 }
 
 .help-me-choose-model-evidence-trigger:hover .help-me-choose-model-evidence-tooltip {
@@ -2728,7 +2728,7 @@ html:not([data-theme]) .help-me-choose-category.has-match {
   bottom: calc(100% + 10px);
   left: 50%;
   transform: translateX(-50%);
-  background-color: var(--bg-card);
+  background: var(--bg-elevated);
   color: var(--text-secondary);
   padding: 0.625rem 0.875rem;
   border-radius: var(--radius-lg);
@@ -2758,7 +2758,7 @@ html:not([data-theme]) .help-me-choose-category.has-match {
   left: 50%;
   transform: translateX(-50%);
   border: 6px solid transparent;
-  border-top-color: var(--bg-card);
+  border-top-color: var(--bg-elevated);
 }
 
 .help-me-choose-category-info-trigger:hover .help-me-choose-category-info-tooltip {
@@ -2781,7 +2781,7 @@ html:not([data-theme]) .help-me-choose-category.has-match {
   left: 50%;
   transform: translateX(-50%);
   border: 6px solid transparent;
-  border-top-color: var(--bg-card);
+  border-top-color: var(--bg-elevated);
 }
 
 .help-me-choose-actions {

@@ -5,6 +5,7 @@ import { estimateTokens } from '../../services/compareService'
 import type { ModelConversation } from '../../types'
 import type { ModelsByProvider } from '../../types/models'
 import logger from '../../utils/logger'
+import { StyledTooltip } from '../shared'
 
 import type { AttachedFile, StoredAttachedFile } from './FileUpload'
 import { UsageIndicatorInfoModal } from './UsageIndicatorInfoModal'
@@ -297,40 +298,41 @@ export function TokenUsageDisplay({
 
   return (
     <>
-      <div
-        className="token-usage-indicator"
-        title={tooltipText}
-        onClick={() => {
-          if (!tutorialIsActive) setShowUsageIndicatorInfo(true)
-        }}
-        style={{
-          touchAction: 'manipulation',
-          cursor: tutorialIsActive ? 'default' : 'pointer',
-        }}
-      >
-        <svg
-          width="32"
-          height="32"
-          viewBox="0 0 32 32"
-          style={{ transform: 'rotate(-90deg)', pointerEvents: 'none' }}
+      <StyledTooltip text={tooltipText}>
+        <div
+          className="token-usage-indicator"
+          onClick={() => {
+            if (!tutorialIsActive) setShowUsageIndicatorInfo(true)
+          }}
+          style={{
+            touchAction: 'manipulation',
+            cursor: tutorialIsActive ? 'default' : 'pointer',
+          }}
         >
-          <circle cx="16" cy="16" r={radius} fill="none" stroke="#e5e7eb" strokeWidth="2" />
-          {hasTokens && (
-            <circle
-              cx="16"
-              cy="16"
-              r={radius}
-              fill="none"
-              stroke={fillColor}
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeDasharray={circumference}
-              strokeDashoffset={offset}
-              style={{ transition: 'stroke-dashoffset 0.3s ease, stroke 0.3s ease' }}
-            />
-          )}
-        </svg>
-      </div>
+          <svg
+            width="32"
+            height="32"
+            viewBox="0 0 32 32"
+            style={{ transform: 'rotate(-90deg)', pointerEvents: 'none' }}
+          >
+            <circle cx="16" cy="16" r={radius} fill="none" stroke="#e5e7eb" strokeWidth="2" />
+            {hasTokens && (
+              <circle
+                cx="16"
+                cy="16"
+                r={radius}
+                fill="none"
+                stroke={fillColor}
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeDasharray={circumference}
+                strokeDashoffset={offset}
+                style={{ transition: 'stroke-dashoffset 0.3s ease, stroke 0.3s ease' }}
+              />
+            )}
+          </svg>
+        </div>
+      </StyledTooltip>
       <UsageIndicatorInfoModal
         isOpen={showUsageIndicatorInfo}
         onClose={() => setShowUsageIndicatorInfo(false)}

@@ -17,6 +17,7 @@ import type { User, ModelConversation } from '../../types'
 import type { ModelsByProvider } from '../../types/models'
 import { showNotification } from '../../utils/error'
 import { hasVisionModelSelected } from '../../utils/visionModels'
+import { StyledTooltip } from '../shared'
 
 import type { FileProps, HistoryProps, SelectionProps } from './ComparisonFormTypes'
 import { ContextWarning } from './ContextWarning'
@@ -452,25 +453,26 @@ export const ComparisonForm = memo<ComparisonFormProps>(
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
         >
-          <button
-            type="button"
-            className={`history-toggle-button ${showHistoryDropdown ? 'active' : ''}`}
-            onClick={() => setShowHistoryDropdown(!showHistoryDropdown)}
-            title="Load previous conversations"
-          >
-            <svg
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
+          <StyledTooltip text="Load previous conversations">
+            <button
+              type="button"
+              className={`history-toggle-button ${showHistoryDropdown ? 'active' : ''}`}
+              onClick={() => setShowHistoryDropdown(!showHistoryDropdown)}
             >
-              <path d="M6 9l6 6 6-6" />
-            </svg>
-          </button>
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M6 9l6 6 6-6" />
+              </svg>
+            </button>
+          </StyledTooltip>
 
           <SavedSelectionsDropdown
             selectionProps={selectionProps}
@@ -507,29 +509,137 @@ export const ComparisonForm = memo<ComparisonFormProps>(
             )}
 
             {isSpeechSupported && speechBrowserSupport === 'native' && (
+              <StyledTooltip text={isSpeechListening ? 'Stop recording' : 'Start voice input'}>
+                <button
+                  type="button"
+                  onClick={() =>
+                    isSpeechListening ? stopSpeechListening() : startSpeechListening()
+                  }
+                  className={`textarea-icon-button voice-button ${isSpeechListening ? 'active' : ''}`}
+                  disabled={isLoading}
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                    style={{ width: '20px', height: '20px', display: 'block' }}
+                  >
+                    <path
+                      d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      fill={isSpeechListening ? 'currentColor' : 'none'}
+                    />
+                    <path
+                      d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v4M8 23h8"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </button>
+              </StyledTooltip>
+            )}
+
+            <StyledTooltip
+              text={
+                !canEnableWebSearch
+                  ? 'Select a web-enabled model'
+                  : webSearchEnabled
+                    ? 'Web search enabled'
+                    : 'Enable web search'
+              }
+            >
               <button
                 type="button"
-                onClick={() => (isSpeechListening ? stopSpeechListening() : startSpeechListening())}
-                className={`textarea-icon-button voice-button ${isSpeechListening ? 'active' : ''}`}
-                title={isSpeechListening ? 'Stop recording' : 'Start voice input'}
-                disabled={isLoading}
+                onClick={() => {
+                  const isDisabled = !canEnableWebSearch || isLoading
+                  if (isDisabled && isTouchDevice) handleDisabledButtonTap('websearch')
+                  else if (!isDisabled) setWebSearchEnabled(!webSearchEnabled)
+                }}
+                className={`textarea-icon-button web-search-button ${webSearchEnabled ? 'active' : ''} ${(!canEnableWebSearch || isLoading) && isTouchDevice ? 'touch-disabled' : ''}`}
+                disabled={!isTouchDevice && (!canEnableWebSearch || isLoading)}
+                aria-disabled={!canEnableWebSearch || isLoading}
               >
                 <svg
                   viewBox="0 0 24 24"
                   fill="none"
                   xmlns="http://www.w3.org/2000/svg"
-                  style={{ width: '20px', height: '20px', display: 'block' }}
+                  style={{ width: '20px', height: '20px' }}
                 >
-                  <path
-                    d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"
-                    stroke="currentColor"
+                  <circle
+                    cx="12"
+                    cy="12"
+                    r="10"
                     strokeWidth="2"
                     strokeLinecap="round"
                     strokeLinejoin="round"
-                    fill={isSpeechListening ? 'currentColor' : 'none'}
+                    fill="none"
                   />
                   <path
-                    d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v4M8 23h8"
+                    d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </button>
+            </StyledTooltip>
+
+            <StyledTooltip
+              text={
+                creditsRemaining <= 0
+                  ? 'You have run out of credits'
+                  : isLoading
+                    ? 'Submit'
+                    : !input.trim() || selectedModels.length === 0
+                      ? 'Enter prompt and select models'
+                      : isFollowUpMode && tokenUsageInfo?.isExceeded
+                        ? 'Input capacity exceeded - inputs may be truncated'
+                        : 'Submit'
+              }
+            >
+              <button
+                onClick={() => {
+                  if (tutorialStep === 'enter-prompt' || tutorialStep === 'enter-prompt-2') return
+                  const isDisabled =
+                    isLoading ||
+                    creditsRemaining <= 0 ||
+                    !input.trim() ||
+                    selectedModels.length === 0
+                  if (isDisabled && isTouchDevice) handleDisabledButtonTap('submit')
+                  else if (!isDisabled) {
+                    if (isFollowUpMode) onContinueConversation()
+                    else onSubmitClick()
+                  }
+                }}
+                disabled={
+                  !isTouchDevice &&
+                  (isLoading ||
+                    creditsRemaining <= 0 ||
+                    !input.trim() ||
+                    selectedModels.length === 0)
+                }
+                className={`textarea-icon-button submit-button ${isAnimatingButton ? 'animate-pulse-glow' : ''} ${
+                  (isLoading ||
+                    creditsRemaining <= 0 ||
+                    !input.trim() ||
+                    selectedModels.length === 0) &&
+                  isTouchDevice
+                    ? 'touch-disabled'
+                    : ''
+                }`}
+                data-testid="comparison-submit-button"
+                aria-disabled={
+                  isLoading || creditsRemaining <= 0 || !input.trim() || selectedModels.length === 0
+                }
+              >
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path
+                    d="M7 14l5-5 5 5"
                     stroke="currentColor"
                     strokeWidth="2"
                     strokeLinecap="round"
@@ -537,98 +647,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
                   />
                 </svg>
               </button>
-            )}
-
-            <button
-              type="button"
-              onClick={() => {
-                const isDisabled = !canEnableWebSearch || isLoading
-                if (isDisabled && isTouchDevice) handleDisabledButtonTap('websearch')
-                else if (!isDisabled) setWebSearchEnabled(!webSearchEnabled)
-              }}
-              className={`textarea-icon-button web-search-button ${webSearchEnabled ? 'active' : ''} ${(!canEnableWebSearch || isLoading) && isTouchDevice ? 'touch-disabled' : ''}`}
-              title={
-                !canEnableWebSearch
-                  ? 'Select a web-enabled model'
-                  : webSearchEnabled
-                    ? 'Web search enabled'
-                    : 'Enable web search'
-              }
-              disabled={!isTouchDevice && (!canEnableWebSearch || isLoading)}
-              aria-disabled={!canEnableWebSearch || isLoading}
-            >
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-                style={{ width: '20px', height: '20px' }}
-              >
-                <circle
-                  cx="12"
-                  cy="12"
-                  r="10"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  fill="none"
-                />
-                <path
-                  d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </button>
-
-            <button
-              onClick={() => {
-                if (tutorialStep === 'enter-prompt' || tutorialStep === 'enter-prompt-2') return
-                const isDisabled =
-                  isLoading || creditsRemaining <= 0 || !input.trim() || selectedModels.length === 0
-                if (isDisabled && isTouchDevice) handleDisabledButtonTap('submit')
-                else if (!isDisabled) {
-                  if (isFollowUpMode) onContinueConversation()
-                  else onSubmitClick()
-                }
-              }}
-              disabled={
-                !isTouchDevice &&
-                (isLoading || creditsRemaining <= 0 || !input.trim() || selectedModels.length === 0)
-              }
-              className={`textarea-icon-button submit-button ${isAnimatingButton ? 'animate-pulse-glow' : ''} ${
-                (isLoading ||
-                  creditsRemaining <= 0 ||
-                  !input.trim() ||
-                  selectedModels.length === 0) &&
-                isTouchDevice
-                  ? 'touch-disabled'
-                  : ''
-              }`}
-              title={(() => {
-                if (creditsRemaining <= 0) return 'You have run out of credits'
-                if (isLoading) return 'Submit'
-                if (!input.trim() || selectedModels.length === 0)
-                  return 'Enter prompt and select models'
-                if (isFollowUpMode && tokenUsageInfo?.isExceeded)
-                  return 'Input capacity exceeded - inputs may be truncated'
-                return 'Submit'
-              })()}
-              data-testid="comparison-submit-button"
-              aria-disabled={
-                isLoading || creditsRemaining <= 0 || !input.trim() || selectedModels.length === 0
-              }
-            >
-              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path
-                  d="M7 14l5-5 5 5"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </button>
+            </StyledTooltip>
           </div>
         </div>
 

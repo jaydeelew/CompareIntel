@@ -426,33 +426,73 @@
 }
 
 /* ═══════════════════════════════════════════════════════════
-   TOOLTIPS
+   TOOLTIPS - Shared theme matching info icon tooltips
    ═══════════════════════════════════════════════════════════ */
+
+/* Base style for all hover tooltips - matches info icon tooltips */
+.tooltip-themed {
+  background: var(--bg-elevated);
+  color: var(--text-secondary);
+  padding: 0.625rem 0.875rem;
+  border-radius: var(--radius-lg);
+  font-size: 0.8125rem;
+  font-weight: var(--font-normal);
+  line-height: 1.5;
+  box-shadow: var(--shadow-xl);
+  border: 1px solid var(--border-color);
+  white-space: normal;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  width: max-content;
+  max-width: min(320px, calc(100vw - 2rem));
+}
+
+.tooltip-themed::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-top-color: var(--bg-elevated);
+}
 
 .tooltip {
   position: relative;
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .tooltip-content {
   visibility: hidden;
-  background: var(--bg-elevated);
-  color: var(--text-primary);
-  text-align: center;
-  padding: 0.75rem 1rem;
-  border-radius: var(--radius-lg);
   position: absolute;
   z-index: var(--z-tooltip);
   bottom: 125%;
   left: 50%;
   transform: translateX(-50%) translateY(-4px);
-  white-space: nowrap;
   opacity: 0;
-  transition: all 0.3s var(--ease-spring);
+  transition:
+    opacity 0.15s,
+    visibility 0.15s,
+    transform 0.3s var(--ease-spring);
+  pointer-events: none;
+  text-align: center;
+  /* Themed styling - matches info icon tooltips */
+  background: var(--bg-elevated);
+  color: var(--text-secondary);
+  padding: 0.625rem 0.875rem;
+  border-radius: var(--radius-lg);
+  font-size: 0.8125rem;
+  font-weight: var(--font-normal);
+  line-height: 1.5;
   box-shadow: var(--shadow-xl);
   border: 1px solid var(--border-color);
-  font-size: var(--font-sm);
-  font-weight: var(--font-medium);
+  white-space: normal;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  width: max-content;
+  max-width: min(320px, calc(100vw - 2rem));
 }
 
 .tooltip-content::after {
@@ -461,7 +501,7 @@
   top: 100%;
   left: 50%;
   transform: translateX(-50%);
-  border: 8px solid transparent;
+  border: 6px solid transparent;
   border-top-color: var(--bg-elevated);
 }
 

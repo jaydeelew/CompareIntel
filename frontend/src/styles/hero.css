@@ -2496,25 +2496,25 @@
 
 .capability-tag .tooltip-text {
   visibility: hidden;
-  width: 220px;
+  width: max-content;
+  max-width: min(320px, calc(100vw - 2rem));
   background: var(--bg-elevated);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  color: var(--text-primary);
+  color: var(--text-secondary);
   text-align: center;
-  border-radius: 12px;
-  padding: 12px 16px;
+  border-radius: var(--radius-lg);
+  padding: 0.625rem 0.875rem;
   position: absolute;
   z-index: 1;
   bottom: 125%;
   left: 50%;
-  margin-left: -110px;
+  transform: translateX(-50%) translateY(-4px);
   opacity: 0;
-  transform: translateY(-4px);
-  transition: all 0.3s var(--ease-spring);
-  font-family: var(--font-sans);
-  font-size: 0.9rem;
-  font-weight: var(--font-medium);
+  transition:
+    opacity 0.15s,
+    visibility 0.15s,
+    transform 0.3s var(--ease-spring);
+  font-size: 0.8125rem;
+  font-weight: var(--font-normal);
   line-height: 1.5;
   box-shadow: var(--shadow-xl);
   border: 1px solid var(--border-color);
@@ -2526,10 +2526,9 @@
   position: absolute;
   top: 100%;
   left: 50%;
-  margin-left: -8px;
-  border-width: 8px;
-  border-style: solid;
-  border-color: var(--bg-elevated) transparent transparent transparent;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-top-color: var(--bg-elevated);
 }
 
 .capability-tag:hover .tooltip-text {
@@ -2551,10 +2550,8 @@
 
 .tooltip-content {
   background: var(--bg-elevated);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border-radius: 12px;
-  padding: 12px 16px;
+  border-radius: var(--radius-lg);
+  padding: 0.625rem 0.875rem;
   box-shadow: var(--shadow-xl);
   border: 1px solid var(--border-color);
   transition: all 0.3s var(--ease-spring);
@@ -2562,7 +2559,7 @@
 
 .tooltip-content strong {
   color: var(--text-primary);
-  font-size: 1rem;
+  font-size: 0.8125rem;
   font-weight: var(--font-semibold);
   display: block;
   margin-bottom: 0.5rem;
@@ -2571,7 +2568,7 @@
 
 .tooltip-content p {
   color: var(--text-secondary);
-  font-size: 0.9rem;
+  font-size: 0.8125rem;
   line-height: 1.5;
   margin: 0;
   font-weight: var(--font-normal);
@@ -2626,18 +2623,18 @@
   }
 
   .tooltip-content {
-    max-width: 260px;
-    padding: 12px 16px;
-    border-radius: 12px;
+    max-width: min(320px, calc(100vw - 2rem));
+    padding: 0.625rem 0.875rem;
+    border-radius: var(--radius-lg);
   }
 
   .tooltip-content strong {
-    font-size: 0.9rem;
+    font-size: 0.8125rem;
     color: var(--text-primary);
   }
 
   .tooltip-content p {
-    font-size: 0.8rem;
+    font-size: 0.75rem;
     color: var(--text-secondary);
   }
 

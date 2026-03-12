@@ -2,6 +2,7 @@ import React, { forwardRef, useCallback, useImperativeHandle, useMemo, useRef } 
 
 import { showNotification } from '../../utils/error'
 import logger from '../../utils/logger'
+import { StyledTooltip } from '../shared'
 
 export interface AttachedFile {
   id: string
@@ -399,28 +400,29 @@ export const FileUpload = forwardRef<FileUploadHandle, FileUploadProps>(function
         style={{ display: 'none' }}
         onChange={handleFileUpload}
       />
-      <button
-        type="button"
-        onClick={handleUploadButtonClick}
-        className="textarea-icon-button file-upload-button"
-        title="Select or drag file here"
-        disabled={disabled}
-      >
-        <svg
-          viewBox="0 0 24 24"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-          style={{ width: '20px', height: '20px', display: 'block' }}
+      <StyledTooltip text="Select or drag file here">
+        <button
+          type="button"
+          onClick={handleUploadButtonClick}
+          className="textarea-icon-button file-upload-button"
+          disabled={disabled}
         >
-          <path
-            d="M12 5v14M5 12h14"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
-      </button>
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            style={{ width: '20px', height: '20px', display: 'block' }}
+          >
+            <path
+              d="M12 5v14M5 12h14"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </button>
+      </StyledTooltip>
     </>
   )
 })

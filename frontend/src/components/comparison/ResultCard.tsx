@@ -5,6 +5,7 @@ import { RESULT_TAB, type ResultTab, type ConversationMessage } from '../../type
 import { getSafeId } from '../../utils'
 import { isErrorMessage } from '../../utils/error'
 import { MessageBubble } from '../conversation/MessageBubble'
+import { StyledTooltip } from '../shared'
 
 export interface Model {
   id: string
@@ -89,138 +90,143 @@ export const ResultCard: React.FC<ResultCardProps> = ({
           <h3>{model?.name || modelId}</h3>
           <div className="header-buttons-container">
             {onScreenshot && (
-              <button
-                className="screenshot-card-btn"
-                disabled={isTutorialActive}
-                onClick={e => {
-                  onScreenshot(modelId)
-                  e.currentTarget.blur()
-                }}
-                title="Copy formatted chat history"
-                aria-label={`Copy formatted chat history for ${model?.name || modelId}`}
-              >
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
+              <StyledTooltip text="Copy formatted chat history">
+                <button
+                  className="screenshot-card-btn"
+                  disabled={isTutorialActive}
+                  onClick={e => {
+                    onScreenshot(modelId)
+                    e.currentTarget.blur()
+                  }}
+                  aria-label={`Copy formatted chat history for ${model?.name || modelId}`}
                 >
-                  <rect x="2" y="3" width="20" height="14" rx="2" />
-                  <path d="M8 21h8" />
-                  <path d="M12 17v4" />
-                </svg>
-              </button>
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <rect x="2" y="3" width="20" height="14" rx="2" />
+                    <path d="M8 21h8" />
+                    <path d="M12 17v4" />
+                  </svg>
+                </button>
+              </StyledTooltip>
             )}
             {onCopyResponse && (
-              <button
-                className="copy-response-btn"
-                disabled={isTutorialActive}
-                onClick={() => onCopyResponse(modelId)}
-                title="Copy raw chat history"
-                aria-label={`Copy raw chat history from ${model?.name || modelId}`}
-              >
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
+              <StyledTooltip text="Copy raw chat history">
+                <button
+                  className="copy-response-btn"
+                  disabled={isTutorialActive}
+                  onClick={() => onCopyResponse(modelId)}
+                  aria-label={`Copy raw chat history from ${model?.name || modelId}`}
                 >
-                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-                </svg>
-              </button>
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                  </svg>
+                </button>
+              </StyledTooltip>
             )}
             {onHideOthers && (
-              <button
-                className="hide-others-btn"
-                disabled={isTutorialActive}
-                onClick={() => onHideOthers(modelId)}
-                title="Hide all other results"
-                aria-label={`Hide all other results except ${model?.name || modelId}`}
-              >
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
+              <StyledTooltip text="Hide all other results">
+                <button
+                  className="hide-others-btn"
+                  disabled={isTutorialActive}
+                  onClick={() => onHideOthers(modelId)}
+                  aria-label={`Hide all other results except ${model?.name || modelId}`}
                 >
-                  <rect x="3" y="3" width="7" height="7" fill="currentColor" opacity="0.8" />
-                  <rect x="14" y="3" width="7" height="7" />
-                  <rect x="14" y="14" width="7" height="7" />
-                  <rect x="3" y="14" width="7" height="7" />
-                </svg>
-              </button>
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <rect x="3" y="3" width="7" height="7" fill="currentColor" opacity="0.8" />
+                    <rect x="14" y="3" width="7" height="7" />
+                    <rect x="14" y="14" width="7" height="7" />
+                    <rect x="3" y="14" width="7" height="7" />
+                  </svg>
+                </button>
+              </StyledTooltip>
             )}
             {onClose && (
-              <button
-                className="close-card-btn"
-                disabled={isTutorialActive}
-                onClick={() => onClose(modelId)}
-                title="Hide this result"
-                aria-label={`Hide result for ${model?.name || modelId}`}
-              >
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
+              <StyledTooltip text="Hide this result">
+                <button
+                  className="close-card-btn"
+                  disabled={isTutorialActive}
+                  onClick={() => onClose(modelId)}
+                  aria-label={`Hide result for ${model?.name || modelId}`}
                 >
-                  <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
-                  <line x1="1" y1="1" x2="23" y2="23" />
-                </svg>
-              </button>
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+                    <line x1="1" y1="1" x2="23" y2="23" />
+                  </svg>
+                </button>
+              </StyledTooltip>
             )}
             {showBreakoutButton && onBreakout && !isError && (
-              <button
-                type="button"
-                className="breakout-card-btn"
-                disabled={isTutorialActive}
-                data-testid="breakout-button"
-                onClick={e => {
-                  onBreakout(modelId)
-                  setTimeout(() => e.currentTarget.blur(), 0)
-                }}
-                onTouchEnd={e => {
-                  // Safari iOS: click often doesn't fire when finger moves slightly during tap.
-                  // Handle touch directly; preventDefault stops synthesized click (avoids double-fire).
-                  e.preventDefault()
-                  if (!isTutorialActive) onBreakout(modelId)
-                }}
-                title="Continue with this model only"
-                aria-label={`Break out conversation with ${model?.name || modelId}`}
-              >
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
+              <StyledTooltip text="Continue with this model only">
+                <button
+                  type="button"
+                  className="breakout-card-btn"
+                  disabled={isTutorialActive}
+                  data-testid="breakout-button"
+                  onClick={e => {
+                    onBreakout(modelId)
+                    setTimeout(() => e.currentTarget.blur(), 0)
+                  }}
+                  onTouchEnd={e => {
+                    // Safari iOS: click often doesn't fire when finger moves slightly during tap.
+                    // Handle touch directly; preventDefault stops synthesized click (avoids double-fire).
+                    e.preventDefault()
+                    if (!isTutorialActive) onBreakout(modelId)
+                  }}
+                  aria-label={`Break out conversation with ${model?.name || modelId}`}
                 >
-                  {/* Arrow breaking out of a box icon */}
-                  <path d="M7 17L17 7" />
-                  <path d="M7 7h10v10" />
-                  <path d="M3 12v8a1 1 0 0 0 1 1h8" />
-                </svg>
-              </button>
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    {/* Arrow breaking out of a box icon */}
+                    <path d="M7 17L17 7" />
+                    <path d="M7 7h10v10" />
+                    <path d="M3 12v8a1 1 0 0 0 1 1h8" />
+                  </svg>
+                </button>
+              </StyledTooltip>
             )}
           </div>
         </div>
