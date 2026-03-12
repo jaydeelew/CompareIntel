@@ -1,3 +1,6 @@
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
+
 import react from '@vitejs/plugin-react'
 import { visualizer } from 'rollup-plugin-visualizer'
 import type { Plugin } from 'vite'
@@ -6,6 +9,8 @@ import { VitePWA } from 'vite-plugin-pwa'
 import { defineConfig } from 'vitest/config'
 
 import { securityHeadersPlugin } from './vite-plugin-security-headers'
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 // Plugin to auto-version social sharing images (cache busting)
 // Replaces __SOCIAL_IMAGE_VERSION__ with build timestamp in index.html
@@ -23,7 +28,11 @@ function socialImageVersionPlugin(): Plugin {
 export default defineConfig({
   logLevel: 'warn',
   resolve: {
-    // Force single React instance for lazy-loaded chunks (fixes "Invalid hook call" in LatexRenderer)
+    // Force single React instance (fixes "Invalid hook call" / "useContext" null with react-router-dom)
+    alias: {
+      react: path.resolve(__dirname, 'node_modules/react'),
+      'react-dom': path.resolve(__dirname, 'node_modules/react-dom'),
+    },
     dedupe: ['react', 'react-dom'],
   },
   plugins: [
@@ -265,8 +274,8 @@ export default defineConfig({
   ],
   cacheDir: '/tmp/vite-cache',
   optimizeDeps: {
-    // Ensure single React instance in dev (avoids "Invalid hook call" in LatexRenderer)
-    include: ['react', 'react-dom'],
+    // Ensure single React instance in dev (avoids "Invalid hook call" / "useContext" null)
+    include: ['react', 'react-dom', 'react-router-dom'],
   },
   server: {
     port: 5173,
