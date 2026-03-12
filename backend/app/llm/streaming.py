@@ -20,7 +20,7 @@ from ..utils.error_handling import (
     classify_api_error,
     format_streaming_error_message,
 )
-from .registry import client, client_with_tool_headers
+from .registry import client, client_with_tool_headers, get_model_supports_vision
 from .text_processing import clean_model_response, detect_repetition
 from .tokens import TokenUsage, calculate_token_usage, get_model_max_tokens
 
@@ -139,6 +139,65 @@ async def fetch_url_content(url: str, max_length: int = 10000) -> str:
         raise Exception(f"Error fetching URL content: {str(e)}")
 
 
+def _build_user_message_content(
+    prompt: str,
+    model_id: str,
+    attached_images: list[dict[str, Any]] | None,
+) -> str | list[dict[str, Any]]:
+    """Build user message content: text only, or multimodal content for vision models.
+
+    For vision models with images: splits prompt by [image: filename] placeholders and
+    interleaves text with image_url parts. For non-vision models: replaces placeholders
+    with a short note.
+    """
+    if not attached_images or len(attached_images) == 0:
+        return prompt
+
+    supports_vision = get_model_supports_vision(model_id)
+    placeholder_to_image = {
+        img.get("placeholder") or f"[image: {img.get('filename', 'image')}]": img
+        for img in attached_images
+    }
+    placeholders = list(placeholder_to_image.keys())
+
+    if supports_vision:
+        # Build multimodal content: interleave text and images in prompt order
+        content_parts: list[dict[str, Any]] = []
+        remaining = prompt
+        while any(ph in remaining for ph in placeholders):
+            # Find earliest placeholder occurrence to preserve order
+            earliest_pos = len(remaining)
+            earliest_ph = None
+            for ph in placeholders:
+                pos = remaining.find(ph)
+                if pos >= 0 and pos < earliest_pos:
+                    earliest_pos = pos
+                    earliest_ph = ph
+            if earliest_ph is None:
+                break
+            before = remaining[:earliest_pos]
+            if before.strip():
+                content_parts.append({"type": "text", "text": before})
+            img = placeholder_to_image[earliest_ph]
+            mime = img.get("mime_type") or "image/png"
+            b64 = img.get("base64_data") or ""
+            url = f"data:{mime};base64,{b64}"
+            content_parts.append({"type": "image_url", "image_url": {"url": url}})
+            remaining = remaining[earliest_pos + len(earliest_ph) :]
+        if remaining.strip():
+            content_parts.append({"type": "text", "text": remaining})
+        if not content_parts:
+            return prompt
+        return content_parts
+    else:
+        # Non-vision: replace placeholders with note
+        note = " (Image omitted - this model does not support image inputs)"
+        result = prompt
+        for ph in placeholders:
+            result = result.replace(ph, note)
+        return result
+
+
 def call_openrouter_streaming(
     prompt: str,
     model_id: str,
@@ -154,6 +213,8 @@ def call_openrouter_streaming(
     | None = None,  # Optional: Source of location - "user_provided" (accurate) or "ip_based" (approximate)
     temperature: float | None = None,  # Optional: 0.0-2.0, controls response randomness
     top_p: float | None = None,  # Optional: 0.0-1.0, nucleus sampling
+    attached_images: list[dict[str, Any]]
+    | None = None,  # Images for vision models [{mime_type, base64_data, filename?, placeholder?}]
     _client: Any
     | None = None,  # Optional: use this OpenAI client instead of global (avoids connection contention in multi-model)
 ) -> Generator[Any, None, TokenUsage | None]:
@@ -194,7 +255,7 @@ def call_openrouter_streaming(
             yield chunk
         return None
 
-    messages = []
+    messages: list[dict[str, Any]] = []
 
     # Debug logging for location/timezone
     logger.debug(
@@ -272,7 +333,8 @@ def call_openrouter_streaming(
         for msg in conversation_history:
             messages.append({"role": msg.role, "content": msg.content})
 
-    messages.append({"role": "user", "content": prompt})
+    user_content = _build_user_message_content(prompt, model_id, attached_images)
+    messages.append({"role": "user", "content": user_content})
 
     # Prepare tools if web search is enabled
     tools = None

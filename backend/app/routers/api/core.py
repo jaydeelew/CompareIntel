@@ -47,10 +47,22 @@ class ConversationMessage(BaseModel):
     )
 
 
+class AttachedImage(BaseModel):
+    """Base64-encoded image for vision-capable models."""
+
+    mime_type: str  # e.g., image/png, image/jpeg, image/webp
+    base64_data: str
+    filename: str | None = None
+    placeholder: str | None = None  # e.g., [image: photo.png] - used to order images in prompt
+
+
 class CompareRequest(BaseModel):
     input_data: str
     models: list[str]
     conversation_history: list[ConversationMessage] = []
+    attached_images: list[
+        AttachedImage
+    ] = []  # Images for vision models (base64, interleaved by placeholder)
     browser_fingerprint: str | None = None
     conversation_id: int | None = None
     estimated_input_tokens: int | None = None
@@ -104,6 +116,7 @@ async def get_available_models(
     from ...model_runner import (
         filter_models_by_tier,
         get_model_supports_temperature,
+        get_model_supports_vision,
         get_model_token_limits_from_openrouter,
     )
 
@@ -118,6 +131,7 @@ async def get_available_models(
         all_models = filter_models_by_tier(OPENROUTER_MODELS, tier, is_trial_active)
         for model in all_models:
             model["supports_temperature"] = get_model_supports_temperature(model["id"])
+            model["supports_vision"] = get_model_supports_vision(model["id"])
             limits = get_model_token_limits_from_openrouter(model["id"])
             if limits:
                 model["max_input_tokens"] = limits["max_input"]
@@ -142,6 +156,7 @@ async def get_available_models(
                     if mid:
                         seen_ids.add(mid)
                     model["supports_temperature"] = get_model_supports_temperature(model["id"])
+                    model["supports_vision"] = get_model_supports_vision(model["id"])
                     limits = get_model_token_limits_from_openrouter(model["id"])
                     if limits:
                         model["max_input_tokens"] = limits["max_input"]

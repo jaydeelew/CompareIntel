@@ -1715,6 +1715,127 @@
 }
 
 /* ═══════════════════════════════════════════════════════════
+   NON-VISION MODELS WARNING - When selected models can't process images
+   ═══════════════════════════════════════════════════════════ */
+
+.models-section-non-vision-warning {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  margin: 0.75rem 0 0;
+  border-top: 1px solid var(--border-color);
+  font-size: 0.9375rem;
+  font-weight: var(--font-medium);
+  color: var(--text-primary);
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--error-color) 8%, var(--bg-elevated)) 0%,
+    color-mix(in srgb, var(--error-color) 4%, var(--bg-elevated)) 100%
+  );
+  border-radius: var(--radius-lg);
+  border: 1px solid color-mix(in srgb, var(--error-color) 35%, var(--border-color));
+  box-shadow: 0 0 12px color-mix(in srgb, var(--error-color) 15%, transparent);
+}
+
+.models-section-non-vision-warning-icon {
+  font-size: 1.125rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.models-section-non-vision-warning-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.models-section-non-vision-warning-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.models-section-non-vision-warning-btn {
+  padding: 0.375rem 0.75rem;
+  font-size: 0.8125rem;
+  font-weight: var(--font-medium);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.models-section-non-vision-warning-btn-primary {
+  background: var(--primary-color);
+  color: var(--primary-contrast);
+  border: 1px solid var(--primary-color);
+}
+
+.models-section-non-vision-warning-btn-primary:hover {
+  background: color-mix(in srgb, var(--primary-color) 90%, black);
+  border-color: color-mix(in srgb, var(--primary-color) 90%, black);
+}
+
+.models-section-non-vision-warning-btn-secondary {
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+}
+
+.models-section-non-vision-warning-btn-secondary:hover {
+  background: color-mix(in srgb, var(--border-color) 20%, var(--bg-elevated));
+  border-color: color-mix(in srgb, var(--border-color) 60%, var(--bg-elevated));
+}
+
+.models-section-non-vision-warning + .models-section-buttons-row,
+.models-section-non-vision-warning + .models-section-image-notice + .models-section-buttons-row {
+  margin-top: 0.5rem;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   IMAGE ATTACHMENT NOTICE - Compact info bar when image attached
+   ═══════════════════════════════════════════════════════════ */
+
+.models-section-image-notice {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  margin: 0.75rem 0 0;
+  border-top: 1px solid var(--border-color);
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--primary-color) 4%, var(--bg-elevated)) 0%,
+    var(--bg-elevated) 100%
+  );
+  border-radius: var(--radius-lg);
+  border: 1px solid color-mix(in srgb, var(--primary-color) 20%, var(--border-color));
+  box-shadow: 0 0 12px color-mix(in srgb, var(--primary-glow) 12%, transparent);
+}
+
+/* Tighter gap when notice is above the buttons row */
+.models-section-image-notice + .models-section-buttons-row {
+  margin-top: 0.5rem;
+}
+
+.models-section-image-notice-icon {
+  font-size: 1rem;
+  line-height: 1;
+  opacity: 0.9;
+}
+
+/* When image notice is present, reduce gap to the buttons row */
+.models-section-image-notice + .models-section-buttons-row {
+  margin-top: 0.5rem;
+}
+
+/* ═══════════════════════════════════════════════════════════
    HELP ME CHOOSE + ADVANCED - Row of collapsible controls
    ═══════════════════════════════════════════════════════════ */
 

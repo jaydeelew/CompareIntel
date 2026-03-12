@@ -1,6 +1,6 @@
 import { useCallback } from 'react'
 
-import type { AttachedFile, StoredAttachedFile } from '../components/comparison/ComparisonForm'
+import type { AttachedFile, StoredAttachedFile } from '../components/comparison/FileUpload'
 import logger from '../utils/logger'
 
 /**
@@ -69,6 +69,11 @@ export function useFileHandling() {
 
       for (const attachedFile of files) {
         try {
+          // Skip image files - keep placeholder as-is for vision models
+          if ('base64Data' in attachedFile && attachedFile.base64Data) {
+            continue
+          }
+
           let content = ''
 
           // Check if this is a StoredAttachedFile (has content property)
@@ -148,6 +153,11 @@ export function useFileHandling() {
         const placeholder = attachedFile.placeholder
         const content = fileContentMap.get(placeholder)
 
+        // Skip image placeholders - keep as-is for vision-capable models
+        if ('base64Data' in attachedFile && attachedFile.base64Data) {
+          return
+        }
+
         if (content) {
           // Replace placeholder with explicit file markers and content
           // Use clear markers that the model can easily distinguish:
@@ -171,6 +181,20 @@ export function useFileHandling() {
     [extractTextFromPDF, extractTextFromDOCX]
   )
 
+  /** Get attached images for API payload (vision-capable models) */
+  const getAttachedImagesForApi = useCallback(
+    (files: (AttachedFile | StoredAttachedFile)[]) =>
+      files
+        .filter((f): f is AttachedFile => 'base64Data' in f && !!f.base64Data && 'mimeType' in f)
+        .map(f => ({
+          mime_type: f.mimeType || 'image/png',
+          base64_data: f.base64Data || '',
+          filename: f.name,
+          placeholder: f.placeholder,
+        })),
+    []
+  )
+
   // Helper function to extract file content from AttachedFile[] for storage
   const extractFileContentForStorage = useCallback(
     async (
@@ -180,6 +204,10 @@ export function useFileHandling() {
 
       for (const attachedFile of files) {
         try {
+          // Skip image files - not stored as text content
+          if ('base64Data' in attachedFile && attachedFile.base64Data) {
+            continue
+          }
           const fileName = attachedFile.file.name.toLowerCase()
           let content = ''
 
@@ -237,5 +265,6 @@ export function useFileHandling() {
     extractTextFromDOCX,
     expandFiles,
     extractFileContentForStorage,
+    getAttachedImagesForApi,
   }
 }

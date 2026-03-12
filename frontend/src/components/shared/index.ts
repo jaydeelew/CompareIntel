@@ -22,4 +22,6 @@ export type { LazyImageProps } from './LazyImage'
 
 export { CreditWarningBanner } from './CreditWarningBanner'
 
+export { DismissibleErrorBanner } from './DismissibleErrorBanner'
+
 export { BackToMainCTA } from './BackToMainCTA'

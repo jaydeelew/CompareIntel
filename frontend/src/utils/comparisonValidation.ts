@@ -5,6 +5,7 @@
 import type { ModelsByProvider } from '../types'
 
 import { formatNumber } from './format'
+import { hasVisionModelSelected } from './visionModels'
 
 export interface ValidationParams {
   user: { is_verified?: boolean } | null
@@ -12,12 +13,15 @@ export interface ValidationParams {
   selectedModels: string[]
   modelsByProvider: ModelsByProvider
   accurateInputTokens: number | null
+  /** When true, at least one selected model must support vision (image interpretation) */
+  hasAttachedImages?: boolean
 }
 
 export type ValidationResult = { valid: true } | { valid: false; error: string }
 
 export function validateComparisonInput(params: ValidationParams): ValidationResult {
-  const { user, input, selectedModels, modelsByProvider, accurateInputTokens } = params
+  const { user, input, selectedModels, modelsByProvider, accurateInputTokens, hasAttachedImages } =
+    params
 
   if (user && !user.is_verified) {
     return {
@@ -61,6 +65,18 @@ export function validateComparisonInput(params: ValidationParams): ValidationRes
 
   if (!input.trim()) {
     return { valid: false, error: 'Please enter some text to compare' }
+  }
+
+  // When images are attached, require at least one vision-capable model
+  if (hasAttachedImages && selectedModels.length > 0) {
+    const hasVisionModel = hasVisionModelSelected(selectedModels, modelsByProvider)
+    if (!hasVisionModel) {
+      return {
+        valid: false,
+        error:
+          "You've attached an image, but none of the selected models can interpret images. Please add at least one vision-capable model — open **Help me choose** and select from the **Best for images** category, or choose models like GPT-4o, Claude 3.5 Sonnet, or Gemini 2.5 Flash.",
+      }
+    }
   }
 
   if (selectedModels.length === 0) {

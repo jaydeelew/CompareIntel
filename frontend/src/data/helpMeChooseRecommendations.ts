@@ -240,6 +240,47 @@ export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
     ],
   },
   {
+    id: 'images',
+    label: 'Best for images',
+    description: 'Image understanding — photos, diagrams, screenshots, charts',
+    categoryInfoTooltip:
+      'These models support image input and can interpret visual content. Required when you attach images to your prompt.',
+    models: [
+      {
+        modelId: 'openai/gpt-4o',
+        evidence: 'Supports image input. Can analyze photos, diagrams, and screenshots.',
+      },
+      {
+        modelId: 'openai/gpt-4o-mini',
+        evidence: 'Supports image input. Cost-effective vision model.',
+      },
+      {
+        modelId: 'google/gemini-2.5-pro',
+        evidence: 'Supports image input. Strong multimodal reasoning.',
+      },
+      {
+        modelId: 'google/gemini-2.5-flash',
+        evidence: 'Supports image input. Fast vision model.',
+      },
+      {
+        modelId: 'google/gemini-3-flash-preview',
+        evidence: 'Supports image input. Latest Gemini flash.',
+      },
+      {
+        modelId: 'anthropic/claude-opus-4.1',
+        evidence: 'Supports image input. Frontier vision model.',
+      },
+      {
+        modelId: 'anthropic/claude-sonnet-4.6',
+        evidence: 'Supports image input. Strong vision from Anthropic.',
+      },
+      {
+        modelId: 'mistralai/mistral-medium-3.1',
+        evidence: 'Supports image input. Multimodal enterprise model.',
+      },
+    ],
+  },
+  {
     id: 'reasoning',
     label: 'Best for reasoning',
     description: 'Math, logic, multi-step problem solving',

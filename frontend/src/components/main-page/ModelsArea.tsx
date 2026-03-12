@@ -16,6 +16,10 @@ import { ErrorBoundary } from '../shared'
 
 export interface ModelsAreaProps {
   // Data
+  /** When true, only vision-capable models are shown and a notice is displayed */
+  hasAttachedImages?: boolean
+  /** When set, shows a persistent warning that selected model(s) cannot process images */
+  nonVisionModelsWarning?: string | null
   modelsByProvider: ModelsByProvider
   selectedModels: string[]
   originalSelectedModels: string[]
@@ -83,10 +87,16 @@ export interface ModelsAreaProps {
   modelsDropdownOpen: 'help-me-choose' | 'advanced' | null
   /** Called when dropdown open state changes */
   onModelsDropdownChange: (open: 'help-me-choose' | 'advanced' | null) => void
+  /** When non-vision warning shows: scroll to models, open Help me choose */
+  onOpenHelpMeChoose?: () => void
+  /** When non-vision warning shows: remove all attached images from composer */
+  onRemoveAttachedImages?: () => void
 }
 
 export function ModelsArea({
   // Data
+  hasAttachedImages = false,
+  nonVisionModelsWarning = null,
   modelsByProvider,
   selectedModels,
   originalSelectedModels,
@@ -143,6 +153,8 @@ export function ModelsArea({
   maxTokensCap,
   modelsDropdownOpen: openDropdown,
   onModelsDropdownChange: setOpenDropdown,
+  onOpenHelpMeChoose,
+  onRemoveAttachedImages,
 }: ModelsAreaProps) {
   return (
     <ErrorBoundary>
@@ -174,6 +186,47 @@ export function ModelsArea({
 
         {!isModelsHidden && (
           <>
+            {nonVisionModelsWarning && (
+              <div className="models-section-non-vision-warning" role="alert" aria-live="assertive">
+                <span className="models-section-non-vision-warning-icon" aria-hidden>
+                  ⚠️
+                </span>
+                <div className="models-section-non-vision-warning-content">
+                  <span>{nonVisionModelsWarning}</span>
+                  <div className="models-section-non-vision-warning-actions">
+                    {onOpenHelpMeChoose && (
+                      <button
+                        type="button"
+                        className="models-section-non-vision-warning-btn models-section-non-vision-warning-btn-primary"
+                        onClick={onOpenHelpMeChoose}
+                      >
+                        Pick a vision model
+                      </button>
+                    )}
+                    {onRemoveAttachedImages && (
+                      <button
+                        type="button"
+                        className="models-section-non-vision-warning-btn models-section-non-vision-warning-btn-secondary"
+                        onClick={onRemoveAttachedImages}
+                      >
+                        Remove image
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+            {hasAttachedImages && !nonVisionModelsWarning && (
+              <div className="models-section-image-notice" role="status" aria-live="polite">
+                <span className="models-section-image-notice-icon" aria-hidden>
+                  📷
+                </span>
+                <span>
+                  Image attached — only vision-capable models are shown. Select at least one to
+                  compare.
+                </span>
+              </div>
+            )}
             <div className="models-section-buttons-row">
               <HelpMeChoose
                 onToggleModel={onToggleModel}
@@ -188,6 +241,7 @@ export function ModelsArea({
                 onExpandChange={expanded => setOpenDropdown(expanded ? 'help-me-choose' : null)}
                 modelsSectionRef={modelsSectionRef}
                 isMobileLayout={isMobileLayout}
+                hasAttachedImages={hasAttachedImages}
               />
               <AdvancedSettings
                 temperature={temperature}
@@ -228,6 +282,7 @@ export function ModelsArea({
                 )
               })()}
             <ModelsSection
+              hasAttachedImages={hasAttachedImages}
               modelsByProvider={modelsByProvider}
               selectedModels={selectedModels}
               originalSelectedModels={originalSelectedModels}

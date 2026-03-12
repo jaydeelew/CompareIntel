@@ -171,16 +171,22 @@ export function useComparisonStreaming(
   } = refs
 
   const submitComparison = useCallback(async () => {
+    const hasAttachedImages = attachedFiles.some(f => 'base64Data' in f && f.base64Data)
     const validation = validateComparisonInput({
       user: auth.user,
       input,
       selectedModels,
       modelsByProvider,
       accurateInputTokens,
+      hasAttachedImages,
     })
     if (!validation.valid) {
       stateCb.setError(validation.error)
-      if (validation.error?.includes('verify') || validation.error?.includes('too long')) {
+      if (
+        validation.error?.includes('verify') ||
+        validation.error?.includes('too long') ||
+        validation.error?.includes('attached an image')
+      ) {
         window.scrollTo({ top: 0, behavior: 'smooth' })
       }
       return
@@ -325,11 +331,14 @@ export function useComparisonStreaming(
 
       logger.debug('[API Request] user location:', userLocation ? 'sending' : 'none (IP fallback)')
 
+      const attachedImages = helpers.getAttachedImagesForApi(attachedFiles)
+
       const stream = await compareStream(
         {
           input_data: expandedInput,
           models: modelsToUse,
           conversation_history: apiConversationHistory,
+          attached_images: attachedImages.length > 0 ? attachedImages : undefined,
           browser_fingerprint: auth.browserFingerprint,
           conversation_id: conversationId || undefined,
           estimated_input_tokens: accurateInputTokens || undefined,

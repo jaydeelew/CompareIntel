@@ -172,6 +172,17 @@
   }
 }
 
+/* Same as fadeInUp but keeps opacity at 1 - use when content must be visible from first frame
+   (avoids invisible-until-hover bug with fadeInUp + both when animation is delayed or reduced) */
+@keyframes slideUpOnly {
+  0% {
+    transform: translateY(30px);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
 @keyframes titleGlow {
   0% {
     opacity: 0.9;

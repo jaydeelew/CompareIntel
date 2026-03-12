@@ -446,16 +446,8 @@ export function useTutorialOverlay(step: TutorialStep | null, isLoading: boolean
         }
       } else if (step === 'enter-prompt' || step === 'enter-prompt-2') {
         // Special handling for textarea container - ensure it's found and visible
-        element = document.querySelector('.composer') as HTMLElement
-        if (!element) {
-          // Fallback: try to find by testid and get parent container
-          const textarea = document.querySelector(
-            '[data-testid="comparison-input-textarea"]'
-          ) as HTMLElement
-          if (textarea) {
-            element = textarea.closest('.composer') as HTMLElement
-          }
-        }
+        // (excludes placeholder when composer is floating)
+        element = getComposerElement()
         if (step === 'enter-prompt') {
           // Highlight the textarea container for step 3
           if (element) {
@@ -842,13 +834,13 @@ export function useTutorialOverlay(step: TutorialStep | null, isLoading: boolean
       }
     } else if (step === 'enter-prompt' || step === 'enter-prompt-2') {
       // Highlight the textarea container for step 3 and step 6 (consistent highlight)
-      const composerElement = document.querySelector('.composer') as HTMLElement
+      const composerElement = getComposerElement()
       if (composerElement) {
         elementsToHighlight = [composerElement]
       }
     } else if (step === 'history-dropdown') {
       // Highlight the composer (same blue & green border as step 3)
-      const composerElement = document.querySelector('.composer') as HTMLElement
+      const composerElement = getComposerElement()
       if (composerElement) {
         elementsToHighlight = [composerElement]
       }
@@ -861,13 +853,13 @@ export function useTutorialOverlay(step: TutorialStep | null, isLoading: boolean
       }
     } else if (step === 'save-selection') {
       // Highlight the composer (same blue & green border as step 3)
-      const composerElement = document.querySelector('.composer') as HTMLElement
+      const composerElement = getComposerElement()
       if (composerElement) {
         elementsToHighlight = [composerElement]
       }
     } else if (step === 'submit-comparison') {
       // Highlight the composer for step 4 (same as step 3)
-      const composerElement = document.querySelector('.composer') as HTMLElement
+      const composerElement = getComposerElement()
       if (composerElement) {
         elementsToHighlight = [composerElement]
       }
@@ -919,7 +911,7 @@ export function useTutorialOverlay(step: TutorialStep | null, isLoading: boolean
     let dropdownContainer: HTMLElement | null = null
     if (step === 'history-dropdown') {
       historyDropdown = document.querySelector('.history-inline-list') as HTMLElement
-      dropdownContainer = document.querySelector('.composer') as HTMLElement
+      dropdownContainer = getComposerElement()
       if (dropdownContainer) {
         dropdownContainer.classList.add('tutorial-dropdown-container-active')
         if (historyDropdown) {
@@ -934,7 +926,7 @@ export function useTutorialOverlay(step: TutorialStep | null, isLoading: boolean
       }
     } else if (step === 'save-selection') {
       savedSelectionsDropdown = document.querySelector('.saved-selections-dropdown') as HTMLElement
-      dropdownContainer = document.querySelector('.composer') as HTMLElement
+      dropdownContainer = getComposerElement()
       if (dropdownContainer) {
         dropdownContainer.classList.add('tutorial-dropdown-container-active')
         if (savedSelectionsDropdown) {
@@ -999,7 +991,7 @@ export function useTutorialOverlay(step: TutorialStep | null, isLoading: boolean
           googleDropdown.style.position = ''
         }
         // Also clean up any textarea container highlights that might still exist
-        const composerElement = document.querySelector('.composer') as HTMLElement
+        const composerElement = getComposerElement()
         if (composerElement) {
           composerElement.classList.remove('tutorial-highlight')
           composerElement.style.pointerEvents = ''
@@ -1260,7 +1252,7 @@ export function useTutorialOverlay(step: TutorialStep | null, isLoading: boolean
       clearTimeout(initialTimeout)
       clearInterval(interval)
       // Clean up highlight when leaving this step
-      const composerElement = document.querySelector('.composer') as HTMLElement
+      const composerElement = getComposerElement()
       if (composerElement) {
         composerElement.classList.remove('tutorial-highlight')
         composerElement.classList.remove('tutorial-textarea-active')
@@ -1320,7 +1312,7 @@ export function useTutorialOverlay(step: TutorialStep | null, isLoading: boolean
       clearTimeout(initialTimeout)
       clearInterval(interval)
       // Clean up highlight when leaving this step
-      const composerElement = document.querySelector('.composer') as HTMLElement
+      const composerElement = getComposerElement()
       if (composerElement) {
         composerElement.classList.remove('tutorial-highlight')
         composerElement.classList.remove('tutorial-textarea-active')
@@ -1449,7 +1441,7 @@ export function useTutorialOverlay(step: TutorialStep | null, isLoading: boolean
       // is preserved and doesn't flash/reset between steps.
       const nextStep = stepRef.current
       if (nextStep !== 'enter-prompt-2') {
-        const composerElement = document.querySelector('.composer') as HTMLElement
+        const composerElement = getComposerElement()
         if (composerElement) {
           composerElement.classList.remove('tutorial-textarea-active')
           composerElement.classList.remove('tutorial-highlight')
@@ -1467,7 +1459,7 @@ export function useTutorialOverlay(step: TutorialStep | null, isLoading: boolean
       return
     }
 
-    const composerElement = document.querySelector('.composer') as HTMLElement
+    const composerElement = getComposerElement()
     if (composerElement) {
       composerElement.classList.remove('tutorial-textarea-active')
       composerElement.classList.remove('tutorial-highlight')
@@ -1588,7 +1580,7 @@ export function useTutorialOverlay(step: TutorialStep | null, isLoading: boolean
       }
 
       // Cutout expands to include dropdown when open (composer + dropdown union)
-      const composerElement = document.querySelector('.composer') as HTMLElement
+      const composerElement = getComposerElement()
       const historyDropdown = document.querySelector('.history-inline-list') as HTMLElement
       if (composerElement) {
         if (!composerElement.classList.contains('tutorial-dropdown-container-active')) {
@@ -1632,9 +1624,7 @@ export function useTutorialOverlay(step: TutorialStep | null, isLoading: boolean
       if (historyDropdown) {
         historyDropdown.classList.remove('tutorial-dropdown-active')
       }
-      const composerElement = document.querySelector(
-        '.composer.tutorial-dropdown-container-active'
-      ) as HTMLElement
+      const composerElement = getComposerElement()
       if (composerElement) {
         composerElement.classList.remove('tutorial-dropdown-container-active')
         composerElement.classList.remove('tutorial-highlight')
@@ -1671,7 +1661,7 @@ export function useTutorialOverlay(step: TutorialStep | null, isLoading: boolean
       }
 
       // Cutout expands to include dropdown when open (composer + dropdown union)
-      const composerElement = document.querySelector('.composer') as HTMLElement
+      const composerElement = getComposerElement()
       const savedSelectionsDropdown = document.querySelector(
         '.saved-selections-dropdown'
       ) as HTMLElement
@@ -1773,7 +1763,7 @@ export function useTutorialOverlay(step: TutorialStep | null, isLoading: boolean
     if (!shouldExcludeDropdown) return
 
     const updateDropdownCutout = () => {
-      const composer = document.querySelector('.composer') as HTMLElement | null
+      const composer = getComposerElement()
       if (!composer) return
 
       const dropdown =
@@ -1818,7 +1808,7 @@ export function useTutorialOverlay(step: TutorialStep | null, isLoading: boolean
     const updateTargetCutout = () => {
       let elementsToUse: HTMLElement[] = []
       if (isSubmitStep) {
-        const composerElement = document.querySelector('.composer') as HTMLElement
+        const composerElement = getComposerElement()
         if (composerElement) elementsToUse = [composerElement]
       } else {
         elementsToUse =

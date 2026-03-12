@@ -1,3 +1,4 @@
+import { Image as ImageIcon } from 'lucide-react'
 import React, {
   memo,
   useCallback,
@@ -15,6 +16,7 @@ import type { TutorialStep } from '../../hooks/useTutorial'
 import type { User, ModelConversation } from '../../types'
 import type { ModelsByProvider } from '../../types/models'
 import { showNotification } from '../../utils/error'
+import { hasVisionModelSelected } from '../../utils/visionModels'
 
 import type { FileProps, HistoryProps, SelectionProps } from './ComparisonFormTypes'
 import { ContextWarning } from './ContextWarning'
@@ -98,7 +100,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
     onOpenHelpMeChoose,
   }) => {
     const { showHistoryDropdown, setShowHistoryDropdown } = historyProps
-    const { attachedFiles, setAttachedFiles, onExpandFiles } = fileProps
+    const { attachedFiles, setAttachedFiles, onExpandFiles, onRemoveAttachedImages } = fileProps
 
     const [webSearchEnabledInternal, setWebSearchEnabledInternal] = useState(false)
     const webSearchEnabled =
@@ -378,10 +380,45 @@ export const ComparisonForm = memo<ComparisonFormProps>(
       }
     }, [composerFloating])
 
+    const hasAttachedImages = attachedFiles.some(
+      f => 'base64Data' in f && (f as AttachedFile).base64Data
+    )
+    const hasVisionModel = hasVisionModelSelected(selectedModels, modelsByProvider)
+
     const composerContent = (
       <div
         className={`composer ${isAnimatingTextarea ? 'animate-pulse-border' : ''} ${composerFloating ? 'composer-floating' : ''} ${isReturningToHero ? 'composer-returning' : ''}`}
       >
+        {hasAttachedImages && !hasVisionModel && (
+          <div className="image-attachment-banner" role="alert" aria-live="polite">
+            <span className="image-attachment-banner-icon" aria-hidden>
+              <ImageIcon size={20} strokeWidth={1.75} />
+            </span>
+            <div className="image-attachment-banner-content">
+              <span>Image attached — add at least one vision-capable model to interpret it.</span>
+              <div className="image-attachment-banner-actions">
+                {onOpenHelpMeChoose && (
+                  <button
+                    type="button"
+                    className="image-attachment-banner-btn image-attachment-banner-btn-primary"
+                    onClick={onOpenHelpMeChoose}
+                  >
+                    Pick a vision model
+                  </button>
+                )}
+                {onRemoveAttachedImages && (
+                  <button
+                    type="button"
+                    className="image-attachment-banner-btn image-attachment-banner-btn-secondary"
+                    onClick={onRemoveAttachedImages}
+                  >
+                    Remove image
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
         <div className="composer-input-wrapper">
           <textarea
             ref={textareaRef as React.RefObject<HTMLTextAreaElement>}
@@ -603,17 +640,6 @@ export const ComparisonForm = memo<ComparisonFormProps>(
           userSubscriptionTier={user?.subscription_tier}
           isSmallLayout={isSmallLayout}
         />
-
-        {!isFollowUpMode && selectedModels.length > 0 && onOpenHelpMeChoose && (
-          <button
-            type="button"
-            className="help-me-choose-hero-cta"
-            onClick={onOpenHelpMeChoose}
-            title="Get model recommendations by use case"
-          >
-            Not sure which models to pick? <strong>Help me choose</strong> →
-          </button>
-        )}
       </div>
     )
 

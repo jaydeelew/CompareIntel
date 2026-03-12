@@ -110,6 +110,9 @@ export interface StreamingCreditCallbacks {
 
 export interface StreamingHelperCallbacks {
   expandFiles: (files: (AttachedFile | StoredAttachedFile)[], text: string) => Promise<string>
+  getAttachedImagesForApi: (
+    files: (AttachedFile | StoredAttachedFile)[]
+  ) => Array<{ mime_type: string; base64_data: string; filename: string; placeholder: string }>
   extractFileContentForStorage: (
     files: AttachedFile[]
   ) => Promise<Array<{ name: string; content: string; placeholder: string }>>

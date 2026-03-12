@@ -4,6 +4,8 @@ import { createPortal } from 'react-dom'
 import { TUTORIAL_STEPS_CONFIG } from '../../data/tutorialSteps'
 import type { TutorialStep } from '../../hooks/useTutorial'
 
+import { getComposerElement } from './tutorialUtils'
+
 import './MobileTutorialOverlay.css'
 
 interface MobileTutorialOverlayProps {
@@ -122,7 +124,7 @@ export const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
     return () => {
       if (el?.parentNode) el.parentNode.removeChild(el)
       // Restore composer and all elements when tutorial completes (unmount)
-      document.querySelector('.composer')?.classList.remove('tutorial-dropdown-container-active')
+      getComposerElement()?.classList.remove('tutorial-dropdown-container-active')
       document.querySelectorAll('.mobile-tutorial-highlight').forEach(htmlEl => {
         htmlEl.classList.remove('mobile-tutorial-highlight')
       })
@@ -210,7 +212,7 @@ export const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
               : googleDropdown
         }
       } else if (step === 'enter-prompt' || step === 'enter-prompt-2') {
-        element = document.querySelector('.composer') as HTMLElement
+        element = getComposerElement()
         if (!element) {
           const textarea = document.querySelector(
             '[data-testid="comparison-input-textarea"]'
@@ -289,7 +291,7 @@ export const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       }
     } else if (TEXTAREA_STEPS.includes(step)) {
       // Keep the entire composer (prompt + toolbar) visible/bright for textarea steps (3 and 6).
-      const composer = document.querySelector('.composer') as HTMLElement | null
+      const composer = getComposerElement()
       if (composer) {
         const inputWrapper = composer.querySelector('.composer-input-wrapper') as HTMLElement | null
         const toolbar = composer.querySelector('.composer-toolbar') as HTMLElement | null
@@ -315,7 +317,7 @@ export const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
     } else if (step === 'submit-comparison' || step === 'submit-comparison-2') {
       // Keep the entire composer (prompt + toolbar) visible/bright during submit steps.
       // Tooltip still targets the submit button, but the cutout should match step 3 behavior.
-      const composer = document.querySelector('.composer') as HTMLElement | null
+      const composer = getComposerElement()
       if (composer) {
         const inputWrapper = composer.querySelector('.composer-input-wrapper') as HTMLElement | null
         const toolbar = composer.querySelector('.composer-toolbar') as HTMLElement | null
@@ -344,7 +346,7 @@ export const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
 
     if (DROPDOWN_STEPS.includes(step)) {
       // Use same rects as step 3 (inputWrapper + toolbar) for consistent cutout size; add dropdown when open
-      const composer = document.querySelector('.composer') as HTMLElement | null
+      const composer = getComposerElement()
       const dropdownElement =
         step === 'history-dropdown'
           ? (document.querySelector('.history-inline-list') as HTMLElement)
@@ -661,7 +663,7 @@ export const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
 
     // For submit steps, highlight the composer container too (match step 3's visual emphasis)
     if (step === 'submit-comparison' || step === 'submit-comparison-2') {
-      const composer = document.querySelector('.composer') as HTMLElement | null
+      const composer = getComposerElement()
       if (composer) {
         composer.classList.add('mobile-tutorial-highlight')
       }
@@ -670,7 +672,7 @@ export const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
     // For dropdown steps, highlight the composer (same blue & green as step 3)
     // so it surrounds both composer and dropdowns when they are expanded
     if (step === 'history-dropdown' || step === 'save-selection') {
-      const composer = document.querySelector('.composer') as HTMLElement | null
+      const composer = getComposerElement()
       if (composer) {
         composer.classList.add('mobile-tutorial-highlight')
         composer.classList.add('tutorial-dropdown-container-active')
@@ -678,7 +680,7 @@ export const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
     }
 
     return () => {
-      document.querySelector('.composer')?.classList.remove('tutorial-dropdown-container-active')
+      getComposerElement()?.classList.remove('tutorial-dropdown-container-active')
       targetElement.classList.remove('mobile-tutorial-highlight')
       targetElement.classList.remove('mobile-tutorial-button-pulsate')
       // Clean up tabs pulse

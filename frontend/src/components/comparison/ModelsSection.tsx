@@ -3,6 +3,7 @@ import React, { useState } from 'react'
 import { useResponsive } from '../../hooks'
 import type { Model, ModelsByProvider, User } from '../../types'
 import { formatTokenCount } from '../../utils/format'
+import { filterToVisionModels } from '../../utils/visionModels'
 
 import { WebSearchInfoModal } from './WebSearchInfoModal'
 
@@ -10,6 +11,8 @@ import { WebSearchInfoModal } from './WebSearchInfoModal'
  * Props for the ModelsSection component
  */
 export interface ModelsSectionProps {
+  /** When true, only vision-capable models are shown and a notice is displayed */
+  hasAttachedImages?: boolean
   /** Models organized by provider */
   modelsByProvider: ModelsByProvider
   /** Currently selected model IDs */
@@ -61,6 +64,7 @@ export interface ModelsSectionProps {
  * - Selected models grid with remove buttons
  */
 export const ModelsSection: React.FC<ModelsSectionProps> = ({
+  hasAttachedImages = false,
   modelsByProvider,
   selectedModels,
   originalSelectedModels,
@@ -95,6 +99,7 @@ export const ModelsSection: React.FC<ModelsSectionProps> = ({
     return (
       <div className="error-message">
         <p>No models available. Please check the server connection.</p>
+
         {onRetryModels && (
           <button
             type="button"
@@ -116,7 +121,7 @@ export const ModelsSection: React.FC<ModelsSectionProps> = ({
           // Filter models based on hidePremiumModels toggle
           // When toggle is active, hide models that are restricted for the user's tier
           // Note: trial_unlocked models are available during the 7-day trial period
-          const visibleModels = hidePremiumModels
+          let visibleModels = hidePremiumModels
             ? models.filter(model => {
                 if (isPaidTier) return true // Paid tiers see all
                 if (model.trial_unlocked) return true // Trial users see trial-unlocked models
@@ -127,6 +132,11 @@ export const ModelsSection: React.FC<ModelsSectionProps> = ({
                 return model.tier_access !== 'paid'
               })
             : models
+
+          // When image is attached, limit to vision-capable models only
+          if (hasAttachedImages) {
+            visibleModels = filterToVisionModels(visibleModels, modelsByProvider)
+          }
 
           // Skip this provider if no visible models after filtering
           if (visibleModels.length === 0) {

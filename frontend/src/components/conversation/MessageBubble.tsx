@@ -1,10 +1,11 @@
-import React, { lazy, Suspense } from 'react'
+import React from 'react'
 
 import { RESULT_TAB, type ResultTab } from '../../types'
 import { formatTime, getSafeId } from '../../utils'
-
-// Lazy load LatexRenderer for code splitting
-const LatexRenderer = lazy(() => import('../LatexRenderer'))
+// Direct import - lazy loading caused "Invalid hook call" because the lazy chunk
+// could resolve a different React instance. LatexRenderer must use the same React
+// as the main app for hooks to work correctly.
+import LatexRenderer from '../LatexRenderer'
 
 export interface MessageBubbleProps {
   id: string
@@ -141,11 +142,9 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
       <div className="message-content" id={messageContentId}>
         {activeTab === RESULT_TAB.FORMATTED ? (
           /* Full LaTeX rendering for formatted view */
-          <Suspense fallback={<pre className="result-output raw-output">{safeContent}</pre>}>
-            <LatexRenderer className="result-output" modelId={modelId}>
-              {safeContent}
-            </LatexRenderer>
-          </Suspense>
+          <LatexRenderer className="result-output" modelId={modelId}>
+            {safeContent}
+          </LatexRenderer>
         ) : (
           /* Raw text for immediate streaming display */
           <pre className="result-output raw-output">{safeContent}</pre>

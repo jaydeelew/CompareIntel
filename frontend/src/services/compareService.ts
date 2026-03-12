@@ -16,10 +16,18 @@ import { apiClient } from './api/client'
 /**
  * Request body for comparison endpoint
  */
+export interface AttachedImagePayload {
+  mime_type: string
+  base64_data: string
+  filename?: string
+  placeholder?: string
+}
+
 export interface CompareRequestPayload {
   input_data: string
   models: string[]
   conversation_history?: Array<{ role: string; content: string; model_id?: string }>
+  attached_images?: AttachedImagePayload[]
   browser_fingerprint?: string
   conversation_id?: number
   estimated_input_tokens?: number // Optional: Accurate token count from /estimate-tokens endpoint

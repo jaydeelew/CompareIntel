@@ -18,6 +18,68 @@ _OPENROUTER_MODELS_PATH = Path(__file__).resolve().parent.parent.parent / "openr
 # Cache for model temperature support (model_id -> bool)
 _temperature_support_cache: dict[str, bool] | None = None
 
+# Cache for model vision support (model_id -> bool)
+_vision_support_cache: dict[str, bool] | None = None
+
+# Models that OpenRouter metadata incorrectly marks as vision-capable but the API rejects image input.
+# See: claude-3-5-haiku-20241022 description "It does not support image inputs."
+KNOWN_NON_VISION_MODEL_IDS: frozenset[str] = frozenset(
+    {
+        "anthropic/claude-3.5-haiku",
+        "anthropic/claude-3.5-haiku-20241022",
+    }
+)
+
+
+def _load_vision_support_map() -> dict[str, bool]:
+    """Load model_id -> supports_vision from openrouter_models.json.
+
+    Vision support is indicated by modality containing 'image' (e.g., text+image->text)
+    or input_modalities containing 'image'. Checks top-level modality, architecture.modality,
+    architecture.vision, and architecture.input_modalities.
+    """
+    global _vision_support_cache
+    if _vision_support_cache is not None:
+        return _vision_support_cache
+
+    result: dict[str, bool] = {}
+    try:
+        if _OPENROUTER_MODELS_PATH.exists():
+            with _OPENROUTER_MODELS_PATH.open() as f:
+                data = json.load(f)
+            for model in data.get("data", []):
+                model_id = model.get("id")
+                if model_id:
+                    modality = model.get("modality") or ""
+                    arch = model.get("architecture") or {}
+                    arch_modality = (arch.get("modality") or "") if isinstance(arch, dict) else ""
+                    arch_vision = (arch.get("vision") or "") if isinstance(arch, dict) else ""
+                    input_mods = arch.get("input_modalities") if isinstance(arch, dict) else []
+                    input_mods_str = (
+                        " ".join(str(m) for m in input_mods).lower()
+                        if isinstance(input_mods, (list, tuple))
+                        else ""
+                    )
+                    vision_input = (
+                        "image" in modality.lower()
+                        or "image" in arch_modality.lower()
+                        or "image" in str(arch_vision).lower()
+                        or "image" in input_mods_str
+                    )
+                    result[model_id] = vision_input
+    except Exception:
+        pass
+
+    _vision_support_cache = result
+    return result
+
+
+def get_model_supports_vision(model_id: str) -> bool:
+    """Return True if the model supports image/vision inputs."""
+    if model_id in KNOWN_NON_VISION_MODEL_IDS:
+        return False
+    return _load_vision_support_map().get(model_id, False)
+
 
 def _load_temperature_support_map() -> dict[str, bool]:
     """Load model_id -> supports_temperature from openrouter_models.json."""

@@ -8,6 +8,10 @@ export interface AttachedFile {
   file: File
   name: string
   placeholder: string
+  /** Base64 data for image files (used by vision-capable models) */
+  base64Data?: string
+  /** MIME type for image files, e.g. image/png */
+  mimeType?: string
 }
 
 export interface StoredAttachedFile {
@@ -28,6 +32,21 @@ export interface FileUploadProps {
 
 export interface FileUploadHandle {
   processFile: (file: File) => Promise<boolean>
+}
+
+const IMAGE_MIME_TYPES = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp', 'image/gif']
+const IMAGE_EXTENSIONS = ['.png', '.jpg', '.jpeg', '.webp', '.gif']
+
+const isImageFile = (file: File): boolean => {
+  const mime = file.type?.toLowerCase()
+  const name = file.name.toLowerCase()
+  return (
+    (mime &&
+      IMAGE_MIME_TYPES.some(
+        t => mime.startsWith('image/') && (mime.includes(t.split('/')[1]) || mime === t)
+      )) ||
+    IMAGE_EXTENSIONS.some(e => name.endsWith(e))
+  )
 }
 
 const isDocumentFile = (file: File): boolean => {
@@ -216,6 +235,7 @@ async function isTextOrCodeFile(file: File): Promise<boolean> {
 
 function getFileTypeLabel(fileName: string): string {
   const lower = fileName.toLowerCase()
+  if (['.png', '.jpg', '.jpeg', '.webp', '.gif'].some(e => lower.endsWith(e))) return 'Image file'
   if (lower.endsWith('.pdf')) return 'PDF file'
   if (lower.endsWith('.docx')) return 'DOCX file'
   if (lower.endsWith('.py')) return 'Python file'
@@ -240,10 +260,10 @@ function getFileTypeLabel(fileName: string): string {
 }
 
 const MOBILE_ACCEPT =
-  'text/*,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.oasis.opendocument.text,application/rtf,application/json,application/javascript,application/xml,.txt,.md,.markdown,.json,.xml,.html,.htm,.css,.js,.jsx,.ts,.tsx,.py,.java,.c,.cpp,.cc,.cxx,.h,.hpp,.cs,.rb,.go,.rs,.swift,.kt,.php,.sh,.bash,.zsh,.fish,.yaml,.yml,.toml,.ini,.cfg,.conf,.log,.csv,.sql,.r,.R,.m,.pl,.pm,.lua,.scala,.clj,.cljs,.hs,.elm,.ex,.exs,.dart,.vue,.svelte,.astro,.graphql,.gql,.dockerfile,.env,.gitignore,.gitattributes,.editorconfig,.eslintrc,.prettierrc,.babelrc,.webpack,.rollup,.vite,.makefile,.cmake,.gradle,.maven,.pom,.sbt,.build,.lock,.lockfile,.package,.requirements,.pip,.conda,.dockerignore,.npmignore,.yarnignore,.eslintignore,.prettierignore,.pdf,.docx,.doc,.rtf,.odt'
+  'text/*,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.oasis.opendocument.text,application/rtf,application/json,application/javascript,application/xml,image/png,image/jpeg,image/webp,image/gif,.txt,.md,.markdown,.json,.xml,.html,.htm,.css,.js,.jsx,.ts,.tsx,.py,.java,.c,.cpp,.cc,.cxx,.h,.hpp,.cs,.rb,.go,.rs,.swift,.kt,.php,.sh,.bash,.zsh,.fish,.yaml,.yml,.toml,.ini,.cfg,.conf,.log,.csv,.sql,.r,.R,.m,.pl,.pm,.lua,.scala,.clj,.cljs,.hs,.elm,.ex,.exs,.dart,.vue,.svelte,.astro,.graphql,.gql,.dockerfile,.env,.gitignore,.gitattributes,.editorconfig,.eslintrc,.prettierrc,.babelrc,.webpack,.rollup,.vite,.makefile,.cmake,.gradle,.maven,.pom,.sbt,.build,.lock,.lockfile,.package,.requirements,.pip,.conda,.dockerignore,.npmignore,.yarnignore,.eslintignore,.prettierignore,.pdf,.docx,.doc,.rtf,.odt,.png,.jpg,.jpeg,.webp,.gif'
 
 const DESKTOP_ACCEPT =
-  '.txt,.md,.markdown,.json,.xml,.html,.htm,.css,.js,.jsx,.ts,.tsx,.py,.java,.c,.cpp,.cc,.cxx,.h,.hpp,.cs,.rb,.go,.rs,.swift,.kt,.php,.sh,.bash,.zsh,.fish,.yaml,.yml,.toml,.ini,.cfg,.conf,.log,.csv,.sql,.r,.R,.m,.pl,.pm,.lua,.scala,.clj,.cljs,.hs,.elm,.ex,.exs,.dart,.vue,.svelte,.astro,.graphql,.gql,.dockerfile,.env,.gitignore,.gitattributes,.editorconfig,.eslintrc,.prettierrc,.babelrc,.webpack,.rollup,.vite,.makefile,.cmake,.gradle,.maven,.pom,.sbt,.build,.lock,.lockfile,.package,.requirements,.pip,.conda,.dockerignore,.npmignore,.yarnignore,.eslintignore,.prettierignore,.pdf,.docx,.doc,.rtf,.odt,text/*,application/json,application/javascript,application/xml,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/msword,application/rtf,application/vnd.oasis.opendocument.text'
+  '.txt,.md,.markdown,.json,.xml,.html,.htm,.css,.js,.jsx,.ts,.tsx,.py,.java,.c,.cpp,.cc,.cxx,.h,.hpp,.cs,.rb,.go,.rs,.swift,.kt,.php,.sh,.bash,.zsh,.fish,.yaml,.yml,.toml,.ini,.cfg,.conf,.log,.csv,.sql,.r,.R,.m,.pl,.pm,.lua,.scala,.clj,.cljs,.hs,.elm,.ex,.exs,.dart,.vue,.svelte,.astro,.graphql,.gql,.dockerfile,.env,.gitignore,.gitattributes,.editorconfig,.eslintrc,.prettierrc,.babelrc,.webpack,.rollup,.vite,.makefile,.cmake,.gradle,.maven,.pom,.sbt,.build,.lock,.lockfile,.package,.requirements,.pip,.conda,.dockerignore,.npmignore,.yarnignore,.eslintignore,.prettierignore,.pdf,.docx,.doc,.rtf,.odt,.png,.jpg,.jpeg,.webp,.gif,text/*,application/json,application/javascript,application/xml,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/msword,application/rtf,application/vnd.oasis.opendocument.text,image/png,image/jpeg,image/webp,image/gif'
 
 export const FileUpload = forwardRef<FileUploadHandle, FileUploadProps>(function FileUpload(
   { attachedFiles, setAttachedFiles, input, setInput, textareaRef, disabled = false },
@@ -260,10 +280,11 @@ export const FileUpload = forwardRef<FileUploadHandle, FileUploadProps>(function
 
   const processFile = useCallback(
     async (file: File) => {
-      const isTextFile = await isTextOrCodeFile(file)
-      if (!isTextFile) {
+      const isText = await isTextOrCodeFile(file)
+      const isImage = isImageFile(file)
+      if (!isText && !isImage) {
         showNotification(
-          'Only text, code, and document files can be uploaded. Please select a supported file.',
+          'Only text, code, document, and image files (PNG, JPEG, WebP, GIF) can be uploaded. Please select a supported file.',
           'error'
         )
         return false
@@ -271,12 +292,36 @@ export const FileUpload = forwardRef<FileUploadHandle, FileUploadProps>(function
 
       try {
         const fileId = `file-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
-        const placeholder = `[file: ${file.name}]`
-        const attachedFile: AttachedFile = {
-          id: fileId,
-          file,
-          name: file.name,
-          placeholder,
+        const placeholder = isImage ? `[image: ${file.name}]` : `[file: ${file.name}]`
+        let attachedFile: AttachedFile
+
+        if (isImage) {
+          const base64Data = await new Promise<string>((resolve, reject) => {
+            const reader = new FileReader()
+            reader.onload = () => {
+              const result = reader.result as string
+              const base64 = result.includes(',') ? result.split(',')[1] : result
+              resolve(base64 || '')
+            }
+            reader.onerror = reject
+            reader.readAsDataURL(file)
+          })
+          const mimeType = file.type || 'image/png'
+          attachedFile = {
+            id: fileId,
+            file,
+            name: file.name,
+            placeholder,
+            base64Data,
+            mimeType,
+          }
+        } else {
+          attachedFile = {
+            id: fileId,
+            file,
+            name: file.name,
+            placeholder,
+          }
         }
 
         setAttachedFiles([...attachedFiles, attachedFile])
@@ -289,18 +334,23 @@ export const FileUpload = forwardRef<FileUploadHandle, FileUploadProps>(function
           const textAfter = input.substring(end)
           const separatorBefore = textBefore.trim() && !textBefore.endsWith('\n') ? '\n\n' : ''
           const separatorAfter = textAfter.trim() && !textAfter.startsWith('\n') ? '\n\n' : ''
-          const newInput = textBefore + separatorBefore + placeholder + separatorAfter + textAfter
+          /* For images: add one space after placeholder and place cursor there */
+          const trailingSpace = isImage ? ' ' : ''
+          const insertion = placeholder + trailingSpace
+          const newInput = textBefore + separatorBefore + insertion + separatorAfter + textAfter
           setInput(newInput)
           setTimeout(() => {
             if (textareaRef.current) {
               const newCursorPos =
-                start + separatorBefore.length + placeholder.length + separatorAfter.length
+                start + separatorBefore.length + insertion.length + separatorAfter.length
               textareaRef.current.setSelectionRange(newCursorPos, newCursorPos)
+              textareaRef.current.focus()
             }
           }, 0)
         } else {
           const separator = input.trim() ? '\n\n' : ''
-          setInput(input + separator + placeholder)
+          const trailingSpace = isImage ? ' ' : ''
+          setInput(input + separator + placeholder + trailingSpace)
         }
 
         const fileType = getFileTypeLabel(file.name)

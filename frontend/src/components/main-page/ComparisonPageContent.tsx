@@ -21,7 +21,7 @@ import {
   type FileProps,
 } from '../comparison'
 import { Hero } from '../layout'
-import { CreditWarningBanner, ErrorBoundary } from '../shared'
+import { CreditWarningBanner, DismissibleErrorBanner, ErrorBoundary } from '../shared'
 import { TrialExpiredBanner } from '../trial'
 
 import type { ModelsAreaProps } from './ModelsArea'
@@ -68,6 +68,10 @@ export interface ComparisonPageContentProps {
   // Error
   error: string | null
   errorMessageRef: RefObject<HTMLDivElement | null>
+
+  // Vision notice (dismissible error banner for image/model conflicts)
+  visionNoticeMessage: string | null
+  onDismissVisionNotice: () => void
 
   // Models
   modelsAreaProps: ModelsAreaProps
@@ -117,6 +121,8 @@ export function ComparisonPageContent({
   onDismissCreditWarning,
   error,
   errorMessageRef,
+  visionNoticeMessage,
+  onDismissVisionNotice,
   modelsAreaProps,
   onOpenHelpMeChoose,
   onCancel,
@@ -174,11 +180,13 @@ export function ComparisonPageContent({
         onDismiss={onDismissCreditWarning}
       />
 
+      <DismissibleErrorBanner message={visionNoticeMessage} onDismiss={onDismissVisionNotice} />
+
       {isAuthenticated && user?.trial_ends_at && !user?.is_trial_active && (
         <TrialExpiredBanner trialEndsAt={user.trial_ends_at} onDismiss={() => {}} />
       )}
 
-      {error && (
+      {error && !(visionNoticeMessage && error === 'Please select at least one model') && (
         <div className="error-message" ref={errorMessageRef as React.RefObject<HTMLDivElement>}>
           <span>⚠️ {error}</span>
         </div>

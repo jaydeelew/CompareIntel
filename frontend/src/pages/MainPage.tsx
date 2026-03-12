@@ -54,6 +54,7 @@ import { generateBrowserFingerprint } from '../utils'
 import { isErrorMessage } from '../utils/error'
 import logger from '../utils/logger'
 import { saveSessionState, onSaveStateEvent } from '../utils/sessionState'
+import { getModelNames, modelSupportsVision } from '../utils/visionModels'
 
 export function MainPage() {
   const { isAuthenticated, user, refreshUser, isLoading: authLoading } = useAuth()
@@ -86,6 +87,7 @@ export function MainPage() {
   const [topP, setTopP] = useState(1) // 0.0-1.0, nucleus sampling
   const [maxTokens, setMaxTokens] = useState<number | null>(null) // cap on output length
   const [defaultSelectionOverridden, setDefaultSelectionOverridden] = useState(false)
+  const [visionNoticeMessage, setVisionNoticeMessage] = useState<string | null>(null)
 
   const { userLocation } = useGeolocation({ isAuthenticated, user })
 
@@ -93,7 +95,7 @@ export function MainPage() {
     setAttachedFilesState(files)
   }, [])
 
-  const { expandFiles, extractFileContentForStorage } = useFileHandling()
+  const { expandFiles, extractFileContentForStorage, getAttachedImagesForApi } = useFileHandling()
 
   const comparisonHook = useModelComparison()
   const {
@@ -131,6 +133,35 @@ export function MainPage() {
     lastSyncTimeRef,
     getFirstUserMessage,
   } = comparisonHook
+
+  const setInputRef = useRef(setInput)
+  setInputRef.current = setInput
+
+  const onRemoveAttachedImages = useCallback(() => {
+    const imageFiles = attachedFiles.filter(
+      (f): f is AttachedFile => 'base64Data' in f && !!f.base64Data
+    )
+    if (imageFiles.length === 0) return
+    const remaining = attachedFiles.filter(
+      f => !('base64Data' in f && (f as AttachedFile).base64Data)
+    )
+    setAttachedFiles(remaining)
+    setVisionNoticeMessage(null)
+    setVisionNoticeMessage(null)
+    setVisionNoticeMessage(null)
+    setInput((prev: string) => {
+      let next = prev
+      for (const f of imageFiles) {
+        next = next
+          .split(f.placeholder)
+          .join('')
+          .replace(/\n{3,}/g, '\n\n')
+          .trim()
+      }
+      return next
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- setInput from useState is stable
+  }, [attachedFiles, setAttachedFiles])
 
   const selectedModelsGridRef = useRef<HTMLDivElement>(null)
   const scrolledToTopRef = useRef<Set<string>>(new Set())
@@ -1181,6 +1212,39 @@ export function MainPage() {
     }
   }, [browserFingerprint, isAuthenticated, user, anonymousCreditsRemaining])
 
+  const hasAttachedImages = attachedFiles.some(
+    f => 'base64Data' in f && (f as AttachedFile).base64Data
+  )
+
+  // When image is attached, auto-deselect any non-vision models so only vision-capable models remain
+  useEffect(() => {
+    if (!hasAttachedImages || selectedModels.length === 0) return
+    const nonVisionIds = selectedModels.filter(id => !modelSupportsVision(id, modelsByProvider))
+    if (nonVisionIds.length === 0) return
+    setSelectedModels(prev => prev.filter(id => modelSupportsVision(id, modelsByProvider)))
+    const names = getModelNames(nonVisionIds, modelsByProvider)
+    const msg =
+      names.length === 1
+        ? `Removed ${names[0]} — it cannot process images. Please select a vision-capable model.`
+        : `Removed ${names.join(', ')} — they cannot process images. Only vision-capable models are kept.`
+    setVisionNoticeMessage(msg)
+  }, [hasAttachedImages, selectedModels, modelsByProvider, setSelectedModels])
+
+  // Persistent warning when image attached but selected model(s) cannot process images
+  const nonVisionModelsWarning =
+    hasAttachedImages && selectedModels.length > 0 && Object.keys(modelsByProvider).length > 0
+      ? (() => {
+          const nonVisionIds = selectedModels.filter(
+            id => !modelSupportsVision(id, modelsByProvider)
+          )
+          if (nonVisionIds.length === 0) return null
+          const names = getModelNames(nonVisionIds, modelsByProvider)
+          return names.length === 1
+            ? `${names[0]} cannot process images. Please select a vision-capable model from the list below or remove the image.`
+            : `The following models cannot process images: ${names.join(', ')}. Please select vision-capable models from the list below or remove the image.`
+        })()
+      : null
+
   // Selected models grid scroll chaining
   useEffect(() => {
     const grid = selectedModelsGridRef.current
@@ -1670,6 +1734,7 @@ export function MainPage() {
       helpers: {
         expandFiles,
         extractFileContentForStorage,
+        getAttachedImagesForApi,
         setupScrollListener,
         cleanupScrollListener,
         saveConversationToLocalStorage,
@@ -1709,6 +1774,7 @@ export function MainPage() {
       setCreditWarningDismissible,
       expandFiles,
       extractFileContentForStorage,
+      getAttachedImagesForApi,
       setupScrollListener,
       cleanupScrollListener,
       saveConversationToLocalStorage,
@@ -1938,6 +2004,7 @@ export function MainPage() {
             attachedFiles,
             setAttachedFiles,
             onExpandFiles: expandFiles,
+            onRemoveAttachedImages,
           }}
           webSearchEnabled={webSearchEnabled}
           onWebSearchEnabledChange={setWebSearchEnabled}
@@ -1956,14 +2023,30 @@ export function MainPage() {
           }}
           error={error}
           errorMessageRef={errorMessageRef}
+          visionNoticeMessage={visionNoticeMessage}
+          onDismissVisionNotice={() => setVisionNoticeMessage(null)}
           onOpenHelpMeChoose={() => {
             setIsModelsHidden(false)
             setModelsDropdownOpen('help-me-choose')
             requestAnimationFrame(() => {
-              modelsSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+              requestAnimationFrame(() => {
+                modelsSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+              })
             })
           }}
           modelsAreaProps={{
+            hasAttachedImages,
+            nonVisionModelsWarning,
+            onOpenHelpMeChoose: () => {
+              setIsModelsHidden(false)
+              setModelsDropdownOpen('help-me-choose')
+              requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                  modelsSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                })
+              })
+            },
+            onRemoveAttachedImages,
             modelsByProvider,
             selectedModels,
             originalSelectedModels,
@@ -1984,8 +2067,37 @@ export function MainPage() {
             modelsSectionRef,
             selectedModelsGridRef,
             onToggleDropdown: toggleDropdown,
-            onToggleModel: handleModelToggle,
-            onApplyCategoryPreset: handleApplyRecommendation,
+            onToggleModel: modelId => {
+              const wouldAdd = !selectedModels.includes(modelId)
+              if (
+                wouldAdd &&
+                hasAttachedImages &&
+                !modelSupportsVision(modelId, modelsByProvider)
+              ) {
+                setVisionNoticeMessage(
+                  'This model cannot process images. Select a vision-capable model.'
+                )
+                return
+              }
+              handleModelToggle(modelId)
+            },
+            onApplyCategoryPreset: modelIds => {
+              const idsToApply = hasAttachedImages
+                ? modelIds.filter(id => modelSupportsVision(id, modelsByProvider))
+                : modelIds
+              if (hasAttachedImages && idsToApply.length < modelIds.length) {
+                setVisionNoticeMessage(
+                  'Some models from this category cannot process images and were not added.'
+                )
+              }
+              if (hasAttachedImages && idsToApply.length === 0) {
+                setVisionNoticeMessage(
+                  'No vision-capable models in this category. Try "Best for images".'
+                )
+                return
+              }
+              handleApplyRecommendation(idsToApply.length > 0 ? idsToApply : modelIds)
+            },
             onToggleAllForProvider: toggleAllForProvider,
             onToggleModelsHidden: () => setIsModelsHidden(!isModelsHidden),
             onToggleHidePremiumModels: () => setHidePremiumModels(!hidePremiumModels),

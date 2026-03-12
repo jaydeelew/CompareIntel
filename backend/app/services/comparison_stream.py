@@ -217,6 +217,11 @@ async def generate_stream(ctx: StreamContext) -> Any:
                                 },
                             )
                         )
+                        attached_images_dicts = (
+                            [img.model_dump() for img in req.attached_images]
+                            if getattr(req, "attached_images", None)
+                            else None
+                        )
                         gen = call_openrouter_streaming(
                             req.input_data,
                             model_id,
@@ -231,6 +236,7 @@ async def generate_stream(ctx: StreamContext) -> Any:
                             location_source=ctx.location_source,
                             temperature=req.temperature,
                             top_p=req.top_p,
+                            attached_images=attached_images_dicts,
                             _client=per_model_client,
                         )
 

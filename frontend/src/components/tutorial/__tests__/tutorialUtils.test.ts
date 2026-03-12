@@ -66,6 +66,28 @@ describe('tutorialUtils', () => {
 
       expect(getComposerElement()).toBe(composer)
     })
+
+    it('should return visible composer when placeholder exists (floating scenario)', () => {
+      // When composer floats, hero has invisible placeholder and portal has real composer
+      const placeholder = document.createElement('div')
+      placeholder.className = 'composer composer-placeholder'
+      placeholder.setAttribute('aria-hidden', 'true')
+      container.appendChild(placeholder)
+
+      const realComposer = document.createElement('div')
+      realComposer.className = 'composer composer-floating'
+      const inputWrapper = document.createElement('div')
+      inputWrapper.className = 'composer-input-wrapper'
+      const textarea = document.createElement('textarea')
+      textarea.setAttribute('data-testid', 'comparison-input-textarea')
+      inputWrapper.appendChild(textarea)
+      realComposer.appendChild(inputWrapper)
+      container.appendChild(realComposer)
+
+      // Should return the visible composer, not the placeholder
+      expect(getComposerElement()).toBe(realComposer)
+      expect(getComposerElement()).not.toBe(placeholder)
+    })
   })
 
   describe('getComposerCutoutRects', () => {

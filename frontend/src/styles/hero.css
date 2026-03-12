@@ -673,7 +673,16 @@
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
-  animation: fadeInUp 0.8s ease-out 0.3s both;
+  /* slideUpOnly: animate transform only, never opacity - ensures composer is visible from first frame.
+     fadeInUp with opacity 0 + animation-fill-mode: both can leave content invisible until hover
+     when animation is delayed, reduced-motion, or tab was backgrounded during load. */
+  animation: slideUpOnly 0.8s ease-out 0.3s both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-input-section {
+    animation: none;
+  }
 }
 
 .hero-input-section > * {
@@ -845,6 +854,121 @@
   background: transparent;
 }
 
+/* Image attachment warning banner - shown when image attached but no vision model selected
+   Matches composer style with subtle gradient tint and seamless blend */
+.image-attachment-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  font-size: 0.9375rem;
+  color: var(--text-primary);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--primary-color) 6%, var(--bg-card, #12121c)) 0%,
+    var(--bg-card, #12121c) 100%
+  );
+  border-radius: 1.5rem 1.5rem 0 0;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.image-attachment-banner-icon {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  color: var(--text-secondary);
+}
+
+.image-attachment-banner-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.image-attachment-banner-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.image-attachment-banner-btn {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: var(--font-medium);
+  border-radius: var(--radius-xl);
+  cursor: pointer;
+  transition: all 0.3s var(--ease-spring);
+  position: relative;
+  overflow: hidden;
+}
+
+.image-attachment-banner-btn-primary {
+  background: var(--gradient-button);
+  color: white;
+  border: none;
+  box-shadow:
+    0 4px 12px rgba(6, 182, 212, 0.3),
+    0 0 20px rgba(6, 182, 212, 0.1);
+}
+
+.image-attachment-banner-btn-primary::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.2) 0%,
+    rgba(255, 255, 255, 0.05) 50%,
+    transparent 100%
+  );
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.image-attachment-banner-btn-primary:hover {
+  background: var(--gradient-button-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.image-attachment-banner-btn-primary:hover::before {
+  opacity: 1;
+}
+
+.image-attachment-banner-btn-primary:focus-visible {
+  outline: none;
+  box-shadow:
+    0 4px 16px rgba(6, 182, 212, 0.4),
+    0 0 0 3px var(--primary-glow);
+}
+
+.image-attachment-banner-btn-secondary {
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+  border: 2px solid var(--border-strong);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.image-attachment-banner-btn-secondary:hover {
+  background: var(--bg-hover);
+  border-color: var(--primary-color);
+  color: var(--primary-light);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.image-attachment-banner-btn-secondary:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--primary-glow);
+}
+
 .composer-input-wrapper {
   position: relative;
   z-index: 2;
@@ -923,6 +1047,11 @@
 
 .composer:has(.composer-toolbar) .composer-input-wrapper {
   border-radius: 1.5rem 1.5rem 0 0;
+}
+
+/* Remove line between image-attachment-banner and textarea */
+.composer:has(.image-attachment-banner) .hero-input-textarea {
+  border-top: none;
 }
 
 /* Composer Toolbar - Actions area below textarea (z-index below textarea wrapper so it never overlaps) */
@@ -1991,6 +2120,10 @@
 
   .composer-input-wrapper {
     border-radius: 1.25rem;
+  }
+
+  .image-attachment-banner {
+    border-radius: 1.25rem 1.25rem 0 0;
   }
 
   .hero-input-textarea {

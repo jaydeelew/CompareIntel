@@ -18,6 +18,7 @@ import {
   type HelpMeChooseCategory,
 } from '../../data/helpMeChooseRecommendations'
 import type { ModelsByProvider, User } from '../../types'
+import { modelSupportsVision } from '../../utils/visionModels'
 
 import { HelpMeChooseScopeInfoModal } from './HelpMeChooseScopeInfoModal'
 
@@ -177,6 +178,8 @@ export interface HelpMeChooseProps {
   modelsSectionRef?: RefObject<HTMLElement | null>
   /** When true, layout adjusts for mobile/touchscreen */
   isMobileLayout?: boolean
+  /** When true, only vision-capable models are shown (for image attachments) */
+  hasAttachedImages?: boolean
 }
 
 export function HelpMeChoose({
@@ -192,6 +195,7 @@ export function HelpMeChoose({
   onExpandChange,
   modelsSectionRef,
   isMobileLayout = false,
+  hasAttachedImages = false,
 }: HelpMeChooseProps) {
   const [internalExpanded, setInternalExpanded] = useState(false)
   const [showScopeInfoModal, setShowScopeInfoModal] = useState(false)
@@ -244,16 +248,25 @@ export function HelpMeChoose({
     return map
   }, [modelsByProvider, userTier, isPaidTier, isRestrictedTier])
 
+  /** When image attached, show only vision-capable models per category */
+  const displayedCategories = useMemo(() => {
+    if (!hasAttachedImages) return HELP_ME_CHOOSE_CATEGORIES
+    return HELP_ME_CHOOSE_CATEGORIES.map(cat => ({
+      ...cat,
+      models: cat.models.filter(entry => modelSupportsVision(entry.modelId, modelsByProvider)),
+    })).filter(cat => cat.models.length > 0)
+  }, [hasAttachedImages, modelsByProvider])
+
   const disabledTooltip = getDisabledTooltip(userTier as 'unregistered' | 'free')
 
   /** Categories that contain at least one selected model (for Goal 10: match summary) */
   const matchingCategories = useMemo(() => {
     if (selectedModels.length === 0) return []
     const selectedSet = new Set(selectedModels)
-    return HELP_ME_CHOOSE_CATEGORIES.filter(cat =>
+    return displayedCategories.filter(cat =>
       cat.models.some(entry => selectedSet.has(entry.modelId))
     )
-  }, [selectedModels])
+  }, [selectedModels, displayedCategories])
 
   const contentRef = useRef<HTMLDivElement>(null)
   const firstSelectedRef = useRef<HTMLLIElement | null>(null)
@@ -328,7 +341,7 @@ export function HelpMeChoose({
     if (!el) return
     const categories = el.querySelectorAll<HTMLElement>('.help-me-choose-category')
     if (categories.length === 0) {
-      setVisibleCategoryLabel(HELP_ME_CHOOSE_CATEGORIES[0]?.label ?? null)
+      setVisibleCategoryLabel(displayedCategories[0]?.label ?? null)
       return
     }
     const scrollLeft = el.scrollLeft
@@ -337,11 +350,11 @@ export function HelpMeChoose({
     const gap = second ? second.offsetLeft - first.offsetLeft - first.offsetWidth : 16
     const categoryWidth = first.offsetWidth + gap
     const index = Math.min(
-      HELP_ME_CHOOSE_CATEGORIES.length - 1,
+      displayedCategories.length - 1,
       Math.max(0, Math.round(scrollLeft / categoryWidth))
     )
-    setVisibleCategoryLabel(HELP_ME_CHOOSE_CATEGORIES[index]?.label ?? null)
-  }, [])
+    setVisibleCategoryLabel(displayedCategories[index]?.label ?? null)
+  }, [displayedCategories])
 
   useEffect(() => {
     if (!isMobileLayout || !isExpanded) {
@@ -697,7 +710,7 @@ export function HelpMeChoose({
             >
               {(() => {
                 let foundFirstSelected = false
-                return HELP_ME_CHOOSE_CATEGORIES.map((cat: HelpMeChooseCategory) => {
+                return displayedCategories.map((cat: HelpMeChooseCategory) => {
                   const hasMatch = matchingCategories.some(m => m.id === cat.id)
                   const topIds = cat.models
                     .filter(e => !modelRestrictedByModelId.get(e.modelId))

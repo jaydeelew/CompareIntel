@@ -34,4 +34,6 @@ export interface FileProps {
     files: (AttachedFile | StoredAttachedFile)[],
     userInput: string
   ) => Promise<string>
+  /** Removes all attached images and their placeholders (for vision-model warning) */
+  onRemoveAttachedImages?: () => void
 }

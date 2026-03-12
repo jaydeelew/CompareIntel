@@ -22,6 +22,10 @@ function socialImageVersionPlugin(): Plugin {
 // https://vite.dev/config/
 export default defineConfig({
   logLevel: 'warn',
+  resolve: {
+    // Force single React instance for lazy-loaded chunks (fixes "Invalid hook call" in LatexRenderer)
+    dedupe: ['react', 'react-dom'],
+  },
   plugins: [
     {
       name: 'concise-startup',
@@ -260,6 +264,10 @@ export default defineConfig({
     }),
   ],
   cacheDir: '/tmp/vite-cache',
+  optimizeDeps: {
+    // Ensure single React instance in dev (avoids "Invalid hook call" in LatexRenderer)
+    include: ['react', 'react-dom'],
+  },
   server: {
     port: 5173,
     strictPort: false,
@@ -347,9 +355,8 @@ export default defineConfig({
           if (id.includes('/src/App.tsx')) {
             return 'app-main';
           }
-          if (id.includes('/src/components/LatexRenderer.tsx')) {
-            return 'latex-renderer';
-          }
+          // LatexRenderer: do NOT put in manualChunks - it's lazy-loaded and must share
+          // the same React instance as the main app to avoid "Invalid hook call" errors.
           // Split page components into separate chunk
           if (id.includes('/src/components/pages/')) {
             return 'pages';
