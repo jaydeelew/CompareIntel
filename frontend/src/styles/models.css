@@ -1745,7 +1745,11 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  background: var(--bg-tertiary);
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--primary-color) 4%, var(--bg-tertiary)) 0%,
+    var(--bg-tertiary) 100%
+  );
   border: 1px solid var(--border-color);
   color: var(--text-secondary);
   font-size: 0.8125rem;
@@ -1762,9 +1766,15 @@
 
 .help-me-choose-toggle:hover:not(:disabled) {
   color: var(--text-primary);
-  background: var(--bg-hover);
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--primary-color) 8%, var(--bg-hover)) 0%,
+    var(--bg-hover) 100%
+  );
   border-color: color-mix(in srgb, var(--primary-color) 35%, var(--border-color));
-  box-shadow: 0 0 12px color-mix(in srgb, var(--primary-glow) 30%, transparent);
+  box-shadow:
+    0 0 12px color-mix(in srgb, var(--primary-glow) 30%, transparent),
+    0 1px 0 0 color-mix(in srgb, var(--primary-color) 15%, transparent) inset;
 }
 
 .help-me-choose-toggle:disabled {
@@ -1811,6 +1821,25 @@
   overflow: hidden;
 }
 
+.help-me-choose-content::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background:
+    radial-gradient(
+      ellipse 80% 50% at 50% 0%,
+      color-mix(in srgb, var(--primary-color) 6%, transparent) 0%,
+      transparent 60%
+    ),
+    radial-gradient(
+      ellipse 60% 40% at 100% 20%,
+      color-mix(in srgb, var(--secondary-color) 4%, transparent) 0%,
+      transparent 50%
+    );
+  pointer-events: none;
+}
+
 /* Non-mobile: allow ordering tooltip to extend above container (mobile uses modal only) */
 @media (min-width: 769px) {
   .help-me-choose-content {
@@ -1825,26 +1854,34 @@
   top: 0;
   left: 0;
   right: 0;
-  height: 3px;
+  height: 4px;
   background: linear-gradient(
     90deg,
     transparent 0%,
-    color-mix(in srgb, var(--primary-color) 25%, transparent) 20%,
-    color-mix(in srgb, var(--primary-color) 40%, transparent) 50%,
-    color-mix(in srgb, var(--primary-color) 25%, transparent) 80%,
+    color-mix(in srgb, var(--secondary-color) 20%, transparent) 15%,
+    color-mix(in srgb, var(--primary-color) 50%, transparent) 50%,
+    color-mix(in srgb, var(--secondary-color) 20%, transparent) 85%,
     transparent 100%
   );
-  opacity: 0.6;
+  opacity: 0.7;
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
   pointer-events: none;
 }
 
 /* Toggle button when Help me choose is open - match Advanced emphasis */
 .help-me-choose-expanded .help-me-choose-toggle {
   color: var(--text-primary);
-  background: var(--bg-hover);
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--primary-color) 12%, var(--bg-hover)) 0%,
+    color-mix(in srgb, var(--primary-color) 6%, var(--bg-hover)) 100%
+  );
   border-color: color-mix(in srgb, var(--primary-color) 40%, var(--border-color));
   font-weight: var(--font-semibold);
-  box-shadow: 0 0 12px color-mix(in srgb, var(--primary-glow) 25%, transparent);
+  box-shadow:
+    0 0 12px color-mix(in srgb, var(--primary-glow) 25%, transparent),
+    0 0 0 1px color-mix(in srgb, var(--primary-color) 12%, transparent) inset,
+    0 1px 0 0 color-mix(in srgb, var(--primary-color) 20%, transparent) inset;
 }
 
 .help-me-choose-expanded .help-me-choose-toggle .help-me-choose-chevron {
@@ -1921,17 +1958,21 @@
 
 .help-me-choose-expanded .help-me-choose-content {
   border-color: var(--border-strong);
-  box-shadow: var(--shadow-md);
+  box-shadow:
+    var(--shadow-md),
+    0 0 0 1px color-mix(in srgb, var(--primary-color) 8%, transparent),
+    0 1px 2px 0 color-mix(in srgb, var(--primary-glow) 15%, transparent);
 }
 
 .help-me-choose-expanded .help-me-choose-content::before {
   opacity: 1;
+  height: 4px;
   background: linear-gradient(
     90deg,
     transparent 0%,
-    color-mix(in srgb, var(--primary-color) 40%, transparent) 20%,
+    color-mix(in srgb, var(--secondary-color) 30%, transparent) 15%,
     var(--primary-color) 50%,
-    color-mix(in srgb, var(--primary-color) 40%, transparent) 80%,
+    color-mix(in srgb, var(--secondary-color) 30%, transparent) 85%,
     transparent 100%
   );
 }
@@ -2200,12 +2241,16 @@
   cursor: grab;
   pointer-events: auto;
   touch-action: none;
-  opacity: 0.85;
-  transition: opacity 0.15s ease;
+  opacity: 0.9;
+  transition:
+    opacity 0.2s ease,
+    box-shadow 0.2s ease;
+  box-shadow: 0 0 6px color-mix(in srgb, var(--primary-glow) 20%, transparent);
 }
 
 .help-me-choose-scrollbar-thumb:hover {
   opacity: 1;
+  box-shadow: 0 0 10px color-mix(in srgb, var(--primary-glow) 35%, transparent);
 }
 
 .help-me-choose-scrollbar-thumb:active {
@@ -2299,8 +2344,13 @@ html:not([data-theme]) .help-me-choose-category.has-match {
   font-size: 0.875rem;
   font-weight: var(--font-semibold);
   color: var(--text-primary);
-  background: var(--bg-elevated);
+  background: linear-gradient(
+    to bottom,
+    var(--bg-elevated) 0%,
+    color-mix(in srgb, var(--primary-color) 3%, var(--bg-elevated)) 100%
+  );
   border-bottom: 1px solid var(--border-color);
+  box-shadow: 0 1px 0 0 color-mix(in srgb, var(--primary-color) 8%, transparent);
 }
 
 .help-me-choose-category-header-row {
@@ -2326,16 +2376,24 @@ html:not([data-theme]) .help-me-choose-category.has-match {
   font-weight: var(--font-medium);
   color: var(--primary-color);
   background: transparent;
-  border: 1px solid var(--primary-color);
+  border: 1px solid color-mix(in srgb, var(--primary-color) 60%, transparent);
   border-radius: var(--radius-sm);
   cursor: pointer;
   transition:
-    background 0.15s ease,
-    color 0.15s ease;
+    background 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .help-me-choose-preset-btn:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--primary-color) 12%, transparent);
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--primary-color) 15%, transparent) 0%,
+    color-mix(in srgb, var(--primary-color) 8%, transparent) 100%
+  );
+  border-color: var(--primary-color);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--primary-glow) 25%, transparent);
 }
 
 .help-me-choose-preset-btn:disabled {
@@ -2408,11 +2466,13 @@ html:not([data-theme]) .help-me-choose-category.has-match {
   background: color-mix(in srgb, var(--primary-color) 12%, var(--bg-elevated));
   font-weight: var(--font-medium);
   border-color: color-mix(in srgb, var(--primary-color) 40%, transparent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--primary-color) 15%, transparent) inset;
 }
 
 .help-me-choose-model-entry.selected:hover {
   background: color-mix(in srgb, var(--primary-color) 18%, var(--bg-elevated));
   border-color: color-mix(in srgb, var(--primary-color) 50%, transparent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--primary-color) 20%, transparent) inset;
 }
 
 /* Space between outline and checkbox - shift content right without expanding outline */
