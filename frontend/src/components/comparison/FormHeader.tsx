@@ -7,6 +7,8 @@ export interface FormHeaderProps {
   tutorialIsActive?: boolean
   onNewComparison: () => void
   modelsSectionRef?: React.RefObject<HTMLDivElement | null>
+  /** When provided and no models selected, scrolls to models, expands section, opens Help me choose */
+  onOpenHelpMeChoose?: () => void
 }
 
 export function FormHeader({
@@ -16,6 +18,7 @@ export function FormHeader({
   tutorialIsActive,
   onNewComparison,
   modelsSectionRef,
+  onOpenHelpMeChoose,
 }: FormHeaderProps) {
   return (
     <div
@@ -74,12 +77,20 @@ export function FormHeader({
           <button
             type="button"
             className="select-models-heading-link"
-            onClick={() =>
-              modelsSectionRef?.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+            onClick={() => {
+              if (onOpenHelpMeChoose) {
+                onOpenHelpMeChoose()
+              } else {
+                modelsSectionRef?.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+              }
+            }}
+            title={
+              onOpenHelpMeChoose
+                ? 'Get model recommendations by use case'
+                : 'Scroll to model selection'
             }
-            title="Scroll to model selection"
           >
-            Scroll Down to Select Models
+            {onOpenHelpMeChoose ? 'Help me choose models →' : 'Scroll Down to Select Models'}
           </button>
         </h2>
       ) : (

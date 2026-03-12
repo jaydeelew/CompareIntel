@@ -1747,21 +1747,22 @@
   gap: 0.5rem;
   background: linear-gradient(
     135deg,
-    color-mix(in srgb, var(--primary-color) 4%, var(--bg-tertiary)) 0%,
-    var(--bg-tertiary) 100%
+    color-mix(in srgb, var(--primary-color) 12%, var(--bg-tertiary)) 0%,
+    color-mix(in srgb, var(--primary-color) 6%, var(--bg-tertiary)) 100%
   );
-  border: 1px solid var(--border-color);
-  color: var(--text-secondary);
-  font-size: 0.8125rem;
-  font-weight: var(--font-medium);
+  border: 1px solid color-mix(in srgb, var(--primary-color) 35%, var(--border-color));
+  color: var(--text-primary);
+  font-size: 0.9375rem;
+  font-weight: var(--font-semibold);
   cursor: pointer;
-  padding: 0.375rem 0.75rem;
+  padding: 0.5rem 1rem;
   border-radius: var(--radius-lg);
   transition:
     color 0.2s ease,
     background 0.2s ease,
     border-color 0.2s ease,
     box-shadow 0.2s ease;
+  box-shadow: 0 0 8px color-mix(in srgb, var(--primary-glow) 20%, transparent);
 }
 
 .help-me-choose-toggle:hover:not(:disabled) {

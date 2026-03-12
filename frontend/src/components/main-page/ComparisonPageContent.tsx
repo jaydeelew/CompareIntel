@@ -71,6 +71,8 @@ export interface ComparisonPageContentProps {
 
   // Models
   modelsAreaProps: ModelsAreaProps
+  /** When provided, scrolls to models, expands section, opens Help me choose dropdown */
+  onOpenHelpMeChoose?: () => void
 
   // Loading
   onCancel: () => void
@@ -116,6 +118,7 @@ export function ComparisonPageContent({
   error,
   errorMessageRef,
   modelsAreaProps,
+  onOpenHelpMeChoose,
   onCancel,
   showResults,
   showFloatingComposer = false,
@@ -158,6 +161,7 @@ export function ComparisonPageContent({
             tutorialIsActive={tutorialIsActive}
             modelsSectionRef={modelsSectionRef}
             composerFloating={composerFloating}
+            onOpenHelpMeChoose={onOpenHelpMeChoose}
           />
         </ErrorBoundary>
       </Hero>

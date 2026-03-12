@@ -62,6 +62,8 @@ interface ComparisonFormProps {
   tutorialIsActive?: boolean
   modelsSectionRef?: React.RefObject<HTMLDivElement | null>
   composerFloating?: boolean
+  /** When provided, enables hero CTA and FormHeader to open Help me choose (scroll, expand, open dropdown) */
+  onOpenHelpMeChoose?: () => void
 }
 
 export const ComparisonForm = memo<ComparisonFormProps>(
@@ -93,6 +95,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
     tutorialIsActive = false,
     modelsSectionRef,
     composerFloating = false,
+    onOpenHelpMeChoose,
   }) => {
     const { showHistoryDropdown, setShowHistoryDropdown } = historyProps
     const { attachedFiles, setAttachedFiles, onExpandFiles } = fileProps
@@ -600,6 +603,17 @@ export const ComparisonForm = memo<ComparisonFormProps>(
           userSubscriptionTier={user?.subscription_tier}
           isSmallLayout={isSmallLayout}
         />
+
+        {!isFollowUpMode && selectedModels.length > 0 && onOpenHelpMeChoose && (
+          <button
+            type="button"
+            className="help-me-choose-hero-cta"
+            onClick={onOpenHelpMeChoose}
+            title="Get model recommendations by use case"
+          >
+            Not sure which models to pick? <strong>Help me choose</strong> →
+          </button>
+        )}
       </div>
     )
 
@@ -612,6 +626,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
           tutorialIsActive={tutorialIsActive}
           onNewComparison={onNewComparison}
           modelsSectionRef={modelsSectionRef}
+          onOpenHelpMeChoose={onOpenHelpMeChoose}
         />
 
         {composerFloating ? (

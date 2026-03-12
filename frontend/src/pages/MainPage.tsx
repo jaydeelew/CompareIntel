@@ -1956,6 +1956,13 @@ export function MainPage() {
           }}
           error={error}
           errorMessageRef={errorMessageRef}
+          onOpenHelpMeChoose={() => {
+            setIsModelsHidden(false)
+            setModelsDropdownOpen('help-me-choose')
+            requestAnimationFrame(() => {
+              modelsSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+            })
+          }}
           modelsAreaProps={{
             modelsByProvider,
             selectedModels,

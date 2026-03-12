@@ -706,6 +706,29 @@
   text-underline-offset: 0.2em;
 }
 
+/* Help me choose CTA - shown below composer when user has models selected */
+.help-me-choose-hero-cta {
+  display: block;
+  width: 100%;
+  margin-top: 0.5rem;
+  padding: 0.5rem 0;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: center;
+  transition: color 0.2s ease;
+}
+
+.help-me-choose-hero-cta:hover {
+  color: var(--primary-color);
+}
+
+.help-me-choose-hero-cta strong {
+  font-weight: var(--font-semibold);
+}
+
 /* Follow-up header (Start over, etc.) - prevent layout squeeze */
 .follow-up-header {
   flex-shrink: 0;
