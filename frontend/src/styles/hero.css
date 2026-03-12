@@ -48,6 +48,11 @@
   overflow: visible;
 }
 
+/* Allow composer action button outlines/shadows to render fully when hovered (avoid top cutoff) */
+.hero-section:has(.composer-toolbar) {
+  overflow: visible;
+}
+
 /* Animated mesh gradient overlay */
 .hero-section::before {
   content: '';
@@ -902,6 +907,7 @@
   position: relative;
   z-index: 1;
   width: 100%;
+  /* When an action button is hovered/focused, raise toolbar so its outline/glow isn't cut off by input-wrapper above */
   min-height: 44px;
   height: 44px;
   padding: 0.375rem 0.75rem 0.375rem 1.25rem;
@@ -921,6 +927,14 @@
   justify-content: space-between;
   overflow: visible;
   flex-shrink: 0;
+}
+
+/* When a toolbar button is hovered/focused, raise toolbar above input-wrapper so outline/glow isn't cut off */
+.composer-toolbar:has(.textarea-icon-button:hover),
+.composer-toolbar:has(.textarea-icon-button:focus-visible),
+.composer-toolbar:has(.history-toggle-button:hover),
+.composer-toolbar:has(.history-toggle-button:focus-visible) {
+  z-index: 3;
 }
 
 /* When history dropdown is visible */
@@ -1130,7 +1144,7 @@
   background: var(--gradient-button);
   color: white;
   position: relative;
-  overflow: hidden;
+  overflow: visible;
   z-index: 1001;
   visibility: visible;
   opacity: 1;
