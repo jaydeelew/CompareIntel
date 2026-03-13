@@ -77,27 +77,27 @@ export function FormHeader({
         </>
       ) : selectedModels.length === 0 ? (
         <h2>
-          <StyledTooltip
-            text={
-              onOpenHelpMeChoose
-                ? 'Get model recommendations by use case'
-                : 'Scroll to model selection'
-            }
-          >
+          {onOpenHelpMeChoose ? (
             <button
               type="button"
               className="select-models-heading-link"
-              onClick={() => {
-                if (onOpenHelpMeChoose) {
-                  onOpenHelpMeChoose()
-                } else {
+              onClick={() => onOpenHelpMeChoose()}
+            >
+              Help me choose models →
+            </button>
+          ) : (
+            <StyledTooltip text="Scroll to model selection">
+              <button
+                type="button"
+                className="select-models-heading-link"
+                onClick={() =>
                   modelsSectionRef?.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
                 }
-              }}
-            >
-              {onOpenHelpMeChoose ? 'Help me choose models →' : 'Scroll Down to Select Models'}
-            </button>
-          </StyledTooltip>
+              >
+                Scroll Down to Select Models
+              </button>
+            </StyledTooltip>
+          )}
         </h2>
       ) : (
         <h2>Enter Your Prompt</h2>
