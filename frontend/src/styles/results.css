@@ -2172,13 +2172,13 @@ html[data-theme='light'] .code-block-direct::-webkit-scrollbar-thumb:hover {
   margin: 0;
 }
 
-/* Done Selecting Card */
+/* Done Selecting Card - z-index above Help me choose dropdown (10000) so card stays visible when expanded */
 .done-selecting-card {
   position: fixed;
   top: 80%;
   left: 50%;
   transform: translate(-50%, -50%);
-  z-index: 1000;
+  z-index: 10001;
   pointer-events: all;
   animation: fadeInScale 0.3s ease-out;
 }
