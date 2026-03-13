@@ -163,10 +163,12 @@ else:
         "https://localhost:443",  # HTTPS localhost with port
         # Local development without SSL
         "http://localhost:5173",  # Vite default port
+        "http://localhost:4173",  # Vite preview (production build testing)
         "http://localhost:5174",  # Alternative Vite port
         "http://localhost:5175",  # Alternative Vite port
         "http://localhost:3000",  # Alternative local port
         "http://127.0.0.1:5173",  # Alternative localhost
+        "http://127.0.0.1:4173",  # Vite preview (production build testing)
         "http://127.0.0.1:5174",  # Alternative localhost
         "http://127.0.0.1:5175",  # Alternative localhost
         "http://127.0.0.1:3000",  # Alternative localhost

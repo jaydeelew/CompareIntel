@@ -1,5 +1,6 @@
 import express from 'express'
 import compression from 'compression'
+import { createProxyMiddleware } from 'http-proxy-middleware'
 import { fileURLToPath } from 'url'
 import { dirname, join } from 'path'
 import { readFileSync } from 'fs'
@@ -9,6 +10,26 @@ const __dirname = dirname(__filename)
 
 const app = express()
 const PORT = process.env.PORT || 4173
+const BACKEND_URL = process.env.BACKEND_URL || 'http://127.0.0.1:8000'
+
+// Proxy /api requests to backend (matches Vite dev server behavior)
+// pathFilter ensures full path /api/* is forwarded (app.use('/api', ...) would strip)
+app.use(
+  createProxyMiddleware({
+    pathFilter: '/api',
+    target: BACKEND_URL,
+    changeOrigin: true,
+    cookieDomainRewrite: { '*': '' },
+    onProxyRes: (proxyRes) => {
+      const cookies = proxyRes.headers['set-cookie']
+      if (cookies) {
+        proxyRes.headers['set-cookie'] = cookies.map((c) =>
+          c.replace(/;\s*Secure/gi, '')
+        )
+      }
+    },
+  })
+)
 
 // Enable compression for all responses
 app.use(compression({
@@ -41,4 +62,6 @@ app.get('*', (req, res) => {
 
 app.listen(PORT, () => {
   console.log(`Preview server with compression running at http://localhost:${PORT}`)
+  console.log(`API requests (/api/*) are proxied to ${BACKEND_URL}`)
+  console.log(`Ensure the backend is running (e.g. uvicorn app.main:app --port 8000)`)
 })
