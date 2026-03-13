@@ -9,5 +9,9 @@ interface ComparisonViewProps {
 }
 
 export function ComparisonView({ children }: ComparisonViewProps) {
-  return <main className="app-main">{children}</main>
+  return (
+    <main id="main-content" className="app-main">
+      {children}
+    </main>
+  )
 }

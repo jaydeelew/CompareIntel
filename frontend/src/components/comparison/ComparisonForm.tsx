@@ -440,6 +440,11 @@ export const ComparisonForm = memo<ComparisonFormProps>(
             placeholder={
               isFollowUpMode ? 'Continue your conversation here' : 'Enter your input here...'
             }
+            aria-label={
+              isFollowUpMode
+                ? 'Continue your conversation'
+                : 'Enter your prompt to compare AI models'
+            }
             className={`hero-input-textarea ${isDraggingOver ? 'drag-over' : ''}`}
             rows={1}
             data-testid="comparison-input-textarea"

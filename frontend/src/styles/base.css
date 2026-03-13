@@ -51,14 +51,18 @@ body {
   font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
 }
 
-/* Global button outline removal */
+/* Buttons: remove default outline on mouse click, but show visible focus ring for keyboard (WCAG 2.4.7) */
 button,
 button:focus,
-button:focus-visible,
 button:active,
 button:hover,
 button:visited {
-  outline: none !important;
+  outline: none;
+}
+
+button:focus-visible {
+  outline: 2px solid var(--primary-color) !important;
+  outline-offset: 2px;
 }
 
 /* Base app container */
