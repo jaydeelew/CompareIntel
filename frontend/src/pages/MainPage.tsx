@@ -347,7 +347,6 @@ export function MainPage() {
         isFollowUpMode,
         modelsSectionRef,
         tutorialIsActive: tutorialState.isActive,
-        isHelpMeChooseExpanded: modelsDropdownOpen === 'help-me-choose',
       },
       {
         onCollapseAllDropdowns: collapseAllDropdowns,
