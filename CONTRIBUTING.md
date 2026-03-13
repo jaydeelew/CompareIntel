@@ -38,7 +38,7 @@ Thank you for your interest in contributing to CompareIntel. This document cover
 3. **Set up the backend:**
    ```bash
    cd backend
-   python -m venv venv
+   python3 -m venv venv
    source venv/bin/activate   # Windows: venv\Scripts\activate
    cp .env.example .env
    # Add SECRET_KEY and OPENROUTER_API_KEY to .env

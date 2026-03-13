@@ -46,7 +46,7 @@ def validate_config() -> None:
     if not settings.secret_key:
         errors.append(
             "SECRET_KEY environment variable is not set. "
-            'Generate one with: python -c "import secrets; print(secrets.token_urlsafe(32))"'
+            'Generate one with: python3 -c "import secrets; print(secrets.token_urlsafe(32))"'
         )
     elif len(settings.secret_key) < 32:
         warnings.append(

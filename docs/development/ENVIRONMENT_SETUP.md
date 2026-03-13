@@ -32,7 +32,7 @@ These variables **must** be set for the backend to run:
 
 #### `SECRET_KEY`
 - **Purpose:** JWT token signing and encryption
-- **Generate:** `python -c "import secrets; print(secrets.token_urlsafe(32))"`
+- **Generate:** `python3 -c "import secrets; print(secrets.token_urlsafe(32))"`
 - **Example:** `SECRET_KEY=abc123xyz...`
 - **⚠️ Security:** Use a strong, randomly generated key. Never commit this to version control!
 
@@ -123,7 +123,7 @@ MAIL_FROM=your-email@gmail.com
 
 2. **Generate a secret key:**
    ```bash
-   python -c "import secrets; print(secrets.token_urlsafe(32))"
+   python3 -c "import secrets; print(secrets.token_urlsafe(32))"
    ```
    Copy the output to `SECRET_KEY` in your `.env` file.
 
@@ -137,7 +137,7 @@ MAIL_FROM=your-email@gmail.com
 5. **Verify your configuration:**
    ```bash
    # Check that variables are loaded
-   python -c "from dotenv import load_dotenv; import os; load_dotenv(); print('SECRET_KEY:', 'SET' if os.getenv('SECRET_KEY') else 'MISSING'); print('OPENROUTER_API_KEY:', 'SET' if os.getenv('OPENROUTER_API_KEY') else 'MISSING')"
+   python3 -c "from dotenv import load_dotenv; import os; load_dotenv(); print('SECRET_KEY:', 'SET' if os.getenv('SECRET_KEY') else 'MISSING'); print('OPENROUTER_API_KEY:', 'SET' if os.getenv('OPENROUTER_API_KEY') else 'MISSING')"
    ```
 
 ---
@@ -264,6 +264,31 @@ VITE_API_URL=/api
 
 Note: Docker Compose can also use environment variables directly or from `.env` files.
 
+### Testing Production Build Locally (Preview Server)
+
+To test the production build locally before deploying, use the preview server. It proxies `/api/*` to the backend (matching Vite dev server behavior).
+
+1. **Start the backend:**
+   ```bash
+   cd backend && python3 -m uvicorn app.main:app --port 8000
+   ```
+
+2. **Build and run the preview server:**
+   ```bash
+   cd frontend && npm run build && npm run preview
+   ```
+
+3. **Open** `http://localhost:4173` in your browser.
+
+**Environment variables:**
+- `PORT` – Preview server port (default: 4173)
+- `BACKEND_URL` – Backend URL for API proxy (default: `http://127.0.0.1:8000`)
+
+Example with custom backend:
+```bash
+BACKEND_URL=http://192.168.1.100:8000 npm run preview
+```
+
 ### Production
 
 **Backend `.env`:**
@@ -298,7 +323,7 @@ VITE_API_URL=/api
 
 **"SECRET_KEY environment variable is not set"**
 - ✅ Solution: Generate a key and add it to `backend/.env`
-- Command: `python -c "import secrets; print(secrets.token_urlsafe(32))"`
+- Command: `python3 -c "import secrets; print(secrets.token_urlsafe(32))"`
 
 **"OPENROUTER_API_KEY not found"**
 - ✅ Solution: Get your key from [OpenRouter](https://openrouter.ai/keys) and add to `.env`
@@ -315,6 +340,11 @@ VITE_API_URL=/api
 - ✅ In development, emails are sent synchronously (check console)
 
 ### Frontend Issues
+
+**"Failed to fetch models" / "Network error: Failed to fetch" / ERR_CONNECTION_REFUSED**
+- ✅ **Development:** Ensure backend is running (`python3 -m uvicorn app.main:app --port 8000`)
+- ✅ **Preview (production build):** Use `npm run preview` – it proxies `/api` to the backend. Start the backend first.
+- ✅ **Deployed production:** Ensure the full stack is running (nginx + backend). Access via nginx (e.g. port 8080), not static files only.
 
 **API calls failing with CORS errors**
 - ✅ Make sure `VITE_API_URL=/api` (uses proxy)

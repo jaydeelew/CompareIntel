@@ -21,7 +21,7 @@ cd CompareIntel
 
 # Backend
 cd backend
-python -m venv venv
+python3 -m venv venv
 source venv/bin/activate   # Windows: venv\Scripts\activate
 pip install -r requirements-dev.txt
 
@@ -43,7 +43,7 @@ Edit `backend/.env` and set:
 
 | Variable | Required | Get it |
 |----------|----------|--------|
-| `SECRET_KEY` | Yes | `python -c "import secrets; print(secrets.token_urlsafe(32))"` |
+| `SECRET_KEY` | Yes | `python3 -c "import secrets; print(secrets.token_urlsafe(32))"` |
 | `OPENROUTER_API_KEY` | Yes | [openrouter.ai/keys](https://openrouter.ai/keys) |
 
 For local development, SQLite is used by default. No database setup needed.

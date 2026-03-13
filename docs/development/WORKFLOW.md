@@ -6,7 +6,7 @@
 
 ```bash
 # Terminal 1 - Backend
-cd backend && python -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
+cd backend && python3 -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
 
 # Terminal 2 - Frontend
 cd frontend && npm run dev
