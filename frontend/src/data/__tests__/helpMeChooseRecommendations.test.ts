@@ -61,6 +61,9 @@ function isSameScale(categoryId: string, scoreA: number, scoreB: number): boolea
 /** Categories where lower score is better (e.g. cost-effective: cheaper first). */
 const ASCENDING_CATEGORIES = new Set(['cost-effective'])
 
+/** Categories that are capability lists (e.g. supports image input) rather than benchmark-ranked. */
+const CAPABILITY_CATEGORIES = new Set(['images'])
+
 /** Returns true if the model has a numeric benchmark score (should be included). */
 function hasBenchmarkScore(categoryId: string, evidence: string): boolean {
   return extractPrimaryScore(categoryId, evidence) !== null
@@ -124,6 +127,7 @@ describe('helpMeChooseRecommendations', () => {
 
     it('only includes models with numeric benchmark scores', () => {
       for (const cat of HELP_ME_CHOOSE_CATEGORIES) {
+        if (CAPABILITY_CATEGORIES.has(cat.id)) continue
         for (const m of cat.models) {
           expect(
             hasBenchmarkScore(cat.id, m.evidence),
