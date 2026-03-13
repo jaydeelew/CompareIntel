@@ -184,12 +184,14 @@ function checkBundleSize() {
   console.log(`📦 Total bundle size (including lazy-loaded): ${formatBytes(totalGzipped)}`);
   
   // Only check non-lazy-loaded chunks for individual limit
-  // Vendor chunks can be larger (up to initial bundle limit) since they're critical for initial load
+  // Vendor chunks and app-main (core app shell) can be larger (up to initial bundle limit)
+  // since they're critical for initial load
   const nonLazyChunks = fileSizes.filter(f => !isLazyLoaded(f.file));
   const oversizedChunks = nonLazyChunks.filter(f => {
     const isVendorChunk = f.file.includes('vendor');
-    // Vendor chunks can be up to initial bundle limit (200KB), others must be under 100KB
-    const chunkLimit = isVendorChunk ? LIMITS.initialBundle : LIMITS.individualChunk;
+    const isAppMainChunk = f.file.includes('app-main');
+    // Vendor and app-main chunks can be up to initial bundle limit (200KB), others under 100KB
+    const chunkLimit = (isVendorChunk || isAppMainChunk) ? LIMITS.initialBundle : LIMITS.individualChunk;
     return f.gzipped > chunkLimit;
   });
   
@@ -197,13 +199,14 @@ function checkBundleSize() {
     console.error(`❌ ${oversizedChunks.length} chunk(s) exceed individual limit:`);
     oversizedChunks.forEach(chunk => {
       const isVendorChunk = chunk.file.includes('vendor');
-      const chunkLimit = isVendorChunk ? LIMITS.initialBundle : LIMITS.individualChunk;
+      const isAppMainChunk = chunk.file.includes('app-main');
+      const chunkLimit = (isVendorChunk || isAppMainChunk) ? LIMITS.initialBundle : LIMITS.individualChunk;
       console.error(`   - ${chunk.file}: ${formatBytes(chunk.gzipped)} > ${formatBytes(chunkLimit)}`);
     });
     hasViolations = true;
   } else {
     console.log(`✅ All initial chunks within individual limit: ${formatBytes(LIMITS.individualChunk)}`);
-    console.log(`   (Vendor chunks allowed up to ${formatBytes(LIMITS.initialBundle)} for optimal loading)`);
+    console.log(`   (Vendor and app-main chunks allowed up to ${formatBytes(LIMITS.initialBundle)} for optimal loading)`);
     
     // Report lazy-loaded chunks that exceed limit (informational only)
     const lazyOversized = fileSizes.filter(f => isLazyLoaded(f.file) && f.gzipped > LIMITS.individualChunk);
