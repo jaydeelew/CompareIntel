@@ -306,7 +306,7 @@
   }
 
   /* Hide theme toggle in navbar on mobile - moved to hero section */
-  .nav-actions > .theme-toggle {
+  .nav-actions .nav-theme-toggle-wrapper {
     display: none !important;
   }
 

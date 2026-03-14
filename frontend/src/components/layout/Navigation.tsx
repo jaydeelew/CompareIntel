@@ -61,7 +61,7 @@ export function Navigation({
         </div>
 
         <div className="nav-actions">
-          <StyledTooltip text={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}>
+          <div className="nav-theme-toggle-wrapper">
             <button
               className="nav-button theme-toggle"
               onClick={toggleTheme}
@@ -99,7 +99,7 @@ export function Navigation({
                 </svg>
               )}
             </button>
-          </StyledTooltip>
+          </div>
           {isAuthenticated ? (
             <>
               {isAdmin && (
