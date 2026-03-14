@@ -38,6 +38,15 @@ export interface FileUploadHandle {
 const IMAGE_MIME_TYPES = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp', 'image/gif']
 const IMAGE_EXTENSIONS = ['.png', '.jpg', '.jpeg', '.webp', '.gif']
 
+/** Threshold above which we warn about large image size and credit costs (1 MB) */
+const LARGE_IMAGE_THRESHOLD_BYTES = 1024 * 1024
+
+function formatFileSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+}
+
 const isImageFile = (file: File): boolean => {
   const mime = file.type?.toLowerCase()
   const name = file.name.toLowerCase()
@@ -361,6 +370,17 @@ export const FileUpload = forwardRef<FileUploadHandle, FileUploadProps>(function
         )
         notification.clearAutoRemove()
         setTimeout(() => notification(), 5000)
+
+        if (isImage && file.size > LARGE_IMAGE_THRESHOLD_BYTES) {
+          const sizeStr = formatFileSize(file.size)
+          const warningNotif = showNotification(
+            `Large image (${sizeStr}) uses more credits. Consider compressing or resizing to reduce cost.`,
+            'warning'
+          )
+          warningNotif.clearAutoRemove()
+          setTimeout(() => warningNotif(), 8000)
+        }
+
         return true
       } catch (error) {
         const errorMessage =

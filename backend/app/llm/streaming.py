@@ -188,6 +188,19 @@ def _build_user_message_content(
             content_parts.append({"type": "text", "text": remaining})
         if not content_parts:
             return prompt
+        # When the user sends only images with no text, add a default instruction.
+        # This avoids vision models (e.g. Gemini 2.0 Flash) defaulting to structured
+        # detection output (bounding boxes with empty labels) instead of a natural
+        # language description. See: https://discuss.ai.google.dev/t/bounding-box-detection-failing-with-gemini-2-0-flash/84175
+        has_text = any(p.get("type") == "text" for p in content_parts)
+        if not has_text:
+            content_parts.insert(
+                0,
+                {
+                    "type": "text",
+                    "text": "Please describe what you see in this image in detail.",
+                },
+            )
         return content_parts
     else:
         # Non-vision: replace placeholders with note

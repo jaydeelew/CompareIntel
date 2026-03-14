@@ -8,7 +8,7 @@
 /**
  * Notification type for user feedback.
  */
-export type NotificationType = 'success' | 'error'
+export type NotificationType = 'success' | 'error' | 'warning'
 
 /**
  * Notification controller returned by showNotification.
@@ -61,7 +61,7 @@ export function showNotification(
 
   // Add icon
   const icon = document.createElement('div')
-  icon.innerHTML = type === 'success' ? '✓' : '✕'
+  icon.innerHTML = type === 'success' ? '✓' : type === 'warning' ? '⚠' : '✕'
   icon.style.fontSize = '1.1rem'
   icon.style.fontWeight = 'bold'
   icon.style.display = 'flex'
@@ -110,7 +110,9 @@ export function showNotification(
   notif.style.background =
     type === 'success'
       ? 'linear-gradient(135deg, #2563eb 0%, #3b82f6 100%)'
-      : 'linear-gradient(135deg, #ef4444 0%, #f87171 100%)'
+      : type === 'warning'
+        ? 'linear-gradient(135deg, #d97706 0%, #f59e0b 100%)'
+        : 'linear-gradient(135deg, #ef4444 0%, #f87171 100%)'
   notif.style.color = 'white'
   notif.style.boxShadow =
     '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04), 0 0 0 1px rgba(255, 255, 255, 0.1)'
@@ -150,7 +152,7 @@ export function showNotification(
     }
 
     // Update icon
-    icon.innerHTML = newType === 'success' ? '✓' : '✕'
+    icon.innerHTML = newType === 'success' ? '✓' : newType === 'warning' ? '⚠' : '✕'
 
     // Update text
     text.textContent = newMsg
@@ -159,7 +161,9 @@ export function showNotification(
     notif.style.background =
       newType === 'success'
         ? 'linear-gradient(135deg, #2563eb 0%, #3b82f6 100%)'
-        : 'linear-gradient(135deg, #ef4444 0%, #f87171 100%)'
+        : newType === 'warning'
+          ? 'linear-gradient(135deg, #d97706 0%, #f59e0b 100%)'
+          : 'linear-gradient(135deg, #ef4444 0%, #f87171 100%)'
 
     // Reset timeout - notification will stay for another 1.5 seconds (shorter for completion messages)
     if (timeoutId) {
