@@ -2455,24 +2455,50 @@ html:not([data-theme]) .help-me-choose-category.has-match {
   box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.06);
 }
 
-/* Sticky category bar: always visible when scrolling (mobile vertical scroll hides in-column headers) */
+/* Sticky category bar: always visible when scrolling (mobile horizontal scroll - category name centered) */
 .help-me-choose-sticky-category {
   position: sticky;
   top: 0;
   z-index: 3;
   flex-shrink: 0;
-  padding: 0.5rem 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 0.625rem 1rem;
   margin-bottom: -0.5rem;
-  font-size: 0.875rem;
+  font-size: 0.9375rem;
   font-weight: var(--font-semibold);
+  letter-spacing: 0.01em;
   color: var(--text-primary);
   background: linear-gradient(
     to bottom,
     var(--bg-elevated) 0%,
-    color-mix(in srgb, var(--primary-color) 3%, var(--bg-elevated)) 100%
+    color-mix(in srgb, var(--primary-color) 4%, var(--bg-elevated)) 100%
   );
   border-bottom: 1px solid var(--border-color);
-  box-shadow: 0 1px 0 0 color-mix(in srgb, var(--primary-color) 8%, transparent);
+  box-shadow:
+    0 1px 0 0 color-mix(in srgb, var(--primary-color) 8%, transparent),
+    0 2px 8px -2px color-mix(in srgb, var(--primary-color) 6%, transparent);
+}
+
+/* Subtle top accent on sticky bar - matches dropdown content theme */
+.help-me-choose-sticky-category::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(120px, 40%);
+  height: 3px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    color-mix(in srgb, var(--primary-color) 50%, transparent) 50%,
+    transparent 100%
+  );
+  border-radius: 0 0 2px 2px;
+  pointer-events: none;
 }
 
 .help-me-choose-category-header-row {
