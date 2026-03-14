@@ -34,6 +34,7 @@ The platform integrates with [OpenRouter](https://openrouter.ai/) to access mode
 - Web search for models that support it
 - LaTeX (KaTeX), syntax highlighting (Prism.js), full Markdown support
 - PDF and Word document parsing
+- Image upload (PNG, JPEG, WebP, GIF) for vision-capable models
 - PWA support
 
 ### Users & Billing

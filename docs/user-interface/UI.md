@@ -24,6 +24,11 @@ All GUI components for CompareIntel, organized by Main and Admin sections.
 - **Description:** Main input area, history, and controls for model comparisons.
 - **File:** `frontend/src/components/comparison/ComparisonForm.tsx`
 
+### FileUpload
+- **Parent:** `ComparisonForm`
+- **Description:** File and image attachment. Supports drag-and-drop and file picker. Accepts text, code, documents (PDF, Word), and images (PNG, JPEG, WebP, GIF). Images require vision-capable models; when an image is attached, the model selector filters to vision-capable models only.
+- **File:** `frontend/src/components/comparison/FileUpload.tsx`
+
 ### ConversationItem
 - **Parent:** `ConversationList`
 - **Description:** Single conversation in history. Truncated prompt, date, model count.

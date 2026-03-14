@@ -478,8 +478,8 @@ export const faqData: FAQItemData[] = [
             users, more for paid tiers)
           </li>
           <li>
-            Enter your prompt or question in the input field—you can also attach files like PDFs or
-            documents
+            Enter your prompt or question in the input field—you can also attach files like PDFs,
+            documents, or images (PNG, JPEG, WebP, GIF) for vision-capable models
           </li>
           <li>Click "Compare" to send your prompt to all selected models simultaneously</li>
           <li>Watch as responses stream in real-time from each model, appearing token-by-token</li>
@@ -501,6 +501,11 @@ export const faqData: FAQItemData[] = [
       <>
         <p>You can compare AI models on virtually any text-based task, including:</p>
         <ul>
+          <li>
+            <strong>Image Analysis:</strong> Attach images (PNG, JPEG, WebP, GIF) and ask
+            vision-capable models to describe them, extract text, analyze diagrams, or answer
+            questions about visual content
+          </li>
           <li>
             <strong>Code Generation:</strong> Compare how different models write code in Python,
             JavaScript, TypeScript, Java, and other languages
@@ -665,7 +670,7 @@ export const faqData: FAQItemData[] = [
       <>
         <p>
           Yes! CompareIntel supports file attachments, allowing you to include documents, code
-          files, and text files in your comparisons. You can attach files in two ways:
+          files, text files, and images in your comparisons. You can attach files in two ways:
         </p>
         <ul>
           <li>
@@ -678,9 +683,17 @@ export const faqData: FAQItemData[] = [
         </ul>
         <p>
           Supported file formats include PDF documents, Word documents (.docx, .doc), text files,
-          code files, markdown files, and more. You can attach multiple files to a single comparison
-          and arrange them in any order with your text. The file contents are automatically
-          extracted and included when sending your prompt to the AI models.
+          code files, markdown files, and images (PNG, JPEG, WebP, GIF). You can attach multiple
+          files to a single comparison and arrange them in any order with your text. Document and
+          text contents are automatically extracted and included when sending your prompt to the AI
+          models.
+        </p>
+        <p>
+          <strong>Image upload:</strong> When you attach an image, CompareIntel filters the model
+          list to show only vision-capable models that can interpret images. You must select at
+          least one vision-capable model to process your image. Use images for tasks like describing
+          photos, analyzing diagrams, extracting text from screenshots, or asking questions about
+          visual content.
         </p>
         <p>
           <strong>Persistent file context:</strong> Attached files persist across conversation

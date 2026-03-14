@@ -4,7 +4,7 @@ File attachments in model comparisons with conversation history persistence.
 
 ## Overview
 
-Implemented a file attachment system that allows users to attach text, code, and document files (PDF, DOCX, DOC, ODT) to their model comparison queries. The system uses a **"Stored Content Approach"** where file contents are extracted and stored separately from placeholders, enabling file content to persist across conversation sessions and be available for follow-up questions.
+Implemented a file attachment system that allows users to attach text, code, document files (PDF, DOCX, DOC, ODT), and images (PNG, JPEG, WebP, GIF) to their model comparison queries. Images are processed by vision-capable models and sent as base64-encoded content. The system uses a **"Stored Content Approach"** where file contents are extracted and stored separately from placeholders, enabling file content to persist across conversation sessions and be available for follow-up questions.
 
 ---
 
@@ -15,7 +15,7 @@ Implemented a file attachment system that allows users to attach text, code, and
 - Users can attach files via:
   - **File input button**: Click to browse and select files
   - **Drag and drop**: Drag files onto the textarea or action section
-- When a file is attached, a placeholder appears in the textarea: `[file: filename.txt]`
+- When a file is attached, a placeholder appears in the textarea: `[file: filename.txt]` for documents or `[image: filename.png]` for images
 - Users can add their own text before or after one or more file placeholders
 - Multiple files can be attached in any order
 
@@ -98,7 +98,9 @@ export interface AttachedFile {
   id: string; // Unique identifier
   file: File; // Browser File object
   name: string; // File name
-  placeholder: string; // Placeholder text: "[file: filename.txt]"
+  placeholder: string; // Placeholder text: "[file: filename.txt]" or "[image: filename.png]"
+  base64Data?: string; // For images: base64-encoded data (used by vision-capable models)
+  mimeType?: string; // For images: e.g. image/png, image/jpeg
 }
 
 // For files loaded from history (with stored content)
@@ -217,6 +219,7 @@ if (isFollowUpMode && conversations.length > 0) {
 - **Text files**: `.txt`, `.md`, `.json`, `.xml`, `.csv`, etc.
 - **Code files**: `.js`, `.ts`, `.py`, `.java`, `.cpp`, `.html`, `.css`, etc.
 - **Documents**: `.pdf`, `.docx`, `.doc`, `.odt`
+- **Images**: `.png`, `.jpg`, `.jpeg`, `.webp`, `.gif` — Images are sent to vision-capable models as base64. When an image is attached, the model selector filters to show only vision-capable models. At least one vision-capable model must be selected to interpret the image.
 
 ### File Processing
 
@@ -445,7 +448,7 @@ const [attachedFiles, setAttachedFiles] = useState<
 
 ### File Type Validation
 
-- Only text, code, and document files allowed
+- Only text, code, document, and image files allowed (PNG, JPEG, WebP, GIF for images)
 - Binary files rejected
 - File type checked before processing
 

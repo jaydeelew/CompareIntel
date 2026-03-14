@@ -337,10 +337,10 @@ export const Features: React.FC = () => {
           </section>
 
           <section className="seo-section">
-            <h2>Document Import & File Support</h2>
+            <h2>Document Import, File & Image Support</h2>
             <p>
-              Easily incorporate your existing documents into AI comparisons. CompareIntel supports
-              importing a variety of file formats to streamline your workflow:
+              Easily incorporate your existing documents and images into AI comparisons.
+              CompareIntel supports importing a variety of file formats to streamline your workflow:
             </p>
             <ul className="seo-list">
               <li>
@@ -354,6 +354,12 @@ export const Features: React.FC = () => {
               <li>
                 <strong>Word Documents:</strong> Upload .docx files and CompareIntel will extract
                 the text content for seamless integration with AI models.
+              </li>
+              <li>
+                <strong>Image Upload:</strong> Attach images (PNG, JPEG, WebP, GIF) for
+                vision-capable models. When you attach an image, the model selector automatically
+                filters to show only vision-capable models. Use images to describe photos, analyze
+                diagrams, extract text from screenshots, or ask questions about visual content.
               </li>
               <li>
                 <strong>Additional Formats:</strong> Support for markdown, code files, and other
