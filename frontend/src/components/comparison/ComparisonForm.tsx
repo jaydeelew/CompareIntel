@@ -19,6 +19,7 @@ import { showNotification } from '../../utils/error'
 import { hasVisionModelSelected } from '../../utils/visionModels'
 import { StyledTooltip } from '../shared'
 
+import { ActionButtonTooltipModal, type ComposerTooltipButtonId } from './ActionButtonTooltipModal'
 import type { FileProps, HistoryProps, SelectionProps } from './ComparisonFormTypes'
 import { ContextWarning } from './ContextWarning'
 import { DisabledButtonInfoModal } from './DisabledButtonInfoModal'
@@ -33,6 +34,7 @@ import { FormHeader } from './FormHeader'
 import { HistoryDropdown } from './HistoryDropdown'
 import { SavedSelectionsDropdown } from './SavedSelectionsDropdown'
 import { TokenUsageDisplay, type TokenUsageInfo } from './TokenUsageDisplay'
+import { getTooltipModalSuppressed } from './tooltipModalStorage'
 
 export type { AttachedFile, StoredAttachedFile }
 export type { HistoryProps, SelectionProps, FileProps } from './ComparisonFormTypes'
@@ -128,6 +130,10 @@ export const ComparisonForm = memo<ComparisonFormProps>(
       message: string
     }>({ button: null, message: '' })
 
+    const [tooltipModalButton, setTooltipModalButton] = useState<ComposerTooltipButtonId | null>(
+      null
+    )
+
     const [isDraggingOver, setIsDraggingOver] = useState(false)
     const fileUploadRef = useRef<FileUploadHandle>(null)
     const savedSelectionsDropdownSlotRef = useRef<HTMLDivElement>(null)
@@ -190,6 +196,88 @@ export const ComparisonForm = memo<ComparisonFormProps>(
         baseInputWhenSpeechStartedRef.current = ''
       }
     }, [isSpeechListening])
+
+    const inputTrimmed = input.trim()
+    const tokenUsageExceeded = tokenUsageInfo?.isExceeded ?? false
+
+    const getTooltipModalConfig = useCallback(
+      (buttonId: ComposerTooltipButtonId): { title: string; message: string } => {
+        switch (buttonId) {
+          case 'add-file':
+            return { title: 'Add File', message: 'Select or drag file here' }
+          case 'voice':
+            return {
+              title: 'Voice Input',
+              message: isSpeechListening ? 'Stop recording' : 'Start voice input',
+            }
+          case 'web-search':
+            return {
+              title: 'Web Search',
+              message: !canEnableWebSearch
+                ? 'Select a web-enabled model'
+                : webSearchEnabled
+                  ? 'Web search enabled'
+                  : 'Enable web search',
+            }
+          case 'submit':
+            return {
+              title: 'Submit',
+              message:
+                creditsRemaining <= 0
+                  ? 'You have run out of credits'
+                  : isLoading
+                    ? 'Submit'
+                    : !inputTrimmed || selectedModels.length === 0
+                      ? 'Enter prompt and select models'
+                      : isFollowUpMode && tokenUsageExceeded
+                        ? 'Input capacity exceeded - inputs may be truncated'
+                        : 'Submit',
+            }
+        }
+      },
+      [
+        isSpeechListening,
+        canEnableWebSearch,
+        webSearchEnabled,
+        creditsRemaining,
+        isLoading,
+        inputTrimmed,
+        selectedModels.length,
+        isFollowUpMode,
+        tokenUsageExceeded,
+      ]
+    )
+
+    const handleTooltipModalConfirm = useCallback(
+      (buttonId: ComposerTooltipButtonId) => {
+        switch (buttonId) {
+          case 'add-file':
+            fileUploadRef.current?.openFilePicker()
+            break
+          case 'voice':
+            if (isSpeechListening) stopSpeechListening()
+            else startSpeechListening()
+            break
+          case 'web-search':
+            setWebSearchEnabled(!webSearchEnabled)
+            break
+          case 'submit':
+            if (isFollowUpMode) onContinueConversation()
+            else onSubmitClick()
+            break
+        }
+      },
+      [
+        isSpeechListening,
+        stopSpeechListening,
+        startSpeechListening,
+        webSearchEnabled,
+        setWebSearchEnabled,
+        isFollowUpMode,
+        onContinueConversation,
+        onSubmitClick,
+      ]
+    )
 
     const handleDisabledButtonTap = useCallback(
       (button: 'websearch' | 'submit') => {
@@ -519,6 +607,17 @@ export const ComparisonForm = memo<ComparisonFormProps>(
               textareaRef={textareaRef}
               disabled={isLoading}
               isMobileLayout={isMobileLayout}
+              onMobileButtonClick={
+                isMobileLayout && !isLoading
+                  ? () => {
+                      if (getTooltipModalSuppressed('add-file')) {
+                        fileUploadRef.current?.openFilePicker()
+                      } else {
+                        setTooltipModalButton('add-file')
+                      }
+                    }
+                  : undefined
+              }
             />
 
             {(isFollowUpMode || input.trim().length > 0) && (
@@ -542,9 +641,14 @@ export const ComparisonForm = memo<ComparisonFormProps>(
               (isMobileLayout ? (
                 <button
                   type="button"
-                  onClick={() =>
-                    isSpeechListening ? stopSpeechListening() : startSpeechListening()
-                  }
+                  onClick={() => {
+                    if (getTooltipModalSuppressed('voice')) {
+                      if (isSpeechListening) stopSpeechListening()
+                      else startSpeechListening()
+                    } else {
+                      setTooltipModalButton('voice')
+                    }
+                  }}
                   className={`textarea-icon-button voice-button ${isSpeechListening ? 'active' : ''}`}
                   disabled={isLoading}
                 >
@@ -575,9 +679,10 @@ export const ComparisonForm = memo<ComparisonFormProps>(
                 <StyledTooltip text={isSpeechListening ? 'Stop recording' : 'Start voice input'}>
                   <button
                     type="button"
-                    onClick={() =>
-                      isSpeechListening ? stopSpeechListening() : startSpeechListening()
-                    }
+                    onClick={() => {
+                      if (isSpeechListening) stopSpeechListening()
+                      else startSpeechListening()
+                    }}
                     className={`textarea-icon-button voice-button ${isSpeechListening ? 'active' : ''}`}
                     disabled={isLoading}
                   >
@@ -612,8 +717,15 @@ export const ComparisonForm = memo<ComparisonFormProps>(
                 type="button"
                 onClick={() => {
                   const isDisabled = !canEnableWebSearch || isLoading
-                  if (isDisabled && isTouchDevice) handleDisabledButtonTap('websearch')
-                  else if (!isDisabled) setWebSearchEnabled(!webSearchEnabled)
+                  if (isDisabled && isTouchDevice) {
+                    handleDisabledButtonTap('websearch')
+                  } else if (!isDisabled) {
+                    if (getTooltipModalSuppressed('web-search')) {
+                      setWebSearchEnabled(!webSearchEnabled)
+                    } else {
+                      setTooltipModalButton('web-search')
+                    }
+                  }
                 }}
                 className={`textarea-icon-button web-search-button ${webSearchEnabled ? 'active' : ''} ${(!canEnableWebSearch || isLoading) && isTouchDevice ? 'touch-disabled' : ''}`}
                 disabled={!isTouchDevice && (!canEnableWebSearch || isLoading)}
@@ -698,10 +810,15 @@ export const ComparisonForm = memo<ComparisonFormProps>(
                     creditsRemaining <= 0 ||
                     !input.trim() ||
                     selectedModels.length === 0
-                  if (isDisabled && isTouchDevice) handleDisabledButtonTap('submit')
-                  else if (!isDisabled) {
-                    if (isFollowUpMode) onContinueConversation()
-                    else onSubmitClick()
+                  if (isDisabled && isTouchDevice) {
+                    handleDisabledButtonTap('submit')
+                  } else if (!isDisabled) {
+                    if (getTooltipModalSuppressed('submit')) {
+                      if (isFollowUpMode) onContinueConversation()
+                      else onSubmitClick()
+                    } else {
+                      setTooltipModalButton('submit')
+                    }
                   }
                 }}
                 disabled={
@@ -851,6 +968,17 @@ export const ComparisonForm = memo<ComparisonFormProps>(
           buttonType={disabledButtonInfo.button}
           message={disabledButtonInfo.message}
         />
+
+        {tooltipModalButton && (
+          <ActionButtonTooltipModal
+            isOpen={true}
+            onClose={() => setTooltipModalButton(null)}
+            onConfirm={() => handleTooltipModalConfirm(tooltipModalButton)}
+            buttonId={tooltipModalButton}
+            title={getTooltipModalConfig(tooltipModalButton).title}
+            message={getTooltipModalConfig(tooltipModalButton).message}
+          />
+        )}
       </>
     )
   }

@@ -127,6 +127,28 @@
   text-decoration: underline;
 }
 
+/* Do not show again checkbox (ActionButtonTooltipModal) */
+.action-tooltip-dont-show-again {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  cursor: pointer;
+  font-size: 0.9375rem;
+  color: var(--text-secondary);
+}
+
+.action-tooltip-dont-show-again input[type='checkbox'] {
+  width: 1.125rem;
+  height: 1.125rem;
+  accent-color: var(--primary-color);
+  cursor: pointer;
+}
+
+.action-tooltip-dont-show-again span {
+  user-select: none;
+}
+
 .disabled-button-info-footer {
   padding: 1rem 1.5rem;
   border-top: 1px solid var(--border-color);

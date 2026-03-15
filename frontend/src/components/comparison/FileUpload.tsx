@@ -31,10 +31,14 @@ export interface FileUploadProps {
   disabled?: boolean
   /** When true, tooltip is hidden (used for mobile layout) */
   isMobileLayout?: boolean
+  /** When provided and on mobile, called instead of opening file picker (parent shows modal first) */
+  onMobileButtonClick?: () => void
 }
 
 export interface FileUploadHandle {
   processFile: (file: File) => Promise<boolean>
+  /** Opens the file picker (used when modal confirms on mobile) */
+  openFilePicker: () => void
 }
 
 const IMAGE_MIME_TYPES = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp', 'image/gif']
@@ -277,7 +281,7 @@ const MOBILE_ACCEPT =
 const DESKTOP_ACCEPT =
   '.txt,.md,.markdown,.json,.xml,.html,.htm,.css,.js,.jsx,.ts,.tsx,.py,.java,.c,.cpp,.cc,.cxx,.h,.hpp,.cs,.rb,.go,.rs,.swift,.kt,.php,.sh,.bash,.zsh,.fish,.yaml,.yml,.toml,.ini,.cfg,.conf,.log,.csv,.sql,.r,.R,.m,.pl,.pm,.lua,.scala,.clj,.cljs,.hs,.elm,.ex,.exs,.dart,.vue,.svelte,.astro,.graphql,.gql,.dockerfile,.env,.gitignore,.gitattributes,.editorconfig,.eslintrc,.prettierrc,.babelrc,.webpack,.rollup,.vite,.makefile,.cmake,.gradle,.maven,.pom,.sbt,.build,.lock,.lockfile,.package,.requirements,.pip,.conda,.dockerignore,.npmignore,.yarnignore,.eslintignore,.prettierignore,.pdf,.docx,.doc,.rtf,.odt,.png,.jpg,.jpeg,.webp,.gif,text/*,application/json,application/javascript,application/xml,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/msword,application/rtf,application/vnd.oasis.opendocument.text,image/png,image/jpeg,image/webp,image/gif'
 
-export const FileUpload = forwardRef<FileUploadHandle, FileUploadProps>(function FileUpload(
+const FileUploadComponent = forwardRef<FileUploadHandle, FileUploadProps>(function FileUpload(
   {
     attachedFiles,
     setAttachedFiles,
@@ -286,6 +290,7 @@ export const FileUpload = forwardRef<FileUploadHandle, FileUploadProps>(function
     textareaRef,
     disabled = false,
     isMobileLayout = false,
+    onMobileButtonClick,
   },
   ref
 ) {
@@ -403,8 +408,6 @@ export const FileUpload = forwardRef<FileUploadHandle, FileUploadProps>(function
     [attachedFiles, setAttachedFiles, input, setInput, textareaRef]
   )
 
-  useImperativeHandle(ref, () => ({ processFile }), [processFile])
-
   const handleFileUpload = useCallback(
     async (event: React.ChangeEvent<HTMLInputElement>) => {
       const file = event.target.files?.[0]
@@ -415,10 +418,26 @@ export const FileUpload = forwardRef<FileUploadHandle, FileUploadProps>(function
     [processFile]
   )
 
-  const handleUploadButtonClick = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
-    fileInputRef.current?.click()
-    e.currentTarget.blur()
-  }, [])
+  const handleUploadButtonClick = useCallback(
+    (e: React.MouseEvent<HTMLButtonElement>) => {
+      e.currentTarget.blur()
+      if (isMobileLayout && onMobileButtonClick) {
+        onMobileButtonClick()
+      } else {
+        fileInputRef.current?.click()
+      }
+    },
+    [isMobileLayout, onMobileButtonClick]
+  )
+
+  useImperativeHandle(
+    ref,
+    () => ({
+      processFile,
+      openFilePicker: () => fileInputRef.current?.click(),
+    }),
+    [processFile]
+  )
 
   return (
     <>
@@ -480,3 +499,5 @@ export const FileUpload = forwardRef<FileUploadHandle, FileUploadProps>(function
     </>
   )
 })
+
+export { FileUploadComponent as FileUpload }
