@@ -36,6 +36,8 @@ export interface TokenUsageDisplayProps {
   onAccurateTokenCountChange?: (totalInputTokens: number | null) => void
   onTokenUsageInfoChange?: (info: TokenUsageInfo | null) => void
   tutorialIsActive?: boolean
+  /** When true, the tooltip is hidden (e.g. on mobile) */
+  hideTooltip?: boolean
 }
 
 function formatCapacityChars(tokens: number): string {
@@ -86,6 +88,7 @@ export function TokenUsageDisplay({
   onAccurateTokenCountChange,
   onTokenUsageInfoChange,
   tutorialIsActive = false,
+  hideTooltip = false,
 }: TokenUsageDisplayProps) {
   const debouncedInput = useDebounce(input, 600)
   const [accurateTokenCounts, setAccurateTokenCounts] = useState<{
@@ -296,43 +299,45 @@ export function TokenUsageDisplay({
     }
   }
 
+  const indicator = (
+    <div
+      className="token-usage-indicator"
+      onClick={() => {
+        if (!tutorialIsActive) setShowUsageIndicatorInfo(true)
+      }}
+      style={{
+        touchAction: 'manipulation',
+        cursor: tutorialIsActive ? 'default' : 'pointer',
+      }}
+    >
+      <svg
+        width="32"
+        height="32"
+        viewBox="0 0 32 32"
+        style={{ transform: 'rotate(-90deg)', pointerEvents: 'none' }}
+      >
+        <circle cx="16" cy="16" r={radius} fill="none" stroke="#e5e7eb" strokeWidth="2" />
+        {hasTokens && (
+          <circle
+            cx="16"
+            cy="16"
+            r={radius}
+            fill="none"
+            stroke={fillColor}
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeDasharray={circumference}
+            strokeDashoffset={offset}
+            style={{ transition: 'stroke-dashoffset 0.3s ease, stroke 0.3s ease' }}
+          />
+        )}
+      </svg>
+    </div>
+  )
+
   return (
     <>
-      <StyledTooltip text={tooltipText}>
-        <div
-          className="token-usage-indicator"
-          onClick={() => {
-            if (!tutorialIsActive) setShowUsageIndicatorInfo(true)
-          }}
-          style={{
-            touchAction: 'manipulation',
-            cursor: tutorialIsActive ? 'default' : 'pointer',
-          }}
-        >
-          <svg
-            width="32"
-            height="32"
-            viewBox="0 0 32 32"
-            style={{ transform: 'rotate(-90deg)', pointerEvents: 'none' }}
-          >
-            <circle cx="16" cy="16" r={radius} fill="none" stroke="#e5e7eb" strokeWidth="2" />
-            {hasTokens && (
-              <circle
-                cx="16"
-                cy="16"
-                r={radius}
-                fill="none"
-                stroke={fillColor}
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeDasharray={circumference}
-                strokeDashoffset={offset}
-                style={{ transition: 'stroke-dashoffset 0.3s ease, stroke 0.3s ease' }}
-              />
-            )}
-          </svg>
-        </div>
-      </StyledTooltip>
+      {hideTooltip ? indicator : <StyledTooltip text={tooltipText}>{indicator}</StyledTooltip>}
       <UsageIndicatorInfoModal
         isOpen={showUsageIndicatorInfo}
         onClose={() => setShowUsageIndicatorInfo(false)}

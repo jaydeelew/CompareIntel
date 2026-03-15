@@ -29,6 +29,8 @@ export interface FileUploadProps {
   setInput: (value: string) => void
   textareaRef: React.RefObject<HTMLTextAreaElement | null>
   disabled?: boolean
+  /** When true, tooltip is hidden (used for mobile layout) */
+  isMobileLayout?: boolean
 }
 
 export interface FileUploadHandle {
@@ -276,7 +278,15 @@ const DESKTOP_ACCEPT =
   '.txt,.md,.markdown,.json,.xml,.html,.htm,.css,.js,.jsx,.ts,.tsx,.py,.java,.c,.cpp,.cc,.cxx,.h,.hpp,.cs,.rb,.go,.rs,.swift,.kt,.php,.sh,.bash,.zsh,.fish,.yaml,.yml,.toml,.ini,.cfg,.conf,.log,.csv,.sql,.r,.R,.m,.pl,.pm,.lua,.scala,.clj,.cljs,.hs,.elm,.ex,.exs,.dart,.vue,.svelte,.astro,.graphql,.gql,.dockerfile,.env,.gitignore,.gitattributes,.editorconfig,.eslintrc,.prettierrc,.babelrc,.webpack,.rollup,.vite,.makefile,.cmake,.gradle,.maven,.pom,.sbt,.build,.lock,.lockfile,.package,.requirements,.pip,.conda,.dockerignore,.npmignore,.yarnignore,.eslintignore,.prettierignore,.pdf,.docx,.doc,.rtf,.odt,.png,.jpg,.jpeg,.webp,.gif,text/*,application/json,application/javascript,application/xml,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/msword,application/rtf,application/vnd.oasis.opendocument.text,image/png,image/jpeg,image/webp,image/gif'
 
 export const FileUpload = forwardRef<FileUploadHandle, FileUploadProps>(function FileUpload(
-  { attachedFiles, setAttachedFiles, input, setInput, textareaRef, disabled = false },
+  {
+    attachedFiles,
+    setAttachedFiles,
+    input,
+    setInput,
+    textareaRef,
+    disabled = false,
+    isMobileLayout = false,
+  },
   ref
 ) {
   const fileInputRef = useRef<HTMLInputElement | null>(null)
@@ -420,7 +430,31 @@ export const FileUpload = forwardRef<FileUploadHandle, FileUploadProps>(function
         style={{ display: 'none' }}
         onChange={handleFileUpload}
       />
-      <StyledTooltip text="Select or drag file here">
+      {!isMobileLayout && attachedFiles.length === 0 ? (
+        <StyledTooltip text="Select or drag file here">
+          <button
+            type="button"
+            onClick={handleUploadButtonClick}
+            className="textarea-icon-button file-upload-button"
+            disabled={disabled}
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              style={{ width: '20px', height: '20px', display: 'block' }}
+            >
+              <path
+                d="M12 5v14M5 12h14"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </button>
+        </StyledTooltip>
+      ) : (
         <button
           type="button"
           onClick={handleUploadButtonClick}
@@ -442,7 +476,7 @@ export const FileUpload = forwardRef<FileUploadHandle, FileUploadProps>(function
             />
           </svg>
         </button>
-      </StyledTooltip>
+      )}
     </>
   )
 })

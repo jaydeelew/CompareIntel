@@ -123,6 +123,8 @@ export interface SavedSelectionsDropdownProps {
   isFollowUpMode: boolean
   /** When provided, the dropdown panel renders into this container (e.g. as sibling of toolbar) instead of inline */
   dropdownContainerRef?: React.RefObject<HTMLElement | null>
+  /** When true, the trigger tooltip is hidden (e.g. on mobile) */
+  hideTooltip?: boolean
 }
 
 export function SavedSelectionsDropdown({
@@ -131,6 +133,7 @@ export function SavedSelectionsDropdown({
   modelsByProvider,
   isFollowUpMode,
   dropdownContainerRef,
+  hideTooltip = false,
 }: SavedSelectionsDropdownProps) {
   const {
     savedModelSelections,
@@ -175,33 +178,39 @@ export function SavedSelectionsDropdown({
 
   const defaultSelection = getDefaultSelection()
 
+  const triggerButton = (
+    <button
+      type="button"
+      className={`saved-selections-button ${showDropdown ? 'active' : ''}`}
+      onClick={() => {
+        setShowDropdown(!showDropdown)
+        setIsInSaveMode(false)
+        setSaveSelectionName('')
+        setSaveSelectionError(null)
+      }}
+    >
+      <svg
+        width="18"
+        height="18"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+      </svg>
+    </button>
+  )
+
   return (
     <div className="saved-selections-container" ref={containerRef}>
-      <StyledTooltip text="Save or load model selections">
-        <button
-          type="button"
-          className={`saved-selections-button ${showDropdown ? 'active' : ''}`}
-          onClick={() => {
-            setShowDropdown(!showDropdown)
-            setIsInSaveMode(false)
-            setSaveSelectionName('')
-            setSaveSelectionError(null)
-          }}
-        >
-          <svg
-            width="18"
-            height="18"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
-          </svg>
-        </button>
-      </StyledTooltip>
+      {hideTooltip ? (
+        triggerButton
+      ) : (
+        <StyledTooltip text="Save or load model selections">{triggerButton}</StyledTooltip>
+      )}
       {!defaultSelectionOverridden && defaultSelection && (
         <span
           className="default-selection-name"
