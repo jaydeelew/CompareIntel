@@ -291,6 +291,8 @@ export function HelpMeChoose({
   const [isCategoriesDragging, setIsCategoriesDragging] = useState(false)
   /** Category label shown in sticky bar when user scrolls (mobile: vertical scroll can hide headers) */
   const [visibleCategoryLabel, setVisibleCategoryLabel] = useState<string | null>(null)
+  /** When true, at least one category header is visible — hide sticky banner to avoid redundancy */
+  const [categoryHeadersVisible, setCategoryHeadersVisible] = useState(true)
 
   /** Scrollbar at top: sync thumb with categories scroll, handle drag */
   const updateScrollbarThumb = useCallback(() => {
@@ -372,6 +374,39 @@ export function HelpMeChoose({
       el.removeEventListener('scroll', updateVisibleCategory)
     }
   }, [isMobileLayout, isExpanded, updateVisibleCategory])
+
+  /** Hide sticky banner when category headers are visible (avoid redundant "Best value" etc.) */
+  const headerIntersectionRef = useRef<Map<Element, boolean>>(new Map())
+  useEffect(() => {
+    if (!isMobileLayout || !isExpanded) {
+      setCategoryHeadersVisible(true)
+      return
+    }
+    const content = contentRef.current
+    const categories = categoriesRef.current
+    if (!content || !categories) return
+    const headers = categories.querySelectorAll<HTMLElement>('.help-me-choose-category-header')
+    if (headers.length === 0) return
+    const map = headerIntersectionRef.current
+    map.clear()
+    const checkVisible = () => {
+      setCategoryHeadersVisible([...map.values()].some(Boolean))
+    }
+    const observer = new IntersectionObserver(
+      entries => {
+        for (const e of entries) {
+          map.set(e.target, e.isIntersecting)
+        }
+        checkVisible()
+      },
+      { root: content, threshold: 0.1, rootMargin: '0px' }
+    )
+    headers.forEach(h => observer.observe(h))
+    return () => {
+      observer.disconnect()
+      map.clear()
+    }
+  }, [isMobileLayout, isExpanded, displayedCategories])
 
   const handleScrollbarPointerDown = useCallback((clientX: number, target: EventTarget) => {
     const el = categoriesRef.current
@@ -684,7 +719,7 @@ export function HelpMeChoose({
           className="help-me-choose-content"
           role="menu"
         >
-          {isMobileLayout && visibleCategoryLabel && (
+          {isMobileLayout && visibleCategoryLabel && !categoryHeadersVisible && (
             <div className="help-me-choose-sticky-category" aria-live="polite">
               {visibleCategoryLabel}
             </div>
