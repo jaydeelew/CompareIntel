@@ -642,9 +642,10 @@ export const ComparisonForm = memo<ComparisonFormProps>(
                 <button
                   type="button"
                   onClick={() => {
-                    if (getTooltipModalSuppressed('voice')) {
-                      if (isSpeechListening) stopSpeechListening()
-                      else startSpeechListening()
+                    if (isSpeechListening) {
+                      stopSpeechListening()
+                    } else if (getTooltipModalSuppressed('voice')) {
+                      startSpeechListening()
                     } else {
                       setTooltipModalButton('voice')
                     }
