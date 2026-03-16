@@ -213,11 +213,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
           case 'web-search':
             return {
               title: 'Web Search',
-              message: !canEnableWebSearch
-                ? 'Select a web-enabled model'
-                : webSearchEnabled
-                  ? 'Web search enabled'
-                  : 'Enable web search',
+              message: !canEnableWebSearch ? 'Select a web-enabled model' : 'Web search enabled',
             }
           case 'submit':
             return {
@@ -721,10 +717,16 @@ export const ComparisonForm = memo<ComparisonFormProps>(
                   if (isDisabled && isTouchDevice) {
                     handleDisabledButtonTap('websearch')
                   } else if (!isDisabled) {
-                    if (getTooltipModalSuppressed('web-search')) {
-                      setWebSearchEnabled(!webSearchEnabled)
+                    if (webSearchEnabled) {
+                      // Disabling: no modal, toggle directly
+                      setWebSearchEnabled(false)
                     } else {
-                      setTooltipModalButton('web-search')
+                      // Enabling: show modal with "Web search enabled" if not suppressed
+                      if (getTooltipModalSuppressed('web-search')) {
+                        setWebSearchEnabled(true)
+                      } else {
+                        setTooltipModalButton('web-search')
+                      }
                     }
                   }
                 }}
