@@ -78,6 +78,11 @@
   border-color: var(--border-strong);
 }
 
+/* Allow select-all tooltip to escape overflow clipping when hovered */
+.provider-dropdown:has(.tooltip:hover) {
+  overflow: visible;
+}
+
 /* Preserve corner-fill shadow when collapsed and hovered */
 .provider-dropdown:not(:has(.provider-models)):hover {
   box-shadow:

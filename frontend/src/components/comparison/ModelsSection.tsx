@@ -4,7 +4,10 @@ import { useResponsive } from '../../hooks'
 import type { Model, ModelsByProvider, User } from '../../types'
 import { formatTokenCount } from '../../utils/format'
 import { filterToVisionModels } from '../../utils/visionModels'
+import { StyledTooltip } from '../shared'
 
+import { SelectAllInfoModal } from './SelectAllInfoModal'
+import { getTooltipModalSuppressed } from './tooltipModalStorage'
 import { WebSearchInfoModal } from './WebSearchInfoModal'
 
 /**
@@ -86,6 +89,7 @@ export const ModelsSection: React.FC<ModelsSectionProps> = ({
 }) => {
   const { isMobileLayout } = useResponsive()
   const [showWebSearchInfoModal, setShowWebSearchInfoModal] = useState(false)
+  const [selectAllModalProvider, setSelectAllModalProvider] = useState<string | null>(null)
 
   // Determine user tier
   const userTier = isAuthenticated ? user?.subscription_tier || 'free' : 'unregistered'
@@ -195,30 +199,41 @@ export const ModelsSection: React.FC<ModelsSectionProps> = ({
 
                     const isAnonymousOrFreeTier = !isPaidTier
 
-                    return (
+                    const tooltipText = isDisabled
+                      ? isFollowUpMode
+                        ? 'Cannot add new models during follow-up'
+                        : `Cannot select more models (max ${maxModelsLimit} for your tier)`
+                      : allProviderModelsSelected
+                        ? 'Deselect All'
+                        : isAnonymousOrFreeTier
+                          ? 'Select all Available'
+                          : 'Select All'
+
+                    const selectAllButton = (
                       <div
                         className={`provider-select-all ${isDisabled ? 'disabled' : ''} ${allProviderModelsSelected ? 'all-selected' : ''}`}
                         onMouseDown={e => e.preventDefault()}
                         onClick={e => {
                           e.stopPropagation()
-                          if (!isDisabled) {
+                          if (isMobileLayout) {
+                            if (getTooltipModalSuppressed('select-all')) {
+                              if (!isDisabled) onToggleAllForProvider(provider)
+                            } else {
+                              setSelectAllModalProvider(provider)
+                            }
+                          } else if (!isDisabled) {
                             onToggleAllForProvider(provider)
                           }
                         }}
-                        title={
-                          isDisabled
-                            ? isFollowUpMode
-                              ? 'Cannot add new models during follow-up'
-                              : `Cannot select more models (max ${maxModelsLimit} for your tier)`
-                            : allProviderModelsSelected
-                              ? `Deselect All`
-                              : isAnonymousOrFreeTier
-                                ? `Select all Available`
-                                : `Select All`
-                        }
                       >
                         ✱
                       </div>
+                    )
+
+                    return isMobileLayout ? (
+                      selectAllButton
+                    ) : (
+                      <StyledTooltip text={tooltipText}>{selectAllButton}</StyledTooltip>
                     )
                   })()}
                   <span className={`dropdown-arrow ${openDropdowns.has(provider) ? 'open' : ''}`}>
@@ -627,6 +642,64 @@ export const ModelsSection: React.FC<ModelsSectionProps> = ({
         isOpen={showWebSearchInfoModal}
         onClose={() => setShowWebSearchInfoModal(false)}
       />
+
+      {selectAllModalProvider &&
+        (() => {
+          const models = modelsByProvider[selectAllModalProvider] || []
+          let visibleModels = hidePremiumModels
+            ? models.filter(model => {
+                if (isPaidTier) return true
+                if (model.trial_unlocked) return true
+                if (userTier === 'unregistered') return model.tier_access === 'unregistered'
+                return model.tier_access !== 'paid'
+              })
+            : models
+          if (hasAttachedImages) {
+            visibleModels = filterToVisionModels(visibleModels, modelsByProvider)
+          }
+          const availableProviderModels = visibleModels.filter(model => model.available !== false)
+          const providerModelIds = availableProviderModels.map(model => model.id)
+          const allProviderModelsSelected =
+            providerModelIds.every(id => selectedModels.includes(id)) && providerModelIds.length > 0
+          const hasAnySelected = providerModelIds.some(id => selectedModels.includes(id))
+          const hasAnyOriginallySelected = providerModelIds.some(id =>
+            originalSelectedModels.includes(id)
+          )
+          const isDisabled =
+            (selectedModels.length >= maxModelsLimit && !hasAnySelected) ||
+            (isFollowUpMode && !hasAnySelected && !hasAnyOriginallySelected)
+          const isAnonymousOrFreeTier = !isPaidTier
+
+          const tooltipText = isDisabled
+            ? isFollowUpMode
+              ? 'Cannot add new models during follow-up'
+              : `Cannot select more models (max ${maxModelsLimit} for your tier)`
+            : allProviderModelsSelected
+              ? 'Deselect All'
+              : isAnonymousOrFreeTier
+                ? 'Select all Available'
+                : 'Select All'
+
+          const modalTitle = isDisabled ? 'Select All' : tooltipText
+          const modalMessage = isDisabled
+            ? tooltipText
+            : allProviderModelsSelected
+              ? 'Deselect all models for this provider.'
+              : isAnonymousOrFreeTier
+                ? 'Select all available models for this provider.'
+                : 'Select all models for this provider.'
+
+          return (
+            <SelectAllInfoModal
+              isOpen={true}
+              onClose={() => setSelectAllModalProvider(null)}
+              onConfirm={() => onToggleAllForProvider(selectAllModalProvider)}
+              title={modalTitle}
+              message={modalMessage}
+              isDisabled={isDisabled}
+            />
+          )
+        })()}
     </div>
   )
 }
