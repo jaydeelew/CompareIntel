@@ -2,7 +2,6 @@ import { useNavigate, useLocation } from 'react-router-dom'
 
 import { useTheme } from '../../contexts/ThemeContext'
 import { UserMenu } from '../auth'
-import { StyledTooltip } from '../shared'
 
 interface NavigationProps {
   isAuthenticated: boolean
@@ -103,33 +102,27 @@ export function Navigation({
           {isAuthenticated ? (
             <>
               {isAdmin && (
-                <StyledTooltip
-                  text={actualCurrentView === 'admin' ? 'Back to Main App' : 'Admin Panel'}
+                <button
+                  className="admin-avatar-button"
+                  onClick={() => handleViewChange(actualCurrentView === 'admin' ? 'main' : 'admin')}
+                  aria-label={actualCurrentView === 'admin' ? 'Back to Main App' : 'Admin Panel'}
                 >
-                  <button
-                    className="admin-avatar-button"
-                    onClick={() =>
-                      handleViewChange(actualCurrentView === 'admin' ? 'main' : 'admin')
-                    }
-                    aria-label={actualCurrentView === 'admin' ? 'Back to Main App' : 'Admin Panel'}
+                  <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
                   >
-                    <svg
-                      width="18"
-                      height="18"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="1.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <path d="M4 6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6Z" />
-                      <path d="M14 6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2h-2a2 2 0 0 1-2-2V6Z" />
-                      <path d="M4 16a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-2Z" />
-                      <path d="M14 16a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2h-2a2 2 0 0 1-2-2v-2Z" />
-                    </svg>
-                  </button>
-                </StyledTooltip>
+                    <path d="M4 6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6Z" />
+                    <path d="M14 6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2h-2a2 2 0 0 1-2-2V6Z" />
+                    <path d="M4 16a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-2Z" />
+                    <path d="M14 16a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2h-2a2 2 0 0 1-2-2v-2Z" />
+                  </svg>
+                </button>
               )}
               <UserMenu />
             </>
