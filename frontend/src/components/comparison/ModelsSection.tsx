@@ -181,11 +181,19 @@ export const ModelsSection: React.FC<ModelsSectionProps> = ({
                     )
                   })()}
                   {(() => {
-                    // Filter out unavailable models (where available === false)
-                    const availableProviderModels = visibleModels.filter(
-                      model => model.available !== false
-                    )
-                    const providerModelIds = availableProviderModels.map(model => model.id)
+                    // Filter to selectable models only (matches useModelManagement logic).
+                    // For unregistered/free tiers with disabled models visible, we must exclude
+                    // restricted models so allProviderModelsSelected can be true when the user
+                    // has selected all selectable models (icon turns orange).
+                    const selectableProviderModels = visibleModels.filter(model => {
+                      if (model.available === false) return false
+                      if (isPaidTier) return true
+                      if (model.trial_unlocked) return true
+                      if (userTier === 'unregistered') return model.tier_access === 'unregistered'
+                      if (userTier === 'free') return model.tier_access !== 'paid'
+                      return true
+                    })
+                    const providerModelIds = selectableProviderModels.map(model => model.id)
                     const allProviderModelsSelected =
                       providerModelIds.every(id => selectedModels.includes(id)) &&
                       providerModelIds.length > 0
@@ -206,7 +214,7 @@ export const ModelsSection: React.FC<ModelsSectionProps> = ({
                       : allProviderModelsSelected
                         ? 'Deselect All'
                         : isAnonymousOrFreeTier
-                          ? 'Select all Available'
+                          ? 'Select all available'
                           : 'Select All'
 
                     const selectAllButton = (
@@ -657,8 +665,15 @@ export const ModelsSection: React.FC<ModelsSectionProps> = ({
           if (hasAttachedImages) {
             visibleModels = filterToVisionModels(visibleModels, modelsByProvider)
           }
-          const availableProviderModels = visibleModels.filter(model => model.available !== false)
-          const providerModelIds = availableProviderModels.map(model => model.id)
+          const selectableProviderModels = visibleModels.filter(model => {
+            if (model.available === false) return false
+            if (isPaidTier) return true
+            if (model.trial_unlocked) return true
+            if (userTier === 'unregistered') return model.tier_access === 'unregistered'
+            if (userTier === 'free') return model.tier_access !== 'paid'
+            return true
+          })
+          const providerModelIds = selectableProviderModels.map(model => model.id)
           const allProviderModelsSelected =
             providerModelIds.every(id => selectedModels.includes(id)) && providerModelIds.length > 0
           const hasAnySelected = providerModelIds.some(id => selectedModels.includes(id))
@@ -677,7 +692,7 @@ export const ModelsSection: React.FC<ModelsSectionProps> = ({
             : allProviderModelsSelected
               ? 'Deselect All'
               : isAnonymousOrFreeTier
-                ? 'Select all Available'
+                ? 'Select all available'
                 : 'Select All'
 
           const modalTitle = isDisabled ? 'Select All' : tooltipText
