@@ -19,6 +19,7 @@ import {
 } from '../../data/helpMeChooseRecommendations'
 import type { ModelsByProvider, User } from '../../types'
 import { modelSupportsVision } from '../../utils/visionModels'
+import { StyledTooltip } from '../shared'
 
 import { HelpMeChooseScopeInfoModal } from './HelpMeChooseScopeInfoModal'
 
@@ -833,6 +834,8 @@ export function HelpMeChoose({
                             modelRestrictedByModelId.get(entry.modelId) ?? false
                           const isSelected = selectedModels.includes(entry.modelId)
                           const displayName = getModelDisplayName(entry.modelId)
+                          const model = findModelById(modelsByProvider, entry.modelId)
+                          const supportsWebSearch = model?.supports_web_search ?? false
                           const isFirstSelectedInDom = isSelected && !foundFirstSelected
                           if (isSelected) foundFirstSelected = true
                           return (
@@ -872,6 +875,49 @@ export function HelpMeChoose({
                                       <path d="M7 11V7a5 5 0 0 1 10 0v4" />
                                     </svg>
                                   </span>
+                                )}
+                                {supportsWebSearch && (
+                                  <StyledTooltip
+                                    text={
+                                      isMobileLayout
+                                        ? 'This model can access the Internet — tap for info'
+                                        : 'This model can access the Internet'
+                                    }
+                                  >
+                                    <span
+                                      className="web-search-indicator"
+                                      style={{
+                                        display: 'inline-flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        width: '14px',
+                                        height: '14px',
+                                        opacity: isSelected ? 1 : 0.6,
+                                        flexShrink: 0,
+                                      }}
+                                      aria-hidden
+                                    >
+                                      <svg
+                                        width="14"
+                                        height="14"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        strokeWidth="2"
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        style={{
+                                          color: isSelected
+                                            ? 'var(--primary-color, #007bff)'
+                                            : 'var(--text-secondary, #666)',
+                                          display: 'block',
+                                        }}
+                                      >
+                                        <circle cx="12" cy="12" r="10" />
+                                        <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+                                      </svg>
+                                    </span>
+                                  </StyledTooltip>
                                 )}
                                 <button
                                   type="button"
