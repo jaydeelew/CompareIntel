@@ -1,4 +1,5 @@
 import type { User, ModelConversation } from '../../types'
+import { StyledTooltip } from '../shared'
 
 export interface ModelsSectionHeaderProps {
   /** Currently selected model IDs */
@@ -208,157 +209,164 @@ export function ModelsSectionHeader({
         <div className="models-header-buttons">
           {/* Hide Premium Models Toggle - only for anonymous and free tiers */}
           {showHidePremiumToggle && (
-            <button
-              className={`hide-premium-button ${hidePremiumModels ? 'active' : ''}`}
-              onClick={handlePremiumToggleClick}
-              title={hidePremiumModels ? 'Show premium models' : 'Hide premium models'}
-              aria-label={hidePremiumModels ? 'Show premium models' : 'Hide premium models'}
-            >
-              {hidePremiumModels ? (
-                /* Eye icon (hiding premium models - shows open eye to indicate "click to show") */
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                  aria-hidden="true"
-                  preserveAspectRatio="xMidYMid meet"
-                >
-                  <path
-                    d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"
-                    strokeWidth="1"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                  <circle
-                    cx="12"
-                    cy="12"
-                    r="3"
-                    strokeWidth="1"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              ) : (
-                /* Eye-off icon (showing all models - shows crossed eye to indicate "click to hide") */
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                  aria-hidden="true"
-                  preserveAspectRatio="xMidYMid meet"
-                >
-                  <path
-                    d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"
-                    strokeWidth="1"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                  <line
-                    x1="1"
-                    y1="1"
-                    x2="23"
-                    y2="23"
-                    strokeWidth="1"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              )}
-            </button>
+            <StyledTooltip text={hidePremiumModels ? 'Show premium models' : 'Hide premium models'}>
+              <button
+                className={`hide-premium-button ${hidePremiumModels ? 'active' : ''}`}
+                onClick={handlePremiumToggleClick}
+                aria-label={hidePremiumModels ? 'Show premium models' : 'Hide premium models'}
+              >
+                {hidePremiumModels ? (
+                  /* Eye icon (hiding premium models - shows open eye to indicate "click to show") */
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                    aria-hidden="true"
+                    preserveAspectRatio="xMidYMid meet"
+                  >
+                    <path
+                      d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"
+                      strokeWidth="1"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                    <circle
+                      cx="12"
+                      cy="12"
+                      r="3"
+                      strokeWidth="1"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                ) : (
+                  /* Eye-off icon (showing all models - shows crossed eye to indicate "click to hide") */
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                    aria-hidden="true"
+                    preserveAspectRatio="xMidYMid meet"
+                  >
+                    <path
+                      d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"
+                      strokeWidth="1"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                    <line
+                      x1="1"
+                      y1="1"
+                      x2="23"
+                      y2="23"
+                      strokeWidth="1"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                )}
+              </button>
+            </StyledTooltip>
           )}
-          <button
-            className={`collapse-all-button ${isMobileLayout && openDropdowns.size === 0 ? 'touch-disabled' : ''}`}
-            onClick={handleCollapseAllClick}
-            disabled={!isMobileLayout && openDropdowns.size === 0}
-            title="Collapse all model providers"
-            aria-label="Collapse all model providers"
-          >
-            {/* Double chevrons up icon (collapse all) */}
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-              aria-hidden="true"
-              preserveAspectRatio="xMidYMid meet"
+          <StyledTooltip text="Collapse all model providers">
+            <button
+              className={`collapse-all-button ${isMobileLayout && openDropdowns.size === 0 ? 'touch-disabled' : ''}`}
+              onClick={handleCollapseAllClick}
+              disabled={!isMobileLayout && openDropdowns.size === 0}
+              aria-label="Collapse all model providers"
             >
-              <path
-                d="M7 13l5-5 5 5M7 18l5-5 5 5"
-                strokeWidth="1"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </button>
-          <button
-            className={`clear-all-button ${isMobileLayout && (selectedModels.length === 0 || isFollowUpMode) ? 'touch-disabled' : ''}`}
-            onClick={handleClearAllClick}
-            disabled={!isMobileLayout && (selectedModels.length === 0 || isFollowUpMode)}
-            title={isFollowUpMode ? 'Cannot clear models during follow-up' : 'Clear all selections'}
-            aria-label={
-              isFollowUpMode ? 'Cannot clear models during follow-up' : 'Clear all selections'
-            }
+              {/* Double chevrons up icon (collapse all) */}
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                aria-hidden="true"
+                preserveAspectRatio="xMidYMid meet"
+              >
+                <path
+                  d="M7 13l5-5 5 5M7 18l5-5 5 5"
+                  strokeWidth="1"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </button>
+          </StyledTooltip>
+          <StyledTooltip
+            text={isFollowUpMode ? 'Cannot clear models during follow-up' : 'Clear all selections'}
           >
-            {/* Square with X icon (deselect all) */}
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-              aria-hidden="true"
-              preserveAspectRatio="xMidYMid meet"
+            <button
+              className={`clear-all-button ${isMobileLayout && (selectedModels.length === 0 || isFollowUpMode) ? 'touch-disabled' : ''}`}
+              onClick={handleClearAllClick}
+              disabled={!isMobileLayout && (selectedModels.length === 0 || isFollowUpMode)}
+              aria-label={
+                isFollowUpMode ? 'Cannot clear models during follow-up' : 'Clear all selections'
+              }
             >
-              <rect
-                x="5"
-                y="5"
-                width="14"
-                height="14"
-                strokeWidth="1"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-              <path
-                d="M9 9l6 6M15 9l-6 6"
-                strokeWidth="1"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </button>
+              {/* Square with X icon (deselect all) */}
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                aria-hidden="true"
+                preserveAspectRatio="xMidYMid meet"
+              >
+                <rect
+                  x="5"
+                  y="5"
+                  width="14"
+                  height="14"
+                  strokeWidth="1"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                <path
+                  d="M9 9l6 6M15 9l-6 6"
+                  strokeWidth="1"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </button>
+          </StyledTooltip>
         </div>
         <div className="models-header-right">
-          <div
-            className={`models-count-indicator ${selectedModels.length > 0 ? 'has-selected' : 'empty'}`}
-            title="Total selections"
-            onClick={e => e.stopPropagation()}
-          >
-            {selectedModels.length} of {maxModelsLimit} selected
-          </div>
-          <button
-            className="models-toggle-arrow"
-            onClick={e => {
-              e.stopPropagation()
-              onToggleModelsHidden()
-            }}
-            style={{
-              padding: '0.5rem',
-              fontSize: '1.25rem',
-              border: 'none',
-              outline: 'none',
-              boxShadow: 'none',
-              background: 'var(--bg-primary)',
-              color: 'var(--primary-color)',
-              borderRadius: '6px',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              width: '36px',
-              height: '36px',
-              fontWeight: 'bold',
-            }}
-            title={isModelsHidden ? 'Show model selection' : 'Hide model selection'}
-          >
-            {isModelsHidden ? '▼' : '▲'}
-          </button>
+          <StyledTooltip text="Total selections">
+            <div
+              className={`models-count-indicator ${selectedModels.length > 0 ? 'has-selected' : 'empty'}`}
+              onClick={e => e.stopPropagation()}
+            >
+              {selectedModels.length} of {maxModelsLimit} selected
+            </div>
+          </StyledTooltip>
+          <StyledTooltip text={isModelsHidden ? 'Show model selection' : 'Hide model selection'}>
+            <button
+              className="models-toggle-arrow"
+              onClick={e => {
+                e.stopPropagation()
+                onToggleModelsHidden()
+              }}
+              style={{
+                padding: '0.5rem',
+                fontSize: '1.25rem',
+                border: 'none',
+                outline: 'none',
+                boxShadow: 'none',
+                background: 'var(--bg-primary)',
+                color: 'var(--primary-color)',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: '36px',
+                height: '36px',
+                fontWeight: 'bold',
+              }}
+            >
+              {isModelsHidden ? '▼' : '▲'}
+            </button>
+          </StyledTooltip>
         </div>
       </div>
     </div>
