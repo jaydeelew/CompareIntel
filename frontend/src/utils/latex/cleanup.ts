@@ -57,6 +57,9 @@ export function cleanMalformedContent(
     cleaned = cleaned.replace(/\\\$/g, '$')
   }
 
+  // Remove trailing backslashes at end of lines (common Gemini 2.0 Flash artifact)
+  cleaned = cleaned.replace(/\\\s*$/gm, '')
+
   cleaned = cleaned.replace(
     /<frac>([\s\S]*?)<\/frac>\s*<div[^>]*style\s*=\s*["'][^"']*border-top[^"']*["'][^>]*>[\s\S]*?<\/div>\s*<div[^>]*style\s*=\s*["'][^"']*margin-left[^"']*["'][^>]*>([\s\S]*?)<\/div>/gi,
     (_match, numerator, denominator) => {
