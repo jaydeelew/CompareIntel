@@ -250,6 +250,21 @@
   cursor: pointer;
 }
 
+/* Model option controls (globe indicator + checkbox) - order: globe first, checkbox second */
+.model-option-controls {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+/* Touch/mobile: extra separation between globe and checkbox to reduce mis-taps */
+@media (pointer: coarse) {
+  .model-option-controls,
+  .model-option-controls-mobile {
+    gap: 0.75rem !important;
+  }
+}
+
 /* Model Checkbox */
 .model-checkbox {
   width: 18px;

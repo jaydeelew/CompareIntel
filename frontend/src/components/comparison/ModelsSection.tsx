@@ -284,9 +284,11 @@ export const ModelsSection: React.FC<ModelsSectionProps> = ({
                       }
                     }
 
+                    const checkboxId = `model-checkbox-${model.id}`
                     return (
                       <label
                         key={model.id}
+                        htmlFor={checkboxId}
                         className={`model-option ${isSelected ? 'selected' : ''} ${isDisabled ? 'disabled' : ''} ${isRestricted ? 'restricted' : ''}`}
                         onMouseDown={e => e.preventDefault()}
                         onClick={e => {
@@ -394,28 +396,14 @@ export const ModelsSection: React.FC<ModelsSectionProps> = ({
                           <p>{model.description}</p>
                         </div>
                         <div
+                          className={`model-option-controls ${isMobileLayout ? 'model-option-controls-mobile' : ''}`}
                           style={{
                             display: 'flex',
                             alignItems: 'center',
-                            gap: '0.375rem',
+                            gap: isMobileLayout ? '0.75rem' : '0.375rem',
                             flexShrink: 0,
                           }}
                         >
-                          {/* Checkbox must be first so the label activates it (not the globe button) when clicking anywhere on the model option */}
-                          <input
-                            type="checkbox"
-                            checked={isSelected}
-                            disabled={isDisabled}
-                            onChange={handleModelClick}
-                            onMouseDown={e => e.preventDefault()}
-                            className={`model-checkbox ${isFollowUpMode && !isSelected && wasOriginallySelected ? 'follow-up-deselected' : ''}`}
-                            data-testid={`model-checkbox-${model.id}`}
-                            style={{
-                              margin: 0,
-                              width: '16px',
-                              height: '16px',
-                            }}
-                          />
                           {model.supports_web_search &&
                             (() => {
                               const indicator = (
@@ -475,6 +463,21 @@ export const ModelsSection: React.FC<ModelsSectionProps> = ({
                                 </span>
                               )
                             })()}
+                          <input
+                            type="checkbox"
+                            id={checkboxId}
+                            checked={isSelected}
+                            disabled={isDisabled}
+                            onChange={handleModelClick}
+                            onMouseDown={e => e.preventDefault()}
+                            className={`model-checkbox ${isFollowUpMode && !isSelected && wasOriginallySelected ? 'follow-up-deselected' : ''}`}
+                            data-testid={`model-checkbox-${model.id}`}
+                            style={{
+                              margin: 0,
+                              width: '16px',
+                              height: '16px',
+                            }}
+                          />
                         </div>
                       </label>
                     )
