@@ -814,12 +814,9 @@ export const ComparisonForm = memo<ComparisonFormProps>(
                   if (isDisabled && isTouchDevice) {
                     handleDisabledButtonTap('submit')
                   } else if (!isDisabled) {
-                    if (getTooltipModalSuppressed('submit')) {
-                      if (isFollowUpMode) onContinueConversation()
-                      else onSubmitClick()
-                    } else {
-                      setTooltipModalButton('submit')
-                    }
+                    // When enabled on touchscreen/mobile, submit directly without modal
+                    if (isFollowUpMode) onContinueConversation()
+                    else onSubmitClick()
                   }
                 }}
                 disabled={
