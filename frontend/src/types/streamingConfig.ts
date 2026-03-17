@@ -39,6 +39,8 @@ export interface StreamingInputState {
   temperature: number // 0.0-2.0, controls response randomness
   topP: number // 0.0-1.0, nucleus sampling
   maxTokens: number | null // cap on output length, null = use model default
+  aspectRatio?: string // for image generation
+  imageSize?: string // for image generation
 }
 
 export interface StreamingConversationState {

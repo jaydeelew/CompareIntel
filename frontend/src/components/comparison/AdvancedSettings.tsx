@@ -26,6 +26,14 @@ export interface AdvancedSettingsProps {
   isExpanded?: boolean
   /** Called when expand state should change (for mutual exclusivity with other dropdowns) */
   onExpandChange?: (expanded: boolean) => void
+  /** When true, show aspect ratio and image size only; hide temp/topP/maxTokens */
+  showImageConfig?: boolean
+  aspectRatio?: string
+  onAspectRatioChange?: (v: string) => void
+  imageSize?: string
+  onImageSizeChange?: (v: string) => void
+  supportedAspectRatios?: string[]
+  supportedImageSizes?: string[]
 }
 
 const DEFAULTS = { temperature: 0.7, topP: 1.0, maxTokens: null as number | null }
@@ -38,6 +46,21 @@ function stepForRange(min: number, max: number): number {
   if (range <= 65536) return 1024
   return 2048
 }
+
+/** Ordered by width/height ascending (portrait to landscape) */
+const IMAGE_ASPECT_RATIOS = [
+  '9:16',
+  '2:3',
+  '3:4',
+  '4:5',
+  '1:1',
+  '5:4',
+  '4:3',
+  '3:2',
+  '16:9',
+  '21:9',
+]
+const IMAGE_SIZES = ['1K', '2K', '4K']
 
 const PARAM_INFO: Record<string, { title: string; description: string }> = {
   temperature: {
@@ -54,6 +77,16 @@ const PARAM_INFO: Record<string, { title: string; description: string }> = {
     title: 'Max Output Tokens',
     description:
       'Sets the maximum length of the generated response in tokens (roughly ¾ of a word each). "Auto" lets the system choose the best limit for each model. Lower values produce shorter responses and use fewer credits. The slider range (256 to the maximum) depends on your selected models: when comparing multiple models, the upper limit is the lowest max supported by any selected model, so all models can honor your setting.',
+  },
+  aspectRatio: {
+    title: 'Aspect Ratio',
+    description:
+      'Shape of the generated image. Common choices: 1:1 (square), 16:9 (landscape), 9:16 (portrait). Options vary by model.',
+  },
+  imageSize: {
+    title: 'Image Size',
+    description:
+      'Output resolution: 1K, 2K, or 4K. Higher resolution uses more credits. Some models do not support 4K.',
   },
 }
 
@@ -164,6 +197,13 @@ export function AdvancedSettings({
   disabled = false,
   isExpanded: controlledExpanded,
   onExpandChange,
+  showImageConfig = false,
+  aspectRatio = '1:1',
+  onAspectRatioChange,
+  imageSize = '1K',
+  onImageSizeChange,
+  supportedAspectRatios: _supportedAspectRatios = IMAGE_ASPECT_RATIOS,
+  supportedImageSizes: _supportedImageSizes = IMAGE_SIZES,
 }: AdvancedSettingsProps) {
   const effectiveMax = Math.max(MAX_TOKENS_MIN, maxTokensCap)
   const [internalExpanded, setInternalExpanded] = useState(false)
@@ -181,15 +221,21 @@ export function AdvancedSettings({
   const displayTemp = clampedTemp.toFixed(1)
   const displayTopP = clampedTopP.toFixed(2)
 
-  const isNonDefault =
-    temperature !== DEFAULTS.temperature ||
-    topP !== DEFAULTS.topP ||
-    maxTokens !== DEFAULTS.maxTokens
+  const isNonDefault = showImageConfig
+    ? aspectRatio !== '1:1' || imageSize !== '1K'
+    : temperature !== DEFAULTS.temperature ||
+      topP !== DEFAULTS.topP ||
+      maxTokens !== DEFAULTS.maxTokens
 
   const handleReset = () => {
-    onTemperatureChange(DEFAULTS.temperature)
-    onTopPChange(DEFAULTS.topP)
-    onMaxTokensChange(DEFAULTS.maxTokens)
+    if (showImageConfig) {
+      onAspectRatioChange?.('1:1')
+      onImageSizeChange?.('1K')
+    } else {
+      onTemperatureChange(DEFAULTS.temperature)
+      onTopPChange(DEFAULTS.topP)
+      onMaxTokensChange(DEFAULTS.maxTokens)
+    }
   }
 
   const handleMaxTokensInput = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -296,113 +342,166 @@ export function AdvancedSettings({
 
       {isExpanded && (
         <div id="advanced-settings-content" className="advanced-settings-content">
-          {/* Temperature */}
-          <div className="advanced-settings-row">
-            <div className="advanced-settings-label-row">
-              <label htmlFor="temperature-slider" className="advanced-settings-label">
-                Temperature
-                <span className="advanced-settings-hint">(0–2)</span>
-              </label>
-              {renderInfoTrigger('temperature')}
-            </div>
-            <div className="advanced-settings-slider-wrap">
-              <input
-                id="temperature-slider"
-                type="range"
-                min="0"
-                max="2"
-                step="0.1"
-                value={clampedTemp}
-                onChange={e => onTemperatureChange(parseFloat(e.target.value))}
-                disabled={disabled}
-                className="advanced-settings-slider"
-                aria-valuemin={0}
-                aria-valuemax={2}
-                aria-valuenow={clampedTemp}
-                aria-valuetext={displayTemp}
-              />
-              <span
-                className={`advanced-settings-value ${temperature !== DEFAULTS.temperature ? 'modified' : ''}`}
-              >
-                {displayTemp}
-              </span>
-            </div>
-          </div>
+          {showImageConfig ? (
+            <>
+              {/* Aspect Ratio */}
+              <div className="advanced-settings-row">
+                <div className="advanced-settings-label-row">
+                  <label htmlFor="aspect-ratio-select" className="advanced-settings-label">
+                    Aspect ratio
+                  </label>
+                  {renderInfoTrigger('aspectRatio')}
+                </div>
+                <select
+                  id="aspect-ratio-select"
+                  value={aspectRatio}
+                  onChange={e => onAspectRatioChange?.(e.target.value)}
+                  disabled={disabled}
+                  className="advanced-settings-select"
+                  aria-label="Aspect ratio"
+                >
+                  {IMAGE_ASPECT_RATIOS.map(r => (
+                    <option key={r} value={r}>
+                      {r}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              {/* Image Size */}
+              <div className="advanced-settings-row">
+                <div className="advanced-settings-label-row">
+                  <label htmlFor="image-size-select" className="advanced-settings-label">
+                    Image size
+                  </label>
+                  {renderInfoTrigger('imageSize')}
+                </div>
+                <select
+                  id="image-size-select"
+                  value={imageSize}
+                  onChange={e => onImageSizeChange?.(e.target.value)}
+                  disabled={disabled}
+                  className="advanced-settings-select"
+                  aria-label="Image size"
+                >
+                  {IMAGE_SIZES.map(s => (
+                    <option key={s} value={s}>
+                      {s}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </>
+          ) : (
+            <>
+              {/* Temperature */}
+              <div className="advanced-settings-row">
+                <div className="advanced-settings-label-row">
+                  <label htmlFor="temperature-slider" className="advanced-settings-label">
+                    Temperature
+                    <span className="advanced-settings-hint">(0–2)</span>
+                  </label>
+                  {renderInfoTrigger('temperature')}
+                </div>
+                <div className="advanced-settings-slider-wrap">
+                  <input
+                    id="temperature-slider"
+                    type="range"
+                    min="0"
+                    max="2"
+                    step="0.1"
+                    value={clampedTemp}
+                    onChange={e => onTemperatureChange(parseFloat(e.target.value))}
+                    disabled={disabled}
+                    className="advanced-settings-slider"
+                    aria-valuemin={0}
+                    aria-valuemax={2}
+                    aria-valuenow={clampedTemp}
+                    aria-valuetext={displayTemp}
+                  />
+                  <span
+                    className={`advanced-settings-value ${temperature !== DEFAULTS.temperature ? 'modified' : ''}`}
+                  >
+                    {displayTemp}
+                  </span>
+                </div>
+              </div>
 
-          {/* Top P */}
-          <div className="advanced-settings-row">
-            <div className="advanced-settings-label-row">
-              <label htmlFor="top-p-slider" className="advanced-settings-label">
-                Top P<span className="advanced-settings-hint">(0–1)</span>
-              </label>
-              {renderInfoTrigger('topP')}
-            </div>
-            <div className="advanced-settings-slider-wrap">
-              <input
-                id="top-p-slider"
-                type="range"
-                min="0"
-                max="1"
-                step="0.05"
-                value={clampedTopP}
-                onChange={e => onTopPChange(parseFloat(e.target.value))}
-                disabled={disabled}
-                className="advanced-settings-slider"
-                aria-valuemin={0}
-                aria-valuemax={1}
-                aria-valuenow={clampedTopP}
-                aria-valuetext={displayTopP}
-              />
-              <span
-                className={`advanced-settings-value ${topP !== DEFAULTS.topP ? 'modified' : ''}`}
-              >
-                {displayTopP}
-              </span>
-            </div>
-          </div>
+              {/* Top P */}
+              <div className="advanced-settings-row">
+                <div className="advanced-settings-label-row">
+                  <label htmlFor="top-p-slider" className="advanced-settings-label">
+                    Top P<span className="advanced-settings-hint">(0–1)</span>
+                  </label>
+                  {renderInfoTrigger('topP')}
+                </div>
+                <div className="advanced-settings-slider-wrap">
+                  <input
+                    id="top-p-slider"
+                    type="range"
+                    min="0"
+                    max="1"
+                    step="0.05"
+                    value={clampedTopP}
+                    onChange={e => onTopPChange(parseFloat(e.target.value))}
+                    disabled={disabled}
+                    className="advanced-settings-slider"
+                    aria-valuemin={0}
+                    aria-valuemax={1}
+                    aria-valuenow={clampedTopP}
+                    aria-valuetext={displayTopP}
+                  />
+                  <span
+                    className={`advanced-settings-value ${topP !== DEFAULTS.topP ? 'modified' : ''}`}
+                  >
+                    {displayTopP}
+                  </span>
+                </div>
+              </div>
 
-          {/* Max Tokens */}
-          <div className="advanced-settings-row">
-            <div className="advanced-settings-label-row">
-              <label htmlFor="max-tokens-slider" className="advanced-settings-label">
-                Max output tokens
-                <span className="advanced-settings-hint">
-                  (Auto or 256–{effectiveMax.toLocaleString()})
-                </span>
-              </label>
-              {renderInfoTrigger('maxTokens')}
-            </div>
-            <div className="advanced-settings-slider-wrap">
-              <input
-                id="max-tokens-slider"
-                type="range"
-                min={MAX_TOKENS_MIN}
-                max={effectiveMax}
-                step={stepForRange(MAX_TOKENS_MIN, effectiveMax)}
-                value={Math.min(maxTokensSliderValue, effectiveMax)}
-                onChange={handleMaxTokensSlider}
-                disabled={disabled}
-                className="advanced-settings-slider"
-                aria-valuemin={MAX_TOKENS_MIN}
-                aria-valuemax={effectiveMax}
-                aria-valuenow={Math.min(maxTokensSliderValue, effectiveMax)}
-                aria-valuetext={maxTokens ? String(maxTokens) : 'Auto'}
-              />
-              <input
-                id="max-tokens-input"
-                type="number"
-                min={MAX_TOKENS_MIN}
-                max={effectiveMax}
-                step={stepForRange(MAX_TOKENS_MIN, effectiveMax)}
-                value={maxTokens ?? ''}
-                onChange={handleMaxTokensInput}
-                disabled={disabled}
-                placeholder="Auto"
-                className="advanced-settings-number-input"
-                aria-label="Max output tokens value"
-              />
-            </div>
-          </div>
+              {/* Max Tokens */}
+              <div className="advanced-settings-row">
+                <div className="advanced-settings-label-row">
+                  <label htmlFor="max-tokens-slider" className="advanced-settings-label">
+                    Max output tokens
+                    <span className="advanced-settings-hint">
+                      (Auto or 256–{effectiveMax.toLocaleString()})
+                    </span>
+                  </label>
+                  {renderInfoTrigger('maxTokens')}
+                </div>
+                <div className="advanced-settings-slider-wrap">
+                  <input
+                    id="max-tokens-slider"
+                    type="range"
+                    min={MAX_TOKENS_MIN}
+                    max={effectiveMax}
+                    step={stepForRange(MAX_TOKENS_MIN, effectiveMax)}
+                    value={Math.min(maxTokensSliderValue, effectiveMax)}
+                    onChange={handleMaxTokensSlider}
+                    disabled={disabled}
+                    className="advanced-settings-slider"
+                    aria-valuemin={MAX_TOKENS_MIN}
+                    aria-valuemax={effectiveMax}
+                    aria-valuenow={Math.min(maxTokensSliderValue, effectiveMax)}
+                    aria-valuetext={maxTokens ? String(maxTokens) : 'Auto'}
+                  />
+                  <input
+                    id="max-tokens-input"
+                    type="number"
+                    min={MAX_TOKENS_MIN}
+                    max={effectiveMax}
+                    step={stepForRange(MAX_TOKENS_MIN, effectiveMax)}
+                    value={maxTokens ?? ''}
+                    onChange={handleMaxTokensInput}
+                    disabled={disabled}
+                    placeholder="Auto"
+                    className="advanced-settings-number-input"
+                    aria-label="Max output tokens value"
+                  />
+                </div>
+              </div>
+            </>
+          )}
 
           {/* Reset to defaults - always visible; disabled when already at defaults */}
           <div className="advanced-settings-reset-row">
@@ -413,7 +512,9 @@ export function AdvancedSettings({
               disabled={disabled || !isNonDefault}
               title={
                 isNonDefault
-                  ? 'Restore Temperature 0.7, Top P 1.0, Max output tokens Auto'
+                  ? showImageConfig
+                    ? 'Restore aspect ratio 1:1, image size 1K'
+                    : 'Restore Temperature 0.7, Top P 1.0, Max output tokens Auto'
                   : 'Already using default values'
               }
             >

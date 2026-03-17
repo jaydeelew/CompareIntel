@@ -28,6 +28,7 @@ import type {
 import { validateComparisonInput } from '../utils/comparisonValidation'
 import { prepareApiConversationHistory } from '../utils/conversationPreparer'
 import logger from '../utils/logger'
+import { modelSupportsImageGeneration } from '../utils/visionModels'
 
 import { useModelFailureCheck } from './useModelFailureCheck'
 import { useStreamCompletion } from './useStreamCompletion'
@@ -153,6 +154,8 @@ export function useComparisonStreaming(
     temperature,
     topP,
     maxTokens,
+    aspectRatio = '1:1',
+    imageSize = '1K',
   } = inputState
   const { conversations, isFollowUpMode, currentVisibleComparisonId } = conversation
   const { creditBalance, creditWarningType } = credit
@@ -332,6 +335,13 @@ export function useComparisonStreaming(
       logger.debug('[API Request] user location:', userLocation ? 'sending' : 'none (IP fallback)')
 
       const attachedImages = helpers.getAttachedImagesForApi(attachedFiles)
+      const hasImageModels = modelsToUse.some(m =>
+        modelSupportsImageGeneration(m, modelsByProvider)
+      )
+      const imageConfig =
+        hasImageModels && (aspectRatio || imageSize)
+          ? { aspect_ratio: aspectRatio, image_size: imageSize }
+          : undefined
 
       const stream = await compareStream(
         {
@@ -348,6 +358,7 @@ export function useComparisonStreaming(
           temperature,
           top_p: topP !== 1 ? topP : undefined,
           max_tokens: maxTokens ?? undefined,
+          image_config: imageConfig,
         },
         controller.signal
       )

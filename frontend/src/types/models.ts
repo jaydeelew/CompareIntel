@@ -39,6 +39,10 @@ export interface Model {
   supports_image_generation?: boolean
   /** Whether the model supports the temperature parameter (false = fixed/deterministic) */
   supports_temperature?: boolean
+  /** Supported aspect ratios for image generation (e.g. ["1:1", "16:9"]) */
+  image_aspect_ratios?: string[]
+  /** Supported image sizes (e.g. ["1K", "2K", "4K"]) */
+  image_sizes?: string[]
   /** Knowledge cutoff date for the model's training data (e.g., "March 2025") */
   knowledge_cutoff?: string
 }

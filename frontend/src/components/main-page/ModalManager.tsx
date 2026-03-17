@@ -15,8 +15,10 @@ import {
   DisabledButtonInfoModal,
   DisabledModelInfoModal,
   ModelTypeConflictModal,
+  ImageConfigConflictModal,
   type DisabledModelModalInfo,
   type ModelTypeConflictType,
+  type ImageConfigConflictType,
 } from '../comparison'
 import { TrialWelcomeModal } from '../trial'
 
@@ -65,6 +67,17 @@ export interface ModalManagerProps {
   // Model type conflict modal (text vs image generation)
   modelTypeConflictType: ModelTypeConflictType | null
   onModelTypeConflictModalClose: () => void
+
+  // Image config conflict modal (aspect ratio / resolution vs model capabilities)
+  imageConfigConflict: {
+    conflictType: ImageConfigConflictType | null
+    settingKind?: 'aspect_ratio' | 'image_size'
+    incompatibleModelIds: string[]
+  }
+  aspectRatio: string
+  imageSize: string
+  modelsByProvider: import('../../types').ModelsByProvider
+  onImageConfigConflictClose: () => void
 }
 
 export function ModalManager({
@@ -109,6 +122,13 @@ export function ModalManager({
   // Model type conflict modal
   modelTypeConflictType,
   onModelTypeConflictModalClose,
+
+  // Image config conflict modal
+  imageConfigConflict,
+  aspectRatio,
+  imageSize,
+  modelsByProvider,
+  onImageConfigConflictClose,
 }: ModalManagerProps) {
   return (
     <>
@@ -175,6 +195,18 @@ export function ModalManager({
         isOpen={modelTypeConflictType !== null}
         conflictType={modelTypeConflictType}
         onClose={onModelTypeConflictModalClose}
+      />
+
+      {/* Image Config Conflict Modal */}
+      <ImageConfigConflictModal
+        isOpen={imageConfigConflict.conflictType !== null}
+        conflictType={imageConfigConflict.conflictType}
+        settingKind={imageConfigConflict.settingKind}
+        incompatibleModelIds={imageConfigConflict.incompatibleModelIds}
+        aspectRatio={aspectRatio}
+        imageSize={imageSize}
+        modelsByProvider={modelsByProvider}
+        onClose={onImageConfigConflictClose}
       />
     </>
   )

@@ -89,6 +89,12 @@ export interface ModelsAreaProps {
   advancedSettings: { temperature: number; topP: number; maxTokens: number | null }
   /** Cap for max tokens based on selected models (min of their max_output_tokens) */
   maxTokensCap: number
+  /** When true, show aspect ratio and image size in Advanced (image mode) */
+  showImageConfig?: boolean
+  aspectRatio?: string
+  onAspectRatioChange?: (v: string) => void
+  imageSize?: string
+  onImageSizeChange?: (v: string) => void
   /** Which dropdown is open (Help me choose or Advanced); controlled by parent */
   modelsDropdownOpen: 'help-me-choose' | 'advanced' | null
   /** Called when dropdown open state changes */
@@ -162,6 +168,11 @@ export function ModelsArea({
   onMaxTokensChange,
   advancedSettings: _advancedSettings,
   maxTokensCap,
+  showImageConfig = false,
+  aspectRatio,
+  onAspectRatioChange,
+  imageSize,
+  onImageSizeChange,
   modelsDropdownOpen: openDropdown,
   onModelsDropdownChange: setOpenDropdown,
   onOpenHelpMeChoose,
@@ -305,6 +316,11 @@ export function ModelsArea({
                 disabled={isLoading}
                 isExpanded={openDropdown === 'advanced'}
                 onExpandChange={expanded => setOpenDropdown(expanded ? 'advanced' : null)}
+                showImageConfig={showImageConfig}
+                aspectRatio={aspectRatio}
+                onAspectRatioChange={onAspectRatioChange}
+                imageSize={imageSize}
+                onImageSizeChange={onImageSizeChange}
               />
             </div>
             {selectedModels.length > 0 &&

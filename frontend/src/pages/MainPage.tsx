@@ -52,6 +52,10 @@ import {
 } from '../types'
 import { generateBrowserFingerprint } from '../utils'
 import { isErrorMessage } from '../utils/error'
+import {
+  getIncompatibleModelsForConfig,
+  isModelCompatibleWithConfig,
+} from '../utils/imageConfigValidation'
 import logger from '../utils/logger'
 import { saveSessionState, onSaveStateEvent } from '../utils/sessionState'
 import {
@@ -95,6 +99,13 @@ export function MainPage() {
   const [defaultSelectionOverridden, setDefaultSelectionOverridden] = useState(false)
   const [visionNoticeMessage, setVisionNoticeMessage] = useState<string | null>(null)
   const [modelMode, setModelMode] = useState<'text' | 'image'>('text')
+  const [aspectRatio, setAspectRatio] = useState('1:1')
+  const [imageSize, setImageSize] = useState('1K')
+  const [imageConfigConflict, setImageConfigConflict] = useState<{
+    conflictType: 'advanced-setting-change' | 'model-add' | null
+    settingKind?: 'aspect_ratio' | 'image_size'
+    incompatibleModelIds: string[]
+  }>({ conflictType: null, incompatibleModelIds: [] })
 
   const { userLocation } = useGeolocation({ isAuthenticated, user })
 
@@ -704,6 +715,48 @@ export function MainPage() {
       setMaxTokens(effectiveMaxTokens)
     }
   }, [effectiveMaxTokens, maxTokens, setMaxTokens])
+
+  const handleAspectRatioChange = useCallback(
+    (newRatio: string) => {
+      const incompatible = getIncompatibleModelsForConfig(
+        selectedModels,
+        newRatio,
+        imageSize,
+        modelsByProvider
+      )
+      if (incompatible.length > 0) {
+        setImageConfigConflict({
+          conflictType: 'advanced-setting-change',
+          settingKind: 'aspect_ratio',
+          incompatibleModelIds: incompatible,
+        })
+        return
+      }
+      setAspectRatio(newRatio)
+    },
+    [selectedModels, imageSize, modelsByProvider]
+  )
+
+  const handleImageSizeChange = useCallback(
+    (newSize: string) => {
+      const incompatible = getIncompatibleModelsForConfig(
+        selectedModels,
+        aspectRatio,
+        newSize,
+        modelsByProvider
+      )
+      if (incompatible.length > 0) {
+        setImageConfigConflict({
+          conflictType: 'advanced-setting-change',
+          settingKind: 'image_size',
+          incompatibleModelIds: incompatible,
+        })
+        return
+      }
+      setImageSize(newSize)
+    },
+    [selectedModels, aspectRatio, modelsByProvider]
+  )
 
   // Breakout conversation hook - must be after allModels is defined
   const { breakoutPhase, handleBreakout } = useBreakoutConversation(
@@ -1668,6 +1721,11 @@ export function MainPage() {
         temperature,
         topP,
         maxTokens,
+        aspectRatio,
+        imageSize,
+        hasImageModels: selectedModels.some(id =>
+          modelSupportsImageGeneration(id, modelsByProvider)
+        ),
       },
       conversation: {
         conversations,
@@ -1983,6 +2041,16 @@ export function MainPage() {
           onOpenSignUp={openRegister}
           modelTypeConflictType={modelTypeConflictType}
           onModelTypeConflictModalClose={() => setModelTypeConflictType(null)}
+          imageConfigConflict={imageConfigConflict}
+          aspectRatio={aspectRatio}
+          imageSize={imageSize}
+          modelsByProvider={modelsByProvider}
+          onImageConfigConflictClose={() =>
+            setImageConfigConflict({
+              conflictType: null,
+              incompatibleModelIds: [],
+            })
+          }
         />
 
         <CreditsInfoModal
@@ -2130,6 +2198,16 @@ export function MainPage() {
                   setModelTypeConflictType('image-to-text')
                   return
                 }
+                if (
+                  isImageGen &&
+                  !isModelCompatibleWithConfig(modelId, aspectRatio, imageSize, modelsByProvider)
+                ) {
+                  setImageConfigConflict({
+                    conflictType: 'model-add',
+                    incompatibleModelIds: [modelId],
+                  })
+                  return
+                }
               }
               handleModelToggle(modelId)
               if (wouldAdd) {
@@ -2187,6 +2265,13 @@ export function MainPage() {
             maxTokensCap: effectiveMaxTokens,
             modelsDropdownOpen,
             onModelsDropdownChange: setModelsDropdownOpen,
+            showImageConfig:
+              modelMode === 'image' ||
+              selectedModels.some(id => modelSupportsImageGeneration(id, modelsByProvider)),
+            aspectRatio,
+            onAspectRatioChange: handleAspectRatioChange,
+            imageSize,
+            onImageSizeChange: handleImageSizeChange,
           }}
           onCancel={handleCancel}
           showResults={!!(response || conversations.length > 0)}

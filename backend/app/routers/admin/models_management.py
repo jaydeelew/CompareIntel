@@ -388,12 +388,56 @@ async def add_model(
         registry["models_by_provider"] = _sort_providers_alphabetically(
             registry["models_by_provider"]
         )
+
+        backend_dir = Path(__file__).parent.parent.parent.parent
+        if is_image_model:
+            # Test image config capabilities and store in registry
+            cap_script = backend_dir / "scripts" / "test_image_config_aspect_ratio.py"
+            cap_result = subprocess.run(
+                [
+                    sys.executable,
+                    str(cap_script),
+                    "--models",
+                    model_id,
+                    "--all",
+                    "--output-capabilities",
+                ],
+                capture_output=True,
+                text=True,
+                timeout=300,
+                cwd=str(backend_dir),
+            )
+            if cap_result.returncode == 0 and cap_result.stdout.strip():
+                try:
+                    caps_list = json.loads(cap_result.stdout.strip())
+                    for cap in caps_list:
+                        if cap.get("model_id") == model_id:
+                            new_model["image_aspect_ratios"] = cap.get("aspect_ratios", [])
+                            new_model["image_sizes"] = cap.get("image_sizes", [])
+                            break
+                except json.JSONDecodeError:
+                    logger.warning(f"Could not parse image config capabilities for {model_id}")
+            else:
+                # Conservative defaults when test fails or not run
+                new_model["image_aspect_ratios"] = [
+                    "9:16",
+                    "2:3",
+                    "3:4",
+                    "4:5",
+                    "1:1",
+                    "5:4",
+                    "4:3",
+                    "3:2",
+                    "16:9",
+                    "21:9",
+                ]
+                new_model["image_sizes"] = ["1K", "2K"]
+
         save_registry(registry)
         reload_registry()
 
         refresh_model_token_limits(model_id)
 
-        backend_dir = Path(__file__).parent.parent.parent.parent
         if not is_image_model:
             script_path = backend_dir / "scripts" / "setup_model_renderer.py"
             result = subprocess.run(
@@ -639,6 +683,56 @@ async def add_model_stream(
             registry["models_by_provider"] = _sort_providers_alphabetically(
                 registry["models_by_provider"]
             )
+
+            backend_dir = Path(__file__).parent.parent.parent.parent
+            if is_image_model:
+                try:
+                    yield f"data: {json.dumps({'type': 'progress', 'stage': 'image_config', 'message': 'Testing image config capabilities...', 'progress': 85})}\n\n"
+                except disconnect_exceptions:
+                    raise
+                cap_script = backend_dir / "scripts" / "test_image_config_aspect_ratio.py"
+                cap_result = subprocess.run(
+                    [
+                        sys.executable,
+                        str(cap_script),
+                        "--models",
+                        model_id,
+                        "--all",
+                        "--output-capabilities",
+                    ],
+                    capture_output=True,
+                    text=True,
+                    timeout=300,
+                    cwd=str(backend_dir),
+                )
+                if cap_result.returncode == 0 and cap_result.stdout.strip():
+                    try:
+                        caps_list = json.loads(cap_result.stdout.strip())
+                        for cap in caps_list:
+                            if cap.get("model_id") == model_id:
+                                new_model["image_aspect_ratios"] = cap.get("aspect_ratios", [])
+                                new_model["image_sizes"] = cap.get("image_sizes", [])
+                                break
+                    except json.JSONDecodeError:
+                        pass
+                if "image_aspect_ratios" not in new_model:
+                    new_model["image_aspect_ratios"] = [
+                        "9:16",
+                        "2:3",
+                        "3:4",
+                        "4:5",
+                        "1:1",
+                        "5:4",
+                        "4:3",
+                        "3:2",
+                        "16:9",
+                        "21:9",
+                    ]
+                    new_model["image_sizes"] = ["1K", "2K"]
+                try:
+                    yield f"data: {json.dumps({'type': 'progress', 'stage': 'saving', 'message': 'Updating registry with capabilities...', 'progress': 90})}\n\n"
+                except disconnect_exceptions:
+                    raise
 
             save_registry(registry)
             reload_registry()

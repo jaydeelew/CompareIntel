@@ -34,7 +34,8 @@ export const ImageGeneration: React.FC = () => {
               Switch to &quot;Image generation models&quot; in the model selector on the main
               comparison page. Select one or more image-capable models, enter your prompt, and run a
               comparison. Each model will generate an image based on your description, displayed
-              side-by-side for easy comparison.
+              side-by-side for easy comparison. Use Advanced settings to choose aspect ratio (1:1,
+              16:9, etc.) and resolution (1K–4K); options vary by model.
             </p>
           </section>
 

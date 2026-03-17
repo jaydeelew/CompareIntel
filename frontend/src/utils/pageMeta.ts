@@ -52,11 +52,11 @@ const PAGE_META: Record<string, PageMeta> = {
   '/image-generation': {
     title: 'Image Generation - CompareIntel',
     description:
-      'Compare AI image generation models side-by-side. Free tier: 2 image comparisons per day. Paid tiers coming soon for unlimited generations.',
+      'Compare AI image models side-by-side with aspect ratio and resolution controls. Free tier: 2 comparisons per day.',
     canonical: `${BASE_URL}/image-generation`,
     ogTitle: 'Image Generation - CompareIntel',
     ogDescription:
-      'Compare AI image generation models side-by-side. Free tier: 2 image comparisons per day. Paid tiers coming soon.',
+      'Compare AI image models side-by-side with aspect ratio and resolution controls. Free tier: 2 comparisons per day.',
     ogImage: DEFAULT_OG_IMAGE,
   },
   '/how-it-works': {

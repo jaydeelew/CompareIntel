@@ -236,6 +236,8 @@ async def generate_stream(ctx: StreamContext) -> Any:
                             if getattr(req, "attached_images", None)
                             else None
                         )
+                        image_config = getattr(req, "image_config", None) or None
+
                         gen = call_openrouter_streaming(
                             req.input_data,
                             model_id,
@@ -252,6 +254,7 @@ async def generate_stream(ctx: StreamContext) -> Any:
                             top_p=req.top_p,
                             attached_images=attached_images_dicts,
                             is_image_generation=is_image_gen,
+                            image_config=image_config if is_image_gen else None,
                             _client=per_model_client,
                         )
 

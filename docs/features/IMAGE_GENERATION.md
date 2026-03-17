@@ -32,3 +32,7 @@ Constants in `backend/app/config/constants.py`:
 ## Unregistered User Gating
 
 Unregistered users see image models in the list but cannot select them. Clicking an image model shows a sign-up modal. The Compare button is effectively disabled (no models selected).
+
+## Aspect Ratio and Resolution
+
+In image mode, Advanced settings show aspect ratio (e.g. 1:1, 16:9) and image size (1K, 2K, 4K). Each model has tested capabilities stored in the registry (`image_aspect_ratios`, `image_sizes`). Incompatible selections trigger a conflict modal and block the change. See `backend/scripts/test_image_config_aspect_ratio.py` and `backend/data/image_config_test_results.json`.

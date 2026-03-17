@@ -234,6 +234,7 @@ def call_openrouter_streaming(
     attached_images: list[dict[str, Any]]
     | None = None,  # Images for vision models [{mime_type, base64_data, filename?, placeholder?}]
     is_image_generation: bool = False,  # When True, add modalities for image output
+    image_config: dict[str, str] | None = None,  # {aspect_ratio, image_size} for image models
     _client: Any
     | None = None,  # Optional: use this OpenAI client instead of global (avoids connection contention in multi-model)
 ) -> Generator[Any, None, TokenUsage | dict | None]:
@@ -408,18 +409,35 @@ def call_openrouter_streaming(
                     api_params["tool_choice"] = "auto"
                 # For other models, omit tool_choice to avoid 404 errors (they'll use tools automatically if supported)
 
+            # Image config: aspect_ratio, image_size; Gemini 3 Pro Image also needs number_of_images
+            extra_body: dict[str, Any] = {}
+            if is_image_generation:
+                ic: dict[str, Any] = {}
+                if image_config:
+                    if image_config.get("aspect_ratio"):
+                        ic["aspect_ratio"] = image_config["aspect_ratio"]
+                    if image_config.get("image_size"):
+                        ic["image_size"] = image_config["image_size"]
+                if model_id == "google/gemini-3-pro-image-preview":
+                    ic["number_of_images"] = 1
+                if ic:
+                    extra_body["image_config"] = ic
+
             # Enable streaming
             # Use client with tool headers when tools are enabled (required by OpenRouter for provider routing)
             # OpenRouter needs HTTP-Referer and X-Title headers to route to providers that support tool calling
             _cl = _client if _client is not None else client
             _cl_tools = _client if _client is not None else client_with_tool_headers
             try:
+                create_kwargs = dict(api_params)
+                if extra_body:
+                    create_kwargs["extra_body"] = extra_body
                 if tools:
                     # Try using extra_headers parameter first (if supported by SDK)
                     # Fall back to _cl_tools if extra_headers doesn't work
                     try:
                         response = _cl.chat.completions.create(
-                            **api_params,
+                            **create_kwargs,
                             extra_headers={
                                 "HTTP-Referer": "https://compareintel.com",
                                 "X-Title": "CompareIntel",
@@ -427,9 +445,9 @@ def call_openrouter_streaming(
                         )
                     except TypeError:
                         # extra_headers not supported, use client with default headers
-                        response = _cl_tools.chat.completions.create(**api_params)
+                        response = _cl_tools.chat.completions.create(**create_kwargs)
                 else:
-                    response = _cl.chat.completions.create(**api_params)
+                    response = _cl.chat.completions.create(**create_kwargs)
             except Exception as api_error:
                 # Log warning if we get a 404 with tools (model may not support tool calling)
                 error_str = str(api_error).lower()

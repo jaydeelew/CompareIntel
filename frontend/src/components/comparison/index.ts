@@ -26,6 +26,8 @@ export { DisabledModelInfoModal } from './DisabledModelInfoModal'
 export type { DisabledModelModalInfo } from './DisabledModelInfoModal'
 export { ModelTypeConflictModal } from './ModelTypeConflictModal'
 export type { ModelTypeConflictType } from './ModelTypeConflictModal'
+export { ImageConfigConflictModal } from './ImageConfigConflictModal'
+export type { ImageConfigConflictType } from './ImageConfigConflictModal'
 
 export { UsageIndicatorInfoModal } from './UsageIndicatorInfoModal'
 

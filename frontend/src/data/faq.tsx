@@ -1587,6 +1587,10 @@ export const faqData: FAQItemData[] = [
           <a href="/glossary#temperature">Temperature</a>, <a href="/glossary#top-p">Top P</a>, and{' '}
           <a href="/glossary#max-output-tokens">Max Output Tokens</a>.
         </p>
+        <p>
+          In <strong>image generation mode</strong>, the Advanced dropdown shows aspect ratio and
+          image size (1K, 2K, 4K) instead of text-model settings.
+        </p>
       </>
     ),
   },

@@ -72,6 +72,9 @@ class CompareRequest(BaseModel):
     temperature: float | None = None  # 0.0-2.0, controls response randomness
     top_p: float | None = None  # 0.0-1.0, nucleus sampling
     max_tokens: int | None = None  # cap on output length, None = use model default
+    image_config: dict | None = (
+        None  # {"aspect_ratio": "16:9", "image_size": "2K"} for image models
+    )
 
     model_config = ConfigDict(
         json_schema_extra={
@@ -136,6 +139,20 @@ async def get_available_models(
             model["supports_image_generation"] = model.get(
                 "supports_image_generation"
             ) or get_model_supports_image_generation(model["id"])
+            if model.get("supports_image_generation"):
+                model["image_aspect_ratios"] = model.get("image_aspect_ratios") or [
+                    "9:16",
+                    "2:3",
+                    "3:4",
+                    "4:5",
+                    "1:1",
+                    "5:4",
+                    "4:3",
+                    "3:2",
+                    "16:9",
+                    "21:9",
+                ]
+                model["image_sizes"] = model.get("image_sizes") or ["1K", "2K"]
             limits = get_model_token_limits_from_openrouter(model["id"])
             if limits:
                 model["max_input_tokens"] = limits["max_input"]
@@ -164,6 +181,20 @@ async def get_available_models(
                     model["supports_image_generation"] = model.get(
                         "supports_image_generation"
                     ) or get_model_supports_image_generation(model["id"])
+                    if model.get("supports_image_generation"):
+                        model["image_aspect_ratios"] = model.get("image_aspect_ratios") or [
+                            "9:16",
+                            "2:3",
+                            "3:4",
+                            "4:5",
+                            "1:1",
+                            "5:4",
+                            "4:3",
+                            "3:2",
+                            "16:9",
+                            "21:9",
+                        ]
+                        model["image_sizes"] = model.get("image_sizes") or ["1K", "2K"]
                     limits = get_model_token_limits_from_openrouter(model["id"])
                     if limits:
                         model["max_input_tokens"] = limits["max_input"]

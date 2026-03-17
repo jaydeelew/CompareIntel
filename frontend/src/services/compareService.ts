@@ -37,6 +37,7 @@ export interface CompareRequestPayload {
   temperature?: number // Optional: 0.0-2.0, controls response randomness (lower = more deterministic)
   top_p?: number // Optional: 0.0-1.0, nucleus sampling
   max_tokens?: number | null // Optional: cap on output length, null = use model default
+  image_config?: { aspect_ratio?: string; image_size?: string } // Optional: for image generation models
 }
 
 /**
