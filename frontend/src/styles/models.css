@@ -1891,11 +1891,11 @@
   gap: 0.25rem;
   margin-top: 0.75rem;
   padding: 0.25rem;
-  /* Match hero mesh gradient: cyan + purple tints */
+  /* Cyan tints only - no purple */
   background: linear-gradient(
     135deg,
     color-mix(in srgb, var(--primary-color) 8%, var(--bg-tertiary)) 0%,
-    color-mix(in srgb, var(--secondary-color) 6%, var(--bg-tertiary)) 50%,
+    color-mix(in srgb, var(--primary-color) 6%, var(--bg-tertiary)) 50%,
     color-mix(in srgb, var(--primary-color) 4%, var(--bg-tertiary)) 100%
   );
   border-radius: var(--radius-lg);
@@ -1907,33 +1907,33 @@
 
 .models-section-mode-toggle:hover {
   border-color: color-mix(in srgb, var(--primary-color) 35%, var(--border-color));
-  box-shadow:
-    0 0 12px color-mix(in srgb, var(--primary-glow) 25%, transparent),
-    0 0 20px color-mix(in srgb, rgba(139, 92, 246, 0.2) 30%, transparent);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--primary-glow) 25%, transparent);
 }
 
-/* Sliding pill - hero gradient: cyan to purple (matches gradient-card-selected, hero title) */
+/* Sliding pill - matches selected model cards (gradient-card-selected) */
+/* Equal 0.5rem gaps (larger gap) on all sides of pill in each position */
 .models-section-mode-slider {
   position: absolute;
   top: 0.25rem;
   bottom: 0.25rem;
-  left: 0.25rem;
-  width: calc(50% - 0.25rem);
+  left: 0.5rem;
+  right: calc(50% - 0.625rem);
   background: var(--gradient-card-selected);
   border-radius: calc(var(--radius-lg) - 2px);
   box-shadow:
-    0 0 16px var(--primary-glow),
-    0 0 24px rgba(139, 92, 246, 0.35),
     0 2px 8px rgba(0, 0, 0, 0.2),
     inset 0 1px 0 rgba(255, 255, 255, 0.2);
   border: 1px solid rgba(255, 255, 255, 0.25);
-  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  transition:
+    left 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+    right 0.35s cubic-bezier(0.4, 0, 0.2, 1);
   z-index: 0;
   pointer-events: none;
 }
 
 .models-section-mode-toggle[data-mode='image'] .models-section-mode-slider {
-  transform: translateX(calc(100% + 0.125rem));
+  left: calc(50% + 0.625rem);
+  right: 0.5rem;
 }
 
 .models-section-mode-btn {
