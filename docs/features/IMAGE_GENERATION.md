@@ -12,7 +12,7 @@ When adding a model via the admin panel:
 
 1. **Detection:** The add flow fetches OpenRouter model data and checks `output_modalities` for `"image"`.
 2. **Registry:** Image models are added with `supports_image_generation: true` and `category: "Image"`.
-3. **Skip scripts:** Do **not** run `setup_model_renderer.py` (no math/formatting analysis) or `research_model_benchmarks.py` (Help Me Choose is text-focused).
+3. **Scripts:** Skips `setup_model_renderer.py` (no math/formatting analysis). Runs `research_model_benchmarks.py` to fetch Text-to-Image Arena scores from kearai.com and add the model to the "Help me choose" dropdown when scores are available.
 
 ## Credit Rules
 

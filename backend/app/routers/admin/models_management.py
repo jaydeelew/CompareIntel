@@ -453,23 +453,24 @@ async def add_model(
                     status_code=500,
                     detail=f"Model added but renderer config generation failed: {error_msg}",
                 )
-            benchmark_script = backend_dir / "scripts" / "research_model_benchmarks.py"
-            if benchmark_script.exists():
-                try:
-                    bench_result = subprocess.run(
-                        [sys.executable, str(benchmark_script), model_id],
-                        capture_output=True,
-                        text=True,
-                        timeout=120,
-                        cwd=str(backend_dir),
+
+        benchmark_script = backend_dir / "scripts" / "research_model_benchmarks.py"
+        if benchmark_script.exists():
+            try:
+                bench_result = subprocess.run(
+                    [sys.executable, str(benchmark_script), model_id],
+                    capture_output=True,
+                    text=True,
+                    timeout=120,
+                    cwd=str(backend_dir),
+                )
+                if bench_result.returncode != 0:
+                    logger.warning(
+                        f"Help Me Choose benchmark research failed for {model_id}: "
+                        f"{bench_result.stderr[:200] if bench_result.stderr else 'Unknown error'}"
                     )
-                    if bench_result.returncode != 0:
-                        logger.warning(
-                            f"Help Me Choose benchmark research failed for {model_id}: "
-                            f"{bench_result.stderr[:200] if bench_result.stderr else 'Unknown error'}"
-                        )
-                except Exception as e:
-                    logger.warning(f"Help Me Choose benchmark research error for {model_id}: {e}")
+            except Exception as e:
+                logger.warning(f"Help Me Choose benchmark research error for {model_id}: {e}")
 
         from ...cache import invalidate_models_cache
 
@@ -749,7 +750,7 @@ async def add_model_stream(
 
             if is_image_model:
                 try:
-                    yield f"data: {json.dumps({'type': 'progress', 'stage': 'setup', 'message': 'Image model: skipping renderer and benchmark setup', 'progress': 90})}\n\n"
+                    yield f"data: {json.dumps({'type': 'progress', 'stage': 'setup', 'message': 'Image model: skipping renderer setup', 'progress': 90})}\n\n"
                 except disconnect_exceptions:
                     raise
                 process = None
@@ -853,39 +854,38 @@ async def add_model_stream(
                         raise
                     return
 
-            if not is_image_model:
+            try:
+                yield f"data: {json.dumps({'type': 'progress', 'stage': 'benchmarks', 'message': 'Researching benchmarks for Help Me Choose...', 'progress': 92})}\n\n"
+            except disconnect_exceptions:
+                raise
+            benchmark_script = backend_dir / "scripts" / "research_model_benchmarks.py"
+            if benchmark_script.exists():
                 try:
-                    yield f"data: {json.dumps({'type': 'progress', 'stage': 'benchmarks', 'message': 'Researching benchmarks for Help Me Choose...', 'progress': 92})}\n\n"
-                except disconnect_exceptions:
-                    raise
-                benchmark_script = backend_dir / "scripts" / "research_model_benchmarks.py"
-                if benchmark_script.exists():
-                    try:
-                        bench_process = await asyncio.create_subprocess_exec(
-                            sys.executable,
-                            str(benchmark_script),
-                            model_id,
-                            stdout=asyncio.subprocess.PIPE,
-                            stderr=asyncio.subprocess.PIPE,
-                            cwd=str(backend_dir),
+                    bench_process = await asyncio.create_subprocess_exec(
+                        sys.executable,
+                        str(benchmark_script),
+                        model_id,
+                        stdout=asyncio.subprocess.PIPE,
+                        stderr=asyncio.subprocess.PIPE,
+                        cwd=str(backend_dir),
+                    )
+                    bench_stdout, bench_stderr = await asyncio.wait_for(
+                        bench_process.communicate(), timeout=120
+                    )
+                    if bench_process.returncode != 0:
+                        logger.warning(
+                            f"Help Me Choose benchmark research failed for {model_id}: "
+                            f"{bench_stderr.decode()[:200] if bench_stderr else 'Unknown'}"
                         )
-                        bench_stdout, bench_stderr = await asyncio.wait_for(
-                            bench_process.communicate(), timeout=120
-                        )
-                        if bench_process.returncode != 0:
-                            logger.warning(
-                                f"Help Me Choose benchmark research failed for {model_id}: "
-                                f"{bench_stderr.decode()[:200] if bench_stderr else 'Unknown'}"
-                            )
-                        else:
-                            try:
-                                yield f"data: {json.dumps({'type': 'progress', 'stage': 'benchmarks', 'message': 'Help Me Choose recommendations updated.', 'progress': 94})}\n\n"
-                            except disconnect_exceptions:
-                                raise
-                    except TimeoutError:
-                        logger.warning(f"Benchmark research timed out for {model_id}")
-                    except Exception as e:
-                        logger.warning(f"Benchmark research error for {model_id}: {e}")
+                    else:
+                        try:
+                            yield f"data: {json.dumps({'type': 'progress', 'stage': 'benchmarks', 'message': 'Help Me Choose recommendations updated.', 'progress': 94})}\n\n"
+                        except disconnect_exceptions:
+                            raise
+                except TimeoutError:
+                    logger.warning(f"Benchmark research timed out for {model_id}")
+                except Exception as e:
+                    logger.warning(f"Benchmark research error for {model_id}: {e}")
 
             try:
                 yield f"data: {json.dumps({'type': 'progress', 'stage': 'finalizing', 'message': 'Finalizing model addition...', 'progress': 95})}\n\n"
