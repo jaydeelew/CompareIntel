@@ -40,7 +40,7 @@ sentencepiece>=0.1.99
 requests>=2.25.0
 
 # Auth & security
-PyJWT>=2.8.0
+PyJWT>=2.12.0
 passlib[bcrypt]>=1.7.4
 bcrypt==4.0.1
 

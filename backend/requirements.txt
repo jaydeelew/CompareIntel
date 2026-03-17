@@ -153,7 +153,7 @@ pydantic-settings==2.13.1
     #   fastapi-mail
 pygments==2.19.2
     # via rich
-pyjwt==2.11.0
+pyjwt==2.12.1
     # via -r requirements.in
 python-dotenv==1.2.1
     # via

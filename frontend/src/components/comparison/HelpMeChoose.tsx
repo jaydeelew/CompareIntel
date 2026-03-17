@@ -862,8 +862,8 @@ export function HelpMeChoose({
                                 {modelRestricted && (
                                   <span className="help-me-choose-model-lock" aria-hidden>
                                     <svg
-                                      width="10"
-                                      height="10"
+                                      width="12"
+                                      height="12"
                                       viewBox="0 0 24 24"
                                       fill="none"
                                       stroke="currentColor"
