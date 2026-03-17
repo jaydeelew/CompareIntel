@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 
 import { RESULT_TAB, type ResultTab } from '../../types'
 import { formatTime, getSafeId } from '../../utils'
@@ -11,6 +11,8 @@ export interface MessageBubbleProps {
   id: string
   type: 'user' | 'assistant'
   content: string
+  /** Generated image URLs (for image-generation model responses) */
+  images?: string[]
   timestamp: string | Date
   activeTab?: ResultTab
   className?: string
@@ -28,6 +30,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
   id,
   type,
   content,
+  images,
   timestamp,
   activeTab = RESULT_TAB.FORMATTED,
   className = '',
@@ -36,6 +39,12 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
   onCopyMessage,
   copyButtonDisabled = false,
 }) => {
+  const [failedImageIndices, setFailedImageIndices] = useState<Set<number>>(new Set())
+
+  const handleImageError = (index: number) => {
+    setFailedImageIndices(prev => new Set(prev).add(index))
+  }
+
   // Safely format timestamp - handle undefined, null, or invalid dates
   const getFormattedTime = () => {
     if (!timestamp) return ''
@@ -140,15 +149,41 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
         </div>
       </div>
       <div className="message-content" id={messageContentId}>
-        {activeTab === RESULT_TAB.FORMATTED ? (
-          /* Full LaTeX rendering for formatted view */
-          <LatexRenderer className="result-output" modelId={modelId}>
-            {safeContent}
-          </LatexRenderer>
-        ) : (
-          /* Raw text for immediate streaming display */
-          <pre className="result-output raw-output">{safeContent}</pre>
+        {images && images.length > 0 && (
+          /* Image generation response - render images */
+          <div className="result-output result-images">
+            {images.map((url, i) =>
+              failedImageIndices.has(i) ? (
+                <div
+                  key={i}
+                  className="result-generated-image result-image-fallback"
+                  role="img"
+                  aria-label="Image no longer available"
+                >
+                  Image no longer available
+                </div>
+              ) : (
+                <img
+                  key={i}
+                  src={url}
+                  alt={`Generated image ${i + 1}`}
+                  className="result-generated-image"
+                  onError={() => handleImageError(i)}
+                />
+              )
+            )}
+          </div>
         )}
+        {safeContent &&
+          (activeTab === RESULT_TAB.FORMATTED ? (
+            /* Full LaTeX rendering for formatted view */
+            <LatexRenderer className="result-output" modelId={modelId}>
+              {safeContent}
+            </LatexRenderer>
+          ) : (
+            /* Raw text for immediate streaming display */
+            <pre className="result-output raw-output">{safeContent}</pre>
+          ))}
       </div>
     </div>
   )

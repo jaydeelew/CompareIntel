@@ -24,6 +24,8 @@ export { DisabledButtonInfoModal } from './DisabledButtonInfoModal'
 
 export { DisabledModelInfoModal } from './DisabledModelInfoModal'
 export type { DisabledModelModalInfo } from './DisabledModelInfoModal'
+export { ModelTypeConflictModal } from './ModelTypeConflictModal'
+export type { ModelTypeConflictType } from './ModelTypeConflictModal'
 
 export { UsageIndicatorInfoModal } from './UsageIndicatorInfoModal'
 

@@ -84,3 +84,19 @@ class TestFormatStreamingErrorMessage:
         msg = format_streaming_error_message(err, "openai/gpt-4o", 60)
         assert "credits" in msg.lower() or "max_tokens" in msg
         assert "Error:" in msg
+
+    def test_502_provider_error_returns_friendly_message(self):
+        err = ClassifiedError(
+            status_code=502,
+            parsed_message="Provider returned error",
+            is_402_max_tokens=False,
+            provider_error='{"error":{"message":"Failed query: select \\"id\\", \\"tenantid\\"..."}}',
+            provider_name="Sourceful",
+            original_exception=Exception("Provider returned error"),
+        )
+        msg = format_streaming_error_message(err, "sourceful/riverflow-v2-standard-preview", 60)
+        assert "temporarily unavailable" in msg
+        assert "provider issues" in msg
+        assert "try again later" in msg
+        assert "different model" in msg
+        assert "Failed query" not in msg

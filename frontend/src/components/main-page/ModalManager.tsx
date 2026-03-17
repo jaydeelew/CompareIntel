@@ -14,7 +14,9 @@ import {
   PremiumModelsToggleInfoModal,
   DisabledButtonInfoModal,
   DisabledModelInfoModal,
+  ModelTypeConflictModal,
   type DisabledModelModalInfo,
+  type ModelTypeConflictType,
 } from '../comparison'
 import { TrialWelcomeModal } from '../trial'
 
@@ -59,6 +61,10 @@ export interface ModalManagerProps {
   onDisabledModelModalClose: () => void
   onToggleHidePremiumModels: () => void
   onOpenSignUp: () => void
+
+  // Model type conflict modal (text vs image generation)
+  modelTypeConflictType: ModelTypeConflictType | null
+  onModelTypeConflictModalClose: () => void
 }
 
 export function ModalManager({
@@ -99,6 +105,10 @@ export function ModalManager({
   onDisabledModelModalClose,
   onToggleHidePremiumModels,
   onOpenSignUp,
+
+  // Model type conflict modal
+  modelTypeConflictType,
+  onModelTypeConflictModalClose,
 }: ModalManagerProps) {
   return (
     <>
@@ -158,6 +168,13 @@ export function ModalManager({
         onClose={onDisabledModelModalClose}
         onToggleHidePremiumModels={onToggleHidePremiumModels}
         onOpenSignUp={onOpenSignUp}
+      />
+
+      {/* Model Type Conflict Modal (text vs image generation) */}
+      <ModelTypeConflictModal
+        isOpen={modelTypeConflictType !== null}
+        conflictType={modelTypeConflictType}
+        onClose={onModelTypeConflictModalClose}
       />
     </>
   )

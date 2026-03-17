@@ -55,7 +55,10 @@ export interface ModelsSectionProps {
     userTier: 'unregistered' | 'free'
     modelTierAccess: 'free' | 'paid'
     modelName?: string
+    imageMode?: boolean
   }) => void
+  /** When true, all models are disabled and show sign-up modal (unregistered + image mode) */
+  imageModelsDisabledForUnregistered?: boolean
 }
 
 /**
@@ -86,6 +89,7 @@ export const ModelsSection: React.FC<ModelsSectionProps> = ({
   onError,
   onRetryModels,
   onShowDisabledModelModal,
+  imageModelsDisabledForUnregistered = false,
 }) => {
   const { isMobileLayout } = useResponsive()
   const [showWebSearchInfoModal, setShowWebSearchInfoModal] = useState(false)
@@ -185,14 +189,18 @@ export const ModelsSection: React.FC<ModelsSectionProps> = ({
                     // For unregistered/free tiers with disabled models visible, we must exclude
                     // restricted models so allProviderModelsSelected can be true when the user
                     // has selected all selectable models (icon turns orange).
-                    const selectableProviderModels = visibleModels.filter(model => {
-                      if (model.available === false) return false
-                      if (isPaidTier) return true
-                      if (model.trial_unlocked) return true
-                      if (userTier === 'unregistered') return model.tier_access === 'unregistered'
-                      if (userTier === 'free') return model.tier_access !== 'paid'
-                      return true
-                    })
+                    // When imageModelsDisabledForUnregistered, no models are selectable.
+                    const selectableProviderModels = imageModelsDisabledForUnregistered
+                      ? []
+                      : visibleModels.filter(model => {
+                          if (model.available === false) return false
+                          if (isPaidTier) return true
+                          if (model.trial_unlocked) return true
+                          if (userTier === 'unregistered')
+                            return model.tier_access === 'unregistered'
+                          if (userTier === 'free') return model.tier_access !== 'paid'
+                          return true
+                        })
                     const providerModelIds = selectableProviderModels.map(model => model.id)
                     const allProviderModelsSelected =
                       providerModelIds.every(id => selectedModels.includes(id)) &&
@@ -260,8 +268,11 @@ export const ModelsSection: React.FC<ModelsSectionProps> = ({
                     // Determine if model is restricted based on user tier
                     // When hidePremiumModels is true, restricted models are already filtered out
                     // trial_unlocked models are available during 7-day trial period
+                    // imageModelsDisabledForUnregistered: unregistered users cannot select image models
                     let isRestricted = false
-                    if (!hidePremiumModels) {
+                    if (imageModelsDisabledForUnregistered) {
+                      isRestricted = true
+                    } else if (!hidePremiumModels) {
                       if (isPaidTier) {
                         // Paid tiers have access to all models
                         isRestricted = false
@@ -294,6 +305,7 @@ export const ModelsSection: React.FC<ModelsSectionProps> = ({
                             userTier: userTier as 'unregistered' | 'free',
                             modelTierAccess: model.tier_access === 'paid' ? 'paid' : 'free',
                             modelName: model.name,
+                            imageMode: imageModelsDisabledForUnregistered,
                           })
                         } else {
                           onError(

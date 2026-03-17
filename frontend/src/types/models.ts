@@ -35,6 +35,8 @@ export interface Model {
   supports_web_search?: boolean
   /** Whether the model supports image/vision inputs (can interpret attached images) */
   supports_vision?: boolean
+  /** Whether the model can generate images from text prompts */
+  supports_image_generation?: boolean
   /** Whether the model supports the temperature parameter (false = fixed/deterministic) */
   supports_temperature?: boolean
   /** Knowledge cutoff date for the model's training data (e.g., "March 2025") */

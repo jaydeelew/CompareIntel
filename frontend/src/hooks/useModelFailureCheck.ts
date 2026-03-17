@@ -25,11 +25,12 @@ export function useModelFailureCheck(
         const assistantMessages = conversation.messages.filter(msg => msg.type === 'assistant')
         if (assistantMessages.length === 0) return true
         const lastMessage = assistantMessages[assistantMessages.length - 1]
-        if (
-          lastMessage &&
-          (isErrorMessage(lastMessage.content) || !(lastMessage.content || '').trim())
-        ) {
-          return true
+        if (lastMessage) {
+          const hasContent = (lastMessage.content || '').trim().length > 0
+          const hasImages = (lastMessage.images?.length ?? 0) > 0
+          if (isErrorMessage(lastMessage.content) || (!hasContent && !hasImages)) {
+            return true
+          }
         }
       }
       return false

@@ -14,6 +14,7 @@ import type { StoredMessage } from './conversation'
 export const STREAM_EVENT_TYPE = {
   START: 'start',
   CHUNK: 'chunk',
+  IMAGE: 'image',
   KEEPALIVE: 'keepalive', // Keepalive event to reset timeout without adding to content
   DONE: 'done',
   COMPLETE: 'complete',
@@ -28,10 +29,12 @@ export type StreamEventType = (typeof STREAM_EVENT_TYPE)[keyof typeof STREAM_EVE
 export interface StreamEvent {
   /** Type of event */
   type: StreamEventType
-  /** Model ID (for start, chunk, done events) */
+  /** Model ID (for start, chunk, done, image events) */
   model?: ModelId
   /** Content chunk (for chunk events) */
   content?: string
+  /** Image data URL (for image events, from image generation models) */
+  url?: string
   /** Error message (for error events) */
   message?: string
   /** Final metadata (for complete events) */

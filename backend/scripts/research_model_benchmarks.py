@@ -50,10 +50,14 @@ CATEGORY_IDS = [
     "multilingual",
     "legal",
     "medical",
+    "image-generation",
 ]
 
 # Categories where lower score is better (e.g. cost-effective: cheaper first)
 SORT_ASCENDING_CATEGORIES = {"cost-effective"}
+
+# Image generation: KEAR AI Text-to-Image Arena (Arena Rating, higher = better)
+TEXT_TO_IMAGE_ARENA_URL = "https://kearai.com/leaderboard/text-to-image"
 
 SWE_BENCH_URL = "https://openlm.ai/swe-bench/"
 LMARENA_URL = "https://lmarena.ai/"
@@ -110,6 +114,11 @@ def extract_primary_score(category_id: str, evidence: str) -> float | None:
         tps = re.search(r"(\d+\.?\d*)\s*t/s", evidence, re.I)
         if tps:
             return float(tps.group(1))
+    # Image generation: Text-to-Image Arena Rating (e.g. "Text-to-Image Arena (kearai.com): 1154.")
+    if category_id == "image-generation":
+        arena = re.search(r"(?:Text-to-Image Arena|Arena Rating)[^:]*:\s*(\d+)", evidence, re.I)
+        if arena:
+            return float(arena.group(1))
     return None
 
 
@@ -464,6 +473,95 @@ WRITING_NAME_TO_MODEL_ID: dict[str, str] = {
 
 WRITING_MIN_ELO = 1390
 
+# KEAR AI Text-to-Image Arena: leaderboard model name/slug -> registry model_id
+TEXT_TO_IMAGE_NAME_TO_MODEL_ID: dict[str, str] = {
+    "gemini-2.5-flash-image-preview": "google/gemini-2.5-flash-image",
+    "gemini-2.5-flash-image": "google/gemini-2.5-flash-image",
+    "gemini-3-pro-image-preview": "google/gemini-3-pro-image-preview",
+    "gemini-3-pro-image-preview-2k": "google/gemini-3-pro-image-preview",
+    "gemini-3.1-flash-image-preview": "google/gemini-3.1-flash-image-preview",
+    "flux-2-max": "black-forest-labs/flux.2-max",
+    "flux-2-pro": "black-forest-labs/flux.2-pro",
+    "flux-2-flex": "black-forest-labs/flux.2-flex",
+    "flux-2-klein-4b": "black-forest-labs/flux.2-klein-4b",
+    "seedream-4.5": "bytedance-seed/seedream-4.5",
+    "riverflow-v2-standard-preview": "sourceful/riverflow-v2-standard-preview",
+    "riverflow-v2-fast-preview": "sourceful/riverflow-v2-fast-preview",
+    "riverflow-v2-pro": "sourceful/riverflow-v2-pro",
+    "gpt-image-1.5-high-fidelity": "openai/gpt-5-image",
+    "gpt-image-1": "openai/gpt-5-image",
+    "gpt-image-1-mini": "openai/gpt-5-image-mini",
+}
+
+
+def fetch_text_to_image_arena_scores() -> dict[str, tuple[float, str]]:
+    """Fetch Text-to-Image Arena scores from kearai.com. Returns model_id -> (arena_rating, evidence).
+
+    KEAR AI Text-to-Image Arena uses human preference votes; higher Arena Rating = better.
+    """
+    model_id_to_name = get_model_id_to_name_map()
+    name_to_model_id = {_normalize_name_for_match(n): mid for mid, n in model_id_to_name.items()}
+
+    result: dict[str, tuple[float, str]] = {}
+    try:
+        resp = httpx.get(TEXT_TO_IMAGE_ARENA_URL, timeout=15.0, follow_redirects=True)
+        if resp.status_code != 200:
+            return result
+        soup = BeautifulSoup(resp.text, "html.parser")
+        table = soup.find("table")
+        if not table:
+            # Fallback: parse markdown-style table in raw text
+            for m in re.finditer(
+                r"\[([a-zA-Z0-9.-]+)(?:\s+\([^)]+\))?\]\([^)]+\)\s*\|\s*(\d+)",
+                resp.text,
+            ):
+                model_slug = m.group(1).strip().lower()
+                try:
+                    rating = int(m.group(2))
+                except ValueError:
+                    continue
+                if rating < 900:
+                    continue
+                mid = TEXT_TO_IMAGE_NAME_TO_MODEL_ID.get(model_slug)
+                if not mid:
+                    norm = _normalize_name_for_match(model_slug.replace("-", " "))
+                    mid = name_to_model_id.get(norm)
+                if mid and (mid not in result or rating > result[mid][0]):
+                    result[mid] = (
+                        float(rating),
+                        f"Text-to-Image Arena (kearai.com): {rating}.",
+                    )
+            return result
+        for row in table.find_all("tr"):
+            cells = row.find_all("td")
+            if len(cells) < 3:
+                continue
+            # cells[0]=Rank, cells[1]=Model, cells[2]=Arena Rating
+            model_cell = cells[1]
+            link = model_cell.find("a")
+            model_slug = link.get_text(strip=True) if link else model_cell.get_text(strip=True)
+            model_slug = (
+                re.sub(r"\s+\([^)]+\)\s*$", "", model_slug).strip().lower().replace(" ", "-")
+            )
+            try:
+                rating = float(cells[2].get_text(strip=True).replace(",", ""))
+            except ValueError:
+                continue
+            if rating < 900:
+                continue
+            mid = TEXT_TO_IMAGE_NAME_TO_MODEL_ID.get(model_slug)
+            if not mid:
+                norm = _normalize_name_for_match(model_slug.replace("-", " "))
+                mid = name_to_model_id.get(norm)
+            if mid and (mid not in result or rating > result[mid][0]):
+                result[mid] = (
+                    float(rating),
+                    f"Text-to-Image Arena (kearai.com): {int(rating)}.",
+                )
+    except Exception as e:
+        print(f"Warning: Could not fetch Text-to-Image Arena scores: {e}", file=sys.stderr)
+    return result
+
 
 def fetch_creative_writing_scores() -> dict[str, tuple[float, str]]:
     """Fetch Creative Writing Arena Elo from kearai.com. Returns model_id -> (elo, evidence).
@@ -749,6 +847,7 @@ def determine_categories(
     mmlu_pro_scores: dict[str, tuple[float, str]] | None = None,
     creative_writing_scores: dict[str, tuple[float, str]] | None = None,
     mrcr_scores: dict[str, tuple[float, str]] | None = None,
+    text_to_image_scores: dict[str, tuple[float, str]] | None = None,
 ) -> list[dict]:
     """Determine which Help Me Choose categories this model qualifies for.
 
@@ -786,6 +885,13 @@ def determine_categories(
         score, evidence = mrcr_scores[model_id]
         if score >= LONG_CONTEXT_MIN_MRCR:
             entries.append({"category_id": "long-context", "evidence": evidence, "score": score})
+    if (
+        registry_model.get("supports_image_generation")
+        and text_to_image_scores
+        and model_id in text_to_image_scores
+    ):
+        score, evidence = text_to_image_scores[model_id]
+        entries.append({"category_id": "image-generation", "evidence": evidence, "score": score})
     return entries
 
 
@@ -1000,6 +1106,9 @@ def research_and_update(model_id: str, dry_run: bool = False) -> dict:
     creative_writing_scores = fetch_creative_writing_scores()
     if creative_writing_scores:
         print(f"  Fetched Creative Writing scores for {len(creative_writing_scores)} models.")
+    text_to_image_scores = fetch_text_to_image_arena_scores()
+    if text_to_image_scores:
+        print(f"  Fetched Text-to-Image Arena scores for {len(text_to_image_scores)} models.")
     mrcr_scores = fetch_mrcr_scores()
     awesome_agents_long_context = fetch_awesome_agents_long_context_scores()
     long_context_scores = merge_long_context_scores(mrcr_scores, awesome_agents_long_context)
@@ -1024,6 +1133,7 @@ def research_and_update(model_id: str, dry_run: bool = False) -> dict:
         mmlu_pro_scores,
         creative_writing_scores,
         long_context_scores,
+        text_to_image_scores,
     )
 
     if not category_entries:
@@ -1088,6 +1198,12 @@ def research_and_update(model_id: str, dry_run: bool = False) -> dict:
             evidence = creative_writing_scores[model_id][1]
         if cat_id == "long-context" and long_context_scores and model_id in long_context_scores:
             evidence = long_context_scores[model_id][1]
+        if (
+            cat_id == "image-generation"
+            and text_to_image_scores
+            and model_id in text_to_image_scores
+        ):
+            evidence = text_to_image_scores[model_id][1]
         if add_model_to_category(categories, cat_id, model_id, evidence):
             added.append(cat_id)
             print(f"  Added to '{cat_id}': {evidence}")
@@ -1110,6 +1226,8 @@ def research_and_update(model_id: str, dry_run: bool = False) -> dict:
         fetched_by_cat["writing"] = creative_writing_scores
     if long_context_scores:
         fetched_by_cat["long-context"] = long_context_scores
+    if text_to_image_scores:
+        fetched_by_cat["image-generation"] = text_to_image_scores
     for cat in categories:
         if cat["id"] in added:
             fetched = fetched_by_cat.get(cat["id"])
@@ -1231,6 +1349,8 @@ def refresh_all_categories(dry_run: bool = False) -> dict:
     print(f"  MMLU-Pro: {len(mmlu_pro_scores)} models")
     creative_writing_scores = fetch_creative_writing_scores()
     print(f"  Creative Writing Arena: {len(creative_writing_scores)} models")
+    text_to_image_scores = fetch_text_to_image_arena_scores()
+    print(f"  Text-to-Image Arena: {len(text_to_image_scores)} models")
     mrcr_scores = fetch_mrcr_scores()
     print(f"  MRCR 1M: {len(mrcr_scores)} models")
     awesome_agents_long_context = fetch_awesome_agents_long_context_scores()
@@ -1263,6 +1383,8 @@ def refresh_all_categories(dry_run: bool = False) -> dict:
         fetched_by_cat["reasoning"] = mmlu_pro_scores
     if creative_writing_scores:
         fetched_by_cat["writing"] = creative_writing_scores
+    if text_to_image_scores:
+        fetched_by_cat["image-generation"] = text_to_image_scores
     awesome_agents_long_context = fetch_awesome_agents_long_context_scores()
     long_context_scores = merge_long_context_scores(mrcr_scores, awesome_agents_long_context)
     if long_context_scores:
@@ -1295,6 +1417,7 @@ def refresh_all_categories(dry_run: bool = False) -> dict:
             mmlu_pro_scores,
             creative_writing_scores,
             long_context_scores,
+            text_to_image_scores,
         )
         for entry in entries:
             cat_id = entry["category_id"]

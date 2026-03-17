@@ -853,68 +853,84 @@ export const ComparisonForm = memo<ComparisonFormProps>(
                 </svg>
               </button>
             ) : (
-              <StyledTooltip
-                text={
-                  creditsRemaining <= 0
-                    ? 'You have run out of credits'
-                    : isLoading
-                      ? 'Submit'
-                      : !input.trim() || selectedModels.length === 0
-                        ? 'Enter prompt and select models'
-                        : isFollowUpMode && tokenUsageInfo?.isExceeded
-                          ? 'Input capacity exceeded - inputs may be truncated'
-                          : 'Submit'
-                }
-              >
-                <button
-                  onClick={() => {
-                    if (tutorialStep === 'enter-prompt' || tutorialStep === 'enter-prompt-2') return
-                    const isDisabled =
+              (() => {
+                const isReadyToSubmit =
+                  !isLoading &&
+                  creditsRemaining > 0 &&
+                  input.trim().length > 0 &&
+                  selectedModels.length > 0 &&
+                  !(isFollowUpMode && tokenUsageInfo?.isExceeded)
+                const submitButton = (
+                  <button
+                    onClick={() => {
+                      if (tutorialStep === 'enter-prompt' || tutorialStep === 'enter-prompt-2')
+                        return
+                      const isDisabled =
+                        isLoading ||
+                        creditsRemaining <= 0 ||
+                        !input.trim() ||
+                        selectedModels.length === 0
+                      if (isDisabled && isTouchDevice) handleDisabledButtonTap('submit')
+                      else if (!isDisabled) {
+                        if (isFollowUpMode) onContinueConversation()
+                        else onSubmitClick()
+                      }
+                    }}
+                    disabled={
+                      !isTouchDevice &&
+                      (isLoading ||
+                        creditsRemaining <= 0 ||
+                        !input.trim() ||
+                        selectedModels.length === 0)
+                    }
+                    className={`textarea-icon-button submit-button ${isAnimatingButton ? 'animate-pulse-glow' : ''} ${
+                      (isLoading ||
+                        creditsRemaining <= 0 ||
+                        !input.trim() ||
+                        selectedModels.length === 0) &&
+                      isTouchDevice
+                        ? 'touch-disabled'
+                        : ''
+                    }`}
+                    data-testid="comparison-submit-button"
+                    aria-disabled={
                       isLoading ||
                       creditsRemaining <= 0 ||
                       !input.trim() ||
                       selectedModels.length === 0
-                    if (isDisabled && isTouchDevice) handleDisabledButtonTap('submit')
-                    else if (!isDisabled) {
-                      if (isFollowUpMode) onContinueConversation()
-                      else onSubmitClick()
                     }
-                  }}
-                  disabled={
-                    !isTouchDevice &&
-                    (isLoading ||
-                      creditsRemaining <= 0 ||
-                      !input.trim() ||
-                      selectedModels.length === 0)
-                  }
-                  className={`textarea-icon-button submit-button ${isAnimatingButton ? 'animate-pulse-glow' : ''} ${
-                    (isLoading ||
-                      creditsRemaining <= 0 ||
-                      !input.trim() ||
-                      selectedModels.length === 0) &&
-                    isTouchDevice
-                      ? 'touch-disabled'
-                      : ''
-                  }`}
-                  data-testid="comparison-submit-button"
-                  aria-disabled={
-                    isLoading ||
-                    creditsRemaining <= 0 ||
-                    !input.trim() ||
-                    selectedModels.length === 0
-                  }
-                >
-                  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path
-                      d="M7 14l5-5 5 5"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                </button>
-              </StyledTooltip>
+                  >
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path
+                        d="M7 14l5-5 5 5"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </button>
+                )
+                return isReadyToSubmit ? (
+                  submitButton
+                ) : (
+                  <StyledTooltip
+                    text={
+                      creditsRemaining <= 0
+                        ? 'You have run out of credits'
+                        : isLoading
+                          ? 'Submit'
+                          : !input.trim() || selectedModels.length === 0
+                            ? 'Enter prompt and select models'
+                            : isFollowUpMode && tokenUsageInfo?.isExceeded
+                              ? 'Input capacity exceeded - inputs may be truncated'
+                              : 'Submit'
+                    }
+                  >
+                    {submitButton}
+                  </StyledTooltip>
+                )
+              })()
             )}
           </div>
         </div>

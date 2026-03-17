@@ -121,6 +121,7 @@ export interface SSEProcessorConfig {
 
 export interface ProcessStreamResult {
   streamingResults: { [key: string]: string }
+  streamingImages: { [key: string]: string[] }
   completedModels: Set<string>
   localModelErrors: { [key: string]: boolean }
   modelStartTimes: { [key: string]: string }
@@ -136,6 +137,7 @@ export async function processComparisonStream(
 ): Promise<ProcessStreamResult> {
   const decoder = new TextDecoder()
   const streamingResults: { [key: string]: string } = {}
+  const streamingImages: { [key: string]: string[] } = {}
   const completedModels = new Set<string>()
   const localModelErrors: { [key: string]: boolean } = {}
   const modelStartTimes: { [key: string]: string } = {}
@@ -243,9 +245,10 @@ export async function processComparisonStream(
         setConversations(prev =>
           prev.map(conv => {
             let content = streamingResults[conv.modelId] || ''
-            // Only show "No response received" when the model has completed but has no content.
+            const images = streamingImages[conv.modelId] || []
+            // Only show "No response received" when the model has completed but has no content or images.
             // During streaming, models that haven't received content yet should not show this error.
-            if (!content.trim() && completedModels.has(conv.modelId)) {
+            if (!content.trim() && images.length === 0 && completedModels.has(conv.modelId)) {
               content = EMPTY_RESPONSE_ERROR
             }
             const startT = modelStartTimes[conv.modelId]
@@ -257,7 +260,12 @@ export async function processComparisonStream(
                   return { ...msg, timestamp: startT || msg.timestamp }
                 }
                 if (idx === 1 && msg.type === 'assistant') {
-                  return { ...msg, content, timestamp: completionTime || msg.timestamp }
+                  return {
+                    ...msg,
+                    content,
+                    images: images.length > 0 ? images : undefined,
+                    timestamp: completionTime || msg.timestamp,
+                  }
                 }
                 return msg
               }),
@@ -268,9 +276,10 @@ export async function processComparisonStream(
         setConversations(prev =>
           prev.map(conv => {
             const content = streamingResults[conv.modelId]
-            // Don't add follow-up to failed models: no content, error response, or empty/blank response
-            if (content === undefined || isErrorMessage(content) || !(content || '').trim())
-              return conv
+            const images = streamingImages[conv.modelId] || []
+            // Don't add follow-up to failed models: no content/images, error response, or empty/blank response
+            const hasContent = (content || '').trim().length > 0 || images.length > 0
+            if (content === undefined || isErrorMessage(content) || !hasContent) return conv
             const hasNewUserMessage = conv.messages.some(
               (msg, idx) =>
                 msg.type === 'user' && msg.content === input && idx >= conv.messages.length - 2
@@ -283,11 +292,14 @@ export async function processComparisonStream(
                 messages: [
                   ...conv.messages,
                   createStreamingMessage('user', input, startT || userTimestamp),
-                  createStreamingMessage(
-                    'assistant',
-                    content,
-                    completionTime || new Date().toISOString()
-                  ),
+                  {
+                    ...createStreamingMessage(
+                      'assistant',
+                      content || '',
+                      completionTime || new Date().toISOString()
+                    ),
+                    images: images.length > 0 ? images : undefined,
+                  },
                 ],
               }
             }
@@ -296,7 +308,12 @@ export async function processComparisonStream(
               ...conv,
               messages: conv.messages.map((msg, idx) =>
                 idx === conv.messages.length - 1 && msg.type === 'assistant'
-                  ? { ...msg, content, timestamp: completionTime || msg.timestamp }
+                  ? {
+                      ...msg,
+                      content: content || '',
+                      images: images.length > 0 ? images : undefined,
+                      timestamp: completionTime || msg.timestamp,
+                    }
                   : msg
               ),
             }
@@ -358,6 +375,32 @@ export async function processComparisonStream(
             modelLastChunkTimes[event.model] = Date.now()
             resetStreamingTimeout()
             shouldUpdate = true
+          } else if (event.type === 'image') {
+            if (event.model && event.url) {
+              if (!streamingImages[event.model]) streamingImages[event.model] = []
+              streamingImages[event.model].push(event.url)
+              modelLastChunkTimes[event.model] = Date.now()
+              resetStreamingTimeout()
+              shouldUpdate = true
+              if (
+                !hasScrolledToResultsOnFirstChunkRef.current &&
+                !(
+                  tutorialState.isActive &&
+                  (tutorialState.currentStep === 'submit-comparison' ||
+                    tutorialState.currentStep === 'submit-comparison-2')
+                )
+              ) {
+                hasScrolledToResultsOnFirstChunkRef.current = true
+                requestAnimationFrame(() => {
+                  setTimeout(() => {
+                    document.querySelector('.results-section')?.scrollIntoView({
+                      behavior: 'smooth',
+                      block: 'start',
+                    })
+                  }, 100)
+                })
+              }
+            }
           } else if (event.type === 'chunk') {
             streamingResults[event.model] = (streamingResults[event.model] || '') + event.content
             modelLastChunkTimes[event.model] = Date.now()
@@ -427,11 +470,13 @@ export async function processComparisonStream(
 
               const hasSuccessfulModels = selectedModels.some(modelId => {
                 const cid = createModelId(modelId)
+                const content = streamingResults[cid] || ''
+                const images = streamingImages[cid] || []
                 return (
                   completedModels.has(cid) &&
                   localModelErrors[cid] !== true &&
-                  !isErrorMessage(streamingResults[cid] || '') &&
-                  (streamingResults[cid] || '').trim().length > 0
+                  !isErrorMessage(content) &&
+                  (content.trim().length > 0 || images.length > 0)
                 )
               })
 
@@ -649,6 +694,7 @@ export async function processComparisonStream(
 
   return {
     streamingResults,
+    streamingImages,
     completedModels,
     localModelErrors,
     modelStartTimes,

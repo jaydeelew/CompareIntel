@@ -61,8 +61,9 @@ export const ResultCard: React.FC<ResultCardProps> = ({
   const safeMessages = messages && Array.isArray(messages) ? messages : []
   const latestMessage = safeMessages[safeMessages.length - 1]
   const safeId = getSafeId(modelId || 'unknown')
+  const hasImages = (latestMessage?.images?.length ?? 0) > 0
 
-  const hasError = isError || isErrorMessage(latestMessage?.content)
+  const hasError = (isError || isErrorMessage(latestMessage?.content)) && !hasImages
   const statusText = isProcessing ? 'Process' : hasError ? 'Failed' : 'Success'
   const statusClass = isProcessing ? 'process' : hasError ? 'error' : 'success'
 
@@ -267,6 +268,7 @@ export const ResultCard: React.FC<ResultCardProps> = ({
               id={messageId}
               type={message.type || 'assistant'}
               content={message.content || ''}
+              images={message.images}
               timestamp={message.timestamp || new Date().toISOString()}
               activeTab={activeTab}
               modelId={modelId}

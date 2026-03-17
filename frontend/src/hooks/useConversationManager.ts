@@ -156,6 +156,9 @@ export function useConversationManager(options: UseConversationManagerOptions) {
             if (msg.success !== undefined) {
               storedMessage.success = msg.success
             }
+            if (msg.images !== undefined && msg.images !== null) {
+              storedMessage.images = msg.images
+            }
             return storedMessage
           }),
         }
@@ -277,6 +280,7 @@ export function useConversationManager(options: UseConversationManagerOptions) {
               content: modelAssistant.content,
               timestamp: modelAssistant.created_at || new Date().toISOString(),
               output_tokens: modelAssistant.output_tokens,
+              images: modelAssistant.images,
             })
           })
         })

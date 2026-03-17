@@ -115,6 +115,7 @@ async def get_available_models(
     """Get list of all AI models with tier_access field."""
     from ...model_runner import (
         filter_models_by_tier,
+        get_model_supports_image_generation,
         get_model_supports_temperature,
         get_model_supports_vision,
         get_model_token_limits_from_openrouter,
@@ -132,6 +133,9 @@ async def get_available_models(
         for model in all_models:
             model["supports_temperature"] = get_model_supports_temperature(model["id"])
             model["supports_vision"] = get_model_supports_vision(model["id"])
+            model["supports_image_generation"] = model.get(
+                "supports_image_generation"
+            ) or get_model_supports_image_generation(model["id"])
             limits = get_model_token_limits_from_openrouter(model["id"])
             if limits:
                 model["max_input_tokens"] = limits["max_input"]
@@ -157,6 +161,9 @@ async def get_available_models(
                         seen_ids.add(mid)
                     model["supports_temperature"] = get_model_supports_temperature(model["id"])
                     model["supports_vision"] = get_model_supports_vision(model["id"])
+                    model["supports_image_generation"] = model.get(
+                        "supports_image_generation"
+                    ) or get_model_supports_image_generation(model["id"])
                     limits = get_model_token_limits_from_openrouter(model["id"])
                     if limits:
                         model["max_input_tokens"] = limits["max_input"]
@@ -304,6 +311,22 @@ async def compare_stream(
 
     if not req.models:
         raise HTTPException(status_code=400, detail="At least one model must be selected")
+
+    from ...model_runner import get_model_supports_image_generation
+
+    def _model_supports_image_gen(mid: str) -> bool:
+        for models in MODELS_BY_PROVIDER.values():
+            for m in models:
+                if m.get("id") == mid and m.get("supports_image_generation"):
+                    return True
+        return get_model_supports_image_generation(mid)
+
+    has_image_model = any(_model_supports_image_gen(mid) for mid in req.models)
+    if has_image_model and current_user is None:
+        raise HTTPException(
+            status_code=402,
+            detail="Sign up for a free account to run 2 image comparisons, or wait for paid tiers for as many image generations as your credits allow.",
+        )
 
     if req.temperature is not None and (req.temperature < 0.0 or req.temperature > 2.0):
         raise HTTPException(status_code=400, detail="Temperature must be between 0.0 and 2.0")

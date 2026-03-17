@@ -41,6 +41,8 @@ export interface ConversationMessage {
   success: boolean
   processing_time_ms: number | null
   created_at: string
+  /** Generated image URLs (for image-generation model responses) */
+  images?: string[]
 }
 
 /**

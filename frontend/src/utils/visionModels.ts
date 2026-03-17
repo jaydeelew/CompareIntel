@@ -66,3 +66,49 @@ export function filterToVisionModels<T extends { id: string }>(
 ): T[] {
   return models.filter(m => modelSupportsVision(String(m.id), modelsByProvider))
 }
+
+export function modelSupportsImageGeneration(
+  modelId: string,
+  modelsByProvider: ModelsByProvider
+): boolean {
+  const idStr = String(modelId)
+  for (const providerModels of Object.values(modelsByProvider)) {
+    const model = providerModels.find(m => String(m.id) === idStr)
+    if (model?.supports_image_generation) return true
+  }
+  return false
+}
+
+export function filterToImageModels<T extends { id: string }>(
+  models: T[],
+  modelsByProvider: ModelsByProvider
+): T[] {
+  return models.filter(m => modelSupportsImageGeneration(String(m.id), modelsByProvider))
+}
+
+export function filterModelsByProviderToImage(
+  modelsByProvider: ModelsByProvider
+): ModelsByProvider {
+  const result: ModelsByProvider = {}
+  const entries = Object.entries(modelsByProvider).sort(([a], [b]) => a.localeCompare(b))
+  for (const [provider, models] of entries) {
+    const imageModels = filterToImageModels(models, modelsByProvider)
+    if (imageModels.length > 0) result[provider] = imageModels
+  }
+  return result
+}
+
+/**
+ * Filter models to only those that do NOT support image generation (text-only models).
+ * Used when "Text models" toggle is selected.
+ */
+export function filterModelsByProviderToText(modelsByProvider: ModelsByProvider): ModelsByProvider {
+  const result: ModelsByProvider = {}
+  for (const [provider, models] of Object.entries(modelsByProvider)) {
+    const textModels = models.filter(
+      m => !modelSupportsImageGeneration(String(m.id), modelsByProvider)
+    )
+    if (textModels.length > 0) result[provider] = textModels
+  }
+  return result
+}

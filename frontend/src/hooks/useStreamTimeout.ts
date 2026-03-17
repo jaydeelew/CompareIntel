@@ -88,15 +88,24 @@ export function useStreamTimeout(
   const handleStreamError = useCallback(
     (err: unknown, streamResult: ProcessStreamResult | null, startTime: number): void => {
       const streamingResults = streamResult?.streamingResults ?? {}
+      const streamingImages = streamResult?.streamingImages ?? {}
       const completedModels = streamResult?.completedModels ?? new Set<string>()
       const localModelErrors = streamResult?.localModelErrors ?? {}
       const modelStartTimes = streamResult?.modelStartTimes ?? {}
       const modelCompletionTimes = streamResult?.modelCompletionTimes ?? {}
 
+      const hasContentOrImages = (modelId: string) => {
+        const content = (streamingResults[modelId] || '').trim()
+        const images = streamingImages[modelId] || []
+        return content.length > 0 || images.length > 0
+      }
+
       const savePartialResultsOnError = () => {
-        const hasAnyResults = Object.keys(streamingResults).some(
-          modelId => (streamingResults[modelId] || '').trim().length > 0
-        )
+        const hasAnyResults =
+          Object.keys(streamingResults).some(
+            modelId => (streamingResults[modelId] || '').trim().length > 0
+          ) ||
+          Object.keys(streamingImages).some(modelId => (streamingImages[modelId] || []).length > 0)
 
         if (!hasAnyResults) return
 
@@ -117,20 +126,19 @@ export function useStreamTimeout(
         }
         setModelErrors(errorModelErrors)
 
+        const allModelIds = [
+          ...new Set([...Object.keys(streamingResults), ...Object.keys(streamingImages)]),
+        ]
         setResponse({
           results: { ...streamingResults },
           metadata: {
             input_length: input.length,
             models_requested: selectedModels.length,
-            models_successful: Object.keys(streamingResults).filter(
-              modelId =>
-                !isErrorMessage(streamingResults[modelId]) &&
-                (streamingResults[modelId] || '').trim().length > 0
+            models_successful: allModelIds.filter(
+              modelId => !isErrorMessage(streamingResults[modelId]) && hasContentOrImages(modelId)
             ).length,
-            models_failed: Object.keys(streamingResults).filter(
-              modelId =>
-                isErrorMessage(streamingResults[modelId]) ||
-                (streamingResults[modelId] || '').trim().length === 0
+            models_failed: allModelIds.filter(
+              modelId => isErrorMessage(streamingResults[modelId]) || !hasContentOrImages(modelId)
             ).length,
             timestamp: new Date().toISOString(),
             processing_time_ms: Date.now() - startTime,
@@ -144,10 +152,12 @@ export function useStreamTimeout(
                 selectedModels && Array.isArray(selectedModels)
                   ? selectedModels.find(m => createModelId(m) === conv.modelId) || conv.modelId
                   : conv.modelId
-              const content =
+              let content =
                 (streamingResults &&
                   (streamingResults[rawModelId] || streamingResults[conv.modelId])) ||
                 ''
+              const images = streamingImages[rawModelId] || streamingImages[conv.modelId] || []
+              if (!content.trim() && images.length === 0) content = 'Error: No response received'
               const startT =
                 (modelStartTimes &&
                   (modelStartTimes[rawModelId] || modelStartTimes[conv.modelId])) ||
@@ -166,6 +176,7 @@ export function useStreamTimeout(
                     return {
                       ...msg,
                       content,
+                      images: images.length > 0 ? images : undefined,
                       timestamp: completionTime || msg.timestamp,
                     }
                   }
@@ -187,7 +198,9 @@ export function useStreamTimeout(
                 const assistantMessages = conv.messages.filter(msg => msg.type === 'assistant')
                 return (
                   assistantMessages.length > 0 &&
-                  assistantMessages.some(msg => msg.content.trim().length > 0)
+                  assistantMessages.some(
+                    msg => msg.content.trim().length > 0 || (msg.images?.length ?? 0) > 0
+                  )
                 )
               })
 
@@ -294,7 +307,7 @@ export function useStreamTimeout(
               timeoutModelErrors[rawModelId] === true ||
               timeoutModelErrors[formattedModelId] === true ||
               isErrorMessage(content)
-            if (!hasError && content.trim().length > 0) {
+            if (!hasError && hasContentOrImages(rawModelId)) {
               formattedTabs[formattedModelId] = RESULT_TAB.FORMATTED
             }
           } catch (error) {
@@ -308,7 +321,9 @@ export function useStreamTimeout(
             return prevConversations.map(conv => {
               const rawModelId =
                 selectedModels.find(m => createModelId(m) === conv.modelId) || conv.modelId
-              const content = streamingResults[rawModelId] || streamingResults[conv.modelId] || ''
+              let content = streamingResults[rawModelId] || streamingResults[conv.modelId] || ''
+              const images = streamingImages[rawModelId] || streamingImages[conv.modelId] || []
+              if (!content.trim() && images.length === 0) content = 'Error: No response received'
               const startT = modelStartTimes[rawModelId] || modelStartTimes[conv.modelId]
               const completionTime =
                 modelCompletionTimes[rawModelId] || modelCompletionTimes[conv.modelId]
@@ -322,6 +337,7 @@ export function useStreamTimeout(
                     return {
                       ...msg,
                       content,
+                      images: images.length > 0 ? images : undefined,
                       timestamp: completionTime || msg.timestamp,
                     }
                   }
@@ -350,7 +366,10 @@ export function useStreamTimeout(
                 (streamingResults[rawModelId] || streamingResults[formattedModelId])) ||
               ''
             const isError = isErrorMessage(content)
-            return hasCompleted && !hasError && !isError && content.trim().length > 0
+            const hasContent =
+              content.trim().length > 0 ||
+              (streamingImages[rawModelId] || streamingImages[formattedModelId] || []).length > 0
+            return hasCompleted && !hasError && !isError && hasContent
           } catch (error) {
             logger.error('Error checking successful model:', error)
             return false

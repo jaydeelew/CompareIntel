@@ -154,6 +154,17 @@ async def classify_model_by_pricing(model_id: str, model_data: dict[str, Any] | 
     return "paid"
 
 
+def _is_image_generation_model(model_data: dict[str, Any] | None) -> bool:
+    if not model_data:
+        return False
+    arch = model_data.get("architecture") or {}
+    out_mods = arch.get("output_modalities") if isinstance(arch, dict) else []
+    out_str = (
+        " ".join(str(m) for m in out_mods).lower() if isinstance(out_mods, (list, tuple)) else ""
+    )
+    return "image" in out_str
+
+
 def _sort_providers_alphabetically(mbp: dict[str, list]) -> dict[str, list]:
     """Return a new dict with providers sorted alphabetically (case-insensitive).
     Used when adding a model that introduces a new provider, so the model provider
@@ -326,13 +337,18 @@ async def add_model(
                 provider_name = existing_provider
                 break
 
+        model_data = await fetch_model_data_from_openrouter(model_id)
+        tier_classification = await classify_model_by_pricing(model_id, model_data)
+        is_image_model = _is_image_generation_model(model_data)
+
         new_model = {
             "id": model_id,
             "name": model_name,
             "description": model_description,
-            "category": "Language",
+            "category": "Image" if is_image_model else "Language",
             "provider": provider_name,
             "supports_web_search": supports_web_search,
+            "supports_image_generation": is_image_model,
         }
         if hasattr(req, "available") and not req.available:
             new_model["available"] = False
@@ -351,8 +367,6 @@ async def add_model(
             )
         mbp[provider_name].append(new_model)
 
-        model_data = await fetch_model_data_from_openrouter(model_id)
-        tier_classification = await classify_model_by_pricing(model_id, model_data)
         mbp[provider_name] = sort_models_by_tier_and_version(
             mbp[provider_name],
             tier_overrides={model_id: tier_classification},
@@ -380,40 +394,38 @@ async def add_model(
         refresh_model_token_limits(model_id)
 
         backend_dir = Path(__file__).parent.parent.parent.parent
-        script_path = backend_dir / "scripts" / "setup_model_renderer.py"
-        result = subprocess.run(
-            [sys.executable, str(script_path), model_id],
-            capture_output=True,
-            text=True,
-            timeout=600,
-            cwd=str(backend_dir),
-        )
-
-        if result.returncode != 0:
-            error_msg = result.stderr[:500] if result.stderr else "Unknown error"
-            raise HTTPException(
-                status_code=500,
-                detail=f"Model added but renderer config generation failed: {error_msg}",
+        if not is_image_model:
+            script_path = backend_dir / "scripts" / "setup_model_renderer.py"
+            result = subprocess.run(
+                [sys.executable, str(script_path), model_id],
+                capture_output=True,
+                text=True,
+                timeout=600,
+                cwd=str(backend_dir),
             )
-
-        # Research benchmarks and update Help Me Choose recommendations
-        benchmark_script = backend_dir / "scripts" / "research_model_benchmarks.py"
-        if benchmark_script.exists():
-            try:
-                bench_result = subprocess.run(
-                    [sys.executable, str(benchmark_script), model_id],
-                    capture_output=True,
-                    text=True,
-                    timeout=120,
-                    cwd=str(backend_dir),
+            if result.returncode != 0:
+                error_msg = result.stderr[:500] if result.stderr else "Unknown error"
+                raise HTTPException(
+                    status_code=500,
+                    detail=f"Model added but renderer config generation failed: {error_msg}",
                 )
-                if bench_result.returncode != 0:
-                    logger.warning(
-                        f"Help Me Choose benchmark research failed for {model_id}: "
-                        f"{bench_result.stderr[:200] if bench_result.stderr else 'Unknown error'}"
+            benchmark_script = backend_dir / "scripts" / "research_model_benchmarks.py"
+            if benchmark_script.exists():
+                try:
+                    bench_result = subprocess.run(
+                        [sys.executable, str(benchmark_script), model_id],
+                        capture_output=True,
+                        text=True,
+                        timeout=120,
+                        cwd=str(backend_dir),
                     )
-            except Exception as e:
-                logger.warning(f"Help Me Choose benchmark research error for {model_id}: {e}")
+                    if bench_result.returncode != 0:
+                        logger.warning(
+                            f"Help Me Choose benchmark research failed for {model_id}: "
+                            f"{bench_result.stderr[:200] if bench_result.stderr else 'Unknown error'}"
+                        )
+                except Exception as e:
+                    logger.warning(f"Help Me Choose benchmark research error for {model_id}: {e}")
 
         from ...cache import invalidate_models_cache
 
@@ -578,13 +590,26 @@ async def add_model_stream(
                     provider_name = existing_provider
                     break
 
+            try:
+                yield f"data: {json.dumps({'type': 'progress', 'stage': 'classifying', 'message': 'Classifying model tier based on pricing...', 'progress': 25})}\n\n"
+            except disconnect_exceptions:
+                raise
+
+            try:
+                model_data = await fetch_model_data_from_openrouter(model_id)
+                tier_classification = await classify_model_by_pricing(model_id, model_data)
+                is_image_model = _is_image_generation_model(model_data)
+            except disconnect_exceptions:
+                raise
+
             new_model = {
                 "id": model_id,
                 "name": model_name,
                 "description": model_description,
-                "category": "Language",
+                "category": "Image" if is_image_model else "Language",
                 "provider": provider_name,
                 "supports_web_search": supports_web_search,
+                "supports_image_generation": is_image_model,
             }
             if hasattr(req, "knowledge_cutoff") and req.knowledge_cutoff:
                 new_model["knowledge_cutoff"] = req.knowledge_cutoff
@@ -594,17 +619,6 @@ async def add_model_stream(
             if provider_name not in mbp:
                 mbp[provider_name] = []
             mbp[provider_name].append(new_model)
-
-            try:
-                yield f"data: {json.dumps({'type': 'progress', 'stage': 'classifying', 'message': 'Classifying model tier based on pricing...', 'progress': 25})}\n\n"
-            except disconnect_exceptions:
-                raise
-
-            try:
-                model_data = await fetch_model_data_from_openrouter(model_id)
-                tier_classification = await classify_model_by_pricing(model_id, model_data)
-            except disconnect_exceptions:
-                raise
 
             mbp[provider_name] = sort_models_by_tier_and_version(
                 mbp[provider_name],
@@ -639,39 +653,46 @@ async def add_model_stream(
             except disconnect_exceptions:
                 raise
 
-            def _has_model_config(mid: str, path: Path) -> bool:
-                """Check if model already has a renderer configuration."""
-                if not path.exists():
-                    return False
+            if is_image_model:
                 try:
-                    with open(path, encoding="utf-8") as f:
-                        configs = json.load(f)
-                except Exception:
-                    return False
-                if isinstance(configs, list):
-                    return any(c.get("modelId") == mid for c in configs if isinstance(c, dict))
-                if isinstance(configs, dict):
-                    return mid in configs
-                return False
-
-            backend_dir = Path(__file__).parent.parent.parent.parent
-            script_path = backend_dir / "scripts" / "setup_model_renderer.py"
-
-            if _has_model_config(model_id, config_path):
-                try:
-                    yield f"data: {json.dumps({'type': 'progress', 'stage': 'setup', 'message': 'Renderer config already exists, skipping setup...', 'progress': 90})}\n\n"
+                    yield f"data: {json.dumps({'type': 'progress', 'stage': 'setup', 'message': 'Image model: skipping renderer and benchmark setup', 'progress': 90})}\n\n"
                 except disconnect_exceptions:
                     raise
                 process = None
             else:
-                process = await asyncio.create_subprocess_exec(
-                    sys.executable,
-                    str(script_path),
-                    model_id,
-                    stdout=asyncio.subprocess.PIPE,
-                    stderr=asyncio.subprocess.PIPE,
-                    cwd=str(backend_dir),
-                )
+
+                def _has_model_config(mid: str, path: Path) -> bool:
+                    if not path.exists():
+                        return False
+                    try:
+                        with open(path, encoding="utf-8") as f:
+                            configs = json.load(f)
+                    except Exception:
+                        return False
+                    if isinstance(configs, list):
+                        return any(c.get("modelId") == mid for c in configs if isinstance(c, dict))
+                    if isinstance(configs, dict):
+                        return mid in configs
+                    return False
+
+                backend_dir = Path(__file__).parent.parent.parent.parent
+                script_path = backend_dir / "scripts" / "setup_model_renderer.py"
+
+                if _has_model_config(model_id, config_path):
+                    try:
+                        yield f"data: {json.dumps({'type': 'progress', 'stage': 'setup', 'message': 'Renderer config already exists, skipping setup...', 'progress': 90})}\n\n"
+                    except disconnect_exceptions:
+                        raise
+                    process = None
+                else:
+                    process = await asyncio.create_subprocess_exec(
+                        sys.executable,
+                        str(script_path),
+                        model_id,
+                        stdout=asyncio.subprocess.PIPE,
+                        stderr=asyncio.subprocess.PIPE,
+                        cwd=str(backend_dir),
+                    )
 
             if process is not None:
                 stderr_lines = []
@@ -738,40 +759,39 @@ async def add_model_stream(
                         raise
                     return
 
-            # Research benchmarks and update Help Me Choose recommendations
-            try:
-                yield f"data: {json.dumps({'type': 'progress', 'stage': 'benchmarks', 'message': 'Researching benchmarks for Help Me Choose...', 'progress': 92})}\n\n"
-            except disconnect_exceptions:
-                raise
-
-            benchmark_script = backend_dir / "scripts" / "research_model_benchmarks.py"
-            if benchmark_script.exists():
+            if not is_image_model:
                 try:
-                    bench_process = await asyncio.create_subprocess_exec(
-                        sys.executable,
-                        str(benchmark_script),
-                        model_id,
-                        stdout=asyncio.subprocess.PIPE,
-                        stderr=asyncio.subprocess.PIPE,
-                        cwd=str(backend_dir),
-                    )
-                    bench_stdout, bench_stderr = await asyncio.wait_for(
-                        bench_process.communicate(), timeout=120
-                    )
-                    if bench_process.returncode != 0:
-                        logger.warning(
-                            f"Help Me Choose benchmark research failed for {model_id}: "
-                            f"{bench_stderr.decode()[:200] if bench_stderr else 'Unknown'}"
+                    yield f"data: {json.dumps({'type': 'progress', 'stage': 'benchmarks', 'message': 'Researching benchmarks for Help Me Choose...', 'progress': 92})}\n\n"
+                except disconnect_exceptions:
+                    raise
+                benchmark_script = backend_dir / "scripts" / "research_model_benchmarks.py"
+                if benchmark_script.exists():
+                    try:
+                        bench_process = await asyncio.create_subprocess_exec(
+                            sys.executable,
+                            str(benchmark_script),
+                            model_id,
+                            stdout=asyncio.subprocess.PIPE,
+                            stderr=asyncio.subprocess.PIPE,
+                            cwd=str(backend_dir),
                         )
-                    else:
-                        try:
-                            yield f"data: {json.dumps({'type': 'progress', 'stage': 'benchmarks', 'message': 'Help Me Choose recommendations updated.', 'progress': 94})}\n\n"
-                        except disconnect_exceptions:
-                            raise
-                except TimeoutError:
-                    logger.warning(f"Benchmark research timed out for {model_id}")
-                except Exception as e:
-                    logger.warning(f"Benchmark research error for {model_id}: {e}")
+                        bench_stdout, bench_stderr = await asyncio.wait_for(
+                            bench_process.communicate(), timeout=120
+                        )
+                        if bench_process.returncode != 0:
+                            logger.warning(
+                                f"Help Me Choose benchmark research failed for {model_id}: "
+                                f"{bench_stderr.decode()[:200] if bench_stderr else 'Unknown'}"
+                            )
+                        else:
+                            try:
+                                yield f"data: {json.dumps({'type': 'progress', 'stage': 'benchmarks', 'message': 'Help Me Choose recommendations updated.', 'progress': 94})}\n\n"
+                            except disconnect_exceptions:
+                                raise
+                    except TimeoutError:
+                        logger.warning(f"Benchmark research timed out for {model_id}")
+                    except Exception as e:
+                        logger.warning(f"Benchmark research error for {model_id}: {e}")
 
             try:
                 yield f"data: {json.dumps({'type': 'progress', 'stage': 'finalizing', 'message': 'Finalizing model addition...', 'progress': 95})}\n\n"

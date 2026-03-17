@@ -113,6 +113,14 @@ MONTHLY_CREDIT_ALLOCATIONS: dict[str, int] = {
     "pro_plus": 10_000,
 }
 
+# Image generation credits (when token usage unavailable)
+CREDITS_PER_DOLLAR: float = 100.0
+IMAGE_CREDITS_PER_GENERATION: int = 5
+
+# Image generation tier limits
+FREE_TIER_IMAGE_COMPARISONS_PER_DAY: int = 2
+UNREGISTERED_IMAGE_COMPARISONS: int = 0
+
 # Subscription pricing (monthly) - placeholder values, not yet established
 TIER_PRICING: dict[str, float] = {
     "unregistered": 0.0,

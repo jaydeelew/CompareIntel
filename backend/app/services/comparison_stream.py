@@ -30,6 +30,7 @@ from ..model_runner import (
     estimate_token_count,
     get_min_max_input_tokens,
     get_min_max_output_tokens,
+    get_model_supports_image_generation,
 )
 from ..models import AppSettings, Conversation, User
 from ..models import ConversationMessage as ConversationMessageModel
@@ -81,10 +82,12 @@ async def generate_stream(ctx: StreamContext) -> Any:
     successful_models = 0
     failed_models = 0
     results_dict = {}
+    images_dict: dict[str, list[str]] = {}
     done_sent: set[str] = set()
     total_input_tokens = 0
     total_output_tokens = 0
     total_effective_tokens = 0
+    total_image_credits = Decimal(0)
     usage_data_dict = {}
     total_credits_used = Decimal(0)
 
@@ -188,6 +191,17 @@ async def generate_stream(ctx: StreamContext) -> Any:
                         if search_provider_instance:
                             enable_web_search_for_model = True
 
+                is_image_gen = False
+                for models in MODELS_BY_PROVIDER.values():
+                    for m in models:
+                        if m.get("id") == model_id and m.get("supports_image_generation"):
+                            is_image_gen = True
+                            break
+                    if is_image_gen:
+                        break
+                if not is_image_gen:
+                    is_image_gen = get_model_supports_image_generation(model_id)
+
                 def process_stream_to_queue():
                     content = ""
                     count = 0
@@ -237,6 +251,7 @@ async def generate_stream(ctx: StreamContext) -> Any:
                             temperature=req.temperature,
                             top_p=req.top_p,
                             attached_images=attached_images_dicts,
+                            is_image_generation=is_image_gen,
                             _client=per_model_client,
                         )
 
@@ -244,6 +259,18 @@ async def generate_stream(ctx: StreamContext) -> Any:
                         try:
                             while True:
                                 chunk = next(gen)
+                                if isinstance(chunk, dict) and chunk.get("type") == "image":
+                                    asyncio.run_coroutine_threadsafe(
+                                        chunk_queue.put(
+                                            {
+                                                "type": "image",
+                                                "model": model_id,
+                                                "url": chunk.get("url", ""),
+                                            }
+                                        ),
+                                        loop,
+                                    )
+                                    continue
                                 is_keepalive = False
                                 if chunk == " ":
                                     if len(content) == 0:
@@ -401,6 +428,13 @@ async def generate_stream(ctx: StreamContext) -> Any:
                         if chunk_data["type"] == "chunk":
                             yield f"data: {json.dumps({'model': chunk_data['model'], 'type': 'chunk', 'content': chunk_data['content']})}\n\n"
                             chunks_processed = True
+                        elif chunk_data["type"] == "image":
+                            mid = chunk_data.get("model")
+                            url = chunk_data.get("url", "")
+                            if mid and url:
+                                images_dict.setdefault(mid, []).append(url)
+                            yield f"data: {json.dumps({'model': chunk_data['model'], 'type': 'image', 'url': chunk_data.get('url', '')})}\n\n"
+                            chunks_processed = True
                         elif chunk_data["type"] == "keepalive":
                             yield f"data: {json.dumps({'model': chunk_data['model'], 'type': 'keepalive'})}\n\n"
                             chunks_processed = True
@@ -431,6 +465,13 @@ async def generate_stream(ctx: StreamContext) -> Any:
                         if chunk_data["type"] == "chunk":
                             yield f"data: {json.dumps({'model': chunk_data['model'], 'type': 'chunk', 'content': chunk_data['content']})}\n\n"
                             chunks_processed = True
+                        elif chunk_data["type"] == "image":
+                            mid = chunk_data.get("model")
+                            url = chunk_data.get("url", "")
+                            if mid and url:
+                                images_dict.setdefault(mid, []).append(url)
+                            yield f"data: {json.dumps({'model': chunk_data['model'], 'type': 'image', 'url': chunk_data.get('url', '')})}\n\n"
+                            chunks_processed = True
                         elif chunk_data["type"] == "keepalive":
                             yield f"data: {json.dumps({'model': chunk_data['model'], 'type': 'keepalive'})}\n\n"
                             chunks_processed = True
@@ -454,6 +495,13 @@ async def generate_stream(ctx: StreamContext) -> Any:
                                 model_last_activity[chunk_model_id] = time.time()
                             if chunk_data["type"] == "chunk":
                                 yield f"data: {json.dumps({'model': chunk_data['model'], 'type': 'chunk', 'content': chunk_data['content']})}\n\n"
+                                chunks_processed = True
+                            elif chunk_data["type"] == "image":
+                                mid = chunk_data.get("model")
+                                url = chunk_data.get("url", "")
+                                if mid and url:
+                                    images_dict.setdefault(mid, []).append(url)
+                                yield f"data: {json.dumps({'model': chunk_data['model'], 'type': 'image', 'url': chunk_data.get('url', '')})}\n\n"
                                 chunks_processed = True
                             elif chunk_data["type"] == "keepalive":
                                 yield f"data: {json.dumps({'model': chunk_data['model'], 'type': 'keepalive'})}\n\n"
@@ -497,10 +545,17 @@ async def generate_stream(ctx: StreamContext) -> Any:
 
                         usage = result.get("usage")
                         if usage:
-                            usage_data_dict[mid] = usage
-                            total_input_tokens += usage.prompt_tokens
-                            total_output_tokens += usage.completion_tokens
-                            total_effective_tokens += usage.effective_tokens
+                            if isinstance(usage, dict) and "image_count" in usage:
+                                from ..llm.image_credits import calculate_image_credits
+
+                                total_image_credits += calculate_image_credits(
+                                    usage.get("model_id", mid), usage.get("image_count", 0)
+                                )
+                            else:
+                                usage_data_dict[mid] = usage
+                                total_input_tokens += usage.prompt_tokens
+                                total_output_tokens += usage.completion_tokens
+                                total_effective_tokens += usage.effective_tokens
 
                     results_dict[mid] = result["content"]
                     done_sent.add(mid)
@@ -535,6 +590,8 @@ async def generate_stream(ctx: StreamContext) -> Any:
         if successful_models > 0:
             if total_effective_tokens > 0:
                 total_credits_used = Decimal(total_effective_tokens) / Decimal(1000)
+            elif total_image_credits > 0:
+                total_credits_used = total_image_credits
             else:
                 total_credits_used = Decimal(successful_models)
 
@@ -843,18 +900,26 @@ async def generate_stream(ctx: StreamContext) -> Any:
                     conv_db.add(user_msg)
 
                     for mid, content in results_dict.items():
-                        if not content.startswith("Error:") and content and content.strip():
+                        has_content = (
+                            not content.startswith("Error:") and content and content.strip()
+                        )
+                        has_images = mid in images_dict and images_dict[mid]
+                        if has_content or has_images:
                             output_tokens = None
                             if mid in usage_data_dict:
                                 output_tokens = usage_data_dict[mid].completion_tokens
+                            images_json = None
+                            if has_images:
+                                images_json = json.dumps(images_dict[mid])
                             assistant_msg = ConversationMessageModel(
                                 conversation_id=conversation.id,
                                 role="assistant",
-                                content=content,
+                                content=content if has_content else "",
                                 model_id=mid,
                                 success=True,
                                 processing_time_ms=processing_time_ms,
                                 output_tokens=output_tokens,
+                                images=images_json,
                             )
                             conv_db.add(assistant_msg)
 

@@ -182,6 +182,19 @@ export const HelpMeChooseMethodology: React.FC = () => {
                   </td>
                 </tr>
                 <tr>
+                  <td>Best for image generation</td>
+                  <td>
+                    <a
+                      href="https://kearai.com/leaderboard/text-to-image"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      Text-to-Image Arena
+                    </a>{' '}
+                    — human preference votes from creators
+                  </td>
+                </tr>
+                <tr>
                   <td>Best for medical</td>
                   <td>
                     <a

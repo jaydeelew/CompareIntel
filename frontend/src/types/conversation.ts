@@ -37,6 +37,8 @@ export interface ConversationMessage {
   type: MessageType
   /** Content of the message */
   content: string
+  /** Generated image URLs (for image-generation model responses) */
+  images?: string[]
   /** ISO timestamp when the message was created */
   timestamp: string
   /** Input tokens for user messages (from OpenRouter API) */
@@ -65,6 +67,8 @@ export interface StoredMessage {
   output_tokens?: number | null
   /** Success flag (true if message was successful, false if failed) - only available from API */
   success?: boolean
+  /** Generated image URLs (for image-generation model responses) */
+  images?: string[]
 }
 
 /**

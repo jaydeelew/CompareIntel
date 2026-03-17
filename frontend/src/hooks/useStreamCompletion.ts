@@ -89,6 +89,7 @@ export function useStreamCompletion(
     ): Promise<void> => {
       const {
         streamingResults,
+        streamingImages = {},
         completedModels,
         localModelErrors,
         modelStartTimes,
@@ -110,12 +111,17 @@ export function useStreamCompletion(
         setTimeout(() => setError(null), 10000)
       }
 
+      const hasContentOrImages = (modelId: string) => {
+        const content = (streamingResults[modelId] || '').trim()
+        const images = streamingImages[modelId] || []
+        return content.length > 0 || images.length > 0
+      }
+
       const finalModelErrors: { [key: string]: boolean } = { ...localModelErrors }
       selectedModels.forEach(modelId => {
         const createdModelId = createModelId(modelId)
         if (!completedModels.has(createdModelId)) {
-          const content = streamingResults[createdModelId] || ''
-          if (content.trim().length === 0) {
+          if (!hasContentOrImages(createdModelId)) {
             finalModelErrors[createdModelId] = true
           }
         }
@@ -127,26 +133,25 @@ export function useStreamCompletion(
         const createdModelId = createModelId(modelId)
         const content = streamingResults[createdModelId] || ''
         const hasError = finalModelErrors[createdModelId] === true || isErrorMessage(content)
-        if (!hasError && content.trim().length > 0) {
+        if (!hasError && hasContentOrImages(createdModelId)) {
           formattedTabs[createdModelId] = RESULT_TAB.FORMATTED
         }
       })
       setActiveResultTabs(prev => ({ ...prev, ...formattedTabs }))
 
+      const allModelIds = [
+        ...new Set([...Object.keys(streamingResults), ...Object.keys(streamingImages)]),
+      ]
       setResponse({
         results: { ...streamingResults },
         metadata: {
           input_length: input.length,
           models_requested: selectedModels.length,
-          models_successful: Object.keys(streamingResults).filter(
-            modelId =>
-              !isErrorMessage(streamingResults[modelId]) &&
-              (streamingResults[modelId] || '').trim().length > 0
+          models_successful: allModelIds.filter(
+            modelId => !isErrorMessage(streamingResults[modelId]) && hasContentOrImages(modelId)
           ).length,
-          models_failed: Object.keys(streamingResults).filter(
-            modelId =>
-              isErrorMessage(streamingResults[modelId]) ||
-              (streamingResults[modelId] || '').trim().length === 0
+          models_failed: allModelIds.filter(
+            modelId => isErrorMessage(streamingResults[modelId]) || !hasContentOrImages(modelId)
           ).length,
           timestamp: new Date().toISOString(),
           processing_time_ms: Date.now() - startTime,
@@ -157,7 +162,8 @@ export function useStreamCompletion(
         setConversations(prevConversations => {
           const updated = prevConversations.map(conv => {
             let content = streamingResults[conv.modelId] || ''
-            if (!content.trim()) content = 'Error: No response received'
+            const images = streamingImages[conv.modelId] || []
+            if (!content.trim() && images.length === 0) content = 'Error: No response received'
             const startT = modelStartTimes[conv.modelId]
             const completionTime = modelCompletionTimes[conv.modelId]
             return {
@@ -170,6 +176,7 @@ export function useStreamCompletion(
                   return {
                     ...msg,
                     content,
+                    images: images.length > 0 ? images : undefined,
                     timestamp: completionTime || msg.timestamp,
                     output_tokens: msg.output_tokens || estimateTokensSimple(content),
                   }
@@ -185,8 +192,11 @@ export function useStreamCompletion(
           const updated = prevConversations.map(conv => {
             const content = streamingResults[conv.modelId]
             const contentStr = content ?? ''
+            const images = streamingImages[conv.modelId] || []
             const isFailed =
-              content === undefined || isErrorMessage(contentStr) || !contentStr.trim()
+              content === undefined ||
+              isErrorMessage(contentStr) ||
+              (!contentStr.trim() && images.length === 0)
             if (isFailed) return conv
 
             const completionTime = modelCompletionTimes[conv.modelId]
@@ -203,6 +213,7 @@ export function useStreamCompletion(
                 completionTime || new Date().toISOString()
               )
               assistantMessage.output_tokens = outputTokens
+              if (images.length > 0) assistantMessage.images = images
               return {
                 ...conv,
                 messages: [
@@ -219,6 +230,7 @@ export function useStreamCompletion(
                   return {
                     ...msg,
                     content: contentStr || msg.content,
+                    images: images.length > 0 ? images : msg.images,
                     timestamp: completionTime || msg.timestamp,
                     output_tokens: outputTokens,
                   }
@@ -242,7 +254,9 @@ export function useStreamCompletion(
                 const assistantMessages = conv.messages.filter(msg => msg.type === 'assistant')
                 return (
                   assistantMessages.length > 0 &&
-                  assistantMessages.some(msg => msg.content.trim().length > 0)
+                  assistantMessages.some(
+                    msg => msg.content.trim().length > 0 || (msg.images?.length ?? 0) > 0
+                  )
                 )
               })
               if (hasCompleteMessages && conversationsWithMessages.length > 0) {
@@ -306,7 +320,9 @@ export function useStreamCompletion(
                 const assistantMessages = conv.messages.filter(msg => msg.type === 'assistant')
                 return (
                   assistantMessages.length > 0 &&
-                  assistantMessages.some(msg => msg.content.trim().length > 0)
+                  assistantMessages.some(
+                    msg => msg.content.trim().length > 0 || (msg.images?.length ?? 0) > 0
+                  )
                 )
               })
               if (hasCompleteMessages && conversationsWithMessages.length > 0) {

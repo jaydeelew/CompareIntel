@@ -49,6 +49,16 @@ const PAGE_META: Record<string, PageMeta> = {
       'Explore CompareIntel features: compare AI models from leading providers, real-time streaming, LaTeX rendering, syntax highlighting, conversation history, and more.',
     ogImage: DEFAULT_OG_IMAGE,
   },
+  '/image-generation': {
+    title: 'Image Generation - CompareIntel',
+    description:
+      'Compare AI image generation models side-by-side. Free tier: 2 image comparisons per day. Paid tiers coming soon for unlimited generations.',
+    canonical: `${BASE_URL}/image-generation`,
+    ogTitle: 'Image Generation - CompareIntel',
+    ogDescription:
+      'Compare AI image generation models side-by-side. Free tier: 2 image comparisons per day. Paid tiers coming soon.',
+    ogImage: DEFAULT_OG_IMAGE,
+  },
   '/how-it-works': {
     title: 'How It Works - CompareIntel',
     description:

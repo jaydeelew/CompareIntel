@@ -45,6 +45,11 @@ const HelpMeChooseMethodology = lazy(() =>
     default: module.HelpMeChooseMethodology,
   }))
 )
+const ImageGeneration = lazy(() =>
+  import('./components/pages/ImageGeneration').then(module => ({
+    default: module.ImageGeneration,
+  }))
+)
 
 function App() {
   return (
@@ -116,6 +121,14 @@ function App() {
                   element={
                     <Suspense fallback={<LoadingSpinner />}>
                       <HelpMeChooseMethodology />
+                    </Suspense>
+                  }
+                />
+                <Route
+                  path="/image-generation"
+                  element={
+                    <Suspense fallback={<LoadingSpinner />}>
+                      <ImageGeneration />
                     </Suspense>
                   }
                 />

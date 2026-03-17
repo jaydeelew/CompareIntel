@@ -54,7 +54,13 @@ import { generateBrowserFingerprint } from '../utils'
 import { isErrorMessage } from '../utils/error'
 import logger from '../utils/logger'
 import { saveSessionState, onSaveStateEvent } from '../utils/sessionState'
-import { getModelNames, modelSupportsVision } from '../utils/visionModels'
+import {
+  filterModelsByProviderToImage,
+  filterModelsByProviderToText,
+  getModelNames,
+  modelSupportsImageGeneration,
+  modelSupportsVision,
+} from '../utils/visionModels'
 
 export function MainPage() {
   const { isAuthenticated, user, refreshUser, isLoading: authLoading } = useAuth()
@@ -88,6 +94,7 @@ export function MainPage() {
   const [maxTokens, setMaxTokens] = useState<number | null>(null) // cap on output length
   const [defaultSelectionOverridden, setDefaultSelectionOverridden] = useState(false)
   const [visionNoticeMessage, setVisionNoticeMessage] = useState<string | null>(null)
+  const [modelMode, setModelMode] = useState<'text' | 'image'>('text')
 
   const { userLocation } = useGeolocation({ isAuthenticated, user })
 
@@ -229,6 +236,9 @@ export function MainPage() {
     modelTierAccess: 'free' | 'paid'
     modelName?: string
   } | null>(null)
+  const [modelTypeConflictType, setModelTypeConflictType] = useState<
+    'text-to-image' | 'image-to-text' | null
+  >(null)
   const [modelErrors, setModelErrors] = useState<{ [key: string]: boolean }>({})
   const [anonymousCreditsRemaining, setAnonymousCreditsRemaining] = useState<number | null>(null)
   const [creditBalance, setCreditBalance] = useState<CreditBalance | null>(null)
@@ -500,6 +510,7 @@ export function MainPage() {
 
       const latestMessage = conversation.messages[conversation.messages.length - 1]
       const content = latestMessage?.content || ''
+      const hasImages = (latestMessage?.images?.length ?? 0) > 0
 
       const rawModelId = selectedModels?.find(m => createModelId(m) === conversation.modelId)
 
@@ -513,6 +524,7 @@ export function MainPage() {
 
       const isEmptyContent =
         content.trim().length === 0 &&
+        !hasImages &&
         latestMessage?.type === 'assistant' &&
         (modelHasCompleted || isLoadingDone)
 
@@ -657,7 +669,25 @@ export function MainPage() {
     ;(window as unknown as Record<string, unknown>).resetUsage = resetUsage
   }
 
-  const allModels = Object.values(modelsByProvider).flat()
+  const filteredModelsByProvider =
+    modelMode === 'image'
+      ? filterModelsByProviderToImage(modelsByProvider)
+      : filterModelsByProviderToText(modelsByProvider)
+  const allModels = Object.values(filteredModelsByProvider).flat()
+
+  // Clear selected models when switching modes if they no longer match the filtered list
+  useEffect(() => {
+    const ids = new Set(
+      Object.values(
+        modelMode === 'image'
+          ? filterModelsByProviderToImage(modelsByProvider)
+          : filterModelsByProviderToText(modelsByProvider)
+      )
+        .flat()
+        .map(m => String(m.id))
+    )
+    setSelectedModels(prev => prev.filter(id => ids.has(id)))
+  }, [modelMode, setSelectedModels, modelsByProvider])
 
   // Effective max tokens cap: minimum of selected models' limits (matches backend logic)
   const effectiveMaxTokens = useMemo(() => {
@@ -1951,6 +1981,8 @@ export function MainPage() {
           onDisabledModelModalClose={() => setDisabledModelModalInfo(null)}
           onToggleHidePremiumModels={() => setHidePremiumModels(true)}
           onOpenSignUp={openRegister}
+          modelTypeConflictType={modelTypeConflictType}
+          onModelTypeConflictModalClose={() => setModelTypeConflictType(null)}
         />
 
         <CreditsInfoModal
@@ -1984,7 +2016,7 @@ export function MainPage() {
           onNewComparison={handleNewComparison}
           renderUsagePreview={renderUsagePreview}
           selectedModels={selectedModels}
-          modelsByProvider={modelsByProvider}
+          modelsByProvider={filteredModelsByProvider}
           onAccurateTokenCountChange={setAccurateInputTokens}
           creditsRemaining={creditsRemaining}
           selectionProps={{
@@ -2046,7 +2078,11 @@ export function MainPage() {
               })
             },
             onRemoveAttachedImages,
-            modelsByProvider,
+            modelMode,
+            onModelModeChange: setModelMode,
+            modelsByProvider: filteredModelsByProvider,
+            allModelsByProvider: modelsByProvider,
+            imageModelsDisabledForUnregistered: modelMode === 'image' && !isAuthenticated,
             selectedModels,
             originalSelectedModels,
             openDropdowns,
@@ -2078,7 +2114,28 @@ export function MainPage() {
                 )
                 return
               }
+              if (wouldAdd) {
+                const isImageGen = modelSupportsImageGeneration(modelId, modelsByProvider)
+                const hasImageGen = selectedModels.some(id =>
+                  modelSupportsImageGeneration(id, modelsByProvider)
+                )
+                const hasTextOnly = selectedModels.some(
+                  id => !modelSupportsImageGeneration(id, modelsByProvider)
+                )
+                if (isImageGen && hasTextOnly) {
+                  setModelTypeConflictType('text-to-image')
+                  return
+                }
+                if (!isImageGen && hasImageGen) {
+                  setModelTypeConflictType('image-to-text')
+                  return
+                }
+              }
               handleModelToggle(modelId)
+              if (wouldAdd) {
+                const isImageGen = modelSupportsImageGeneration(modelId, modelsByProvider)
+                setModelMode(isImageGen ? 'image' : 'text')
+              }
             },
             onApplyCategoryPreset: modelIds => {
               const idsToApply = hasAttachedImages
@@ -2095,7 +2152,16 @@ export function MainPage() {
                 )
                 return
               }
-              handleApplyRecommendation(idsToApply.length > 0 ? idsToApply : modelIds)
+              const finalIds = idsToApply.length > 0 ? idsToApply : modelIds
+              const allImageGen = finalIds.every(id =>
+                modelSupportsImageGeneration(id, modelsByProvider)
+              )
+              const allText = finalIds.every(
+                id => !modelSupportsImageGeneration(id, modelsByProvider)
+              )
+              if (allImageGen) setModelMode('image')
+              else if (allText) setModelMode('text')
+              handleApplyRecommendation(finalIds)
             },
             onToggleAllForProvider: toggleAllForProvider,
             onToggleModelsHidden: () => setIsModelsHidden(!isModelsHidden),
@@ -2179,7 +2245,7 @@ export function MainPage() {
           isTouchDevice={isTouchDevice}
           currentView={currentView}
           isMobileLayout={isMobileLayout}
-          modelsByProvider={modelsByProvider}
+          modelsByProvider={filteredModelsByProvider}
           openDropdowns={openDropdowns}
           selectedModels={selectedModels}
           input={input}

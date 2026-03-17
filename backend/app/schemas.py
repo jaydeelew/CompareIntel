@@ -291,7 +291,10 @@ class ConversationMessage(BaseModel):
     role: Literal["user", "assistant"] = Field(
         ..., description="Message role: 'user' or 'assistant'"
     )
-    content: str = Field(..., min_length=1, description="Message content")
+    content: str = Field(..., description="Message content")
+    images: list[str] | None = Field(
+        None, description="Generated image URLs (for image-generation responses)"
+    )
     input_tokens: int | None = Field(
         None, ge=0, description="Input tokens for user messages (from OpenRouter)"
     )

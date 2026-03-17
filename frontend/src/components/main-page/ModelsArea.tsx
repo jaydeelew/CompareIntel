@@ -20,7 +20,13 @@ export interface ModelsAreaProps {
   hasAttachedImages?: boolean
   /** When set, shows a persistent warning that selected model(s) cannot process images */
   nonVisionModelsWarning?: string | null
+  /** "text" = text models, "image" = image generation models */
+  modelMode?: 'text' | 'image'
+  /** Called when user switches between text and image model modes */
+  onModelModeChange?: (mode: 'text' | 'image') => void
   modelsByProvider: ModelsByProvider
+  /** Full models for Help Me Choose lookups (avoids greying text/image models when filtered by mode) */
+  allModelsByProvider?: ModelsByProvider
   selectedModels: string[]
   originalSelectedModels: string[]
   openDropdowns: Set<string>
@@ -91,13 +97,18 @@ export interface ModelsAreaProps {
   onOpenHelpMeChoose?: () => void
   /** When non-vision warning shows: remove all attached images from composer */
   onRemoveAttachedImages?: () => void
+  /** When true, unregistered users cannot select image models (show sign-up modal) */
+  imageModelsDisabledForUnregistered?: boolean
 }
 
 export function ModelsArea({
   // Data
   hasAttachedImages = false,
   nonVisionModelsWarning = null,
+  modelMode = 'text',
+  onModelModeChange,
   modelsByProvider,
+  allModelsByProvider,
   selectedModels,
   originalSelectedModels,
   openDropdowns,
@@ -155,6 +166,7 @@ export function ModelsArea({
   onModelsDropdownChange: setOpenDropdown,
   onOpenHelpMeChoose,
   onRemoveAttachedImages,
+  imageModelsDisabledForUnregistered = false,
 }: ModelsAreaProps) {
   return (
     <ErrorBoundary>
@@ -227,6 +239,44 @@ export function ModelsArea({
                 </span>
               </div>
             )}
+            {onModelModeChange && (
+              <div
+                className="models-section-mode-toggle"
+                role="group"
+                aria-label="Model type"
+                data-mode={modelMode}
+              >
+                <span className="models-section-mode-slider" aria-hidden />
+                <button
+                  type="button"
+                  className={`models-section-mode-btn ${modelMode === 'text' ? 'active' : ''}`}
+                  onClick={() => onModelModeChange('text')}
+                  aria-pressed={modelMode === 'text'}
+                >
+                  Text models
+                </button>
+                <button
+                  type="button"
+                  className={`models-section-mode-btn ${modelMode === 'image' ? 'active' : ''}`}
+                  onClick={() => onModelModeChange('image')}
+                  aria-pressed={modelMode === 'image'}
+                >
+                  Image generation models
+                </button>
+              </div>
+            )}
+            {imageModelsDisabledForUnregistered && (
+              <div className="models-section-image-signup-banner" role="alert" aria-live="polite">
+                <span className="models-section-image-signup-banner-icon" aria-hidden>
+                  🖼️
+                </span>
+                <span>
+                  Sign up for a free account to use image generation models. Free tier: 2 image
+                  comparisons per day. Paid tiers coming soon for as many image generations as you
+                  have credits for.
+                </span>
+              </div>
+            )}
             <div className="models-section-buttons-row">
               <HelpMeChoose
                 onToggleModel={onToggleModel}
@@ -234,6 +284,7 @@ export function ModelsArea({
                 disabled={isLoading}
                 isFollowUpMode={isFollowUpMode}
                 modelsByProvider={modelsByProvider}
+                allModelsByProvider={allModelsByProvider}
                 isAuthenticated={isAuthenticated}
                 user={user}
                 selectedModels={selectedModels}
@@ -301,6 +352,7 @@ export function ModelsArea({
               onError={onError}
               onRetryModels={onRetryModels}
               onShowDisabledModelModal={onShowDisabledModelModal}
+              imageModelsDisabledForUnregistered={imageModelsDisabledForUnregistered}
             />
           </>
         )}

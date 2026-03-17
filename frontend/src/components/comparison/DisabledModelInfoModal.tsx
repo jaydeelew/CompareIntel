@@ -10,6 +10,8 @@ export type DisabledModelModalInfo = {
   userTier: 'unregistered' | 'free'
   modelTierAccess: 'free' | 'paid'
   modelName?: string
+  /** When true, shows image-generation-specific sign-up message */
+  imageMode?: boolean
 }
 
 interface DisabledModelInfoModalProps {
@@ -23,8 +25,26 @@ interface DisabledModelInfoModalProps {
 function getModalContent(
   userTier: 'unregistered' | 'free',
   modelTierAccess: 'free' | 'paid',
-  modelName?: string
-): { title: string; message: string; showSignUp: boolean; showUpgrade: boolean } {
+  modelName?: string,
+  imageMode?: boolean
+): {
+  title: string
+  message: string
+  showSignUp: boolean
+  showUpgrade: boolean
+  showHidePremium: boolean
+} {
+  if (imageMode && userTier === 'unregistered') {
+    return {
+      title: 'Sign Up to Use Image Generation',
+      message:
+        'Sign up for a free account to run 2 image comparisons per day. Paid tiers coming soon for as many image generations as you have credits for.',
+      showSignUp: true,
+      showUpgrade: false,
+      showHidePremium: false,
+    }
+  }
+
   const modelLabel = modelName ? `"${modelName}"` : 'This model'
 
   if (userTier === 'unregistered') {
@@ -34,6 +54,7 @@ function getModalContent(
         message: `${modelLabel} is available with a free account. You can sign up to access it and other free-tier models, or use the "Hide premium models" button below to focus on models available without registration.`,
         showSignUp: true,
         showUpgrade: false,
+        showHidePremium: true,
       }
     }
     // modelTierAccess === 'paid'
@@ -42,6 +63,7 @@ function getModalContent(
       message: `${modelLabel} is a premium model. Sign up for a free account to unlock more models and get a 7-day trial of all premium models, or use the "Hide premium models" button below to focus on models available without registration.`,
       showSignUp: true,
       showUpgrade: false,
+      showHidePremium: true,
     }
   }
 
@@ -51,6 +73,7 @@ function getModalContent(
     message: `${modelLabel} requires a paid subscription. You can use the "Hide premium models" button below to hide premium models from the list, or upgrade to a paid tier once paid tiers become available to access all models.`,
     showSignUp: false,
     showUpgrade: true,
+    showHidePremium: true,
   }
 }
 
@@ -96,10 +119,11 @@ export const DisabledModelInfoModal: React.FC<
 
   if (!isOpen || !info) return null
 
-  const { title, message, showSignUp, showUpgrade } = getModalContent(
+  const { title, message, showSignUp, showUpgrade, showHidePremium } = getModalContent(
     info.userTier,
     info.modelTierAccess,
-    info.modelName
+    info.modelName,
+    info.imageMode
   )
 
   return (
@@ -147,62 +171,69 @@ export const DisabledModelInfoModal: React.FC<
         </div>
         <div className="disabled-model-info-content">
           <p id="disabled-model-info-message">{message}</p>
-          <div className="disabled-model-info-button-demo">
-            <div className="disabled-model-info-button-label-row">
-              <p className="disabled-model-info-button-label">The "Hide premium models" button:</p>
-              <button
-                type="button"
-                className="hide-premium-button-preview"
-                aria-hidden="true"
-                tabIndex={-1}
-              >
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
+          {showHidePremium && (
+            <div className="disabled-model-info-button-demo">
+              <div className="disabled-model-info-button-label-row">
+                <p className="disabled-model-info-button-label">
+                  The "Hide premium models" button:
+                </p>
+                <button
+                  type="button"
+                  className="hide-premium-button-preview"
                   aria-hidden="true"
-                  preserveAspectRatio="xMidYMid meet"
+                  tabIndex={-1}
                 >
-                  <path
-                    d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"
-                    strokeWidth="1"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                  <line
-                    x1="1"
-                    y1="1"
-                    x2="23"
-                    y2="23"
-                    strokeWidth="1"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              </button>
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                    aria-hidden="true"
+                    preserveAspectRatio="xMidYMid meet"
+                  >
+                    <path
+                      d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"
+                      strokeWidth="1"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                    <line
+                      x1="1"
+                      y1="1"
+                      x2="23"
+                      y2="23"
+                      strokeWidth="1"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </button>
+              </div>
+              <span className="disabled-model-info-button-hint">
+                Located in the "Select Models to Compare" header
+              </span>
             </div>
-            <span className="disabled-model-info-button-hint">
-              Located in the "Select Models to Compare" header
-            </span>
-          </div>
+          )}
         </div>
         <div className="disabled-model-info-footer">
-          <button
-            className="disabled-model-info-button primary"
-            onClick={handleToggleAndClose}
-            type="button"
-            autoFocus
-          >
-            Hide premium models
-          </button>
+          {showHidePremium && (
+            <button
+              className="disabled-model-info-button primary"
+              onClick={handleToggleAndClose}
+              type="button"
+              autoFocus
+            >
+              Hide premium models
+            </button>
+          )}
           {showSignUp && (
             <button
-              className="disabled-model-info-button secondary"
+              className={`disabled-model-info-button ${!showHidePremium ? 'primary' : 'secondary'}`}
               onClick={() => {
                 onOpenSignUp()
                 onClose()
               }}
               type="button"
+              autoFocus={!showHidePremium}
             >
               Sign up
             </button>

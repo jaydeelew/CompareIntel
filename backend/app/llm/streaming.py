@@ -228,9 +228,10 @@ def call_openrouter_streaming(
     top_p: float | None = None,  # Optional: 0.0-1.0, nucleus sampling
     attached_images: list[dict[str, Any]]
     | None = None,  # Images for vision models [{mime_type, base64_data, filename?, placeholder?}]
+    is_image_generation: bool = False,  # When True, add modalities for image output
     _client: Any
     | None = None,  # Optional: use this OpenAI client instead of global (avoids connection contention in multi-model)
-) -> Generator[Any, None, TokenUsage | None]:
+) -> Generator[Any, None, TokenUsage | dict | None]:
     """
     Stream OpenRouter responses token-by-token for faster perceived response time.
     Yields chunks of text as they arrive from the model.
@@ -368,13 +369,12 @@ def call_openrouter_streaming(
 
     while retry_count <= max_retries:
         try:
-            # Prepare API call parameters
             api_params = {
                 "model": model_id,
                 "messages": messages,
                 "timeout": settings.individual_model_timeout,
                 "max_tokens": max_tokens,
-                "stream": True,  # Enable streaming!
+                "stream": True,
                 "frequency_penalty": 0.7,  # Reduce token repetition (0.0-2.0, higher = less repetition)
                 "presence_penalty": 0.5,  # Reduce topic/concept repetition (0.0-2.0, higher = less repetition)
             }
@@ -382,6 +382,16 @@ def call_openrouter_streaming(
                 api_params["temperature"] = max(0.0, min(2.0, temperature))
             if top_p is not None:
                 api_params["top_p"] = max(0.0, min(1.0, top_p))
+            if is_image_generation:
+                # Flux, Sourceful, Seedream output only images; Gemini outputs text+image
+                if (
+                    model_id.startswith("black-forest-labs/")
+                    or model_id.startswith("sourceful/")
+                    or model_id.startswith("bytedance-seed/")
+                ):
+                    api_params["modalities"] = ["image"]
+                else:
+                    api_params["modalities"] = ["image", "text"]
 
             # Add tools if web search is enabled
             if tools:
@@ -429,6 +439,7 @@ def call_openrouter_streaming(
             full_content = ""
             finish_reason = None
             usage_data = None
+            image_count = 0
             tool_calls_accumulated = {}  # Dict to accumulate tool calls by index
             tool_call_ids_seen = set()  # Track tool call IDs to prevent duplicates across indices
             all_tool_call_ids_ever_seen = (
@@ -510,8 +521,22 @@ def call_openrouter_streaming(
                                         tool_call_delta.function.arguments
                                     )
 
-                    # Yield content chunks as they arrive
-                    # Check delta.content first (standard streaming)
+                    if is_image_generation and hasattr(delta, "images") and delta.images:
+                        for img in delta.images:
+                            url = None
+                            if hasattr(img, "image_url") and img.image_url:
+                                url = getattr(img.image_url, "url", None) or (
+                                    img.image_url.get("url")
+                                    if isinstance(img.image_url, dict)
+                                    else None
+                                )
+                            elif isinstance(img, dict):
+                                iu = img.get("image_url") or img.get("imageUrl")
+                                url = iu.get("url") if iu else None
+                            if url:
+                                image_count += 1
+                                yield {"type": "image", "url": url}
+
                     if hasattr(delta, "content") and delta.content:
                         content_chunk = delta.content
                         full_content += content_chunk
@@ -2544,7 +2569,8 @@ def call_openrouter_streaming(
             elif finish_reason == "content_filter":
                 yield "\n\n⚠️ **Note:** Response stopped by content filter."
 
-            # Return usage data (generator return value)
+            if is_image_generation and image_count > 0 and usage_data is None:
+                return {"image_count": image_count, "model_id": model_id}
             return usage_data
 
         except Exception as e:
@@ -2605,11 +2631,9 @@ def call_openrouter(
             use_mock=use_mock,
         )
 
-        # Collect all chunks
         for chunk in generator:
-            chunks.append(chunk)
-
-        # Join all chunks into a single response
+            if isinstance(chunk, str):
+                chunks.append(chunk)
         response = "".join(chunks)
 
         # Check if response contains an error message

@@ -160,6 +160,21 @@ def format_streaming_error_message(
     if sc == 429 or "rate limit" in err_lower or "429" in err_lower:
         return "Error: Rate limited"
 
+    # 502/5xx or provider internal errors (e.g. DB "Failed query" from Sourceful)
+    is_provider_502 = (
+        (sc is not None and sc >= 500)
+        or "502" in msg
+        or (
+            err.provider_error
+            and ("failed query" in err.provider_error.lower() or "502" in err.provider_error)
+        )
+    )
+    if is_provider_502:
+        return (
+            f"Error: Model '{model_id}' is temporarily unavailable due to provider issues. "
+            "Please try again later or use a different model."
+        )
+
     if "timeout" in err_lower:
         return f"Error: Timeout ({model_timeout_seconds}s)"
 

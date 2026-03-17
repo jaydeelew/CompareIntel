@@ -150,6 +150,7 @@ async def get_conversation(
             success=msg.success,
             processing_time_ms=msg.processing_time_ms,
             created_at=msg.created_at,
+            images=json.loads(msg.images) if msg.images else None,
         )
         for msg in messages
     ]
@@ -282,6 +283,7 @@ async def create_breakout_conversation(
                 success=msg.success,
                 processing_time_ms=msg.processing_time_ms,
                 created_at=msg.created_at,
+                images=msg.images,
             )
             db.add(new_message)
 
@@ -308,6 +310,7 @@ async def create_breakout_conversation(
             success=msg.success,
             processing_time_ms=msg.processing_time_ms,
             created_at=msg.created_at,
+            images=json.loads(msg.images) if msg.images else None,
         )
         for msg in new_messages
     ]

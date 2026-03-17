@@ -1087,7 +1087,8 @@
 .composer-toolbar:has(.history-toggle-button:hover),
 .composer-toolbar:has(.history-toggle-button:focus-visible),
 .composer-toolbar:has(.saved-selections-button:hover),
-.composer-toolbar:has(.saved-selections-button:focus-visible) {
+.composer-toolbar:has(.saved-selections-button:focus-visible),
+.composer-toolbar:has(.token-usage-indicator:hover) {
   z-index: 3;
 }
 

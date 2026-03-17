@@ -4,7 +4,16 @@ This document describes the workflow for adding new AI models to CompareIntel an
 
 ## Overview
 
-When new models are added to `backend/app/model_runner.py`, they need renderer configurations to properly display their responses. The workflow consists of three main steps:
+When new models are added to `backend/app/model_runner.py`, they need renderer configurations to properly display their responses.
+
+### Image Models
+
+Image generation models follow a different workflow. When adding via admin, the system detects `output_modalities` includes `"image"` and:
+- Sets `supports_image_generation: true`, `category: "Image"`
+- **Skips** `setup_model_renderer.py` (no math/formatting analysis)
+- **Skips** `research_model_benchmarks.py` (Help Me Choose is text-focused)
+
+See `docs/features/IMAGE_GENERATION.md` for details. The workflow consists of three main steps:
 
 1. **Collect Responses** - Gather sample responses from new models
 2. **Analyze Responses** - Identify formatting patterns and issues

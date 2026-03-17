@@ -15,6 +15,7 @@ const ROUTE_TITLES: Record<string, string> = {
   '/': 'CompareIntel - Compare AI Models Side-by-Side | Free Tier',
   '/about': 'About - CompareIntel',
   '/features': 'Features - CompareIntel',
+  '/image-generation': 'Image Generation - CompareIntel',
   '/how-it-works': 'How It Works - CompareIntel',
   '/faq': 'FAQ - CompareIntel',
   '/privacy-policy': 'Privacy Policy - CompareIntel',

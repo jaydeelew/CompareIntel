@@ -4,11 +4,15 @@ The credit system manages user quotas for AI model comparisons based on token us
 
 ## How Credits Work
 
-**Formula:**
+**Formula (text models):**
 - 1 credit = 1,000 effective tokens
 - Effective tokens = input tokens + (output tokens × 2.5)
 
 The 2.5 multiplier accounts for the higher cost of output tokens relative to input tokens.
+
+**Image generation models:**
+- Use OpenRouter `pricing.image` (dollars per image) when available: `credits = pricing.image × CREDITS_PER_DOLLAR × num_images`
+- Fallback: `IMAGE_CREDITS_PER_GENERATION` per image when pricing unavailable
 
 ## Credit Allocations
 

@@ -21,6 +21,12 @@ _temperature_support_cache: dict[str, bool] | None = None
 # Cache for model vision support (model_id -> bool)
 _vision_support_cache: dict[str, bool] | None = None
 
+# Cache for image generation support (model_id -> bool)
+_image_gen_support_cache: dict[str, bool] | None = None
+
+# Cache for pricing.image (model_id -> float, dollars per image)
+_image_price_cache: dict[str, float] | None = None
+
 # Models that OpenRouter metadata incorrectly marks as vision-capable but the API rejects image input.
 # See: claude-3-5-haiku-20241022 description "It does not support image inputs."
 KNOWN_NON_VISION_MODEL_IDS: frozenset[str] = frozenset(
@@ -109,6 +115,66 @@ def _load_temperature_support_map() -> dict[str, bool]:
 def get_model_supports_temperature(model_id: str) -> bool:
     """Return True if the model supports the temperature parameter."""
     return _load_temperature_support_map().get(model_id, True)  # Default True if unknown
+
+
+def _load_image_gen_support_map() -> dict[str, bool]:
+    global _image_gen_support_cache
+    if _image_gen_support_cache is not None:
+        return _image_gen_support_cache
+    result: dict[str, bool] = {}
+    try:
+        if _OPENROUTER_MODELS_PATH.exists():
+            with _OPENROUTER_MODELS_PATH.open() as f:
+                data = json.load(f)
+            for model in data.get("data", []):
+                model_id = model.get("id")
+                if model_id:
+                    arch = model.get("architecture") or {}
+                    out_mods = arch.get("output_modalities") if isinstance(arch, dict) else []
+                    out_str = (
+                        " ".join(str(m) for m in out_mods).lower()
+                        if isinstance(out_mods, (list, tuple))
+                        else ""
+                    )
+                    result[model_id] = "image" in out_str
+    except Exception:
+        pass
+    _image_gen_support_cache = result
+    return result
+
+
+def get_model_supports_image_generation(model_id: str) -> bool:
+    return _load_image_gen_support_map().get(model_id, False)
+
+
+def _load_image_price_map() -> dict[str, float]:
+    global _image_price_cache
+    if _image_price_cache is not None:
+        return _image_price_cache
+    result: dict[str, float] = {}
+    try:
+        if _OPENROUTER_MODELS_PATH.exists():
+            with _OPENROUTER_MODELS_PATH.open() as f:
+                data = json.load(f)
+            for model in data.get("data", []):
+                model_id = model.get("id")
+                if model_id:
+                    pricing = model.get("pricing") or {}
+                    img_val = pricing.get("image") if isinstance(pricing, dict) else None
+                    if img_val is not None:
+                        try:
+                            result[model_id] = float(img_val)
+                        except (ValueError, TypeError):
+                            pass
+    except Exception:
+        pass
+    _image_price_cache = result
+    return result
+
+
+def get_model_image_price_per_image(model_id: str) -> float | None:
+    price = _load_image_price_map().get(model_id)
+    return price if price and price > 0 else None
 
 
 def get_registry_path() -> Path:

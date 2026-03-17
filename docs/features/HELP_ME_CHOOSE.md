@@ -6,7 +6,7 @@ The "Help me choose" feature provides decision support for model selection. User
 
 A "Help me choose" button sits next to the Advanced button in the model selection area. Clicking it opens a dropdown with six categories displayed horizontally (stacking vertically on mobile). Each category lists models ranked by benchmark score (highest first). All models shown are strong in their category. Users can check individual models or use "Select top 3" per category; selections apply immediately and respect tier restrictions and `maxModelsLimit`.
 
-**Categories:** Best for coding, Best for writing, Best for reasoning, Best for long context, Best value (cost-effective), Fastest responses, Best for multilingual, Best for legal, Best for medical.
+**Categories:** Best for coding, Best for writing, Best for reasoning, Best for long context, Best value (cost-effective), Fastest responses, Best for multilingual, Best for legal, Best for image generation, Best for medical.
 
 **Inclusion rule:** Only models with numeric benchmark scores from well-respected, publicly available sources are included. Models without benchmark scores are not added. Each category has at least two models. Model IDs must exist in `models_registry.json`.
 
@@ -34,6 +34,7 @@ A public page at `/help-me-choose-methodology` (linked in the footer) explains i
 | **Fastest responses** | LMSpeed | https://lmspeed.net/leaderboard/best-throughput-models-weekly | Tokens/second | Yes |
 | **Multilingual** | Global-MMLU (llmdb) | https://llmdb.com/benchmarks/global-mmlu | 42-language score | Yes (sparse) |
 | **Legal** | LegalBench (VALS.ai) | https://www.vals.ai/benchmarks/legal_bench | % across 161 tasks | Yes |
+| **Image generation** | Text-to-Image Arena (KEAR AI) | https://kearai.com/leaderboard/text-to-image | Arena Rating | Yes |
 | **Medical** | HealthBench (OpenAI) | https://openai.com/index/healthbench | Physician-rated % | **Manual only** |
 
 **Long context note:** MRCR 1M has sparse coverage (~7 models). See "Long context (MRCR 1M and alternatives)" in Manual Curation Guide for secondary sources: Awesome Agents (MRCR v2, LongBench v2), model announcements, LongBench v2, RULER.
@@ -185,6 +186,6 @@ Some categories cannot be fully automated because their data sources don't expos
 - Use `$/1M tokens` for pricing: `'OpenRouter avg: $0.22/1M tokens.'`
 - Use `t/s` for throughput: `'LMSpeed (lmspeed.net): 1742 t/s.'`
 
-## Future Enhancements
+## Image Generation Category
 
-Image/vision-capable models will be added as a category once vision/multimodal support exists in the comparison flow.
+The "Best for image generation" category uses the KEAR AI Text-to-Image Arena (human preference votes). When a user selects from this category, the model mode toggle automatically switches to "Image generation models". Text-only and image generation models cannot be mixed; a modal guides users to deselect one type before selecting the other.

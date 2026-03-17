@@ -163,8 +163,10 @@ export interface HelpMeChooseProps {
   disabled?: boolean
   /** Whether in follow-up mode (preset button disabled) */
   isFollowUpMode?: boolean
-  /** Models by provider (for tier restriction check) */
+  /** Models by provider (for tier restriction check). Use allModelsByProvider when provided for lookups so text/image models are not greyed out when filtered by mode. */
   modelsByProvider?: ModelsByProvider
+  /** Full models list for lookups (avoids greying out models not in current mode filter) */
+  allModelsByProvider?: ModelsByProvider
   /** Whether user is authenticated */
   isAuthenticated?: boolean
   /** Current user (for tier) */
@@ -189,6 +191,7 @@ export function HelpMeChoose({
   disabled = false,
   isFollowUpMode = false,
   modelsByProvider = {},
+  allModelsByProvider,
   isAuthenticated = false,
   user = null,
   selectedModels = [],
@@ -233,30 +236,35 @@ export function HelpMeChoose({
   const isPaidTier = ['starter', 'starter_plus', 'pro', 'pro_plus'].includes(userTier)
   const isRestrictedTier = userTier === 'unregistered' || userTier === 'free'
 
+  const lookupModels = allModelsByProvider ?? modelsByProvider
   const modelRestrictedByModelId = useMemo(() => {
     const map = new Map<string, boolean>()
     if (!isRestrictedTier || isPaidTier) return map
     for (const cat of HELP_ME_CHOOSE_CATEGORIES) {
       for (const entry of cat.models) {
         if (map.has(entry.modelId)) continue
-        const model = findModelById(modelsByProvider, entry.modelId)
+        const model = findModelById(lookupModels, entry.modelId)
+        if (!model) {
+          map.set(entry.modelId, false)
+          continue
+        }
         map.set(
           entry.modelId,
-          !model || model.available === false || isModelRestricted(model, userTier, isPaidTier)
+          model.available === false || isModelRestricted(model, userTier, isPaidTier)
         )
       }
     }
     return map
-  }, [modelsByProvider, userTier, isPaidTier, isRestrictedTier])
+  }, [lookupModels, userTier, isPaidTier, isRestrictedTier])
 
   /** When image attached, show only vision-capable models per category */
   const displayedCategories = useMemo(() => {
     if (!hasAttachedImages) return HELP_ME_CHOOSE_CATEGORIES
     return HELP_ME_CHOOSE_CATEGORIES.map(cat => ({
       ...cat,
-      models: cat.models.filter(entry => modelSupportsVision(entry.modelId, modelsByProvider)),
+      models: cat.models.filter(entry => modelSupportsVision(entry.modelId, lookupModels)),
     })).filter(cat => cat.models.length > 0)
-  }, [hasAttachedImages, modelsByProvider])
+  }, [hasAttachedImages, lookupModels])
 
   const disabledTooltip = getDisabledTooltip(userTier as 'unregistered' | 'free')
 
@@ -589,6 +597,10 @@ export function HelpMeChoose({
       // Closing on mousedown would collapse the dropdown before the click fires,
       // causing layout shift, scroll-to-bottom, and the close handler to miss.
       if (modelsSectionRef?.current?.contains(target)) return
+      // Don't close when clicking a modal overlay (e.g. conflict modal, disabled model modal).
+      // Closing would collapse Help me choose and cause unwanted scroll.
+      const el = target as Element
+      if (el.closest?.('.disabled-model-info-overlay, .disabled-button-info-overlay')) return
       setIsExpanded(false)
     }
     document.addEventListener('mousedown', handleClickOutside)
@@ -650,7 +662,7 @@ export function HelpMeChoose({
   }
 
   const getModelDisplayName = (modelId: string): string => {
-    const model = findModelById(modelsByProvider, modelId)
+    const model = findModelById(lookupModels, modelId)
     return model?.name ?? modelId.split('/').pop() ?? modelId
   }
 
@@ -834,7 +846,7 @@ export function HelpMeChoose({
                             modelRestrictedByModelId.get(entry.modelId) ?? false
                           const isSelected = selectedModels.includes(entry.modelId)
                           const displayName = getModelDisplayName(entry.modelId)
-                          const model = findModelById(modelsByProvider, entry.modelId)
+                          const model = findModelById(lookupModels, entry.modelId)
                           const supportsWebSearch = model?.supports_web_search ?? false
                           const isFirstSelectedInDom = isSelected && !foundFirstSelected
                           if (isSelected) foundFirstSelected = true

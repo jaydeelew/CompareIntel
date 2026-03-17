@@ -1070,6 +1070,32 @@
   color: inherit;
 }
 
+/* Image generation model output */
+.message-content .result-images {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.message-content .result-generated-image {
+  max-width: 100%;
+  height: auto;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+}
+
+.message-content .result-image-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 120px;
+  padding: 1rem;
+  font-size: 0.875rem;
+  color: var(--text-muted, #6b7280);
+  background: var(--bg-muted, #f3f4f6);
+}
+
 @keyframes fadeInUp {
   from {
     opacity: 0;
@@ -1853,6 +1879,115 @@
 /* When image notice is present, reduce gap to the buttons row */
 .models-section-image-notice + .models-section-buttons-row {
   margin-top: 0.5rem;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   TEXT / IMAGE MODE TOGGLE
+   ═══════════════════════════════════════════════════════════ */
+
+.models-section-mode-toggle {
+  position: relative;
+  display: flex;
+  gap: 0.25rem;
+  margin-top: 0.75rem;
+  padding: 0.25rem;
+  /* Match hero mesh gradient: cyan + purple tints */
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--primary-color) 8%, var(--bg-tertiary)) 0%,
+    color-mix(in srgb, var(--secondary-color) 6%, var(--bg-tertiary)) 50%,
+    color-mix(in srgb, var(--primary-color) 4%, var(--bg-tertiary)) 100%
+  );
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-color);
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.models-section-mode-toggle:hover {
+  border-color: color-mix(in srgb, var(--primary-color) 35%, var(--border-color));
+  box-shadow:
+    0 0 12px color-mix(in srgb, var(--primary-glow) 25%, transparent),
+    0 0 20px color-mix(in srgb, rgba(139, 92, 246, 0.2) 30%, transparent);
+}
+
+/* Sliding pill - hero gradient: cyan to purple (matches gradient-card-selected, hero title) */
+.models-section-mode-slider {
+  position: absolute;
+  top: 0.25rem;
+  bottom: 0.25rem;
+  left: 0.25rem;
+  width: calc(50% - 0.25rem);
+  background: var(--gradient-card-selected);
+  border-radius: calc(var(--radius-lg) - 2px);
+  box-shadow:
+    0 0 16px var(--primary-glow),
+    0 0 24px rgba(139, 92, 246, 0.35),
+    0 2px 8px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 0;
+  pointer-events: none;
+}
+
+.models-section-mode-toggle[data-mode='image'] .models-section-mode-slider {
+  transform: translateX(calc(100% + 0.125rem));
+}
+
+.models-section-mode-btn {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: var(--font-medium);
+  color: var(--text-secondary);
+  background: transparent;
+  border: none;
+  border-radius: calc(var(--radius-lg) - 2px);
+  cursor: pointer;
+  transition:
+    color 0.25s ease,
+    font-weight 0.2s ease;
+}
+
+.models-section-mode-btn:hover:not(.active) {
+  color: var(--text-primary);
+}
+
+.models-section-mode-btn.active {
+  color: white;
+  font-weight: var(--font-semibold);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   IMAGE MODE SIGN-UP BANNER (unregistered users)
+   ═══════════════════════════════════════════════════════════ */
+
+.models-section-image-signup-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  margin-top: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--primary-color) 6%, var(--bg-elevated)) 0%,
+    var(--bg-elevated) 100%
+  );
+  border-radius: var(--radius-lg);
+  border: 1px solid color-mix(in srgb, var(--primary-color) 25%, var(--border-color));
+}
+
+.models-section-image-signup-banner-icon {
+  font-size: 1rem;
+  line-height: 1;
+  opacity: 0.9;
 }
 
 /* ═══════════════════════════════════════════════════════════

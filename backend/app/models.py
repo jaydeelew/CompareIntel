@@ -229,6 +229,9 @@ class ConversationMessage(Base):
     model_id = Column(String(255))  # Which model generated this response (null for user messages)
     role = Column(String(20), nullable=False)  # 'user' or 'assistant'
     content = Column(Text, nullable=False)
+    images = Column(
+        Text, nullable=True
+    )  # JSON array of image URLs (for image-generation responses)
 
     # Token usage (from OpenRouter API responses)
     input_tokens = Column(Integer)  # Input tokens for user messages (null for assistant messages)
