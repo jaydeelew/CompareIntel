@@ -445,6 +445,9 @@ def call_openrouter_streaming(
             finish_reason = None
             usage_data = None
             image_count = 0
+            image_urls_seen: set[str] = (
+                set()
+            )  # Deduplicate image URLs (some models return same URL in multiple chunks)
             tool_calls_accumulated = {}  # Dict to accumulate tool calls by index
             tool_call_ids_seen = set()  # Track tool call IDs to prevent duplicates across indices
             all_tool_call_ids_ever_seen = (
@@ -538,7 +541,8 @@ def call_openrouter_streaming(
                             elif isinstance(img, dict):
                                 iu = img.get("image_url") or img.get("imageUrl")
                                 url = iu.get("url") if iu else None
-                            if url:
+                            if url and url not in image_urls_seen:
+                                image_urls_seen.add(url)
                                 image_count += 1
                                 yield {"type": "image", "url": url}
 
