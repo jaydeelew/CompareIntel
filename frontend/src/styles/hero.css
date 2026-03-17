@@ -232,9 +232,9 @@
 
 .hero-capabilities {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 1.25rem;
-  max-width: 900px;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+  max-width: 1000px;
   margin: 0 auto 2.5rem;
   padding: 0 1rem;
   animation: fadeInUp 0.8s ease-out 0.2s both;
@@ -249,6 +249,8 @@
 .capability-tile-wrapper {
   perspective: 1200px;
   position: relative;
+  display: flex;
+  min-height: 0;
 }
 
 .capability-tile-wrapper:has(.flipped) {
@@ -257,9 +259,14 @@
 
 .capability-tile {
   /* No background/backdrop-filter here — they break transform-style: preserve-3d */
+  flex: 1;
+  width: 100%;
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 20px;
-  padding: 1.5rem 1.25rem;
+  padding: 1.25rem 1rem;
   text-align: center;
   transition:
     transform 0.7s cubic-bezier(0.4, 0, 0.2, 1),
@@ -293,6 +300,10 @@
    rotateY(0deg) establishes a 3D layer so backface-visibility works.
    Glassmorphism lives here (not on .capability-tile) to preserve 3D context. */
 .capability-tile-front {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
   transform: rotateY(0deg);
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
@@ -300,8 +311,8 @@
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border-radius: 18px;
-  margin: -1.5rem -1.25rem;
-  padding: 1.5rem 1.25rem;
+  margin: -1.25rem -1rem;
+  padding: 1.25rem 1rem;
   opacity: 1;
   transition: opacity 0.25s ease;
 }
@@ -413,6 +424,15 @@
 .capability-tile-enlarge-btn svg {
   width: 1em;
   height: 1em;
+}
+
+/* Counter-scale tooltip so it doesn't inherit the flipped tile's scale(2.4) */
+.capability-tile.flipped .tooltip .tooltip-content {
+  transform-origin: 50% 100%;
+  transform: translateX(-50%) translateY(-4px) scale(calc(1 / 2.4));
+}
+.capability-tile.flipped .tooltip:hover .tooltip-content {
+  transform: translateX(-50%) translateY(0) scale(calc(1 / 2.4));
 }
 
 .capability-tile-back-image-wrap {
@@ -1761,12 +1781,13 @@
 /* Intermediate screens: shift flipped outer tiles inward so they stay fully visible.
    The 2.4× scale can push the left/right tiles past the viewport edge; this computes
    exactly how much overflow there is and translates the wrapper inward by that amount,
-   keeping tiles hugging their respective screen edge with a 0.75rem margin. */
-@media (max-width: 1280px) and (min-width: 769px) {
+   keeping tiles hugging their respective screen edge with a 0.75rem margin.
+   Only applies when full tile layout is active (viewport > 900px). */
+@media (max-width: 1280px) and (min-width: 901px) {
   .hero-capabilities {
-    --_grid-max: 900px;
+    --_grid-max: 1000px;
     --_gw: min(var(--_grid-max), 100vw);
-    --_col: calc((var(--_gw) - 4.5rem) / 3);
+    --_col: calc((var(--_gw) - 3rem) / 4);
     --_tile-center: calc((100vw - var(--_gw)) / 2 + 1rem + var(--_col) / 2);
     --_shift: max(0px, calc(1.2 * var(--_col) - var(--_tile-center) + 0.75rem));
   }
@@ -1784,11 +1805,140 @@
   }
 }
 
-@media (max-width: 1024px) and (min-width: 769px) {
+@media (max-width: 1024px) and (min-width: 901px) {
   .hero-capabilities {
-    grid-template-columns: repeat(3, 1fr);
-    max-width: 800px;
-    --_grid-max: 800px;
+    grid-template-columns: repeat(4, 1fr);
+    max-width: 900px;
+    --_grid-max: 900px;
+  }
+}
+
+/* Switch to compact icon-only tiles before subtitles wrap to 3 lines */
+@media (max-width: 900px) {
+  .hero-capabilities {
+    grid-template-columns: repeat(4, auto);
+    justify-content: center;
+    gap: 0.5rem;
+    max-width: 100%;
+    padding: 0 0.5rem;
+  }
+
+  .hero-capabilities:has(.capability-tile.flipped) {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 0 0.75rem;
+  }
+
+  .hero-capabilities:has(.capability-tile.flipped) .capability-tile-wrapper:not(:has(.flipped)) {
+    display: none;
+  }
+
+  .hero-section .capability-icon {
+    width: 44px;
+    height: 44px;
+    margin: 0;
+  }
+
+  .hero-section .capability-icon svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .hero-section .capability-title {
+    display: none;
+  }
+
+  .hero-section .capability-description {
+    display: none;
+  }
+
+  .hero-section .capability-tile {
+    width: 76px;
+    padding: 0.5rem;
+    overflow: visible;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 20px;
+    box-shadow:
+      0 4px 24px rgba(0, 0, 0, 0.2),
+      inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    outline: none;
+  }
+
+  .hero-section .capability-tile-front {
+    margin: -0.5rem;
+    padding: 0.5rem;
+  }
+
+  [data-theme='light'] .hero-section .capability-tile:not(.flipped),
+  [data-theme='light'] .hero-section .capability-tile:not(.flipped):hover,
+  [data-theme='light'] .hero-section .capability-tile:not(.flipped):active,
+  [data-theme='light'] .hero-section .capability-tile:not(.flipped):focus {
+    border-color: rgba(0, 0, 0, 0.08) !important;
+    box-shadow:
+      0 4px 24px rgba(0, 0, 0, 0.08),
+      inset 0 1px 0 rgba(255, 255, 255, 0.6) !important;
+  }
+
+  .hero-section .capability-tile.flipped {
+    width: min(280px, calc(100vw - 3rem));
+    height: auto;
+    transform: rotateY(180deg);
+    transform-origin: center center;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    border-radius: 20px;
+    box-shadow:
+      0 16px 48px rgba(0, 0, 0, 0.4),
+      0 0 0 1px rgba(6, 182, 212, 0.15),
+      inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+  }
+
+  .hero-section .capability-tile.flipped .capability-tile-front {
+    display: none;
+  }
+
+  .hero-section .capability-tile.flipped .capability-tile-back-image-wrap {
+    display: none;
+  }
+
+  .hero-section .capability-tile.flipped .capability-tile-back {
+    position: static;
+    padding: 1.25rem 1.25rem;
+  }
+
+  .hero-section .capability-tile.flipped .capability-tile-back-label-row {
+    font-size: 0.7rem;
+  }
+
+  .hero-section .capability-tile.flipped .capability-tile-back-label {
+    font-size: 0.7rem;
+    font-weight: var(--font-bold);
+  }
+
+  .hero-section .capability-tile.flipped .capability-tile-back-text {
+    font-size: 0.9rem;
+    line-height: 1.5;
+  }
+
+  [data-theme='light'] .hero-section .capability-tile.flipped {
+    border-color: rgba(37, 99, 235, 0.2) !important;
+    box-shadow:
+      0 16px 48px rgba(0, 0, 0, 0.15),
+      0 0 0 1px rgba(37, 99, 235, 0.15),
+      inset 0 1px 0 rgba(255, 255, 255, 0.95) !important;
+  }
+
+  [data-theme='light'] .hero-section .capability-tile.flipped .capability-tile-back {
+    background: linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.97) 0%,
+      rgba(248, 250, 252, 0.94) 100%
+    );
   }
 }
 
@@ -1943,7 +2093,7 @@
   }
 
   .hero-capabilities {
-    grid-template-columns: repeat(3, auto);
+    grid-template-columns: repeat(4, auto);
     justify-content: center;
     gap: 0.5rem;
     max-width: 100%;
