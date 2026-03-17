@@ -374,15 +374,6 @@
         "knowledge_cutoff": "August 2024"
       },
       {
-        "id": "meta-llama/llama-3.1-405b-instruct",
-        "name": "Llama 3.1 405B Instruct",
-        "description": "Meta's flagship 405B open-source model excelling in multilingual understanding, coding, and instruction-following.",
-        "category": "Language",
-        "provider": "Meta",
-        "supports_web_search": true,
-        "knowledge_cutoff": "December 2023"
-      },
-      {
         "id": "meta-llama/llama-3.3-70b-instruct",
         "name": "Llama 3.3 70B Instruct",
         "description": "The Meta Llama 3.3 multilingual large language model (LLM) is a pretrained and instruction tuned generative model in 70B.",
