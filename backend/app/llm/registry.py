@@ -36,6 +36,14 @@ KNOWN_NON_VISION_MODEL_IDS: frozenset[str] = frozenset(
     }
 )
 
+# Models that do not support the temperature parameter (provider returns 400 if passed).
+KNOWN_NO_TEMPERATURE_MODEL_IDS: frozenset[str] = frozenset(
+    {
+        "openai/gpt-5-image",
+        "openai/gpt-5-image-mini",
+    }
+)
+
 
 def _load_vision_support_map() -> dict[str, bool]:
     """Load model_id -> supports_vision from openrouter_models.json.
@@ -114,6 +122,8 @@ def _load_temperature_support_map() -> dict[str, bool]:
 
 def get_model_supports_temperature(model_id: str) -> bool:
     """Return True if the model supports the temperature parameter."""
+    if model_id in KNOWN_NO_TEMPERATURE_MODEL_IDS:
+        return False
     return _load_temperature_support_map().get(model_id, True)  # Default True if unknown
 
 

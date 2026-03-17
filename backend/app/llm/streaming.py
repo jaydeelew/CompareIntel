@@ -20,7 +20,12 @@ from ..utils.error_handling import (
     classify_api_error,
     format_streaming_error_message,
 )
-from .registry import client, client_with_tool_headers, get_model_supports_vision
+from .registry import (
+    client,
+    client_with_tool_headers,
+    get_model_supports_temperature,
+    get_model_supports_vision,
+)
 from .text_processing import clean_model_response, detect_repetition
 from .tokens import TokenUsage, calculate_token_usage, get_model_max_tokens
 
@@ -378,7 +383,7 @@ def call_openrouter_streaming(
                 "frequency_penalty": 0.7,  # Reduce token repetition (0.0-2.0, higher = less repetition)
                 "presence_penalty": 0.5,  # Reduce topic/concept repetition (0.0-2.0, higher = less repetition)
             }
-            if temperature is not None:
+            if temperature is not None and get_model_supports_temperature(model_id):
                 api_params["temperature"] = max(0.0, min(2.0, temperature))
             if top_p is not None:
                 api_params["top_p"] = max(0.0, min(1.0, top_p))
@@ -1940,7 +1945,7 @@ def call_openrouter_streaming(
                         "frequency_penalty": 0.7,  # Reduce token repetition (0.0-2.0, higher = less repetition)
                         "presence_penalty": 0.5,  # Reduce topic/concept repetition (0.0-2.0, higher = less repetition)
                     }
-                    if temperature is not None:
+                    if temperature is not None and get_model_supports_temperature(model_id):
                         api_params_continue["temperature"] = max(0.0, min(2.0, temperature))
                     if top_p is not None:
                         api_params_continue["top_p"] = max(0.0, min(1.0, top_p))
@@ -2291,7 +2296,7 @@ def call_openrouter_streaming(
                         "frequency_penalty": 0.7,  # Reduce token repetition
                         "presence_penalty": 0.5,  # Reduce topic repetition
                     }
-                    if temperature is not None:
+                    if temperature is not None and get_model_supports_temperature(model_id):
                         final_params["temperature"] = max(0.0, min(2.0, temperature))
                     if top_p is not None:
                         final_params["top_p"] = max(0.0, min(1.0, top_p))
@@ -2459,7 +2464,9 @@ def call_openrouter_streaming(
                                     "frequency_penalty": 0.7,  # Reduce token repetition
                                     "presence_penalty": 0.5,  # Reduce topic repetition
                                 }
-                                if temperature is not None:
+                                if temperature is not None and get_model_supports_temperature(
+                                    model_id
+                                ):
                                     completion_params["temperature"] = max(
                                         0.0, min(2.0, temperature)
                                     )

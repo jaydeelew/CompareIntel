@@ -75,6 +75,11 @@ class TestTemperatureSupport:
         result = get_model_supports_temperature("openai/gpt-5")
         assert result is False
 
+    def test_model_without_temperature_gpt5_image(self):
+        """Test that GPT-5 Image models report no temperature support."""
+        assert get_model_supports_temperature("openai/gpt-5-image") is False
+        assert get_model_supports_temperature("openai/gpt-5-image-mini") is False
+
     def test_unknown_model_defaults_to_true(self):
         """Test that an unknown model ID defaults to True (safe assumption)."""
         result = get_model_supports_temperature("nonexistent/model-xyz")
