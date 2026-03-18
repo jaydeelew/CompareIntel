@@ -44,6 +44,12 @@ function extractPrimaryScore(categoryId: string, evidence: string): number | nul
     if (tpsMatch) return parseFloat(tpsMatch[1])
   }
 
+  // Image-generation: Text-to-Image Arena (kearai.com): 1237
+  if (categoryId === 'image-generation') {
+    const arenaMatch = evidence.match(/Arena[^:]*:\s*(\d+\.?\d*)/i)
+    if (arenaMatch) return parseFloat(arenaMatch[1])
+  }
+
   return null
 }
 

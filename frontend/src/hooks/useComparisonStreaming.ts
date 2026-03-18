@@ -376,11 +376,12 @@ export function useComparisonStreaming(
           firstErr.message.includes('Sign up for a free account to run') &&
           firstErr.message.includes('image comparison')
 
-        if (isAuthRelated402) {
+        const refresh = auth.refreshToken
+        if (isAuthRelated402 && refresh) {
           logger.debug(
             '[API] Got 402 for image comparison while authenticated - refreshing session and retrying'
           )
-          await auth.refreshToken()
+          await refresh()
           stream = await compareStream(comparePayload, controller.signal)
         } else {
           throw firstErr

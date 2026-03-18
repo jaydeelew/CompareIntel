@@ -721,11 +721,17 @@ class TestActualRecommendationsFile:
                 )
 
     def test_each_model_has_benchmark_score(self, real_ts_content):
-        """Each model must have numeric benchmark evidence (extract_primary_score returns non-null)."""
+        """Each model must have numeric benchmark evidence (extract_primary_score returns non-null).
+        Excludes 'images' — that category lists vision-capable models by capability, not benchmark rank."""
         from scripts.research_model_benchmarks import extract_primary_score
+
+        # Capability-based categories: models listed by feature support, no numeric benchmark
+        EXEMPT_CATEGORIES = {"images"}
 
         cats = parse_recommendations_ts(real_ts_content)
         for cat in cats:
+            if cat["id"] in EXEMPT_CATEGORIES:
+                continue
             for m in cat["models"]:
                 score = extract_primary_score(cat["id"], m["evidence"])
                 assert score is not None, (
