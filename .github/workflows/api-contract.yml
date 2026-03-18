@@ -55,10 +55,30 @@ jobs:
         run: |
           # Start server and validate OpenAPI schema
           python -m uvicorn app.main:app --host 127.0.0.1 --port 8000 &
-          sleep 5
+          SERVER_PID=$!
           
-          # Fetch OpenAPI schema
-          curl -s http://localhost:8000/openapi.json > openapi-schema.json
+          # Wait for server to be ready (retry up to 30 seconds)
+          # Use 127.0.0.1 to avoid IPv6 resolution issues; /health is lightweight
+          SERVER_READY=0
+          for i in $(seq 1 30); do
+            if curl -sf http://127.0.0.1:8000/health > /dev/null 2>&1; then
+              echo "Server is ready after ${i}s"
+              SERVER_READY=1
+              break
+            fi
+            if ! kill -0 $SERVER_PID 2>/dev/null; then
+              echo "Server process died before becoming ready"
+              exit 1
+            fi
+            sleep 1
+          done
+          if [ "$SERVER_READY" -ne 1 ]; then
+            echo "Server failed to become ready within 30 seconds"
+            exit 1
+          fi
+          
+          # Fetch OpenAPI schema (use 127.0.0.1 for consistency)
+          curl -sf http://127.0.0.1:8000/openapi.json > openapi-schema.json
           
           # Validate schema structure (basic checks)
           python -c "
@@ -88,16 +108,12 @@ jobs:
           
           print('✅ OpenAPI schema validation passed')
           "
-      
-      - name: Test API response contracts
-        working-directory: backend
-        run: |
-          # Test that API responses match expected schemas
+          
+          # Test API response contracts (server still running from above)
           python -c "
           import requests
-          import json
           
-          base_url = 'http://localhost:8000'
+          base_url = 'http://127.0.0.1:8000'
           
           # Test health endpoint (mounted at root, not under /api)
           health_response = requests.get(f'{base_url}/health')
@@ -105,8 +121,6 @@ jobs:
           health_data = health_response.json()
           assert 'status' in health_data, 'Health response missing status field'
           
-          # Test auth endpoints structure (without actually authenticating)
-          # This validates the contract, not the functionality
           print('✅ API contract validation passed')
           "
       
