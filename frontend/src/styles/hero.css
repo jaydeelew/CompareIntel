@@ -793,6 +793,20 @@
   transform: translateZ(0);
   backface-visibility: hidden;
   background: var(--bg-card, #12121c);
+  background-color: var(--bg-card, #12121c);
+}
+
+/* Guaranteed opaque backdrop — prevents hero gradient bleed-through during scroll/repaint
+   (e.g. when switching to Image generation models and scrolling back up). */
+.composer:not(.composer-placeholder)::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: var(--bg-card, #12121c);
+  background-color: var(--bg-card, #12121c);
+  pointer-events: none;
 }
 
 .composer:hover {
@@ -999,6 +1013,9 @@
   flex-shrink: 0;
   overflow: hidden;
   border-radius: 1.5rem;
+  /* Opaque background prevents hero gradient bleed-through when composer repaints. */
+  background: var(--bg-card, #12121c);
+  background-color: var(--bg-card, #12121c);
 }
 
 /* History dropdown border radius adjustments */
