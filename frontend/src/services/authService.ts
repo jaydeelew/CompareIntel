@@ -13,6 +13,7 @@
 import type { User, LoginCredentials, RegisterData, AuthResponse } from '../types'
 
 import { apiClient } from './api/client'
+import { AuthenticationError } from './api/errors'
 
 /**
  * Email verification request
@@ -160,7 +161,10 @@ export async function resetPassword(
  * @throws {ApiError} If request fails or user is not authenticated
  */
 export async function getCurrentUser(): Promise<User> {
-  const response = await apiClient.get<User>('/auth/me')
+  const response = await apiClient.get<User | null>('/auth/me')
+  if (response.data === null) {
+    throw new AuthenticationError('Not authenticated')
+  }
   return response.data
 }
 

@@ -205,6 +205,11 @@ export const loggingErrorInterceptor: ErrorInterceptor = async (error, config) =
       return error
     }
 
+    // Suppress 402 for compare-stream - handled in UI with user-facing error message
+    if (status === 402 && url.includes('/compare-stream')) {
+      return error
+    }
+
     logger.error('[API Client Error]', {
       error: error.message,
       method: config.method || 'GET',

@@ -38,10 +38,11 @@ class TestTokenEdgeCases:
             expires_delta=timedelta(seconds=-1),  # Already expired
         )
 
-        # Try to use expired token
+        # Try to use expired token - returns null (no valid session)
         client.headers = {"Authorization": f"Bearer {expired_token}"}
         response = client.get("/api/auth/me")
-        assert response.status_code == status.HTTP_401_UNAUTHORIZED
+        assert response.status_code == status.HTTP_200_OK
+        assert response.json() is None
 
     def test_expired_refresh_token(self, client, db_session):
         """Test that expired refresh token is rejected."""
@@ -61,21 +62,22 @@ class TestTokenEdgeCases:
         assert response.status_code in [status.HTTP_200_OK, status.HTTP_401_UNAUTHORIZED]
 
     def test_malformed_token(self, client):
-        """Test that malformed token is rejected."""
+        """Test that malformed token returns null."""
         client.headers = {"Authorization": "Bearer malformed.token.here"}
         response = client.get("/api/auth/me")
-        assert response.status_code == status.HTTP_401_UNAUTHORIZED
+        assert response.status_code == status.HTTP_200_OK
+        assert response.json() is None
 
     def test_token_without_bearer_prefix(self, client):
-        """Test that token without Bearer prefix is rejected."""
-
+        """Test that token without Bearer prefix returns null."""
         # Create a valid token
         token = create_access_token({"sub": "1"})
 
-        # Try without Bearer prefix
+        # Try without Bearer prefix - JWT won't be found
         client.headers = {"Authorization": token}
         response = client.get("/api/auth/me")
-        assert response.status_code == status.HTTP_401_UNAUTHORIZED
+        assert response.status_code == status.HTTP_200_OK
+        assert response.json() is None
 
     def test_access_token_as_refresh_token(self, client, authenticated_client):
         """Test that access token cannot be used as refresh token."""
@@ -91,52 +93,56 @@ class TestTokenEdgeCases:
         )
 
     def test_refresh_token_as_access_token(self, client, authenticated_client):
-        """Test that refresh token cannot be used as access token."""
+        """Test that refresh token used as access token returns null (wrong token type)."""
         client, user, access_token, refresh_token = authenticated_client
 
         # Clear any cookies and set wrong token type in header
         client.cookies.clear()
         client.headers = {"Authorization": f"Bearer {refresh_token}"}
         response = client.get("/api/auth/me")
-        assert response.status_code == status.HTTP_401_UNAUTHORIZED, (
-            f"Expected 401, got {response.status_code}. Response: {response.text}"
-        )
+        # Returns null - refresh token has different structure, won't validate as access
+        assert response.status_code == status.HTTP_200_OK
+        assert response.json() is None
 
     def test_token_with_invalid_user_id(self, client):
-        """Test token with non-existent user ID."""
+        """Test token with non-existent user ID returns null."""
         # Create token with invalid user ID
         invalid_token = create_access_token({"sub": "99999"})
 
         client.headers = {"Authorization": f"Bearer {invalid_token}"}
         response = client.get("/api/auth/me")
-        assert response.status_code == status.HTTP_401_UNAUTHORIZED
+        assert response.status_code == status.HTTP_200_OK
+        assert response.json() is None
 
     def test_token_without_sub_claim(self, client):
-        """Test token without subject claim."""
+        """Test token without subject claim returns null."""
         # Create token without 'sub' claim
         invalid_token = create_access_token({"email": "test@example.com"})
 
         client.headers = {"Authorization": f"Bearer {invalid_token}"}
         response = client.get("/api/auth/me")
-        assert response.status_code == status.HTTP_401_UNAUTHORIZED
+        assert response.status_code == status.HTTP_200_OK
+        assert response.json() is None
 
     def test_token_with_non_numeric_sub(self, client):
-        """Test token with non-numeric subject."""
+        """Test token with non-numeric subject returns null."""
         # Create token with non-numeric sub
         invalid_token = create_access_token({"sub": "not-a-number"})
 
         client.headers = {"Authorization": f"Bearer {invalid_token}"}
         response = client.get("/api/auth/me")
-        assert response.status_code == status.HTTP_401_UNAUTHORIZED
+        assert response.status_code == status.HTTP_200_OK
+        assert response.json() is None
 
     def test_empty_token(self, client):
-        """Test that empty token is rejected."""
+        """Test that empty token returns null."""
         client.headers = {"Authorization": "Bearer "}
         response = client.get("/api/auth/me")
-        assert response.status_code == status.HTTP_401_UNAUTHORIZED
+        assert response.status_code == status.HTTP_200_OK
+        assert response.json() is None
 
     def test_token_after_user_deletion(self, client, db_session):
-        """Test token becomes invalid after user deletion."""
+        """Test token returns null after user deletion."""
         from tests.factories import create_user
 
         user = create_user(db_session)
@@ -151,10 +157,11 @@ class TestTokenEdgeCases:
         db_session.delete(user)
         db_session.commit()
 
-        # Try to use token after user deletion
+        # Try to use token after user deletion - returns null (user no longer exists)
         client.headers = {"Authorization": f"Bearer {token}"}
         response = client.get("/api/auth/me")
-        assert response.status_code == status.HTTP_401_UNAUTHORIZED
+        assert response.status_code == status.HTTP_200_OK
+        assert response.json() is None
 
 
 class TestPasswordValidationEdgeCases:

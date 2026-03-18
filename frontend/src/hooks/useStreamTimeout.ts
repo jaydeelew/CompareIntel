@@ -494,23 +494,19 @@ export function useStreamTimeout(
         if (isFollowUpMode) {
           setIsFollowUpMode(false)
         }
-        if (creditWarningType !== 'none') {
-          setError(
-            err.message ||
-              'Insufficient credits for this request. Please upgrade your plan or wait for credits to reset.'
-          )
-          window.scrollTo({ top: 0, behavior: 'smooth' })
-        }
+        setError(
+          err.message ||
+            'Insufficient credits for this request. Please upgrade your plan or wait for credits to reset.'
+        )
+        window.scrollTo({ top: 0, behavior: 'smooth' })
       } else if (err instanceof ApiError && err.status === 402) {
         if (isFollowUpMode) {
           setIsFollowUpMode(false)
         }
-        if (creditWarningType !== 'none') {
-          const errorMessage =
-            err.response?.detail || err.message || 'Insufficient credits for this request.'
-          setError(errorMessage)
-          window.scrollTo({ top: 0, behavior: 'smooth' })
-        }
+        const errorMessage =
+          err.response?.detail || err.message || 'Insufficient credits for this request.'
+        setError(errorMessage)
+        window.scrollTo({ top: 0, behavior: 'smooth' })
       } else if (err instanceof Error && err.message.includes('Failed to fetch')) {
         setError('Unable to connect to the server. Please check if the backend is running.')
         savePartialResultsOnError()

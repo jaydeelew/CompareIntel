@@ -28,7 +28,7 @@ from ..auth import (
     verify_password,
     verify_token,
 )
-from ..dependencies import get_current_user_required, get_current_verified_user
+from ..dependencies import get_current_user, get_current_user_required, get_current_verified_user
 from ..email_service import (
     send_new_user_signup_notification,
     send_password_reset_email,
@@ -678,22 +678,26 @@ async def test_endpoint() -> dict[str, str]:
     return {"message": "Auth router is working"}
 
 
-@router.get("/me", response_model=UserResponse)
+@router.get("/me", response_model=UserResponse | None)
 async def get_current_user_info(
-    current_user: User = Depends(get_current_user_required), db: Session = Depends(get_db)
+    current_user: User | None = Depends(get_current_user), db: Session = Depends(get_db)
 ):
     """
     Get current authenticated user information.
 
-    - Returns user profile data
-    - Requires valid access token
+    - Returns user profile data when authenticated
+    - Returns null when not authenticated (avoids 401 console noise for session check)
     - Refreshes user data from database to get latest usage counts
     """
+    if current_user is None:
+        return None
     # Refresh the user object from the database to get the latest data
     # This is important after usage increments in /compare-stream endpoint
     db.refresh(current_user)
-    print(
-        f"[/auth/me] Returning user data for {current_user.email}: credits_used={current_user.credits_used_this_period}"
+    logger.debug(
+        "[/auth/me] Returning user data for %s: credits_used=%s",
+        current_user.email,
+        current_user.credits_used_this_period,
     )
     return current_user
 

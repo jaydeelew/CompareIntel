@@ -593,7 +593,8 @@ export class ApiClient {
           response.statusText,
           errorData
         )
-        const processedError = await this.applyErrorInterceptors(error, finalConfig)
+        const configWithUrl = { ...finalConfig, _url: fullUrl }
+        const processedError = await this.applyErrorInterceptors(error, configWithUrl)
         throw processedError
       }
 
@@ -603,7 +604,14 @@ export class ApiClient {
       if (onError) {
         onError(error as Error)
       }
-      const processedError = await this.applyErrorInterceptors(error as Error, requestConfig || {})
+      const configWithUrl = {
+        ...requestConfig,
+        _url: `${this.baseURL}${url.startsWith('/') ? '' : '/'}${url}`,
+      }
+      const processedError = await this.applyErrorInterceptors(
+        error as Error,
+        configWithUrl as RequestConfig
+      )
       throw processedError
     }
   }

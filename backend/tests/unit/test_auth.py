@@ -398,9 +398,10 @@ class TestUserInfo:
         assert "password" not in data
 
     def test_get_current_user_info_unauthorized(self, client):
-        """Test getting user info without authentication."""
+        """Test getting user info without authentication returns 200 with null."""
         response = client.get("/api/auth/me")
-        assert response.status_code == status.HTTP_401_UNAUTHORIZED
+        assert response.status_code == status.HTTP_200_OK
+        assert response.json() is None
 
     def test_logout(self, authenticated_client):
         """Test logout endpoint."""

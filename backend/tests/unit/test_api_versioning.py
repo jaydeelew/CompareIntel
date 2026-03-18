@@ -99,15 +99,17 @@ class TestAPIVersioningAuthentication:
         assert response.status_code == 200
         assert "access_token" in response.json()
 
-    def test_legacy_me_endpoint_requires_auth(self, client):
-        """Legacy /api/auth/me should require authentication."""
+    def test_legacy_me_endpoint_unauthenticated_returns_null(self, client):
+        """Legacy /api/auth/me returns 200 with null when not authenticated."""
         response = client.get("/api/auth/me")
-        assert response.status_code == 401
+        assert response.status_code == 200
+        assert response.json() is None
 
-    def test_versioned_me_endpoint_requires_auth(self, client):
-        """Versioned /api/v1/auth/me should require authentication."""
+    def test_versioned_me_endpoint_unauthenticated_returns_null(self, client):
+        """Versioned /api/v1/auth/me returns 200 with null when not authenticated."""
         response = client.get("/api/v1/auth/me")
-        assert response.status_code == 401
+        assert response.status_code == 200
+        assert response.json() is None
 
     def test_legacy_me_with_auth(self, authenticated_client):
         """Legacy /api/auth/me should work with authentication."""
