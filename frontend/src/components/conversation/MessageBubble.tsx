@@ -58,7 +58,32 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
 
   // Ensure content is always a string and trim leading/trailing whitespace
   // This prevents horizontal scrollbars caused by leading spaces
-  const safeContent = (content || '').trim()
+  let safeContent = (content || '').trim()
+
+  // When we have structured images (from image-generation models), strip embedded image syntax
+  // from content to avoid duplicate display - Gemini etc. often embed the same image in both
+  // the images array and as ![alt](url) or <img src="..."> in the text
+  if (images && images.length > 0 && safeContent) {
+    safeContent = safeContent
+      .replace(/!\[([^\]]*)\]\([^)]+\)/g, '')
+      .replace(/<img[^>]+src=["'][^"']+["'][^>]*\/?>/gi, '')
+      .trim()
+  }
+
+  // Deduplicate images - API may return same image with identical or differently-encoded URLs
+  const displayImages = React.useMemo(() => {
+    if (!images || images.length <= 1) return images ?? []
+    const seen = new Set<string>()
+    return images.filter(url => {
+      const key =
+        url.startsWith('data:') && url.includes('base64,')
+          ? (url.split('base64,')[1]?.replace(/=+$/, '') ?? url)
+          : url
+      if (seen.has(key)) return false
+      seen.add(key)
+      return true
+    })
+  }, [images])
 
   // Generate the message content ID that matches what useScreenshotCopy expects
   const safeModelId = modelId ? getSafeId(modelId) : 'unknown'
@@ -149,10 +174,10 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
         </div>
       </div>
       <div className="message-content" id={messageContentId}>
-        {images && images.length > 0 && (
+        {displayImages.length > 0 && (
           /* Image generation response - render images */
           <div className="result-output result-images">
-            {images.map((url, i) =>
+            {displayImages.map((url, i) =>
               failedImageIndices.has(i) ? (
                 <div
                   key={i}
