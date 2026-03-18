@@ -435,7 +435,9 @@ async def generate_stream(ctx: StreamContext) -> Any:
                             mid = chunk_data.get("model")
                             url = chunk_data.get("url", "")
                             if mid and url:
-                                images_dict.setdefault(mid, []).append(url)
+                                lst = images_dict.setdefault(mid, [])
+                                if url not in lst:
+                                    lst.append(url)
                             yield f"data: {json.dumps({'model': chunk_data['model'], 'type': 'image', 'url': chunk_data.get('url', '')})}\n\n"
                             chunks_processed = True
                         elif chunk_data["type"] == "keepalive":
@@ -472,7 +474,9 @@ async def generate_stream(ctx: StreamContext) -> Any:
                             mid = chunk_data.get("model")
                             url = chunk_data.get("url", "")
                             if mid and url:
-                                images_dict.setdefault(mid, []).append(url)
+                                lst = images_dict.setdefault(mid, [])
+                                if url not in lst:
+                                    lst.append(url)
                             yield f"data: {json.dumps({'model': chunk_data['model'], 'type': 'image', 'url': chunk_data.get('url', '')})}\n\n"
                             chunks_processed = True
                         elif chunk_data["type"] == "keepalive":
@@ -503,7 +507,9 @@ async def generate_stream(ctx: StreamContext) -> Any:
                                 mid = chunk_data.get("model")
                                 url = chunk_data.get("url", "")
                                 if mid and url:
-                                    images_dict.setdefault(mid, []).append(url)
+                                    lst = images_dict.setdefault(mid, [])
+                                    if url not in lst:
+                                        lst.append(url)
                                 yield f"data: {json.dumps({'model': chunk_data['model'], 'type': 'image', 'url': chunk_data.get('url', '')})}\n\n"
                                 chunks_processed = True
                             elif chunk_data["type"] == "keepalive":

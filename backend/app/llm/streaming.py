@@ -646,6 +646,25 @@ def call_openrouter_streaming(
 
                                 yield content_chunk
 
+                        # Also check message.images in final chunk (Gemini/OpenRouter may return images here)
+                        # Deduplicate against delta.images we may have already yielded
+                        if is_image_generation and hasattr(message, "images") and message.images:
+                            for img in message.images:
+                                url = None
+                                if hasattr(img, "image_url") and img.image_url:
+                                    url = getattr(img.image_url, "url", None) or (
+                                        img.image_url.get("url")
+                                        if isinstance(img.image_url, dict)
+                                        else None
+                                    )
+                                elif isinstance(img, dict):
+                                    iu = img.get("image_url") or img.get("imageUrl")
+                                    url = iu.get("url") if iu else None
+                                if url and url not in image_urls_seen:
+                                    image_urls_seen.add(url)
+                                    image_count += 1
+                                    yield {"type": "image", "url": url}
+
                         # Also check message.tool_calls in final chunk (some models like GPT-5 Chat return tool_calls here)
                         # This handles cases where tool_calls are only in the final chunk's message object
                         if hasattr(message, "tool_calls") and message.tool_calls:

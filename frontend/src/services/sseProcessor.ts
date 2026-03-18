@@ -378,7 +378,9 @@ export async function processComparisonStream(
           } else if (event.type === 'image') {
             if (event.model && event.url) {
               if (!streamingImages[event.model]) streamingImages[event.model] = []
-              streamingImages[event.model].push(event.url)
+              if (!streamingImages[event.model].includes(event.url)) {
+                streamingImages[event.model].push(event.url)
+              }
               modelLastChunkTimes[event.model] = Date.now()
               resetStreamingTimeout()
               shouldUpdate = true
