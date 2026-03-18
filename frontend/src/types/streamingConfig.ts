@@ -22,6 +22,8 @@ export interface StreamingAuthInfo {
     total_credits_used?: number
   } | null
   browserFingerprint: string
+  /** Refresh access token (used when backend returns 402 due to expired session) */
+  refreshToken?: () => Promise<void>
 }
 
 export interface StreamingModelSelection {

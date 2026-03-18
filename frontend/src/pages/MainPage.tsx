@@ -67,7 +67,7 @@ import {
 } from '../utils/visionModels'
 
 export function MainPage() {
-  const { isAuthenticated, user, refreshUser, isLoading: authLoading } = useAuth()
+  const { isAuthenticated, user, refreshUser, refreshToken, isLoading: authLoading } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
 
@@ -1710,7 +1710,7 @@ export function MainPage() {
 
   const streamingConfig = useMemo(
     () => ({
-      auth: { isAuthenticated, user, browserFingerprint },
+      auth: { isAuthenticated, user, browserFingerprint, refreshToken },
       models: { selectedModels, modelsByProvider, originalSelectedModels },
       input: {
         input,
@@ -1758,6 +1758,7 @@ export function MainPage() {
       isAuthenticated,
       user,
       browserFingerprint,
+      refreshToken,
       selectedModels,
       modelsByProvider,
       originalSelectedModels,

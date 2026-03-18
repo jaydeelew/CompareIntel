@@ -8,6 +8,7 @@ import { useCallback } from 'react'
 
 import { getCreditAllocation, getDailyCreditLimit } from '../config/constants'
 import { apiClient } from '../services/api/client'
+import { ApiError } from '../services/api/errors'
 import { compareStream } from '../services/compareService'
 import { getCreditBalance } from '../services/creditService'
 import type { CreditBalance } from '../services/creditService'
@@ -343,25 +344,48 @@ export function useComparisonStreaming(
           ? { aspect_ratio: aspectRatio, image_size: imageSize }
           : undefined
 
-      const stream = await compareStream(
-        {
-          input_data: expandedInput,
-          models: modelsToUse,
-          conversation_history: apiConversationHistory,
-          attached_images: attachedImages.length > 0 ? attachedImages : undefined,
-          browser_fingerprint: auth.browserFingerprint,
-          conversation_id: conversationId || undefined,
-          estimated_input_tokens: accurateInputTokens || undefined,
-          timezone: userTimezone,
-          location: userLocation || undefined,
-          enable_web_search: webSearchEnabled || false,
-          temperature,
-          top_p: topP !== 1 ? topP : undefined,
-          max_tokens: maxTokens ?? undefined,
-          image_config: imageConfig,
-        },
-        controller.signal
-      )
+      const comparePayload = {
+        input_data: expandedInput,
+        models: modelsToUse,
+        conversation_history: apiConversationHistory,
+        attached_images: attachedImages.length > 0 ? attachedImages : undefined,
+        browser_fingerprint: auth.browserFingerprint,
+        conversation_id: conversationId || undefined,
+        estimated_input_tokens: accurateInputTokens || undefined,
+        timezone: userTimezone,
+        location: userLocation || undefined,
+        enable_web_search: webSearchEnabled || false,
+        temperature,
+        top_p: topP !== 1 ? topP : undefined,
+        max_tokens: maxTokens ?? undefined,
+        image_config: imageConfig,
+      }
+
+      let stream: ReadableStream<Uint8Array> | null = null
+      try {
+        stream = await compareStream(comparePayload, controller.signal)
+      } catch (firstErr) {
+        // If signed-in user gets "sign up" 402 for image comparisons, session may have expired.
+        // Refresh token and retry once before showing the error.
+        const isAuthRelated402 =
+          auth.isAuthenticated &&
+          auth.refreshToken &&
+          firstErr instanceof ApiError &&
+          firstErr.status === 402 &&
+          typeof firstErr.message === 'string' &&
+          firstErr.message.includes('Sign up for a free account to run') &&
+          firstErr.message.includes('image comparison')
+
+        if (isAuthRelated402) {
+          logger.debug(
+            '[API] Got 402 for image comparison while authenticated - refreshing session and retrying'
+          )
+          await auth.refreshToken()
+          stream = await compareStream(comparePayload, controller.signal)
+        } else {
+          throw firstErr
+        }
+      }
 
       if (!stream) {
         throw new Error('Failed to start streaming comparison')
