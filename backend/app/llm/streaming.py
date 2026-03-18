@@ -353,6 +353,20 @@ def call_openrouter_streaming(
         for msg in conversation_history:
             messages.append({"role": msg.role, "content": msg.content})
 
+    # Workaround: OpenRouter may not correctly forward image_config.aspect_ratio to OpenAI's
+    # GPT-5 Image backend (OpenAI uses a different "size" parameter). Gemini honors it; GPT-5
+    # Image often returns 1:1. Inject aspect-ratio instruction into the prompt for OpenAI
+    # image models when a non-1:1 ratio is requested.
+    if (
+        is_image_generation
+        and model_id.startswith("openai/")
+        and image_config
+        and image_config.get("aspect_ratio")
+        and image_config["aspect_ratio"] != "1:1"
+    ):
+        ar = image_config["aspect_ratio"]
+        prompt = f"{prompt}\n\nImportant: Generate this image in exactly {ar} aspect ratio format."
+
     user_content = _build_user_message_content(prompt, model_id, attached_images)
     messages.append({"role": "user", "content": user_content})
 
