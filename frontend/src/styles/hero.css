@@ -282,7 +282,7 @@
 }
 
 .capability-tile.flipped {
-  transform: rotateY(180deg) scale(2.4);
+  transform: rotateY(180deg) scale(3);
   transform-origin: center center;
   z-index: 200;
   border-color: rgba(6, 182, 212, 0.4);
@@ -426,13 +426,13 @@
   height: 1em;
 }
 
-/* Counter-scale tooltip so it doesn't inherit the flipped tile's scale(2.4) */
+/* Counter-scale tooltip so it doesn't inherit the flipped tile's scale(3) */
 .capability-tile.flipped .tooltip .tooltip-content {
   transform-origin: 50% 100%;
-  transform: translateX(-50%) translateY(-4px) scale(calc(1 / 2.4));
+  transform: translateX(-50%) translateY(-4px) scale(calc(1 / 3));
 }
 .capability-tile.flipped .tooltip:hover .tooltip-content {
-  transform: translateX(-50%) translateY(0) scale(calc(1 / 2.4));
+  transform: translateX(-50%) translateY(0) scale(calc(1 / 3));
 }
 
 .capability-tile-back-image-wrap {
@@ -1796,7 +1796,7 @@
    ═══════════════════════════════════════════════════════════ */
 
 /* Intermediate screens: shift flipped outer tiles inward so they stay fully visible.
-   The 2.4× scale can push the left/right tiles past the viewport edge; this computes
+   The 3× scale can push the left/right tiles past the viewport edge; this computes
    exactly how much overflow there is and translates the wrapper inward by that amount,
    keeping tiles hugging their respective screen edge with a 0.75rem margin.
    Only applies when full tile layout is active (viewport > 900px). */
@@ -1806,7 +1806,7 @@
     --_gw: min(var(--_grid-max), 100vw);
     --_col: calc((var(--_gw) - 3rem) / 4);
     --_tile-center: calc((100vw - var(--_gw)) / 2 + 1rem + var(--_col) / 2);
-    --_shift: max(0px, calc(1.2 * var(--_col) - var(--_tile-center) + 0.75rem));
+    --_shift: max(0px, calc(1.5 * var(--_col) - var(--_tile-center) + 0.75rem));
   }
 
   .capability-tile-wrapper {
