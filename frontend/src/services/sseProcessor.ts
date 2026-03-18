@@ -20,6 +20,24 @@ const UPDATE_THROTTLE_MS = 50
 
 const EMPTY_RESPONSE_ERROR = 'Error: No response received'
 
+/** Normalize image URL for deduplication - handles data URLs with encoding/padding variations. */
+function normalizeImageUrlKey(url: string): string {
+  if (!url || typeof url !== 'string') return url || ''
+  const trimmed = url.trim()
+  if (trimmed.startsWith('data:') && trimmed.includes('base64,')) {
+    try {
+      const parts = trimmed.split('base64,', 2)
+      if (parts.length !== 2) return trimmed
+      const payload = decodeURIComponent(parts[1]).replace(/=+$/, '')
+      // Use full payload as key - same image => same key regardless of encoding
+      return `data:base64:${payload}`
+    } catch {
+      return trimmed
+    }
+  }
+  return trimmed
+}
+
 export function estimateTokensSimple(text: string): number {
   if (!text || !text.trim()) return 0
   return Math.max(1, Math.ceil(text.length / 4))
@@ -138,6 +156,7 @@ export async function processComparisonStream(
   const decoder = new TextDecoder()
   const streamingResults: { [key: string]: string } = {}
   const streamingImages: { [key: string]: string[] } = {}
+  const streamingImageKeysSeen: { [key: string]: Set<string> } = {}
   const completedModels = new Set<string>()
   const localModelErrors: { [key: string]: boolean } = {}
   const modelStartTimes: { [key: string]: string } = {}
@@ -377,8 +396,13 @@ export async function processComparisonStream(
             shouldUpdate = true
           } else if (event.type === 'image') {
             if (event.model && event.url) {
-              if (!streamingImages[event.model]) streamingImages[event.model] = []
-              if (!streamingImages[event.model].includes(event.url)) {
+              const key = normalizeImageUrlKey(event.url)
+              if (!streamingImageKeysSeen[event.model]) {
+                streamingImageKeysSeen[event.model] = new Set()
+              }
+              if (!streamingImageKeysSeen[event.model].has(key)) {
+                streamingImageKeysSeen[event.model].add(key)
+                if (!streamingImages[event.model]) streamingImages[event.model] = []
                 streamingImages[event.model].push(event.url)
               }
               modelLastChunkTimes[event.model] = Date.now()

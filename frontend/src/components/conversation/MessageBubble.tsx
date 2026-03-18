@@ -70,15 +70,23 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
       .trim()
   }
 
-  // Deduplicate images - API may return same image with identical or differently-encoded URLs
+  // Deduplicate images - Gemini etc. may return the same image multiple times with
+  // identical or differently-encoded URLs (base64 padding, percent-encoding)
   const displayImages = React.useMemo(() => {
-    if (!images || images.length <= 1) return images ?? []
+    if (!images || images.length === 0) return []
     const seen = new Set<string>()
     return images.filter(url => {
-      const key =
-        url.startsWith('data:') && url.includes('base64,')
-          ? (url.split('base64,')[1]?.replace(/=+$/, '') ?? url)
-          : url
+      let key = url
+      if (url.startsWith('data:') && url.includes('base64,')) {
+        try {
+          const parts = url.split('base64,', 2)
+          if (parts.length === 2) {
+            key = `data:base64:${decodeURIComponent(parts[1]).replace(/=+$/, '')}`
+          }
+        } catch {
+          key = url
+        }
+      }
       if (seen.has(key)) return false
       seen.add(key)
       return true

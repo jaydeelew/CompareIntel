@@ -32,6 +32,31 @@ from .tokens import TokenUsage, calculate_token_usage, get_model_max_tokens
 logger = logging.getLogger(__name__)
 
 
+def _normalize_image_url_key(url: str) -> str:
+    """Return a canonical key for image URL deduplication.
+
+    Some models (e.g. Gemini 3 Pro Image) return the same image multiple times
+    with slightly different URL encodings (e.g. base64 padding, percent-encoding).
+    This normalizes so duplicates are detected.
+    """
+    if not url or not isinstance(url, str):
+        return url or ""
+    url = url.strip()
+    if url.startswith("data:") and "base64," in url:
+        try:
+            import hashlib
+            from urllib.parse import unquote
+
+            _, payload = url.split("base64,", 1)
+            payload = unquote(payload)  # Handle %2B, %2F, etc.
+            payload = payload.rstrip("=")  # Normalize base64 padding
+            # Use hash for large payloads to avoid memory bloat
+            return f"data:base64:{hashlib.sha256(payload.encode()).hexdigest()}"
+        except Exception:
+            return url
+    return url
+
+
 def is_time_sensitive_query(prompt: str) -> bool:
     """Return True if the query appears time-sensitive and may need web search."""
     prompt_lower = prompt.lower()
@@ -353,13 +378,16 @@ def call_openrouter_streaming(
         for msg in conversation_history:
             messages.append({"role": msg.role, "content": msg.content})
 
-    # Workaround: OpenRouter may not correctly forward image_config.aspect_ratio to OpenAI's
-    # GPT-5 Image backend (OpenAI uses a different "size" parameter). Gemini honors it; GPT-5
-    # Image often returns 1:1. Inject aspect-ratio instruction into the prompt for OpenAI
-    # image models when a non-1:1 ratio is requested.
+    # Workaround: OpenRouter may not correctly forward image_config.aspect_ratio to some image
+    # backends. GPT-5 Image uses a different "size" parameter; Gemini 2.5 Flash Image often
+    # returns 1:1 despite image_config. Inject aspect-ratio instruction into the prompt when
+    # a non-1:1 ratio is requested.
+    _needs_aspect_ratio_prompt = model_id.startswith("openai/") or (
+        model_id.startswith("google/") and "image" in model_id
+    )
     if (
         is_image_generation
-        and model_id.startswith("openai/")
+        and _needs_aspect_ratio_prompt
         and image_config
         and image_config.get("aspect_ratio")
         and image_config["aspect_ratio"] != "1:1"
@@ -573,8 +601,9 @@ def call_openrouter_streaming(
                             elif isinstance(img, dict):
                                 iu = img.get("image_url") or img.get("imageUrl")
                                 url = iu.get("url") if iu else None
-                            if url and url not in image_urls_seen:
-                                image_urls_seen.add(url)
+                            key = _normalize_image_url_key(url)
+                            if url and key and key not in image_urls_seen:
+                                image_urls_seen.add(key)
                                 image_count += 1
                                 yield {"type": "image", "url": url}
 
@@ -660,8 +689,9 @@ def call_openrouter_streaming(
                                 elif isinstance(img, dict):
                                     iu = img.get("image_url") or img.get("imageUrl")
                                     url = iu.get("url") if iu else None
-                                if url and url not in image_urls_seen:
-                                    image_urls_seen.add(url)
+                                key = _normalize_image_url_key(url)
+                                if url and key and key not in image_urls_seen:
+                                    image_urls_seen.add(key)
                                     image_count += 1
                                     yield {"type": "image", "url": url}
 

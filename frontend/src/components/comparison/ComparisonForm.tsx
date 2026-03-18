@@ -911,20 +911,18 @@ export const ComparisonForm = memo<ComparisonFormProps>(
                     </svg>
                   </button>
                 )
-                return isReadyToSubmit ? (
+                return isReadyToSubmit || isLoading ? (
                   submitButton
                 ) : (
                   <StyledTooltip
                     text={
                       creditsRemaining <= 0
                         ? 'You have run out of credits'
-                        : isLoading
-                          ? 'Submit'
-                          : !input.trim() || selectedModels.length === 0
-                            ? 'Enter prompt and select models'
-                            : isFollowUpMode && tokenUsageInfo?.isExceeded
-                              ? 'Input capacity exceeded - inputs may be truncated'
-                              : 'Submit'
+                        : !input.trim() || selectedModels.length === 0
+                          ? 'Enter prompt and select models'
+                          : isFollowUpMode && tokenUsageInfo?.isExceeded
+                            ? 'Input capacity exceeded - inputs may be truncated'
+                            : 'Submit'
                     }
                   >
                     {submitButton}
