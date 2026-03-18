@@ -131,9 +131,9 @@ export function getPageMeta(pathname: string): PageMeta {
     description:
       'Compare AI language and image models side-by-side from OpenAI, Anthropic, Google, Meta, xAI, and more. Image generation comparison included.',
     canonical: `${BASE_URL}${normalizedPath}`,
-    ogTitle: 'CompareIntel',
+    ogTitle: 'CompareIntel - AI & Image Model Comparison Side-by-Side | Free',
     ogDescription:
-      'Compare the latest AI models side-by-side from OpenAI, Anthropic, Google, Meta, xAI, and more simultaneously.',
+      'Compare AI language and image models side-by-side. Test GPT-5.4, Claude 4.6, Gemini 3, FLUX from OpenAI, Anthropic, Google, Meta, xAI. Free tier.',
     ogImage: DEFAULT_OG_IMAGE,
   }
 }

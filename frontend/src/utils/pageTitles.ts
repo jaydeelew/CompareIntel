@@ -12,7 +12,7 @@ const BASE_TITLE = 'CompareIntel'
  * Format: "Page Name - CompareIntel" (keeps titles under 60 chars)
  */
 const ROUTE_TITLES: Record<string, string> = {
-  '/': 'CompareIntel - Compare AI Models Side-by-Side | Free Tier',
+  '/': 'CompareIntel - Compare AI & Image Models Side-by-Side | Free',
   '/about': 'About - CompareIntel',
   '/features': 'Features - CompareIntel',
   '/image-generation': 'Image Generation - CompareIntel',

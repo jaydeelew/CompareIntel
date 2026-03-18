@@ -11,6 +11,7 @@ This guide covers the SEO implementation for CompareIntel and the steps needed t
 - ✅ X Card tags (formerly Twitter Card) for X/Twitter sharing
 - ✅ Canonical URL
 - ✅ Structured data (JSON-LD) for search engines
+- ✅ Image generation comparison page (`/image-generation`) with dedicated meta tags
 
 ### 2. robots.txt (`frontend/public/robots.txt`)
 - ✅ Allows all search engines to crawl the site
@@ -18,7 +19,7 @@ This guide covers the SEO implementation for CompareIntel and the steps needed t
 - ✅ References sitemap location
 
 ### 3. sitemap.xml (`frontend/public/sitemap.xml`)
-- ✅ Lists all public pages
+- ✅ Lists all public pages (including `/image-generation` for AI image model comparison)
 - ✅ Includes priority and change frequency
 - ✅ Proper XML schema
 
@@ -144,23 +145,23 @@ For multiple pages or site-wide changes:
 For effective SEO, place keywords naturally in these locations (in order of importance):
 
 1. **Title Tag** (`<title>`) - ✅ Already optimized
-   - Your current title: "CompareIntel - Compare AI Models Side-by-Side | Free Tier"
-   - Contains key terms: "Compare", "AI Models", "Side-by-Side"
+   - Your current title: "CompareIntel - Compare AI & Image Models Side-by-Side | Free"
+   - Contains key terms: "Compare", "AI Models", "Image Models", "Side-by-Side"
 
 2. **Meta Description** - ✅ Already optimized
-   - Your current description includes: "AI models", provider names like "OpenAI", "Anthropic", "Google"
+   - Your current description includes: "AI language and image models", providers (OpenAI, Anthropic, Google, Meta, xAI), image models (FLUX, DALL-E), "image generation comparison"
    - Keep it under 160 characters for best display
 
 3. **H1/H2 Headings** - ✅ Already optimized
-   - Your homepage has: "Compare AI Models Side by Side" (H2)
-   - Consider adding an H1 tag with primary keywords
+   - Your homepage has: "Compare AI and Image Models Side by Side" (H1)
+   - Hero section uses: "Compare AI & Image Models" / "Side by Side"
 
 4. **Page Content** - ✅ Already optimized
    - Keywords naturally appear in your hero section and descriptions
    - Ensure keywords appear in the first 100-200 words of visible content
 
 5. **Structured Data (JSON-LD)** - ✅ Already optimized
-   - Your structured data includes: "AI models", provider names, and model counts
+   - Your structured data includes: "AI language and image models", provider names (OpenAI, Anthropic, Google, Meta, xAI, Black Forest Labs), image model comparison (FLUX, Imagen, GPT-5 Image, Riverflow)
    - This helps search engines understand your content
 
 6. **Alt Text for Images** - ⚠️ Verify
@@ -176,12 +177,14 @@ For effective SEO, place keywords naturally in these locations (in order of impo
 1. **Primary Keywords** (already in use):
    - "AI model comparison"
    - "Compare AI models"
-   - "GPT-4 vs Claude"
+   - "AI image comparison" / "compare image models"
+   - "GPT-5 vs Claude" / "GPT-5.4 vs Claude 4.6"
    - "AI testing tool"
 
 2. **Long-tail Keywords** to consider:
    - "compare multiple AI models side by side"
    - "test AI models simultaneously"
+   - "compare AI image models" / "FLUX vs DALL-E vs Imagen"
    - "AI model comparison tool"
    - "best AI model for [use case]"
 
@@ -200,7 +203,7 @@ For effective SEO, place keywords naturally in these locations (in order of impo
 - ✅ Keywords used naturally throughout content (not keyword stuffing)
 - ✅ Internal links use keyword-rich anchor text
 - ✅ Images have descriptive alt text with keywords
-- ✅ Structured data includes relevant keywordt s
+- ✅ Structured data includes relevant keywords
 
 ## Testing SEO Implementation
 
