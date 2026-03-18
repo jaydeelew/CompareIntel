@@ -11,7 +11,7 @@ When new models are added to `backend/app/model_runner.py`, they need renderer c
 Image generation models follow a different workflow. When adding via admin, the system detects `output_modalities` includes `"image"` and:
 - Sets `supports_image_generation: true`, `category: "Image"`
 - **Skips** `setup_model_renderer.py` (no math/formatting analysis)
-- **Runs** `research_model_benchmarks.py` to fetch Text-to-Image Arena scores and add the model to the "Help me choose" dropdown when scores are available
+- **Runs** `research_model_benchmarks.py` to fetch benchmark scores (SWE-bench, MATH/GSM8K, Text-to-Image Arena, etc.) and add the model to the "Help me choose" dropdown when scores are available
 - **Runs** `test_image_config_aspect_ratio.py` to get supported aspect ratios and image sizes; stores in registry as `image_aspect_ratios`, `image_sizes`
 
 See `docs/features/IMAGE_GENERATION.md` for details. The workflow consists of three main steps:

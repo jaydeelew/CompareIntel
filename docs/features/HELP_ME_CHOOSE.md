@@ -6,7 +6,7 @@ The "Help me choose" feature provides decision support for model selection. User
 
 A "Help me choose" button sits next to the Advanced button in the model selection area. Clicking it opens a dropdown with six categories displayed horizontally (stacking vertically on mobile). Each category lists models ranked by benchmark score (highest first). All models shown are strong in their category. Users can check individual models or use "Select top 3" per category; selections apply immediately and respect tier restrictions and `maxModelsLimit`.
 
-**Categories:** Best for coding, Best for writing, Best for reasoning, Best for long context, Best value (cost-effective), Fastest responses, Best for multilingual, Best for legal, Best for image generation, Best for medical.
+**Categories:** Best for coding, Best for writing, Best for math, Best for reasoning, Best for long context, Best value (cost-effective), Fastest responses, Best for multilingual, Best for legal, Best for image generation, Best for medical.
 
 **Inclusion rule:** Only models with numeric benchmark scores from well-respected, publicly available sources are included. Models without benchmark scores are not added. Each category has at least two models. Model IDs must exist in `models_registry.json`.
 
@@ -28,6 +28,7 @@ A public page at `/help-me-choose-methodology` (linked in the footer) explains i
 |----------|---------------|-----|------------|------------|
 | **Coding** | SWE-Bench Verified (OpenLM) | https://openlm.ai/swe-bench/ | % Resolved | Yes |
 | **Writing** | Creative Writing Arena | https://kearai.com/leaderboard/creative-writing | Elo rating | Yes |
+| **Math** | MATH, GSM8K (llmdb) | https://llmdb.com/benchmarks/math, https://llmdb.com/benchmarks/gsm8k | % (0–100) | Yes |
 | **Reasoning** | MMLU-Pro | https://awesomeagents.ai/leaderboards/mmlu-pro-leaderboard/ | Overall % | Yes |
 | **Long context** | MRCR 1M (llmdb) | https://llmdb.com/benchmarks/mrcr-1m | Score /100 | Yes (sparse) |
 | **Best value** | OpenRouter pricing API | https://openrouter.ai/api/v1/models | Avg $/1M tokens | Yes |
@@ -62,7 +63,7 @@ python scripts/research_model_benchmarks.py --refresh-all [--dry-run]
 
 This command re-evaluates ALL registry models against ALL data-driven categories:
 
-1. **Fetches** current data from 9 external sources (SWE-bench, OpenRouter, LMSpeed, MMLU-Pro, Creative Writing Arena, MRCR 1M, Awesome Agents long-context, LegalBench, Global-MMLU)
+1. **Fetches** current data from 10 external sources (SWE-bench, OpenRouter, LMSpeed, MMLU-Pro, Creative Writing Arena, MATH/GSM8K, MRCR 1M, Awesome Agents long-context, LegalBench, Global-MMLU)
 2. **Syncs evidence** — updates stale evidence strings on existing models (e.g. price changes, new throughput data)
 3. **Prunes** models that no longer meet category thresholds
 4. **Adds** missing models that now qualify
@@ -89,6 +90,7 @@ Data-driven categories apply qualification thresholds to maintain quality:
 | Best value | &lt; $1.00/1M tokens avg | `COST_EFFECTIVE_MAX_PRICE` |
 | Fastest responses | ≥ 50 tokens/sec | `FAST_MIN_THROUGHPUT` |
 | Coding | ≥ 55% SWE-Bench Verified | `CODING_MIN_SWE_BENCH` |
+| Math | MATH or GSM8K ≥ 85% (when MATH not available) | `MATH_MIN_GSM8K` |
 | Reasoning | ≥ 80% MMLU-Pro | `REASONING_MIN_MMLU_PRO` |
 | Writing | ≥ 1390 Elo | `WRITING_MIN_ELO` |
 | Long context | ≥ 30/100 MRCR | `LONG_CONTEXT_MIN_MRCR` |

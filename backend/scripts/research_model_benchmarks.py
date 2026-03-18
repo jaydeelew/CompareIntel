@@ -16,7 +16,7 @@ Single-model mode:
 
 Refresh-all mode (--refresh-all):
   Re-evaluates ALL registry models against ALL data-driven categories
-  (cost-effective, fast, coding, reasoning, writing, long-context, legal,
+  (cost-effective, fast, coding, math, reasoning, writing, long-context, legal,
   multilingual). Ensures no qualifying model is missing from its category.
   Run periodically to keep categories comprehensive as leaderboards update.
 
@@ -44,6 +44,7 @@ CATEGORY_IDS = [
     "coding",
     "writing",
     "reasoning",
+    "math",
     "long-context",
     "cost-effective",
     "fast",
@@ -68,6 +69,8 @@ GLOBAL_MMLU_URL = "https://llmdb.com/benchmarks/global-mmlu"
 MMLU_PRO_URL = "https://awesomeagents.ai/leaderboards/mmlu-pro-leaderboard/"
 CREATIVE_WRITING_URL = "https://kearai.com/leaderboard/creative-writing"
 MRCR_URL = "https://llmdb.com/benchmarks/mrcr-1m"
+MATH_URL = "https://llmdb.com/benchmarks/math"
+GSM8K_URL = "https://llmdb.com/benchmarks/gsm8k"
 AWESOME_AGENTS_LONG_CONTEXT_URL = (
     "https://awesomeagents.ai/leaderboards/long-context-benchmarks-leaderboard/"
 )
@@ -143,6 +146,22 @@ def get_model_id_to_name_map() -> dict[str, str]:
                 result[mid] = m.get("name", mid.split("/")[-1])
     return result
 
+
+# llmdb MATH/GSM8K slug -> registry model_id (llmdb uses different naming)
+MATH_SLUG_TO_MODEL_ID: dict[str, str] = {
+    "kimi-k2": "moonshotai/kimi-k2.5",
+    "claude-3-7-sonnet": "anthropic/claude-3.7-sonnet",
+    "o1": "openai/o3",
+    "gemini-2-0-pro": "google/gemini-2.5-pro",
+    "gemini-2-0-flash": "google/gemini-2.5-flash",
+    "deepseek-v3": "deepseek/deepseek-v3.2-exp",
+    "gemini-2-0-flash-lite": "google/gemini-2.0-flash-001",
+    "gpt-4o": "openai/gpt-4o",
+    "claude-3-5-sonnet": "anthropic/claude-sonnet-4.5",
+    "claude-3-opus": "anthropic/claude-opus-4",
+    "claude-3-sonnet": "anthropic/claude-sonnet-4",
+    "claude-3-haiku": "anthropic/claude-haiku-4.5",
+}
 
 # VALS model slug (e.g. google_gemini-3-pro-preview) -> our registry model_id
 VALS_TO_MODEL_ID: dict[str, str] = {
@@ -266,6 +285,82 @@ def fetch_global_mmlu_scores() -> dict[str, tuple[float, str]]:
     except Exception as e:
         print(f"Warning: Could not fetch Global-MMLU scores: {e}", file=sys.stderr)
     return result
+
+
+def _fetch_llmdb_math_benchmark(
+    url: str, benchmark_name: str, evidence_template: str
+) -> dict[str, tuple[float, str]]:
+    """Fetch MATH or GSM8K scores from llmdb.com. Returns model_id -> (score, evidence).
+
+    Table structure: Rank | Model | Provider | Score | Parameters | Released | Type.
+    Score is in 0-100 scale. Uses MATH_SLUG_TO_MODEL_ID for llmdb slug -> registry mapping.
+    """
+    model_id_to_name = get_model_id_to_name_map()
+    name_to_model_id = {_normalize_name_for_match(n): mid for mid, n in model_id_to_name.items()}
+    slug_to_model_id: dict[str, str] = {}
+    for mid in model_id_to_name:
+        parts = mid.split("/")
+        if len(parts) == 2:
+            slug = parts[1].replace(".", "-")
+            slug_to_model_id[slug] = mid
+    for slug, mid in MATH_SLUG_TO_MODEL_ID.items():
+        slug_to_model_id[slug] = mid
+
+    result: dict[str, tuple[float, str]] = {}
+    try:
+        resp = httpx.get(url, timeout=15.0, follow_redirects=True)
+        if resp.status_code != 200:
+            return result
+        soup = BeautifulSoup(resp.text, "html.parser")
+        for link in soup.find_all("a", href=True):
+            href = link.get("href", "")
+            if "/models/" not in href:
+                continue
+            slug = href.split("/models/")[-1].rstrip("/").strip()
+            if not slug:
+                continue
+            display_name = link.get_text(strip=True) or ""
+            parent_row = link.find_parent("tr")
+            if not parent_row:
+                continue
+            row_text = parent_row.get_text()
+            # Score is 0-100 with decimal (e.g. 97.4, 82.88); avoid matching Rank, year, param count
+            score_match = re.search(r"\b(\d{1,2}\.\d{1,2})\b", row_text)
+            if not score_match:
+                continue
+            try:
+                score = float(score_match.group(1))
+            except ValueError:
+                continue
+            if score < 0 or score > 100:
+                continue
+            mid = slug_to_model_id.get(slug)
+            if not mid:
+                norm = _normalize_name_for_match(display_name.split("(")[0].strip())
+                mid = name_to_model_id.get(norm)
+            if mid:
+                evidence = evidence_template.format(score=score)
+                if mid not in result or score > result[mid][0]:
+                    result[mid] = (score, evidence)
+    except Exception as e:
+        print(f"Warning: Could not fetch {benchmark_name} scores: {e}", file=sys.stderr)
+    return result
+
+
+def fetch_math_scores() -> dict[str, tuple[float, str]]:
+    """Fetch math benchmark scores. Merges MATH (primary) and GSM8K (fallback).
+
+    MATH: 12.5K competition mathematics problems (llmdb.com).
+    GSM8K: 8.5K grade school math problems (llmdb.com).
+    Prefers MATH when both exist for a model; higher score = better.
+    """
+    math_scores = _fetch_llmdb_math_benchmark(MATH_URL, "MATH", "MATH (llmdb.com): {score}%.")
+    gsm8k_scores = _fetch_llmdb_math_benchmark(GSM8K_URL, "GSM8K", "GSM8K (llmdb.com): {score}%.")
+    merged: dict[str, tuple[float, str]] = dict(math_scores)
+    for mid, (score, evidence) in gsm8k_scores.items():
+        if mid not in merged and score >= MATH_MIN_GSM8K:
+            merged[mid] = (score, evidence)
+    return merged
 
 
 def _normalize_lmspeed_name(name: str) -> str:
@@ -832,6 +927,7 @@ COST_EFFECTIVE_MAX_PRICE = 1.00  # max avg $/1M tokens (exclusive: under $1)
 FAST_MIN_THROUGHPUT = 50.0  # min tokens/sec
 CODING_MIN_SWE_BENCH = 55.0  # min SWE-bench Verified %
 REASONING_MIN_MMLU_PRO = 80.0  # min MMLU-Pro %
+MATH_MIN_GSM8K = 85.0  # min GSM8K % when MATH not available (MATH has no min; all scored included)
 LONG_CONTEXT_MIN_MRCR = 30.0  # min MRCR 1M score
 
 
@@ -848,6 +944,7 @@ def determine_categories(
     creative_writing_scores: dict[str, tuple[float, str]] | None = None,
     mrcr_scores: dict[str, tuple[float, str]] | None = None,
     text_to_image_scores: dict[str, tuple[float, str]] | None = None,
+    math_scores: dict[str, tuple[float, str]] | None = None,
 ) -> list[dict]:
     """Determine which Help Me Choose categories this model qualifies for.
 
@@ -892,6 +989,9 @@ def determine_categories(
     ):
         score, evidence = text_to_image_scores[model_id]
         entries.append({"category_id": "image-generation", "evidence": evidence, "score": score})
+    if math_scores and model_id in math_scores:
+        score, evidence = math_scores[model_id]
+        entries.append({"category_id": "math", "evidence": evidence, "score": score})
     return entries
 
 
@@ -1117,6 +1217,9 @@ def research_and_update(model_id: str, dry_run: bool = False) -> dict:
             f"  Fetched long-context scores for {len(long_context_scores)} models "
             f"(MRCR 1M + Awesome Agents)."
         )
+    math_scores = fetch_math_scores()
+    if math_scores:
+        print(f"  Fetched MATH/GSM8K scores for {len(math_scores)} models.")
 
     print(
         f"PROGRESS:{json.dumps({'stage': 'researching', 'message': 'Determining category placements...', 'progress': 40})}"
@@ -1134,6 +1237,7 @@ def research_and_update(model_id: str, dry_run: bool = False) -> dict:
         creative_writing_scores,
         long_context_scores,
         text_to_image_scores,
+        math_scores,
     )
 
     if not category_entries:
@@ -1204,6 +1308,8 @@ def research_and_update(model_id: str, dry_run: bool = False) -> dict:
             and model_id in text_to_image_scores
         ):
             evidence = text_to_image_scores[model_id][1]
+        if cat_id == "math" and math_scores and model_id in math_scores:
+            evidence = math_scores[model_id][1]
         if add_model_to_category(categories, cat_id, model_id, evidence):
             added.append(cat_id)
             print(f"  Added to '{cat_id}': {evidence}")
@@ -1228,6 +1334,8 @@ def research_and_update(model_id: str, dry_run: bool = False) -> dict:
         fetched_by_cat["long-context"] = long_context_scores
     if text_to_image_scores:
         fetched_by_cat["image-generation"] = text_to_image_scores
+    if math_scores:
+        fetched_by_cat["math"] = math_scores
     for cat in categories:
         if cat["id"] in added:
             fetched = fetched_by_cat.get(cat["id"])
@@ -1357,6 +1465,8 @@ def refresh_all_categories(dry_run: bool = False) -> dict:
     print(f"  Awesome Agents long-context: {len(awesome_agents_long_context)} models")
     long_context_scores = merge_long_context_scores(mrcr_scores, awesome_agents_long_context)
     print(f"  Long-context (merged): {len(long_context_scores)} models")
+    math_scores = fetch_math_scores()
+    print(f"  MATH/GSM8K: {len(math_scores)} models")
 
     if not RECOMMENDATIONS_PATH.exists():
         print(f"Error: {RECOMMENDATIONS_PATH} not found", file=sys.stderr)
@@ -1385,6 +1495,8 @@ def refresh_all_categories(dry_run: bool = False) -> dict:
         fetched_by_cat["writing"] = creative_writing_scores
     if text_to_image_scores:
         fetched_by_cat["image-generation"] = text_to_image_scores
+    if math_scores:
+        fetched_by_cat["math"] = math_scores
     awesome_agents_long_context = fetch_awesome_agents_long_context_scores()
     long_context_scores = merge_long_context_scores(mrcr_scores, awesome_agents_long_context)
     if long_context_scores:
@@ -1418,6 +1530,7 @@ def refresh_all_categories(dry_run: bool = False) -> dict:
             creative_writing_scores,
             long_context_scores,
             text_to_image_scores,
+            math_scores,
         )
         for entry in entries:
             cat_id = entry["category_id"]

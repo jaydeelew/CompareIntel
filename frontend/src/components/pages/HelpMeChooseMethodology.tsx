@@ -88,6 +88,27 @@ export const HelpMeChooseMethodology: React.FC = () => {
                   </td>
                 </tr>
                 <tr>
+                  <td>Best for math</td>
+                  <td>
+                    <a
+                      href="https://llmdb.com/benchmarks/math"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      MATH
+                    </a>
+                    ,{' '}
+                    <a
+                      href="https://llmdb.com/benchmarks/gsm8k"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      GSM8K
+                    </a>{' '}
+                    — competition math and grade-school arithmetic
+                  </td>
+                </tr>
+                <tr>
                   <td>Best for reasoning</td>
                   <td>
                     <a
@@ -223,6 +244,11 @@ export const HelpMeChooseMethodology: React.FC = () => {
                 <strong>Creative Writing Arena (writing)</strong> — Human raters compare model
                 outputs head-to-head and assign Elo ratings, similar to chess rankings. Higher Elo =
                 better style and consistency.
+              </li>
+              <li>
+                <strong>MATH / GSM8K (math)</strong> — MATH: 12,500 competition mathematics problems
+                requiring multi-step reasoning. GSM8K: 8,500 grade school math word problems. Both
+                use a 0–100 scale; higher = better at mathematical problem-solving.
               </li>
               <li>
                 <strong>MMLU-Pro (reasoning)</strong> — Expert-level multiple-choice questions
