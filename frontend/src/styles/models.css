@@ -1911,13 +1911,13 @@
 }
 
 /* Sliding pill - matches selected model cards (gradient-card-selected) */
-/* Equal 0.5rem gaps (larger gap) on all sides of pill in each position */
+/* Equal 0.25rem gaps on all sides of pill (matches container padding) */
 .models-section-mode-slider {
   position: absolute;
   top: 0.25rem;
   bottom: 0.25rem;
-  left: 0.5rem;
-  right: calc(50% - 0.625rem);
+  left: 0.25rem;
+  right: calc(50% - 0.375rem);
   background: var(--gradient-card-selected);
   border-radius: calc(var(--radius-lg) - 2px);
   box-shadow:
@@ -1932,8 +1932,8 @@
 }
 
 .models-section-mode-toggle[data-mode='image'] .models-section-mode-slider {
-  left: calc(50% + 0.625rem);
-  right: 0.5rem;
+  left: calc(50% + 0.375rem);
+  right: 0.25rem;
 }
 
 .models-section-mode-btn {
