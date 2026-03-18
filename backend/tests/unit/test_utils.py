@@ -9,6 +9,7 @@ Tests cover:
 """
 
 from datetime import datetime, timedelta
+from unittest.mock import MagicMock
 
 
 class TestDateUtilities:
@@ -198,6 +199,47 @@ class TestConfigHelpers:
         from app.config.helpers import get_conversation_limit
 
         assert get_conversation_limit("unknown") == 2
+
+
+class TestGetClientIp:
+    """Tests for get_client_ip request utility."""
+
+    def test_get_client_ip_from_forwarded_for(self):
+        """Test IP extraction from X-Forwarded-For header (uses first IP)."""
+        from app.utils.request import get_client_ip
+
+        request = MagicMock()
+        request.headers = {"X-Forwarded-For": " 192.168.1.1, 10.0.0.1 "}
+        request.client = None
+        assert get_client_ip(request) == "192.168.1.1"
+
+    def test_get_client_ip_from_real_ip(self):
+        """Test IP extraction from X-Real-IP header when X-Forwarded-For absent."""
+        from app.utils.request import get_client_ip
+
+        request = MagicMock()
+        request.headers = {"X-Real-IP": " 203.0.113.50 "}
+        request.client = None
+        assert get_client_ip(request) == "203.0.113.50"
+
+    def test_get_client_ip_from_client_host(self):
+        """Test IP from request.client when no proxy headers present."""
+        from app.utils.request import get_client_ip
+
+        request = MagicMock()
+        request.headers = {}
+        request.client = MagicMock()
+        request.client.host = "127.0.0.1"
+        assert get_client_ip(request) == "127.0.0.1"
+
+    def test_get_client_ip_fallback_to_unknown(self):
+        """Test fallback to 'unknown' when no headers and no client."""
+        from app.utils.request import get_client_ip
+
+        request = MagicMock()
+        request.headers = {}
+        request.client = None
+        assert get_client_ip(request) == "unknown"
 
 
 class TestConstants:

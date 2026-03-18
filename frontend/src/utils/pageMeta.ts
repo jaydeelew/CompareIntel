@@ -20,13 +20,13 @@ interface PageMeta {
 
 const PAGE_META: Record<string, PageMeta> = {
   '/': {
-    title: 'CompareIntel - Compare AI Models Side-by-Side | Free Tier',
+    title: 'CompareIntel - Compare AI & Image Models Side-by-Side | Free',
     description:
-      'Compare the latest AI models side-by-side. Test models from OpenAI, Anthropic, Google, Meta, xAI, and more. New models added regularly. Free tier available.',
+      'Compare AI language and image models side-by-side. Test GPT-5, Claude, Gemini, FLUX, DALL-E from OpenAI, Anthropic, Google, Meta, xAI. Image generation comparison included. Free tier.',
     canonical: `${BASE_URL}/`,
-    ogTitle: 'CompareIntel - Compare AI Models Side-by-Side | Free Tier',
+    ogTitle: 'CompareIntel - AI & Image Model Comparison Side-by-Side | Free',
     ogDescription:
-      'Compare the latest AI models side-by-side from leading providers. Test prompts and find the best AI for your needs. New models added as released. Free tier available.',
+      'Compare AI language and image models side-by-side. Test GPT-5.4, Claude 4.6, Gemini 3, FLUX from OpenAI, Anthropic, Google, Meta, xAI. Free tier.',
     ogImage: DEFAULT_OG_IMAGE,
   },
   '/about': {
@@ -127,9 +127,9 @@ export function getPageMeta(pathname: string): PageMeta {
 
   // Default fallback
   return {
-    title: 'CompareIntel - Compare AI Models Side-by-Side | Free Tier',
+    title: 'CompareIntel - Compare AI & Image Models Side-by-Side | Free',
     description:
-      'Compare the latest AI models side-by-side from OpenAI, Anthropic, Google, Meta, xAI, and more simultaneously.',
+      'Compare AI language and image models side-by-side from OpenAI, Anthropic, Google, Meta, xAI, and more. Image generation comparison included.',
     canonical: `${BASE_URL}${normalizedPath}`,
     ogTitle: 'CompareIntel',
     ogDescription:
