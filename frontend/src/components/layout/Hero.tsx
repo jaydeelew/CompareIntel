@@ -212,8 +212,11 @@ export function Hero({ children }: HeroProps) {
         </div>
 
         <h1 className="hero-title">
-          <span className="hero-title-first-line">Compare AI & Image Models</span>{' '}
-          <span className="hero-title-second-line">Side by Side</span>
+          <span className="sr-only">Compare AI Language and Image Models Side by Side</span>
+          <span aria-hidden="true">
+            <span className="hero-title-first-line">Compare AI Models</span>{' '}
+            <span className="hero-title-second-line">Side by Side</span>
+          </span>
         </h1>
         <p className="hero-subtitle">
           <span className="hero-subtitle-first-line">Get responses from multiple AI models</span>
