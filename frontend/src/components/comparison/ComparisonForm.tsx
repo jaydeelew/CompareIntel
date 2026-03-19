@@ -505,6 +505,25 @@ export const ComparisonForm = memo<ComparisonFormProps>(
 
     const submitReady = !hardSubmitDisabled && !submitImageConfigBlocked
 
+    const voiceButtonAriaLabel = isSpeechListening ? 'Stop recording' : 'Start voice input'
+    const webSearchButtonAriaLabel = !canEnableWebSearch
+      ? 'Select a web-enabled model'
+      : webSearchEnabled
+        ? 'Web search enabled'
+        : 'Enable web search'
+    const submitButtonAriaLabel =
+      creditsRemaining <= 0
+        ? 'You have run out of credits'
+        : !input.trim() || selectedModels.length === 0
+          ? 'Enter prompt and select models'
+          : submitImageBlockTooltip !== ''
+            ? submitImageBlockTooltip
+            : isFollowUpMode && tokenUsageExceeded
+              ? 'Input capacity exceeded - inputs may be truncated'
+              : isFollowUpMode
+                ? 'Continue conversation'
+                : 'Submit'
+
     const composerContent = (
       <div
         className={`composer ${isAnimatingTextarea ? 'animate-pulse-border' : ''} ${composerFloating ? 'composer-floating' : ''} ${isReturningToHero ? 'composer-returning' : ''}`}
@@ -586,6 +605,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
             <button
               type="button"
               className={`history-toggle-button ${showHistoryDropdown ? 'active' : ''}`}
+              aria-label="Load previous conversations"
               onClick={() => setShowHistoryDropdown(!showHistoryDropdown)}
             >
               <svg
@@ -606,6 +626,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
               <button
                 type="button"
                 className={`history-toggle-button ${showHistoryDropdown ? 'active' : ''}`}
+                aria-label="Load previous conversations"
                 onClick={() => setShowHistoryDropdown(!showHistoryDropdown)}
               >
                 <svg
@@ -687,6 +708,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
                     }
                   }}
                   className={`textarea-icon-button voice-button ${isSpeechListening ? 'active' : ''}`}
+                  aria-label={voiceButtonAriaLabel}
                   disabled={isLoading}
                 >
                   <svg
@@ -721,6 +743,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
                       else startSpeechListening()
                     }}
                     className={`textarea-icon-button voice-button ${isSpeechListening ? 'active' : ''}`}
+                    aria-label={voiceButtonAriaLabel}
                     disabled={isLoading}
                   >
                     <svg
@@ -772,6 +795,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
                 }}
                 className={`textarea-icon-button web-search-button ${webSearchEnabled ? 'active' : ''} ${(!canEnableWebSearch || isLoading) && isTouchDevice ? 'touch-disabled' : ''}`}
                 disabled={!isTouchDevice && (!canEnableWebSearch || isLoading)}
+                aria-label={webSearchButtonAriaLabel}
                 aria-disabled={!canEnableWebSearch || isLoading}
               >
                 <svg
@@ -816,6 +840,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
                   }}
                   className={`textarea-icon-button web-search-button ${webSearchEnabled ? 'active' : ''} ${(!canEnableWebSearch || isLoading) && isTouchDevice ? 'touch-disabled' : ''}`}
                   disabled={!isTouchDevice && (!canEnableWebSearch || isLoading)}
+                  aria-label={webSearchButtonAriaLabel}
                   aria-disabled={!canEnableWebSearch || isLoading}
                 >
                   <svg
@@ -866,6 +891,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
                     : ''
                 } ${hardSubmitDisabled && isTouchDevice ? 'touch-disabled' : ''}`}
                 data-testid="comparison-submit-button"
+                aria-label={submitButtonAriaLabel}
                 aria-disabled={hardSubmitDisabled || submitImageConfigBlocked}
               >
                 <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -909,6 +935,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
                         : ''
                     } ${hardSubmitDisabled && isTouchDevice ? 'touch-disabled' : ''}`}
                     data-testid="comparison-submit-button"
+                    aria-label={submitButtonAriaLabel}
                     aria-disabled={hardSubmitDisabled || submitImageConfigBlocked}
                   >
                     <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">

@@ -182,6 +182,7 @@ export function SavedSelectionsDropdown({
     <button
       type="button"
       className={`saved-selections-button ${showDropdown ? 'active' : ''}`}
+      aria-label="Save or load model selections"
       onClick={() => {
         setShowDropdown(!showDropdown)
         setIsInSaveMode(false)

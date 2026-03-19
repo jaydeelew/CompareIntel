@@ -455,6 +455,7 @@ const FileUploadComponent = forwardRef<FileUploadHandle, FileUploadProps>(functi
             type="button"
             onClick={handleUploadButtonClick}
             className="textarea-icon-button file-upload-button"
+            aria-label="Select or drag file here"
             disabled={disabled}
           >
             <svg
@@ -478,6 +479,7 @@ const FileUploadComponent = forwardRef<FileUploadHandle, FileUploadProps>(functi
           type="button"
           onClick={handleUploadButtonClick}
           className="textarea-icon-button file-upload-button"
+          aria-label="Select or drag file here"
           disabled={disabled}
         >
           <svg
