@@ -503,6 +503,8 @@ export const ComparisonForm = memo<ComparisonFormProps>(
           ? 'Adjust Advanced options below so aspect ratio and image size work for every selected image model.'
           : ''
 
+    const submitReady = !hardSubmitDisabled && !submitImageConfigBlocked
+
     const composerContent = (
       <div
         className={`composer ${isAnimatingTextarea ? 'animate-pulse-border' : ''} ${composerFloating ? 'composer-floating' : ''} ${isReturningToHero ? 'composer-returning' : ''}`}
@@ -858,7 +860,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
                   }
                 }}
                 disabled={!isTouchDevice && hardSubmitDisabled}
-                className={`textarea-icon-button submit-button ${isAnimatingButton ? 'animate-pulse-glow' : ''} ${
+                className={`textarea-icon-button submit-button ${submitReady ? 'submit-ready' : ''} ${isAnimatingButton ? 'animate-pulse-glow' : ''} ${
                   submitImageConfigBlocked && !hardSubmitDisabled
                     ? 'submit-blocked-image-config'
                     : ''
@@ -901,7 +903,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
                       }
                     }}
                     disabled={!isTouchDevice && hardSubmitDisabled}
-                    className={`textarea-icon-button submit-button ${isAnimatingButton ? 'animate-pulse-glow' : ''} ${
+                    className={`textarea-icon-button submit-button ${submitReady ? 'submit-ready' : ''} ${isAnimatingButton ? 'animate-pulse-glow' : ''} ${
                       submitImageConfigBlocked && !hardSubmitDisabled
                         ? 'submit-blocked-image-config'
                         : ''

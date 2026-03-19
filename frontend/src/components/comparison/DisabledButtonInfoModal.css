@@ -109,6 +109,10 @@
   color: var(--text-secondary);
 }
 
+.disabled-button-info-content .param-info-description {
+  white-space: pre-line;
+}
+
 .disabled-button-info-content p + p {
   margin-top: 0.75rem;
 }

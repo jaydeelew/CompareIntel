@@ -97,7 +97,7 @@ const PARAM_INFO: Record<string, { title: string; description: string }> = {
   imageSize: {
     title: 'Image Size',
     description:
-      'Output resolution: 1K, 2K, or 4K. Higher resolution uses more credits. Some models do not support 4K.',
+      'Output resolutions: 1K, 2K, or 4K.\nHigher resolution uses more credits. Some models do not support 4K.',
   },
 }
 
@@ -180,7 +180,7 @@ function ParamInfoModal({ paramKey, onClose }: { paramKey: string; onClose: () =
           </button>
         </div>
         <div className="disabled-button-info-content">
-          <p>{info.description}</p>
+          <p className="param-info-description">{info.description}</p>
           <p className="param-info-methodology-link">
             <Link to="/faq#advanced-settings" onClick={onClose}>
               Learn more about advanced settings

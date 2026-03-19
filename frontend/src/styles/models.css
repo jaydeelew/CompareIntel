@@ -3477,7 +3477,7 @@ html:not([data-theme]) .help-me-choose-category.has-match {
   font-size: 0.8125rem;
   font-weight: var(--font-normal);
   line-height: 1.5;
-  white-space: normal;
+  white-space: pre-line;
   width: max-content;
   max-width: min(320px, calc(100vw - 2rem));
   box-shadow: var(--shadow-xl);
