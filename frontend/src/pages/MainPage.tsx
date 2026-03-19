@@ -56,9 +56,10 @@ import {
   getAllKnownAspectRatios,
   getAllKnownImageSizes,
   getDefaultCompatibleConfig,
+  getIncompatibleModelsForConfig,
   getSupportedAspectRatiosForModels,
   getSupportedImageSizesForModels,
-  isModelCompatibleWithConfig,
+  hasCommonImageConfig,
 } from '../utils/imageConfigValidation'
 import logger from '../utils/logger'
 import { saveSessionState, onSaveStateEvent } from '../utils/sessionState'
@@ -106,10 +107,21 @@ export function MainPage() {
   const [aspectRatio, setAspectRatio] = useState('1:1')
   const [imageSize, setImageSize] = useState('1K')
   const [imageConfigConflict, setImageConfigConflict] = useState<{
-    conflictType: 'advanced-setting-change' | 'model-add' | null
+    conflictType:
+      | 'advanced-setting-change'
+      | 'model-add'
+      | 'no-common-config'
+      | 'auto-adjusted'
+      | null
     settingKind?: 'aspect_ratio' | 'image_size'
     incompatibleModelIds: string[]
+    previousAspectRatio?: string
+    previousImageSize?: string
+    /** Full image model selection (for modal copy when not identical to incompatibleModelIds) */
+    allImageModelIds?: string[]
   }>({ conflictType: null, incompatibleModelIds: [] })
+  /** After user dismisses "no common config", do not reopen until selection changes */
+  const imageConflictImpossibleDismissedKeyRef = useRef<string | null>(null)
 
   const { userLocation } = useGeolocation({ isAuthenticated, user })
 
@@ -720,33 +732,112 @@ export function MainPage() {
     }
   }, [effectiveMaxTokens, maxTokens, setMaxTokens])
 
-  // Auto-adjust aspect ratio/image size when selected models change and current config is incompatible
   const imageModelIds = useMemo(
     () => selectedModels.filter(id => modelSupportsImageGeneration(id, modelsByProvider)),
     [selectedModels, modelsByProvider]
   )
+
+  // Image Advanced: open dropdown + modal when selection has no shared options, or auto-adjust when possible.
   useEffect(() => {
-    if (imageModelIds.length === 0) return
-    const compatible = isModelCompatibleWithConfig(
-      imageModelIds[0],
+    if (imageModelIds.length === 0) {
+      imageConflictImpossibleDismissedKeyRef.current = null
+      setImageConfigConflict(prev =>
+        prev.conflictType === 'no-common-config'
+          ? { conflictType: null, incompatibleModelIds: [], allImageModelIds: undefined }
+          : prev
+      )
+      return
+    }
+
+    const selectionKey = [...selectedModels].sort().join(',')
+
+    if (!hasCommonImageConfig(selectedModels, modelsByProvider)) {
+      setModelsDropdownOpen('advanced')
+      if (imageConflictImpossibleDismissedKeyRef.current !== selectionKey) {
+        setImageConfigConflict({
+          conflictType: 'no-common-config',
+          incompatibleModelIds: imageModelIds,
+        })
+      }
+      return
+    }
+
+    imageConflictImpossibleDismissedKeyRef.current = null
+
+    const incompatible = getIncompatibleModelsForConfig(
+      selectedModels,
       aspectRatio,
       imageSize,
       modelsByProvider
     )
-    if (
-      !compatible ||
-      !imageModelIds.every(id =>
-        isModelCompatibleWithConfig(id, aspectRatio, imageSize, modelsByProvider)
+
+    if (incompatible.length === 0) {
+      setImageConfigConflict(prev =>
+        prev.conflictType === 'no-common-config'
+          ? { conflictType: null, incompatibleModelIds: [], allImageModelIds: undefined }
+          : prev
       )
-    ) {
-      const { aspectRatio: r, imageSize: s } = getDefaultCompatibleConfig(
-        imageModelIds,
-        modelsByProvider
-      )
+      return
+    }
+
+    const { aspectRatio: r, imageSize: s } = getDefaultCompatibleConfig(
+      selectedModels,
+      modelsByProvider
+    )
+    if (r !== aspectRatio || s !== imageSize) {
       setAspectRatio(r)
       setImageSize(s)
+      setModelsDropdownOpen('advanced')
+      setImageConfigConflict({
+        conflictType: 'auto-adjusted',
+        incompatibleModelIds: incompatible,
+        previousAspectRatio: aspectRatio,
+        previousImageSize: imageSize,
+        allImageModelIds: [...imageModelIds],
+      })
     }
-  }, [imageModelIds, modelsByProvider])
+  }, [selectedModels, modelsByProvider, aspectRatio, imageSize, imageModelIds])
+
+  const imageGenerationNoSharedImageOptions = useMemo(() => {
+    const imageIds = selectedModels.filter(id => modelSupportsImageGeneration(id, modelsByProvider))
+    if (imageIds.length === 0) return false
+    return !hasCommonImageConfig(selectedModels, modelsByProvider)
+  }, [selectedModels, modelsByProvider])
+
+  const isImageGenerationConfigBlocked = useMemo(() => {
+    const imageIds = selectedModels.filter(id => modelSupportsImageGeneration(id, modelsByProvider))
+    if (imageIds.length === 0) return false
+    if (!hasCommonImageConfig(selectedModels, modelsByProvider)) return true
+    return (
+      getIncompatibleModelsForConfig(selectedModels, aspectRatio, imageSize, modelsByProvider)
+        .length > 0
+    )
+  }, [selectedModels, modelsByProvider, aspectRatio, imageSize])
+
+  const revealImageConfigConflict = useCallback(() => {
+    const imageIds = selectedModels.filter(id => modelSupportsImageGeneration(id, modelsByProvider))
+    setModelsDropdownOpen('advanced')
+    if (imageIds.length === 0) return
+    if (!hasCommonImageConfig(selectedModels, modelsByProvider)) {
+      setImageConfigConflict({
+        conflictType: 'no-common-config',
+        incompatibleModelIds: imageIds,
+      })
+      return
+    }
+    const incompatible = getIncompatibleModelsForConfig(
+      selectedModels,
+      aspectRatio,
+      imageSize,
+      modelsByProvider
+    )
+    if (incompatible.length > 0) {
+      setImageConfigConflict({
+        conflictType: 'model-add',
+        incompatibleModelIds: incompatible,
+      })
+    }
+  }, [selectedModels, modelsByProvider, aspectRatio, imageSize])
 
   // Image config options: derived from registry; unsupported options are disabled in UI.
   // Use allModelsByProvider (full model set) for capability lookup so we have complete
@@ -1909,6 +2000,12 @@ export function MainPage() {
       return
     }
 
+    if (isImageGenerationConfigBlocked) {
+      revealImageConfigConflict()
+      modelsSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      return
+    }
+
     const userTier = isAuthenticated ? user?.subscription_tier || 'free' : 'unregistered'
     const creditsAllocated =
       creditBalance?.credits_allocated ??
@@ -2057,12 +2154,21 @@ export function MainPage() {
           aspectRatio={aspectRatio}
           imageSize={imageSize}
           modelsByProvider={modelsByProvider}
-          onImageConfigConflictClose={() =>
-            setImageConfigConflict({
-              conflictType: null,
-              incompatibleModelIds: [],
+          onImageConfigConflictClose={() => {
+            setModelsDropdownOpen('advanced')
+            setImageConfigConflict(prev => {
+              if (prev.conflictType === 'no-common-config') {
+                imageConflictImpossibleDismissedKeyRef.current = [...selectedModels]
+                  .sort()
+                  .join(',')
+              }
+              return {
+                conflictType: null,
+                incompatibleModelIds: [],
+                allImageModelIds: undefined,
+              }
             })
-          }
+          }}
         />
 
         <CreditsInfoModal
@@ -2145,6 +2251,9 @@ export function MainPage() {
               })
             })
           }}
+          imageGenerationSubmitBlocked={isImageGenerationConfigBlocked}
+          imageGenerationNoSharedImageOptions={imageGenerationNoSharedImageOptions}
+          onImageGenerationSubmitBlockedTap={revealImageConfigConflict}
           modelsAreaProps={{
             hasAttachedImages,
             nonVisionModelsWarning,
@@ -2208,21 +2317,6 @@ export function MainPage() {
                 }
                 if (!isImageGen && hasImageGen) {
                   setModelTypeConflictType('image-to-text')
-                  return
-                }
-                if (
-                  isImageGen &&
-                  !isModelCompatibleWithConfig(modelId, aspectRatio, imageSize, modelsByProvider)
-                ) {
-                  handleModelToggle(modelId)
-                  const nextIds = [...selectedModels, modelId]
-                  const { aspectRatio: r, imageSize: s } = getDefaultCompatibleConfig(
-                    nextIds,
-                    modelsByProvider
-                  )
-                  setAspectRatio(r)
-                  setImageSize(s)
-                  setModelMode('image')
                   return
                 }
               }

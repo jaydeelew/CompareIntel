@@ -77,6 +77,12 @@ export interface ComparisonPageContentProps {
   modelsAreaProps: ModelsAreaProps
   /** When provided, scrolls to models, expands section, opens Help me choose dropdown */
   onOpenHelpMeChoose?: () => void
+  /** Block compare until image aspect/size matches all selected image models */
+  imageGenerationSubmitBlocked?: boolean
+  /** True when selected image models share no common aspect ratio + size (Advanced cannot fix) */
+  imageGenerationNoSharedImageOptions?: boolean
+  /** Called when user activates submit while blocked (e.g. image config conflict) */
+  onImageGenerationSubmitBlockedTap?: () => void
 
   // Loading
   onCancel: () => void
@@ -125,6 +131,9 @@ export function ComparisonPageContent({
   onDismissVisionNotice,
   modelsAreaProps,
   onOpenHelpMeChoose,
+  imageGenerationSubmitBlocked = false,
+  imageGenerationNoSharedImageOptions = false,
+  onImageGenerationSubmitBlockedTap,
   onCancel,
   showResults,
   showFloatingComposer = false,
@@ -168,6 +177,9 @@ export function ComparisonPageContent({
             modelsSectionRef={modelsSectionRef}
             composerFloating={composerFloating}
             onOpenHelpMeChoose={onOpenHelpMeChoose}
+            imageGenerationSubmitBlocked={imageGenerationSubmitBlocked}
+            imageGenerationNoSharedImageOptions={imageGenerationNoSharedImageOptions}
+            onImageGenerationSubmitBlockedTap={onImageGenerationSubmitBlockedTap}
           />
         </ErrorBoundary>
       </Hero>

@@ -102,6 +102,34 @@ export function getSupportedImageSizes(
   return (model as { image_sizes?: string[] }).image_sizes ?? DEFAULT_IMAGE_SIZES
 }
 
+/** Same ordering as Advanced Settings aspect-ratio select (portrait → landscape, then any extras). */
+export function orderAspectRatiosLikeAdvanced(ratios: string[]): string[] {
+  if (ratios.length === 0) return []
+  const set = new Set(ratios)
+  const out: string[] = []
+  for (const r of DEFAULT_ASPECT_RATIOS) {
+    if (set.has(r)) out.push(r)
+  }
+  for (const r of ratios) {
+    if (!out.includes(r)) out.push(r)
+  }
+  return out
+}
+
+/** Same ordering as Advanced Settings image-size select (see IMAGE_SIZE_ORDER). */
+export function orderImageSizesLikeAdvanced(sizes: string[]): string[] {
+  if (sizes.length === 0) return []
+  const set = new Set(sizes)
+  const out: string[] = []
+  for (const s of IMAGE_SIZE_ORDER) {
+    if (set.has(s)) out.push(s)
+  }
+  for (const s of sizes) {
+    if (!out.includes(s)) out.push(s)
+  }
+  return out
+}
+
 export function getIncompatibleModelsForConfig(
   selectedModels: string[],
   aspectRatio: string,
@@ -213,7 +241,7 @@ export function getSupportedAspectRatiosForModels(
       intersection = new Set<string>([...intersection].filter((x: string) => set.has(x)))
     }
   }
-  if (!intersection || intersection.size === 0) return DEFAULT_ASPECT_RATIOS
+  if (!intersection || intersection.size === 0) return []
   const ratioSet = intersection
   return DEFAULT_ASPECT_RATIOS.filter((r: string) => ratioSet.has(r))
 }
@@ -241,14 +269,33 @@ export function getSupportedImageSizesForModels(
       intersection = new Set<string>([...intersection].filter((x: string) => set.has(x)))
     }
   }
-  if (!intersection || intersection.size === 0) return DEFAULT_IMAGE_SIZES
+  if (!intersection || intersection.size === 0) return []
   const sizeSet = intersection
   return IMAGE_SIZE_ORDER.filter((s: string) => sizeSet.has(s))
 }
 
 /**
+ * True when every selected image model shares at least one common aspect ratio and image size.
+ * When false, no single Advanced combination can satisfy the full selection.
+ */
+export function hasCommonImageConfig(
+  selectedModelIds: string[],
+  modelsByProvider: ModelsByProvider
+): boolean {
+  const imageModelIds = selectedModelIds.filter(id =>
+    modelSupportsImageGeneration(id, modelsByProvider)
+  )
+  if (imageModelIds.length === 0) return true
+  const ratios = getSupportedAspectRatiosForModels(selectedModelIds, modelsByProvider)
+  const sizes = getSupportedImageSizesForModels(selectedModelIds, modelsByProvider)
+  return ratios.length > 0 && sizes.length > 0
+}
+
+/**
  * Returns a compatible (aspectRatio, imageSize) for the given models.
  * Prefers 1:1 and 1K when available; otherwise first available in each category.
+ * If there is no common aspect ratio or size across image models, returns a neutral placeholder;
+ * callers must use hasCommonImageConfig() before treating the pair as valid.
  */
 export function getDefaultCompatibleConfig(
   selectedModelIds: string[],
@@ -256,6 +303,9 @@ export function getDefaultCompatibleConfig(
 ): { aspectRatio: string; imageSize: string } {
   const ratios = getSupportedAspectRatiosForModels(selectedModelIds, modelsByProvider)
   const sizes = getSupportedImageSizesForModels(selectedModelIds, modelsByProvider)
+  if (ratios.length === 0 || sizes.length === 0) {
+    return { aspectRatio: '1:1', imageSize: '1K' }
+  }
   return {
     aspectRatio: ratios.includes('1:1') ? '1:1' : (ratios[0] ?? '1:1'),
     imageSize: sizes.includes('1K') ? '1K' : (sizes[0] ?? '1K'),

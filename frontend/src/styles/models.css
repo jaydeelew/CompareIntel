@@ -92,6 +92,12 @@
   overflow: visible;
 }
 
+/* Model info tooltips (incl. long image-model aspect/size lists) extend above the card; escape clipping */
+.provider-dropdown:has(.model-name-tooltip-wrapper:hover) {
+  overflow: visible;
+  z-index: 6;
+}
+
 /* Preserve corner-fill shadow when collapsed and hovered */
 .provider-dropdown:not(:has(.provider-models)):hover {
   box-shadow:
@@ -411,15 +417,20 @@
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  /* Keep tooltip within viewport when near edges */
+  width: max-content;
   max-width: min(calc(100vw - 2rem), 400px);
+  /* Uniform height: three logical rows (context + two capability lines for image models) */
+  min-height: 5.75rem;
+  box-sizing: border-box;
+  justify-content: flex-start;
 }
 
 .model-info-tooltip::after {
   content: '';
   position: absolute;
   top: 100%;
-  left: 50%;
+  /* Set via --model-tooltip-arrow-left (px) from layout measure so the caret targets the (i) icon */
+  left: var(--model-tooltip-arrow-left, 50%);
   transform: translateX(-50%);
   border: 6px solid transparent;
   border-top-color: var(--bg-elevated);
@@ -429,6 +440,17 @@
   opacity: 1;
   visibility: visible;
   pointer-events: auto;
+}
+
+/* Image-generation: long aspect/size lists stay on one line; width follows content */
+.model-info-tooltip.model-info-tooltip--image {
+  white-space: nowrap;
+  max-width: none;
+}
+
+.model-info-tooltip.model-info-tooltip--image .tooltip-row {
+  flex-wrap: nowrap;
+  align-items: center;
 }
 
 .model-info-tooltip .tooltip-section {
@@ -441,6 +463,8 @@
   display: flex;
   align-items: center;
   gap: 0.25rem;
+  flex-wrap: nowrap;
+  white-space: nowrap;
 }
 
 .model-info-tooltip .tooltip-label {
@@ -578,6 +602,24 @@
   opacity: 1;
 }
 
+/* Selected-column info tooltips sit above the card and can be wider than 340px — parents use overflow hidden/auto */
+.selected-models-section:has(.model-name-tooltip-wrapper:hover),
+.selected-models-section:has(.model-info-tooltip:hover) {
+  overflow: visible;
+  z-index: 4;
+}
+
+.selected-models-grid:has(.model-name-tooltip-wrapper:hover),
+.selected-models-grid:has(.model-info-tooltip:hover) {
+  overflow: visible;
+}
+
+.selected-model-card:has(.model-name-tooltip-wrapper:hover),
+.selected-model-card:has(.model-info-tooltip:hover) {
+  overflow: visible;
+  z-index: 5;
+}
+
 /* Selected Model Header */
 .selected-model-header {
   display: flex;
@@ -592,6 +634,17 @@
   color: white;
   margin: 0;
   line-height: 1.3;
+}
+
+/* Info icon: readable on blue gradient (default is muted gray for provider list) */
+.selected-model-card .knowledge-cutoff-icon {
+  color: rgba(255, 255, 255, 0.92);
+  opacity: 1;
+}
+
+.selected-model-card .model-name-tooltip-wrapper:hover .knowledge-cutoff-icon {
+  color: #fff;
+  opacity: 1;
 }
 
 /* Actions container (globe icon + close button) */

@@ -1641,6 +1641,26 @@
   stroke: var(--text-subtle);
 }
 
+/* Clickable but muted: image model / Advanced settings mismatch (opens explain modal) */
+.submit-button.submit-blocked-image-config {
+  background: var(--bg-card);
+  border-color: var(--border-color);
+  color: var(--text-subtle);
+  opacity: 0.55;
+  cursor: pointer;
+  transform: none;
+  box-shadow: none;
+}
+
+.submit-button.submit-blocked-image-config:hover {
+  opacity: 0.65;
+  border-color: var(--border-strong);
+}
+
+.submit-button.submit-blocked-image-config:hover svg path {
+  stroke: var(--text-subtle);
+}
+
 .submit-button.not-ready {
   background: var(--bg-elevated);
   border-color: var(--border-color);

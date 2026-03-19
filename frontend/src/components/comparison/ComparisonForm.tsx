@@ -69,6 +69,15 @@ interface ComparisonFormProps {
   composerFloating?: boolean
   /** When provided, enables hero CTA and FormHeader to open Help me choose (scroll, expand, open dropdown) */
   onOpenHelpMeChoose?: () => void
+  /** When true, submit is blocked until image aspect ratio & size match all selected image models */
+  imageGenerationSubmitBlocked?: boolean
+  /**
+   * When true with imageGenerationSubmitBlocked: models share no valid aspect+size combo;
+   * tooltip directs user to change selection, not Advanced.
+   */
+  imageGenerationNoSharedImageOptions?: boolean
+  /** Fired when user clicks submit while only blocked by image config (opens conflict UI) */
+  onImageGenerationSubmitBlockedTap?: () => void
 }
 
 export const ComparisonForm = memo<ComparisonFormProps>(
@@ -101,6 +110,9 @@ export const ComparisonForm = memo<ComparisonFormProps>(
     modelsSectionRef,
     composerFloating = false,
     onOpenHelpMeChoose,
+    imageGenerationSubmitBlocked = false,
+    imageGenerationNoSharedImageOptions = false,
+    onImageGenerationSubmitBlockedTap,
   }) => {
     const { showHistoryDropdown, setShowHistoryDropdown } = historyProps
     const { attachedFiles, setAttachedFiles, onExpandFiles, onRemoveAttachedImages } = fileProps
@@ -225,9 +237,13 @@ export const ComparisonForm = memo<ComparisonFormProps>(
                     ? 'Submit'
                     : !inputTrimmed || selectedModels.length === 0
                       ? 'Enter prompt and select models'
-                      : isFollowUpMode && tokenUsageExceeded
-                        ? 'Input capacity exceeded - inputs may be truncated'
-                        : 'Submit',
+                      : imageGenerationSubmitBlocked
+                        ? imageGenerationNoSharedImageOptions
+                          ? 'These image models do not share any aspect ratio and resolution that works for all of them. Change your model selection—Advanced cannot fix this combination.'
+                          : 'Adjust Advanced options below so aspect ratio and image size work for every selected image model.'
+                        : isFollowUpMode && tokenUsageExceeded
+                          ? 'Input capacity exceeded - inputs may be truncated'
+                          : 'Submit',
             }
         }
       },
@@ -236,6 +252,8 @@ export const ComparisonForm = memo<ComparisonFormProps>(
         canEnableWebSearch,
         webSearchEnabled,
         creditsRemaining,
+        imageGenerationSubmitBlocked,
+        imageGenerationNoSharedImageOptions,
         isLoading,
         inputTrimmed,
         selectedModels.length,
@@ -470,6 +488,21 @@ export const ComparisonForm = memo<ComparisonFormProps>(
     )
     const hasVisionModel = hasVisionModelSelected(selectedModels, modelsByProvider)
 
+    const hardSubmitDisabled =
+      isLoading ||
+      creditsRemaining <= 0 ||
+      !input.trim() ||
+      selectedModels.length === 0 ||
+      (isFollowUpMode && tokenUsageExceeded)
+
+    const submitImageConfigBlocked = imageGenerationSubmitBlocked
+    const submitImageBlockTooltip =
+      submitImageConfigBlocked && imageGenerationNoSharedImageOptions
+        ? 'These image models do not share any aspect ratio and resolution that works for all of them. Change your model selection—Advanced cannot fix this combination.'
+        : submitImageConfigBlocked
+          ? 'Adjust Advanced options below so aspect ratio and image size work for every selected image model.'
+          : ''
+
     const composerContent = (
       <div
         className={`composer ${isAnimatingTextarea ? 'animate-pulse-border' : ''} ${composerFloating ? 'composer-floating' : ''} ${isReturningToHero ? 'composer-returning' : ''}`}
@@ -513,6 +546,11 @@ export const ComparisonForm = memo<ComparisonFormProps>(
               if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault()
                 if (tutorialStep === 'enter-prompt' || tutorialStep === 'enter-prompt-2') return
+                if (submitImageConfigBlocked && !hardSubmitDisabled) {
+                  onImageGenerationSubmitBlockedTap?.()
+                  return
+                }
+                if (hardSubmitDisabled) return
                 if (isFollowUpMode) onContinueConversation()
                 else onSubmitClick()
               }
@@ -808,39 +846,25 @@ export const ComparisonForm = memo<ComparisonFormProps>(
               <button
                 onClick={() => {
                   if (tutorialStep === 'enter-prompt' || tutorialStep === 'enter-prompt-2') return
-                  const isDisabled =
-                    isLoading ||
-                    creditsRemaining <= 0 ||
-                    !input.trim() ||
-                    selectedModels.length === 0
-                  if (isDisabled && isTouchDevice) {
+                  if (submitImageConfigBlocked && !hardSubmitDisabled) {
+                    onImageGenerationSubmitBlockedTap?.()
+                    return
+                  }
+                  if (hardSubmitDisabled && isTouchDevice) {
                     handleDisabledButtonTap('submit')
-                  } else if (!isDisabled) {
-                    // When enabled on touchscreen/mobile, submit directly without modal
+                  } else if (!hardSubmitDisabled) {
                     if (isFollowUpMode) onContinueConversation()
                     else onSubmitClick()
                   }
                 }}
-                disabled={
-                  !isTouchDevice &&
-                  (isLoading ||
-                    creditsRemaining <= 0 ||
-                    !input.trim() ||
-                    selectedModels.length === 0)
-                }
+                disabled={!isTouchDevice && hardSubmitDisabled}
                 className={`textarea-icon-button submit-button ${isAnimatingButton ? 'animate-pulse-glow' : ''} ${
-                  (isLoading ||
-                    creditsRemaining <= 0 ||
-                    !input.trim() ||
-                    selectedModels.length === 0) &&
-                  isTouchDevice
-                    ? 'touch-disabled'
+                  submitImageConfigBlocked && !hardSubmitDisabled
+                    ? 'submit-blocked-image-config'
                     : ''
-                }`}
+                } ${hardSubmitDisabled && isTouchDevice ? 'touch-disabled' : ''}`}
                 data-testid="comparison-submit-button"
-                aria-disabled={
-                  isLoading || creditsRemaining <= 0 || !input.trim() || selectedModels.length === 0
-                }
+                aria-disabled={hardSubmitDisabled || submitImageConfigBlocked}
               >
                 <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <path
@@ -859,46 +883,31 @@ export const ComparisonForm = memo<ComparisonFormProps>(
                   creditsRemaining > 0 &&
                   input.trim().length > 0 &&
                   selectedModels.length > 0 &&
-                  !(isFollowUpMode && tokenUsageInfo?.isExceeded)
+                  !(isFollowUpMode && tokenUsageInfo?.isExceeded) &&
+                  !submitImageConfigBlocked
                 const submitButton = (
                   <button
                     onClick={() => {
                       if (tutorialStep === 'enter-prompt' || tutorialStep === 'enter-prompt-2')
                         return
-                      const isDisabled =
-                        isLoading ||
-                        creditsRemaining <= 0 ||
-                        !input.trim() ||
-                        selectedModels.length === 0
-                      if (isDisabled && isTouchDevice) handleDisabledButtonTap('submit')
-                      else if (!isDisabled) {
+                      if (submitImageConfigBlocked && !hardSubmitDisabled) {
+                        onImageGenerationSubmitBlockedTap?.()
+                        return
+                      }
+                      if (hardSubmitDisabled && isTouchDevice) handleDisabledButtonTap('submit')
+                      else if (!hardSubmitDisabled) {
                         if (isFollowUpMode) onContinueConversation()
                         else onSubmitClick()
                       }
                     }}
-                    disabled={
-                      !isTouchDevice &&
-                      (isLoading ||
-                        creditsRemaining <= 0 ||
-                        !input.trim() ||
-                        selectedModels.length === 0)
-                    }
+                    disabled={!isTouchDevice && hardSubmitDisabled}
                     className={`textarea-icon-button submit-button ${isAnimatingButton ? 'animate-pulse-glow' : ''} ${
-                      (isLoading ||
-                        creditsRemaining <= 0 ||
-                        !input.trim() ||
-                        selectedModels.length === 0) &&
-                      isTouchDevice
-                        ? 'touch-disabled'
+                      submitImageConfigBlocked && !hardSubmitDisabled
+                        ? 'submit-blocked-image-config'
                         : ''
-                    }`}
+                    } ${hardSubmitDisabled && isTouchDevice ? 'touch-disabled' : ''}`}
                     data-testid="comparison-submit-button"
-                    aria-disabled={
-                      isLoading ||
-                      creditsRemaining <= 0 ||
-                      !input.trim() ||
-                      selectedModels.length === 0
-                    }
+                    aria-disabled={hardSubmitDisabled || submitImageConfigBlocked}
                   >
                     <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                       <path
@@ -920,9 +929,11 @@ export const ComparisonForm = memo<ComparisonFormProps>(
                         ? 'You have run out of credits'
                         : !input.trim() || selectedModels.length === 0
                           ? 'Enter prompt and select models'
-                          : isFollowUpMode && tokenUsageInfo?.isExceeded
-                            ? 'Input capacity exceeded - inputs may be truncated'
-                            : 'Submit'
+                          : submitImageBlockTooltip !== ''
+                            ? submitImageBlockTooltip
+                            : isFollowUpMode && tokenUsageInfo?.isExceeded
+                              ? 'Input capacity exceeded - inputs may be truncated'
+                              : 'Submit'
                     }
                   >
                     {submitButton}

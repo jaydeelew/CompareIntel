@@ -7,7 +7,10 @@ import type { ModelsByProvider } from '../../types'
 import {
   getSupportedAspectRatiosForModels,
   getSupportedImageSizesForModels,
+  hasCommonImageConfig,
   isModelCompatibleWithConfig,
+  orderAspectRatiosLikeAdvanced,
+  orderImageSizesLikeAdvanced,
 } from '../imageConfigValidation'
 
 function createFlux2FlexModel() {
@@ -30,6 +33,23 @@ function createModelsByProvider(models: unknown[]): ModelsByProvider {
 }
 
 describe('imageConfigValidation', () => {
+  describe('orderAspectRatiosLikeAdvanced', () => {
+    it('orders by Advanced / portrait-to-landscape canonical order', () => {
+      const shuffled = ['16:9', '1:1', '9:16', '4:3']
+      expect(orderAspectRatiosLikeAdvanced(shuffled)).toEqual(['9:16', '1:1', '4:3', '16:9'])
+    })
+
+    it('appends ratios not in the canonical list after ordered ones', () => {
+      expect(orderAspectRatiosLikeAdvanced(['10:10', '1:1'])).toEqual(['1:1', '10:10'])
+    })
+  })
+
+  describe('orderImageSizesLikeAdvanced', () => {
+    it('orders as 1K, 2K, 4K, 0.5K when present', () => {
+      expect(orderImageSizesLikeAdvanced(['4K', '1K'])).toEqual(['1K', '4K'])
+    })
+  })
+
   describe('getSupportedImageSizesForModels', () => {
     it('returns only 2K for Flux 2 Flex when it is the only selected model', () => {
       const fluxModel = createFlux2FlexModel()
@@ -136,6 +156,20 @@ describe('imageConfigValidation', () => {
       )
       expect(supported).toEqual(['1K'])
       expect(supported).not.toContain('2K')
+    })
+
+    it('returns no shared image size for Gemini 2.5 Flash (1K only) + Flux 2 Flex (2K only)', () => {
+      const supported = getSupportedImageSizesForModels(
+        ['google/gemini-2.5-flash-image', 'black-forest-labs/flux.2-flex'],
+        {} as ModelsByProvider
+      )
+      expect(supported).toEqual([])
+      expect(
+        hasCommonImageConfig(
+          ['google/gemini-2.5-flash-image', 'black-forest-labs/flux.2-flex'],
+          {} as ModelsByProvider
+        )
+      ).toBe(false)
     })
   })
 })

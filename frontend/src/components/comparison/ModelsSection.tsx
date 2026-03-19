@@ -1,8 +1,14 @@
-import React, { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 
 import { useResponsive } from '../../hooks'
 import type { Model, ModelsByProvider, User } from '../../types'
 import { formatTokenCount } from '../../utils/format'
+import {
+  getSupportedAspectRatios,
+  getSupportedImageSizes,
+  orderAspectRatiosLikeAdvanced,
+  orderImageSizesLikeAdvanced,
+} from '../../utils/imageConfigValidation'
 import { filterToVisionModels } from '../../utils/visionModels'
 import { StyledTooltip } from '../shared'
 
@@ -47,6 +53,127 @@ function scheduleScrollRestores(pos: { app: number; win: number }): void {
   for (const ms of [0, 16, 32, 48, 100, 200, 320, 400, 520, 650]) {
     window.setTimeout(apply, ms)
   }
+}
+
+function ModelInfoTooltipContent({
+  model,
+  modelsByProvider,
+}: {
+  model: Model
+  modelsByProvider: ModelsByProvider
+}) {
+  const isImageModel = !!model.supports_image_generation
+  const aspectText = isImageModel
+    ? (() => {
+        const a = orderAspectRatiosLikeAdvanced(
+          getSupportedAspectRatios(model.id, modelsByProvider)
+        )
+        return a.length > 0 ? a.join(', ') : '—'
+      })()
+    : ''
+  const sizeText = isImageModel
+    ? (() => {
+        const s = orderImageSizesLikeAdvanced(getSupportedImageSizes(model.id, modelsByProvider))
+        return s.length > 0 ? s.join(', ') : '—'
+      })()
+    : ''
+
+  return (
+    <>
+      <span className="tooltip-section">
+        <span className="tooltip-row">
+          <span className="tooltip-label">Context window:</span>
+          <span className="tooltip-value context-window">
+            {formatTokenCount(model.max_input_tokens)} tokens
+          </span>
+        </span>
+      </span>
+      {isImageModel ? (
+        <>
+          <span className="tooltip-section">
+            <span className="tooltip-row">
+              <span className="tooltip-label">Aspect Ratios:</span>
+              <span className="tooltip-value">{aspectText}</span>
+            </span>
+          </span>
+          <span className="tooltip-section">
+            <span className="tooltip-row">
+              <span className="tooltip-label">Image Sizes:</span>
+              <span className="tooltip-value">{sizeText}</span>
+            </span>
+          </span>
+        </>
+      ) : (
+        <span className="tooltip-section">
+          <span className="tooltip-row">
+            <span className="tooltip-label">Knowledge cutoff:</span>
+            {model.knowledge_cutoff ? (
+              <span className="tooltip-value cutoff-date">{model.knowledge_cutoff}</span>
+            ) : (
+              <span className="tooltip-value cutoff-pending">Date pending</span>
+            )}
+          </span>
+        </span>
+      )}
+    </>
+  )
+}
+
+/** 14px-wide info icon at end of `.model-name-tooltip-wrapper`; caret targets its horizontal center. */
+const MODEL_INFO_ICON_CSS_PX = 14
+
+function ModelNameWithInfoTooltip({
+  model,
+  modelsByProvider,
+}: {
+  model: Model
+  modelsByProvider: ModelsByProvider
+}) {
+  const wrapRef = useRef<HTMLSpanElement>(null)
+  const tipRef = useRef<HTMLSpanElement>(null)
+  const isImageGen = !!model.supports_image_generation
+
+  const placeTooltipArrow = useCallback(() => {
+    const wrap = wrapRef.current
+    const tip = tipRef.current
+    if (!wrap || !tip) return
+    const wrapR = wrap.getBoundingClientRect()
+    const tipR = tip.getBoundingClientRect()
+    const iconCenterX = wrapR.right - MODEL_INFO_ICON_CSS_PX / 2
+    const px = iconCenterX - tipR.left
+    tip.style.setProperty('--model-tooltip-arrow-left', `${px}px`)
+  }, [])
+
+  useLayoutEffect(() => {
+    placeTooltipArrow()
+  }, [placeTooltipArrow, model.id, model.name, model.supports_image_generation])
+
+  return (
+    <span ref={wrapRef} className="model-name-tooltip-wrapper" onMouseEnter={placeTooltipArrow}>
+      <span className="model-name-text">{model.name}</span>
+      <svg
+        className="knowledge-cutoff-icon"
+        width="14"
+        height="14"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <circle cx="12" cy="12" r="10" />
+        <path d="M12 16v-4" />
+        <path d="M12 8h.01" />
+      </svg>
+      <span
+        ref={tipRef}
+        className={`model-info-tooltip ${isImageGen ? 'model-info-tooltip--image' : ''}`}
+      >
+        <ModelInfoTooltipContent model={model} modelsByProvider={modelsByProvider} />
+      </span>
+    </span>
+  )
 }
 
 /**
@@ -464,48 +591,10 @@ export const ModelsSection: React.FC<ModelsSectionProps> = ({
                       >
                         <div className="model-info">
                           <h4>
-                            <span className="model-name-tooltip-wrapper">
-                              <span className="model-name-text">{model.name}</span>
-                              <svg
-                                className="knowledge-cutoff-icon"
-                                width="14"
-                                height="14"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              >
-                                <circle cx="12" cy="12" r="10" />
-                                <path d="M12 16v-4" />
-                                <path d="M12 8h.01" />
-                              </svg>
-                              <span className="model-info-tooltip">
-                                <span className="tooltip-section">
-                                  <span className="tooltip-row">
-                                    <span className="tooltip-label">Context window:</span>
-                                    <span className="tooltip-value context-window">
-                                      {formatTokenCount(model.max_input_tokens)} tokens
-                                    </span>
-                                  </span>
-                                </span>
-                                <span className="tooltip-section">
-                                  <span className="tooltip-row">
-                                    <span className="tooltip-label">Knowledge cutoff:</span>
-                                    {model.knowledge_cutoff ? (
-                                      <span className="tooltip-value cutoff-date">
-                                        {model.knowledge_cutoff}
-                                      </span>
-                                    ) : (
-                                      <span className="tooltip-value cutoff-pending">
-                                        Date pending
-                                      </span>
-                                    )}
-                                  </span>
-                                </span>
-                              </span>
-                            </span>
+                            <ModelNameWithInfoTooltip
+                              model={model}
+                              modelsByProvider={modelsByProvider}
+                            />
                             {model.trial_unlocked && (
                               <span
                                 className="model-badge trial-unlocked"
@@ -663,46 +752,7 @@ export const ModelsSection: React.FC<ModelsSectionProps> = ({
                 <div key={modelId} className="selected-model-card">
                   <div className="selected-model-header">
                     <h4>
-                      <span className="model-name-tooltip-wrapper">
-                        <span className="model-name-text">{model.name}</span>
-                        <svg
-                          className="knowledge-cutoff-icon"
-                          width="14"
-                          height="14"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        >
-                          <circle cx="12" cy="12" r="10" />
-                          <path d="M12 16v-4" />
-                          <path d="M12 8h.01" />
-                        </svg>
-                        <span className="model-info-tooltip">
-                          <span className="tooltip-section">
-                            <span className="tooltip-row">
-                              <span className="tooltip-label">Context window:</span>
-                              <span className="tooltip-value context-window">
-                                {formatTokenCount(model.max_input_tokens)} tokens
-                              </span>
-                            </span>
-                          </span>
-                          <span className="tooltip-section">
-                            <span className="tooltip-row">
-                              <span className="tooltip-label">Knowledge cutoff:</span>
-                              {model.knowledge_cutoff ? (
-                                <span className="tooltip-value cutoff-date">
-                                  {model.knowledge_cutoff}
-                                </span>
-                              ) : (
-                                <span className="tooltip-value cutoff-pending">Date pending</span>
-                              )}
-                            </span>
-                          </span>
-                        </span>
-                      </span>
+                      <ModelNameWithInfoTooltip model={model} modelsByProvider={modelsByProvider} />
                     </h4>
                     <div className="selected-model-actions">
                       {model.supports_web_search &&

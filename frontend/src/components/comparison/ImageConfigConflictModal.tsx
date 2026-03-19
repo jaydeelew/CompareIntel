@@ -9,7 +9,11 @@ import type { ModelsByProvider } from '../../types'
 import { getModelNames } from '../../utils/visionModels'
 import './DisabledModelInfoModal.css'
 
-export type ImageConfigConflictType = 'advanced-setting-change' | 'model-add'
+export type ImageConfigConflictType =
+  | 'advanced-setting-change'
+  | 'model-add'
+  | 'no-common-config'
+  | 'auto-adjusted'
 
 export type ImageConfigSettingKind = 'aspect_ratio' | 'image_size'
 
@@ -21,6 +25,11 @@ interface ImageConfigConflictModalProps {
   incompatibleModelIds: string[]
   aspectRatio: string
   imageSize: string
+  /** After auto-adjusted: values before resolution/clamp */
+  previousAspectRatio?: string
+  previousImageSize?: string
+  /** Full image-model selection (e.g. for auto-adjusted overview) */
+  allImageModelIds?: string[]
   modelsByProvider: ModelsByProvider
   onClose: () => void
 }
@@ -31,9 +40,48 @@ function getModalContent(
   incompatibleModelIds: string[],
   modelNames: string[],
   aspectRatio: string,
-  imageSize: string
+  imageSize: string,
+  previousAspectRatio?: string,
+  previousImageSize?: string,
+  fullSelectionNamesJoined?: string,
+  /** When exactly 1, auto-adjusted copy uses singular phrasing */
+  selectedImageModelCount?: number
 ): { title: string; message: string } {
   const names = modelNames.join(', ')
+  if (conflictType === 'no-common-config') {
+    const body =
+      names.length > 0
+        ? `There is no aspect ratio and image size combination that all of these models can use at the same time: ${names}. Try removing one model from the comparison, or swap in models whose supported shapes and resolutions overlap.`
+        : 'There is no aspect ratio and image size that all of your selected image models can use at the same time. Try removing or replacing models until their supported options overlap.'
+    return {
+      title: 'No shared image options',
+      message: `${body} Aspect ratio and image size in Advanced stay disabled until every selected model shares at least one valid combination.`,
+    }
+  }
+  if (conflictType === 'auto-adjusted') {
+    const prev =
+      previousAspectRatio !== undefined && previousImageSize !== undefined
+        ? `${previousAspectRatio} @ ${previousImageSize}`
+        : 'your previous settings'
+    const single = selectedImageModelCount === 1
+    const selectionSummary =
+      fullSelectionNamesJoined && fullSelectionNamesJoined.length > 0
+        ? fullSelectionNamesJoined
+        : names
+    const intro =
+      selectionSummary.length > 0
+        ? single
+          ? `Your image model: ${selectionSummary}. `
+          : `Your image models: ${selectionSummary}. `
+        : ''
+    const message = single
+      ? `${intro}We updated Advanced settings from ${prev} to ${aspectRatio} @ ${imageSize}—this model cannot use the previous combination. If you want other aspect ratios or resolutions, switch to a different model, or keep this configuration.`
+      : `${intro}We updated Advanced settings from ${prev} to ${aspectRatio} @ ${imageSize} so every selected model can generate together. These models did not support the previous combination: ${names}. You can deselect a model to widen the available options for the rest, or keep this configuration.`
+    return {
+      title: 'Image settings updated for your selection',
+      message,
+    }
+  }
   if (conflictType === 'advanced-setting-change') {
     const setting =
       settingKind === 'image_size' ? `resolution (${imageSize})` : `aspect ratio (${aspectRatio})`
@@ -55,6 +103,9 @@ export const ImageConfigConflictModal: React.FC<ImageConfigConflictModalProps> =
   incompatibleModelIds,
   aspectRatio,
   imageSize,
+  previousAspectRatio,
+  previousImageSize,
+  allImageModelIds,
   modelsByProvider,
   onClose,
 }) => {
@@ -81,13 +132,21 @@ export const ImageConfigConflictModal: React.FC<ImageConfigConflictModalProps> =
   if (!isOpen || !conflictType) return null
 
   const modelNames = getModelNames(incompatibleModelIds, modelsByProvider)
+  const fullSelectionNamesJoined =
+    allImageModelIds && allImageModelIds.length > 0
+      ? getModelNames(allImageModelIds, modelsByProvider).join(', ')
+      : ''
   const { title, message } = getModalContent(
     conflictType,
     settingKind,
     incompatibleModelIds,
     modelNames,
     aspectRatio,
-    imageSize
+    imageSize,
+    previousAspectRatio,
+    previousImageSize,
+    fullSelectionNamesJoined,
+    allImageModelIds?.length
   )
 
   return (

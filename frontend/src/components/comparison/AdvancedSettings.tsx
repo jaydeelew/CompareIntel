@@ -225,6 +225,9 @@ export function AdvancedSettings({
   const imageSizeOptions = allImageSizes ?? supportedImageSizes ?? IMAGE_SIZES
   const supportedRatiosSet = new Set(supportedAspectRatios)
   const supportedSizesSet = new Set(supportedImageSizes)
+  /** No aspect ratio or size is shared by every selected image model */
+  const imageConfigImpossible =
+    showImageConfig && (supportedAspectRatios.length === 0 || supportedImageSizes.length === 0)
   const effectiveMax = Math.max(MAX_TOKENS_MIN, maxTokensCap)
   const [internalExpanded, setInternalExpanded] = useState(false)
   const isExpanded = controlledExpanded !== undefined ? controlledExpanded : internalExpanded
@@ -244,7 +247,8 @@ export function AdvancedSettings({
   const imageDefaultRatio = defaultAspectRatio ?? '1:1'
   const imageDefaultSize = defaultImageSize ?? '1K'
   const isNonDefault = showImageConfig
-    ? aspectRatio !== imageDefaultRatio || imageSize !== imageDefaultSize
+    ? (aspectRatio !== imageDefaultRatio || imageSize !== imageDefaultSize) &&
+      !imageConfigImpossible
     : temperature !== DEFAULTS.temperature ||
       topP !== DEFAULTS.topP ||
       maxTokens !== DEFAULTS.maxTokens
@@ -389,7 +393,7 @@ export function AdvancedSettings({
                   aria-label="Aspect ratio"
                 >
                   {aspectRatioOptions.map(r => {
-                    const isSupported = supportedRatiosSet.has(r)
+                    const isSupported = supportedRatiosSet.has(r) && !imageConfigImpossible
                     const isSelected = aspectRatio === r
                     return (
                       <button
@@ -423,7 +427,7 @@ export function AdvancedSettings({
                   aria-label="Image size"
                 >
                   {imageSizeOptions.map(s => {
-                    const isSupported = supportedSizesSet.has(s)
+                    const isSupported = supportedSizesSet.has(s) && !imageConfigImpossible
                     const isSelected = imageSize === s
                     return (
                       <button
@@ -561,7 +565,7 @@ export function AdvancedSettings({
               type="button"
               className="advanced-settings-reset-btn"
               onClick={handleReset}
-              disabled={disabled || !isNonDefault}
+              disabled={disabled || !isNonDefault || imageConfigImpossible}
               title={
                 isNonDefault
                   ? showImageConfig

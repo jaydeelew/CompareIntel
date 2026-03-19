@@ -73,6 +73,9 @@ export interface ModalManagerProps {
     conflictType: ImageConfigConflictType | null
     settingKind?: 'aspect_ratio' | 'image_size'
     incompatibleModelIds: string[]
+    previousAspectRatio?: string
+    previousImageSize?: string
+    allImageModelIds?: string[]
   }
   aspectRatio: string
   imageSize: string
@@ -205,6 +208,9 @@ export function ModalManager({
         incompatibleModelIds={imageConfigConflict.incompatibleModelIds}
         aspectRatio={aspectRatio}
         imageSize={imageSize}
+        previousAspectRatio={imageConfigConflict.previousAspectRatio}
+        previousImageSize={imageConfigConflict.previousImageSize}
+        allImageModelIds={imageConfigConflict.allImageModelIds}
         modelsByProvider={modelsByProvider}
         onClose={onImageConfigConflictClose}
       />
