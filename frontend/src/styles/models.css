@@ -44,6 +44,7 @@
   gap: 2rem;
   align-items: stretch;
   min-height: 0;
+  overflow-anchor: none;
 }
 
 /* Provider Dropdowns Column */
@@ -54,6 +55,14 @@
   flex: 1;
   min-width: 0;
   min-height: 0;
+  overflow-anchor: none;
+}
+
+/* Checkbox focus scroll-into-view would otherwise pull the page up (esp. with .models-section scroll-margin) */
+.provider-dropdowns .model-checkbox {
+  scroll-margin: 0;
+  scroll-margin-block: 0;
+  scroll-margin-inline: 0;
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -469,6 +478,7 @@
   align-self: stretch;
   min-height: 0;
   overflow: hidden;
+  overflow-anchor: none;
 }
 
 .selected-models-section h3 {
@@ -488,6 +498,7 @@
   flex: 1 1 0;
   min-height: 0;
   overflow-y: auto;
+  overflow-anchor: none;
 }
 
 .selected-models-spacer {

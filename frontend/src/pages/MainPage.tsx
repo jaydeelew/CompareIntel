@@ -893,27 +893,20 @@ export function MainPage() {
     }
   )
 
-  // Refresh usage on model selection
+  // Refresh anonymous rate-limit status when models are selected (eligibility for requests).
+  // Intentionally does not call refreshUser() for signed-in users here: toggling model checkboxes
+  // does not change server-side credits; refreshUser would refetch /auth/me and setUser, causing
+  // full re-renders and scroll/layout thrash (jumps/flashing) in the model-selection area.
+  // Authenticated credit balances still refresh after comparisons and other explicit flows.
   useEffect(() => {
-    if (selectedModels.length > 0 && !isLoading) {
-      const timeoutId = setTimeout(() => {
-        if (!isAuthenticated && browserFingerprint) {
-          fetchRateLimitStatus()
-        } else if (isAuthenticated) {
-          refreshUser()
-        }
-      }, 300)
-
-      return () => clearTimeout(timeoutId)
+    if (isAuthenticated || !browserFingerprint || selectedModels.length === 0 || isLoading) {
+      return
     }
-  }, [
-    selectedModels.length,
-    isLoading,
-    browserFingerprint,
-    isAuthenticated,
-    fetchRateLimitStatus,
-    refreshUser,
-  ])
+    const timeoutId = setTimeout(() => {
+      fetchRateLimitStatus()
+    }, 300)
+    return () => clearTimeout(timeoutId)
+  }, [selectedModels.length, isLoading, browserFingerprint, isAuthenticated, fetchRateLimitStatus])
 
   // Page scroll detection
   useEffect(() => {

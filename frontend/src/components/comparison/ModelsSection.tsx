@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react'
 
 import { useResponsive } from '../../hooks'
 import type { Model, ModelsByProvider, User } from '../../types'
@@ -9,6 +9,45 @@ import { StyledTooltip } from '../shared'
 import { SelectAllInfoModal } from './SelectAllInfoModal'
 import { getTooltipModalSuppressed } from './tooltipModalStorage'
 import { WebSearchInfoModal } from './WebSearchInfoModal'
+
+/** Main page scrolls in `.app`; keep window in sync for focus/scroll-into-view quirks. */
+function captureProviderModelToggleScroll(): { app: number; win: number } {
+  const appEl = document.querySelector('.app') as HTMLElement | null
+  const win = window.scrollY || document.documentElement.scrollTop || document.body.scrollTop || 0
+  return {
+    app: appEl?.scrollTop ?? 0,
+    win,
+  }
+}
+
+function restoreProviderModelToggleScroll(pos: { app: number; win: number }): void {
+  const appEl = document.querySelector('.app') as HTMLElement | null
+  if (appEl) appEl.scrollTop = pos.app
+  window.scrollTo({ top: pos.win, left: 0, behavior: 'auto' })
+  const doc = document.documentElement
+  const body = document.body
+  if (doc && Math.abs(doc.scrollTop - pos.win) > 0.5) doc.scrollTop = pos.win
+  if (body && Math.abs(body.scrollTop - pos.win) > 0.5) body.scrollTop = pos.win
+}
+
+/** Gate restore/resize handling after a provider-row pointerdown (focus + flex/selected-column layout). */
+const PROVIDER_TOGGLE_SCROLL_MAX_AGE_MS = 650
+
+function scheduleScrollRestores(pos: { app: number; win: number }): void {
+  const apply = () => restoreProviderModelToggleScroll(pos)
+  apply()
+  queueMicrotask(apply)
+  requestAnimationFrame(() => {
+    apply()
+    requestAnimationFrame(() => {
+      apply()
+      requestAnimationFrame(apply)
+    })
+  })
+  for (const ms of [0, 16, 32, 48, 100, 200, 320, 400, 520, 650]) {
+    window.setTimeout(apply, ms)
+  }
+}
 
 /**
  * Props for the ModelsSection component
@@ -95,6 +134,93 @@ export const ModelsSection: React.FC<ModelsSectionProps> = ({
   const [showWebSearchInfoModal, setShowWebSearchInfoModal] = useState(false)
   const [selectAllModalProvider, setSelectAllModalProvider] = useState<string | null>(null)
 
+  /** Scroll snapshot from pointerdown on a provider model row (before focus + layout). */
+  const providerToggleScrollSnapRef = useRef<{ app: number; win: number } | null>(null)
+  const providerTogglePointerTsRef = useRef(0)
+  const providerToggleSnapClearTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const modelsSelectionLayoutRef = useRef<HTMLDivElement>(null)
+  const resizeRestoreRafRef = useRef<number | null>(null)
+
+  const selectedModelsSignature = selectedModels.join('\0')
+
+  useEffect(() => {
+    return () => {
+      if (providerToggleSnapClearTimeoutRef.current) {
+        clearTimeout(providerToggleSnapClearTimeoutRef.current)
+      }
+      if (resizeRestoreRafRef.current) {
+        cancelAnimationFrame(resizeRestoreRafRef.current)
+      }
+    }
+  }, [])
+
+  const modelsListReady = !isLoadingModels && Object.keys(modelsByProvider).length > 0
+
+  // Selected-models column height / flex stretch often updates after the first layout pass
+  // (and again after async credit refresh). Keep snapshot and re-apply on resize.
+  useEffect(() => {
+    if (!modelsListReady) return
+    const el = modelsSelectionLayoutRef.current
+    if (!el) return
+
+    const ro = new ResizeObserver(() => {
+      if (Date.now() - providerTogglePointerTsRef.current > PROVIDER_TOGGLE_SCROLL_MAX_AGE_MS) {
+        return
+      }
+      const snap = providerToggleScrollSnapRef.current
+      if (!snap) return
+      if (resizeRestoreRafRef.current) {
+        cancelAnimationFrame(resizeRestoreRafRef.current)
+      }
+      resizeRestoreRafRef.current = requestAnimationFrame(() => {
+        resizeRestoreRafRef.current = null
+        restoreProviderModelToggleScroll(snap)
+      })
+    })
+
+    ro.observe(el)
+    return () => {
+      ro.disconnect()
+      if (resizeRestoreRafRef.current) {
+        cancelAnimationFrame(resizeRestoreRafRef.current)
+        resizeRestoreRafRef.current = null
+      }
+    }
+  }, [modelsListReady])
+
+  // After React commits the new selection (extra card in the grid, flex height, etc.),
+  // the scroll container can move again — restore using the pre-click snapshot.
+  useLayoutEffect(() => {
+    if (Date.now() - providerTogglePointerTsRef.current > PROVIDER_TOGGLE_SCROLL_MAX_AGE_MS) {
+      return
+    }
+    const snap = providerToggleScrollSnapRef.current
+    if (!snap) return
+    scheduleScrollRestores(snap)
+  }, [selectedModelsSignature])
+
+  const handleModelOptionPointerDownCapture = (e: React.PointerEvent<HTMLLabelElement>) => {
+    if ((e.target as HTMLElement).closest('button')) return
+    if (providerToggleSnapClearTimeoutRef.current) {
+      clearTimeout(providerToggleSnapClearTimeoutRef.current)
+      providerToggleSnapClearTimeoutRef.current = null
+    }
+    providerToggleScrollSnapRef.current = captureProviderModelToggleScroll()
+    providerTogglePointerTsRef.current = Date.now()
+    providerToggleSnapClearTimeoutRef.current = setTimeout(() => {
+      providerToggleScrollSnapRef.current = null
+      providerToggleSnapClearTimeoutRef.current = null
+    }, 800)
+  }
+
+  const handleModelCheckboxFocus = () => {
+    const saved = providerToggleScrollSnapRef.current
+    if (!saved) return
+    // Do not cancel the pointerdown timeout here: if selection does not change,
+    // useLayoutEffect will not run and we still need the timeout to clear the snap.
+    scheduleScrollRestores(saved)
+  }
+
   // Determine user tier
   const userTier = isAuthenticated ? user?.subscription_tier || 'free' : 'unregistered'
   const isPaidTier = ['starter', 'starter_plus', 'pro', 'pro_plus'].includes(userTier)
@@ -123,7 +249,7 @@ export const ModelsSection: React.FC<ModelsSectionProps> = ({
   }
 
   return (
-    <div className="models-selection-layout">
+    <div className="models-selection-layout" ref={modelsSelectionLayoutRef}>
       <div className="provider-dropdowns">
         {Object.entries(modelsByProvider).map(([provider, models]) => {
           // Filter models based on hidePremiumModels toggle
@@ -325,6 +451,7 @@ export const ModelsSection: React.FC<ModelsSectionProps> = ({
                         key={model.id}
                         htmlFor={checkboxId}
                         className={`model-option ${isSelected ? 'selected' : ''} ${isDisabled ? 'disabled' : ''} ${isRestricted ? 'restricted' : ''}`}
+                        onPointerDownCapture={handleModelOptionPointerDownCapture}
                         onMouseDown={e => e.preventDefault()}
                         onClick={e => {
                           // When restricted, clicking anywhere on the label should show the modal
@@ -503,6 +630,7 @@ export const ModelsSection: React.FC<ModelsSectionProps> = ({
                             checked={isSelected}
                             disabled={isDisabled}
                             onChange={handleModelClick}
+                            onFocus={handleModelCheckboxFocus}
                             onMouseDown={e => e.preventDefault()}
                             className={`model-checkbox ${isFollowUpMode && !isSelected && wasOriginallySelected ? 'follow-up-deselected' : ''}`}
                             data-testid={`model-checkbox-${model.id}`}
