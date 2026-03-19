@@ -3546,6 +3546,66 @@ html:not([data-theme]) .help-me-choose-category.has-match {
   box-shadow: 0 0 0 2px var(--primary-glow);
 }
 
+/* Image config: checkbox-style single-select option grid */
+.advanced-settings-option-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+}
+
+.advanced-settings-option-chip {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.8125rem;
+  font-weight: var(--font-medium);
+  color: var(--text-secondary);
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+  transition:
+    background 0.15s,
+    border-color 0.15s,
+    color 0.15s;
+}
+
+.advanced-settings-option-chip:hover:not(.disabled) {
+  background: var(--bg-secondary);
+  border-color: var(--border-color-hover, var(--border-color));
+}
+
+.advanced-settings-option-chip.selected {
+  background: var(--primary-color);
+  border-color: var(--primary-color);
+  color: white;
+}
+
+.advanced-settings-option-chip.disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.advanced-settings-option-chip-label {
+  user-select: none;
+}
+
+/* Desktop: larger chips for greater visibility */
+@media (min-width: 769px) {
+  .advanced-settings-option-grid {
+    gap: 0.5rem;
+  }
+  .advanced-settings-option-chip {
+    padding: 0.5rem 1rem;
+    font-size: 1rem;
+  }
+}
+
 .advanced-settings-slider {
   flex: 1;
   min-width: 0;

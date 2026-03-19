@@ -32,8 +32,17 @@ export interface AdvancedSettingsProps {
   onAspectRatioChange?: (v: string) => void
   imageSize?: string
   onImageSizeChange?: (v: string) => void
+  /** Aspect ratios supported by ALL selected models (intersection); options not in this list are disabled */
   supportedAspectRatios?: string[]
+  /** Image sizes supported by ALL selected models (intersection); options not in this list are disabled */
   supportedImageSizes?: string[]
+  /** Full list of aspect ratio options to display (from registry); when omitted, uses supported or defaults */
+  allAspectRatios?: string[]
+  /** Full list of image size options to display (from registry); when omitted, uses supported or defaults */
+  allImageSizes?: string[]
+  /** Compatible defaults for reset (from getDefaultCompatibleConfig); when provided, Reset uses these */
+  defaultAspectRatio?: string
+  defaultImageSize?: string
 }
 
 const DEFAULTS = { temperature: 0.7, topP: 1.0, maxTokens: null as number | null }
@@ -202,9 +211,17 @@ export function AdvancedSettings({
   onAspectRatioChange,
   imageSize = '1K',
   onImageSizeChange,
-  supportedAspectRatios: _supportedAspectRatios = IMAGE_ASPECT_RATIOS,
-  supportedImageSizes: _supportedImageSizes = IMAGE_SIZES,
+  supportedAspectRatios = IMAGE_ASPECT_RATIOS,
+  supportedImageSizes = IMAGE_SIZES,
+  allAspectRatios,
+  allImageSizes,
+  defaultAspectRatio,
+  defaultImageSize,
 }: AdvancedSettingsProps) {
+  const aspectRatioOptions = allAspectRatios ?? supportedAspectRatios ?? IMAGE_ASPECT_RATIOS
+  const imageSizeOptions = allImageSizes ?? supportedImageSizes ?? IMAGE_SIZES
+  const supportedRatiosSet = new Set(supportedAspectRatios)
+  const supportedSizesSet = new Set(supportedImageSizes)
   const effectiveMax = Math.max(MAX_TOKENS_MIN, maxTokensCap)
   const [internalExpanded, setInternalExpanded] = useState(false)
   const isExpanded = controlledExpanded !== undefined ? controlledExpanded : internalExpanded
@@ -221,16 +238,20 @@ export function AdvancedSettings({
   const displayTemp = clampedTemp.toFixed(1)
   const displayTopP = clampedTopP.toFixed(2)
 
+  const imageDefaultRatio = defaultAspectRatio ?? '1:1'
+  const imageDefaultSize = defaultImageSize ?? '1K'
   const isNonDefault = showImageConfig
-    ? aspectRatio !== '1:1' || imageSize !== '1K'
+    ? aspectRatio !== imageDefaultRatio || imageSize !== imageDefaultSize
     : temperature !== DEFAULTS.temperature ||
       topP !== DEFAULTS.topP ||
       maxTokens !== DEFAULTS.maxTokens
 
   const handleReset = () => {
     if (showImageConfig) {
-      onAspectRatioChange?.('1:1')
-      onImageSizeChange?.('1K')
+      const targetRatio = defaultAspectRatio ?? '1:1'
+      const targetSize = defaultImageSize ?? '1K'
+      onAspectRatioChange?.(targetRatio)
+      onImageSizeChange?.(targetSize)
     } else {
       onTemperatureChange(DEFAULTS.temperature)
       onTopPChange(DEFAULTS.topP)
@@ -344,51 +365,73 @@ export function AdvancedSettings({
         <div id="advanced-settings-content" className="advanced-settings-content">
           {showImageConfig ? (
             <>
-              {/* Aspect Ratio */}
+              {/* Aspect Ratio - checkbox-style single-select */}
               <div className="advanced-settings-row">
                 <div className="advanced-settings-label-row">
-                  <label htmlFor="aspect-ratio-select" className="advanced-settings-label">
+                  <span id="aspect-ratio-label" className="advanced-settings-label">
                     Aspect ratio
-                  </label>
+                  </span>
                   {renderInfoTrigger('aspectRatio')}
                 </div>
-                <select
-                  id="aspect-ratio-select"
-                  value={aspectRatio}
-                  onChange={e => onAspectRatioChange?.(e.target.value)}
-                  disabled={disabled}
-                  className="advanced-settings-select"
+                <div
+                  className="advanced-settings-option-grid"
+                  role="radiogroup"
+                  aria-labelledby="aspect-ratio-label"
                   aria-label="Aspect ratio"
                 >
-                  {IMAGE_ASPECT_RATIOS.map(r => (
-                    <option key={r} value={r}>
-                      {r}
-                    </option>
-                  ))}
-                </select>
+                  {aspectRatioOptions.map(r => {
+                    const isSupported = supportedRatiosSet.has(r)
+                    const isSelected = aspectRatio === r
+                    return (
+                      <button
+                        key={r}
+                        type="button"
+                        role="radio"
+                        aria-checked={isSelected}
+                        aria-disabled={disabled || !isSupported}
+                        disabled={disabled || !isSupported}
+                        className={`advanced-settings-option-chip ${!isSupported ? 'disabled' : ''} ${isSelected ? 'selected' : ''}`}
+                        onClick={() => isSupported && onAspectRatioChange?.(r)}
+                      >
+                        <span className="advanced-settings-option-chip-label">{r}</span>
+                      </button>
+                    )
+                  })}
+                </div>
               </div>
-              {/* Image Size */}
+              {/* Image Size - checkbox-style single-select */}
               <div className="advanced-settings-row">
                 <div className="advanced-settings-label-row">
-                  <label htmlFor="image-size-select" className="advanced-settings-label">
+                  <span id="image-size-label" className="advanced-settings-label">
                     Image size
-                  </label>
+                  </span>
                   {renderInfoTrigger('imageSize')}
                 </div>
-                <select
-                  id="image-size-select"
-                  value={imageSize}
-                  onChange={e => onImageSizeChange?.(e.target.value)}
-                  disabled={disabled}
-                  className="advanced-settings-select"
+                <div
+                  className="advanced-settings-option-grid"
+                  role="radiogroup"
+                  aria-labelledby="image-size-label"
                   aria-label="Image size"
                 >
-                  {IMAGE_SIZES.map(s => (
-                    <option key={s} value={s}>
-                      {s}
-                    </option>
-                  ))}
-                </select>
+                  {imageSizeOptions.map(s => {
+                    const isSupported = supportedSizesSet.has(s)
+                    const isSelected = imageSize === s
+                    return (
+                      <button
+                        key={s}
+                        type="button"
+                        role="radio"
+                        aria-checked={isSelected}
+                        aria-disabled={disabled || !isSupported}
+                        disabled={disabled || !isSupported}
+                        className={`advanced-settings-option-chip ${!isSupported ? 'disabled' : ''} ${isSelected ? 'selected' : ''}`}
+                        onClick={() => isSupported && onImageSizeChange?.(s)}
+                      >
+                        <span className="advanced-settings-option-chip-label">{s}</span>
+                      </button>
+                    )
+                  })}
+                </div>
               </div>
             </>
           ) : (

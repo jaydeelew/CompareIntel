@@ -35,4 +35,6 @@ Unregistered users see image models in the list but cannot select them. Clicking
 
 ## Aspect Ratio and Resolution
 
-In image mode, Advanced settings show aspect ratio (e.g. 1:1, 16:9) and image size (1K, 2K, 4K). Each model has tested capabilities stored in the registry (`image_aspect_ratios`, `image_sizes`). Incompatible selections trigger a conflict modal and block the change. See `backend/scripts/test_image_config_aspect_ratio.py` and `backend/data/image_config_test_results.json`.
+In image mode, Advanced settings show aspect ratio (e.g. 1:1, 16:9) and image size (1K, 2K, 4K). Each model has tested capabilities stored in the registry (`image_aspect_ratios`, `image_sizes`). The test script validates that returned images actually match both the requested aspect ratio (dimension check) and resolution (longest-edge check); only validated ratios and sizes are stored. Resolution is validated by longest edge: 1K 700–1400 px, 2K 1500–2800 px, 4K 3000–5500 px (see `backend/app/llm/image_aspect_ratio_validation.py`). Incompatible selections trigger a conflict modal and block the change. See `backend/scripts/test_image_config_aspect_ratio.py` and `backend/data/image_config_test_results.json`.
+
+**Multiple images:** Some models return 2 images per request. When `image_config_test_results.json` shows `image_count >= 2` for a model, the registry is updated with `returns_multiple_images: true` (via `update_registry_image_capabilities.py`). The streaming layer then shows only the first image to the user.

@@ -23,6 +23,7 @@ from ..utils.error_handling import (
 from .registry import (
     client,
     client_with_tool_headers,
+    get_model_returns_multiple_images,
     get_model_supports_temperature,
     get_model_supports_vision,
 )
@@ -590,6 +591,7 @@ def call_openrouter_streaming(
                                     )
 
                     if is_image_generation and hasattr(delta, "images") and delta.images:
+                        returns_multiple = get_model_returns_multiple_images(model_id)
                         for img in delta.images:
                             url = None
                             if hasattr(img, "image_url") and img.image_url:
@@ -603,9 +605,12 @@ def call_openrouter_streaming(
                                 url = iu.get("url") if iu else None
                             key = _normalize_image_url_key(url)
                             if url and key and key not in image_urls_seen:
-                                image_urls_seen.add(key)
-                                image_count += 1
-                                yield {"type": "image", "url": url}
+                                if returns_multiple and image_count >= 1:
+                                    pass  # Only show first image to user
+                                else:
+                                    image_urls_seen.add(key)
+                                    image_count += 1
+                                    yield {"type": "image", "url": url}
 
                     if hasattr(delta, "content") and delta.content:
                         content_chunk = delta.content
@@ -678,6 +683,7 @@ def call_openrouter_streaming(
                         # Also check message.images in final chunk (Gemini/OpenRouter may return images here)
                         # Deduplicate against delta.images we may have already yielded
                         if is_image_generation and hasattr(message, "images") and message.images:
+                            returns_multiple = get_model_returns_multiple_images(model_id)
                             for img in message.images:
                                 url = None
                                 if hasattr(img, "image_url") and img.image_url:
@@ -691,9 +697,12 @@ def call_openrouter_streaming(
                                     url = iu.get("url") if iu else None
                                 key = _normalize_image_url_key(url)
                                 if url and key and key not in image_urls_seen:
-                                    image_urls_seen.add(key)
-                                    image_count += 1
-                                    yield {"type": "image", "url": url}
+                                    if returns_multiple and image_count >= 1:
+                                        pass  # Only show first image to user
+                                    else:
+                                        image_urls_seen.add(key)
+                                        image_count += 1
+                                        yield {"type": "image", "url": url}
 
                         # Also check message.tool_calls in final chunk (some models like GPT-5 Chat return tool_calls here)
                         # This handles cases where tool_calls are only in the final chunk's message object

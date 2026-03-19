@@ -95,6 +95,17 @@ export interface ModelsAreaProps {
   onAspectRatioChange?: (v: string) => void
   imageSize?: string
   onImageSizeChange?: (v: string) => void
+  /** Aspect ratios supported by ALL selected image models (intersection); enables options */
+  supportedAspectRatios?: string[]
+  /** Image sizes supported by ALL selected image models (intersection); enables options */
+  supportedImageSizes?: string[]
+  /** Full list of aspect ratios to display (from registry, future-proof) */
+  allAspectRatios?: string[]
+  /** Full list of image sizes to display (from registry, future-proof) */
+  allImageSizes?: string[]
+  /** Compatible defaults for reset (from getDefaultCompatibleConfig) */
+  defaultAspectRatio?: string
+  defaultImageSize?: string
   /** Which dropdown is open (Help me choose or Advanced); controlled by parent */
   modelsDropdownOpen: 'help-me-choose' | 'advanced' | null
   /** Called when dropdown open state changes */
@@ -173,6 +184,12 @@ export function ModelsArea({
   onAspectRatioChange,
   imageSize,
   onImageSizeChange,
+  supportedAspectRatios,
+  supportedImageSizes,
+  allAspectRatios,
+  allImageSizes,
+  defaultAspectRatio,
+  defaultImageSize,
   modelsDropdownOpen: openDropdown,
   onModelsDropdownChange: setOpenDropdown,
   onOpenHelpMeChoose,
@@ -321,6 +338,12 @@ export function ModelsArea({
                 onAspectRatioChange={onAspectRatioChange}
                 imageSize={imageSize}
                 onImageSizeChange={onImageSizeChange}
+                supportedAspectRatios={supportedAspectRatios}
+                supportedImageSizes={supportedImageSizes}
+                allAspectRatios={allAspectRatios}
+                allImageSizes={allImageSizes}
+                defaultAspectRatio={defaultAspectRatio}
+                defaultImageSize={defaultImageSize}
               />
             </div>
             {selectedModels.length > 0 &&

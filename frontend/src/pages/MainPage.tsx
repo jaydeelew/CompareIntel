@@ -53,7 +53,11 @@ import {
 import { generateBrowserFingerprint } from '../utils'
 import { isErrorMessage } from '../utils/error'
 import {
-  getIncompatibleModelsForConfig,
+  getAllKnownAspectRatios,
+  getAllKnownImageSizes,
+  getDefaultCompatibleConfig,
+  getSupportedAspectRatiosForModels,
+  getSupportedImageSizesForModels,
   isModelCompatibleWithConfig,
 } from '../utils/imageConfigValidation'
 import logger from '../utils/logger'
@@ -716,47 +720,58 @@ export function MainPage() {
     }
   }, [effectiveMaxTokens, maxTokens, setMaxTokens])
 
-  const handleAspectRatioChange = useCallback(
-    (newRatio: string) => {
-      const incompatible = getIncompatibleModelsForConfig(
-        selectedModels,
-        newRatio,
-        imageSize,
+  // Auto-adjust aspect ratio/image size when selected models change and current config is incompatible
+  const imageModelIds = useMemo(
+    () => selectedModels.filter(id => modelSupportsImageGeneration(id, modelsByProvider)),
+    [selectedModels, modelsByProvider]
+  )
+  useEffect(() => {
+    if (imageModelIds.length === 0) return
+    const compatible = isModelCompatibleWithConfig(
+      imageModelIds[0],
+      aspectRatio,
+      imageSize,
+      modelsByProvider
+    )
+    if (
+      !compatible ||
+      !imageModelIds.every(id =>
+        isModelCompatibleWithConfig(id, aspectRatio, imageSize, modelsByProvider)
+      )
+    ) {
+      const { aspectRatio: r, imageSize: s } = getDefaultCompatibleConfig(
+        imageModelIds,
         modelsByProvider
       )
-      if (incompatible.length > 0) {
-        setImageConfigConflict({
-          conflictType: 'advanced-setting-change',
-          settingKind: 'aspect_ratio',
-          incompatibleModelIds: incompatible,
-        })
-        return
-      }
-      setAspectRatio(newRatio)
-    },
-    [selectedModels, imageSize, modelsByProvider]
-  )
+      setAspectRatio(r)
+      setImageSize(s)
+    }
+  }, [imageModelIds, modelsByProvider])
 
-  const handleImageSizeChange = useCallback(
-    (newSize: string) => {
-      const incompatible = getIncompatibleModelsForConfig(
-        selectedModels,
-        aspectRatio,
-        newSize,
-        modelsByProvider
-      )
-      if (incompatible.length > 0) {
-        setImageConfigConflict({
-          conflictType: 'advanced-setting-change',
-          settingKind: 'image_size',
-          incompatibleModelIds: incompatible,
-        })
-        return
-      }
-      setImageSize(newSize)
-    },
-    [selectedModels, aspectRatio, modelsByProvider]
-  )
+  // Image config options: derived from registry; unsupported options are disabled in UI
+  const imageConfigOptions = useMemo(() => {
+    const supportedRatios = getSupportedAspectRatiosForModels(selectedModels, modelsByProvider)
+    const supportedSizes = getSupportedImageSizesForModels(selectedModels, modelsByProvider)
+    const allRatios = getAllKnownAspectRatios(modelsByProvider)
+    const allSizes = getAllKnownImageSizes(modelsByProvider)
+    const defaults = getDefaultCompatibleConfig(selectedModels, modelsByProvider)
+    return {
+      supportedAspectRatios: supportedRatios,
+      supportedImageSizes: supportedSizes,
+      allAspectRatios: allRatios,
+      allImageSizes: allSizes,
+      defaultAspectRatio: defaults.aspectRatio,
+      defaultImageSize: defaults.imageSize,
+    }
+  }, [selectedModels, modelsByProvider])
+
+  const handleAspectRatioChange = useCallback((newRatio: string) => {
+    setAspectRatio(newRatio)
+  }, [])
+
+  const handleImageSizeChange = useCallback((newSize: string) => {
+    setImageSize(newSize)
+  }, [])
 
   // Breakout conversation hook - must be after allModels is defined
   const { breakoutPhase, handleBreakout } = useBreakoutConversation(
@@ -2203,10 +2218,15 @@ export function MainPage() {
                   isImageGen &&
                   !isModelCompatibleWithConfig(modelId, aspectRatio, imageSize, modelsByProvider)
                 ) {
-                  setImageConfigConflict({
-                    conflictType: 'model-add',
-                    incompatibleModelIds: [modelId],
-                  })
+                  handleModelToggle(modelId)
+                  const nextIds = [...selectedModels, modelId]
+                  const { aspectRatio: r, imageSize: s } = getDefaultCompatibleConfig(
+                    nextIds,
+                    modelsByProvider
+                  )
+                  setAspectRatio(r)
+                  setImageSize(s)
+                  setModelMode('image')
                   return
                 }
               }
@@ -2273,6 +2293,7 @@ export function MainPage() {
             onAspectRatioChange: handleAspectRatioChange,
             imageSize,
             onImageSizeChange: handleImageSizeChange,
+            ...imageConfigOptions,
           }}
           onCancel={handleCancel}
           showResults={!!(response || conversations.length > 0)}

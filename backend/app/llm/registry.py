@@ -187,6 +187,17 @@ def get_model_image_price_per_image(model_id: str) -> float | None:
     return price if price and price > 0 else None
 
 
+def get_model_returns_multiple_images(model_id: str) -> bool:
+    """True if image_config_test_results.json showed this model returns 2+ images.
+
+    When True, we only show the first image to the user.
+    """
+    for m in OPENROUTER_MODELS:
+        if m.get("id") == model_id:
+            return m.get("returns_multiple_images", False)
+    return False
+
+
 def get_registry_path() -> Path:
     return _REGISTRY_PATH
 

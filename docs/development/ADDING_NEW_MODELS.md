@@ -12,7 +12,7 @@ Image generation models follow a different workflow. When adding via admin, the 
 - Sets `supports_image_generation: true`, `category: "Image"`
 - **Skips** `setup_model_renderer.py` (no math/formatting analysis)
 - **Runs** `research_model_benchmarks.py` to fetch benchmark scores (SWE-bench, MATH/GSM8K, Text-to-Image Arena, etc.) and add the model to the "Help me choose" dropdown when scores are available
-- **Runs** `test_image_config_aspect_ratio.py` to get supported aspect ratios and image sizes; stores in registry as `image_aspect_ratios`, `image_sizes`
+- **Runs** `test_image_config_aspect_ratio.py` to get supported aspect ratios and image sizes; stores in registry as `image_aspect_ratios`, `image_sizes`. The script validates that returned images actually match the requested aspect ratio (dimension check) and resolution (longest-edge check) before including them; use `--skip-dimension-validation` to bypass.
 
 See `docs/features/IMAGE_GENERATION.md` for details. The workflow consists of three main steps:
 
