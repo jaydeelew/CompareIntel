@@ -748,13 +748,16 @@ export function MainPage() {
     }
   }, [imageModelIds, modelsByProvider])
 
-  // Image config options: derived from registry; unsupported options are disabled in UI
+  // Image config options: derived from registry; unsupported options are disabled in UI.
+  // Use allModelsByProvider (full model set) for capability lookup so we have complete
+  // image_aspect_ratios and image_sizes from the registry for each selected image model.
+  const allModelsByProvider = modelsByProvider
   const imageConfigOptions = useMemo(() => {
-    const supportedRatios = getSupportedAspectRatiosForModels(selectedModels, modelsByProvider)
-    const supportedSizes = getSupportedImageSizesForModels(selectedModels, modelsByProvider)
-    const allRatios = getAllKnownAspectRatios(modelsByProvider)
-    const allSizes = getAllKnownImageSizes(modelsByProvider)
-    const defaults = getDefaultCompatibleConfig(selectedModels, modelsByProvider)
+    const supportedRatios = getSupportedAspectRatiosForModels(selectedModels, allModelsByProvider)
+    const supportedSizes = getSupportedImageSizesForModels(selectedModels, allModelsByProvider)
+    const allRatios = getAllKnownAspectRatios(allModelsByProvider)
+    const allSizes = getAllKnownImageSizes(allModelsByProvider)
+    const defaults = getDefaultCompatibleConfig(selectedModels, allModelsByProvider)
     return {
       supportedAspectRatios: supportedRatios,
       supportedImageSizes: supportedSizes,
@@ -763,7 +766,7 @@ export function MainPage() {
       defaultAspectRatio: defaults.aspectRatio,
       defaultImageSize: defaults.imageSize,
     }
-  }, [selectedModels, modelsByProvider])
+  }, [selectedModels, allModelsByProvider])
 
   const handleAspectRatioChange = useCallback((newRatio: string) => {
     setAspectRatio(newRatio)

@@ -9,8 +9,16 @@
  * the models-related UI logic.
  */
 
+import { useMemo } from 'react'
+
 import type { User, ModelsByProvider, CompareResponse, Model } from '../../types'
 import type { ModelConversation } from '../../types/conversation'
+import {
+  getAllKnownAspectRatios,
+  getAllKnownImageSizes,
+  getSupportedAspectRatiosForModels,
+  getSupportedImageSizesForModels,
+} from '../../utils/imageConfigValidation'
 import { AdvancedSettings, HelpMeChoose, ModelsSection, ModelsSectionHeader } from '../comparison'
 import { ErrorBoundary } from '../shared'
 
@@ -196,6 +204,27 @@ export function ModelsArea({
   onRemoveAttachedImages,
   imageModelsDisabledForUnregistered = false,
 }: ModelsAreaProps) {
+  // Use allModelsByProvider (full model set) for image config capability lookups.
+  // This ensures we have complete image_aspect_ratios and image_sizes from the registry
+  // so unsupported options (e.g. 1K/4K for Flux 2 Flex) are correctly disabled.
+  const effectiveImageConfig = useMemo(() => {
+    if (!showImageConfig) return null
+    const modelsForLookup = allModelsByProvider ?? modelsByProvider
+    return {
+      supportedAspectRatios: getSupportedAspectRatiosForModels(selectedModels, modelsForLookup),
+      supportedImageSizes: getSupportedImageSizesForModels(selectedModels, modelsForLookup),
+      allAspectRatios: getAllKnownAspectRatios(modelsForLookup),
+      allImageSizes: getAllKnownImageSizes(modelsForLookup),
+    }
+  }, [showImageConfig, selectedModels, allModelsByProvider, modelsByProvider])
+
+  const effectiveSupportedAspectRatios =
+    effectiveImageConfig?.supportedAspectRatios ?? supportedAspectRatios
+  const effectiveSupportedImageSizes =
+    effectiveImageConfig?.supportedImageSizes ?? supportedImageSizes
+  const effectiveAllAspectRatios = effectiveImageConfig?.allAspectRatios ?? allAspectRatios
+  const effectiveAllImageSizes = effectiveImageConfig?.allImageSizes ?? allImageSizes
+
   return (
     <ErrorBoundary>
       <section className="models-section" ref={modelsSectionRef}>
@@ -338,10 +367,10 @@ export function ModelsArea({
                 onAspectRatioChange={onAspectRatioChange}
                 imageSize={imageSize}
                 onImageSizeChange={onImageSizeChange}
-                supportedAspectRatios={supportedAspectRatios}
-                supportedImageSizes={supportedImageSizes}
-                allAspectRatios={allAspectRatios}
-                allImageSizes={allImageSizes}
+                supportedAspectRatios={effectiveSupportedAspectRatios}
+                supportedImageSizes={effectiveSupportedImageSizes}
+                allAspectRatios={effectiveAllAspectRatios}
+                allImageSizes={effectiveAllImageSizes}
                 defaultAspectRatio={defaultAspectRatio}
                 defaultImageSize={defaultImageSize}
               />

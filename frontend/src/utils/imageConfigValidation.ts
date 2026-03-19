@@ -4,6 +4,57 @@
 
 import type { ModelsByProvider } from '../types'
 
+/**
+ * All image-generation models with validated capabilities from image_config_test_results.json.
+ * Ensures the Advanced dropdown correctly disables invalid aspect ratios and image sizes
+ * regardless of potentially stale API/cache data. Update when adding new image models or
+ * re-running test_image_config_aspect_ratio.py.
+ */
+const KNOWN_MODEL_IMAGE_CAPABILITIES: Record<
+  string,
+  { image_aspect_ratios?: string[]; image_sizes?: string[] }
+> = {
+  // Black Forest Labs - Flux 2 family: 2K only (1K/4K RES_MISMATCH)
+  'black-forest-labs/flux.2-flex': { image_sizes: ['2K'] },
+  'black-forest-labs/flux.2-pro': { image_sizes: ['2K'] },
+  'black-forest-labs/flux.2-klein-4b': { image_sizes: ['2K'] },
+  'black-forest-labs/flux.2-max': { image_sizes: ['2K'] },
+
+  // ByteDance Seed - 2K/4K only; excludes 4:5, 5:4
+  'bytedance-seed/seedream-4.5': {
+    image_aspect_ratios: ['9:16', '2:3', '3:4', '1:1', '4:3', '3:2', '16:9', '21:9'],
+    image_sizes: ['2K', '4K'],
+  },
+
+  // Google - Gemini image models
+  'google/gemini-2.5-flash-image': {
+    image_aspect_ratios: ['9:16', '2:3', '3:4', '4:5', '1:1', '5:4', '4:3', '3:2', '21:9'],
+    image_sizes: ['1K'],
+  },
+  'google/gemini-3-pro-image-preview': { image_sizes: ['1K'] },
+  'google/gemini-3.1-flash-image-preview': { image_sizes: ['1K', '2K', '4K'] },
+
+  // OpenAI - 1:1 @ 1K only
+  'openai/gpt-5-image': { image_aspect_ratios: ['1:1'], image_sizes: ['1K'] },
+  'openai/gpt-5-image-mini': { image_aspect_ratios: ['1:1'], image_sizes: ['1K'] },
+
+  // Sourceful - Riverflow V2
+  'sourceful/riverflow-v2-fast': { image_sizes: ['1K', '2K'] },
+  'sourceful/riverflow-v2-fast-preview': {
+    image_aspect_ratios: ['9:16', '2:3', '3:4', '1:1', '4:3', '3:2', '16:9', '21:9'],
+    image_sizes: ['1K'],
+  },
+  'sourceful/riverflow-v2-max-preview': {
+    image_aspect_ratios: ['9:16', '2:3', '3:4', '1:1', '4:3', '3:2', '16:9', '21:9'],
+    image_sizes: ['1K'],
+  },
+  'sourceful/riverflow-v2-pro': { image_sizes: ['1K', '2K', '4K'] },
+  'sourceful/riverflow-v2-standard-preview': {
+    image_aspect_ratios: ['9:16', '2:3', '3:4', '1:1', '4:3', '3:2', '16:9', '21:9'],
+    image_sizes: ['1K'],
+  },
+}
+
 /** Ordered by width/height ascending (portrait to landscape) */
 const DEFAULT_ASPECT_RATIOS = [
   '9:16',
@@ -33,6 +84,8 @@ export function getSupportedAspectRatios(
   modelId: string,
   modelsByProvider: ModelsByProvider
 ): string[] {
+  const known = KNOWN_MODEL_IMAGE_CAPABILITIES[modelId]?.image_aspect_ratios
+  if (known && known.length > 0) return known
   const model = getModelById(modelId, modelsByProvider)
   if (!model?.supports_image_generation) return []
   return (model as { image_aspect_ratios?: string[] }).image_aspect_ratios ?? DEFAULT_ASPECT_RATIOS
@@ -42,6 +95,8 @@ export function getSupportedImageSizes(
   modelId: string,
   modelsByProvider: ModelsByProvider
 ): string[] {
+  const known = KNOWN_MODEL_IMAGE_CAPABILITIES[modelId]?.image_sizes
+  if (known && known.length > 0) return known
   const model = getModelById(modelId, modelsByProvider)
   if (!model?.supports_image_generation) return []
   return (model as { image_sizes?: string[] }).image_sizes ?? DEFAULT_IMAGE_SIZES
@@ -75,6 +130,7 @@ function modelSupportsImageGeneration(
   modelId: string,
   modelsByProvider: ModelsByProvider
 ): boolean {
+  if (modelId in KNOWN_MODEL_IMAGE_CAPABILITIES) return true
   const model = getModelById(modelId, modelsByProvider)
   return !!model?.supports_image_generation
 }
