@@ -43,6 +43,8 @@ export interface AdvancedSettingsProps {
   /** Compatible defaults for reset (from getDefaultCompatibleConfig); when provided, Reset uses these */
   defaultAspectRatio?: string
   defaultImageSize?: string
+  /** CSS selector for elements that should NOT close the dropdown when clicked (e.g. model-provider dropdowns) */
+  excludeFromClickOutsideSelector?: string
 }
 
 const DEFAULTS = { temperature: 0.7, topP: 1.0, maxTokens: null as number | null }
@@ -217,6 +219,7 @@ export function AdvancedSettings({
   allImageSizes,
   defaultAspectRatio,
   defaultImageSize,
+  excludeFromClickOutsideSelector,
 }: AdvancedSettingsProps) {
   const aspectRatioOptions = allAspectRatios ?? supportedAspectRatios ?? IMAGE_ASPECT_RATIOS
   const imageSizeOptions = allImageSizes ?? supportedImageSizes ?? IMAGE_SIZES
@@ -315,13 +318,19 @@ export function AdvancedSettings({
     if (!isExpanded) return
     const handleClickOutside = (e: MouseEvent) => {
       const target = e.target as Node
-      if (!containerRef.current?.contains(target)) {
-        setIsExpanded(false)
+      if (containerRef.current?.contains(target)) return
+      // Don't close when clicking inside model-provider dropdowns (selecting a model)
+      if (
+        excludeFromClickOutsideSelector &&
+        (target as Element).closest?.(excludeFromClickOutsideSelector)
+      ) {
+        return
       }
+      setIsExpanded(false)
     }
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [isExpanded])
+  }, [isExpanded, excludeFromClickOutsideSelector])
 
   return (
     <div

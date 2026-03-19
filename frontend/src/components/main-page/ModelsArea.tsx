@@ -362,6 +362,7 @@ export function ModelsArea({
                 disabled={isLoading}
                 isExpanded={openDropdown === 'advanced'}
                 onExpandChange={expanded => setOpenDropdown(expanded ? 'advanced' : null)}
+                excludeFromClickOutsideSelector=".provider-dropdowns"
                 showImageConfig={showImageConfig}
                 aspectRatio={aspectRatio}
                 onAspectRatioChange={onAspectRatioChange}
