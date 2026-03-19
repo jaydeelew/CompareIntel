@@ -45,7 +45,7 @@ describe('imageConfigValidation', () => {
   })
 
   describe('orderImageSizesLikeAdvanced', () => {
-    it('orders as 1K, 2K, 4K, 0.5K when present', () => {
+    it('orders as 1K, 2K, 4K when present', () => {
       expect(orderImageSizesLikeAdvanced(['4K', '1K'])).toEqual(['1K', '4K'])
     })
   })

@@ -70,7 +70,7 @@ const DEFAULT_ASPECT_RATIOS = [
 ]
 const DEFAULT_IMAGE_SIZES = ['1K', '2K']
 /** Canonical order for UI; includes sizes that may appear in registry */
-const IMAGE_SIZE_ORDER = ['1K', '2K', '4K', '0.5K']
+const IMAGE_SIZE_ORDER = ['1K', '2K', '4K']
 
 function getModelById(modelId: string, modelsByProvider: ModelsByProvider) {
   for (const models of Object.values(modelsByProvider)) {
@@ -196,7 +196,7 @@ export function getAllKnownAspectRatios(modelsByProvider: ModelsByProvider): str
  * Order follows DEFAULT_IMAGE_SIZES plus common extras; unknown values are appended.
  */
 export function getAllKnownImageSizes(modelsByProvider: ModelsByProvider): string[] {
-  const knownOrder = ['1K', '2K', '4K', '0.5K']
+  const knownOrder = ['1K', '2K', '4K']
   const seen = new Set<string>()
   const result: string[] = []
   for (const s of knownOrder) {
