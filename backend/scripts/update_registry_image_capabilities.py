@@ -65,7 +65,7 @@ def main():
             ratios = sorted(model_ratios.get(mid, set())) or ASPECT_RATIOS
             sizes = sorted(
                 model_sizes.get(mid) or set(),
-                key=lambda s: (0 if s == "1K" else 1 if s == "2K" else 2),
+                key=lambda s: 0 if s == "1K" else 1 if s == "2K" else 2,
             )
             if not sizes:
                 sizes = ["1K", "2K"]  # conservative default
