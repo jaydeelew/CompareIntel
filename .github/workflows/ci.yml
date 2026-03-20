@@ -31,6 +31,7 @@ jobs:
     outputs:
       frontend: ${{ steps.filter.outputs.frontend }}
       backend: ${{ steps.filter.outputs.backend }}
+      seo: ${{ steps.filter.outputs.seo }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -49,6 +50,11 @@ jobs:
               - 'backend/**'
               - 'frontend/src/data/**'
               - '.github/workflows/ci.yml'
+            seo:
+              - 'frontend/public/sitemap.xml'
+              - 'frontend/index.html'
+              - 'frontend/public/robots.txt'
+              - 'frontend/src/utils/pageMeta.ts'
 
   frontend-lint:
     name: Frontend Lint & Type Check
@@ -736,6 +742,22 @@ jobs:
           if grep -r "f\".*SELECT\|f\".*INSERT\|f\".*UPDATE\|f\".*DELETE" backend/app --include="*.py" | grep -v "test" | grep -v "#"; then
             echo "⚠️  Warning: Potential SQL injection risk. Use parameterized queries."
           fi
+
+  ping-sitemap:
+    name: Ping Sitemap (SEO)
+    needs: detect-changes
+    if: |
+      github.event_name == 'push' &&
+      github.ref == 'refs/heads/master' &&
+      needs.detect-changes.outputs.seo == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Ping Google and Bing sitemap
+        run: bash scripts/ping-sitemap.sh
 
   dependency-review:
     name: Dependency Review

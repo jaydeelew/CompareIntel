@@ -27,6 +27,48 @@ This guide covers the SEO implementation for CompareIntel and the steps needed t
 - ✅ Explicit handling for `robots.txt` and `sitemap.xml`
 - ✅ Proper content types and caching headers
 
+## Post-Deployment SEO Checklist
+
+Run this checklist after each SEO deploy to prompt search engines to recrawl and pick up changes.
+
+### Condensed Checklist
+
+1. **Verify production** – Confirm changes are live at `https://compareintel.com`:
+   ```bash
+   curl -s https://compareintel.com/ | grep -E "og:title|description|twitter:title"
+   ```
+   Confirm output includes expected keywords (e.g. "AI & Image Models", "image generation", "FLUX", "DALL-E").
+
+2. **Request indexing for priority URLs** (in order):
+   - `https://compareintel.com/` (homepage)
+   - `https://compareintel.com/image-generation`
+   - `https://compareintel.com/features`
+
+3. **Resubmit sitemap** – In Google Search Console and Bing Webmaster Tools, resubmit `https://compareintel.com/sitemap.xml`.
+
+4. **Refresh Open Graph cache** – Use [Facebook Sharing Debugger](https://developers.facebook.com/tools/debug/) for the homepage.
+
+### Detailed Instructions
+
+For step-by-step recrawl instructions (URL Inspection, Request Indexing, sitemap resubmission), see [Requesting Recrawls After Making Changes](#requesting-recrawls-after-making-changes) below.
+
+### Expected Timeline
+
+- **Recrawls**: Hours to days
+- **Index refresh**: 1–2 weeks
+
+### Automated Sitemap Ping (CI)
+
+When you push SEO changes to `master` (sitemap, index.html, robots.txt, or pageMeta.ts), CI automatically runs `scripts/ping-sitemap.sh` to ping Google and Bing. Run manually if needed:
+
+```bash
+bash scripts/ping-sitemap.sh
+```
+
+**Note:** Google deprecated their sitemap ping endpoint (2024); it may return 404. Bing's ping may still work. The primary way to notify search engines is via Search Console (resubmit sitemap, request indexing).
+
+---
+
 ## Next Steps: Submit to Search Engines
 
 ### 1. Google Search Console
