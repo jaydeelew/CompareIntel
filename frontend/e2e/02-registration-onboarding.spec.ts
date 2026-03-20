@@ -557,6 +557,7 @@ test.describe('Registration and Onboarding', () => {
     // Increase timeout for registration + comparison test
     // WebKit and mobile need longer timeout
     const isWebKit = browserName === 'webkit'
+    const isFirefox = browserName === 'firefox'
     const projectName = test.info().project.name || ''
     const isMobileProject =
       projectName.includes('Mobile') ||
@@ -564,7 +565,7 @@ test.describe('Registration and Onboarding', () => {
       projectName.includes('iPad') ||
       projectName.includes('Pixel') ||
       projectName.includes('Galaxy')
-    test.setTimeout(isWebKit || isMobileProject ? 120000 : 60000)
+    test.setTimeout(isWebKit || isFirefox || isMobileProject ? 120000 : 60000)
     const timestamp = Date.now()
     const testEmail = `firstcomp-${timestamp}@example.com`
     const testPassword = 'TestPassword123!'
@@ -694,7 +695,7 @@ test.describe('Registration and Onboarding', () => {
       let providerHeaders = page.locator('.provider-header, button[class*="provider-header"]')
       let providerCount = await providerHeaders.count()
       // If models section is collapsed on mobile, expand it first
-      if (providerCount === 0 && (isMobileProject || isWebKit)) {
+      if (providerCount === 0 && (isMobileProject || isWebKit || isFirefox)) {
         const showModelsBtn = page.locator('button[title="Show model selection"]')
         if (await showModelsBtn.isVisible({ timeout: 3000 }).catch(() => false)) {
           await showModelsBtn.click({ timeout: 5000 })
@@ -750,8 +751,8 @@ test.describe('Registration and Onboarding', () => {
               await checkbox.scrollIntoViewIfNeeded().catch(() => {})
               await safeWait(page, 200)
             }
-            // WebKit: click() can trigger React onChange more reliably than check()
-            if (isWebKit) {
+            // WebKit/Firefox: click() reliably fires onChange with checkbox onMouseDown preventDefault
+            if (isWebKit || isFirefox) {
               await checkbox.click({ timeout: 10000 })
             } else {
               await checkbox.check({ timeout: 10000 })
@@ -766,10 +767,14 @@ test.describe('Registration and Onboarding', () => {
 
       expect(selectedCount).toBeGreaterThan(0)
 
-      // Wait for selected models UI (confirms React state; avoids racing the submit button on Chromium)
+      // Wait for selected models UI (confirms React state; avoids racing the submit button on Chromium).
+      // On mobile Safari the strip can sit below the fold until scrolled into view.
+      const selectedModelsSection = page.locator('.selected-models-section')
+      await selectedModelsSection.scrollIntoViewIfNeeded().catch(() => {})
+      await safeWait(page, isMobileProject ? 400 : 200)
       const selectedModelsGrid = page.locator('.selected-models-section .selected-model-card')
       await expect(selectedModelsGrid.first()).toBeVisible({
-        timeout: isMobileProject ? 8000 : 10000,
+        timeout: isMobileProject ? 20000 : 10000,
       })
       await safeWait(page, isMobileProject ? 500 : 200)
 
@@ -793,8 +798,8 @@ test.describe('Registration and Onboarding', () => {
         await safeWait(page, 300)
       }
 
-      // Submit comparison - WebKit and mobile need longer timeout
-      const submitTimeout = isWebKit || isMobileProject ? 60000 : 15000
+      // Submit comparison - WebKit / Firefox / mobile need longer timeout
+      const submitTimeout = isWebKit || isFirefox || isMobileProject ? 60000 : 15000
 
       const submitButton = page.getByTestId('comparison-submit-button')
 
@@ -832,17 +837,10 @@ test.describe('Registration and Onboarding', () => {
         })
       }
 
-      // Results should appear
+      // Results should appear (longer window for WebKit / Firefox streaming + paint)
       const results = page.locator('[data-testid^="result-card-"], .result-card, .model-response')
-
-      const hasResults = await results
-        .first()
-        .isVisible({ timeout: 30000 })
-        .catch(() => false)
-
-      if (hasResults) {
-        await expect(results.first()).toBeVisible()
-      }
+      const resultsTimeout = isWebKit || isFirefox || isMobileProject ? 45000 : 30000
+      await expect(results.first()).toBeVisible({ timeout: resultsTimeout })
     })
   })
 
