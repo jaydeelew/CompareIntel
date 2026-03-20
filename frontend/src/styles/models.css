@@ -3333,6 +3333,19 @@ html:not([data-theme]) .help-me-choose-category.has-match {
   overflow: hidden;
 }
 
+.advanced-settings-panel-fade {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  transition: opacity 0.16s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .advanced-settings-panel-fade {
+    transition: none;
+  }
+}
+
 /* Subtle top accent bar - match Help me choose */
 .advanced-settings-content::before {
   content: '';
@@ -3638,7 +3651,7 @@ html:not([data-theme]) .help-me-choose-category.has-match {
     color 0.15s;
 }
 
-.advanced-settings-option-chip:hover:not(.disabled) {
+.advanced-settings-option-chip:hover:not(.disabled):not(.selected) {
   background: var(--bg-secondary);
   border-color: var(--border-color-hover, var(--border-color));
 }
@@ -3653,6 +3666,18 @@ html:not([data-theme]) .help-me-choose-category.has-match {
   opacity: 0.45;
   cursor: not-allowed;
   pointer-events: none;
+}
+
+/* Image advanced: instant selection, no transition or hover emphasis */
+.advanced-settings-option-grid--image .advanced-settings-option-chip {
+  transition: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.advanced-settings-option-grid--image
+  .advanced-settings-option-chip:hover:not(.disabled):not(.selected) {
+  background: var(--bg-tertiary);
+  border-color: var(--border-color);
 }
 
 .advanced-settings-option-chip-label {

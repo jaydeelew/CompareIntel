@@ -332,7 +332,10 @@ async def generate_stream(ctx: StreamContext) -> Any:
                 else:
                     model_content = full_content
 
-                if not is_error and model_content:
+                # Text-only failure heuristics: image models often return empty or very short
+                # captions while images stream via separate chunks; misclassifying those as
+                # errors prevents successful_models > 0 and skips persisting conversation history.
+                if not is_error and model_content and not is_image_gen:
                     import re
 
                     trimmed_content = model_content.strip()
@@ -542,6 +545,11 @@ async def generate_stream(ctx: StreamContext) -> Any:
                     result_model_id = result.get("model")
                     if result_model_id:
                         mid = result_model_id
+
+                    if result["error"] and images_dict.get(mid):
+                        # Stream delivered image URL(s) for this model — treat as success so credits,
+                        # metadata, and DB history match what the client received.
+                        result["error"] = False
 
                     if result["error"]:
                         failed_models += 1
@@ -820,6 +828,17 @@ async def generate_stream(ctx: StreamContext) -> Any:
                         )
                         conv_db.add(conversation)
                         conv_db.flush()
+
+                    if req.image_config is None:
+                        conversation.composer_temperature = req.temperature
+                        conversation.composer_top_p = req.top_p
+                        conversation.composer_max_tokens = req.max_tokens
+                    else:
+                        ic = req.image_config if isinstance(req.image_config, dict) else {}
+                        ar = ic.get("aspect_ratio")
+                        sz = ic.get("image_size")
+                        conversation.composer_aspect_ratio = str(ar) if ar is not None else None
+                        conversation.composer_image_size = str(sz) if sz is not None else None
 
                     user_input_tokens = None
                     actual_prompt_tokens = None

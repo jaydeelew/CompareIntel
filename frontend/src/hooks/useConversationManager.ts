@@ -7,11 +7,49 @@ import type {
   ConversationMessage,
   ConversationRound,
   ConversationSummary,
+  ImageComposerAdvancedSettings,
+  TextComposerAdvancedSettings,
 } from '../types'
 import { createConversationId, createMessageId, createModelId } from '../types'
 import type { ModelConversation, StoredMessage } from '../types/conversation'
 import { isErrorMessage } from '../utils/error'
 import logger from '../utils/logger'
+import { applyTextComposerAdvancedSettings } from '../utils/textComposerAdvancedRestore'
+
+function extractTextComposerAdvancedFromLoaded(data: {
+  textComposerAdvanced?: TextComposerAdvancedSettings
+  composer_temperature?: number | null
+  composer_top_p?: number | null
+  composer_max_tokens?: number | null
+}): TextComposerAdvancedSettings | undefined {
+  if (data.textComposerAdvanced) return data.textComposerAdvanced
+  const hasAny =
+    data.composer_temperature != null ||
+    data.composer_top_p != null ||
+    data.composer_max_tokens != null
+  if (!hasAny) return undefined
+  return {
+    temperature: data.composer_temperature ?? 0.7,
+    topP: data.composer_top_p ?? 1,
+    maxTokens: data.composer_max_tokens ?? null,
+  }
+}
+
+function extractImageComposerAdvancedFromLoaded(data: {
+  imageComposerAdvanced?: ImageComposerAdvancedSettings
+  composer_aspect_ratio?: string | null
+  composer_image_size?: string | null
+}): ImageComposerAdvancedSettings | undefined {
+  if (data.imageComposerAdvanced) return data.imageComposerAdvanced
+  const hasAny =
+    (data.composer_aspect_ratio != null && data.composer_aspect_ratio !== '') ||
+    (data.composer_image_size != null && data.composer_image_size !== '')
+  if (!hasAny) return undefined
+  return {
+    aspectRatio: data.composer_aspect_ratio ?? '1:1',
+    imageSize: data.composer_image_size ?? '1K',
+  }
+}
 
 interface UseConversationManagerOptions {
   isAuthenticated: boolean
@@ -36,6 +74,13 @@ interface UseConversationManagerOptions {
   justLoadedFromHistoryRef: React.MutableRefObject<boolean>
   setCurrentVisibleComparisonId: (value: string | null) => void
   setModelErrors: (errors: { [key: string]: boolean }) => void
+  modelMode: 'text' | 'image'
+  allModels: Array<{ id: string; max_output_tokens?: number }>
+  setTemperature: (v: number) => void
+  setTopP: (v: number) => void
+  setMaxTokens: (v: number | null) => void
+  setAspectRatio: (v: string) => void
+  setImageSize: (v: string) => void
 }
 
 export function useConversationManager(options: UseConversationManagerOptions) {
@@ -62,6 +107,13 @@ export function useConversationManager(options: UseConversationManagerOptions) {
     justLoadedFromHistoryRef,
     setCurrentVisibleComparisonId,
     setModelErrors,
+    modelMode,
+    allModels,
+    setTemperature,
+    setTopP,
+    setMaxTokens,
+    setAspectRatio,
+    setImageSize,
   } = options
 
   const loadConversationFromLocalStorage = useCallback(
@@ -122,7 +174,16 @@ export function useConversationManager(options: UseConversationManagerOptions) {
   const loadConversationFromAPI = useCallback(
     async (
       id: number
-    ): Promise<{ input_data: string; models_used: string[]; messages: StoredMessage[] } | null> => {
+    ): Promise<{
+      input_data: string
+      models_used: string[]
+      messages: StoredMessage[]
+      composer_temperature?: number | null
+      composer_top_p?: number | null
+      composer_max_tokens?: number | null
+      composer_aspect_ratio?: string | null
+      composer_image_size?: string | null
+    } | null> => {
       if (!isAuthenticated) return null
 
       try {
@@ -133,6 +194,11 @@ export function useConversationManager(options: UseConversationManagerOptions) {
         return {
           input_data: data.input_data,
           models_used: data.models_used,
+          composer_temperature: data.composer_temperature,
+          composer_top_p: data.composer_top_p,
+          composer_max_tokens: data.composer_max_tokens,
+          composer_aspect_ratio: data.composer_aspect_ratio,
+          composer_image_size: data.composer_image_size,
           messages: data.messages.map(msg => {
             const storedMessage: StoredMessage = {
               role: msg.role,
@@ -184,6 +250,13 @@ export function useConversationManager(options: UseConversationManagerOptions) {
           messages: StoredMessage[]
           file_contents?: Array<{ name: string; content: string; placeholder: string }>
           already_broken_out_models?: string[]
+          textComposerAdvanced?: TextComposerAdvancedSettings
+          composer_temperature?: number | null
+          composer_top_p?: number | null
+          composer_max_tokens?: number | null
+          composer_aspect_ratio?: string | null
+          composer_image_size?: string | null
+          imageComposerAdvanced?: ImageComposerAdvancedSettings
         } | null = null
 
         if (isAuthenticated && typeof summary.id === 'number') {
@@ -333,6 +406,24 @@ export function useConversationManager(options: UseConversationManagerOptions) {
         setConversations(loadedConversations)
         setSelectedModels([...modelsUsed])
         setOriginalSelectedModels([...modelsUsed])
+        const textAdvanced = extractTextComposerAdvancedFromLoaded(conversationData)
+        if (modelMode === 'text' && textAdvanced) {
+          applyTextComposerAdvancedSettings(
+            textAdvanced,
+            [...modelsUsed],
+            allModels,
+            setTemperature,
+            setTopP,
+            setMaxTokens
+          )
+        }
+        const imageAdvanced = extractImageComposerAdvancedFromLoaded(conversationData)
+        // Restore image Advanced whenever the source has saved values (not only when the toggle
+        // is on "image" — avoids losing settings if mode differs, and matches text advanced).
+        if (imageAdvanced) {
+          setAspectRatio(imageAdvanced.aspectRatio)
+          setImageSize(imageAdvanced.imageSize)
+        }
         setInput('')
         setIsFollowUpMode(loadedConversations.some(conv => conv.messages.length > 0))
         setClosedCards(new Set())
@@ -362,6 +453,13 @@ export function useConversationManager(options: UseConversationManagerOptions) {
       justLoadedFromHistoryRef,
       loadConversationFromAPI,
       loadConversationFromLocalStorage,
+      modelMode,
+      allModels,
+      setTemperature,
+      setTopP,
+      setMaxTokens,
+      setAspectRatio,
+      setImageSize,
       setAlreadyBrokenOutModels,
       setClosedCards,
       setConversations,

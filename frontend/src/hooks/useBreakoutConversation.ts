@@ -7,6 +7,8 @@ import type {
   ConversationSummary,
   ModelConversation,
   StoredMessage,
+  TextComposerAdvancedSettings,
+  ImageComposerAdvancedSettings,
 } from '../types'
 import { createModelId, createMessageId } from '../types'
 import { showNotification } from '../utils'
@@ -33,6 +35,8 @@ interface UseBreakoutConversationCallbacks {
     models_used: string[]
     messages: StoredMessage[]
     file_contents?: Array<{ name: string; content: string; placeholder: string }>
+    textComposerAdvanced?: TextComposerAdvancedSettings
+    imageComposerAdvanced?: ImageComposerAdvancedSettings
   } | null
   loadHistoryFromLocalStorage: () => ConversationSummary[]
   saveConversationToLocalStorage: (
@@ -43,7 +47,9 @@ interface UseBreakoutConversationCallbacks {
     fileContents?: Array<{ name: string; content: string; placeholder: string }>,
     conversationType?: 'comparison' | 'breakout',
     parentConversationId?: string | null,
-    breakoutModelId?: string | null
+    breakoutModelId?: string | null,
+    textComposerAdvanced?: TextComposerAdvancedSettings,
+    imageComposerAdvanced?: ImageComposerAdvancedSettings
   ) => string
   setConversationHistory: (history: ConversationSummary[]) => void
   setConversations: React.Dispatch<React.SetStateAction<ModelConversation[]>>
@@ -156,7 +162,9 @@ export function useBreakoutConversation(
             parentData.file_contents,
             'breakout',
             String(conversationId),
-            modelId
+            modelId,
+            parentData.textComposerAdvanced,
+            parentData.imageComposerAdvanced
           )
 
           const reloadedHistory = loadHistoryFromLocalStorage()

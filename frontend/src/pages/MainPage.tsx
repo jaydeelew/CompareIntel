@@ -63,6 +63,7 @@ import {
 } from '../utils/imageConfigValidation'
 import logger from '../utils/logger'
 import { saveSessionState, onSaveStateEvent } from '../utils/sessionState'
+import { applyTextComposerAdvancedSettings } from '../utils/textComposerAdvancedRestore'
 import {
   filterModelsByProviderToImage,
   filterModelsByProviderToText,
@@ -392,6 +393,11 @@ export function MainPage() {
       }
     )
 
+  const allModelsFlatForComposer = useMemo(
+    () => Object.values(modelsByProvider).flat(),
+    [modelsByProvider]
+  )
+
   // Combined saved selections hook (replaces useSavedModelSelections + useSavedSelectionManager)
   const {
     savedSelections: savedModelSelections,
@@ -417,6 +423,13 @@ export function MainPage() {
           setTutorialHasSavedSelection(true)
         }
       },
+      modelMode,
+      temperature,
+      topP,
+      maxTokens,
+      allModels: allModelsFlatForComposer,
+      aspectRatio,
+      imageSize,
     },
     {
       setSelectedModels,
@@ -424,6 +437,11 @@ export function MainPage() {
       setConversations,
       setResponse,
       setDefaultSelectionOverridden,
+      setTemperature,
+      setTopP,
+      setMaxTokens,
+      setAspectRatio,
+      setImageSize,
     }
   )
 
@@ -716,6 +734,34 @@ export function MainPage() {
     setSelectedModels(prev => prev.filter(id => ids.has(id)))
   }, [modelMode, setSelectedModels, modelsByProvider])
 
+  /**
+   * Image Advanced (aspect ratio, image size): when selected models shrink, swap for a new set,
+   * or clear entirely, snap to defaults compatible with the current selection. Skips pure “add
+   * only” updates so manual image config isn’t reset when adding another model.
+   */
+  const prevSelectedModelsForAdvancedRef = useRef<string[] | null>(null)
+  useEffect(() => {
+    const prev = prevSelectedModelsForAdvancedRef.current
+    prevSelectedModelsForAdvancedRef.current = selectedModels
+    if (justLoadedFromHistoryRef.current || isScrollingToTopFromHistoryRef.current) return
+    if (prev === null) return
+
+    const prevSet = new Set(prev.map(String))
+    const nextSet = new Set(selectedModels.map(String))
+    const removed = prev.some(id => !nextSet.has(String(id)))
+    const added = selectedModels.some(id => !prevSet.has(String(id)))
+    if (!removed && !added) return
+    if (added && !removed) return
+
+    const { aspectRatio: r, imageSize: s } = getDefaultCompatibleConfig(
+      selectedModels,
+      modelsByProvider
+    )
+    setAspectRatio(r)
+    setImageSize(s)
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- refs read for history-load guard only
+  }, [selectedModels, modelsByProvider])
+
   // Effective max tokens cap: minimum of selected models' limits (matches backend logic)
   const effectiveMaxTokens = useMemo(() => {
     if (selectedModels.length === 0) return 8192
@@ -746,6 +792,10 @@ export function MainPage() {
           ? { conflictType: null, incompatibleModelIds: [], allImageModelIds: undefined }
           : prev
       )
+      return
+    }
+
+    if (justLoadedFromHistoryRef.current || isScrollingToTopFromHistoryRef.current) {
       return
     }
 
@@ -796,6 +846,7 @@ export function MainPage() {
         allImageModelIds: [...imageModelIds],
       })
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- justLoadedFromHistoryRef / isScrollingToTopFromHistoryRef
   }, [selectedModels, modelsByProvider, aspectRatio, imageSize, imageModelIds])
 
   const imageGenerationNoSharedImageOptions = useMemo(() => {
@@ -928,6 +979,13 @@ export function MainPage() {
       justLoadedFromHistoryRef,
       setCurrentVisibleComparisonId,
       setModelErrors,
+      modelMode,
+      allModels,
+      setTemperature,
+      setTopP,
+      setMaxTokens,
+      setAspectRatio,
+      setImageSize,
     })
 
   // Note: Tutorial effects are now handled by useTutorialComplete hook
@@ -1363,6 +1421,21 @@ export function MainPage() {
 
         return hasChanges ? newSet : prev
       })
+
+      if (modelMode === 'text' && defaultSelection.textComposerAdvanced) {
+        applyTextComposerAdvancedSettings(
+          defaultSelection.textComposerAdvanced,
+          limitedModelIds,
+          allModelsFlatForComposer,
+          setTemperature,
+          setTopP,
+          setMaxTokens
+        )
+      }
+      if (modelMode === 'image' && defaultSelection.imageComposerAdvanced) {
+        setAspectRatio(defaultSelection.imageComposerAdvanced.aspectRatio)
+        setImageSize(defaultSelection.imageComposerAdvanced.imageSize)
+      }
     }
   }, [
     isLoadingModels,
@@ -1373,8 +1446,15 @@ export function MainPage() {
     maxModelsLimit,
     isAuthenticated,
     user,
+    modelMode,
+    allModelsFlatForComposer,
     setSelectedModels,
     setOpenDropdowns,
+    setTemperature,
+    setTopP,
+    setMaxTokens,
+    setAspectRatio,
+    setImageSize,
   ])
 
   // Refetch credit balance
@@ -1823,6 +1903,7 @@ export function MainPage() {
         temperature,
         topP,
         maxTokens,
+        modelMode,
         aspectRatio,
         imageSize,
         hasImageModels: selectedModels.some(id =>
@@ -1872,6 +1953,9 @@ export function MainPage() {
       temperature,
       topP,
       maxTokens,
+      modelMode,
+      aspectRatio,
+      imageSize,
       conversations,
       isFollowUpMode,
       currentVisibleComparisonId,

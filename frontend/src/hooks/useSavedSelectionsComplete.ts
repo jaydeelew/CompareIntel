@@ -11,11 +11,16 @@
 import { useState, useCallback, useEffect, useMemo } from 'react'
 
 import { getSavedModelSelectionLimit, type SubscriptionTier } from '../config/constants'
-import type { CompareResponse } from '../types'
+import type {
+  CompareResponse,
+  ImageComposerAdvancedSettings,
+  TextComposerAdvancedSettings,
+} from '../types'
 import type { ModelConversation } from '../types/conversation'
 import type { ModelsByProvider } from '../types/models'
 import { showNotification } from '../utils'
 import logger from '../utils/logger'
+import { applyTextComposerAdvancedSettings } from '../utils/textComposerAdvancedRestore'
 
 // Storage keys
 const STORAGE_KEY_PREFIX = 'compareintel_saved_model_selections'
@@ -28,6 +33,10 @@ export interface SavedModelSelection {
   modelIds: string[]
   createdAt: string
   updatedAt: string
+  /** Text Models mode Advanced settings captured when the selection was saved */
+  textComposerAdvanced?: TextComposerAdvancedSettings
+  /** Image Models mode Advanced settings captured when the selection was saved */
+  imageComposerAdvanced?: ImageComposerAdvancedSettings
 }
 
 export interface UseSavedSelectionsCompleteConfig {
@@ -47,6 +56,13 @@ export interface UseSavedSelectionsCompleteConfig {
   conversations: ModelConversation[]
   /** Callback when selection is saved (for tutorial tracking) */
   onSelectionSaved?: () => void
+  modelMode: 'text' | 'image'
+  temperature: number
+  topP: number
+  maxTokens: number | null
+  allModels: Array<{ id: string; max_output_tokens?: number }>
+  aspectRatio: string
+  imageSize: string
 }
 
 export interface UseSavedSelectionsCompleteCallbacks {
@@ -55,6 +71,11 @@ export interface UseSavedSelectionsCompleteCallbacks {
   setConversations: (conversations: ModelConversation[]) => void
   setResponse: (response: CompareResponse | null) => void
   setDefaultSelectionOverridden: (overridden: boolean) => void
+  setTemperature: (v: number) => void
+  setTopP: (v: number) => void
+  setMaxTokens: (v: number | null) => void
+  setAspectRatio: (v: string) => void
+  setImageSize: (v: string) => void
 }
 
 export interface UseSavedSelectionsCompleteReturn {
@@ -65,7 +86,12 @@ export interface UseSavedSelectionsCompleteReturn {
   maxSelections: number
 
   // Core operations (from useSavedModelSelections)
-  saveSelection: (name: string, modelIds: string[]) => { success: boolean; error?: string }
+  saveSelection: (
+    name: string,
+    modelIds: string[],
+    textComposerAdvanced?: TextComposerAdvancedSettings,
+    imageComposerAdvanced?: ImageComposerAdvancedSettings
+  ) => { success: boolean; error?: string }
   loadSelectionRaw: (id: string) => string[] | null
   deleteSelection: (id: string) => void
   renameSelection: (id: string, newName: string) => { success: boolean; error?: string }
@@ -170,6 +196,13 @@ export function useSavedSelectionsComplete(
     response,
     conversations,
     onSelectionSaved,
+    modelMode,
+    temperature,
+    topP,
+    maxTokens,
+    allModels,
+    aspectRatio,
+    imageSize,
   } = config
 
   const {
@@ -178,6 +211,11 @@ export function useSavedSelectionsComplete(
     setConversations,
     setResponse,
     setDefaultSelectionOverridden,
+    setTemperature,
+    setTopP,
+    setMaxTokens,
+    setAspectRatio,
+    setImageSize,
   } = callbacks
 
   // State
@@ -197,7 +235,12 @@ export function useSavedSelectionsComplete(
   // Core Operations (from useSavedModelSelections)
 
   const saveSelection = useCallback(
-    (name: string, modelIds: string[]): { success: boolean; error?: string } => {
+    (
+      name: string,
+      modelIds: string[],
+      textComposerAdvanced?: TextComposerAdvancedSettings,
+      imageComposerAdvanced?: ImageComposerAdvancedSettings
+    ): { success: boolean; error?: string } => {
       const trimmedName = name.trim()
 
       if (!trimmedName) {
@@ -230,6 +273,8 @@ export function useSavedSelectionsComplete(
         modelIds: [...modelIds],
         createdAt: now,
         updatedAt: now,
+        ...(textComposerAdvanced != null ? { textComposerAdvanced } : {}),
+        ...(imageComposerAdvanced != null ? { imageComposerAdvanced } : {}),
       }
 
       const updated = [...savedSelections, newSelection]
@@ -318,13 +363,25 @@ export function useSavedSelectionsComplete(
 
   const handleSaveSelection = useCallback(
     (name: string) => {
-      const result = saveSelection(name, selectedModels)
+      const textSnap = modelMode === 'text' ? { temperature, topP, maxTokens } : undefined
+      const imageSnap = modelMode === 'image' ? { aspectRatio, imageSize } : undefined
+      const result = saveSelection(name, selectedModels, textSnap, imageSnap)
       if (result.success) {
         onSelectionSaved?.()
       }
       return result
     },
-    [saveSelection, selectedModels, onSelectionSaved]
+    [
+      saveSelection,
+      selectedModels,
+      onSelectionSaved,
+      modelMode,
+      temperature,
+      topP,
+      maxTokens,
+      aspectRatio,
+      imageSize,
+    ]
   )
 
   const handleLoadSelection = useCallback(
@@ -404,11 +461,30 @@ export function useSavedSelectionsComplete(
       if (defaultSelectionId === id) {
         setDefaultSelectionOverridden(false)
       }
+
+      const loadedSel = savedSelections.find(s => s.id === id)
+      if (modelMode === 'text' && loadedSel?.textComposerAdvanced) {
+        applyTextComposerAdvancedSettings(
+          loadedSel.textComposerAdvanced,
+          limitedModelIds,
+          allModels,
+          setTemperature,
+          setTopP,
+          setMaxTokens
+        )
+      }
+      if (modelMode === 'image' && loadedSel?.imageComposerAdvanced) {
+        setAspectRatio(loadedSel.imageComposerAdvanced.aspectRatio)
+        setImageSize(loadedSel.imageComposerAdvanced.imageSize)
+      }
     },
     [
       loadSelectionRaw,
+      savedSelections,
       modelsByProvider,
       maxModelsLimit,
+      modelMode,
+      allModels,
       setSelectedModels,
       setOpenDropdowns,
       response,
@@ -417,6 +493,11 @@ export function useSavedSelectionsComplete(
       setResponse,
       defaultSelectionId,
       setDefaultSelectionOverridden,
+      setTemperature,
+      setTopP,
+      setMaxTokens,
+      setAspectRatio,
+      setImageSize,
     ]
   )
 

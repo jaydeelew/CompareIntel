@@ -15,6 +15,8 @@ import type {
   ConversationId,
   StoredMessage,
   User,
+  TextComposerAdvancedSettings,
+  ImageComposerAdvancedSettings,
 } from '../types'
 import logger from '../utils/logger'
 
@@ -44,7 +46,9 @@ export interface UseConversationHistoryReturn {
     fileContents?: Array<{ name: string; content: string; placeholder: string }>,
     conversationType?: 'comparison' | 'breakout',
     parentConversationId?: string | null,
-    breakoutModelId?: string | null
+    breakoutModelId?: string | null,
+    textComposerAdvanced?: TextComposerAdvancedSettings,
+    imageComposerAdvanced?: ImageComposerAdvancedSettings
   ) => string
   deleteConversation: (summary: ConversationSummary, e: React.MouseEvent) => Promise<void>
   loadConversationFromAPI: (conversationId: ConversationId) => Promise<ModelConversation[] | null>
@@ -104,7 +108,9 @@ export function useConversationHistory({
       fileContents?: Array<{ name: string; content: string; placeholder: string }>,
       conversationType: 'comparison' | 'breakout' = 'comparison',
       parentConversationId?: string | null,
-      breakoutModelId?: string | null
+      breakoutModelId?: string | null,
+      textComposerAdvanced?: TextComposerAdvancedSettings,
+      imageComposerAdvanced?: ImageComposerAdvancedSettings
     ): string => {
       try {
         const history = loadHistoryFromLocalStorage()
@@ -314,6 +320,20 @@ export function useConversationHistory({
               )
             : null
 
+        let storedTextAdvanced: TextComposerAdvancedSettings | undefined
+        if (textComposerAdvanced !== undefined) {
+          storedTextAdvanced = textComposerAdvanced
+        } else if (isUpdate && existingData?.textComposerAdvanced) {
+          storedTextAdvanced = existingData.textComposerAdvanced as TextComposerAdvancedSettings
+        }
+
+        let storedImageAdvanced: ImageComposerAdvancedSettings | undefined
+        if (imageComposerAdvanced !== undefined) {
+          storedImageAdvanced = imageComposerAdvanced
+        } else if (isUpdate && existingData?.imageComposerAdvanced) {
+          storedImageAdvanced = existingData.imageComposerAdvanced as ImageComposerAdvancedSettings
+        }
+
         localStorage.setItem(
           `compareintel_conversation_${conversationId}`,
           JSON.stringify({
@@ -325,6 +345,8 @@ export function useConversationHistory({
             created_at: existingData?.created_at || conversationSummary.created_at,
             messages: conversationMessages,
             file_contents: fileContents || [], // Store extracted file contents separately
+            ...(storedTextAdvanced != null ? { textComposerAdvanced: storedTextAdvanced } : {}),
+            ...(storedImageAdvanced != null ? { imageComposerAdvanced: storedImageAdvanced } : {}),
           })
         )
 
@@ -382,6 +404,11 @@ export function useConversationHistory({
                   ? item.created_at
                   : new Date(item.created_at).toISOString(),
               models_used: Array.isArray(item.models_used) ? item.models_used : [],
+              composer_temperature: item.composer_temperature ?? undefined,
+              composer_top_p: item.composer_top_p ?? undefined,
+              composer_max_tokens: item.composer_max_tokens ?? undefined,
+              composer_aspect_ratio: item.composer_aspect_ratio ?? undefined,
+              composer_image_size: item.composer_image_size ?? undefined,
             }
             return summary
           })
@@ -567,6 +594,11 @@ export function useConversationHistory({
                     ? item.created_at
                     : new Date(item.created_at).toISOString(),
                 models_used: Array.isArray(item.models_used) ? item.models_used : [],
+                composer_temperature: item.composer_temperature ?? undefined,
+                composer_top_p: item.composer_top_p ?? undefined,
+                composer_max_tokens: item.composer_max_tokens ?? undefined,
+                composer_aspect_ratio: item.composer_aspect_ratio ?? undefined,
+                composer_image_size: item.composer_image_size ?? undefined,
               }
               return summary
             })

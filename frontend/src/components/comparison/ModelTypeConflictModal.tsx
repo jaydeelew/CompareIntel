@@ -4,6 +4,8 @@
  */
 
 import React, { useEffect, useRef } from 'react'
+
+import { ImageGenerationPageLink } from './ImageGenerationPageLink'
 import './DisabledModelInfoModal.css'
 
 export type ModelTypeConflictType = 'text-to-image' | 'image-to-text'
@@ -112,6 +114,7 @@ export const ModelTypeConflictModal: React.FC<ModelTypeConflictModalProps> = ({
         </div>
         <div className="disabled-model-info-content">
           <p id="model-type-conflict-message">{message}</p>
+          <ImageGenerationPageLink onNavigate={onClose} />
         </div>
         <div className="disabled-model-info-footer">
           <button

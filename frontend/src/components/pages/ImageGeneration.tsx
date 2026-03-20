@@ -40,6 +40,57 @@ export const ImageGeneration: React.FC = () => {
           </section>
 
           <section className="seo-section">
+            <h2>Credits for image models</h2>
+            <p>
+              Credits are the same currency as for text comparisons, but image models do not all
+              bill the same way. Some providers return token usage; others expose a fixed price per
+              image. Each model you run is charged separately for its own generation.
+            </p>
+            <table
+              className="methodology-table"
+              aria-label="How image generation credits are calculated"
+            >
+              <thead>
+                <tr>
+                  <th scope="col">How the model is priced</th>
+                  <th scope="col">Credits (simplified)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>
+                    <strong>Token usage</strong> (API reports prompt + completion tokens)
+                  </td>
+                  <td>
+                    Same rule as text: roughly <strong>1 credit per 1,000 effective tokens</strong>,
+                    where effective = input tokens + (output × 2.5). Output counts more because it
+                    is usually costlier.
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    <strong>Per-image</strong> (provider lists a $/image price)
+                  </td>
+                  <td>
+                    <strong>$ per image × 100 × number of images</strong> for that model (rounded up
+                    to whole credits, at least 1). So a $0.04 image → 4 credits before rounding
+                    rules.
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    <strong>Fallback</strong> (no token usage and no $/image on file)
+                  </td>
+                  <td>
+                    A small <strong>fixed credits per image</strong> per generation so runs still
+                    count against your balance predictably.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </section>
+
+          <section className="seo-section">
             <h2>Supported Models</h2>
             <p>
               We support top image generation models from leading providers, including Google Gemini
@@ -60,9 +111,78 @@ export const ImageGeneration: React.FC = () => {
           <section className="seo-section">
             <h2>Paid Tiers Coming Soon</h2>
             <p>
-              Paid tiers will allow as many image generations as you have credits for. Credits are
-              consumed based on each model&apos;s per-image pricing. Stay tuned for updates.
+              Paid tiers will allow as many image generations as you have credits for, using the
+              rules above. Stay tuned for updates.
             </p>
+          </section>
+
+          <section className="seo-section">
+            <h2>In-app messages about image mode</h2>
+            <p>
+              On the comparison page you may see a short dialog explaining a constraint. Here is
+              what each one is about:
+            </p>
+            <table className="methodology-table" aria-label="Image-related in-app messages">
+              <thead>
+                <tr>
+                  <th scope="col">Message title</th>
+                  <th scope="col">What it means</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Image settings updated for your selection</td>
+                  <td>
+                    Aspect ratio or resolution was adjusted so every selected image model can share
+                    one valid combination. The old combo did not work for at least one model in the
+                    group.
+                  </td>
+                </tr>
+                <tr>
+                  <td>No shared image options</td>
+                  <td>
+                    There is no single aspect ratio and resolution that all selected models support
+                    together. Remove or swap models until their supported sizes overlap, or the
+                    Advanced image controls stay disabled.
+                  </td>
+                </tr>
+                <tr>
+                  <td>Incompatible image settings</td>
+                  <td>
+                    The aspect ratio or resolution you are changing to is not supported by one or
+                    more selected models. Adjust Advanced settings or deselect those models.
+                  </td>
+                </tr>
+                <tr>
+                  <td>Model incompatible with settings</td>
+                  <td>
+                    Adding this model would break the current aspect ratio or resolution. Change
+                    Advanced settings or pick a different model.
+                  </td>
+                </tr>
+                <tr>
+                  <td>Switch to Image Generation Models</td>
+                  <td>
+                    You still have text models selected. Deselect them first, then pick image models
+                    via the toggle or Help me choose.
+                  </td>
+                </tr>
+                <tr>
+                  <td>Switch to Text Models</td>
+                  <td>
+                    You still have image models selected. Deselect them first, then switch back to
+                    text models with the toggle.
+                  </td>
+                </tr>
+                <tr>
+                  <td>Sign Up to Use Image Generation</td>
+                  <td>
+                    Image generation requires an account. Free accounts include a small daily number
+                    of image comparisons; broader use will follow with paid credits.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
           </section>
 
           <BackToMainCTA

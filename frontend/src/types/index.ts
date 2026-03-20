@@ -42,6 +42,12 @@ export type {
 // Model types
 export type { Model, ModelsByProvider } from './models'
 
+// Composer Advanced (text + image models)
+export type {
+  TextComposerAdvancedSettings,
+  ImageComposerAdvancedSettings,
+} from './textComposerAdvanced'
+
 // User and auth types
 export type {
   User,

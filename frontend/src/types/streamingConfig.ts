@@ -9,6 +9,10 @@ import type { CreditBalance } from '../services/creditService'
 import type { CompareResponse, ActiveResultTabs } from './comparison'
 import type { ConversationMessage, ModelConversation } from './conversation'
 import type { ModelsByProvider } from './models'
+import type {
+  ImageComposerAdvancedSettings,
+  TextComposerAdvancedSettings,
+} from './textComposerAdvanced'
 
 export interface StreamingAuthInfo {
   isAuthenticated: boolean
@@ -41,6 +45,7 @@ export interface StreamingInputState {
   temperature: number // 0.0-2.0, controls response randomness
   topP: number // 0.0-1.0, nucleus sampling
   maxTokens: number | null // cap on output length, null = use model default
+  modelMode: 'text' | 'image'
   aspectRatio?: string // for image generation
   imageSize?: string // for image generation
 }
@@ -127,7 +132,12 @@ export interface StreamingHelperCallbacks {
     models: string[],
     conversations: ModelConversation[],
     isUpdate: boolean,
-    fileContents?: Array<{ name: string; content: string; placeholder: string }>
+    fileContents?: Array<{ name: string; content: string; placeholder: string }>,
+    conversationType?: 'comparison' | 'breakout',
+    parentConversationId?: string | null,
+    breakoutModelId?: string | null,
+    textComposerAdvanced?: TextComposerAdvancedSettings,
+    imageComposerAdvanced?: ImageComposerAdvancedSettings
   ) => string | null
   syncHistoryAfterComparison: (input: string, models: string[]) => Promise<void>
   loadHistoryFromAPI: () => Promise<void>

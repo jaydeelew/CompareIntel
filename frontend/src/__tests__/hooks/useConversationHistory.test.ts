@@ -212,6 +212,48 @@ describe('useConversationHistory', () => {
       expect(localStorage.getItem(`compareintel_conversation_${savedHistory[0].id}`)).toBeTruthy()
     })
 
+    it('persists imageComposerAdvanced in localStorage payload', () => {
+      const { result } = renderHook(() =>
+        useConversationHistory({
+          isAuthenticated: false,
+          user: null,
+        })
+      )
+
+      const conversations = [
+        createMockModelConversation({
+          modelId: createModelId('openai/gpt-5-image'),
+          messages: [
+            createMockConversationMessage({ type: 'user' }),
+            createMockConversationMessage({ type: 'assistant' }),
+          ],
+        }),
+      ]
+
+      act(() => {
+        result.current.saveConversationToLocalStorage(
+          'prompt',
+          ['openai/gpt-5-image'],
+          conversations,
+          false,
+          undefined,
+          'comparison',
+          undefined,
+          undefined,
+          undefined,
+          { aspectRatio: '16:9', imageSize: '2K' }
+        )
+      })
+
+      const savedHistory = result.current.loadHistoryFromLocalStorage()
+      const raw = localStorage.getItem(`compareintel_conversation_${savedHistory[0].id}`)
+      expect(raw).toBeTruthy()
+      const parsed = JSON.parse(raw!) as {
+        imageComposerAdvanced?: { aspectRatio: string; imageSize: string }
+      }
+      expect(parsed.imageComposerAdvanced).toEqual({ aspectRatio: '16:9', imageSize: '2K' })
+    })
+
     it('should limit to 2 conversations for anonymous users', () => {
       const { result } = renderHook(() =>
         useConversationHistory({

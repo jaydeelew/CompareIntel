@@ -96,6 +96,12 @@ export function useComparisonStreaming(
       attachedFiles: inputState.attachedFiles,
       browserFingerprint: auth.browserFingerprint,
       lastSubmittedInputRef: refs.lastSubmittedInputRef,
+      modelMode: inputState.modelMode,
+      temperature: inputState.temperature,
+      topP: inputState.topP,
+      maxTokens: inputState.maxTokens,
+      aspectRatio: inputState.aspectRatio ?? '1:1',
+      imageSize: inputState.imageSize ?? '1K',
     },
     {
       setError: stateCb.setError,
@@ -126,6 +132,12 @@ export function useComparisonStreaming(
       browserFingerprint: auth.browserFingerprint,
       userCancelledRef: refs.userCancelledRef,
       lastSubmittedInputRef: refs.lastSubmittedInputRef,
+      modelMode: inputState.modelMode,
+      temperature: inputState.temperature,
+      topP: inputState.topP,
+      maxTokens: inputState.maxTokens,
+      aspectRatio: inputState.aspectRatio ?? '1:1',
+      imageSize: inputState.imageSize ?? '1K',
     },
     {
       setError: stateCb.setError,
@@ -155,6 +167,7 @@ export function useComparisonStreaming(
     temperature,
     topP,
     maxTokens,
+    modelMode,
     aspectRatio = '1:1',
     imageSize = '1K',
   } = inputState
@@ -235,11 +248,21 @@ export function useComparisonStreaming(
 
           if (firstUserMessage) {
             const inputData = firstUserMessage.content
+            const textComposerSnapshot =
+              modelMode === 'text' ? { temperature, topP, maxTokens } : undefined
+            const imageComposerSnapshot =
+              modelMode === 'image' ? { aspectRatio, imageSize } : undefined
             helpers.saveConversationToLocalStorage(
               inputData,
               previousModels,
               conversationsWithMessages,
-              false
+              false,
+              undefined,
+              'comparison',
+              undefined,
+              undefined,
+              textComposerSnapshot,
+              imageComposerSnapshot
             )
           }
         }

@@ -337,6 +337,11 @@ class ConversationSummary(BaseModel):
     )
     created_at: datetime
     message_count: int
+    composer_temperature: float | None = None
+    composer_top_p: float | None = None
+    composer_max_tokens: int | None = None
+    composer_aspect_ratio: str | None = None
+    composer_image_size: str | None = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -363,6 +368,11 @@ class ConversationDetail(BaseModel):
     )
     created_at: datetime
     messages: list[ConversationMessage]
+    composer_temperature: float | None = None
+    composer_top_p: float | None = None
+    composer_max_tokens: int | None = None
+    composer_aspect_ratio: str | None = None
+    composer_image_size: str | None = None
 
     model_config = ConfigDict(from_attributes=True)
 

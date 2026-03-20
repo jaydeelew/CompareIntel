@@ -43,8 +43,6 @@ export interface AdvancedSettingsProps {
   /** Compatible defaults for reset (from getDefaultCompatibleConfig); when provided, Reset uses these */
   defaultAspectRatio?: string
   defaultImageSize?: string
-  /** CSS selector for elements that should NOT close the dropdown when clicked (e.g. model-provider dropdowns) */
-  excludeFromClickOutsideSelector?: string
 }
 
 const DEFAULTS = { temperature: 0.7, topP: 1.0, maxTokens: null as number | null }
@@ -219,7 +217,6 @@ export function AdvancedSettings({
   allImageSizes,
   defaultAspectRatio,
   defaultImageSize,
-  excludeFromClickOutsideSelector,
 }: AdvancedSettingsProps) {
   const aspectRatioOptions = allAspectRatios ?? supportedAspectRatios ?? IMAGE_ASPECT_RATIOS
   const imageSizeOptions = allImageSizes ?? supportedImageSizes ?? IMAGE_SIZES
@@ -235,7 +232,6 @@ export function AdvancedSettings({
     onExpandChange !== undefined
       ? (v: boolean) => onExpandChange(v)
       : (v: boolean) => setInternalExpanded(v)
-  const containerRef = useRef<HTMLDivElement>(null)
   const [infoKey, setInfoKey] = useState<string | null>(null)
   const { isMobileLayout } = useResponsive()
 
@@ -253,8 +249,44 @@ export function AdvancedSettings({
       topP !== DEFAULTS.topP ||
       maxTokens !== DEFAULTS.maxTokens
 
+  const FADE_MS = 160
+  const [displayImageConfig, setDisplayImageConfig] = useState(showImageConfig)
+  const [panelFadeOpacity, setPanelFadeOpacity] = useState(1)
+
+  useEffect(() => {
+    if (!isExpanded) {
+      setDisplayImageConfig(showImageConfig)
+      setPanelFadeOpacity(1)
+      return
+    }
+    if (showImageConfig === displayImageConfig) {
+      setPanelFadeOpacity(1)
+      return
+    }
+    setPanelFadeOpacity(0)
+    const fadeOutTimer = window.setTimeout(() => {
+      setDisplayImageConfig(showImageConfig)
+    }, FADE_MS)
+    const fadeInTimer = window.setTimeout(() => {
+      setPanelFadeOpacity(1)
+    }, FADE_MS + 24)
+    return () => {
+      window.clearTimeout(fadeOutTimer)
+      window.clearTimeout(fadeInTimer)
+    }
+  }, [showImageConfig, isExpanded, displayImageConfig])
+
+  const imageConfigImpossibleDisplayed =
+    displayImageConfig && (supportedAspectRatios.length === 0 || supportedImageSizes.length === 0)
+  const isNonDefaultDisplayed = displayImageConfig
+    ? (aspectRatio !== imageDefaultRatio || imageSize !== imageDefaultSize) &&
+      !imageConfigImpossibleDisplayed
+    : temperature !== DEFAULTS.temperature ||
+      topP !== DEFAULTS.topP ||
+      maxTokens !== DEFAULTS.maxTokens
+
   const handleReset = () => {
-    if (showImageConfig) {
+    if (displayImageConfig) {
       const targetRatio = defaultAspectRatio ?? '1:1'
       const targetSize = defaultImageSize ?? '1K'
       onAspectRatioChange?.(targetRatio)
@@ -318,29 +350,8 @@ export function AdvancedSettings({
     )
   }
 
-  useEffect(() => {
-    if (!isExpanded) return
-    const handleClickOutside = (e: MouseEvent) => {
-      const target = e.target as Node
-      if (containerRef.current?.contains(target)) return
-      // Don't close when clicking inside model-provider dropdowns (selecting a model)
-      if (
-        excludeFromClickOutsideSelector &&
-        (target as Element).closest?.(excludeFromClickOutsideSelector)
-      ) {
-        return
-      }
-      setIsExpanded(false)
-    }
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [isExpanded, excludeFromClickOutsideSelector])
-
   return (
-    <div
-      ref={containerRef}
-      className={`advanced-settings${isExpanded ? ' advanced-settings-expanded' : ''}`}
-    >
+    <div className={`advanced-settings${isExpanded ? ' advanced-settings-expanded' : ''}`}>
       <button
         type="button"
         className="advanced-settings-toggle"
@@ -376,206 +387,210 @@ export function AdvancedSettings({
 
       {isExpanded && (
         <div id="advanced-settings-content" className="advanced-settings-content">
-          {showImageConfig ? (
-            <>
-              {/* Aspect Ratio - checkbox-style single-select */}
-              <div className="advanced-settings-row">
-                <div className="advanced-settings-label-row">
-                  <span id="aspect-ratio-label" className="advanced-settings-label">
-                    Aspect ratio
-                  </span>
-                  {renderInfoTrigger('aspectRatio')}
-                </div>
-                <div
-                  className="advanced-settings-option-grid"
-                  role="radiogroup"
-                  aria-labelledby="aspect-ratio-label"
-                  aria-label="Aspect ratio"
-                >
-                  {aspectRatioOptions.map(r => {
-                    const isSupported = supportedRatiosSet.has(r) && !imageConfigImpossible
-                    const isSelected = aspectRatio === r
-                    return (
-                      <button
-                        key={r}
-                        type="button"
-                        role="radio"
-                        aria-checked={isSelected}
-                        aria-disabled={disabled || !isSupported}
-                        disabled={disabled || !isSupported}
-                        className={`advanced-settings-option-chip ${!isSupported ? 'disabled' : ''} ${isSelected ? 'selected' : ''}`}
-                        onClick={() => isSupported && onAspectRatioChange?.(r)}
-                      >
-                        <span className="advanced-settings-option-chip-label">{r}</span>
-                      </button>
-                    )
-                  })}
-                </div>
-              </div>
-              {/* Image Size - checkbox-style single-select */}
-              <div className="advanced-settings-row">
-                <div className="advanced-settings-label-row">
-                  <span id="image-size-label" className="advanced-settings-label">
-                    Image size
-                  </span>
-                  {renderInfoTrigger('imageSize')}
-                </div>
-                <div
-                  className="advanced-settings-option-grid"
-                  role="radiogroup"
-                  aria-labelledby="image-size-label"
-                  aria-label="Image size"
-                >
-                  {imageSizeOptions.map(s => {
-                    const isSupported = supportedSizesSet.has(s) && !imageConfigImpossible
-                    const isSelected = imageSize === s
-                    return (
-                      <button
-                        key={s}
-                        type="button"
-                        role="radio"
-                        aria-checked={isSelected}
-                        aria-disabled={disabled || !isSupported}
-                        disabled={disabled || !isSupported}
-                        className={`advanced-settings-option-chip ${!isSupported ? 'disabled' : ''} ${isSelected ? 'selected' : ''}`}
-                        onClick={() => isSupported && onImageSizeChange?.(s)}
-                      >
-                        <span className="advanced-settings-option-chip-label">{s}</span>
-                      </button>
-                    )
-                  })}
-                </div>
-              </div>
-            </>
-          ) : (
-            <>
-              {/* Temperature */}
-              <div className="advanced-settings-row">
-                <div className="advanced-settings-label-row">
-                  <label htmlFor="temperature-slider" className="advanced-settings-label">
-                    Temperature
-                    <span className="advanced-settings-hint">(0–2)</span>
-                  </label>
-                  {renderInfoTrigger('temperature')}
-                </div>
-                <div className="advanced-settings-slider-wrap">
-                  <input
-                    id="temperature-slider"
-                    type="range"
-                    min="0"
-                    max="2"
-                    step="0.1"
-                    value={clampedTemp}
-                    onChange={e => onTemperatureChange(parseFloat(e.target.value))}
-                    disabled={disabled}
-                    className="advanced-settings-slider"
-                    aria-valuemin={0}
-                    aria-valuemax={2}
-                    aria-valuenow={clampedTemp}
-                    aria-valuetext={displayTemp}
-                  />
-                  <span
-                    className={`advanced-settings-value ${temperature !== DEFAULTS.temperature ? 'modified' : ''}`}
-                  >
-                    {displayTemp}
-                  </span>
-                </div>
-              </div>
-
-              {/* Top P */}
-              <div className="advanced-settings-row">
-                <div className="advanced-settings-label-row">
-                  <label htmlFor="top-p-slider" className="advanced-settings-label">
-                    Top P<span className="advanced-settings-hint">(0–1)</span>
-                  </label>
-                  {renderInfoTrigger('topP')}
-                </div>
-                <div className="advanced-settings-slider-wrap">
-                  <input
-                    id="top-p-slider"
-                    type="range"
-                    min="0"
-                    max="1"
-                    step="0.05"
-                    value={clampedTopP}
-                    onChange={e => onTopPChange(parseFloat(e.target.value))}
-                    disabled={disabled}
-                    className="advanced-settings-slider"
-                    aria-valuemin={0}
-                    aria-valuemax={1}
-                    aria-valuenow={clampedTopP}
-                    aria-valuetext={displayTopP}
-                  />
-                  <span
-                    className={`advanced-settings-value ${topP !== DEFAULTS.topP ? 'modified' : ''}`}
-                  >
-                    {displayTopP}
-                  </span>
-                </div>
-              </div>
-
-              {/* Max Tokens */}
-              <div className="advanced-settings-row">
-                <div className="advanced-settings-label-row">
-                  <label htmlFor="max-tokens-slider" className="advanced-settings-label">
-                    Max output tokens
-                    <span className="advanced-settings-hint">
-                      (Auto or 256–{effectiveMax.toLocaleString()})
+          <div className="advanced-settings-panel-fade" style={{ opacity: panelFadeOpacity }}>
+            {displayImageConfig ? (
+              <>
+                {/* Aspect Ratio - checkbox-style single-select */}
+                <div className="advanced-settings-row">
+                  <div className="advanced-settings-label-row">
+                    <span id="aspect-ratio-label" className="advanced-settings-label">
+                      Aspect ratio
                     </span>
-                  </label>
-                  {renderInfoTrigger('maxTokens')}
+                    {renderInfoTrigger('aspectRatio')}
+                  </div>
+                  <div
+                    className="advanced-settings-option-grid advanced-settings-option-grid--image"
+                    role="radiogroup"
+                    aria-labelledby="aspect-ratio-label"
+                    aria-label="Aspect ratio"
+                  >
+                    {aspectRatioOptions.map(r => {
+                      const isSupported =
+                        supportedRatiosSet.has(r) && !imageConfigImpossibleDisplayed
+                      const isSelected = aspectRatio === r
+                      return (
+                        <button
+                          key={r}
+                          type="button"
+                          role="radio"
+                          aria-checked={isSelected}
+                          aria-disabled={disabled || !isSupported}
+                          disabled={disabled || !isSupported}
+                          className={`advanced-settings-option-chip ${!isSupported ? 'disabled' : ''} ${isSelected ? 'selected' : ''}`}
+                          onClick={() => isSupported && onAspectRatioChange?.(r)}
+                        >
+                          <span className="advanced-settings-option-chip-label">{r}</span>
+                        </button>
+                      )
+                    })}
+                  </div>
                 </div>
-                <div className="advanced-settings-slider-wrap">
-                  <input
-                    id="max-tokens-slider"
-                    type="range"
-                    min={MAX_TOKENS_MIN}
-                    max={effectiveMax}
-                    step={stepForRange(MAX_TOKENS_MIN, effectiveMax)}
-                    value={Math.min(maxTokensSliderValue, effectiveMax)}
-                    onChange={handleMaxTokensSlider}
-                    disabled={disabled}
-                    className="advanced-settings-slider"
-                    aria-valuemin={MAX_TOKENS_MIN}
-                    aria-valuemax={effectiveMax}
-                    aria-valuenow={Math.min(maxTokensSliderValue, effectiveMax)}
-                    aria-valuetext={maxTokens ? String(maxTokens) : 'Auto'}
-                  />
-                  <input
-                    id="max-tokens-input"
-                    type="number"
-                    min={MAX_TOKENS_MIN}
-                    max={effectiveMax}
-                    step={stepForRange(MAX_TOKENS_MIN, effectiveMax)}
-                    value={maxTokens ?? ''}
-                    onChange={handleMaxTokensInput}
-                    disabled={disabled}
-                    placeholder="Auto"
-                    className="advanced-settings-number-input"
-                    aria-label="Max output tokens value"
-                  />
+                {/* Image Size - checkbox-style single-select */}
+                <div className="advanced-settings-row">
+                  <div className="advanced-settings-label-row">
+                    <span id="image-size-label" className="advanced-settings-label">
+                      Image size
+                    </span>
+                    {renderInfoTrigger('imageSize')}
+                  </div>
+                  <div
+                    className="advanced-settings-option-grid advanced-settings-option-grid--image"
+                    role="radiogroup"
+                    aria-labelledby="image-size-label"
+                    aria-label="Image size"
+                  >
+                    {imageSizeOptions.map(s => {
+                      const isSupported =
+                        supportedSizesSet.has(s) && !imageConfigImpossibleDisplayed
+                      const isSelected = imageSize === s
+                      return (
+                        <button
+                          key={s}
+                          type="button"
+                          role="radio"
+                          aria-checked={isSelected}
+                          aria-disabled={disabled || !isSupported}
+                          disabled={disabled || !isSupported}
+                          className={`advanced-settings-option-chip ${!isSupported ? 'disabled' : ''} ${isSelected ? 'selected' : ''}`}
+                          onClick={() => isSupported && onImageSizeChange?.(s)}
+                        >
+                          <span className="advanced-settings-option-chip-label">{s}</span>
+                        </button>
+                      )
+                    })}
+                  </div>
                 </div>
-              </div>
-            </>
-          )}
+              </>
+            ) : (
+              <>
+                {/* Temperature */}
+                <div className="advanced-settings-row">
+                  <div className="advanced-settings-label-row">
+                    <label htmlFor="temperature-slider" className="advanced-settings-label">
+                      Temperature
+                      <span className="advanced-settings-hint">(0–2)</span>
+                    </label>
+                    {renderInfoTrigger('temperature')}
+                  </div>
+                  <div className="advanced-settings-slider-wrap">
+                    <input
+                      id="temperature-slider"
+                      type="range"
+                      min="0"
+                      max="2"
+                      step="0.1"
+                      value={clampedTemp}
+                      onChange={e => onTemperatureChange(parseFloat(e.target.value))}
+                      disabled={disabled}
+                      className="advanced-settings-slider"
+                      aria-valuemin={0}
+                      aria-valuemax={2}
+                      aria-valuenow={clampedTemp}
+                      aria-valuetext={displayTemp}
+                    />
+                    <span
+                      className={`advanced-settings-value ${temperature !== DEFAULTS.temperature ? 'modified' : ''}`}
+                    >
+                      {displayTemp}
+                    </span>
+                  </div>
+                </div>
 
-          {/* Reset to defaults - always visible; disabled when already at defaults */}
-          <div className="advanced-settings-reset-row">
-            <button
-              type="button"
-              className="advanced-settings-reset-btn"
-              onClick={handleReset}
-              disabled={disabled || !isNonDefault || imageConfigImpossible}
-              title={
-                isNonDefault
-                  ? showImageConfig
-                    ? 'Restore aspect ratio 1:1, image size 1K'
-                    : 'Restore Temperature 0.7, Top P 1.0, Max output tokens Auto'
-                  : 'Already using default values'
-              }
-            >
-              Reset to defaults
-            </button>
+                {/* Top P */}
+                <div className="advanced-settings-row">
+                  <div className="advanced-settings-label-row">
+                    <label htmlFor="top-p-slider" className="advanced-settings-label">
+                      Top P<span className="advanced-settings-hint">(0–1)</span>
+                    </label>
+                    {renderInfoTrigger('topP')}
+                  </div>
+                  <div className="advanced-settings-slider-wrap">
+                    <input
+                      id="top-p-slider"
+                      type="range"
+                      min="0"
+                      max="1"
+                      step="0.05"
+                      value={clampedTopP}
+                      onChange={e => onTopPChange(parseFloat(e.target.value))}
+                      disabled={disabled}
+                      className="advanced-settings-slider"
+                      aria-valuemin={0}
+                      aria-valuemax={1}
+                      aria-valuenow={clampedTopP}
+                      aria-valuetext={displayTopP}
+                    />
+                    <span
+                      className={`advanced-settings-value ${topP !== DEFAULTS.topP ? 'modified' : ''}`}
+                    >
+                      {displayTopP}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Max Tokens */}
+                <div className="advanced-settings-row">
+                  <div className="advanced-settings-label-row">
+                    <label htmlFor="max-tokens-slider" className="advanced-settings-label">
+                      Max output tokens
+                      <span className="advanced-settings-hint">
+                        (Auto or 256–{effectiveMax.toLocaleString()})
+                      </span>
+                    </label>
+                    {renderInfoTrigger('maxTokens')}
+                  </div>
+                  <div className="advanced-settings-slider-wrap">
+                    <input
+                      id="max-tokens-slider"
+                      type="range"
+                      min={MAX_TOKENS_MIN}
+                      max={effectiveMax}
+                      step={stepForRange(MAX_TOKENS_MIN, effectiveMax)}
+                      value={Math.min(maxTokensSliderValue, effectiveMax)}
+                      onChange={handleMaxTokensSlider}
+                      disabled={disabled}
+                      className="advanced-settings-slider"
+                      aria-valuemin={MAX_TOKENS_MIN}
+                      aria-valuemax={effectiveMax}
+                      aria-valuenow={Math.min(maxTokensSliderValue, effectiveMax)}
+                      aria-valuetext={maxTokens ? String(maxTokens) : 'Auto'}
+                    />
+                    <input
+                      id="max-tokens-input"
+                      type="number"
+                      min={MAX_TOKENS_MIN}
+                      max={effectiveMax}
+                      step={stepForRange(MAX_TOKENS_MIN, effectiveMax)}
+                      value={maxTokens ?? ''}
+                      onChange={handleMaxTokensInput}
+                      disabled={disabled}
+                      placeholder="Auto"
+                      className="advanced-settings-number-input"
+                      aria-label="Max output tokens value"
+                    />
+                  </div>
+                </div>
+              </>
+            )}
+
+            {/* Reset to defaults - always visible; disabled when already at defaults */}
+            <div className="advanced-settings-reset-row">
+              <button
+                type="button"
+                className="advanced-settings-reset-btn"
+                onClick={handleReset}
+                disabled={disabled || !isNonDefaultDisplayed || imageConfigImpossibleDisplayed}
+                title={
+                  isNonDefaultDisplayed
+                    ? displayImageConfig
+                      ? 'Restore aspect ratio 1:1, image size 1K'
+                      : 'Restore Temperature 0.7, Top P 1.0, Max output tokens Auto'
+                    : 'Already using default values'
+                }
+              >
+                Reset to defaults
+              </button>
+            </div>
           </div>
         </div>
       )}

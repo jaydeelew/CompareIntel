@@ -106,6 +106,27 @@
   color: var(--text-secondary);
 }
 
+.disabled-model-info-learn-more {
+  margin: 0 0 0.5rem 0;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.disabled-model-info-learn-more:last-child {
+  margin-bottom: 0;
+}
+
+.disabled-model-info-page-link {
+  color: var(--primary-color);
+  font-weight: 500;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.disabled-model-info-page-link:hover {
+  filter: brightness(1.08);
+}
+
 .disabled-model-info-button-demo {
   background: var(--bg-tertiary);
   border: 1px solid var(--border-color);

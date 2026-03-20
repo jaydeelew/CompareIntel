@@ -111,6 +111,12 @@ export interface ConversationSummary {
   created_at: string
   /** Optional count of messages in the conversation */
   message_count?: number
+  /** Saved Text Models Advanced settings (from API); localStorage uses textComposerAdvanced on full payload */
+  composer_temperature?: number | null
+  composer_top_p?: number | null
+  composer_max_tokens?: number | null
+  composer_aspect_ratio?: string | null
+  composer_image_size?: string | null
 }
 
 /**

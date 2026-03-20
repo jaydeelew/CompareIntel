@@ -23,6 +23,12 @@ export interface UseStreamCompletionConfig {
   attachedFiles: (AttachedFile | StoredAttachedFile)[]
   browserFingerprint: string
   lastSubmittedInputRef: React.MutableRefObject<string>
+  modelMode: 'text' | 'image'
+  temperature: number
+  topP: number
+  maxTokens: number | null
+  aspectRatio: string
+  imageSize: string
 }
 
 export interface UseStreamCompletionCallbacks {
@@ -42,7 +48,12 @@ export interface UseStreamCompletionCallbacks {
     models: string[],
     conversations: ModelConversation[],
     isUpdate: boolean,
-    fileContents?: Array<{ name: string; content: string; placeholder: string }>
+    fileContents?: Array<{ name: string; content: string; placeholder: string }>,
+    conversationType?: 'comparison' | 'breakout',
+    parentConversationId?: string | null,
+    breakoutModelId?: string | null,
+    textComposerAdvanced?: import('../types').TextComposerAdvancedSettings,
+    imageComposerAdvanced?: import('../types').ImageComposerAdvancedSettings
   ) => string | null
   syncHistoryAfterComparison: (input: string, models: string[]) => Promise<void>
   getFirstUserMessage: () => import('../types/conversation').ConversationMessage | undefined
@@ -62,6 +73,12 @@ export function useStreamCompletion(
     attachedFiles,
     browserFingerprint,
     lastSubmittedInputRef,
+    modelMode,
+    temperature,
+    topP,
+    maxTokens,
+    aspectRatio,
+    imageSize,
   } = config
 
   const {
@@ -97,6 +114,10 @@ export function useStreamCompletion(
         streamingMetadata,
         streamError,
       } = streamResult
+
+      const textComposerSnapshot =
+        modelMode === 'text' ? { temperature, topP, maxTokens } : undefined
+      const imageComposerSnapshot = modelMode === 'image' ? { aspectRatio, imageSize } : undefined
 
       if (streamError) {
         const errorModelErrors: { [key: string]: boolean } = { ...localModelErrors }
@@ -295,7 +316,12 @@ export function useStreamCompletion(
                       selectedModels,
                       conversationsWithMessages,
                       false,
-                      fileContentsForSave
+                      fileContentsForSave,
+                      'comparison',
+                      undefined,
+                      undefined,
+                      textComposerSnapshot,
+                      imageComposerSnapshot
                     )
                     if (savedId) setCurrentVisibleComparisonId(savedId)
                   })()
@@ -361,7 +387,12 @@ export function useStreamCompletion(
                       selectedModels,
                       conversationsWithMessages,
                       true,
-                      fileContentsForSave
+                      fileContentsForSave,
+                      'comparison',
+                      undefined,
+                      undefined,
+                      textComposerSnapshot,
+                      imageComposerSnapshot
                     )
                     if (savedId) setCurrentVisibleComparisonId(savedId)
                   })()
@@ -467,6 +498,12 @@ export function useStreamCompletion(
       attachedFiles,
       browserFingerprint,
       lastSubmittedInputRef,
+      modelMode,
+      temperature,
+      topP,
+      maxTokens,
+      aspectRatio,
+      imageSize,
       setError,
       setModelErrors,
       setActiveResultTabs,

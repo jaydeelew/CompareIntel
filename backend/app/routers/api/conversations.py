@@ -80,6 +80,11 @@ async def get_conversations(
                 breakout_model_id=conv.breakout_model_id,
                 created_at=conv.created_at,
                 message_count=message_count,
+                composer_temperature=conv.composer_temperature,
+                composer_top_p=conv.composer_top_p,
+                composer_max_tokens=conv.composer_max_tokens,
+                composer_aspect_ratio=conv.composer_aspect_ratio,
+                composer_image_size=conv.composer_image_size,
             )
         )
 
@@ -166,6 +171,11 @@ async def get_conversation(
         already_broken_out_models=already_broken_out_models,
         created_at=conversation.created_at,
         messages=message_schemas,
+        composer_temperature=conversation.composer_temperature,
+        composer_top_p=conversation.composer_top_p,
+        composer_max_tokens=conversation.composer_max_tokens,
+        composer_aspect_ratio=conversation.composer_aspect_ratio,
+        composer_image_size=conversation.composer_image_size,
     )
 
 
@@ -265,6 +275,11 @@ async def create_breakout_conversation(
         conversation_type="breakout",
         parent_conversation_id=parent_conversation.id,
         breakout_model_id=breakout_data.model_id,
+        composer_temperature=parent_conversation.composer_temperature,
+        composer_top_p=parent_conversation.composer_top_p,
+        composer_max_tokens=parent_conversation.composer_max_tokens,
+        composer_aspect_ratio=parent_conversation.composer_aspect_ratio,
+        composer_image_size=parent_conversation.composer_image_size,
     )
     db.add(breakout_conversation)
     db.flush()
@@ -325,4 +340,9 @@ async def create_breakout_conversation(
         breakout_model_id=breakout_conversation.breakout_model_id,
         created_at=breakout_conversation.created_at,
         messages=message_schemas,
+        composer_temperature=breakout_conversation.composer_temperature,
+        composer_top_p=breakout_conversation.composer_top_p,
+        composer_max_tokens=breakout_conversation.composer_max_tokens,
+        composer_aspect_ratio=breakout_conversation.composer_aspect_ratio,
+        composer_image_size=breakout_conversation.composer_image_size,
     )

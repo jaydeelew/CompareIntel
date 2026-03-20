@@ -25,6 +25,12 @@ export interface UseStreamTimeoutConfig {
   browserFingerprint: string
   userCancelledRef: React.MutableRefObject<boolean>
   lastSubmittedInputRef: React.MutableRefObject<string>
+  modelMode: 'text' | 'image'
+  temperature: number
+  topP: number
+  maxTokens: number | null
+  aspectRatio: string
+  imageSize: string
 }
 
 export interface UseStreamTimeoutCallbacks {
@@ -45,7 +51,12 @@ export interface UseStreamTimeoutCallbacks {
     models: string[],
     conversations: ModelConversation[],
     isUpdate: boolean,
-    fileContents?: Array<{ name: string; content: string; placeholder: string }>
+    fileContents?: Array<{ name: string; content: string; placeholder: string }>,
+    conversationType?: 'comparison' | 'breakout',
+    parentConversationId?: string | null,
+    breakoutModelId?: string | null,
+    textComposerAdvanced?: import('../types').TextComposerAdvancedSettings,
+    imageComposerAdvanced?: import('../types').ImageComposerAdvancedSettings
   ) => string | null
   syncHistoryAfterComparison: (input: string, models: string[]) => Promise<void>
   getFirstUserMessage: () => import('../types/conversation').ConversationMessage | undefined
@@ -66,6 +77,12 @@ export function useStreamTimeout(
     browserFingerprint,
     userCancelledRef,
     lastSubmittedInputRef,
+    modelMode,
+    temperature,
+    topP,
+    maxTokens,
+    aspectRatio,
+    imageSize,
   } = config
 
   const {
@@ -87,6 +104,10 @@ export function useStreamTimeout(
 
   const handleStreamError = useCallback(
     (err: unknown, streamResult: ProcessStreamResult | null, startTime: number): void => {
+      const textComposerSnapshot =
+        modelMode === 'text' ? { temperature, topP, maxTokens } : undefined
+      const imageComposerSnapshot = modelMode === 'image' ? { aspectRatio, imageSize } : undefined
+
       const streamingResults = streamResult?.streamingResults ?? {}
       const streamingImages = streamResult?.streamingImages ?? {}
       const completedModels = streamResult?.completedModels ?? new Set<string>()
@@ -241,7 +262,12 @@ export function useStreamTimeout(
                       selectedModels,
                       conversationsWithMessages,
                       false,
-                      fileContentsForSave
+                      fileContentsForSave,
+                      'comparison',
+                      undefined,
+                      undefined,
+                      textComposerSnapshot,
+                      imageComposerSnapshot
                     )
                     if (savedId) {
                       setCurrentVisibleComparisonId(savedId)
@@ -528,6 +554,12 @@ export function useStreamTimeout(
       browserFingerprint,
       userCancelledRef,
       lastSubmittedInputRef,
+      modelMode,
+      temperature,
+      topP,
+      maxTokens,
+      aspectRatio,
+      imageSize,
       setError,
       setModelErrors,
       setActiveResultTabs,

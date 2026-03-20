@@ -4,6 +4,8 @@
  */
 
 import React, { useCallback, useEffect, useRef } from 'react'
+
+import { ImageGenerationPageLink } from './ImageGenerationPageLink'
 import './DisabledModelInfoModal.css'
 
 export type DisabledModelModalInfo = {
@@ -171,6 +173,7 @@ export const DisabledModelInfoModal: React.FC<
         </div>
         <div className="disabled-model-info-content">
           <p id="disabled-model-info-message">{message}</p>
+          {info.imageMode && <ImageGenerationPageLink onNavigate={onClose} />}
           {showHidePremium && (
             <div className="disabled-model-info-button-demo">
               <div className="disabled-model-info-button-label-row">

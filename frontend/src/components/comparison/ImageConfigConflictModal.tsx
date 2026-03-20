@@ -7,6 +7,8 @@ import React, { useEffect, useRef } from 'react'
 
 import type { ModelsByProvider } from '../../types'
 import { getModelNames } from '../../utils/visionModels'
+
+import { ImageGenerationPageLink } from './ImageGenerationPageLink'
 import './DisabledModelInfoModal.css'
 
 export type ImageConfigConflictType =
@@ -190,6 +192,7 @@ export const ImageConfigConflictModal: React.FC<ImageConfigConflictModalProps> =
         </div>
         <div className="disabled-model-info-content">
           <p>{message}</p>
+          <ImageGenerationPageLink onNavigate={onClose} />
         </div>
         <div className="disabled-model-info-footer">
           <button

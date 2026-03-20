@@ -504,6 +504,7 @@ def call_openrouter_streaming(
 
             full_content = ""
             finish_reason = None
+            repetition_detected = False  # Set True when detect_repetition stops the stream
             usage_data = None
             image_count = 0
             image_urls_seen: set[str] = (
@@ -654,6 +655,7 @@ def call_openrouter_streaming(
                                                 f"Stopping stream early to prevent looping."
                                             )
                                             yield "\n\n⚠️ Response stopped - detected repetitive content."
+                                            repetition_detected = True
                                             finish_reason = "length"
                                             break
 
@@ -2231,6 +2233,7 @@ def call_openrouter_streaming(
                                                         f"Stopping stream early to prevent looping."
                                                     )
                                                     yield "\n\n⚠️ Response stopped - detected repetitive content."
+                                                    repetition_detected = True
                                                     finish_reason = "length"
                                                     break
 

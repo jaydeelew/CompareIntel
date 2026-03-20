@@ -26,6 +26,11 @@ export interface ConversationDetail {
   already_broken_out_models?: string[]
   created_at: string
   messages: ConversationMessage[]
+  composer_temperature?: number | null
+  composer_top_p?: number | null
+  composer_max_tokens?: number | null
+  composer_aspect_ratio?: string | null
+  composer_image_size?: string | null
 }
 
 /**

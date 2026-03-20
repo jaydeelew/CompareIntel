@@ -14,6 +14,7 @@ from sqlalchemy import (
     Column,
     Date,
     DateTime,
+    Float,
     ForeignKey,
     Integer,
     String,
@@ -200,6 +201,15 @@ class Conversation(Base):
     breakout_model_id = Column(
         String(255), nullable=True
     )  # The specific model that was broken out (for breakout type)
+
+    # Text composer Advanced (temperature / top_p / max_tokens); updated on text-mode compare-stream saves
+    composer_temperature = Column(Float, nullable=True)
+    composer_top_p = Column(Float, nullable=True)
+    composer_max_tokens = Column(Integer, nullable=True)
+
+    # Image composer Advanced (aspect ratio / image size); updated when compare-stream sends image_config
+    composer_aspect_ratio = Column(String(32), nullable=True)
+    composer_image_size = Column(String(32), nullable=True)
 
     # Timestamps
     created_at = Column(DateTime, default=func.now(), index=True)
