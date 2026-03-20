@@ -39,6 +39,33 @@ function restoreProviderModelToggleScroll(pos: { app: number; win: number }): vo
 /** Gate restore/resize handling after a provider-row pointerdown (focus + flex/selected-column layout). */
 const PROVIDER_TOGGLE_SCROLL_MAX_AGE_MS = 650
 
+/**
+ * With "hide locked models" on, tier filtering can drop every model for a provider (e.g. unregistered
+ * users + image models only marked `free`). Fall back to the full provider list so dropdowns never
+ * disappear while the API still returned models; restricted styling still applies per row.
+ */
+function getVisibleModelsAfterTierFilter(
+  models: Model[],
+  hidePremiumModels: boolean,
+  isPaidTier: boolean,
+  userTier: string
+): { visibleModels: Model[]; usedTierFilterFallback: boolean } {
+  if (!hidePremiumModels) {
+    return { visibleModels: models, usedTierFilterFallback: false }
+  }
+  const filtered = models.filter(model => {
+    if (isPaidTier) return true
+    if (model.trial_unlocked) return true
+    if (userTier === 'unregistered') return model.tier_access === 'unregistered'
+    return model.tier_access !== 'paid'
+  })
+  const usedTierFilterFallback = !isPaidTier && models.length > 0 && filtered.length === 0
+  return {
+    visibleModels: usedTierFilterFallback ? models : filtered,
+    usedTierFilterFallback,
+  }
+}
+
 function scheduleScrollRestores(pos: { app: number; win: number }): void {
   const apply = () => restoreProviderModelToggleScroll(pos)
   apply()
@@ -379,20 +406,9 @@ export const ModelsSection: React.FC<ModelsSectionProps> = ({
     <div className="models-selection-layout" ref={modelsSelectionLayoutRef}>
       <div className="provider-dropdowns">
         {Object.entries(modelsByProvider).map(([provider, models]) => {
-          // Filter models based on hidePremiumModels toggle
-          // When toggle is active, hide models that are restricted for the user's tier
-          // Note: trial_unlocked models are available during the 7-day trial period
-          let visibleModels = hidePremiumModels
-            ? models.filter(model => {
-                if (isPaidTier) return true // Paid tiers see all
-                if (model.trial_unlocked) return true // Trial users see trial-unlocked models
-                if (userTier === 'unregistered') {
-                  return model.tier_access === 'unregistered'
-                }
-                // Free tier
-                return model.tier_access !== 'paid'
-              })
-            : models
+          const { visibleModels: tierVisible, usedTierFilterFallback } =
+            getVisibleModelsAfterTierFilter(models, hidePremiumModels, isPaidTier, userTier)
+          let visibleModels = tierVisible
 
           // When image is attached, limit to vision-capable models only
           if (hasAttachedImages) {
@@ -519,13 +535,13 @@ export const ModelsSection: React.FC<ModelsSectionProps> = ({
                     const isUnavailable = model.available === false
 
                     // Determine if model is restricted based on user tier
-                    // When hidePremiumModels is true, restricted models are already filtered out
-                    // trial_unlocked models are available during 7-day trial period
+                    // When hidePremiumModels is true, restricted models are usually filtered out;
+                    // usedTierFilterFallback shows the full list so tier checks apply here again.
                     // imageModelsDisabledForUnregistered: unregistered users cannot select image models
                     let isRestricted = false
                     if (imageModelsDisabledForUnregistered) {
                       isRestricted = true
-                    } else if (!hidePremiumModels) {
+                    } else if (!hidePremiumModels || usedTierFilterFallback) {
                       if (isPaidTier) {
                         // Paid tiers have access to all models
                         isRestricted = false
@@ -845,14 +861,13 @@ export const ModelsSection: React.FC<ModelsSectionProps> = ({
       {selectAllModalProvider &&
         (() => {
           const models = modelsByProvider[selectAllModalProvider] || []
-          let visibleModels = hidePremiumModels
-            ? models.filter(model => {
-                if (isPaidTier) return true
-                if (model.trial_unlocked) return true
-                if (userTier === 'unregistered') return model.tier_access === 'unregistered'
-                return model.tier_access !== 'paid'
-              })
-            : models
+          const { visibleModels: tierVisible } = getVisibleModelsAfterTierFilter(
+            models,
+            hidePremiumModels,
+            isPaidTier,
+            userTier
+          )
+          let visibleModels = tierVisible
           if (hasAttachedImages) {
             visibleModels = filterToVisionModels(visibleModels, modelsByProvider)
           }
