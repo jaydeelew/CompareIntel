@@ -250,7 +250,6 @@ export const ComparisonForm = memo<ComparisonFormProps>(
       [
         isSpeechListening,
         canEnableWebSearch,
-        webSearchEnabled,
         creditsRemaining,
         imageGenerationSubmitBlocked,
         imageGenerationNoSharedImageOptions,
@@ -273,7 +272,8 @@ export const ComparisonForm = memo<ComparisonFormProps>(
             else startSpeechListening()
             break
           case 'web-search':
-            setWebSearchEnabled(!webSearchEnabled)
+            // Mobile opens this modal only when turning web search on (off is a direct tap).
+            setWebSearchEnabled(true)
             break
           case 'submit':
             if (isFollowUpMode) onContinueConversation()
@@ -285,7 +285,6 @@ export const ComparisonForm = memo<ComparisonFormProps>(
         isSpeechListening,
         stopSpeechListening,
         startSpeechListening,
-        webSearchEnabled,
         setWebSearchEnabled,
         isFollowUpMode,
         onContinueConversation,

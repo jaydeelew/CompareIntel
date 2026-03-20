@@ -1,4 +1,25 @@
+import type { Locator, Page } from '@playwright/test'
+
 import { test, expect } from './fixtures'
+import { isMobileE2eProject, toggleModelCheckbox } from './helpers/modelCheckbox'
+
+async function ensureFirstProviderExpanded(page: Page): Promise<void> {
+  const headers = page.locator('.provider-header, button[class*="provider-header"]')
+  if ((await headers.count()) === 0) return
+  const first = headers.first()
+  if ((await first.getAttribute('aria-expanded')) !== 'true') {
+    await first.click()
+    await page.waitForTimeout(500)
+  }
+}
+
+function firstResultCard(page: Page): Locator {
+  return page.locator('.result-card, [data-testid^="result-card-"]').first()
+}
+
+function allResultCards(page: Page): Locator {
+  return page.locator('.result-card, [data-testid^="result-card-"]')
+}
 
 /**
  * E2E Tests: Results Display Regression Tests
@@ -109,7 +130,7 @@ test.describe('Results Display Regression Tests', () => {
         }
 
         // Verify result cards appear
-        const resultCards = authenticatedPage.locator('.result-card, [data-testid^="result-card-"]')
+        const resultCards = allResultCards(authenticatedPage)
         await expect(resultCards.first()).toBeVisible({ timeout: 30000 })
 
         const cardCount = await resultCards.count()
@@ -117,7 +138,7 @@ test.describe('Results Display Regression Tests', () => {
       })
 
       await test.step('Verify result card structure', async () => {
-        const resultCard = authenticatedPage.locator('.result-card').first()
+        const resultCard = firstResultCard(authenticatedPage)
 
         // Check header exists
         const header = resultCard.locator('.result-header')
@@ -135,7 +156,8 @@ test.describe('Results Display Regression Tests', () => {
       })
     })
 
-    test('Result card shows formatted view by default', async ({ authenticatedPage }) => {
+    test('Result card shows formatted view by default', async ({ authenticatedPage }, testInfo) => {
+      const projectName = testInfo.project.name
       await test.step('Perform comparison', async () => {
         const inputField = authenticatedPage.getByTestId('comparison-input-textarea')
         await inputField.fill('Explain what a variable is in programming')
@@ -144,27 +166,19 @@ test.describe('Results Display Regression Tests', () => {
         const loadingMessage = authenticatedPage.locator('.loading-message')
         await loadingMessage.waitFor({ state: 'hidden', timeout: 10000 }).catch(() => {})
 
-        const providerHeaders = authenticatedPage.locator('.provider-header')
-        if ((await providerHeaders.count()) > 0) {
-          const firstProvider = providerHeaders.first()
-          const isExpanded = await firstProvider.getAttribute('aria-expanded')
-          if (isExpanded !== 'true') {
-            await firstProvider.click()
-            await authenticatedPage.waitForTimeout(500)
-          }
-        }
+        await ensureFirstProviderExpanded(authenticatedPage)
 
         const modelCheckboxes = authenticatedPage.locator(
           '[data-testid^="model-checkbox-"], input[type="checkbox"].model-checkbox'
         )
         await expect(modelCheckboxes.first()).toBeVisible({ timeout: 15000 })
-        await modelCheckboxes.first().check()
+        await toggleModelCheckbox(modelCheckboxes.first(), projectName)
 
         await authenticatedPage.getByTestId('comparison-submit-button').click()
       })
 
       await test.step('Verify formatted tab is active', async () => {
-        const resultCard = authenticatedPage.locator('.result-card').first()
+        const resultCard = firstResultCard(authenticatedPage)
         await expect(resultCard).toBeVisible({ timeout: 30000 })
 
         // Check that formatted tab is active (not raw)
@@ -179,7 +193,10 @@ test.describe('Results Display Regression Tests', () => {
       })
     })
 
-    test('Tab switching between formatted and raw views works', async ({ authenticatedPage }) => {
+    test('Tab switching between formatted and raw views works', async ({
+      authenticatedPage,
+    }, testInfo) => {
+      const projectName = testInfo.project.name
       await test.step('Perform comparison', async () => {
         const inputField = authenticatedPage.getByTestId('comparison-input-textarea')
         await inputField.fill('What is JavaScript?')
@@ -187,23 +204,19 @@ test.describe('Results Display Regression Tests', () => {
         const loadingMessage = authenticatedPage.locator('.loading-message')
         await loadingMessage.waitFor({ state: 'hidden', timeout: 10000 }).catch(() => {})
 
-        const providerHeaders = authenticatedPage.locator('.provider-header')
-        if ((await providerHeaders.count()) > 0) {
-          await providerHeaders.first().click()
-          await authenticatedPage.waitForTimeout(500)
-        }
+        await ensureFirstProviderExpanded(authenticatedPage)
 
         const modelCheckboxes = authenticatedPage.locator(
           '[data-testid^="model-checkbox-"], input[type="checkbox"].model-checkbox'
         )
         await expect(modelCheckboxes.first()).toBeVisible({ timeout: 15000 })
-        await modelCheckboxes.first().check()
+        await toggleModelCheckbox(modelCheckboxes.first(), projectName)
 
         await authenticatedPage.getByTestId('comparison-submit-button').click()
       })
 
       await test.step('Switch to raw view', async () => {
-        const resultCard = authenticatedPage.locator('.result-card').first()
+        const resultCard = firstResultCard(authenticatedPage)
         await expect(resultCard).toBeVisible({ timeout: 30000 })
 
         // Wait for content to load
@@ -223,7 +236,7 @@ test.describe('Results Display Regression Tests', () => {
       })
 
       await test.step('Switch back to formatted view', async () => {
-        const resultCard = authenticatedPage.locator('.result-card').first()
+        const resultCard = firstResultCard(authenticatedPage)
 
         // Find and click formatted tab
         const formattedTab = resultCard
@@ -241,7 +254,8 @@ test.describe('Results Display Regression Tests', () => {
   })
 
   test.describe('Result Card Actions', () => {
-    test('Copy response button works', async ({ authenticatedPage }) => {
+    test('Copy response button works', async ({ authenticatedPage }, testInfo) => {
+      const projectName = testInfo.project.name
       await test.step('Setup comparison', async () => {
         const inputField = authenticatedPage.getByTestId('comparison-input-textarea')
         await inputField.fill('Say hello')
@@ -249,23 +263,19 @@ test.describe('Results Display Regression Tests', () => {
         const loadingMessage = authenticatedPage.locator('.loading-message')
         await loadingMessage.waitFor({ state: 'hidden', timeout: 10000 }).catch(() => {})
 
-        const providerHeaders = authenticatedPage.locator('.provider-header')
-        if ((await providerHeaders.count()) > 0) {
-          await providerHeaders.first().click()
-          await authenticatedPage.waitForTimeout(500)
-        }
+        await ensureFirstProviderExpanded(authenticatedPage)
 
         const modelCheckboxes = authenticatedPage.locator(
           '[data-testid^="model-checkbox-"], input[type="checkbox"].model-checkbox'
         )
         await expect(modelCheckboxes.first()).toBeVisible({ timeout: 15000 })
-        await modelCheckboxes.first().check()
+        await toggleModelCheckbox(modelCheckboxes.first(), projectName)
 
         await authenticatedPage.getByTestId('comparison-submit-button').click()
       })
 
       await test.step('Click copy button', async () => {
-        const resultCard = authenticatedPage.locator('.result-card').first()
+        const resultCard = firstResultCard(authenticatedPage)
         await expect(resultCard).toBeVisible({ timeout: 30000 })
 
         // Wait for content
@@ -289,7 +299,10 @@ test.describe('Results Display Regression Tests', () => {
       })
     })
 
-    test('Close card button works with multiple results', async ({ authenticatedPage }) => {
+    test('Close card button works with multiple results', async ({
+      authenticatedPage,
+    }, testInfo) => {
+      const projectName = testInfo.project.name
       await test.step('Setup comparison with multiple models', async () => {
         const inputField = authenticatedPage.getByTestId('comparison-input-textarea')
         await inputField.fill('What is Python?')
@@ -297,11 +310,7 @@ test.describe('Results Display Regression Tests', () => {
         const loadingMessage = authenticatedPage.locator('.loading-message')
         await loadingMessage.waitFor({ state: 'hidden', timeout: 10000 }).catch(() => {})
 
-        const providerHeaders = authenticatedPage.locator('.provider-header')
-        if ((await providerHeaders.count()) > 0) {
-          await providerHeaders.first().click()
-          await authenticatedPage.waitForTimeout(500)
-        }
+        await ensureFirstProviderExpanded(authenticatedPage)
 
         const modelCheckboxes = authenticatedPage.locator(
           '[data-testid^="model-checkbox-"], input[type="checkbox"].model-checkbox'
@@ -315,7 +324,7 @@ test.describe('Results Display Regression Tests', () => {
           const checkbox = modelCheckboxes.nth(i)
           const isEnabled = await checkbox.isEnabled().catch(() => false)
           if (isEnabled) {
-            await checkbox.check({ timeout: 10000 })
+            await toggleModelCheckbox(checkbox, projectName)
             selectedCount++
           }
         }
@@ -324,28 +333,46 @@ test.describe('Results Display Regression Tests', () => {
       })
 
       await test.step('Close one result card', async () => {
-        const resultCards = authenticatedPage.locator('.result-card')
+        const isMobile = isMobileE2eProject(projectName)
+        const resultCards = allResultCards(authenticatedPage)
         await expect(resultCards.first()).toBeVisible({ timeout: 30000 })
 
-        const _initialCount = await resultCards.count()
+        const initialCount = await resultCards.count()
 
         // Find close button on first card
         const closeBtn = resultCards
           .first()
           .locator('.close-card-btn, button[title*="Close"], button[title*="Hide"]')
 
-        if (await closeBtn.isVisible({ timeout: 5000 }).catch(() => false)) {
+        await expect(closeBtn).toBeVisible({ timeout: 10000 })
+        try {
+          await closeBtn.tap({ timeout: 5000 })
+        } catch {
           await closeBtn.click()
+        }
 
-          // Verify one less card is visible
-          await authenticatedPage.waitForTimeout(500)
-          const newCount = await resultCards.count()
-          expect(newCount).toBe(initialCount - 1)
+        await authenticatedPage.waitForTimeout(500)
+
+        // Mobile tabbed layout keeps a single .result-card in the DOM; use header "Show all" instead.
+        if (isMobile) {
+          await expect(authenticatedPage.getByTestId('show-all-results-button')).toBeVisible({
+            timeout: 10000,
+          })
+        } else {
+          await expect
+            .poll(async () => allResultCards(authenticatedPage).count(), {
+              timeout: 20000,
+              intervals: [100, 250, 500, 1000],
+            })
+            .toBe(initialCount - 1)
         }
       })
     })
 
-    test('Show all results button restores closed cards', async ({ authenticatedPage }) => {
+    test('Show all results button restores closed cards', async ({
+      authenticatedPage,
+    }, testInfo) => {
+      const projectName = testInfo.project.name
       await test.step('Setup and close a card', async () => {
         const inputField = authenticatedPage.getByTestId('comparison-input-textarea')
         await inputField.fill('Explain recursion')
@@ -353,11 +380,7 @@ test.describe('Results Display Regression Tests', () => {
         const loadingMessage = authenticatedPage.locator('.loading-message')
         await loadingMessage.waitFor({ state: 'hidden', timeout: 10000 }).catch(() => {})
 
-        const providerHeaders = authenticatedPage.locator('.provider-header')
-        if ((await providerHeaders.count()) > 0) {
-          await providerHeaders.first().click()
-          await authenticatedPage.waitForTimeout(500)
-        }
+        await ensureFirstProviderExpanded(authenticatedPage)
 
         const modelCheckboxes = authenticatedPage.locator(
           '[data-testid^="model-checkbox-"], input[type="checkbox"].model-checkbox'
@@ -371,46 +394,68 @@ test.describe('Results Display Regression Tests', () => {
           const checkbox = modelCheckboxes.nth(i)
           const isEnabled = await checkbox.isEnabled().catch(() => false)
           if (isEnabled) {
-            await checkbox.check({ timeout: 10000 })
+            await toggleModelCheckbox(checkbox, projectName)
             selectedCount++
           }
         }
 
         await authenticatedPage.getByTestId('comparison-submit-button').click()
 
-        const resultCards = authenticatedPage.locator('.result-card')
+        const resultCards = allResultCards(authenticatedPage)
         await expect(resultCards.first()).toBeVisible({ timeout: 30000 })
-
-        const _initialCount = await resultCards.count()
 
         // Close first card
         const closeBtn = resultCards
           .first()
           .locator('.close-card-btn, button[title*="Close"], button[title*="Hide"]')
-        if (await closeBtn.isVisible({ timeout: 5000 }).catch(() => false)) {
+        await expect(closeBtn).toBeVisible({ timeout: 10000 })
+        try {
+          await closeBtn.tap({ timeout: 5000 })
+        } catch {
           await closeBtn.click()
-          await authenticatedPage.waitForTimeout(500)
         }
+        await authenticatedPage.waitForTimeout(500)
+
+        await expect(authenticatedPage.getByTestId('show-all-results-button')).toBeVisible({
+          timeout: 10000,
+        })
       })
 
       await test.step('Show all results', async () => {
-        // Look for "show all" button
-        const showAllBtn = authenticatedPage.locator('button[title*="Show all"]')
+        const isMobile = isMobileE2eProject(projectName)
+        const showAllBtn = authenticatedPage.getByTestId('show-all-results-button')
 
-        if (await showAllBtn.isVisible({ timeout: 5000 }).catch(() => false)) {
-          const beforeCount = await authenticatedPage.locator('.result-card').count()
+        await expect(showAllBtn).toBeVisible({ timeout: 15000 })
+
+        const beforeCards = await allResultCards(authenticatedPage).count()
+
+        await showAllBtn.scrollIntoViewIfNeeded().catch(() => {})
+        try {
+          await showAllBtn.tap({ timeout: 5000 })
+        } catch {
           await showAllBtn.click()
-          await authenticatedPage.waitForTimeout(500)
-          const afterCount = await authenticatedPage.locator('.result-card').count()
+        }
 
-          expect(afterCount).toBeGreaterThan(beforeCount)
+        if (isMobile) {
+          await expect
+            .poll(async () => authenticatedPage.locator('.results-tab-button').count(), {
+              timeout: 15000,
+            })
+            .toBe(2)
+        } else {
+          await expect
+            .poll(async () => allResultCards(authenticatedPage).count(), {
+              timeout: 15000,
+            })
+            .toBeGreaterThan(beforeCards)
         }
       })
     })
   })
 
   test.describe('Results Section Header', () => {
-    test('Results section header displays correctly', async ({ authenticatedPage }) => {
+    test('Results section header displays correctly', async ({ authenticatedPage }, testInfo) => {
+      const projectName = testInfo.project.name
       await test.step('Perform comparison', async () => {
         const inputField = authenticatedPage.getByTestId('comparison-input-textarea')
         await inputField.fill('What is AI?')
@@ -418,24 +463,20 @@ test.describe('Results Display Regression Tests', () => {
         const loadingMessage = authenticatedPage.locator('.loading-message')
         await loadingMessage.waitFor({ state: 'hidden', timeout: 10000 }).catch(() => {})
 
-        const providerHeaders = authenticatedPage.locator('.provider-header')
-        if ((await providerHeaders.count()) > 0) {
-          await providerHeaders.first().click()
-          await authenticatedPage.waitForTimeout(500)
-        }
+        await ensureFirstProviderExpanded(authenticatedPage)
 
         const modelCheckboxes = authenticatedPage.locator(
           '[data-testid^="model-checkbox-"], input[type="checkbox"].model-checkbox'
         )
         await expect(modelCheckboxes.first()).toBeVisible({ timeout: 15000 })
-        await modelCheckboxes.first().check()
+        await toggleModelCheckbox(modelCheckboxes.first(), projectName)
 
         await authenticatedPage.getByTestId('comparison-submit-button').click()
       })
 
       await test.step('Verify section header elements', async () => {
         // Wait for results
-        const resultCard = authenticatedPage.locator('.result-card').first()
+        const resultCard = firstResultCard(authenticatedPage)
         await expect(resultCard).toBeVisible({ timeout: 30000 })
 
         // Check for section header
@@ -450,7 +491,10 @@ test.describe('Results Display Regression Tests', () => {
       })
     })
 
-    test('Export dropdown appears and contains all options', async ({ authenticatedPage }) => {
+    test('Export dropdown appears and contains all options', async ({
+      authenticatedPage,
+    }, testInfo) => {
+      const projectName = testInfo.project.name
       await test.step('Perform comparison', async () => {
         const inputField = authenticatedPage.getByTestId('comparison-input-textarea')
         await inputField.fill('What is machine learning?')
@@ -458,22 +502,18 @@ test.describe('Results Display Regression Tests', () => {
         const loadingMessage = authenticatedPage.locator('.loading-message')
         await loadingMessage.waitFor({ state: 'hidden', timeout: 10000 }).catch(() => {})
 
-        const providerHeaders = authenticatedPage.locator('.provider-header')
-        if ((await providerHeaders.count()) > 0) {
-          await providerHeaders.first().click()
-          await authenticatedPage.waitForTimeout(500)
-        }
+        await ensureFirstProviderExpanded(authenticatedPage)
 
         const modelCheckboxes = authenticatedPage.locator(
           '[data-testid^="model-checkbox-"], input[type="checkbox"].model-checkbox'
         )
         await expect(modelCheckboxes.first()).toBeVisible({ timeout: 15000 })
-        await modelCheckboxes.first().check()
+        await toggleModelCheckbox(modelCheckboxes.first(), projectName)
 
         await authenticatedPage.getByTestId('comparison-submit-button').click()
 
         // Wait for results
-        const resultCard = authenticatedPage.locator('.result-card').first()
+        const resultCard = firstResultCard(authenticatedPage)
         await expect(resultCard).toBeVisible({ timeout: 30000 })
         await authenticatedPage.waitForTimeout(2000)
       })
@@ -514,7 +554,8 @@ test.describe('Results Display Regression Tests', () => {
   })
 
   test.describe('Follow-up Mode', () => {
-    test('Follow-up button appears after comparison', async ({ authenticatedPage }) => {
+    test('Follow-up button appears after comparison', async ({ authenticatedPage }, testInfo) => {
+      const projectName = testInfo.project.name
       await test.step('Perform comparison', async () => {
         const inputField = authenticatedPage.getByTestId('comparison-input-textarea')
         await inputField.fill('What is TypeScript?')
@@ -522,24 +563,20 @@ test.describe('Results Display Regression Tests', () => {
         const loadingMessage = authenticatedPage.locator('.loading-message')
         await loadingMessage.waitFor({ state: 'hidden', timeout: 10000 }).catch(() => {})
 
-        const providerHeaders = authenticatedPage.locator('.provider-header')
-        if ((await providerHeaders.count()) > 0) {
-          await providerHeaders.first().click()
-          await authenticatedPage.waitForTimeout(500)
-        }
+        await ensureFirstProviderExpanded(authenticatedPage)
 
         const modelCheckboxes = authenticatedPage.locator(
           '[data-testid^="model-checkbox-"], input[type="checkbox"].model-checkbox'
         )
         await expect(modelCheckboxes.first()).toBeVisible({ timeout: 15000 })
-        await modelCheckboxes.first().check()
+        await toggleModelCheckbox(modelCheckboxes.first(), projectName)
 
         await authenticatedPage.getByTestId('comparison-submit-button').click()
       })
 
       await test.step('Check follow-up button', async () => {
         // Wait for results
-        const resultCard = authenticatedPage.locator('.result-card').first()
+        const resultCard = firstResultCard(authenticatedPage)
         await expect(resultCard).toBeVisible({ timeout: 30000 })
 
         // Wait for streaming to complete
@@ -558,7 +595,8 @@ test.describe('Results Display Regression Tests', () => {
   })
 
   test.describe('Breakout Conversation', () => {
-    test('Breakout button appears on result cards', async ({ authenticatedPage }) => {
+    test('Breakout button appears on result cards', async ({ authenticatedPage }, testInfo) => {
+      const projectName = testInfo.project.name
       await test.step('Perform comparison with multiple models', async () => {
         const inputField = authenticatedPage.getByTestId('comparison-input-textarea')
         await inputField.fill('Explain APIs')
@@ -566,11 +604,7 @@ test.describe('Results Display Regression Tests', () => {
         const loadingMessage = authenticatedPage.locator('.loading-message')
         await loadingMessage.waitFor({ state: 'hidden', timeout: 10000 }).catch(() => {})
 
-        const providerHeaders = authenticatedPage.locator('.provider-header')
-        if ((await providerHeaders.count()) > 0) {
-          await providerHeaders.first().click()
-          await authenticatedPage.waitForTimeout(500)
-        }
+        await ensureFirstProviderExpanded(authenticatedPage)
 
         const modelCheckboxes = authenticatedPage.locator(
           '[data-testid^="model-checkbox-"], input[type="checkbox"].model-checkbox'
@@ -584,7 +618,7 @@ test.describe('Results Display Regression Tests', () => {
           const checkbox = modelCheckboxes.nth(i)
           const isEnabled = await checkbox.isEnabled().catch(() => false)
           if (isEnabled) {
-            await checkbox.check({ timeout: 10000 })
+            await toggleModelCheckbox(checkbox, projectName)
             selectedCount++
           }
         }
@@ -593,7 +627,7 @@ test.describe('Results Display Regression Tests', () => {
       })
 
       await test.step('Verify breakout button exists and is clickable', async () => {
-        const resultCard = authenticatedPage.locator('.result-card').first()
+        const resultCard = firstResultCard(authenticatedPage)
         await expect(resultCard).toBeVisible({ timeout: 30000 })
 
         // Wait for streaming to complete
@@ -604,14 +638,31 @@ test.describe('Results Display Regression Tests', () => {
         )
         await expect(breakoutBtn).toBeVisible({ timeout: 5000 })
 
-        // Click breakout and verify single-model view (breakout succeeded)
+        // Breakout runs an authenticated API call; fixed sleeps are flaky on WebKit CI.
+        const breakoutResponse = authenticatedPage.waitForResponse(
+          res =>
+            res.url().includes('/conversations/breakout') &&
+            (res.status() === 200 || res.status() === 201),
+          { timeout: 60000 }
+        )
         await breakoutBtn.click()
-        await authenticatedPage.waitForTimeout(1500) // Allow breakout animation
+        await breakoutResponse
 
-        // After breakout: only one model visible, follow-up mode active
-        const resultCardsAfter = authenticatedPage.locator('.result-card')
-        const cardsCount = await resultCardsAfter.count()
-        expect(cardsCount).toBe(1)
+        // Follow-up mode proves the breakout handler finished (clears composer, single-thread UI).
+        await expect(authenticatedPage.getByTestId('comparison-input-textarea')).toHaveAttribute(
+          'aria-label',
+          'Continue your conversation',
+          { timeout: 25000 }
+        )
+
+        // Results grid should collapse to one card (post–breakout UX is always non-tabbed).
+        const gridCards = authenticatedPage.locator('.results-grid .result-card')
+        await expect
+          .poll(async () => gridCards.count(), {
+            timeout: 25000,
+            intervals: [100, 250, 500, 1000],
+          })
+          .toBe(1)
       })
     })
   })

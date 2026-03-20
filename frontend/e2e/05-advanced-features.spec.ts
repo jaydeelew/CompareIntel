@@ -1,6 +1,7 @@
 import { Page } from '@playwright/test'
 
 import { test, expect } from './fixtures'
+import { toggleModelCheckbox } from './helpers/modelCheckbox'
 
 /**
  * E2E Tests: Advanced Features
@@ -42,7 +43,10 @@ async function safeWait(page: Page, ms: number) {
 }
 
 test.describe('Advanced Features', () => {
-  test('User can enable web search for supported models', async ({ authenticatedPage }) => {
+  test('User can enable web search for supported models', async ({
+    authenticatedPage,
+  }, testInfo) => {
+    const projectName = testInfo.project.name
     await test.step('Select models that support web search', async () => {
       // Wait for models to load first
       const loadingMessage = authenticatedPage.locator(
@@ -71,13 +75,24 @@ test.describe('Advanced Features', () => {
       const checkboxCount = await modelCheckboxes.count()
       expect(checkboxCount).toBeGreaterThan(0)
 
-      // Select first model - only if enabled
-      const firstCheckbox = modelCheckboxes.first()
-      const isEnabled = await firstCheckbox.isEnabled().catch(() => false)
+      // Prefer a model that supports web search (🌐); otherwise the toolbar stays disabled on touch.
+      const webSearchCheckbox = authenticatedPage.locator(
+        'label:has(.web-search-indicator) input.model-checkbox'
+      )
+      let checkboxToSelect = webSearchCheckbox.first()
+      if ((await webSearchCheckbox.count()) === 0) {
+        checkboxToSelect = modelCheckboxes.first()
+      }
+      const isEnabled = await checkboxToSelect.isEnabled().catch(() => false)
       if (isEnabled) {
-        await firstCheckbox.check()
+        await toggleModelCheckbox(checkboxToSelect, projectName)
       }
       await safeWait(authenticatedPage, 500)
+
+      const webSearchButtonProbe = authenticatedPage.locator('button.web-search-button').first()
+      await expect(webSearchButtonProbe).toHaveAttribute('aria-disabled', 'false', {
+        timeout: 15000,
+      })
     })
 
     await test.step('Web search toggle appears', async () => {
@@ -102,9 +117,7 @@ test.describe('Advanced Features', () => {
     })
 
     await test.step('Enable web search', async () => {
-      const webSearchButton = authenticatedPage.locator(
-        'button[class*="web-search"], button[title*="web search"]'
-      )
+      const webSearchButton = authenticatedPage.locator('button.web-search-button')
 
       if (
         await webSearchButton
@@ -115,10 +128,24 @@ test.describe('Advanced Features', () => {
         const initialClass = await webSearchButton.first().getAttribute('class')
         const isInitiallyActive = initialClass?.includes('active') || false
 
-        await webSearchButton.first().click()
+        await webSearchButton
+          .first()
+          .scrollIntoViewIfNeeded()
+          .catch(() => {})
+        try {
+          await webSearchButton.first().tap({ timeout: 3000 })
+        } catch {
+          await webSearchButton.first().click()
+        }
         await safeWait(authenticatedPage, 300)
 
-        // Verify state changed
+        // Mobile: ActionButtonTooltipModal — use test id (not generic "Got it") so we don't confirm the wrong dialog.
+        const confirmTooltip = authenticatedPage.getByTestId('action-tooltip-modal-confirm')
+        if (await confirmTooltip.isVisible({ timeout: 2500 }).catch(() => false)) {
+          await confirmTooltip.click()
+          await safeWait(authenticatedPage, 200)
+        }
+
         const newClass = await webSearchButton.first().getAttribute('class')
         const isNowActive = newClass?.includes('active') || false
 

@@ -119,6 +119,7 @@ export const ActionButtonTooltipModal: React.FC<ActionButtonTooltipModalProps> =
         <div className="disabled-button-info-footer">
           <button
             className="disabled-button-info-button"
+            data-testid="action-tooltip-modal-confirm"
             onClick={handleConfirm}
             type="button"
             autoFocus
