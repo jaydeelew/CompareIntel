@@ -156,4 +156,6 @@ export interface StreamingHelperCallbacks {
   ) => boolean
   scrollConversationsToBottom: () => void
   refreshUser: () => Promise<void>
+  /** Reset composer advanced settings (text or image) after a successful comparison */
+  resetComposerAdvancedSettings?: () => void
 }

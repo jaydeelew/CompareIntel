@@ -96,6 +96,7 @@ export function useComparisonStreaming(
       attachedFiles: inputState.attachedFiles,
       browserFingerprint: auth.browserFingerprint,
       lastSubmittedInputRef: refs.lastSubmittedInputRef,
+      userCancelledRef: refs.userCancelledRef,
       modelMode: inputState.modelMode,
       temperature: inputState.temperature,
       topP: inputState.topP,
@@ -118,6 +119,7 @@ export function useComparisonStreaming(
       getFirstUserMessage: helpers.getFirstUserMessage,
       scrollConversationsToBottom: helpers.scrollConversationsToBottom,
       refreshUser: helpers.refreshUser,
+      resetComposerAdvancedSettings: helpers.resetComposerAdvancedSettings,
     }
   )
 

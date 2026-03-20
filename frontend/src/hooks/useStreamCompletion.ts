@@ -23,6 +23,7 @@ export interface UseStreamCompletionConfig {
   attachedFiles: (AttachedFile | StoredAttachedFile)[]
   browserFingerprint: string
   lastSubmittedInputRef: React.MutableRefObject<string>
+  userCancelledRef: React.MutableRefObject<boolean>
   modelMode: 'text' | 'image'
   temperature: number
   topP: number
@@ -59,6 +60,7 @@ export interface UseStreamCompletionCallbacks {
   getFirstUserMessage: () => import('../types/conversation').ConversationMessage | undefined
   scrollConversationsToBottom: () => void
   refreshUser: () => Promise<void>
+  resetComposerAdvancedSettings?: () => void
 }
 
 export function useStreamCompletion(
@@ -73,6 +75,7 @@ export function useStreamCompletion(
     attachedFiles,
     browserFingerprint,
     lastSubmittedInputRef,
+    userCancelledRef,
     modelMode,
     temperature,
     topP,
@@ -96,6 +99,7 @@ export function useStreamCompletion(
     getFirstUserMessage,
     scrollConversationsToBottom,
     refreshUser,
+    resetComposerAdvancedSettings,
   } = callbacks
 
   const applyStreamCompletion = useCallback(
@@ -433,6 +437,14 @@ export function useStreamCompletion(
 
       setResponse(filteredData)
 
+      const hadSuccessfulModel = selectedModels.some(modelId => {
+        const createdModelId = createModelId(modelId)
+        return hasContentOrImages(createdModelId)
+      })
+      if (hadSuccessfulModel && !userCancelledRef.current) {
+        resetComposerAdvancedSettings?.()
+      }
+
       if (filteredData.metadata.models_successful > 0) {
         setInput('')
       }
@@ -498,12 +510,14 @@ export function useStreamCompletion(
       attachedFiles,
       browserFingerprint,
       lastSubmittedInputRef,
+      userCancelledRef,
       modelMode,
       temperature,
       topP,
       maxTokens,
       aspectRatio,
       imageSize,
+      resetComposerAdvancedSettings,
       setError,
       setModelErrors,
       setActiveResultTabs,

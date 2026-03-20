@@ -1847,6 +1847,21 @@ export function MainPage() {
     handleSubmitClick()
   }
 
+  const resetComposerAdvancedToDefaults = useCallback(() => {
+    if (modelMode === 'text') {
+      setTemperature(0.7)
+      setTopP(1)
+      setMaxTokens(null)
+    } else {
+      const { aspectRatio: r, imageSize: s } = getDefaultCompatibleConfig(
+        selectedModels,
+        modelsByProvider
+      )
+      setAspectRatio(r)
+      setImageSize(s)
+    }
+  }, [modelMode, selectedModels, modelsByProvider])
+
   const handleNewComparison = () => {
     setIsFollowUpMode(false)
     if (!input.trim()) {
@@ -2019,6 +2034,7 @@ export function MainPage() {
         isLowCreditWarningDismissed,
         scrollConversationsToBottom,
         refreshUser,
+        resetComposerAdvancedSettings: resetComposerAdvancedToDefaults,
       },
     }),
     [
@@ -2059,6 +2075,7 @@ export function MainPage() {
       isLowCreditWarningDismissed,
       scrollConversationsToBottom,
       refreshUser,
+      resetComposerAdvancedToDefaults,
     ]
   )
 
