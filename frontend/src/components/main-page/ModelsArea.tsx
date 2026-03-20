@@ -9,7 +9,8 @@
  * the models-related UI logic.
  */
 
-import { useMemo } from 'react'
+import { Image as ImageIcon, X } from 'lucide-react'
+import { useMemo, useState } from 'react'
 
 import type { User, ModelsByProvider, CompareResponse, Model } from '../../types'
 import type { ModelConversation } from '../../types/conversation'
@@ -204,6 +205,8 @@ export function ModelsArea({
   onRemoveAttachedImages,
   imageModelsDisabledForUnregistered = false,
 }: ModelsAreaProps) {
+  const [imageSignupBannerDismissed, setImageSignupBannerDismissed] = useState(false)
+
   // Use allModelsByProvider (full model set) for image config capability lookups.
   // This ensures we have complete image_aspect_ratios and image_sizes from the registry
   // so unsupported options (e.g. 1K/4K for Flux 2 Flex) are correctly disabled.
@@ -322,16 +325,24 @@ export function ModelsArea({
                 </button>
               </div>
             )}
-            {imageModelsDisabledForUnregistered && (
+            {imageModelsDisabledForUnregistered && !imageSignupBannerDismissed && (
               <div className="models-section-image-signup-banner" role="alert" aria-live="polite">
                 <span className="models-section-image-signup-banner-icon" aria-hidden>
-                  🖼️
+                  <ImageIcon size={18} strokeWidth={1.75} />
                 </span>
-                <span>
+                <span className="models-section-image-signup-banner-text">
                   Sign up for a free account to use image generation models. Free tier: 2 image
                   comparisons per day. Paid tiers coming soon for as many image generations as you
                   have credits for.
                 </span>
+                <button
+                  type="button"
+                  className="models-section-image-signup-banner-dismiss"
+                  onClick={() => setImageSignupBannerDismissed(true)}
+                  aria-label="Dismiss image generation sign-up notice"
+                >
+                  <X size={16} strokeWidth={2} aria-hidden />
+                </button>
               </div>
             )}
             <div className="models-section-buttons-row">

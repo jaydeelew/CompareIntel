@@ -2033,9 +2033,9 @@
 
 .models-section-image-signup-banner {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 0.5rem;
-  padding: 0.5rem 1rem;
+  padding: 0.5rem 0.5rem 0.5rem 1rem;
   margin-top: 0.5rem;
   font-size: 0.875rem;
   color: var(--text-secondary);
@@ -2049,9 +2049,48 @@
 }
 
 .models-section-image-signup-banner-icon {
-  font-size: 1rem;
-  line-height: 1;
-  opacity: 0.9;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 0.1rem;
+  color: color-mix(in srgb, var(--primary-color) 85%, var(--text-secondary));
+  opacity: 0.95;
+}
+
+.models-section-image-signup-banner-text {
+  flex: 1;
+  min-width: 0;
+  line-height: 1.45;
+}
+
+.models-section-image-signup-banner-dismiss {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  margin: -0.15rem -0.15rem -0.15rem 0;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
+}
+
+.models-section-image-signup-banner-dismiss:hover {
+  background: color-mix(in srgb, var(--primary-color) 12%, var(--bg-elevated));
+  color: var(--text-secondary);
+}
+
+.models-section-image-signup-banner-dismiss:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--primary-color) 55%, transparent);
+  outline-offset: 2px;
 }
 
 /* ═══════════════════════════════════════════════════════════
