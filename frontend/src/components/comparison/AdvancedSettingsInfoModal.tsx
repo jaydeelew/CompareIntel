@@ -118,7 +118,7 @@ export function AdvancedSettingsInfoModal({
               <dd>{maxTokens ?? 'Auto'}</dd>
             </div>
             <p className="advanced-settings-info-desc">
-              Maximum response length. "Auto" uses each model's built-in limit. Lower values produce
+              Maximum response length. "Auto" lets the system choose the limit. Lower values produce
               shorter, more concise responses.
             </p>
           </dl>

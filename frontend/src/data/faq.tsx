@@ -1570,9 +1570,15 @@ export const faqData: FAQItemData[] = [
           </li>
           <li>
             <strong>Max output tokens</strong>: Caps the response length. Lower values produce
-            shorter answers and use fewer credits. "Auto" uses each model's default. The slider
-            range (256 to the maximum) changes based on your model selection: when comparing
-            multiple models, the upper limit is the lowest max supported by any selected model.
+            shorter answers and use fewer credits. "Auto" lets the system choose the limit. The
+            system starts from each model&apos;s maximum output capacity; when you compare multiple
+            models, it uses the lowest of those caps so every model can honor the same ceiling. It
+            then reduces the limit if needed so your prompt and conversation fit within each
+            model&apos;s context window (input plus output cannot exceed the model&apos;s context
+            size). If your credits are very low, it may reduce further so the request can complete.
+            The slider range (256 to the maximum) changes based on your model selection: when
+            comparing multiple models, the upper limit is the lowest max supported by any selected
+            model.
           </li>
         </ul>
         <p>
