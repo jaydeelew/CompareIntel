@@ -833,14 +833,17 @@ export function MainPage() {
     if (r !== aspectRatio || s !== imageSize) {
       setAspectRatio(r)
       setImageSize(s)
-      setModelsDropdownOpen('advanced')
-      setImageConfigConflict({
-        conflictType: 'auto-adjusted',
-        incompatibleModelIds: incompatible,
-        previousAspectRatio: aspectRatio,
-        previousImageSize: imageSize,
-        allImageModelIds: [...imageModelIds],
-      })
+      const isFirstAndOnlyModel = imageModelIds.length === 1
+      if (!isFirstAndOnlyModel) {
+        setModelsDropdownOpen('advanced')
+        setImageConfigConflict({
+          conflictType: 'auto-adjusted',
+          incompatibleModelIds: incompatible,
+          previousAspectRatio: aspectRatio,
+          previousImageSize: imageSize,
+          allImageModelIds: [...imageModelIds],
+        })
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- justLoadedFromHistoryRef / isScrollingToTopFromHistoryRef
   }, [selectedModels, modelsByProvider, aspectRatio, imageSize, imageModelIds])
