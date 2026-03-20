@@ -40,7 +40,7 @@ function getModalContent(
     return {
       title: 'Sign Up to Use Image Generation',
       message:
-        'Sign up for a free account to run 2 image comparisons per day. Paid tiers coming soon for as many image generations as you have credits for.',
+        'Sign up for a free account to use image generation. Free tier: 2 comparison runs per day—each run is one Compare with your chosen models (up to 3 image models side-by-side). Paid tiers coming soon for as many image generations as you have credits for.',
       showSignUp: true,
       showUpgrade: false,
       showHidePremium: false,

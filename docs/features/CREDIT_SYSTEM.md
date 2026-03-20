@@ -14,6 +14,8 @@ The 2.5 multiplier accounts for the higher cost of output tokens relative to inp
 - Use OpenRouter `pricing.image` (dollars per image) when available: `credits = pricing.image × CREDITS_PER_DOLLAR × num_images`
 - Fallback: `IMAGE_CREDITS_PER_GENERATION` per image when pricing unavailable
 
+Marketing copy for the free tier describes a daily number of **image comparison runs** (one Compare action in image mode), not a cap on output images; each run may use up to **3 image models** side-by-side. See [IMAGE_GENERATION.md](./IMAGE_GENERATION.md#tier-limits).
+
 ## Credit Allocations
 
 | Tier | Price | Credits | Period | Model Access |

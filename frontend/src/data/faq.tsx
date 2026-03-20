@@ -1595,6 +1595,27 @@ export const faqData: FAQItemData[] = [
     ),
   },
   {
+    id: 'image-generation-free-tier',
+    question: 'What does “2 image comparisons per day” mean on the free tier?',
+    answer: (
+      <>
+        <p>
+          A <strong>comparison</strong> is each time you click Compare with your selected models—not
+          a cap on the number of individual images. In image generation mode, the free tier allows{' '}
+          <strong>2 comparison runs per day</strong>. Each run can include{' '}
+          <strong>up to 3 image models</strong> side-by-side (the same “models per comparison” limit
+          as text mode for anonymous and free tiers), so you can see several model outputs in a
+          single run.
+        </p>
+        <p>
+          Image generation still uses <strong>credits</strong>; very expensive models or retries may
+          use your daily budget before you reach that cap. See our{' '}
+          <a href="/image-generation">Image generation</a> page for product details.
+        </p>
+      </>
+    ),
+  },
+  {
     id: 'site-slow',
     question: 'The site seems slow. What can I do?',
     answer: (
