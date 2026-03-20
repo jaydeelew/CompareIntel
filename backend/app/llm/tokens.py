@@ -116,6 +116,7 @@ def fetch_all_models_from_openrouter() -> dict[str, dict[str, Any]] | None:
         with httpx.Client(timeout=30.0) as http_client:
             response = http_client.get(
                 "https://openrouter.ai/api/v1/models",
+                params={"output_modalities": "all"},
                 headers={
                     "Authorization": f"Bearer {settings.openrouter_api_key}",
                     "HTTP-Referer": "https://compareintel.com",
