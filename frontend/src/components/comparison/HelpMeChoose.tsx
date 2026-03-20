@@ -63,6 +63,17 @@ function isModelRestricted(
   return false
 }
 
+/** Same rule as ModelsSection when "hide locked" is on: unregistered = unregistered-tier only; free = not paid-only. */
+function modelIsUnlockedForHideFilter(
+  model: { tier_access?: string; trial_unlocked?: boolean },
+  userTier: string
+): boolean {
+  if (model.trial_unlocked) return true
+  if (userTier === 'unregistered') return model.tier_access === 'unregistered'
+  if (userTier === 'free') return model.tier_access !== 'paid'
+  return true
+}
+
 function getDisabledTooltip(userTier: 'unregistered' | 'free'): string {
   if (userTier === 'unregistered') {
     return 'Sign up for a free account to unlock more models and get a 7-day trial of all premium models.'
@@ -183,6 +194,8 @@ export interface HelpMeChooseProps {
   isMobileLayout?: boolean
   /** When true, only vision-capable models are shown (for image attachments) */
   hasAttachedImages?: boolean
+  /** When true, omit tier-locked models from lists (matches provider dropdown hide control) */
+  hidePremiumModels?: boolean
 }
 
 export function HelpMeChoose({
@@ -200,6 +213,7 @@ export function HelpMeChoose({
   modelsSectionRef,
   isMobileLayout = false,
   hasAttachedImages = false,
+  hidePremiumModels = false,
 }: HelpMeChooseProps) {
   const [internalExpanded, setInternalExpanded] = useState(false)
   const [showScopeInfoModal, setShowScopeInfoModal] = useState(false)
@@ -237,10 +251,35 @@ export function HelpMeChoose({
   const isRestrictedTier = userTier === 'unregistered' || userTier === 'free'
 
   const lookupModels = allModelsByProvider ?? modelsByProvider
+
+  /** Vision filter, then same tier filter as ModelsSection when hide locked is active */
+  const displayedCategories = useMemo(() => {
+    let cats: typeof HELP_ME_CHOOSE_CATEGORIES = HELP_ME_CHOOSE_CATEGORIES
+    if (hasAttachedImages) {
+      cats = HELP_ME_CHOOSE_CATEGORIES.map(cat => ({
+        ...cat,
+        models: cat.models.filter(entry => modelSupportsVision(entry.modelId, lookupModels)),
+      })).filter(cat => cat.models.length > 0)
+    }
+    if (hidePremiumModels && !isPaidTier) {
+      cats = cats
+        .map(cat => ({
+          ...cat,
+          models: cat.models.filter(entry => {
+            const model = findModelById(lookupModels, entry.modelId)
+            if (!model) return true
+            return modelIsUnlockedForHideFilter(model, userTier)
+          }),
+        }))
+        .filter(cat => cat.models.length > 0)
+    }
+    return cats
+  }, [hasAttachedImages, lookupModels, hidePremiumModels, isPaidTier, userTier])
+
   const modelRestrictedByModelId = useMemo(() => {
     const map = new Map<string, boolean>()
     if (!isRestrictedTier || isPaidTier) return map
-    for (const cat of HELP_ME_CHOOSE_CATEGORIES) {
+    for (const cat of displayedCategories) {
       for (const entry of cat.models) {
         if (map.has(entry.modelId)) continue
         const model = findModelById(lookupModels, entry.modelId)
@@ -255,16 +294,7 @@ export function HelpMeChoose({
       }
     }
     return map
-  }, [lookupModels, userTier, isPaidTier, isRestrictedTier])
-
-  /** When image attached, show only vision-capable models per category */
-  const displayedCategories = useMemo(() => {
-    if (!hasAttachedImages) return HELP_ME_CHOOSE_CATEGORIES
-    return HELP_ME_CHOOSE_CATEGORIES.map(cat => ({
-      ...cat,
-      models: cat.models.filter(entry => modelSupportsVision(entry.modelId, lookupModels)),
-    })).filter(cat => cat.models.length > 0)
-  }, [hasAttachedImages, lookupModels])
+  }, [displayedCategories, lookupModels, userTier, isPaidTier, isRestrictedTier])
 
   const disabledTooltip = getDisabledTooltip(userTier as 'unregistered' | 'free')
 

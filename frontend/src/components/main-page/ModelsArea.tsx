@@ -361,6 +361,7 @@ export function ModelsArea({
                 modelsSectionRef={modelsSectionRef}
                 isMobileLayout={isMobileLayout}
                 hasAttachedImages={hasAttachedImages}
+                hidePremiumModels={hidePremiumModels}
               />
               <AdvancedSettings
                 temperature={temperature}
