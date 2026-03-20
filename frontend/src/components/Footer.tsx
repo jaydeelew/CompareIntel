@@ -49,9 +49,6 @@ export const Footer: React.FC = () => {
         <Link to="/how-it-works" style={linkStyle} onClick={scrollToTop}>
           How It Works
         </Link>
-        <Link to="/glossary" style={linkStyle} onClick={scrollToTop}>
-          AI Glossary
-        </Link>
         <Link to="/help-me-choose-methodology" style={linkStyle} onClick={scrollToTop}>
           Help me choose
         </Link>

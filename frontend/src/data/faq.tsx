@@ -27,10 +27,6 @@ export const faqData: FAQItemData[] = [
           conversational experience that can help with writing, coding, research, creative projects,
           and much more.
         </p>
-        <p>
-          <a href="/glossary">Explore our AI Glossary →</a> for more terms explained in plain
-          English.
-        </p>
       </>
     ),
   },
@@ -1549,9 +1545,6 @@ export const faqData: FAQItemData[] = [
             If you need consistency, be very specific in your prompts about exactly what you want
           </li>
         </ul>
-        <p>
-          <a href="/glossary#temperature">Learn more about Temperature in our Glossary →</a>
-        </p>
       </>
     ),
   },
@@ -1582,11 +1575,6 @@ export const faqData: FAQItemData[] = [
             multiple models, the upper limit is the lowest max supported by any selected model.
           </li>
         </ul>
-        <p>
-          <a href="/glossary">See our AI Glossary</a> for detailed definitions of{' '}
-          <a href="/glossary#temperature">Temperature</a>, <a href="/glossary#top-p">Top P</a>, and{' '}
-          <a href="/glossary#max-output-tokens">Max Output Tokens</a>.
-        </p>
         <p>
           In <strong>image generation mode</strong>, the Advanced dropdown shows aspect ratio and
           image size (1K, 2K, 4K) instead of text-model settings.
@@ -1771,12 +1759,6 @@ export const faqData: FAQItemData[] = [
           </li>
           <li>
             <strong>Check this FAQ:</strong> Many common questions are answered here
-          </li>
-          <li>
-            <strong>
-              Check our <Link to="/glossary">Glossary</Link>:
-            </strong>{' '}
-            If you're confused by AI terminology
           </li>
         </ul>
         <p>

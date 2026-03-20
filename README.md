@@ -235,7 +235,7 @@ CompareIntel/
 │   │   │   ├── layout/       # Navigation, hero, banners
 │   │   │   └── shared/       # Reusable components
 │   │   ├── contexts/         # React Context providers
-│   │   ├── data/             # FAQ, glossary, tutorial steps
+│   │   ├── data/             # FAQ, tutorial steps
 │   │   ├── hooks/            # Custom React hooks
 │   │   ├── services/         # API client, SSE processing
 │   │   ├── styles/           # CSS modules
