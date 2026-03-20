@@ -30,21 +30,13 @@ export const BackToMainCTA: React.FC<BackToMainCTAProps> = ({
       <div className="cta-glow" />
       <div className="cta-content">
         <div className="cta-icon-wrapper">
-          <svg
+          <img
+            src="/CI_favicon_tab.svg"
+            alt="CompareIntel"
             className="cta-icon"
             width="48"
             height="48"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M12 2L2 7l10 5 10-5-10-5z" />
-            <path d="M2 17l10 5 10-5" />
-            <path d="M2 12l10 5 10-5" />
-          </svg>
+          />
         </div>
         <h2 className="cta-title">{title}</h2>
         <p className="cta-description">{description}</p>
