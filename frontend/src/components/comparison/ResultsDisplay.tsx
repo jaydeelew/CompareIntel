@@ -9,7 +9,6 @@ import { ResultCard, type Model } from './ResultCard'
 
 export interface ResultsDisplayProps {
   conversations: ModelConversation[]
-  selectedModels: string[]
   closedCards: Set<string>
   allModels: Model[]
   activeResultTabs: ActiveResultTabs
@@ -39,7 +38,6 @@ export interface ResultsDisplayProps {
 // Renders comparison results as a grid (desktop) or tabs (mobile)
 export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
   conversations,
-  selectedModels,
   closedCards,
   allModels,
   activeResultTabs,
@@ -59,7 +57,7 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
   isTutorialActive = false,
 }) => {
   const visibleConversations = conversations.filter(
-    conv => selectedModels.includes(conv.modelId) && !closedCards.has(conv.modelId)
+    conv => Boolean(conv?.modelId) && !closedCards.has(conv.modelId)
   )
 
   // Responsive state from centralized hook

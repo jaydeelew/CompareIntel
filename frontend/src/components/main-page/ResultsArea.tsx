@@ -21,7 +21,6 @@ type BreakoutPhase = 'idle' | 'fading-out' | 'hidden' | 'fading-in'
 export interface ResultsAreaProps {
   // Data
   conversations: ModelConversation[]
-  selectedModels: string[]
   closedCards: Set<string>
   allModels: Model[]
   activeResultTabs: ActiveResultTabs
@@ -62,7 +61,6 @@ export interface ResultsAreaProps {
 export function ResultsArea({
   // Data
   conversations,
-  selectedModels,
   closedCards,
   allModels,
   activeResultTabs,
@@ -121,7 +119,6 @@ export function ResultsArea({
 
         <ResultsDisplay
           conversations={conversations}
-          selectedModels={selectedModels}
           closedCards={closedCards}
           allModels={allModels}
           activeResultTabs={activeResultTabs}

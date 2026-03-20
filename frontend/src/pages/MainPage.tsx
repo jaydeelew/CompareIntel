@@ -537,14 +537,8 @@ export function MainPage() {
   const [activeTabIndex, setActiveTabIndex] = useState<number>(0)
 
   const visibleConversations = useMemo(() => {
-    return conversations.filter(
-      conv =>
-        conv &&
-        conv.modelId &&
-        selectedModels.includes(conv.modelId) &&
-        !closedCards.has(conv.modelId)
-    )
-  }, [conversations, selectedModels, closedCards])
+    return conversations.filter(conv => conv && conv.modelId && !closedCards.has(conv.modelId))
+  }, [conversations, closedCards])
 
   const { modelErrorStates, modelProcessingStates } = useMemo(() => {
     const errorStates: Record<string, boolean> = {}
@@ -557,7 +551,9 @@ export function MainPage() {
       const content = latestMessage?.content || ''
       const hasImages = (latestMessage?.images?.length ?? 0) > 0
 
-      const rawModelId = selectedModels?.find(m => createModelId(m) === conversation.modelId)
+      const rawModelId =
+        selectedModels.find(m => createModelId(m) === conversation.modelId) ??
+        originalSelectedModels.find(m => createModelId(m) === conversation.modelId)
 
       const hasBackendError =
         (rawModelId && modelErrors[rawModelId] === true) ||
@@ -578,7 +574,7 @@ export function MainPage() {
     })
 
     return { modelErrorStates: errorStates, modelProcessingStates: processingStates }
-  }, [conversations, selectedModels, modelErrors, isLoading])
+  }, [conversations, selectedModels, originalSelectedModels, modelErrors, isLoading])
 
   const attemptFocusTextarea = useCallback(() => {
     if (!isTouchDevice && currentView === 'main' && textareaRef.current) {
@@ -2502,9 +2498,8 @@ export function MainPage() {
           }
           resultsAreaProps={{
             conversations,
-            selectedModels,
             closedCards,
-            allModels,
+            allModels: allModelsFlatForComposer,
             activeResultTabs,
             modelProcessingStates,
             modelErrorStates,
