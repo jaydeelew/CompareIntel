@@ -644,33 +644,32 @@ test.describe('Registration and Onboarding', () => {
       await expect(inputField).toBeVisible()
 
       const promptText = 'Explain machine learning in simple terms.'
-      // On mobile/WebKit, tap or click first to focus - fill() can fail to trigger React state
-      if (isMobileProject || isWebKit) {
-        try {
-          await inputField.tap({ timeout: 5000 })
-        } catch {
-          await inputField.click({ timeout: 5000 })
-        }
-        await safeWait(page, 200)
+      // Focus first — in CI Chromium, fill() on a controlled textarea can update the DOM but
+      // skip React onChange, leaving the submit button disabled ("Enter prompt and select models").
+      await inputField.scrollIntoViewIfNeeded().catch(() => {})
+      try {
+        await inputField.tap({ timeout: 2000 })
+      } catch {
+        await inputField.click({ timeout: 5000 })
       }
+      await safeWait(page, 150)
       await inputField.fill(promptText)
 
-      // On Mobile Safari/WebKit/mobile projects, fill() may not trigger React state - verify and retry
       let filledValue = await inputField.inputValue().catch(() => '')
-      if (filledValue.trim() !== promptText && (isWebKit || isMobileProject)) {
+      if (filledValue.trim() !== promptText) {
         await inputField.click()
-        await inputField.pressSequentially(promptText, { delay: isWebKit ? 50 : 20 })
-        await safeWait(page, 300)
+        await inputField.fill('')
+        await inputField.pressSequentially(promptText, { delay: isWebKit ? 50 : 15 })
+        await safeWait(page, 250)
         filledValue = await inputField.inputValue().catch(() => '')
       }
-      // WebKit/mobile nuclear fallback: use evaluate to set value and dispatch input event (bypasses automation quirks)
-      if (filledValue.trim() !== promptText && (isWebKit || isMobileProject)) {
+      if (filledValue.trim() !== promptText) {
         await inputField.evaluate((el: HTMLTextAreaElement, text: string) => {
           el.focus()
           el.value = text
           el.dispatchEvent(new Event('input', { bubbles: true }))
         }, promptText)
-        await safeWait(page, 500)
+        await safeWait(page, 400)
       }
 
       // Wait for loading message to disappear
@@ -767,15 +766,12 @@ test.describe('Registration and Onboarding', () => {
 
       expect(selectedCount).toBeGreaterThan(0)
 
-      // On mobile, wait for selected models UI to reflect state (React re-render)
-      if (isMobileProject) {
-        const selectedModelsGrid = page.locator('.selected-models-section .selected-model-card')
-        await selectedModelsGrid
-          .first()
-          .waitFor({ state: 'visible', timeout: 5000 })
-          .catch(() => {})
-        await safeWait(page, 500)
-      }
+      // Wait for selected models UI (confirms React state; avoids racing the submit button on Chromium)
+      const selectedModelsGrid = page.locator('.selected-models-section .selected-model-card')
+      await expect(selectedModelsGrid.first()).toBeVisible({
+        timeout: isMobileProject ? 8000 : 10000,
+      })
+      await safeWait(page, isMobileProject ? 500 : 200)
 
       // Check if tutorial overlay is blocking (especially in WebKit)
       const overlayVisibleBeforeSubmit = await tutorialOverlay
@@ -785,6 +781,16 @@ test.describe('Registration and Onboarding', () => {
         // Dismiss tutorial overlay before submitting
         await dismissTutorialOverlay(page)
         await safeWait(page, 1000) // Wait longer for overlay to fully disappear
+      }
+
+      const finalPrompt = await inputField.inputValue().catch(() => '')
+      if (finalPrompt.trim() !== promptText) {
+        await inputField.evaluate((el: HTMLTextAreaElement, text: string) => {
+          el.focus()
+          el.value = text
+          el.dispatchEvent(new Event('input', { bubbles: true }))
+        }, promptText)
+        await safeWait(page, 300)
       }
 
       // Submit comparison - WebKit and mobile need longer timeout
