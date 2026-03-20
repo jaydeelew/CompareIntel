@@ -91,15 +91,37 @@ and numeric ids, while production was stamped on an old name such as
      python /app/scripts/alembic_suggest_stamp.py
    ```
 
-3. **Reconcile and upgrade** (example; use the revision the script prints if it differs):
+3. **Reconcile and upgrade** — use the revision the helper infers (example: `0001_initial` or
+   `0002_images`).
+
+   **`alembic stamp` usually fails** while `version_num` is still an orphan: Alembic loads the
+   current row before stamping and cannot resolve the old id.
+
+   **Preferred:** let the helper write `alembic_version` (after backup):
 
    ```bash
-   docker compose -f docker-compose.ssl.yml exec backend alembic stamp 0002_images
+   docker compose -f docker-compose.ssl.yml exec backend \
+     python /app/scripts/alembic_suggest_stamp.py --apply
    docker compose -f docker-compose.ssl.yml exec backend alembic upgrade head
    ```
 
-`stamp` only updates `alembic_version`; it does **not** run migration `upgrade()` code. Choose the
-stamp that matches **columns already present** so `upgrade head` applies only missing migrations.
+   **Alternative (heredoc):** the closing `PY` must be on its own line—nothing after it until the
+   heredoc ends. If you see “the input device is not a TTY”, add `-T`: `exec -T -i backend python <<'PY'`.
+
+   ```bash
+   docker compose -f docker-compose.ssl.yml exec -T -i backend python <<'PY'
+   from sqlalchemy import create_engine, text
+   import os
+   engine = create_engine(os.environ["DATABASE_URL"])
+   with engine.begin() as conn:
+       conn.execute(text("UPDATE alembic_version SET version_num = '0001_initial'"))
+   print("alembic_version updated")
+   PY
+   docker compose -f docker-compose.ssl.yml exec backend alembic upgrade head
+   ```
+
+   Replace `'0001_initial'` with the revision that matches **columns already on disk** (see table
+   below). This UPDATE only changes Alembic metadata; it does not delete user data.
 
 **Column hints for manual checks**
 
