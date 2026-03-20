@@ -1,5 +1,9 @@
+import { useState } from 'react'
+
 import type { User, ModelConversation } from '../../types'
 import { StyledTooltip } from '../shared'
+
+import { TierLimitsInfoModal, getTierListContent } from './TierLimitsInfoModal'
 
 export interface ModelsSectionHeaderProps {
   /** Currently selected model IDs */
@@ -88,6 +92,7 @@ export function ModelsSectionHeader({
   // Get user tier for display and premium toggle visibility
   const userTier = isAuthenticated ? user?.subscription_tier || 'free' : 'unregistered'
   const showHidePremiumToggle = userTier === 'unregistered' || userTier === 'free'
+  const [tierLimitsModalOpen, setTierLimitsModalOpen] = useState(false)
 
   // Format tier name for display
   const formatTierName = () => {
@@ -186,11 +191,84 @@ export function ModelsSectionHeader({
           {isFollowUpMode ? 'Selected Models (Follow-up Mode)' : 'Select Models to Compare'}
         </h2>
         <p
-          style={{ margin: '0.25rem 0 0 0', fontSize: '0.875rem', color: 'var(--text-secondary)' }}
+          style={{
+            margin: '0.25rem 0 0 0',
+            fontSize: '0.875rem',
+            color: 'var(--text-secondary)',
+            display: 'flex',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: '0.25rem',
+          }}
         >
-          {isFollowUpMode
-            ? 'You can deselect models or reselect previously selected ones (minimum 1 model required)'
-            : `Choose up to ${maxModelsLimit} models${formatTierName()}`}
+          {isFollowUpMode ? (
+            'You can deselect models or reselect previously selected ones (minimum 1 model required)'
+          ) : (
+            <>
+              {`Choose up to ${maxModelsLimit} models${formatTierName()}`}
+              {showHidePremiumToggle && (
+                <>
+                  {' '}
+                  {isMobileLayout ? (
+                    <button
+                      type="button"
+                      className="advanced-settings-info-btn"
+                      onClick={e => {
+                        e.stopPropagation()
+                        setTierLimitsModalOpen(true)
+                      }}
+                      aria-label="Learn about tier limits"
+                    >
+                      <svg
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        aria-hidden="true"
+                      >
+                        <circle cx="12" cy="12" r="10" />
+                        <path d="M12 16v-4" />
+                        <path d="M12 8h.01" />
+                      </svg>
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      className="advanced-settings-info-trigger"
+                      onClick={e => {
+                        e.stopPropagation()
+                        setTierLimitsModalOpen(true)
+                      }}
+                      aria-label="Learn about tier limits"
+                    >
+                      <svg
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        aria-hidden="true"
+                      >
+                        <circle cx="12" cy="12" r="10" />
+                        <path d="M12 16v-4" />
+                        <path d="M12 8h.01" />
+                      </svg>
+                      <span className="advanced-settings-tooltip" role="tooltip">
+                        {getTierListContent()}
+                      </span>
+                    </button>
+                  )}
+                </>
+              )}
+            </>
+          )}
         </p>
       </div>
       <div
@@ -369,6 +447,11 @@ export function ModelsSectionHeader({
           </StyledTooltip>
         </div>
       </div>
+
+      <TierLimitsInfoModal
+        isOpen={tierLimitsModalOpen}
+        onClose={() => setTierLimitsModalOpen(false)}
+      />
     </div>
   )
 }
