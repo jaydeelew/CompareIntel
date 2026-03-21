@@ -5,7 +5,7 @@
   <meta charset="UTF-8" />
   <!-- Theme persistence: prevent flash of wrong theme before React mounts -->
   <script>
-    (function() {
+    (function () {
       var stored = localStorage.getItem('compareintel-theme');
       var theme = (stored === 'light' || stored === 'dark') ? stored : 'light';
       document.documentElement.setAttribute('data-theme', theme);
@@ -13,31 +13,19 @@
       document.documentElement.classList.add('preload');
     })();
   </script>
-  <!-- Favicons - SVG first (scales crisply on all displays), ICO for crawlers, PNG fallbacks -->
-  <!-- SVG favicon - modern browsers (Chrome 80+, Firefox 41+, Safari 16.4+) -->
-  <!-- Circle-safe version: content scaled to 75% to survive Google Search's circular crop -->
-  <link rel="icon" type="image/svg+xml" href="/CI_favicon_circle_safe.svg" />
-  <!-- favicon.ico: circle-safe for Google Search's circular mask (many crawlers request /favicon.ico by default) -->
-  <link rel="icon" type="image/x-icon" href="/favicon.ico" />
-  <!-- PNG fallbacks for older browsers and specific contexts -->
-  <link rel="icon" type="image/png" sizes="512x512" href="/CI_favicon_512x512.png" />
-  <link rel="icon" type="image/png" sizes="256x256" href="/CI_favicon_512x512.png" />
-  <link rel="icon" type="image/png" sizes="192x192" href="/CI_favicon_192x192.png" />
-  <link rel="icon" type="image/png" sizes="128x128" href="/CI_favicon_192x192.png" />
-  <link rel="icon" type="image/png" sizes="96x96" href="/CI_favicon_192x192.png" />
-  <link rel="icon" type="image/png" sizes="64x64" href="/CI_favicon_192x192.png" />
-  <link rel="icon" type="image/png" sizes="48x48" href="/CI_favicon_192x192.png" />
-  <link rel="icon" type="image/png" sizes="32x32" href="/CI_favicon_32x32.png" />
-  <link rel="icon" type="image/png" sizes="16x16" href="/CI_favicon_16x16.png" />
-  <!-- Apple devices - SVG for modern iOS (11+) with PNG fallback for older devices -->
+  <!-- Favicons: SVG-only for browser tab (CI_favicon_tab.svg has contrasting disk for tab visibility).
+       Chrome prefers ICO/PNG over SVG when both are linked, so we omit ICO and PNG rel=icon to ensure the tab
+       uses our updated design. favicon.ico and large PNGs remain on disk for crawlers (GET /favicon.ico) and PWA manifest. -->
+  <link rel="icon" type="image/svg+xml" href="/CI_favicon_tab.svg" />
   <link rel="apple-touch-icon" type="image/svg+xml" href="/CI_favicon.svg" />
   <link rel="apple-touch-icon" sizes="180x180" href="/CI_favicon_180x180.png" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  
+
   <!-- Content Security Policy -->
   <!-- Note: frame-ancestors is set via HTTP header (nginx) as meta tags don't support it -->
   <!-- img-src: 'self', data:, and compareintel.com for social images -->
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.google.com https://www.gstatic.com https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: https://compareintel.com; connect-src 'self' https://www.google.com https://api.bigdatacloud.net https://api.zippopotam.us https://fonts.googleapis.com https://fonts.gstatic.com; frame-src https://www.google.com; base-uri 'self'; form-action 'self';" />
+  <meta http-equiv="Content-Security-Policy"
+    content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.google.com https://www.gstatic.com https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: https://compareintel.com; connect-src 'self' https://www.google.com https://api.bigdatacloud.net https://api.zippopotam.us https://fonts.googleapis.com https://fonts.gstatic.com; frame-src https://www.google.com; base-uri 'self'; form-action 'self';" />
 
   <!-- Preconnect to Google Fonts for faster font loading - MUST be before font stylesheet -->
   <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin />
@@ -47,10 +35,13 @@
   <!-- Load asynchronously to avoid render-blocking (improves FCP/LCP for Lighthouse) -->
   <!-- media="print" defers load; onload switches to "all" when ready. display=swap shows fallback until loaded. -->
   <!-- crossorigin enables JS access to stylesheet rules (needed by html-to-image for screenshots) -->
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap"
+  <link rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap"
     media="print" onload="this.media='all'" crossorigin />
   <noscript>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" crossorigin />
+    <link rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap"
+      crossorigin />
   </noscript>
 
   <!-- PWA Meta Tags -->
@@ -87,7 +78,8 @@
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
   <meta property="og:image:type" content="image/png" />
-  <meta property="og:image:alt" content="CompareIntel - AI and image model comparison platform with side-by-side testing" />
+  <meta property="og:image:alt"
+    content="CompareIntel - AI and image model comparison platform with side-by-side testing" />
   <meta property="og:site_name" content="CompareIntel" />
   <meta property="og:locale" content="en_US" />
   <!-- fb:app_id - Using Facebook's default App ID to suppress warning (deprecated but still flagged by Debugger) -->
@@ -193,7 +185,9 @@
 
 <body>
   <div id="root">
-    <h1 style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0">CompareIntel - Compare AI Language and Image Models Side by Side</h1>
+    <h1
+      style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0">
+      CompareIntel - Compare AI Language and Image Models Side by Side</h1>
   </div>
   <script type="module" src="/src/main.tsx"></script>
 </body>
