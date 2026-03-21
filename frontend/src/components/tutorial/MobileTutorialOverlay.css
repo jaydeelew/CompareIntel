@@ -22,6 +22,15 @@
   box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.65);
   z-index: 9998;
   pointer-events: none;
+  transition: opacity 0.3s ease-in-out;
+}
+
+/* Fade out cutout during step transitions so the backdrop jump isn't visible.
+   transition: none makes the disappearance instant; the base 0.3s transition
+   on .mobile-tutorial-backdrop-cutout handles the smooth fade-in when the class is removed. */
+.mobile-tutorial-backdrop-cutout--transitioning {
+  opacity: 0 !important;
+  transition: none !important;
 }
 
 /* Highlight effect on target element */
@@ -124,6 +133,16 @@
   max-width: 300px;
   pointer-events: auto;
   /* Transform is applied via inline styles based on position calculation */
+  transition: opacity 0.3s ease-in-out;
+}
+
+/* Hide tooltip during automatic step transitions to prevent jitter while page scrolls.
+   transition: none makes the disappearance instant; the base 0.3s transition
+   on .mobile-tutorial-tooltip handles the smooth fade-in when the class is removed. */
+.mobile-tutorial-tooltip--transitioning {
+  opacity: 0 !important;
+  pointer-events: none !important;
+  transition: none !important;
 }
 
 /* Tooltip content box */

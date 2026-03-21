@@ -99,6 +99,8 @@ export const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
   const [loadingStreamingRect, setLoadingStreamingRect] = useState<TargetRect | null>(null)
   // Track when an automatic step transition is in progress to suppress scroll indicator
   const [isStepTransitioning, setIsStepTransitioning] = useState(false)
+  const isStepTransitioningRef = useRef(false)
+  const prevIsLoadingRef = useRef(isLoading)
   const dropdownWasOpenedRef = useRef<boolean>(false)
   // State for save-selection step so Done button re-renders when user clicks (ref doesn't trigger re-renders)
   const [saveSelectionDropdownOpened, setSaveSelectionDropdownOpened] = useState(false)
@@ -160,24 +162,71 @@ export const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
     }
   }, [step])
 
-  // Track step transitions to suppress scroll indicator during automatic scrolling
-  useEffect(() => {
-    // Only trigger transition state when step actually changes to a new value
+  // Set transition flag synchronously before paint so the tooltip never renders at a
+  // stale position for even a single frame when the step changes.
+  useLayoutEffect(() => {
     if (step && step !== previousStepRef.current) {
+      const prevStep = previousStepRef.current
       previousStepRef.current = step
-      setIsStepTransitioning(true)
-      // Reset off-screen state immediately to prevent flashing indicator
-      setIsTargetOffScreen(null)
 
-      // Allow time for automatic scrolling to complete before enabling scroll indicator
-      // This accounts for: element finding (up to 300ms), scroll delay (100ms), and smooth scroll animation (400-600ms)
-      const transitionTimeout = setTimeout(() => {
-        setIsStepTransitioning(false)
-      }, 1000)
-
-      return () => clearTimeout(transitionTimeout)
+      if (prevStep !== null) {
+        isStepTransitioningRef.current = true
+        setIsStepTransitioning(true)
+        setIsTargetOffScreen(null)
+      }
     }
   }, [step])
+
+  // When loading ends on a submit step, the step is about to change to follow-up.
+  // Preemptively hide the overlay NOW (before the step change render) so the cutout
+  // doesn't visibly jump from the results section back to the submit button for one frame.
+  useLayoutEffect(() => {
+    const isSubmitStep = step === 'submit-comparison' || step === 'submit-comparison-2'
+    if (isSubmitStep && prevIsLoadingRef.current && !isLoading) {
+      isStepTransitioningRef.current = true
+      setIsStepTransitioning(true)
+    }
+    prevIsLoadingRef.current = isLoading
+  }, [isLoading, step])
+
+  // Once transitioning, wait for target discovery + scroll to settle before fading in.
+  // Minimum delay prevents ending before the scroll even starts; scroll-idle detection
+  // waits for actual motion to stop; hard cap prevents hanging indefinitely.
+  useEffect(() => {
+    if (!isStepTransitioning) return
+
+    let ended = false
+    let idleTimeout: ReturnType<typeof setTimeout> | null = null
+
+    const endTransition = () => {
+      if (!ended) {
+        ended = true
+        isStepTransitioningRef.current = false
+        setIsStepTransitioning(false)
+      }
+    }
+
+    const resetIdleTimer = () => {
+      if (idleTimeout) clearTimeout(idleTimeout)
+      idleTimeout = setTimeout(endTransition, 300)
+    }
+
+    const hardCap = setTimeout(endTransition, 2500)
+
+    // Wait at least 600ms before starting idle detection — enough time for element
+    // discovery (up to 300ms retries) + scroll initiation (100ms delay).
+    const minTimer = setTimeout(() => {
+      resetIdleTimer()
+      window.addEventListener('scroll', resetIdleTimer, true)
+    }, 600)
+
+    return () => {
+      window.removeEventListener('scroll', resetIdleTimer, true)
+      if (idleTimeout) clearTimeout(idleTimeout)
+      clearTimeout(minTimer)
+      clearTimeout(hardCap)
+    }
+  }, [isStepTransitioning])
 
   // Find target element for current step
   useEffect(() => {
@@ -426,16 +475,13 @@ export const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
     // Ensure tooltip stays within viewport vertically
     tooltipTop = Math.max(padding, Math.min(tooltipTop, viewportHeight - tooltipHeight - padding))
 
-    // For 'follow-up' and 'view-follow-up-results' steps: Position tooltip ABOVE the results section, not inside it
-    // The tooltip should be at the top of the results section and allowed to scroll out of view
-    if (step === 'follow-up' || step === 'view-follow-up-results') {
+    // For view-follow-up-results, position tooltip above the results section.
+    if (step === 'view-follow-up-results') {
       const resultsSection = document.querySelector('.results-section') as HTMLElement
       if (resultsSection) {
         const resultsRect = resultsSection.getBoundingClientRect()
-        // Position tooltip above the results section
-        tooltipTop = resultsRect.top - tooltipHeight - arrowSize - 8
+        tooltipTop = Math.max(padding, resultsRect.top - tooltipHeight - arrowSize - 8)
         arrowDirection = 'down'
-        // Do NOT clamp to viewport - allow tooltip to scroll out of view
       }
     }
 
@@ -470,6 +516,14 @@ export const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       useFullscreen: false,
     })
   }, [targetElement, step, tooltipEstimatedHeight])
+
+  // Recalculate once the transition finishes so the tooltip/cutout appear at the
+  // final settled position instead of the pre-scroll coordinates.
+  useEffect(() => {
+    if (!isStepTransitioning && targetElement && step) {
+      calculatePositions()
+    }
+  }, [isStepTransitioning, targetElement, step, calculatePositions])
 
   // Update positions on mount, scroll, resize
   useEffect(() => {
@@ -513,42 +567,27 @@ export const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
           window.scrollTo({ top: Math.max(0, scrollTarget), behavior: 'smooth' })
         }
       } else if (step === 'follow-up') {
-        // For follow-up step, tooltip appears above the button
-        // Ensure tooltip has enough space above while keeping results visible below
+        // Keep the follow-up button low enough in the viewport that the tooltip can sit
+        // above it without covering the target or the tabs/results users should review.
+        // Use an instant scroll while the tooltip is hidden to avoid visible shaking.
         const arrowSize = 10
+        const measuredTooltipHeight =
+          overlayRef.current?.getBoundingClientRect().height ?? tooltipEstimatedHeight
         const tooltipSpacing = arrowSize + 8
-        const totalTooltipHeight = tooltipEstimatedHeight + tooltipSpacing
-        const topMargin = 80 // Desired margin from top of viewport for tooltip
+        const totalTooltipHeight = measuredTooltipHeight + tooltipSpacing
+        const topMargin = 12
+        const minButtonTop = topMargin + totalTooltipHeight
+        const preferredButtonTop = Math.round(viewportHeight * 0.32)
+        const maxButtonTop = Math.round(viewportHeight * 0.42)
+        const idealButtonTop =
+          minButtonTop > maxButtonTop ? minButtonTop : Math.max(minButtonTop, preferredButtonTop)
+        const scrollAdjustment = rect.top - idealButtonTop
 
-        // Calculate where tooltip top would be if positioned above button
-        const tooltipTop = rect.top - totalTooltipHeight
-
-        // If tooltip would go off-screen at the top, scroll to position button lower
-        if (tooltipTop < topMargin) {
-          // Calculate ideal position: button top should be low enough that tooltip fits above
-          const idealButtonTop = topMargin + totalTooltipHeight
-          const currentButtonTop = rect.top
-          const scrollAdjustment = currentButtonTop - idealButtonTop
-
-          if (scrollAdjustment < 0) {
-            // Scroll up (decrease scroll position) to move button down in viewport
-            // This positions button lower, leaving room above for tooltip
-            const scrollTarget = window.pageYOffset + scrollAdjustment
-            window.scrollTo({ top: Math.max(0, scrollTarget), behavior: 'smooth' })
-          }
-        } else if (rect.top < topMargin + totalTooltipHeight) {
-          // Button too close to top, ensure we have enough space for tooltip above
-          const scrollAdjustment = topMargin + totalTooltipHeight - rect.top
-          const scrollTarget = window.pageYOffset - scrollAdjustment
-          window.scrollTo({ top: Math.max(0, scrollTarget), behavior: 'smooth' })
-        } else {
-          // If there is room above, push the target higher to reveal more results
-          const maxTargetTop = Math.round(viewportHeight * 0.4)
-          if (rect.top > maxTargetTop) {
-            const scrollAdjustment = rect.top - maxTargetTop
-            const scrollTarget = window.pageYOffset + scrollAdjustment
-            window.scrollTo({ top: Math.max(0, scrollTarget), behavior: 'smooth' })
-          }
+        if (Math.abs(scrollAdjustment) > 8) {
+          window.scrollTo({
+            top: Math.max(0, window.pageYOffset + scrollAdjustment),
+            behavior: 'auto',
+          })
         }
       } else if (step === 'view-follow-up-results') {
         // For view-follow-up-results, scroll high so more comparison results are visible
@@ -605,7 +644,9 @@ export const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
     setTimeout(scrollTargetIntoView, 100)
 
     const handleUpdate = () => {
-      calculatePositions()
+      if (!isStepTransitioningRef.current) {
+        calculatePositions()
+      }
     }
 
     window.addEventListener('scroll', handleUpdate, true)
@@ -917,10 +958,14 @@ export const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
 
   const overlayUi = (
     <>
-      {/* Backdrop with cutout - skip for steps where user needs to see full content */}
+      {/* Backdrop with cutout — hidden entirely during loading/streaming to avoid bouncing */}
       {showBackdrop &&
+        !isLoadingStreamingPhase &&
         (cutoutStyle ? (
-          <div className="mobile-tutorial-backdrop-cutout" style={cutoutStyle} />
+          <div
+            className={`mobile-tutorial-backdrop-cutout${isStepTransitioning ? ' mobile-tutorial-backdrop-cutout--transitioning' : ''}`}
+            style={cutoutStyle}
+          />
         ) : (
           <div className="mobile-tutorial-backdrop" />
         ))}
@@ -946,7 +991,7 @@ export const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       {!shouldShowScrollIndicator && !isLoadingStreamingPhase && tooltipPosition && (
         <div
           ref={overlayRef}
-          className={`mobile-tutorial-tooltip ${tooltipPosition.useFullscreen ? 'mobile-tutorial-fullscreen-tooltip' : ''}`}
+          className={`mobile-tutorial-tooltip${tooltipPosition.useFullscreen ? ' mobile-tutorial-fullscreen-tooltip' : ''}${isStepTransitioning ? ' mobile-tutorial-tooltip--transitioning' : ''}`}
           style={
             tooltipPosition.useFullscreen
               ? undefined
