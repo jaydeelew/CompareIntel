@@ -23,6 +23,11 @@ interface HTMLElementWithTutorialProps extends HTMLElement {
 export function useTutorialOverlay(step: TutorialStep | null, isLoading: boolean) {
   const overlayRef = useRef<HTMLDivElement>(null)
   const stepRef = useRef<TutorialStep | null>(step)
+  // Keep in sync during render so effect cleanups see the *incoming* step (not the previous one).
+  // Stale refs caused composer/cutout cleanup to run on 3→4, 6→7, and 9→10 and produced a visible flash.
+  stepRef.current = step
+  /** Previous step for transition-aware cutout clearing (layout only). */
+  const prevStepForCutoutRef = useRef<TutorialStep | null>(null)
   const heroHeightLockedRef = useRef<boolean>(false)
   const dropdownWasOpenedRef = useRef<boolean>(false)
   // State for save-selection step so Done button re-renders when user clicks (ref doesn't trigger re-renders)
@@ -77,7 +82,6 @@ export function useTutorialOverlay(step: TutorialStep | null, isLoading: boolean
   useTutorialCleanup()
 
   useEffect(() => {
-    stepRef.current = step
     // Reset dropdown opened flag when step changes away from dropdown steps
     if (step !== 'history-dropdown' && step !== 'save-selection') {
       dropdownWasOpenedRef.current = false
@@ -93,15 +97,38 @@ export function useTutorialOverlay(step: TutorialStep | null, isLoading: boolean
     }
   }, [step])
 
-  // Clear all cutouts synchronously before paint when step changes. Prevents a single
-  // frame with stale cutouts from the previous step (e.g. step 2's cutout flashing on step 3).
+  // Clear cutouts when the step changes, but keep holes that stay valid across specific
+  // transitions so the backdrop never briefly goes full-screen (3→4, 6→7, 9→10).
   useLayoutEffect(() => {
-    if (!step) return
-    setTextareaCutout(null)
-    setDropdownCutout(null)
-    setButtonCutout(null)
+    if (!step) {
+      prevStepForCutoutRef.current = null
+      setTextareaCutout(null)
+      setDropdownCutout(null)
+      setButtonCutout(null)
+      setTargetCutout(null)
+      setLoadingStreamingCutout(null)
+      return
+    }
+
+    const prev = prevStepForCutoutRef.current
+    if (prev === step) return
+
+    const preserveTextareaCutout =
+      (prev === 'enter-prompt' && step === 'submit-comparison') ||
+      (prev === 'enter-prompt-2' && step === 'submit-comparison-2')
+    const preserveDropdownCutouts = prev === 'history-dropdown' && step === 'save-selection'
+
+    if (!preserveTextareaCutout) {
+      setTextareaCutout(null)
+    }
+    if (!preserveDropdownCutouts) {
+      setDropdownCutout(null)
+      setButtonCutout(null)
+    }
     setTargetCutout(null)
     setLoadingStreamingCutout(null)
+
+    prevStepForCutoutRef.current = step
   }, [step])
 
   useEffect(() => {
@@ -387,13 +414,8 @@ export function useTutorialOverlay(step: TutorialStep | null, isLoading: boolean
     // until the initial scroll + position adjustments settle.
     setPositionStabilized(false)
 
-    // Clear cutout states when entering a new step to ensure fresh calculation
-    // This prevents stale cutout positions from previous steps
-    setTextareaCutout(null)
-    setDropdownCutout(null)
-    setButtonCutout(null)
-    setTargetCutout(null)
-    setLoadingStreamingCutout(null)
+    // Cutout resets run in the layout effect above (transition-aware). Avoid clearing here —
+    // a passive-effect clear after layout caused one painted frame of missing holes.
 
     // Wait for element to be available
     const findElement = () => {
@@ -1251,6 +1273,7 @@ export function useTutorialOverlay(step: TutorialStep | null, isLoading: boolean
     return () => {
       clearTimeout(initialTimeout)
       clearInterval(interval)
+      if (stepRef.current === 'submit-comparison') return
       // Clean up highlight when leaving this step
       const composerElement = getComposerElement()
       if (composerElement) {
@@ -1311,6 +1334,7 @@ export function useTutorialOverlay(step: TutorialStep | null, isLoading: boolean
     return () => {
       clearTimeout(initialTimeout)
       clearInterval(interval)
+      if (stepRef.current === 'submit-comparison-2') return
       // Clean up highlight when leaving this step
       const composerElement = getComposerElement()
       if (composerElement) {
@@ -1619,20 +1643,22 @@ export function useTutorialOverlay(step: TutorialStep | null, isLoading: boolean
       if (historyToggleButton) {
         historyToggleButton.removeEventListener('click', handleHistoryButtonClick)
       }
-      // Clean up on unmount
+      const transitioningToSaveSelection = stepRef.current === 'save-selection'
       const historyDropdown = document.querySelector('.history-inline-list') as HTMLElement
       if (historyDropdown) {
         historyDropdown.classList.remove('tutorial-dropdown-active')
+      }
+      const historyButton = document.querySelector('.history-toggle-button') as HTMLElement
+      if (historyButton) {
+        historyButton.classList.remove('tutorial-highlight')
+      }
+      if (transitioningToSaveSelection) {
+        return
       }
       const composerElement = getComposerElement()
       if (composerElement) {
         composerElement.classList.remove('tutorial-dropdown-container-active')
         composerElement.classList.remove('tutorial-highlight')
-      }
-      // Clean up highlight from history button
-      const historyButton = document.querySelector('.history-toggle-button') as HTMLElement
-      if (historyButton) {
-        historyButton.classList.remove('tutorial-highlight')
       }
       setDropdownCutout(null)
     }
