@@ -111,6 +111,8 @@
 }
 
 .back-to-main-cta .cta-icon {
+  width: 72px;
+  height: 72px;
   color: #60a5fa;
   animation: back-to-main-icon-pulse 3s ease-in-out infinite;
 }
@@ -242,8 +244,8 @@
   }
 
   .back-to-main-cta .cta-icon {
-    width: 36px;
-    height: 36px;
+    width: 56px;
+    height: 56px;
   }
 
   .back-to-main-cta .cta-title {
