@@ -1909,6 +1909,11 @@
 
 /* Switch to compact icon-only tiles before subtitles wrap to 3 lines */
 @media (max-width: 900px) {
+  /* No hover affordance on touch-sized viewports — hide enlarge + tooltip */
+  .hero-section .capability-tile-enlarge-btn {
+    display: none !important;
+  }
+
   .hero-capabilities {
     grid-template-columns: repeat(4, auto);
     justify-content: center;
