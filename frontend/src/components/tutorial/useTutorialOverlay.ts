@@ -796,7 +796,7 @@ export function useTutorialOverlay(step: TutorialStep | null, isLoading: boolean
         setTimeout(() => {
           initialScrollCompleteRef.current = true
           setPositionStabilized(true)
-        }, 500)
+        }, 150)
       }
     }, scrollDelay)
 

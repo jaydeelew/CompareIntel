@@ -208,17 +208,17 @@ export const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
 
     const resetIdleTimer = () => {
       if (idleTimeout) clearTimeout(idleTimeout)
-      idleTimeout = setTimeout(endTransition, 300)
+      idleTimeout = setTimeout(endTransition, 150)
     }
 
-    const hardCap = setTimeout(endTransition, 2500)
+    const hardCap = setTimeout(endTransition, 1200)
 
-    // Wait at least 600ms before starting idle detection — enough time for element
-    // discovery (up to 300ms retries) + scroll initiation (100ms delay).
+    // Wait briefly before starting idle detection — enough time for element
+    // discovery + scroll initiation (100ms delay).
     const minTimer = setTimeout(() => {
       resetIdleTimer()
       window.addEventListener('scroll', resetIdleTimer, true)
-    }, 600)
+    }, 200)
 
     return () => {
       window.removeEventListener('scroll', resetIdleTimer, true)
