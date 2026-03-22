@@ -35,10 +35,13 @@ The PWA is configured in `frontend/vite.config.ts` using `vite-plugin-pwa`.
 
 The PWA uses icons from `frontend/public/`:
 
-### Standard Icons
+### Standard Icons (`purpose: any`)
 
-- `CI_favicon_192x192.png` - Standard icon (192x192)
-- `CI_favicon_512x512.png` - Large icon (512x512)
+Manifest install / taskbar / shortcuts use:
+
+- `CI_favicon_1024x1024.png` - Full-size mark (1024×1024)
+
+Smaller PNGs (`CI_favicon_192x192.png`, `CI_favicon_512x512.png`) remain in `public/` for tiles, structured data, and other references outside the manifest `any` icons.
 
 ### Maskable Icons (for Android Adaptive Icons)
 

@@ -102,6 +102,7 @@ export default defineConfig({
         'CI_favicon_circle_safe.svg', // Circle-safe favicon for Google search results
         'CI_favicon_192x192.png',
         'CI_favicon_512x512.png',
+        'CI_favicon_1024x1024.png',
         'maskable_icon.png',
         'maskable_icon_x192.png',
         'maskable_icon_x512.png',
@@ -132,24 +133,18 @@ export default defineConfig({
             url: '/?action=new',
             icons: [
               {
-                src: 'CI_favicon_192x192.png',
-                sizes: '192x192',
+                src: 'CI_favicon_1024x1024.png',
+                sizes: '1024x1024',
                 type: 'image/png',
               },
             ],
           },
         ],
         icons: [
-          // Standard icons
+          // Standard icons (full-size mark for install / taskbar / shortcuts)
           {
-            src: 'CI_favicon_192x192.png',
-            sizes: '192x192',
-            type: 'image/png',
-            purpose: 'any',
-          },
-          {
-            src: 'CI_favicon_512x512.png',
-            sizes: '512x512',
+            src: 'CI_favicon_1024x1024.png',
+            sizes: '1024x1024',
             type: 'image/png',
             purpose: 'any',
           },

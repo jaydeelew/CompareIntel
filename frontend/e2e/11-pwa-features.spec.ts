@@ -214,8 +214,9 @@ test.describe('PWA Features', () => {
     expect(Array.isArray(icons)).toBe(true)
     expect(icons.length).toBeGreaterThan(0)
 
-    // Check for required icon sizes (192x192 and 512x512)
+    // Maskable icons include 192x192 and 512x512; `any` uses CI_favicon_1024x1024.png
     const iconSizes = icons.map(icon => icon.sizes).join(' ')
+    expect(iconSizes).toMatch(/1024x1024/)
     expect(iconSizes).toMatch(/192x192/)
     expect(iconSizes).toMatch(/512x512/)
   })
