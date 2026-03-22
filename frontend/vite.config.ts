@@ -216,16 +216,17 @@ export default defineConfig({
             purpose: 'maskable',
           },
         ],
+        // Use /brand/... so screenshot URLs are not resolved to /screenshot-*.png (SPA fallback serves HTML).
         screenshots: [
           {
-            src: 'brand/screenshot-desktop.png',
+            src: '/brand/screenshot-desktop.png',
             sizes: '1280x720',
             type: 'image/png',
             form_factor: 'wide',
             label: 'CompareIntel - Compare AI models side-by-side on desktop',
           },
           {
-            src: 'brand/screenshot-mobile.png',
+            src: '/brand/screenshot-mobile.png',
             sizes: '601x1334',
             type: 'image/png',
             form_factor: 'narrow',
