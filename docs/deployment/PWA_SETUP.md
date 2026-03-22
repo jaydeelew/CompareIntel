@@ -33,29 +33,38 @@ The PWA is configured in `frontend/vite.config.ts` using `vite-plugin-pwa`.
 
 ## Icons
 
-The PWA uses icons from `frontend/public/`:
+All PWA and brand icons live in `frontend/public/brand/`. Generate them with:
+
+```bash
+cd frontend
+npm run generate:icons
+```
 
 ### Standard Icons (`purpose: any`)
 
 Manifest install / taskbar / shortcuts use:
 
-- `CI_favicon_1024x1024.png` - Full-size mark (1024×1024)
-
-Smaller PNGs (`CI_favicon_192x192.png`, `CI_favicon_512x512.png`) remain in `public/` for tiles, structured data, and other references outside the manifest `any` icons.
+- `brand/pwa-any-192.png` (192×192)
+- `brand/pwa-any-512.png` (512×512)
+- `brand/pwa-any-1024.png` (1024×1024)
 
 ### Maskable Icons (for Android Adaptive Icons)
 
-Dedicated maskable icons with proper safe zone padding:
+Dedicated maskable icons with 20% safe zone padding:
 
-- `maskable_icon_x48.png` (48x48)
-- `maskable_icon_x72.png` (72x72)
-- `maskable_icon_x96.png` (96x96)
-- `maskable_icon_x128.png` (128x128)
-- `maskable_icon_x192.png` (192x192)
-- `maskable_icon_x384.png` (384x384)
-- `maskable_icon_x512.png` (512x512)
+- `brand/pwa-maskable-48.png`
+- `brand/pwa-maskable-72.png`
+- `brand/pwa-maskable-96.png`
+- `brand/pwa-maskable-128.png`
+- `brand/pwa-maskable-192.png`
+- `brand/pwa-maskable-384.png`
+- `brand/pwa-maskable-512.png`
 
 You can verify maskable icons at [maskable.app/editor](https://maskable.app/editor)
+
+### Favicon root
+
+Crawlers and legacy browsers request `/favicon.ico`. The build script copies `brand/favicon.ico` to `public/favicon.ico` so that requests to `/favicon.ico` succeed without nginx redirects.
 
 ## Testing the PWA
 

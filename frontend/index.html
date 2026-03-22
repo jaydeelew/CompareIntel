@@ -13,12 +13,12 @@
       document.documentElement.classList.add('preload');
     })();
   </script>
-  <!-- Favicons: SVG-only for browser tab (CI_favicon_tab.svg has contrasting disk for tab visibility).
+  <!-- Favicons: SVG-only for browser tab (brand/tab.svg has contrasting disk for tab visibility).
        Chrome prefers ICO/PNG over SVG when both are linked, so we omit ICO and PNG rel=icon to ensure the tab
-       uses our updated design. favicon.ico and large PNGs remain on disk for crawlers (GET /favicon.ico) and PWA manifest. -->
-  <link rel="icon" type="image/svg+xml" href="/CI_favicon_tab.svg" />
-  <link rel="apple-touch-icon" type="image/svg+xml" href="/CI_favicon.svg" />
-  <link rel="apple-touch-icon" sizes="180x180" href="/CI_favicon_180x180.png" />
+       uses our updated design. brand/favicon.ico and large PNGs remain on disk for crawlers (GET /favicon.ico) and PWA manifest. -->
+  <link rel="icon" type="image/svg+xml" href="/brand/tab.svg" />
+  <link rel="apple-touch-icon" type="image/svg+xml" href="/brand/logo.svg" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/brand/apple-touch-icon-180.png" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <!-- Content Security Policy -->
@@ -52,7 +52,7 @@
   <meta name="apple-mobile-web-app-title" content="CompareIntel" />
   <meta name="application-name" content="CompareIntel" />
   <meta name="msapplication-TileColor" content="#2563eb" />
-  <meta name="msapplication-TileImage" content="/CI_favicon_192x192.png" />
+  <meta name="msapplication-TileImage" content="/brand/pwa-any-192.png" />
 
   <!-- PWA Manifest - Injected by VitePWA plugin -->
 
@@ -130,12 +130,12 @@
       "Conversation history",
       "Progressive Web App (PWA) support"
     ],
-    "screenshot": "https://compareintel.com/screenshot-desktop.png",
+    "screenshot": "https://compareintel.com/brand/screenshot-desktop.png",
     "provider": {
       "@type": "Organization",
       "name": "CompareIntel",
       "url": "https://compareintel.com",
-      "logo": "https://compareintel.com/CI_favicon_512x512.png",
+      "logo": "https://compareintel.com/brand/pwa-any-512.png",
       "contactPoint": {
         "@type": "ContactPoint",
         "email": "support@compareintel.com",
@@ -152,7 +152,7 @@
     "@type": "Organization",
     "name": "CompareIntel",
     "url": "https://compareintel.com",
-    "logo": "https://compareintel.com/CI_favicon_512x512.png",
+    "logo": "https://compareintel.com/brand/pwa-any-512.png",
     "description": "CompareIntel is an AI model comparison platform for language and image models, enabling users to test and compare AI from OpenAI, Anthropic, Google, Meta, xAI, Black Forest Labs, and more.",
     "contactPoint": {
       "@type": "ContactPoint",

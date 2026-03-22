@@ -27,7 +27,8 @@
     "test:e2e:mobile:all": "playwright test --grep 'Mobile Platform Tests'",
     "bundle:size": "node scripts/check-bundle-size.js",
     "lighthouse:ci": "lhci autorun",
-    "generate:icons": "node scripts/generate-icons.js"
+    "generate:icons": "node scripts/generate-icons.js",
+    "generate:brand:fullbleed": "node scripts/generate-fullbleed-brand-pngs.js"
   },
   "dependencies": {
     "@sentry/react": "^8.55.0",

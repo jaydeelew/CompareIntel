@@ -40,8 +40,8 @@ export const TutorialWelcomeModal: React.FC<TutorialWelcomeModalProps> = ({
           <div
             className="tutorial-welcome-logo-image"
             style={{
-              WebkitMaskImage: 'url(/CI_favicon_512x512.png)',
-              maskImage: 'url(/CI_favicon_512x512.png)',
+              WebkitMaskImage: 'url(/brand/pwa-any-512.png)',
+              maskImage: 'url(/brand/pwa-any-512.png)',
             }}
           />
         </div>

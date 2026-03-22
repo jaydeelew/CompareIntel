@@ -45,7 +45,7 @@ export function Navigation({
         <div className="nav-brand">
           <div className="brand-logo">
             <img
-              src="/CI_favicon.svg"
+              src="/brand/logo.svg"
               alt="CompareIntel Logo"
               className="logo-icon"
               width="36"

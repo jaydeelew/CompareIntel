@@ -31,7 +31,7 @@ export const BackToMainCTA: React.FC<BackToMainCTAProps> = ({
       <div className="cta-content">
         <div className="cta-icon-wrapper">
           <img
-            src="/CI_favicon.png"
+            src="/brand/serp-circle-512.png"
             alt="CompareIntel"
             className="cta-icon"
             width="72"
