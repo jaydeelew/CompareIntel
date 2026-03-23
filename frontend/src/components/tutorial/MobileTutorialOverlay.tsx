@@ -104,7 +104,7 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
   const dropdownWasOpenedRef = useRef<boolean>(false)
   // State for save-selection step so Done button re-renders when user clicks (ref doesn't trigger re-renders)
   const [saveSelectionDropdownOpened, setSaveSelectionDropdownOpened] = useState(false)
-  /** Step 5 (follow-up): inner scroll on `.conversation-content` so the fixed tooltip can move off-screen with reading. */
+  /** Steps 5 & 8: inner scroll on `.conversation-content` so the fixed tooltip moves with the results body (like staying above the section when scrolling). */
   const [followUpConversationScrollTop, setFollowUpConversationScrollTop] = useState(0)
   // Portal root for rendering tutorial UI - ensures position: fixed works correctly
   const [portalRoot, setPortalRoot] = useState<HTMLElement | null>(null)
@@ -230,10 +230,13 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
     }
   }, [isStepTransitioning])
 
-  // Step 5 (follow-up): results scroll inside `.conversation-content`, not the window — track that
-  // scroll so the fixed tooltip translates up and leaves the viewport instead of covering messages.
+  // Steps 5 (follow-up) & 8 (view-follow-up-results): results scroll inside `.conversation-content`,
+  // not the window — track that scroll so the fixed tooltip translates up with the content.
+  // Step 8 only: baseline scroll when the step begins. Leftover scrollTop from reading follow-up
+  // responses would otherwise force the tooltip to the viewport-top padding clamp and hide the arrow.
+  // Step 5 keeps absolute scrollTop so a pre-scrolled conversation still pulls the tooltip up.
   useEffect(() => {
-    if (step !== 'follow-up') {
+    if (step !== 'follow-up' && step !== 'view-follow-up-results') {
       setFollowUpConversationScrollTop(0)
       return
     }
@@ -243,8 +246,12 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
     ) as HTMLElement | null
     if (!el) return
 
+    const baseline = step === 'view-follow-up-results' ? el.scrollTop : 0
+
     const onScroll = () => {
-      setFollowUpConversationScrollTop(el.scrollTop)
+      setFollowUpConversationScrollTop(
+        step === 'view-follow-up-results' ? el.scrollTop - baseline : el.scrollTop
+      )
     }
     onScroll()
 
@@ -471,9 +478,10 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
     let arrowDirection: 'up' | 'down' | 'left' | 'right' = 'up'
     let arrowOffset = 50 // Default to center
 
-    if (step === 'follow-up') {
+    if (step === 'follow-up' || step === 'view-follow-up-results') {
       // Never overlap model tabs/messages. Generic placement can put the tooltip below the button or
       // centered, and the viewport clamp can shove it down — all of that covers the results body.
+      // Step 5 targets the follow-up button; step 8 targets the full results section — same math.
       const tabsContainer = document.querySelector('.results-tabs-container') as HTMLElement | null
       const conversationEl = document.querySelector('.conversation-content') as HTMLElement | null
       const resultsGrid = document.querySelector('.results-grid') as HTMLElement | null
@@ -530,16 +538,6 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
 
       // Ensure tooltip stays within viewport vertically
       tooltipTop = Math.max(padding, Math.min(tooltipTop, viewportHeight - tooltipHeight - padding))
-    }
-
-    // For view-follow-up-results, position tooltip above the results section.
-    if (step === 'view-follow-up-results') {
-      const resultsSection = document.querySelector('.results-section') as HTMLElement
-      if (resultsSection) {
-        const resultsRect = resultsSection.getBoundingClientRect()
-        tooltipTop = Math.max(padding, resultsRect.top - tooltipHeight - arrowSize - 8)
-        arrowDirection = 'down'
-      }
     }
 
     // For dropdown steps: ALWAYS position above the button so menus stay visible below
@@ -711,9 +709,12 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
 
     // Recalculate periodically to handle DOM changes
     // Skip interval for button-pulsate steps so tooltip stays stable while button scales
-    const isButtonPulsateStep = ['submit-comparison', 'follow-up', 'submit-comparison-2'].includes(
-      step
-    )
+    const isButtonPulsateStep = [
+      'submit-comparison',
+      'follow-up',
+      'submit-comparison-2',
+      'view-follow-up-results',
+    ].includes(step)
     const interval = isButtonPulsateStep ? null : setInterval(handleUpdate, 200)
 
     return () => {
@@ -1048,7 +1049,7 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       {!shouldShowScrollIndicator && !isLoadingStreamingPhase && tooltipPosition && (
         <div
           ref={overlayRef}
-          className={`mobile-tutorial-tooltip${tooltipPosition.useFullscreen ? ' mobile-tutorial-fullscreen-tooltip' : ''}${isStepTransitioning ? ' mobile-tutorial-tooltip--transitioning' : ''}${step === 'follow-up' && followUpConversationScrollTop > 12 ? ' mobile-tutorial-tooltip--followup-conversation-scrolled' : ''}`}
+          className={`mobile-tutorial-tooltip${tooltipPosition.useFullscreen ? ' mobile-tutorial-fullscreen-tooltip' : ''}${isStepTransitioning ? ' mobile-tutorial-tooltip--transitioning' : ''}${(step === 'follow-up' || step === 'view-follow-up-results') && followUpConversationScrollTop > 12 ? ' mobile-tutorial-tooltip--followup-conversation-scrolled' : ''}`}
           style={
             tooltipPosition.useFullscreen
               ? undefined
