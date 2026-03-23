@@ -577,6 +577,10 @@ export const ModelsSection: React.FC<ModelsSectionProps> = ({
 
                     const handleModelClick = () => {
                       if (isRestricted && requiresUpgrade) {
+                        // During tutorial, do not show the locked-model modal
+                        if (hideModelInfoTooltips) {
+                          return
+                        }
                         // Show modal for unregistered/free tiers, or fallback to error message
                         if (onShowDisabledModelModal) {
                           onShowDisabledModelModal({
