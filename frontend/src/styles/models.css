@@ -3401,6 +3401,26 @@ html:not([data-theme]) .help-me-choose-category.has-match {
   pointer-events: none;
 }
 
+/* Same accent on bottom edge */
+.advanced-settings-content::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    color-mix(in srgb, var(--primary-color) 25%, transparent) 20%,
+    color-mix(in srgb, var(--primary-color) 40%, transparent) 50%,
+    color-mix(in srgb, var(--primary-color) 25%, transparent) 80%,
+    transparent 100%
+  );
+  opacity: 0.6;
+  pointer-events: none;
+}
+
 /* Non-mobile: allow info tooltips to extend above container */
 @media (min-width: 769px) {
   .advanced-settings-content {
@@ -3411,14 +3431,11 @@ html:not([data-theme]) .help-me-choose-category.has-match {
 /* When Advanced is open: match Help me choose + subtle open-state emphasis */
 .advanced-settings-expanded .advanced-settings-content {
   border-color: var(--border-strong);
-  border-left-width: 3px;
-  border-left-color: color-mix(in srgb, var(--primary-color) 45%, var(--border-strong));
-  box-shadow:
-    var(--shadow-md),
-    0 0 0 1px color-mix(in srgb, var(--primary-color) 12%, transparent);
+  box-shadow: var(--shadow-md);
 }
 
-.advanced-settings-expanded .advanced-settings-content::before {
+.advanced-settings-expanded .advanced-settings-content::before,
+.advanced-settings-expanded .advanced-settings-content::after {
   opacity: 1;
   background: linear-gradient(
     90deg,
@@ -3439,11 +3456,9 @@ html:not([data-theme]) .help-me-choose-category.has-match {
     var(--bg-elevated) 100%
   );
   border-color: rgba(37, 99, 235, 0.25);
-  border-left-color: rgba(37, 99, 235, 0.5);
   box-shadow:
     0 2px 8px rgba(37, 99, 235, 0.06),
-    0 1px 3px rgba(0, 0, 0, 0.06),
-    0 0 0 1px rgba(37, 99, 235, 0.08);
+    0 1px 3px rgba(0, 0, 0, 0.06);
 }
 
 /* Dark theme: match Help me choose when open */
@@ -3455,11 +3470,9 @@ html:not([data-theme]) .help-me-choose-category.has-match {
     var(--bg-elevated) 100%
   );
   border-color: rgba(6, 182, 212, 0.3);
-  border-left-color: rgba(6, 182, 212, 0.55);
   box-shadow:
     0 2px 12px rgba(0, 0, 0, 0.4),
-    0 0 16px color-mix(in srgb, var(--primary-glow) 20%, transparent),
-    0 0 0 1px rgba(6, 182, 212, 0.15);
+    0 1px 3px rgba(0, 0, 0, 0.25);
 }
 
 .advanced-settings-row {
