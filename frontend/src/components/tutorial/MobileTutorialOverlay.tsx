@@ -81,7 +81,7 @@ const TEXTAREA_STEPS: TutorialStep[] = ['enter-prompt', 'enter-prompt-2']
 // Dropdown steps should keep tooltip above to avoid covering menus
 const DROPDOWN_STEPS: TutorialStep[] = ['history-dropdown', 'save-selection']
 
-export const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
+const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
   step,
   onComplete,
   onSkip,
@@ -282,10 +282,8 @@ export const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
           '.provider-dropdown[data-provider-name="Google"]'
         ) as HTMLElement
         if (googleDropdown) {
-          element =
-            step === 'expand-provider'
-              ? (googleDropdown.querySelector('.provider-header') as HTMLElement)
-              : googleDropdown
+          // Use the full provider card for both steps so highlight/cutout styling is consistent.
+          element = googleDropdown
         }
       } else if (step === 'enter-prompt' || step === 'enter-prompt-2') {
         element = getComposerElement()
@@ -737,16 +735,6 @@ export const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       targetElement.classList.add('mobile-tutorial-button-pulsate')
     }
 
-    // For provider steps, highlight the whole dropdown
-    if (step === 'expand-provider' || step === 'select-models') {
-      const googleDropdown = document.querySelector(
-        '.provider-dropdown[data-provider-name="Google"]'
-      ) as HTMLElement
-      if (googleDropdown) {
-        googleDropdown.classList.add('mobile-tutorial-highlight')
-      }
-    }
-
     // For follow-up (step 5) and view-follow-up-results (step 8), highlight the full results section and add pulsing to model tabs
     const resultsSection =
       step === 'follow-up' || step === 'view-follow-up-results'
@@ -990,7 +978,8 @@ export const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       ? null
       : (dropdownRect ?? backdropRect ?? targetRect)
 
-  const cutoutPadding = 8
+  const isProviderStep = step === 'expand-provider' || step === 'select-models'
+  const cutoutPadding = isProviderStep ? 5 : 8
   const cutoutStyle =
     cutoutTarget && showBackdrop
       ? {
@@ -1008,8 +997,12 @@ export const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
                 step === 'history-dropdown' ||
                 step === 'save-selection'
               ? '32px'
-              : '16px',
-          boxShadow: '0 0 0 9999px rgba(0, 0, 0, 0.65)',
+              : isProviderStep
+                ? '17px'
+                : '16px',
+          boxShadow: isProviderStep
+            ? 'inset 0 0 0 5px var(--accent-color), 0 0 0 9999px rgba(0, 0, 0, 0.65)'
+            : '0 0 0 9999px rgba(0, 0, 0, 0.65)',
           zIndex: 9998,
           pointerEvents: 'none' as const,
         }
@@ -1149,3 +1142,5 @@ export const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
 
   return createPortal(overlayUi, portalRoot)
 }
+
+export default MobileTutorialOverlay

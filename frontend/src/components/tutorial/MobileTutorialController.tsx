@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react'
 
 import type { TutorialStep, TutorialState } from '../../hooks/useTutorial'
 
-import { MobileTutorialOverlay } from './MobileTutorialOverlay'
+import MobileTutorialOverlay from './MobileTutorialOverlay'
 
 interface MobileTutorialControllerProps {
   // Tutorial state and functions (passed from parent to share state)

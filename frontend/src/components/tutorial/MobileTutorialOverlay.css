@@ -67,14 +67,41 @@
   transition: none !important;
 }
 
-/* Special styling for provider dropdown highlight on mobile */
+/* Special styling for provider dropdown highlight on mobile —
+   the cutout has 0 padding so no page-background white leaks around the card.
+   Thicker / more-opaque rings compensate for rendering over the dark backdrop. */
 .provider-dropdown.mobile-tutorial-highlight {
-  border-radius: var(--radius-lg) !important;
+  border-radius: var(--radius-xl) !important;
+  border-color: var(--accent-color) !important;
+  overflow: visible !important;
+  box-shadow:
+    0 0 0 4px var(--accent-color),
+    0 0 0 9px rgba(14, 165, 233, 0.35),
+    0 0 20px rgba(14, 165, 233, 0.5) !important;
+  animation: mobile-tutorial-pulse-provider 2s ease-in-out infinite !important;
+}
+
+@keyframes mobile-tutorial-pulse-provider {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 4px var(--accent-color),
+      0 0 0 9px rgba(14, 165, 233, 0.3),
+      0 0 20px rgba(14, 165, 233, 0.45);
+  }
+
+  50% {
+    box-shadow:
+      0 0 0 4px var(--accent-color),
+      0 0 0 11px rgba(14, 165, 233, 0.38),
+      0 0 30px rgba(14, 165, 233, 0.6);
+  }
 }
 
 /* Pulsing effect for model results tab text on steps 5 (follow-up) and 8 (view-follow-up-results) - draws attention to tabs via size pulse */
 .results-tabs-header.mobile-tutorial-tabs-pulse .results-tab-name {
-  display: inline-block; /* Required for transform to affect inline content */
+  display: inline-block;
+  /* Required for transform to affect inline content */
   animation: mobile-tutorial-tabs-size-pulse 1.5s ease-in-out infinite !important;
 }
 
