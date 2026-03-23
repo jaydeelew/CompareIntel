@@ -3,7 +3,7 @@ Unit tests for user settings/preferences API endpoints.
 
 Tests cover:
 - Getting user preferences
-- Updating user preferences (zipcode, remember_state_on_logout)
+- Updating user preferences (zipcode, remember_state_on_logout, hide_hero_utility_tiles)
 - Deleting all conversations
 - Validation of zipcode format
 """
@@ -32,6 +32,8 @@ class TestUserPreferences:
         assert "usage_alerts" in data
         assert "zipcode" in data
         assert "remember_state_on_logout" in data
+        assert "hide_hero_utility_tiles" in data
+        assert data["hide_hero_utility_tiles"] is False
 
     def test_get_preferences_creates_default_if_not_exists(self, authenticated_client, db_session):
         """Test that getting preferences creates default preferences if they don't exist."""
@@ -52,6 +54,7 @@ class TestUserPreferences:
         assert data["email_notifications"] is True
         assert data["usage_alerts"] is True
         assert data["remember_state_on_logout"] is False
+        assert data["hide_hero_utility_tiles"] is False
 
     def test_update_preferences_zipcode(self, authenticated_client):
         """Test updating zipcode preference."""
@@ -95,6 +98,14 @@ class TestUserPreferences:
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
         assert data["remember_state_on_logout"] is True
+
+    def test_update_preferences_hide_hero_utility_tiles(self, authenticated_client):
+        """Test updating hide_hero_utility_tiles preference."""
+        client, user, access_token, refresh_token = authenticated_client
+        response = client.put("/api/user/preferences", json={"hide_hero_utility_tiles": True})
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert data["hide_hero_utility_tiles"] is True
 
     def test_update_preferences_multiple_fields(self, authenticated_client):
         """Test updating multiple preference fields at once."""

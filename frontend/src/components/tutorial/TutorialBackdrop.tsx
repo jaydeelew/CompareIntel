@@ -1,5 +1,7 @@
 import React from 'react'
 
+import type { TutorialStep } from '../../hooks/useTutorial'
+
 export interface RectCutout {
   top: number
   left: number
@@ -18,6 +20,7 @@ export interface ButtonCutout {
 }
 
 export interface TutorialBackdropProps {
+  step: TutorialStep | null
   isLoadingStreamingPhase: boolean
   loadingStreamingCutout: RectCutout | null
   useRoundedCutout: boolean
@@ -37,6 +40,7 @@ function handleBackdropClick(e: React.MouseEvent, className: string) {
 }
 
 export const TutorialBackdrop: React.FC<TutorialBackdropProps> = ({
+  step,
   isLoadingStreamingPhase,
   loadingStreamingCutout,
   useRoundedCutout,
@@ -147,6 +151,11 @@ export const TutorialBackdrop: React.FC<TutorialBackdropProps> = ({
   }
 
   if (targetCutout && !shouldExcludeTextarea && !shouldExcludeDropdown && !useRoundedCutout) {
+    const usesInsetBlueRing =
+      step === 'expand-provider' ||
+      step === 'select-models' ||
+      step === 'follow-up' ||
+      step === 'view-follow-up-results'
     return (
       <div
         className="tutorial-backdrop-cutout"
@@ -157,7 +166,10 @@ export const TutorialBackdrop: React.FC<TutorialBackdropProps> = ({
           width: `${targetCutout.width}px`,
           height: `${targetCutout.height}px`,
           borderRadius: `${targetCutout.borderRadius}px`,
-          boxShadow: '0 0 0 9999px rgba(0, 0, 0, 0.6)',
+          /* Solid blue in the padded gap — matches provider steps (hero) on results-section steps. */
+          boxShadow: usesInsetBlueRing
+            ? 'inset 0 0 0 8px var(--accent-color), 0 0 0 9999px rgba(0, 0, 0, 0.6)'
+            : '0 0 0 9999px rgba(0, 0, 0, 0.6)',
           zIndex: 9998,
           pointerEvents: 'none',
         }}

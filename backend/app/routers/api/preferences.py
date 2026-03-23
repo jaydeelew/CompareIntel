@@ -54,6 +54,9 @@ async def get_user_preferences(
         remember_state_on_logout=preferences.remember_state_on_logout
         if preferences.remember_state_on_logout is not None
         else False,
+        hide_hero_utility_tiles=preferences.hide_hero_utility_tiles
+        if preferences.hide_hero_utility_tiles is not None
+        else False,
     )
 
 
@@ -97,6 +100,8 @@ async def update_user_preferences(
         preferences.zipcode = validated_data.zipcode
     if validated_data.remember_state_on_logout is not None:
         preferences.remember_state_on_logout = validated_data.remember_state_on_logout
+    if validated_data.hide_hero_utility_tiles is not None:
+        preferences.hide_hero_utility_tiles = validated_data.hide_hero_utility_tiles
 
     db.commit()
     db.refresh(preferences)
@@ -118,5 +123,8 @@ async def update_user_preferences(
         zipcode=preferences.zipcode,
         remember_state_on_logout=preferences.remember_state_on_logout
         if preferences.remember_state_on_logout is not None
+        else False,
+        hide_hero_utility_tiles=preferences.hide_hero_utility_tiles
+        if preferences.hide_hero_utility_tiles is not None
         else False,
     )

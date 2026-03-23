@@ -940,20 +940,8 @@
   font-weight: var(--font-medium);
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: 0 4px 12px var(--primary-glow);
   white-space: nowrap;
   flex-shrink: 0;
-}
-
-.follow-up-button:hover {
-  box-shadow:
-    0 6px 20px rgba(6, 182, 212, 0.4),
-    0 0 20px var(--primary-glow);
-  transform: translateY(-1px);
-}
-
-.follow-up-button:not(:has(span)):hover {
-  transform: none;
 }
 
 .follow-up-button:disabled {

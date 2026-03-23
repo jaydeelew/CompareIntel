@@ -168,6 +168,9 @@ class UserPreference(Base):
     # When enabled, preserves follow-up mode, model responses, textarea text, and web search state on logout
     remember_state_on_logout = Column(Boolean, default=False)
 
+    # Home page: hide capability cards row and center the question box (registered users)
+    hide_hero_utility_tiles = Column(Boolean, default=False)
+
     # Timestamps
     created_at = Column(DateTime, default=func.now())
     updated_at = Column(DateTime, default=func.now(), onupdate=func.now())

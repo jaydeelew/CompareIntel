@@ -13,7 +13,7 @@ import { updatePageMeta } from '../utils/pageMeta'
 import { updatePageTitle } from '../utils/pageTitles'
 
 import { Footer } from './Footer'
-import { InstallPrompt, SkipLink } from './layout'
+import { InstallPrompt } from './layout'
 
 const SCROLL_LOCK_MS = 700
 
@@ -120,8 +120,6 @@ export const Layout: React.FC = () => {
 
   return (
     <>
-      {/* Skip link for keyboard navigation accessibility */}
-      <SkipLink />
       {/* Hero provides H1 on homepage; other pages define their own */}
       <Outlet />
       <Footer />

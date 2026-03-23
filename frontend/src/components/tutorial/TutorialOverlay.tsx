@@ -58,6 +58,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
   const overlayUi = (
     <>
       <TutorialBackdrop
+        step={step}
         isLoadingStreamingPhase={isLoadingStreamingPhase}
         loadingStreamingCutout={loadingStreamingCutout}
         useRoundedCutout={useRoundedCutout}

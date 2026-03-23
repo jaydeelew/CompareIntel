@@ -18,6 +18,7 @@ frontend/.env
 /compareintel.db
 
 # Backend SQLite DB (runtime data; schema via migrations)
+backend/compareintel.db*
 backend/data/compareintel.db
 backend/data/*.db
 backend/test.db

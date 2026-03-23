@@ -8,6 +8,9 @@
 
 import { apiClient } from './api/client'
 
+/** Dispatched on document when preferences are saved so the UI can update without a full reload */
+export const USER_PREFERENCES_UPDATED_EVENT = 'compareintel:user-preferences-updated'
+
 /**
  * User preferences response from the API
  */
@@ -18,6 +21,7 @@ export interface UserPreferences {
   usage_alerts: boolean
   zipcode: string | null
   remember_state_on_logout: boolean
+  hide_hero_utility_tiles: boolean
 }
 
 /**
@@ -30,6 +34,7 @@ export interface UserPreferencesUpdate {
   usage_alerts?: boolean
   zipcode?: string | null
   remember_state_on_logout?: boolean
+  hide_hero_utility_tiles?: boolean
 }
 
 /**

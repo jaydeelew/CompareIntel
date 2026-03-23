@@ -27,6 +27,7 @@ describe('userSettingsService', () => {
     usage_alerts: true,
     zipcode: '12345',
     remember_state_on_logout: true,
+    hide_hero_utility_tiles: false,
   }
 
   beforeEach(() => {

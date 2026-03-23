@@ -1845,7 +1845,16 @@ export function useTutorialOverlay(step: TutorialStep | null, isLoading: boolean
               : []
       }
       const padding = 8
-      const borderRadius = step === 'view-follow-up-results' ? 16 : isSubmitStep ? 32 : 12
+      const isProviderStep = step === 'expand-provider' || step === 'select-models'
+      /* Concentric outer radius: element radius + cutout padding (8px). */
+      const borderRadius =
+        step === 'follow-up' || step === 'view-follow-up-results'
+          ? 24 /* --radius-2xl (16px) + 8 */
+          : isSubmitStep
+            ? 32
+            : isProviderStep
+              ? 20 /* --radius-xl (12px) + 8 */
+              : 12
       const cutout = computeTargetCutout(elementsToUse, padding, borderRadius)
       if (cutout) {
         cutout.top += window.scrollY

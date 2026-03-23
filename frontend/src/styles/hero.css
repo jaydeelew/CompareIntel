@@ -53,6 +53,20 @@
   overflow: visible;
 }
 
+/* Registered users (setting): hide capability tiles; vertically center composer in the hero area.
+   Does not alter base .hero-section padding — only inner layout. */
+.hero-section.hero-section--composer-focused .hero-capabilities {
+  display: none;
+}
+
+.hero-section.hero-section--composer-focused .hero-input-section {
+  margin-top: 0;
+  min-height: clamp(200px, 30vh, 360px);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
 /* Animated mesh gradient overlay */
 .hero-section::before {
   content: '';

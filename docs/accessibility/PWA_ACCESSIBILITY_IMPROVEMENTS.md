@@ -53,25 +53,7 @@ This document summarizes the accessibility improvements made to the CompareIntel
 
 ## Recommended Improvements
 
-### 4. Skip Link Component (WCAG 2.4.1 - Bypass Blocks)
-
-**Issue:** No way for keyboard users to skip navigation and banners.
-
-**Fix:** Created skip link component that:
-- Appears as first focusable element
-- Hidden off-screen, visible on focus
-- Scrolls and focuses main content area
-- Removes tabindex after use to prevent tab order issues
-
-**Files Created:**
-- `frontend/src/components/layout/SkipLink.tsx`
-
-**Files Modified:**
-- `frontend/src/components/Layout.tsx` - Added SkipLink component
-- `frontend/src/styles/layout.css` - Added skip link styles
-- `frontend/src/components/layout/MainLayout.tsx` - Added `id="main-content"` for skip link target
-
-### 5. Enhanced Manifest (2026 Best Practices)
+### 4. Enhanced Manifest (2026 Best Practices)
 
 **Issue:** Manifest missing some 2026 best practice fields.
 
@@ -113,7 +95,6 @@ This document summarizes the accessibility improvements made to the CompareIntel
 - [x] Test with screen reader (NVDA/JAWS/VoiceOver)
 - [x] Test focus visibility on all buttons
 - [x] Test focus trap in modal
-- [x] Test skip link functionality
 - [ ] Test on actual mobile devices (iOS/Android)
 - [ ] Test with reduced motion preference
 - [ ] Test with high contrast mode
@@ -126,13 +107,10 @@ This document summarizes the accessibility improvements made to the CompareIntel
 ### New Files
 - `docs/accessibility/PWA_ACCESSIBILITY_EVALUATION.md` - Comprehensive evaluation report
 - `docs/accessibility/PWA_ACCESSIBILITY_IMPROVEMENTS.md` - This file
-- `frontend/src/components/layout/SkipLink.tsx` - Skip link component
 
 ### Modified Files
 - `frontend/src/components/layout/InstallPrompt.tsx` - Focus trap and keyboard handlers
 - `frontend/src/styles/banners.css` - Focus styles for buttons
-- `frontend/src/styles/layout.css` - Skip link styles
-- `frontend/src/components/Layout.tsx` - Added SkipLink
 - `frontend/src/components/layout/MainLayout.tsx` - Added main content ID
 - `frontend/vite.config.ts` - Enhanced manifest configuration
 
@@ -158,7 +136,7 @@ This document summarizes the accessibility improvements made to the CompareIntel
 
 | Criterion | Status | Notes |
 |-----------|--------|-------|
-| 2.4.1 Bypass Blocks | Fixed | Skip link implemented |
+| 2.4.1 Bypass Blocks | Partial | No skip link; keyboard users tab through nav |
 | 2.4.3 Focus Order | Fixed | Focus trap in modal |
 | 2.4.7 Focus Visible | Fixed | Visible focus styles |
 | 3.2.1 On Focus | Pass | No context changes |

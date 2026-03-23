@@ -978,8 +978,7 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       ? null
       : (dropdownRect ?? backdropRect ?? targetRect)
 
-  const isProviderStep = step === 'expand-provider' || step === 'select-models'
-  const cutoutPadding = isProviderStep ? 5 : 8
+  const cutoutPadding = 8
   const cutoutStyle =
     cutoutTarget && showBackdrop
       ? {
@@ -997,12 +996,18 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
                 step === 'history-dropdown' ||
                 step === 'save-selection'
               ? '32px'
-              : isProviderStep
-                ? '17px'
-                : '16px',
-          boxShadow: isProviderStep
-            ? 'inset 0 0 0 5px var(--accent-color), 0 0 0 9999px rgba(0, 0, 0, 0.65)'
-            : '0 0 0 9999px rgba(0, 0, 0, 0.65)',
+              : step === 'expand-provider' || step === 'select-models'
+                ? '20px'
+                : step === 'follow-up' || step === 'view-follow-up-results'
+                  ? '24px'
+                  : '16px',
+          boxShadow:
+            step === 'expand-provider' ||
+            step === 'select-models' ||
+            step === 'follow-up' ||
+            step === 'view-follow-up-results'
+              ? 'inset 0 0 0 8px var(--accent-color), 0 0 0 9999px rgba(0, 0, 0, 0.65)'
+              : '0 0 0 9999px rgba(0, 0, 0, 0.65)',
           zIndex: 9998,
           pointerEvents: 'none' as const,
         }

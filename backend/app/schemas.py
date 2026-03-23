@@ -221,6 +221,10 @@ class UserPreferencesUpdate(BaseModel):
         None,
         description="Remember state (follow-up mode, responses, textarea, websearch) on logout",
     )
+    hide_hero_utility_tiles: bool | None = Field(
+        None,
+        description="Hide the four capability cards below the page title and center the question box (registered users)",
+    )
 
     @field_validator("preferred_models")
     @classmethod
@@ -257,6 +261,7 @@ class UserPreferencesResponse(BaseModel):
     usage_alerts: bool
     zipcode: str | None = None
     remember_state_on_logout: bool = False
+    hide_hero_utility_tiles: bool = False
 
     model_config = ConfigDict(from_attributes=True)
 

@@ -12,8 +12,12 @@ import { apiClient } from '../../services/api/client'
 import { deleteAllConversations } from '../../services/conversationService'
 import { getCreditBalance } from '../../services/creditService'
 import type { CreditBalance } from '../../services/creditService'
-import { getUserPreferences, updateUserPreferences } from '../../services/userSettingsService'
-import type { UserPreferences } from '../../services/userSettingsService'
+import {
+  getUserPreferences,
+  updateUserPreferences,
+  USER_PREFERENCES_UPDATED_EVENT,
+} from '../../services/userSettingsService'
+import type { UserPreferences, UserPreferencesUpdate } from '../../services/userSettingsService'
 import logger from '../../utils/logger'
 import { dispatchSaveStateEvent } from '../../utils/sessionState'
 import './UserMenu.css'
@@ -33,7 +37,8 @@ export const UserMenu: React.FC = () => {
   const [isLoadingPreferences, setIsLoadingPreferences] = useState(false)
   const [zipcode, setZipcode] = useState('')
   const [rememberState, setRememberState] = useState(false)
-  const [isSavingPreferences, setIsSavingPreferences] = useState(false)
+  const [hideHeroUtilityTiles, setHideHeroUtilityTiles] = useState(false)
+  const [isSavingPreference, setIsSavingPreference] = useState(false)
   const [preferencesError, setPreferencesError] = useState<string | null>(null)
   const [preferencesSuccess, setPreferencesSuccess] = useState<string | null>(null)
   const [isDeletingHistory, setIsDeletingHistory] = useState(false)
@@ -125,6 +130,7 @@ export const UserMenu: React.FC = () => {
           setPreferences(prefs)
           setZipcode(prefs.zipcode || '')
           setRememberState(prefs.remember_state_on_logout)
+          setHideHeroUtilityTiles(prefs.hide_hero_utility_tiles)
         })
         .catch(error => {
           logger.error('Failed to load preferences:', error)
@@ -136,27 +142,53 @@ export const UserMenu: React.FC = () => {
     }
   }, [activeModal, user])
 
-  // Handle saving preferences
-  const handleSavePreferences = useCallback(async () => {
-    setIsSavingPreferences(true)
-    setPreferencesError(null)
-    setPreferencesSuccess(null)
-    try {
-      const updated = await updateUserPreferences({
-        zipcode: zipcode.trim() || null,
-        remember_state_on_logout: rememberState,
-      })
-      setPreferences(updated)
-      setPreferencesSuccess('Settings saved successfully!')
-      setTimeout(() => setPreferencesSuccess(null), 3000)
-    } catch (error: unknown) {
-      logger.error('Failed to save preferences:', error)
-      const errorMessage = error instanceof Error ? error.message : 'Failed to save settings'
-      setPreferencesError(errorMessage)
-    } finally {
-      setIsSavingPreferences(false)
-    }
-  }, [zipcode, rememberState])
+  const persistPartialPreferences = useCallback(
+    async (payload: UserPreferencesUpdate, revert?: () => void) => {
+      setIsSavingPreference(true)
+      setPreferencesError(null)
+      try {
+        const updated = await updateUserPreferences(payload)
+        setPreferences(updated)
+        setRememberState(updated.remember_state_on_logout)
+        setHideHeroUtilityTiles(updated.hide_hero_utility_tiles)
+        setZipcode(updated.zipcode || '')
+        window.dispatchEvent(new CustomEvent(USER_PREFERENCES_UPDATED_EVENT, { detail: updated }))
+      } catch (error: unknown) {
+        logger.error('Failed to save preferences:', error)
+        revert?.()
+        setPreferencesError(error instanceof Error ? error.message : 'Failed to save settings')
+      } finally {
+        setIsSavingPreference(false)
+      }
+    },
+    []
+  )
+
+  const handleHideHeroToggle = useCallback(() => {
+    if (isSavingPreference) return
+    const prev = hideHeroUtilityTiles
+    const next = !prev
+    setHideHeroUtilityTiles(next)
+    void persistPartialPreferences({ hide_hero_utility_tiles: next }, () =>
+      setHideHeroUtilityTiles(prev)
+    )
+  }, [hideHeroUtilityTiles, isSavingPreference, persistPartialPreferences])
+
+  const handleRememberStateToggle = useCallback(() => {
+    if (isSavingPreference) return
+    const prev = rememberState
+    const next = !prev
+    setRememberState(next)
+    void persistPartialPreferences({ remember_state_on_logout: next }, () => setRememberState(prev))
+  }, [rememberState, isSavingPreference, persistPartialPreferences])
+
+  const handleZipcodeBlur = useCallback(() => {
+    if (!preferences || isSavingPreference) return
+    const newVal = zipcode.trim() === '' ? null : zipcode.trim()
+    if ((newVal || '') === (preferences.zipcode || '')) return
+    const previousZip = preferences.zipcode || ''
+    void persistPartialPreferences({ zipcode: newVal }, () => setZipcode(previousZip))
+  }, [preferences, zipcode, isSavingPreference, persistPartialPreferences])
 
   // Handle delete all history
   const handleDeleteAllHistory = useCallback(async () => {
@@ -512,187 +544,217 @@ export const UserMenu: React.FC = () => {
                 <h2 className="modal-title">Settings</h2>
               </div>
 
-              {isLoadingPreferences ? (
-                <div className="settings-loading">
-                  <div className="settings-spinner" />
-                  <span>Loading settings...</span>
-                </div>
-              ) : (
-                <div className="settings-content">
-                  {/* Status Messages */}
-                  {preferencesError && (
-                    <div className="settings-message settings-error">
-                      <svg
-                        width="16"
-                        height="16"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                      >
-                        <circle cx="12" cy="12" r="10" />
-                        <line x1="15" y1="9" x2="9" y2="15" />
-                        <line x1="9" y1="9" x2="15" y2="15" />
-                      </svg>
-                      {preferencesError}
-                    </div>
-                  )}
-                  {preferencesSuccess && (
-                    <div className="settings-message settings-success">
-                      <svg
-                        width="16"
-                        height="16"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                      >
-                        <path d="M20 6L9 17l-5-5" />
-                      </svg>
-                      {preferencesSuccess}
-                    </div>
-                  )}
-
-                  {/* Location Settings */}
-                  <div className="settings-section">
-                    <h3 className="settings-section-title">
-                      <svg
-                        width="18"
-                        height="18"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="1.5"
-                      >
-                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-                        <circle cx="12" cy="10" r="3" />
-                      </svg>
-                      Location
-                    </h3>
-                    <div className="settings-item">
-                      <div className="settings-item-info">
-                        <label htmlFor="zipcode-input" className="settings-label">
-                          Zipcode
-                        </label>
-                        <p className="settings-description">
-                          Enter your zipcode for more precise location-based model results
-                        </p>
-                      </div>
-                      <input
-                        id="zipcode-input"
-                        type="text"
-                        className="settings-input"
-                        placeholder="12345"
-                        value={zipcode}
-                        onChange={e => setZipcode(e.target.value)}
-                        maxLength={10}
-                      />
-                    </div>
+              <div className="settings-modal-body">
+                {isLoadingPreferences ? (
+                  <div className="settings-loading">
+                    <div className="settings-spinner" />
+                    <span>Loading settings...</span>
                   </div>
-
-                  {/* Session Settings */}
-                  <div className="settings-section">
-                    <h3 className="settings-section-title">
-                      <svg
-                        width="18"
-                        height="18"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="1.5"
-                      >
-                        <path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83" />
-                      </svg>
-                      Session
-                    </h3>
-                    <div className="settings-item settings-item-toggle">
-                      <div className="settings-item-info">
-                        <span className="settings-label">Remember state on logout</span>
-                        <p className="settings-description">
-                          Preserve model responses, model selections, follow-up mode, text entered,
-                          and web search state when you log out
-                        </p>
-                      </div>
-                      <button
-                        className={`settings-toggle ${rememberState ? 'active' : ''}`}
-                        onClick={() => setRememberState(!rememberState)}
-                        aria-pressed={rememberState}
-                        role="switch"
-                      >
-                        <span className="settings-toggle-slider" />
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Save Button */}
-                  <button
-                    className="settings-save-btn"
-                    onClick={handleSavePreferences}
-                    disabled={isSavingPreferences}
-                  >
-                    {isSavingPreferences ? (
-                      <>
-                        <span className="settings-btn-spinner" />
-                        Saving...
-                      </>
-                    ) : (
-                      'Save Settings'
-                    )}
-                  </button>
-
-                  {/* Danger Zone - Delete History */}
-                  <div className="settings-section settings-danger-zone">
-                    <h3 className="settings-section-title danger">
-                      <svg
-                        width="18"
-                        height="18"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="1.5"
-                      >
-                        <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                      </svg>
-                      Danger Zone
-                    </h3>
-                    <div className="settings-item">
-                      <div className="settings-item-info">
-                        <span className="settings-label">Delete all comparison history</span>
-                        <p className="settings-description">
-                          Permanently delete all your saved model comparison conversations. This
-                          action cannot be undone.
-                        </p>
-                      </div>
-                      {!showDeleteConfirm ? (
-                        <button
-                          className="settings-delete-btn"
-                          onClick={() => setShowDeleteConfirm(true)}
+                ) : (
+                  <div className="settings-content">
+                    {/* Status Messages */}
+                    {preferencesError && (
+                      <div className="settings-message settings-error">
+                        <svg
+                          width="16"
+                          height="16"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
                         >
-                          Delete All
-                        </button>
-                      ) : (
-                        <div className="settings-delete-confirm">
-                          <span className="settings-delete-warning">Are you sure?</span>
-                          <button
-                            className="settings-delete-btn confirm"
-                            onClick={handleDeleteAllHistory}
-                            disabled={isDeletingHistory}
-                          >
-                            {isDeletingHistory ? 'Deleting...' : 'Yes, Delete'}
-                          </button>
-                          <button
-                            className="settings-delete-btn cancel"
-                            onClick={() => setShowDeleteConfirm(false)}
-                            disabled={isDeletingHistory}
-                          >
-                            Cancel
-                          </button>
+                          <circle cx="12" cy="12" r="10" />
+                          <line x1="15" y1="9" x2="9" y2="15" />
+                          <line x1="9" y1="9" x2="15" y2="15" />
+                        </svg>
+                        {preferencesError}
+                      </div>
+                    )}
+                    {preferencesSuccess && (
+                      <div className="settings-message settings-success">
+                        <svg
+                          width="16"
+                          height="16"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                        >
+                          <path d="M20 6L9 17l-5-5" />
+                        </svg>
+                        {preferencesSuccess}
+                      </div>
+                    )}
+
+                    {/* Location Settings */}
+                    <div className="settings-section">
+                      <h3 className="settings-section-title">
+                        <svg
+                          width="18"
+                          height="18"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="1.5"
+                        >
+                          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                          <circle cx="12" cy="10" r="3" />
+                        </svg>
+                        Location
+                      </h3>
+                      <div className="settings-item">
+                        <div className="settings-item-info">
+                          <label htmlFor="zipcode-input" className="settings-label">
+                            Zipcode
+                          </label>
+                          <p className="settings-description">
+                            Enter your zipcode for more precise location-based model results
+                          </p>
                         </div>
-                      )}
+                        <input
+                          id="zipcode-input"
+                          type="text"
+                          className="settings-input"
+                          placeholder="12345"
+                          value={zipcode}
+                          onChange={e => setZipcode(e.target.value)}
+                          onBlur={handleZipcodeBlur}
+                          maxLength={10}
+                          disabled={isSavingPreference}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Layout (home page) */}
+                    <div className="settings-section">
+                      <h3 className="settings-section-title">
+                        <svg
+                          width="18"
+                          height="18"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="1.5"
+                        >
+                          <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                          <line x1="3" y1="9" x2="21" y2="9" />
+                          <line x1="9" y1="21" x2="9" y2="9" />
+                        </svg>
+                        Layout
+                      </h3>
+                      <div className="settings-item settings-item-toggle">
+                        <div className="settings-item-info">
+                          <span className="settings-label">Hide capability cards</span>
+                          <p className="settings-description">
+                            Hides the four cards below the page title and centers the box where you
+                            type your question.
+                          </p>
+                        </div>
+                        <button
+                          className={`settings-toggle ${hideHeroUtilityTiles ? 'active' : ''}`}
+                          onClick={handleHideHeroToggle}
+                          aria-pressed={hideHeroUtilityTiles}
+                          role="switch"
+                          type="button"
+                          disabled={isSavingPreference}
+                          aria-busy={isSavingPreference}
+                        >
+                          <span className="settings-toggle-slider" />
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Session Settings */}
+                    <div className="settings-section">
+                      <h3 className="settings-section-title">
+                        <svg
+                          width="18"
+                          height="18"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="1.5"
+                        >
+                          <path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83" />
+                        </svg>
+                        Session
+                      </h3>
+                      <div className="settings-item settings-item-toggle">
+                        <div className="settings-item-info">
+                          <span className="settings-label">Remember state on logout</span>
+                          <p className="settings-description">
+                            Preserve model responses, model selections, follow-up mode, text
+                            entered, and web search state when you log out
+                          </p>
+                        </div>
+                        <button
+                          className={`settings-toggle ${rememberState ? 'active' : ''}`}
+                          onClick={handleRememberStateToggle}
+                          aria-pressed={rememberState}
+                          role="switch"
+                          type="button"
+                          disabled={isSavingPreference}
+                          aria-busy={isSavingPreference}
+                        >
+                          <span className="settings-toggle-slider" />
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Danger Zone - Delete History */}
+                    <div className="settings-section settings-danger-zone">
+                      <h3 className="settings-section-title danger">
+                        <svg
+                          width="18"
+                          height="18"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="1.5"
+                        >
+                          <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                        Danger Zone
+                      </h3>
+                      <div className="settings-item">
+                        <div className="settings-item-info">
+                          <span className="settings-label">Delete all comparison history</span>
+                          <p className="settings-description">
+                            Permanently delete all your saved model comparison conversations. This
+                            action cannot be undone.
+                          </p>
+                        </div>
+                        {!showDeleteConfirm ? (
+                          <button
+                            className="settings-delete-btn"
+                            onClick={() => setShowDeleteConfirm(true)}
+                          >
+                            Delete All
+                          </button>
+                        ) : (
+                          <div className="settings-delete-confirm">
+                            <span className="settings-delete-warning">Are you sure?</span>
+                            <button
+                              className="settings-delete-btn confirm"
+                              onClick={handleDeleteAllHistory}
+                              disabled={isDeletingHistory}
+                            >
+                              {isDeletingHistory ? 'Deleting...' : 'Yes, Delete'}
+                            </button>
+                            <button
+                              className="settings-delete-btn cancel"
+                              onClick={() => setShowDeleteConfirm(false)}
+                              disabled={isDeletingHistory}
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
 
               <div className="settings-modal-footer">
                 <button className="modal-button-secondary" onClick={closeModal}>

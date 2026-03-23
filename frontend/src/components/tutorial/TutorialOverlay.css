@@ -135,8 +135,9 @@ body:has(.tutorial-backdrop) .hero-section {
   isolation: isolate !important;
 }
 
-/* Ensure results section highlight fully surrounds the bottom - prevent overflow clipping */
+/* Match native card corners so highlight + cutout align like provider steps */
 .results-section.tutorial-highlight {
+  border-radius: var(--radius-2xl) !important;
   overflow: visible !important;
 }
 
@@ -185,6 +186,14 @@ body:has(.tutorial-backdrop) .hero-section {
   /* Prevent any backdrop effects */
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
+}
+
+/* Provider dropdown highlight — keep native radius so children (provider-header)
+   align with the highlight corners, and blend the native border into the ring. */
+.provider-dropdown.tutorial-highlight {
+  border-radius: var(--radius-xl) !important;
+  border-color: var(--accent-color) !important;
+  overflow: visible !important;
 }
 
 @keyframes tutorial-pulse {

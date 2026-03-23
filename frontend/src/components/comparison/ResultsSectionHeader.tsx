@@ -15,6 +15,7 @@
  */
 
 import type { ExportFormat } from '../../hooks/useExport'
+import { StyledTooltip } from '../shared'
 
 interface ResultsSectionHeaderProps {
   /** Number of conversations (model cards) currently displayed */
@@ -67,6 +68,78 @@ export function ResultsSectionHeader({
   isTutorialActive = false,
 }: ResultsSectionHeaderProps) {
   const buttonsDisabled = isTutorialActive
+  const showDesktopStyledTooltips = !isTutorialActive
+  const scrollTooltipText = isScrollLocked
+    ? 'Unlock scrolling - Each card scrolls independently'
+    : 'Lock scrolling - All results scroll together'
+
+  const scrollLockButton = (
+    <button
+      type="button"
+      onClick={onToggleScrollLock}
+      disabled={buttonsDisabled}
+      aria-label={scrollTooltipText}
+      style={{
+        padding: '0.5rem 0.75rem',
+        fontSize: '0.875rem',
+        border: '1px solid ' + (isScrollLocked ? 'var(--primary-color)' : '#cccccc'),
+        background: isScrollLocked ? 'var(--primary-color)' : 'transparent',
+        color: isScrollLocked ? 'white' : '#666',
+        borderRadius: 'var(--radius-md)',
+        cursor: 'pointer',
+        transition: 'all 0.2s ease',
+        fontWeight: '500',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '0.5rem',
+        outline: 'none',
+      }}
+      onMouseOver={e => {
+        if (!isScrollLocked) {
+          e.currentTarget.style.borderColor = '#999'
+          e.currentTarget.style.color = '#333'
+        }
+      }}
+      onMouseOut={e => {
+        if (!isScrollLocked) {
+          e.currentTarget.style.borderColor = '#cccccc'
+          e.currentTarget.style.color = '#666'
+        }
+      }}
+    >
+      <span>Scroll</span>
+      {isScrollLocked ? (
+        <svg
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <rect x="5" y="11" width="14" height="10" rx="2" ry="2" />
+          <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+        </svg>
+      ) : (
+        <svg
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <rect x="5" y="11" width="14" height="10" rx="2" ry="2" />
+          <line x1="7" y1="11" x2="7" y2="7" />
+        </svg>
+      )}
+    </button>
+  )
+
   return (
     <div
       style={{
@@ -91,80 +164,16 @@ export function ResultsSectionHeader({
         {!isMobileLayout && (
           <>
             {/* Scroll Lock Toggle - Only show when multiple models are running */}
-            {conversationsCount > 1 && (
-              <button
-                onClick={onToggleScrollLock}
-                disabled={buttonsDisabled}
-                style={{
-                  padding: '0.5rem 0.75rem',
-                  fontSize: '0.875rem',
-                  border: '1px solid ' + (isScrollLocked ? 'var(--primary-color)' : '#cccccc'),
-                  background: isScrollLocked ? 'var(--primary-color)' : 'transparent',
-                  color: isScrollLocked ? 'white' : '#666',
-                  borderRadius: 'var(--radius-md)',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease',
-                  fontWeight: '500',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
-                  outline: 'none',
-                }}
-                title={
-                  isScrollLocked
-                    ? 'Unlock scrolling - Each card scrolls independently'
-                    : 'Lock scrolling - All cards scroll together'
-                }
-                onMouseOver={e => {
-                  if (!isScrollLocked) {
-                    e.currentTarget.style.borderColor = '#999'
-                    e.currentTarget.style.color = '#333'
-                  }
-                }}
-                onMouseOut={e => {
-                  if (!isScrollLocked) {
-                    e.currentTarget.style.borderColor = '#cccccc'
-                    e.currentTarget.style.color = '#666'
-                  }
-                }}
-              >
-                <span>Scroll</span>
-                {isScrollLocked ? (
-                  <svg
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <rect x="5" y="11" width="14" height="10" rx="2" ry="2" />
-                    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                  </svg>
-                ) : (
-                  <svg
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <rect x="5" y="11" width="14" height="10" rx="2" ry="2" />
-                    <line x1="7" y1="11" x2="7" y2="7" />
-                  </svg>
-                )}
-              </button>
-            )}
+            {conversationsCount > 1 &&
+              (showDesktopStyledTooltips ? (
+                <StyledTooltip text={scrollTooltipText}>{scrollLockButton}</StyledTooltip>
+              ) : (
+                scrollLockButton
+              ))}
             {!isFollowUpMode && (
               <button
                 onClick={onFollowUp}
                 className="follow-up-button"
-                title={isFollowUpDisabled ? followUpDisabledReason : 'Ask a follow-up question'}
                 disabled={isFollowUpDisabled}
               >
                 Follow up
@@ -179,6 +188,7 @@ export function ResultsSectionHeader({
               onExport={onExport}
               isMobileLayout={false}
               disabled={buttonsDisabled}
+              showStyledTooltip={showDesktopStyledTooltips}
             />
 
             {/* Show all results button for desktop */}
@@ -259,6 +269,7 @@ export function ResultsSectionHeader({
               onExport={onExport}
               isMobileLayout={true}
               disabled={buttonsDisabled}
+              showStyledTooltip={false}
             />
 
             {/* Show all results button - icon only */}
@@ -324,7 +335,11 @@ interface ExportDropdownProps {
   onExport: (format: ExportFormat) => Promise<void>
   isMobileLayout: boolean
   disabled?: boolean
+  /** Desktop: use StyledTooltip instead of native title (hidden during tutorial) */
+  showStyledTooltip?: boolean
 }
+
+const EXPORT_TRIGGER_TOOLTIP = 'Export comparison'
 
 function ExportDropdown({
   showExportMenu,
@@ -333,61 +348,72 @@ function ExportDropdown({
   onExport,
   isMobileLayout,
   disabled = false,
+  showStyledTooltip = false,
 }: ExportDropdownProps) {
+  const exportTriggerButton = (
+    <button
+      type="button"
+      onClick={onToggleExportMenu}
+      className="follow-up-button export-dropdown-trigger"
+      title={showStyledTooltip || !isMobileLayout ? undefined : 'Export comparison'}
+      disabled={disabled}
+      aria-label={EXPORT_TRIGGER_TOOLTIP}
+      aria-expanded={showExportMenu}
+      aria-haspopup="true"
+      style={
+        isMobileLayout
+          ? {
+              padding: '0.5rem',
+              minWidth: '36px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }
+          : undefined
+      }
+    >
+      <svg
+        width={isMobileLayout ? '18' : '16'}
+        height={isMobileLayout ? '18' : '16'}
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+        <polyline points="7 10 12 15 17 10" />
+        <line x1="12" y1="15" x2="12" y2="3" />
+      </svg>
+      {!isMobileLayout && (
+        <>
+          <span>Export</span>
+          <svg
+            className={`export-dropdown-arrow ${showExportMenu ? 'open' : ''}`}
+            width="12"
+            height="12"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <polyline points="6 9 12 15 18 9" />
+          </svg>
+        </>
+      )}
+    </button>
+  )
+
   return (
     <div className="export-dropdown-container" ref={exportMenuRef}>
-      <button
-        onClick={onToggleExportMenu}
-        className="follow-up-button export-dropdown-trigger"
-        title="Export comparison"
-        disabled={disabled}
-        aria-expanded={showExportMenu}
-        aria-haspopup="true"
-        style={
-          isMobileLayout
-            ? {
-                padding: '0.5rem',
-                minWidth: '36px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }
-            : undefined
-        }
-      >
-        <svg
-          width={isMobileLayout ? '18' : '16'}
-          height={isMobileLayout ? '18' : '16'}
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-          <polyline points="7 10 12 15 17 10" />
-          <line x1="12" y1="15" x2="12" y2="3" />
-        </svg>
-        {!isMobileLayout && (
-          <>
-            <span>Export</span>
-            <svg
-              className={`export-dropdown-arrow ${showExportMenu ? 'open' : ''}`}
-              width="12"
-              height="12"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <polyline points="6 9 12 15 18 9" />
-            </svg>
-          </>
-        )}
-      </button>
+      {showStyledTooltip ? (
+        <StyledTooltip text={EXPORT_TRIGGER_TOOLTIP}>{exportTriggerButton}</StyledTooltip>
+      ) : (
+        exportTriggerButton
+      )}
       {showExportMenu && (
         <div className="export-dropdown-menu" role="menu">
           <button

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 
 import { useTheme } from '../../contexts/ThemeContext'
+import { useHideHeroUtilityTiles } from '../../hooks/useHideHeroUtilityTiles'
 import { StyledTooltip } from '../shared'
 
 interface CapabilityTileProps {
@@ -112,6 +113,7 @@ export function Hero({ children }: HeroProps) {
   const [flippedTile, setFlippedTile] = useState<string | null>(null)
   const [enlargedImageSrc, setEnlargedImageSrc] = useState<string | null>(null)
   const { theme, toggleTheme } = useTheme()
+  const hideHeroUtilityTiles = useHideHeroUtilityTiles()
 
   const dismissFlip = useCallback(() => {
     setFlippedTile(null)
@@ -165,7 +167,11 @@ export function Hero({ children }: HeroProps) {
   )
 
   return (
-    <div className="hero-section">
+    <div
+      className={
+        hideHeroUtilityTiles ? 'hero-section hero-section--composer-focused' : 'hero-section'
+      }
+    >
       {/* Flash logo background */}
       <div className={`hero-logo-flash ${showFlash ? 'active' : ''}`}>
         <img src="/brand/logo.svg" alt="CompareIntel logo" className="hero-flash-logo-img" />

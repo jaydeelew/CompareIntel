@@ -869,19 +869,58 @@
    Settings Modal Styles
    ============================================ */
 
+/* Shell clips border-radius; body scrolls inside (scrollbar inside the card) */
+.modal-content.settings-modal {
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  overflow: hidden;
+}
+
 .settings-modal {
   max-width: 520px;
-  padding: 2rem;
   background: var(--bg-card);
 }
 
 .settings-modal-header {
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   gap: 1rem;
-  margin-bottom: 1.5rem;
-  padding-bottom: 1rem;
+  margin-bottom: 0;
+  padding: 2rem 2rem 1rem 2rem;
   border-bottom: 1px solid var(--border-color);
+}
+
+.settings-modal-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 1.5rem 2rem 0;
+  scrollbar-width: thin;
+  scrollbar-color: var(--primary-color) var(--bg-tertiary);
+}
+
+/* Scrollbar inside the modal panel */
+.settings-modal-body::-webkit-scrollbar {
+  width: 10px;
+}
+
+.settings-modal-body::-webkit-scrollbar-track {
+  background: var(--bg-tertiary);
+  border-radius: 10px;
+  margin: 8px 0;
+}
+
+.settings-modal-body::-webkit-scrollbar-thumb {
+  background: var(--gradient-primary);
+  border-radius: 10px;
+  border: 2px solid var(--bg-tertiary);
+}
+
+.settings-modal-body::-webkit-scrollbar-thumb:hover {
+  background: var(--primary-hover);
 }
 
 .settings-modal-header .modal-icon {
@@ -928,6 +967,7 @@
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
+  padding-bottom: 0.25rem;
 }
 
 /* Status Messages */
@@ -1074,46 +1114,9 @@
   transform: translateX(22px);
 }
 
-/* Save Button */
-.settings-save-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  width: 100%;
-  padding: 0.875rem 1.5rem;
-  background: var(--gradient-button);
-  color: white;
-  font-size: 0.9375rem;
-  font-weight: 600;
-  border: none;
-  border-radius: 10px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  box-shadow: var(--shadow-glow-sm);
-}
-
-.settings-save-btn:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-glow-md);
-}
-
-.settings-save-btn:active:not(:disabled) {
-  transform: translateY(0);
-}
-
-.settings-save-btn:disabled {
-  opacity: 0.7;
+.settings-toggle:disabled {
+  opacity: 0.55;
   cursor: not-allowed;
-}
-
-.settings-btn-spinner {
-  width: 16px;
-  height: 16px;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  border-top-color: white;
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
 }
 
 /* Danger Zone - Dark Theme */
@@ -1184,8 +1187,9 @@
 
 /* Modal Footer */
 .settings-modal-footer {
-  margin-top: 1.5rem;
-  padding-top: 1rem;
+  flex-shrink: 0;
+  margin-top: 0;
+  padding: 1.5rem 2rem 2rem;
   border-top: 1px solid var(--border-color);
   display: flex;
   justify-content: flex-end;
@@ -1260,13 +1264,21 @@
 
   /* Settings Modal Responsive */
   .settings-modal {
-    padding: 1.5rem;
     max-width: 100%;
   }
 
   .settings-modal-header {
+    padding: 1.5rem 1.5rem 1rem 1.5rem;
     flex-direction: column;
     text-align: center;
+  }
+
+  .settings-modal-body {
+    padding: 1.25rem 1.5rem 0;
+  }
+
+  .settings-modal-footer {
+    padding: 1.25rem 1.5rem 1.5rem;
   }
 
   .settings-item {

@@ -259,20 +259,6 @@ test.describe('Accessibility Tests', () => {
 
       // Verify navigation elements are focusable
       expect(focusableElements.length).toBeGreaterThan(0)
-
-      // Check skip link (should be first focusable element)
-      await page.goto('/')
-      await page.keyboard.press('Tab')
-      const firstFocused = await page.evaluate(() => {
-        const el = document.activeElement
-        return el?.textContent?.toLowerCase() || ''
-      })
-
-      // First element should ideally be a skip link or main navigation
-      // This is a soft check - log if not present
-      if (!firstFocused.includes('skip') && !firstFocused.includes('main')) {
-        console.log('Consider adding a "Skip to main content" link for keyboard users')
-      }
     })
 
     test('Focus should be visible on interactive elements', async ({ page }) => {

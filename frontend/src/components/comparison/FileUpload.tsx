@@ -29,8 +29,10 @@ export interface FileUploadProps {
   setInput: (value: string) => void
   textareaRef: React.RefObject<HTMLTextAreaElement | null>
   disabled?: boolean
-  /** When true, tooltip is hidden (used for mobile layout) */
+  /** When true, mobile-specific behavior (and no desktop hover tooltip path) */
   isMobileLayout?: boolean
+  /** When true, desktop hover tooltip on the attach button is hidden (e.g. during tutorial) */
+  hideTooltip?: boolean
   /** When provided and on mobile, called instead of opening file picker (parent shows modal first) */
   onMobileButtonClick?: () => void
 }
@@ -290,6 +292,7 @@ const FileUploadComponent = forwardRef<FileUploadHandle, FileUploadProps>(functi
     textareaRef,
     disabled = false,
     isMobileLayout = false,
+    hideTooltip = false,
     onMobileButtonClick,
   },
   ref
@@ -449,7 +452,7 @@ const FileUploadComponent = forwardRef<FileUploadHandle, FileUploadProps>(functi
         style={{ display: 'none' }}
         onChange={handleFileUpload}
       />
-      {!isMobileLayout && attachedFiles.length === 0 ? (
+      {!isMobileLayout && attachedFiles.length === 0 && !hideTooltip ? (
         <StyledTooltip text="Select or drag file here">
           <button
             type="button"

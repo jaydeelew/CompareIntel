@@ -83,12 +83,7 @@ The CompareIntel PWA demonstrates **good accessibility foundations** with severa
    - Trap focus within modal when open
    - Return focus to trigger on close
 
-3. **Add Skip Link**
-   - Add "Skip to main content" link as first focusable element
-   - Position off-screen, visible on focus
-   - Link to main content area
-
-4. **Improve Keyboard Navigation**
+3. **Improve Keyboard Navigation**
    - Ensure all interactive elements are keyboard accessible
    - Add Enter/Space key handlers (currently only Escape works)
    - Test with screen readers (NVDA, JAWS, VoiceOver)
@@ -298,27 +293,22 @@ manifest: {
 
 ### Medium Priority (Best Practices)
 
-3. **Add Skip Link**
-   - Create skip link component
-   - Position as first focusable element
-   - Link to main content
-
-4. **Enhance Manifest**
+3. **Enhance Manifest**
    - Add `shortcuts` array
    - Add `prefer_related_applications: false`
    - Add `dir` and `lang` attributes
 
-5. **Improve Keyboard Navigation**
+4. **Improve Keyboard Navigation**
    - Add Enter/Space handlers for buttons
    - Ensure all interactive elements are keyboard accessible
 
 ### Low Priority (Enhancements)
 
-6. **Add Share Target**
+5. **Add Share Target**
    - Configure `share_target` in manifest
    - Handle shared content
 
-7. **Enhanced iOS Instructions**
+6. **Enhanced iOS Instructions**
    - Add visual aids
    - Support dark mode
    - Consider video tutorial
@@ -408,51 +398,6 @@ function useFocusTrap(isActive: boolean) {
   return containerRef
 }
 ```
-
-### Enhancement: Skip Link Component
-
-**File:** `frontend/src/components/layout/SkipLink.tsx`
-
-```typescript
-export function SkipLink() {
-  return (
-    <a
-      href="#main-content"
-      className="skip-link"
-      onClick={(e) => {
-        e.preventDefault()
-        const main = document.getElementById('main-content')
-        main?.focus()
-        main?.scrollIntoView({ behavior: 'smooth' })
-      }}
-    >
-      Skip to main content
-    </a>
-  )
-}
-```
-
-**CSS:**
-
-```css
-.skip-link {
-  position: absolute;
-  top: -100px;
-  left: 0;
-  background: var(--primary-color);
-  color: var(--text-inverse);
-  padding: var(--spacing-sm) var(--spacing-md);
-  z-index: 10000;
-  text-decoration: none;
-  border-radius: 0 0 var(--radius-md) 0;
-}
-
-.skip-link:focus {
-  top: 0;
-}
-```
-
----
 
 ## 9. Conclusion
 

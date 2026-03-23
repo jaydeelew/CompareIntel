@@ -62,6 +62,7 @@ describe('useGeolocation', () => {
         usage_alerts: false,
         preferred_models: null,
         remember_state_on_logout: false,
+        hide_hero_utility_tiles: false,
       })
 
       const { result } = renderHook(() => useGeolocation({ isAuthenticated: false, user: null }))
@@ -79,6 +80,7 @@ describe('useGeolocation', () => {
         usage_alerts: false,
         preferred_models: null,
         remember_state_on_logout: false,
+        hide_hero_utility_tiles: false,
       })
 
       const { result } = renderHook(() => useGeolocation({ isAuthenticated: false, user: null }))
@@ -99,6 +101,7 @@ describe('useGeolocation', () => {
         usage_alerts: false,
         preferred_models: null,
         remember_state_on_logout: false,
+        hide_hero_utility_tiles: false,
       })
 
       mockFetch.mockResolvedValueOnce({
@@ -126,6 +129,7 @@ describe('useGeolocation', () => {
         usage_alerts: false,
         preferred_models: null,
         remember_state_on_logout: false,
+        hide_hero_utility_tiles: false,
       })
 
       mockFetch.mockResolvedValueOnce({
@@ -159,6 +163,7 @@ describe('useGeolocation', () => {
         usage_alerts: false,
         preferred_models: null,
         remember_state_on_logout: false,
+        hide_hero_utility_tiles: false,
       })
 
       mockFetch.mockResolvedValueOnce({ ok: false })
@@ -180,6 +185,7 @@ describe('useGeolocation', () => {
         usage_alerts: false,
         preferred_models: null,
         remember_state_on_logout: false,
+        hide_hero_utility_tiles: false,
       })
     })
 
@@ -291,6 +297,7 @@ describe('useGeolocation', () => {
         usage_alerts: false,
         preferred_models: null,
         remember_state_on_logout: false,
+        hide_hero_utility_tiles: false,
       })
     })
 
@@ -360,6 +367,7 @@ describe('useGeolocation', () => {
         usage_alerts: false,
         preferred_models: null,
         remember_state_on_logout: false,
+        hide_hero_utility_tiles: false,
       })
 
       Object.defineProperty(global, 'navigator', {
@@ -395,6 +403,7 @@ describe('useGeolocation', () => {
         usage_alerts: false,
         preferred_models: null,
         remember_state_on_logout: false,
+        hide_hero_utility_tiles: false,
       })
 
       Object.defineProperty(global, 'navigator', {
