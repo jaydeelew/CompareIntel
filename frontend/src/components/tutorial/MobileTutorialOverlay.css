@@ -145,6 +145,12 @@
   transition: none !important;
 }
 
+/* Step 5 (follow-up): arrow no longer points at the button once the user scrolls the conversation */
+.mobile-tutorial-tooltip--followup-conversation-scrolled .mobile-tutorial-arrow {
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
 /* Tooltip content box */
 .mobile-tutorial-tooltip-content {
   background: var(--bg-primary);

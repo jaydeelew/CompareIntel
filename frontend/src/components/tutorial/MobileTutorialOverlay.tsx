@@ -104,6 +104,8 @@ export const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
   const dropdownWasOpenedRef = useRef<boolean>(false)
   // State for save-selection step so Done button re-renders when user clicks (ref doesn't trigger re-renders)
   const [saveSelectionDropdownOpened, setSaveSelectionDropdownOpened] = useState(false)
+  /** Step 5 (follow-up): inner scroll on `.conversation-content` so the fixed tooltip can move off-screen with reading. */
+  const [followUpConversationScrollTop, setFollowUpConversationScrollTop] = useState(0)
   // Portal root for rendering tutorial UI - ensures position: fixed works correctly
   const [portalRoot, setPortalRoot] = useState<HTMLElement | null>(null)
 
@@ -227,6 +229,31 @@ export const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       clearTimeout(hardCap)
     }
   }, [isStepTransitioning])
+
+  // Step 5 (follow-up): results scroll inside `.conversation-content`, not the window — track that
+  // scroll so the fixed tooltip translates up and leaves the viewport instead of covering messages.
+  useEffect(() => {
+    if (step !== 'follow-up') {
+      setFollowUpConversationScrollTop(0)
+      return
+    }
+
+    const el = document.querySelector(
+      '.results-section .conversation-content'
+    ) as HTMLElement | null
+    if (!el) return
+
+    const onScroll = () => {
+      setFollowUpConversationScrollTop(el.scrollTop)
+    }
+    onScroll()
+
+    el.addEventListener('scroll', onScroll, { passive: true })
+    return () => {
+      el.removeEventListener('scroll', onScroll)
+      setFollowUpConversationScrollTop(0)
+    }
+  }, [step, targetElement])
 
   // Find target element for current step
   useEffect(() => {
@@ -446,34 +473,66 @@ export const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
     let arrowDirection: 'up' | 'down' | 'left' | 'right' = 'up'
     let arrowOffset = 50 // Default to center
 
-    // Determine vertical position (above or below target)
-    const spaceAbove = rect.top
-    const spaceBelow = viewportHeight - rect.bottom
+    if (step === 'follow-up') {
+      // Never overlap model tabs/messages. Generic placement can put the tooltip below the button or
+      // centered, and the viewport clamp can shove it down — all of that covers the results body.
+      const tabsContainer = document.querySelector('.results-tabs-container') as HTMLElement | null
+      const conversationEl = document.querySelector('.conversation-content') as HTMLElement | null
+      const resultsGrid = document.querySelector('.results-grid') as HTMLElement | null
+      let bodyTop: number
+      if (tabsContainer) {
+        bodyTop = tabsContainer.getBoundingClientRect().top
+      } else if (conversationEl) {
+        bodyTop = conversationEl.getBoundingClientRect().top
+      } else if (resultsGrid) {
+        bodyTop = resultsGrid.getBoundingClientRect().top
+      } else {
+        const rs = document.querySelector('.results-section') as HTMLElement | null
+        bodyTop = rs?.getBoundingClientRect().top ?? rect.top
+      }
 
-    if (preferredPosition === 'bottom' && spaceBelow >= tooltipHeight + padding + arrowSize) {
-      // Position below target
-      tooltipTop = rect.bottom + arrowSize + 8
-      arrowDirection = 'up'
-    } else if (preferredPosition === 'top' && spaceAbove >= tooltipHeight + padding + arrowSize) {
-      // Position above target
+      const gap = 10
+      // Entire tooltip (measured height includes bubble + arrow) must sit above the model-results body
+      const maxTooltipTop = bodyTop - gap - tooltipHeight
       tooltipTop = rect.top - tooltipHeight - arrowSize - 8
+      tooltipTop -= followUpConversationScrollTop
+      tooltipTop = Math.min(tooltipTop, maxTooltipTop)
       arrowDirection = 'down'
-    } else if (spaceBelow >= spaceAbove && spaceBelow >= 100) {
-      // More space below
-      tooltipTop = rect.bottom + arrowSize + 8
-      arrowDirection = 'up'
-    } else if (spaceAbove >= 100) {
-      // More space above
-      tooltipTop = rect.top - tooltipHeight - arrowSize - 8
-      arrowDirection = 'down'
+
+      // Prefer viewport top padding only if it doesn't push the tooltip into the results area
+      if (tooltipTop < padding && padding + tooltipHeight <= bodyTop - gap) {
+        tooltipTop = padding
+      }
     } else {
-      // Very tight space - position at center of screen
-      tooltipTop = (viewportHeight - tooltipHeight) / 2
-      arrowDirection = rect.top + rect.height / 2 > viewportHeight / 2 ? 'down' : 'up'
-    }
+      // Determine vertical position (above or below target)
+      const spaceAbove = rect.top
+      const spaceBelow = viewportHeight - rect.bottom
 
-    // Ensure tooltip stays within viewport vertically
-    tooltipTop = Math.max(padding, Math.min(tooltipTop, viewportHeight - tooltipHeight - padding))
+      if (preferredPosition === 'bottom' && spaceBelow >= tooltipHeight + padding + arrowSize) {
+        // Position below target
+        tooltipTop = rect.bottom + arrowSize + 8
+        arrowDirection = 'up'
+      } else if (preferredPosition === 'top' && spaceAbove >= tooltipHeight + padding + arrowSize) {
+        // Position above target
+        tooltipTop = rect.top - tooltipHeight - arrowSize - 8
+        arrowDirection = 'down'
+      } else if (spaceBelow >= spaceAbove && spaceBelow >= 100) {
+        // More space below
+        tooltipTop = rect.bottom + arrowSize + 8
+        arrowDirection = 'up'
+      } else if (spaceAbove >= 100) {
+        // More space above
+        tooltipTop = rect.top - tooltipHeight - arrowSize - 8
+        arrowDirection = 'down'
+      } else {
+        // Very tight space - position at center of screen
+        tooltipTop = (viewportHeight - tooltipHeight) / 2
+        arrowDirection = rect.top + rect.height / 2 > viewportHeight / 2 ? 'down' : 'up'
+      }
+
+      // Ensure tooltip stays within viewport vertically
+      tooltipTop = Math.max(padding, Math.min(tooltipTop, viewportHeight - tooltipHeight - padding))
+    }
 
     // For view-follow-up-results, position tooltip above the results section.
     if (step === 'view-follow-up-results') {
@@ -515,7 +574,7 @@ export const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       arrowOffset,
       useFullscreen: false,
     })
-  }, [targetElement, step, tooltipEstimatedHeight])
+  }, [targetElement, step, tooltipEstimatedHeight, followUpConversationScrollTop])
 
   // Recalculate once the transition finishes so the tooltip/cutout appear at the
   // final settled position instead of the pre-scroll coordinates.
@@ -991,7 +1050,7 @@ export const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       {!shouldShowScrollIndicator && !isLoadingStreamingPhase && tooltipPosition && (
         <div
           ref={overlayRef}
-          className={`mobile-tutorial-tooltip${tooltipPosition.useFullscreen ? ' mobile-tutorial-fullscreen-tooltip' : ''}${isStepTransitioning ? ' mobile-tutorial-tooltip--transitioning' : ''}`}
+          className={`mobile-tutorial-tooltip${tooltipPosition.useFullscreen ? ' mobile-tutorial-fullscreen-tooltip' : ''}${isStepTransitioning ? ' mobile-tutorial-tooltip--transitioning' : ''}${step === 'follow-up' && followUpConversationScrollTop > 12 ? ' mobile-tutorial-tooltip--followup-conversation-scrolled' : ''}`}
           style={
             tooltipPosition.useFullscreen
               ? undefined
