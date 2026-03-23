@@ -2372,6 +2372,7 @@ export function MainPage() {
             modelsByProvider: filteredModelsByProvider,
             allModelsByProvider: modelsByProvider,
             imageModelsDisabledForUnregistered: modelMode === 'image' && !isAuthenticated,
+            isTutorialActive: tutorialState.isActive,
             selectedModels,
             originalSelectedModels,
             openDropdowns,

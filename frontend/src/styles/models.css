@@ -442,6 +442,14 @@
   pointer-events: auto;
 }
 
+/* During tutorial: suppress info tooltips to avoid overlap with tutorial UI */
+.model-name-tooltip-wrapper.model-info-tooltip-disabled .model-info-tooltip,
+.model-name-tooltip-wrapper.model-info-tooltip-disabled:hover .model-info-tooltip {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
 /* Image-generation: long aspect/size lists stay on one line; width follows content */
 .model-info-tooltip.model-info-tooltip--image {
   white-space: nowrap;

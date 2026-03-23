@@ -152,9 +152,11 @@ const MODEL_INFO_ICON_CSS_PX = 14
 function ModelNameWithInfoTooltip({
   model,
   modelsByProvider,
+  hideTooltip = false,
 }: {
   model: Model
   modelsByProvider: ModelsByProvider
+  hideTooltip?: boolean
 }) {
   const wrapRef = useRef<HTMLSpanElement>(null)
   const tipRef = useRef<HTMLSpanElement>(null)
@@ -176,7 +178,11 @@ function ModelNameWithInfoTooltip({
   }, [placeTooltipArrow, model.id, model.name, model.supports_image_generation])
 
   return (
-    <span ref={wrapRef} className="model-name-tooltip-wrapper" onMouseEnter={placeTooltipArrow}>
+    <span
+      ref={wrapRef}
+      className={`model-name-tooltip-wrapper ${hideTooltip ? 'model-info-tooltip-disabled' : ''}`}
+      onMouseEnter={placeTooltipArrow}
+    >
       <span className="model-name-text">{model.name}</span>
       <svg
         className="knowledge-cutoff-icon"
@@ -252,6 +258,8 @@ export interface ModelsSectionProps {
   }) => void
   /** When true, all models are disabled and show sign-up modal (unregistered + image mode) */
   imageModelsDisabledForUnregistered?: boolean
+  /** When true, disable info tooltips on model names (e.g. during tutorial) */
+  hideModelInfoTooltips?: boolean
 }
 
 /**
@@ -276,6 +284,7 @@ export const ModelsSection: React.FC<ModelsSectionProps> = ({
   isAuthenticated,
   user,
   selectedModelsGridRef,
+  hideModelInfoTooltips = false,
   onToggleDropdown,
   onToggleModel,
   onToggleAllForProvider,
@@ -610,6 +619,7 @@ export const ModelsSection: React.FC<ModelsSectionProps> = ({
                             <ModelNameWithInfoTooltip
                               model={model}
                               modelsByProvider={modelsByProvider}
+                              hideTooltip={hideModelInfoTooltips}
                             />
                             {model.trial_unlocked && (
                               <span
@@ -768,7 +778,11 @@ export const ModelsSection: React.FC<ModelsSectionProps> = ({
                 <div key={modelId} className="selected-model-card">
                   <div className="selected-model-header">
                     <h4>
-                      <ModelNameWithInfoTooltip model={model} modelsByProvider={modelsByProvider} />
+                      <ModelNameWithInfoTooltip
+                        model={model}
+                        modelsByProvider={modelsByProvider}
+                        hideTooltip={hideModelInfoTooltips}
+                      />
                     </h4>
                     <div className="selected-model-actions">
                       {model.supports_web_search &&
