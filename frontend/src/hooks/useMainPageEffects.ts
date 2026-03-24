@@ -312,6 +312,10 @@ export function useMainPageEffects(config: UseMainPageEffectsConfig) {
     if (allFormatted && allExist) {
       shouldScrollToTopAfterFormattingRef.current = false
       setTimeout(() => {
+        document.querySelector('.results-section')?.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start',
+        })
         selectedModelsForScroll.forEach(id => {
           const safeId = createModelId(id).replace(/[^a-zA-Z0-9_-]/g, '-')
           const el = document.querySelector(`#conversation-content-${safeId}`) as HTMLElement
