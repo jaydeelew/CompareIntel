@@ -103,6 +103,139 @@
         "knowledge_cutoff": null
       }
     ],
+    "Black Forest Labs": [
+      {
+        "id": "black-forest-labs/flux.2-max",
+        "name": "Flux 2 Max",
+        "description": "Top-tier image model from Black Forest Labs with best image quality, prompt understanding, and editing capabilities.",
+        "category": "Image",
+        "provider": "Black Forest Labs",
+        "supports_image_generation": true,
+        "supports_web_search": false,
+        "knowledge_cutoff": null,
+        "image_aspect_ratios": [
+          "16:9",
+          "1:1",
+          "21:9",
+          "2:3",
+          "3:2",
+          "3:4",
+          "4:3",
+          "4:5",
+          "5:4",
+          "9:16"
+        ],
+        "image_sizes": [
+          "2K"
+        ],
+        "returns_multiple_images": false
+      },
+      {
+        "id": "black-forest-labs/flux.2-pro",
+        "name": "Flux 2 Pro",
+        "description": "Frontier-level visual quality with text-to-image and editing up to 4MP resolution.",
+        "category": "Image",
+        "provider": "Black Forest Labs",
+        "supports_image_generation": true,
+        "supports_web_search": false,
+        "knowledge_cutoff": null,
+        "image_aspect_ratios": [
+          "16:9",
+          "1:1",
+          "21:9",
+          "2:3",
+          "3:2",
+          "3:4",
+          "4:3",
+          "4:5",
+          "5:4",
+          "9:16"
+        ],
+        "image_sizes": [
+          "2K"
+        ],
+        "returns_multiple_images": false
+      },
+      {
+        "id": "black-forest-labs/flux.2-flex",
+        "name": "Flux 2 Flex",
+        "description": "Flexible image generation model for balanced quality and speed.",
+        "category": "Image",
+        "provider": "Black Forest Labs",
+        "supports_image_generation": true,
+        "supports_web_search": false,
+        "knowledge_cutoff": null,
+        "image_aspect_ratios": [
+          "16:9",
+          "1:1",
+          "21:9",
+          "2:3",
+          "3:2",
+          "3:4",
+          "4:3",
+          "4:5",
+          "5:4",
+          "9:16"
+        ],
+        "image_sizes": [
+          "2K"
+        ],
+        "returns_multiple_images": false
+      },
+      {
+        "id": "black-forest-labs/flux.2-klein-4b",
+        "name": "Flux 2 Klein 4B",
+        "description": "Fastest and most cost-effective model in the FLUX.2 family, optimized for high-throughput use cases.",
+        "category": "Image",
+        "provider": "Black Forest Labs",
+        "supports_image_generation": true,
+        "supports_web_search": false,
+        "knowledge_cutoff": null,
+        "image_aspect_ratios": [
+          "16:9",
+          "1:1",
+          "21:9",
+          "2:3",
+          "3:2",
+          "3:4",
+          "4:3",
+          "4:5",
+          "5:4",
+          "9:16"
+        ],
+        "image_sizes": [
+          "2K"
+        ],
+        "returns_multiple_images": false
+      }
+    ],
+    "ByteDance Seed": [
+      {
+        "id": "bytedance-seed/seedream-4.5",
+        "name": "Seedream 4.5",
+        "description": "ByteDance's image model with improved editing consistency, portrait refinement, and text rendering. Per-image pricing.",
+        "category": "Image",
+        "provider": "ByteDance Seed",
+        "supports_image_generation": true,
+        "supports_web_search": false,
+        "knowledge_cutoff": null,
+        "image_aspect_ratios": [
+          "16:9",
+          "1:1",
+          "21:9",
+          "2:3",
+          "3:2",
+          "3:4",
+          "4:3",
+          "9:16"
+        ],
+        "image_sizes": [
+          "2K",
+          "4K"
+        ],
+        "returns_multiple_images": false
+      }
+    ],
     "Cohere": [
       {
         "id": "cohere/command-r7b-12-2024",
@@ -294,268 +427,6 @@
           "1K"
         ],
         "returns_multiple_images": true
-      }
-    ],
-    "Black Forest Labs": [
-      {
-        "id": "black-forest-labs/flux.2-max",
-        "name": "Flux 2 Max",
-        "description": "Top-tier image model from Black Forest Labs with best image quality, prompt understanding, and editing capabilities.",
-        "category": "Image",
-        "provider": "Black Forest Labs",
-        "supports_image_generation": true,
-        "supports_web_search": false,
-        "knowledge_cutoff": null,
-        "image_aspect_ratios": [
-          "16:9",
-          "1:1",
-          "21:9",
-          "2:3",
-          "3:2",
-          "3:4",
-          "4:3",
-          "4:5",
-          "5:4",
-          "9:16"
-        ],
-        "image_sizes": [
-          "2K"
-        ],
-        "returns_multiple_images": false
-      },
-      {
-        "id": "black-forest-labs/flux.2-pro",
-        "name": "Flux 2 Pro",
-        "description": "Frontier-level visual quality with text-to-image and editing up to 4MP resolution.",
-        "category": "Image",
-        "provider": "Black Forest Labs",
-        "supports_image_generation": true,
-        "supports_web_search": false,
-        "knowledge_cutoff": null,
-        "image_aspect_ratios": [
-          "16:9",
-          "1:1",
-          "21:9",
-          "2:3",
-          "3:2",
-          "3:4",
-          "4:3",
-          "4:5",
-          "5:4",
-          "9:16"
-        ],
-        "image_sizes": [
-          "2K"
-        ],
-        "returns_multiple_images": false
-      },
-      {
-        "id": "black-forest-labs/flux.2-flex",
-        "name": "Flux 2 Flex",
-        "description": "Flexible image generation model for balanced quality and speed.",
-        "category": "Image",
-        "provider": "Black Forest Labs",
-        "supports_image_generation": true,
-        "supports_web_search": false,
-        "knowledge_cutoff": null,
-        "image_aspect_ratios": [
-          "16:9",
-          "1:1",
-          "21:9",
-          "2:3",
-          "3:2",
-          "3:4",
-          "4:3",
-          "4:5",
-          "5:4",
-          "9:16"
-        ],
-        "image_sizes": [
-          "2K"
-        ],
-        "returns_multiple_images": false
-      },
-      {
-        "id": "black-forest-labs/flux.2-klein-4b",
-        "name": "Flux 2 Klein 4B",
-        "description": "Fastest and most cost-effective model in the FLUX.2 family, optimized for high-throughput use cases.",
-        "category": "Image",
-        "provider": "Black Forest Labs",
-        "supports_image_generation": true,
-        "supports_web_search": false,
-        "knowledge_cutoff": null,
-        "image_aspect_ratios": [
-          "16:9",
-          "1:1",
-          "21:9",
-          "2:3",
-          "3:2",
-          "3:4",
-          "4:3",
-          "4:5",
-          "5:4",
-          "9:16"
-        ],
-        "image_sizes": [
-          "2K"
-        ],
-        "returns_multiple_images": false
-      }
-    ],
-    "Sourceful": [
-      {
-        "id": "sourceful/riverflow-v2-max-preview",
-        "name": "Riverflow V2 Max Preview",
-        "description": "Most powerful variant of Sourceful's Riverflow V2 preview lineup for top-tier image generation.",
-        "category": "Image",
-        "provider": "Sourceful",
-        "supports_image_generation": true,
-        "supports_web_search": false,
-        "knowledge_cutoff": null,
-        "image_aspect_ratios": [
-          "16:9",
-          "1:1",
-          "21:9",
-          "2:3",
-          "3:2",
-          "3:4",
-          "4:3",
-          "9:16"
-        ],
-        "image_sizes": [
-          "1K"
-        ],
-        "returns_multiple_images": false
-      },
-      {
-        "id": "sourceful/riverflow-v2-standard-preview",
-        "name": "Riverflow V2 Standard",
-        "description": "Unified text-to-image and image-to-image model for versatile image generation.",
-        "category": "Image",
-        "provider": "Sourceful",
-        "supports_image_generation": true,
-        "supports_web_search": false,
-        "knowledge_cutoff": null,
-        "image_aspect_ratios": [
-          "16:9",
-          "1:1",
-          "21:9",
-          "2:3",
-          "3:2",
-          "3:4",
-          "4:3",
-          "9:16"
-        ],
-        "image_sizes": [
-          "1K"
-        ],
-        "returns_multiple_images": false
-      },
-      {
-        "id": "sourceful/riverflow-v2-fast-preview",
-        "name": "Riverflow V2 Fast Preview",
-        "description": "The fastest variant of Sourceful's Riverflow V2 preview lineup for low-latency image generation.",
-        "category": "Image",
-        "provider": "Sourceful",
-        "supports_image_generation": true,
-        "supports_web_search": false,
-        "knowledge_cutoff": null,
-        "image_aspect_ratios": [
-          "16:9",
-          "1:1",
-          "21:9",
-          "2:3",
-          "3:2",
-          "3:4",
-          "4:3",
-          "9:16"
-        ],
-        "image_sizes": [
-          "1K"
-        ],
-        "returns_multiple_images": false
-      },
-      {
-        "id": "sourceful/riverflow-v2-fast",
-        "name": "Riverflow V2 Fast",
-        "description": "Fastest variant of Sourceful's Riverflow 2.0 lineup for production deployments and low latency.",
-        "category": "Image",
-        "provider": "Sourceful",
-        "supports_image_generation": true,
-        "supports_web_search": false,
-        "knowledge_cutoff": null,
-        "image_aspect_ratios": [
-          "16:9",
-          "1:1",
-          "21:9",
-          "2:3",
-          "3:2",
-          "3:4",
-          "4:3",
-          "4:5",
-          "5:4",
-          "9:16"
-        ],
-        "image_sizes": [
-          "1K",
-          "2K"
-        ],
-        "returns_multiple_images": false
-      },
-      {
-        "id": "sourceful/riverflow-v2-pro",
-        "name": "Riverflow V2 Pro",
-        "description": "The most powerful Riverflow 2.0 variant for top-tier control and perfect text rendering in images.",
-        "category": "Image",
-        "provider": "Sourceful",
-        "supports_image_generation": true,
-        "supports_web_search": false,
-        "knowledge_cutoff": null,
-        "image_aspect_ratios": [
-          "16:9",
-          "1:1",
-          "21:9",
-          "2:3",
-          "3:2",
-          "3:4",
-          "4:3",
-          "4:5",
-          "5:4",
-          "9:16"
-        ],
-        "image_sizes": [
-          "1K",
-          "2K",
-          "4K"
-        ],
-        "returns_multiple_images": false
-      }
-    ],
-    "ByteDance Seed": [
-      {
-        "id": "bytedance-seed/seedream-4.5",
-        "name": "Seedream 4.5",
-        "description": "ByteDance's image model with improved editing consistency, portrait refinement, and text rendering. Per-image pricing.",
-        "category": "Image",
-        "provider": "ByteDance Seed",
-        "supports_image_generation": true,
-        "supports_web_search": false,
-        "knowledge_cutoff": null,
-        "image_aspect_ratios": [
-          "16:9",
-          "1:1",
-          "21:9",
-          "2:3",
-          "3:2",
-          "3:4",
-          "4:3",
-          "9:16"
-        ],
-        "image_sizes": [
-          "2K",
-          "4K"
-        ],
-        "returns_multiple_images": false
       }
     ],
     "Kwaipilot": [],
@@ -780,6 +651,33 @@
         "knowledge_cutoff": "October 2023"
       },
       {
+        "id": "openai/gpt-5",
+        "name": "GPT-5",
+        "description": "OpenAI's most advanced model with major improvements in reasoning, code quality, and user experience.",
+        "category": "Language",
+        "provider": "OpenAI",
+        "supports_web_search": true,
+        "knowledge_cutoff": "September 2024"
+      },
+      {
+        "id": "openai/gpt-5-chat",
+        "name": "GPT-5 Chat",
+        "description": "A GPT-5 variant optimized for natural, multimodal, and context-aware enterprise conversations.",
+        "category": "Language",
+        "provider": "OpenAI",
+        "supports_web_search": false,
+        "knowledge_cutoff": "September 2024"
+      },
+      {
+        "id": "openai/gpt-5-codex",
+        "name": "GPT-5 Codex",
+        "description": "A specialized GPT-5 variant optimized for software engineering, code generation, and development workflows.",
+        "category": "Code",
+        "provider": "OpenAI",
+        "supports_web_search": true,
+        "knowledge_cutoff": "September 2024"
+      },
+      {
         "id": "openai/gpt-5-image",
         "name": "GPT-5 Image",
         "description": "OpenAI's GPT-5 combined with state-of-the-art image generation capabilities.",
@@ -812,33 +710,6 @@
           "1K"
         ],
         "returns_multiple_images": false
-      },
-      {
-        "id": "openai/gpt-5",
-        "name": "GPT-5",
-        "description": "OpenAI's most advanced model with major improvements in reasoning, code quality, and user experience.",
-        "category": "Language",
-        "provider": "OpenAI",
-        "supports_web_search": true,
-        "knowledge_cutoff": "September 2024"
-      },
-      {
-        "id": "openai/gpt-5-chat",
-        "name": "GPT-5 Chat",
-        "description": "A GPT-5 variant optimized for natural, multimodal, and context-aware enterprise conversations.",
-        "category": "Language",
-        "provider": "OpenAI",
-        "supports_web_search": false,
-        "knowledge_cutoff": "September 2024"
-      },
-      {
-        "id": "openai/gpt-5-codex",
-        "name": "GPT-5 Codex",
-        "description": "A specialized GPT-5 variant optimized for software engineering, code generation, and development workflows.",
-        "category": "Code",
-        "provider": "OpenAI",
-        "supports_web_search": true,
-        "knowledge_cutoff": "September 2024"
       },
       {
         "id": "openai/gpt-5.1",
@@ -911,6 +782,16 @@
         "provider": "OpenAI",
         "supports_web_search": true,
         "knowledge_cutoff": "August 2025"
+      },
+      {
+        "id": "openai/gpt-5.3-codex",
+        "name": "Gpt 5.3 Codex",
+        "description": "GPT-5.3-Codex is OpenAI’s most advanced agentic coding model, combining the frontier software engineering performance of GPT-5.2-Codex with the broader reasoning and professional knowledge capabilities of GPT-5.2.",
+        "category": "Language",
+        "provider": "OpenAI",
+        "supports_web_search": true,
+        "supports_image_generation": false,
+        "knowledge_cutoff": null
       },
       {
         "id": "openai/gpt-5.4",
@@ -1057,6 +938,135 @@
         "provider": "Qwen",
         "supports_web_search": true,
         "knowledge_cutoff": "April 2025"
+      }
+    ],
+    "Sourceful": [
+      {
+        "id": "sourceful/riverflow-v2-max-preview",
+        "name": "Riverflow V2 Max Preview",
+        "description": "Most powerful variant of Sourceful's Riverflow V2 preview lineup for top-tier image generation.",
+        "category": "Image",
+        "provider": "Sourceful",
+        "supports_image_generation": true,
+        "supports_web_search": false,
+        "knowledge_cutoff": null,
+        "image_aspect_ratios": [
+          "16:9",
+          "1:1",
+          "21:9",
+          "2:3",
+          "3:2",
+          "3:4",
+          "4:3",
+          "9:16"
+        ],
+        "image_sizes": [
+          "1K"
+        ],
+        "returns_multiple_images": false
+      },
+      {
+        "id": "sourceful/riverflow-v2-standard-preview",
+        "name": "Riverflow V2 Standard",
+        "description": "Unified text-to-image and image-to-image model for versatile image generation.",
+        "category": "Image",
+        "provider": "Sourceful",
+        "supports_image_generation": true,
+        "supports_web_search": false,
+        "knowledge_cutoff": null,
+        "image_aspect_ratios": [
+          "16:9",
+          "1:1",
+          "21:9",
+          "2:3",
+          "3:2",
+          "3:4",
+          "4:3",
+          "9:16"
+        ],
+        "image_sizes": [
+          "1K"
+        ],
+        "returns_multiple_images": false
+      },
+      {
+        "id": "sourceful/riverflow-v2-fast-preview",
+        "name": "Riverflow V2 Fast Preview",
+        "description": "The fastest variant of Sourceful's Riverflow V2 preview lineup for low-latency image generation.",
+        "category": "Image",
+        "provider": "Sourceful",
+        "supports_image_generation": true,
+        "supports_web_search": false,
+        "knowledge_cutoff": null,
+        "image_aspect_ratios": [
+          "16:9",
+          "1:1",
+          "21:9",
+          "2:3",
+          "3:2",
+          "3:4",
+          "4:3",
+          "9:16"
+        ],
+        "image_sizes": [
+          "1K"
+        ],
+        "returns_multiple_images": false
+      },
+      {
+        "id": "sourceful/riverflow-v2-fast",
+        "name": "Riverflow V2 Fast",
+        "description": "Fastest variant of Sourceful's Riverflow 2.0 lineup for production deployments and low latency.",
+        "category": "Image",
+        "provider": "Sourceful",
+        "supports_image_generation": true,
+        "supports_web_search": false,
+        "knowledge_cutoff": null,
+        "image_aspect_ratios": [
+          "16:9",
+          "1:1",
+          "21:9",
+          "2:3",
+          "3:2",
+          "3:4",
+          "4:3",
+          "4:5",
+          "5:4",
+          "9:16"
+        ],
+        "image_sizes": [
+          "1K",
+          "2K"
+        ],
+        "returns_multiple_images": false
+      },
+      {
+        "id": "sourceful/riverflow-v2-pro",
+        "name": "Riverflow V2 Pro",
+        "description": "The most powerful Riverflow 2.0 variant for top-tier control and perfect text rendering in images.",
+        "category": "Image",
+        "provider": "Sourceful",
+        "supports_image_generation": true,
+        "supports_web_search": false,
+        "knowledge_cutoff": null,
+        "image_aspect_ratios": [
+          "16:9",
+          "1:1",
+          "21:9",
+          "2:3",
+          "3:2",
+          "3:4",
+          "4:3",
+          "4:5",
+          "5:4",
+          "9:16"
+        ],
+        "image_sizes": [
+          "1K",
+          "2K",
+          "4K"
+        ],
+        "returns_multiple_images": false
       }
     ],
     "Stepfun": [

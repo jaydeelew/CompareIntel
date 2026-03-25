@@ -136,18 +136,19 @@ export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
         modelId: 'minimax/minimax-m2.5',
         evidence: 'SWE-Bench Verified (openlm.ai): 80.2%. 3× faster. Best value/speed for code.',
       },
-      {
-        modelId: 'anthropic/claude-sonnet-4.6',
-        evidence: 'SWE-Bench Verified: 79.6%. Frontier Sonnet for code.',
-      },
       { modelId: 'anthropic/claude-opus-4.6', evidence: 'SWE-Bench Verified (openlm.ai): 79.2%.' },
       { modelId: 'z-ai/glm-5', evidence: 'SWE-Bench Verified: 77.8%. Strong coding from Zhipu.' },
       { modelId: 'moonshotai/kimi-k2.5', evidence: 'SWE-Bench Verified (openlm.ai): 76.8%.' },
       { modelId: 'qwen/qwen3.5-397b-a17b', evidence: 'SWE-Bench Verified: 76.4%. Qwen flagship.' },
       {
+        modelId: 'anthropic/claude-sonnet-4.6',
+        evidence: 'SWE-Bench Verified: 79.6%. Frontier Sonnet for code.',
+      },
+      {
         modelId: 'google/gemini-3-flash-preview',
         evidence: 'SWE-Bench Verified (openlm.ai): 75.2%. Fast coding model.',
       },
+      { modelId: 'openai/gpt-5.3-codex', evidence: 'SWE-Bench Verified (openlm.ai): 75.2%.' },
       { modelId: 'anthropic/claude-opus-4.5', evidence: 'SWE-Bench Verified (openlm.ai): 74.4%.' },
       {
         modelId: 'google/gemini-3-pro-preview',
