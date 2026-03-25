@@ -417,7 +417,7 @@ npm run test:e2e:headed
 The project includes a comprehensive deployment script for Ubuntu/PostgreSQL servers:
 
 ```bash
-# Full deployment (git pull, migrations, build, restart)
+# Full deployment (git pull, build, restart — DB migrations run on backend start)
 ./deploy-production.sh deploy
 
 # Quick deploy (no git pull, for hotfixes)
@@ -479,7 +479,7 @@ npm run type-check
 
 ### Database Migrations
 
-The project uses Alembic for database migrations:
+The project uses Alembic for database migrations. In **production** (Docker), `backend/entrypoint.sh` runs `alembic upgrade head` before Gunicorn starts whenever `ENVIRONMENT` is not `development`, so pending migrations apply on each backend container start. You can still run `alembic upgrade head` manually (e.g. `docker compose exec backend alembic upgrade head`) if you need to migrate without restarting.
 
 ```bash
 cd backend

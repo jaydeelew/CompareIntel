@@ -42,7 +42,12 @@ alembic current
 
 Migrations use the `DATABASE_URL` environment variable or fall back to the app settings.
 
-For production:
+### Production (Docker)
+
+When the backend container starts with `ENVIRONMENT` set to production (or any non-`development` value), `entrypoint.sh` runs `alembic upgrade head` before starting Gunicorn, so the database schema stays in sync with the deployed code. Development containers use the dev entry path and do not auto-run migrations.
+
+To run migrations manually (host shell or `docker compose exec backend`, with `DATABASE_URL` set as in production):
+
 ```bash
 export DATABASE_URL=postgresql://user:pass@host:5432/compareintel
 alembic upgrade head
