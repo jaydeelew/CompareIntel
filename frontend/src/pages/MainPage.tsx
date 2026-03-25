@@ -62,6 +62,7 @@ import {
   hasCommonImageConfig,
 } from '../utils/imageConfigValidation'
 import logger from '../utils/logger'
+import { inferModelModeForLoadedModels } from '../utils/modelModeInference'
 import { isModelIdSelectableForUser } from '../utils/modelTierAccess'
 import { saveSessionState, onSaveStateEvent } from '../utils/sessionState'
 import { applyTextComposerAdvancedSettings } from '../utils/textComposerAdvancedRestore'
@@ -438,6 +439,7 @@ export function MainPage() {
       setConversations,
       setResponse,
       setDefaultSelectionOverridden,
+      setModelMode,
       setTemperature,
       setTopP,
       setMaxTokens,
@@ -714,6 +716,16 @@ export function MainPage() {
       : filterModelsByProviderToText(modelsByProvider)
   const allModels = Object.values(filteredModelsByProvider).flat()
 
+  /** Text/image toggle only — marks default as session-overridden so empty selection does not re-apply default */
+  const handleModelModeChange = useCallback(
+    (newMode: 'text' | 'image') => {
+      if (newMode === modelMode) return
+      setDefaultSelectionOverridden(true)
+      setModelMode(newMode)
+    },
+    [modelMode]
+  )
+
   // Clear selected models when switching modes if they no longer match the filtered list
   useEffect(() => {
     const ids = new Set(
@@ -726,7 +738,8 @@ export function MainPage() {
         .map(m => String(m.id))
     )
     setSelectedModels(prev => prev.filter(id => ids.has(id)))
-  }, [modelMode, setSelectedModels, modelsByProvider])
+    setOriginalSelectedModels(prev => prev.filter(id => ids.has(id)))
+  }, [modelMode, setSelectedModels, setOriginalSelectedModels, modelsByProvider])
 
   /**
    * Image Advanced (aspect ratio, image size): when selected models shrink, swap for a new set,
@@ -976,7 +989,8 @@ export function MainPage() {
       justLoadedFromHistoryRef,
       setCurrentVisibleComparisonId,
       setModelErrors,
-      modelMode,
+      modelsByProvider,
+      setModelMode,
       allModels,
       setTemperature,
       setTopP,
@@ -1381,6 +1395,12 @@ export function MainPage() {
     const limitedModelIds = validModelIds.slice(0, maxModelsLimit)
 
     if (limitedModelIds.length > 0) {
+      const targetMode = inferModelModeForLoadedModels(limitedModelIds, modelsByProvider, {
+        textComposerAdvanced: defaultSelection.textComposerAdvanced,
+        imageComposerAdvanced: defaultSelection.imageComposerAdvanced,
+      })
+      setModelMode(targetMode)
+
       setSelectedModels(limitedModelIds)
 
       setOpenDropdowns(prev => {
@@ -1403,7 +1423,7 @@ export function MainPage() {
         return hasChanges ? newSet : prev
       })
 
-      if (modelMode === 'text' && defaultSelection.textComposerAdvanced) {
+      if (targetMode === 'text' && defaultSelection.textComposerAdvanced) {
         applyTextComposerAdvancedSettings(
           defaultSelection.textComposerAdvanced,
           limitedModelIds,
@@ -1413,7 +1433,7 @@ export function MainPage() {
           setMaxTokens
         )
       }
-      if (modelMode === 'image' && defaultSelection.imageComposerAdvanced) {
+      if (targetMode === 'image' && defaultSelection.imageComposerAdvanced) {
         setAspectRatio(defaultSelection.imageComposerAdvanced.aspectRatio)
         setImageSize(defaultSelection.imageComposerAdvanced.imageSize)
       }
@@ -1427,10 +1447,10 @@ export function MainPage() {
     maxModelsLimit,
     isAuthenticated,
     user,
-    modelMode,
     allModelsFlatForComposer,
     setSelectedModels,
     setOpenDropdowns,
+    setModelMode,
     setTemperature,
     setTopP,
     setMaxTokens,
@@ -2368,7 +2388,7 @@ export function MainPage() {
             },
             onRemoveAttachedImages,
             modelMode,
-            onModelModeChange: setModelMode,
+            onModelModeChange: handleModelModeChange,
             modelsByProvider: filteredModelsByProvider,
             allModelsByProvider: modelsByProvider,
             imageModelsDisabledForUnregistered: modelMode === 'image' && !isAuthenticated,

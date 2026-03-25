@@ -8,12 +8,14 @@ import type {
   ConversationRound,
   ConversationSummary,
   ImageComposerAdvancedSettings,
+  ModelsByProvider,
   TextComposerAdvancedSettings,
 } from '../types'
 import { createConversationId, createMessageId, createModelId } from '../types'
 import type { ModelConversation, StoredMessage } from '../types/conversation'
 import { isErrorMessage } from '../utils/error'
 import logger from '../utils/logger'
+import { inferModelModeForLoadedModels } from '../utils/modelModeInference'
 import { applyTextComposerAdvancedSettings } from '../utils/textComposerAdvancedRestore'
 
 function extractTextComposerAdvancedFromLoaded(data: {
@@ -74,7 +76,8 @@ interface UseConversationManagerOptions {
   justLoadedFromHistoryRef: React.MutableRefObject<boolean>
   setCurrentVisibleComparisonId: (value: string | null) => void
   setModelErrors: (errors: { [key: string]: boolean }) => void
-  modelMode: 'text' | 'image'
+  modelsByProvider: ModelsByProvider
+  setModelMode: (mode: 'text' | 'image') => void
   allModels: Array<{ id: string; max_output_tokens?: number }>
   setTemperature: (v: number) => void
   setTopP: (v: number) => void
@@ -107,7 +110,8 @@ export function useConversationManager(options: UseConversationManagerOptions) {
     justLoadedFromHistoryRef,
     setCurrentVisibleComparisonId,
     setModelErrors,
-    modelMode,
+    modelsByProvider,
+    setModelMode,
     allModels,
     setTemperature,
     setTopP,
@@ -407,7 +411,13 @@ export function useConversationManager(options: UseConversationManagerOptions) {
         setSelectedModels([...modelsUsed])
         setOriginalSelectedModels([...modelsUsed])
         const textAdvanced = extractTextComposerAdvancedFromLoaded(conversationData)
-        if (modelMode === 'text' && textAdvanced) {
+        const imageAdvanced = extractImageComposerAdvancedFromLoaded(conversationData)
+        const targetMode = inferModelModeForLoadedModels([...modelsUsed], modelsByProvider, {
+          textComposerAdvanced: textAdvanced,
+          imageComposerAdvanced: imageAdvanced,
+        })
+        setModelMode(targetMode)
+        if (targetMode === 'text' && textAdvanced) {
           applyTextComposerAdvancedSettings(
             textAdvanced,
             [...modelsUsed],
@@ -417,10 +427,7 @@ export function useConversationManager(options: UseConversationManagerOptions) {
             setMaxTokens
           )
         }
-        const imageAdvanced = extractImageComposerAdvancedFromLoaded(conversationData)
-        // Restore image Advanced whenever the source has saved values (not only when the toggle
-        // is on "image" — avoids losing settings if mode differs, and matches text advanced).
-        if (imageAdvanced) {
+        if (targetMode === 'image' && imageAdvanced) {
           setAspectRatio(imageAdvanced.aspectRatio)
           setImageSize(imageAdvanced.imageSize)
         }
@@ -453,7 +460,8 @@ export function useConversationManager(options: UseConversationManagerOptions) {
       justLoadedFromHistoryRef,
       loadConversationFromAPI,
       loadConversationFromLocalStorage,
-      modelMode,
+      modelsByProvider,
+      setModelMode,
       allModels,
       setTemperature,
       setTopP,

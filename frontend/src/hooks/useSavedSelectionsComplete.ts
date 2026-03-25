@@ -21,6 +21,7 @@ import type { ModelConversation } from '../types/conversation'
 import type { ModelsByProvider } from '../types/models'
 import { showNotification } from '../utils'
 import logger from '../utils/logger'
+import { inferModelModeForLoadedModels } from '../utils/modelModeInference'
 import { isModelIdSelectableForAccessContext } from '../utils/modelTierAccess'
 import { applyTextComposerAdvancedSettings } from '../utils/textComposerAdvancedRestore'
 
@@ -75,6 +76,7 @@ export interface UseSavedSelectionsCompleteCallbacks {
   setConversations: (conversations: ModelConversation[]) => void
   setResponse: (response: CompareResponse | null) => void
   setDefaultSelectionOverridden: (overridden: boolean) => void
+  setModelMode: (mode: 'text' | 'image') => void
   setTemperature: (v: number) => void
   setTopP: (v: number) => void
   setMaxTokens: (v: number | null) => void
@@ -216,6 +218,7 @@ export function useSavedSelectionsComplete(
     setConversations,
     setResponse,
     setDefaultSelectionOverridden,
+    setModelMode,
     setTemperature,
     setTopP,
     setMaxTokens,
@@ -419,6 +422,13 @@ export function useSavedSelectionsComplete(
         )
       }
 
+      const loadedSel = savedSelections.find(s => s.id === id)
+      const targetMode = inferModelModeForLoadedModels(limitedModelIds, modelsByProvider, {
+        textComposerAdvanced: loadedSel?.textComposerAdvanced,
+        imageComposerAdvanced: loadedSel?.imageComposerAdvanced,
+      })
+      setModelMode(targetMode)
+
       // Update selected models
       setSelectedModels(limitedModelIds)
 
@@ -468,8 +478,7 @@ export function useSavedSelectionsComplete(
         setDefaultSelectionOverridden(false)
       }
 
-      const loadedSel = savedSelections.find(s => s.id === id)
-      if (modelMode === 'text' && loadedSel?.textComposerAdvanced) {
+      if (targetMode === 'text' && loadedSel?.textComposerAdvanced) {
         applyTextComposerAdvancedSettings(
           loadedSel.textComposerAdvanced,
           limitedModelIds,
@@ -479,7 +488,7 @@ export function useSavedSelectionsComplete(
           setMaxTokens
         )
       }
-      if (modelMode === 'image' && loadedSel?.imageComposerAdvanced) {
+      if (targetMode === 'image' && loadedSel?.imageComposerAdvanced) {
         setAspectRatio(loadedSel.imageComposerAdvanced.aspectRatio)
         setImageSize(loadedSel.imageComposerAdvanced.imageSize)
       }
@@ -492,7 +501,6 @@ export function useSavedSelectionsComplete(
       accessUser,
       modelsByProvider,
       maxModelsLimit,
-      modelMode,
       allModels,
       setSelectedModels,
       setOpenDropdowns,
@@ -502,6 +510,7 @@ export function useSavedSelectionsComplete(
       setResponse,
       defaultSelectionId,
       setDefaultSelectionOverridden,
+      setModelMode,
       setTemperature,
       setTopP,
       setMaxTokens,

@@ -45,6 +45,12 @@ describe('useSavedSelectionsComplete', () => {
   const mockSetConversations = vi.fn()
   const mockSetResponse = vi.fn()
   const mockSetDefaultSelectionOverridden = vi.fn()
+  const mockSetModelMode = vi.fn()
+  const mockSetTemperature = vi.fn()
+  const mockSetTopP = vi.fn()
+  const mockSetMaxTokens = vi.fn()
+  const mockSetAspectRatio = vi.fn()
+  const mockSetImageSize = vi.fn()
   const mockOnSelectionSaved = vi.fn()
 
   const defaultConfig = {
@@ -91,6 +97,12 @@ describe('useSavedSelectionsComplete', () => {
     setConversations: mockSetConversations,
     setResponse: mockSetResponse,
     setDefaultSelectionOverridden: mockSetDefaultSelectionOverridden,
+    setModelMode: mockSetModelMode,
+    setTemperature: mockSetTemperature,
+    setTopP: mockSetTopP,
+    setMaxTokens: mockSetMaxTokens,
+    setAspectRatio: mockSetAspectRatio,
+    setImageSize: mockSetImageSize,
   }
 
   beforeEach(() => {
@@ -391,8 +403,47 @@ describe('useSavedSelectionsComplete', () => {
         result.current.handleLoadSelection(selectionId)
       })
 
+      expect(mockSetModelMode).toHaveBeenCalledWith('text')
       expect(mockSetSelectedModels).toHaveBeenCalledWith(['model-1', 'model-2'])
       expect(mockSetOpenDropdowns).toHaveBeenCalled()
+    })
+
+    it('should set model mode to image when loading an image-model selection', () => {
+      const imageModelsByProvider: ModelsByProvider = {
+        OpenAI: [
+          {
+            id: 'dall-e-3',
+            name: 'DALL-E 3',
+            provider: 'OpenAI',
+            available: true,
+            tier_access: 'free' as const,
+            supports_image_generation: true,
+          },
+        ],
+      }
+      const { result } = renderHook(() =>
+        useSavedSelectionsComplete(
+          {
+            ...defaultConfig,
+            modelsByProvider: imageModelsByProvider,
+            allModels: [{ id: 'dall-e-3', max_output_tokens: 4096 }],
+          },
+          defaultCallbacks
+        )
+      )
+
+      act(() => {
+        result.current.saveSelection('Image preset', ['dall-e-3'])
+      })
+
+      const selectionId = result.current.savedSelections[0].id
+
+      act(() => {
+        result.current.handleLoadSelection(selectionId)
+      })
+
+      expect(mockSetModelMode).toHaveBeenCalledWith('image')
+      expect(mockSetSelectedModels).toHaveBeenCalledWith(['dall-e-3'])
     })
 
     it('should filter out unavailable models when loading', () => {
