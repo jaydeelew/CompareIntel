@@ -4,6 +4,45 @@ import { getUserPreferences } from '../services/userSettingsService'
 import type { User } from '../types'
 import logger from '../utils/logger'
 
+function isValidLatLon(lat: number, lon: number): boolean {
+  return (
+    Number.isFinite(lat) &&
+    Number.isFinite(lon) &&
+    lat >= -90 &&
+    lat <= 90 &&
+    lon >= -180 &&
+    lon <= 180
+  )
+}
+
+/** Photon (Komoot) reverse geocode — CORS-friendly, avoids BigDataCloud 400s on bad coords / IP fallback. */
+function formatLocationFromPhotonProperties(props: Record<string, unknown>): string | null {
+  const city = typeof props.city === 'string' ? props.city : ''
+  const region =
+    typeof props.state === 'string'
+      ? props.state
+      : typeof props.county === 'string'
+        ? props.county
+        : ''
+  let country = typeof props.country === 'string' ? props.country : ''
+  country = country.replace(/\s*\(the\)\s*$/i, '').trim()
+  const parts = [city, region, country].filter(Boolean)
+  if (parts.length === 0) return null
+  return parts.join(', ')
+}
+
+async function reverseGeocodePhoton(lat: number, lon: number): Promise<string | null> {
+  const url = `https://photon.komoot.io/reverse?lat=${lat}&lon=${lon}&lang=en`
+  const response = await fetch(url)
+  if (!response.ok) return null
+  const data = (await response.json()) as {
+    features?: Array<{ properties?: Record<string, unknown> }>
+  }
+  const props = data.features?.[0]?.properties
+  if (!props) return null
+  return formatLocationFromPhotonProperties(props)
+}
+
 interface UseGeolocationProps {
   isAuthenticated: boolean
   user: User | null
@@ -84,39 +123,14 @@ export function useGeolocation({ isAuthenticated, user }: UseGeolocationProps) {
                   // Round to 6 decimal places (~0.1m) to avoid floating-point string issues
                   const lat = Number(position.coords.latitude.toFixed(6))
                   const lon = Number(position.coords.longitude.toFixed(6))
-                  const response = await fetch(
-                    `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=en`
-                  )
-                  if (response.ok) {
-                    const data = await response.json()
-                    const city = data.city || ''
-                    const region = data.principalSubdivision || ''
-                    let country = data.countryName || ''
-                    country = country.replace(/\s*\(the\)\s*$/i, '').trim()
-                    const parts = [city, region, country].filter(Boolean)
-                    if (parts.length > 0) {
-                      const location = parts.join(', ')
-                      logger.debug('[Geolocation] Successfully detected location:', location)
-                      setUserLocation(location)
-                      return
-                    }
+                  if (!isValidLatLon(lat, lon)) {
+                    logger.debug('[Geolocation] Ignoring invalid coordinates:', lat, lon)
+                    return
                   }
-                  // Fallback: BigDataCloud supports calling without coords for IP-based geolocation
-                  const fallbackResponse = await fetch(
-                    'https://api.bigdatacloud.net/data/reverse-geocode-client?localityLanguage=en'
-                  )
-                  if (fallbackResponse.ok) {
-                    const data = await fallbackResponse.json()
-                    const city = data.city || ''
-                    const region = data.principalSubdivision || ''
-                    let country = data.countryName || ''
-                    country = country.replace(/\s*\(the\)\s*$/i, '').trim()
-                    const parts = [city, region, country].filter(Boolean)
-                    if (parts.length > 0) {
-                      const location = parts.join(', ')
-                      logger.debug('[Geolocation] Using IP fallback location:', location)
-                      setUserLocation(location)
-                    }
+                  const location = await reverseGeocodePhoton(lat, lon)
+                  if (location) {
+                    logger.debug('[Geolocation] Successfully detected location:', location)
+                    setUserLocation(location)
                   }
                 } catch (error) {
                   logger.debug('Failed to get location from coordinates:', error)

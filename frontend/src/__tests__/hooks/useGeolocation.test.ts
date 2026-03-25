@@ -1,8 +1,8 @@
 /**
  * Tests for useGeolocation hook
  *
- * Tests saved zipcode precedence, BigDataCloud reverse geocoding,
- * IP fallback, coordinate rounding, and response parsing.
+ * Tests saved zipcode precedence, Photon reverse geocoding,
+ * coordinate rounding, and response parsing.
  */
 
 import { renderHook, waitFor, act } from '@testing-library/react'
@@ -162,7 +162,7 @@ describe('useGeolocation', () => {
         expect(result.current.userLocation).toBe('Beverly Hills, CA, United States')
       })
 
-      // Advance past the 5s geolocation timeout - should not call BigDataCloud
+      // Advance past the 5s geolocation timeout - should not call Photon
       await act(async () => {
         vi.advanceTimersByTime(6000)
       })
@@ -196,7 +196,7 @@ describe('useGeolocation', () => {
     })
   })
 
-  describe('BigDataCloud reverse geocoding', () => {
+  describe('Photon reverse geocoding', () => {
     beforeEach(() => {
       vi.mocked(userSettingsService.getUserPreferences).mockResolvedValue({
         zipcode: null,
@@ -224,9 +224,16 @@ describe('useGeolocation', () => {
         ok: true,
         json: () =>
           Promise.resolve({
-            city: 'Weatherford',
-            principalSubdivision: 'Texas',
-            countryName: 'United States of America (the)',
+            type: 'FeatureCollection',
+            features: [
+              {
+                properties: {
+                  city: 'Weatherford',
+                  state: 'Texas',
+                  country: 'United States of America (the)',
+                },
+              },
+            ],
           }),
       })
 
@@ -243,7 +250,7 @@ describe('useGeolocation', () => {
       // toFixed(6) rounds coords - exact string can vary by float representation
       expect(mockFetch).toHaveBeenCalledWith(
         expect.stringMatching(
-          /reverse-geocode-client\?latitude=32\.73222\d&longitude=-97\.78985\d&localityLanguage=en/
+          /photon\.komoot\.io\/reverse\?lat=32\.73222\d&lon=-97\.78985\d&lang=en/
         )
       )
     })
@@ -262,9 +269,16 @@ describe('useGeolocation', () => {
         ok: true,
         json: () =>
           Promise.resolve({
-            city: 'Mountain View',
-            principalSubdivision: 'California',
-            countryName: 'United States of America (the)',
+            type: 'FeatureCollection',
+            features: [
+              {
+                properties: {
+                  city: 'Mountain View',
+                  state: 'California',
+                  country: 'United States',
+                },
+              },
+            ],
           }),
       })
 
@@ -275,8 +289,8 @@ describe('useGeolocation', () => {
       })
 
       await waitFor(() => {
-        expect(mockFetch).toHaveBeenCalledWith(expect.stringContaining('latitude=37.123457'))
-        expect(mockFetch).toHaveBeenCalledWith(expect.stringContaining('longitude=-122.987654'))
+        expect(mockFetch).toHaveBeenCalledWith(expect.stringContaining('lat=37.123457'))
+        expect(mockFetch).toHaveBeenCalledWith(expect.stringContaining('lon=-122.987654'))
       })
     })
 
@@ -291,9 +305,16 @@ describe('useGeolocation', () => {
         ok: true,
         json: () =>
           Promise.resolve({
-            city: 'London',
-            principalSubdivision: 'England',
-            countryName: 'United Kingdom of Great Britain and Northern Ireland (the)',
+            type: 'FeatureCollection',
+            features: [
+              {
+                properties: {
+                  city: 'London',
+                  state: 'England',
+                  country: 'United Kingdom of Great Britain and Northern Ireland (the)',
+                },
+              },
+            ],
           }),
       })
 
@@ -312,7 +333,7 @@ describe('useGeolocation', () => {
     })
   })
 
-  describe('IP fallback', () => {
+  describe('Photon failure handling', () => {
     beforeEach(() => {
       vi.mocked(userSettingsService.getUserPreferences).mockResolvedValue({
         zipcode: null,
@@ -329,22 +350,14 @@ describe('useGeolocation', () => {
       })
     })
 
-    it('should fall back to IP geolocation when coordinate request fails', async () => {
+    it('should leave location null when reverse geocode request fails', async () => {
       mockGetCurrentPosition.mockImplementation(cb =>
         cb({
           coords: { latitude: 32.73, longitude: -97.79 },
         })
       )
 
-      mockFetch.mockResolvedValueOnce({ ok: false }).mockResolvedValueOnce({
-        ok: true,
-        json: () =>
-          Promise.resolve({
-            city: 'Dallas',
-            principalSubdivision: 'Texas',
-            countryName: 'United States of America (the)',
-          }),
-      })
+      mockFetch.mockResolvedValueOnce({ ok: false })
 
       const { result } = renderHook(() => useGeolocation({ isAuthenticated: true, user: mockUser }))
 
@@ -353,24 +366,23 @@ describe('useGeolocation', () => {
       })
 
       await waitFor(() => {
-        expect(result.current.userLocation).toBe('Dallas, Texas, United States of America')
+        expect(mockFetch).toHaveBeenCalledTimes(1)
       })
 
-      expect(mockFetch).toHaveBeenCalledTimes(2)
-      expect(mockFetch).toHaveBeenNthCalledWith(
-        2,
-        'https://api.bigdatacloud.net/data/reverse-geocode-client?localityLanguage=en'
-      )
+      expect(result.current.userLocation).toBe(null)
     })
 
-    it('should handle both coordinate and IP fallback failures gracefully', async () => {
+    it('should leave location null when Photon returns no features', async () => {
       mockGetCurrentPosition.mockImplementation(cb =>
         cb({
           coords: { latitude: 32.73, longitude: -97.79 },
         })
       )
 
-      mockFetch.mockResolvedValueOnce({ ok: false }).mockResolvedValueOnce({ ok: false })
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ type: 'FeatureCollection', features: [] }),
+      })
 
       const { result } = renderHook(() => useGeolocation({ isAuthenticated: true, user: mockUser }))
 
@@ -379,7 +391,7 @@ describe('useGeolocation', () => {
       })
 
       await waitFor(() => {
-        expect(mockFetch).toHaveBeenCalledTimes(2)
+        expect(mockFetch).toHaveBeenCalledTimes(1)
       })
 
       expect(result.current.userLocation).toBe(null)
