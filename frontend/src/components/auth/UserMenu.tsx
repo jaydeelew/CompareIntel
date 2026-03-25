@@ -16,6 +16,8 @@ import {
   getUserPreferences,
   updateUserPreferences,
   USER_PREFERENCES_UPDATED_EVENT,
+  REQUEST_PERSIST_IMAGE_COMPOSER_ADVANCED_EVENT,
+  REQUEST_PERSIST_TEXT_COMPOSER_ADVANCED_EVENT,
 } from '../../services/userSettingsService'
 import type { UserPreferences, UserPreferencesUpdate } from '../../services/userSettingsService'
 import logger from '../../utils/logger'
@@ -37,6 +39,8 @@ export const UserMenu: React.FC = () => {
   const [isLoadingPreferences, setIsLoadingPreferences] = useState(false)
   const [zipcode, setZipcode] = useState('')
   const [rememberState, setRememberState] = useState(false)
+  const [rememberTextAdvanced, setRememberTextAdvanced] = useState(false)
+  const [rememberImageAdvanced, setRememberImageAdvanced] = useState(false)
   const [hideHeroUtilityTiles, setHideHeroUtilityTiles] = useState(false)
   const [isSavingPreference, setIsSavingPreference] = useState(false)
   const [preferencesError, setPreferencesError] = useState<string | null>(null)
@@ -130,6 +134,8 @@ export const UserMenu: React.FC = () => {
           setPreferences(prefs)
           setZipcode(prefs.zipcode || '')
           setRememberState(prefs.remember_state_on_logout)
+          setRememberTextAdvanced(prefs.remember_text_advanced_settings)
+          setRememberImageAdvanced(prefs.remember_image_advanced_settings)
           setHideHeroUtilityTiles(prefs.hide_hero_utility_tiles)
         })
         .catch(error => {
@@ -150,9 +156,17 @@ export const UserMenu: React.FC = () => {
         const updated = await updateUserPreferences(payload)
         setPreferences(updated)
         setRememberState(updated.remember_state_on_logout)
+        setRememberTextAdvanced(updated.remember_text_advanced_settings)
+        setRememberImageAdvanced(updated.remember_image_advanced_settings)
         setHideHeroUtilityTiles(updated.hide_hero_utility_tiles)
         setZipcode(updated.zipcode || '')
         window.dispatchEvent(new CustomEvent(USER_PREFERENCES_UPDATED_EVENT, { detail: updated }))
+        if (payload.remember_text_advanced_settings === true) {
+          window.dispatchEvent(new CustomEvent(REQUEST_PERSIST_TEXT_COMPOSER_ADVANCED_EVENT))
+        }
+        if (payload.remember_image_advanced_settings === true) {
+          window.dispatchEvent(new CustomEvent(REQUEST_PERSIST_IMAGE_COMPOSER_ADVANCED_EVENT))
+        }
       } catch (error: unknown) {
         logger.error('Failed to save preferences:', error)
         revert?.()
@@ -181,6 +195,40 @@ export const UserMenu: React.FC = () => {
     setRememberState(next)
     void persistPartialPreferences({ remember_state_on_logout: next }, () => setRememberState(prev))
   }, [rememberState, isSavingPreference, persistPartialPreferences])
+
+  const handleRememberTextAdvancedToggle = useCallback(() => {
+    if (isSavingPreference) return
+    const prev = rememberTextAdvanced
+    const next = !prev
+    setRememberTextAdvanced(next)
+    if (next) {
+      void persistPartialPreferences({ remember_text_advanced_settings: true }, () =>
+        setRememberTextAdvanced(prev)
+      )
+    } else {
+      void persistPartialPreferences(
+        { remember_text_advanced_settings: false, text_composer_advanced: null },
+        () => setRememberTextAdvanced(prev)
+      )
+    }
+  }, [rememberTextAdvanced, isSavingPreference, persistPartialPreferences])
+
+  const handleRememberImageAdvancedToggle = useCallback(() => {
+    if (isSavingPreference) return
+    const prev = rememberImageAdvanced
+    const next = !prev
+    setRememberImageAdvanced(next)
+    if (next) {
+      void persistPartialPreferences({ remember_image_advanced_settings: true }, () =>
+        setRememberImageAdvanced(prev)
+      )
+    } else {
+      void persistPartialPreferences(
+        { remember_image_advanced_settings: false, image_composer_advanced: null },
+        () => setRememberImageAdvanced(prev)
+      )
+    }
+  }, [rememberImageAdvanced, isSavingPreference, persistPartialPreferences])
 
   const handleZipcodeBlur = useCallback(() => {
     if (!preferences || isSavingPreference) return
@@ -691,6 +739,68 @@ export const UserMenu: React.FC = () => {
                           className={`settings-toggle ${rememberState ? 'active' : ''}`}
                           onClick={handleRememberStateToggle}
                           aria-pressed={rememberState}
+                          role="switch"
+                          type="button"
+                          disabled={isSavingPreference}
+                          aria-busy={isSavingPreference}
+                        >
+                          <span className="settings-toggle-slider" />
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Composer advanced settings persistence */}
+                    <div className="settings-section">
+                      <h3 className="settings-section-title">
+                        <svg
+                          width="18"
+                          height="18"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="1.5"
+                        >
+                          <path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+                        </svg>
+                        Comparison defaults
+                      </h3>
+                      <div className="settings-item settings-item-toggle">
+                        <div className="settings-item-info">
+                          <span className="settings-label">
+                            Remember text model advanced settings
+                          </span>
+                          <p className="settings-description">
+                            Save temperature, top P, and max tokens to your account so they return
+                            after a refresh or the next time you sign in. When off, those values are
+                            not stored on the server; they still apply for the rest of this visit.
+                          </p>
+                        </div>
+                        <button
+                          className={`settings-toggle ${rememberTextAdvanced ? 'active' : ''}`}
+                          onClick={handleRememberTextAdvancedToggle}
+                          aria-pressed={rememberTextAdvanced}
+                          role="switch"
+                          type="button"
+                          disabled={isSavingPreference}
+                          aria-busy={isSavingPreference}
+                        >
+                          <span className="settings-toggle-slider" />
+                        </button>
+                      </div>
+                      <div className="settings-item settings-item-toggle">
+                        <div className="settings-item-info">
+                          <span className="settings-label">
+                            Remember image model advanced settings
+                          </span>
+                          <p className="settings-description">
+                            Keep aspect ratio and image size across page refreshes and future
+                            logins.
+                          </p>
+                        </div>
+                        <button
+                          className={`settings-toggle ${rememberImageAdvanced ? 'active' : ''}`}
+                          onClick={handleRememberImageAdvancedToggle}
+                          aria-pressed={rememberImageAdvanced}
                           role="switch"
                           type="button"
                           disabled={isSavingPreference}

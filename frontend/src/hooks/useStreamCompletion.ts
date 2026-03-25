@@ -60,7 +60,6 @@ export interface UseStreamCompletionCallbacks {
   getFirstUserMessage: () => import('../types/conversation').ConversationMessage | undefined
   scrollConversationsToBottom: () => void
   refreshUser: () => Promise<void>
-  resetComposerAdvancedSettings?: () => void
 }
 
 export function useStreamCompletion(
@@ -99,7 +98,6 @@ export function useStreamCompletion(
     getFirstUserMessage,
     scrollConversationsToBottom,
     refreshUser,
-    resetComposerAdvancedSettings,
   } = callbacks
 
   const applyStreamCompletion = useCallback(
@@ -441,10 +439,6 @@ export function useStreamCompletion(
         const createdModelId = createModelId(modelId)
         return hasContentOrImages(createdModelId)
       })
-      if (hadSuccessfulModel && !userCancelledRef.current) {
-        resetComposerAdvancedSettings?.()
-      }
-
       if (!isFollowUpMode && hadSuccessfulModel && !userCancelledRef.current) {
         const scrollResultsIntoView = (behavior: ScrollBehavior) => {
           document.querySelector('.results-section')?.scrollIntoView({
@@ -536,7 +530,6 @@ export function useStreamCompletion(
       maxTokens,
       aspectRatio,
       imageSize,
-      resetComposerAdvancedSettings,
       setError,
       setModelErrors,
       setActiveResultTabs,

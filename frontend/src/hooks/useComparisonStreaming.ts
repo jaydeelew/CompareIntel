@@ -109,7 +109,6 @@ export function useComparisonStreaming(
       getFirstUserMessage: helpers.getFirstUserMessage,
       scrollConversationsToBottom: helpers.scrollConversationsToBottom,
       refreshUser: helpers.refreshUser,
-      resetComposerAdvancedSettings: helpers.resetComposerAdvancedSettings,
     }
   )
 

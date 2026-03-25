@@ -28,6 +28,10 @@ describe('userSettingsService', () => {
     zipcode: '12345',
     remember_state_on_logout: true,
     hide_hero_utility_tiles: false,
+    remember_text_advanced_settings: false,
+    remember_image_advanced_settings: false,
+    text_composer_advanced: null,
+    image_composer_advanced: null,
   }
 
   beforeEach(() => {

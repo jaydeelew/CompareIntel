@@ -63,6 +63,10 @@ describe('useGeolocation', () => {
         preferred_models: null,
         remember_state_on_logout: false,
         hide_hero_utility_tiles: false,
+        remember_text_advanced_settings: false,
+        remember_image_advanced_settings: false,
+        text_composer_advanced: null,
+        image_composer_advanced: null,
       })
 
       const { result } = renderHook(() => useGeolocation({ isAuthenticated: false, user: null }))
@@ -81,6 +85,10 @@ describe('useGeolocation', () => {
         preferred_models: null,
         remember_state_on_logout: false,
         hide_hero_utility_tiles: false,
+        remember_text_advanced_settings: false,
+        remember_image_advanced_settings: false,
+        text_composer_advanced: null,
+        image_composer_advanced: null,
       })
 
       const { result } = renderHook(() => useGeolocation({ isAuthenticated: false, user: null }))
@@ -102,6 +110,10 @@ describe('useGeolocation', () => {
         preferred_models: null,
         remember_state_on_logout: false,
         hide_hero_utility_tiles: false,
+        remember_text_advanced_settings: false,
+        remember_image_advanced_settings: false,
+        text_composer_advanced: null,
+        image_composer_advanced: null,
       })
 
       mockFetch.mockResolvedValueOnce({
@@ -130,6 +142,10 @@ describe('useGeolocation', () => {
         preferred_models: null,
         remember_state_on_logout: false,
         hide_hero_utility_tiles: false,
+        remember_text_advanced_settings: false,
+        remember_image_advanced_settings: false,
+        text_composer_advanced: null,
+        image_composer_advanced: null,
       })
 
       mockFetch.mockResolvedValueOnce({
@@ -164,6 +180,10 @@ describe('useGeolocation', () => {
         preferred_models: null,
         remember_state_on_logout: false,
         hide_hero_utility_tiles: false,
+        remember_text_advanced_settings: false,
+        remember_image_advanced_settings: false,
+        text_composer_advanced: null,
+        image_composer_advanced: null,
       })
 
       mockFetch.mockResolvedValueOnce({ ok: false })
@@ -186,6 +206,10 @@ describe('useGeolocation', () => {
         preferred_models: null,
         remember_state_on_logout: false,
         hide_hero_utility_tiles: false,
+        remember_text_advanced_settings: false,
+        remember_image_advanced_settings: false,
+        text_composer_advanced: null,
+        image_composer_advanced: null,
       })
     })
 
@@ -298,6 +322,10 @@ describe('useGeolocation', () => {
         preferred_models: null,
         remember_state_on_logout: false,
         hide_hero_utility_tiles: false,
+        remember_text_advanced_settings: false,
+        remember_image_advanced_settings: false,
+        text_composer_advanced: null,
+        image_composer_advanced: null,
       })
     })
 
@@ -368,6 +396,10 @@ describe('useGeolocation', () => {
         preferred_models: null,
         remember_state_on_logout: false,
         hide_hero_utility_tiles: false,
+        remember_text_advanced_settings: false,
+        remember_image_advanced_settings: false,
+        text_composer_advanced: null,
+        image_composer_advanced: null,
       })
 
       Object.defineProperty(global, 'navigator', {
@@ -404,6 +436,10 @@ describe('useGeolocation', () => {
         preferred_models: null,
         remember_state_on_logout: false,
         hide_hero_utility_tiles: false,
+        remember_text_advanced_settings: false,
+        remember_image_advanced_settings: false,
+        text_composer_advanced: null,
+        image_composer_advanced: null,
       })
 
       Object.defineProperty(global, 'navigator', {

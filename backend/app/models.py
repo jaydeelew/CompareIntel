@@ -171,6 +171,13 @@ class UserPreference(Base):
     # Home page: hide capability cards row and center the question box (registered users)
     hide_hero_utility_tiles = Column(Boolean, default=False)
 
+    # When enabled, persist text composer advanced settings (temperature, top_p, max_tokens) across sessions
+    remember_text_advanced_settings = Column(Boolean, default=False)
+    # When enabled, persist image composer advanced settings (aspect ratio, size) across sessions
+    remember_image_advanced_settings = Column(Boolean, default=False)
+    text_composer_advanced = Column(Text, nullable=True)  # JSON object
+    image_composer_advanced = Column(Text, nullable=True)  # JSON object
+
     # Timestamps
     created_at = Column(DateTime, default=func.now())
     updated_at = Column(DateTime, default=func.now(), onupdate=func.now())

@@ -209,6 +209,21 @@ class UsageHistory(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
+class TextComposerAdvancedPayload(BaseModel):
+    """Saved text-mode advanced settings for the comparison composer."""
+
+    temperature: float = Field(..., ge=0, le=2)
+    top_p: float = Field(..., ge=0, le=1)
+    max_tokens: int | None = Field(None, ge=1, description="Output cap; null means model default")
+
+
+class ImageComposerAdvancedPayload(BaseModel):
+    """Saved image-mode advanced settings for the comparison composer."""
+
+    aspect_ratio: str = Field(..., min_length=1, max_length=64)
+    image_size: str = Field(..., min_length=1, max_length=64)
+
+
 class UserPreferencesUpdate(BaseModel):
     """Schema for updating user preferences."""
 
@@ -224,6 +239,22 @@ class UserPreferencesUpdate(BaseModel):
     hide_hero_utility_tiles: bool | None = Field(
         None,
         description="Hide the four capability cards below the page title and center the question box (registered users)",
+    )
+    remember_text_advanced_settings: bool | None = Field(
+        None,
+        description="Persist text composer advanced settings across logins and page refresh",
+    )
+    remember_image_advanced_settings: bool | None = Field(
+        None,
+        description="Persist image composer advanced settings across logins and page refresh",
+    )
+    text_composer_advanced: TextComposerAdvancedPayload | None = Field(
+        None,
+        description="Stored text advanced settings; omit to leave unchanged, null clears when allowed",
+    )
+    image_composer_advanced: ImageComposerAdvancedPayload | None = Field(
+        None,
+        description="Stored image advanced settings; omit to leave unchanged, null clears when allowed",
     )
 
     @field_validator("preferred_models")
@@ -262,6 +293,10 @@ class UserPreferencesResponse(BaseModel):
     zipcode: str | None = None
     remember_state_on_logout: bool = False
     hide_hero_utility_tiles: bool = False
+    remember_text_advanced_settings: bool = False
+    remember_image_advanced_settings: bool = False
+    text_composer_advanced: dict | None = None
+    image_composer_advanced: dict | None = None
 
     model_config = ConfigDict(from_attributes=True)
 

@@ -34,6 +34,12 @@ class TestUserPreferences:
         assert "remember_state_on_logout" in data
         assert "hide_hero_utility_tiles" in data
         assert data["hide_hero_utility_tiles"] is False
+        assert "remember_text_advanced_settings" in data
+        assert "remember_image_advanced_settings" in data
+        assert data["remember_text_advanced_settings"] is False
+        assert data["remember_image_advanced_settings"] is False
+        assert data.get("text_composer_advanced") is None
+        assert data.get("image_composer_advanced") is None
 
     def test_get_preferences_creates_default_if_not_exists(self, authenticated_client, db_session):
         """Test that getting preferences creates default preferences if they don't exist."""
@@ -55,6 +61,8 @@ class TestUserPreferences:
         assert data["usage_alerts"] is True
         assert data["remember_state_on_logout"] is False
         assert data["hide_hero_utility_tiles"] is False
+        assert data["remember_text_advanced_settings"] is False
+        assert data["remember_image_advanced_settings"] is False
 
     def test_update_preferences_zipcode(self, authenticated_client):
         """Test updating zipcode preference."""
@@ -106,6 +114,46 @@ class TestUserPreferences:
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
         assert data["hide_hero_utility_tiles"] is True
+
+    def test_update_preferences_remember_text_advanced_and_payload(self, authenticated_client):
+        """Test persisting text composer advanced settings."""
+        client, user, access_token, refresh_token = authenticated_client
+        response = client.put(
+            "/api/user/preferences",
+            json={
+                "remember_text_advanced_settings": True,
+                "text_composer_advanced": {
+                    "temperature": 0.9,
+                    "top_p": 0.95,
+                    "max_tokens": 2048,
+                },
+            },
+        )
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert data["remember_text_advanced_settings"] is True
+        assert data["text_composer_advanced"]["temperature"] == 0.9
+        assert data["text_composer_advanced"]["top_p"] == 0.95
+        assert data["text_composer_advanced"]["max_tokens"] == 2048
+
+    def test_update_preferences_clear_text_composer_advanced(self, authenticated_client):
+        """Test clearing stored text advanced JSON when disabling remember."""
+        client, user, access_token, refresh_token = authenticated_client
+        client.put(
+            "/api/user/preferences",
+            json={
+                "remember_text_advanced_settings": True,
+                "text_composer_advanced": {"temperature": 0.5, "top_p": 1.0, "max_tokens": None},
+            },
+        )
+        response = client.put(
+            "/api/user/preferences",
+            json={"remember_text_advanced_settings": False, "text_composer_advanced": None},
+        )
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert data["remember_text_advanced_settings"] is False
+        assert data["text_composer_advanced"] is None
 
     def test_update_preferences_multiple_fields(self, authenticated_client):
         """Test updating multiple preference fields at once."""
