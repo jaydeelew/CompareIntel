@@ -65,7 +65,6 @@ export interface StreamingCreditState {
 export interface StreamingRefs {
   userCancelledRef: React.MutableRefObject<boolean>
   hasScrolledToResultsRef: React.MutableRefObject<boolean>
-  hasScrolledToResultsOnFirstChunkRef: React.MutableRefObject<boolean>
   scrolledToTopRef: React.MutableRefObject<Set<string>>
   shouldScrollToTopAfterFormattingRef: React.MutableRefObject<boolean>
   autoScrollPausedRef: React.MutableRefObject<Set<string>>

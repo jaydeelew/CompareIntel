@@ -97,7 +97,6 @@ export function useStreamCompletion(
     saveConversationToLocalStorage,
     syncHistoryAfterComparison,
     getFirstUserMessage,
-    scrollConversationsToBottom,
     refreshUser,
     resetComposerAdvancedSettings,
   } = callbacks
@@ -491,16 +490,6 @@ export function useStreamCompletion(
           setError(null)
         }, 8000)
       }
-
-      if (isFollowUpMode) {
-        setTimeout(() => {
-          scrollConversationsToBottom()
-        }, 600)
-      } else {
-        setTimeout(() => {
-          scrollConversationsToBottom()
-        }, 500)
-      }
     },
     [
       selectedModels,
@@ -530,7 +519,6 @@ export function useStreamCompletion(
       saveConversationToLocalStorage,
       syncHistoryAfterComparison,
       getFirstUserMessage,
-      scrollConversationsToBottom,
       refreshUser,
     ]
   )

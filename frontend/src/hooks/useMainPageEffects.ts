@@ -8,7 +8,7 @@
 
 import { useEffect, useRef } from 'react'
 
-import type { CompareResponse, ConversationSummary, ModelConversation } from '../types'
+import type { ConversationSummary, ModelConversation } from '../types'
 import { RESULT_TAB, createModelId } from '../types'
 import { getSafeId } from '../utils'
 
@@ -57,10 +57,7 @@ export interface UseMainPageEffectsConfig {
   scrolledToTopRef: React.MutableRefObject<Set<string>>
   conversationsForScroll: ModelConversation[]
 
-  // Scroll - results
-  response: CompareResponse | null
-  hasScrolledToResultsRef: React.MutableRefObject<boolean>
-  followUpJustActivatedRef: React.MutableRefObject<boolean>
+  // Scroll - results (card internals only; no window scroll to .results-section)
   shouldScrollToTopAfterFormattingRef: React.MutableRefObject<boolean>
   selectedModelsForScroll: string[]
 
@@ -98,9 +95,6 @@ export function useMainPageEffects(config: UseMainPageEffectsConfig) {
     activeResultTabs,
     scrolledToTopRef,
     conversationsForScroll,
-    response,
-    hasScrolledToResultsRef,
-    followUpJustActivatedRef,
     shouldScrollToTopAfterFormattingRef,
     selectedModelsForScroll,
     input,
@@ -265,38 +259,6 @@ export function useMainPageEffects(config: UseMainPageEffectsConfig) {
     })
   }, [activeResultTabs, isFollowUpMode, conversationsForScroll, scrolledToTopRef])
 
-  // Scroll to results
-  useEffect(() => {
-    const tutorialBlocking =
-      tutorialState.isActive &&
-      (tutorialState.currentStep === 'submit-comparison' ||
-        tutorialState.currentStep === 'follow-up')
-
-    if (
-      response &&
-      !isFollowUpMode &&
-      !hasScrolledToResultsRef.current &&
-      !error &&
-      !tutorialBlocking
-    ) {
-      if (response.metadata?.models_successful === 0) return
-      hasScrolledToResultsRef.current = true
-      setTimeout(() => {
-        document.querySelector('.results-section')?.scrollIntoView({
-          behavior: 'smooth',
-          block: 'start',
-        })
-      }, 300)
-    }
-  }, [
-    response,
-    isFollowUpMode,
-    error,
-    tutorialState.currentStep,
-    tutorialState.isActive,
-    hasScrolledToResultsRef,
-  ])
-
   // Scroll all cards to top after formatting
   useEffect(() => {
     if (isFollowUpMode || !shouldScrollToTopAfterFormattingRef.current) return
@@ -312,10 +274,6 @@ export function useMainPageEffects(config: UseMainPageEffectsConfig) {
     if (allFormatted && allExist) {
       shouldScrollToTopAfterFormattingRef.current = false
       setTimeout(() => {
-        document.querySelector('.results-section')?.scrollIntoView({
-          behavior: 'smooth',
-          block: 'start',
-        })
         selectedModelsForScroll.forEach(id => {
           const safeId = createModelId(id).replace(/[^a-zA-Z0-9_-]/g, '-')
           const el = document.querySelector(`#conversation-content-${safeId}`) as HTMLElement
@@ -329,36 +287,6 @@ export function useMainPageEffects(config: UseMainPageEffectsConfig) {
     conversationsForScroll,
     selectedModelsForScroll,
     shouldScrollToTopAfterFormattingRef,
-  ])
-
-  // Scroll after follow-up
-  useEffect(() => {
-    const tutorialLate =
-      tutorialState.isActive &&
-      (tutorialState.currentStep === 'submit-comparison-2' ||
-        tutorialState.currentStep === 'view-follow-up-results' ||
-        tutorialState.currentStep === 'history-dropdown' ||
-        tutorialState.currentStep === 'save-selection')
-
-    if (
-      conversations.length > 0 &&
-      isFollowUpMode &&
-      !followUpJustActivatedRef.current &&
-      !tutorialLate
-    ) {
-      setTimeout(() => {
-        document.querySelector('.results-section')?.scrollIntoView({
-          behavior: 'smooth',
-          block: 'start',
-        })
-      }, 400)
-    }
-  }, [
-    conversations.length,
-    isFollowUpMode,
-    tutorialState.currentStep,
-    tutorialState.isActive,
-    followUpJustActivatedRef,
   ])
 
   // Clear textarea errors

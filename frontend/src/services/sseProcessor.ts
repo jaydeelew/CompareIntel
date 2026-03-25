@@ -78,11 +78,9 @@ export interface SSEProcessorConfig {
   startTime: number
   userTimestamp: string
   userCancelledRef: React.MutableRefObject<boolean>
-  hasScrolledToResultsOnFirstChunkRef: React.MutableRefObject<boolean>
   shouldScrollToTopAfterFormattingRef: React.MutableRefObject<boolean>
   autoScrollPausedRef: React.MutableRefObject<Set<string>>
   isPageScrollingRef: React.MutableRefObject<boolean>
-  tutorialState: { isActive: boolean; currentStep: string | null }
   setModelErrors: React.Dispatch<React.SetStateAction<{ [key: string]: boolean }>>
   setActiveResultTabs: React.Dispatch<React.SetStateAction<ActiveResultTabs>>
   setConversations: React.Dispatch<React.SetStateAction<ModelConversation[]>>
@@ -166,6 +164,7 @@ export async function processComparisonStream(
   let streamError: Error | null = null
   let timeoutId: ReturnType<typeof setTimeout> | null = null
   let lastUpdateTime = Date.now()
+  let hasScrolledToResults = false
   const listenersSetUp = new Set<string>()
 
   const {
@@ -179,11 +178,9 @@ export async function processComparisonStream(
     startTime,
     userTimestamp,
     userCancelledRef,
-    hasScrolledToResultsOnFirstChunkRef,
     shouldScrollToTopAfterFormattingRef,
     autoScrollPausedRef,
     isPageScrollingRef,
-    tutorialState,
     setModelErrors,
     setActiveResultTabs,
     setConversations,
@@ -408,15 +405,9 @@ export async function processComparisonStream(
               modelLastChunkTimes[event.model] = Date.now()
               resetStreamingTimeout()
               shouldUpdate = true
-              if (
-                !hasScrolledToResultsOnFirstChunkRef.current &&
-                !(
-                  tutorialState.isActive &&
-                  (tutorialState.currentStep === 'submit-comparison' ||
-                    tutorialState.currentStep === 'submit-comparison-2')
-                )
-              ) {
-                hasScrolledToResultsOnFirstChunkRef.current = true
+
+              if (!hasScrolledToResults) {
+                hasScrolledToResults = true
                 requestAnimationFrame(() => {
                   setTimeout(() => {
                     document.querySelector('.results-section')?.scrollIntoView({
@@ -433,15 +424,8 @@ export async function processComparisonStream(
             resetStreamingTimeout()
             shouldUpdate = true
 
-            if (
-              !hasScrolledToResultsOnFirstChunkRef.current &&
-              !(
-                tutorialState.isActive &&
-                (tutorialState.currentStep === 'submit-comparison' ||
-                  tutorialState.currentStep === 'submit-comparison-2')
-              )
-            ) {
-              hasScrolledToResultsOnFirstChunkRef.current = true
+            if (!hasScrolledToResults) {
+              hasScrolledToResults = true
               requestAnimationFrame(() => {
                 setTimeout(() => {
                   document.querySelector('.results-section')?.scrollIntoView({

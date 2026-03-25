@@ -553,6 +553,11 @@
   pointer-events: none;
 }
 
+video.capability-tile-image-lightbox-img {
+  pointer-events: auto;
+  cursor: default;
+}
+
 [data-theme='light'] .capability-tile.flipped {
   border-color: rgba(37, 99, 235, 0.35);
   box-shadow:

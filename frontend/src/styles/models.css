@@ -3737,6 +3737,7 @@ html:not([data-theme]) .help-me-choose-category.has-match {
   .advanced-settings-option-grid {
     gap: 0.5rem;
   }
+
   .advanced-settings-option-chip {
     padding: 0.5rem 1rem;
     font-size: 1rem;

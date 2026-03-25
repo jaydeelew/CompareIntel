@@ -11,7 +11,10 @@ interface CapabilityTileProps {
   title: string
   backTitle: string
   description: string
+  /** Still image, or poster frame when `backVideo` is set */
   backImage: string
+  /** When set, shown on the tile back instead of `backImage` alone */
+  backVideo?: string
   backText: string
   isFlipped: boolean
   onTileClick: (id: string) => void
@@ -25,12 +28,14 @@ function CapabilityTile({
   backTitle,
   description,
   backImage,
+  backVideo,
   backText,
   isFlipped,
   onTileClick,
   onImageEnlarge,
 }: CapabilityTileProps) {
   const tileRef = useRef<HTMLDivElement>(null)
+  const videoRef = useRef<HTMLVideoElement>(null)
   const prevFlipped = useRef(isFlipped)
 
   useEffect(() => {
@@ -40,6 +45,17 @@ function CapabilityTile({
     prevFlipped.current = isFlipped
   }, [isFlipped])
 
+  useEffect(() => {
+    const v = videoRef.current
+    if (!v || !backVideo) return
+    if (isFlipped) {
+      void v.play().catch(() => {})
+    } else {
+      v.pause()
+      v.currentTime = 0
+    }
+  }, [isFlipped, backVideo])
+
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation()
     onTileClick(id)
@@ -47,7 +63,7 @@ function CapabilityTile({
 
   const handleEnlargeClick = (e: React.MouseEvent) => {
     e.stopPropagation()
-    onImageEnlarge?.(backImage)
+    onImageEnlarge?.(backVideo ?? backImage)
   }
 
   return (
@@ -92,7 +108,25 @@ function CapabilityTile({
             )}
           </div>
           <div className="capability-tile-back-image-wrap">
-            <img src={backImage} alt={`${title} example`} className="capability-tile-back-image" />
+            {backVideo ? (
+              <video
+                ref={videoRef}
+                src={backVideo}
+                poster={backImage}
+                className="capability-tile-back-image"
+                muted
+                loop
+                playsInline
+                preload="none"
+                aria-label={`${title} example`}
+              />
+            ) : (
+              <img
+                src={backImage}
+                alt={`${title} example`}
+                className="capability-tile-back-image"
+              />
+            )}
           </div>
           <p className="capability-tile-back-text">{backText}</p>
         </div>
@@ -250,6 +284,7 @@ export function Hero({ children }: HeroProps) {
             backTitle="Natural Language COMPARISON"
             description="Compare conversational responses"
             backImage="/images/tile-natural-language.png"
+            backVideo="/videos/natural_language.mp4"
             backText="Ask any question and instantly compare how each model responds — notice the differences in tone, detail, and perspective."
             isFlipped={flippedTile === 'natural-language'}
             onTileClick={handleTileClick}
@@ -348,14 +383,27 @@ export function Hero({ children }: HeroProps) {
             className="capability-tile-image-lightbox"
             role="dialog"
             aria-modal="true"
-            aria-label="Enlarged image — click to close"
+            aria-label="Enlarged preview — click to close"
             onClick={closeEnlargedAndUnflip}
           >
-            <img
-              src={enlargedImageSrc}
-              alt="Enlarged preview — click to close"
-              className="capability-tile-image-lightbox-img"
-            />
+            {enlargedImageSrc.endsWith('.mp4') ? (
+              <video
+                src={enlargedImageSrc}
+                className="capability-tile-image-lightbox-img"
+                controls
+                autoPlay
+                muted
+                loop
+                playsInline
+                onClick={e => e.stopPropagation()}
+              />
+            ) : (
+              <img
+                src={enlargedImageSrc}
+                alt="Enlarged preview — click to close"
+                className="capability-tile-image-lightbox-img"
+              />
+            )}
           </div>,
           document.body
         )}

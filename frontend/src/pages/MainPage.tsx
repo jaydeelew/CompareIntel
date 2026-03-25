@@ -201,7 +201,6 @@ export function MainPage() {
   const selectedModelsGridRef = useRef<HTMLDivElement>(null)
   const scrolledToTopRef = useRef<Set<string>>(new Set())
   const shouldScrollToTopAfterFormattingRef = useRef<boolean>(false)
-  const hasScrolledToResultsOnFirstChunkRef = useRef<boolean>(false)
   const lastSubmittedInputRef = useRef<string>('')
   const [modelsByProvider, setModelsByProvider] = useState<ModelsByProvider>({})
   const [isLoadingModels, setIsLoadingModels] = useState(true)
@@ -624,9 +623,6 @@ export function MainPage() {
     activeResultTabs,
     scrolledToTopRef,
     conversationsForScroll: conversations,
-    response,
-    hasScrolledToResultsRef,
-    followUpJustActivatedRef,
     shouldScrollToTopAfterFormattingRef,
     selectedModelsForScroll: selectedModels,
     input,
@@ -1877,7 +1873,6 @@ export function MainPage() {
     setIsModelsHidden(false)
     setCurrentVisibleComparisonId(null)
     setModelErrors({})
-    hasScrolledToResultsOnFirstChunkRef.current = false
     setAttachedFiles([])
   }
 
@@ -1937,7 +1932,6 @@ export function MainPage() {
       refs: {
         userCancelledRef,
         hasScrolledToResultsRef,
-        hasScrolledToResultsOnFirstChunkRef,
         scrolledToTopRef,
         shouldScrollToTopAfterFormattingRef,
         autoScrollPausedRef,
@@ -1949,7 +1943,6 @@ export function MainPage() {
         lastSubmittedInputRef,
       },
       modelErrors,
-      tutorialState,
     }),
     [
       isAuthenticated,
@@ -1977,7 +1970,6 @@ export function MainPage() {
       anonymousCreditsRemaining,
       creditWarningType,
       modelErrors,
-      tutorialState,
       autoScrollPausedRef,
       hasScrolledToResultsRef,
       isPageScrollingRef,

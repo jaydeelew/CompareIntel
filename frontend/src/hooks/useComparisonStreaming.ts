@@ -44,7 +44,6 @@ export interface UseComparisonStreamingConfig {
   credit: StreamingCreditState
   refs: StreamingRefs
   modelErrors: { [key: string]: boolean }
-  tutorialState: { isActive: boolean; currentStep: string | null }
 }
 
 export interface UseComparisonStreamingCallbacks {
@@ -62,16 +61,7 @@ export function useComparisonStreaming(
   config: UseComparisonStreamingConfig,
   callbacks: UseComparisonStreamingCallbacks
 ): UseComparisonStreamingReturn {
-  const {
-    auth,
-    models,
-    input: inputState,
-    conversation,
-    credit,
-    refs,
-    modelErrors,
-    tutorialState,
-  } = config
+  const { auth, models, input: inputState, conversation, credit, refs, modelErrors } = config
   const { state: stateCb, credit: creditCb, helpers } = callbacks
 
   const { currentAbortControllerRef, cancelComparison } = useStreamConnection(
@@ -177,7 +167,6 @@ export function useComparisonStreaming(
   const { creditBalance, creditWarningType } = credit
   const {
     userCancelledRef,
-    hasScrolledToResultsOnFirstChunkRef,
     scrolledToTopRef,
     shouldScrollToTopAfterFormattingRef,
     autoScrollPausedRef,
@@ -300,7 +289,6 @@ export function useComparisonStreaming(
     stateCb.setClosedCards(new Set())
     stateCb.setProcessingTime(null)
     userCancelledRef.current = false
-    hasScrolledToResultsOnFirstChunkRef.current = false
     scrolledToTopRef.current.clear()
     shouldScrollToTopAfterFormattingRef.current = false
     autoScrollPausedRef.current.clear()
@@ -482,11 +470,9 @@ export function useComparisonStreaming(
         startTime,
         userTimestamp,
         userCancelledRef,
-        hasScrolledToResultsOnFirstChunkRef,
         shouldScrollToTopAfterFormattingRef,
         autoScrollPausedRef,
         isPageScrollingRef,
-        tutorialState,
         setModelErrors: stateCb.setModelErrors,
         setActiveResultTabs: stateCb.setActiveResultTabs,
         setConversations: stateCb.setConversations,

@@ -5,6 +5,7 @@
  * section. Extracted from MainPage to reduce its size and improve clarity.
  */
 
+import { useLayoutEffect, useRef } from 'react'
 import type { ReactNode, RefObject } from 'react'
 
 import { useComposerFloat } from '../../hooks/useComposerFloat'
@@ -143,6 +144,27 @@ export function ComparisonPageContent({
     showFloatingComposer !== undefined ? showFloatingComposer : showResults,
     tutorialIsActive ?? false
   )
+
+  const prevIsLoadingRef = useRef<boolean>(isLoading)
+
+  // When the in-flow loading section disappears (on completion), it would normally pull
+  // the results upward. If the user is currently anchored at the top of results, we
+  // compensate before paint so the viewport stays visually stable.
+  useLayoutEffect(() => {
+    const wasLoading = prevIsLoadingRef.current
+    prevIsLoadingRef.current = isLoading
+
+    if (!wasLoading || isLoading || !showResults) return
+
+    const resultsSection = document.querySelector('.results-section') as HTMLElement | null
+    if (!resultsSection) return
+
+    const top = resultsSection.getBoundingClientRect().top
+    // Only correct small post-layout shifts (e.g. removing loading section or minor reflow).
+    if (top < -8 && top > -320) {
+      window.scrollBy({ top, left: 0, behavior: 'auto' })
+    }
+  }, [isLoading, showResults])
 
   return (
     <ComparisonView>
