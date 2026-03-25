@@ -97,6 +97,7 @@ export function useStreamCompletion(
     saveConversationToLocalStorage,
     syncHistoryAfterComparison,
     getFirstUserMessage,
+    scrollConversationsToBottom,
     refreshUser,
     resetComposerAdvancedSettings,
   } = callbacks
@@ -444,6 +445,35 @@ export function useStreamCompletion(
         resetComposerAdvancedSettings?.()
       }
 
+      if (!isFollowUpMode && hadSuccessfulModel && !userCancelledRef.current) {
+        const scrollResultsIntoView = (behavior: ScrollBehavior) => {
+          document.querySelector('.results-section')?.scrollIntoView({
+            behavior,
+            block: 'start',
+          })
+        }
+
+        // Align cards and then pin the results header near the top.
+        setTimeout(() => {
+          scrollConversationsToBottom()
+        }, 300)
+
+        requestAnimationFrame(() => {
+          scrollResultsIntoView('instant')
+          setTimeout(() => {
+            scrollResultsIntoView('smooth')
+          }, 120)
+        })
+
+        // Image cards can still shift layout after decode/load; add a few follow-up repins.
+        const repinDelays = modelMode === 'image' ? [450, 1000, 1800, 3000] : [450, 1000]
+        repinDelays.forEach(delay => {
+          setTimeout(() => {
+            if (!userCancelledRef.current) scrollResultsIntoView('instant')
+          }, delay)
+        })
+      }
+
       if (filteredData.metadata.models_successful > 0) {
         setInput('')
       }
@@ -519,6 +549,7 @@ export function useStreamCompletion(
       saveConversationToLocalStorage,
       syncHistoryAfterComparison,
       getFirstUserMessage,
+      scrollConversationsToBottom,
       refreshUser,
     ]
   )
