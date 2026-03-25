@@ -63,6 +63,7 @@
 import { useState, useCallback, startTransition } from 'react'
 
 import type { Model, ModelsByProvider, User } from '../types'
+import { getUserTierInfo, isModelRestrictedForUser } from '../utils/modelTierAccess'
 
 /**
  * Configuration options for the model management hook
@@ -111,44 +112,6 @@ export interface UseModelManagementReturn {
   handleModelToggle: (modelId: string) => void
   /** Apply a bulk model selection (e.g. from Help me choose): filters by tier, availability, limit */
   handleApplyRecommendation: (modelIds: string[]) => void
-}
-
-/**
- * Determine user's subscription tier and paid status
- *
- * @param isAuthenticated - Whether user is logged in
- * @param user - User object (may be null)
- * @returns Object with userTier string and isPaidTier boolean
- */
-function getUserTierInfo(isAuthenticated: boolean, user: User | null) {
-  const userTier = isAuthenticated ? user?.subscription_tier || 'free' : 'unregistered'
-  const isPaidTier = ['starter', 'starter_plus', 'pro', 'pro_plus'].includes(userTier)
-  return { userTier, isPaidTier }
-}
-
-/**
- * Check if a model is restricted for the user's subscription tier
- *
- * Model access is determined by the model's `tier_access` field:
- * - 'unregistered': Available to everyone including anonymous users
- * - 'free': Available to free tier and above (not anonymous)
- * - 'paid': Only available to paying subscribers
- *
- * Additionally, models with `trial_unlocked: true` are accessible to
- * users with an active 7-day trial.
- *
- * @param model - Model to check
- * @param userTier - User's subscription tier
- * @param isPaidTier - Whether user is on a paid tier
- * @returns True if model is restricted (user cannot access it)
- */
-function isModelRestricted(model: Model, userTier: string, isPaidTier: boolean): boolean {
-  if (isPaidTier) return false
-  // Trial-unlocked models are accessible during active 7-day trial
-  if (model.trial_unlocked) return false
-  if (userTier === 'unregistered') return model.tier_access !== 'unregistered'
-  if (userTier === 'free') return model.tier_access === 'paid'
-  return false
 }
 
 /**
@@ -210,16 +173,9 @@ export function useModelManagement({
       const providerModels = modelsByProvider[provider] || []
       const { userTier, isPaidTier } = getUserTierInfo(isAuthenticated, user)
 
-      // Filter out unavailable models and restricted models based on tier
-      // Also include trial_unlocked models for users with active 7-day trial
       const availableProviderModels = providerModels.filter(model => {
         if (model.available === false) return false
-        if (isPaidTier) return true
-        // Trial-unlocked models are accessible during active 7-day trial
-        if (model.trial_unlocked) return true
-        if (userTier === 'unregistered') return model.tier_access === 'unregistered'
-        if (userTier === 'free') return model.tier_access !== 'paid'
-        return true
+        return !isModelRestrictedForUser(model, userTier, isPaidTier)
       })
 
       const providerModelIds = availableProviderModels.map(model => model.id)
@@ -402,7 +358,7 @@ export function useModelManagement({
         const { userTier, isPaidTier } = getUserTierInfo(isAuthenticated, user)
         const modelInfo = findModelById(modelsByProvider, modelId)
 
-        if (modelInfo && isModelRestricted(modelInfo, userTier, isPaidTier)) {
+        if (modelInfo && isModelRestrictedForUser(modelInfo, userTier, isPaidTier)) {
           const tierName = !isAuthenticated ? 'Unregistered' : user?.subscription_tier || 'free'
           const upgradeMsg =
             tierName === 'Unregistered'
@@ -480,7 +436,7 @@ export function useModelManagement({
         if (filtered.length >= maxModelsLimit) break
         const model = findModelById(modelsByProvider, id)
         if (!model || model.available === false) continue
-        if (isModelRestricted(model, userTier, isPaidTier)) continue
+        if (isModelRestrictedForUser(model, userTier, isPaidTier)) continue
         if (hidePremiumModels) {
           if (isPaidTier) {
             // ok

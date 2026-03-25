@@ -15,11 +15,13 @@ import type {
   CompareResponse,
   ImageComposerAdvancedSettings,
   TextComposerAdvancedSettings,
+  User,
 } from '../types'
 import type { ModelConversation } from '../types/conversation'
 import type { ModelsByProvider } from '../types/models'
 import { showNotification } from '../utils'
 import logger from '../utils/logger'
+import { isModelIdSelectableForAccessContext } from '../utils/modelTierAccess'
 import { applyTextComposerAdvancedSettings } from '../utils/textComposerAdvancedRestore'
 
 // Storage keys
@@ -50,6 +52,8 @@ export interface UseSavedSelectionsCompleteConfig {
   modelsByProvider: ModelsByProvider
   /** Maximum models user can select */
   maxModelsLimit: number
+  /** Current user (for staff model access when loading saved selections) */
+  user?: User | null
   /** Current comparison response */
   response: CompareResponse | null
   /** Current conversations */
@@ -193,6 +197,7 @@ export function useSavedSelectionsComplete(
     selectedModels,
     modelsByProvider,
     maxModelsLimit,
+    user: accessUser,
     response,
     conversations,
     onSelectionSaved,
@@ -389,15 +394,16 @@ export function useSavedSelectionsComplete(
       const modelIds = loadSelectionRaw(id)
       if (!modelIds) return
 
-      // Filter to only available models
-      const validModelIds = modelIds.filter(modelId => {
-        for (const providerModels of Object.values(modelsByProvider)) {
-          if (providerModels.some(m => String(m.id) === modelId)) {
-            return true
-          }
-        }
-        return false
-      })
+      const isAuthenticated = userId !== undefined
+      const validModelIds = modelIds.filter(modelId =>
+        isModelIdSelectableForAccessContext(
+          modelId,
+          modelsByProvider,
+          isAuthenticated,
+          tier,
+          accessUser
+        )
+      )
 
       const limitedModelIds = validModelIds.slice(0, maxModelsLimit)
 
@@ -481,6 +487,9 @@ export function useSavedSelectionsComplete(
     [
       loadSelectionRaw,
       savedSelections,
+      userId,
+      tier,
+      accessUser,
       modelsByProvider,
       maxModelsLimit,
       modelMode,

@@ -62,6 +62,7 @@ import {
   hasCommonImageConfig,
 } from '../utils/imageConfigValidation'
 import logger from '../utils/logger'
+import { isModelIdSelectableForUser } from '../utils/modelTierAccess'
 import { saveSessionState, onSaveStateEvent } from '../utils/sessionState'
 import { applyTextComposerAdvancedSettings } from '../utils/textComposerAdvancedRestore'
 import {
@@ -412,6 +413,7 @@ export function MainPage() {
     {
       userId: user?.id,
       tier: user?.subscription_tier ?? 'unregistered',
+      user,
       selectedModels,
       modelsByProvider,
       maxModelsLimit,
@@ -1372,25 +1374,9 @@ export function MainPage() {
 
     const validModelIds = modelIds
       .map(id => String(id))
-      .filter(modelId => {
-        for (const providerModels of Object.values(modelsByProvider)) {
-          const model = providerModels.find(m => String(m.id) === modelId)
-          if (model) {
-            const userTier = isAuthenticated ? user?.subscription_tier || 'free' : 'unregistered'
-            const isPaidTier = ['starter', 'starter_plus', 'pro', 'pro_plus'].includes(userTier)
-
-            // Check if model is accessible: paid tiers can access all, trial_unlocked means trial user can access
-            if (model.tier_access === 'paid' && !isPaidTier && !model.trial_unlocked) {
-              return false
-            }
-            if (model.available === false) {
-              return false
-            }
-            return true
-          }
-        }
-        return false
-      })
+      .filter(modelId =>
+        isModelIdSelectableForUser(modelId, modelsByProvider, isAuthenticated, user)
+      )
 
     const limitedModelIds = validModelIds.slice(0, maxModelsLimit)
 
@@ -1450,6 +1436,28 @@ export function MainPage() {
     setMaxTokens,
     setAspectRatio,
     setImageSize,
+  ])
+
+  useEffect(() => {
+    if (authLoading || isLoadingModels || Object.keys(modelsByProvider).length === 0) {
+      return
+    }
+    const kept = selectedModels.filter(id =>
+      isModelIdSelectableForUser(id, modelsByProvider, isAuthenticated, user)
+    )
+    const same =
+      kept.length === selectedModels.length && kept.every((id, i) => id === selectedModels[i])
+    if (!same) {
+      setSelectedModels(kept)
+    }
+  }, [
+    authLoading,
+    isLoadingModels,
+    modelsByProvider,
+    isAuthenticated,
+    user,
+    selectedModels,
+    setSelectedModels,
   ])
 
   // Refetch credit balance

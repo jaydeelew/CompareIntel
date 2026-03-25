@@ -37,6 +37,16 @@ router = APIRouter(tags=["API"])
 logger = logging.getLogger(__name__)
 
 
+def _staff_has_full_model_access(user: User | None) -> bool:
+    """Staff may have a non-paid subscription_tier in DB but still need access to all catalog models."""
+    if user is None:
+        return False
+    if user.is_admin:
+        return True
+    role = getattr(user, "role", None) or ""
+    return role in ("admin", "super_admin")
+
+
 class ConversationMessage(BaseModel):
     role: str
     content: str
@@ -493,11 +503,14 @@ async def compare_stream(
     normalized_tier_name = "unregistered" if tier_name == "anonymous" else tier_name
     is_trial_active = current_user.is_trial_active if current_user else False
 
-    restricted_models = [
-        model_id
-        for model_id in req.models
-        if not is_model_available_for_tier(model_id, normalized_tier_name, is_trial_active)
-    ]
+    if current_user and _staff_has_full_model_access(current_user):
+        restricted_models: list[str] = []
+    else:
+        restricted_models = [
+            model_id
+            for model_id in req.models
+            if not is_model_available_for_tier(model_id, normalized_tier_name, is_trial_active)
+        ]
     if restricted_models:
         upgrade_message = ""
         if normalized_tier_name == "unregistered":

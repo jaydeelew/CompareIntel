@@ -17,7 +17,8 @@ import {
   HELP_ME_CHOOSE_CATEGORIES,
   type HelpMeChooseCategory,
 } from '../../data/helpMeChooseRecommendations'
-import type { ModelsByProvider, User } from '../../types'
+import type { Model, ModelsByProvider, User } from '../../types'
+import { getUserTierInfo, isModelRestrictedForUser } from '../../utils/modelTierAccess'
 import { modelSupportsVision } from '../../utils/visionModels'
 import { StyledTooltip } from '../shared'
 
@@ -49,29 +50,6 @@ function findModelById(modelsByProvider: ModelsByProvider, modelId: string) {
     if (model) return model
   }
   return null
-}
-
-function isModelRestricted(
-  model: { tier_access?: string; trial_unlocked?: boolean },
-  userTier: string,
-  isPaidTier: boolean
-): boolean {
-  if (isPaidTier) return false
-  if (model.trial_unlocked) return false
-  if (userTier === 'unregistered') return model.tier_access !== 'unregistered'
-  if (userTier === 'free') return model.tier_access === 'paid'
-  return false
-}
-
-/** Same rule as ModelsSection when "hide locked" is on: unregistered = unregistered-tier only; free = not paid-only. */
-function modelIsUnlockedForHideFilter(
-  model: { tier_access?: string; trial_unlocked?: boolean },
-  userTier: string
-): boolean {
-  if (model.trial_unlocked) return true
-  if (userTier === 'unregistered') return model.tier_access === 'unregistered'
-  if (userTier === 'free') return model.tier_access !== 'paid'
-  return true
 }
 
 function getDisabledTooltip(userTier: 'unregistered' | 'free'): string {
@@ -246,8 +224,7 @@ export function HelpMeChoose({
   )
   const containerRef = useRef<HTMLDivElement>(null)
 
-  const userTier = isAuthenticated ? user?.subscription_tier || 'free' : 'unregistered'
-  const isPaidTier = ['starter', 'starter_plus', 'pro', 'pro_plus'].includes(userTier)
+  const { userTier, isPaidTier } = getUserTierInfo(isAuthenticated, user)
   const isRestrictedTier = userTier === 'unregistered' || userTier === 'free'
 
   const lookupModels = allModelsByProvider ?? modelsByProvider
@@ -268,7 +245,7 @@ export function HelpMeChoose({
           models: cat.models.filter(entry => {
             const model = findModelById(lookupModels, entry.modelId)
             if (!model) return true
-            return modelIsUnlockedForHideFilter(model, userTier)
+            return !isModelRestrictedForUser(model as Model, userTier, isPaidTier)
           }),
         }))
         .filter(cat => cat.models.length > 0)
@@ -289,7 +266,7 @@ export function HelpMeChoose({
         }
         map.set(
           entry.modelId,
-          model.available === false || isModelRestricted(model, userTier, isPaidTier)
+          model.available === false || isModelRestrictedForUser(model, userTier, isPaidTier)
         )
       }
     }

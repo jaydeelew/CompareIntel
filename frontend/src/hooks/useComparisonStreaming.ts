@@ -378,21 +378,32 @@ export function useComparisonStreaming(
       try {
         stream = await compareStream(comparePayload, controller.signal)
       } catch (firstErr) {
-        // If signed-in user gets "sign up" 402 for image comparisons, session may have expired.
-        // Refresh token and retry once before showing the error.
+        // Session cookie may be stale while React still shows the user as logged in.
+        // Refresh and retry once for known auth-mismatch errors before surfacing the message.
+        const refresh = auth.refreshToken
+        const msg =
+          firstErr instanceof ApiError && typeof firstErr.message === 'string'
+            ? firstErr.message
+            : ''
+
         const isAuthRelated402 =
           auth.isAuthenticated &&
-          auth.refreshToken &&
+          refresh &&
           firstErr instanceof ApiError &&
           firstErr.status === 402 &&
-          typeof firstErr.message === 'string' &&
-          firstErr.message.includes('Sign up for a free account to run') &&
-          firstErr.message.includes('image comparison')
+          msg.includes('Sign up for a free account to run') &&
+          msg.includes('image comparison')
 
-        const refresh = auth.refreshToken
-        if (isAuthRelated402 && refresh) {
+        const isAuthRelated403Unregistered =
+          auth.isAuthenticated &&
+          refresh &&
+          firstErr instanceof ApiError &&
+          firstErr.status === 403 &&
+          msg.includes('not available for unregistered tier')
+
+        if (isAuthRelated402 || isAuthRelated403Unregistered) {
           logger.debug(
-            '[API] Got 402 for image comparison while authenticated - refreshing session and retrying'
+            '[API] Compare-stream auth mismatch while authenticated - refreshing session and retrying'
           )
           await refresh()
           stream = await compareStream(comparePayload, controller.signal)

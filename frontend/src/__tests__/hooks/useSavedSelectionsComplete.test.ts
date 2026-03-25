@@ -53,14 +53,36 @@ describe('useSavedSelectionsComplete', () => {
     selectedModels: ['model-1', 'model-2'],
     modelsByProvider: {
       OpenAI: [
-        { id: 'model-1', name: 'GPT-4', provider: 'OpenAI', available: true },
-        { id: 'model-2', name: 'GPT-3.5', provider: 'OpenAI', available: true },
+        {
+          id: 'model-1',
+          name: 'GPT-4',
+          provider: 'OpenAI',
+          available: true,
+          tier_access: 'free' as const,
+        },
+        {
+          id: 'model-2',
+          name: 'GPT-3.5',
+          provider: 'OpenAI',
+          available: true,
+          tier_access: 'unregistered' as const,
+        },
       ],
     } as ModelsByProvider,
     maxModelsLimit: 9,
     response: null,
     conversations: [],
     onSelectionSaved: mockOnSelectionSaved,
+    modelMode: 'text' as const,
+    temperature: 0.7,
+    topP: 1,
+    maxTokens: null as number | null,
+    allModels: [
+      { id: 'model-1', max_output_tokens: 4096 },
+      { id: 'model-2', max_output_tokens: 4096 },
+    ],
+    aspectRatio: '1:1',
+    imageSize: '1K',
   }
 
   const defaultCallbacks = {
