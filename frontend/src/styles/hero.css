@@ -555,7 +555,7 @@
 
 video.capability-tile-image-lightbox-img {
   pointer-events: auto;
-  cursor: default;
+  cursor: pointer;
 }
 
 [data-theme='light'] .capability-tile.flipped {

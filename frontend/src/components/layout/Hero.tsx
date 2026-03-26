@@ -404,7 +404,6 @@ export function Hero({ children }: HeroProps) {
                 muted
                 loop
                 playsInline
-                onClick={e => e.stopPropagation()}
               />
             ) : (
               <img
