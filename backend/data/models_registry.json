@@ -112,7 +112,7 @@
         "provider": "Black Forest Labs",
         "supports_image_generation": true,
         "supports_web_search": false,
-        "knowledge_cutoff": null,
+        "knowledge_cutoff": "N/A",
         "image_aspect_ratios": [
           "16:9",
           "1:1",
@@ -138,7 +138,7 @@
         "provider": "Black Forest Labs",
         "supports_image_generation": true,
         "supports_web_search": false,
-        "knowledge_cutoff": null,
+        "knowledge_cutoff": "N/A",
         "image_aspect_ratios": [
           "16:9",
           "1:1",
@@ -164,7 +164,7 @@
         "provider": "Black Forest Labs",
         "supports_image_generation": true,
         "supports_web_search": false,
-        "knowledge_cutoff": null,
+        "knowledge_cutoff": "N/A",
         "image_aspect_ratios": [
           "16:9",
           "1:1",
@@ -190,7 +190,7 @@
         "provider": "Black Forest Labs",
         "supports_image_generation": true,
         "supports_web_search": false,
-        "knowledge_cutoff": null,
+        "knowledge_cutoff": "N/A",
         "image_aspect_ratios": [
           "16:9",
           "1:1",
@@ -218,7 +218,7 @@
         "provider": "ByteDance Seed",
         "supports_image_generation": true,
         "supports_web_search": false,
-        "knowledge_cutoff": null,
+        "knowledge_cutoff": "N/A",
         "image_aspect_ratios": [
           "16:9",
           "1:1",
@@ -321,7 +321,7 @@
         "provider": "Google",
         "supports_image_generation": true,
         "supports_web_search": false,
-        "knowledge_cutoff": null,
+        "knowledge_cutoff": "N/A",
         "image_aspect_ratios": [
           "1:1",
           "21:9",
@@ -346,7 +346,7 @@
         "provider": "Google",
         "supports_image_generation": true,
         "supports_web_search": false,
-        "knowledge_cutoff": null,
+        "knowledge_cutoff": "N/A",
         "image_aspect_ratios": [
           "16:9",
           "1:1",
@@ -374,7 +374,7 @@
         "provider": "Google",
         "supports_web_search": true,
         "supports_image_generation": false,
-        "knowledge_cutoff": null
+        "knowledge_cutoff": "January 2025"
       },
       {
         "id": "google/gemini-2.5-pro",
@@ -402,7 +402,7 @@
         "provider": "Google",
         "supports_image_generation": true,
         "supports_web_search": false,
-        "knowledge_cutoff": null,
+        "knowledge_cutoff": "N/A",
         "image_aspect_ratios": [
           "16:9",
           "1:1",
@@ -497,7 +497,7 @@
         "category": "Language",
         "provider": "Minimax",
         "supports_web_search": true,
-        "knowledge_cutoff": null
+        "knowledge_cutoff": "June 2025"
       }
     ],
     "Mistral": [
@@ -686,7 +686,7 @@
         "provider": "OpenAI",
         "supports_image_generation": true,
         "supports_web_search": false,
-        "knowledge_cutoff": null,
+        "knowledge_cutoff": "N/A",
         "image_aspect_ratios": [
           "1:1"
         ],
@@ -703,7 +703,7 @@
         "provider": "OpenAI",
         "supports_image_generation": true,
         "supports_web_search": false,
-        "knowledge_cutoff": null,
+        "knowledge_cutoff": "N/A",
         "image_aspect_ratios": [
           "1:1"
         ],
@@ -792,7 +792,7 @@
         "provider": "OpenAI",
         "supports_web_search": true,
         "supports_image_generation": false,
-        "knowledge_cutoff": null
+        "knowledge_cutoff": "August 2025"
       },
       {
         "id": "openai/gpt-5.4",
@@ -821,7 +821,7 @@
         "category": "Language",
         "provider": "Qwen",
         "supports_web_search": true,
-        "knowledge_cutoff": null
+        "knowledge_cutoff": "September 2025"
       },
       {
         "id": "qwen/qwen3-30b-a3b-instruct-2507",
@@ -875,7 +875,7 @@
         "category": "Language",
         "provider": "Qwen",
         "supports_web_search": true,
-        "knowledge_cutoff": null
+        "knowledge_cutoff": "March 2025"
       },
       {
         "id": "qwen/qwen3-235b-a22b",
@@ -950,7 +950,7 @@
         "provider": "Sourceful",
         "supports_image_generation": true,
         "supports_web_search": false,
-        "knowledge_cutoff": null,
+        "knowledge_cutoff": "N/A",
         "image_aspect_ratios": [
           "16:9",
           "1:1",
@@ -974,7 +974,7 @@
         "provider": "Sourceful",
         "supports_image_generation": true,
         "supports_web_search": false,
-        "knowledge_cutoff": null,
+        "knowledge_cutoff": "N/A",
         "image_aspect_ratios": [
           "16:9",
           "1:1",
@@ -998,7 +998,7 @@
         "provider": "Sourceful",
         "supports_image_generation": true,
         "supports_web_search": false,
-        "knowledge_cutoff": null,
+        "knowledge_cutoff": "N/A",
         "image_aspect_ratios": [
           "16:9",
           "1:1",
@@ -1022,7 +1022,7 @@
         "provider": "Sourceful",
         "supports_image_generation": true,
         "supports_web_search": false,
-        "knowledge_cutoff": null,
+        "knowledge_cutoff": "N/A",
         "image_aspect_ratios": [
           "16:9",
           "1:1",
@@ -1049,7 +1049,7 @@
         "provider": "Sourceful",
         "supports_image_generation": true,
         "supports_web_search": false,
-        "knowledge_cutoff": null,
+        "knowledge_cutoff": "N/A",
         "image_aspect_ratios": [
           "16:9",
           "1:1",
