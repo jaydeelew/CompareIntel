@@ -33,7 +33,7 @@ export interface UseStreamCompletionConfig {
 }
 
 export interface UseStreamCompletionCallbacks {
-  setError: (error: string | null) => void
+  setError: React.Dispatch<React.SetStateAction<string | null>>
   setModelErrors: React.Dispatch<React.SetStateAction<{ [key: string]: boolean }>>
   setActiveResultTabs: React.Dispatch<React.SetStateAction<ActiveResultTabs>>
   setResponse: (response: import('../types').CompareResponse | null) => void

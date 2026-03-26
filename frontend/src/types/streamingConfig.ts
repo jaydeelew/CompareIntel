@@ -87,7 +87,7 @@ export interface StreamingRefs {
 }
 
 export interface StreamingStateCallbacks {
-  setError: (error: string | null) => void
+  setError: React.Dispatch<React.SetStateAction<string | null>>
   setIsLoading: (loading: boolean) => void
   setResponse: (response: CompareResponse | null) => void
   setProcessingTime: (time: number | null) => void
