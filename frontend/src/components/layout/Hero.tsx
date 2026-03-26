@@ -69,7 +69,8 @@ function CapabilityTile({
 
   const handleEnlargeClick = (e: React.MouseEvent) => {
     e.stopPropagation()
-    onImageEnlarge?.(backVideo ?? backImage)
+    const src = backVideo ?? backImage
+    if (src) onImageEnlarge?.(src)
   }
 
   return (
