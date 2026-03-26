@@ -314,33 +314,6 @@
         "knowledge_cutoff": "January 2025"
       },
       {
-        "id": "google/gemini-2.5-pro",
-        "name": "Gemini 2.5 Pro",
-        "description": "Google's most capable model excelling in complex reasoning, coding, mathematics, and scientific analysis.",
-        "category": "Language",
-        "provider": "Google",
-        "supports_web_search": true,
-        "knowledge_cutoff": "January 2025"
-      },
-      {
-        "id": "google/gemini-3-flash-preview",
-        "name": "Gemini 3 Flash Preview",
-        "description": "Gemini 3 Flash Preview is a high speed, high value thinking model designed for agentic workflows, multi turn chat, and coding assistance.",
-        "category": "Language",
-        "provider": "Google",
-        "supports_web_search": true,
-        "knowledge_cutoff": "August 2025"
-      },
-      {
-        "id": "google/gemini-3.1-pro-preview",
-        "name": "Gemini 3.1 Pro Preview",
-        "description": "Gemini 3.1 Pro Preview is Google’s frontier reasoning model, delivering enhanced software engineering performance, improved agentic reliability, and more efficient token usage across complex workflows.",
-        "category": "Language",
-        "provider": "Google",
-        "supports_web_search": true,
-        "knowledge_cutoff": "January 2025"
-      },
-      {
         "id": "google/gemini-2.5-flash-image",
         "name": "Gemini 2.5 Flash Image",
         "description": "Google's image generation model. Generates images from text prompts with support for extended aspect ratios.",
@@ -394,6 +367,34 @@
         "returns_multiple_images": false
       },
       {
+        "id": "google/gemini-3.1-flash-lite-preview",
+        "name": "Gemini 3.1 Flash Lite Preview",
+        "description": "Gemini 3.1 Flash Lite Preview is Google's high-efficiency model optimized for high-volume use cases.",
+        "category": "Language",
+        "provider": "Google",
+        "supports_web_search": true,
+        "supports_image_generation": false,
+        "knowledge_cutoff": null
+      },
+      {
+        "id": "google/gemini-2.5-pro",
+        "name": "Gemini 2.5 Pro",
+        "description": "Google's most capable model excelling in complex reasoning, coding, mathematics, and scientific analysis.",
+        "category": "Language",
+        "provider": "Google",
+        "supports_web_search": true,
+        "knowledge_cutoff": "January 2025"
+      },
+      {
+        "id": "google/gemini-3-flash-preview",
+        "name": "Gemini 3 Flash Preview",
+        "description": "Gemini 3 Flash Preview is a high speed, high value thinking model designed for agentic workflows, multi turn chat, and coding assistance.",
+        "category": "Language",
+        "provider": "Google",
+        "supports_web_search": true,
+        "knowledge_cutoff": "August 2025"
+      },
+      {
         "id": "google/gemini-3-pro-image-preview",
         "name": "Gemini 3 Pro Image (Nano Banana Pro)",
         "description": "Google's most advanced image-generation and editing model, built on Gemini 3 Pro.",
@@ -418,6 +419,15 @@
           "1K"
         ],
         "returns_multiple_images": true
+      },
+      {
+        "id": "google/gemini-3.1-pro-preview",
+        "name": "Gemini 3.1 Pro Preview",
+        "description": "Gemini 3.1 Pro Preview is Google’s frontier reasoning model, delivering enhanced software engineering performance, improved agentic reliability, and more efficient token usage across complex workflows.",
+        "category": "Language",
+        "provider": "Google",
+        "supports_web_search": true,
+        "knowledge_cutoff": "January 2025"
       }
     ],
     "Kwaipilot": [],
@@ -1191,14 +1201,14 @@
   ],
   "free_tier_additional_models": [
     "anthropic/claude-haiku-4.5",
-    "black-forest-labs/flux.2-pro",
     "black-forest-labs/flux.2-flex",
+    "black-forest-labs/flux.2-pro",
     "bytedance-seed/seedream-4.5",
-    "google/gemini-2.5-flash-image",
-    "google/gemini-3.1-flash-image-preview",
-    "sourceful/riverflow-v2-standard-preview",
     "cohere/command-r-plus-08-2024",
     "deepseek/deepseek-r1",
+    "google/gemini-2.5-flash-image",
+    "google/gemini-3.1-flash-image-preview",
+    "google/gemini-3.1-flash-lite-preview",
     "meta-llama/llama-4-maverick",
     "meta-llama/llama-4-scout",
     "microsoft/phi-4-reasoning-plus",
@@ -1219,6 +1229,7 @@
     "qwen/qwen3-next-80b-a3b-instruct",
     "qwen/qwen3.5-397b-a17b",
     "qwen/qwen3.5-plus-02-15",
+    "sourceful/riverflow-v2-standard-preview",
     "x-ai/grok-3-mini",
     "z-ai/glm-5"
   ]

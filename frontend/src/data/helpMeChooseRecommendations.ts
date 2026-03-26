@@ -83,6 +83,10 @@ export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
       { modelId: 'minimax/minimax-m2', evidence: 'OpenRouter avg: $0.63/1M tokens.' },
       { modelId: 'minimax/minimax-m2.5', evidence: 'OpenRouter avg: $0.70/1M tokens.' },
       { modelId: 'x-ai/grok-code-fast-1', evidence: 'OpenRouter avg: $0.85/1M tokens.' },
+      {
+        modelId: 'google/gemini-3.1-flash-lite-preview',
+        evidence: 'OpenRouter avg: $0.88/1M tokens.',
+      },
       { modelId: 'qwen/qwen3.5-plus-02-15', evidence: 'OpenRouter avg: $0.91/1M tokens.' },
     ],
   },
