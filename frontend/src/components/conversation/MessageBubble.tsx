@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useLayoutEffect, useRef, useState } from 'react'
 
 import { RESULT_TAB, type ResultTab } from '../../types'
 import { formatTime, getSafeId } from '../../utils'
@@ -6,6 +6,83 @@ import { formatTime, getSafeId } from '../../utils'
 // could resolve a different React instance. LatexRenderer must use the same React
 // as the main app for hooks to work correctly.
 import LatexRenderer from '../LatexRenderer'
+
+const BRAND_LOGO_SRC = '/brand/logo.svg'
+
+function BreathingBrandLogo() {
+  return (
+    <img
+      src={BRAND_LOGO_SRC}
+      alt=""
+      className="result-generated-image-logo-breathing"
+      width={96}
+      height={96}
+      loading="eager"
+      decoding="async"
+    />
+  )
+}
+
+/** Shown while the model runs but no image URL exists yet (SSE has not emitted image). */
+function AwaitingImageUrlSlot() {
+  return (
+    <div className="result-generated-image-frame" aria-busy="true" aria-label="Generating image">
+      <div className="result-generated-image-placeholder" aria-hidden="true">
+        <BreathingBrandLogo />
+      </div>
+    </div>
+  )
+}
+
+type GeneratedImageSlotProps = {
+  url: string
+  index: number
+  onImageError: (index: number) => void
+}
+
+/** Loading state: breathing logo until the generated image has loaded. */
+function GeneratedImageSlot({ url, index, onImageError }: GeneratedImageSlotProps) {
+  const [loaded, setLoaded] = useState(false)
+  const imgRef = useRef<HTMLImageElement>(null)
+
+  // After `url` changes, sync overlay visibility with the real <img> element. Cached / decoded
+  // images often skip `load` after remount (Strict Mode, or swapping awaiting slot → URL).
+  // Must run in layout (not useEffect) so we reset before paint and avoid stale `loaded: true`.
+  useLayoutEffect(() => {
+    const el = imgRef.current
+    if (!el) return
+    if (el.complete && el.naturalHeight > 0) {
+      setLoaded(true)
+    } else {
+      setLoaded(false)
+    }
+  }, [url])
+
+  const handleLoad = () => setLoaded(true)
+
+  return (
+    <div
+      className={`result-generated-image-frame${loaded ? ' is-loaded' : ''}`}
+      aria-busy={!loaded}
+      aria-label={loaded ? undefined : 'Loading generated image'}
+    >
+      <img
+        ref={imgRef}
+        src={url}
+        alt={`Generated image ${index + 1}`}
+        className={`result-generated-image${loaded ? ' is-loaded' : ''}`}
+        decoding="async"
+        onLoad={handleLoad}
+        onError={() => onImageError(index)}
+      />
+      {!loaded && (
+        <div className="result-generated-image-placeholder" aria-hidden="true">
+          <BreathingBrandLogo />
+        </div>
+      )}
+    </div>
+  )
+}
 
 export interface MessageBubbleProps {
   id: string
@@ -23,6 +100,11 @@ export interface MessageBubbleProps {
   onCopyMessage?: (content: string) => void
   /** When true, copy button is visible but disabled (e.g. during tutorial) */
   copyButtonDisabled?: boolean
+  /**
+   * Image-generation models: show breathing logo while the stream has not yet produced an image URL.
+   * (Once URLs exist, {@link GeneratedImageSlot} covers decode/network loading.)
+   */
+  pendingGeneratedImage?: boolean
 }
 
 // Displays a single message in a conversation with formatted/raw rendering
@@ -38,6 +120,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
   modelName,
   onCopyMessage,
   copyButtonDisabled = false,
+  pendingGeneratedImage = false,
 }) => {
   const [failedImageIndices, setFailedImageIndices] = useState<Set<number>>(new Set())
 
@@ -182,6 +265,11 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
         </div>
       </div>
       <div className="message-content" id={messageContentId}>
+        {pendingGeneratedImage && displayImages.length === 0 && (
+          <div className="result-output result-images">
+            <AwaitingImageUrlSlot />
+          </div>
+        )}
         {displayImages.length > 0 && (
           /* Image generation response - render images */
           <div className="result-output result-images">
@@ -196,13 +284,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
                   Image no longer available
                 </div>
               ) : (
-                <img
-                  key={i}
-                  src={url}
-                  alt={`Generated image ${i + 1}`}
-                  className="result-generated-image"
-                  onError={() => handleImageError(i)}
-                />
+                <GeneratedImageSlot key={i} url={url} index={i} onImageError={handleImageError} />
               )
             )}
           </div>

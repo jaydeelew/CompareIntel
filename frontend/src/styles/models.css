@@ -1145,6 +1145,87 @@
   border: 1px solid var(--border-color);
 }
 
+/* Generated image: breathing logo while bytes load */
+.message-content .result-generated-image-frame {
+  position: relative;
+  align-self: flex-start;
+  max-width: 100%;
+  min-height: 12rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+  background: var(--bg-muted, #f3f4f6);
+  overflow: hidden;
+}
+
+.message-content .result-generated-image-frame:not(.is-loaded) {
+  width: 100%;
+}
+
+.message-content .result-generated-image-frame.is-loaded {
+  width: auto;
+  min-height: 0;
+  background: transparent;
+  border: none;
+}
+
+.message-content .result-generated-image-frame .result-generated-image {
+  position: relative;
+  z-index: 0;
+  display: block;
+  opacity: 0;
+  transition: opacity 0.35s ease;
+}
+
+.message-content .result-generated-image-frame .result-generated-image.is-loaded {
+  opacity: 1;
+}
+
+.message-content .result-generated-image-placeholder {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.message-content .result-generated-image-logo-breathing {
+  width: 5rem;
+  height: auto;
+  max-height: 5rem;
+  object-fit: contain;
+  animation: compareintel-logo-breathe 2.8s ease-in-out infinite;
+}
+
+@keyframes compareintel-logo-breathe {
+  0%,
+  100% {
+    opacity: 0.55;
+    transform: scale(0.96);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1.04);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .message-content .result-generated-image-logo-breathing {
+    animation: none;
+    opacity: 0.85;
+  }
+
+  .message-content .result-generated-image-frame .result-generated-image {
+    transition: none;
+  }
+
+  .message-content .result-generated-image-frame .result-generated-image.is-loaded {
+    opacity: 1;
+  }
+}
+
 .message-content .result-image-fallback {
   display: flex;
   align-items: center;

@@ -185,6 +185,27 @@ describe('MessageBubble', () => {
     })
   })
 
+  describe('Image generation pending placeholder', () => {
+    it('should show breathing logo slot before image URLs exist', () => {
+      const { container } = render(
+        <MessageBubble
+          id="msg-a"
+          type="assistant"
+          content=""
+          timestamp={new Date()}
+          pendingGeneratedImage
+        />
+      )
+      const frame = container.querySelector('.result-generated-image-frame')
+      expect(frame).toBeInTheDocument()
+      expect(frame).toHaveAttribute('aria-busy', 'true')
+      expect(frame).toHaveAttribute('aria-label', 'Generating image')
+      const logo = container.querySelector('.result-generated-image-logo-breathing')
+      expect(logo).toBeInTheDocument()
+      expect(logo).toHaveAttribute('src', '/brand/logo.svg')
+    })
+  })
+
   describe('Custom className', () => {
     it('should apply custom className', () => {
       const { container } = render(

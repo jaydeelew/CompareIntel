@@ -11,6 +11,8 @@ export interface Model {
   id: string
   name: string
   description?: string
+  /** When true, show image-generation loading affordance until URLs arrive */
+  supports_image_generation?: boolean
 }
 
 export interface ResultCardProps {
@@ -62,6 +64,7 @@ export const ResultCard: React.FC<ResultCardProps> = ({
   const latestMessage = safeMessages[safeMessages.length - 1]
   const safeId = getSafeId(modelId || 'unknown')
   const hasImages = (latestMessage?.images?.length ?? 0) > 0
+  const isImageGenModel = model?.supports_image_generation === true
 
   const hasError = (isError || isErrorMessage(latestMessage?.content)) && !hasImages
   const statusText = isProcessing ? 'Process' : hasError ? 'Failed' : 'Success'
@@ -262,6 +265,12 @@ export const ResultCard: React.FC<ResultCardProps> = ({
         {safeMessages.map((message, index) => {
           const messageId = message.id ? String(message.id) : `msg-${index}`
           const uniqueKey = message.id ? `${String(message.id)}-${index}` : `msg-${index}`
+          const isLatestAssistant =
+            message.type === 'assistant' && index === safeMessages.length - 1
+          const imgCount = message.images?.length ?? 0
+          const pendingGeneratedImage = Boolean(
+            isImageGenModel && isProcessing && isLatestAssistant && imgCount === 0 && !isError
+          )
           return (
             <MessageBubble
               key={uniqueKey}
@@ -273,6 +282,7 @@ export const ResultCard: React.FC<ResultCardProps> = ({
               activeTab={activeTab}
               modelId={modelId}
               modelName={model?.name}
+              pendingGeneratedImage={pendingGeneratedImage}
               onCopyMessage={
                 onCopyMessage ? content => onCopyMessage(modelId, messageId, content) : undefined
               }
