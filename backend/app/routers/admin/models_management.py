@@ -22,6 +22,7 @@ from ...config import settings
 from ...database import get_db
 from ...dependencies import require_admin_role
 from ...llm.registry import (
+    _load_registry,
     get_registry_path,
     load_registry,
     reload_registry,
@@ -29,8 +30,6 @@ from ...llm.registry import (
     sort_models_by_tier_and_version,
 )
 from ...model_runner import (
-    MODELS_BY_PROVIDER,
-    OPENROUTER_MODELS,
     client,
     refresh_model_token_limits,
 )
@@ -178,9 +177,14 @@ async def get_admin_models(
     current_user: User = Depends(require_admin_role("admin")),
 ) -> dict[str, Any]:
     """Get all models organized by provider for admin panel."""
+    data = _load_registry()
+    mbp = data["models_by_provider"]
+    flat: list[dict[str, Any]] = []
+    for models in mbp.values():
+        flat.extend(models)
     return {
-        "models": OPENROUTER_MODELS,
-        "models_by_provider": MODELS_BY_PROVIDER,
+        "models": flat,
+        "models_by_provider": mbp,
     }
 
 
@@ -197,9 +201,9 @@ async def validate_model(
     if not model_id:
         raise HTTPException(status_code=400, detail="Model ID cannot be empty")
 
-    for provider, models in MODELS_BY_PROVIDER.items():
+    for provider, models in _load_registry()["models_by_provider"].items():
         for model in models:
-            if model["id"] == model_id:
+            if model.get("id") == model_id:
                 raise HTTPException(
                     status_code=400, detail=f"Model {model_id} already exists in registry"
                 )
@@ -1016,28 +1020,25 @@ async def delete_model(
     if not model_id:
         raise HTTPException(status_code=400, detail="Model ID cannot be empty")
 
-    model_found = False
-    provider_name = None
-    for provider, models in MODELS_BY_PROVIDER.items():
-        for model in models:
-            if model["id"] == model_id:
-                model_found = True
-                provider_name = provider
-                break
-        if model_found:
-            break
-
-    if not model_found:
-        raise HTTPException(status_code=404, detail=f"Model {model_id} not found in registry")
-
+    # Use load_registry() for lookup (same as add_model). The imported MODELS_BY_PROVIDER
+    # binding can stay stale after reload_registry(); it is not updated on re-import.
     try:
         registry = load_registry()
         mbp = registry["models_by_provider"]
 
-        if provider_name not in mbp:
+        provider_name: str | None = None
+        for provider, models in mbp.items():
+            for model in models:
+                if model.get("id") == model_id:
+                    provider_name = provider
+                    break
+            if provider_name is not None:
+                break
+
+        if provider_name is None:
             raise HTTPException(status_code=404, detail=f"Model {model_id} not found in registry")
 
-        models_list = [m for m in mbp[provider_name] if m["id"] != model_id]
+        models_list = [m for m in mbp[provider_name] if m.get("id") != model_id]
         if len(models_list) == len(mbp[provider_name]):
             raise HTTPException(
                 status_code=500, detail=f"Failed to remove model {model_id} from registry"
@@ -1132,41 +1133,30 @@ async def update_model_knowledge_cutoff(
     if not model_id:
         raise HTTPException(status_code=400, detail="Model ID cannot be empty")
 
-    model_found = False
-    provider_name = None
-
-    for provider, models in MODELS_BY_PROVIDER.items():
-        for model in models:
-            if model["id"] == model_id:
-                model_found = True
-                provider_name = provider
-                break
-        if model_found:
-            break
-
-    if not model_found:
-        raise HTTPException(status_code=404, detail=f"Model {model_id} not found")
-
     try:
         registry = load_registry()
         mbp = registry["models_by_provider"]
 
-        if provider_name not in mbp:
-            raise HTTPException(
-                status_code=500, detail=f"Could not find provider {provider_name} in registry"
-            )
-
-        for model in mbp[provider_name]:
-            if model["id"] == model_id:
-                if req.knowledge_cutoff == "":
-                    model.pop("knowledge_cutoff", None)
-                elif req.knowledge_cutoff is not None:
-                    model["knowledge_cutoff"] = req.knowledge_cutoff
-                else:
-                    model["knowledge_cutoff"] = None
+        target_model: dict[str, Any] | None = None
+        provider_name: str | None = None
+        for provider, models in mbp.items():
+            for model in models:
+                if model.get("id") == model_id:
+                    provider_name = provider
+                    target_model = model
+                    break
+            if target_model is not None:
                 break
-        else:
+
+        if target_model is None:
             raise HTTPException(status_code=404, detail=f"Model {model_id} not found in registry")
+
+        if req.knowledge_cutoff == "":
+            target_model.pop("knowledge_cutoff", None)
+        elif req.knowledge_cutoff is not None:
+            target_model["knowledge_cutoff"] = req.knowledge_cutoff
+        else:
+            target_model["knowledge_cutoff"] = None
 
         save_registry(registry)
         reload_registry()
