@@ -385,13 +385,19 @@ export function useComparisonStreaming(
             ? firstErr.message
             : ''
 
+        // Backend returns this text when image models are requested but the session is missing
+        // (anonymous). Must match core.py and any legacy wording so we refresh and retry once.
+        const isAnonymousImageComparisonGate402 =
+          msg.includes('Sign up for a free account') &&
+          (msg.includes('use image generation') ||
+            (msg.includes('to run') && msg.includes('image comparison')))
+
         const isAuthRelated402 =
           auth.isAuthenticated &&
           refresh &&
           firstErr instanceof ApiError &&
           firstErr.status === 402 &&
-          msg.includes('Sign up for a free account to run') &&
-          msg.includes('image comparison')
+          isAnonymousImageComparisonGate402
 
         const isAuthRelated403Unregistered =
           auth.isAuthenticated &&

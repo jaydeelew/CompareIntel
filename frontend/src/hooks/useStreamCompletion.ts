@@ -439,6 +439,19 @@ export function useStreamCompletion(
         const createdModelId = createModelId(modelId)
         return hasContentOrImages(createdModelId)
       })
+
+      // Stale banner: anonymous image-gate 402 can show if session refresh matching failed; clear once we have results.
+      if (hadSuccessfulModel) {
+        setError(prev => {
+          if (typeof prev !== 'string') return prev
+          const isAnonymousImageGate =
+            prev.includes('Sign up for a free account') &&
+            (prev.includes('use image generation') ||
+              (prev.includes('to run') && prev.includes('image comparison')))
+          return isAnonymousImageGate ? null : prev
+        })
+      }
+
       if (!isFollowUpMode && hadSuccessfulModel && !userCancelledRef.current) {
         const scrollResultsIntoView = (behavior: ScrollBehavior) => {
           document.querySelector('.results-section')?.scrollIntoView({
