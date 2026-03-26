@@ -1794,6 +1794,7 @@ html[data-theme='light'] .code-block-direct::-webkit-scrollbar-thumb:hover {
 
   .selected-models-grid {
     max-height: none;
+    overflow-x: hidden;
     overflow-y: visible;
     flex: 0 1 auto;
     /* Don't grow, just take needed space */
@@ -1917,6 +1918,7 @@ html[data-theme='light'] .code-block-direct::-webkit-scrollbar-thumb:hover {
 
   .selected-models-grid {
     max-height: none;
+    overflow-x: hidden;
     overflow-y: visible;
     flex: 0 1 auto;
   }

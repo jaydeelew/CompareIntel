@@ -70,6 +70,7 @@
 
   .selected-models-grid {
     max-height: none;
+    overflow-x: hidden;
     overflow-y: visible;
     flex: 0 1 auto;
   }

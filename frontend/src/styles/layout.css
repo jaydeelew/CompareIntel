@@ -232,6 +232,7 @@
     flex-direction: row;
     flex-wrap: wrap;
     gap: var(--spacing-3);
+    overflow-x: hidden;
     overflow-y: visible;
     max-height: none;
   }
