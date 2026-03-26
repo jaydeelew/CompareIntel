@@ -31,8 +31,18 @@ function formatLocationFromPhotonProperties(props: Record<string, unknown>): str
   return parts.join(', ')
 }
 
+function photonReverseUrl(lat: number, lon: number): string {
+  const q = `lat=${lat}&lon=${lon}&lang=en`
+  // Dev: same-origin proxy (see vite.config.ts) avoids CORS / blocked third-party fetches.
+  // Tests: keep direct URL so mocks stay stable.
+  if (import.meta.env.DEV && import.meta.env.MODE !== 'test') {
+    return `/geo/photon/reverse?${q}`
+  }
+  return `https://photon.komoot.io/reverse?${q}`
+}
+
 async function reverseGeocodePhoton(lat: number, lon: number): Promise<string | null> {
-  const url = `https://photon.komoot.io/reverse?lat=${lat}&lon=${lon}&lang=en`
+  const url = photonReverseUrl(lat, lon)
   const response = await fetch(url)
   if (!response.ok) return null
   const data = (await response.json()) as {

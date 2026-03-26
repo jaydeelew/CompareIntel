@@ -301,6 +301,13 @@ export default defineConfig({
     port: 5173,
     strictPort: false,
     proxy: {
+      // Photon (Komoot) does not always respond with CORS headers when the browser blocks
+      // or fails the cross-origin request (e.g. extensions). Same-origin proxy avoids that.
+      '/geo/photon': {
+        target: 'https://photon.komoot.io',
+        changeOrigin: true,
+        rewrite: path => path.replace(/^\/geo\/photon/, ''),
+      },
       '/api': {
         target: 'http://127.0.0.1:8000',
         changeOrigin: true,
