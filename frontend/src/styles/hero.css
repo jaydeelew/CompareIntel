@@ -2160,14 +2160,23 @@ video.capability-tile-image-lightbox-img {
     border: none;
     border-radius: var(--radius-full, 9999px);
     background: transparent;
-    color: var(--text-muted);
+    /* Hero is always a dark gradient: avoid page --text-muted (too dim with svg opacity). */
+    color: var(--hero-text-color);
     cursor: pointer;
     transition: color 0.2s ease;
     line-height: 1;
   }
 
+  [data-theme='dark'] .hero-theme-toggle-button {
+    color: #a8b8c9;
+  }
+
   .hero-theme-toggle-button:hover {
-    color: var(--text-primary);
+    color: #ffffff;
+  }
+
+  [data-theme='dark'] .hero-theme-toggle-button:hover {
+    color: #e8edf4;
   }
 
   .hero-theme-toggle-button:active {
@@ -2176,7 +2185,7 @@ video.capability-tile-image-lightbox-img {
 
   .hero-theme-toggle-button svg {
     flex-shrink: 0;
-    opacity: 0.7;
+    opacity: 0.82;
   }
 
   .hero-theme-toggle-button:hover svg {
