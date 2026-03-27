@@ -90,6 +90,43 @@
   opacity: 0.13;
 }
 
+/* Decorative arrows from screen edges toward the composer.
+   Vertical position: hero bottom-padding (4rem) + half the focused input-section
+   min-height + half the composer height targets the white-area center. */
+.hero-arrow {
+  position: absolute;
+  bottom: calc(4rem + clamp(125px, 18vh, 215px));
+  transform: translateY(50%);
+  height: clamp(70px, 9vw, 150px);
+  width: calc(50% - 390px);
+  pointer-events: none;
+  z-index: 1;
+  user-select: none;
+  opacity: 0.15;
+}
+
+[data-theme='light'] .hero-arrow {
+  opacity: 0.18;
+}
+
+.hero-arrow--left {
+  left: 0;
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, transparent 40%, black 100%);
+  mask-image: linear-gradient(to right, transparent 0%, transparent 40%, black 100%);
+}
+
+.hero-arrow--right {
+  right: 0;
+  -webkit-mask-image: linear-gradient(to left, transparent 0%, transparent 40%, black 100%);
+  mask-image: linear-gradient(to left, transparent 0%, transparent 40%, black 100%);
+}
+
+@media (max-width: 900px) {
+  .hero-arrow {
+    display: none;
+  }
+}
+
 /* Animated mesh gradient overlay */
 .hero-section::before {
   content: '';
