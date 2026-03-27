@@ -111,14 +111,14 @@
 
 .hero-arrow--left {
   left: 0;
-  -webkit-mask-image: linear-gradient(to right, transparent 0%, transparent 40%, black 100%);
-  mask-image: linear-gradient(to right, transparent 0%, transparent 40%, black 100%);
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, transparent 20%, black 100%);
+  mask-image: linear-gradient(to right, transparent 0%, transparent 20%, black 100%);
 }
 
 .hero-arrow--right {
   right: 0;
-  -webkit-mask-image: linear-gradient(to left, transparent 0%, transparent 40%, black 100%);
-  mask-image: linear-gradient(to left, transparent 0%, transparent 40%, black 100%);
+  -webkit-mask-image: linear-gradient(to left, transparent 0%, transparent 20%, black 100%);
+  mask-image: linear-gradient(to left, transparent 0%, transparent 20%, black 100%);
 }
 
 @media (max-width: 900px) {
