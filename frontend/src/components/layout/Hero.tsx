@@ -220,7 +220,12 @@ export function Hero({ children }: HeroProps) {
       </div>
 
       {hideHeroUtilityTiles && (
-        <img src="/brand/logo.svg" alt="" className="hero-centered-logo" aria-hidden="true" />
+        <img
+          src="/brand/logo-no-arrows.svg"
+          alt=""
+          className="hero-centered-logo"
+          aria-hidden="true"
+        />
       )}
 
       <div className="hero-content">
