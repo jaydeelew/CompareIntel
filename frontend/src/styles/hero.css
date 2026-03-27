@@ -4,15 +4,16 @@
    ═══════════════════════════════════════════════════════════ */
 
 /* Hero theme toggle: shown only at phone widths (navbar keeps it wider).
-   430px ≈ iPhone 15 Pro Max portrait — widest common phone CSS width. */
+   Align with max-width: 480px — watermark sits just below this row. */
 .hero-theme-toggle-mobile {
   display: none;
 }
 
-@media (max-width: 430px) {
+@media (max-width: 480px) {
   .hero-theme-toggle-mobile {
     display: flex;
     justify-content: center;
+    margin-top: -1rem;
     margin-bottom: 1rem;
   }
 
@@ -58,9 +59,10 @@
     opacity: 1;
   }
 
-  /* Composer-focused watermark shares the top band with the in-hero toggle — push it down. */
+  /* Composer-focused watermark (≤480px). */
   .hero-section.hero-section--composer-focused .hero-centered-logo {
-    top: calc(5.5rem + clamp(1.75rem, 7vh, 4rem));
+    top: 3.5rem;
+    transform: translateX(-50%);
   }
 }
 

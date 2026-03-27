@@ -281,7 +281,7 @@ export function Hero({ children }: HeroProps) {
       )}
 
       <div className="hero-content">
-        {/* Theme toggle in hero at phone widths only (see hero.css @media max-width: 430px); navbar keeps it on wider viewports. */}
+        {/* Theme toggle in hero at phone widths only (see hero.css @media max-width: 480px); navbar keeps it on wider viewports. */}
         <div className="hero-theme-toggle-mobile">
           <button
             className="hero-theme-toggle-button"

@@ -374,8 +374,8 @@
   }
 }
 
-/* Main page only: hide navbar theme toggle only at phone widths (Hero shows it; see hero.css @ 430px). */
-@media (max-width: 430px) {
+/* Main page only: hide navbar theme toggle only at phone widths (Hero shows it; see hero.css @ 480px). */
+@media (max-width: 480px) {
   .app-header--mobile-theme-toggle-in-hero .nav-theme-toggle-wrapper {
     display: none !important;
   }

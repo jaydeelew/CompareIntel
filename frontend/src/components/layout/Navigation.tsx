@@ -11,7 +11,7 @@ interface NavigationProps {
   onSignInClick: () => void
   onSignUpClick: () => void
   /**
-   * When true, the navbar theme toggle is hidden below ~430px (widest phone portrait) because
+   * When true, the navbar theme toggle is hidden at max-width 480px because
    * the main page shows it in the Hero instead. Omit on routes without Hero (e.g. admin).
    */
   hideNavThemeToggleOnMobile?: boolean
