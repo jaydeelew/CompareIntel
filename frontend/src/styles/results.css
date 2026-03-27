@@ -1854,6 +1854,11 @@ html[data-theme='light'] .code-block-direct::-webkit-scrollbar-thumb:hover {
     text-align: center;
   }
 
+  /* Subtitle is display:flex (tier info control); text-align does not center flex items */
+  .models-header-title p {
+    justify-content: center;
+  }
+
   .models-header-controls {
     order: 2;
     flex-direction: row;

@@ -61,7 +61,6 @@
   /* Composer-focused watermark shares the top band with the in-hero toggle — push it down. */
   .hero-section.hero-section--composer-focused .hero-centered-logo {
     top: calc(5.5rem + clamp(1.75rem, 7vh, 4rem));
-    max-height: calc(11rem + clamp(3.5rem, 14vh, 8rem));
   }
 }
 
@@ -129,13 +128,25 @@
   justify-content: flex-start;
 }
 
+/* When tiles are hidden, the watermark can read huge — keep it subtler than the default 480px. */
+.hero-section.hero-section--composer-focused .hero-centered-logo {
+  width: min(360px, 75vw);
+  max-width: 75vw;
+}
+
+.hero-section.hero-section--composer-focused .hero-centered-logo--no-arrows {
+  width: min(520px, 88vw);
+  max-width: 88vw;
+}
+
 /* Subtle centered logo shown when capability tiles are hidden */
 .hero-centered-logo {
   position: absolute;
   top: 29%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: clamp(260px, 35vw, 480px);
+  width: 480px;
+  max-width: 85vw;
   height: auto;
   opacity: 0.1;
   pointer-events: none;
@@ -162,18 +173,16 @@
   .hero-centered-logo--with-arrows {
     display: block;
     top: calc(6.5rem + clamp(1.75rem, 7vh, 4rem));
-    width: auto;
-    max-width: clamp(200px, 32vw, 380px);
-    max-height: calc(13rem + clamp(3.5rem, 14vh, 8rem));
+    width: 380px;
+    max-width: 85vw;
+  }
+
+  .hero-section.hero-section--composer-focused .hero-centered-logo--with-arrows {
+    width: min(300px, 75vw);
   }
 }
 
-@media (max-width: 768px) {
-  .hero-centered-logo--with-arrows {
-    top: calc(4.25rem + clamp(1.75rem, 7vh, 4rem));
-    max-height: calc(8.5rem + clamp(3.5rem, 14vh, 8rem));
-  }
-}
+/* Watermark logo keeps the 1100px-level top value down to mobile; see @media (max-width: 480px) in navigation.css. */
 
 /* Decorative arrows from screen edges toward the composer.
    Vertical position: hero bottom-padding (4rem) + half the focused input-section
@@ -2206,86 +2215,12 @@ video.capability-tile-image-lightbox-img {
 }
 
 @media (max-width: 768px) {
-  .navbar {
-    padding: 0.75rem;
-  }
-
-  .logo-icon {
-    width: 40px;
-    height: 40px;
-  }
-
-  .nav-brand .brand-text .brand-name {
-    font-size: 1.5rem !important;
-    color: var(--text-primary) !important;
-    font-weight: var(--font-extrabold);
-    text-shadow: none !important;
-    opacity: 1;
-    background: none !important;
-    -webkit-background-clip: unset !important;
-    background-clip: unset !important;
-    -webkit-text-fill-color: var(--text-primary) !important;
-  }
-
-  .brand-tagline {
-    font-size: 0.75rem !important;
-    color: var(--text-secondary);
-    font-weight: var(--font-semibold);
-    opacity: 1;
-  }
-
-  .nav-brand {
-    flex-shrink: 1;
-    min-width: 0;
-    max-width: calc(100% - 140px);
-  }
-
-  .nav-brand .brand-text .brand-name {
-    font-size: 1.25rem !important;
-  }
-
-  .nav-button-text,
-  .nav-button-primary {
-    white-space: nowrap !important;
-    font-size: 0.9375rem !important;
-    min-width: 70px !important;
-    width: auto !important;
-    max-width: none !important;
-    padding: 0.5rem 0.875rem !important;
-    line-height: 1 !important;
-    justify-content: center !important;
-    align-items: center !important;
-    flex-shrink: 0 !important;
-    overflow: visible !important;
-    word-break: keep-all !important;
-    word-wrap: normal !important;
-    text-overflow: clip !important;
-    text-wrap: nowrap !important;
-  }
-
-  .nav-button-text *,
-  .nav-button-primary * {
-    white-space: nowrap !important;
-  }
-
-  .nav-button-primary {
-    min-width: 75px !important;
-    padding: 0.5rem 1rem !important;
-  }
-
-  .nav-actions {
-    gap: 0.375rem !important;
-    flex-shrink: 0 !important;
-    min-width: 0;
-  }
-
-  .navbar {
-    flex-wrap: nowrap !important;
-    overflow: visible !important;
-  }
+  /* Navbar/brand overrides removed — navigation.css owns navbar sizing.
+     Position-affecting changes (height, padding, font-size, gap) now fire
+     at 480px so the hero, brand, and watermark stay stable above phone widths. */
 
   .hero-section {
-    padding: 1rem 1rem 4rem;
+    padding: 3rem 1rem 4rem;
   }
 
   .hero-title {

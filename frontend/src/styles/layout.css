@@ -5,7 +5,9 @@
 
 /* Main Content Container */
 .app-main {
-  flex: 1;
+  /* 1 0 auto: grow into leftover viewport when content is short, but never shrink
+     below content height — page simply grows when children gain height. */
+  flex: 1 0 auto;
   width: 100%;
   max-width: none;
   margin: 0;
@@ -14,9 +16,16 @@
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
+  justify-content: flex-start;
+  align-items: stretch;
   gap: var(--spacing-4);
   /* Prevent subtle scroll jumps caused by layout reflow above viewport. */
   overflow-anchor: none;
+}
+
+/* Hero is the first flex item; keep it from shrinking when siblings (e.g. models section) gain height. */
+.app-main > .hero-section {
+  flex-shrink: 0;
 }
 
 /* ═══════════════════════════════════════════════════════════

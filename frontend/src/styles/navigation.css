@@ -274,35 +274,34 @@
    MOBILE NAVIGATION
    ═══════════════════════════════════════════════════════════ */
 
-@media (max-width: 768px) {
-  .navbar {
-    padding: 0.75rem 1rem;
-    height: auto;
-    min-height: 56px;
+/* Full-size mark above phone widths; compact brand only at max-width: 480px below. */
+@media (min-width: 481px) {
+  .logo-icon,
+  .logo-icon-button .logo-icon {
+    width: 48px;
+    height: 48px;
+    min-width: 48px;
+    min-height: 48px;
   }
+
+  .nav-brand .brand-text .brand-name {
+    font-size: var(--font-2xl) !important;
+  }
+
+  .brand-tagline {
+    font-size: var(--font-xs) !important;
+  }
+}
+
+@media (max-width: 768px) {
+  /* Navbar keeps height: var(--navbar-height) and base padding here so the
+     brand, hero, and watermark logo don't shift at tablet widths.
+     Height/padding/gap shrink at 480px (phone widths) instead. */
 
   .nav-brand {
     flex-shrink: 1;
     min-width: 0;
     max-width: calc(100% - 140px);
-  }
-
-  .brand-logo {
-    gap: var(--spacing-2);
-  }
-
-  .logo-icon,
-  .logo-icon-button .logo-icon {
-    width: 40px;
-    height: 40px;
-  }
-
-  .nav-brand .brand-text .brand-name {
-    font-size: 1.25rem !important;
-  }
-
-  .brand-tagline {
-    font-size: 0.6875rem !important;
   }
 
   .nav-actions {
@@ -344,6 +343,34 @@
   .navbar {
     flex-wrap: nowrap !important;
     overflow: visible !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .navbar {
+    padding: 0.75rem 1rem;
+    height: auto;
+    min-height: 56px;
+  }
+
+  .brand-logo {
+    gap: var(--spacing-2);
+  }
+
+  .logo-icon,
+  .logo-icon-button .logo-icon {
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+    min-height: 40px;
+  }
+
+  .nav-brand .brand-text .brand-name {
+    font-size: 1.25rem !important;
+  }
+
+  .brand-tagline {
+    font-size: 0.75rem !important;
   }
 }
 
