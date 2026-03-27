@@ -251,7 +251,9 @@
     min-width: 140px;
     max-width: calc(50% - var(--spacing-3));
   }
+}
 
+@media (max-width: 860px) {
   .models-section-header {
     flex-direction: column;
     gap: var(--spacing-3);

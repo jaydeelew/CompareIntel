@@ -48,19 +48,22 @@
 
 /* Adjust app header when mock mode banner is visible */
 .app:has(.mock-mode-banner) .app-header {
-  top: 3.5rem; /* Position navbar below mock mode banner */
+  top: 3.5rem;
+  /* Position navbar below mock mode banner */
 }
 
 /* Ensure no gap - hero section starts immediately below navbar when mock mode banner is visible */
 .app:has(.mock-mode-banner) .hero-section {
-  margin-top: 0; /* Remove any default margin */
+  margin-top: 0;
+  /* Remove any default margin */
 }
 
 /* Ensure hero section starts immediately below navbar when mock mode banner is visible */
 /* Mock banner (3.5rem) + navbar (3.75rem) = 7.25rem */
 .app:has(.mock-mode-banner) .hero-section {
   margin-top: 0;
-  padding-top: 7.25rem; /* Push content down, background covers gap */
+  padding-top: 7.25rem;
+  /* Push content down, background covers gap */
 }
 
 /* Install Prompt Banner - Enhanced for 2025 best practices */
@@ -347,6 +350,7 @@
     transform: translateY(100%);
     opacity: 0;
   }
+
   to {
     transform: translateY(0);
     opacity: 1;
@@ -357,6 +361,7 @@
   from {
     opacity: 0;
   }
+
   to {
     opacity: 1;
   }
