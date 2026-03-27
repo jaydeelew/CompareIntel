@@ -3,9 +3,66 @@
    Immersive dark design with subtle depth and glow effects
    ═══════════════════════════════════════════════════════════ */
 
-/* Hero Theme Toggle - hidden on desktop, shown on mobile */
+/* Hero theme toggle: shown only at phone widths (navbar keeps it wider).
+   430px ≈ iPhone 15 Pro Max portrait — widest common phone CSS width. */
 .hero-theme-toggle-mobile {
   display: none;
+}
+
+@media (max-width: 430px) {
+  .hero-theme-toggle-mobile {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 1rem;
+  }
+
+  .hero-theme-toggle-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border: none;
+    border-radius: var(--radius-full, 9999px);
+    background: transparent;
+    /* Hero is always a dark gradient: avoid page --text-muted (too dim with svg opacity). */
+    color: var(--hero-text-color);
+    cursor: pointer;
+    transition: color 0.2s ease;
+    line-height: 1;
+  }
+
+  [data-theme='dark'] .hero-theme-toggle-button {
+    color: #a8b8c9;
+  }
+
+  .hero-theme-toggle-button:hover {
+    color: #ffffff;
+  }
+
+  [data-theme='dark'] .hero-theme-toggle-button:hover {
+    color: #e8edf4;
+  }
+
+  .hero-theme-toggle-button:active {
+    transform: scale(0.92);
+  }
+
+  .hero-theme-toggle-button svg {
+    flex-shrink: 0;
+    opacity: 0.82;
+  }
+
+  .hero-theme-toggle-button:hover svg {
+    opacity: 1;
+  }
+
+  /* Composer-focused watermark shares the top band with the in-hero toggle — push it down. */
+  .hero-section.hero-section--composer-focused .hero-centered-logo {
+    top: calc(5.5rem + clamp(1.75rem, 7vh, 4rem));
+    max-height: calc(11rem + clamp(3.5rem, 14vh, 8rem));
+  }
 }
 
 .hero-section {
@@ -61,21 +118,21 @@
 
 .hero-section.hero-section--composer-focused .hero-title,
 .hero-section.hero-section--composer-focused .hero-subtitle {
-  visibility: hidden;
+  display: none;
 }
 
 .hero-section.hero-section--composer-focused .hero-input-section {
-  margin-top: 0;
-  min-height: clamp(200px, 30vh, 360px);
+  margin-top: clamp(13.5rem, calc(10rem + 14vh), 18rem);
+  min-height: clamp(200px, 28vh, 340px);
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start;
 }
 
 /* Subtle centered logo shown when capability tiles are hidden */
 .hero-centered-logo {
   position: absolute;
-  top: 22%;
+  top: 29%;
   left: 50%;
   transform: translate(-50%, -50%);
   width: clamp(260px, 35vw, 480px);
@@ -86,8 +143,36 @@
   user-select: none;
 }
 
+/* Wide screens: show the no-arrows logo + separate arrow elements */
+.hero-centered-logo--with-arrows {
+  display: none;
+}
+
 [data-theme='light'] .hero-centered-logo {
   opacity: 0.13;
+}
+
+/* Mid-width screens: swap to the full logo (with built-in arrows) and hide the separate arrows.
+   Center vertically between the navbar bottom (hero top) and the composer top. */
+@media (max-width: 1100px) {
+  .hero-centered-logo--no-arrows {
+    display: none;
+  }
+
+  .hero-centered-logo--with-arrows {
+    display: block;
+    top: calc(6.5rem + clamp(1.75rem, 7vh, 4rem));
+    width: auto;
+    max-width: clamp(200px, 32vw, 380px);
+    max-height: calc(13rem + clamp(3.5rem, 14vh, 8rem));
+  }
+}
+
+@media (max-width: 768px) {
+  .hero-centered-logo--with-arrows {
+    top: calc(4.25rem + clamp(1.75rem, 7vh, 4rem));
+    max-height: calc(8.5rem + clamp(3.5rem, 14vh, 8rem));
+  }
 }
 
 /* Decorative arrows from screen edges toward the composer.
@@ -121,7 +206,7 @@
   mask-image: linear-gradient(to left, transparent 0%, transparent 20%, black 100%);
 }
 
-@media (max-width: 900px) {
+@media (max-width: 1100px) {
   .hero-arrow {
     display: none;
   }
@@ -771,7 +856,7 @@ video.capability-tile-image-lightbox-img {
    ═══════════════════════════════════════════════════════════ */
 
 .hero-input-section {
-  margin-top: 1.5rem;
+  margin-top: 3.75rem;
   max-width: 700px;
   margin-left: auto;
   margin-right: auto;
@@ -2203,55 +2288,6 @@ video.capability-tile-image-lightbox-img {
     padding: 1rem 1rem 4rem;
   }
 
-  /* Mobile theme toggle - visible only on mobile */
-  .hero-theme-toggle-mobile {
-    display: flex;
-    justify-content: center;
-    margin-bottom: 1rem;
-  }
-
-  .hero-theme-toggle-button {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 32px;
-    height: 32px;
-    padding: 0;
-    border: none;
-    border-radius: var(--radius-full, 9999px);
-    background: transparent;
-    /* Hero is always a dark gradient: avoid page --text-muted (too dim with svg opacity). */
-    color: var(--hero-text-color);
-    cursor: pointer;
-    transition: color 0.2s ease;
-    line-height: 1;
-  }
-
-  [data-theme='dark'] .hero-theme-toggle-button {
-    color: #a8b8c9;
-  }
-
-  .hero-theme-toggle-button:hover {
-    color: #ffffff;
-  }
-
-  [data-theme='dark'] .hero-theme-toggle-button:hover {
-    color: #e8edf4;
-  }
-
-  .hero-theme-toggle-button:active {
-    transform: scale(0.92);
-  }
-
-  .hero-theme-toggle-button svg {
-    flex-shrink: 0;
-    opacity: 0.82;
-  }
-
-  .hero-theme-toggle-button:hover svg {
-    opacity: 1;
-  }
-
   .hero-title {
     font-size: clamp(2rem, 8vw, 2.5rem);
     margin-bottom: 0.75rem;
@@ -2437,7 +2473,7 @@ video.capability-tile-image-lightbox-img {
   }
 
   .hero-input-section {
-    margin-top: 1.25rem;
+    margin-top: 3.25rem;
     padding: 0 0.5rem;
     gap: 0.625rem;
   }

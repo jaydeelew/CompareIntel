@@ -2229,6 +2229,7 @@ export function MainPage() {
           onViewChange={view => navigate(view === 'admin' ? '/admin' : '/')}
           onSignInClick={openLogin}
           onSignUpClick={openRegister}
+          hideNavThemeToggleOnMobile
         />
 
         <ModalManager

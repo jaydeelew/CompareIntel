@@ -10,6 +10,11 @@ interface NavigationProps {
   onViewChange?: (view: 'main' | 'admin') => void // Optional for backward compatibility
   onSignInClick: () => void
   onSignUpClick: () => void
+  /**
+   * When true, the navbar theme toggle is hidden below ~430px (widest phone portrait) because
+   * the main page shows it in the Hero instead. Omit on routes without Hero (e.g. admin).
+   */
+  hideNavThemeToggleOnMobile?: boolean
 }
 
 /**
@@ -22,6 +27,7 @@ export function Navigation({
   onViewChange,
   onSignInClick,
   onSignUpClick,
+  hideNavThemeToggleOnMobile = false,
 }: NavigationProps) {
   const navigate = useNavigate()
   const location = useLocation()
@@ -40,7 +46,13 @@ export function Navigation({
   const actualCurrentView = currentView || (location.pathname === '/admin' ? 'admin' : 'main')
 
   return (
-    <header className="app-header">
+    <header
+      className={
+        hideNavThemeToggleOnMobile
+          ? 'app-header app-header--mobile-theme-toggle-in-hero'
+          : 'app-header'
+      }
+    >
       <nav className="navbar">
         <div className="nav-brand">
           <div className="brand-logo">

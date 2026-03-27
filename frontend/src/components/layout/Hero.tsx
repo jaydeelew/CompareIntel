@@ -224,7 +224,13 @@ export function Hero({ children }: HeroProps) {
           <img
             src="/brand/logo-no-arrows.svg"
             alt=""
-            className="hero-centered-logo"
+            className="hero-centered-logo hero-centered-logo--no-arrows"
+            aria-hidden="true"
+          />
+          <img
+            src="/brand/logo.svg"
+            alt=""
+            className="hero-centered-logo hero-centered-logo--with-arrows"
             aria-hidden="true"
           />
           <svg
@@ -275,7 +281,7 @@ export function Hero({ children }: HeroProps) {
       )}
 
       <div className="hero-content">
-        {/* Mobile-only theme toggle - moved from navbar for better visibility */}
+        {/* Theme toggle in hero at phone widths only (see hero.css @media max-width: 430px); navbar keeps it on wider viewports. */}
         <div className="hero-theme-toggle-mobile">
           <button
             className="hero-theme-toggle-button"
