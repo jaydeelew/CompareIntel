@@ -59,12 +59,35 @@
   display: none;
 }
 
+.hero-section.hero-section--composer-focused .hero-title,
+.hero-section.hero-section--composer-focused .hero-subtitle {
+  visibility: hidden;
+}
+
 .hero-section.hero-section--composer-focused .hero-input-section {
   margin-top: 0;
   min-height: clamp(200px, 30vh, 360px);
   display: flex;
   flex-direction: column;
   justify-content: center;
+}
+
+/* Subtle centered logo shown when capability tiles are hidden */
+.hero-centered-logo {
+  position: absolute;
+  top: 22%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: clamp(260px, 35vw, 480px);
+  height: auto;
+  opacity: 0.1;
+  pointer-events: none;
+  z-index: 1;
+  user-select: none;
+}
+
+[data-theme='light'] .hero-centered-logo {
+  opacity: 0.13;
 }
 
 /* Animated mesh gradient overlay */

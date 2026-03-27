@@ -218,6 +218,11 @@ export function Hero({ children }: HeroProps) {
       <div className={`hero-logo-flash ${showFlash ? 'active' : ''}`}>
         <img src="/brand/logo.svg" alt="CompareIntel logo" className="hero-flash-logo-img" />
       </div>
+
+      {hideHeroUtilityTiles && (
+        <img src="/brand/logo.svg" alt="" className="hero-centered-logo" aria-hidden="true" />
+      )}
+
       <div className="hero-content">
         {/* Mobile-only theme toggle - moved from navbar for better visibility */}
         <div className="hero-theme-toggle-mobile">
