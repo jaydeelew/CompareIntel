@@ -75,7 +75,7 @@ describe('compareService - Web Search', () => {
           // Simulate tool result
           controller.enqueue(
             new TextEncoder().encode(
-              'data: {"type":"chunk","model":"openai/gpt-4","content":"{\\"type\\":\\"tool_result\\",\\"content\\":\\"Search results: Sunny, 75°F"}"}\n\n'
+              'data: {"type":"chunk","model":"openai/gpt-4","content":"{\\"type\\":\\"tool_result\\",\\"content\\":\\"Search results: Sunny, 75°F\\"}"}\n\n'
             )
           )
           // Simulate final response

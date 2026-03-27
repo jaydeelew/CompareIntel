@@ -4,7 +4,7 @@
 
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
 import { ErrorBoundary } from '../ErrorBoundary'
 
@@ -17,9 +17,19 @@ const ThrowError = ({ shouldThrow = false }: { shouldThrow?: boolean }) => {
 }
 
 describe('ErrorBoundary', () => {
+  const suppressReactThrowInJsdom = (e: Event) => {
+    e.preventDefault()
+  }
+
   beforeEach(() => {
     // Suppress console.error for error boundary tests
     vi.spyOn(console, 'error').mockImplementation(() => {})
+    // React rethrows in invokeGuardedCallback; prevent jsdom from logging each as uncaught
+    window.addEventListener('error', suppressReactThrowInJsdom)
+  })
+
+  afterEach(() => {
+    window.removeEventListener('error', suppressReactThrowInJsdom)
   })
 
   describe('Normal Rendering', () => {
