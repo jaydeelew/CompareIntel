@@ -44,7 +44,7 @@ describe('userSettingsService', () => {
 
       const result = await userSettingsService.getUserPreferences()
 
-      expect(apiClient.get).toHaveBeenCalledWith('/user/preferences')
+      expect(apiClient.get).toHaveBeenCalledWith('/user/preferences', { enableCache: false })
       expect(result).toEqual(mockPreferences)
     })
 

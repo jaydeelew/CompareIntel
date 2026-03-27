@@ -24,7 +24,7 @@ export function useHideHeroUtilityTiles(): boolean {
     let cancelled = false
     getUserPreferences()
       .then(prefs => {
-        if (!cancelled) setHide(prefs.hide_hero_utility_tiles)
+        if (!cancelled) setHide(Boolean(prefs.hide_hero_utility_tiles))
       })
       .catch(() => {
         if (!cancelled) setHide(false)

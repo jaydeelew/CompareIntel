@@ -73,7 +73,11 @@ export interface UserPreferencesUpdate {
  * @throws {ApiError} If the request fails or user is not authenticated
  */
 export async function getUserPreferences(): Promise<UserPreferences> {
-  const response = await apiClient.get<UserPreferences>('/user/preferences')
+  // Preferences must not use the API client GET cache — stale hide_hero_utility_tiles (etc.)
+  // breaks layout until cache TTL expires after toggles or auth/user ref updates.
+  const response = await apiClient.get<UserPreferences>('/user/preferences', {
+    enableCache: false,
+  })
   return response.data
 }
 
