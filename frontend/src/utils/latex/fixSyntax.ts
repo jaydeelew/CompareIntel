@@ -1,3 +1,150 @@
+/**
+ * Detect lines that are bare LaTeX (commands like \frac{}{}, \sqrt{}, etc.
+ * without $, $$, \(\), or \[\] delimiters) and wrap them in $$ for display
+ * math rendering.
+ *
+ * Must run AFTER code block extraction and BEFORE math delimiter extraction.
+ */
+export function wrapBareLatexBlocks(text: string): string {
+  const lines = text.split('\n')
+  const result: string[] = []
+  let i = 0
+  let insideMathBlock = false
+
+  while (i < lines.length) {
+    const trimmed = lines[i].trim()
+
+    if (!insideMathBlock && /^\\\[\s*$/.test(trimmed)) {
+      insideMathBlock = true
+      result.push(lines[i])
+      i++
+      continue
+    }
+    if (insideMathBlock && /^\\\]\s*$/.test(trimmed)) {
+      insideMathBlock = false
+      result.push(lines[i])
+      i++
+      continue
+    }
+    if (!insideMathBlock && /^\$\$\s*$/.test(trimmed)) {
+      insideMathBlock = true
+      result.push(lines[i])
+      i++
+      continue
+    }
+    if (insideMathBlock && /^\$\$\s*$/.test(trimmed)) {
+      insideMathBlock = false
+      result.push(lines[i])
+      i++
+      continue
+    }
+
+    if (insideMathBlock) {
+      result.push(lines[i])
+      i++
+      continue
+    }
+
+    if (isBareLatexLine(trimmed)) {
+      const blockLines: string[] = [lines[i]]
+      i++
+
+      while (i < lines.length) {
+        const t = lines[i].trim()
+        if (isBareLatexLine(t)) {
+          blockLines.push(lines[i])
+          i++
+        } else if (!t && blockLines.length > 0) {
+          let peek = i + 1
+          while (peek < lines.length && !lines[peek].trim()) peek++
+          if (peek < lines.length && isBareLatexLine(lines[peek].trim())) {
+            blockLines.push(lines[i])
+            i++
+          } else {
+            break
+          }
+        } else {
+          break
+        }
+      }
+
+      const block = blockLines
+        .map(l => l.trim())
+        .join('\n')
+        .trim()
+      result.push(`$$${block}$$`)
+    } else {
+      result.push(lines[i])
+      i++
+    }
+  }
+
+  return result.join('\n')
+}
+
+function isBareLatexLine(line: string): boolean {
+  if (!line) return false
+
+  if (
+    /^\$\$/.test(line) ||
+    /\$\$$/.test(line) ||
+    /^\\\[/.test(line) ||
+    /\\\]$/.test(line) ||
+    /^\\\(/.test(line) ||
+    /\\\)$/.test(line)
+  ) {
+    return false
+  }
+
+  if (/\\\(/.test(line) && /\\\)/.test(line)) return false
+
+  if (/^[-*+]\s/.test(line) || /^\d+\.\s/.test(line)) return false
+
+  if (/^__/.test(line)) return false
+
+  const hasBracedCmd = /\\(?:frac|sqrt|binom|overline|underline|hat|bar|vec|tilde|boxed)\s*\{/.test(
+    line
+  )
+  if (!hasBracedCmd) return false
+
+  const proseStarters =
+    /^(Note|Where|If|Let|For|The|Since|Because|When|Then|Given|Assume|Suppose|Corrected|Replaced|Using|This|That|Here|Thus|Hence|Therefore|Also|So|Now|To|From|By|In|On|At|As|With|We|It|A|An)\b/i
+  if (proseStarters.test(line)) return false
+
+  const cmdCount = (line.match(/\\[a-zA-Z]+/g) || []).length
+
+  const stripped = line
+    .replace(/\\[a-zA-Z]+/g, ' ')
+    .replace(/[{}_^$\\|]/g, ' ')
+    .replace(/[=+\-*/<>()[\],.:;!?0-9∫∇⋅∂ε₀ρμσπ∞²³⁴⁵⁶⁷⁸⁹⁰¹]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+
+  const proseWords = (stripped.match(/[a-zA-Z]{3,}/g) || []).filter(
+    w =>
+      ![
+        'sin',
+        'cos',
+        'tan',
+        'log',
+        'exp',
+        'lim',
+        'sup',
+        'inf',
+        'max',
+        'min',
+        'det',
+        'dim',
+        'ker',
+        'deg',
+        'gcd',
+        'lcm',
+      ].includes(w.toLowerCase())
+  )
+
+  return cmdCount > proseWords.length
+}
+
 export function fixLatexIssues(text: string): string {
   let fixed = text
 

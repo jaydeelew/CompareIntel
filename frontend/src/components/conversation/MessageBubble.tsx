@@ -238,7 +238,9 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
           {onCopyMessage && (
             <StyledTooltip
               text={
-                activeTab === RESULT_TAB.FORMATTED ? 'Copy formatted message' : 'Copy raw message'
+                activeTab === RESULT_TAB.FORMATTED
+                  ? 'Screenshot formatted message'
+                  : 'Copy raw message'
               }
             >
               <button

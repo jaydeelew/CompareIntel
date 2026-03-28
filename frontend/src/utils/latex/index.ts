@@ -1,6 +1,6 @@
 export { safeRenderKatex, looksMathematical, convertSquareRoots, looksProse } from './helpers'
 export { cleanMalformedContent } from './cleanup'
-export { fixLatexIssues } from './fixSyntax'
+export { fixLatexIssues, wrapBareLatexBlocks } from './fixSyntax'
 export { convertImplicitMath } from './implicitMath'
 export { processMarkdownLists } from './lists'
 export { renderCodeBlock } from './codeBlocks'

@@ -774,6 +774,11 @@
         "pattern": "/\\$\\$([^$]+?)\\$\\$/gs",
         "name": "double-dollar",
         "priority": 1
+      },
+      {
+        "pattern": "/\\\\\\[\\s*([\\s\\S]*?)\\s*\\\\\\]/g",
+        "name": "bracket",
+        "priority": 2
       }
     ],
     "inlineMathDelimiters": [
@@ -4190,8 +4195,30 @@
   {
     "modelId": "stepfun/step-3.5-flash:free",
     "version": "1.0.0",
-    "displayMathDelimiters": [],
-    "inlineMathDelimiters": [],
+    "displayMathDelimiters": [
+      {
+        "pattern": "/\\\\\\[\\s*([\\s\\S]*?)\\s*\\\\\\]/g",
+        "name": "bracket",
+        "priority": 1
+      },
+      {
+        "pattern": "/\\$\\$([^$]+?)\\$\\$/gs",
+        "name": "double-dollar",
+        "priority": 2
+      }
+    ],
+    "inlineMathDelimiters": [
+      {
+        "pattern": "/\\\\\\(\\s*([\\s\\S]*?)\\s*\\\\\\)/g",
+        "name": "paren",
+        "priority": 1
+      },
+      {
+        "pattern": "/(?<!\\$)\\$([^$\\n]+?)\\$(?!\\$)/g",
+        "name": "single-dollar",
+        "priority": 2
+      }
+    ],
     "preprocessing": {
       "fixEscapedDollars": false,
       "removeHtmlFromMath": false,

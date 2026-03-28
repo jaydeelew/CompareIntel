@@ -35,6 +35,7 @@ import { loadKatexCss } from '../utils/katexLoader'
 import {
   cleanMalformedContent,
   fixLatexIssues,
+  wrapBareLatexBlocks,
   convertImplicitMath,
   processMarkdownLists,
   renderCodeBlock,
@@ -878,6 +879,11 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({ children, className = '',
             /\\\\(?=(?:frac|sqrt|left|right|boxed|pm|mp|neq|leq|geq|cdot|times|div|Rightarrow|Leftarrow|rightarrow|leftarrow|alpha|beta|gamma|delta|theta|pi|infty|displaystyle)\b)/g,
             '\\'
           )
+
+        // Stage 0.4: Wrap bare LaTeX blocks (commands without delimiters) in $$
+        // Some models output \frac{}{}, \sqrt{}, etc. without any math delimiters.
+        // Must run before display/inline math extraction so wrapped blocks get picked up.
+        processed = wrapBareLatexBlocks(processed)
 
         // Stage 0.5: Extract display math blocks BEFORE any processing
         // This protects math content from being modified by preprocessing stages
