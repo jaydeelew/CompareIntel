@@ -365,14 +365,14 @@
   /* Modal overlay - slightly lighter for light theme */
   --modal-overlay-bg: rgba(0, 0, 0, 0.5);
 
-  /* Hero - Blue gradient (original light theme hero) */
+  /* Hero - Blue gradient with JS-randomized angle & stops (--hero-angle, --hero-stop*) */
   --hero-background: linear-gradient(
-    135deg,
-    #0f172a 0%,
-    #1e3a8a 20%,
-    #0ea5e9 50%,
-    #1e40af 80%,
-    #0f172a 100%
+    var(--hero-angle, 135deg),
+    #132044 0%,
+    #1e3a8a var(--hero-stop2, 20%),
+    #2b6cb5 var(--hero-stop3, 50%),
+    #1e40af var(--hero-stop4, 80%),
+    #132044 100%
   );
   --gradient-hero: var(--hero-background);
 

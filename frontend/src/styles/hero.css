@@ -95,13 +95,29 @@
   /* Theme-aware gradient background */
   background: var(--hero-background);
 
-  transition: padding-bottom 0.3s ease-out;
+  transition:
+    padding-bottom 0.3s ease-out,
+    background 0.3s ease-out;
 
   /* Establish explicit stacking context so animated/transparent pseudo-elements
      (::before with animation, ::after with opacity) composite deterministically
      behind .hero-content (z-index: 2). Without this, some browsers intermittently
      fail to paint child backgrounds above the gradient overlays. */
   isolation: isolate;
+}
+
+/* Light theme: resolve gradient on .hero-section so inline --hero-* custom
+   properties (set by JS) are in scope — they aren't visible at the :root level
+   where [data-theme='light'] defines --hero-background. */
+[data-theme='light'] .hero-section {
+  background: linear-gradient(
+    var(--hero-angle, 135deg),
+    #132044 0%,
+    #1e3a8a var(--hero-stop2, 20%),
+    #2b6cb5 var(--hero-stop3, 50%),
+    #1e40af var(--hero-stop4, 80%),
+    #132044 100%
+  );
 }
 
 /* Expand hero when dropdowns are visible */
@@ -292,6 +308,11 @@
     );
   opacity: 1;
   animation: meshFloat var(--mesh-duration, 15s) ease-in-out infinite;
+}
+
+/* Light theme: no mesh blobs — only the randomized base gradient */
+[data-theme='light'] .hero-section::before {
+  display: none;
 }
 
 /* Subtle grid pattern overlay */

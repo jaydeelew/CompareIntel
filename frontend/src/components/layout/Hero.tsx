@@ -205,6 +205,10 @@ export function Hero({ children }: HeroProps) {
       '--mesh-h4': `${r(25, 45)}%`,
       '--mesh-o4': `${r(0.04, 0.09)}`,
       '--mesh-duration': `${r(12, 20).toFixed(1)}s`,
+      '--hero-angle': `${[r(20, 70), r(110, 160), r(200, 250), r(290, 340)][Math.floor(Math.random() * 4)].toFixed(0)}deg`,
+      '--hero-stop2': `${r(10, 32).toFixed(0)}%`,
+      '--hero-stop3': `${r(35, 65).toFixed(0)}%`,
+      '--hero-stop4': `${r(68, 90).toFixed(0)}%`,
     } as React.CSSProperties
   }, [])
   /** Desktop: omit tiles when hidden (original behavior). ≤480px: keep tiles for layout stability. */
