@@ -1147,7 +1147,7 @@ html[data-theme='light'] .code-block-direct::-webkit-scrollbar-thumb:hover {
 .latex-content .katex-display {
   margin: 1em 0;
   text-align: left;
-  overflow-x: visible;
+  overflow-x: auto;
   overflow-y: visible;
 }
 
@@ -1167,13 +1167,17 @@ html[data-theme='light'] .code-block-direct::-webkit-scrollbar-thumb:hover {
   overflow: visible !important;
 }
 
-/* Prevent scrollable containers in KaTeX output */
+/* Allow wide display math to scroll; keep inline math visible */
 .latex-content .katex,
-.latex-content .katex-display,
 .latex-content .katex-html,
 .latex-content .katex .base {
   overflow: visible !important;
   overflow-x: visible !important;
+  overflow-y: visible !important;
+}
+
+.latex-content .katex-display {
+  overflow-x: auto !important;
   overflow-y: visible !important;
 }
 
@@ -1271,7 +1275,7 @@ html[data-theme='light'] .code-block-direct::-webkit-scrollbar-thumb:hover {
   background: var(--bg-secondary);
   border-radius: var(--radius-lg);
   padding: 1rem;
-  overflow-x: hidden;
+  overflow-x: auto;
   word-wrap: break-word;
   overflow-wrap: break-word;
   hyphens: auto;

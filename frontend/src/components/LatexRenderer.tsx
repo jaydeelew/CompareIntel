@@ -1396,7 +1396,6 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({ children, className = '',
         wordWrap: 'break-word',
         overflowWrap: 'break-word',
         maxWidth: '100%',
-        overflow: 'hidden',
       }}
     />
   )
