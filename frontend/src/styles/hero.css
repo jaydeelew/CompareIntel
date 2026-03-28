@@ -34,12 +34,21 @@
     line-height: 1;
   }
 
+  [data-theme='light'] .hero-theme-toggle-button {
+    /* Moon icon: softer than hero title (#f8fafc) so it does not read as harsh */
+    color: #b0c0d0;
+  }
+
   [data-theme='dark'] .hero-theme-toggle-button {
     color: #a8b8c9;
   }
 
   .hero-theme-toggle-button:hover {
     color: #ffffff;
+  }
+
+  [data-theme='light'] .hero-theme-toggle-button:hover {
+    color: #dce4ec;
   }
 
   [data-theme='dark'] .hero-theme-toggle-button:hover {
