@@ -1,6 +1,7 @@
 import {
   useCallback,
   useEffect,
+  useMemo,
   useRef,
   useState,
   useSyncExternalStore,
@@ -179,6 +180,33 @@ export function Hero({ children }: HeroProps) {
   const { theme, toggleTheme } = useTheme()
   const hideHeroUtilityTiles = useHideHeroUtilityTiles()
   const narrowHero = useNarrowHeroLayout()
+
+  const meshStyle = useMemo(() => {
+    const r = (min: number, max: number) => min + Math.random() * (max - min)
+    return {
+      '--mesh-x1': `${r(35, 65)}%`,
+      '--mesh-y1': `${r(0, 25)}%`,
+      '--mesh-w1': `${r(55, 95)}%`,
+      '--mesh-h1': `${r(35, 60)}%`,
+      '--mesh-o1': `${r(0.1, 0.2)}`,
+      '--mesh-x2': `${r(5, 35)}%`,
+      '--mesh-y2': `${r(60, 90)}%`,
+      '--mesh-w2': `${r(40, 75)}%`,
+      '--mesh-h2': `${r(28, 50)}%`,
+      '--mesh-o2': `${r(0.06, 0.14)}`,
+      '--mesh-x3': `${r(60, 92)}%`,
+      '--mesh-y3': `${r(35, 75)}%`,
+      '--mesh-w3': `${r(40, 70)}%`,
+      '--mesh-h3': `${r(28, 50)}%`,
+      '--mesh-o3': `${r(0.05, 0.12)}`,
+      '--mesh-x4': `${r(30, 70)}%`,
+      '--mesh-y4': `${r(40, 70)}%`,
+      '--mesh-w4': `${r(35, 60)}%`,
+      '--mesh-h4': `${r(25, 45)}%`,
+      '--mesh-o4': `${r(0.04, 0.09)}`,
+      '--mesh-duration': `${r(12, 20).toFixed(1)}s`,
+    } as React.CSSProperties
+  }, [])
   /** Desktop: omit tiles when hidden (original behavior). ≤480px: keep tiles for layout stability. */
   const renderCapabilityTilesInHero = !hideHeroUtilityTiles || narrowHero
 
@@ -238,6 +266,7 @@ export function Hero({ children }: HeroProps) {
       className={
         hideHeroUtilityTiles ? 'hero-section hero-section--composer-focused' : 'hero-section'
       }
+      style={meshStyle}
     >
       {/* Flash logo background */}
       <div className={`hero-logo-flash ${showFlash ? 'active' : ''}`}>
