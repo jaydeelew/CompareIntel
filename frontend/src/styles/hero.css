@@ -120,23 +120,16 @@
   overflow: visible;
 }
 
-/* Registered users (setting): hide capability tiles; vertically center composer in the hero area.
-   Does not alter base .hero-section padding — only inner layout. */
+/* Registered users (setting): hide capability tiles visually but keep grid box size so hero
+   height and title / subtitle / composer positions match the default layout.
+   Use opacity (not visibility) so intrinsic grid height stays stable; disable fadeInUp here so
+   opacity/transform from that animation cannot interact badly with layout on some engines. */
 .hero-section.hero-section--composer-focused .hero-capabilities {
-  display: none;
-}
-
-.hero-section.hero-section--composer-focused .hero-title,
-.hero-section.hero-section--composer-focused .hero-subtitle {
-  display: none;
-}
-
-.hero-section.hero-section--composer-focused .hero-input-section {
-  margin-top: clamp(13.5rem, calc(10rem + 14vh), 18rem);
-  min-height: clamp(200px, 28vh, 340px);
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
+  opacity: 0;
+  pointer-events: none;
+  user-select: none;
+  animation: none !important;
+  transform: none;
 }
 
 /* When tiles are hidden, the watermark can read huge — keep it subtler than the default 480px. */
