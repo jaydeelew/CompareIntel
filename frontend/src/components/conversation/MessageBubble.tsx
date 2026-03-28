@@ -6,6 +6,7 @@ import { formatTime, getSafeId } from '../../utils'
 // could resolve a different React instance. LatexRenderer must use the same React
 // as the main app for hooks to work correctly.
 import LatexRenderer from '../LatexRenderer'
+import { StyledTooltip } from '../shared'
 
 const BRAND_LOGO_SRC = '/brand/logo.svg'
 
@@ -235,32 +236,35 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           <span className="message-time">{getFormattedTime()}</span>
           {onCopyMessage && (
-            <button
-              className="copy-message-btn"
-              disabled={copyButtonDisabled}
-              onClick={e => {
-                onCopyMessage(safeContent)
-                e.currentTarget.blur()
-              }}
-              title={
+            <StyledTooltip
+              text={
                 activeTab === RESULT_TAB.FORMATTED ? 'Copy formatted message' : 'Copy raw message'
               }
-              aria-label={`Copy ${activeTab === RESULT_TAB.FORMATTED ? 'formatted' : 'raw'} message`}
             >
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
+              <button
+                className="copy-message-btn"
+                disabled={copyButtonDisabled}
+                onClick={e => {
+                  onCopyMessage(safeContent)
+                  e.currentTarget.blur()
+                }}
+                aria-label={`Copy ${activeTab === RESULT_TAB.FORMATTED ? 'formatted' : 'raw'} message`}
               >
-                <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-              </svg>
-            </button>
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                </svg>
+              </button>
+            </StyledTooltip>
           )}
         </div>
       </div>

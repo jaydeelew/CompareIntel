@@ -217,7 +217,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
       (buttonId: ComposerTooltipButtonId): { title: string; message: string } => {
         switch (buttonId) {
           case 'add-file':
-            return { title: 'Add File', message: 'Select or drag file here' }
+            return { title: 'Add File', message: 'Select or drag text and image files here' }
           case 'voice':
             return {
               title: 'Voice Input',
