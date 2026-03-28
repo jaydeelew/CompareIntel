@@ -72,7 +72,7 @@ export function wrapBareLatexBlocks(text: string): string {
         .map(l => l.trim())
         .join('\n')
         .trim()
-      result.push(`$$${block}$$`)
+      result.push(`$$${normalizeUnicodeMath(block)}$$`)
     } else {
       result.push(lines[i])
       i++
@@ -105,18 +105,31 @@ function isBareLatexLine(line: string): boolean {
   const hasBracedCmd = /\\(?:frac|sqrt|binom|overline|underline|hat|bar|vec|tilde|boxed)\s*\{/.test(
     line
   )
-  if (!hasBracedCmd) return false
+
+  // Detect Unicode math operators (∫, ∑, ∇, …) combined with LaTeX-style
+  // subscript/superscript notation (_{…}, ^{…}) or Unicode subscript digits.
+  // This catches model output that uses a mix of Unicode symbols and LaTeX
+  // notation but omits math-mode delimiters entirely.
+  const hasUnicodeMathOperators = /[∫∑∏∮∬∭∇∀∃∈∉]/.test(line)
+  const hasLatexSubSup = /[_^]\{/.test(line) || /[₀₁₂₃₄₅₆₇₈₉]/.test(line)
+  const hasUnicodeMath = hasUnicodeMathOperators && hasLatexSubSup
+
+  if (!hasBracedCmd && !hasUnicodeMath) return false
 
   const proseStarters =
     /^(Note|Where|If|Let|For|The|Since|Because|When|Then|Given|Assume|Suppose|Corrected|Replaced|Using|This|That|Here|Thus|Hence|Therefore|Also|So|Now|To|From|By|In|On|At|As|With|We|It|A|An)\b/i
   if (proseStarters.test(line)) return false
 
   const cmdCount = (line.match(/\\[a-zA-Z]+/g) || []).length
+  const unicodeMathCount = (line.match(/[∫∑∏∮∬∭∇∀∃∈∉∞αβγδεζηθικλμνξπρστυφχψωΓΔΘΛΞΠΣΥΦΨΩ]/g) || [])
+    .length
 
   const stripped = line
     .replace(/\\[a-zA-Z]+/g, ' ')
     .replace(/[{}_^$\\|]/g, ' ')
     .replace(/[=+\-*/<>()[\],.:;!?0-9∫∇⋅∂ε₀ρμσπ∞²³⁴⁵⁶⁷⁸⁹⁰¹]/g, ' ')
+    .replace(/[∑∏∮∬∭∀∃∈∉αβγδζηθικλμνξστυφχψωΓΔΘΛΞΠΣΥΦΨΩ→←⇒⇐·×÷±≤≥≈≠⊂⊃∪∩∅ℂℕℝℤℚ₁₂₃₄₅₆₇₈₉−‒–—]/g, ' ')
+    .replace(/[\u{1D400}-\u{1D433}]/gu, ' ')
     .replace(/\s+/g, ' ')
     .trim()
 
@@ -142,7 +155,184 @@ function isBareLatexLine(line: string): boolean {
       ].includes(w.toLowerCase())
   )
 
-  return cmdCount > proseWords.length
+  return cmdCount + unicodeMathCount > proseWords.length
+}
+
+/**
+ * Convert Unicode math symbols, Greek letters, bold math, subscripts/superscripts,
+ * and bare function names into their LaTeX equivalents so the content can be
+ * rendered by KaTeX after being wrapped in display-math delimiters.
+ *
+ * Called by wrapBareLatexBlocks on detected bare-math lines BEFORE they are
+ * wrapped in $$ and extracted – i.e. before fixLatexIssues runs.
+ */
+export function normalizeUnicodeMath(text: string): string {
+  let r = text
+
+  // Dash / minus variants → ASCII hyphen-minus
+  r = r.replace(/[−‒–—]/g, '-')
+
+  // Unicode subscript digits → LaTeX subscripts
+  r = r
+    .replace(/₀/g, '_0')
+    .replace(/₁/g, '_1')
+    .replace(/₂/g, '_2')
+    .replace(/₃/g, '_3')
+    .replace(/₄/g, '_4')
+    .replace(/₅/g, '_5')
+    .replace(/₆/g, '_6')
+    .replace(/₇/g, '_7')
+    .replace(/₈/g, '_8')
+    .replace(/₉/g, '_9')
+
+  // Unicode superscript digits → LaTeX superscripts
+  const supEntries: [string, string][] = [
+    ['²', '2'],
+    ['³', '3'],
+    ['⁴', '4'],
+    ['⁵', '5'],
+    ['⁶', '6'],
+    ['⁷', '7'],
+    ['⁸', '8'],
+    ['⁹', '9'],
+    ['⁰', '0'],
+    ['¹', '1'],
+  ]
+  for (const [uc, digit] of supEntries) {
+    const escaped = uc.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    r = r.replace(new RegExp(`([a-zA-Z0-9)\\]])${escaped}`, 'g'), `$1^{${digit}}`)
+    r = r.replace(new RegExp(escaped, 'g'), `^{${digit}}`)
+  }
+
+  // Mathematical Bold letters (U+1D400‒U+1D433)
+  r = r.replace(/[\u{1D400}-\u{1D419}]/gu, ch => {
+    const offset = ch.codePointAt(0)! - 0x1d400
+    return `\\mathbf{${String.fromCharCode(65 + offset)}}`
+  })
+  r = r.replace(/[\u{1D41A}-\u{1D433}]/gu, ch => {
+    const offset = ch.codePointAt(0)! - 0x1d41a
+    return `\\mathbf{${String.fromCharCode(97 + offset)}}`
+  })
+
+  // Blackboard-bold
+  r = r
+    .replace(/ℂ/g, '\\mathbb{C}')
+    .replace(/ℕ/g, '\\mathbb{N}')
+    .replace(/ℝ/g, '\\mathbb{R}')
+    .replace(/ℤ/g, '\\mathbb{Z}')
+    .replace(/ℚ/g, '\\mathbb{Q}')
+
+  // Multi-char operators first to avoid partial matches (∭ before ∫, etc.)
+  r = r
+    .replace(/∭/g, '\\iiint ')
+    .replace(/∬/g, '\\iint ')
+    .replace(/∮/g, '\\oint ')
+    .replace(/∫/g, '\\int ')
+    .replace(/∑/g, '\\sum ')
+    .replace(/∏/g, '\\prod ')
+    .replace(/∇/g, '\\nabla ')
+    .replace(/∂/g, '\\partial ')
+    .replace(/∀/g, '\\forall ')
+    .replace(/∃/g, '\\exists ')
+    .replace(/∈/g, '\\in ')
+    .replace(/∉/g, '\\notin ')
+    .replace(/∞/g, '\\infty ')
+    .replace(/→/g, '\\to ')
+    .replace(/←/g, '\\leftarrow ')
+    .replace(/⇒/g, '\\Rightarrow ')
+    .replace(/⇐/g, '\\Leftarrow ')
+    .replace(/±/g, '\\pm ')
+    .replace(/×/g, '\\times ')
+    .replace(/÷/g, '\\div ')
+    .replace(/≤/g, '\\leq ')
+    .replace(/≥/g, '\\geq ')
+    .replace(/≈/g, '\\approx ')
+    .replace(/≠/g, '\\neq ')
+    .replace(/⊂/g, '\\subset ')
+    .replace(/⊃/g, '\\supset ')
+    .replace(/∪/g, '\\cup ')
+    .replace(/∩/g, '\\cap ')
+    .replace(/∅/g, '\\emptyset ')
+    .replace(/⋅/g, '\\cdot ')
+    .replace(/·/g, '\\cdot ')
+
+  // Greek lowercase
+  r = r
+    .replace(/α/g, '\\alpha ')
+    .replace(/β/g, '\\beta ')
+    .replace(/γ/g, '\\gamma ')
+    .replace(/δ/g, '\\delta ')
+    .replace(/ε/g, '\\varepsilon ')
+    .replace(/ζ/g, '\\zeta ')
+    .replace(/η/g, '\\eta ')
+    .replace(/θ/g, '\\theta ')
+    .replace(/ι/g, '\\iota ')
+    .replace(/κ/g, '\\kappa ')
+    .replace(/λ/g, '\\lambda ')
+    .replace(/μ/g, '\\mu ')
+    .replace(/ν/g, '\\nu ')
+    .replace(/ξ/g, '\\xi ')
+    .replace(/π/g, '\\pi ')
+    .replace(/ρ/g, '\\rho ')
+    .replace(/σ/g, '\\sigma ')
+    .replace(/τ/g, '\\tau ')
+    .replace(/υ/g, '\\upsilon ')
+    .replace(/φ/g, '\\varphi ')
+    .replace(/χ/g, '\\chi ')
+    .replace(/ψ/g, '\\psi ')
+    .replace(/ω/g, '\\omega ')
+
+  // Greek uppercase (only those that differ from Latin)
+  r = r
+    .replace(/Γ/g, '\\Gamma ')
+    .replace(/Δ/g, '\\Delta ')
+    .replace(/Θ/g, '\\Theta ')
+    .replace(/Λ/g, '\\Lambda ')
+    .replace(/Ξ/g, '\\Xi ')
+    .replace(/Π/g, '\\Pi ')
+    .replace(/Σ/g, '\\Sigma ')
+    .replace(/Υ/g, '\\Upsilon ')
+    .replace(/Φ/g, '\\Phi ')
+    .replace(/Ψ/g, '\\Psi ')
+    .replace(/Ω/g, '\\Omega ')
+
+  // Bare math function names → \cmd (longer names first to avoid partial match)
+  const fns = [
+    'arcsin',
+    'arccos',
+    'arctan',
+    'sinh',
+    'cosh',
+    'tanh',
+    'sin',
+    'cos',
+    'tan',
+    'cot',
+    'sec',
+    'csc',
+    'log',
+    'ln',
+    'exp',
+    'lim',
+    'max',
+    'min',
+    'sup',
+    'det',
+    'dim',
+    'ker',
+    'deg',
+    'gcd',
+    'infty',
+  ]
+  fns.forEach(fn => {
+    r = r.replace(new RegExp(`(?<!\\\\)\\b${fn}\\b`, 'g'), `\\${fn}`)
+  })
+  r = r.replace(/(?<!\\)\binf\b(?!ty)/g, '\\inf')
+
+  // Collapse runs of spaces
+  r = r.replace(/ {2,}/g, ' ')
+
+  return r
 }
 
 export function fixLatexIssues(text: string): string {
