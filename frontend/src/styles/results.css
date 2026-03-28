@@ -1148,7 +1148,7 @@ html[data-theme='light'] .code-block-direct::-webkit-scrollbar-thumb:hover {
   margin: 1em 0;
   text-align: left;
   overflow-x: auto;
-  overflow-y: visible;
+  overflow-y: hidden;
 }
 
 .latex-content .katex-display > .katex {
@@ -1178,7 +1178,7 @@ html[data-theme='light'] .code-block-direct::-webkit-scrollbar-thumb:hover {
 
 .latex-content .katex-display {
   overflow-x: auto !important;
-  overflow-y: visible !important;
+  overflow-y: hidden !important;
 }
 
 /* Ensure boxed equations don't create scrollable containers */
