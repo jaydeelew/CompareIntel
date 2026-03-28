@@ -132,6 +132,22 @@
   transform: none;
 }
 
+/* Mobile: hide visible title + subtitle when tiles are hidden; visibility keeps boxes/margins
+   unchanged. Only the decorative title span is hidden — .sr-only in the h1 stays available to AT. */
+@media (max-width: 768px) {
+  .hero-section.hero-section--composer-focused .hero-title > span[aria-hidden='true'] {
+    visibility: hidden;
+    pointer-events: none;
+    user-select: none;
+  }
+
+  .hero-section.hero-section--composer-focused .hero-subtitle {
+    visibility: hidden;
+    pointer-events: none;
+    user-select: none;
+  }
+}
+
 /* When tiles are hidden, the watermark can read huge — keep it subtler than the default 480px. */
 .hero-section.hero-section--composer-focused .hero-centered-logo {
   width: min(360px, 75vw);
