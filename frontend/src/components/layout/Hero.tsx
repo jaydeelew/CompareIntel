@@ -291,50 +291,6 @@ export function Hero({ children }: HeroProps) {
             className="hero-centered-logo hero-centered-logo--with-arrows"
             aria-hidden="true"
           />
-          <svg
-            className="hero-arrow hero-arrow--left"
-            viewBox="0 0 1000 100"
-            preserveAspectRatio="none"
-            xmlns="http://www.w3.org/2000/svg"
-            aria-hidden="true"
-          >
-            <defs>
-              <linearGradient
-                id="heroArrowGradL"
-                x1="500"
-                y1="0"
-                x2="500"
-                y2="100"
-                gradientUnits="userSpaceOnUse"
-              >
-                <stop stopColor="#4DA8FF" />
-                <stop offset="1" stopColor="#2878C8" />
-              </linearGradient>
-            </defs>
-            <path d="M0 35 H850 V0 L1000 50 L850 100 V65 H0 Z" fill="url(#heroArrowGradL)" />
-          </svg>
-          <svg
-            className="hero-arrow hero-arrow--right"
-            viewBox="0 0 1000 100"
-            preserveAspectRatio="none"
-            xmlns="http://www.w3.org/2000/svg"
-            aria-hidden="true"
-          >
-            <defs>
-              <linearGradient
-                id="heroArrowGradR"
-                x1="500"
-                y1="0"
-                x2="500"
-                y2="100"
-                gradientUnits="userSpaceOnUse"
-              >
-                <stop stopColor="#4DA8FF" />
-                <stop offset="1" stopColor="#2878C8" />
-              </linearGradient>
-            </defs>
-            <path d="M1000 35 H150 V0 L0 50 L150 100 V65 H1000 Z" fill="url(#heroArrowGradR)" />
-          </svg>
         </>
       )}
 
@@ -506,7 +462,17 @@ export function Hero({ children }: HeroProps) {
         )}
 
         {/* Render children (comparison form) inside hero-input-section */}
-        {children && <div className="hero-input-section">{children}</div>}
+        {children && (
+          <div className="hero-input-section">
+            {hideHeroUtilityTiles && (
+              <>
+                <div className="hero-arrow hero-arrow--left" aria-hidden="true" />
+                <div className="hero-arrow hero-arrow--right" aria-hidden="true" />
+              </>
+            )}
+            {children}
+          </div>
+        )}
       </div>
 
       {enlargedImageSrc &&

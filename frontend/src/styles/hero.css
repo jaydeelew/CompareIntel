@@ -217,6 +217,11 @@
   opacity: 0.13;
 }
 
+[data-theme='dark'] .hero-centered-logo--no-arrows,
+[data-theme='dark'] .hero-centered-logo--with-arrows {
+  opacity: 0.04;
+}
+
 /* Mid-width screens: swap to the full logo (with built-in arrows) and hide the separate arrows.
    Center vertically between the navbar bottom (hero top) and the composer top. */
 @media (max-width: 1100px) {
@@ -238,39 +243,85 @@
 
 /* Watermark logo keeps the 1100px-level top value down to mobile; see @media (max-width: 480px) in navigation.css. */
 
-/* Decorative arrows from screen edges toward the composer.
-   Vertical position: hero bottom-padding (4rem) + half the focused input-section
-   min-height + half the composer height targets the white-area center. */
-.hero-arrow {
-  position: absolute;
-  bottom: calc(4rem + clamp(125px, 18vh, 215px));
-  transform: translateY(50%);
-  height: clamp(70px, 9vw, 150px);
-  width: calc(50% - 390px);
-  pointer-events: none;
-  z-index: 1;
-  user-select: none;
-  opacity: 0.15;
+/* Decorative arrows: live in .hero-input-section; tips align to composer vertical center (anchor). */
+.hero-section.hero-section--composer-focused .hero-input-section {
+  position: relative;
 }
 
-[data-theme='light'] .hero-arrow {
+.hero-section.hero-section--composer-focused .hero-input-section .hero-arrow {
+  position: absolute;
+  height: 100px;
+  pointer-events: none;
+  z-index: 0;
+  user-select: none;
+  opacity: 0.15;
+  background: linear-gradient(to bottom, #4da8ff, #2878c8);
+}
+
+[data-theme='light'] .hero-section.hero-section--composer-focused .hero-input-section .hero-arrow {
   opacity: 0.18;
 }
 
-.hero-arrow--left {
-  left: 0;
+[data-theme='dark'] .hero-section.hero-section--composer-focused .hero-input-section .hero-arrow {
+  opacity: 0.055;
+}
+
+.hero-section.hero-section--composer-focused .hero-input-section .hero-arrow--left {
+  left: calc(50% - 50vw);
+  width: calc(50vw - 390px);
+  clip-path: polygon(
+    0% calc(35% - 1.5px),
+    calc(100% - 56px) calc(35% - 1.5px),
+    calc(100% - 56px) 0%,
+    100% 50%,
+    calc(100% - 56px) 100%,
+    calc(100% - 56px) calc(65% + 1.5px),
+    0% calc(65% + 1.5px)
+  );
   -webkit-mask-image: linear-gradient(to right, transparent 0%, transparent 20%, black 100%);
   mask-image: linear-gradient(to right, transparent 0%, transparent 20%, black 100%);
 }
 
-.hero-arrow--right {
-  right: 0;
+.hero-section.hero-section--composer-focused .hero-input-section .hero-arrow--right {
+  right: calc(50% - 50vw);
+  width: calc(50vw - 390px);
+  clip-path: polygon(
+    100% calc(35% - 1.5px),
+    56px calc(35% - 1.5px),
+    56px 0%,
+    0% 50%,
+    56px 100%,
+    56px calc(65% + 1.5px),
+    100% calc(65% + 1.5px)
+  );
   -webkit-mask-image: linear-gradient(to left, transparent 0%, transparent 20%, black 100%);
   mask-image: linear-gradient(to left, transparent 0%, transparent 20%, black 100%);
 }
 
+/* Tips track the vertical center of the full composer (textarea + toolbar, banners, dropdown chrome). */
+@supports (anchor-name: --hero-composer) {
+  .hero-section.hero-section--composer-focused .hero-input-section .composer {
+    anchor-name: --hero-composer;
+  }
+
+  .hero-section.hero-section--composer-focused .hero-input-section .hero-arrow {
+    position-anchor: --hero-composer;
+    top: anchor(50%);
+    bottom: auto;
+    transform: translateY(-50%);
+  }
+}
+
+@supports not (anchor-name: --hero-composer) {
+  .hero-section.hero-section--composer-focused .hero-input-section .hero-arrow {
+    top: clamp(5rem, 22vw, 11rem);
+    bottom: auto;
+    transform: translateY(-50%);
+  }
+}
+
 @media (max-width: 1100px) {
-  .hero-arrow {
+  .hero-section.hero-section--composer-focused .hero-input-section .hero-arrow {
     display: none;
   }
 }
