@@ -1,4 +1,11 @@
-import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+  type ReactNode,
+} from 'react'
 import { createPortal } from 'react-dom'
 
 import { useTheme } from '../../contexts/ThemeContext'
@@ -10,6 +17,21 @@ import { StyledTooltip } from '../shared'
  * replace any hero capability video file so clients fetch the new bytes.
  */
 const CAPABILITY_VIDEO_CACHE_BUST = 'v=2'
+
+/** Matches hero.css phone rules (theme toggle in hero, etc.); mobile keeps tiles in DOM but hidden. */
+const NARROW_HERO_MQ = '(max-width: 480px)'
+
+function useNarrowHeroLayout(): boolean {
+  return useSyncExternalStore(
+    onStoreChange => {
+      const mq = window.matchMedia(NARROW_HERO_MQ)
+      mq.addEventListener('change', onStoreChange)
+      return () => mq.removeEventListener('change', onStoreChange)
+    },
+    () => window.matchMedia(NARROW_HERO_MQ).matches,
+    () => false
+  )
+}
 
 interface CapabilityTileProps {
   id: string
@@ -156,6 +178,9 @@ export function Hero({ children }: HeroProps) {
   const [enlargedImageSrc, setEnlargedImageSrc] = useState<string | null>(null)
   const { theme, toggleTheme } = useTheme()
   const hideHeroUtilityTiles = useHideHeroUtilityTiles()
+  const narrowHero = useNarrowHeroLayout()
+  /** Desktop: omit tiles when hidden (original behavior). ≤480px: keep tiles for layout stability. */
+  const renderCapabilityTilesInHero = !hideHeroUtilityTiles || narrowHero
 
   const dismissFlip = useCallback(() => {
     setFlippedTile(null)
@@ -333,117 +358,119 @@ export function Hero({ children }: HeroProps) {
           <span className="hero-subtitle-second-line"> at the same time</span>
         </p>
 
-        <div
-          className={`hero-capabilities${enlargedImageSrc ? ' lightbox-open' : ''}`}
-          aria-hidden={hideHeroUtilityTiles}
-        >
-          <CapabilityTile
-            id="natural-language"
-            icon={
-              <svg
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-              </svg>
-            }
-            title="Natural Language"
-            backTitle="Natural Language COMPARISON"
-            description="Compare conversational responses"
-            backVideo={`/videos/natural_language.mp4?${CAPABILITY_VIDEO_CACHE_BUST}`}
-            backText="Ask any question and instantly compare how each model responds — notice the differences in tone, detail, and perspective."
-            isFlipped={flippedTile === 'natural-language'}
-            onTileClick={handleTileClick}
-            onImageEnlarge={setEnlargedImageSrc}
-          />
+        {renderCapabilityTilesInHero && (
+          <div
+            className={`hero-capabilities${enlargedImageSrc ? ' lightbox-open' : ''}`}
+            aria-hidden={hideHeroUtilityTiles}
+          >
+            <CapabilityTile
+              id="natural-language"
+              icon={
+                <svg
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                </svg>
+              }
+              title="Natural Language"
+              backTitle="Natural Language COMPARISON"
+              description="Compare conversational responses"
+              backVideo={`/videos/natural_language.mp4?${CAPABILITY_VIDEO_CACHE_BUST}`}
+              backText="Ask any question and instantly compare how each model responds — notice the differences in tone, detail, and perspective."
+              isFlipped={flippedTile === 'natural-language'}
+              onTileClick={handleTileClick}
+              onImageEnlarge={setEnlargedImageSrc}
+            />
 
-          <CapabilityTile
-            id="code-generation"
-            icon={
-              <svg
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <polyline points="16 18 22 12 16 6"></polyline>
-                <polyline points="8 6 2 12 8 18"></polyline>
-              </svg>
-            }
-            title="Code Generation"
-            backTitle="Code Generation COMPARISON"
-            description="Evaluate programming capabilities"
-            backVideo={`/videos/code-generation.mp4?${CAPABILITY_VIDEO_CACHE_BUST}`}
-            backText="Submit a coding prompt and compare the generated implementations — evaluate syntax, style, and correctness side by side."
-            isFlipped={flippedTile === 'code-generation'}
-            onTileClick={handleTileClick}
-            onImageEnlarge={setEnlargedImageSrc}
-          />
+            <CapabilityTile
+              id="code-generation"
+              icon={
+                <svg
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <polyline points="16 18 22 12 16 6"></polyline>
+                  <polyline points="8 6 2 12 8 18"></polyline>
+                </svg>
+              }
+              title="Code Generation"
+              backTitle="Code Generation COMPARISON"
+              description="Evaluate programming capabilities"
+              backVideo={`/videos/code-generation.mp4?${CAPABILITY_VIDEO_CACHE_BUST}`}
+              backText="Submit a coding prompt and compare the generated implementations — evaluate syntax, style, and correctness side by side."
+              isFlipped={flippedTile === 'code-generation'}
+              onTileClick={handleTileClick}
+              onImageEnlarge={setEnlargedImageSrc}
+            />
 
-          <CapabilityTile
-            id="formatted-math"
-            icon={
-              <svg
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M3 12h3l3 7 5-14h7"></path>
-              </svg>
-            }
-            title="Formatted Math"
-            backTitle="Formatted Math COMPARISON"
-            description="Render math equations beautifully"
-            backVideo={`/videos/formatted-math.mp4?${CAPABILITY_VIDEO_CACHE_BUST}`}
-            backText="Request a derivation or formula and see how each model renders mathematical notation — compare clarity and step-by-step accuracy."
-            isFlipped={flippedTile === 'formatted-math'}
-            onTileClick={handleTileClick}
-            onImageEnlarge={setEnlargedImageSrc}
-          />
+            <CapabilityTile
+              id="formatted-math"
+              icon={
+                <svg
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M3 12h3l3 7 5-14h7"></path>
+                </svg>
+              }
+              title="Formatted Math"
+              backTitle="Formatted Math COMPARISON"
+              description="Render math equations beautifully"
+              backVideo={`/videos/formatted-math.mp4?${CAPABILITY_VIDEO_CACHE_BUST}`}
+              backText="Request a derivation or formula and see how each model renders mathematical notation — compare clarity and step-by-step accuracy."
+              isFlipped={flippedTile === 'formatted-math'}
+              onTileClick={handleTileClick}
+              onImageEnlarge={setEnlargedImageSrc}
+            />
 
-          <CapabilityTile
-            id="image-creation"
-            icon={
-              <svg
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-                <circle cx="8.5" cy="8.5" r="1.5" />
-                <polyline points="21 15 16 10 5 21" />
-              </svg>
-            }
-            title="Image Creation"
-            backTitle="Image Creation COMPARISON"
-            description="Compare AI-generated images"
-            backVideo={`/videos/image-generation.mp4?${CAPABILITY_VIDEO_CACHE_BUST}`}
-            backText="Enter a prompt and compare images generated by multiple AI models side by side — see how each interprets your vision."
-            isFlipped={flippedTile === 'image-creation'}
-            onTileClick={handleTileClick}
-            onImageEnlarge={setEnlargedImageSrc}
-          />
-        </div>
+            <CapabilityTile
+              id="image-creation"
+              icon={
+                <svg
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                  <circle cx="8.5" cy="8.5" r="1.5" />
+                  <polyline points="21 15 16 10 5 21" />
+                </svg>
+              }
+              title="Image Creation"
+              backTitle="Image Creation COMPARISON"
+              description="Compare AI-generated images"
+              backVideo={`/videos/image-generation.mp4?${CAPABILITY_VIDEO_CACHE_BUST}`}
+              backText="Enter a prompt and compare images generated by multiple AI models side by side — see how each interprets your vision."
+              isFlipped={flippedTile === 'image-creation'}
+              onTileClick={handleTileClick}
+              onImageEnlarge={setEnlargedImageSrc}
+            />
+          </div>
+        )}
 
         {/* Render children (comparison form) inside hero-input-section */}
         {children && <div className="hero-input-section">{children}</div>}

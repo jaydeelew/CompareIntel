@@ -120,21 +120,20 @@
   overflow: visible;
 }
 
-/* Registered users (setting): hide capability tiles visually but keep grid box size so hero
-   height and title / subtitle / composer positions match the default layout.
-   Use opacity (not visibility) so intrinsic grid height stays stable; disable fadeInUp here so
-   opacity/transform from that animation cannot interact badly with layout on some engines. */
-.hero-section.hero-section--composer-focused .hero-capabilities {
-  opacity: 0;
-  pointer-events: none;
-  user-select: none;
-  animation: none !important;
-  transform: none;
-}
+/* Registered users (setting): "hide capability tiles"
+   — ≤480px: keep tiles in DOM, hide with opacity; hide title/subtitle with visibility (layout stable).
+   — >480px: original behavior — remove tiles from flow, hide title/subtitle, composer-focused input. */
 
-/* Mobile: hide visible title + subtitle when tiles are hidden; visibility keeps boxes/margins
-   unchanged. Only the decorative title span is hidden — .sr-only in the h1 stays available to AT. */
-@media (max-width: 768px) {
+@media (max-width: 480px) {
+  .hero-section.hero-section--composer-focused .hero-capabilities {
+    opacity: 0;
+    pointer-events: none;
+    user-select: none;
+    animation: none !important;
+    transform: none;
+  }
+
+  /* Hide visible title + subtitle; visibility keeps boxes/margins unchanged. .sr-only in h1 stays for AT. */
   .hero-section.hero-section--composer-focused .hero-title > span[aria-hidden='true'] {
     visibility: hidden;
     pointer-events: none;
@@ -145,6 +144,25 @@
     visibility: hidden;
     pointer-events: none;
     user-select: none;
+  }
+}
+
+@media (min-width: 481px) {
+  .hero-section.hero-section--composer-focused .hero-capabilities {
+    display: none;
+  }
+
+  .hero-section.hero-section--composer-focused .hero-title,
+  .hero-section.hero-section--composer-focused .hero-subtitle {
+    display: none;
+  }
+
+  .hero-section.hero-section--composer-focused .hero-input-section {
+    margin-top: clamp(13.5rem, calc(10rem + 14vh), 18rem);
+    min-height: clamp(200px, 28vh, 340px);
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
   }
 }
 
