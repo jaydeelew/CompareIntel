@@ -1112,6 +1112,16 @@
         "knowledge_cutoff": "August 2025"
       },
       {
+        "id": "x-ai/grok-4.20-beta",
+        "name": "Grok 4.20 Beta",
+        "description": "Grok 4.20 Beta is xAI's newest flagship model with industry-leading speed and agentic tool calling capabilities.",
+        "category": "Language",
+        "provider": "xAI",
+        "supports_web_search": true,
+        "supports_image_generation": false,
+        "knowledge_cutoff": null
+      },
+      {
         "id": "x-ai/grok-5",
         "name": "Grok 5 (Coming Soon)",
         "description": "xAI's upcoming next-generation model expected by end of 2025 (not yet available).",
