@@ -19,8 +19,6 @@ from ...credit_manager import (
 from ...database import get_db
 from ...dependencies import get_current_user
 from ...model_runner import (
-    MODELS_BY_PROVIDER,
-    OPENROUTER_MODELS,
     estimate_token_count,
     get_min_max_input_tokens,
     get_model_max_input_tokens,
@@ -142,7 +140,17 @@ async def get_available_models(
         is_trial_active = False
 
     def get_models():
-        all_models = filter_models_by_tier(OPENROUTER_MODELS, tier, is_trial_active)
+        # Reload registry from disk and read via model_runner — `from model_runner import
+        # MODELS_BY_PROVIDER` in this module would stay bound to the initial dict after
+        # reload_registry() reassigns the module globals (admin/UI desync).
+        from ... import model_runner as mr
+        from ...llm.registry import reload_registry
+
+        reload_registry()
+        openrouter_models = mr.OPENROUTER_MODELS
+        models_by_provider = mr.MODELS_BY_PROVIDER
+
+        all_models = filter_models_by_tier(openrouter_models, tier, is_trial_active)
         for model in all_models:
             model["supports_temperature"] = get_model_supports_temperature(model["id"])
             model["supports_vision"] = get_model_supports_vision(model["id"])
@@ -173,8 +181,8 @@ async def get_available_models(
 
         from ...model_runner import sort_models_by_tier_and_version
 
-        models_by_provider = {}
-        for provider, models in MODELS_BY_PROVIDER.items():
+        models_by_provider_out = {}
+        for provider, models in models_by_provider.items():
             sorted_models = sort_models_by_tier_and_version(models)
             provider_models = filter_models_by_tier(sorted_models, tier, is_trial_active)
             if provider_models:
@@ -214,11 +222,11 @@ async def get_available_models(
                         model["max_output_tokens"] = 8192
                     deduped_models.append(model)
                 if deduped_models:
-                    models_by_provider[provider] = deduped_models
+                    models_by_provider_out[provider] = deduped_models
 
         return {
             "models": all_models,
-            "models_by_provider": models_by_provider,
+            "models_by_provider": models_by_provider_out,
             "user_tier": tier,
             "is_trial_active": is_trial_active,
         }
@@ -353,10 +361,11 @@ async def compare_stream(
     if not req.models:
         raise HTTPException(status_code=400, detail="At least one model must be selected")
 
+    from ... import model_runner as mr
     from ...model_runner import get_model_supports_image_generation
 
     def _model_supports_image_gen(mid: str) -> bool:
-        for models in MODELS_BY_PROVIDER.values():
+        for models in mr.MODELS_BY_PROVIDER.values():
             for m in models:
                 if m.get("id") == mid and m.get("supports_image_generation"):
                     return True
@@ -392,7 +401,7 @@ async def compare_stream(
             model_max_input = get_model_max_input_tokens(model_id)
             if model_max_input < input_tokens:
                 model_name = None
-                for provider_models in MODELS_BY_PROVIDER.values():
+                for provider_models in mr.MODELS_BY_PROVIDER.values():
                     for model in provider_models:
                         if model.get("id") == model_id:
                             model_name = model.get("name", model_id)

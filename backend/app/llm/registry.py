@@ -276,6 +276,14 @@ def reload_registry() -> None:
         mr_mod.FREE_TIER_MODELS = FREE_TIER_MODELS
         mr_mod.OPENROUTER_MODELS = OPENROUTER_MODELS
 
+    # Public /models response is cached; invalidate so new models appear without stale HTTP cache.
+    try:
+        from app.cache import invalidate_models_cache
+
+        invalidate_models_cache()
+    except Exception:
+        pass
+
 
 def _get_model_tier_for_sort(model_id: str) -> int:
     """Get tier classification for sorting: 0=unregistered, 1=free, 2=paid."""

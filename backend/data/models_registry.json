@@ -1143,6 +1143,16 @@
         "knowledge_cutoff": null
       },
       {
+        "id": "z-ai/glm-5-turbo",
+        "name": "Glm 5 Turbo",
+        "description": "GLM-5 Turbo is a new model from Z.ai designed for fast inference and strong performance in agent-driven environments such as OpenClaw scenarios.",
+        "category": "Language",
+        "provider": "ZAi",
+        "supports_web_search": true,
+        "supports_image_generation": false,
+        "knowledge_cutoff": null
+      },
+      {
         "id": "z-ai/glm-4.7",
         "name": "Glm 4.7",
         "description": "GLM-4.7 is Z.AI's latest flagship model, featuring upgrades in two key areas: enhanced programming capabilities and more stable multi-step reasoning/execution.",
@@ -1219,6 +1229,7 @@
     "qwen/qwen3.5-plus-02-15",
     "sourceful/riverflow-v2-standard-preview",
     "x-ai/grok-3-mini",
-    "z-ai/glm-5"
+    "z-ai/glm-5",
+    "z-ai/glm-5-turbo"
   ]
 }

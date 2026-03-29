@@ -156,13 +156,26 @@ def get_cached_models(getter_func: Callable[[], T]) -> T:
     Returns:
         Models list (cached for 1 hour since it's static)
     """
+    from app.llm.registry import get_registry_path
+
+    registry_path = get_registry_path()
+    try:
+        current_mtime_ns = registry_path.stat().st_mtime_ns
+    except OSError:
+        current_mtime_ns = None
+
     cached_value = cache.get(CACHE_KEY_MODELS)
     if cached_value is not None:
-        return cached_value
+        if isinstance(cached_value, tuple) and len(cached_value) == 2:
+            data, cached_mtime_ns = cached_value
+            if cached_mtime_ns == current_mtime_ns:
+                return data
+        else:
+            # Legacy: cached payload without mtime — drop so registry edits take effect
+            cache.delete(CACHE_KEY_MODELS)
 
-    # Get models and cache for 1 hour (static data)
     models = getter_func()
-    cache.set(CACHE_KEY_MODELS, models, ttl_seconds=3600)
+    cache.set(CACHE_KEY_MODELS, (models, current_mtime_ns), ttl_seconds=3600)
     return models
 
 
