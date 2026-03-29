@@ -1391,6 +1391,21 @@ video.capability-tile-image-lightbox-img {
   border-radius: 1.5rem 1.5rem 0 0;
 }
 
+/* .composer draws the outer ring; inner borders on the same radius stack and read as a double outline at corners */
+.composer .hero-input-textarea {
+  border-top: none;
+  border-left: none;
+  border-right: none;
+}
+
+.composer:not(:has(.composer-toolbar)) .hero-input-textarea {
+  border-bottom: none;
+}
+
+.composer .composer-toolbar {
+  border: none;
+}
+
 /* Remove line between image-attachment-banner and textarea */
 .composer:has(.image-attachment-banner) .hero-input-textarea {
   border-top: none;

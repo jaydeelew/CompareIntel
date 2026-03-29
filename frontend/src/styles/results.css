@@ -2292,7 +2292,8 @@ body:has([role='dialog'][aria-modal='true']) .done-selecting-card {
   animation: pulseBorder 1.5s ease-in-out infinite;
 }
 
-.animate-pulse-border .hero-input-textarea {
+/* Error pulse: outer ring is on .composer (inner textarea border removed in hero.css) */
+.composer.animate-pulse-border {
   border-color: rgba(239, 68, 68, 0.5);
 }
 
