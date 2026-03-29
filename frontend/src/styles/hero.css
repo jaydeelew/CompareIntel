@@ -604,7 +604,8 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
-  transform: rotateY(0deg);
+  /* translateZ separates faces for correct backface culling (no opacity swap — that + backdrop-filter + 3D caused empty backs). */
+  transform: rotateY(0deg) translateZ(1px);
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
   background: rgba(255, 255, 255, 0.03);
@@ -613,8 +614,6 @@
   border-radius: 18px;
   margin: -1.25rem -1rem;
   padding: 1.25rem 1rem;
-  opacity: 1;
-  transition: opacity 0.25s ease;
 }
 
 /* Back face — absolutely positioned over front, pre-rotated.
@@ -627,7 +626,7 @@
   bottom: 0;
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
-  transform: rotateY(180deg);
+  transform: rotateY(180deg) translateZ(1px);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -635,22 +634,16 @@
   padding: 0.5rem;
   border-radius: 18px;
   gap: 0.25rem;
-  background: rgba(15, 23, 42, 0.95);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  opacity: 0;
+  /* Nearly opaque fill keeps the back readable without backdrop-filter, which often fails to paint under 3D transforms. */
+  background: rgba(15, 23, 42, 0.98);
   pointer-events: none;
-  transition: opacity 0.25s ease;
 }
 
-/* Force clear front/back switching so screenshots always appear on flip */
 .capability-tile.flipped .capability-tile-front {
-  opacity: 0;
   pointer-events: none;
 }
 
 .capability-tile.flipped .capability-tile-back {
-  opacity: 1;
   pointer-events: auto;
 }
 
@@ -774,7 +767,7 @@
 
 /* Light theme: flipped tile back face */
 [data-theme='light'] .capability-tile-back {
-  background: rgba(248, 250, 252, 0.82);
+  background: rgba(248, 250, 252, 0.98);
   border: 1px solid rgba(0, 0, 0, 0.08);
 }
 
