@@ -4,6 +4,8 @@
  */
 
 import React, { useEffect, useRef } from 'react'
+import { createPortal } from 'react-dom'
+
 import './UsageIndicatorInfoModal.css'
 
 interface UsageIndicatorInfoModalProps {
@@ -58,7 +60,7 @@ export const UsageIndicatorInfoModal: React.FC<UsageIndicatorInfoModalProps> = (
     }
   }, [isOpen])
 
-  if (!isOpen) return null
+  if (!isOpen || typeof document === 'undefined') return null
 
   // Build message text
   let messageText: string
@@ -79,7 +81,7 @@ export const UsageIndicatorInfoModal: React.FC<UsageIndicatorInfoModalProps> = (
     }
   }
 
-  return (
+  return createPortal(
     <div
       className="usage-indicator-info-overlay"
       onClick={onClose}
@@ -132,6 +134,7 @@ export const UsageIndicatorInfoModal: React.FC<UsageIndicatorInfoModalProps> = (
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }

@@ -38,6 +38,8 @@ export interface TokenUsageDisplayProps {
   tutorialIsActive?: boolean
   /** When true, the tooltip is hidden (e.g. on mobile) */
   hideTooltip?: boolean
+  /** Capacity info modal is mobile-only (matches useResponsive isMobileLayout) */
+  isMobileLayout?: boolean
 }
 
 function formatCapacityChars(tokens: number): string {
@@ -89,6 +91,7 @@ export function TokenUsageDisplay({
   onTokenUsageInfoChange,
   tutorialIsActive = false,
   hideTooltip = false,
+  isMobileLayout = false,
 }: TokenUsageDisplayProps) {
   const debouncedInput = useDebounce(input, 600)
   const [accurateTokenCounts, setAccurateTokenCounts] = useState<{
@@ -99,6 +102,10 @@ export function TokenUsageDisplay({
   const [isLoadingAccurateTokens, setIsLoadingAccurateTokens] = useState(false)
   const [showUsageIndicatorInfo, setShowUsageIndicatorInfo] = useState(false)
   const abortControllerRef = useRef<AbortController | null>(null)
+
+  useEffect(() => {
+    if (!isMobileLayout) setShowUsageIndicatorInfo(false)
+  }, [isMobileLayout])
 
   useEffect(() => {
     if (selectedModels.length === 0) {
@@ -303,7 +310,7 @@ export function TokenUsageDisplay({
     <div
       className="token-usage-indicator"
       onClick={() => {
-        if (!tutorialIsActive) setShowUsageIndicatorInfo(true)
+        if (!tutorialIsActive && isMobileLayout) setShowUsageIndicatorInfo(true)
       }}
       style={{
         touchAction: 'manipulation',
@@ -339,7 +346,7 @@ export function TokenUsageDisplay({
     <>
       {hideTooltip ? indicator : <StyledTooltip text={tooltipText}>{indicator}</StyledTooltip>}
       <UsageIndicatorInfoModal
-        isOpen={showUsageIndicatorInfo}
+        isOpen={isMobileLayout && showUsageIndicatorInfo}
         onClose={() => setShowUsageIndicatorInfo(false)}
         percentage={percentage}
         totalInputTokens={totalInputTokens}

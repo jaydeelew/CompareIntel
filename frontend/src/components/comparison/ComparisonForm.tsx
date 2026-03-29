@@ -691,6 +691,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
                 onTokenUsageInfoChange={setTokenUsageInfo}
                 tutorialIsActive={tutorialIsActive}
                 hideTooltip={!showComposerStyledTooltips}
+                isMobileLayout={isMobileLayout}
               />
             )}
 
