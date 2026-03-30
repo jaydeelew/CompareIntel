@@ -362,9 +362,8 @@ const FileUploadComponent = forwardRef<FileUploadHandle, FileUploadProps>(functi
           const textAfter = input.substring(end)
           const separatorBefore = textBefore.trim() && !textBefore.endsWith('\n') ? '\n\n' : ''
           const separatorAfter = textAfter.trim() && !textAfter.startsWith('\n') ? '\n\n' : ''
-          /* For images: add one space after placeholder and place cursor there */
-          const trailingSpace = isImage ? ' ' : ''
-          const insertion = placeholder + trailingSpace
+          /* Newline after placeholder so the cursor lands on the next line for typing */
+          const insertion = `${placeholder}\n`
           const newInput = textBefore + separatorBefore + insertion + separatorAfter + textAfter
           setInput(newInput)
           setTimeout(() => {
@@ -377,8 +376,7 @@ const FileUploadComponent = forwardRef<FileUploadHandle, FileUploadProps>(functi
           }, 0)
         } else {
           const separator = input.trim() ? '\n\n' : ''
-          const trailingSpace = isImage ? ' ' : ''
-          setInput(input + separator + placeholder + trailingSpace)
+          setInput(input + separator + placeholder + '\n')
         }
 
         const fileType = getFileTypeLabel(file.name)

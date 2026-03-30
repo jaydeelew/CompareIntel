@@ -82,7 +82,7 @@ describe('FileUpload', () => {
     )
   }
 
-  it('adds image placeholder with trailing space when image file is attached', async () => {
+  it('adds image placeholder with trailing newline when image file is attached', async () => {
     mockFileReader()
     const ref = renderFileUpload('')
 
@@ -93,10 +93,10 @@ describe('FileUpload', () => {
     const result = await ref.current!.processFile(file)
 
     expect(result).toBe(true)
-    expect(setInput).toHaveBeenCalledWith('[image: photo.jpg] ')
+    expect(setInput).toHaveBeenCalledWith('[image: photo.jpg]\n')
   })
 
-  it('places cursor one space after the image placeholder', async () => {
+  it('places cursor on the line after the image placeholder', async () => {
     vi.useFakeTimers()
     mockFileReader()
     const setSelectionRangeSpy = vi.spyOn(HTMLTextAreaElement.prototype, 'setSelectionRange')
@@ -111,14 +111,14 @@ describe('FileUpload', () => {
     // processFile uses setTimeout(0) for cursor placement
     await vi.runAllTimersAsync()
 
-    const placeholder = '[image: test.png] '
+    const placeholder = '[image: test.png]\n'
     expect(setSelectionRangeSpy).toHaveBeenCalledWith(placeholder.length, placeholder.length)
     expect(focusSpy).toHaveBeenCalled()
 
     vi.useRealTimers()
   })
 
-  it('inserts image placeholder at cursor with trailing space when input has text', async () => {
+  it('inserts image placeholder at cursor with trailing newline when input has text', async () => {
     mockFileReader()
     const ref = renderFileUpload('Hello world')
     textarea.value = 'Hello world'
@@ -128,17 +128,16 @@ describe('FileUpload', () => {
     await ref.current!.processFile(file)
 
     // textBefore="Hello", textAfter=" world" -> separatorBefore="\n\n", separatorAfter="\n\n"
-    expect(setInput).toHaveBeenCalledWith('Hello\n\n[image: img.jpeg] \n\n world')
+    expect(setInput).toHaveBeenCalledWith('Hello\n\n[image: img.jpeg]\n\n\n world')
   })
 
-  it('does not add trailing space for non-image (text) files', async () => {
+  it('adds trailing newline for non-image (text) files', async () => {
     const ref = renderFileUpload('')
     const file = new File(['content'], 'doc.txt', { type: 'text/plain' })
 
     await ref.current!.processFile(file)
 
-    expect(setInput).toHaveBeenCalledWith('[file: doc.txt]')
-    expect(setInput).not.toHaveBeenCalledWith(expect.stringContaining('[file: doc.txt] '))
+    expect(setInput).toHaveBeenCalledWith('[file: doc.txt]\n')
   })
 
   it('adds attached image to setAttachedFiles with base64Data and placeholder', async () => {
