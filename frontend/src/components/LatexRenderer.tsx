@@ -182,11 +182,37 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({ children, className = '',
             const tag = isHeader ? 'th' : 'td'
             // Process markdown formatting in each cell before creating HTML
             const processedCells = cells.map(cell => {
-              let processed = cell
-              // Process bold and italic (bold first, then italic)
+              const cellTickMap = new Map<string, string>()
+              let tickIdx = 0
+              let processed = cell.replace(/`([^`\n]+?)`/g, full => {
+                const ph = `⟨⟨ICPH${tickIdx++}⟩⟩`
+                cellTickMap.set(ph, full)
+                return ph
+              })
+              const cellArphMap = new Map<string, string>()
+              let arIdx = 0
+              processed = processed.replace(/\[(file|image):\s*[^\]]+\]/gi, full => {
+                const ph = `⟨⟨ARPH${arIdx++}⟩⟩`
+                cellArphMap.set(ph, full)
+                return ph
+              })
               processed = processed.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
               processed = processed.replace(/(?<!\*)\*([^*\n]+?)\*(?!\*)/g, '<em>$1</em>')
-              // Process inline code
+              processed = processed.replace(/(?<!_)_((?:(?!_)[^\n])+?)_(?!_)/g, '<em>$1</em>')
+              for (const [ph, original] of [...cellArphMap.entries()].sort(
+                (a, b) =>
+                  parseInt(b[0].match(/ARPH(\d+)/)?.[1] ?? '0', 10) -
+                  parseInt(a[0].match(/ARPH(\d+)/)?.[1] ?? '0', 10)
+              )) {
+                processed = processed.split(ph).join(original)
+              }
+              for (const [ph, original] of [...cellTickMap.entries()].sort(
+                (a, b) =>
+                  parseInt(b[0].match(/ICPH(\d+)/)?.[1] ?? '0', 10) -
+                  parseInt(a[0].match(/ICPH(\d+)/)?.[1] ?? '0', 10)
+              )) {
+                processed = processed.split(ph).join(original)
+              }
               processed = processed.replace(/`([^`\n]+?)`/g, '<code class="inline-code">$1</code>')
               return processed
             })
@@ -201,6 +227,26 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({ children, className = '',
         return tableHTML
       })
     }
+
+    // Protect inline `...` spans before bold/italic. Otherwise underscores inside code (e.g.
+    // **`Jack_D_Lewis_Resume.docx`**) are parsed as _italic_ after ** wraps the segment.
+    const inlineBacktickPlaceholders = new Map<string, string>()
+    let inlineBacktickIdx = 0
+    processed = processed.replace(/`([^`\n]+?)`/g, full => {
+      const ph = `⟨⟨ICPH${inlineBacktickIdx++}⟩⟩`
+      inlineBacktickPlaceholders.set(ph, full)
+      return ph
+    })
+
+    // Protect [file: …] / [image: …] attachment placeholders (see FileUpload). Underscores in
+    // snake_case names (e.g. Jack_D_Lewis_Resume.docx) must not be parsed as _italic_.
+    const attachmentRefPlaceholders = new Map<string, string>()
+    let attachmentRefIdx = 0
+    processed = processed.replace(/\[(file|image):\s*[^\]]+\]/gi, full => {
+      const ph = `⟨⟨ARPH${attachmentRefIdx++}⟩⟩`
+      attachmentRefPlaceholders.set(ph, full)
+      return ph
+    })
 
     // Bold and italic (if enabled, preserve all spaces)
     // Process BEFORE headings and inline code so formatting works correctly
@@ -219,6 +265,29 @@ const LatexRenderer: React.FC<LatexRendererProps> = ({ children, className = '',
       // Italic: match single _ but not when part of __ (underscore-based italic)
       // Use negative lookbehind/lookahead to avoid matching __text__ as _text_
       processed = processed.replace(/(?<!_)_((?:(?!_)[^\n])+?)_(?!_)/g, '<em>$1</em>')
+    }
+
+    // Restore protected inline code spans so the dedicated pass below can render them (incl. math)
+    if (inlineBacktickPlaceholders.size > 0) {
+      const entries = [...inlineBacktickPlaceholders.entries()].sort((a, b) => {
+        const na = parseInt(a[0].match(/ICPH(\d+)/)?.[1] ?? '0', 10)
+        const nb = parseInt(b[0].match(/ICPH(\d+)/)?.[1] ?? '0', 10)
+        return nb - na
+      })
+      for (const [ph, original] of entries) {
+        processed = processed.split(ph).join(original)
+      }
+    }
+
+    if (attachmentRefPlaceholders.size > 0) {
+      const entries = [...attachmentRefPlaceholders.entries()].sort((a, b) => {
+        const na = parseInt(a[0].match(/ARPH(\d+)/)?.[1] ?? '0', 10)
+        const nb = parseInt(b[0].match(/ARPH(\d+)/)?.[1] ?? '0', 10)
+        return nb - na
+      })
+      for (const [ph, original] of entries) {
+        processed = processed.split(ph).join(original)
+      }
     }
 
     // Inline code - ALWAYS process backticks to remove them from output
