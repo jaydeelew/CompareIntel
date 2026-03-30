@@ -964,7 +964,7 @@ export const faqData: FAQItemData[] = [
             not set).
           </li>
           <li>
-            <strong>Paid tiers:</strong> Monthly allocations from 1,200 credits (Starter) to 10,000
+            <strong>Paid tiers:</strong> Monthly allocations from 1,250 credits (Starter) to 10,000
             credits (Pro+). Credits reset monthly on your billing date. Additional credits can be
             purchased if needed.
           </li>
@@ -993,7 +993,7 @@ export const faqData: FAQItemData[] = [
             3 saved model selections
           </li>
           <li>
-            <strong>Starter:</strong> 1,200 credits/month, 6 models per comparison, 10 saved
+            <strong>Starter:</strong> 1,250 credits/month, 6 models per comparison, 10 saved
             conversations, 5 saved model selections, access to all premium models
           </li>
           <li>
@@ -1145,7 +1145,7 @@ export const faqData: FAQItemData[] = [
           <li>
             <strong>Starter and Starter+:</strong> Up to 6 models per comparison. These paid tiers
             unlock the ability to compare more models simultaneously, giving you access to all
-            premium AI models, monthly credit allocations (1,200 credits for Starter, 2,500 for
+            premium AI models, monthly credit allocations (1,250 credits for Starter, 2,500 for
             Starter+), and more saved conversations.
           </li>
           <li>

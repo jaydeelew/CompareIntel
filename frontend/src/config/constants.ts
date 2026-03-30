@@ -72,7 +72,7 @@ export const DAILY_CREDIT_LIMITS = {
 
 // Monthly credit allocations for paid tiers
 export const MONTHLY_CREDIT_ALLOCATIONS = {
-  starter: 1_200,
+  starter: 1_250,
   starter_plus: 2_500,
   pro: 5_000,
   pro_plus: 10_000,

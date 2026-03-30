@@ -22,7 +22,7 @@ Marketing copy for the free tier describes a daily number of **image comparison 
 |------|-------|---------|--------|--------------|
 | Anonymous | Free | 50/day | Daily | Free-tier models only |
 | Free | Free | 100/day | Daily | Free-tier models only |
-| Starter | TBD | 1,200/month | Monthly | All models |
+| Starter | TBD | 1,250/month | Monthly | All models |
 | Starter+ | TBD | 2,500/month | Monthly | All models |
 | Pro | TBD | 5,000/month | Monthly | All models |
 | Pro+ | TBD | 10,000/month | Monthly | All models |

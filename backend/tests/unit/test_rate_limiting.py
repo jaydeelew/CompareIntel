@@ -238,7 +238,7 @@ class TestAllTierCredits:
         is_allowed, credits_remaining, credits_allocated = check_user_credits(
             test_user_starter, Decimal("5"), db_session
         )
-        assert credits_allocated == MONTHLY_CREDIT_ALLOCATIONS.get("starter", 1200)
+        assert credits_allocated == MONTHLY_CREDIT_ALLOCATIONS.get("starter", 1250)
         assert is_allowed is True
 
     def test_starter_plus_tier_credits(self, db_session, test_user_starter_plus):
@@ -323,7 +323,7 @@ class TestAllTierCredits:
 
         # Deduct all credits
         allocated = test_user_starter.monthly_credits_allocated or MONTHLY_CREDIT_ALLOCATIONS.get(
-            "starter", 1200
+            "starter", 1250
         )
         deduct_user_credits(
             test_user_starter, Decimal(allocated), None, db_session, "Test: Exhaust credits"

@@ -353,7 +353,7 @@ Both prefixes currently route to the same v1 handlers.
 |------|-------|----------------------|----------------------|---------------------|
 | **Anonymous** | Free | 50/day | 3 | 2 |
 | **Free** | Free | 100/day | 3 | 3 |
-| **Starter** | TBD | 1,200/month | 6 | 10 |
+| **Starter** | TBD | 1,250/month | 6 | 10 |
 | **Starter+** | TBD | 2,500/month | 6 | 20 |
 | **Pro** | TBD | 5,000/month | 9 | 40 |
 | **Pro+** | TBD | 10,000/month | 12 | 80 |

@@ -295,7 +295,7 @@ export const Features: React.FC = () => {
                   <div className="paid-tier-item">
                     <h4>Starter</h4>
                     <ul>
-                      <li>1,200 credits/month (~240 exchanges)</li>
+                      <li>1,250 credits/month (~250 exchanges)</li>
                       <li>Compare up to 6 models simultaneously</li>
                       <li>10 multi-model conversations saved</li>
                       <li>Email support</li>

@@ -915,7 +915,7 @@ export const UserMenu: React.FC = () => {
                       <div className="feature-item">
                         <span className="feature-icon">✓</span>
                         <span className="feature-text">
-                          <strong>1,200 credits</strong> per month (~240 exchanges/month)
+                          <strong>1,250 credits</strong> per month (~250 exchanges/month)
                         </span>
                       </div>
                       <div className="feature-item">

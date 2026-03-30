@@ -107,7 +107,7 @@ DAILY_CREDIT_LIMITS: dict[str, int] = {
 
 # Monthly credit allocations for paid tiers
 MONTHLY_CREDIT_ALLOCATIONS: dict[str, int] = {
-    "starter": 1_200,
+    "starter": 1_250,
     "starter_plus": 2_500,
     "pro": 5_000,
     "pro_plus": 10_000,

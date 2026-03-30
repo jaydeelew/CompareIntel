@@ -382,7 +382,7 @@ User Types:
   ├─────────────────┼───────────────┼─────────────────────────┤
   │ Anonymous       │ 50/day        │ Daily (midnight local)  │
   │ Free            │ 100/day       │ Daily (midnight local)  │
-  │ Starter         │ 1,200/month   │ Monthly (billing date)  │
+  │ Starter         │ 1,250/month   │ Monthly (billing date)  │
   │ Starter+        │ 2,500/month   │ Monthly (billing date)  │
   │ Pro             │ 5,000/month   │ Monthly (billing date)  │
   │ Pro+            │ 10,000/month  │ Monthly (billing date)  │

@@ -456,7 +456,7 @@ class TestDifferentSubscriptionTiers:
         is_allowed, credits_remaining, credits_allocated = check_user_credits(
             test_user_starter, Decimal("5"), db_session
         )
-        assert credits_allocated == MONTHLY_CREDIT_ALLOCATIONS.get("starter", 1200)
+        assert credits_allocated == MONTHLY_CREDIT_ALLOCATIONS.get("starter", 1250)
         assert credits_allocated > 0
 
     def test_pro_tier_credits(self, db_session, test_user_pro):
@@ -480,7 +480,7 @@ class TestDifferentSubscriptionTiers:
     def test_tier_hierarchy(self):
         """Test that tier credit allocations increase with tier level."""
         free_credits = DAILY_CREDIT_LIMITS.get("free", 100)
-        starter_credits = MONTHLY_CREDIT_ALLOCATIONS.get("starter", 1200)
+        starter_credits = MONTHLY_CREDIT_ALLOCATIONS.get("starter", 1250)
         pro_credits = MONTHLY_CREDIT_ALLOCATIONS.get("pro", 5000)
         pro_plus_credits = MONTHLY_CREDIT_ALLOCATIONS.get("pro_plus", 10000)
 
