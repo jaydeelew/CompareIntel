@@ -7,6 +7,8 @@ import React, {
   useMemo,
   useRef,
   useState,
+  type Dispatch,
+  type SetStateAction,
 } from 'react'
 import { createPortal } from 'react-dom'
 
@@ -43,7 +45,7 @@ export type { HistoryProps, SelectionProps, FileProps } from './ComparisonFormTy
 
 interface ComparisonFormProps {
   input: string
-  setInput: (value: string) => void
+  setInput: Dispatch<SetStateAction<string>>
   textareaRef: React.RefObject<HTMLTextAreaElement | null>
   isFollowUpMode: boolean
   isLoading: boolean

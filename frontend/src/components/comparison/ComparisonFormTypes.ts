@@ -1,3 +1,5 @@
+import type { Dispatch, SetStateAction } from 'react'
+
 import type { SavedModelSelection } from '../../hooks/useSavedModelSelections'
 import type { ConversationSummary } from '../../types'
 
@@ -29,7 +31,7 @@ export interface SelectionProps {
 
 export interface FileProps {
   attachedFiles: (AttachedFile | StoredAttachedFile)[]
-  setAttachedFiles: (files: (AttachedFile | StoredAttachedFile)[]) => void
+  setAttachedFiles: Dispatch<SetStateAction<(AttachedFile | StoredAttachedFile)[]>>
   onExpandFiles?: (
     files: (AttachedFile | StoredAttachedFile)[],
     userInput: string

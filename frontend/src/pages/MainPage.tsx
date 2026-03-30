@@ -101,7 +101,7 @@ export function MainPage() {
   // to have access to all required dependencies
 
   const [accurateInputTokens, setAccurateInputTokens] = useState<number | null>(null)
-  const [attachedFiles, setAttachedFilesState] = useState<(AttachedFile | StoredAttachedFile)[]>([])
+  const [attachedFiles, setAttachedFiles] = useState<(AttachedFile | StoredAttachedFile)[]>([])
   const [webSearchEnabled, setWebSearchEnabled] = useState(false)
   const [temperature, setTemperature] = useState(0.7) // 0.0-2.0, controls response randomness
   const [topP, setTopP] = useState(1) // 0.0-1.0, nucleus sampling
@@ -129,10 +129,6 @@ export function MainPage() {
   const imageConflictImpossibleDismissedKeyRef = useRef<string | null>(null)
 
   const { userLocation } = useGeolocation({ isAuthenticated, user })
-
-  const setAttachedFiles = useCallback((files: (AttachedFile | StoredAttachedFile)[]) => {
-    setAttachedFilesState(files)
-  }, [])
 
   const { expandFiles, extractFileContentForStorage, getAttachedImagesForApi } = useFileHandling()
 

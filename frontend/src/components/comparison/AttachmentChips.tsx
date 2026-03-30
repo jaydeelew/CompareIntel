@@ -1,5 +1,5 @@
 import { FileText, Image as ImageIcon, X } from 'lucide-react'
-import React, { memo, useCallback } from 'react'
+import { memo, useCallback, type Dispatch, type SetStateAction } from 'react'
 
 import { removePlaceholderFromInput } from '../../utils/attachmentInputUtils'
 
@@ -7,8 +7,8 @@ import type { AttachedFile, StoredAttachedFile } from './FileUpload'
 
 export interface AttachmentChipsProps {
   attachedFiles: (AttachedFile | StoredAttachedFile)[]
-  setAttachedFiles: (files: (AttachedFile | StoredAttachedFile)[]) => void
-  setInput: (value: string | ((prev: string) => string)) => void
+  setAttachedFiles: Dispatch<SetStateAction<(AttachedFile | StoredAttachedFile)[]>>
+  setInput: Dispatch<SetStateAction<string>>
   disabled?: boolean
 }
 

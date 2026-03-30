@@ -6,7 +6,7 @@
  */
 
 import { useLayoutEffect, useRef } from 'react'
-import type { ReactNode, RefObject } from 'react'
+import type { Dispatch, ReactNode, RefObject, SetStateAction } from 'react'
 
 import { useComposerFloat } from '../../hooks/useComposerFloat'
 import type { TutorialStep } from '../../hooks/useTutorial'
@@ -33,7 +33,7 @@ import { ResultsArea } from './ResultsArea'
 export interface ComparisonPageContentProps {
   // Form
   input: string
-  setInput: (value: string) => void
+  setInput: Dispatch<SetStateAction<string>>
   textareaRef: RefObject<HTMLTextAreaElement | null>
   isFollowUpMode: boolean
   isLoading: boolean
