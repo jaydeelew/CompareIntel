@@ -174,6 +174,13 @@ export interface HelpMeChooseProps {
   hasAttachedImages?: boolean
   /** When true, omit tier-locked models from lists (matches provider dropdown hide control) */
   hidePremiumModels?: boolean
+  /**
+   * When the dropdown opens, scroll this category column into view horizontally
+   * (e.g. `HELP_ME_CHOOSE_CATEGORY_IMAGES_ID` when opening from "Pick a vision model").
+   */
+  scrollCategoryIdIntoView?: string | null
+  /** Called after attempting to scroll so the parent can clear `scrollCategoryIdIntoView`. */
+  onScrollCategoryIntoViewDone?: () => void
 }
 
 export function HelpMeChoose({
@@ -192,6 +199,8 @@ export function HelpMeChoose({
   isMobileLayout = false,
   hasAttachedImages = false,
   hidePremiumModels = false,
+  scrollCategoryIdIntoView = null,
+  onScrollCategoryIntoViewDone,
 }: HelpMeChooseProps) {
   const [internalExpanded, setInternalExpanded] = useState(false)
   const [showScopeInfoModal, setShowScopeInfoModal] = useState(false)
@@ -645,6 +654,28 @@ export function HelpMeChoose({
     return () => cancelAnimationFrame(timer)
   }, [isExpanded, selectedModels])
 
+  /** Horizontal scroll to a category column when opening from e.g. "Pick a vision model" */
+  useEffect(() => {
+    if (!isExpanded || !scrollCategoryIdIntoView) return undefined
+    const id = scrollCategoryIdIntoView
+    let cancelled = false
+    const timer = window.setTimeout(() => {
+      if (cancelled) return
+      const container = categoriesRef.current
+      const target = container?.querySelector<HTMLElement>(
+        `[data-help-me-choose-category="${CSS.escape(id)}"]`
+      )
+      if (target) {
+        target.scrollIntoView({ behavior: 'smooth', inline: 'start', block: 'nearest' })
+      }
+      onScrollCategoryIntoViewDone?.()
+    }, 100)
+    return () => {
+      cancelled = true
+      clearTimeout(timer)
+    }
+  }, [isExpanded, scrollCategoryIdIntoView, onScrollCategoryIntoViewDone])
+
   const handleModelToggle = (modelId: string) => {
     if (modelRestrictedByModelId.get(modelId)) return
     onToggleModel(modelId)
@@ -776,6 +807,7 @@ export function HelpMeChoose({
                   return (
                     <div
                       key={cat.id}
+                      data-help-me-choose-category={cat.id}
                       className={`help-me-choose-category ${hasMatch ? 'has-match' : ''}`}
                     >
                       <div className="help-me-choose-category-header-row">

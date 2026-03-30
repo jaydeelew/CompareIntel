@@ -77,7 +77,7 @@ export interface ComparisonPageContentProps {
   // Models
   modelsAreaProps: ModelsAreaProps
   /** When provided, scrolls to models, expands section, opens Help me choose dropdown */
-  onOpenHelpMeChoose?: () => void
+  onOpenHelpMeChoose?: (options?: { scrollToCategoryId?: string }) => void
   /** Block compare until image aspect/size matches all selected image models */
   imageGenerationSubmitBlocked?: boolean
   /** True when selected image models share no common aspect ratio + size (Advanced cannot fix) */

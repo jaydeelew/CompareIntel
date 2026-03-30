@@ -360,23 +360,27 @@ const FileUploadComponent = forwardRef<FileUploadHandle, FileUploadProps>(functi
           const end = textarea.selectionEnd
           const textBefore = input.substring(0, start)
           const textAfter = input.substring(end)
-          const separatorBefore = textBefore.trim() && !textBefore.endsWith('\n') ? '\n\n' : ''
-          const separatorAfter = textAfter.trim() && !textAfter.startsWith('\n') ? '\n\n' : ''
-          /* Newline after placeholder so the cursor lands on the next line for typing */
-          const insertion = `${placeholder}\n`
-          const newInput = textBefore + separatorBefore + insertion + separatorAfter + textAfter
-          setInput(newInput)
-          setTimeout(() => {
-            if (textareaRef.current) {
-              const newCursorPos =
-                start + separatorBefore.length + insertion.length + separatorAfter.length
-              textareaRef.current.setSelectionRange(newCursorPos, newCursorPos)
-              textareaRef.current.focus()
-            }
-          }, 0)
-        } else {
-          const separator = input.trim() ? '\n\n' : ''
-          setInput(input + separator + placeholder + '\n')
+          if (input.length > 0) {
+            const separatorBefore = textBefore.trim() && !textBefore.endsWith('\n') ? '\n\n' : ''
+            const separatorAfter = textAfter.trim() && !textAfter.startsWith('\n') ? '\n\n' : ''
+            const insertion = '\n'
+            const newInput = textBefore + separatorBefore + insertion + separatorAfter + textAfter
+            setInput(newInput)
+            setTimeout(() => {
+              if (textareaRef.current) {
+                const newCursorPos =
+                  start + separatorBefore.length + insertion.length + separatorAfter.length
+                textareaRef.current.setSelectionRange(newCursorPos, newCursorPos)
+                textareaRef.current.focus()
+              }
+            }, 0)
+          } else {
+            setTimeout(() => {
+              textareaRef.current?.focus()
+            }, 0)
+          }
+        } else if (input.trim()) {
+          setInput(input + '\n\n')
         }
 
         const fileType = getFileTypeLabel(file.name)

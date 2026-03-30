@@ -135,20 +135,12 @@ export function useFileHandling() {
         }
       })
 
-      // Preserve the order of user input and files as they appear in the textarea
-      // This handles any combination:
-      // - Files before user input: [file: test.txt] Please review this
-      // - User input before files: Please review [file: test.txt]
-      // - Mixed: [file: file1.txt] Review this [file: file2.txt] and this
-      // - Multiple files: [file: file1.txt] [file: file2.txt]
-
-      // Replace each placeholder with explicit file markers and content
-      // Format: [FILE: filename] followed by content, then [/FILE: filename]
-      // This makes it very clear to the model what is file content vs user input
+      // Replace `[file: name]` tokens in the prompt when present (legacy / pasted).
+      // Attachments added via chips are not inserted into the textarea; those are expanded in
+      // `attachedFiles` order and appended after the user text.
       let result = userInput
+      const sectionsToAppend: string[] = []
 
-      // Process files in the order they appear in the input (by finding placeholders)
-      // Use a more robust replacement that handles multiple occurrences
       files.forEach(attachedFile => {
         const placeholder = attachedFile.placeholder
         const content = fileContentMap.get(placeholder)
@@ -159,19 +151,27 @@ export function useFileHandling() {
         }
 
         if (content) {
-          // Replace placeholder with explicit file markers and content
-          // Use clear markers that the model can easily distinguish:
-          // [FILE: filename] marks the start of file content
-          // [/FILE: filename] marks the end of file content
           const fileSection = `\n\n[FILE: ${attachedFile.name}]\n${content}\n[/FILE: ${attachedFile.name}]\n\n`
-          // Replace all occurrences of this placeholder (in case user pasted it multiple times)
-          result = result.split(placeholder).join(fileSection)
+          if (result.includes(placeholder)) {
+            result = result.split(placeholder).join(fileSection)
+          } else {
+            sectionsToAppend.push(fileSection)
+          }
         } else {
-          // File extraction failed, remove placeholder but add a note
           const errorSection = `\n\n[FILE: ${attachedFile.name} - extraction failed]\n\n`
-          result = result.split(placeholder).join(errorSection)
+          if (result.includes(placeholder)) {
+            result = result.split(placeholder).join(errorSection)
+          } else {
+            sectionsToAppend.push(errorSection)
+          }
         }
       })
+
+      if (sectionsToAppend.length > 0) {
+        const appended = sectionsToAppend.join('')
+        const trimmed = result.trimEnd()
+        result = trimmed.length > 0 ? `${trimmed}\n\n${appended}` : appended
+      }
 
       // Clean up excessive newlines (more than 2 consecutive) while preserving structure
       result = result.replace(/\n{3,}/g, '\n\n')

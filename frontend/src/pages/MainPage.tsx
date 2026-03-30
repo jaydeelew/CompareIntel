@@ -52,6 +52,7 @@ import {
   type ActiveResultTabs,
 } from '../types'
 import { generateBrowserFingerprint } from '../utils'
+import { removePlaceholderFromInput } from '../utils/attachmentInputUtils'
 import { isErrorMessage } from '../utils/error'
 import {
   getAllKnownAspectRatios,
@@ -190,13 +191,9 @@ export function MainPage() {
     setInput((prev: string) => {
       let next = prev
       for (const f of imageFiles) {
-        next = next
-          .split(f.placeholder)
-          .join('')
-          .replace(/\n{3,}/g, '\n\n')
-          .trim()
+        next = removePlaceholderFromInput(next, f.placeholder)
       }
-      return next
+      return next.trim()
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps -- setInput from useState is stable
   }, [attachedFiles, setAttachedFiles])
@@ -378,6 +375,10 @@ export function MainPage() {
   const [modelsDropdownOpen, setModelsDropdownOpen] = useState<
     'help-me-choose' | 'advanced' | null
   >(null)
+  /** When set, Help me choose scrolls this category into view horizontally after open */
+  const [helpMeChooseScrollCategoryId, setHelpMeChooseScrollCategoryId] = useState<string | null>(
+    null
+  )
 
   const { showDoneSelectingCard, setShowDoneSelectingCard, handleDoneSelecting } =
     useDoneSelectingCard(
@@ -394,6 +395,31 @@ export function MainPage() {
         onFocusTextarea: () => textareaRef.current?.focus(),
       }
     )
+
+  const clearHelpMeChooseScrollCategory = useCallback(() => {
+    setHelpMeChooseScrollCategoryId(null)
+  }, [])
+
+  const openHelpMeChoose = useCallback((options?: { scrollToCategoryId?: string }) => {
+    setHelpMeChooseScrollCategoryId(options?.scrollToCategoryId ?? null)
+    setIsModelsHidden(false)
+    setModelsDropdownOpen('help-me-choose')
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        modelsSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      })
+    })
+  }, [])
+
+  const handleModelsDropdownChange = useCallback((open: 'help-me-choose' | 'advanced' | null) => {
+    setModelsDropdownOpen(open)
+  }, [])
+
+  useEffect(() => {
+    if (modelsDropdownOpen !== 'help-me-choose') {
+      setHelpMeChooseScrollCategoryId(null)
+    }
+  }, [modelsDropdownOpen])
 
   const allModelsFlatForComposer = useMemo(
     () => Object.values(modelsByProvider).flat(),
@@ -2362,30 +2388,16 @@ export function MainPage() {
           errorMessageRef={errorMessageRef}
           visionNoticeMessage={visionNoticeMessage}
           onDismissVisionNotice={() => setVisionNoticeMessage(null)}
-          onOpenHelpMeChoose={() => {
-            setIsModelsHidden(false)
-            setModelsDropdownOpen('help-me-choose')
-            requestAnimationFrame(() => {
-              requestAnimationFrame(() => {
-                modelsSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-              })
-            })
-          }}
+          onOpenHelpMeChoose={openHelpMeChoose}
           imageGenerationSubmitBlocked={isImageGenerationConfigBlocked}
           imageGenerationNoSharedImageOptions={imageGenerationNoSharedImageOptions}
           onImageGenerationSubmitBlockedTap={revealImageConfigConflict}
           modelsAreaProps={{
             hasAttachedImages,
             nonVisionModelsWarning,
-            onOpenHelpMeChoose: () => {
-              setIsModelsHidden(false)
-              setModelsDropdownOpen('help-me-choose')
-              requestAnimationFrame(() => {
-                requestAnimationFrame(() => {
-                  modelsSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-                })
-              })
-            },
+            onOpenHelpMeChoose: openHelpMeChoose,
+            helpMeChooseScrollCategoryId,
+            onHelpMeChooseScrollCategoryDone: clearHelpMeChooseScrollCategory,
             onRemoveAttachedImages,
             modelMode,
             onModelModeChange: handleModelModeChange,
@@ -2496,7 +2508,7 @@ export function MainPage() {
             advancedSettings: { temperature, topP, maxTokens },
             maxTokensCap: effectiveMaxTokens,
             modelsDropdownOpen,
-            onModelsDropdownChange: setModelsDropdownOpen,
+            onModelsDropdownChange: handleModelsDropdownChange,
             showImageConfig:
               modelMode === 'image' ||
               selectedModels.some(id => modelSupportsImageGeneration(id, modelsByProvider)),

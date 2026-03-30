@@ -10,7 +10,7 @@ export interface FormHeaderProps {
   onNewComparison: () => void
   modelsSectionRef?: React.RefObject<HTMLDivElement | null>
   /** When provided and no models selected, scrolls to models, expands section, opens Help me choose */
-  onOpenHelpMeChoose?: () => void
+  onOpenHelpMeChoose?: (options?: { scrollToCategoryId?: string }) => void
 }
 
 export function FormHeader({

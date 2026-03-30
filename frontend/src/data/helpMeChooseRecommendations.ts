@@ -455,6 +455,9 @@ export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
   },
 ]
 
+/** Stable `id` for the "Best for images" column (scroll Help me choose horizontally to this category). */
+export const HELP_ME_CHOOSE_CATEGORY_IMAGES_ID = 'images' as const
+
 /** @deprecated Use HELP_ME_CHOOSE_CATEGORIES. Flattened for backwards compatibility during migration. */
 export interface HelpMeChooseRecommendation {
   id: string

@@ -1,5 +1,5 @@
 /**
- * Tests for FileUpload component - image attachment, placeholder, cursor placement
+ * Tests for FileUpload component - attachment state, cursor/focus after attach (placeholders are chips, not textarea text)
  */
 /// <reference types="@testing-library/jest-dom" />
 
@@ -82,7 +82,7 @@ describe('FileUpload', () => {
     )
   }
 
-  it('adds image placeholder with trailing newline when image file is attached', async () => {
+  it('does not insert attachment text into textarea when composer is empty', async () => {
     mockFileReader()
     const ref = renderFileUpload('')
 
@@ -93,10 +93,10 @@ describe('FileUpload', () => {
     const result = await ref.current!.processFile(file)
 
     expect(result).toBe(true)
-    expect(setInput).toHaveBeenCalledWith('[image: photo.jpg]\n')
+    expect(setInput).not.toHaveBeenCalled()
   })
 
-  it('places cursor on the line after the image placeholder', async () => {
+  it('focuses textarea after attaching when input is empty', async () => {
     vi.useFakeTimers()
     mockFileReader()
     const setSelectionRangeSpy = vi.spyOn(HTMLTextAreaElement.prototype, 'setSelectionRange')
@@ -108,17 +108,15 @@ describe('FileUpload', () => {
     const processPromise = ref.current!.processFile(file)
     await processPromise
 
-    // processFile uses setTimeout(0) for cursor placement
     await vi.runAllTimersAsync()
 
-    const placeholder = '[image: test.png]\n'
-    expect(setSelectionRangeSpy).toHaveBeenCalledWith(placeholder.length, placeholder.length)
+    expect(setSelectionRangeSpy).not.toHaveBeenCalled()
     expect(focusSpy).toHaveBeenCalled()
 
     vi.useRealTimers()
   })
 
-  it('inserts image placeholder at cursor with trailing newline when input has text', async () => {
+  it('inserts line breaks at cursor when input has text so user can type after attach', async () => {
     mockFileReader()
     const ref = renderFileUpload('Hello world')
     textarea.value = 'Hello world'
@@ -127,17 +125,17 @@ describe('FileUpload', () => {
     const file = createImageFile('img.jpeg')
     await ref.current!.processFile(file)
 
-    // textBefore="Hello", textAfter=" world" -> separatorBefore="\n\n", separatorAfter="\n\n"
-    expect(setInput).toHaveBeenCalledWith('Hello\n\n[image: img.jpeg]\n\n\n world')
+    // textBefore="Hello", textAfter=" world" -> separatorBefore="\n\n", separatorAfter="\n\n", insertion="\n"
+    expect(setInput).toHaveBeenCalledWith('Hello\n\n\n\n\n world')
   })
 
-  it('adds trailing newline for non-image (text) files', async () => {
+  it('does not change textarea text for non-image when composer is empty', async () => {
     const ref = renderFileUpload('')
     const file = new File(['content'], 'doc.txt', { type: 'text/plain' })
 
     await ref.current!.processFile(file)
 
-    expect(setInput).toHaveBeenCalledWith('[file: doc.txt]\n')
+    expect(setInput).not.toHaveBeenCalled()
   })
 
   it('adds attached image to setAttachedFiles with base64Data and placeholder', async () => {

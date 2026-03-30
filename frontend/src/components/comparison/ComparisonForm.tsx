@@ -11,6 +11,7 @@ import React, {
 import { createPortal } from 'react-dom'
 
 import { BREAKPOINT_MOBILE } from '../../config/constants'
+import { HELP_ME_CHOOSE_CATEGORY_IMAGES_ID } from '../../data/helpMeChooseRecommendations'
 import { useSpeechRecognition, useResponsive } from '../../hooks'
 import type { TutorialStep } from '../../hooks/useTutorial'
 import type { User, ModelConversation } from '../../types'
@@ -20,6 +21,7 @@ import { hasVisionModelSelected } from '../../utils/visionModels'
 import { StyledTooltip } from '../shared'
 
 import { ActionButtonTooltipModal, type ComposerTooltipButtonId } from './ActionButtonTooltipModal'
+import { AttachmentChips } from './AttachmentChips'
 import type { FileProps, HistoryProps, SelectionProps } from './ComparisonFormTypes'
 import { ContextWarning } from './ContextWarning'
 import { DisabledButtonInfoModal } from './DisabledButtonInfoModal'
@@ -68,7 +70,7 @@ interface ComparisonFormProps {
   modelsSectionRef?: React.RefObject<HTMLDivElement | null>
   composerFloating?: boolean
   /** When provided, enables hero CTA and FormHeader to open Help me choose (scroll, expand, open dropdown) */
-  onOpenHelpMeChoose?: () => void
+  onOpenHelpMeChoose?: (options?: { scrollToCategoryId?: string }) => void
   /** When true, submit is blocked until image aspect ratio & size match all selected image models */
   imageGenerationSubmitBlocked?: boolean
   /**
@@ -540,7 +542,11 @@ export const ComparisonForm = memo<ComparisonFormProps>(
                   <button
                     type="button"
                     className="image-attachment-banner-btn image-attachment-banner-btn-primary"
-                    onClick={onOpenHelpMeChoose}
+                    onClick={() =>
+                      onOpenHelpMeChoose?.({
+                        scrollToCategoryId: HELP_ME_CHOOSE_CATEGORY_IMAGES_ID,
+                      })
+                    }
                   >
                     Pick a vision model
                   </button>
@@ -559,6 +565,14 @@ export const ComparisonForm = memo<ComparisonFormProps>(
           </div>
         )}
         <div className="composer-input-wrapper">
+          {attachedFiles.length > 0 && (
+            <AttachmentChips
+              attachedFiles={attachedFiles}
+              setAttachedFiles={setAttachedFiles}
+              setInput={setInput}
+              disabled={isLoading}
+            />
+          )}
           <textarea
             ref={textareaRef as React.RefObject<HTMLTextAreaElement>}
             value={input}

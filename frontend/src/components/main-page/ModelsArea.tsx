@@ -12,6 +12,7 @@
 import { Image as ImageIcon, X } from 'lucide-react'
 import { useMemo, useState } from 'react'
 
+import { HELP_ME_CHOOSE_CATEGORY_IMAGES_ID } from '../../data/helpMeChooseRecommendations'
 import type { User, ModelsByProvider, CompareResponse, Model } from '../../types'
 import type { ModelConversation } from '../../types/conversation'
 import {
@@ -120,7 +121,10 @@ export interface ModelsAreaProps {
   /** Called when dropdown open state changes */
   onModelsDropdownChange: (open: 'help-me-choose' | 'advanced' | null) => void
   /** When non-vision warning shows: scroll to models, open Help me choose */
-  onOpenHelpMeChoose?: () => void
+  onOpenHelpMeChoose?: (options?: { scrollToCategoryId?: string }) => void
+  /** Request horizontal scroll to this Help me choose category when the dropdown opens */
+  helpMeChooseScrollCategoryId?: string | null
+  onHelpMeChooseScrollCategoryDone?: () => void
   /** When non-vision warning shows: remove all attached images from composer */
   onRemoveAttachedImages?: () => void
   /** When true, unregistered users cannot select image models (show sign-up modal) */
@@ -204,6 +208,8 @@ export function ModelsArea({
   modelsDropdownOpen: openDropdown,
   onModelsDropdownChange: setOpenDropdown,
   onOpenHelpMeChoose,
+  helpMeChooseScrollCategoryId = null,
+  onHelpMeChooseScrollCategoryDone,
   onRemoveAttachedImages,
   imageModelsDisabledForUnregistered = false,
   isTutorialActive = false,
@@ -273,7 +279,11 @@ export function ModelsArea({
                       <button
                         type="button"
                         className="models-section-non-vision-warning-btn models-section-non-vision-warning-btn-primary"
-                        onClick={onOpenHelpMeChoose}
+                        onClick={() =>
+                          onOpenHelpMeChoose?.({
+                            scrollToCategoryId: HELP_ME_CHOOSE_CATEGORY_IMAGES_ID,
+                          })
+                        }
                       >
                         Pick a vision model
                       </button>
@@ -365,6 +375,8 @@ export function ModelsArea({
                 isMobileLayout={isMobileLayout}
                 hasAttachedImages={hasAttachedImages}
                 hidePremiumModels={hidePremiumModels}
+                scrollCategoryIdIntoView={helpMeChooseScrollCategoryId}
+                onScrollCategoryIntoViewDone={onHelpMeChooseScrollCategoryDone}
               />
               <AdvancedSettings
                 temperature={temperature}
