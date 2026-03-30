@@ -419,8 +419,6 @@
   gap: 0.5rem;
   width: max-content;
   max-width: min(calc(100vw - 2rem), 400px);
-  /* Uniform height: three logical rows (context + two capability lines for image models) */
-  min-height: 5.75rem;
   box-sizing: border-box;
   justify-content: flex-start;
 }
@@ -459,6 +457,8 @@
 .model-info-tooltip.model-info-tooltip--image {
   white-space: normal;
   max-width: min(calc(100vw - 2rem), 400px);
+  /* Uniform height: three logical rows (context + aspect + sizes) */
+  min-height: 5.75rem;
 }
 
 .model-info-tooltip.model-info-tooltip--image .tooltip-row {
