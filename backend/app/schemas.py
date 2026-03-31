@@ -83,6 +83,8 @@ class UserResponse(BaseModel):
     # 7-day trial fields - grants free users access to all premium models
     trial_ends_at: datetime | None = None
     is_trial_active: bool | None = False
+    # Stripe (optional) — present after first successful Checkout; used for Customer Portal
+    stripe_customer_id: str | None = None
 
     model_config = ConfigDict(from_attributes=True)
 

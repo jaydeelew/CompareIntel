@@ -38,6 +38,7 @@ anthropic>=0.18.0
 transformers>=4.35.0
 sentencepiece>=0.1.99
 requests>=2.33.0
+stripe>=11.0.0
 
 # Auth & security
 PyJWT>=2.12.0

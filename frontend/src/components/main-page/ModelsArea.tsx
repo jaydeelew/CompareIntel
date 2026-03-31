@@ -345,8 +345,8 @@ export function ModelsArea({
                 </span>
                 <span className="models-section-image-signup-banner-text">
                   Sign up for a free account to use image generation models. Free tier: 2 comparison
-                  runs per day in image mode (each run can include up to 3 image models). Paid tiers
-                  coming soon for as many image generations as you have credits for.
+                  runs per day in image mode (each run can include up to 3 image models). Paid plans
+                  use your monthly and prepaid credits for image generations, the same way as text.
                 </span>
                 <button
                   type="button"

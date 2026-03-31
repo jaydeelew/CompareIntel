@@ -48,7 +48,9 @@ export const HowItWorks: React.FC = () => {
                   Start right away without an account—a handful of models are available to try. For
                   more models and credits, sign up for a free account (no credit card required).
                   Free users receive twice the credits of unregistered users. After registering,
-                  verify your email to unlock additional features. Paid tiers are coming soon.
+                  verify your email to unlock additional features. Paid tiers add monthly credit
+                  pools and higher model limits — subscribe from Account → Upgrade plan when billing
+                  is enabled.
                 </p>
               </div>
             </div>
@@ -60,7 +62,7 @@ export const HowItWorks: React.FC = () => {
                 <p>
                   Browse models from OpenAI, Anthropic, Google, Meta, Mistral, xAI, and more.
                   Unregistered and Free users can select up to 3 models; paid tiers allow more.
-                  Model availability varies by tier. Premium models are coming soon for paid users.
+                  Model availability varies by tier; paid subscribers get the full premium catalog.
                   Free and unregistered users can use the hide/show premium models button (eye icon)
                   in the "Select Models to Compare" header to focus on models available to their
                   tier.

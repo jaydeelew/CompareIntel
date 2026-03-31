@@ -591,7 +591,7 @@ export const ModelsSection: React.FC<ModelsSectionProps> = ({
                           })
                         } else {
                           onError(
-                            `${model.name} is a premium model. Paid subscriptions are coming soon — stay tuned!`
+                            `${model.name} is a premium model. Use Account → Upgrade plan when billing is enabled.`
                           )
                         }
                         return
@@ -639,7 +639,7 @@ export const ModelsSection: React.FC<ModelsSectionProps> = ({
                                 title={
                                   userTier === 'unregistered' && model.tier_access === 'free'
                                     ? "Click 'Sign Up' above"
-                                    : 'Premium model - paid tiers coming soon'
+                                    : 'Premium model — subscribe from Account → Upgrade plan'
                                 }
                               >
                                 <svg

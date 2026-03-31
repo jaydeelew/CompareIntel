@@ -28,7 +28,7 @@ from .registry import (
     get_model_supports_vision,
 )
 from .text_processing import clean_model_response, detect_repetition
-from .tokens import TokenUsage, calculate_token_usage, get_model_max_tokens
+from .tokens import TokenUsage, get_model_max_tokens, token_usage_from_openrouter_usage
 
 logger = logging.getLogger(__name__)
 
@@ -780,13 +780,11 @@ def call_openrouter_streaming(
                         ):
                             reasoning_details = chunk.choices[0].reasoning_details
 
-                # Extract usage data from chunk if available
+                # Extract usage data from chunk if available (OpenRouter includes usage.cost on final chunk)
                 if hasattr(chunk, "usage") and chunk.usage:
-                    usage = chunk.usage
-                    prompt_tokens = getattr(usage, "prompt_tokens", 0)
-                    completion_tokens = getattr(usage, "completion_tokens", 0)
-                    if prompt_tokens > 0 or completion_tokens > 0:
-                        usage_data = calculate_token_usage(prompt_tokens, completion_tokens)
+                    merged = token_usage_from_openrouter_usage(chunk.usage)
+                    if merged:
+                        usage_data = merged
 
                 # Check response object itself for reasoning_details (may be set after streaming)
                 if hasattr(response, "reasoning_details") and response.reasoning_details:
@@ -2336,11 +2334,9 @@ def call_openrouter_streaming(
 
                         # Extract usage data from chunk if available
                         if hasattr(chunk, "usage") and chunk.usage:
-                            usage = chunk.usage
-                            prompt_tokens = getattr(usage, "prompt_tokens", 0)
-                            completion_tokens = getattr(usage, "completion_tokens", 0)
-                            if prompt_tokens > 0 or completion_tokens > 0:
-                                usage_data = calculate_token_usage(prompt_tokens, completion_tokens)
+                            merged = token_usage_from_openrouter_usage(chunk.usage)
+                            if merged:
+                                usage_data = merged
 
                     # Update reasoning_details for next iteration (if we have recursive tool calls)
                     if reasoning_details_continue is not None:
@@ -2473,11 +2469,9 @@ def call_openrouter_streaming(
                                 finish_reason = chunk.choices[0].finish_reason
 
                         if hasattr(chunk, "usage") and chunk.usage:
-                            usage = chunk.usage
-                            prompt_tokens = getattr(usage, "prompt_tokens", 0)
-                            completion_tokens = getattr(usage, "completion_tokens", 0)
-                            if prompt_tokens > 0 or completion_tokens > 0:
-                                usage_data = calculate_token_usage(prompt_tokens, completion_tokens)
+                            merged = token_usage_from_openrouter_usage(chunk.usage)
+                            if merged:
+                                usage_data = merged
                 except Exception as final_error:
                     logger.error(
                         f"Error in final completion call for model {model_id}: {final_error}"
@@ -2486,11 +2480,9 @@ def call_openrouter_streaming(
 
             # Extract usage data from last chunk if available (from continuation response)
             if last_chunk and hasattr(last_chunk, "usage") and last_chunk.usage:
-                usage = last_chunk.usage
-                prompt_tokens = getattr(usage, "prompt_tokens", 0)
-                completion_tokens = getattr(usage, "completion_tokens", 0)
-                if prompt_tokens > 0 or completion_tokens > 0:
-                    usage_data = calculate_token_usage(prompt_tokens, completion_tokens)
+                merged = token_usage_from_openrouter_usage(last_chunk.usage)
+                if merged:
+                    usage_data = merged
 
             # Check if the last assistant message had text content that suggests an incomplete response
             # Common patterns: ends with ":", "Let me", "I'll", etc.
@@ -2650,13 +2642,9 @@ def call_openrouter_streaming(
                                             finish_reason = chunk.choices[0].finish_reason
 
                                     if hasattr(chunk, "usage") and chunk.usage:
-                                        usage = chunk.usage
-                                        prompt_tokens = getattr(usage, "prompt_tokens", 0)
-                                        completion_tokens = getattr(usage, "completion_tokens", 0)
-                                        if prompt_tokens > 0 or completion_tokens > 0:
-                                            usage_data = calculate_token_usage(
-                                                prompt_tokens, completion_tokens
-                                            )
+                                        merged = token_usage_from_openrouter_usage(chunk.usage)
+                                        if merged:
+                                            usage_data = merged
                             except Exception as completion_error:
                                 logger.error(
                                     f"Error in incomplete response completion call for model {model_id}: {completion_error}"

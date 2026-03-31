@@ -49,6 +49,7 @@ async def get_credit_balance(
 
         return {
             "credits_allocated": stats["credits_allocated"],
+            "purchased_credits_balance": stats["purchased_credits_balance"],
             "credits_used_this_period": stats["credits_used_this_period"],
             "credits_remaining": stats["credits_remaining"],
             "total_credits_used": stats["total_credits_used"],

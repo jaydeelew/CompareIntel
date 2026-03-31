@@ -19,14 +19,16 @@ from .models import CreditTransaction, User
 
 
 def get_user_credits(user_id: int, db: Session) -> int:
-    """Returns remaining credits (allocated - used)."""
+    """Returns remaining credits: subscription pool remainder plus purchased balance."""
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         raise ValueError(f"User {user_id} not found")
 
     allocated = user.monthly_credits_allocated or 0
     used = user.credits_used_this_period or 0
-    return max(0, allocated - used)
+    sub_remaining = max(0, allocated - used)
+    purchased = user.purchased_credits_balance or 0
+    return sub_remaining + purchased
 
 
 def check_credits_sufficient(user_id: int, required_credits: Decimal, db: Session) -> bool:
@@ -55,21 +57,19 @@ def deduct_credits(
     if not user:
         raise ValueError(f"User {user_id} not found")
 
-    # Calculate new credits_used_this_period
     allocated = user.monthly_credits_allocated or 0
     used = user.credits_used_this_period or 0
-    new_used = used + credits_int
+    purchased = user.purchased_credits_balance or 0
 
-    # Cap credits_used_this_period at allocated amount (zero out credits, don't go negative)
-    # This allows comparisons to proceed even if they exceed remaining credits
-    if new_used > allocated:
-        user.credits_used_this_period = allocated
-        # Still track actual usage in total_credits_used for analytics
-        user.total_credits_used = (user.total_credits_used or 0) + credits_int
-    else:
-        # Normal deduction - credits are sufficient
-        user.credits_used_this_period = new_used
-        user.total_credits_used = (user.total_credits_used or 0) + credits_int
+    room_monthly = max(0, allocated - used)
+    take_monthly = min(credits_int, room_monthly)
+    remainder = credits_int - take_monthly
+
+    user.credits_used_this_period = used + take_monthly
+    if remainder > 0:
+        user.purchased_credits_balance = max(0, purchased - remainder)
+
+    user.total_credits_used = (user.total_credits_used or 0) + credits_int
 
     # Create credit transaction record
     # Store exact Decimal value in transaction (as integer representing millicredits for precision)
@@ -86,8 +86,36 @@ def deduct_credits(
     db.commit()
 
 
+def add_purchased_credits(
+    user_id: int,
+    credits: int,
+    db: Session,
+    description: str | None = None,
+) -> None:
+    """Add prepaid credits (e.g. Stripe checkout for credit packs)."""
+    if credits <= 0:
+        return
+    user = db.query(User).filter(User.id == user_id).with_for_update().first()
+    if not user:
+        raise ValueError(f"User {user_id} not found")
+    user.purchased_credits_balance = (user.purchased_credits_balance or 0) + credits
+    transaction = CreditTransaction(
+        user_id=user_id,
+        transaction_type="purchase",
+        credits_amount=credits,
+        description=description or "Purchased credits",
+    )
+    db.add(transaction)
+    db.commit()
+
+
 def allocate_monthly_credits(user_id: int, tier: str, db: Session) -> None:
-    """Allocate monthly credits based on tier. Sets up 30-day billing period."""
+    """Allocate monthly credits based on tier.
+
+    For users with ``stripe_subscription_id``, billing period boundaries and
+    ``credits_reset_at`` are owned by Stripe webhooks—this only refills the
+    monthly pool and resets usage. For everyone else, sets a 30-day window.
+    """
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         raise ValueError(f"User {user_id} not found")
@@ -96,11 +124,11 @@ def allocate_monthly_credits(user_id: int, tier: str, db: Session) -> None:
     if tier in MONTHLY_CREDIT_ALLOCATIONS:
         credits = MONTHLY_CREDIT_ALLOCATIONS[tier]
 
-        # Set billing period (monthly for paid tiers)
-        now = datetime.now(UTC)
-        user.billing_period_start = now
-        user.billing_period_end = now + timedelta(days=30)
-        user.credits_reset_at = user.billing_period_end
+        if not user.stripe_subscription_id:
+            now = datetime.now(UTC)
+            user.billing_period_start = now
+            user.billing_period_end = now + timedelta(days=30)
+            user.credits_reset_at = user.billing_period_end
 
         # Allocate credits and reset usage
         user.monthly_credits_allocated = credits
@@ -226,7 +254,8 @@ def get_credit_usage_stats(user_id: int, db: Session) -> dict[str, Any]:
 
     allocated = user.monthly_credits_allocated or 0
     used = user.credits_used_this_period or 0
-    remaining = max(0, allocated - used)
+    purchased = user.purchased_credits_balance or 0
+    remaining = max(0, allocated - used) + purchased
     total_used = user.total_credits_used or 0
 
     # Get reset time
@@ -249,6 +278,7 @@ def get_credit_usage_stats(user_id: int, db: Session) -> dict[str, Any]:
     return {
         "credits_allocated": allocated,
         "credits_used_this_period": used,
+        "purchased_credits_balance": purchased,
         "credits_remaining": remaining,
         "total_credits_used": total_used,
         "credits_reset_at": reset_time_str,
@@ -304,7 +334,8 @@ def check_and_reset_credits_if_needed(user_id: int, db: Session) -> None:
             if tier in DAILY_CREDIT_LIMITS:
                 reset_daily_credits(user_id, tier, db)
             elif tier in MONTHLY_CREDIT_ALLOCATIONS:
-                allocate_monthly_credits(user_id, tier, db)
+                if not user.stripe_subscription_id:
+                    allocate_monthly_credits(user_id, tier, db)
     else:
         # No reset time set - this could mean:
         # 1. New user who hasn't been allocated credits yet
@@ -322,7 +353,8 @@ def check_and_reset_credits_if_needed(user_id: int, db: Session) -> None:
             if tier in DAILY_CREDIT_LIMITS:
                 reset_daily_credits(user_id, tier, db)
             elif tier in MONTHLY_CREDIT_ALLOCATIONS:
-                allocate_monthly_credits(user_id, tier, db)
+                if not user.stripe_subscription_id:
+                    allocate_monthly_credits(user_id, tier, db)
         else:
             # Credits are allocated and not exhausted, but no reset time set
             # Set the reset time based on tier

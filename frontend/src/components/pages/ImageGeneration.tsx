@@ -113,10 +113,10 @@ export const ImageGeneration: React.FC = () => {
           </section>
 
           <section className="seo-section">
-            <h2>Paid Tiers Coming Soon</h2>
+            <h2>Paid plans</h2>
             <p>
-              Paid tiers will allow as many image generations as you have credits for, using the
-              rules above. Stay tuned for updates.
+              Paid tiers use your monthly and prepaid credits for image generations, the same way as
+              text comparisons, subject to the per-run model limits above.
             </p>
           </section>
 

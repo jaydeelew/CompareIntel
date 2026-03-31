@@ -107,6 +107,16 @@ class Settings(BaseSettings):
     redis_url: str | None = None  # e.g., "redis://localhost:6379/0"
     redis_enabled: bool = False  # Set to True to enable Redis-based distributed rate limiting
 
+    # Stripe (optional until billing is live)
+    stripe_secret_key: str | None = None
+    stripe_webhook_secret: str | None = None
+    stripe_price_starter: str | None = None
+    stripe_price_starter_plus: str | None = None
+    stripe_price_pro: str | None = None
+    stripe_price_pro_plus: str | None = None
+    stripe_price_credit_pack: str | None = None
+    stripe_credit_pack_credits: int = 1000
+
     # Circuit breaker configuration
     search_circuit_breaker_enabled: bool = True  # Enable circuit breaker for API failures
 

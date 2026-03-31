@@ -11,7 +11,7 @@ from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
 from datetime import datetime
-from decimal import ROUND_CEILING, Decimal
+from decimal import Decimal
 from typing import TYPE_CHECKING, Any
 
 from openai import OpenAI
@@ -87,9 +87,10 @@ async def generate_stream(ctx: StreamContext) -> Any:
     total_input_tokens = 0
     total_output_tokens = 0
     total_effective_tokens = 0
-    total_image_credits = Decimal(0)
     usage_data_dict = {}
     total_credits_used = Decimal(0)
+    billing_fractional_total = Decimal(0)
+    total_usd_for_log = Decimal(0)
 
     is_development = os.environ.get("ENVIRONMENT") == "development"
     use_mock = False
@@ -563,11 +564,17 @@ async def generate_stream(ctx: StreamContext) -> Any:
                         usage = result.get("usage")
                         if usage:
                             if isinstance(usage, dict) and "image_count" in usage:
-                                from ..llm.image_credits import calculate_image_credits
-
-                                total_image_credits += calculate_image_credits(
-                                    usage.get("model_id", mid), usage.get("image_count", 0)
+                                from ..llm.image_credits import (
+                                    calculate_image_credits_fractional,
+                                    usd_logged_for_image,
                                 )
+
+                                m_img = usage.get("model_id", mid)
+                                nimg = usage.get("image_count", 0)
+                                billing_fractional_total += calculate_image_credits_fractional(
+                                    m_img, nimg
+                                )
+                                total_usd_for_log += usd_logged_for_image(m_img, nimg)
                             else:
                                 usage_data_dict[mid] = usage
                                 total_input_tokens += usage.prompt_tokens
@@ -605,22 +612,19 @@ async def generate_stream(ctx: StreamContext) -> Any:
                 logger.info(f"[MultiModel] Safety check: {mid} already in done_sent")
 
         if successful_models > 0:
-            if total_effective_tokens > 0:
-                total_credits_used = Decimal(total_effective_tokens) / Decimal(1000)
-            elif total_image_credits > 0:
-                total_credits_used = total_image_credits
-            else:
-                total_credits_used = Decimal(successful_models)
-
-            total_credits_used = max(
-                Decimal(1),
-                total_credits_used.quantize(Decimal("1"), rounding=ROUND_CEILING),
+            from ..llm.tokens import (
+                finalize_billed_credits,
+                fractional_credits_for_text_usage,
+                usd_logged_for_text_usage,
             )
-            actual_credits_used = total_credits_used
 
+            for mid, usage in usage_data_dict.items():
+                billing_fractional_total += fractional_credits_for_text_usage(usage, mid)
+                total_usd_for_log += usd_logged_for_text_usage(usage, mid)
+
+            total_credits_used = finalize_billed_credits(billing_fractional_total)
             if total_credits_used <= 0:
                 total_credits_used = Decimal(1)
-                actual_credits_used = total_credits_used
 
             credit_db = SessionLocal()
             try:
@@ -752,6 +756,7 @@ async def generate_stream(ctx: StreamContext) -> Any:
             ),
             effective_tokens=total_effective_tokens if total_effective_tokens > 0 else None,
             credits_used=total_credits_used,
+            actual_cost=total_usd_for_log if total_usd_for_log > 0 else None,
         )
         log_db = SessionLocal()
         try:

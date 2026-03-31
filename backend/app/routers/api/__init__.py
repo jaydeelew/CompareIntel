@@ -2,6 +2,7 @@
 
 from fastapi import APIRouter
 
+from ..billing import router as billing_router
 from .conversations import router as conversations_router
 from .core import router as core_router
 from .credits import router as credits_router
@@ -12,6 +13,7 @@ from .preferences import router as preferences_router
 router = APIRouter(tags=["API"])
 
 router.include_router(core_router, tags=["API"])
+router.include_router(billing_router, tags=["Billing"])
 router.include_router(conversations_router, tags=["API"])
 router.include_router(credits_router, tags=["API"])
 router.include_router(preferences_router, tags=["API"])

@@ -311,7 +311,7 @@ async def send_trial_expired_email(email: EmailStr) -> None:
     html = _load_template("trial_expired.html").substitute(dashboard_url=dashboard_url)
 
     message = MessageSchema(
-        subject="Your CompareIntel Trial Has Ended - Paid Tiers Coming Soon!",
+        subject="Your CompareIntel trial has ended — see paid plans",
         recipients=[email],
         body=html,
         subtype="html",

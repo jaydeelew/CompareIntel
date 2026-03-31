@@ -1,5 +1,7 @@
 """
 Admin user management endpoints.
+
+Billing interactions with Stripe vs manual tiers: see docs/ops/ADMIN_BILLING.md.
 """
 
 from datetime import UTC, datetime, timedelta

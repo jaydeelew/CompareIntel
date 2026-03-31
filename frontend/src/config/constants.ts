@@ -61,8 +61,7 @@ export const SAVED_MODEL_SELECTION_LIMITS = {
 } as const
 
 // Credit-Based System Configuration
-// 1 credit = 1,000 effective tokens
-// Effective tokens = input_tokens + (output_tokens × 2.5)
+// Text credits follow provider cost (see docs/features/CREDIT_SYSTEM.md); token weighting is legacy fallback.
 
 // Daily credit limits for free tiers (resets daily)
 export const DAILY_CREDIT_LIMITS = {
@@ -78,18 +77,18 @@ export const MONTHLY_CREDIT_ALLOCATIONS = {
   pro_plus: 10_000,
 } as const
 
-// Subscription pricing (monthly) - placeholder values, not yet established
+// Subscription pricing (monthly USD) — illustrative; must match Stripe products and backend TIER_PRICING
 export const TIER_PRICING = {
   unregistered: 0.0,
   free: 0.0,
-  starter: 0,
-  starter_plus: 0,
-  pro: 0,
-  pro_plus: 0,
+  starter: 9,
+  starter_plus: 19,
+  pro: 39,
+  pro_plus: 79,
 } as const
 
-// Overage pricing (per 1,000 credits)
-export const OVERAGE_PRICE_PER_1000_CREDITS = 12.0 // TBD - overage pricing not yet established
+// Overage / pack anchor (per 1,000 credits, USD)
+export const OVERAGE_PRICE_PER_1000_CREDITS = 12.0
 
 // Type Exports
 

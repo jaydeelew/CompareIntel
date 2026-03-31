@@ -40,7 +40,7 @@ function getModalContent(
     return {
       title: 'Sign Up to Use Image Generation',
       message:
-        'Sign up for a free account to use image generation. Free tier: 2 comparison runs per day—each run is one Compare with your chosen models (up to 3 image models side-by-side). Paid tiers coming soon for as many image generations as you have credits for.',
+        'Sign up for a free account to use image generation. Free tier: 2 comparison runs per day—each run is one Compare with your chosen models (up to 3 image models side-by-side). Paid plans use your monthly and prepaid credits for additional image runs.',
       showSignUp: true,
       showUpgrade: false,
       showHidePremium: false,
@@ -72,7 +72,7 @@ function getModalContent(
   // userTier === 'free'
   return {
     title: 'Premium Model',
-    message: `${modelLabel} requires a paid subscription. You can use the "Hide premium models" button below to hide premium models from the list, or upgrade to a paid tier once paid tiers become available to access all models.`,
+    message: `${modelLabel} requires a paid subscription. Use the "Hide premium models" button below to focus on free-tier models, or open your avatar menu → Upgrade plan to subscribe when billing is enabled on this site.`,
     showSignUp: false,
     showUpgrade: true,
     showHidePremium: true,
@@ -246,9 +246,9 @@ export const DisabledModelInfoModal: React.FC<
               className="disabled-model-info-button secondary"
               onClick={onClose}
               type="button"
-              title="Paid tiers are coming soon"
+              title="Open your avatar menu, then Upgrade plan"
             >
-              Upgrade (coming soon)
+              Upgrade plan (account menu)
             </button>
           )}
           <button className="disabled-model-info-button tertiary" onClick={onClose} type="button">
