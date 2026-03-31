@@ -6,6 +6,7 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
 
+import { TIER_PRICING } from '../../config/constants'
 import { BackToMainCTA } from '../shared'
 import './Pages.css'
 
@@ -311,8 +312,13 @@ export const Features: React.FC = () => {
                 </p>
               </div>
               <div className="pricing-tier pricing-tier-full">
-                <h3>Paid Tiers (Coming Soon)</h3>
-                <p>Premium AI models, higher limits, and priority access to new releases.</p>
+                <h3>Paid tiers</h3>
+                <p>
+                  Premium AI models, monthly credit pools, optional prepaid packs, and priority
+                  access to new releases. After you sign in, use{' '}
+                  <strong>Account → Upgrade plan</strong> for Stripe checkout when billing is
+                  enabled.
+                </p>
                 <div className="paid-tiers-grid">
                   <div className="paid-tier-item">
                     <h4>Starter</h4>
@@ -352,7 +358,10 @@ export const Features: React.FC = () => {
                   </div>
                 </div>
                 <p style={{ marginTop: '1rem', fontSize: '0.9rem', color: '#666' }}>
-                  Pricing will be announced when paid tiers launch.
+                  Illustrative monthly prices (USD, before tax): Starter ${TIER_PRICING.starter},
+                  Starter+ ${TIER_PRICING.starter_plus}, Pro ${TIER_PRICING.pro}, Pro+ $
+                  {TIER_PRICING.pro_plus}. Confirm live amounts at checkout; pools and credit
+                  economics are documented in the FAQ.
                 </p>
               </div>
             </div>

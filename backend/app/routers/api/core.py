@@ -14,7 +14,6 @@ from ...config.settings import settings
 from ...credit_manager import (
     check_and_reset_credits_if_needed,
     ensure_credits_allocated,
-    get_user_credits,
 )
 from ...database import get_db
 from ...dependencies import get_current_user
@@ -25,7 +24,7 @@ from ...model_runner import (
     is_model_available_for_tier,
 )
 from ...models import AppSettings, User
-from ...rate_limiting import check_anonymous_credits
+from ...rate_limiting import check_anonymous_credits, check_user_credits
 from ...utils.cookies import get_token_from_cookies
 from ...utils.geo import get_location_from_ip, get_timezone_from_request
 from ...utils.request import get_client_ip
@@ -358,7 +357,7 @@ async def compare_stream(
     """Compare AI models using Server-Sent Events (SSE) streaming."""
     from decimal import Decimal
 
-    from ...config.constants import DAILY_CREDIT_LIMITS
+    from ...config.constants import DAILY_CREDIT_LIMITS, SUBSCRIPTION_CONFIG
 
     if not req.input_data.strip():
         raise HTTPException(status_code=400, detail="Input data cannot be empty")
@@ -533,9 +532,13 @@ async def compare_stream(
             else:
                 upgrade_message = " Sign up for a free account to access more models!"
         elif normalized_tier_name == "free":
-            upgrade_message = " Paid subscriptions are coming soon!"
+            upgrade_message = (
+                " Subscribe to a paid plan from Account → Upgrade plan when billing is enabled."
+            )
         else:
-            upgrade_message = " Paid subscriptions are coming soon!"
+            upgrade_message = (
+                " This model may require a higher tier or is not included in your current plan."
+            )
 
         raise HTTPException(
             status_code=403,
@@ -551,9 +554,9 @@ async def compare_stream(
                 f" Sign up for a free account to compare up to {free_model_limit} models."
             )
         elif normalized_tier_name == "free":
-            upgrade_message = " Paid plans with higher model limits are coming soon!"
+            upgrade_message = " Paid plans allow more models per comparison — use Account → Upgrade plan when billing is enabled."
         elif normalized_tier_name in ["starter", "starter_plus"]:
-            upgrade_message = " Higher tier plans with more models are coming soon!"
+            upgrade_message = " Pro and Pro+ tiers allow more models per comparison."
 
         raise HTTPException(
             status_code=400,
@@ -589,6 +592,18 @@ async def compare_stream(
             user_location = ip_location
             location_source = "ip_based"
 
+    from ...llm.tokens import estimate_reserved_credits_for_compare
+
+    is_image_by_model = {mid: _model_supports_image_gen(mid) for mid in req.models}
+    tokenizer_mid = req.models[0] if req.models else None
+    required_credits = estimate_reserved_credits_for_compare(
+        req.input_data.strip(),
+        req.models,
+        req.conversation_history,
+        tokenizer_mid,
+        is_image_by_model,
+    )
+
     credits_remaining = 0
     credits_allocated = 0
 
@@ -596,16 +611,24 @@ async def compare_stream(
         check_and_reset_credits_if_needed(current_user.id, db)
         ensure_credits_allocated(current_user.id, db)
         db.refresh(current_user)
-        credits_remaining = get_user_credits(current_user.id, db)
-        credits_allocated = current_user.monthly_credits_allocated or 0
+        is_allowed, credits_remaining, credits_allocated = check_user_credits(
+            current_user, required_credits, db
+        )
 
-        if credits_remaining == 0:
+        if not is_allowed:
             tier_name = current_user.subscription_tier or "free"
+            need = int(required_credits.quantize(Decimal("1")))
+            tier_cfg = SUBSCRIPTION_CONFIG.get(tier_name) or {}
+            overage_hint = ""
+            if tier_cfg.get("overage_allowed"):
+                overage_hint = (
+                    " Use Account → Upgrade plan to buy credit packs or change your subscription."
+                )
             if tier_name in ["unregistered", "free"]:
                 error_msg = (
-                    f"You've run out of credits. Credits will reset to "
-                    f"{DAILY_CREDIT_LIMITS.get(tier_name, 50)} tomorrow, "
-                    f"or sign-up for a free account to get more credits!"
+                    f"Not enough credits for this comparison (need at least {need} credits). "
+                    f"Daily credits reset to {DAILY_CREDIT_LIMITS.get(tier_name, 50)} tomorrow, "
+                    f"or sign up for a free account to get more credits!"
                 )
             elif tier_name == "pro_plus":
                 reset_date = (
@@ -613,25 +636,32 @@ async def compare_stream(
                     if current_user.credits_reset_at
                     else "N/A"
                 )
-                error_msg = f"You've run out of credits which will reset on {reset_date}."
+                error_msg = (
+                    f"Not enough credits for this comparison (need at least {need} credits). "
+                    f"Credits reset on {reset_date}.{overage_hint}"
+                )
             else:
                 reset_date = (
                     current_user.credits_reset_at.date().isoformat()
                     if current_user.credits_reset_at
                     else "N/A"
                 )
-                error_msg = f"You've run out of credits which will reset on {reset_date}."
+                error_msg = (
+                    f"Not enough credits for this comparison (need at least {need} credits). "
+                    f"Credits reset on {reset_date}.{overage_hint}"
+                )
             raise HTTPException(status_code=402, detail=error_msg)
     else:
         ip_identifier = f"ip:{client_ip}"
-        _, ip_credits_remaining, ip_credits_allocated = check_anonymous_credits(
-            ip_identifier, Decimal(0), user_timezone, db
+        is_allowed_ip, ip_credits_remaining, ip_credits_allocated = check_anonymous_credits(
+            ip_identifier, required_credits, user_timezone, db
         )
         fingerprint_credits_remaining = ip_credits_remaining
+        is_allowed_fp = True
         if req.browser_fingerprint:
             fp_identifier = f"fp:{req.browser_fingerprint}"
-            _, fingerprint_credits_remaining, fingerprint_credits_allocated = (
-                check_anonymous_credits(fp_identifier, Decimal(0), user_timezone, db)
+            is_allowed_fp, fingerprint_credits_remaining, _ = check_anonymous_credits(
+                fp_identifier, required_credits, user_timezone, db
             )
         credits_remaining = min(
             ip_credits_remaining,
@@ -639,11 +669,11 @@ async def compare_stream(
         )
         credits_allocated = ip_credits_allocated
 
-        if credits_remaining == 0:
+        if not (is_allowed_ip and is_allowed_fp):
             raise HTTPException(
                 status_code=402,
-                detail="You've run out of credits. Credits will reset to 50 tomorrow, "
-                "or sign-up for a free account to get more credits!",
+                detail="Not enough credits for this comparison. Credits reset to 50 tomorrow, "
+                "or sign up for a free account to get more credits!",
             )
 
     credits_remaining_ref = [credits_remaining]

@@ -12,6 +12,8 @@ import { apiClient } from './api/client'
 export interface CreditBalance {
   /** Credits allocated for current period */
   credits_allocated: number
+  /** Prepaid balance (spent after monthly pool is used) */
+  purchased_credits_balance?: number
   /** Credits used this period (for authenticated users) */
   credits_used_this_period?: number
   /** Credits used today (for unregistered users) */

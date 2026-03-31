@@ -128,8 +128,8 @@ export const About: React.FC = () => {
                 <h3>Flexible Access Tiers</h3>
                 <p>
                   Unregistered users can explore with a handful of models. Sign up for a free
-                  account to access more models and credits. Paid tiers coming soon for premium AI
-                  models.
+                  account to access more models and credits. Paid tiers unlock premium models and
+                  larger monthly credit pools when billing is enabled.
                 </p>
               </div>
               <div className="feature-item">

@@ -115,7 +115,7 @@ function getDisabledTooltip(userTier: 'unregistered' | 'free'): string {
   if (userTier === 'unregistered') {
     return 'Sign up for a free account to unlock more models and get a 7-day trial of all premium models.'
   }
-  return 'Paid tiers are coming soon — stay tuned to access all models.'
+  return 'Upgrade to a paid plan from Account → Upgrade plan to access all catalog models (when billing is enabled).'
 }
 
 function EvidenceInfoModal({

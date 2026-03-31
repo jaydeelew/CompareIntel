@@ -94,10 +94,9 @@ CONVERSATION_LIMITS: dict[str, int] = {
 }
 
 
-# Credit allocations for each tier
-# 1 credit = 1,000 effective tokens
-# Effective tokens = input_tokens + (output_tokens × 2.5)
-# Average exchange: ~5 credits (mix of standard/extended/follow-ups)
+# Credit allocations for each tier (whole credits debited per successful compare).
+# Text usage is cost-based (OpenRouter USD × CREDITS_PER_DOLLAR); legacy token
+# weighting is only a fallback when list pricing is unavailable.
 
 # Daily credit limits for free tiers (resets daily)
 DAILY_CREDIT_LIMITS: dict[str, int] = {
@@ -119,15 +118,16 @@ IMAGE_CREDITS_PER_GENERATION: int = 5
 # Image generation: unregistered users are blocked in compare-stream. Registered free tier has no
 # separate daily image-run cap—only daily credits (DAILY_CREDIT_LIMITS) and model_limit apply.
 
-# Subscription pricing (monthly) - placeholder values, not yet established
+# Subscription pricing (monthly USD) — illustrative placeholders for Stripe products;
+# replace with values from internal OpenRouter COGS / margin analysis before launch.
 TIER_PRICING: dict[str, float] = {
     "unregistered": 0.0,
     "free": 0.0,
-    "starter": 0.0,
-    "starter_plus": 0.0,
-    "pro": 0.0,
-    "pro_plus": 0.0,
+    "starter": 9.0,
+    "starter_plus": 19.0,
+    "pro": 39.0,
+    "pro_plus": 79.0,
 }
 
-# Overage pricing (per 1,000 credits)
-OVERAGE_PRICE_PER_1000_CREDITS: float = 12.0  # TBD - overage pricing not yet established
+# Overage / pack list price anchor (per 1,000 credits, USD)—keep ≥ effective $/credit at list rates
+OVERAGE_PRICE_PER_1000_CREDITS: float = 12.0

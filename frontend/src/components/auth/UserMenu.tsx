@@ -6,9 +6,21 @@
 import React, { useState, useRef, useEffect, useLayoutEffect, useCallback } from 'react'
 import { createPortal } from 'react-dom'
 
-import { getCreditAllocation, getDailyCreditLimit } from '../../config/constants'
+import {
+  getCreditAllocation,
+  getDailyCreditLimit,
+  MONTHLY_CREDIT_ALLOCATIONS,
+  TIER_PRICING,
+} from '../../config/constants'
 import { useAuth } from '../../contexts/AuthContext'
 import { apiClient } from '../../services/api/client'
+import { ApiError } from '../../services/api/errors'
+import {
+  createBillingPortalSession,
+  createCreditPackCheckoutSession,
+  createSubscriptionCheckoutSession,
+  type PaidSubscriptionTier,
+} from '../../services/billingService'
 import { deleteAllConversations } from '../../services/conversationService'
 import { getCreditBalance } from '../../services/creditService'
 import type { CreditBalance } from '../../services/creditService'
@@ -53,6 +65,13 @@ export const UserMenu: React.FC = () => {
   const [preferencesSuccess, setPreferencesSuccess] = useState<string | null>(null)
   const [isDeletingHistory, setIsDeletingHistory] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [billingBusy, setBillingBusy] = useState<string | null>(null)
+  const [billingError, setBillingError] = useState<string | null>(null)
+
+  const isPaidTier = Boolean(
+    user?.subscription_tier &&
+      Object.prototype.hasOwnProperty.call(MONTHLY_CREDIT_ALLOCATIONS, user.subscription_tier)
+  )
 
   // Daily model response limits per subscription tier (legacy - for backward compatibility)
   const getDailyLimit = (tier: string): number => {
@@ -81,6 +100,7 @@ export const UserMenu: React.FC = () => {
             setCreditBalance({
               credits_allocated: user.monthly_credits_allocated || 0,
               credits_used_this_period: user.credits_used_this_period || 0,
+              purchased_credits_balance: 0,
               credits_remaining: Math.max(
                 0,
                 (user.monthly_credits_allocated || 0) - (user.credits_used_this_period || 0)
@@ -305,6 +325,60 @@ export const UserMenu: React.FC = () => {
     }
   }, [])
 
+  const subscribeTier = useCallback(async (tier: PaidSubscriptionTier) => {
+    setBillingError(null)
+    setBillingBusy(`sub-${tier}`)
+    try {
+      const url = await createSubscriptionCheckoutSession(tier)
+      window.location.href = url
+    } catch (err) {
+      const msg =
+        err instanceof ApiError
+          ? err.message
+          : err instanceof Error
+            ? err.message
+            : 'Checkout could not start.'
+      setBillingError(msg)
+      setBillingBusy(null)
+    }
+  }, [])
+
+  const buyCreditPack = useCallback(async () => {
+    setBillingError(null)
+    setBillingBusy('pack')
+    try {
+      const url = await createCreditPackCheckoutSession()
+      window.location.href = url
+    } catch (err) {
+      const msg =
+        err instanceof ApiError
+          ? err.message
+          : err instanceof Error
+            ? err.message
+            : 'Checkout could not start.'
+      setBillingError(msg)
+      setBillingBusy(null)
+    }
+  }, [])
+
+  const openBillingPortal = useCallback(async () => {
+    setBillingError(null)
+    setBillingBusy('portal')
+    try {
+      const url = await createBillingPortalSession()
+      window.location.href = url
+    } catch (err) {
+      const msg =
+        err instanceof ApiError
+          ? err.message
+          : err instanceof Error
+            ? err.message
+            : 'Billing portal could not be opened.'
+      setBillingError(msg)
+      setBillingBusy(null)
+    }
+  }, [])
+
   if (!user) return null
 
   const getTierBadgeClass = (tier: string) => {
@@ -344,6 +418,7 @@ export const UserMenu: React.FC = () => {
 
   const closeModal = () => {
     setActiveModal(null)
+    setBillingError(null)
   }
 
   const dropdownPanel = (
@@ -961,6 +1036,22 @@ export const UserMenu: React.FC = () => {
                         </span>
                       </div>
                     </div>
+                    <div className="tier-checkout-actions" style={{ marginTop: '1rem' }}>
+                      <p style={{ fontWeight: 600, margin: 0 }}>${TIER_PRICING.starter}/month</p>
+                      <button
+                        type="button"
+                        className="modal-button-primary"
+                        style={{ width: '100%', marginTop: '0.5rem' }}
+                        disabled={billingBusy !== null || user.subscription_tier === 'starter'}
+                        onClick={() => subscribeTier('starter')}
+                      >
+                        {user.subscription_tier === 'starter'
+                          ? 'Current plan'
+                          : billingBusy === 'sub-starter'
+                            ? 'Redirecting…'
+                            : 'Subscribe with Stripe'}
+                      </button>
+                    </div>
                   </div>
 
                   <div className="pricing-tier tier-starter">
@@ -994,6 +1085,24 @@ export const UserMenu: React.FC = () => {
                           <strong>20 conversations</strong> saved
                         </span>
                       </div>
+                    </div>
+                    <div className="tier-checkout-actions" style={{ marginTop: '1rem' }}>
+                      <p style={{ fontWeight: 600, margin: 0 }}>
+                        ${TIER_PRICING.starter_plus}/month
+                      </p>
+                      <button
+                        type="button"
+                        className="modal-button-primary"
+                        style={{ width: '100%', marginTop: '0.5rem' }}
+                        disabled={billingBusy !== null || user.subscription_tier === 'starter_plus'}
+                        onClick={() => subscribeTier('starter_plus')}
+                      >
+                        {user.subscription_tier === 'starter_plus'
+                          ? 'Current plan'
+                          : billingBusy === 'sub-starter_plus'
+                            ? 'Redirecting…'
+                            : 'Subscribe with Stripe'}
+                      </button>
                     </div>
                   </div>
 
@@ -1030,6 +1139,22 @@ export const UserMenu: React.FC = () => {
                         </span>
                       </div>
                     </div>
+                    <div className="tier-checkout-actions" style={{ marginTop: '1rem' }}>
+                      <p style={{ fontWeight: 600, margin: 0 }}>${TIER_PRICING.pro}/month</p>
+                      <button
+                        type="button"
+                        className="modal-button-primary"
+                        style={{ width: '100%', marginTop: '0.5rem' }}
+                        disabled={billingBusy !== null || user.subscription_tier === 'pro'}
+                        onClick={() => subscribeTier('pro')}
+                      >
+                        {user.subscription_tier === 'pro'
+                          ? 'Current plan'
+                          : billingBusy === 'sub-pro'
+                            ? 'Redirecting…'
+                            : 'Subscribe with Stripe'}
+                      </button>
+                    </div>
                   </div>
 
                   <div className="pricing-tier tier-pro">
@@ -1064,18 +1189,71 @@ export const UserMenu: React.FC = () => {
                         </span>
                       </div>
                     </div>
+                    <div className="tier-checkout-actions" style={{ marginTop: '1rem' }}>
+                      <p style={{ fontWeight: 600, margin: 0 }}>${TIER_PRICING.pro_plus}/month</p>
+                      <button
+                        type="button"
+                        className="modal-button-primary"
+                        style={{ width: '100%', marginTop: '0.5rem' }}
+                        disabled={billingBusy !== null || user.subscription_tier === 'pro_plus'}
+                        onClick={() => subscribeTier('pro_plus')}
+                      >
+                        {user.subscription_tier === 'pro_plus'
+                          ? 'Current plan'
+                          : billingBusy === 'sub-pro_plus'
+                            ? 'Redirecting…'
+                            : 'Subscribe with Stripe'}
+                      </button>
+                    </div>
                   </div>
                 </div>
 
                 <div className="upgrade-modal-footer">
+                  {billingError && (
+                    <p className="pricing-notice" style={{ color: '#c62828' }}>
+                      {billingError}
+                    </p>
+                  )}
                   <p className="pricing-notice">
-                    💡 <strong>How credits work:</strong> 1 credit = 1,000 effective tokens.
-                    Effective tokens = input tokens + (output tokens × 2.5). Average comparison uses
-                    ~5 credits.
+                    💡 <strong>How credits work:</strong> we convert provider cost (OpenRouter USD
+                    or list prices) into credits at a fixed rate. Multiple models in one comparison
+                    add up; we charge whole credits rounded up (at least 1 when anything succeeds).
                   </p>
-                  <p className="pricing-notice" style={{ marginTop: '0.75rem' }}>
-                    Paid tiers and pricing will be available soon. We're working hard to bring you
-                    the best value and features!
+                  <div
+                    style={{
+                      display: 'flex',
+                      flexWrap: 'wrap',
+                      gap: '0.5rem',
+                      marginTop: '0.75rem',
+                    }}
+                  >
+                    {user.stripe_customer_id ? (
+                      <button
+                        type="button"
+                        className="modal-button-secondary"
+                        disabled={billingBusy !== null}
+                        onClick={() => openBillingPortal()}
+                      >
+                        {billingBusy === 'portal' ? 'Opening…' : 'Manage billing'}
+                      </button>
+                    ) : null}
+                    {isPaidTier ? (
+                      <button
+                        type="button"
+                        className="modal-button-secondary"
+                        disabled={billingBusy !== null}
+                        onClick={() => buyCreditPack()}
+                      >
+                        {billingBusy === 'pack' ? 'Redirecting…' : 'Buy credit pack'}
+                      </button>
+                    ) : null}
+                  </div>
+                  <p
+                    className="pricing-notice"
+                    style={{ marginTop: '0.75rem', fontSize: '0.85rem' }}
+                  >
+                    Checkout requires Stripe price IDs in server configuration. If you see a
+                    configuration error, billing is not enabled on this deployment yet.
                   </p>
                   <button className="modal-button-primary" onClick={closeModal}>
                     Close

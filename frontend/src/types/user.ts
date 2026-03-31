@@ -54,6 +54,8 @@ export interface User {
   trial_ends_at?: string
   /** 7-DAY TRIAL: Whether the user's trial is currently active */
   is_trial_active?: boolean
+  /** Stripe customer id after checkout (Customer Portal / billing) */
+  stripe_customer_id?: string | null
 }
 
 /**

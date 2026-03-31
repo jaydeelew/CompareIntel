@@ -363,28 +363,34 @@ Handles model selection with business rules:
 │                       Credit System                               │
 └─────────────────────────────────────────────────────────────────┘
 
-Credit Calculation:
-  effective_tokens = input_tokens + (output_tokens × 2.5)
-  credits_used = effective_tokens / 1000
+Credit calculation (text, per model):
+  1) OpenRouter usage.cost (USD) x CREDITS_PER_DOLLAR (fractional credits), or
+  2) List pricing from openrouter_models.json x tokens, or
+  3) Legacy effective_tokens formula (fallback).
 
-User Types:
+Per request: sum fractional credits across successful models; charge max(1, ceil(total))
+whole credits. UsageLog.actual_cost stores attributed USD.
+
+User types (pools):
   ┌─────────────────┬───────────────┬─────────────────────────┐
   │ User Type       │ Credit Pool   │ Reset Schedule          │
   ├─────────────────┼───────────────┼─────────────────────────┤
   │ Anonymous       │ 50/day        │ Daily (midnight local)  │
   │ Free            │ 100/day       │ Daily (midnight local)  │
-  │ Starter         │ 1,250/month   │ Monthly (billing date)  │
-  │ Starter+        │ 2,500/month   │ Monthly (billing date)  │
-  │ Pro             │ 5,000/month   │ Monthly (billing date)  │
-  │ Pro+            │ 10,000/month  │ Monthly (billing date)  │
+  │ Starter         │ 1,250/month   │ Monthly (Stripe period)   │
+  │ Starter+        │ 2,500/month   │ Monthly (Stripe period)   │
+  │ Pro             │ 5,000/month   │ Monthly (Stripe period)   │
+  │ Pro+            │ 10,000/month  │ Monthly (Stripe period)   │
   └─────────────────┴───────────────┴─────────────────────────┘
 
-Credit Check Flow:
-  1. Frontend: useCreditsRemaining calculates remaining credits
-  2. Submit: useComparisonStreaming validates credit availability
-  3. Backend: /api/compare-stream checks and deducts credits
-  4. Response: COMPLETE event includes updated credit balance
-  5. Update: Frontend refreshes credit state from response
+Prepaid: purchased_credits_balance spent after monthly pool is exhausted.
+
+Billing (optional): POST /api/billing/create-checkout-session, POST /api/billing/webhooks/stripe
+
+Credit check flow:
+  1. Backend /api/compare-stream estimates required credits (per model); 402 if insufficient
+  2. Stream completes; comparison_stream sums USD/credits and deducts via credit_manager
+  3. COMPLETE / balance endpoints refresh UI
 ```
 
 ### 5.4 Conversation Persistence

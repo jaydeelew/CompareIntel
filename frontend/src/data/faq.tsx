@@ -376,10 +376,10 @@ export const faqData: FAQItemData[] = [
           card is required to sign up.
         </p>
         <p>
-          <strong>Paid subscription tiers are coming soon</strong> for users who need more credits
-          and access to premium AI models. Paid tiers will include Starter, Starter+, Pro, and Pro+,
-          each with increasing credit allocations, more models per comparison, and more conversation
-          history storage. Pricing will be announced when available.
+          <strong>Paid plans</strong> (Starter, Starter+, Pro, Pro+) add monthly credit pools (from
+          1,250 up to 10,000 credits), more models per comparison, and optional prepaid credit
+          packs. Subscribe from your account menu (Upgrade plan) when billing is enabled on the
+          deployment you use.
         </p>
       </>
     ),
@@ -412,8 +412,8 @@ export const faqData: FAQItemData[] = [
             comparison
           </li>
           <li>
-            <strong>Upgrade your plan:</strong> Paid plans have larger credit allocations that reset
-            monthly
+            <strong>Upgrade or top up:</strong> Paid plans have larger monthly pools; on paid tiers
+            you can also buy prepaid credit packs from billing when available
           </li>
           <li>
             <strong>Shorter prompts:</strong> More concise prompts use fewer input tokens
@@ -929,10 +929,10 @@ export const faqData: FAQItemData[] = [
           Registration is quick and only requires an email address—no credit card needed.
         </p>
         <p>
-          <strong>Paid tiers (Starter, Starter+, Pro, Pro+) are coming soon.</strong> They will
-          unlock access to all premium AI models, higher credit allocations (monthly instead of
-          daily), more models per comparison (up to 12 for Pro+), and more conversation history
-          storage (up to 80 conversations for Pro+). Pricing will be announced when available.
+          <strong>Paid tiers</strong> (Starter, Starter+, Pro, Pro+) unlock premium models, monthly
+          credit allocations (1,250–10,000 credits), up to 12 models per comparison on Pro+, and
+          more saved conversations. Subscribe from <strong>Account → Upgrade plan</strong> when
+          Stripe checkout is configured for your environment.
         </p>
       </>
     ),
@@ -943,42 +943,38 @@ export const faqData: FAQItemData[] = [
     answer: (
       <>
         <p>
-          CompareIntel uses a credit-based system that translates AI token usage into a simple,
-          predictable unit. This approach abstracts the complexity of different model pricing while
-          ensuring fair and transparent billing.
+          CompareIntel uses credits so usage stays simple on the surface while reflecting{' '}
+          <strong>real provider cost</strong>: pricier models use more credits than cheaper ones for
+          the same amount of text. Credits convert from OpenRouter charges (and published list
+          prices when needed).
         </p>
         <p>
-          <strong>The Token-to-Credit Formula:</strong>
+          <strong>How we calculate credits (text):</strong>
         </p>
         <ul>
           <li>
-            <strong>Effective Tokens</strong> = Input Tokens + (Output Tokens × 2.5)
+            We use OpenRouter&rsquo;s reported <strong>cost in USD</strong> when the API provides
+            it, scaled by a fixed rate (credits per dollar).
           </li>
           <li>
-            <strong>Credits</strong> = Effective Tokens ÷ 1,000
+            If cost isn&rsquo;t present, we estimate USD from public{' '}
+            <strong>per-token list prices</strong> for that model, then apply the same
+            credits-per-dollar rate.
+          </li>
+          <li>
+            <strong>Fallback:</strong> rare models without pricing metadata still use the legacy
+            &quot;effective tokens&quot; estimate (input + output × 2.5, divided by 1,000) so usage
+            is never free by accident.
           </li>
         </ul>
         <p>
-          The 2.5× multiplier on output tokens reflects the higher computational cost of generating
-          text compared to processing input. This industry-standard weighting ensures our pricing
-          aligns with actual AI provider costs. One credit equals 1,000 effective tokens.
+          <strong>Multiple models:</strong> We add up fractional credits from every successful model
+          in one comparison, round up to whole credits, and charge at least{' '}
+          <strong>1 credit</strong> for any successful run (0 if everything failed).
         </p>
         <p>
-          <strong>Practical Example:</strong> Suppose you send a 500-word prompt (≈400 input tokens)
-          and receive a detailed 800-word response (≈600 output tokens):
-        </p>
-        <ul>
-          <li>Effective Tokens: 400 + (600 × 2.5) = 1,900</li>
-          <li>Credits (raw): 1,900 ÷ 1,000 = 1.9</li>
-          <li>
-            <strong>Credits charged: 2</strong> (rounded up to the nearest whole credit; minimum 1
-            credit per successful comparison)
-          </li>
-        </ul>
-        <p>
-          When comparing multiple models simultaneously, effective tokens are calculated separately
-          for each model's response and summed; the total is then converted to credits and rounded
-          up.
+          <strong>Images:</strong> priced from OpenRouter image rates (or a small default) and
+          folded into the same per-request rounding when you compare image models.
         </p>
         <p>
           <strong>Credit Allocations:</strong>
@@ -991,8 +987,9 @@ export const faqData: FAQItemData[] = [
           </li>
           <li>
             <strong>Paid tiers:</strong> Monthly allocations from 1,250 credits (Starter) to 10,000
-            credits (Pro+). Credits reset monthly on your billing date. Additional credits can be
-            purchased if needed.
+            credits (Pro+). Credits reset on your Stripe billing period; prepaid packs add to your
+            balance and are used after the monthly pool. Use <strong>Account → Upgrade plan</strong>{' '}
+            for checkout when enabled.
           </li>
         </ul>
         <p>
