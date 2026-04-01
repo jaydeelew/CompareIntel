@@ -7,8 +7,16 @@ import './index.css'
 // It will be loaded when LatexRenderer component is first used
 import App from './App.tsx'
 import { initializeRegistry } from './config/loadModelConfigs'
+import { isCancellationError } from './services/api/errors'
 import logger from './utils/logger'
 import { initWebVitals } from './utils/performance'
+
+// Deduped/aborted API GETs reject with CancellationError; suppress console noise only (does not affect promise handling)
+window.addEventListener('unhandledrejection', event => {
+  if (isCancellationError(event.reason)) {
+    event.preventDefault()
+  }
+})
 
 // Defer Sentry so @sentry/react is not on the critical path (Lighthouse / main-thread parse).
 const scheduleSentryInit = () => {

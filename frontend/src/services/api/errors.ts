@@ -193,3 +193,11 @@ export class CancellationError extends ApiError {
     this.name = 'CancellationError'
   }
 }
+
+/** True when a request was aborted (timeout interceptor, deduped fetch, navigation, etc.) */
+export function isCancellationError(error: unknown): boolean {
+  return (
+    error instanceof CancellationError ||
+    (error instanceof Error && error.name === 'CancellationError')
+  )
+}

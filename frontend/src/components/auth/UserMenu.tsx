@@ -14,7 +14,7 @@ import {
 } from '../../config/constants'
 import { useAuth } from '../../contexts/AuthContext'
 import { apiClient } from '../../services/api/client'
-import { ApiError } from '../../services/api/errors'
+import { ApiError, isCancellationError } from '../../services/api/errors'
 import {
   createBillingPortalSession,
   createCreditPackCheckoutSession,
@@ -73,18 +73,6 @@ export const UserMenu: React.FC = () => {
       Object.prototype.hasOwnProperty.call(MONTHLY_CREDIT_ALLOCATIONS, user.subscription_tier)
   )
 
-  // Daily model response limits per subscription tier (legacy - for backward compatibility)
-  const getDailyLimit = (tier: string): number => {
-    const limits = {
-      free: 20,
-      starter: 50,
-      starter_plus: 100,
-      pro: 200,
-      pro_plus: 400,
-    }
-    return limits[tier as keyof typeof limits] || 20
-  }
-
   // Fetch credit balance when menu opens
   useEffect(() => {
     if (isOpen && user) {
@@ -94,6 +82,7 @@ export const UserMenu: React.FC = () => {
           setCreditBalance(balance)
         })
         .catch(error => {
+          if (isCancellationError(error)) return
           logger.error('Failed to fetch credit balance:', error)
           // Fallback to user object data if available
           if (user.monthly_credits_allocated !== undefined) {
@@ -1012,7 +1001,11 @@ export const UserMenu: React.FC = () => {
                       <div className="feature-item">
                         <span className="feature-icon">✓</span>
                         <span className="feature-text">
-                          <strong>1,250 credits</strong> per month (~250 exchanges/month)
+                          <strong>
+                            {MONTHLY_CREDIT_ALLOCATIONS.starter.toLocaleString()} credits
+                          </strong>{' '}
+                          per month (~{Math.round(MONTHLY_CREDIT_ALLOCATIONS.starter / 5)}{' '}
+                          exchanges/month at ~5 credits each)
                         </span>
                       </div>
                       <div className="feature-item">
@@ -1062,7 +1055,11 @@ export const UserMenu: React.FC = () => {
                       <div className="feature-item">
                         <span className="feature-icon">✓</span>
                         <span className="feature-text">
-                          <strong>2,500 credits</strong> per month (~500 exchanges/month)
+                          <strong>
+                            {MONTHLY_CREDIT_ALLOCATIONS.starter_plus.toLocaleString()} credits
+                          </strong>{' '}
+                          per month (~{Math.round(MONTHLY_CREDIT_ALLOCATIONS.starter_plus / 5)}{' '}
+                          exchanges/month at ~5 credits each)
                         </span>
                       </div>
                       <div className="feature-item">
@@ -1115,7 +1112,9 @@ export const UserMenu: React.FC = () => {
                       <div className="feature-item">
                         <span className="feature-icon">✓</span>
                         <span className="feature-text">
-                          <strong>5,000 credits</strong> per month (~1,000 exchanges/month)
+                          <strong>{MONTHLY_CREDIT_ALLOCATIONS.pro.toLocaleString()} credits</strong>{' '}
+                          per month (~{Math.round(MONTHLY_CREDIT_ALLOCATIONS.pro / 5)}{' '}
+                          exchanges/month at ~5 credits each)
                         </span>
                       </div>
                       <div className="feature-item">
@@ -1165,7 +1164,11 @@ export const UserMenu: React.FC = () => {
                       <div className="feature-item">
                         <span className="feature-icon">✓</span>
                         <span className="feature-text">
-                          <strong>10,000 credits</strong> per month (~2,000 exchanges/month)
+                          <strong>
+                            {MONTHLY_CREDIT_ALLOCATIONS.pro_plus.toLocaleString()} credits
+                          </strong>{' '}
+                          per month (~{Math.round(MONTHLY_CREDIT_ALLOCATIONS.pro_plus / 5)}{' '}
+                          exchanges/month at ~5 credits each)
                         </span>
                       </div>
                       <div className="feature-item">

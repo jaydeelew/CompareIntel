@@ -17,7 +17,6 @@ UserRole = Literal["user", "moderator", "admin", "super_admin"]
 class TierConfigDict(TypedDict):
     """Configuration for a subscription tier."""
 
-    daily_limit: int
     model_limit: int
     overage_allowed: bool
     overage_price: float | None

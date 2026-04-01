@@ -1,6 +1,8 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
 
+import { MONTHLY_CREDIT_ALLOCATIONS, OVERAGE_USD_PER_CREDIT } from '../config/constants'
+
 export interface FAQItemData {
   id: string
   question: string
@@ -376,10 +378,12 @@ export const faqData: FAQItemData[] = [
           card is required to sign up.
         </p>
         <p>
-          <strong>Paid plans</strong> (Starter, Starter+, Pro, Pro+) add monthly credit pools (from
-          1,250 up to 10,000 credits), more models per comparison, and optional prepaid credit
-          packs. Subscribe from your account menu (Upgrade plan) when billing is enabled on the
-          deployment you use.
+          <strong>Paid plans</strong> (Starter, Starter+, Pro, Pro+) add monthly credit pools (from{' '}
+          {MONTHLY_CREDIT_ALLOCATIONS.starter.toLocaleString()} up to{' '}
+          {MONTHLY_CREDIT_ALLOCATIONS.pro_plus.toLocaleString()} credits), more models per
+          comparison, optional prepaid credit packs, and (when enabled) overage beyond your pool at{' '}
+          ${OVERAGE_USD_PER_CREDIT.toFixed(3)} per credit. Subscribe from your account menu (Upgrade
+          plan) when billing is enabled on the deployment you use.
         </p>
       </>
     ),
@@ -930,9 +934,11 @@ export const faqData: FAQItemData[] = [
         </p>
         <p>
           <strong>Paid tiers</strong> (Starter, Starter+, Pro, Pro+) unlock premium models, monthly
-          credit allocations (1,250–10,000 credits), up to 12 models per comparison on Pro+, and
-          more saved conversations. Subscribe from <strong>Account → Upgrade plan</strong> when
-          Stripe checkout is configured for your environment.
+          credit allocations (
+          {`${MONTHLY_CREDIT_ALLOCATIONS.starter.toLocaleString()}–${MONTHLY_CREDIT_ALLOCATIONS.pro_plus.toLocaleString()}`}{' '}
+          credits), up to 12 models per comparison on Pro+, and more saved conversations. Subscribe
+          from <strong>Account → Upgrade plan</strong> when Stripe checkout is configured for your
+          environment.
         </p>
       </>
     ),
@@ -986,10 +992,13 @@ export const faqData: FAQItemData[] = [
             not set).
           </li>
           <li>
-            <strong>Paid tiers:</strong> Monthly allocations from 1,250 credits (Starter) to 10,000
-            credits (Pro+). Credits reset on your Stripe billing period; prepaid packs add to your
-            balance and are used after the monthly pool. Use <strong>Account → Upgrade plan</strong>{' '}
-            for checkout when enabled.
+            <strong>Paid tiers:</strong> Monthly allocations from{' '}
+            {MONTHLY_CREDIT_ALLOCATIONS.starter.toLocaleString()} credits (Starter) to{' '}
+            {MONTHLY_CREDIT_ALLOCATIONS.pro_plus.toLocaleString()} credits (Pro+). Credits reset on
+            your Stripe billing period; prepaid packs add to your balance and are used after the
+            monthly pool. Overage beyond the pool (when enabled) is billed at $
+            {OVERAGE_USD_PER_CREDIT.toFixed(3)} per credit. Use{' '}
+            <strong>Account → Upgrade plan</strong> for checkout when enabled.
           </li>
         </ul>
         <p>
@@ -1016,26 +1025,31 @@ export const faqData: FAQItemData[] = [
             3 saved model selections
           </li>
           <li>
-            <strong>Starter:</strong> 1,250 credits/month, 6 models per comparison, 10 saved
-            conversations, 5 saved model selections, access to all premium models
+            <strong>Starter:</strong> {MONTHLY_CREDIT_ALLOCATIONS.starter.toLocaleString()}{' '}
+            credits/month, 6 models per comparison, 10 saved conversations, 5 saved model
+            selections, access to all premium models
           </li>
           <li>
-            <strong>Starter+:</strong> 2,500 credits/month, 6 models per comparison, 20 saved
-            conversations, 10 saved model selections, access to all premium models
+            <strong>Starter+:</strong> {MONTHLY_CREDIT_ALLOCATIONS.starter_plus.toLocaleString()}{' '}
+            credits/month, 6 models per comparison, 20 saved conversations, 10 saved model
+            selections, access to all premium models
           </li>
           <li>
-            <strong>Pro:</strong> 5,000 credits/month, 9 models per comparison, 40 saved
-            conversations, 15 saved model selections, access to all premium models
+            <strong>Pro:</strong> {MONTHLY_CREDIT_ALLOCATIONS.pro.toLocaleString()} credits/month, 9
+            models per comparison, 40 saved conversations, 15 saved model selections, access to all
+            premium models
           </li>
           <li>
-            <strong>Pro+:</strong> 10,000 credits/month, 12 models per comparison, 80 saved
-            conversations, 20 saved model selections, access to all premium models
+            <strong>Pro+:</strong> {MONTHLY_CREDIT_ALLOCATIONS.pro_plus.toLocaleString()}{' '}
+            credits/month, 12 models per comparison, 80 saved conversations, 20 saved model
+            selections, access to all premium models
           </li>
         </ul>
         <p>
           All paid tiers include access to premium AI models that aren't available to free users.
           Paid tiers also allow purchasing additional credits beyond your monthly allocation if
-          needed. Pricing will be announced when paid tiers launch.
+          needed. List overage rate when metered billing is enabled: $
+          {OVERAGE_USD_PER_CREDIT.toFixed(3)} per credit (see checkout for current amounts).
         </p>
       </>
     ),
@@ -1168,18 +1182,22 @@ export const faqData: FAQItemData[] = [
           <li>
             <strong>Starter and Starter+:</strong> Up to 6 models per comparison. These paid tiers
             unlock the ability to compare more models simultaneously, giving you access to all
-            premium AI models, monthly credit allocations (1,250 credits for Starter, 2,500 for
-            Starter+), and more saved conversations.
+            premium AI models, monthly credit allocations (
+            {MONTHLY_CREDIT_ALLOCATIONS.starter.toLocaleString()} credits for Starter,{' '}
+            {MONTHLY_CREDIT_ALLOCATIONS.starter_plus.toLocaleString()} for Starter+), and more saved
+            conversations.
           </li>
           <li>
-            <strong>Pro:</strong> Up to 9 models per comparison. The Pro tier provides 5,000 credits
-            per month and allows you to compare nearly double the number of models compared to free
-            tiers, making it ideal for power users who need comprehensive model comparisons.
+            <strong>Pro:</strong> Up to 9 models per comparison. The Pro tier provides{' '}
+            {MONTHLY_CREDIT_ALLOCATIONS.pro.toLocaleString()} credits per month and allows you to
+            compare nearly double the number of models compared to free tiers, making it ideal for
+            power users who need comprehensive model comparisons.
           </li>
           <li>
             <strong>Pro+:</strong> Up to 12 models per comparison. The highest tier allows you to
-            compare the maximum number of models simultaneously, with 10,000 credits per month and
-            the most generous limits for saved conversations and model selections.
+            compare the maximum number of models simultaneously, with{' '}
+            {MONTHLY_CREDIT_ALLOCATIONS.pro_plus.toLocaleString()} credits per month and the most
+            generous limits for saved conversations and model selections.
           </li>
         </ul>
         <p>

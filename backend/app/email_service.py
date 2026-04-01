@@ -89,7 +89,7 @@ async def send_password_reset_email(email: EmailStr, token: str) -> None:
 async def send_subscription_confirmation_email(
     email: EmailStr, tier: str, period: str, amount: float
 ) -> None:
-    from .config import get_conversation_limit, get_daily_limit, get_model_limit
+    from .config import get_history_entry_limit, get_model_limit
 
     frontend_url = os.getenv("FRONTEND_URL", "http://localhost:5173")
     dashboard_url = f"{frontend_url}/dashboard"
@@ -100,34 +100,34 @@ async def send_subscription_confirmation_email(
 
     benefits = {
         "starter": [
-            f"{get_daily_limit('starter')} model responses per day",
+            "Usage limited by monthly credits (no separate daily response cap)",
             f"{get_model_limit('starter')} models max per comparison",
             "Email support (48-hour response)",
             "Usage analytics",
-            f"{get_conversation_limit('starter')} conversations saved",
+            f"{get_history_entry_limit('starter')} comparison history entries",
         ],
         "starter_plus": [
-            f"{get_daily_limit('starter_plus')} model responses per day",
+            "Usage limited by monthly credits (no separate daily response cap)",
             f"{get_model_limit('starter_plus')} models max per comparison",
             "Email support (48-hour response)",
             "Usage analytics",
-            f"{get_conversation_limit('starter_plus')} conversations saved",
+            f"{get_history_entry_limit('starter_plus')} comparison history entries",
         ],
         "pro": [
-            f"{get_daily_limit('pro')} model responses per day",
+            "Usage limited by monthly credits (no separate daily response cap)",
             f"{get_model_limit('pro')} models max per comparison",
             "Priority email support (24-hour response)",
             "Usage analytics",
             "Export conversations",
-            f"{get_conversation_limit('pro')} conversations saved",
+            f"{get_history_entry_limit('pro')} comparison history entries",
         ],
         "pro_plus": [
-            f"{get_daily_limit('pro_plus')} model responses per day",
+            "Usage limited by monthly credits (no separate daily response cap)",
             f"{get_model_limit('pro_plus')} models max per comparison",
             "Priority email support (24-hour response)",
             "Usage analytics",
             "Export conversations",
-            f"{get_conversation_limit('pro_plus')} conversations saved",
+            f"{get_history_entry_limit('pro_plus')} comparison history entries",
         ],
     }
 
@@ -156,6 +156,8 @@ async def send_subscription_confirmation_email(
 async def send_usage_limit_warning_email(
     email: EmailStr, usage_count: int, daily_limit: int, tier: str
 ) -> None:
+    if daily_limit <= 0:
+        return
     frontend_url = os.getenv("FRONTEND_URL", "http://localhost:5173")
     upgrade_url = f"{frontend_url}/subscription"
 

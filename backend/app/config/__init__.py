@@ -17,18 +17,15 @@ Example:
 # Import settings
 # Import constants
 from .constants import (
-    ANONYMOUS_DAILY_LIMIT,
     ANONYMOUS_MODEL_LIMIT,
-    CONVERSATION_LIMITS,
+    HISTORY_ENTRY_LIMITS,
     MODEL_LIMITS,
     SUBSCRIPTION_CONFIG,
-    SUBSCRIPTION_LIMITS,
 )
 
 # Import helper functions (re-exported for backwards compatibility)
 from .helpers import (
-    get_conversation_limit,
-    get_daily_limit,
+    get_history_entry_limit,
     get_model_limit,
 )
 from .settings import Settings, settings
@@ -46,19 +43,16 @@ __all__ = [
     "Settings",
     # Constants
     "SUBSCRIPTION_CONFIG",
-    "SUBSCRIPTION_LIMITS",
     "MODEL_LIMITS",
-    "ANONYMOUS_DAILY_LIMIT",
     "ANONYMOUS_MODEL_LIMIT",
-    "CONVERSATION_LIMITS",
+    "HISTORY_ENTRY_LIMITS",
     # Validation
     "validate_config",
     "log_configuration",
     "mask_secret",
     # Helper functions
     "get_model_limit",
-    "get_daily_limit",
-    "get_conversation_limit",
+    "get_history_entry_limit",
 ]
 
 # Run validation on import (optional - can be disabled for testing)

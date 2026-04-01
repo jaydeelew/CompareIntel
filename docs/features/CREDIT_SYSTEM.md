@@ -35,10 +35,12 @@ On the free tier, image generation is limited by **daily credits** and by **up t
 |------|-------|---------|--------|--------------|
 | Anonymous | Free | 50/day | Daily | Free-tier models only |
 | Free | Free | 100/day | Daily | Free-tier models only |
-| Starter | See `TIER_PRICING` | 1,250/month | Monthly | All models |
-| Starter+ | See `TIER_PRICING` | 2,500/month | Monthly | All models |
-| Pro | See `TIER_PRICING` | 5,000/month | Monthly | All models |
-| Pro+ | See `TIER_PRICING` | 10,000/month | Monthly | All models |
+| Starter | See `TIER_PRICING` | 720/month | Monthly | All models |
+| Starter+ | See `TIER_PRICING` | 1,600/month | Monthly | All models |
+| Pro | See `TIER_PRICING` | 3,300/month | Monthly | All models |
+| Pro+ | See `TIER_PRICING` | 6,700/month | Monthly | All models |
+
+**Overage (planned / list rate):** `OVERAGE_USD_PER_CREDIT` (**$0.013** per credit beyond the monthly pool), flat across paid tiers — see `docs/internal/PRICING_SHEET.md`.
 
 Monthly pool numbers may be **recalibrated** after observing usage under cost-based credits (`UsageLog.actual_cost`).
 
@@ -91,8 +93,8 @@ Monthly pool numbers may be **recalibrated** after observing usage under cost-ba
 
 ## Configuration
 
-- Backend: `backend/app/config/constants.py`
-- Frontend: `frontend/src/config/constants.ts`
+- Backend: `backend/app/config/constants.py` (`TIER_PRICING`, `MONTHLY_CREDIT_ALLOCATIONS`, `OVERAGE_USD_PER_CREDIT`)
+- Frontend: `frontend/src/config/constants.ts` (mirror the same three)
 - Stripe price IDs and secrets: environment variables / `backend/app/config/settings.py`
 
 Keep frontend allocation numbers in sync when changing pools.

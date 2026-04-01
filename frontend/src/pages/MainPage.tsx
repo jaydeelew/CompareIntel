@@ -42,7 +42,7 @@ import {
   useSavedSelectionsComplete,
   useMainPageEffects,
 } from '../hooks'
-import { ApiError } from '../services/api/errors'
+import { ApiError, isCancellationError } from '../services/api/errors'
 import { getRateLimitStatus, resetRateLimit } from '../services/compareService'
 import { getCreditBalance } from '../services/creditService'
 import type { CreditBalance } from '../services/creditService'
@@ -229,7 +229,7 @@ export function MainPage() {
             setError('No model data received from server')
           }
         } catch (err) {
-          if (err instanceof Error && err.name === 'CancellationError') return
+          if (isCancellationError(err)) return
           const msg = err instanceof Error ? err.message : String(err)
           logger.error('Failed to fetch models:', msg)
           setError(`Failed to fetch models: ${msg}`)
@@ -1055,6 +1055,7 @@ export function MainPage() {
             setAnonymousCreditsRemaining(creditBalance.credits_remaining)
             setCreditBalance(creditBalance)
           } catch (err) {
+            if (isCancellationError(err)) return
             logger.error('Failed to refresh credit balance after reset:', err)
             setAnonymousCreditsRemaining(50)
           }
@@ -1364,10 +1365,11 @@ export function MainPage() {
               setAnonymousCreditsRemaining(creditBalance.credits_remaining)
               setCreditBalance(creditBalance)
             } catch (error) {
+              if (isCancellationError(error)) return
               logger.error('Failed to fetch anonymous credit balance:', error)
             }
           } catch (error) {
-            if (error instanceof Error && error.name === 'CancellationError') {
+            if (isCancellationError(error)) {
               // Expected on unmount
             } else {
               logger.error('Failed to sync usage count from backend, using localStorage:', error)
@@ -1386,7 +1388,7 @@ export function MainPage() {
           }
         }
       } catch (error) {
-        if (error instanceof Error && error.name === 'CancellationError') {
+        if (isCancellationError(error)) {
           // Expected
         } else {
           logger.error('Failed to sync usage count with backend:', error)
@@ -1538,6 +1540,7 @@ export function MainPage() {
             }
           })
           .catch(error => {
+            if (isCancellationError(error)) return
             logger.error('Failed to refetch anonymous credit balance:', error)
           })
       }
