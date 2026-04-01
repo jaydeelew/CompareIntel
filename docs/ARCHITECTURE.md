@@ -386,10 +386,10 @@ User types (pools):
   ├─────────────────┼───────────────┼─────────────────────────┤
   │ Anonymous       │ 50/day        │ Daily (midnight local)  │
   │ Free            │ 100/day       │ Daily (midnight local)  │
-  │ Starter         │ 1,250/month   │ Monthly (Stripe period)   │
-  │ Starter+        │ 2,500/month   │ Monthly (Stripe period)   │
-  │ Pro             │ 5,000/month   │ Monthly (Stripe period)   │
-  │ Pro+            │ 10,000/month  │ Monthly (Stripe period)   │
+  │ Starter         │ 720/month     │ Monthly (Stripe period)   │
+  │ Starter+        │ 1,600/month   │ Monthly (Stripe period)   │
+  │ Pro             │ 3,300/month   │ Monthly (Stripe period)   │
+  │ Pro+            │ 6,700/month   │ Monthly (Stripe period)   │
   └─────────────────┴───────────────┴─────────────────────────┘
 
 Prepaid: purchased_credits_balance spent after monthly pool is exhausted.

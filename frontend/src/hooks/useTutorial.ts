@@ -40,7 +40,7 @@ export function useTutorial() {
       return {
         isActive: false,
         currentStep: null,
-        completedSteps: new Set<TutorialStep>(),
+        completedSteps: new Set(TUTORIAL_STEPS),
       }
     }
 
@@ -97,7 +97,7 @@ export function useTutorial() {
     setTutorialState({
       isActive: false,
       currentStep: null,
-      completedSteps: new Set(),
+      completedSteps: new Set(TUTORIAL_STEPS),
     })
   }, [])
 

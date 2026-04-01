@@ -16,7 +16,7 @@ from typing import TYPE_CHECKING, Any
 
 from openai import OpenAI
 
-from ..config import get_conversation_limit
+from ..config import get_history_entry_limit
 
 if TYPE_CHECKING:
     from sqlalchemy.orm import Session
@@ -960,8 +960,7 @@ async def generate_stream(ctx: StreamContext) -> Any:
 
                     user_obj = conv_db.query(User).filter(User.id == ctx.user_id).first()
                     tier = user_obj.subscription_tier if user_obj else "free"
-                    display_limit = get_conversation_limit(tier)
-                    storage_limit = display_limit
+                    storage_limit = get_history_entry_limit(tier)
 
                     all_conversations = (
                         conv_db.query(Conversation)

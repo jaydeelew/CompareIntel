@@ -31,12 +31,19 @@ _TIER_TO_PRICE_SETTING = {
 }
 
 
+def _stripe_checkout_success_url(base: str) -> str:
+    """Append Stripe's ``session_id`` template; use ``?`` or ``&`` depending on existing query string."""
+    b = base.rstrip()
+    q = "session_id={CHECKOUT_SESSION_ID}"
+    return f"{b}&{q}" if "?" in b else f"{b}?{q}"
+
+
 def _require_stripe():
     import stripe
 
     if not settings.stripe_secret_key:
         raise HTTPException(
-            status_code=503,
+            status_code=422,
             detail="Stripe billing is not configured (missing STRIPE_SECRET_KEY).",
         )
     stripe.api_key = settings.stripe_secret_key
@@ -73,7 +80,7 @@ async def create_checkout_session(
     price_id = getattr(settings, attr, None)
     if not price_id:
         raise HTTPException(
-            status_code=503,
+            status_code=422,
             detail=f"Stripe price ID not configured for tier {body.tier}.",
         )
 
@@ -83,7 +90,7 @@ async def create_checkout_session(
     session = stripe.checkout.Session.create(
         mode="subscription",
         line_items=[{"price": price_id, "quantity": 1}],
-        success_url=success + "&session_id={CHECKOUT_SESSION_ID}",
+        success_url=_stripe_checkout_success_url(success),
         cancel_url=cancel,
         client_reference_id=str(current_user.id),
         subscription_data={
@@ -111,7 +118,7 @@ async def create_credit_pack_checkout_session(
     stripe = _require_stripe()
     if not settings.stripe_price_credit_pack:
         raise HTTPException(
-            status_code=503,
+            status_code=422,
             detail="Credit pack Stripe price is not configured (STRIPE_PRICE_CREDIT_PACK).",
         )
     tier = current_user.subscription_tier or "free"
@@ -127,7 +134,7 @@ async def create_credit_pack_checkout_session(
     session = stripe.checkout.Session.create(
         mode="payment",
         line_items=[{"price": settings.stripe_price_credit_pack, "quantity": 1}],
-        success_url=success + "&session_id={CHECKOUT_SESSION_ID}",
+        success_url=_stripe_checkout_success_url(success),
         cancel_url=cancel,
         client_reference_id=str(current_user.id),
         metadata={
@@ -199,7 +206,7 @@ def _allocate_for_paid_cycle(user_id: int, tier: str, db: Session) -> None:
 async def stripe_webhook(request: Request, db: Session = Depends(get_db)) -> dict[str, str]:
     """Verify signature and apply subscription / pack events."""
     if not settings.stripe_webhook_secret:
-        raise HTTPException(status_code=503, detail="Stripe webhooks are not configured.")
+        raise HTTPException(status_code=422, detail="Stripe webhooks are not configured.")
     payload = await request.body()
     sig_header = request.headers.get("stripe-signature")
     if not sig_header:

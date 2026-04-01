@@ -6,7 +6,11 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
 
-import { TIER_PRICING } from '../../config/constants'
+import {
+  MONTHLY_CREDIT_ALLOCATIONS,
+  OVERAGE_USD_PER_CREDIT,
+  TIER_PRICING,
+} from '../../config/constants'
 import { BackToMainCTA } from '../shared'
 import './Pages.css'
 
@@ -301,7 +305,11 @@ export const Features: React.FC = () => {
                   <div className="paid-tier-item">
                     <h4>Starter</h4>
                     <ul>
-                      <li>1,250 credits/month (~250 exchanges)</li>
+                      <li>
+                        {MONTHLY_CREDIT_ALLOCATIONS.starter.toLocaleString()} credits/month (~
+                        {Math.round(MONTHLY_CREDIT_ALLOCATIONS.starter / 5)} exchanges at ~5 credits
+                        each)
+                      </li>
                       <li>Compare up to 6 models simultaneously</li>
                       <li>10 multi-model conversations saved</li>
                       <li>Email support</li>
@@ -310,7 +318,11 @@ export const Features: React.FC = () => {
                   <div className="paid-tier-item">
                     <h4>Starter+</h4>
                     <ul>
-                      <li>2,500 credits/month (~500 exchanges)</li>
+                      <li>
+                        {MONTHLY_CREDIT_ALLOCATIONS.starter_plus.toLocaleString()} credits/month (~
+                        {Math.round(MONTHLY_CREDIT_ALLOCATIONS.starter_plus / 5)} exchanges at ~5
+                        credits each)
+                      </li>
                       <li>Compare up to 6 models simultaneously</li>
                       <li>20 multi-model conversations saved</li>
                       <li>Email support</li>
@@ -319,7 +331,11 @@ export const Features: React.FC = () => {
                   <div className="paid-tier-item">
                     <h4>Pro</h4>
                     <ul>
-                      <li>5,000 credits/month (~1,000 exchanges)</li>
+                      <li>
+                        {MONTHLY_CREDIT_ALLOCATIONS.pro.toLocaleString()} credits/month (~
+                        {Math.round(MONTHLY_CREDIT_ALLOCATIONS.pro / 5)} exchanges at ~5 credits
+                        each)
+                      </li>
                       <li>Compare up to 9 models simultaneously</li>
                       <li>40 multi-model conversations saved</li>
                       <li>Priority email support</li>
@@ -328,7 +344,11 @@ export const Features: React.FC = () => {
                   <div className="paid-tier-item">
                     <h4>Pro+</h4>
                     <ul>
-                      <li>10,000 credits/month (~2,000 exchanges)</li>
+                      <li>
+                        {MONTHLY_CREDIT_ALLOCATIONS.pro_plus.toLocaleString()} credits/month (~
+                        {Math.round(MONTHLY_CREDIT_ALLOCATIONS.pro_plus / 5)} exchanges at ~5
+                        credits each)
+                      </li>
                       <li>Compare up to 12 models simultaneously</li>
                       <li>80 multi-model conversations saved</li>
                       <li>Priority email support</li>
@@ -338,8 +358,9 @@ export const Features: React.FC = () => {
                 <p style={{ marginTop: '1rem', fontSize: '0.9rem', color: '#666' }}>
                   Illustrative monthly prices (USD, before tax): Starter ${TIER_PRICING.starter},
                   Starter+ ${TIER_PRICING.starter_plus}, Pro ${TIER_PRICING.pro}, Pro+ $
-                  {TIER_PRICING.pro_plus}. Confirm live amounts at checkout; pools and credit
-                  economics are documented in the FAQ.
+                  {TIER_PRICING.pro_plus}. Overage beyond your pool (when enabled): $
+                  {OVERAGE_USD_PER_CREDIT.toFixed(3)} per credit. Confirm live amounts at checkout;
+                  pools and credit economics are documented in the FAQ.
                 </p>
               </div>
             </div>

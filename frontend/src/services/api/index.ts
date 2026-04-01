@@ -34,6 +34,7 @@ export {
   ValidationError,
   ServerError,
   CancellationError,
+  isCancellationError,
 } from './errors'
 
 // Export types

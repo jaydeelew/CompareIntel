@@ -12,53 +12,41 @@ All constants should be imported from this module to maintain a single source of
 
 from ..type_defs import TierConfigDict
 
-# MODEL-BASED PRICING: daily_limit = model responses per day (not comparisons)
 # model_limit = max models per comparison (tiered: 3/6/6/9/12)
-# overage_allowed = whether tier can purchase additional interactions beyond daily limit
-# overage_price = price per additional model response (TBD - pricing not yet finalized)
-# extended_overage_price = price per additional extended interaction (TBD - pricing not yet finalized)
+# overage_allowed = whether tier can purchase credit packs beyond monthly pool
+# Usage is constrained by credits only (no separate daily model-response caps).
 
 SUBSCRIPTION_CONFIG: dict[str, TierConfigDict] = {
     "free": {
-        "daily_limit": 20,
         "model_limit": 3,
         "overage_allowed": False,
         "overage_price": None,
         "extended_overage_price": None,
-    },  # Free registered users
+    },
     "starter": {
-        "daily_limit": 50,
         "model_limit": 6,
         "overage_allowed": True,
-        "overage_price": None,
+        "overage_price": 0.013,
         "extended_overage_price": None,
-    },  # Pricing TBD
+    },
     "starter_plus": {
-        "daily_limit": 100,
         "model_limit": 6,
         "overage_allowed": True,
-        "overage_price": None,
+        "overage_price": 0.013,
         "extended_overage_price": None,
-    },  # Pricing TBD
+    },
     "pro": {
-        "daily_limit": 200,
         "model_limit": 9,
         "overage_allowed": True,
-        "overage_price": None,
+        "overage_price": 0.013,
         "extended_overage_price": None,
-    },  # Pricing TBD
+    },
     "pro_plus": {
-        "daily_limit": 400,
         "model_limit": 12,
         "overage_allowed": True,
-        "overage_price": None,
+        "overage_price": 0.013,
         "extended_overage_price": None,
-    },  # Pricing TBD
-}
-
-# Backwards compatibility - extract limits
-SUBSCRIPTION_LIMITS: dict[str, int] = {
-    tier: config["daily_limit"] for tier, config in SUBSCRIPTION_CONFIG.items()
+    },
 }
 
 MODEL_LIMITS: dict[str, int] = {
@@ -75,16 +63,11 @@ MODEL_LIMITS: dict[str, int] = {
 
 
 # Limits for unregistered users
-ANONYMOUS_DAILY_LIMIT: int = (
-    10  # Model responses per day for unregistered users (legacy, use credits instead)
-)
 ANONYMOUS_MODEL_LIMIT: int = 3  # Maximum models per comparison for unregistered users
 
 
-# Maximum number of conversations stored per subscription tier
-# Each conversation (with or without follow-ups) counts as 1 conversation
-
-CONVERSATION_LIMITS: dict[str, int] = {
+# Maximum comparison history entries (stored conversations) per tier; oldest trimmed when exceeded.
+HISTORY_ENTRY_LIMITS: dict[str, int] = {
     "unregistered": 2,
     "free": 3,
     "starter": 10,
@@ -106,10 +89,10 @@ DAILY_CREDIT_LIMITS: dict[str, int] = {
 
 # Monthly credit allocations for paid tiers
 MONTHLY_CREDIT_ALLOCATIONS: dict[str, int] = {
-    "starter": 1_250,
-    "starter_plus": 2_500,
-    "pro": 5_000,
-    "pro_plus": 10_000,
+    "starter": 720,
+    "starter_plus": 1_600,
+    "pro": 3_300,
+    "pro_plus": 6_700,
 }
 
 # Image generation credits (when token usage unavailable)
@@ -120,8 +103,9 @@ IMAGE_CREDITS_PER_GENERATION: int = 5
 FREE_TIER_IMAGE_COMPARISONS_PER_DAY: int = 2
 UNREGISTERED_IMAGE_COMPARISONS: int = 0
 
-# Subscription pricing (monthly USD) — illustrative placeholders for Stripe products;
-# replace with values from internal OpenRouter COGS / margin analysis before launch.
+# Subscription pricing (monthly USD) — must match Stripe recurring Price amounts and frontend copy.
+# Tier/credit ladder 2026-04-01: pool $/credit strictly decreases at higher tiers; thin margin vs
+# full-burn COGS (MONTHLY_CREDIT_ALLOCATIONS / CREDITS_PER_DOLLAR). See docs/internal/PRICING_SHEET.md.
 TIER_PRICING: dict[str, float] = {
     "unregistered": 0.0,
     "free": 0.0,
@@ -131,5 +115,5 @@ TIER_PRICING: dict[str, float] = {
     "pro_plus": 79.0,
 }
 
-# Overage / pack list price anchor (per 1,000 credits, USD)—keep ≥ effective $/credit at list rates
-OVERAGE_PRICE_PER_1000_CREDITS: float = 12.0
+# Flat list rate for credits beyond the monthly pool (USD per credit); same for all paid tiers.
+OVERAGE_USD_PER_CREDIT: float = 0.013

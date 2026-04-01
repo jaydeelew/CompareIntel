@@ -160,7 +160,8 @@ export function useTutorialComplete(config: UseTutorialCompleteConfig): UseTutor
     setTutorialState({
       isActive: false,
       currentStep: null,
-      completedSteps: new Set(),
+      // Match completed-in-storage semantics so overlays stay inactive (empty set looked "incomplete")
+      completedSteps: new Set(TUTORIAL_STEPS),
     })
   }, [])
 
@@ -182,6 +183,13 @@ export function useTutorialComplete(config: UseTutorialCompleteConfig): UseTutor
 
   // Effects (previously in useTutorialEffects)
 
+  // Never show the anonymous welcome overlay while signed in (avoids race with login finishing)
+  useEffect(() => {
+    if (isAuthenticated) {
+      setShowWelcomeModal(false)
+    }
+  }, [isAuthenticated])
+
   // Welcome modal logic - show for unregistered users after auth has loaded
   // Must wait for authLoading to be false to avoid flashing for logged-in users in production
   // (when auth resolves quickly, isAuthenticated can transition from false to true very fast)
@@ -201,9 +209,9 @@ export function useTutorialComplete(config: UseTutorialCompleteConfig): UseTutor
       return
     }
 
-    // Check "don't show again" preference
     const dontShowAgain = localStorage.getItem(WELCOME_DONT_SHOW_KEY)
-    if (dontShowAgain !== 'true') {
+    const tutorialAlreadyDone = localStorage.getItem(TUTORIAL_STORAGE_KEY) === 'true'
+    if (dontShowAgain !== 'true' && !tutorialAlreadyDone) {
       setShowWelcomeModal(true)
       hasShownWelcomeModalRef.current = true
     }

@@ -259,6 +259,21 @@ describe('useTutorialComplete', () => {
       expect(result.current.showWelcomeModal).toBe(false)
     })
 
+    it('should not show welcome modal when tutorial was already completed in storage', () => {
+      localStorageMock.setItem('compareintel_tutorial_completed', 'true')
+
+      const { result } = renderHook(() =>
+        useTutorialComplete({
+          ...defaultConfig,
+          isAuthenticated: false,
+          authLoading: false,
+          currentView: 'main',
+        })
+      )
+
+      expect(result.current.showWelcomeModal).toBe(false)
+    })
+
     it('should allow setting welcome modal visibility', () => {
       const { result } = renderHook(() => useTutorialComplete(defaultConfig))
 
