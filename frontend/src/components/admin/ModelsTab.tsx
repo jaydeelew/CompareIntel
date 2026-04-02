@@ -45,6 +45,18 @@ const ModelsTab: React.FC<ModelsTabProps> = ({
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [modelToDelete, setModelToDelete] = useState<{ id: string; name: string } | null>(null)
   const [deletingModel, setDeletingModel] = useState(false)
+  const [collapsedProviders, setCollapsedProviders] = useState<Set<string>>(new Set())
+  const collapsedProvidersSyncedRef = useRef(false)
+  const lastModelProviderKeysRef = useRef<Set<string>>(new Set())
+
+  const toggleProviderCollapsed = (provider: string) => {
+    setCollapsedProviders(prev => {
+      const next = new Set(prev)
+      if (next.has(provider)) next.delete(provider)
+      else next.add(provider)
+      return next
+    })
+  }
 
   useEffect(() => {
     onBusyChange(addingModel || deletingModel)
@@ -73,6 +85,27 @@ const ModelsTab: React.FC<ModelsTabProps> = ({
   useEffect(() => {
     fetchModels()
   }, [fetchModels])
+
+  useEffect(() => {
+    if (!models?.models_by_provider) return
+    const keys = Object.keys(models.models_by_provider)
+    const keySet = new Set(keys)
+    setCollapsedProviders(prev => {
+      if (!collapsedProvidersSyncedRef.current) {
+        collapsedProvidersSyncedRef.current = true
+        lastModelProviderKeysRef.current = keySet
+        return new Set(keys)
+      }
+      const next = new Set<string>()
+      const lastKeys = lastModelProviderKeysRef.current
+      for (const k of keys) {
+        if (!lastKeys.has(k)) next.add(k)
+        else if (prev.has(k)) next.add(k)
+      }
+      lastModelProviderKeysRef.current = keySet
+      return next
+    })
+  }, [models])
 
   const handleAddModel = async () => {
     if (!newModelId.trim()) {
@@ -473,34 +506,74 @@ const ModelsTab: React.FC<ModelsTabProps> = ({
         ) : models?.models_by_provider ? (
           <div>
             <h3 style={{ marginBottom: '1.5rem', color: 'var(--text-primary)' }}>Current Models</h3>
-            {Object.entries(models.models_by_provider).map(([provider, providerModels]) => (
-              <div key={provider} style={{ marginBottom: '2rem' }}>
-                <div
-                  style={{
-                    padding: '1rem 1.5rem',
-                    background: 'var(--bg-secondary)',
-                    border: '1px solid var(--border-color)',
-                    borderRadius: 'var(--radius-lg)',
-                    marginBottom: '0.5rem',
-                  }}
-                >
-                  <div
+            {Object.entries(models.models_by_provider).map(([provider, providerModels]) => {
+              const isProviderExpanded = !collapsedProviders.has(provider)
+              const sectionId = `admin-models-provider-${encodeURIComponent(provider).replace(/%/g, '')}`
+              return (
+                <div key={provider} style={{ marginBottom: '2rem' }}>
+                  <button
+                    type="button"
+                    id={`${sectionId}-header`}
+                    aria-expanded={isProviderExpanded}
+                    aria-controls={`${sectionId}-panel`}
+                    onClick={() => toggleProviderCollapsed(provider)}
                     style={{
+                      width: '100%',
+                      padding: '1rem 1.5rem',
+                      background: 'var(--bg-secondary)',
+                      border: '1px solid var(--border-color)',
+                      borderRadius: 'var(--radius-lg)',
+                      marginBottom: isProviderExpanded ? '0.5rem' : 0,
+                      cursor: 'pointer',
                       display: 'flex',
                       justifyContent: 'space-between',
                       alignItems: 'center',
+                      gap: '0.75rem',
+                      textAlign: 'left',
+                      font: 'inherit',
+                      color: 'inherit',
+                      boxSizing: 'border-box',
                     }}
                   >
-                    <h4
+                    <span
                       style={{
-                        margin: 0,
-                        color: 'var(--text-primary)',
-                        fontSize: '1.1rem',
-                        fontWeight: 600,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.5rem',
+                        minWidth: 0,
+                        flex: 1,
                       }}
                     >
-                      {provider}
-                    </h4>
+                      <svg
+                        width="20"
+                        height="20"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        aria-hidden
+                        style={{
+                          flexShrink: 0,
+                          color: 'var(--text-secondary)',
+                          transform: isProviderExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
+                          transition: 'transform 0.2s ease',
+                        }}
+                      >
+                        <path d="M6 9l6 6 6-6" />
+                      </svg>
+                      <span
+                        style={{
+                          margin: 0,
+                          color: 'var(--text-primary)',
+                          fontSize: '1.1rem',
+                          fontWeight: 600,
+                        }}
+                      >
+                        {provider}
+                      </span>
+                    </span>
                     <span
                       style={{
                         padding: '0.25rem 0.75rem',
@@ -508,202 +581,211 @@ const ModelsTab: React.FC<ModelsTabProps> = ({
                         background: 'var(--bg-tertiary)',
                         color: 'var(--text-secondary)',
                         fontSize: '0.875rem',
+                        flexShrink: 0,
                       }}
                     >
                       {providerModels.length} model{providerModels.length !== 1 ? 's' : ''}
                     </span>
-                  </div>
-                </div>
-                <div
-                  style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
-                    gap: '1rem',
-                  }}
-                >
-                  {providerModels.map((model: Model) => (
-                    <div
-                      key={model.id}
-                      style={{
-                        padding: '1rem',
-                        background: 'var(--bg-primary)',
-                        border: '1px solid var(--border-color)',
-                        borderRadius: 'var(--radius-md)',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: '0.75rem',
-                      }}
-                    >
+                  </button>
+                  <div
+                    id={`${sectionId}-panel`}
+                    role="region"
+                    aria-labelledby={`${sectionId}-header`}
+                    aria-hidden={!isProviderExpanded}
+                    style={
+                      isProviderExpanded
+                        ? {
+                            display: 'grid',
+                            gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
+                            gap: '1rem',
+                          }
+                        : { display: 'none' }
+                    }
+                  >
+                    {providerModels.map((model: Model) => (
                       <div
+                        key={model.id}
                         style={{
+                          padding: '1rem',
+                          background: 'var(--bg-primary)',
+                          border: '1px solid var(--border-color)',
+                          borderRadius: 'var(--radius-md)',
                           display: 'flex',
-                          justifyContent: 'space-between',
-                          alignItems: 'flex-start',
+                          flexDirection: 'column',
+                          gap: '0.75rem',
                         }}
                       >
-                        <div style={{ flex: 1 }}>
-                          <div
-                            style={{
-                              fontWeight: 600,
-                              color: 'var(--text-primary)',
-                              marginBottom: '0.25rem',
-                            }}
-                          >
-                            {model.name}
-                          </div>
-                          <div
-                            style={{
-                              fontSize: '0.875rem',
-                              color: 'var(--text-secondary)',
-                              fontFamily: 'monospace',
-                              marginBottom: '0.5rem',
-                            }}
-                          >
-                            {model.id}
-                          </div>
-                          <div
-                            style={{
-                              fontSize: '0.875rem',
-                              color: 'var(--text-secondary)',
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: '0.5rem',
-                            }}
-                          >
-                            <strong>Knowledge Cutoff:</strong>
-                            {editingCutoff?.modelId === model.id ? (
-                              <div
-                                style={{
-                                  display: 'flex',
-                                  gap: '0.5rem',
-                                  alignItems: 'center',
-                                  flex: 1,
-                                }}
-                              >
-                                <input
-                                  type="text"
-                                  value={editingCutoff.value}
-                                  onChange={e =>
-                                    setEditingCutoff({ modelId: model.id, value: e.target.value })
-                                  }
-                                  placeholder="e.g., March 2025 or leave empty"
+                        <div
+                          style={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'flex-start',
+                          }}
+                        >
+                          <div style={{ flex: 1 }}>
+                            <div
+                              style={{
+                                fontWeight: 600,
+                                color: 'var(--text-primary)',
+                                marginBottom: '0.25rem',
+                              }}
+                            >
+                              {model.name}
+                            </div>
+                            <div
+                              style={{
+                                fontSize: '0.875rem',
+                                color: 'var(--text-secondary)',
+                                fontFamily: 'monospace',
+                                marginBottom: '0.5rem',
+                              }}
+                            >
+                              {model.id}
+                            </div>
+                            <div
+                              style={{
+                                fontSize: '0.875rem',
+                                color: 'var(--text-secondary)',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '0.5rem',
+                              }}
+                            >
+                              <strong>Knowledge Cutoff:</strong>
+                              {editingCutoff?.modelId === model.id ? (
+                                <div
                                   style={{
+                                    display: 'flex',
+                                    gap: '0.5rem',
+                                    alignItems: 'center',
                                     flex: 1,
-                                    padding: '0.375rem 0.5rem',
-                                    borderRadius: 'var(--radius-sm)',
-                                    border: '1px solid var(--border-color)',
-                                    background: 'var(--bg-secondary)',
-                                    color: 'var(--text-primary)',
-                                    fontSize: '0.875rem',
-                                  }}
-                                  onKeyDown={async e => {
-                                    if (e.key === 'Enter')
-                                      await handleUpdateKnowledgeCutoff(
-                                        model.id,
-                                        editingCutoff.value
-                                      )
-                                    else if (e.key === 'Escape') setEditingCutoff(null)
-                                  }}
-                                  autoFocus
-                                />
-                                <button
-                                  onClick={() =>
-                                    handleUpdateKnowledgeCutoff(model.id, editingCutoff.value)
-                                  }
-                                  style={{
-                                    padding: '0.375rem 0.75rem',
-                                    borderRadius: 'var(--radius-sm)',
-                                    border: 'none',
-                                    background: 'var(--primary-color)',
-                                    color: 'white',
-                                    fontWeight: 500,
-                                    cursor: 'pointer',
-                                    fontSize: '0.875rem',
                                   }}
                                 >
-                                  Save
-                                </button>
-                                <button
-                                  onClick={() => setEditingCutoff(null)}
+                                  <input
+                                    type="text"
+                                    value={editingCutoff.value}
+                                    onChange={e =>
+                                      setEditingCutoff({ modelId: model.id, value: e.target.value })
+                                    }
+                                    placeholder="e.g., March 2025 or leave empty"
+                                    style={{
+                                      flex: 1,
+                                      padding: '0.375rem 0.5rem',
+                                      borderRadius: 'var(--radius-sm)',
+                                      border: '1px solid var(--border-color)',
+                                      background: 'var(--bg-secondary)',
+                                      color: 'var(--text-primary)',
+                                      fontSize: '0.875rem',
+                                    }}
+                                    onKeyDown={async e => {
+                                      if (e.key === 'Enter')
+                                        await handleUpdateKnowledgeCutoff(
+                                          model.id,
+                                          editingCutoff.value
+                                        )
+                                      else if (e.key === 'Escape') setEditingCutoff(null)
+                                    }}
+                                    autoFocus
+                                  />
+                                  <button
+                                    onClick={() =>
+                                      handleUpdateKnowledgeCutoff(model.id, editingCutoff.value)
+                                    }
+                                    style={{
+                                      padding: '0.375rem 0.75rem',
+                                      borderRadius: 'var(--radius-sm)',
+                                      border: 'none',
+                                      background: 'var(--primary-color)',
+                                      color: 'white',
+                                      fontWeight: 500,
+                                      cursor: 'pointer',
+                                      fontSize: '0.875rem',
+                                    }}
+                                  >
+                                    Save
+                                  </button>
+                                  <button
+                                    onClick={() => setEditingCutoff(null)}
+                                    style={{
+                                      padding: '0.375rem 0.75rem',
+                                      borderRadius: 'var(--radius-sm)',
+                                      border: '1px solid var(--border-color)',
+                                      background: 'var(--bg-secondary)',
+                                      color: 'var(--text-primary)',
+                                      fontWeight: 500,
+                                      cursor: 'pointer',
+                                      fontSize: '0.875rem',
+                                    }}
+                                  >
+                                    Cancel
+                                  </button>
+                                </div>
+                              ) : (
+                                <span
                                   style={{
-                                    padding: '0.375rem 0.75rem',
-                                    borderRadius: 'var(--radius-sm)',
-                                    border: '1px solid var(--border-color)',
-                                    background: 'var(--bg-secondary)',
-                                    color: 'var(--text-primary)',
-                                    fontWeight: 500,
-                                    cursor: 'pointer',
-                                    fontSize: '0.875rem',
+                                    color: model.knowledge_cutoff
+                                      ? 'var(--primary-color)'
+                                      : 'var(--warning-color, #f59e0b)',
+                                    fontStyle: model.knowledge_cutoff ? 'normal' : 'italic',
                                   }}
                                 >
-                                  Cancel
-                                </button>
-                              </div>
-                            ) : (
-                              <span
+                                  {model.knowledge_cutoff || 'Date pending'}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                          <div style={{ display: 'flex', gap: '0.5rem' }}>
+                            {editingCutoff?.modelId !== model.id && (
+                              <button
+                                onClick={() =>
+                                  setEditingCutoff({
+                                    modelId: model.id,
+                                    value: model.knowledge_cutoff || '',
+                                  })
+                                }
                                 style={{
-                                  color: model.knowledge_cutoff
-                                    ? 'var(--primary-color)'
-                                    : 'var(--warning-color, #f59e0b)',
-                                  fontStyle: model.knowledge_cutoff ? 'normal' : 'italic',
+                                  padding: '0.375rem 0.75rem',
+                                  borderRadius: 'var(--radius-sm)',
+                                  border: '1px solid var(--border-color)',
+                                  background: 'var(--bg-secondary)',
+                                  color: 'var(--text-primary)',
+                                  fontWeight: 500,
+                                  cursor: 'pointer',
+                                  fontSize: '0.875rem',
+                                }}
+                                title="Edit knowledge cutoff date"
+                              >
+                                Edit
+                              </button>
+                            )}
+                            {isDevelopment && (
+                              <button
+                                onClick={() => {
+                                  setModelToDelete({ id: model.id, name: model.name })
+                                  setShowDeleteConfirm(true)
+                                }}
+                                style={{
+                                  padding: '0.375rem 0.75rem',
+                                  borderRadius: 'var(--radius-sm)',
+                                  border: 'none',
+                                  background: 'var(--error-color)',
+                                  color: 'white',
+                                  fontWeight: 600,
+                                  cursor: 'pointer',
+                                  fontSize: '0.875rem',
                                 }}
                               >
-                                {model.knowledge_cutoff || 'Date pending'}
-                              </span>
+                                Delete
+                              </button>
                             )}
                           </div>
                         </div>
-                        <div style={{ display: 'flex', gap: '0.5rem' }}>
-                          {editingCutoff?.modelId !== model.id && (
-                            <button
-                              onClick={() =>
-                                setEditingCutoff({
-                                  modelId: model.id,
-                                  value: model.knowledge_cutoff || '',
-                                })
-                              }
-                              style={{
-                                padding: '0.375rem 0.75rem',
-                                borderRadius: 'var(--radius-sm)',
-                                border: '1px solid var(--border-color)',
-                                background: 'var(--bg-secondary)',
-                                color: 'var(--text-primary)',
-                                fontWeight: 500,
-                                cursor: 'pointer',
-                                fontSize: '0.875rem',
-                              }}
-                              title="Edit knowledge cutoff date"
-                            >
-                              Edit
-                            </button>
-                          )}
-                          {isDevelopment && (
-                            <button
-                              onClick={() => {
-                                setModelToDelete({ id: model.id, name: model.name })
-                                setShowDeleteConfirm(true)
-                              }}
-                              style={{
-                                padding: '0.375rem 0.75rem',
-                                borderRadius: 'var(--radius-sm)',
-                                border: 'none',
-                                background: 'var(--error-color)',
-                                color: 'white',
-                                fontWeight: 600,
-                                cursor: 'pointer',
-                                fontSize: '0.875rem',
-                              }}
-                            >
-                              Delete
-                            </button>
-                          )}
-                        </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         ) : (
           <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-secondary)' }}>
