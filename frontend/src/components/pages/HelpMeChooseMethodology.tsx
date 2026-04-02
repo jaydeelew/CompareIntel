@@ -34,7 +34,7 @@ export const HelpMeChooseMethodology: React.FC = () => {
               run by third parties use the same tasks for every model, so you can compare apples to
               apples. We link to each source so you can verify the numbers yourself.
             </p>
-            <p className="last-updated">Last updated: March 2026</p>
+            <p className="last-updated">Last updated: April 2026</p>
           </header>
 
           <section className="seo-section">
@@ -65,13 +65,14 @@ export const HelpMeChooseMethodology: React.FC = () => {
                   <td>Best for coding</td>
                   <td>
                     <a
-                      href="https://openlm.ai/swe-bench/"
+                      href="https://labs.scale.com/leaderboard/swe_bench_pro_public"
                       target="_blank"
                       rel="noopener noreferrer"
                     >
-                      SWE-Bench
+                      SWE-Bench Pro
                     </a>{' '}
-                    — real coding tasks solved correctly
+                    (public split) — long-horizon software engineering tasks in real repositories; %
+                    resolved (scores are lower than classic SWE-Bench Verified leaderboards)
                   </td>
                 </tr>
                 <tr>
@@ -237,8 +238,10 @@ export const HelpMeChooseMethodology: React.FC = () => {
             <p>Curious what these scores mean in practice? Here’s a quick overview:</p>
             <ul className="seo-list">
               <li>
-                <strong>SWE-Bench (coding)</strong> — Real GitHub issues from open-source projects.
-                Models must produce patches that pass the project’s test suite. No toy problems.
+                <strong>SWE-Bench Pro (coding)</strong> — Challenging, long-horizon software
+                engineering: models work in full repositories and must produce patches that resolve
+                realistic tasks (public split on the Scale Labs leaderboard). Percentages are not
+                comparable to SWE-Bench Verified scores from other sites.
               </li>
               <li>
                 <strong>Creative Writing Arena (writing)</strong> — Human raters compare model
@@ -287,9 +290,9 @@ export const HelpMeChooseMethodology: React.FC = () => {
             <p>
               Benchmarks are helpful, but they’re not perfect. They test specific skills under
               controlled conditions—your real-world tasks may differ. A model that excels at
-              SWE-Bench may still struggle with your codebase; a “best for writing” model might not
-              match your preferred tone. Use these rankings as a starting point, then try the models
-              yourself.
+              SWE-Bench Pro may still diverge from your codebase; a “best for writing” model might
+              not match your preferred tone. Use these rankings as a starting point, then try the
+              models yourself.
             </p>
             <p>
               Some categories have sparse benchmark coverage (e.g., long context, multilingual). We

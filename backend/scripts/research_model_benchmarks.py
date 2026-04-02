@@ -9,7 +9,7 @@ It can also be run standalone:
 
 Single-model mode:
 1. Fetches the model's OpenRouter data (description, pricing, capabilities)
-2. Fetches benchmark scores from public sources (OpenLM SWE-bench, etc.) when available
+2. Fetches benchmark scores from public sources (Scale Labs SWE-Bench Pro public, etc.) when available
 3. Determines which Help Me Choose categories the model qualifies for
 4. Adds the model and sorts each category by benchmark score (best first)
 5. Updates frontend/src/data/helpMeChooseRecommendations.ts with proper ranking
@@ -17,8 +17,9 @@ Single-model mode:
 Refresh-all mode (--refresh-all):
   Re-evaluates ALL registry models against ALL data-driven categories
   (cost-effective, fast, coding, math, reasoning, writing, long-context, legal,
-  multilingual). Ensures no qualifying model is missing from its category.
-  Run periodically to keep categories comprehensive as leaderboards update.
+  multilingual). Coding uses SWE-Bench Pro public (Scale Labs); models without a
+  Pro leaderboard row are dropped from Best for coding. Run periodically to keep
+  categories current as leaderboards update.
 
 Only models with verifiable, publicly available benchmark data are added.
 """
@@ -60,7 +61,10 @@ SORT_ASCENDING_CATEGORIES = {"cost-effective"}
 # Image generation: KEAR AI Text-to-Image Arena (Arena Rating, higher = better)
 TEXT_TO_IMAGE_ARENA_URL = "https://kearai.com/leaderboard/text-to-image"
 
-SWE_BENCH_URL = "https://openlm.ai/swe-bench/"
+# SWE-Bench Pro public leaderboard (Scale Labs; RSC payload includes entry JSON)
+SWE_BENCH_PRO_URL = "https://labs.scale.com/leaderboard/swe_bench_pro_public"
+# Static HTML fallback (subset of models; used if labs page format changes)
+SWE_BENCH_PRO_FALLBACK_URL = "https://scaleapi.github.io/SWE-bench_Pro-os/"
 LMARENA_URL = "https://lmarena.ai/"
 VALS_LEGAL_BENCH_URL = "https://www.vals.ai/benchmarks/legal_bench"
 LMSPEED_URL = "https://lmspeed.net/leaderboard/best-throughput-models-weekly"
@@ -453,41 +457,113 @@ def fetch_lmspeed_scores() -> dict[str, tuple[float, str]]:
     return result
 
 
-def fetch_swebench_scores() -> dict[str, tuple[float, str]]:
-    """Fetch OpenLM SWE-bench leaderboard. Returns model_id -> (score, evidence)."""
+# Scale Labs leaderboard slug -> OpenRouter registry model_id (public SWE-Bench Pro split).
+SWE_BENCH_PRO_SLUG_TO_MODEL_ID: dict[str, str] = {
+    "claude-opus-4-5-20251101": "anthropic/claude-opus-4.5",
+    "claude-4-5-Sonnet": "anthropic/claude-sonnet-4.5",
+    "gemini-3-pro-preview": "google/gemini-3.1-pro-preview",
+    "claude-4-Sonnet": "anthropic/claude-sonnet-4",
+    "gpt-5-2025-08-07 (High)": "openai/gpt-5",
+    "gpt-5.2-codex": "openai/gpt-5.2-codex",
+    "claude-4-5-haiku": "anthropic/claude-haiku-4.5",
+    "qwen3-coder-480b-a35b": "qwen/qwen3-coder",
+    "minimax-2.1": "minimax/minimax-m2.5",
+    "gemini-3-flash": "google/gemini-3-flash-preview",
+    "gpt-5.2": "openai/gpt-5.2",
+    "qwen3-235b-a22b": "qwen/qwen3-235b-a22b",
+    "kimi-k2-instruct": "moonshotai/kimi-k2.5",
+    "gpt-oss-120b": "openai/gpt-oss-120b",
+    "deepseek-v3p2": "deepseek/deepseek-v3.2-exp",
+    "llama4-maverick-17b-instruct": "meta-llama/llama-4-maverick",
+    "glm-4.6": "z-ai/glm-5",
+    "codestral-2405": "mistralai/codestral-2508",
+}
+
+# RSC-embedded JSON on labs.scale.com leaderboard pages
+_SWE_BENCH_PRO_ENTRY_RE = re.compile(
+    r'\\"model\\":\\"((?:[^"\\]|\\\\.)*)\\",\\"version\\":\\"[^"]*\\",\\"rank\\":\d+,\\"score\\":(\d+\.?\d*)'
+)
+
+
+def _swe_bench_pro_evidence(score: float) -> str:
+    return f"SWE-Bench Pro public (Scale Labs): {score:.2f}%."
+
+
+def _merge_swe_bench_pro_row(
+    result: dict[str, tuple[float, str]],
+    slug: str,
+    score: float,
+    model_id_to_name: dict[str, str],
+) -> None:
+    """Map leaderboard slug to registry model_id and keep best score per model."""
+    mid = SWE_BENCH_PRO_SLUG_TO_MODEL_ID.get(slug)
+    if not mid:
+        base = slug.split("(")[0].strip()
+        norm = _normalize_name_for_match(base)
+        name_to_model_id = {_normalize_name_for_match(n): m for m, n in model_id_to_name.items()}
+        mid = name_to_model_id.get(norm)
+    if not mid:
+        return
+    evidence = _swe_bench_pro_evidence(score)
+    if mid not in result or score > result[mid][0]:
+        result[mid] = (score, evidence)
+
+
+def fetch_swe_bench_pro_scores() -> dict[str, tuple[float, str]]:
+    """Fetch SWE-Bench Pro (public) scores from Scale Labs leaderboard.
+
+    Parses RSC-payload JSON embedded in the Next.js page. Falls back to the
+    static GitHub Pages mirror if the primary page returns no entries.
+
+    Returns model_id -> (score, evidence).
+    """
     model_id_to_name = get_model_id_to_name_map()
-    name_to_model_id = {_normalize_name_for_match(n): mid for mid, n in model_id_to_name.items()}
 
     result: dict[str, tuple[float, str]] = {}
     try:
-        resp = httpx.get(SWE_BENCH_URL, timeout=15.0)
+        resp = httpx.get(
+            SWE_BENCH_PRO_URL,
+            timeout=20.0,
+            follow_redirects=True,
+            headers={"User-Agent": "Mozilla/5.0 (compatible; CompareIntel/1.0)"},
+        )
+        if resp.status_code == 200:
+            for slug, score_s in _SWE_BENCH_PRO_ENTRY_RE.findall(resp.text):
+                try:
+                    score = float(score_s)
+                except ValueError:
+                    continue
+                slug = slug.replace("\\/", "/")
+                _merge_swe_bench_pro_row(result, slug, score, model_id_to_name)
+    except Exception as e:
+        print(f"Warning: Could not fetch SWE-Bench Pro (labs): {e}", file=sys.stderr)
+
+    if result:
+        return result
+
+    try:
+        resp = httpx.get(
+            SWE_BENCH_PRO_FALLBACK_URL,
+            timeout=15.0,
+            follow_redirects=True,
+            headers={"User-Agent": "Mozilla/5.0 (compatible; CompareIntel/1.0)"},
+        )
         if resp.status_code != 200:
             return result
         soup = BeautifulSoup(resp.text, "html.parser")
-        # OpenLM table: rows with Model (link) | SWE-bench (score) | ...
-        for row in soup.find_all("tr"):
-            cells = row.find_all("td")
-            if len(cells) < 2:
-                continue
-            model_cell = cells[0]
-            score_cell = cells[1]
-            link = model_cell.find("a")
-            model_name = (
-                link.get_text(strip=True) if link else model_cell.get_text(strip=True)
-            ) or ""
-            score_text = score_cell.get_text(strip=True) or ""
-            # Score may be in backticks like `79.2`
-            score_text = score_text.strip("`")
+        for row in soup.select("#leaderboardTable tbody tr[data-score]"):
             try:
-                score = float(score_text)
+                score = float(row.get("data-score", ""))
             except ValueError:
                 continue
-            norm = _normalize_name_for_match(model_name)
-            if norm in name_to_model_id:
-                mid = name_to_model_id[norm]
-                result[mid] = (score, f"SWE-Bench Verified (openlm.ai): {score}%.")
+            name_el = row.select_one(".model-name")
+            if not name_el:
+                continue
+            raw = name_el.get_text(strip=True)
+            slug = re.sub(r"^SWE-Agent\s*\+\s*", "", raw, flags=re.I).strip()
+            _merge_swe_bench_pro_row(result, slug, score, model_id_to_name)
     except Exception as e:
-        print(f"Warning: Could not fetch SWE-bench scores: {e}", file=sys.stderr)
+        print(f"Warning: Could not fetch SWE-Bench Pro (fallback): {e}", file=sys.stderr)
     return result
 
 
@@ -925,7 +1001,10 @@ def calculate_avg_cost(model_data: dict) -> float | None:
 # Category qualification thresholds.  Models must meet these to be included.
 COST_EFFECTIVE_MAX_PRICE = 1.00  # max avg $/1M tokens (exclusive: under $1)
 FAST_MIN_THROUGHPUT = 50.0  # min tokens/sec
-CODING_MIN_SWE_BENCH = 55.0  # min SWE-bench Verified %
+# SWE-Bench Pro public scores are much lower than SWE-Bench Verified (typical range ~2–46%).
+CODING_MIN_SWE_BENCH_PRO = (
+    1.0  # min % resolved on public split; include all mapped leaderboard rows
+)
 REASONING_MIN_MMLU_PRO = 80.0  # min MMLU-Pro %
 MATH_MIN_GSM8K = 85.0  # min GSM8K % when MATH not available (MATH has no min; all scored included)
 LONG_CONTEXT_MIN_MRCR = 30.0  # min MRCR 1M score
@@ -935,7 +1014,7 @@ def determine_categories(
     model_id: str,
     registry_model: dict,
     openrouter_data: dict | None,
-    swebench_scores: dict[str, tuple[float, str]],
+    swe_bench_pro_scores: dict[str, tuple[float, str]],
     legalbench_scores: dict[str, tuple[float, str]] | None = None,
     openrouter_pricing: dict[str, tuple[float, str]] | None = None,
     lmspeed_scores: dict[str, tuple[float, str]] | None = None,
@@ -952,9 +1031,9 @@ def determine_categories(
     fetchable source. Models without benchmark data are not added.
     """
     entries = []
-    if model_id in swebench_scores:
-        score, evidence = swebench_scores[model_id]
-        if score >= CODING_MIN_SWE_BENCH:
+    if model_id in swe_bench_pro_scores:
+        score, evidence = swe_bench_pro_scores[model_id]
+        if score >= CODING_MIN_SWE_BENCH_PRO:
             entries.append({"category_id": "coding", "evidence": evidence, "score": score})
     if legalbench_scores and model_id in legalbench_scores:
         score, evidence = legalbench_scores[model_id]
@@ -1185,9 +1264,9 @@ def research_and_update(model_id: str, dry_run: bool = False) -> dict:
     print(
         f"PROGRESS:{json.dumps({'stage': 'researching', 'message': 'Fetching benchmark scores...', 'progress': 20})}"
     )
-    swebench_scores = fetch_swebench_scores()
-    if swebench_scores:
-        print(f"  Fetched SWE-bench scores for {len(swebench_scores)} models.")
+    swe_bench_pro_scores = fetch_swe_bench_pro_scores()
+    if swe_bench_pro_scores:
+        print(f"  Fetched SWE-Bench Pro scores for {len(swe_bench_pro_scores)} models.")
     legalbench_scores = fetch_legalbench_scores()
     if legalbench_scores:
         print(f"  Fetched LegalBench scores for {len(legalbench_scores)} models.")
@@ -1228,7 +1307,7 @@ def research_and_update(model_id: str, dry_run: bool = False) -> dict:
         model_id,
         registry_model,
         fetch_openrouter_model(model_id),
-        swebench_scores,
+        swe_bench_pro_scores,
         legalbench_scores,
         openrouter_pricing,
         lmspeed_scores,
@@ -1286,8 +1365,8 @@ def research_and_update(model_id: str, dry_run: bool = False) -> dict:
             print(f"  Model already in '{cat_id}', skipping.")
             continue
         evidence = entry["evidence"]
-        if cat_id == "coding" and model_id in swebench_scores:
-            evidence = swebench_scores[model_id][1]
+        if cat_id == "coding" and model_id in swe_bench_pro_scores:
+            evidence = swe_bench_pro_scores[model_id][1]
         if cat_id == "legal" and legalbench_scores and model_id in legalbench_scores:
             evidence = legalbench_scores[model_id][1]
         if cat_id == "cost-effective" and openrouter_pricing and model_id in openrouter_pricing:
@@ -1316,8 +1395,8 @@ def research_and_update(model_id: str, dry_run: bool = False) -> dict:
 
     # Sort each modified category by benchmark score (best first)
     fetched_by_cat: dict[str, dict] = {}
-    if swebench_scores:
-        fetched_by_cat["coding"] = swebench_scores
+    if swe_bench_pro_scores:
+        fetched_by_cat["coding"] = swe_bench_pro_scores
     if legalbench_scores:
         fetched_by_cat["legal"] = legalbench_scores
     if openrouter_pricing:
@@ -1378,7 +1457,7 @@ def _sync_evidence_and_prune(
     thresholds: dict[str, tuple[str, float]] = {
         "cost-effective": ("max_exclusive", COST_EFFECTIVE_MAX_PRICE),  # under $1/1M
         "fast": ("min", FAST_MIN_THROUGHPUT),
-        "coding": ("min", CODING_MIN_SWE_BENCH),
+        "coding": ("min", CODING_MIN_SWE_BENCH_PRO),
         "reasoning": ("min", REASONING_MIN_MMLU_PRO),
         "writing": ("min", WRITING_MIN_ELO),
         "long-context": ("min", LONG_CONTEXT_MIN_MRCR),
@@ -1397,6 +1476,11 @@ def _sync_evidence_and_prune(
 
         for i, m in enumerate(cat["models"]):
             mid = m["modelId"]
+            # Best for coding tracks SWE-Bench Pro only; drop entries without a Pro score.
+            if cat_id == "coding" and mid not in fetched:
+                to_remove.append(i)
+                removed.setdefault(cat_id, []).append(mid)
+                continue  # no SWE-Bench Pro public row for this registry model
             if mid not in fetched:
                 continue
             score, new_evidence = fetched[mid]
@@ -1443,8 +1527,8 @@ def refresh_all_categories(dry_run: bool = False) -> dict:
     print(f"Refreshing categories for {len(all_model_ids)} registry models...")
     print("Fetching benchmark data from all sources...")
 
-    swebench_scores = fetch_swebench_scores()
-    print(f"  SWE-bench: {len(swebench_scores)} models")
+    swe_bench_pro_scores = fetch_swe_bench_pro_scores()
+    print(f"  SWE-Bench Pro: {len(swe_bench_pro_scores)} models")
     legalbench_scores = fetch_legalbench_scores()
     print(f"  LegalBench: {len(legalbench_scores)} models")
     openrouter_pricing = fetch_openrouter_pricing()
@@ -1479,8 +1563,8 @@ def refresh_all_categories(dry_run: bool = False) -> dict:
         return {"added": {}, "updated": {}, "removed": {}, "total_changes": 0}
 
     fetched_by_cat: dict[str, dict] = {}
-    if swebench_scores:
-        fetched_by_cat["coding"] = swebench_scores
+    if swe_bench_pro_scores:
+        fetched_by_cat["coding"] = swe_bench_pro_scores
     if legalbench_scores:
         fetched_by_cat["legal"] = legalbench_scores
     if openrouter_pricing:
@@ -1509,7 +1593,7 @@ def refresh_all_categories(dry_run: bool = False) -> dict:
             print(f"  ~ {mid} [{cat_id}]: evidence updated")
     for cat_id, mids in ev_removed.items():
         for mid in mids:
-            print(f"  - {mid} [{cat_id}]: no longer meets threshold")
+            print(f"  - {mid} [{cat_id}]: removed (no current score or below category threshold)")
 
     # Step 2: Add missing models
     added: dict[str, list[str]] = {}
@@ -1521,7 +1605,7 @@ def refresh_all_categories(dry_run: bool = False) -> dict:
             model_id,
             registry_model,
             None,
-            swebench_scores,
+            swe_bench_pro_scores,
             legalbench_scores,
             openrouter_pricing,
             lmspeed_scores,

@@ -18,7 +18,7 @@ The file has **one** array: `HELP_ME_CHOOSE_CATEGORIES`. Edit **only** the array
 export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
   {
     id: 'coding',
-    models: [ { modelId: '...', evidence: 'SWE-Bench Verified: 80.9%.' }, ... ],
+    models: [ { modelId: '...', evidence: 'SWE-Bench Pro public (Scale Labs): 43.60%.' }, ... ],
   },
   // ... more categories (writing, reasoning, long-context, legal, medical)
 ]

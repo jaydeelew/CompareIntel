@@ -13,7 +13,7 @@ A "Help me choose" button sits next to the Advanced button in the model selectio
 ## Key Behaviors
 
 - **Immediate selection:** Checkboxes toggle models directly; no Apply button. Same behavior as the main model selection area.
-- **Evidence tooltips:** Hover over any model to see benchmark name, score, and source (e.g., "SWE-Bench Verified (swebench.com): 80.9%").
+- **Evidence tooltips:** Hover over any model to see benchmark name, score, and source (e.g., "SWE-Bench Pro public (Scale Labs): 43.60%.").
 - **Tier restrictions:** Models unavailable to the user's tier are disabled with a lock icon and tooltip.
 - **Visual feedback:** Selected models use primary-tinted styling; category headers containing selected models are highlighted. On open, the dropdown scrolls to the first selected model.
 - **Mutual exclusivity:** Only one of Help me choose or Advanced can be open at a time.
@@ -26,7 +26,7 @@ A public page at `/help-me-choose-methodology` (linked in the footer) explains i
 
 | Category | Primary source | URL | Key metric | Automated? |
 |----------|---------------|-----|------------|------------|
-| **Coding** | SWE-Bench Verified (OpenLM) | https://openlm.ai/swe-bench/ | % Resolved | Yes |
+| **Coding** | SWE-Bench Pro public (Scale Labs) | https://labs.scale.com/leaderboard/swe_bench_pro_public | % Resolved (public split) | Yes |
 | **Writing** | Creative Writing Arena | https://kearai.com/leaderboard/creative-writing | Elo rating | Yes |
 | **Math** | MATH, GSM8K (llmdb) | https://llmdb.com/benchmarks/math, https://llmdb.com/benchmarks/gsm8k | % (0–100) | Yes |
 | **Reasoning** | MMLU-Pro | https://awesomeagents.ai/leaderboards/mmlu-pro-leaderboard/ | Overall % | Yes |
@@ -63,7 +63,7 @@ python scripts/research_model_benchmarks.py --refresh-all [--dry-run]
 
 This command re-evaluates ALL registry models against ALL data-driven categories:
 
-1. **Fetches** current data from 10 external sources (SWE-bench, OpenRouter, LMSpeed, MMLU-Pro, Creative Writing Arena, MATH/GSM8K, MRCR 1M, Awesome Agents long-context, LegalBench, Global-MMLU)
+1. **Fetches** current data from 10 external sources (SWE-Bench Pro public, OpenRouter, LMSpeed, MMLU-Pro, Creative Writing Arena, MATH/GSM8K, MRCR 1M, Awesome Agents long-context, LegalBench, Global-MMLU)
 2. **Syncs evidence** — updates stale evidence strings on existing models (e.g. price changes, new throughput data)
 3. **Prunes** models that no longer meet category thresholds
 4. **Adds** missing models that now qualify
@@ -89,7 +89,7 @@ Data-driven categories apply qualification thresholds to maintain quality:
 |----------|-----------|----------|
 | Best value | &lt; $1.00/1M tokens avg | `COST_EFFECTIVE_MAX_PRICE` |
 | Fastest responses | ≥ 50 tokens/sec | `FAST_MIN_THROUGHPUT` |
-| Coding | ≥ 55% SWE-Bench Verified | `CODING_MIN_SWE_BENCH` |
+| Coding | ≥ 1% SWE-Bench Pro public (% resolved; scores are much lower than SWE-Bench Verified) | `CODING_MIN_SWE_BENCH_PRO` |
 | Math | MATH or GSM8K ≥ 85% (when MATH not available) | `MATH_MIN_GSM8K` |
 | Reasoning | ≥ 80% MMLU-Pro | `REASONING_MIN_MMLU_PRO` |
 | Writing | ≥ 1390 Elo | `WRITING_MIN_ELO` |
@@ -104,7 +104,8 @@ Data-driven categories apply qualification thresholds to maintain quality:
 - **LegalBench** URL changed from `/legal_bench-01-30-2025` to `/legal_bench` (no date suffix). The scraper follows redirects.
 - **Global-MMLU** and **MRCR 1M** leaderboards on llmdb.com have sparse coverage (few models listed).
 - **Creative Writing Arena** lists many model variants (thinking, non-thinking, dated snapshots). The scraper takes the best score per registry model.
-- **Name mapping dicts** (`LMSPEED_NAME_TO_MODEL_ID`, `WRITING_NAME_TO_MODEL_ID`, `MMLU_PRO_NAME_TO_MODEL_ID`, `AWESOME_AGENTS_LONG_CONTEXT_NAME_TO_MODEL_ID`, etc.) resolve leaderboard display names that don't match registry names. Update these when adding new models or when leaderboard names change.
+- **Name mapping dicts** (`SWE_BENCH_PRO_SLUG_TO_MODEL_ID`, `LMSPEED_NAME_TO_MODEL_ID`, `WRITING_NAME_TO_MODEL_ID`, `MMLU_PRO_NAME_TO_MODEL_ID`, `AWESOME_AGENTS_LONG_CONTEXT_NAME_TO_MODEL_ID`, etc.) resolve leaderboard display names that don't match registry names. Update these when adding new models or when leaderboard names change.
+- **SWE-Bench Pro** leaderboard data is parsed from the Scale Labs Next.js page (RSC-embedded JSON); a static HTML fallback uses [scaleapi.github.io/SWE-bench_Pro-os](https://scaleapi.github.io/SWE-bench_Pro-os/) (subset of models).
 - **Long context** merges MRCR 1M (llmdb) with Awesome Agents (MRCR v2, LongBench v2). MRCR 1M is primary; Awesome Agents adds models not on the llmdb leaderboard. Threshold ≥ 30 applies to both sources.
 
 ### Registry sync

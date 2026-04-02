@@ -43,7 +43,7 @@ SAMPLE_TS_CONTENT = textwrap.dedent("""\
         label: 'Best for coding',
         description: 'Code generation, debugging, refactoring',
         models: [
-          { modelId: 'anthropic/claude-opus-4.5', evidence: 'SWE-Bench Verified: 80.9%.' },
+          { modelId: 'anthropic/claude-opus-4.5', evidence: 'SWE-Bench Pro public (Scale Labs): 45.89%.' },
         ],
       },
       {
@@ -134,21 +134,34 @@ class TestCalculateAvgCost:
 
 
 class TestDetermineCategories:
-    """Only models with fetched benchmark scores are added. Categories: coding (SWE-bench), legal (LegalBench)."""
+    """Only models with fetched benchmark scores are added. Categories: coding (SWE-Bench Pro), legal (LegalBench)."""
 
-    def test_model_in_swebench_gets_coding(self):
+    def test_model_in_swe_bench_pro_gets_coding(self):
         model = make_registry_model("anthropic/claude-opus-4.5")
-        swebench = {"anthropic/claude-opus-4.5": (80.9, "SWE-Bench Verified: 80.9%.")}
-        entries = determine_categories("anthropic/claude-opus-4.5", model, None, swebench)
+        pro = {"anthropic/claude-opus-4.5": (45.89, "SWE-Bench Pro public (Scale Labs): 45.89%.")}
+        entries = determine_categories("anthropic/claude-opus-4.5", model, None, pro)
         assert len(entries) == 1
         assert entries[0]["category_id"] == "coding"
-        assert entries[0]["evidence"] == "SWE-Bench Verified: 80.9%."
+        assert entries[0]["evidence"] == "SWE-Bench Pro public (Scale Labs): 45.89%."
 
-    def test_model_not_in_swebench_gets_no_categories(self):
+    def test_model_not_in_swe_bench_pro_gets_no_coding(self):
         model = make_registry_model("test/unknown-model")
-        swebench = {"anthropic/claude-opus-4.5": (80.9, "SWE-Bench Verified: 80.9%.")}
-        entries = determine_categories("test/unknown-model", model, None, swebench)
+        pro = {"anthropic/claude-opus-4.5": (45.89, "SWE-Bench Pro public (Scale Labs): 45.89%.")}
+        entries = determine_categories("test/unknown-model", model, None, pro)
         assert len(entries) == 0
+
+    def test_model_below_coding_threshold_gets_no_coding(self):
+        from scripts.research_model_benchmarks import CODING_MIN_SWE_BENCH_PRO
+
+        model = make_registry_model("test/low")
+        pro = {
+            "test/low": (
+                CODING_MIN_SWE_BENCH_PRO - 0.5,
+                f"SWE-Bench Pro public (Scale Labs): {CODING_MIN_SWE_BENCH_PRO - 0.5:.2f}%.",
+            )
+        }
+        entries = determine_categories("test/low", model, None, pro)
+        assert not any(e["category_id"] == "coding" for e in entries)
 
     def test_model_in_legalbench_gets_legal(self):
         model = make_registry_model("openai/gpt-5")
@@ -158,10 +171,10 @@ class TestDetermineCategories:
         assert entries[0]["category_id"] == "legal"
         assert entries[0]["evidence"] == "LegalBench (vals.ai): 86.02%."
 
-    def test_empty_swebench_returns_empty(self):
+    def test_empty_swe_bench_pro_returns_no_coding(self):
         model = make_registry_model("test/code-model")
         entries = determine_categories("test/code-model", model, None, {})
-        assert len(entries) == 0
+        assert not any(e["category_id"] == "coding" for e in entries)
 
     def test_cost_effective_included_when_under_one_dollar(self):
         """Best value category only includes models under $1/1M tokens."""
@@ -324,7 +337,9 @@ class TestAddModelToCategory:
 
 class TestExtractPrimaryScore:
     def test_extracts_percentage(self):
-        assert extract_primary_score("coding", "SWE-Bench Verified: 80.9%.") == 80.9
+        assert (
+            extract_primary_score("coding", "SWE-Bench Pro public (Scale Labs): 45.89%.") == 45.89
+        )
         assert extract_primary_score("reasoning", "MMLU-Pro: 89.5%.") == 89.5
 
     def test_extracts_mazur_writing_score(self):
@@ -474,8 +489,8 @@ class TestRebuildCategoriesTs:
 class TestResearchAndUpdateIntegration:
     """Tests the full research_and_update flow with mocked external calls."""
 
-    def test_model_with_swebench_score_added_to_coding(self, tmp_path):
-        """A model with SWE-bench score should be added to the coding category."""
+    def test_model_with_swe_bench_pro_score_added_to_coding(self, tmp_path):
+        """A model with SWE-Bench Pro score should be added to the coding category."""
         from scripts.research_model_benchmarks import research_and_update
 
         ts_file = tmp_path / "helpMeChooseRecommendations.ts"
@@ -492,14 +507,14 @@ class TestResearchAndUpdateIntegration:
                 ]
             }
         }
-        swebench_scores = {"test/code-wizard": (75.0, "SWE-Bench Verified (openlm.ai): 75.0%.")}
+        pro_scores = {"test/code-wizard": (36.5, "SWE-Bench Pro public (Scale Labs): 36.50%.")}
 
         with (
             patch("scripts.research_model_benchmarks.RECOMMENDATIONS_PATH", ts_file),
             patch("scripts.research_model_benchmarks.load_registry", return_value=registry_data),
             patch(
-                "scripts.research_model_benchmarks.fetch_swebench_scores",
-                return_value=swebench_scores,
+                "scripts.research_model_benchmarks.fetch_swe_bench_pro_scores",
+                return_value=pro_scores,
             ),
             patch("scripts.research_model_benchmarks.fetch_legalbench_scores", return_value={}),
             patch("scripts.research_model_benchmarks.fetch_openrouter_pricing", return_value={}),
@@ -517,7 +532,7 @@ class TestResearchAndUpdateIntegration:
         assert any(m["modelId"] == "test/code-wizard" for m in coding["models"])
 
     def test_model_without_benchmark_not_added(self, tmp_path):
-        """A model without SWE-bench score should not be added (skipped)."""
+        """A model without SWE-Bench Pro score should not be added (skipped)."""
         from scripts.research_model_benchmarks import research_and_update
 
         ts_file = tmp_path / "helpMeChooseRecommendations.ts"
@@ -538,7 +553,7 @@ class TestResearchAndUpdateIntegration:
         with (
             patch("scripts.research_model_benchmarks.RECOMMENDATIONS_PATH", ts_file),
             patch("scripts.research_model_benchmarks.load_registry", return_value=registry_data),
-            patch("scripts.research_model_benchmarks.fetch_swebench_scores", return_value={}),
+            patch("scripts.research_model_benchmarks.fetch_swe_bench_pro_scores", return_value={}),
             patch("scripts.research_model_benchmarks.fetch_legalbench_scores", return_value={}),
             patch("scripts.research_model_benchmarks.fetch_openrouter_pricing", return_value={}),
             patch("scripts.research_model_benchmarks.fetch_lmspeed_scores", return_value={}),
@@ -561,6 +576,7 @@ class TestResearchAndUpdateIntegration:
         with (
             patch("scripts.research_model_benchmarks.RECOMMENDATIONS_PATH", ts_file),
             patch("scripts.research_model_benchmarks.load_registry", return_value=registry_data),
+            patch("scripts.research_model_benchmarks.fetch_swe_bench_pro_scores", return_value={}),
             patch("scripts.research_model_benchmarks.fetch_legalbench_scores", return_value={}),
             patch("scripts.research_model_benchmarks.fetch_openrouter_pricing", return_value={}),
             patch("scripts.research_model_benchmarks.fetch_lmspeed_scores", return_value={}),
@@ -581,14 +597,14 @@ class TestResearchAndUpdateIntegration:
         registry_data = {
             "models_by_provider": {"Anthropic": [make_registry_model("anthropic/claude-opus-4.5")]}
         }
-        swebench = {"anthropic/claude-opus-4.5": (80.9, "SWE-Bench Verified: 80.9%.")}
+        pro = {"anthropic/claude-opus-4.5": (45.89, "SWE-Bench Pro public (Scale Labs): 45.89%.")}
 
         with (
             patch("scripts.research_model_benchmarks.RECOMMENDATIONS_PATH", ts_file),
             patch("scripts.research_model_benchmarks.load_registry", return_value=registry_data),
             patch(
-                "scripts.research_model_benchmarks.fetch_swebench_scores",
-                return_value=swebench,
+                "scripts.research_model_benchmarks.fetch_swe_bench_pro_scores",
+                return_value=pro,
             ),
             patch("scripts.research_model_benchmarks.fetch_legalbench_scores", return_value={}),
             patch("scripts.research_model_benchmarks.fetch_openrouter_pricing", return_value={}),
@@ -617,14 +633,14 @@ class TestResearchAndUpdateIntegration:
                 ]
             }
         }
-        swebench = {"test/dry-run-model": (72.0, "SWE-Bench Verified: 72.0%.")}
+        pro = {"test/dry-run-model": (30.0, "SWE-Bench Pro public (Scale Labs): 30.00%.")}
 
         with (
             patch("scripts.research_model_benchmarks.RECOMMENDATIONS_PATH", ts_file),
             patch("scripts.research_model_benchmarks.load_registry", return_value=registry_data),
             patch(
-                "scripts.research_model_benchmarks.fetch_swebench_scores",
-                return_value=swebench,
+                "scripts.research_model_benchmarks.fetch_swe_bench_pro_scores",
+                return_value=pro,
             ),
             patch("scripts.research_model_benchmarks.fetch_legalbench_scores", return_value={}),
             patch("scripts.research_model_benchmarks.fetch_openrouter_pricing", return_value={}),

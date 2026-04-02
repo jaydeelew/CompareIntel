@@ -6,7 +6,7 @@
  * categories; users select individual models.
  *
  * Inclusion rule: Only models with numeric benchmark scores from well-respected,
- * publicly available sources (SWE-Bench, MMLU-Pro, Mazur Writing Score, etc.)
+ * publicly available sources (SWE-Bench Pro public, MMLU-Pro, Mazur Writing Score, etc.)
  * are included. Models without benchmark scores are not added.
  *
  * Evidence format: Each entry includes the source (benchmark/reference) and
@@ -53,7 +53,7 @@ export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
       { modelId: 'openai/gpt-oss-120b', evidence: 'OpenRouter avg: $0.11/1M tokens.' },
       {
         modelId: 'mistralai/mistral-small-3.2-24b-instruct',
-        evidence: 'OpenRouter avg: $0.12/1M tokens.',
+        evidence: 'OpenRouter avg: $0.14/1M tokens.',
       },
       { modelId: 'meta-llama/llama-4-scout', evidence: 'OpenRouter avg: $0.19/1M tokens.' },
       { modelId: 'xiaomi/mimo-v2-flash', evidence: 'OpenRouter avg: $0.19/1M tokens.' },
@@ -75,13 +75,13 @@ export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
       { modelId: 'qwen/qwen3-next-80b-a3b-thinking', evidence: 'OpenRouter avg: $0.44/1M tokens.' },
       { modelId: 'deepseek/deepseek-chat-v3.1', evidence: 'OpenRouter avg: $0.45/1M tokens.' },
       { modelId: 'qwen/qwen-plus-2025-07-28', evidence: 'OpenRouter avg: $0.52/1M tokens.' },
+      { modelId: 'minimax/minimax-m2.5', evidence: 'OpenRouter avg: $0.56/1M tokens.' },
       { modelId: 'qwen/qwen3-coder-flash', evidence: 'OpenRouter avg: $0.58/1M tokens.' },
       { modelId: 'qwen/qwen3-next-80b-a3b-instruct', evidence: 'OpenRouter avg: $0.60/1M tokens.' },
       { modelId: 'mistralai/codestral-2508', evidence: 'OpenRouter avg: $0.60/1M tokens.' },
       { modelId: 'qwen/qwen3-coder', evidence: 'OpenRouter avg: $0.61/1M tokens.' },
       { modelId: 'microsoft/wizardlm-2-8x22b', evidence: 'OpenRouter avg: $0.62/1M tokens.' },
       { modelId: 'minimax/minimax-m2', evidence: 'OpenRouter avg: $0.63/1M tokens.' },
-      { modelId: 'minimax/minimax-m2.5', evidence: 'OpenRouter avg: $0.70/1M tokens.' },
       { modelId: 'x-ai/grok-code-fast-1', evidence: 'OpenRouter avg: $0.85/1M tokens.' },
       {
         modelId: 'google/gemini-3.1-flash-lite-preview',
@@ -97,19 +97,23 @@ export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
     categoryInfoTooltip:
       'Ranked by inference throughput (tokens/second) from LMSpeed and API benchmarks. Higher throughput = faster streaming responses. Speed varies by provider and load.',
     models: [
-      { modelId: 'anthropic/claude-haiku-4.5', evidence: 'LMSpeed (lmspeed.net): 88 t/s.' },
+      { modelId: 'anthropic/claude-sonnet-4.6', evidence: 'LMSpeed (lmspeed.net): 13496 t/s.' },
+      { modelId: 'anthropic/claude-haiku-4.5', evidence: 'LMSpeed (lmspeed.net): 3615 t/s.' },
       { modelId: 'anthropic/claude-sonnet-4', evidence: 'LMSpeed (lmspeed.net): 1415 t/s.' },
       { modelId: 'moonshotai/kimi-k2.5', evidence: 'LMSpeed (lmspeed.net): 1383 t/s.' },
-      { modelId: 'minimax/minimax-m2.5', evidence: 'LMSpeed (lmspeed.net): 71 t/s.' },
+      { modelId: 'minimax/minimax-m2.5', evidence: 'LMSpeed (lmspeed.net): 729 t/s.' },
       { modelId: 'openai/gpt-5', evidence: 'LMSpeed (lmspeed.net): 490 t/s.' },
       { modelId: 'openai/gpt-5-codex', evidence: 'LMSpeed (lmspeed.net): 466 t/s.' },
       { modelId: 'openai/gpt-5.2-codex', evidence: 'LMSpeed (lmspeed.net): 405 t/s.' },
-      { modelId: 'openai/gpt-oss-120b', evidence: 'LMSpeed (lmspeed.net): 276 t/s.' },
-      { modelId: 'openai/gpt-5.1-codex-mini', evidence: 'LMSpeed (lmspeed.net): 246 t/s.' },
-      { modelId: 'openai/gpt-5.1-codex-max', evidence: 'LMSpeed (lmspeed.net): 90 t/s.' },
+      { modelId: 'openai/gpt-5-nano', evidence: 'LMSpeed (lmspeed.net): 263 t/s.' },
+      { modelId: 'openai/gpt-oss-120b', evidence: 'LMSpeed (lmspeed.net): 205 t/s.' },
+      { modelId: 'openai/gpt-5.1-codex-mini', evidence: 'LMSpeed (lmspeed.net): 205 t/s.' },
+      { modelId: 'openai/gpt-5.1-codex-max', evidence: 'LMSpeed (lmspeed.net): 190 t/s.' },
       { modelId: 'openai/gpt-5.2', evidence: 'LMSpeed (lmspeed.net): 171 t/s.' },
       { modelId: 'openai/gpt-5.1', evidence: 'LMSpeed (lmspeed.net): 167 t/s.' },
-      { modelId: 'google/gemini-3-flash-preview', evidence: 'LMSpeed (lmspeed.net): 163 t/s.' },
+      { modelId: 'google/gemini-3-flash-preview', evidence: 'LMSpeed (lmspeed.net): 160 t/s.' },
+      { modelId: 'z-ai/glm-4.7', evidence: 'LMSpeed (lmspeed.net): 154 t/s.' },
+      { modelId: 'qwen/qwen3-coder-next', evidence: 'LMSpeed (lmspeed.net): 147 t/s.' },
       { modelId: 'qwen/qwen3.5-397b-a17b', evidence: 'LMSpeed (lmspeed.net): 138 t/s.' },
       { modelId: 'stepfun/step-3.5-flash:free', evidence: 'LMSpeed (lmspeed.net): 133 t/s.' },
       { modelId: 'x-ai/grok-4-fast', evidence: 'LMSpeed (lmspeed.net): 124 t/s.' },
@@ -131,57 +135,53 @@ export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
     label: 'Best for coding',
     description: 'Code generation, debugging, refactoring',
     categoryInfoTooltip:
-      'Ranked by SWE-Bench Verified (OpenLM): real-world code-repair on GitHub issues. Higher % = better at resolving bugs. See openlm.ai/swe-bench.',
+      'Ranked by SWE-Bench Pro public (Scale Labs): long-horizon software engineering in real repositories. Higher % = more tasks resolved. Scores are not comparable to SWE-Bench Verified. See labs.scale.com/leaderboard/swe_bench_pro_public.',
     models: [
       {
-        modelId: 'google/gemini-3.1-pro-preview',
-        evidence: 'SWE-Bench Verified: 80.6%. Strong code generation.',
+        modelId: 'anthropic/claude-opus-4.5',
+        evidence: 'SWE-Bench Pro public (Scale Labs): 45.89%.',
       },
-      {
-        modelId: 'minimax/minimax-m2.5',
-        evidence: 'SWE-Bench Verified (openlm.ai): 80.2%. 3× faster. Best value/speed for code.',
-      },
-      {
-        modelId: 'anthropic/claude-sonnet-4.6',
-        evidence: 'SWE-Bench Verified: 79.6%. Frontier Sonnet for code.',
-      },
-      { modelId: 'anthropic/claude-opus-4.6', evidence: 'SWE-Bench Verified (openlm.ai): 79.2%.' },
-      { modelId: 'z-ai/glm-5', evidence: 'SWE-Bench Verified: 77.8%. Strong coding from Zhipu.' },
-      { modelId: 'moonshotai/kimi-k2.5', evidence: 'SWE-Bench Verified (openlm.ai): 76.8%.' },
-      { modelId: 'qwen/qwen3.5-397b-a17b', evidence: 'SWE-Bench Verified: 76.4%. Qwen flagship.' },
-      {
-        modelId: 'google/gemini-3-flash-preview',
-        evidence: 'SWE-Bench Verified (openlm.ai): 75.2%. Fast coding model.',
-      },
-      { modelId: 'openai/gpt-5.3-codex', evidence: 'SWE-Bench Verified (openlm.ai): 75.2%.' },
-      { modelId: 'anthropic/claude-opus-4.5', evidence: 'SWE-Bench Verified (openlm.ai): 74.4%.' },
-      {
-        modelId: 'google/gemini-3-pro-preview',
-        evidence: 'SWE-Bench Verified (openlm.ai): 74.2%. Pro-tier coding.',
-      },
-      {
-        modelId: 'deepseek/deepseek-v3.2-exp',
-        evidence: 'SWE-Bench Verified: 73.0%. Experimental V3.2.',
-      },
-      { modelId: 'openai/gpt-5.2', evidence: 'SWE-Bench Verified (openlm.ai): 71.8%.' },
       {
         modelId: 'anthropic/claude-sonnet-4.5',
-        evidence: 'SWE-Bench Verified (openlm.ai): 70.6%.',
+        evidence: 'SWE-Bench Pro public (Scale Labs): 43.60%.',
       },
       {
-        modelId: 'qwen/qwen3-coder-next',
-        evidence: 'SWE-Bench Verified (openlm.ai): 70.6%. Specialized coder.',
+        modelId: 'google/gemini-3.1-pro-preview',
+        evidence: 'SWE-Bench Pro public (Scale Labs): 43.30%.',
       },
-      { modelId: 'x-ai/grok-4', evidence: 'SWE-Bench Verified (openlm.ai): 70.6%.' },
-      { modelId: 'openai/gpt-5.1', evidence: 'SWE-Bench Verified (openlm.ai): 70.5%.' },
-      { modelId: 'anthropic/claude-opus-4.1', evidence: 'SWE-Bench Verified (openlm.ai): 70.1%.' },
-      { modelId: 'qwen/qwen3-max', evidence: 'SWE-Bench Verified (openlm.ai): 69.6%.' },
-      { modelId: 'anthropic/claude-haiku-4.5', evidence: 'SWE-Bench Verified (openlm.ai): 68.8%.' },
-      { modelId: 'anthropic/claude-sonnet-4', evidence: 'SWE-Bench Verified (openlm.ai): 68.0%.' },
-      { modelId: 'anthropic/claude-opus-4', evidence: 'SWE-Bench Verified (openlm.ai): 67.6%.' },
-      { modelId: 'openai/gpt-5', evidence: 'SWE-Bench Verified (openlm.ai): 65.0%.' },
-      { modelId: 'openai/gpt-5-mini', evidence: 'SWE-Bench Verified (openlm.ai): 59.8%.' },
-      { modelId: 'openai/o3', evidence: 'SWE-Bench Verified (openlm.ai): 58.4%.' },
+      {
+        modelId: 'anthropic/claude-sonnet-4',
+        evidence: 'SWE-Bench Pro public (Scale Labs): 42.70%.',
+      },
+      { modelId: 'openai/gpt-5', evidence: 'SWE-Bench Pro public (Scale Labs): 41.78%.' },
+      { modelId: 'openai/gpt-5.2-codex', evidence: 'SWE-Bench Pro public (Scale Labs): 41.04%.' },
+      {
+        modelId: 'anthropic/claude-haiku-4.5',
+        evidence: 'SWE-Bench Pro public (Scale Labs): 39.45%.',
+      },
+      { modelId: 'qwen/qwen3-coder', evidence: 'SWE-Bench Pro public (Scale Labs): 38.70%.' },
+      { modelId: 'minimax/minimax-m2.5', evidence: 'SWE-Bench Pro public (Scale Labs): 36.81%.' },
+      {
+        modelId: 'google/gemini-3-flash-preview',
+        evidence: 'SWE-Bench Pro public (Scale Labs): 34.63%.',
+      },
+      { modelId: 'openai/gpt-5.2', evidence: 'SWE-Bench Pro public (Scale Labs): 29.94%.' },
+      { modelId: 'moonshotai/kimi-k2.5', evidence: 'SWE-Bench Pro public (Scale Labs): 27.67%.' },
+      { modelId: 'qwen/qwen3-235b-a22b', evidence: 'SWE-Bench Pro public (Scale Labs): 21.41%.' },
+      { modelId: 'openai/gpt-oss-120b', evidence: 'SWE-Bench Pro public (Scale Labs): 16.20%.' },
+      {
+        modelId: 'deepseek/deepseek-v3.2-exp',
+        evidence: 'SWE-Bench Pro public (Scale Labs): 15.56%.',
+      },
+      { modelId: 'z-ai/glm-5', evidence: 'SWE-Bench Pro public (Scale Labs): 9.67%.' },
+      {
+        modelId: 'meta-llama/llama-4-maverick',
+        evidence: 'SWE-Bench Pro public (Scale Labs): 5.24%.',
+      },
+      {
+        modelId: 'mistralai/codestral-2508',
+        evidence: 'SWE-Bench Pro public (Scale Labs): 1.51%.',
+      },
     ],
   },
   {
