@@ -1094,19 +1094,40 @@ export const UserMenu: React.FC = () => {
                     </div>
                     <div className="tier-checkout-actions" style={{ marginTop: '1rem' }}>
                       <p style={{ fontWeight: 600, margin: 0 }}>${TIER_PRICING.starter}/month</p>
-                      <button
-                        type="button"
-                        className="modal-button-primary tier-checkout-button"
-                        style={{ width: '100%', marginTop: '0.5rem' }}
-                        disabled={billingBusy !== null || user.subscription_tier === 'starter'}
-                        onClick={() => subscribeTier('starter')}
-                      >
-                        {user.subscription_tier === 'starter'
-                          ? 'Current plan'
-                          : billingBusy === 'sub-starter'
-                            ? 'Redirecting…'
-                            : 'Subscribe with Stripe'}
-                      </button>
+                      {user.subscription_tier === 'starter' ? (
+                        user.stripe_customer_id ? (
+                          <button
+                            type="button"
+                            className="modal-button-primary tier-checkout-button tier-checkout-manage-billing"
+                            style={{ width: '100%', marginTop: '0.5rem' }}
+                            disabled={billingBusy !== null}
+                            onClick={() => openBillingPortal()}
+                          >
+                            {billingBusy === 'portal' ? 'Opening…' : 'Manage billing'}
+                          </button>
+                        ) : (
+                          <p
+                            style={{
+                              marginTop: '0.75rem',
+                              marginBottom: 0,
+                              color: '#666',
+                              fontSize: '0.95rem',
+                            }}
+                          >
+                            Current plan
+                          </p>
+                        )
+                      ) : (
+                        <button
+                          type="button"
+                          className="modal-button-primary tier-checkout-button"
+                          style={{ width: '100%', marginTop: '0.5rem' }}
+                          disabled={billingBusy !== null}
+                          onClick={() => subscribeTier('starter')}
+                        >
+                          {billingBusy === 'sub-starter' ? 'Redirecting…' : 'Subscribe with Stripe'}
+                        </button>
+                      )}
                     </div>
                   </div>
 
@@ -1163,19 +1184,42 @@ export const UserMenu: React.FC = () => {
                       <p style={{ fontWeight: 600, margin: 0 }}>
                         ${TIER_PRICING.starter_plus}/month
                       </p>
-                      <button
-                        type="button"
-                        className="modal-button-primary tier-checkout-button"
-                        style={{ width: '100%', marginTop: '0.5rem' }}
-                        disabled={billingBusy !== null || user.subscription_tier === 'starter_plus'}
-                        onClick={() => subscribeTier('starter_plus')}
-                      >
-                        {user.subscription_tier === 'starter_plus'
-                          ? 'Current plan'
-                          : billingBusy === 'sub-starter_plus'
+                      {user.subscription_tier === 'starter_plus' ? (
+                        user.stripe_customer_id ? (
+                          <button
+                            type="button"
+                            className="modal-button-primary tier-checkout-button tier-checkout-manage-billing"
+                            style={{ width: '100%', marginTop: '0.5rem' }}
+                            disabled={billingBusy !== null}
+                            onClick={() => openBillingPortal()}
+                          >
+                            {billingBusy === 'portal' ? 'Opening…' : 'Manage billing'}
+                          </button>
+                        ) : (
+                          <p
+                            style={{
+                              marginTop: '0.75rem',
+                              marginBottom: 0,
+                              color: '#666',
+                              fontSize: '0.95rem',
+                            }}
+                          >
+                            Current plan
+                          </p>
+                        )
+                      ) : (
+                        <button
+                          type="button"
+                          className="modal-button-primary tier-checkout-button"
+                          style={{ width: '100%', marginTop: '0.5rem' }}
+                          disabled={billingBusy !== null}
+                          onClick={() => subscribeTier('starter_plus')}
+                        >
+                          {billingBusy === 'sub-starter_plus'
                             ? 'Redirecting…'
                             : 'Subscribe with Stripe'}
-                      </button>
+                        </button>
+                      )}
                     </div>
                   </div>
 
@@ -1228,19 +1272,40 @@ export const UserMenu: React.FC = () => {
                     </div>
                     <div className="tier-checkout-actions" style={{ marginTop: '1rem' }}>
                       <p style={{ fontWeight: 600, margin: 0 }}>${TIER_PRICING.pro}/month</p>
-                      <button
-                        type="button"
-                        className="modal-button-primary tier-checkout-button"
-                        style={{ width: '100%', marginTop: '0.5rem' }}
-                        disabled={billingBusy !== null || user.subscription_tier === 'pro'}
-                        onClick={() => subscribeTier('pro')}
-                      >
-                        {user.subscription_tier === 'pro'
-                          ? 'Current plan'
-                          : billingBusy === 'sub-pro'
-                            ? 'Redirecting…'
-                            : 'Subscribe with Stripe'}
-                      </button>
+                      {user.subscription_tier === 'pro' ? (
+                        user.stripe_customer_id ? (
+                          <button
+                            type="button"
+                            className="modal-button-primary tier-checkout-button tier-checkout-manage-billing"
+                            style={{ width: '100%', marginTop: '0.5rem' }}
+                            disabled={billingBusy !== null}
+                            onClick={() => openBillingPortal()}
+                          >
+                            {billingBusy === 'portal' ? 'Opening…' : 'Manage billing'}
+                          </button>
+                        ) : (
+                          <p
+                            style={{
+                              marginTop: '0.75rem',
+                              marginBottom: 0,
+                              color: '#666',
+                              fontSize: '0.95rem',
+                            }}
+                          >
+                            Current plan
+                          </p>
+                        )
+                      ) : (
+                        <button
+                          type="button"
+                          className="modal-button-primary tier-checkout-button"
+                          style={{ width: '100%', marginTop: '0.5rem' }}
+                          disabled={billingBusy !== null}
+                          onClick={() => subscribeTier('pro')}
+                        >
+                          {billingBusy === 'sub-pro' ? 'Redirecting…' : 'Subscribe with Stripe'}
+                        </button>
+                      )}
                     </div>
                   </div>
 
@@ -1296,19 +1361,42 @@ export const UserMenu: React.FC = () => {
                     </div>
                     <div className="tier-checkout-actions" style={{ marginTop: '1rem' }}>
                       <p style={{ fontWeight: 600, margin: 0 }}>${TIER_PRICING.pro_plus}/month</p>
-                      <button
-                        type="button"
-                        className="modal-button-primary tier-checkout-button"
-                        style={{ width: '100%', marginTop: '0.5rem' }}
-                        disabled={billingBusy !== null || user.subscription_tier === 'pro_plus'}
-                        onClick={() => subscribeTier('pro_plus')}
-                      >
-                        {user.subscription_tier === 'pro_plus'
-                          ? 'Current plan'
-                          : billingBusy === 'sub-pro_plus'
+                      {user.subscription_tier === 'pro_plus' ? (
+                        user.stripe_customer_id ? (
+                          <button
+                            type="button"
+                            className="modal-button-primary tier-checkout-button tier-checkout-manage-billing"
+                            style={{ width: '100%', marginTop: '0.5rem' }}
+                            disabled={billingBusy !== null}
+                            onClick={() => openBillingPortal()}
+                          >
+                            {billingBusy === 'portal' ? 'Opening…' : 'Manage billing'}
+                          </button>
+                        ) : (
+                          <p
+                            style={{
+                              marginTop: '0.75rem',
+                              marginBottom: 0,
+                              color: '#666',
+                              fontSize: '0.95rem',
+                            }}
+                          >
+                            Current plan
+                          </p>
+                        )
+                      ) : (
+                        <button
+                          type="button"
+                          className="modal-button-primary tier-checkout-button"
+                          style={{ width: '100%', marginTop: '0.5rem' }}
+                          disabled={billingBusy !== null}
+                          onClick={() => subscribeTier('pro_plus')}
+                        >
+                          {billingBusy === 'sub-pro_plus'
                             ? 'Redirecting…'
                             : 'Subscribe with Stripe'}
-                      </button>
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -1325,25 +1413,6 @@ export const UserMenu: React.FC = () => {
                     comparison add up; we charge whole credits rounded up (at least 1 when anything
                     succeeds).
                   </p>
-                  <div
-                    style={{
-                      display: 'flex',
-                      flexWrap: 'wrap',
-                      gap: '0.5rem',
-                      marginTop: '0.75rem',
-                    }}
-                  >
-                    {user.stripe_customer_id ? (
-                      <button
-                        type="button"
-                        className="modal-button-secondary"
-                        disabled={billingBusy !== null}
-                        onClick={() => openBillingPortal()}
-                      >
-                        {billingBusy === 'portal' ? 'Opening…' : 'Manage billing'}
-                      </button>
-                    ) : null}
-                  </div>
                   <p
                     className="pricing-notice"
                     style={{ marginTop: '0.75rem', fontSize: '0.85rem' }}

@@ -25,7 +25,7 @@ Processed event IDs are stored in **`processed_stripe_webhooks`** (`ProcessedStr
 
 | Event | Effect |
 |-------|--------|
-| `checkout.session.completed` | Sets `stripe_customer_id`; subscriptions load Subscription and `_apply_subscription_fields`. |
+| `checkout.session.completed` | Sets `stripe_customer_id`; subscriptions load Subscription and `_apply_subscription_fields`; then cancels any other active/trialing subscriptions on that customer so tier switches do not leave duplicates. |
 | `invoice.paid` | Syncs subscription period; `allocate_monthly_credits` refills the monthly pool (does **not** overwrite Stripe period dates when `stripe_subscription_id` is set). |
 | `customer.subscription.updated` | Tier + period sync. |
 | `customer.subscription.deleted` | Marks cancelled; clears `stripe_subscription_id`. |

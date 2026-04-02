@@ -842,6 +842,22 @@
   font-weight: 700;
 }
 
+/* Same layout/typography as Subscribe; brand amber/orange (matches pricing-notice / hero accents) */
+.upgrade-modal .tier-checkout-manage-billing.modal-button-primary {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 50%, #fbbf24 100%);
+  color: #fff;
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--warning-color) 35%, transparent);
+}
+
+.upgrade-modal .tier-checkout-manage-billing.modal-button-primary:hover {
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 45%, #d97706 100%);
+  box-shadow: var(--shadow-glow-md);
+}
+
+.upgrade-modal .tier-checkout-manage-billing.modal-button-primary:active {
+  background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+}
+
 .upgrade-modal .tier-checkout-button:disabled {
   opacity: 0.55;
   cursor: not-allowed;
