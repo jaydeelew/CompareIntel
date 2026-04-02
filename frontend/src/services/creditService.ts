@@ -56,7 +56,7 @@ export interface CreditUsageEntry {
   output_tokens: number | null
   /** Total tokens used */
   total_tokens: number | null
-  /** Effective tokens used */
+  /** Legacy normalized token tally (input + output×2.5) when logged; billing uses cost-based credits */
   effective_tokens: number | null
   /** Processing time in milliseconds */
   processing_time_ms: number | null

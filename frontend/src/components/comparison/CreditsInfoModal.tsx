@@ -14,7 +14,7 @@ interface CreditsInfoModalProps {
 }
 
 export const CREDITS_MESSAGE =
-  'Credits are used for each comparison based on token usage. One credit equals 1,000 effective tokens (input tokens + output tokens × 2.5). Your balance resets daily for free tiers or monthly for paid tiers. Credits are only charged when a comparison completes successfully.'
+  'Each comparison uses credits based on underlying API cost (reported usage in USD, converted at a fixed credits-per-dollar rate). Pricier models use more credits than cheaper ones for similar work. Your balance resets daily on free tiers or monthly on paid tiers. Credits are only charged when a comparison completes successfully.'
 
 export function CreditsInfoModal({ isOpen, onClose }: CreditsInfoModalProps) {
   const closeButtonRef = useRef<HTMLButtonElement>(null)

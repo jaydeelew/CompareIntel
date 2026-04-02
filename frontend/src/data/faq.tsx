@@ -194,9 +194,10 @@ export const faqData: FAQItemData[] = [
           tokens more heavily in pricing.
         </p>
         <p>
-          <strong>How this affects your credits:</strong> On CompareIntel, we convert token usage
-          into credits using a weighted formula. For the complete breakdown, see the{' '}
-          <a href="#credits-system">"How does the credits system work?"</a> FAQ below.
+          <strong>How this affects your credits:</strong> On CompareIntel, credits reflect what we
+          pay the provider for your request (see{' '}
+          <a href="#credits-system">"How does the credits system work?"</a>). Longer prompts and
+          outputs and more capable models generally cost more.
         </p>
       </>
     ),
@@ -952,16 +953,16 @@ export const faqData: FAQItemData[] = [
         <p>
           CompareIntel uses credits so usage stays simple on the surface while reflecting{' '}
           <strong>real provider cost</strong>: pricier models use more credits than cheaper ones for
-          the same amount of text. Credits convert from OpenRouter charges (and published list
-          prices when needed).
+          the same amount of text. Credits convert from reported API usage in USD (and published
+          list prices when needed).
         </p>
         <p>
           <strong>How we calculate credits (text):</strong>
         </p>
         <ul>
           <li>
-            We use OpenRouter&rsquo;s reported <strong>cost in USD</strong> when the API provides
-            it, scaled by a fixed rate (credits per dollar).
+            We use <strong>reported cost in USD</strong> when the API provides it, scaled by a fixed
+            rate (credits per dollar).
           </li>
           <li>
             If cost isn&rsquo;t present, we estimate USD from public{' '}
@@ -980,7 +981,7 @@ export const faqData: FAQItemData[] = [
           <strong>1 credit</strong> for any successful run (0 if everything failed).
         </p>
         <p>
-          <strong>Images:</strong> priced from OpenRouter image rates (or a small default) and
+          <strong>Images:</strong> priced from published per-image rates (or a small default) and
           folded into the same per-request rounding when you compare image models.
         </p>
         <p>

@@ -33,7 +33,7 @@ export interface ComparisonMetadata {
   total_input_tokens?: number
   /** Total output tokens used */
   total_output_tokens?: number
-  /** Total effective tokens used */
+  /** Legacy effective-token tally for analytics; billing is cost-based */
   total_effective_tokens?: number
 }
 

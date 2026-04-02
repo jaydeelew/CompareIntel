@@ -111,7 +111,7 @@ def extract_primary_score(category_id: str, evidence: str) -> float | None:
         pct = re.search(r"(\d+\.?\d*)\s*%", evidence)
         if pct:
             return float(pct.group(1))
-    # Cost-effective: OpenRouter avg $X.XX/1M tokens
+    # Cost-effective: Avg. $X.XX/1M tokens
     if category_id == "cost-effective":
         cost = re.search(r"\$\s*(\d+\.?\d*)\s*/\s*1\s*M", evidence, re.I)
         if cost:
@@ -234,7 +234,7 @@ def fetch_openrouter_pricing() -> dict[str, tuple[float, str]]:
                 continue
             cost = calculate_avg_cost(m)
             if cost is not None and cost > 0:
-                result[mid] = (cost, f"OpenRouter avg: ${cost:.2f}/1M tokens.")
+                result[mid] = (cost, f"Avg. ${cost:.2f}/1M tokens.")
     except Exception as e:
         print(f"Warning: Could not fetch OpenRouter pricing: {e}", file=sys.stderr)
     return result
