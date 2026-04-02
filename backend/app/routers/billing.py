@@ -99,6 +99,44 @@ def _checkout_customer_kwargs(user: User) -> dict[str, str]:
     return {"customer_email": str(user.email)}
 
 
+def _cancel_other_subscriptions_for_customer(
+    stripe_mod: Any,
+    *,
+    customer_id: str,
+    keep_subscription_id: str,
+) -> None:
+    """Cancel every other active/trialing subscription so tier switches leave a single sub."""
+    for status in ("active", "trialing"):
+        try:
+            list_obj = stripe_mod.Subscription.list(
+                customer=customer_id,
+                status=status,
+                limit=100,
+            )
+        except StripeError as exc:
+            logger.warning(
+                "Subscription.list failed customer=%s status=%s: %s",
+                customer_id,
+                status,
+                exc,
+            )
+            continue
+        for sub in list_obj.auto_paging_iter():
+            sid = getattr(sub, "id", None)
+            if not sid or sid == keep_subscription_id:
+                continue
+            try:
+                stripe_mod.Subscription.delete(sid)
+                logger.info(
+                    "Cancelled extra subscription %s for customer %s (keeping %s)",
+                    sid,
+                    customer_id,
+                    keep_subscription_id,
+                )
+            except StripeError as exc:
+                logger.warning("Subscription.delete(%s) failed: %s", sid, exc)
+
+
 @router.post("/billing/create-checkout-session")
 async def create_checkout_session(
     body: CheckoutSubscriptionBody,
@@ -395,6 +433,12 @@ async def stripe_webhook(request: Request, db: Session = Depends(get_db)) -> dic
                             else None
                         )
                         _apply_subscription_fields(user, sub_dict, db, tier_hint=th)
+                        if cust_id:
+                            _cancel_other_subscriptions_for_customer(
+                                stripe,
+                                customer_id=cust_id,
+                                keep_subscription_id=sub_id,
+                            )
                     else:
                         tier = meta.get("tier")
                         if isinstance(tier, str) and tier in MONTHLY_CREDIT_ALLOCATIONS:
@@ -403,6 +447,12 @@ async def stripe_webhook(request: Request, db: Session = Depends(get_db)) -> dic
                             user.subscription_status = "active"
                         db.add(user)
                         db.commit()
+                        if cust_id:
+                            _cancel_other_subscriptions_for_customer(
+                                stripe,
+                                customer_id=cust_id,
+                                keep_subscription_id=sub_id,
+                            )
                 elif cust_id:
                     db.add(user)
                     db.commit()
