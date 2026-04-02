@@ -64,7 +64,7 @@ export function useGeolocation({ isAuthenticated, user }: UseGeolocationProps) {
   const savedLocationLoadedRef = useRef(false)
 
   useEffect(() => {
-    if (!isAuthenticated || !user) return
+    if (!isAuthenticated || user?.id == null) return
     if (savedLocationLoadedRef.current) return
 
     const loadSavedLocation = async () => {
@@ -99,7 +99,7 @@ export function useGeolocation({ isAuthenticated, user }: UseGeolocationProps) {
     }
 
     loadSavedLocation()
-  }, [isAuthenticated, user])
+  }, [isAuthenticated, user?.id])
 
   useEffect(() => {
     if (geolocationDetectedRef.current) return

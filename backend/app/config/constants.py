@@ -13,7 +13,7 @@ All constants should be imported from this module to maintain a single source of
 from ..type_defs import TierConfigDict
 
 # model_limit = max models per comparison (tiered: 3/6/6/9/12)
-# overage_allowed = whether tier can purchase credit packs beyond monthly pool
+# overage_allowed = whether tier may use metered overage beyond the monthly pool
 # Usage is constrained by credits only (no separate daily model-response caps).
 
 SUBSCRIPTION_CONFIG: dict[str, TierConfigDict] = {

@@ -7,8 +7,7 @@
 | `STRIPE_SECRET_KEY` | Server-side API secret |
 | `STRIPE_WEBHOOK_SECRET` | Signing secret for `POST /api/billing/webhooks/stripe` |
 | `STRIPE_PRICE_STARTER` / `STRIPE_PRICE_STARTER_PLUS` / `STRIPE_PRICE_PRO` / `STRIPE_PRICE_PRO_PLUS` | Subscription Price IDs (amounts must match `TIER_PRICING` in `backend/app/config/constants.py`) |
-| `STRIPE_PRICE_CREDIT_PACK` | One-time pack Price ID |
-| `STRIPE_CREDIT_PACK_CREDITS` | Integer credits granted per pack purchase (default `100`) |
+| `STRIPE_OVERAGE_METER_ID` / `STRIPE_OVERAGE_PRODUCT_ID` / `STRIPE_PRICE_OVERAGE` | Optional metered overage (per credit) — configure in Stripe when using usage-based billing beyond the monthly pool |
 | `FRONTEND_URL` | Success/cancel/portal return URLs |
 
 Pydantic loads these from the environment (see `backend/app/config/settings.py`).
@@ -26,7 +25,7 @@ Processed event IDs are stored in **`processed_stripe_webhooks`** (`ProcessedStr
 
 | Event | Effect |
 |-------|--------|
-| `checkout.session.completed` | Sets `stripe_customer_id`; pack purchases call `add_purchased_credits`; subscriptions load Subscription and `_apply_subscription_fields`. |
+| `checkout.session.completed` | Sets `stripe_customer_id`; subscriptions load Subscription and `_apply_subscription_fields`. |
 | `invoice.paid` | Syncs subscription period; `allocate_monthly_credits` refills the monthly pool (does **not** overwrite Stripe period dates when `stripe_subscription_id` is set). |
 | `customer.subscription.updated` | Tier + period sync. |
 | `customer.subscription.deleted` | Marks cancelled; clears `stripe_subscription_id`. |
@@ -43,13 +42,31 @@ Use **test mode** keys (`sk_test_...`) and test Price IDs in `backend/.env`.
 
 Verify: `stripe --version`
 
-### 2. Log in (links your CLI to your Stripe account)
+### 2. Authenticate the CLI
+
+Pick **one** of the following (both must use the **same** Stripe account as your test Price IDs in `backend/.env`).
+
+**A. `stripe login` (browser)**
 
 ```bash
 stripe login
 ```
 
-This opens a browser to confirm; the CLI stores credentials for that machine.
+Opens a browser to confirm; the CLI stores credentials on that machine.
+
+**B. Test secret key (no browser)**
+
+Use your Dashboard **test** secret key (`sk_test_...`) — the same value as **`STRIPE_SECRET_KEY`** in `backend/.env` is fine for local dev.
+
+In the terminal where you run the CLI:
+
+```bash
+export STRIPE_API_KEY='sk_test_...'
+```
+
+That lasts for the current shell session only. Alternatively, pass the key per command: `stripe listen --api-key sk_test_... --forward-to ...` (and the same for `stripe trigger`).
+
+Treat `STRIPE_API_KEY` like a password: do not commit it or paste it into tickets.
 
 ### 3. Forward webhooks to your local API
 
@@ -79,7 +96,7 @@ You should see the event in the CLI output and your server logs. For full flows,
 |-------|----------------|
 | `Invalid webhook signature` | `STRIPE_WEBHOOK_SECRET` must match the `whsec_...` from the **same** `stripe listen` session. |
 | Connection refused | Backend is not running on `127.0.0.1:8000`, or URL path is wrong. |
-| Wrong Stripe account | `stripe login` must match the Dashboard where your test prices live. |
+| Wrong Stripe account | `stripe login` or `STRIPE_API_KEY` / `--api-key` must be for the same Dashboard (test mode) where your test prices live. |
 
 ## Failure handling
 

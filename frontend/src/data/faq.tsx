@@ -381,8 +381,8 @@ export const faqData: FAQItemData[] = [
           <strong>Paid plans</strong> (Starter, Starter+, Pro, Pro+) add monthly credit pools (from{' '}
           {MONTHLY_CREDIT_ALLOCATIONS.starter.toLocaleString()} up to{' '}
           {MONTHLY_CREDIT_ALLOCATIONS.pro_plus.toLocaleString()} credits), more models per
-          comparison, optional prepaid credit packs, and (when enabled) overage beyond your pool at{' '}
-          ${OVERAGE_USD_PER_CREDIT.toFixed(3)} per credit. Subscribe from your account menu (Upgrade
+          comparison, and (when enabled) metered overage beyond your pool at $
+          {OVERAGE_USD_PER_CREDIT.toFixed(3)} per credit. Subscribe from your account menu (Upgrade
           plan) when billing is enabled on the deployment you use.
         </p>
       </>
@@ -416,8 +416,9 @@ export const faqData: FAQItemData[] = [
             comparison
           </li>
           <li>
-            <strong>Upgrade or top up:</strong> Paid plans have larger monthly pools; on paid tiers
-            you can also buy prepaid credit packs from billing when available
+            <strong>Upgrade or overage:</strong> Paid plans have larger monthly pools; beyond that,
+            metered overage may be available per credit when billing is enabled (not a one-time pack
+            purchase)
           </li>
           <li>
             <strong>Shorter prompts:</strong> More concise prompts use fewer input tokens
@@ -995,8 +996,7 @@ export const faqData: FAQItemData[] = [
             <strong>Paid tiers:</strong> Monthly allocations from{' '}
             {MONTHLY_CREDIT_ALLOCATIONS.starter.toLocaleString()} credits (Starter) to{' '}
             {MONTHLY_CREDIT_ALLOCATIONS.pro_plus.toLocaleString()} credits (Pro+). Credits reset on
-            your Stripe billing period; prepaid packs add to your balance and are used after the
-            monthly pool. Overage beyond the pool (when enabled) is billed at $
+            your Stripe billing period. Overage beyond the pool (when enabled) is billed at $
             {OVERAGE_USD_PER_CREDIT.toFixed(3)} per credit. Use{' '}
             <strong>Account → Upgrade plan</strong> for checkout when enabled.
           </li>
@@ -1047,9 +1047,9 @@ export const faqData: FAQItemData[] = [
         </ul>
         <p>
           All paid tiers include access to premium AI models that aren't available to free users.
-          Paid tiers also allow purchasing additional credits beyond your monthly allocation if
-          needed. List overage rate when metered billing is enabled: $
-          {OVERAGE_USD_PER_CREDIT.toFixed(3)} per credit (see checkout for current amounts).
+          Beyond the monthly pool, paid tiers may use metered overage per credit when enabled (not a
+          separate one-time pack). Typical overage rate when metered billing is enabled: $
+          {OVERAGE_USD_PER_CREDIT.toFixed(3)} per credit (confirm in Stripe or Manage billing).
         </p>
       </>
     ),

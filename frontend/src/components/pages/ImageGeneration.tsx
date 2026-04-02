@@ -114,8 +114,9 @@ export const ImageGeneration: React.FC = () => {
           <section className="seo-section">
             <h2>Paid plans</h2>
             <p>
-              Paid tiers use your monthly and prepaid credits for image generations, the same way as
-              text comparisons, subject to the per-run model limits above.
+              Paid tiers use your monthly credit pool (and metered overage when enabled) for image
+              generations, the same way as text comparisons, subject to the per-run model limits
+              above.
             </p>
           </section>
 

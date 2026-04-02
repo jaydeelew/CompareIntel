@@ -9,6 +9,7 @@ import { createPortal } from 'react-dom'
 import {
   getCreditAllocation,
   getDailyCreditLimit,
+  getModelLimit,
   MONTHLY_CREDIT_ALLOCATIONS,
   TIER_PRICING,
 } from '../../config/constants'
@@ -17,7 +18,6 @@ import { apiClient } from '../../services/api/client'
 import { ApiError, isCancellationError } from '../../services/api/errors'
 import {
   createBillingPortalSession,
-  createCreditPackCheckoutSession,
   createSubscriptionCheckoutSession,
   type PaidSubscriptionTier,
 } from '../../services/billingService'
@@ -32,6 +32,7 @@ import {
   REQUEST_PERSIST_TEXT_COMPOSER_ADVANCED_EVENT,
 } from '../../services/userSettingsService'
 import type { UserPreferences, UserPreferencesUpdate } from '../../services/userSettingsService'
+import { BILLING_UPDATED_EVENT } from '../../utils/billingSync'
 import logger from '../../utils/logger'
 import { dispatchSaveStateEvent } from '../../utils/sessionState'
 import './UserMenu.css'
@@ -39,7 +40,7 @@ import './UserMenu.css'
 type ModalType = 'dashboard' | 'settings' | 'upgrade' | null
 
 export const UserMenu: React.FC = () => {
-  const { user, logout } = useAuth()
+  const { user, logout, refreshUser } = useAuth()
   const [isOpen, setIsOpen] = useState(false)
   const [activeModal, setActiveModal] = useState<ModalType>(null)
   const [creditBalance, setCreditBalance] = useState<CreditBalance | null>(null)
@@ -52,6 +53,9 @@ export const UserMenu: React.FC = () => {
     right: number
     width: number
   } | null>(null)
+  const upgradeModalSyncDoneRef = useRef(false)
+  const userRef = useRef(user)
+  userRef.current = user
 
   // Settings state
   const [preferences, setPreferences] = useState<UserPreferences | null>(null)
@@ -68,14 +72,9 @@ export const UserMenu: React.FC = () => {
   const [billingBusy, setBillingBusy] = useState<string | null>(null)
   const [billingError, setBillingError] = useState<string | null>(null)
 
-  const isPaidTier = Boolean(
-    user?.subscription_tier &&
-      Object.prototype.hasOwnProperty.call(MONTHLY_CREDIT_ALLOCATIONS, user.subscription_tier)
-  )
-
   // Fetch credit balance when menu opens
   useEffect(() => {
-    if (isOpen && user) {
+    if (isOpen && user?.id != null) {
       setIsLoadingCredits(true)
       getCreditBalance()
         .then(balance => {
@@ -84,22 +83,22 @@ export const UserMenu: React.FC = () => {
         .catch(error => {
           if (isCancellationError(error)) return
           logger.error('Failed to fetch credit balance:', error)
-          // Fallback to user object data if available
-          if (user.monthly_credits_allocated !== undefined) {
+          const u = userRef.current
+          if (u?.monthly_credits_allocated !== undefined) {
             setCreditBalance({
-              credits_allocated: user.monthly_credits_allocated || 0,
-              credits_used_this_period: user.credits_used_this_period || 0,
+              credits_allocated: u.monthly_credits_allocated || 0,
+              credits_used_this_period: u.credits_used_this_period || 0,
               purchased_credits_balance: 0,
               credits_remaining: Math.max(
                 0,
-                (user.monthly_credits_allocated || 0) - (user.credits_used_this_period || 0)
+                (u.monthly_credits_allocated || 0) - (u.credits_used_this_period || 0)
               ),
-              total_credits_used: user.total_credits_used,
-              credits_reset_at: user.credits_reset_at,
-              billing_period_start: user.billing_period_start,
-              billing_period_end: user.billing_period_end,
-              period_type: user.billing_period_start ? 'monthly' : 'daily',
-              subscription_tier: user.subscription_tier,
+              total_credits_used: u.total_credits_used,
+              credits_reset_at: u.credits_reset_at,
+              billing_period_start: u.billing_period_start,
+              billing_period_end: u.billing_period_end,
+              period_type: u.billing_period_start ? 'monthly' : 'daily',
+              subscription_tier: u.subscription_tier,
             })
           }
         })
@@ -107,7 +106,7 @@ export const UserMenu: React.FC = () => {
           setIsLoadingCredits(false)
         })
     }
-  }, [isOpen, user])
+  }, [isOpen, user?.id])
 
   const updateDropdownPlacement = useCallback(() => {
     if (!avatarRef.current) return
@@ -191,9 +190,46 @@ export const UserMenu: React.FC = () => {
     }
   }, [activeModal])
 
+  useEffect(() => {
+    if (user?.id == null) return
+    const onBillingUpdated = () => {
+      void (async () => {
+        try {
+          const bal = await getCreditBalance()
+          setCreditBalance(bal)
+        } catch (error) {
+          if (isCancellationError(error)) return
+          logger.error('Failed to refresh credits after billing update:', error)
+        }
+      })()
+    }
+    window.addEventListener(BILLING_UPDATED_EVENT, onBillingUpdated)
+    return () => window.removeEventListener(BILLING_UPDATED_EVENT, onBillingUpdated)
+  }, [user?.id])
+
+  useEffect(() => {
+    if (activeModal !== 'upgrade') {
+      upgradeModalSyncDoneRef.current = false
+      return
+    }
+    if (user?.id == null) return
+    if (upgradeModalSyncDoneRef.current) return
+    upgradeModalSyncDoneRef.current = true
+    void (async () => {
+      await refreshUser()
+      try {
+        const bal = await getCreditBalance()
+        setCreditBalance(bal)
+      } catch (error) {
+        if (isCancellationError(error)) return
+        logger.error('Failed to refresh plan/credits when opening upgrade modal:', error)
+      }
+    })()
+  }, [activeModal, user?.id, refreshUser])
+
   // Load preferences when settings modal opens
   useEffect(() => {
-    if (activeModal === 'settings' && user) {
+    if (activeModal === 'settings' && user?.id != null) {
       setIsLoadingPreferences(true)
       setPreferencesError(null)
       setPreferencesSuccess(null)
@@ -213,7 +249,7 @@ export const UserMenu: React.FC = () => {
           setIsLoadingPreferences(false)
         })
     }
-  }, [activeModal, user])
+  }, [activeModal, user?.id])
 
   const persistPartialPreferences = useCallback(
     async (payload: UserPreferencesUpdate, revert?: () => void) => {
@@ -332,24 +368,6 @@ export const UserMenu: React.FC = () => {
     }
   }, [])
 
-  const buyCreditPack = useCallback(async () => {
-    setBillingError(null)
-    setBillingBusy('pack')
-    try {
-      const url = await createCreditPackCheckoutSession()
-      window.location.href = url
-    } catch (err) {
-      const msg =
-        err instanceof ApiError
-          ? err.message
-          : err instanceof Error
-            ? err.message
-            : 'Checkout could not start.'
-      setBillingError(msg)
-      setBillingBusy(null)
-    }
-  }, [])
-
   const openBillingPortal = useCallback(async () => {
     setBillingError(null)
     setBillingBusy('portal')
@@ -410,6 +428,16 @@ export const UserMenu: React.FC = () => {
     setBillingError(null)
   }
 
+  const trustedCreditBalance =
+    creditBalance && creditBalance.subscription_tier === user.subscription_tier
+      ? creditBalance
+      : null
+
+  const usagePeriodLabel =
+    trustedCreditBalance?.period_type === 'monthly' || user.billing_period_start
+      ? 'Usage This Month'
+      : 'Usage Today'
+
   const dropdownPanel = (
     <div
       ref={dropdownRef}
@@ -432,8 +460,8 @@ export const UserMenu: React.FC = () => {
               {getTierDisplay(user.subscription_tier)}
             </div>
             <div className="daily-limit-info">
-              {creditBalance
-                ? `${creditBalance.credits_allocated} ${creditBalance.period_type === 'monthly' ? 'credits/month' : 'credits/day'}`
+              {trustedCreditBalance
+                ? `${trustedCreditBalance.credits_allocated} ${trustedCreditBalance.period_type === 'monthly' ? 'credits/month' : 'credits/day'}`
                 : user.monthly_credits_allocated
                   ? `${user.monthly_credits_allocated} credits/month`
                   : `${getCreditAllocation(user.subscription_tier)} credits/${getDailyCreditLimit(user.subscription_tier) > 0 ? 'day' : 'month'}`}
@@ -445,9 +473,7 @@ export const UserMenu: React.FC = () => {
       <div className="user-menu-divider"></div>
 
       <div className="usage-section">
-        <div className="usage-header">
-          {creditBalance?.period_type === 'monthly' ? 'Usage This Month' : 'Usage Today'}
-        </div>
+        <div className="usage-header">{usagePeriodLabel}</div>
         <div className="usage-stats-grid">
           {/* Credits Display (Primary) */}
           <div className="usage-stat">
@@ -456,24 +482,24 @@ export const UserMenu: React.FC = () => {
               <div className="usage-stat-value" style={{ opacity: 0.6 }}>
                 Loading...
               </div>
-            ) : creditBalance ? (
+            ) : trustedCreditBalance ? (
               <>
                 <div className="usage-stat-value">
                   <span className="usage-current">
-                    {Math.round(creditBalance.credits_remaining)}
+                    {Math.round(trustedCreditBalance.credits_remaining)}
                   </span>
                   <span className="usage-separator">/</span>
-                  <span className="usage-limit">{creditBalance.credits_allocated}</span>
+                  <span className="usage-limit">{trustedCreditBalance.credits_allocated}</span>
                 </div>
                 <div className="usage-progress-bar">
                   <div
                     className="usage-progress-fill"
                     style={{
-                      width: `${Math.min(100, ((creditBalance.credits_used_this_period ?? 0) / creditBalance.credits_allocated) * 100)}%`,
+                      width: `${Math.min(100, ((trustedCreditBalance.credits_used_this_period ?? 0) / trustedCreditBalance.credits_allocated) * 100)}%`,
                     }}
                   ></div>
                 </div>
-                {creditBalance.credits_reset_at && (
+                {trustedCreditBalance.credits_reset_at && (
                   <div
                     className="usage-reset-info"
                     style={{
@@ -482,7 +508,19 @@ export const UserMenu: React.FC = () => {
                       marginTop: '0.25rem',
                     }}
                   >
-                    Resets {new Date(creditBalance.credits_reset_at).toLocaleDateString()}
+                    Resets {new Date(trustedCreditBalance.credits_reset_at).toLocaleDateString()}
+                  </div>
+                )}
+                {(trustedCreditBalance.purchased_credits_balance ?? 0) > 0 && (
+                  <div
+                    className="usage-reset-info"
+                    style={{
+                      fontSize: '0.75rem',
+                      color: 'rgba(255, 255, 255, 0.75)',
+                      marginTop: '0.35rem',
+                    }}
+                  >
+                    Prepaid credits: {trustedCreditBalance.purchased_credits_balance}
                   </div>
                 )}
               </>
@@ -606,7 +644,6 @@ export const UserMenu: React.FC = () => {
       </nav>
 
       <div className="user-menu-divider"></div>
-
       <button
         className="menu-item logout-btn"
         onClick={async () => {
@@ -979,15 +1016,28 @@ export const UserMenu: React.FC = () => {
                     className="modal-subtitle"
                     style={{ fontSize: '0.9rem', marginTop: '0.5rem', color: '#666' }}
                   >
+                    <strong>Current plan:</strong> {getTierDisplay(user.subscription_tier)}
+                    {user.subscription_status && user.subscription_status !== 'active' ? (
+                      <>
+                        {' '}
+                        <span style={{ color: '#666' }}>({user.subscription_status})</span>
+                      </>
+                    ) : null}
+                  </p>
+                  <p
+                    className="modal-subtitle"
+                    style={{ fontSize: '0.9rem', marginTop: '0.5rem', color: '#666' }}
+                  >
                     You currently have:{' '}
                     <strong>
-                      {creditBalance
-                        ? `${creditBalance.credits_allocated} ${creditBalance.period_type === 'monthly' ? 'credits/month' : 'credits/day'}`
+                      {trustedCreditBalance
+                        ? `${trustedCreditBalance.credits_allocated} ${trustedCreditBalance.period_type === 'monthly' ? 'credits/month' : 'credits/day'}`
                         : user.monthly_credits_allocated
                           ? `${user.monthly_credits_allocated} credits/month`
                           : `${getCreditAllocation(user.subscription_tier)} credits/${getDailyCreditLimit(user.subscription_tier) > 0 ? 'day' : 'month'}`}
                     </strong>{' '}
-                    • <strong>3 models max</strong> per comparison
+                    • <strong>{getModelLimit(user.subscription_tier)} models max</strong> per
+                    comparison
                   </p>
                 </div>
 
@@ -1240,23 +1290,14 @@ export const UserMenu: React.FC = () => {
                         {billingBusy === 'portal' ? 'Opening…' : 'Manage billing'}
                       </button>
                     ) : null}
-                    {isPaidTier ? (
-                      <button
-                        type="button"
-                        className="modal-button-secondary"
-                        disabled={billingBusy !== null}
-                        onClick={() => buyCreditPack()}
-                      >
-                        {billingBusy === 'pack' ? 'Redirecting…' : 'Buy credit pack'}
-                      </button>
-                    ) : null}
                   </div>
                   <p
                     className="pricing-notice"
                     style={{ marginTop: '0.75rem', fontSize: '0.85rem' }}
                   >
-                    Checkout requires Stripe price IDs in server configuration. If you see a
-                    configuration error, billing is not enabled on this deployment yet.
+                    Subscription checkout requires Stripe recurring price IDs in server
+                    configuration. If you see a configuration error, billing is not enabled on this
+                    deployment yet.
                   </p>
                   <button className="modal-button-primary" onClick={closeModal}>
                     Close

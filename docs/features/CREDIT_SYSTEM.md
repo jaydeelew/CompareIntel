@@ -60,7 +60,7 @@ Monthly pool numbers may be **recalibrated** after observing usage under cost-ba
 1. **Pre-request:** Frontend blocks submission when the user has no credits remaining.
 2. **Validation:** Backend estimates required credits (per selected model, list pricing or legacy) and returns **402** if the user cannot afford the estimate. It also applies tier rules such as anonymous users not using image generation.
 3. **Processing:** Streaming reads `usage.cost` when present; otherwise list pricing or legacy path.
-4. **Deduction:** Whole credits are deducted atomically once per successful comparison; **purchased** pack balance is used after the monthly pool is exhausted (when enabled).
+4. **Deduction:** Whole credits are deducted atomically once per successful comparison; any **purchased** balance on the user is used after the monthly pool is exhausted, then metered overage when integrated.
 5. **Recording:** `CreditTransaction` + `UsageLog` with `actual_cost` and token fields.
 
 ## Database Fields
@@ -69,7 +69,7 @@ Monthly pool numbers may be **recalibrated** after observing usage under cost-ba
 
 - `monthly_credits_allocated` - Subscription credits for current period
 - `credits_used_this_period` - Consumption against the monthly allocation
-- `purchased_credits_balance` - Prepaid credits (top-ups)
+- `purchased_credits_balance` - Purchased balance (legacy / admin; not sold via one-time checkout)
 - `stripe_customer_id`, `stripe_subscription_id` - Billing integration
 - `credits_reset_at`, `billing_period_start`, `billing_period_end`
 

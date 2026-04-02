@@ -318,8 +318,8 @@ export const Features: React.FC = () => {
               <div className="pricing-tier pricing-tier-full">
                 <h3>Paid tiers</h3>
                 <p>
-                  Premium AI models, monthly credit pools, optional prepaid packs, and priority
-                  access to new releases. After you sign in, use{' '}
+                  Premium AI models, monthly credit pools, optional metered overage per credit when
+                  enabled, and priority access to new releases. After you sign in, use{' '}
                   <strong>Account → Upgrade plan</strong> for Stripe checkout when billing is
                   enabled.
                 </p>
@@ -381,8 +381,8 @@ export const Features: React.FC = () => {
                   Illustrative monthly prices (USD, before tax): Starter ${TIER_PRICING.starter},
                   Starter+ ${TIER_PRICING.starter_plus}, Pro ${TIER_PRICING.pro}, Pro+ $
                   {TIER_PRICING.pro_plus}. Overage beyond your pool (when enabled): $
-                  {OVERAGE_USD_PER_CREDIT.toFixed(3)} per credit. Confirm live amounts at checkout;
-                  pools and credit economics are documented in the FAQ.
+                  {OVERAGE_USD_PER_CREDIT.toFixed(3)} per credit. Confirm live amounts in Stripe or
+                  Manage billing; pools and credit economics are documented in the FAQ.
                 </p>
               </div>
             </div>

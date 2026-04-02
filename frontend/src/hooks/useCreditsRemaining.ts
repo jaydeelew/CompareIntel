@@ -39,13 +39,20 @@ export function useCreditsRemaining(props: UseCreditsRemainingProps): UseCredits
   const creditsRemaining = useMemo(() => {
     const userTier = isAuthenticated ? user?.subscription_tier || 'free' : 'unregistered'
 
+    const balanceMatchesUser =
+      Boolean(isAuthenticated && creditBalance && creditBalance.subscription_tier === userTier) ||
+      (!isAuthenticated && creditBalance && creditBalance.subscription_tier === 'unregistered')
+
     // Get credit information (if available)
-    // Prefer creditBalance if available (more up-to-date after model calls)
-    const creditsAllocated =
-      creditBalance?.credits_allocated ??
-      (isAuthenticated && user
+    // Prefer creditBalance only when its tier matches the current user (avoids stale free-tier payload after upgrade)
+    const creditsAllocated = balanceMatchesUser
+      ? (creditBalance!.credits_allocated ??
+        (isAuthenticated && user
+          ? user.monthly_credits_allocated || getCreditAllocation(userTier)
+          : getDailyCreditLimit(userTier) || getCreditAllocation(userTier)))
+      : isAuthenticated && user
         ? user.monthly_credits_allocated || getCreditAllocation(userTier)
-        : getDailyCreditLimit(userTier) || getCreditAllocation(userTier))
+        : getDailyCreditLimit(userTier) || getCreditAllocation(userTier)
 
     // For unregistered users, prefer anonymousCreditsRemaining if available, then creditBalance
     if (!isAuthenticated) {
@@ -53,30 +60,24 @@ export function useCreditsRemaining(props: UseCreditsRemainingProps): UseCredits
         // Use anonymousCreditsRemaining state if available (most up-to-date for unregistered users)
         return anonymousCreditsRemaining
       } else if (
+        balanceMatchesUser &&
         creditBalance?.credits_remaining !== undefined &&
         creditBalance?.subscription_tier === 'unregistered'
       ) {
         // Only use creditBalance if it's for unregistered users (prevent using authenticated user's balance)
         return creditBalance.credits_remaining
       } else {
-        // Fallback: calculate from allocated and used
-        const creditsUsed = creditBalance?.credits_used_today ?? 0
+        const creditsUsed = balanceMatchesUser ? (creditBalance?.credits_used_today ?? 0) : 0
         return Math.max(0, creditsAllocated - creditsUsed)
       }
     } else {
-      // For authenticated users, only use creditBalance if it matches their tier
-      if (
-        creditBalance?.credits_remaining !== undefined &&
-        creditBalance?.subscription_tier === userTier
-      ) {
-        // Use creditBalance if available and matches current user's tier
+      if (balanceMatchesUser && creditBalance?.credits_remaining !== undefined) {
         return creditBalance.credits_remaining
-      } else {
-        // Fallback: calculate from allocated and used
-        const creditsUsed =
-          creditBalance?.credits_used_this_period ?? (user?.credits_used_this_period || 0)
-        return Math.max(0, creditsAllocated - creditsUsed)
       }
+      const creditsUsed = balanceMatchesUser
+        ? (creditBalance?.credits_used_this_period ?? (user?.credits_used_this_period || 0))
+        : user?.credits_used_this_period || 0
+      return Math.max(0, creditsAllocated - creditsUsed)
     }
   }, [isAuthenticated, user, creditBalance, anonymousCreditsRemaining])
 

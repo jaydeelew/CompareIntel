@@ -14,9 +14,9 @@ If the user has completed Checkout:
 - If you set a paid tier **without** Stripe, the user has **no** `stripe_subscription_id`: the app uses the **30-day** billing window from `allocate_monthly_credits` and local `credits_reset_at`.
 - For comped or internal accounts, prefer a clear process: either leave Stripe fields empty (manual cycle) or create a complimentary Stripe subscription so periods stay consistent.
 
-## Prepaid credits
+## Purchased credit balance (legacy / admin)
 
-- **`purchased_credits_balance`** is incremented by pack checkout (`add_purchased_credits`) and consumed **after** the monthly pool is exhausted (`deduct_credits`).
+- **`purchased_credits_balance`** is consumed **after** the monthly pool is exhausted (`deduct_credits`). It can be incremented via `add_purchased_credits` (e.g. admin grant); the app does not grant this via Stripe webhooks.
 - Admins should rarely need to edit this; if adjusting, document the reason in support notes.
 
 ## Conflicts
