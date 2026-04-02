@@ -92,7 +92,7 @@ def add_purchased_credits(
     db: Session,
     description: str | None = None,
 ) -> None:
-    """Add prepaid credits (e.g. Stripe checkout for credit packs)."""
+    """Add purchased credits (e.g. admin grant or legacy balance)."""
     if credits <= 0:
         return
     user = db.query(User).filter(User.id == user_id).with_for_update().first()
@@ -297,17 +297,24 @@ def ensure_credits_allocated(user_id: int, db: Session) -> None:
 
     tier = user.subscription_tier or "free"
 
-    # Check if credits need to be allocated
-    if user.monthly_credits_allocated is None or user.monthly_credits_allocated == 0:
-        if tier in MONTHLY_CREDIT_ALLOCATIONS:
+    # Paid monthly tiers: pool size must match tier (e.g. after Stripe upgrade, free user may still
+    # have daily limit 100 in monthly_credits_allocated until we realign).
+    if tier in MONTHLY_CREDIT_ALLOCATIONS:
+        correct_pool = MONTHLY_CREDIT_ALLOCATIONS[tier]
+        current = user.monthly_credits_allocated
+        if current is None or current != correct_pool:
             allocate_monthly_credits(user_id, tier, db)
-        elif tier in DAILY_CREDIT_LIMITS:
-            # Set daily credits and reset time based on user's timezone
-            credits = DAILY_CREDIT_LIMITS[tier]
+        return
+
+    # Daily / free tiers (including downgrade from paid: pool must match daily limit, not 720+)
+    if tier in DAILY_CREDIT_LIMITS:
+        daily = DAILY_CREDIT_LIMITS[tier]
+        current_alloc = user.monthly_credits_allocated
+        if current_alloc is None or current_alloc == 0 or current_alloc != daily:
             user_timezone = _get_user_timezone(user)
             next_midnight_utc = _get_next_local_midnight(user_timezone)
             user.credits_reset_at = next_midnight_utc
-            user.monthly_credits_allocated = credits
+            user.monthly_credits_allocated = daily
             user.credits_used_this_period = 0
             db.commit()
 

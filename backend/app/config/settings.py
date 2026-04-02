@@ -114,8 +114,6 @@ class Settings(BaseSettings):
     stripe_price_starter_plus: str | None = None
     stripe_price_pro: str | None = None
     stripe_price_pro_plus: str | None = None
-    stripe_price_credit_pack: str | None = None
-    stripe_credit_pack_credits: int = 100
     stripe_overage_meter_id: str | None = None
     stripe_overage_product_id: str | None = None
     stripe_price_overage: str | None = None
@@ -127,7 +125,6 @@ class Settings(BaseSettings):
         "stripe_price_starter_plus",
         "stripe_price_pro",
         "stripe_price_pro_plus",
-        "stripe_price_credit_pack",
         "stripe_overage_meter_id",
         "stripe_overage_product_id",
         "stripe_price_overage",

@@ -8,13 +8,15 @@ from typing import TYPE_CHECKING, Any
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel, Field
+from sqlalchemy import func
+from stripe import SignatureVerificationError, StripeError
 
 if TYPE_CHECKING:
     from sqlalchemy.orm import Session
 
 from ..config.constants import MONTHLY_CREDIT_ALLOCATIONS
 from ..config.settings import settings
-from ..credit_manager import add_purchased_credits, allocate_monthly_credits
+from ..credit_manager import allocate_monthly_credits
 from ..database import get_db
 from ..dependencies import get_current_user
 from ..models import ProcessedStripeWebhook, User
@@ -29,6 +31,37 @@ _TIER_TO_PRICE_SETTING = {
     "pro": "stripe_price_pro",
     "pro_plus": "stripe_price_pro_plus",
 }
+
+
+def _event_data_object(event: dict[str, Any]) -> dict[str, Any]:
+    """Stripe may send ``\"data\": null``; ``dict.get(\"data\", {})`` would return None and crash."""
+    data = event.get("data")
+    if not isinstance(data, dict):
+        return {}
+    obj = data.get("object")
+    return obj if isinstance(obj, dict) else {}
+
+
+def _stripe_expandable_id(value: Any) -> str | None:
+    """Normalize Stripe API string id or expanded object ``{\"id\": \"...\"}``."""
+    if value is None:
+        return None
+    if isinstance(value, str) and value.strip():
+        return value.strip()
+    if isinstance(value, dict):
+        sid = value.get("id")
+        if isinstance(sid, str) and sid.strip():
+            return sid.strip()
+    return None
+
+
+def _unix_ts_or_none(val: Any) -> int | None:
+    if val is None:
+        return None
+    try:
+        return int(val)
+    except (TypeError, ValueError):
+        return None
 
 
 def _stripe_checkout_success_url(base: str) -> str:
@@ -84,6 +117,17 @@ async def create_checkout_session(
             detail=f"Stripe price ID not configured for tier {body.tier}.",
         )
 
+    st = (current_user.subscription_status or "").lower()
+    if (
+        current_user.stripe_subscription_id
+        and st == "active"
+        and (current_user.subscription_tier or "") == body.tier
+    ):
+        raise HTTPException(
+            status_code=400,
+            detail="You already have this plan. Open Manage billing to change or cancel your subscription.",
+        )
+
     success = body.success_url or f"{settings.frontend_url.rstrip('/')}/?checkout=success"
     cancel = body.cancel_url or f"{settings.frontend_url.rstrip('/')}/?checkout=cancel"
 
@@ -102,44 +146,6 @@ async def create_checkout_session(
         metadata={
             "user_id": str(current_user.id),
             "tier": body.tier,
-        },
-        **_checkout_customer_kwargs(current_user),
-    )
-    if not session.url:
-        raise HTTPException(status_code=500, detail="Checkout session missing redirect URL")
-    return {"url": session.url}
-
-
-@router.post("/billing/create-credit-pack-checkout-session")
-async def create_credit_pack_checkout_session(
-    current_user: User = Depends(get_current_user),
-) -> dict[str, str]:
-    """One-time payment that credits ``stripe_credit_pack_credits`` via webhook metadata."""
-    stripe = _require_stripe()
-    if not settings.stripe_price_credit_pack:
-        raise HTTPException(
-            status_code=422,
-            detail="Credit pack Stripe price is not configured (STRIPE_PRICE_CREDIT_PACK).",
-        )
-    tier = current_user.subscription_tier or "free"
-    if tier not in MONTHLY_CREDIT_ALLOCATIONS:
-        raise HTTPException(
-            status_code=403,
-            detail="Credit packs are available on paid subscription tiers.",
-        )
-    pack = max(1, int(settings.stripe_credit_pack_credits))
-    success = f"{settings.frontend_url.rstrip('/')}/?checkout=pack_success"
-    cancel = f"{settings.frontend_url.rstrip('/')}/?checkout=pack_cancel"
-
-    session = stripe.checkout.Session.create(
-        mode="payment",
-        line_items=[{"price": settings.stripe_price_credit_pack, "quantity": 1}],
-        success_url=_stripe_checkout_success_url(success),
-        cancel_url=cancel,
-        client_reference_id=str(current_user.id),
-        metadata={
-            "user_id": str(current_user.id),
-            "credit_pack_credits": str(pack),
         },
         **_checkout_customer_kwargs(current_user),
     )
@@ -178,19 +184,130 @@ def _user_from_metadata(meta: dict[str, Any], db: Session) -> User | None:
         return None
 
 
-def _apply_subscription_fields(user: User, subscription: dict[str, Any], db: Session) -> None:
+def _stripe_event_to_dict(event: Any) -> dict[str, Any]:
+    """``construct_event`` may return a dict or a StripeObject depending on SDK version."""
+    if isinstance(event, dict):
+        return event
+    for name in ("to_dict_recursive", "to_dict"):
+        fn = getattr(event, name, None)
+        if callable(fn):
+            try:
+                out = fn()
+                if isinstance(out, dict):
+                    return out
+            except Exception as e:
+                logger.debug("Stripe event to_dict %s failed: %s", name, e)
+                continue
+    try:
+        return dict(event)  # type: ignore[arg-type]
+    except Exception:
+        logger.warning("Stripe webhook event could not be converted to dict: %s", type(event))
+        return {}
+
+
+def _user_from_checkout_session(obj: dict[str, Any], db: Session) -> User | None:
+    """Resolve CompareIntel user from Checkout Session (metadata, client_reference_id, email)."""
+    meta = obj.get("metadata") or {}
+    if not isinstance(meta, dict):
+        meta = {}
+    user = _user_from_metadata(meta, db)
+    if user:
+        return user
+    cref = obj.get("client_reference_id")
+    if cref is not None and str(cref).strip():
+        try:
+            uid_int = int(str(cref).strip())
+            u = db.query(User).filter(User.id == uid_int).first()
+            if u:
+                return u
+        except (TypeError, ValueError):
+            pass
+    email: str | None = None
+    cd = obj.get("customer_details")
+    if isinstance(cd, dict):
+        e = cd.get("email")
+        if isinstance(e, str) and e.strip():
+            email = e.strip()
+    if not email and isinstance(obj.get("customer_email"), str):
+        email = obj["customer_email"].strip()
+    if email:
+        em = email.lower()
+        u = db.query(User).filter(func.lower(User.email) == em).first()
+        if u:
+            return u
+    return None
+
+
+def _tier_from_subscription_prices(subscription: dict[str, Any]) -> str | None:
+    """Map Stripe recurring price id on the subscription to CompareIntel tier."""
+    price_id_to_tier: list[tuple[str | None, str]] = [
+        (settings.stripe_price_starter, "starter"),
+        (settings.stripe_price_starter_plus, "starter_plus"),
+        (settings.stripe_price_pro, "pro"),
+        (settings.stripe_price_pro_plus, "pro_plus"),
+    ]
+    items = subscription.get("items")
+    if not isinstance(items, dict):
+        return None
+    for line in items.get("data") or []:
+        if not isinstance(line, dict):
+            continue
+        price = line.get("price")
+        pid: str | None
+        if isinstance(price, str):
+            pid = price
+        elif isinstance(price, dict):
+            p = price.get("id")
+            pid = p if isinstance(p, str) else None
+        else:
+            pid = None
+        if not pid:
+            continue
+        for configured, tier in price_id_to_tier:
+            if configured and pid == configured:
+                return tier
+    return None
+
+
+def _resolve_paid_tier(
+    subscription: dict[str, Any],
+    *,
+    tier_hint: str | None,
+    user: User,
+) -> str:
+    """Never keep ``free`` when we are persisting an active Stripe subscription."""
+    sm = subscription.get("metadata") or {}
+    raw = sm.get("tier")
+    if isinstance(raw, str) and raw in MONTHLY_CREDIT_ALLOCATIONS:
+        return raw
+    if isinstance(tier_hint, str) and tier_hint in MONTHLY_CREDIT_ALLOCATIONS:
+        return tier_hint
+    from_price = _tier_from_subscription_prices(subscription)
+    if from_price:
+        return from_price
+    existing = user.subscription_tier
+    if isinstance(existing, str) and existing in MONTHLY_CREDIT_ALLOCATIONS:
+        return existing
+    return "starter"
+
+
+def _apply_subscription_fields(
+    user: User,
+    subscription: dict[str, Any],
+    db: Session,
+    *,
+    tier_hint: str | None = None,
+) -> None:
     """Persist tier, subscription id, and billing period boundaries (no credit allocation)."""
-    tier = (subscription.get("metadata") or {}).get("tier") or user.subscription_tier
-    if tier not in MONTHLY_CREDIT_ALLOCATIONS:
-        tier = user.subscription_tier or "starter"
+    tier = _resolve_paid_tier(subscription, tier_hint=tier_hint, user=user)
     user.subscription_tier = tier
     user.stripe_subscription_id = subscription.get("id")
-    cps = subscription.get("current_period_start")
-    cpe = subscription.get("current_period_end")
-    if cps:
-        user.billing_period_start = datetime.fromtimestamp(int(cps), tz=UTC)
-    if cpe:
-        user.billing_period_end = datetime.fromtimestamp(int(cpe), tz=UTC)
+    cps = _unix_ts_or_none(subscription.get("current_period_start"))
+    cpe = _unix_ts_or_none(subscription.get("current_period_end"))
+    if cps is not None:
+        user.billing_period_start = datetime.fromtimestamp(cps, tz=UTC)
+    if cpe is not None:
+        user.billing_period_end = datetime.fromtimestamp(cpe, tz=UTC)
         user.credits_reset_at = user.billing_period_end
     user.subscription_status = "active"
     db.add(user)
@@ -204,7 +321,7 @@ def _allocate_for_paid_cycle(user_id: int, tier: str, db: Session) -> None:
 
 @router.post("/billing/webhooks/stripe")
 async def stripe_webhook(request: Request, db: Session = Depends(get_db)) -> dict[str, str]:
-    """Verify signature and apply subscription / pack events."""
+    """Verify signature and apply subscription events."""
     if not settings.stripe_webhook_secret:
         raise HTTPException(status_code=422, detail="Stripe webhooks are not configured.")
     payload = await request.body()
@@ -214,65 +331,123 @@ async def stripe_webhook(request: Request, db: Session = Depends(get_db)) -> dic
 
     stripe = _require_stripe()
     try:
-        event = stripe.Webhook.construct_event(payload, sig_header, settings.stripe_webhook_secret)
+        raw_event = stripe.Webhook.construct_event(
+            payload, sig_header, settings.stripe_webhook_secret
+        )
     except ValueError:
         raise HTTPException(status_code=400, detail="Invalid webhook payload") from None
-    except stripe.error.SignatureVerificationError:
+    except SignatureVerificationError:
         raise HTTPException(status_code=400, detail="Invalid webhook signature") from None
+
+    event = _stripe_event_to_dict(raw_event)
 
     eid = event.get("id")
     if eid and db.query(ProcessedStripeWebhook).filter_by(stripe_event_id=eid).first():
         return {"status": "ok"}
 
     etype = event.get("type")
-    obj = event.get("data", {}).get("object") or {}
+    obj = _event_data_object(event)
 
     try:
         if etype == "checkout.session.completed":
             meta = obj.get("metadata") or {}
-            user = _user_from_metadata(meta, db)
+            if not isinstance(meta, dict):
+                meta = {}
+            user = _user_from_checkout_session(obj, db)
             if not user:
-                logger.warning("checkout.session.completed: no user for metadata %s", meta)
+                logger.warning(
+                    "checkout.session.completed: could not resolve user metadata=%s "
+                    "client_reference_id=%s customer_email=%s",
+                    meta,
+                    obj.get("client_reference_id"),
+                    obj.get("customer_email"),
+                )
             else:
-                if obj.get("customer"):
-                    user.stripe_customer_id = obj["customer"]
-                pack = meta.get("credit_pack_credits")
-                if pack:
-                    add_purchased_credits(
-                        user.id,
-                        int(pack),
-                        db,
-                        description="Credit pack (Stripe checkout)",
-                    )
-                if obj.get("mode") == "subscription" and obj.get("subscription"):
-                    sub = stripe.Subscription.retrieve(obj["subscription"])
-                    _apply_subscription_fields(user, sub.to_dict(), db)
-                elif not pack:
+                cust_id = _stripe_expandable_id(obj.get("customer"))
+                if cust_id:
+                    user.stripe_customer_id = cust_id
+                mode_sub = obj.get("mode") == "subscription"
+                sub_raw = obj.get("subscription")
+                sub_id = _stripe_expandable_id(sub_raw)
+                if mode_sub and sub_id:
+                    sub_dict: dict[str, Any] | None = None
+                    if (
+                        isinstance(sub_raw, dict)
+                        and _unix_ts_or_none(sub_raw.get("current_period_start")) is not None
+                    ):
+                        sub_dict = sub_raw
+                    else:
+                        try:
+                            sub = stripe.Subscription.retrieve(sub_id, expand=["items.data.price"])
+                            sub_dict = sub.to_dict()
+                        except StripeError as exc:
+                            logger.warning(
+                                "checkout.session.completed: Subscription.retrieve(%s) failed: %s",
+                                sub_id,
+                                exc,
+                            )
+                    if sub_dict is not None:
+                        session_tier = meta.get("tier")
+                        th = (
+                            session_tier
+                            if isinstance(session_tier, str)
+                            and session_tier in MONTHLY_CREDIT_ALLOCATIONS
+                            else None
+                        )
+                        _apply_subscription_fields(user, sub_dict, db, tier_hint=th)
+                    else:
+                        tier = meta.get("tier")
+                        if isinstance(tier, str) and tier in MONTHLY_CREDIT_ALLOCATIONS:
+                            user.subscription_tier = tier
+                            user.stripe_subscription_id = sub_id
+                            user.subscription_status = "active"
+                        db.add(user)
+                        db.commit()
+                elif cust_id:
                     db.add(user)
                     db.commit()
         elif etype == "invoice.paid":
-            sub_id = obj.get("subscription")
-            cust = obj.get("customer")
+            sub_id = _stripe_expandable_id(obj.get("subscription"))
+            cust = _stripe_expandable_id(obj.get("customer"))
             user = None
             if cust:
                 user = db.query(User).filter(User.stripe_customer_id == cust).first()
             if not user and sub_id:
                 user = db.query(User).filter(User.stripe_subscription_id == sub_id).first()
             if user and sub_id:
-                sub = stripe.Subscription.retrieve(sub_id)
-                sub_d = sub.to_dict()
-                _apply_subscription_fields(user, sub_d, db)
-                db.refresh(user)
-                tier = user.subscription_tier or "starter"
-                if tier in MONTHLY_CREDIT_ALLOCATIONS:
-                    _allocate_for_paid_cycle(user.id, tier, db)
+                try:
+                    sub = stripe.Subscription.retrieve(sub_id, expand=["items.data.price"])
+                    sub_d = sub.to_dict()
+                except StripeError as exc:
+                    logger.warning(
+                        "invoice.paid: Subscription.retrieve(%s) failed: %s", sub_id, exc
+                    )
+                    sub_d = None
+                if sub_d is not None:
+                    _apply_subscription_fields(user, sub_d, db)
+                    db.refresh(user)
+                    tier = (
+                        user.subscription_tier
+                        if user.subscription_tier in MONTHLY_CREDIT_ALLOCATIONS
+                        else "starter"
+                    )
+                    if tier in MONTHLY_CREDIT_ALLOCATIONS:
+                        _allocate_for_paid_cycle(user.id, tier, db)
         elif etype == "customer.subscription.updated":
             meta = obj.get("metadata") or {}
+            if not isinstance(meta, dict):
+                meta = {}
             user = _user_from_metadata(meta, db)
             if not user and obj.get("id"):
                 user = db.query(User).filter(User.stripe_subscription_id == obj["id"]).first()
             if user:
-                _apply_subscription_fields(user, obj, db)
+                m_tier = meta.get("tier")
+                th = (
+                    m_tier
+                    if isinstance(m_tier, str) and m_tier in MONTHLY_CREDIT_ALLOCATIONS
+                    else None
+                )
+                _apply_subscription_fields(user, obj, db, tier_hint=th)
         elif etype == "customer.subscription.deleted":
             user = None
             if obj.get("id"):

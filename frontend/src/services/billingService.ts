@@ -15,14 +15,6 @@ export async function createSubscriptionCheckoutSession(
   return data.url
 }
 
-export async function createCreditPackCheckoutSession(): Promise<string> {
-  const { data } = await apiClient.post<{ url: string }>(
-    '/billing/create-credit-pack-checkout-session',
-    {}
-  )
-  return data.url
-}
-
 export async function createBillingPortalSession(): Promise<string> {
   const { data } = await apiClient.post<{ url: string }>('/billing/create-portal-session', {})
   return data.url

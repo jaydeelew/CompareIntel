@@ -53,6 +53,7 @@ import {
 } from '../types'
 import { generateBrowserFingerprint } from '../utils'
 import { removePlaceholderFromInput } from '../utils/attachmentInputUtils'
+import { BILLING_UPDATED_EVENT } from '../utils/billingSync'
 import { isErrorMessage } from '../utils/error'
 import {
   getAllKnownAspectRatios,
@@ -129,6 +130,24 @@ export function MainPage() {
   const imageConflictImpossibleDismissedKeyRef = useRef<string | null>(null)
 
   const { userLocation } = useGeolocation({ isAuthenticated, user })
+
+  /** Avoids re-running fingerprint + models init on every /auth/me object identity change. */
+  const authBillingInitKey = useMemo(() => {
+    if (!isAuthenticated || !user) return ''
+    return [
+      user.id,
+      user.subscription_tier,
+      user.monthly_credits_allocated ?? '',
+      user.billing_period_start ?? '',
+    ].join('|')
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- billing primitives only; omit `user` object to avoid refreshUser() identity churn
+  }, [
+    isAuthenticated,
+    user?.id,
+    user?.subscription_tier,
+    user?.monthly_credits_allocated,
+    user?.billing_period_start,
+  ])
 
   const { expandFiles, extractFileContentForStorage, getAttachedImagesForApi } = useFileHandling()
 
@@ -1389,7 +1408,26 @@ export function MainPage() {
     initFingerprint()
 
     fetchModelsRef.current()
-  }, [isAuthenticated, user, setBrowserFingerprint, setError, setUsageCount])
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- keyed by authBillingInitKey; omit `user` to avoid refreshUser() identity-only churn
+  }, [isAuthenticated, authBillingInitKey, setBrowserFingerprint, setError, setUsageCount])
+
+  useEffect(() => {
+    if (!isAuthenticated) return
+    const onBillingUpdated = () => {
+      void (async () => {
+        try {
+          const balance = await getCreditBalance()
+          setCreditBalance(balance)
+          setUsageCount(balance.credits_used_this_period ?? 0)
+        } catch (error) {
+          if (isCancellationError(error)) return
+          logger.error('Failed to refresh credit balance after billing update:', error)
+        }
+      })()
+    }
+    window.addEventListener(BILLING_UPDATED_EVENT, onBillingUpdated)
+    return () => window.removeEventListener(BILLING_UPDATED_EVENT, onBillingUpdated)
+  }, [isAuthenticated, setUsageCount])
 
   // Load default selection
   useEffect(() => {

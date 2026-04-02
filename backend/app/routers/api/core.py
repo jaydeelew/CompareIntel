@@ -616,9 +616,7 @@ async def compare_stream(
             tier_cfg = SUBSCRIPTION_CONFIG.get(tier_name) or {}
             overage_hint = ""
             if tier_cfg.get("overage_allowed"):
-                overage_hint = (
-                    " Use Account → Upgrade plan to buy credit packs or change your subscription."
-                )
+                overage_hint = " Use Account → Upgrade plan to change your plan or use metered overage when enabled."
             if tier_name in ["unregistered", "free"]:
                 error_msg = (
                     f"Not enough credits for this comparison (need at least {need} credits). "

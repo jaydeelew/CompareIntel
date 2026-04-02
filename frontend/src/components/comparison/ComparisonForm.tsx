@@ -312,7 +312,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
         } else if (button === 'submit') {
           if (creditsRemaining <= 0) {
             message =
-              'You have run out of credits. Open the account menu → Upgrade plan to subscribe, buy a credit pack (paid tiers), or wait for your balance to reset.'
+              'You have run out of credits. Open the account menu → Upgrade plan to subscribe, use metered overage on paid tiers when enabled, or wait for your balance to reset.'
           } else if (isLoading) {
             message =
               'Please wait for the current comparison to complete before submitting a new one.'

@@ -16,7 +16,7 @@ export function useHideHeroUtilityTiles(): boolean {
   const [hide, setHide] = useState(false)
 
   useEffect(() => {
-    if (!user) {
+    if (!user?.id) {
       setHide(false)
       return
     }
@@ -42,7 +42,7 @@ export function useHideHeroUtilityTiles(): boolean {
       cancelled = true
       window.removeEventListener(USER_PREFERENCES_UPDATED_EVENT, onUpdated)
     }
-  }, [user])
+  }, [user?.id])
 
   return hide
 }
