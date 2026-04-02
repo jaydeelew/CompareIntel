@@ -672,9 +672,11 @@
     var(--shadow-glow-md);
 }
 
+/* Keep focus ring + glow; transform comes from .pricing-tier:hover */
 .pricing-tier-current:hover {
-  border-color: var(--primary-color);
-  transform: translateY(-4px) scale(1.01);
+  box-shadow:
+    0 0 0 3px color-mix(in srgb, var(--primary-color) 28%, transparent),
+    var(--shadow-glow-md);
 }
 
 /* Shared top block so current (banner) and non-current (spacer) cards align */
