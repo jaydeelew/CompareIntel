@@ -146,7 +146,7 @@ function CapabilityTile({
                 muted
                 loop
                 playsInline
-                preload="none"
+                preload="auto"
                 aria-label={`${title} example`}
               />
             ) : (
