@@ -1042,7 +1042,20 @@ export const UserMenu: React.FC = () => {
                 </div>
 
                 <div className="pricing-tiers">
-                  <div className="pricing-tier tier-starter">
+                  <div
+                    className={`pricing-tier tier-starter${user.subscription_tier === 'starter' ? ' pricing-tier-current' : ''}`}
+                  >
+                    <div
+                      className={`pricing-tier-top-slot ${
+                        user.subscription_tier === 'starter'
+                          ? 'pricing-tier-current-banner'
+                          : 'pricing-tier-top-align-spacer'
+                      }`}
+                      role={user.subscription_tier === 'starter' ? 'status' : undefined}
+                      aria-hidden={user.subscription_tier !== 'starter'}
+                    >
+                      Your current plan
+                    </div>
                     <div className="tier-header">
                       <h3 className="tier-name">Starter</h3>
                       <div className="tier-badge tier-badge-starter">POPULAR</div>
@@ -1083,7 +1096,7 @@ export const UserMenu: React.FC = () => {
                       <p style={{ fontWeight: 600, margin: 0 }}>${TIER_PRICING.starter}/month</p>
                       <button
                         type="button"
-                        className="modal-button-primary"
+                        className="modal-button-primary tier-checkout-button"
                         style={{ width: '100%', marginTop: '0.5rem' }}
                         disabled={billingBusy !== null || user.subscription_tier === 'starter'}
                         onClick={() => subscribeTier('starter')}
@@ -1097,7 +1110,20 @@ export const UserMenu: React.FC = () => {
                     </div>
                   </div>
 
-                  <div className="pricing-tier tier-starter">
+                  <div
+                    className={`pricing-tier tier-starter${user.subscription_tier === 'starter_plus' ? ' pricing-tier-current' : ''}`}
+                  >
+                    <div
+                      className={`pricing-tier-top-slot ${
+                        user.subscription_tier === 'starter_plus'
+                          ? 'pricing-tier-current-banner'
+                          : 'pricing-tier-top-align-spacer'
+                      }`}
+                      role={user.subscription_tier === 'starter_plus' ? 'status' : undefined}
+                      aria-hidden={user.subscription_tier !== 'starter_plus'}
+                    >
+                      Your current plan
+                    </div>
                     <div className="tier-header">
                       <h3 className="tier-name">Starter+</h3>
                     </div>
@@ -1139,7 +1165,7 @@ export const UserMenu: React.FC = () => {
                       </p>
                       <button
                         type="button"
-                        className="modal-button-primary"
+                        className="modal-button-primary tier-checkout-button"
                         style={{ width: '100%', marginTop: '0.5rem' }}
                         disabled={billingBusy !== null || user.subscription_tier === 'starter_plus'}
                         onClick={() => subscribeTier('starter_plus')}
@@ -1153,10 +1179,22 @@ export const UserMenu: React.FC = () => {
                     </div>
                   </div>
 
-                  <div className="pricing-tier tier-pro">
+                  <div
+                    className={`pricing-tier tier-pro${user.subscription_tier === 'pro' ? ' pricing-tier-current' : ''}`}
+                  >
+                    <div
+                      className={`pricing-tier-top-slot ${
+                        user.subscription_tier === 'pro'
+                          ? 'pricing-tier-current-banner'
+                          : 'pricing-tier-top-align-spacer'
+                      }`}
+                      role={user.subscription_tier === 'pro' ? 'status' : undefined}
+                      aria-hidden={user.subscription_tier !== 'pro'}
+                    >
+                      Your current plan
+                    </div>
                     <div className="tier-header">
                       <h3 className="tier-name">Pro</h3>
-                      <div className="tier-badge tier-badge-pro">BEST VALUE</div>
                     </div>
                     <div className="tier-features">
                       <div className="feature-item">
@@ -1192,7 +1230,7 @@ export const UserMenu: React.FC = () => {
                       <p style={{ fontWeight: 600, margin: 0 }}>${TIER_PRICING.pro}/month</p>
                       <button
                         type="button"
-                        className="modal-button-primary"
+                        className="modal-button-primary tier-checkout-button"
                         style={{ width: '100%', marginTop: '0.5rem' }}
                         disabled={billingBusy !== null || user.subscription_tier === 'pro'}
                         onClick={() => subscribeTier('pro')}
@@ -1206,9 +1244,23 @@ export const UserMenu: React.FC = () => {
                     </div>
                   </div>
 
-                  <div className="pricing-tier tier-pro">
+                  <div
+                    className={`pricing-tier tier-pro${user.subscription_tier === 'pro_plus' ? ' pricing-tier-current' : ''}`}
+                  >
+                    <div
+                      className={`pricing-tier-top-slot ${
+                        user.subscription_tier === 'pro_plus'
+                          ? 'pricing-tier-current-banner'
+                          : 'pricing-tier-top-align-spacer'
+                      }`}
+                      role={user.subscription_tier === 'pro_plus' ? 'status' : undefined}
+                      aria-hidden={user.subscription_tier !== 'pro_plus'}
+                    >
+                      Your current plan
+                    </div>
                     <div className="tier-header">
                       <h3 className="tier-name">Pro+</h3>
+                      <div className="tier-badge tier-badge-pro">BEST VALUE</div>
                     </div>
                     <div className="tier-features">
                       <div className="feature-item">
@@ -1246,7 +1298,7 @@ export const UserMenu: React.FC = () => {
                       <p style={{ fontWeight: 600, margin: 0 }}>${TIER_PRICING.pro_plus}/month</p>
                       <button
                         type="button"
-                        className="modal-button-primary"
+                        className="modal-button-primary tier-checkout-button"
                         style={{ width: '100%', marginTop: '0.5rem' }}
                         disabled={billingBusy !== null || user.subscription_tier === 'pro_plus'}
                         onClick={() => subscribeTier('pro_plus')}
