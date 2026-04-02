@@ -756,6 +756,16 @@
         "knowledge_cutoff": "August 2025"
       },
       {
+        "id": "openai/gpt-5.2-codex",
+        "name": "Gpt 5.2 Codex",
+        "description": "GPT-5.2-Codex is an upgraded version of GPT-5.1-Codex optimized for software engineering and coding workflows.",
+        "category": "Language",
+        "provider": "OpenAI",
+        "supports_web_search": true,
+        "supports_image_generation": false,
+        "knowledge_cutoff": null
+      },
+      {
         "id": "openai/gpt-5.2-pro",
         "name": "Gpt 5.2 Pro",
         "description": "GPT-5.2 Pro is OpenAI's most advanced model, offering major improvements in agentic coding and long context performance over GPT-5 Pro.",
