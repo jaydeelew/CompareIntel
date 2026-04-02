@@ -59,12 +59,13 @@ export const ImageGeneration: React.FC = () => {
               <tbody>
                 <tr>
                   <td>
-                    <strong>Token usage</strong> (API reports prompt + completion tokens)
+                    <strong>Usage billed as tokens</strong> (API returns cost or we estimate USD
+                    from list prices × tokens)
                   </td>
                   <td>
-                    Same rule as text: roughly <strong>1 credit per 1,000 effective tokens</strong>,
-                    where effective = input tokens + (output × 2.5). Output counts more because it
-                    is usually costlier.
+                    Same as text: <strong>fractional credits = USD × credits per dollar</strong>{' '}
+                    (100 per $1 by default), combined with other models in the run, then rounded up
+                    to whole credits.
                   </td>
                 </tr>
                 <tr>

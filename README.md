@@ -353,17 +353,14 @@ Both prefixes currently route to the same v1 handlers.
 |------|-------|----------------------|----------------------|---------------------|
 | **Anonymous** | Free | 50/day | 3 | 2 |
 | **Free** | Free | 100/day | 3 | 3 |
-| **Starter** | TBD | 1,250/month | 6 | 10 |
-| **Starter+** | TBD | 2,500/month | 6 | 20 |
-| **Pro** | TBD | 5,000/month | 9 | 40 |
-| **Pro+** | TBD | 10,000/month | 12 | 80 |
+| **Starter** | $9/mo | 720/month | 6 | 10 |
+| **Starter+** | $19/mo | 1,600/month | 6 | 20 |
+| **Pro** | $39/mo | 3,300/month | 9 | 40 |
+| **Pro+** | $79/mo | 6,700/month | 12 | 80 |
 
 ### Credit System
 
-Credits are calculated based on token usage:
-- **1 credit = 1,000 effective tokens**
-- **Effective tokens = input_tokens + (output_tokens × 2.5)**
-- Average comparison: ~5 credits (mix of standard/extended/follow-ups)
+Credits follow **underlying API cost** (reported usage in USD), scaled by a fixed **credits per dollar** rate (see `CREDITS_PER_DOLLAR` in `backend/app/config/constants.py`, default 100 credits per $1). If the API does not report cost, USD is estimated from published per-token list prices; a legacy token-based estimate is used only when list pricing is missing. For a full description, see `docs/features/CREDIT_SYSTEM.md`.
 
 ---
 

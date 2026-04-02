@@ -74,7 +74,7 @@ Monthly pool numbers may be **recalibrated** after observing usage under cost-ba
 
 **UsageLog model:**
 
-- `input_tokens`, `output_tokens`, `effective_tokens`
+- `input_tokens`, `output_tokens`, `effective_tokens` (legacy tally for analytics / rare fallback path)
 - `credits_used` - Whole credits charged
 - `actual_cost` - USD attributed to the request
 

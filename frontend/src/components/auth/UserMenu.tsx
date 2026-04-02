@@ -1286,9 +1286,10 @@ export const UserMenu: React.FC = () => {
                     </p>
                   )}
                   <p className="pricing-notice">
-                    💡 <strong>How credits work:</strong> we convert provider cost (OpenRouter USD
-                    or list prices) into credits at a fixed rate. Multiple models in one comparison
-                    add up; we charge whole credits rounded up (at least 1 when anything succeeds).
+                    💡 <strong>How credits work:</strong> we convert provider-reported API cost in
+                    USD (or list prices) into credits at a fixed rate. Multiple models in one
+                    comparison add up; we charge whole credits rounded up (at least 1 when anything
+                    succeeds).
                   </p>
                   <div
                     style={{

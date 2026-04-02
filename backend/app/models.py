@@ -303,8 +303,10 @@ class UsageLog(Base):
     input_tokens = Column(Integer)  # Input tokens used
     output_tokens = Column(Integer)  # Output tokens used
     total_tokens = Column(Integer)  # Total tokens (input + output)
-    effective_tokens = Column(Integer)  # Effective tokens = input + (output × 2.5)
-    credits_used = Column(DECIMAL(10, 4))  # Credits used (effective_tokens / 1000)
+    effective_tokens = Column(Integer)  # Legacy tally input + (output × 2.5); billing is cost-based
+    credits_used = Column(
+        DECIMAL(10, 4)
+    )  # Whole credits charged (fractional USD × CREDITS_PER_DOLLAR, rounded)
     actual_cost = Column(DECIMAL(10, 4))  # Actual cost in USD from OpenRouter
 
     # Timestamp

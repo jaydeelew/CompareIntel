@@ -185,7 +185,7 @@ Some categories cannot be fully automated because their data sources don't expos
 - Use `%` for MRCR v2 / LongBench v2: `'MRCR v2 4-needle 256K (awesomeagents.ai): 98%.'`
 - Use `Elo` for arena rankings: `'Creative Writing Arena (kearai.com): 1478 Elo.'`
 - Use `/100` for normalized scores: `'MRCR 1M (llmdb.com): 93/100.'`
-- Use `$/1M tokens` for pricing: `'OpenRouter avg: $0.22/1M tokens.'`
+- Use `$/1M tokens` for pricing: `'Avg. $0.22/1M tokens.'`
 - Use `t/s` for throughput: `'LMSpeed (lmspeed.net): 1742 t/s.'`
 
 ## Image Generation Category

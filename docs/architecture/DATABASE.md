@@ -153,7 +153,7 @@ Detailed usage tracking for analytics and billing.
 | `input_tokens` | Integer | Total input tokens |
 | `output_tokens` | Integer | Total output tokens |
 | `total_tokens` | Integer | Combined tokens |
-| `effective_tokens` | Integer | Billing tokens (input + output×2.5) |
+| `effective_tokens` | Integer | Legacy token tally (input + output×2.5); billing is cost-based |
 | `credits_used` | DECIMAL(10,4) | Credits deducted |
 | `actual_cost` | DECIMAL(10,4) | Actual API cost |
 | `estimated_cost` | DECIMAL(10,4) | Estimated cost |
@@ -198,7 +198,7 @@ Monthly aggregated usage statistics for data retention.
 | `total_models_failed` | Integer | Failed responses |
 | `total_input_tokens` | BigInteger | Total input tokens |
 | `total_output_tokens` | BigInteger | Total output tokens |
-| `total_effective_tokens` | BigInteger | Total billing tokens |
+| `total_effective_tokens` | BigInteger | Sum of legacy effective-token tallies |
 | `avg_input_tokens` | DECIMAL | Average input tokens |
 | `avg_output_tokens` | DECIMAL | Average output tokens |
 | `avg_output_ratio` | DECIMAL | Output/input ratio |

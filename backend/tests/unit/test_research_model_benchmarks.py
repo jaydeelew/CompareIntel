@@ -167,21 +167,21 @@ class TestDetermineCategories:
         """Best value category only includes models under $1/1M tokens."""
         model = make_registry_model("test/cheap-model")
         pricing = {
-            "test/cheap-model": (0.61, "OpenRouter avg: $0.61/1M tokens."),
+            "test/cheap-model": (0.61, "Avg. $0.61/1M tokens."),
         }
         entries = determine_categories(
             "test/cheap-model", model, None, {}, openrouter_pricing=pricing
         )
         cost_eff = [e for e in entries if e["category_id"] == "cost-effective"]
         assert len(cost_eff) == 1
-        assert cost_eff[0]["evidence"] == "OpenRouter avg: $0.61/1M tokens."
+        assert cost_eff[0]["evidence"] == "Avg. $0.61/1M tokens."
 
     def test_cost_effective_excluded_at_or_above_one_dollar(self):
         """Models at $1/1M or above are excluded from Best value."""
         model = make_registry_model("test/expensive-model")
         for cost, evidence in [
-            (1.0, "OpenRouter avg: $1.00/1M tokens."),
-            (1.12, "OpenRouter avg: $1.12/1M tokens."),
+            (1.0, "Avg. $1.00/1M tokens."),
+            (1.12, "Avg. $1.12/1M tokens."),
         ]:
             pricing = {"test/expensive-model": (cost, evidence)}
             entries = determine_categories(
@@ -270,7 +270,7 @@ class TestParseRecommendationsTs:
               { id: 'cost-effective', label: 'Best value', description: 'D',
                 categoryInfoTooltip: 'Ranked by OpenRouter pricing. Lower = better.',
                 models: [
-                  { modelId: 'a/b', evidence: 'OpenRouter avg: $0.61/1M tokens.' },
+                  { modelId: 'a/b', evidence: 'Avg. $0.61/1M tokens.' },
                 ] },
             ]
         """)
@@ -340,8 +340,8 @@ class TestExtractPrimaryScore:
         assert extract_primary_score("medical", "HealthBench (OpenAI): 60%.") == 60.0
 
     def test_extracts_cost_effective_dollar_per_million(self):
-        assert extract_primary_score("cost-effective", "OpenRouter avg: $0.61/1M tokens.") == 0.61
-        assert extract_primary_score("cost-effective", "OpenRouter avg: $1.50/1M tokens.") == 1.5
+        assert extract_primary_score("cost-effective", "Avg. $0.61/1M tokens.") == 0.61
+        assert extract_primary_score("cost-effective", "Avg. $1.50/1M tokens.") == 1.5
 
     def test_extracts_fast_tokens_per_second(self):
         assert extract_primary_score("fast", "LMSpeed (lmspeed.net): 1742 t/s.") == 1742.0
@@ -407,8 +407,8 @@ class TestSortCategoryByScores:
             "label": "Best value",
             "description": "D",
             "models": [
-                {"modelId": "a/expensive", "evidence": "OpenRouter avg: $2.00/1M tokens."},
-                {"modelId": "b/cheap", "evidence": "OpenRouter avg: $0.61/1M tokens."},
+                {"modelId": "a/expensive", "evidence": "Avg. $2.00/1M tokens."},
+                {"modelId": "b/cheap", "evidence": "Avg. $0.61/1M tokens."},
             ],
         }
         sort_category_by_scores(cat, None)
@@ -454,7 +454,7 @@ class TestRebuildCategoriesTs:
               { id: 'cost-effective', label: 'Best value', description: 'D',
                 categoryInfoTooltip: 'Ranked by OpenRouter pricing.',
                 models: [
-                  { modelId: 'a/b', evidence: 'OpenRouter avg: $0.61/1M tokens.' },
+                  { modelId: 'a/b', evidence: 'Avg. $0.61/1M tokens.' },
                 ] },
             ]
         """)
