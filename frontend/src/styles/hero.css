@@ -730,6 +730,7 @@
 }
 
 .capability-tile-back-image-wrap {
+  position: relative;
   width: 100%;
   flex: 1;
   min-height: 0;
@@ -742,6 +743,21 @@
   overflow: hidden;
 }
 
+/* Covers <video> until first frame is decoded — the video layer often paints white under 3D transforms. */
+.capability-tile-back-image-wrap--video-pending::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  border-radius: inherit;
+  background: rgba(15, 23, 42, 0.95);
+  pointer-events: none;
+}
+
+[data-theme='light'] .capability-tile-back-image-wrap--video-pending::after {
+  background: rgba(241, 245, 249, 0.85);
+}
+
 .capability-tile-back-image {
   width: 100%;
   height: 100%;
@@ -750,6 +766,14 @@
   object-fit: contain;
   /* Matches .capability-tile-back-image-wrap so letterboxing / pre-first-frame paint is not bright white */
   background: rgba(15, 23, 42, 0.95);
+}
+
+/* Stable compositing layer during preserve-3d flip (reduces blank/white flashes in WebKit/Blink). */
+video.capability-tile-back-video {
+  position: relative;
+  z-index: 0;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
 }
 
 /* Natural Language and Formatted Math: darken screenshots to match Code Generation tile */

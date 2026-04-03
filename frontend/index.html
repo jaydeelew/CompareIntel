@@ -17,6 +17,11 @@
        Chrome prefers ICO/PNG over SVG when both are linked, so we omit ICO and PNG rel=icon to ensure the tab
        uses our updated design. brand/favicon.ico and large PNGs remain on disk for crawlers (GET /favicon.ico) and PWA manifest. -->
   <link rel="icon" type="image/svg+xml" href="/brand/tab.svg" />
+  <!-- Hero capability demos: warm cache before React (query must match CAPABILITY_VIDEO_CACHE_BUST in Hero.tsx) -->
+  <link rel="preload" href="/videos/natural_language.mp4?v=2" as="video" type="video/mp4" />
+  <link rel="preload" href="/videos/code-generation.mp4?v=2" as="video" type="video/mp4" />
+  <link rel="preload" href="/videos/formatted-math.mp4?v=2" as="video" type="video/mp4" />
+  <link rel="preload" href="/videos/image-generation.mp4?v=2" as="video" type="video/mp4" />
   <link rel="apple-touch-icon" type="image/svg+xml" href="/brand/logo.svg" />
   <link rel="apple-touch-icon" sizes="180x180" href="/brand/apple-touch-icon-180.png" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />

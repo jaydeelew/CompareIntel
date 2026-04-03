@@ -66,6 +66,8 @@ function CapabilityTile({
   const tileRef = useRef<HTMLDivElement>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
   const prevFlipped = useRef(isFlipped)
+  /** False until the browser has decoded at least one frame; hides the video's default blank/white paint. */
+  const [videoHasFrame, setVideoHasFrame] = useState(false)
 
   useEffect(() => {
     if (prevFlipped.current && !isFlipped) {
@@ -73,6 +75,34 @@ function CapabilityTile({
     }
     prevFlipped.current = isFlipped
   }, [isFlipped])
+
+  useEffect(() => {
+    setVideoHasFrame(false)
+    const v = videoRef.current
+    if (!v || !backVideo) return
+    let cancelled = false
+    const markReady = () => {
+      if (cancelled) return
+      try {
+        v.currentTime = 0
+      } catch {
+        /* ignore */
+      }
+      setVideoHasFrame(true)
+    }
+    v.addEventListener('loadeddata', markReady)
+    v.addEventListener('canplay', markReady)
+    v.addEventListener('error', markReady)
+    if (v.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) {
+      markReady()
+    }
+    return () => {
+      cancelled = true
+      v.removeEventListener('loadeddata', markReady)
+      v.removeEventListener('canplay', markReady)
+      v.removeEventListener('error', markReady)
+    }
+  }, [backVideo])
 
   useEffect(() => {
     const v = videoRef.current
@@ -137,12 +167,16 @@ function CapabilityTile({
               </StyledTooltip>
             )}
           </div>
-          <div className="capability-tile-back-image-wrap">
+          <div
+            className={`capability-tile-back-image-wrap${
+              backVideo && !videoHasFrame ? ' capability-tile-back-image-wrap--video-pending' : ''
+            }`}
+          >
             {backVideo ? (
               <video
                 ref={videoRef}
                 src={backVideo}
-                className="capability-tile-back-image"
+                className="capability-tile-back-image capability-tile-back-video"
                 muted
                 loop
                 playsInline
