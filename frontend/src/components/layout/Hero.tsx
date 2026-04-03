@@ -68,6 +68,8 @@ function CapabilityTile({
   const prevFlipped = useRef(isFlipped)
   /** False until the browser has decoded at least one frame; hides the video's default blank/white paint. */
   const [videoHasFrame, setVideoHasFrame] = useState(false)
+  /** `canplay` fires repeatedly during playback; priming must run once or `currentTime = 0` would reset the video. */
+  const videoPrimedRef = useRef(false)
 
   useEffect(() => {
     if (prevFlipped.current && !isFlipped) {
@@ -78,11 +80,16 @@ function CapabilityTile({
 
   useEffect(() => {
     setVideoHasFrame(false)
+    videoPrimedRef.current = false
     const v = videoRef.current
     if (!v || !backVideo) return
     let cancelled = false
     const markReady = () => {
-      if (cancelled) return
+      if (cancelled || videoPrimedRef.current) return
+      videoPrimedRef.current = true
+      v.removeEventListener('loadeddata', markReady)
+      v.removeEventListener('canplay', markReady)
+      v.removeEventListener('error', markReady)
       try {
         v.currentTime = 0
       } catch {
