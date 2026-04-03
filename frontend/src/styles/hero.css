@@ -592,6 +592,25 @@
     inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
+/* Firefox: scale on the wrapper keeps video sharp. Chromium animating wrapper scale(3)
+   rasterizes the subtree during the transition (soft video until the animation ends). */
+@supports (-moz-appearance: none) {
+  @media (min-width: 901px) {
+    .capability-tile-wrapper {
+      transition: transform 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .capability-tile-wrapper:has(.flipped) {
+      transform: scale(3);
+      transform-origin: center center;
+    }
+  }
+
+  .capability-tile.flipped {
+    transform: rotateY(180deg);
+  }
+}
+
 .hero-capabilities.lightbox-open .capability-tile.flipped {
   visibility: hidden;
 }
@@ -2321,6 +2340,19 @@ video.capability-tile-image-lightbox-img {
 
   .hero-capabilities .capability-tile-wrapper:last-child:has(.flipped) {
     transform: translateX(calc(-1 * var(--_shift)));
+  }
+}
+
+/* Firefox: outer-tile shift must include wrapper scale (tile has no scale(3) here). */
+@supports (-moz-appearance: none) {
+  @media (max-width: 1280px) and (min-width: 901px) {
+    .hero-capabilities .capability-tile-wrapper:first-child:has(.flipped) {
+      transform: translateX(var(--_shift)) scale(3);
+    }
+
+    .hero-capabilities .capability-tile-wrapper:last-child:has(.flipped) {
+      transform: translateX(calc(-1 * var(--_shift))) scale(3);
+    }
   }
 }
 
