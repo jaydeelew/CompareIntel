@@ -7,7 +7,7 @@
  */
 
 const BASE_URL = 'https://compareintel.com'
-const DEFAULT_OG_IMAGE = 'https://compareintel.com/CompareIntel-social.png'
+const DEFAULT_OG_IMAGE = 'https://compareintel.com/brand/CompareIntel-social.png'
 
 interface PageMeta {
   title: string
