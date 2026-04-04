@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 
 import { usePWAInstall } from '../../contexts/PWAInstallContext'
@@ -399,11 +399,27 @@ export function Navigation({
 
   const shellClass = `app-header-shell${folded ? ' app-header-shell--folded' : ''}`
 
+  /**
+   * Folded shell is visually collapsed (`pointer-events: none`). Use the `inert` property so
+   * focus cannot remain on controls inside (e.g. user avatar) — `aria-hidden` alone does not
+   * move focus and triggers browser a11y warnings when a descendant stays focused.
+   */
+  useLayoutEffect(() => {
+    const shell = shellRef.current
+    if (!shell) return
+    shell.inert = folded
+    if (folded) {
+      const active = document.activeElement
+      if (active instanceof HTMLElement && shell.contains(active)) {
+        active.blur()
+      }
+    }
+  }, [folded])
+
   return (
     <div
       ref={shellRef}
       className={shellClass}
-      aria-hidden={folded ? true : undefined}
       onPointerDown={handleNavActivity}
       onFocus={handleNavActivity}
       onKeyDown={handleNavActivity}
