@@ -46,10 +46,9 @@
   margin-right: var(--spacing-xs);
 }
 
-/* Adjust app header when mock mode banner is visible */
-.app:has(.mock-mode-banner) .app-header {
+/* Sticky shell sits below mock mode banner */
+.app:has(.mock-mode-banner) .app-header-shell {
   top: 3.5rem;
-  /* Position navbar below mock mode banner */
 }
 
 /* Ensure no gap - hero section starts immediately below navbar when mock mode banner is visible */
