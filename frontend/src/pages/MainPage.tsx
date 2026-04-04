@@ -362,6 +362,13 @@ export function MainPage() {
     authLoading,
   })
 
+  /** Once the welcome modal was shown, Navigation can tell “Start” dismiss from “never shown”. */
+  const welcomeModalEverShownRef = useRef(false)
+  if (showWelcomeModal && !isAuthenticated) {
+    welcomeModalEverShownRef.current = true
+  }
+  const [welcomeSkipFoldNonce, setWelcomeSkipFoldNonce] = useState(0)
+
   // Trial modal state (not part of tutorial)
   const [showTrialWelcomeModal, setShowTrialWelcomeModal] = useState(false)
   const [pendingTrialModalAfterVerification, setPendingTrialModalAfterVerification] =
@@ -2252,6 +2259,9 @@ export function MainPage() {
           onSignInClick={openLogin}
           onSignUpClick={openRegister}
           hideNavThemeToggleOnMobile
+          tutorialWelcomeModalOpen={showWelcomeModal && !isAuthenticated}
+          welcomeModalEverShown={welcomeModalEverShownRef.current}
+          welcomeSkipFoldNonce={welcomeSkipFoldNonce}
         />
 
         <ModalManager
@@ -2585,6 +2595,7 @@ export function MainPage() {
           setTutorialHasCompletedComparison={setTutorialHasCompletedComparison}
           setTutorialHasBreakout={setTutorialHasBreakout}
           setTutorialHasSavedSelection={setTutorialHasSavedSelection}
+          onTutorialWelcomeSkipped={() => setWelcomeSkipFoldNonce(n => n + 1)}
         />
       </>
     </div>

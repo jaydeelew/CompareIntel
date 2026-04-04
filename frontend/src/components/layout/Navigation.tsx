@@ -43,6 +43,12 @@ interface NavigationProps {
    * the main page shows it in the Hero instead. Omit on routes without Hero (e.g. admin).
    */
   hideNavThemeToggleOnMobile?: boolean
+  /** While the tutorial welcome modal is visible, the bar stays unfolded (no initial fold timer). */
+  tutorialWelcomeModalOpen?: boolean
+  /** Set true once the welcome modal was shown (unauthenticated flow). */
+  welcomeModalEverShown?: boolean
+  /** Increment only when the user clicks “Skip for Now” on the welcome modal (fold 5s after skip). */
+  welcomeSkipFoldNonce?: number
 }
 
 /**
@@ -56,6 +62,9 @@ export function Navigation({
   onSignInClick,
   onSignUpClick,
   hideNavThemeToggleOnMobile = false,
+  tutorialWelcomeModalOpen = false,
+  welcomeModalEverShown = false,
+  welcomeSkipFoldNonce = 0,
 }: NavigationProps) {
   const navigate = useNavigate()
   const location = useLocation()
@@ -82,7 +91,15 @@ export function Navigation({
    * Cleared after scrolling below top or landing-from-below handling (then two-wheel path applies).
    */
   const singleWheelRevealAtTopRef = useRef(false)
+  const initialFoldTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [folded, setFolded] = useState(false)
+
+  const clearInitialFoldTimer = useCallback(() => {
+    if (initialFoldTimerRef.current) {
+      clearTimeout(initialFoldTimerRef.current)
+      initialFoldTimerRef.current = null
+    }
+  }, [])
 
   const clearAtTopSettleTimer = useCallback(() => {
     if (atTopSettleTimerRef.current) {
@@ -114,16 +131,43 @@ export function Navigation({
     scheduleInactivityHide()
   }, [scheduleInactivityHide])
 
-  /** Show for 5s on load, then fold up. */
+  /**
+   * Initial fold: 5s after load unless the welcome modal is open (stay unfolded until it closes).
+   * After “Skip for Now”, fold 5s after the skip. After “Start Tutorial” (or other dismiss without skip),
+   * fold immediately.
+   */
   useEffect(() => {
+    clearInitialFoldTimer()
     setFolded(false)
     initialPhaseRef.current = true
-    const t = setTimeout(() => {
+
+    if (tutorialWelcomeModalOpen) {
+      return () => clearInitialFoldTimer()
+    }
+
+    const skipNonce = welcomeSkipFoldNonce
+    if (welcomeModalEverShown && skipNonce === 0) {
       setFolded(true)
       initialPhaseRef.current = false
+      return () => clearInitialFoldTimer()
+    }
+
+    if (skipNonce > 0) {
+      initialFoldTimerRef.current = setTimeout(() => {
+        setFolded(true)
+        initialPhaseRef.current = false
+        initialFoldTimerRef.current = null
+      }, INITIAL_SHOW_MS)
+      return () => clearInitialFoldTimer()
+    }
+
+    initialFoldTimerRef.current = setTimeout(() => {
+      setFolded(true)
+      initialPhaseRef.current = false
+      initialFoldTimerRef.current = null
     }, INITIAL_SHOW_MS)
-    return () => clearTimeout(t)
-  }, [])
+    return () => clearInitialFoldTimer()
+  }, [tutorialWelcomeModalOpen, welcomeModalEverShown, welcomeSkipFoldNonce, clearInitialFoldTimer])
 
   /** When the bar folds: if already at top, arm only after the same settle delay (no instant ready). */
   useEffect(() => {
@@ -340,7 +384,7 @@ export function Navigation({
       className={shellClass}
       aria-hidden={folded ? true : undefined}
       onPointerDown={handleNavActivity}
-      onFocusIn={handleNavActivity}
+      onFocus={handleNavActivity}
       onKeyDown={handleNavActivity}
     >
       <header className={headerClass}>

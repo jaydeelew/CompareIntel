@@ -30,6 +30,8 @@ interface TutorialManagerProps {
   setTutorialHasCompletedComparison: (value: boolean) => void
   setTutorialHasBreakout: (value: boolean) => void
   setTutorialHasSavedSelection: (value: boolean) => void
+  /** Called when the user dismisses the welcome modal via “Skip for Now” (navbar fold timing). */
+  onTutorialWelcomeSkipped?: () => void
 }
 
 export function TutorialManager({
@@ -57,6 +59,7 @@ export function TutorialManager({
   setTutorialHasCompletedComparison,
   setTutorialHasBreakout,
   setTutorialHasSavedSelection,
+  onTutorialWelcomeSkipped,
 }: TutorialManagerProps) {
   const googleProviderExpanded = 'Google' in modelsByProvider && openDropdowns.has('Google')
   const googleModelIds = ['google/gemini-2.0-flash-001', 'google/gemini-2.5-flash']
@@ -74,6 +77,7 @@ export function TutorialManager({
           onSkip={() => {
             setShowWelcomeModal(false)
             skipTutorial()
+            onTutorialWelcomeSkipped?.()
           }}
           onDontShowAgain={() => {
             localStorage.setItem('compareintel_welcome_dont_show_again', 'true')
