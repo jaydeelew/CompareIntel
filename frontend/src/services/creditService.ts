@@ -77,41 +77,6 @@ export interface CreditUsageHistory {
 }
 
 /**
- * Credit estimation request
- */
-export interface CreditEstimateRequest {
-  /** Input prompt text */
-  input_data: string
-  /** List of model IDs */
-  models: string[]
-  /** Optional conversation history */
-  conversation_history?: Array<{ role: string; content: string; model_id?: string }>
-}
-
-/**
- * Credit estimation response
- */
-export interface CreditEstimate {
-  /** Estimated credits needed */
-  estimated_credits: number
-  /** Current credits remaining */
-  credits_remaining: number
-  /** Credits allocated for current period */
-  credits_allocated: number
-  /** Whether user has sufficient credits */
-  is_sufficient: boolean
-  /** Breakdown of estimation */
-  breakdown: {
-    /** Number of models */
-    num_models: number
-    /** Input length in characters */
-    input_length: number
-    /** Conversation history length */
-    conversation_history_length: number
-  }
-}
-
-/**
  * Get current credit balance
  *
  * @param fingerprint - Optional browser fingerprint for unregistered users
@@ -145,13 +110,5 @@ export async function getCreditUsage(
   const response = await apiClient.get<CreditUsageHistory>(
     `/credits/usage${queryString ? `?${queryString}` : ''}`
   )
-  return response.data
-}
-
-/**
- * Estimate credits needed for a request
- */
-export async function estimateCredits(request: CreditEstimateRequest): Promise<CreditEstimate> {
-  const response = await apiClient.post<CreditEstimate>('/credits/estimate', request)
   return response.data
 }

@@ -42,8 +42,8 @@ On the free tier, image generation is limited by **daily credits** and by **up t
 
 ## Credit Flow
 
-1. **Pre-request:** Frontend estimates required credits before submission
-2. **Validation:** Backend validates user has sufficient credits (returns 402 if insufficient)
+1. **Pre-request:** Frontend blocks submission when the user has no credits remaining
+2. **Validation:** Backend rejects the request with 402 when credits remaining are zero (and applies tier rules such as anonymous users not using image generation)
 3. **Processing:** Request is processed and actual token usage is extracted from API response
 4. **Deduction:** Credits are deducted atomically based on actual usage
 5. **Recording:** Credit transaction is logged for audit trail
@@ -64,7 +64,6 @@ On the free tier, image generation is limited by **daily credits** and by **up t
 
 - `GET /api/credits/balance` - Get current credit balance
 - `GET /api/credits/usage` - Get paginated usage history
-- `POST /api/credits/estimate` - Estimate credits for a request
 
 ## Error Codes
 
