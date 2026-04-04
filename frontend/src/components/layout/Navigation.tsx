@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 
+import { usePWAInstall } from '../../contexts/PWAInstallContext'
 import { useTheme } from '../../contexts/ThemeContext'
 import { UserMenu } from '../auth'
 
@@ -68,6 +69,7 @@ export function Navigation({
 }: NavigationProps) {
   const navigate = useNavigate()
   const location = useLocation()
+  const { isStandalone } = usePWAInstall()
   const { theme, toggleTheme } = useTheme()
   const shellRef = useRef<HTMLDivElement>(null)
   const lastScrollY = useRef(0)
@@ -118,12 +120,13 @@ export function Navigation({
   }, [])
 
   const scheduleInactivityHide = useCallback(() => {
+    if (isStandalone) return
     clearInactivityTimer()
     inactivityTimerRef.current = setTimeout(() => {
       setFolded(true)
       inactivityTimerRef.current = null
     }, INACTIVITY_HIDE_MS)
-  }, [clearInactivityTimer])
+  }, [clearInactivityTimer, isStandalone])
 
   const handleNavActivity = useCallback(() => {
     if (foldedRef.current) return
@@ -140,6 +143,12 @@ export function Navigation({
     clearInitialFoldTimer()
     setFolded(false)
     initialPhaseRef.current = true
+
+    /** Installed PWA / standalone: keep the bar always visible (no auto-hide). */
+    if (isStandalone) {
+      initialPhaseRef.current = false
+      return () => clearInitialFoldTimer()
+    }
 
     if (tutorialWelcomeModalOpen) {
       return () => clearInitialFoldTimer()
@@ -167,7 +176,13 @@ export function Navigation({
       initialFoldTimerRef.current = null
     }, INITIAL_SHOW_MS)
     return () => clearInitialFoldTimer()
-  }, [tutorialWelcomeModalOpen, welcomeModalEverShown, welcomeSkipFoldNonce, clearInitialFoldTimer])
+  }, [
+    isStandalone,
+    tutorialWelcomeModalOpen,
+    welcomeModalEverShown,
+    welcomeSkipFoldNonce,
+    clearInitialFoldTimer,
+  ])
 
   /** When the bar folds: if already at top, arm only after the same settle delay (no instant ready). */
   useEffect(() => {
@@ -207,6 +222,8 @@ export function Navigation({
    * intent (wheel) reveals the bar. Scroll/wheel share the same scroll position helpers.
    */
   useEffect(() => {
+    if (isStandalone) return
+
     const shell = shellRef.current
     if (!shell) return
 
@@ -340,7 +357,7 @@ export function Navigation({
         app.removeEventListener('scrollend', onScrollEnd)
       }
     }
-  }, [clearInactivityTimer, scheduleInactivityHide, clearAtTopSettleTimer])
+  }, [isStandalone, clearInactivityTimer, scheduleInactivityHide, clearAtTopSettleTimer])
 
   /** Portaled menus/modals (e.g. UserMenu) are outside the shell but still count as navbar activity. */
   useEffect(() => {
