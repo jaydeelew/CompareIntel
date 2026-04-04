@@ -127,7 +127,8 @@
 }
 
 /* Allow flipped tiles to extend beyond hero bounds (mobile) */
-.hero-section:has(.capability-tile.flipped) {
+.hero-section:has(.capability-tile.flipped),
+.hero-section:has(.capability-tile-wrapper--elevated) {
   overflow: visible;
 }
 
@@ -541,20 +542,29 @@
   position: relative;
 }
 
-.hero-capabilities:has(.flipped) {
+.hero-capabilities:has(.flipped),
+.hero-capabilities:has(.capability-tile-wrapper--elevated) {
   z-index: 100;
 }
 
-/* Wrapper provides 3D perspective and holds grid space */
+/* Wrapper provides 3D perspective and holds grid space.
+   z-index 0 on all wrappers: later grid columns no longer paint over an earlier tile when z-index was `auto`. */
 .capability-tile-wrapper {
   perspective: 1200px;
   position: relative;
   display: flex;
   min-height: 0;
+  z-index: 0;
 }
 
-.capability-tile-wrapper:has(.flipped) {
+.capability-tile-wrapper:has(.flipped),
+.capability-tile-wrapper--elevated {
   z-index: 100;
+}
+
+/* Closing animation removes .flipped before the transform finishes — keep the tile above siblings and the composer. */
+.capability-tile-wrapper--elevated .capability-tile {
+  z-index: 200;
 }
 
 .capability-tile {

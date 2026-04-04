@@ -1,6 +1,7 @@
 import {
   useCallback,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -18,6 +19,9 @@ import { StyledTooltip } from '../shared'
  * replace any hero capability video file so clients fetch the new bytes.
  */
 const CAPABILITY_VIDEO_CACHE_BUST = 'v=2'
+
+/** Matches .capability-tile transform transition in hero.css (0.7s) — keep stacking elevated until it finishes. */
+const CAPABILITY_FLIP_STACK_MS = 750
 
 /** Matches hero.css phone rules (theme toggle in hero, etc.); mobile keeps tiles in DOM but hidden. */
 const NARROW_HERO_MQ = '(max-width: 480px)'
@@ -70,6 +74,19 @@ function CapabilityTile({
   const [videoHasFrame, setVideoHasFrame] = useState(false)
   /** `canplay` fires repeatedly during playback; priming must run once or `currentTime = 0` would reset the video. */
   const videoPrimedRef = useRef(false)
+  /** True briefly after flip state changes so z-index stays above siblings/composer during CSS transition (esp. closing). */
+  const [stackElevated, setStackElevated] = useState(false)
+  const prevFlippedStackRef = useRef(isFlipped)
+
+  /* useLayoutEffect: on close, .flipped is removed before paint so stacking must update in the same frame
+     (useEffect runs after paint and one frame showed neighbors/composer on top). */
+  useLayoutEffect(() => {
+    if (prevFlippedStackRef.current === isFlipped) return
+    prevFlippedStackRef.current = isFlipped
+    setStackElevated(true)
+    const id = window.setTimeout(() => setStackElevated(false), CAPABILITY_FLIP_STACK_MS)
+    return () => window.clearTimeout(id)
+  }, [isFlipped])
 
   useEffect(() => {
     if (prevFlipped.current && !isFlipped) {
@@ -134,7 +151,9 @@ function CapabilityTile({
   }
 
   return (
-    <div className="capability-tile-wrapper">
+    <div
+      className={`capability-tile-wrapper${stackElevated ? ' capability-tile-wrapper--elevated' : ''}`}
+    >
       <div
         ref={tileRef}
         className={`capability-tile ${isFlipped ? 'flipped' : ''}`}
