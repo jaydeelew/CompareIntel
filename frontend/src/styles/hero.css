@@ -131,10 +131,10 @@
   overflow: visible;
 }
 
-/* Allow composer action button outlines/shadows to render fully when hovered (avoid top cutoff) */
-.hero-section:has(.composer-toolbar) {
-  overflow: visible;
-}
+/* Keep default overflow:hidden when the composer has a toolbar. overflow:visible here caused
+   Firefox to show a square white wedge past the composer’s bottom radius whenever the sticky
+   navbar (backdrop-filter) was visible; Chrome was fine. Toolbar hovers use z-index (hero.css)
+   so outlines are not clipped by the input wrapper. */
 
 /* Registered users (setting): "hide capability tiles"
    — ≤480px: keep tiles in DOM, hide with opacity; hide title/subtitle with visibility (layout stable).
@@ -1132,7 +1132,10 @@ video.capability-tile-image-lightbox-img {
   align-items: stretch;
   width: 100%;
   min-height: 60px;
-  overflow: visible;
+  /* Clip backgrounds/borders of children to this radius. overflow:visible + translateZ/isolate
+     lets Firefox paint a square compositor layer past the rounded outer border (worse with sticky
+     header / hero stacking); Chrome is less affected. Tutorial highlights override to visible. */
+  overflow: hidden;
   border-radius: 1.5rem;
   /* 1px ring via border — spread box-shadow (0 0 0 1px) looks thin/uneven on rounded corners in Chromium */
   border: 1px solid rgba(6, 182, 212, 0.15);
@@ -1205,6 +1208,37 @@ video.capability-tile-image-lightbox-img {
   to {
     opacity: 1;
     transform: translateY(0) translateZ(0);
+  }
+}
+
+@keyframes composer-float-in-moz {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Firefox: translateZ/isolate + native multiline control can leave a square white wedge past the
+   outer radius (esp. bottom-left). Dropping the extra layer on the in-flow composer fixes it;
+   floating composer uses composer-float-in-moz (no translateZ in final state). Strip -moz textarea chrome. */
+@supports (-moz-appearance: none) {
+  .composer:not(.composer-floating):not(.composer-placeholder) {
+    transform: none;
+    backface-visibility: visible;
+  }
+
+  .composer.composer-floating {
+    animation-name: composer-float-in-moz;
+  }
+
+  .composer .hero-input-textarea {
+    -moz-appearance: none;
+    appearance: none;
   }
 }
 
@@ -1554,7 +1588,8 @@ video.capability-tile-image-lightbox-img {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  overflow: visible;
+  /* Clip flex children to bottom radius (Firefox could show square fills past the curve). */
+  overflow: hidden;
   flex-shrink: 0;
 }
 

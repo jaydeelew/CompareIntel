@@ -56,6 +56,8 @@
   isolation: isolate !important;
   position: relative !important;
   z-index: 9999 !important;
+  /* Match desktop tutorial: outer glow must extend past .composer (base uses overflow:hidden). */
+  overflow: visible !important;
   transform: translateZ(0) !important;
   /* Ensure the highlight box-shadow and pulse animation are consistent across all steps.
      The .composer normally has transition: box-shadow which can dampen the pulse. */
