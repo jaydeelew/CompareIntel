@@ -1396,7 +1396,8 @@ video.capability-tile-image-lightbox-img {
 
 .composer-input-wrapper {
   position: relative;
-  z-index: 1;
+  /* Stack above in-flow siblings without z-index; stay below .composer-toolbar so toolbar chrome stays on top. */
+  z-index: 2;
   display: flex;
   flex-direction: column;
   width: 100%;
@@ -1407,6 +1408,10 @@ video.capability-tile-image-lightbox-img {
   /* Opaque background prevents hero gradient bleed-through when composer repaints. */
   background: var(--bg-card, #12121c);
   background-color: var(--bg-card, #12121c);
+  /* Own compositor layer: Chromium/WebKit often blanks the textarea stack on scroll when it sat at z-index:1
+     under the toolbar (toolbar stayed painted). translateZ matches .composer’s layer promotion pattern. */
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
 }
 
 /* History dropdown border radius adjustments */
@@ -1574,11 +1579,12 @@ video.capability-tile-image-lightbox-img {
   border-radius: 0;
 }
 
-/* Composer Toolbar — z-index above input wrapper so Chromium doesn’t blank toolbar chrome on scroll;
-   keep wrapper at 1 so we don’t stack the whole toolbar subtree behind the textarea layer. */
+/* Composer Toolbar — above .composer-input-wrapper (z-index:2) so buttons paint on top; wrapper is also
+   layer-promoted so both repaint reliably on scroll (previously toolbar z-index:2 + wrapper z-index:1
+   left the textarea area blank until interaction). */
 .composer-toolbar {
   position: relative;
-  z-index: 2;
+  z-index: 3;
   width: 100%;
   /* When an action button is hovered/focused, raise toolbar so its outline/glow isn't cut off by input-wrapper above */
   min-height: 44px;
@@ -1612,7 +1618,7 @@ video.capability-tile-image-lightbox-img {
 .composer-toolbar:has(.saved-selections-button:hover),
 .composer-toolbar:has(.saved-selections-button:focus-visible),
 .composer-toolbar:has(.token-usage-indicator:hover) {
-  z-index: 3;
+  z-index: 4;
 }
 
 /* When history dropdown is visible */

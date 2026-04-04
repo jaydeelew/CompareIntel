@@ -2686,6 +2686,8 @@ button.nav-button-primary {
 
 /* Inline history list that extends textarea depth */
 .history-inline-list {
+  position: relative;
+  z-index: 4;
   width: 100%;
   background: var(--bg-elevated);
   border-top: 1px solid var(--border-color);
@@ -3096,6 +3098,9 @@ button.nav-button-primary {
 /* Slot for saved selections dropdown - direct child of composer, below toolbar */
 .saved-selections-dropdown-slot {
   min-height: 0;
+  position: relative;
+  /* Above .composer-toolbar (z-index:3) so portaled panels repaint with the composer on scroll */
+  z-index: 4;
 }
 
 /* Container for the saved selections button (dropdown panel renders in slot below toolbar) */
