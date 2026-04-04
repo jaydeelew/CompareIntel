@@ -101,22 +101,21 @@ export const ImageGeneration: React.FC = () => {
           </section>
 
           <section className="seo-section">
-            <h2>Free Tier: 2 Image Comparison Runs per Day</h2>
+            <h2>Free tier limits</h2>
             <p>
-              Sign up for a free account for image generation. A <strong>comparison</strong> is each
-              time you run Compare in image mode with your chosen models—not a limit on the number
-              of pictures. Free tier allows <strong>2 such runs per day</strong>, and each run can
-              include <strong>up to 3 image models</strong> side-by-side (same model cap as text
-              comparisons), so you can see multiple outputs in one go. Usage still draws from your
-              daily credits.
+              Sign up for a free account for image generation. Usage draws from your{' '}
+              <strong>daily credits</strong>—you can run as many image comparisons as your balance
+              allows (no separate cap on comparison runs). Each run can include{' '}
+              <strong>up to 3 image models</strong> side-by-side, the same models-per-comparison cap
+              as text mode on the free tier.
             </p>
           </section>
 
           <section className="seo-section">
             <h2>Paid Tiers Coming Soon</h2>
             <p>
-              Paid tiers will allow as many image generations as you have credits for, using the
-              rules above. Stay tuned for updates.
+              Paid tiers will offer larger monthly credit pools using the same billing rules above.
+              Stay tuned for updates.
             </p>
           </section>
 
@@ -181,9 +180,9 @@ export const ImageGeneration: React.FC = () => {
                 <tr>
                   <td>Sign Up to Use Image Generation</td>
                   <td>
-                    Image generation requires an account. On the free tier you get 2 comparison runs
-                    per day in image mode; each run can use up to 3 image models at once. Broader
-                    use will follow with paid credits.
+                    Image generation requires an account. On the free tier, each run uses credits
+                    from your daily balance; you can run as many comparisons as your credits allow,
+                    with up to 3 image models per run.
                   </td>
                 </tr>
               </tbody>

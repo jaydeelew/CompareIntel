@@ -344,9 +344,9 @@ export function ModelsArea({
                   <ImageIcon size={18} strokeWidth={1.75} />
                 </span>
                 <span className="models-section-image-signup-banner-text">
-                  Sign up for a free account to use image generation models. Free tier: 2 comparison
-                  runs per day in image mode (each run can include up to 3 image models). Paid tiers
-                  coming soon for as many image generations as you have credits for.
+                  Sign up for a free account to use image generation models. Usage draws from your
+                  daily credits—you can run as many image comparisons as your balance allows (up to
+                  3 image models per run on the free tier).
                 </span>
                 <button
                   type="button"

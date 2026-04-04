@@ -116,10 +116,8 @@ MONTHLY_CREDIT_ALLOCATIONS: dict[str, int] = {
 # Image generation credits (when token usage unavailable)
 CREDITS_PER_DOLLAR: float = 100.0
 IMAGE_CREDITS_PER_GENERATION: int = 5
-
-# Image generation tier limits
-FREE_TIER_IMAGE_COMPARISONS_PER_DAY: int = 2
-UNREGISTERED_IMAGE_COMPARISONS: int = 0
+# Image generation: unregistered users are blocked in compare-stream. Registered free tier has no
+# separate daily image-run cap—only daily credits (DAILY_CREDIT_LIMITS) and model_limit apply.
 
 # Subscription pricing (monthly) - placeholder values, not yet established
 TIER_PRICING: dict[str, float] = {

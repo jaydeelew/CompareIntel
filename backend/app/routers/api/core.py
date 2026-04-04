@@ -375,7 +375,7 @@ async def compare_stream(
     if has_image_model and current_user is None:
         raise HTTPException(
             status_code=402,
-            detail="Sign up for a free account to use image generation (free tier: 2 comparison runs per day, up to 3 image models per run), or wait for paid tiers for as many image generations as your credits allow.",
+            detail="Sign up for a free account to use image generation. Registered users use daily credits; you can run as many image comparisons as your balance allows (up to 3 image models per comparison on the free tier).",
         )
 
     if req.temperature is not None and (req.temperature < 0.0 or req.temperature > 2.0):

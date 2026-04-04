@@ -26,10 +26,8 @@ Constants in `backend/app/config/constants.py`:
 
 ## Tier Limits
 
-- **`FREE_TIER_IMAGE_COMPARISONS_PER_DAY` (default: 2):** Intended cap on how many times a free user can **run Compare** in a day while **any** selected model is image-generation-capable. A "comparison" here is **one Compare action**, not one output image. Free tier also allows **up to 3 models per comparison** (see `SUBSCRIPTION_CONFIG` / `model_limit`), so a single run may produce up to three outputs (one per model), subject to provider behavior and credits.
-- **`UNREGISTERED_IMAGE_COMPARISONS` (0):** Unregistered users cannot use image models.
-
-**Implementation note:** The daily image-comparison counter constant exists for product limits but is **not yet wired** in request handling; free registered users are currently constrained primarily by **daily credits** (`DAILY_CREDIT_LIMITS`) and the **model limit** when selecting image models.
+- **Unregistered:** Cannot use image models (`compare-stream` returns 402 when any selected model supports image generation and there is no authenticated user).
+- **Registered free tier:** No separate daily cap on image comparison **runs**. Limits are **daily credits** (`DAILY_CREDIT_LIMITS`) and **up to 3 models per comparison** (`SUBSCRIPTION_CONFIG` / `model_limit` for tier `free`). Each generation charges credits per the [Credit Rules](#credit-rules) above.
 
 ## Unregistered User Gating
 
