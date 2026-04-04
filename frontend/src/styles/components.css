@@ -511,6 +511,23 @@
   transform: translateX(-50%) translateY(0);
 }
 
+/* Portaled tooltips (see StyledTooltip usePortal) — escape overflow:hidden on composer, etc. */
+.tooltip--portal-anchor {
+  position: relative;
+}
+
+.tooltip-content--portaled {
+  visibility: visible;
+  opacity: 1;
+  position: fixed;
+  bottom: auto;
+  right: auto;
+  z-index: var(--z-tooltip);
+  transform: translate(-50%, calc(-100% - 6px));
+  pointer-events: auto;
+  transition: opacity 0.15s ease;
+}
+
 /* ═══════════════════════════════════════════════════════════
    BADGES
    ═══════════════════════════════════════════════════════════ */

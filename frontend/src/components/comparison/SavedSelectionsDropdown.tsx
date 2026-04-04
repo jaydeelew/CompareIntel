@@ -125,6 +125,8 @@ export interface SavedSelectionsDropdownProps {
   dropdownContainerRef?: React.RefObject<HTMLElement | null>
   /** When true, the trigger tooltip is hidden (e.g. on mobile) */
   hideTooltip?: boolean
+  /** When true with tooltip visible, render tooltip in a portal (avoids composer overflow clipping) */
+  tooltipUsePortal?: boolean
 }
 
 export function SavedSelectionsDropdown({
@@ -134,6 +136,7 @@ export function SavedSelectionsDropdown({
   isFollowUpMode,
   dropdownContainerRef,
   hideTooltip = false,
+  tooltipUsePortal = false,
 }: SavedSelectionsDropdownProps) {
   const {
     savedModelSelections,
@@ -210,7 +213,9 @@ export function SavedSelectionsDropdown({
       {hideTooltip ? (
         triggerButton
       ) : (
-        <StyledTooltip text="Save or load model selections">{triggerButton}</StyledTooltip>
+        <StyledTooltip usePortal={tooltipUsePortal} text="Save or load model selections">
+          {triggerButton}
+        </StyledTooltip>
       )}
       {!defaultSelectionOverridden && defaultSelection && (
         <span

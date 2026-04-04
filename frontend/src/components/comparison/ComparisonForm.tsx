@@ -618,7 +618,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
           onDrop={handleDrop}
         >
           {showComposerStyledTooltips ? (
-            <StyledTooltip text="Load previous conversations">
+            <StyledTooltip usePortal text="Load previous conversations">
               <button
                 type="button"
                 className={`history-toggle-button ${showHistoryDropdown ? 'active' : ''}`}
@@ -668,6 +668,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
             isFollowUpMode={isFollowUpMode}
             dropdownContainerRef={savedSelectionsDropdownSlotRef}
             hideTooltip={!showComposerStyledTooltips}
+            tooltipUsePortal={showComposerStyledTooltips}
           />
 
           <div className="textarea-actions">
@@ -681,6 +682,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
               disabled={isLoading}
               isMobileLayout={isMobileLayout}
               hideTooltip={!showComposerStyledTooltips}
+              tooltipUsePortal={showComposerStyledTooltips}
               onMobileButtonClick={
                 isMobileLayout && !isLoading
                   ? () => {
@@ -707,6 +709,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
                 onTokenUsageInfoChange={setTokenUsageInfo}
                 tutorialIsActive={tutorialIsActive}
                 hideTooltip={!showComposerStyledTooltips}
+                tooltipUsePortal={showComposerStyledTooltips}
                 isMobileLayout={isMobileLayout}
               />
             )}
@@ -753,7 +756,10 @@ export const ComparisonForm = memo<ComparisonFormProps>(
                   </svg>
                 </button>
               ) : showComposerStyledTooltips ? (
-                <StyledTooltip text={isSpeechListening ? 'Stop recording' : 'Start voice input'}>
+                <StyledTooltip
+                  usePortal
+                  text={isSpeechListening ? 'Stop recording' : 'Start voice input'}
+                >
                   <button
                     type="button"
                     onClick={() => {
@@ -875,6 +881,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
               </button>
             ) : showComposerStyledTooltips ? (
               <StyledTooltip
+                usePortal
                 text={
                   !canEnableWebSearch
                     ? 'Select a web-enabled model'
@@ -1041,6 +1048,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
                   submitButton
                 ) : (
                   <StyledTooltip
+                    usePortal
                     text={
                       creditsRemaining <= 0
                         ? 'You have run out of credits'

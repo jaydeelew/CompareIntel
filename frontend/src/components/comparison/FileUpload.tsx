@@ -33,6 +33,8 @@ export interface FileUploadProps {
   isMobileLayout?: boolean
   /** When true, desktop hover tooltip on the attach button is hidden (e.g. during tutorial) */
   hideTooltip?: boolean
+  /** When true with tooltip visible, render tooltip in a portal (avoids composer overflow clipping) */
+  tooltipUsePortal?: boolean
   /** When provided and on mobile, called instead of opening file picker (parent shows modal first) */
   onMobileButtonClick?: () => void
 }
@@ -293,6 +295,7 @@ const FileUploadComponent = forwardRef<FileUploadHandle, FileUploadProps>(functi
     disabled = false,
     isMobileLayout = false,
     hideTooltip = false,
+    tooltipUsePortal = false,
     onMobileButtonClick,
   },
   ref
@@ -455,7 +458,7 @@ const FileUploadComponent = forwardRef<FileUploadHandle, FileUploadProps>(functi
         onChange={handleFileUpload}
       />
       {!isMobileLayout && attachedFiles.length === 0 && !hideTooltip ? (
-        <StyledTooltip text="Select or drag text and image files here">
+        <StyledTooltip usePortal={tooltipUsePortal} text="Select or drag text and image files here">
           <button
             type="button"
             onClick={handleUploadButtonClick}

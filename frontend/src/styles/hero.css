@@ -1588,8 +1588,9 @@ video.capability-tile-image-lightbox-img {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  /* Clip flex children to bottom radius (Firefox could show square fills past the curve). */
-  overflow: hidden;
+  /* overflow:visible avoids clipping button chrome; composer tooltips use StyledTooltip usePortal
+     so bubbles render in document.body and are not clipped by .composer overflow:hidden. */
+  overflow: visible;
   flex-shrink: 0;
 }
 

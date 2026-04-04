@@ -38,6 +38,8 @@ export interface TokenUsageDisplayProps {
   tutorialIsActive?: boolean
   /** When true, the tooltip is hidden (e.g. on mobile) */
   hideTooltip?: boolean
+  /** When true with tooltip visible, render tooltip in a portal (avoids composer overflow clipping) */
+  tooltipUsePortal?: boolean
   /** Capacity info modal is mobile-only (matches useResponsive isMobileLayout) */
   isMobileLayout?: boolean
 }
@@ -91,6 +93,7 @@ export function TokenUsageDisplay({
   onTokenUsageInfoChange,
   tutorialIsActive = false,
   hideTooltip = false,
+  tooltipUsePortal = false,
   isMobileLayout = false,
 }: TokenUsageDisplayProps) {
   const debouncedInput = useDebounce(input, 600)
@@ -344,7 +347,13 @@ export function TokenUsageDisplay({
 
   return (
     <>
-      {hideTooltip ? indicator : <StyledTooltip text={tooltipText}>{indicator}</StyledTooltip>}
+      {hideTooltip ? (
+        indicator
+      ) : (
+        <StyledTooltip usePortal={tooltipUsePortal} text={tooltipText}>
+          {indicator}
+        </StyledTooltip>
+      )}
       <UsageIndicatorInfoModal
         isOpen={isMobileLayout && showUsageIndicatorInfo}
         onClose={() => setShowUsageIndicatorInfo(false)}
