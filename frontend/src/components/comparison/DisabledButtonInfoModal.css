@@ -192,10 +192,13 @@
   outline-offset: 2px;
 }
 
-/* Mobile optimizations */
-@media (max-width: 640px) {
+/* Mobile optimizations — bottom sheet: flush to viewport bottom (no gap under square corners).
+   Max width matches BREAKPOINT_MOBILE (768) so sheet layout aligns with useResponsive isMobileLayout. */
+@media (max-width: 768px) {
   .disabled-button-info-overlay {
-    padding: 0.5rem;
+    padding: 0.5rem 0.5rem 0;
+    padding-left: max(0.5rem, env(safe-area-inset-left, 0px));
+    padding-right: max(0.5rem, env(safe-area-inset-right, 0px));
     align-items: flex-end;
   }
 
@@ -224,6 +227,7 @@
 
   .disabled-button-info-footer {
     padding: 0.875rem 1.25rem;
+    padding-bottom: calc(0.875rem + env(safe-area-inset-bottom, 0px));
     border-radius: 0;
   }
 

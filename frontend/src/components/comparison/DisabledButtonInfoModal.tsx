@@ -4,6 +4,8 @@
  */
 
 import React, { useEffect, useRef } from 'react'
+import { createPortal } from 'react-dom'
+
 import './DisabledButtonInfoModal.css'
 
 interface DisabledButtonInfoModalProps {
@@ -65,7 +67,7 @@ export const DisabledButtonInfoModal: React.FC<DisabledButtonInfoModalProps> = (
           ? 'Collapse All Model Providers'
           : 'Clear All Selections'
 
-  return (
+  return createPortal(
     <div
       className="disabled-button-info-overlay"
       onClick={onClose}
@@ -118,6 +120,7 @@ export const DisabledButtonInfoModal: React.FC<DisabledButtonInfoModalProps> = (
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }

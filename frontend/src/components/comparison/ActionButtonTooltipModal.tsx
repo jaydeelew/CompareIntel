@@ -4,6 +4,7 @@
  */
 
 import React, { useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 
 import './DisabledButtonInfoModal.css'
 import { setTooltipModalSuppressed } from './tooltipModalStorage'
@@ -65,7 +66,9 @@ export const ActionButtonTooltipModal: React.FC<ActionButtonTooltipModalProps> =
 
   if (!isOpen) return null
 
-  return (
+  // Portal to body: hero-input-section uses transform (slideUpOnly), which traps position:fixed
+  // to that subtree so bottom-sheet CSS would align to the hero, not the viewport.
+  return createPortal(
     <div
       className="disabled-button-info-overlay"
       onClick={onClose}
@@ -128,6 +131,7 @@ export const ActionButtonTooltipModal: React.FC<ActionButtonTooltipModalProps> =
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
