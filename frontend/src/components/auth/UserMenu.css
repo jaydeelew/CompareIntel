@@ -51,6 +51,13 @@
   animation: slideDown 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* Portaled to document.body — escapes .app-header-shell { overflow: hidden } clipping */
+.user-menu-dropdown--portaled {
+  position: fixed;
+  left: auto;
+  z-index: var(--z-tooltip);
+}
+
 @keyframes slideDown {
   from {
     opacity: 0;

@@ -3,7 +3,7 @@
  * Displays user info and dropdown menu when authenticated
  */
 
-import React, { useState, useRef, useEffect, useCallback } from 'react'
+import React, { useState, useRef, useEffect, useLayoutEffect, useCallback } from 'react'
 import { createPortal } from 'react-dom'
 
 import { getCreditAllocation, getDailyCreditLimit } from '../../config/constants'
@@ -32,7 +32,14 @@ export const UserMenu: React.FC = () => {
   const [activeModal, setActiveModal] = useState<ModalType>(null)
   const [creditBalance, setCreditBalance] = useState<CreditBalance | null>(null)
   const [isLoadingCredits, setIsLoadingCredits] = useState(false)
-  const menuRef = useRef<HTMLDivElement>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
+  const avatarRef = useRef<HTMLButtonElement>(null)
+  const dropdownRef = useRef<HTMLDivElement>(null)
+  const [dropdownPlacement, setDropdownPlacement] = useState<{
+    top: number
+    right: number
+    width: number
+  } | null>(null)
 
   // Settings state
   const [preferences, setPreferences] = useState<UserPreferences | null>(null)
@@ -94,12 +101,50 @@ export const UserMenu: React.FC = () => {
     }
   }, [isOpen, user])
 
+  const updateDropdownPlacement = useCallback(() => {
+    if (!avatarRef.current) return
+    const rect = avatarRef.current.getBoundingClientRect()
+    setDropdownPlacement({
+      top: rect.bottom + 8,
+      right: window.innerWidth - rect.right,
+      width: Math.min(240, window.innerWidth - 16),
+    })
+  }, [])
+
+  // Position portaled dropdown (header shell uses overflow:hidden and would clip an in-flow menu)
+  useLayoutEffect(() => {
+    if (!isOpen) {
+      setDropdownPlacement(null)
+      return
+    }
+    updateDropdownPlacement()
+  }, [isOpen, updateDropdownPlacement])
+
+  useEffect(() => {
+    if (!isOpen) return
+    const handler = () => updateDropdownPlacement()
+    window.addEventListener('scroll', handler, true)
+    window.addEventListener('resize', handler)
+    const app = document.querySelector('.app')
+    app?.addEventListener('scroll', handler, true)
+    return () => {
+      window.removeEventListener('scroll', handler, true)
+      window.removeEventListener('resize', handler)
+      app?.removeEventListener('scroll', handler, true)
+    }
+  }, [isOpen, updateDropdownPlacement])
+
   // Close menu when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        setIsOpen(false)
+      const target = event.target as Node
+      if (
+        (containerRef.current?.contains(target) ?? false) ||
+        (dropdownRef.current?.contains(target) ?? false)
+      ) {
+        return
       }
+      setIsOpen(false)
     }
 
     if (isOpen) {
@@ -299,9 +344,241 @@ export const UserMenu: React.FC = () => {
     setActiveModal(null)
   }
 
-  return (
-    <div className="user-menu" ref={menuRef}>
+  const dropdownPanel = (
+    <div
+      ref={dropdownRef}
+      className="user-menu-dropdown user-menu-dropdown--portaled"
+      style={
+        dropdownPlacement
+          ? {
+              top: dropdownPlacement.top,
+              right: dropdownPlacement.right,
+              width: dropdownPlacement.width,
+            }
+          : undefined
+      }
+    >
+      <div className="user-menu-header">
+        <div className="user-info">
+          <div className="user-email">{user.email}</div>
+          <div className="user-tier-row">
+            <div className={`tier-badge ${getTierBadgeClass(user.subscription_tier)}`}>
+              {getTierDisplay(user.subscription_tier)}
+            </div>
+            <div className="daily-limit-info">
+              {creditBalance
+                ? `${creditBalance.credits_allocated} ${creditBalance.period_type === 'monthly' ? 'credits/month' : 'credits/day'}`
+                : user.monthly_credits_allocated
+                  ? `${user.monthly_credits_allocated} credits/month`
+                  : `${getCreditAllocation(user.subscription_tier)} credits/${getDailyCreditLimit(user.subscription_tier) > 0 ? 'day' : 'month'}`}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="user-menu-divider"></div>
+
+      <div className="usage-section">
+        <div className="usage-header">
+          {creditBalance?.period_type === 'monthly' ? 'Usage This Month' : 'Usage Today'}
+        </div>
+        <div className="usage-stats-grid">
+          {/* Credits Display (Primary) */}
+          <div className="usage-stat">
+            <div className="usage-stat-label">Credits</div>
+            {isLoadingCredits ? (
+              <div className="usage-stat-value" style={{ opacity: 0.6 }}>
+                Loading...
+              </div>
+            ) : creditBalance ? (
+              <>
+                <div className="usage-stat-value">
+                  <span className="usage-current">
+                    {Math.round(creditBalance.credits_remaining)}
+                  </span>
+                  <span className="usage-separator">/</span>
+                  <span className="usage-limit">{creditBalance.credits_allocated}</span>
+                </div>
+                <div className="usage-progress-bar">
+                  <div
+                    className="usage-progress-fill"
+                    style={{
+                      width: `${Math.min(100, ((creditBalance.credits_used_this_period ?? 0) / creditBalance.credits_allocated) * 100)}%`,
+                    }}
+                  ></div>
+                </div>
+                {creditBalance.credits_reset_at && (
+                  <div
+                    className="usage-reset-info"
+                    style={{
+                      fontSize: '0.75rem',
+                      color: 'rgba(255, 255, 255, 0.6)',
+                      marginTop: '0.25rem',
+                    }}
+                  >
+                    Resets {new Date(creditBalance.credits_reset_at).toLocaleDateString()}
+                  </div>
+                )}
+              </>
+            ) : (
+              <div className="usage-stat-value">
+                <span className="usage-current">
+                  {user.credits_used_this_period !== undefined
+                    ? Math.round(
+                        Math.max(
+                          0,
+                          (user.monthly_credits_allocated || 0) -
+                            (user.credits_used_this_period || 0)
+                        )
+                      )
+                    : '—'}
+                </span>
+                <span className="usage-separator">/</span>
+                <span className="usage-limit">
+                  {user.monthly_credits_allocated || getCreditAllocation(user.subscription_tier)}
+                </span>
+              </div>
+            )}
+          </div>
+        </div>
+        {/* Legacy Model Response Display (Hidden by default, can be shown for transition period) */}
+        {/* eslint-disable-next-line no-constant-binary-expression */}
+        {false && user && (
+          <div className="usage-stat" style={{ marginTop: '0.5rem', opacity: 0.7 }}>
+            <div className="usage-stat-label" style={{ fontSize: '0.75rem' }}>
+              Model Responses (Legacy)
+            </div>
+            <div className="usage-stat-value" style={{ fontSize: '0.875rem' }}>
+              <span className="usage-current">{user!.credits_used_this_period ?? 0}</span>
+              <span className="usage-separator">/</span>
+              <span className="usage-limit">{getDailyLimit(user!.subscription_tier)}</span>
+            </div>
+          </div>
+        )}
+      </div>
+
+      <div className="user-menu-divider"></div>
+
+      <nav className="user-menu-nav">
+        <button className="menu-item" onClick={() => handleMenuItemClick('dashboard')}>
+          <span className="menu-icon">
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z" />
+            </svg>
+          </span>
+          <span>Dashboard</span>
+        </button>
+        <button className="menu-item" onClick={() => handleMenuItemClick('upgrade')}>
+          <span className="menu-icon">
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
+              <line x1="1" y1="10" x2="23" y2="10" />
+            </svg>
+          </span>
+          <span>Upgrade Plan</span>
+        </button>
+        <button className="menu-item" onClick={() => handleMenuItemClick('settings')}>
+          <span className="menu-icon">
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" />
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1Z" />
+            </svg>
+          </span>
+          <span>Settings</span>
+        </button>
+        <a
+          href="mailto:support@compareintel.com"
+          className="menu-item"
+          onClick={() => {
+            setIsOpen(false)
+          }}
+        >
+          <span className="menu-icon">
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <rect x="2" y="4" width="20" height="16" rx="2" />
+              <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+            </svg>
+          </span>
+          <span>Contact Support</span>
+        </a>
+      </nav>
+
+      <div className="user-menu-divider"></div>
+
       <button
+        className="menu-item logout-btn"
+        onClick={async () => {
+          // Check if user wants to remember state on logout
+          if (preferences?.remember_state_on_logout || rememberState) {
+            // Dispatch event to save state before logout
+            dispatchSaveStateEvent()
+            // Small delay to ensure state is saved
+            await new Promise(resolve => setTimeout(resolve, 50))
+          }
+          logout()
+          setIsOpen(false)
+        }}
+        data-testid="logout-button"
+      >
+        <span className="menu-icon">
+          <svg
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15M12 9l-3 3m0 0 3 3m-3-3h12.75" />
+          </svg>
+        </span>
+        <span>Sign Out</span>
+      </button>
+    </div>
+  )
+
+  return (
+    <div className="user-menu" ref={containerRef}>
+      <button
+        ref={avatarRef}
         className="user-avatar"
         onClick={() => setIsOpen(!isOpen)}
         aria-expanded={isOpen}
@@ -311,225 +588,7 @@ export const UserMenu: React.FC = () => {
         {user.email.charAt(0).toUpperCase()}
       </button>
 
-      {isOpen && (
-        <div className="user-menu-dropdown">
-          <div className="user-menu-header">
-            <div className="user-info">
-              <div className="user-email">{user.email}</div>
-              <div className="user-tier-row">
-                <div className={`tier-badge ${getTierBadgeClass(user.subscription_tier)}`}>
-                  {getTierDisplay(user.subscription_tier)}
-                </div>
-                <div className="daily-limit-info">
-                  {creditBalance
-                    ? `${creditBalance.credits_allocated} ${creditBalance.period_type === 'monthly' ? 'credits/month' : 'credits/day'}`
-                    : user.monthly_credits_allocated
-                      ? `${user.monthly_credits_allocated} credits/month`
-                      : `${getCreditAllocation(user.subscription_tier)} credits/${getDailyCreditLimit(user.subscription_tier) > 0 ? 'day' : 'month'}`}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="user-menu-divider"></div>
-
-          <div className="usage-section">
-            <div className="usage-header">
-              {creditBalance?.period_type === 'monthly' ? 'Usage This Month' : 'Usage Today'}
-            </div>
-            <div className="usage-stats-grid">
-              {/* Credits Display (Primary) */}
-              <div className="usage-stat">
-                <div className="usage-stat-label">Credits</div>
-                {isLoadingCredits ? (
-                  <div className="usage-stat-value" style={{ opacity: 0.6 }}>
-                    Loading...
-                  </div>
-                ) : creditBalance ? (
-                  <>
-                    <div className="usage-stat-value">
-                      <span className="usage-current">
-                        {Math.round(creditBalance.credits_remaining)}
-                      </span>
-                      <span className="usage-separator">/</span>
-                      <span className="usage-limit">{creditBalance.credits_allocated}</span>
-                    </div>
-                    <div className="usage-progress-bar">
-                      <div
-                        className="usage-progress-fill"
-                        style={{
-                          width: `${Math.min(100, ((creditBalance.credits_used_this_period ?? 0) / creditBalance.credits_allocated) * 100)}%`,
-                        }}
-                      ></div>
-                    </div>
-                    {creditBalance.credits_reset_at && (
-                      <div
-                        className="usage-reset-info"
-                        style={{
-                          fontSize: '0.75rem',
-                          color: 'rgba(255, 255, 255, 0.6)',
-                          marginTop: '0.25rem',
-                        }}
-                      >
-                        Resets {new Date(creditBalance.credits_reset_at).toLocaleDateString()}
-                      </div>
-                    )}
-                  </>
-                ) : (
-                  <div className="usage-stat-value">
-                    <span className="usage-current">
-                      {user.credits_used_this_period !== undefined
-                        ? Math.round(
-                            Math.max(
-                              0,
-                              (user.monthly_credits_allocated || 0) -
-                                (user.credits_used_this_period || 0)
-                            )
-                          )
-                        : '—'}
-                    </span>
-                    <span className="usage-separator">/</span>
-                    <span className="usage-limit">
-                      {user.monthly_credits_allocated ||
-                        getCreditAllocation(user.subscription_tier)}
-                    </span>
-                  </div>
-                )}
-              </div>
-            </div>
-            {/* Legacy Model Response Display (Hidden by default, can be shown for transition period) */}
-            {/* eslint-disable-next-line no-constant-binary-expression */}
-            {false && user && (
-              <div className="usage-stat" style={{ marginTop: '0.5rem', opacity: 0.7 }}>
-                <div className="usage-stat-label" style={{ fontSize: '0.75rem' }}>
-                  Model Responses (Legacy)
-                </div>
-                <div className="usage-stat-value" style={{ fontSize: '0.875rem' }}>
-                  <span className="usage-current">{user!.credits_used_this_period ?? 0}</span>
-                  <span className="usage-separator">/</span>
-                  <span className="usage-limit">{getDailyLimit(user!.subscription_tier)}</span>
-                </div>
-              </div>
-            )}
-          </div>
-
-          <div className="user-menu-divider"></div>
-
-          <nav className="user-menu-nav">
-            <button className="menu-item" onClick={() => handleMenuItemClick('dashboard')}>
-              <span className="menu-icon">
-                <svg
-                  width="18"
-                  height="18"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z" />
-                </svg>
-              </span>
-              <span>Dashboard</span>
-            </button>
-            <button className="menu-item" onClick={() => handleMenuItemClick('upgrade')}>
-              <span className="menu-icon">
-                <svg
-                  width="18"
-                  height="18"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
-                  <line x1="1" y1="10" x2="23" y2="10" />
-                </svg>
-              </span>
-              <span>Upgrade Plan</span>
-            </button>
-            <button className="menu-item" onClick={() => handleMenuItemClick('settings')}>
-              <span className="menu-icon">
-                <svg
-                  width="18"
-                  height="18"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" />
-                  <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1Z" />
-                </svg>
-              </span>
-              <span>Settings</span>
-            </button>
-            <a
-              href="mailto:support@compareintel.com"
-              className="menu-item"
-              onClick={() => {
-                setIsOpen(false)
-              }}
-            >
-              <span className="menu-icon">
-                <svg
-                  width="18"
-                  height="18"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <rect x="2" y="4" width="20" height="16" rx="2" />
-                  <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
-                </svg>
-              </span>
-              <span>Contact Support</span>
-            </a>
-          </nav>
-
-          <div className="user-menu-divider"></div>
-
-          <button
-            className="menu-item logout-btn"
-            onClick={async () => {
-              // Check if user wants to remember state on logout
-              if (preferences?.remember_state_on_logout || rememberState) {
-                // Dispatch event to save state before logout
-                dispatchSaveStateEvent()
-                // Small delay to ensure state is saved
-                await new Promise(resolve => setTimeout(resolve, 50))
-              }
-              logout()
-              setIsOpen(false)
-            }}
-            data-testid="logout-button"
-          >
-            <span className="menu-icon">
-              <svg
-                width="18"
-                height="18"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15M12 9l-3 3m0 0 3 3m-3-3h12.75" />
-              </svg>
-            </span>
-            <span>Sign Out</span>
-          </button>
-        </div>
-      )}
+      {isOpen && dropdownPlacement && createPortal(dropdownPanel, document.body)}
 
       {/* Modals - rendered via portal to body for correct positioning */}
       {activeModal === 'dashboard' &&
