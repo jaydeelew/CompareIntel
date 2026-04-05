@@ -28,10 +28,12 @@ const MIN_MS_AFTER_LAST_SCROLL_AT_TOP = 420
  */
 const MIN_MS_BETWEEN_WHEEL_INTENTS = 280
 /**
- * After scrolling from below the top to the top (fling / overscroll chain), block wheel reveal
- * until this quiet period — separate from “already at top” two-flick open.
+ * After crossing into “at top” from below while folded, briefly block wheel reveal so the fling
+ * isn’t mistaken for “reveal navbar”. `scrollend` then arms a single-wheel reveal (see onScrollEnd).
  */
-const SUPPRESS_WHEEL_MS_AFTER_LANDING_FROM_BELOW = 1650
+const SUPPRESS_WHEEL_MS_AFTER_LANDING_FROM_BELOW = 480
+/** After scrollend at top, minimal guard so rubber-band doesn’t steal the reveal wheel. */
+const POST_SCROLLEND_WHEEL_SUPPRESS_MS = 120
 
 interface NavigationProps {
   isAuthenticated: boolean
@@ -281,6 +283,13 @@ export function Navigation({
 
       lastScrollWhileAtTopRef.current = performance.now()
 
+      // Folded while already at top: one wheel reveal — do not bounce-reset `ready` on every scroll
+      // tick (overscroll/rubber-band) or the first intentional wheel after scrollend is ignored.
+      if (singleWheelRevealAtTopRef.current) {
+        readyForSecondScrollUpRef.current = true
+        return
+      }
+
       // At top: do not arm until scroll motion has settled (debounce). Overscroll keeps firing
       // scroll events; resetting the timer prevents arming until that stops.
       clearAtTopSettleTimer()
@@ -338,9 +347,17 @@ export function Navigation({
       if (getScrollY() > AT_TOP_PX) return
       // Momentum scroll can land at top without a single scroll event crossing prev>AT_TOP (coarse steps).
       if (hadScrollBelowTopWhileFoldedRef.current) {
-        applyLandingFromBelowSuppress()
+        hadScrollBelowTopWhileFoldedRef.current = false
+        // Scroll chain finished at top: arm one upward wheel to reveal (not two). Do not extend
+        // the long landing-from-below suppress here — that made the first wheel after rest fail.
+        singleWheelRevealAtTopRef.current = true
+        readyForSecondScrollUpRef.current = true
+        firstWheelAtTopConsumedAtRef.current = null
+        suppressWheelRevealUntilRef.current = performance.now() + POST_SCROLLEND_WHEEL_SUPPRESS_MS
+        lastScrollWhileAtTopRef.current = performance.now() - MIN_MS_AFTER_LAST_SCROLL_AT_TOP - 1
+      } else {
+        lastScrollWhileAtTopRef.current = performance.now()
       }
-      lastScrollWhileAtTopRef.current = performance.now()
     }
 
     window.addEventListener('scroll', onScroll, { passive: true })
