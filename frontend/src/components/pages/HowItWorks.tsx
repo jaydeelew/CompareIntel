@@ -146,6 +146,16 @@ export const HowItWorks: React.FC = () => {
                   <li>Response time metrics to compare model speed</li>
                 </ul>
 
+                <h4>Thinking models and Reasoning</h4>
+                <p>
+                  Models marked with a <strong>thinking</strong> (T) badge may show a collapsible{' '}
+                  <strong>Reasoning</strong> block while they stream - a separate trace from the
+                  main answer when the provider sends it. That block is <strong>not saved</strong>{' '}
+                  to your history; only the final answer is kept. Some models reason internally but
+                  do not expose that text to CompareIntel, so you may see no Reasoning section even
+                  for capable models.
+                </p>
+
                 <h4>Result card actions</h4>
                 <p>
                   Each result card includes action buttons in its header. Here's what each icon

@@ -12,7 +12,7 @@ interface ThinkingModelInfoModalProps {
 }
 
 const THINKING_MODEL_MESSAGE =
-  'This is a thinking model: it uses an extended internal reasoning step before the visible answer. Responses may take longer and can use more credits than comparable chat models.'
+  'This is a thinking model: the provider may expose separable reasoning in a Reasoning section while the answer streams. That reasoning is not saved with your history. Responses may take longer and can use more credits than comparable chat models. Some models reason internally without exposing that text here.'
 
 export function ThinkingModelInfoModal({ isOpen, onClose }: ThinkingModelInfoModalProps) {
   const closeButtonRef = useRef<HTMLButtonElement>(null)

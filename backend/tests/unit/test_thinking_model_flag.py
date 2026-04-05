@@ -1,10 +1,12 @@
-"""OpenRouter-derived thinking-model detection (reasoning / include_reasoning parameters)."""
+"""Thinking-model (T) flag: separable streamed reasoning, not raw OpenRouter reasoning params."""
 
 from app.llm.registry import (
     get_openrouter_thinking_model_flag,
     is_thinking_model_from_openrouter_entry,
+    is_thinking_model_registry_file_value,
     openrouter_reasoning_request_body,
     should_request_openrouter_reasoning_traces,
+    streams_separable_reasoning_from_openrouter_entry,
 )
 
 
@@ -30,8 +32,21 @@ def test_qwen_instruct_not_thinking_in_snapshot() -> None:
     assert get_openrouter_thinking_model_flag("qwen/qwen3-next-80b-a3b-instruct") is False
 
 
+def test_grok_4_not_flagged_despite_reasoning_params() -> None:
+    assert get_openrouter_thinking_model_flag("x-ai/grok-4") is False
+
+
+def test_registry_file_value_includes_snapshot_overrides() -> None:
+    assert is_thinking_model_registry_file_value("anthropic/claude-opus-4.5") is True
+    assert is_thinking_model_registry_file_value("x-ai/grok-4") is False
+
+
 def test_should_request_reasoning_for_claude_37() -> None:
     assert should_request_openrouter_reasoning_traces("anthropic/claude-3.7-sonnet") is True
+
+
+def test_should_not_request_reasoning_for_grok_4() -> None:
+    assert should_request_openrouter_reasoning_traces("x-ai/grok-4") is False
 
 
 def test_openrouter_reasoning_body_anthropic_uses_max_tokens() -> None:
@@ -55,3 +70,21 @@ def test_is_thinking_model_from_openrouter_entry_live_shape() -> None:
     )
     assert is_thinking_model_from_openrouter_entry({}) is None
     assert is_thinking_model_from_openrouter_entry(None) is None
+
+
+def test_streams_separable_false_when_description_denies_exposure() -> None:
+    entry = {
+        "id": "vendor/model-x",
+        "supported_parameters": ["reasoning", "max_tokens"],
+        "description": "Great model. Note that reasoning is not exposed to the client.",
+    }
+    assert streams_separable_reasoning_from_openrouter_entry(entry) is False
+
+
+def test_streams_separable_respects_id_blocklist() -> None:
+    entry = {
+        "id": "x-ai/grok-4",
+        "supported_parameters": ["reasoning", "include_reasoning"],
+        "description": "Marketing text without denial markers.",
+    }
+    assert streams_separable_reasoning_from_openrouter_entry(entry) is False

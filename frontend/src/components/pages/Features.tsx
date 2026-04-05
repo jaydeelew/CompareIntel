@@ -128,6 +128,28 @@ export const Features: React.FC = () => {
           </section>
 
           <section className="seo-section">
+            <h2>Thinking models and the Reasoning section</h2>
+            <p>
+              Some language models are labeled with a <strong>thinking</strong> indicator (T badge)
+              in the model picker. CompareIntel marks these when the provider exposes{' '}
+              <strong>separable reasoning</strong> in the live response stream: text that appears in
+              a collapsible <strong>Reasoning</strong> section above the main answer while the model
+              responds.
+            </p>
+            <p>
+              That reasoning text is <strong>only shown for the current run</strong> - it is not
+              saved with your conversation history. The final visible answer is what persists.
+            </p>
+            <p>
+              Many models still perform internal reasoning before answering but{' '}
+              <strong>do not stream or expose</strong> those steps to CompareIntel. For those models
+              you will see the main response only, even if the model is reasoning-heavy under the
+              hood. The thinking label specifically reflects separable reasoning output in our UI,
+              not every model that thinks internally.
+            </p>
+          </section>
+
+          <section className="seo-section">
             <h2>Advanced Rendering Capabilities</h2>
             <p>
               CompareIntel doesn't just show raw text—we render AI responses beautifully with full

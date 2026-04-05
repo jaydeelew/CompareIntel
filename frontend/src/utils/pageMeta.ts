@@ -42,11 +42,11 @@ const PAGE_META: Record<string, PageMeta> = {
   '/features': {
     title: 'Features - CompareIntel',
     description:
-      'Explore CompareIntel features: compare AI models from leading providers, real-time streaming, LaTeX rendering, syntax highlighting, conversation history, and more.',
+      'Explore CompareIntel: side-by-side AI comparison, streaming, thinking models with optional Reasoning blocks (not saved), LaTeX, code highlighting, and conversation history.',
     canonical: `${BASE_URL}/features`,
     ogTitle: 'Features - CompareIntel',
     ogDescription:
-      'Explore CompareIntel features: compare AI models from leading providers, real-time streaming, LaTeX rendering, syntax highlighting, conversation history, and more.',
+      'Explore CompareIntel: side-by-side AI comparison, streaming, thinking models with optional Reasoning blocks (not saved), LaTeX, code highlighting, and conversation history.',
     ogImage: DEFAULT_OG_IMAGE,
   },
   '/image-generation': {
@@ -62,21 +62,21 @@ const PAGE_META: Record<string, PageMeta> = {
   '/how-it-works': {
     title: 'How It Works - CompareIntel',
     description:
-      'Learn how CompareIntel works. Compare AI models side-by-side, test prompts simultaneously, and analyze responses with advanced formatting support.',
+      'How to compare AI models on CompareIntel: select models, prompt once, stream answers side-by-side. Thinking models may show a Reasoning section (not saved); some models reason internally without exposing it.',
     canonical: `${BASE_URL}/how-it-works`,
     ogTitle: 'How It Works - CompareIntel',
     ogDescription:
-      'Learn how CompareIntel works. Compare AI models side-by-side, test prompts simultaneously, and analyze responses with advanced formatting support.',
+      'How to compare AI models on CompareIntel: select models, prompt once, stream answers side-by-side. Thinking models may show a Reasoning section (not saved); some models reason internally without exposing it.',
     ogImage: DEFAULT_OG_IMAGE,
   },
   '/faq': {
     title: 'FAQ - CompareIntel',
     description:
-      'Frequently asked questions about CompareIntel. Learn about AI model comparison, pricing, features, and how to get started.',
+      'CompareIntel FAQ: AI model comparison, credits, thinking models, Reasoning blocks (not saved), features, pricing, and getting started.',
     canonical: `${BASE_URL}/faq`,
     ogTitle: 'FAQ - CompareIntel',
     ogDescription:
-      'Frequently asked questions about CompareIntel. Learn about AI model comparison, pricing, features, and how to get started.',
+      'CompareIntel FAQ: AI model comparison, credits, thinking models, Reasoning blocks (not saved), features, pricing, and getting started.',
     ogImage: DEFAULT_OG_IMAGE,
   },
   '/privacy-policy': {
