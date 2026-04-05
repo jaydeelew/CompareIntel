@@ -523,7 +523,8 @@
   bottom: auto;
   right: auto;
   z-index: var(--z-tooltip);
-  transform: translate(-50%, calc(-100% - 6px));
+  /* Extra gap above anchor so the ::after drop arrow does not sit on the button border */
+  transform: translate(-50%, calc(-100% - 14px));
   pointer-events: auto;
   transition: opacity 0.15s ease;
 }

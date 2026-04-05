@@ -234,7 +234,7 @@ function ModelNameWithInfoTooltip({
             <ThinkingModelIcon className="thinking-model-icon" />
           </button>
         ) : (
-          <StyledTooltip text="Thinking model">
+          <StyledTooltip usePortal text="Thinking model">
             <span className="thinking-model-icon-wrap" aria-hidden>
               <ThinkingModelIcon className="thinking-model-icon" />
             </span>
@@ -766,7 +766,10 @@ export const ModelsSection: React.FC<ModelsSectionProps> = ({
                                 flexShrink: 0,
                               }
                               return isMobileLayout ? (
-                                <StyledTooltip text="This model can access the Internet — tap for info">
+                                <StyledTooltip
+                                  usePortal
+                                  text="This model can access the Internet — tap for info"
+                                >
                                   <button
                                     type="button"
                                     className="web-search-indicator indicator-tappable"
@@ -782,7 +785,7 @@ export const ModelsSection: React.FC<ModelsSectionProps> = ({
                                   </button>
                                 </StyledTooltip>
                               ) : (
-                                <StyledTooltip text="This model can access the Internet">
+                                <StyledTooltip usePortal text="This model can access the Internet">
                                   <span className="web-search-indicator" style={commonStyle}>
                                     {indicator}
                                   </span>
@@ -839,7 +842,10 @@ export const ModelsSection: React.FC<ModelsSectionProps> = ({
                     <div className="selected-model-actions">
                       {model.supports_web_search &&
                         (isMobileLayout ? (
-                          <StyledTooltip text="This model can access the Internet — tap for info">
+                          <StyledTooltip
+                            usePortal
+                            text="This model can access the Internet — tap for info"
+                          >
                             <button
                               type="button"
                               className="web-search-indicator indicator-tappable"
@@ -876,7 +882,7 @@ export const ModelsSection: React.FC<ModelsSectionProps> = ({
                             </button>
                           </StyledTooltip>
                         ) : (
-                          <StyledTooltip text="This model can access the Internet">
+                          <StyledTooltip usePortal text="This model can access the Internet">
                             <span
                               className="web-search-indicator"
                               style={{ display: 'inline-flex', alignItems: 'center', opacity: 1 }}
