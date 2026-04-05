@@ -56,6 +56,8 @@ export interface ResultsAreaProps {
   onBreakout: (modelId: string) => void
   onHideOthers: (modelId: string) => void
   onCopyMessage: (modelId: string, messageId: string, content: string) => void
+  streamingReasoningByModel?: Record<string, string>
+  streamAnswerStartedByModel?: Record<string, boolean>
 }
 
 export function ResultsArea({
@@ -95,6 +97,8 @@ export function ResultsArea({
   onBreakout,
   onHideOthers,
   onCopyMessage,
+  streamingReasoningByModel = {},
+  streamAnswerStartedByModel = {},
 }: ResultsAreaProps) {
   return (
     <ErrorBoundary>
@@ -133,6 +137,8 @@ export function ResultsArea({
           onHideOthers={onHideOthers}
           onCopyMessage={onCopyMessage}
           isTutorialActive={isTutorialActive}
+          streamingReasoningByModel={streamingReasoningByModel}
+          streamAnswerStartedByModel={streamAnswerStartedByModel}
         />
       </section>
     </ErrorBoundary>

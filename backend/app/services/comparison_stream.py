@@ -274,6 +274,18 @@ async def generate_stream(ctx: StreamContext) -> Any:
                                         loop,
                                     )
                                     continue
+                                if isinstance(chunk, dict) and chunk.get("type") == "reasoning":
+                                    asyncio.run_coroutine_threadsafe(
+                                        chunk_queue.put(
+                                            {
+                                                "type": "reasoning",
+                                                "model": model_id,
+                                                "content": chunk.get("content") or "",
+                                            }
+                                        ),
+                                        loop,
+                                    )
+                                    continue
                                 is_keepalive = False
                                 if chunk == " ":
                                     if len(content) == 0:
@@ -434,6 +446,9 @@ async def generate_stream(ctx: StreamContext) -> Any:
                         if chunk_data["type"] == "chunk":
                             yield f"data: {json.dumps({'model': chunk_data['model'], 'type': 'chunk', 'content': chunk_data['content']})}\n\n"
                             chunks_processed = True
+                        elif chunk_data["type"] == "reasoning":
+                            yield f"data: {json.dumps({'model': chunk_data['model'], 'type': 'reasoning', 'content': chunk_data['content']})}\n\n"
+                            chunks_processed = True
                         elif chunk_data["type"] == "image":
                             mid = chunk_data.get("model")
                             url = chunk_data.get("url", "")
@@ -473,6 +488,9 @@ async def generate_stream(ctx: StreamContext) -> Any:
                         if chunk_data["type"] == "chunk":
                             yield f"data: {json.dumps({'model': chunk_data['model'], 'type': 'chunk', 'content': chunk_data['content']})}\n\n"
                             chunks_processed = True
+                        elif chunk_data["type"] == "reasoning":
+                            yield f"data: {json.dumps({'model': chunk_data['model'], 'type': 'reasoning', 'content': chunk_data['content']})}\n\n"
+                            chunks_processed = True
                         elif chunk_data["type"] == "image":
                             mid = chunk_data.get("model")
                             url = chunk_data.get("url", "")
@@ -505,6 +523,9 @@ async def generate_stream(ctx: StreamContext) -> Any:
                                 model_last_activity[chunk_model_id] = time.time()
                             if chunk_data["type"] == "chunk":
                                 yield f"data: {json.dumps({'model': chunk_data['model'], 'type': 'chunk', 'content': chunk_data['content']})}\n\n"
+                                chunks_processed = True
+                            elif chunk_data["type"] == "reasoning":
+                                yield f"data: {json.dumps({'model': chunk_data['model'], 'type': 'reasoning', 'content': chunk_data['content']})}\n\n"
                                 chunks_processed = True
                             elif chunk_data["type"] == "image":
                                 mid = chunk_data.get("model")

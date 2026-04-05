@@ -24,6 +24,7 @@ from ...dependencies import require_admin_role
 from ...llm.registry import (
     _load_registry,
     get_registry_path,
+    is_thinking_model_from_openrouter_entry,
     load_registry,
     reload_registry,
     save_registry,
@@ -354,6 +355,10 @@ async def add_model(
             "supports_web_search": supports_web_search,
             "supports_image_generation": is_image_model,
         }
+        if not is_image_model:
+            thinking_flag = is_thinking_model_from_openrouter_entry(model_data)
+            if thinking_flag is not None:
+                new_model["is_thinking_model"] = thinking_flag
         if hasattr(req, "available") and not req.available:
             new_model["available"] = False
         if hasattr(req, "knowledge_cutoff") and req.knowledge_cutoff:
@@ -660,6 +665,10 @@ async def add_model_stream(
                 "supports_web_search": supports_web_search,
                 "supports_image_generation": is_image_model,
             }
+            if not is_image_model:
+                thinking_flag = is_thinking_model_from_openrouter_entry(model_data)
+                if thinking_flag is not None:
+                    new_model["is_thinking_model"] = thinking_flag
             if hasattr(req, "knowledge_cutoff") and req.knowledge_cutoff:
                 new_model["knowledge_cutoff"] = req.knowledge_cutoff
             elif hasattr(req, "knowledge_cutoff") and req.knowledge_cutoff is None:

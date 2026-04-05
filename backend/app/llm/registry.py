@@ -18,6 +18,11 @@ _OPENROUTER_MODELS_PATH = Path(__file__).resolve().parent.parent.parent / "openr
 # Cache for model temperature support (model_id -> bool)
 _temperature_support_cache: dict[str, bool] | None = None
 
+# OpenRouter /models: ids that appear in openrouter_models.json snapshot
+_openrouter_known_ids_cache: frozenset[str] | None = None
+# Subset: models that advertise reasoning / include_reasoning parameters (separable thinking traces)
+_openrouter_thinking_model_ids_cache: frozenset[str] | None = None
+
 # Cache for model vision support (model_id -> bool)
 _vision_support_cache: dict[str, bool] | None = None
 
@@ -125,6 +130,91 @@ def get_model_supports_temperature(model_id: str) -> bool:
     if model_id in KNOWN_NO_TEMPERATURE_MODEL_IDS:
         return False
     return _load_temperature_support_map().get(model_id, True)  # Default True if unknown
+
+
+def is_thinking_model_from_openrouter_entry(model_data: dict[str, Any] | None) -> bool | None:
+    """True if OpenRouter lists ``reasoning`` / ``include_reasoning`` in ``supported_parameters``.
+
+    Use with a single object from the live ``/api/v1/models`` ``data[]`` list or the local snapshot.
+    Returns ``None`` if the payload does not include a usable ``supported_parameters`` list.
+    """
+    if not model_data or not isinstance(model_data, dict):
+        return None
+    params = model_data.get("supported_parameters")
+    if not isinstance(params, list):
+        return None
+    return "reasoning" in params or "include_reasoning" in params
+
+
+def _load_openrouter_model_ids_and_thinking() -> tuple[frozenset[str], frozenset[str]]:
+    """Parse openrouter_models.json once: all ids, and ids with reasoning API support."""
+    global _openrouter_known_ids_cache, _openrouter_thinking_model_ids_cache
+    if _openrouter_known_ids_cache is not None and _openrouter_thinking_model_ids_cache is not None:
+        return _openrouter_known_ids_cache, _openrouter_thinking_model_ids_cache
+
+    known: set[str] = set()
+    thinking: set[str] = set()
+    try:
+        if _OPENROUTER_MODELS_PATH.exists():
+            with _OPENROUTER_MODELS_PATH.open() as f:
+                data = json.load(f)
+            for model in data.get("data", []):
+                model_id = model.get("id")
+                if not model_id:
+                    continue
+                known.add(model_id)
+                if is_thinking_model_from_openrouter_entry(model):
+                    thinking.add(model_id)
+    except Exception:
+        pass
+
+    _openrouter_known_ids_cache = frozenset(known)
+    _openrouter_thinking_model_ids_cache = frozenset(thinking)
+    return _openrouter_known_ids_cache, _openrouter_thinking_model_ids_cache
+
+
+def get_openrouter_thinking_model_flag(model_id: str) -> bool | None:
+    """If ``model_id`` is in the local OpenRouter snapshot, return whether it supports reasoning params.
+
+    OpenRouter exposes this via ``supported_parameters`` (``reasoning``, ``include_reasoning``).
+    When the id is missing from the snapshot, returns ``None`` so callers can fall back to heuristics.
+    """
+    known, thinking = _load_openrouter_model_ids_and_thinking()
+    if model_id not in known:
+        return None
+    return model_id in thinking
+
+
+def should_request_openrouter_reasoning_traces(model_id: str) -> bool:
+    """Whether to add a ``reasoning`` object to OpenRouter chat ``extra_body``.
+
+    Without it, many providers (notably Anthropic) omit separable reasoning deltas from the stream,
+    so the UI never receives ``delta.reasoning`` / ``reasoning_content`` chunks.
+    """
+    flag = get_openrouter_thinking_model_flag(model_id)
+    if flag is True:
+        return True
+    if flag is False:
+        return False
+    for m in OPENROUTER_MODELS:
+        if m.get("id") == model_id and m.get("is_thinking_model") is True:
+            return True
+    return False
+
+
+def openrouter_reasoning_request_body(model_id: str) -> dict[str, Any]:
+    """Value for ``extra_body[\"reasoning\"]`` (see OpenRouter reasoning-tokens docs)."""
+    mid = model_id.lower()
+    # Anthropic: thinking budget via max_tokens (OpenRouter normalizes to provider).
+    # Provider rejects values above 31999 (e.g. 400: reasoning.maxtokens must be 1024–31999).
+    if mid.startswith("anthropic/"):
+        return {"max_tokens": 31999}
+    # OpenAI o-series / GPT-5: effort-based
+    if mid.startswith("openai/") and ("/o" in mid or "gpt-5" in mid):
+        return {"effort": "medium"}
+    if mid.startswith("x-ai/"):
+        return {"effort": "medium"}
+    return {"enabled": True}
 
 
 def _load_image_gen_support_map() -> dict[str, bool]:

@@ -5,6 +5,29 @@ import { RESULT_TAB } from '../types'
 import { showNotification, getSafeId, formatConversationMessage } from '../utils'
 import logger from '../utils/logger'
 
+/** Omit ephemeral reasoning panels from html-to-image captures (return false = exclude node). */
+function includeNodeInChatScreenshot(node: HTMLElement): boolean {
+  return !node.classList?.contains('reasoning-collapsible')
+}
+
+/**
+ * Height for html-to-image: scrollHeight/clientHeight can include empty flex space inside the
+ * container; sum children bottoms + bottom padding to match the visible stack only.
+ */
+function getTightConversationContentHeightPx(el: HTMLElement): number {
+  const elRect = el.getBoundingClientRect()
+  const padBottom = parseFloat(getComputedStyle(el).paddingBottom) || 0
+  if (el.children.length === 0) {
+    return Math.ceil(elRect.height)
+  }
+  let maxChildBottom = 0
+  for (let i = 0; i < el.children.length; i++) {
+    const cr = el.children[i].getBoundingClientRect()
+    maxChildBottom = Math.max(maxChildBottom, cr.bottom)
+  }
+  return Math.ceil(maxChildBottom - elRect.top + padBottom)
+}
+
 export interface UseScreenshotCopyOptions {
   /** Current conversations */
   conversations: ModelConversation[]
@@ -105,6 +128,12 @@ export function useScreenshotCopy({
 
         const toBlob = htmlToImage.toBlob
 
+        // Tight size after .screenshot-mode flex overrides — do not use scrollHeight (often inflated)
+        void content.offsetHeight
+        const captureRect = content.getBoundingClientRect()
+        const captureWidth = Math.ceil(captureRect.width)
+        const captureHeight = getTightConversationContentHeightPx(content)
+
         // Use the actual computed background color to preserve the dark theme
         const computedBg = getComputedStyle(content).backgroundColor
         const backgroundColor =
@@ -117,6 +146,9 @@ export function useScreenshotCopy({
         const blob = await toBlob(content, {
           pixelRatio: 2, // High quality
           backgroundColor,
+          width: captureWidth,
+          height: captureHeight,
+          filter: includeNodeInChatScreenshot,
           // Google Fonts loaded with crossorigin in index.html, so html-to-image can
           // read and embed them. Other cross-origin stylesheets (KaTeX, Prism) are
           // gracefully skipped by the library's internal try-catch.

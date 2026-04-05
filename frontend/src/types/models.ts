@@ -39,6 +39,11 @@ export interface Model {
   supports_image_generation?: boolean
   /** Whether the model supports the temperature parameter (false = fixed/deterministic) */
   supports_temperature?: boolean
+  /**
+   * When set by the API: from OpenRouter `supported_parameters` (`reasoning` / `include_reasoning`).
+   * Omitted if the model id is missing from the local OpenRouter snapshot — use client heuristics then.
+   */
+  is_thinking_model?: boolean
   /** Supported aspect ratios for image generation (e.g. ["1:1", "16:9"]) */
   image_aspect_ratios?: string[]
   /** Supported image sizes (e.g. ["1K", "2K", "4K"]) */

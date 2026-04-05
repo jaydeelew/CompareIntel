@@ -1,11 +1,23 @@
 import React, { useState, useEffect } from 'react'
 
 import { useResponsive } from '../../hooks'
-import { RESULT_TAB } from '../../types'
+import { RESULT_TAB, createModelId } from '../../types'
 import type { ModelConversation, ActiveResultTabs, ResultTab } from '../../types'
 import { isErrorMessage } from '../../utils/error'
 
 import { ResultCard, type Model } from './ResultCard'
+
+/** Resolve reasoning text when map keys differ slightly from conversation.modelId (e.g. whitespace). */
+function getStreamingReasoningForModel(modelId: string, byModel: Record<string, string>): string {
+  const direct = byModel[modelId]
+  if (direct?.trim()) return direct
+  const target = createModelId(modelId)
+  for (const [k, v] of Object.entries(byModel)) {
+    if (!v?.trim()) continue
+    if (createModelId(k) === target) return v
+  }
+  return ''
+}
 
 export interface ResultsDisplayProps {
   conversations: ModelConversation[]
@@ -33,6 +45,8 @@ export interface ResultsDisplayProps {
   className?: string
   /** When true, disables card action buttons (not model tabs or formatted/raw tabs) */
   isTutorialActive?: boolean
+  streamingReasoningByModel?: Record<string, string>
+  streamAnswerStartedByModel?: Record<string, boolean>
 }
 
 // Renders comparison results as a grid (desktop) or tabs (mobile)
@@ -55,6 +69,8 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
   onCopyMessage,
   className = '',
   isTutorialActive = false,
+  streamingReasoningByModel = {},
+  streamAnswerStartedByModel = {},
 }) => {
   const visibleConversations = conversations.filter(
     conv => Boolean(conv?.modelId) && !closedCards.has(conv.modelId)
@@ -181,6 +197,11 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
               onCopyMessage={onCopyMessage}
               showBreakoutButton={visibleConversations.length > 1 && !isError}
               isTutorialActive={isTutorialActive}
+              streamingReasoning={getStreamingReasoningForModel(
+                activeConversation.modelId,
+                streamingReasoningByModel
+              )}
+              streamAnswerStarted={streamAnswerStartedByModel[activeConversation.modelId] ?? false}
             />
           </div>
         </div>
@@ -239,6 +260,11 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
               onCopyMessage={onCopyMessage}
               showBreakoutButton={visibleConversations.length > 1 && !isError}
               isTutorialActive={isTutorialActive}
+              streamingReasoning={getStreamingReasoningForModel(
+                conversation.modelId,
+                streamingReasoningByModel
+              )}
+              streamAnswerStarted={streamAnswerStartedByModel[conversation.modelId] ?? false}
             />
           )
         })}

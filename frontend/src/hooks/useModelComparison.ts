@@ -9,7 +9,7 @@
  * state management for comparison-related data.
  */
 
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback, useMemo, useEffect } from 'react'
 
 import type {
   CompareResponse,
@@ -38,6 +38,18 @@ export interface UseModelComparisonReturn {
   setConversations: React.Dispatch<React.SetStateAction<ModelConversation[]>>
   isFollowUpMode: boolean
   setIsFollowUpMode: React.Dispatch<React.SetStateAction<boolean>>
+  /** Ephemeral model reasoning text during streaming (not persisted). */
+  streamingReasoningByModel: Record<string, string>
+  /**
+   * Merges live state with a ref backup so reasoning stays visible if React state is
+   * accidentally cleared before the next explicit reset (new comparison / login / clear).
+   */
+  effectiveStreamingReasoningByModel: Record<string, string>
+  setStreamingReasoningByModel: React.Dispatch<React.SetStateAction<Record<string, string>>>
+  /** Per model: visible answer tokens have started (collapses reasoning panel). */
+  streamAnswerStartedByModel: Record<string, boolean>
+  setStreamAnswerStartedByModel: React.Dispatch<React.SetStateAction<Record<string, boolean>>>
+  clearStreamingReasoningUi: () => void
   closedCards: Set<string>
   setClosedCards: React.Dispatch<React.SetStateAction<Set<string>>>
 
@@ -99,6 +111,29 @@ export function useModelComparison(): UseModelComparisonReturn {
   const [conversations, setConversations] = useState<ModelConversation[]>([])
   const [isFollowUpMode, setIsFollowUpMode] = useState(false)
   const [closedCards, setClosedCards] = useState<Set<string>>(new Set())
+  const [streamingReasoningByModel, setStreamingReasoningByModel] = useState<
+    Record<string, string>
+  >({})
+  const [streamAnswerStartedByModel, setStreamAnswerStartedByModel] = useState<
+    Record<string, boolean>
+  >({})
+
+  /** Survives mistaken clears of streamingReasoningByModel until clearStreamingReasoningUi runs. */
+  const streamingReasoningBackupRef = useRef<Record<string, string>>({})
+
+  useEffect(() => {
+    for (const [k, v] of Object.entries(streamingReasoningByModel)) {
+      if (v && v.trim()) streamingReasoningBackupRef.current[k] = v
+    }
+  }, [streamingReasoningByModel])
+
+  const effectiveStreamingReasoningByModel = useMemo(() => {
+    const out: Record<string, string> = { ...streamingReasoningBackupRef.current }
+    for (const [k, v] of Object.entries(streamingReasoningByModel)) {
+      if (v && v.trim()) out[k] = v
+    }
+    return out
+  }, [streamingReasoningByModel])
 
   // Tab state
   const [activeResultTabs, setActiveResultTabs] = useState<ActiveResultTabs>({})
@@ -134,11 +169,18 @@ export function useModelComparison(): UseModelComparisonReturn {
   const syncingFromElementRef = useRef<HTMLElement | null>(null)
   const lastSyncTimeRef = useRef<number>(0)
 
+  const clearStreamingReasoningUi = useCallback(() => {
+    streamingReasoningBackupRef.current = {}
+    setStreamingReasoningByModel({})
+    setStreamAnswerStartedByModel({})
+  }, [])
+
   // Reset comparison state (for new comparisons)
   const resetComparisonState = useCallback(() => {
     setResponse(null)
     setClosedCards(new Set())
     setProcessingTime(null)
+    clearStreamingReasoningUi()
     userCancelledRef.current = false
     hasScrolledToResultsRef.current = false
     autoScrollPausedRef.current.clear()
@@ -146,7 +188,7 @@ export function useModelComparison(): UseModelComparisonReturn {
     lastScrollTopRef.current.clear()
     lastAlignedRoundRef.current = 0
     setIsScrollLocked(false)
-  }, [])
+  }, [clearStreamingReasoningUi])
 
   // Cancel ongoing comparison
   const cancelComparison = useCallback(() => {
@@ -202,6 +244,12 @@ export function useModelComparison(): UseModelComparisonReturn {
     setIsFollowUpMode,
     closedCards,
     setClosedCards,
+    streamingReasoningByModel,
+    effectiveStreamingReasoningByModel,
+    setStreamingReasoningByModel,
+    streamAnswerStartedByModel,
+    setStreamAnswerStartedByModel,
+    clearStreamingReasoningUi,
 
     // Tab state
     activeResultTabs,

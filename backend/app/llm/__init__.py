@@ -15,8 +15,12 @@ from .registry import (
     get_model_supports_image_generation,
     get_model_supports_temperature,
     get_model_supports_vision,
+    get_openrouter_thinking_model_flag,
     is_model_available_for_tier,
+    is_thinking_model_from_openrouter_entry,
+    openrouter_reasoning_request_body,
     reload_registry,
+    should_request_openrouter_reasoning_traces,
     sort_models_by_tier_and_version,
 )
 from .streaming import (
@@ -76,6 +80,10 @@ __all__ = [
     "get_model_supports_image_generation",
     "get_model_supports_temperature",
     "get_model_supports_vision",
+    "get_openrouter_thinking_model_flag",
+    "is_thinking_model_from_openrouter_entry",
+    "openrouter_reasoning_request_body",
+    "should_request_openrouter_reasoning_traces",
     "get_model_token_limits_from_openrouter",
     "is_model_available_for_tier",
     "is_time_sensitive_query",

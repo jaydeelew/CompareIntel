@@ -62,7 +62,8 @@
         "category": "Language",
         "provider": "Anthropic",
         "supports_web_search": true,
-        "knowledge_cutoff": "May 2025"
+        "knowledge_cutoff": "May 2025",
+        "is_thinking_model": true
       },
       {
         "id": "anthropic/claude-sonnet-4.5",
@@ -71,7 +72,8 @@
         "category": "Language",
         "provider": "Anthropic",
         "supports_web_search": true,
-        "knowledge_cutoff": "May 2025"
+        "knowledge_cutoff": "May 2025",
+        "is_thinking_model": true
       },
       {
         "id": "anthropic/claude-opus-4.6",
@@ -80,7 +82,8 @@
         "category": "Language",
         "provider": "Anthropic",
         "supports_web_search": true,
-        "knowledge_cutoff": "May 2025"
+        "knowledge_cutoff": "May 2025",
+        "is_thinking_model": true
       },
       {
         "id": "anthropic/claude-sonnet-4.6",
@@ -89,7 +92,8 @@
         "category": "Language",
         "provider": "Anthropic",
         "supports_web_search": true,
-        "knowledge_cutoff": "May 2025"
+        "knowledge_cutoff": "May 2025",
+        "is_thinking_model": true
       }
     ],
     "ArceeAi": [
@@ -1119,7 +1123,8 @@
         "description": "Grok 4.1 Fast is xAI's best agentic tool calling model that shines in real-world use cases like customer support and deep research.",
         "category": "Language",
         "provider": "xAI",
-        "knowledge_cutoff": "August 2025"
+        "knowledge_cutoff": "August 2025",
+        "is_thinking_model": true
       },
       {
         "id": "x-ai/grok-4.20",
@@ -1129,7 +1134,8 @@
         "provider": "xAI",
         "supports_web_search": true,
         "supports_image_generation": false,
-        "knowledge_cutoff": null
+        "knowledge_cutoff": null,
+        "is_thinking_model": true
       },
       {
         "id": "x-ai/grok-5",

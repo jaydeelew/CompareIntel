@@ -199,6 +199,8 @@ export function useComparisonStreaming(
       return
     }
 
+    stateCb.clearStreamingReasoningUi()
+
     // Store original selected models for follow-up comparison logic (only for new comparisons, not follow-ups)
     if (!isFollowUpMode) {
       // Clear the currently visible comparison ID so the previous one will appear in history
@@ -509,11 +511,15 @@ export function useComparisonStreaming(
         setIsFollowUpMode: stateCb.setIsFollowUpMode,
         loadHistoryFromAPI: helpers.loadHistoryFromAPI,
         apiClientDeleteCache: (key: string) => apiClient.deleteCache(key),
+        setStreamingReasoningByModel: stateCb.setStreamingReasoningByModel,
+        setStreamAnswerStartedByModel: stateCb.setStreamAnswerStartedByModel,
+        clearStreamingReasoningUi: stateCb.clearStreamingReasoningUi,
       })
 
       await applyStreamCompletion(streamResult, startTime, userTimestamp)
     } catch (err) {
       handleStreamError(err, streamResult, startTime)
+      stateCb.clearStreamingReasoningUi()
     } finally {
       currentAbortControllerRef.current = null
       stateCb.setCurrentAbortController(null)

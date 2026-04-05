@@ -106,6 +106,9 @@ export interface StreamingStateCallbacks {
   setIsScrollLocked: (locked: boolean) => void
   setUsageCount: React.Dispatch<React.SetStateAction<number>>
   setIsFollowUpMode: (mode: boolean) => void
+  setStreamingReasoningByModel: React.Dispatch<React.SetStateAction<Record<string, string>>>
+  setStreamAnswerStartedByModel: React.Dispatch<React.SetStateAction<Record<string, boolean>>>
+  clearStreamingReasoningUi: () => void
 }
 
 export interface StreamingCreditCallbacks {

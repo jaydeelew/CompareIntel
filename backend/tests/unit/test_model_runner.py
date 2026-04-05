@@ -6,6 +6,7 @@ Tests cover:
 - Error handling
 """
 
+from app.llm.streaming import REASONING_STREAM_TYPE
 from app.model_runner import (
     call_openrouter_streaming,
 )
@@ -20,5 +21,9 @@ class TestModelRunnerMockMode:
             call_openrouter_streaming(prompt="Test prompt", model_id="gpt-4", use_mock=True)
         )
         assert len(chunks) > 0
-        # All chunks should be strings
-        assert all(isinstance(chunk, str) for chunk in chunks)
+        # Mock mode yields one reasoning dict then string answer chunks
+        assert chunks[0] == {
+            "type": REASONING_STREAM_TYPE,
+            "content": "[Mock] Simulated planning step before answering.\n\n",
+        }
+        assert all(isinstance(chunk, str) for chunk in chunks[1:])
