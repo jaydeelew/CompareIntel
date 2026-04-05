@@ -5,6 +5,7 @@ from app.llm.registry import (
     is_thinking_model_from_openrouter_entry,
     is_thinking_model_registry_file_value,
     openrouter_reasoning_request_body,
+    resolve_is_thinking_model_for_ui,
     should_request_openrouter_reasoning_traces,
     streams_separable_reasoning_from_openrouter_entry,
 )
@@ -39,6 +40,18 @@ def test_grok_4_not_flagged_despite_reasoning_params() -> None:
 def test_registry_file_value_includes_snapshot_overrides() -> None:
     assert is_thinking_model_registry_file_value("anthropic/claude-opus-4.5") is True
     assert is_thinking_model_registry_file_value("x-ai/grok-4") is False
+
+
+def test_kimi_k25_flagged_when_missing_from_bundled_snapshot() -> None:
+    """Align T badge + extra_body reasoning with streamed separable reasoning (see STREAMING_REASONING_MODEL_IDS_NOT_IN_SNAPSHOT)."""
+    assert get_openrouter_thinking_model_flag("moonshotai/kimi-k2.5") is None
+    assert resolve_is_thinking_model_for_ui("moonshotai/kimi-k2.5", {}) is True
+    assert is_thinking_model_registry_file_value("moonshotai/kimi-k2.5") is True
+    assert should_request_openrouter_reasoning_traces("moonshotai/kimi-k2.5") is True
+
+
+def test_openrouter_reasoning_body_moonshot_uses_enabled() -> None:
+    assert openrouter_reasoning_request_body("moonshotai/kimi-k2.5") == {"enabled": True}
 
 
 def test_should_request_reasoning_for_claude_37() -> None:

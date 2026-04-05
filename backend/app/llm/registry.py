@@ -168,6 +168,8 @@ STREAMING_REASONING_MODEL_IDS_NOT_IN_SNAPSHOT: frozenset[str] = frozenset(
         "anthropic/claude-sonnet-4.5",
         "anthropic/claude-opus-4.6",
         "anthropic/claude-sonnet-4.6",
+        # Moonshot: streams separable reasoning; id may be absent from bundled snapshot until refresh.
+        "moonshotai/kimi-k2.5",
     }
 )
 

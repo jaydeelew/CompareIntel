@@ -520,7 +520,8 @@
         "category": "Language",
         "provider": "Moonshot AI",
         "supports_web_search": true,
-        "knowledge_cutoff": null
+        "knowledge_cutoff": null,
+        "is_thinking_model": true
       }
     ],
     "Mistral": [
