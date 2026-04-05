@@ -512,6 +512,17 @@
         "knowledge_cutoff": "June 2025"
       }
     ],
+    "Moonshot AI": [
+      {
+        "id": "moonshotai/kimi-k2.5",
+        "name": "Kimi K2.5",
+        "description": "Moonshot AI's large MoE model with strong agentic coding, long-context, and tool-use performance.",
+        "category": "Language",
+        "provider": "Moonshot AI",
+        "supports_web_search": true,
+        "knowledge_cutoff": null
+      }
+    ],
     "Mistral": [
       {
         "id": "mistralai/devstral-medium",
