@@ -1,4 +1,4 @@
-import type { Page } from '@playwright/test'
+import type { APIRequestContext, Page } from '@playwright/test'
 
 import { waitForAuthState, waitForReactHydration } from './fixtures'
 import { test, expect } from './test-setup'
@@ -29,6 +29,33 @@ async function safeWait(page: Page, ms: number) {
       return
     }
     throw error
+  }
+}
+
+/**
+ * DEV/TEST ONLY: mark the user as email-verified via create-test-user (same as global-setup).
+ * New registrations are unverified; the verification modal blocks the comparison textarea in CI.
+ */
+async function markUserVerifiedViaDevApi(
+  request: APIRequestContext,
+  email: string,
+  password: string
+): Promise<boolean> {
+  const backendURL = process.env.BACKEND_URL || 'http://localhost:8000'
+  try {
+    const res = await request.post(`${backendURL}/api/dev/create-test-user`, {
+      json: {
+        email,
+        password,
+        role: 'user',
+        is_admin: false,
+        is_verified: true,
+        is_active: true,
+      },
+    })
+    return res.ok()
+  } catch {
+    return false
   }
 }
 
@@ -553,7 +580,7 @@ test.describe('Registration and Onboarding', () => {
     })
   })
 
-  test('New user can perform first comparison', async ({ page, browserName }) => {
+  test('New user can perform first comparison', async ({ page, browserName, request }) => {
     // Increase timeout for registration + comparison test
     // WebKit and mobile need longer timeout
     const isWebKit = browserName === 'webkit'
@@ -565,10 +592,15 @@ test.describe('Registration and Onboarding', () => {
       projectName.includes('iPad') ||
       projectName.includes('Pixel') ||
       projectName.includes('Galaxy')
-    test.setTimeout(isWebKit || isFirefox || isMobileProject ? 120000 : 60000)
+    // 60s is often too short for register + models + stream; keep under Playwright CI default (90s).
+    test.setTimeout(isWebKit || isFirefox || isMobileProject ? 120000 : 90000)
     const timestamp = Date.now()
     const testEmail = `firstcomp-${timestamp}@example.com`
     const testPassword = 'TestPassword123!'
+
+    // Tutorial can appear after beforeEach or sit above the nav; clear it before any clicks.
+    await dismissTutorialOverlay(page)
+    await safeWait(page, 300)
 
     await test.step('Register and login', async () => {
       await page.getByTestId('nav-sign-up-button').click()
@@ -638,9 +670,40 @@ test.describe('Registration and Onboarding', () => {
 
       // Wait for user menu to appear (user data needs to load after registration)
       await expect(page.getByTestId('user-menu-button')).toBeVisible({ timeout: 20000 })
+
+      // Unverified users get a blocking verification modal; mark verified in DB and reload
+      // so /auth/me returns is_verified (matches E2E global-setup for fixed test users).
+      let markedVerified = false
+      for (let r = 0; r < 3; r++) {
+        markedVerified = await markUserVerifiedViaDevApi(request, testEmail, testPassword)
+        if (markedVerified) break
+        await page.waitForTimeout(600)
+      }
+      if (markedVerified) {
+        await page.reload({ waitUntil: 'domcontentloaded' })
+        await expect(page.getByTestId('user-menu-button')).toBeVisible({ timeout: 20000 })
+        await dismissTutorialOverlay(page)
+        await safeWait(page, 300)
+      }
     })
 
     await test.step('Perform first comparison', async () => {
+      const verificationOverlay = page.locator('.verification-code-overlay')
+      for (let attempt = 0; attempt < 5; attempt++) {
+        const blocked = await verificationOverlay.isVisible({ timeout: 1500 }).catch(() => false)
+        if (!blocked) break
+        await markUserVerifiedViaDevApi(request, testEmail, testPassword)
+        await page.reload({ waitUntil: 'domcontentloaded' })
+        await expect(page.getByTestId('user-menu-button')).toBeVisible({ timeout: 20000 })
+        await dismissTutorialOverlay(page)
+        await safeWait(page, 400)
+      }
+      if (await verificationOverlay.isVisible({ timeout: 2000 }).catch(() => false)) {
+        throw new Error(
+          'Verification overlay still blocks the composer after dev verify retries. Check /api/dev/create-test-user and DB.'
+        )
+      }
+
       const inputField = page.getByTestId('comparison-input-textarea')
       await expect(inputField).toBeVisible()
 

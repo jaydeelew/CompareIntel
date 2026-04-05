@@ -624,19 +624,19 @@ test.describe('Results Display Regression Tests', () => {
         }
 
         await authenticatedPage.getByTestId('comparison-submit-button').click()
+
+        await expect(firstResultCard(authenticatedPage)).toBeVisible({ timeout: 60000 })
       })
 
       await test.step('Verify breakout button exists and is clickable', async () => {
         const resultCard = firstResultCard(authenticatedPage)
-        await expect(resultCard).toBeVisible({ timeout: 30000 })
-
-        // Wait for streaming to complete
-        await authenticatedPage.waitForTimeout(5000)
+        await expect(resultCard).toBeVisible({ timeout: 15000 })
 
         const breakoutBtn = resultCard.locator(
           '[data-testid="breakout-button"], .breakout-card-btn, button[aria-label*="Break out"]'
         )
-        await expect(breakoutBtn).toBeVisible({ timeout: 5000 })
+        // Avoid fixed sleeps: reasoning models / slow CI need longer for both cards to be non-error.
+        await expect(breakoutBtn).toBeVisible({ timeout: 45000 })
 
         // Breakout runs an authenticated API call; fixed sleeps are flaky on WebKit CI.
         const breakoutResponse = authenticatedPage.waitForResponse(

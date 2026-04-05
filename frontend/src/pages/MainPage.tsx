@@ -1,6 +1,10 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 
+import '../styles/hero.css'
+import '../styles/models.css'
+import '../styles/results.css'
+
 import {
   type AttachedFile,
   type StoredAttachedFile,
