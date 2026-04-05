@@ -1,7 +1,27 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type ReactNode,
+} from 'react'
 import { createPortal } from 'react-dom'
 
-const PORTAL_HIDE_DELAY_MS = 140
+const VIEWPORT_MARGIN_PX = 8
+
+/** Keep tooltip bubble fully inside the viewport; when impossible, center horizontally. */
+function clampTooltipCenterX(anchorCenterX: number, tooltipWidth: number): number {
+  const half = tooltipWidth / 2
+  const vw = window.innerWidth
+  const minCenter = VIEWPORT_MARGIN_PX + half
+  const maxCenter = vw - VIEWPORT_MARGIN_PX - half
+  if (minCenter > maxCenter) {
+    return vw / 2
+  }
+  return Math.max(minCenter, Math.min(maxCenter, anchorCenterX))
+}
 
 interface StyledTooltipProps {
   /** Tooltip text shown on hover */
@@ -24,41 +44,44 @@ export function StyledTooltip({
   usePortal = false,
 }: StyledTooltipProps) {
   const anchorRef = useRef<HTMLSpanElement>(null)
+  const tooltipRef = useRef<HTMLSpanElement>(null)
   const [open, setOpen] = useState(false)
-  const [pos, setPos] = useState({ x: 0, y: 0 })
-  const hideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-
-  const cancelHide = useCallback(() => {
-    if (hideTimerRef.current != null) {
-      clearTimeout(hideTimerRef.current)
-      hideTimerRef.current = null
-    }
-  }, [])
+  const [pos, setPos] = useState<{ x: number; y: number; arrowLeftPx?: number }>({ x: 0, y: 0 })
 
   const syncPosition = useCallback(() => {
     const el = anchorRef.current
     if (!el) return
     const rect = el.getBoundingClientRect()
-    setPos({
-      x: rect.left + rect.width / 2,
-      y: rect.top,
-    })
+    const anchorCenterX = rect.left + rect.width / 2
+    let centerX = anchorCenterX
+    let arrowLeftPx: number | undefined
+
+    const tooltipEl = tooltipRef.current
+    if (tooltipEl) {
+      const w = tooltipEl.offsetWidth
+      if (w > 0) {
+        centerX = clampTooltipCenterX(anchorCenterX, w)
+        arrowLeftPx = anchorCenterX - centerX + w / 2
+      }
+    }
+
+    setPos({ x: centerX, y: rect.top, arrowLeftPx })
   }, [])
 
   const show = useCallback(() => {
-    cancelHide()
     syncPosition()
     setOpen(true)
-  }, [cancelHide, syncPosition])
+  }, [syncPosition])
 
-  const hideSoon = useCallback(() => {
-    cancelHide()
-    hideTimerRef.current = setTimeout(() => setOpen(false), PORTAL_HIDE_DELAY_MS)
-  }, [cancelHide])
+  const hide = useCallback(() => {
+    setOpen(false)
+  }, [])
 
   useLayoutEffect(() => {
     if (!usePortal || !open) return
     syncPosition()
+    const id = requestAnimationFrame(() => syncPosition())
+    return () => cancelAnimationFrame(id)
   }, [usePortal, open, syncPosition, text])
 
   useEffect(() => {
@@ -72,36 +95,18 @@ export function StyledTooltip({
     }
   }, [usePortal, open, syncPosition])
 
-  useEffect(() => () => cancelHide(), [cancelHide])
-
   useEffect(() => {
     if (!usePortal) return
     const root = anchorRef.current
     if (!root) return
 
     const onFocusIn = () => {
-      if (hideTimerRef.current != null) {
-        clearTimeout(hideTimerRef.current)
-        hideTimerRef.current = null
-      }
-      const el = anchorRef.current
-      if (el) {
-        const rect = el.getBoundingClientRect()
-        setPos({
-          x: rect.left + rect.width / 2,
-          y: rect.top,
-        })
-      }
       setOpen(true)
     }
 
     const onFocusOut = (e: FocusEvent) => {
       const next = e.relatedTarget as Node | null
       if (next && root.contains(next)) return
-      if (hideTimerRef.current != null) {
-        clearTimeout(hideTimerRef.current)
-        hideTimerRef.current = null
-      }
       setOpen(false)
     }
 
@@ -130,7 +135,7 @@ export function StyledTooltip({
         ref={anchorRef}
         className={`tooltip tooltip--portal-anchor ${className}`.trim()}
         onMouseEnter={show}
-        onMouseLeave={hideSoon}
+        onMouseLeave={hide}
       >
         {children}
       </span>
@@ -138,11 +143,19 @@ export function StyledTooltip({
         typeof document !== 'undefined' &&
         createPortal(
           <span
+            ref={tooltipRef}
             className="tooltip-content tooltip-content--portaled"
             role="tooltip"
-            style={{ left: pos.x, top: pos.y }}
-            onMouseEnter={cancelHide}
-            onMouseLeave={hideSoon}
+            style={
+              {
+                left: pos.x,
+                top: pos.y,
+                ...(pos.arrowLeftPx != null
+                  ? { '--tooltip-arrow-left': `${pos.arrowLeftPx}px` }
+                  : {}),
+              } as CSSProperties
+            }
+            onMouseLeave={hide}
           >
             {text}
           </span>,

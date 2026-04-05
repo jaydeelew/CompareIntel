@@ -106,7 +106,7 @@ export const ResultCard: React.FC<ResultCardProps> = ({
           <h3>{model?.name || modelId}</h3>
           <div className="header-buttons-container">
             {onScreenshot && (
-              <StyledTooltip text="Copy formatted chat history">
+              <StyledTooltip usePortal text="Copy formatted chat history">
                 <button
                   className="screenshot-card-btn"
                   disabled={isTutorialActive}
@@ -134,7 +134,7 @@ export const ResultCard: React.FC<ResultCardProps> = ({
               </StyledTooltip>
             )}
             {onCopyResponse && (
-              <StyledTooltip text="Copy raw chat history">
+              <StyledTooltip usePortal text="Copy raw chat history">
                 <button
                   className="copy-response-btn"
                   disabled={isTutorialActive}
@@ -158,7 +158,7 @@ export const ResultCard: React.FC<ResultCardProps> = ({
               </StyledTooltip>
             )}
             {onHideOthers && (
-              <StyledTooltip text="Hide all other results">
+              <StyledTooltip usePortal text="Hide all other results">
                 <button
                   className="hide-others-btn"
                   disabled={isTutorialActive}
@@ -184,7 +184,7 @@ export const ResultCard: React.FC<ResultCardProps> = ({
               </StyledTooltip>
             )}
             {onClose && (
-              <StyledTooltip text="Hide this result">
+              <StyledTooltip usePortal text="Hide this result">
                 <button
                   className="close-card-btn"
                   disabled={isTutorialActive}
@@ -208,7 +208,7 @@ export const ResultCard: React.FC<ResultCardProps> = ({
               </StyledTooltip>
             )}
             {showBreakoutButton && onBreakout && !isError && (
-              <StyledTooltip text="Continue with this model only">
+              <StyledTooltip usePortal text="Continue with this model only">
                 <button
                   type="button"
                   className="breakout-card-btn"
