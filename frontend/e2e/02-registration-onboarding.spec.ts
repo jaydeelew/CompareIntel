@@ -1,4 +1,4 @@
-import type { APIRequestContext, Page } from '@playwright/test'
+import type { Page } from '@playwright/test'
 
 import { waitForAuthState, waitForReactHydration } from './fixtures'
 import { test, expect } from './test-setup'
@@ -36,24 +36,24 @@ async function safeWait(page: Page, ms: number) {
  * DEV/TEST ONLY: mark the user as email-verified via create-test-user (same as global-setup).
  * New registrations are unverified; the verification modal blocks the comparison textarea in CI.
  */
-async function markUserVerifiedViaDevApi(
-  request: APIRequestContext,
-  email: string,
-  password: string
-): Promise<boolean> {
+async function markUserVerifiedViaDevApi(email: string, password: string): Promise<boolean> {
   const backendURL = process.env.BACKEND_URL || 'http://localhost:8000'
   try {
-    const res = await request.post(`${backendURL}/api/dev/create-test-user`, {
-      json: {
+    // Use fetch (same as fixtures.ts / global-setup) — Playwright APIRequestContext.post
+    // has been unreliable for this endpoint in some environments.
+    const res = await fetch(`${backendURL}/api/dev/create-test-user`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
         email,
         password,
         role: 'user',
         is_admin: false,
         is_verified: true,
         is_active: true,
-      },
+      }),
     })
-    return res.ok()
+    return res.ok
   } catch {
     return false
   }
@@ -516,7 +516,7 @@ test.describe('Registration and Onboarding', () => {
     })
   })
 
-  test('New user can perform first comparison', async ({ page, browserName, request }) => {
+  test('New user can perform first comparison', async ({ page, browserName }) => {
     const isWebKit = browserName === 'webkit'
     const isFirefox = browserName === 'firefox'
     const projectName = test.info().project.name || ''
@@ -526,8 +526,9 @@ test.describe('Registration and Onboarding', () => {
       projectName.includes('iPad') ||
       projectName.includes('Pixel') ||
       projectName.includes('Galaxy')
-    // Register + verification settle + model selection + stream regularly needs >90s in CI.
-    test.setTimeout(120000)
+    // Register + verification settle + model selection + stream regularly needs >90s in CI;
+    // Firefox is slower and can hit pointer/layout races on the model list.
+    test.setTimeout(isFirefox ? 180000 : 120000)
     const timestamp = Date.now()
     const testEmail = `firstcomp-${timestamp}@example.com`
     const testPassword = 'TestPassword123!'
@@ -537,7 +538,15 @@ test.describe('Registration and Onboarding', () => {
     await safeWait(page, 300)
 
     await test.step('Register and login', async () => {
-      await page.getByTestId('nav-sign-up-button').click()
+      const signUpBtn = page.getByTestId('nav-sign-up-button')
+      await signUpBtn.scrollIntoViewIfNeeded().catch(() => {})
+      try {
+        await signUpBtn.click({ timeout: 10000 })
+      } catch {
+        await dismissTutorialOverlay(page)
+        await safeWait(page, 400)
+        await signUpBtn.click({ timeout: 10000, force: true })
+      }
       await page.waitForSelector('[data-testid="auth-modal"], .auth-modal', { timeout: 5000 })
 
       await page.locator('input[type="email"]').first().fill(testEmail)
@@ -609,7 +618,7 @@ test.describe('Registration and Onboarding', () => {
       // so /auth/me returns is_verified (matches E2E global-setup for fixed test users).
       let markedVerified = false
       for (let r = 0; r < 3; r++) {
-        markedVerified = await markUserVerifiedViaDevApi(request, testEmail, testPassword)
+        markedVerified = await markUserVerifiedViaDevApi(testEmail, testPassword)
         if (markedVerified) break
         await page.waitForTimeout(600)
       }
@@ -622,16 +631,42 @@ test.describe('Registration and Onboarding', () => {
     })
 
     await test.step('Perform first comparison', async () => {
+      // Prefer class on the overlay; Firefox sometimes reports visibility differently, so also
+      // match the accessible dialog — if we skip this loop, the modal stays up and blocks model clicks.
       const verificationOverlay = page.locator('.verification-code-overlay')
+      const verificationDialog = page.getByRole('dialog', { name: /verify your email/i })
+      const verificationHeading = page.getByText('Verify Your Email', { exact: true })
+
+      async function isVerificationUiBlocking(): Promise<boolean> {
+        if (await verificationOverlay.isVisible().catch(() => false)) return true
+        if (await verificationDialog.isVisible().catch(() => false)) return true
+        // Firefox: dialog accessible name can differ; heading text is the reliable signal.
+        return await verificationHeading.isVisible().catch(() => false)
+      }
+
       // locator.isVisible({ timeout }) does NOT wait — timeout is ignored (Playwright). The
       // verification modal opens ~500ms after auth settles (useVerificationModalTrigger), so a
       // plain isVisible() right after registration races the modal and returns false.
       await safeWait(page, 2500)
 
+      // Always sync verified state via dev API + reload. Do not rely only on overlay visibility
+      // checks (Firefox can disagree); without this, the verification modal blocks model clicks.
+      for (let sync = 0; sync < 3; sync++) {
+        const ok = await markUserVerifiedViaDevApi(testEmail, testPassword)
+        if (ok) {
+          await page.reload({ waitUntil: 'domcontentloaded' })
+          await expect(page.getByTestId('user-menu-button')).toBeVisible({ timeout: 20000 })
+          await dismissTutorialOverlay(page)
+          await safeWait(page, 500)
+          break
+        }
+        await safeWait(page, 500)
+      }
+
       for (let attempt = 0; attempt < 5; attempt++) {
-        const blocked = await verificationOverlay.isVisible()
+        const blocked = await isVerificationUiBlocking()
         if (!blocked) break
-        const marked = await markUserVerifiedViaDevApi(request, testEmail, testPassword)
+        const marked = await markUserVerifiedViaDevApi(testEmail, testPassword)
         if (!marked) {
           await safeWait(page, 400)
           continue
@@ -645,6 +680,20 @@ test.describe('Registration and Onboarding', () => {
       // Extra settle after loop; if the overlay is still up (e.g. dev verify unavailable), we
       // still proceed — fill({ force: true }) avoids pointer interception from the modal.
       await safeWait(page, 1500)
+
+      // Mobile Safari: verification dialog can remain visible after reload; keep syncing until it
+      // is gone so pointer events are not intercepted (fill fallbacks still use click()).
+      for (let v = 0; v < 4 && (await isVerificationUiBlocking()); v++) {
+        await markUserVerifiedViaDevApi(testEmail, testPassword)
+        await page.reload({ waitUntil: 'domcontentloaded' })
+        await expect(page.getByTestId('user-menu-button')).toBeVisible({ timeout: 20000 })
+        await dismissTutorialOverlay(page)
+        await safeWait(page, 600)
+      }
+      await page
+        .locator('.verification-code-overlay')
+        .waitFor({ state: 'hidden', timeout: 15000 })
+        .catch(() => {})
 
       const inputField = page.getByTestId('comparison-input-textarea')
       await expect(inputField).toBeVisible()
@@ -709,9 +758,20 @@ test.describe('Registration and Onboarding', () => {
       }
       let selectedCount = 0
 
-      for (let p = 0; p < providerCount && selectedCount === 0; p++) {
+      if (isFirefox) {
+        await safeWait(page, 1200)
+      }
+
+      // Cap how many provider rows we try: .nth(i) waits until the (i+1)th match exists — if
+      // count() races ahead of the DOM (Firefox), a high index can stall until test timeout.
+      const rawProviderCount = await providerHeaders.count()
+      const maxProviders = Math.min(rawProviderCount, 12)
+
+      for (let p = 0; p < maxProviders && selectedCount === 0; p++) {
         const providerHeader = providerHeaders.nth(p)
-        const isExpanded = await providerHeader.getAttribute('aria-expanded')
+        const isExpanded = await providerHeader
+          .getAttribute('aria-expanded', { timeout: 8000 })
+          .catch(() => null)
         if (isExpanded !== 'true') {
           await providerHeader.scrollIntoViewIfNeeded().catch(() => {})
           await safeWait(page, isMobileProject ? 500 : 300)

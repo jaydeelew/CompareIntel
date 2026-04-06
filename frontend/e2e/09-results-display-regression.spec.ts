@@ -8,7 +8,12 @@ async function ensureFirstProviderExpanded(page: Page): Promise<void> {
   if ((await headers.count()) === 0) return
   const first = headers.first()
   if ((await first.getAttribute('aria-expanded')) !== 'true') {
-    await first.click()
+    await first.scrollIntoViewIfNeeded().catch(() => {})
+    try {
+      await first.click({ timeout: 5000 })
+    } catch {
+      await first.click({ timeout: 5000, force: true })
+    }
     await page.waitForTimeout(500)
   }
 }
@@ -433,7 +438,11 @@ test.describe('Results Display Regression Tests', () => {
         try {
           await showAllBtn.tap({ timeout: 5000 })
         } catch {
-          await showAllBtn.click()
+          try {
+            await showAllBtn.click({ timeout: 10000 })
+          } catch {
+            await showAllBtn.click({ timeout: 10000, force: true })
+          }
         }
 
         if (isMobile) {
@@ -638,15 +647,15 @@ test.describe('Results Display Regression Tests', () => {
         // Avoid fixed sleeps: reasoning models / slow CI need longer for both cards to be non-error.
         await expect(breakoutBtn).toBeVisible({ timeout: 45000 })
 
-        // Breakout runs an authenticated API call; fixed sleeps are flaky on WebKit CI.
-        const breakoutResponse = authenticatedPage.waitForResponse(
-          res =>
-            res.url().includes('/conversations/breakout') &&
-            (res.status() === 200 || res.status() === 201),
-          { timeout: 60000 }
-        )
-        await breakoutBtn.click()
-        await breakoutResponse
+        const isMobile = isMobileE2eProject(projectName)
+        // Breakout runs an authenticated API call; parallel wait + tap matches real mobile WebKit.
+        const breakoutMatcher = (res: { url: () => string; status: () => number }) =>
+          res.url().includes('/conversations/breakout') && res.status() >= 200 && res.status() < 300
+
+        await Promise.all([
+          authenticatedPage.waitForResponse(breakoutMatcher, { timeout: 90000 }),
+          isMobile ? breakoutBtn.tap({ timeout: 15000 }) : breakoutBtn.click({ timeout: 15000 }),
+        ])
 
         // Follow-up mode proves the breakout handler finished (clears composer, single-thread UI).
         await expect(authenticatedPage.getByTestId('comparison-input-textarea')).toHaveAttribute(

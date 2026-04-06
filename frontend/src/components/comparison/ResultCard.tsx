@@ -186,9 +186,15 @@ export const ResultCard: React.FC<ResultCardProps> = ({
             {onClose && (
               <StyledTooltip usePortal text="Hide this result">
                 <button
+                  type="button"
                   className="close-card-btn"
                   disabled={isTutorialActive}
                   onClick={() => onClose(modelId)}
+                  onTouchEnd={e => {
+                    // Safari iOS / WebKit mobile: same pattern as breakout — tap often misses click().
+                    e.preventDefault()
+                    if (!isTutorialActive) onClose(modelId)
+                  }}
                   aria-label={`Hide result for ${model?.name || modelId}`}
                 >
                   <svg

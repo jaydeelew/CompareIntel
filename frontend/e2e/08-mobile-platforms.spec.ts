@@ -102,6 +102,8 @@ async function tapOrClick(locator: Locator, page?: Page, browserName?: string): 
     await safeWait(pageInstance, 500)
   }
 
+  await locator.scrollIntoViewIfNeeded().catch(() => {})
+
   try {
     await locator.tap({ timeout: isWebKit ? 30000 : 15000 })
   } catch (error) {
@@ -115,7 +117,18 @@ async function tapOrClick(locator: Locator, page?: Page, browserName?: string): 
         await locator.click({ timeout: 15000, force: true })
       }
     } else {
-      await locator.click({ timeout: isWebKit ? 30000 : 15000 })
+      try {
+        await locator.click({ timeout: isWebKit ? 30000 : 15000 })
+      } catch {
+        await dismissTutorialOverlay(pageInstance)
+        await safeWait(pageInstance, 300)
+        await locator.scrollIntoViewIfNeeded().catch(() => {})
+        try {
+          await locator.click({ timeout: isWebKit ? 30000 : 15000, force: true })
+        } catch {
+          await locator.evaluate((el: HTMLElement) => el.click())
+        }
+      }
     }
   }
 }
