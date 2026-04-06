@@ -1089,10 +1089,9 @@ test.describe('Unregistered User Journey', () => {
           }
         }
 
-        // Scope to footer only: marketing pages duplicate these links in the article (strict mode).
+        // Landmark is unique; article body also duplicates these routes (strict mode on page-level links).
         const link = page
-          .locator('footer')
-          .first()
+          .getByLabel('Footer navigation')
           .getByRole('link', { name: new RegExp(`^${pageInfo.name}$`, 'i') })
 
         // Wait for link to be visible with longer timeout for mobile devices

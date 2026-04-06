@@ -24,11 +24,44 @@ async function ensureFirstProviderExpanded(page: Page): Promise<void> {
 }
 
 function firstResultCard(page: Page): Locator {
-  return page.locator('.result-card, [data-testid^="result-card-"]').first()
+  return page
+    .locator('.results-section .result-card.conversation-card, [data-testid^="result-card-"]')
+    .first()
 }
 
 function allResultCards(page: Page): Locator {
-  return page.locator('.result-card, [data-testid^="result-card-"]')
+  return page.locator(
+    '.results-section .result-card.conversation-card, [data-testid^="result-card-"]'
+  )
+}
+
+async function clickHideResultCardButton(closeBtn: Locator, browserName: string): Promise<void> {
+  if (browserName === 'firefox') {
+    await closeBtn.evaluate((el: HTMLElement) => (el as HTMLButtonElement).click())
+    return
+  }
+  try {
+    await closeBtn.tap({ timeout: 5000 })
+  } catch {
+    await closeBtn.click()
+  }
+}
+
+async function clickShowAllResultsButton(btn: Locator, browserName: string): Promise<void> {
+  await btn.scrollIntoViewIfNeeded().catch(() => {})
+  if (browserName === 'firefox') {
+    await btn.evaluate((el: HTMLElement) => (el as HTMLButtonElement).click())
+    return
+  }
+  try {
+    await btn.tap({ timeout: 5000 })
+  } catch {
+    try {
+      await btn.click({ timeout: 10000 })
+    } catch {
+      await btn.click({ timeout: 10000, force: true })
+    }
+  }
 }
 
 /**
@@ -316,6 +349,7 @@ test.describe('Results Display Regression Tests', () => {
 
     test('Close card button works with multiple results', async ({
       authenticatedPage,
+      browserName,
     }, testInfo) => {
       const projectName = testInfo.project.name
       const cardWait = firstResultCardVisibleTimeoutMs(projectName)
@@ -361,11 +395,7 @@ test.describe('Results Display Regression Tests', () => {
           .locator('.close-card-btn, button[title*="Close"], button[title*="Hide"]')
 
         await expect(closeBtn).toBeVisible({ timeout: 10000 })
-        try {
-          await closeBtn.tap({ timeout: 5000 })
-        } catch {
-          await closeBtn.click()
-        }
+        await clickHideResultCardButton(closeBtn, browserName)
 
         await authenticatedPage.waitForTimeout(500)
 
@@ -387,6 +417,7 @@ test.describe('Results Display Regression Tests', () => {
 
     test('Show all results button restores closed cards', async ({
       authenticatedPage,
+      browserName,
     }, testInfo) => {
       const projectName = testInfo.project.name
       const cardWait = firstResultCardVisibleTimeoutMs(projectName)
@@ -426,11 +457,7 @@ test.describe('Results Display Regression Tests', () => {
           .first()
           .locator('.close-card-btn, button[title*="Close"], button[title*="Hide"]')
         await expect(closeBtn).toBeVisible({ timeout: 10000 })
-        try {
-          await closeBtn.tap({ timeout: 5000 })
-        } catch {
-          await closeBtn.click()
-        }
+        await clickHideResultCardButton(closeBtn, browserName)
         await authenticatedPage.waitForTimeout(500)
 
         await expect(authenticatedPage.getByTestId('show-all-results-button')).toBeVisible({
@@ -446,16 +473,7 @@ test.describe('Results Display Regression Tests', () => {
 
         const beforeCards = await allResultCards(authenticatedPage).count()
 
-        await showAllBtn.scrollIntoViewIfNeeded().catch(() => {})
-        try {
-          await showAllBtn.tap({ timeout: 5000 })
-        } catch {
-          try {
-            await showAllBtn.click({ timeout: 10000 })
-          } catch {
-            await showAllBtn.click({ timeout: 10000, force: true })
-          }
-        }
+        await clickShowAllResultsButton(showAllBtn, browserName)
 
         if (isMobile) {
           await expect
@@ -676,7 +694,7 @@ test.describe('Results Display Regression Tests', () => {
         await breakoutBtn.scrollIntoViewIfNeeded().catch(() => {})
         const triggerBreakout = isMobile
           ? () => breakoutBtn.tap({ timeout: 15000 })
-          : browserName === 'webkit'
+          : browserName === 'webkit' || browserName === 'firefox'
             ? () =>
                 breakoutBtn.evaluate((el: HTMLElement) => {
                   ;(el as HTMLButtonElement).click()

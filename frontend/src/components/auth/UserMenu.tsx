@@ -111,6 +111,21 @@ export const UserMenu: React.FC = () => {
     })
   }, [])
 
+  /** Open/close menu; compute placement synchronously when opening so the portaled panel mounts on the first paint (Firefox/E2E saw a frame with isOpen && !placement). */
+  const toggleUserMenu = useCallback(() => {
+    setIsOpen(prev => {
+      if (!prev && avatarRef.current) {
+        const rect = avatarRef.current.getBoundingClientRect()
+        setDropdownPlacement({
+          top: rect.bottom + 8,
+          right: window.innerWidth - rect.right,
+          width: Math.min(240, window.innerWidth - 16),
+        })
+      }
+      return !prev
+    })
+  }, [])
+
   // Position portaled dropdown (header shell uses overflow:hidden and would clip an in-flow menu)
   useLayoutEffect(() => {
     if (!isOpen) {
@@ -580,7 +595,7 @@ export const UserMenu: React.FC = () => {
       <button
         ref={avatarRef}
         className="user-avatar"
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={toggleUserMenu}
         aria-expanded={isOpen}
         aria-haspopup="true"
         data-testid="user-menu-button"

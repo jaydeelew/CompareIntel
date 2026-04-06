@@ -26,5 +26,5 @@ export async function submitAndAwaitCompareStream(
   await page
     .locator('.result-card.conversation-card')
     .first()
-    .waitFor({ state: 'attached', timeout: cardWait })
+    .waitFor({ state: 'visible', timeout: cardWait })
 }
