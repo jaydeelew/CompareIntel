@@ -45,12 +45,13 @@ const ModelsTab: React.FC<ModelsTabProps> = ({
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [modelToDelete, setModelToDelete] = useState<{ id: string; name: string } | null>(null)
   const [deletingModel, setDeletingModel] = useState(false)
-  const [collapsedProviders, setCollapsedProviders] = useState<Set<string>>(new Set())
-  const collapsedProvidersSyncedRef = useRef(false)
+  /** Providers in this set have their model list expanded; default empty = all collapsed on first paint. */
+  const [expandedProviders, setExpandedProviders] = useState<Set<string>>(new Set())
+  const expandedProvidersSyncedRef = useRef(false)
   const lastModelProviderKeysRef = useRef<Set<string>>(new Set())
 
-  const toggleProviderCollapsed = (provider: string) => {
-    setCollapsedProviders(prev => {
+  const toggleProviderExpanded = (provider: string) => {
+    setExpandedProviders(prev => {
       const next = new Set(prev)
       if (next.has(provider)) next.delete(provider)
       else next.add(provider)
@@ -90,17 +91,16 @@ const ModelsTab: React.FC<ModelsTabProps> = ({
     if (!models?.models_by_provider) return
     const keys = Object.keys(models.models_by_provider)
     const keySet = new Set(keys)
-    setCollapsedProviders(prev => {
-      if (!collapsedProvidersSyncedRef.current) {
-        collapsedProvidersSyncedRef.current = true
+    setExpandedProviders(prev => {
+      if (!expandedProvidersSyncedRef.current) {
+        expandedProvidersSyncedRef.current = true
         lastModelProviderKeysRef.current = keySet
-        return new Set(keys)
+        return new Set()
       }
       const next = new Set<string>()
       const lastKeys = lastModelProviderKeysRef.current
       for (const k of keys) {
-        if (!lastKeys.has(k)) next.add(k)
-        else if (prev.has(k)) next.add(k)
+        if (lastKeys.has(k) && prev.has(k)) next.add(k)
       }
       lastModelProviderKeysRef.current = keySet
       return next
@@ -507,7 +507,7 @@ const ModelsTab: React.FC<ModelsTabProps> = ({
           <div>
             <h3 style={{ marginBottom: '1.5rem', color: 'var(--text-primary)' }}>Current Models</h3>
             {Object.entries(models.models_by_provider).map(([provider, providerModels]) => {
-              const isProviderExpanded = !collapsedProviders.has(provider)
+              const isProviderExpanded = expandedProviders.has(provider)
               const sectionId = `admin-models-provider-${encodeURIComponent(provider).replace(/%/g, '')}`
               return (
                 <div key={provider} style={{ marginBottom: '2rem' }}>
@@ -516,7 +516,7 @@ const ModelsTab: React.FC<ModelsTabProps> = ({
                     id={`${sectionId}-header`}
                     aria-expanded={isProviderExpanded}
                     aria-controls={`${sectionId}-panel`}
-                    onClick={() => toggleProviderCollapsed(provider)}
+                    onClick={() => toggleProviderExpanded(provider)}
                     style={{
                       width: '100%',
                       padding: '1rem 1.5rem',

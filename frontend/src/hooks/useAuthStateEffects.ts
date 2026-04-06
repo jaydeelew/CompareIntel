@@ -37,6 +37,7 @@ interface UseAuthStateEffectsCallbacks {
   setMaxTokens: (v: number | null) => void
   hasScrolledToResultsRef: React.MutableRefObject<boolean>
   shouldScrollToTopAfterFormattingRef: React.MutableRefObject<boolean>
+  clearStreamingReasoningUi: () => void
 }
 
 export function useAuthStateEffects(
@@ -71,6 +72,7 @@ export function useAuthStateEffects(
     setMaxTokens,
     hasScrolledToResultsRef,
     shouldScrollToTopAfterFormattingRef,
+    clearStreamingReasoningUi,
   } = callbacks
 
   const prevIsAuthenticatedRef = useRef<boolean | null>(null)
@@ -161,6 +163,7 @@ export function useAuthStateEffects(
       }
 
       // Always reset these regardless of saved state
+      clearStreamingReasoningUi()
       setError(null)
       setIsLoading(false)
       setProcessingTime(null)

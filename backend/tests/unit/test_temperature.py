@@ -22,7 +22,8 @@ class TestTemperatureStreaming:
             )
         )
         assert len(chunks) > 0
-        assert all(isinstance(chunk, str) for chunk in chunks)
+        text = "".join(c for c in chunks if isinstance(c, str))
+        assert len(text) > 0
 
     def test_streaming_with_temperature_zero(self):
         """Test streaming with temperature=0.0 (fully deterministic)."""

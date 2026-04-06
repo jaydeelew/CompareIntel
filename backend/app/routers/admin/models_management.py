@@ -21,13 +21,16 @@ from sqlalchemy.orm import Session
 from ...config import settings
 from ...database import get_db
 from ...dependencies import require_admin_role
+from ...llm.reasoning_probe import ReasoningProbeResult, probe_streams_separable_reasoning
 from ...llm.registry import (
+    STREAMING_REASONING_MODEL_IDS_NOT_IN_SNAPSHOT,
     _load_registry,
     get_registry_path,
     load_registry,
     reload_registry,
     save_registry,
     sort_models_by_tier_and_version,
+    streams_separable_reasoning_from_openrouter_entry,
 )
 from ...model_runner import (
     client,
@@ -170,6 +173,25 @@ def _sort_providers_alphabetically(mbp: dict[str, list]) -> dict[str, list]:
     dropdown (Select Models for Comparison) displays providers in alphabetical order.
     """
     return dict(sorted(mbp.items(), key=lambda x: x[0].lower()))
+
+
+def _apply_reasoning_probe_result(
+    model_id: str,
+    model_data: dict[str, Any] | None,
+    new_model: dict[str, Any],
+    res: ReasoningProbeResult,
+) -> None:
+    """Set ``is_thinking_model`` from a live probe; fall back to catalog only when the probe cannot run or errors."""
+    if res.observed:
+        new_model["is_thinking_model"] = True
+        return
+    if res.skip_reason == "no_reasoning_parameters":
+        return
+    if res.error is not None or res.skip_reason == "not_in_openrouter_snapshot":
+        sr = streams_separable_reasoning_from_openrouter_entry(model_data)
+        if sr is True or model_id in STREAMING_REASONING_MODEL_IDS_NOT_IN_SNAPSHOT:
+            new_model["is_thinking_model"] = True
+        return
 
 
 @router.get("/models")
@@ -354,6 +376,9 @@ async def add_model(
             "supports_web_search": supports_web_search,
             "supports_image_generation": is_image_model,
         }
+        if not is_image_model:
+            probe_res = probe_streams_separable_reasoning(model_id, openrouter_entry=model_data)
+            _apply_reasoning_probe_result(model_id, model_data, new_model, probe_res)
         if hasattr(req, "available") and not req.available:
             new_model["available"] = False
         if hasattr(req, "knowledge_cutoff") and req.knowledge_cutoff:
@@ -660,6 +685,17 @@ async def add_model_stream(
                 "supports_web_search": supports_web_search,
                 "supports_image_generation": is_image_model,
             }
+            if not is_image_model:
+                try:
+                    yield f"data: {json.dumps({'type': 'progress', 'stage': 'reasoning_probe', 'message': 'Checking whether the model streams separable reasoning...', 'progress': 30})}\n\n"
+                except disconnect_exceptions:
+                    raise
+                probe_res = await asyncio.to_thread(
+                    probe_streams_separable_reasoning,
+                    model_id,
+                    openrouter_entry=model_data,
+                )
+                _apply_reasoning_probe_result(model_id, model_data, new_model, probe_res)
             if hasattr(req, "knowledge_cutoff") and req.knowledge_cutoff:
                 new_model["knowledge_cutoff"] = req.knowledge_cutoff
             elif hasattr(req, "knowledge_cutoff") and req.knowledge_cutoff is None:

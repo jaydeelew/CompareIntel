@@ -9,10 +9,12 @@ import {
   orderAspectRatiosLikeAdvanced,
   orderImageSizesLikeAdvanced,
 } from '../../utils/imageConfigValidation'
+import { isThinkingModel } from '../../utils/thinkingModels'
 import { filterToVisionModels } from '../../utils/visionModels'
 import { StyledTooltip } from '../shared'
 
 import { SelectAllInfoModal } from './SelectAllInfoModal'
+import { ThinkingModelInfoModal } from './ThinkingModelInfoModal'
 import { getTooltipModalSuppressed } from './tooltipModalStorage'
 import { WebSearchInfoModal } from './WebSearchInfoModal'
 
@@ -149,18 +151,33 @@ function ModelInfoTooltipContent({
 /** 14px-wide info icon at end of `.model-name-tooltip-wrapper`; caret targets its horizontal center. */
 const MODEL_INFO_ICON_CSS_PX = 14
 
+/** Georgia “T” for thinking models (matches requested typography) */
+function ThinkingModelIcon({ className = '' }: { className?: string }) {
+  return (
+    <span className={className} aria-hidden>
+      T
+    </span>
+  )
+}
+
 function ModelNameWithInfoTooltip({
   model,
   modelsByProvider,
   hideTooltip = false,
+  isMobileLayout = false,
+  onOpenThinkingModelInfoModal,
 }: {
   model: Model
   modelsByProvider: ModelsByProvider
   hideTooltip?: boolean
+  isMobileLayout?: boolean
+  onOpenThinkingModelInfoModal?: () => void
 }) {
   const wrapRef = useRef<HTMLSpanElement>(null)
   const tipRef = useRef<HTMLSpanElement>(null)
   const isImageGen = !!model.supports_image_generation
+
+  const isThinking = isThinkingModel(model)
 
   const placeTooltipArrow = useCallback(() => {
     const wrap = wrapRef.current
@@ -168,37 +185,61 @@ function ModelNameWithInfoTooltip({
     if (!wrap || !tip) return
     const wrapR = wrap.getBoundingClientRect()
     const tipR = tip.getBoundingClientRect()
-    const iconCenterX = wrapR.right - MODEL_INFO_ICON_CSS_PX / 2
+    // Point at the (i) icon: last icon before thinking indicator when present
+    const iconsAfterInfo = isThinking ? MODEL_INFO_ICON_CSS_PX + 4 : MODEL_INFO_ICON_CSS_PX / 2
+    const iconCenterX = wrapR.right - iconsAfterInfo
     const px = iconCenterX - tipR.left
     tip.style.setProperty('--model-tooltip-arrow-left', `${px}px`)
-  }, [])
+  }, [isThinking])
 
   useLayoutEffect(() => {
     placeTooltipArrow()
-  }, [placeTooltipArrow, model.id, model.name, model.supports_image_generation])
+  }, [placeTooltipArrow, model.id, model.name, model.supports_image_generation, isThinking])
 
   return (
     <span
       ref={wrapRef}
       className={`model-name-tooltip-wrapper ${hideTooltip ? 'model-info-tooltip-disabled' : ''}`}
-      onMouseEnter={placeTooltipArrow}
     >
-      <span className="model-name-text">{model.name}</span>
-      <svg
-        className="knowledge-cutoff-icon"
-        width="14"
-        height="14"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      >
-        <circle cx="12" cy="12" r="10" />
-        <path d="M12 16v-4" />
-        <path d="M12 8h.01" />
-      </svg>
+      <span className="model-info-tooltip-trigger" onMouseEnter={placeTooltipArrow}>
+        <span className="model-name-text">{model.name}</span>
+        <svg
+          className="knowledge-cutoff-icon"
+          width="14"
+          height="14"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <circle cx="12" cy="12" r="10" />
+          <path d="M12 16v-4" />
+          <path d="M12 8h.01" />
+        </svg>
+      </span>
+      {isThinking &&
+        (isMobileLayout ? (
+          <button
+            type="button"
+            className="thinking-model-icon-btn"
+            onClick={e => {
+              e.preventDefault()
+              e.stopPropagation()
+              onOpenThinkingModelInfoModal?.()
+            }}
+            aria-label="Thinking model — tap for info"
+          >
+            <ThinkingModelIcon className="thinking-model-icon" />
+          </button>
+        ) : (
+          <StyledTooltip usePortal text="Thinking model">
+            <span className="thinking-model-icon-wrap" aria-hidden>
+              <ThinkingModelIcon className="thinking-model-icon" />
+            </span>
+          </StyledTooltip>
+        ))}
       <span
         ref={tipRef}
         className={`model-info-tooltip ${isImageGen ? 'model-info-tooltip--image' : ''}`}
@@ -295,6 +336,7 @@ export const ModelsSection: React.FC<ModelsSectionProps> = ({
 }) => {
   const { isMobileLayout } = useResponsive()
   const [showWebSearchInfoModal, setShowWebSearchInfoModal] = useState(false)
+  const [showThinkingModelInfoModal, setShowThinkingModelInfoModal] = useState(false)
   const [selectAllModalProvider, setSelectAllModalProvider] = useState<string | null>(null)
 
   /** Scroll snapshot from pointerdown on a provider model row (before focus + layout). */
@@ -624,6 +666,10 @@ export const ModelsSection: React.FC<ModelsSectionProps> = ({
                               model={model}
                               modelsByProvider={modelsByProvider}
                               hideTooltip={hideModelInfoTooltips}
+                              isMobileLayout={isMobileLayout}
+                              onOpenThinkingModelInfoModal={() =>
+                                setShowThinkingModelInfoModal(true)
+                              }
                             />
                             {model.trial_unlocked && (
                               <span
@@ -720,7 +766,10 @@ export const ModelsSection: React.FC<ModelsSectionProps> = ({
                                 flexShrink: 0,
                               }
                               return isMobileLayout ? (
-                                <StyledTooltip text="This model can access the Internet — tap for info">
+                                <StyledTooltip
+                                  usePortal
+                                  text="This model can access the Internet — tap for info"
+                                >
                                   <button
                                     type="button"
                                     className="web-search-indicator indicator-tappable"
@@ -736,7 +785,7 @@ export const ModelsSection: React.FC<ModelsSectionProps> = ({
                                   </button>
                                 </StyledTooltip>
                               ) : (
-                                <StyledTooltip text="This model can access the Internet">
+                                <StyledTooltip usePortal text="This model can access the Internet">
                                   <span className="web-search-indicator" style={commonStyle}>
                                     {indicator}
                                   </span>
@@ -786,12 +835,17 @@ export const ModelsSection: React.FC<ModelsSectionProps> = ({
                         model={model}
                         modelsByProvider={modelsByProvider}
                         hideTooltip={hideModelInfoTooltips}
+                        isMobileLayout={isMobileLayout}
+                        onOpenThinkingModelInfoModal={() => setShowThinkingModelInfoModal(true)}
                       />
                     </h4>
                     <div className="selected-model-actions">
                       {model.supports_web_search &&
                         (isMobileLayout ? (
-                          <StyledTooltip text="This model can access the Internet — tap for info">
+                          <StyledTooltip
+                            usePortal
+                            text="This model can access the Internet — tap for info"
+                          >
                             <button
                               type="button"
                               className="web-search-indicator indicator-tappable"
@@ -828,7 +882,7 @@ export const ModelsSection: React.FC<ModelsSectionProps> = ({
                             </button>
                           </StyledTooltip>
                         ) : (
-                          <StyledTooltip text="This model can access the Internet">
+                          <StyledTooltip usePortal text="This model can access the Internet">
                             <span
                               className="web-search-indicator"
                               style={{ display: 'inline-flex', alignItems: 'center', opacity: 1 }}
@@ -874,6 +928,11 @@ export const ModelsSection: React.FC<ModelsSectionProps> = ({
       <WebSearchInfoModal
         isOpen={showWebSearchInfoModal}
         onClose={() => setShowWebSearchInfoModal(false)}
+      />
+
+      <ThinkingModelInfoModal
+        isOpen={showThinkingModelInfoModal}
+        onClose={() => setShowThinkingModelInfoModal(false)}
       />
 
       {selectAllModalProvider &&

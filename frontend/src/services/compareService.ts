@@ -162,6 +162,9 @@ export async function processStreamEvents(
               }
               break
 
+            case STREAM_EVENT_TYPE.REASONING:
+              break
+
             case STREAM_EVENT_TYPE.KEEPALIVE:
               // Keepalive events reset timeout but don't add to content
               // The frontend App.tsx handles these directly, so no callback needed here

@@ -7,6 +7,8 @@ import { isErrorMessage } from '../../utils/error'
 import { MessageBubble } from '../conversation/MessageBubble'
 import { StyledTooltip } from '../shared'
 
+import { ReasoningCollapsible } from './ReasoningCollapsible'
+
 export interface Model {
   id: string
   name: string
@@ -37,6 +39,10 @@ export interface ResultCardProps {
   className?: string
   /** When true, disables card action buttons (screenshot, copy, close, breakout, hide others, copy message) - not formatted/raw tabs */
   isTutorialActive?: boolean
+  /** Ephemeral streamed reasoning for the latest turn (not persisted). */
+  streamingReasoning?: string
+  /** True once visible answer tokens have arrived for this model in the current stream. */
+  streamAnswerStarted?: boolean
 }
 
 // Single model result card with formatted/raw toggle
@@ -59,8 +65,14 @@ export const ResultCard: React.FC<ResultCardProps> = ({
   style,
   className = '',
   isTutorialActive = false,
+  streamingReasoning = '',
+  streamAnswerStarted = false,
 }) => {
   const safeMessages = messages && Array.isArray(messages) ? messages : []
+  const lastAssistantIndex = safeMessages.reduce(
+    (lastIdx, m, i) => (m.type === 'assistant' ? i : lastIdx),
+    -1
+  )
   const latestMessage = safeMessages[safeMessages.length - 1]
   const safeId = getSafeId(modelId || 'unknown')
   const hasImages = (latestMessage?.images?.length ?? 0) > 0
@@ -94,7 +106,7 @@ export const ResultCard: React.FC<ResultCardProps> = ({
           <h3>{model?.name || modelId}</h3>
           <div className="header-buttons-container">
             {onScreenshot && (
-              <StyledTooltip text="Copy formatted chat history">
+              <StyledTooltip usePortal text="Copy formatted chat history">
                 <button
                   className="screenshot-card-btn"
                   disabled={isTutorialActive}
@@ -122,7 +134,7 @@ export const ResultCard: React.FC<ResultCardProps> = ({
               </StyledTooltip>
             )}
             {onCopyResponse && (
-              <StyledTooltip text="Copy raw chat history">
+              <StyledTooltip usePortal text="Copy raw chat history">
                 <button
                   className="copy-response-btn"
                   disabled={isTutorialActive}
@@ -146,7 +158,7 @@ export const ResultCard: React.FC<ResultCardProps> = ({
               </StyledTooltip>
             )}
             {onHideOthers && (
-              <StyledTooltip text="Hide all other results">
+              <StyledTooltip usePortal text="Hide all other results">
                 <button
                   className="hide-others-btn"
                   disabled={isTutorialActive}
@@ -172,11 +184,17 @@ export const ResultCard: React.FC<ResultCardProps> = ({
               </StyledTooltip>
             )}
             {onClose && (
-              <StyledTooltip text="Hide this result">
+              <StyledTooltip usePortal text="Hide this result">
                 <button
+                  type="button"
                   className="close-card-btn"
                   disabled={isTutorialActive}
                   onClick={() => onClose(modelId)}
+                  onTouchEnd={e => {
+                    // Safari iOS / WebKit mobile: same pattern as breakout — tap often misses click().
+                    e.preventDefault()
+                    if (!isTutorialActive) onClose(modelId)
+                  }}
                   aria-label={`Hide result for ${model?.name || modelId}`}
                 >
                   <svg
@@ -196,7 +214,7 @@ export const ResultCard: React.FC<ResultCardProps> = ({
               </StyledTooltip>
             )}
             {showBreakoutButton && onBreakout && !isError && (
-              <StyledTooltip text="Continue with this model only">
+              <StyledTooltip usePortal text="Continue with this model only">
                 <button
                   type="button"
                   className="breakout-card-btn"
@@ -266,28 +284,37 @@ export const ResultCard: React.FC<ResultCardProps> = ({
           const messageId = message.id ? String(message.id) : `msg-${index}`
           const uniqueKey = message.id ? `${String(message.id)}-${index}` : `msg-${index}`
           const isLatestAssistant =
-            message.type === 'assistant' && index === safeMessages.length - 1
+            message.type === 'assistant' && index === lastAssistantIndex && lastAssistantIndex >= 0
           const imgCount = message.images?.length ?? 0
           const pendingGeneratedImage = Boolean(
             isImageGenModel && isProcessing && isLatestAssistant && imgCount === 0 && !isError
           )
+          const showReasoningBeforeBubble = isLatestAssistant && Boolean(streamingReasoning?.trim())
           return (
-            <MessageBubble
-              key={uniqueKey}
-              id={messageId}
-              type={message.type || 'assistant'}
-              content={message.content || ''}
-              images={message.images}
-              timestamp={message.timestamp || new Date().toISOString()}
-              activeTab={activeTab}
-              modelId={modelId}
-              modelName={model?.name}
-              pendingGeneratedImage={pendingGeneratedImage}
-              onCopyMessage={
-                onCopyMessage ? content => onCopyMessage(modelId, messageId, content) : undefined
-              }
-              copyButtonDisabled={isTutorialActive}
-            />
+            <React.Fragment key={uniqueKey}>
+              {showReasoningBeforeBubble && (
+                <ReasoningCollapsible
+                  text={streamingReasoning}
+                  isProcessing={isProcessing}
+                  answerStarted={streamAnswerStarted}
+                />
+              )}
+              <MessageBubble
+                id={messageId}
+                type={message.type || 'assistant'}
+                content={message.content || ''}
+                images={message.images}
+                timestamp={message.timestamp || new Date().toISOString()}
+                activeTab={activeTab}
+                modelId={modelId}
+                modelName={model?.name}
+                pendingGeneratedImage={pendingGeneratedImage}
+                onCopyMessage={
+                  onCopyMessage ? content => onCopyMessage(modelId, messageId, content) : undefined
+                }
+                copyButtonDisabled={isTutorialActive}
+              />
+            </React.Fragment>
           )
         })}
       </div>

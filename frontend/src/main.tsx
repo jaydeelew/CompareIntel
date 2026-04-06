@@ -9,11 +9,18 @@ import App from './App.tsx'
 import { initializeRegistry } from './config/loadModelConfigs'
 import logger from './utils/logger'
 import { initWebVitals } from './utils/performance'
-import { initSentry } from './utils/sentry'
 
-// Initialize Sentry error monitoring before anything else
-// This ensures we capture any errors during startup
-initSentry()
+// Defer Sentry so @sentry/react is not on the critical path (Lighthouse / main-thread parse).
+const scheduleSentryInit = () => {
+  void import('./utils/sentry').then(({ initSentry }) => {
+    initSentry()
+  })
+}
+if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+  requestIdleCallback(scheduleSentryInit, { timeout: 2500 })
+} else {
+  setTimeout(scheduleSentryInit, 0)
+}
 
 // Disable browser scroll restoration before React renders to prevent unwanted scroll restoration
 if ('scrollRestoration' in history) {

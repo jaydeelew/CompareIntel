@@ -194,6 +194,8 @@ export function ResultsSectionHeader({
             {/* Show all results button for desktop */}
             {closedCardsCount > 0 && (
               <button
+                type="button"
+                data-testid="show-all-results-button"
                 onClick={onShowAllResults}
                 disabled={buttonsDisabled}
                 style={{
@@ -275,6 +277,8 @@ export function ResultsSectionHeader({
             {/* Show all results button - icon only */}
             {closedCardsCount > 0 && (
               <button
+                type="button"
+                data-testid="show-all-results-button"
                 onClick={onShowAllResults}
                 disabled={buttonsDisabled}
                 title={`Show all results (${closedCardsCount} hidden)`}

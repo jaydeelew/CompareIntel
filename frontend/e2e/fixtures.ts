@@ -1321,14 +1321,9 @@ export const test = base.extend<TestFixtures>({
       true
     )
 
-    // Navigate to admin panel
-    // Wait for admin button to appear (user data needs to load first)
-    const adminButton = page.getByRole('button', { name: /admin|dashboard/i })
-    if (await adminButton.isVisible({ timeout: 10000 }).catch(() => false)) {
-      await adminButton.click()
-    } else {
-      await page.goto('/admin')
-    }
+    // Navigate to admin panel — use direct URL. Clicking the nav Admin button can fail on
+    // Firefox when .hero-section (or similar) intercepts pointer events in some scroll states.
+    await page.goto('/admin', { waitUntil: 'domcontentloaded', timeout: 30000 })
     // Wait for load state with fallback - networkidle can be too strict
     try {
       await page.waitForLoadState('load', { timeout: 10000 })

@@ -26,11 +26,37 @@ from .registry import (
     get_model_returns_multiple_images,
     get_model_supports_temperature,
     get_model_supports_vision,
+    openrouter_reasoning_request_body,
+    should_request_openrouter_reasoning_traces,
 )
 from .text_processing import clean_model_response, detect_repetition
 from .tokens import TokenUsage, calculate_token_usage, get_model_max_tokens
 
 logger = logging.getLogger(__name__)
+
+# Stream event shape for UI (also handled by comparison_stream SSE). Not persisted as assistant text.
+REASONING_STREAM_TYPE = "reasoning"
+
+
+def _reasoning_text_delta(delta: Any, choice: Any) -> str | None:
+    """Extract incremental reasoning/thinking text from a stream delta (OpenRouter / OpenAI-style APIs)."""
+    for obj in (delta, choice):
+        if obj is None:
+            continue
+        for attr in ("reasoning", "reasoning_content"):
+            if hasattr(obj, attr):
+                val = getattr(obj, attr, None)
+                if isinstance(val, str) and val.strip():
+                    return val
+    return None
+
+
+def _reasoning_stream_payload(delta: Any, choice: Any) -> dict[str, Any] | None:
+    """Build a reasoning SSE payload, or None if this chunk has no reasoning text."""
+    text = _reasoning_text_delta(delta, choice)
+    if not text:
+        return None
+    return {"type": REASONING_STREAM_TYPE, "content": text}
 
 
 def _normalize_image_url_key(url: str) -> str:
@@ -289,7 +315,9 @@ def call_openrouter_streaming(
         location_source: Optional source of location - "user_provided" (accurate) or "ip_based" (approximate)
 
     Yields:
-        str: Content chunks as they arrive
+        str: Answer content chunks as they arrive
+        dict: ``{"type": "image", "url": ...}`` for image generation streams
+        dict: ``{"type": "reasoning", "content": ...}`` for separable model reasoning (not persisted)
 
     Returns:
         Optional[TokenUsage]: Token usage data, or None if unavailable or in mock mode
@@ -297,6 +325,10 @@ def call_openrouter_streaming(
     # Mock mode: return pre-defined responses for testing
     if use_mock:
         print(f"🎭 Mock mode enabled - returning mock response for {model_id}")
+        yield {
+            "type": REASONING_STREAM_TYPE,
+            "content": "[Mock] Simulated planning step before answering.\n\n",
+        }
         for chunk in stream_mock_response(chunk_size=50):
             yield chunk
         return None
@@ -465,6 +497,9 @@ def call_openrouter_streaming(
                     ic["number_of_images"] = 1
                 if ic:
                     extra_body["image_config"] = ic
+            # OpenRouter: request reasoning tokens so stream deltas include reasoning/thinking (Anthropic etc.)
+            elif should_request_openrouter_reasoning_traces(model_id):
+                extra_body["reasoning"] = openrouter_reasoning_request_body(model_id)
 
             # Enable streaming
             # Use client with tool headers when tools are enabled (required by OpenRouter for provider routing)
@@ -502,7 +537,7 @@ def call_openrouter_streaming(
                     )
                 raise
 
-            full_content = ""
+            full_answer_content = ""
             finish_reason = None
             repetition_detected = False  # Set True when detect_repetition stops the stream
             usage_data = None
@@ -531,6 +566,10 @@ def call_openrouter_streaming(
                         and chunk.choices[0].reasoning_details
                     ):
                         reasoning_details = chunk.choices[0].reasoning_details
+
+                    rp = _reasoning_stream_payload(delta, chunk.choices[0])
+                    if rp:
+                        yield rp
 
                     # Handle tool calls (for web search) - accumulate across chunks
                     if hasattr(delta, "tool_calls") and delta.tool_calls:
@@ -615,12 +654,12 @@ def call_openrouter_streaming(
 
                     if hasattr(delta, "content") and delta.content:
                         content_chunk = delta.content
-                        full_content += content_chunk
+                        full_answer_content += content_chunk
 
                         # Check for repetition in streaming content
                         # Only check if we have enough content (avoid false positives early)
-                        if len(full_content) > 500:
-                            if detect_repetition(full_content):
+                        if len(full_answer_content) > 500:
+                            if detect_repetition(full_answer_content):
                                 logger.warning(
                                     f"Model {model_id} detected repetition in streaming response. "
                                     f"Stopping stream early to prevent looping."
@@ -640,16 +679,16 @@ def call_openrouter_streaming(
                         message = chunk.choices[0].message
                         if hasattr(message, "content") and message.content:
                             message_content = message.content
-                            if message_content and len(message_content) > len(full_content):
+                            if message_content and len(message_content) > len(full_answer_content):
                                 # Extract only the new part that hasn't been yielded yet
-                                new_content = message_content[len(full_content) :]
+                                new_content = message_content[len(full_answer_content) :]
                                 if new_content:
                                     content_chunk = new_content
-                                    full_content += content_chunk
+                                    full_answer_content += content_chunk
 
                                     # Check for repetition
-                                    if len(full_content) > 500:
-                                        if detect_repetition(full_content):
+                                    if len(full_answer_content) > 500:
+                                        if detect_repetition(full_answer_content):
                                             logger.warning(
                                                 f"Model {model_id} detected repetition in streaming response. "
                                                 f"Stopping stream early to prevent looping."
@@ -660,15 +699,15 @@ def call_openrouter_streaming(
                                             break
 
                                     yield content_chunk
-                            elif message_content and not full_content:
+                            elif message_content and not full_answer_content:
                                 # If we haven't yielded any content yet, yield the entire message content
                                 # This handles cases where GPT-5 models return all content in the final chunk
                                 content_chunk = message_content
-                                full_content += content_chunk
+                                full_answer_content += content_chunk
 
                                 # Check for repetition
-                                if len(full_content) > 500:
-                                    if detect_repetition(full_content):
+                                if len(full_answer_content) > 500:
+                                    if detect_repetition(full_answer_content):
                                         logger.warning(
                                             f"Model {model_id} detected repetition in streaming response. "
                                             f"Stopping stream early to prevent looping."
@@ -1678,8 +1717,8 @@ def call_openrouter_streaming(
 
                     assistant_message = {
                         "role": "assistant",
-                        "content": full_content
-                        if full_content
+                        "content": full_answer_content
+                        if full_answer_content
                         else "",  # Preserve text content that was streamed
                         "tool_calls": final_valid_tool_call_messages,
                     }
@@ -2060,6 +2099,11 @@ def call_openrouter_streaming(
                         # Omit tool_choice for continuation requests too (same reason as above)
                         # api_params_continue["tool_choice"] = "auto"
 
+                    if should_request_openrouter_reasoning_traces(model_id):
+                        api_params_continue["extra_body"] = {
+                            "reasoning": openrouter_reasoning_request_body(model_id)
+                        }
+
                     try:
                         # Use client with tool headers when tools are enabled (required by OpenRouter for provider routing)
                         if tools:
@@ -2132,6 +2176,10 @@ def call_openrouter_streaming(
                             ):
                                 reasoning_details_continue = chunk.choices[0].reasoning_details
 
+                            rp_cont = _reasoning_stream_payload(delta, chunk.choices[0])
+                            if rp_cont:
+                                yield rp_cont
+
                             # Handle tool calls in continuation (recursive)
                             if hasattr(delta, "tool_calls") and delta.tool_calls:
                                 for tool_call_delta in delta.tool_calls:
@@ -2192,11 +2240,11 @@ def call_openrouter_streaming(
                             # Check delta.content first (standard streaming)
                             if hasattr(delta, "content") and delta.content:
                                 content_chunk = delta.content
-                                full_content += content_chunk
+                                full_answer_content += content_chunk
 
                                 # Check for repetition in continuation streaming
-                                if len(full_content) > 500:
-                                    if detect_repetition(full_content):
+                                if len(full_answer_content) > 500:
+                                    if detect_repetition(full_answer_content):
                                         logger.warning(
                                             f"Model {model_id} detected repetition in continuation streaming response. "
                                             f"Stopping stream early to prevent looping."
@@ -2218,16 +2266,18 @@ def call_openrouter_streaming(
                                     # Only yield if we haven't already yielded this content via delta
                                     # Check if this is new content by comparing with what we've accumulated
                                     message_content = message.content
-                                    if message_content and len(message_content) > len(full_content):
+                                    if message_content and len(message_content) > len(
+                                        full_answer_content
+                                    ):
                                         # Extract only the new part that hasn't been yielded yet
-                                        new_content = message_content[len(full_content) :]
+                                        new_content = message_content[len(full_answer_content) :]
                                         if new_content:
                                             content_chunk = new_content
-                                            full_content += content_chunk
+                                            full_answer_content += content_chunk
 
                                             # Check for repetition
-                                            if len(full_content) > 500:
-                                                if detect_repetition(full_content):
+                                            if len(full_answer_content) > 500:
+                                                if detect_repetition(full_answer_content):
                                                     logger.warning(
                                                         f"Model {model_id} detected repetition in continuation streaming response. "
                                                         f"Stopping stream early to prevent looping."
@@ -2238,15 +2288,15 @@ def call_openrouter_streaming(
                                                     break
 
                                             yield content_chunk
-                                    elif message_content and not full_content:
+                                    elif message_content and not full_answer_content:
                                         # If we haven't yielded any content yet, yield the entire message content
                                         # This handles cases where GPT-5 models return all content in the final chunk
                                         content_chunk = message_content
-                                        full_content += content_chunk
+                                        full_answer_content += content_chunk
 
                                         # Check for repetition
-                                        if len(full_content) > 500:
-                                            if detect_repetition(full_content):
+                                        if len(full_answer_content) > 500:
+                                            if detect_repetition(full_answer_content):
                                                 logger.warning(
                                                     f"Model {model_id} detected repetition in continuation streaming response. "
                                                     f"Stopping stream early to prevent looping."
@@ -2397,6 +2447,10 @@ def call_openrouter_streaming(
                         final_params["temperature"] = max(0.0, min(2.0, temperature))
                     if top_p is not None:
                         final_params["top_p"] = max(0.0, min(1.0, top_p))
+                    if should_request_openrouter_reasoning_traces(model_id):
+                        final_params["extra_body"] = {
+                            "reasoning": openrouter_reasoning_request_body(model_id)
+                        }
                     final_response = _cl.chat.completions.create(**final_params)
 
                     # Stream the final response
@@ -2405,13 +2459,17 @@ def call_openrouter_streaming(
                         if chunk.choices and len(chunk.choices) > 0:
                             delta = chunk.choices[0].delta
 
+                            rp_final = _reasoning_stream_payload(delta, chunk.choices[0])
+                            if rp_final:
+                                yield rp_final
+
                             if hasattr(delta, "content") and delta.content:
                                 content_chunk = delta.content
-                                full_content += content_chunk
+                                full_answer_content += content_chunk
 
                                 # Check for repetition
-                                if len(full_content) > 500:
-                                    if detect_repetition(full_content):
+                                if len(full_answer_content) > 500:
+                                    if detect_repetition(full_answer_content):
                                         logger.warning(
                                             f"Model {model_id} detected repetition in final completion response. "
                                             f"Stopping stream early to prevent looping."
@@ -2430,14 +2488,16 @@ def call_openrouter_streaming(
                                 message = chunk.choices[0].message
                                 if hasattr(message, "content") and message.content:
                                     message_content = message.content
-                                    if message_content and len(message_content) > len(full_content):
-                                        new_content = message_content[len(full_content) :]
+                                    if message_content and len(message_content) > len(
+                                        full_answer_content
+                                    ):
+                                        new_content = message_content[len(full_answer_content) :]
                                         if new_content:
-                                            full_content += new_content
+                                            full_answer_content += new_content
 
                                             # Check for repetition
-                                            if len(full_content) > 500:
-                                                if detect_repetition(full_content):
+                                            if len(full_answer_content) > 500:
+                                                if detect_repetition(full_answer_content):
                                                     logger.warning(
                                                         f"Model {model_id} detected repetition in final completion response. "
                                                         f"Stopping stream early to prevent looping."
@@ -2450,12 +2510,12 @@ def call_openrouter_streaming(
                                                     break
 
                                             yield new_content
-                                    elif message_content and not full_content:
-                                        full_content += message_content
+                                    elif message_content and not full_answer_content:
+                                        full_answer_content += message_content
 
                                         # Check for repetition
-                                        if len(full_content) > 500:
-                                            if detect_repetition(full_content):
+                                        if len(full_answer_content) > 500:
+                                            if detect_repetition(full_answer_content):
                                                 logger.warning(
                                                     f"Model {model_id} detected repetition in final completion response. "
                                                     f"Stopping stream early to prevent looping."
@@ -2569,6 +2629,10 @@ def call_openrouter_streaming(
                                     )
                                 if top_p is not None:
                                     completion_params["top_p"] = max(0.0, min(1.0, top_p))
+                                if should_request_openrouter_reasoning_traces(model_id):
+                                    completion_params["extra_body"] = {
+                                        "reasoning": openrouter_reasoning_request_body(model_id)
+                                    }
                                 completion_response = _cl.chat.completions.create(
                                     **completion_params
                                 )
@@ -2579,13 +2643,17 @@ def call_openrouter_streaming(
                                     if chunk.choices and len(chunk.choices) > 0:
                                         delta = chunk.choices[0].delta
 
+                                        rp_inc = _reasoning_stream_payload(delta, chunk.choices[0])
+                                        if rp_inc:
+                                            yield rp_inc
+
                                         if hasattr(delta, "content") and delta.content:
                                             content_chunk = delta.content
-                                            full_content += content_chunk
+                                            full_answer_content += content_chunk
 
                                             # Check for repetition
-                                            if len(full_content) > 500:
-                                                if detect_repetition(full_content):
+                                            if len(full_answer_content) > 500:
+                                                if detect_repetition(full_answer_content):
                                                     logger.warning(
                                                         f"Model {model_id} detected repetition in incomplete response completion. "
                                                         f"Stopping stream early to prevent looping."
@@ -2608,17 +2676,19 @@ def call_openrouter_streaming(
                                             if hasattr(message, "content") and message.content:
                                                 message_content = message.content
                                                 if message_content and len(message_content) > len(
-                                                    full_content
+                                                    full_answer_content
                                                 ):
                                                     new_content = message_content[
-                                                        len(full_content) :
+                                                        len(full_answer_content) :
                                                     ]
                                                     if new_content:
-                                                        full_content += new_content
+                                                        full_answer_content += new_content
 
                                                         # Check for repetition
-                                                        if len(full_content) > 500:
-                                                            if detect_repetition(full_content):
+                                                        if len(full_answer_content) > 500:
+                                                            if detect_repetition(
+                                                                full_answer_content
+                                                            ):
                                                                 logger.warning(
                                                                     f"Model {model_id} detected repetition in incomplete response completion. "
                                                                     f"Stopping stream early to prevent looping."
@@ -2629,12 +2699,12 @@ def call_openrouter_streaming(
                                                                 break
 
                                                         yield new_content
-                                                elif message_content and not full_content:
-                                                    full_content += message_content
+                                                elif message_content and not full_answer_content:
+                                                    full_answer_content += message_content
 
                                                     # Check for repetition
-                                                    if len(full_content) > 500:
-                                                        if detect_repetition(full_content):
+                                                    if len(full_answer_content) > 500:
+                                                        if detect_repetition(full_answer_content):
                                                             logger.warning(
                                                                 f"Model {model_id} detected repetition in incomplete response completion. "
                                                                 f"Stopping stream early to prevent looping."

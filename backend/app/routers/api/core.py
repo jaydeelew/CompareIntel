@@ -130,6 +130,7 @@ async def get_available_models(
         get_model_supports_temperature,
         get_model_supports_vision,
         get_model_token_limits_from_openrouter,
+        resolve_is_thinking_model_for_ui,
     )
 
     if current_user:
@@ -178,6 +179,7 @@ async def get_available_models(
             else:
                 model["max_input_tokens"] = 8192
                 model["max_output_tokens"] = 8192
+            model["is_thinking_model"] = resolve_is_thinking_model_for_ui(model["id"], model)
 
         from ...model_runner import sort_models_by_tier_and_version
 
@@ -220,6 +222,9 @@ async def get_available_models(
                     else:
                         model["max_input_tokens"] = 8192
                         model["max_output_tokens"] = 8192
+                    model["is_thinking_model"] = resolve_is_thinking_model_for_ui(
+                        model["id"], model
+                    )
                     deduped_models.append(model)
                 if deduped_models:
                     models_by_provider_out[provider] = deduped_models

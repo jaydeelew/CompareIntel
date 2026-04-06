@@ -294,29 +294,8 @@
   margin-right: -0.5rem;
 }
 
-/* Same as message-header: right-align + below trigger to avoid overflow clipping */
-.result-header .header-buttons-container .tooltip .tooltip-content {
-  bottom: auto;
-  top: calc(100% + 8px);
-  left: auto;
-  right: 0;
-  transform: translateY(4px);
-  text-align: left;
-}
-
-.result-header .header-buttons-container .tooltip:hover .tooltip-content {
-  transform: translateY(0);
-}
-
-.result-header .header-buttons-container .tooltip .tooltip-content::after {
-  left: auto;
-  right: 14px;
-  top: auto;
-  bottom: 100%;
-  transform: none;
-  border: 6px solid transparent;
-  border-bottom-color: var(--bg-elevated);
-}
+/* Result card tooltips: use shared .tooltip-content (above trigger, centered, drop arrow via ::after).
+   .result-card has overflow: visible so upward tooltips are not clipped. */
 
 .result-header-bottom {
   display: flex;

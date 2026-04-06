@@ -61,6 +61,12 @@ export interface UseMainPageEffectsConfig {
   shouldScrollToTopAfterFormattingRef: React.MutableRefObject<boolean>
   selectedModelsForScroll: string[]
 
+  /** When set, skip scrolling cards to top so ephemeral reasoning stays visible; scroll to bottom instead. */
+  streamingReasoningByModel: Record<string, string>
+
+  /** Match SSE auto-scroll: do not programmatically scroll a card when the user has scrolled away. */
+  autoScrollPausedRef: React.MutableRefObject<Set<string>>
+
   // Clear textarea errors
   input: string
 }
@@ -97,6 +103,8 @@ export function useMainPageEffects(config: UseMainPageEffectsConfig) {
     conversationsForScroll,
     shouldScrollToTopAfterFormattingRef,
     selectedModelsForScroll,
+    streamingReasoningByModel,
+    autoScrollPausedRef,
     input,
   } = config
 
@@ -238,7 +246,7 @@ export function useMainPageEffects(config: UseMainPageEffectsConfig) {
     if (userVerified && error?.includes('verify your email')) setError(null)
   }, [userVerified, error, setError])
 
-  // Scroll cards to top on formatting
+  // Scroll cards to top on formatting (or to bottom when ephemeral reasoning is shown so it is not scrolled away)
   useEffect(() => {
     if (isFollowUpMode) return
 
@@ -250,14 +258,27 @@ export function useMainPageEffects(config: UseMainPageEffectsConfig) {
       ) {
         scrolledToTopRef.current.add(modelId)
         setTimeout(() => {
+          if (autoScrollPausedRef.current.has(modelId)) return
           const el = document.querySelector(
             `#conversation-content-${getSafeId(modelId)}`
           ) as HTMLElement
-          if (el) el.scrollTop = 0
+          if (!el) return
+          if (streamingReasoningByModel[modelId]?.trim()) {
+            el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' })
+          } else {
+            el.scrollTop = 0
+          }
         }, 200)
       }
     })
-  }, [activeResultTabs, isFollowUpMode, conversationsForScroll, scrolledToTopRef])
+  }, [
+    activeResultTabs,
+    isFollowUpMode,
+    conversationsForScroll,
+    scrolledToTopRef,
+    streamingReasoningByModel,
+    autoScrollPausedRef,
+  ])
 
   // Scroll all cards to top after formatting
   useEffect(() => {
@@ -275,9 +296,16 @@ export function useMainPageEffects(config: UseMainPageEffectsConfig) {
       shouldScrollToTopAfterFormattingRef.current = false
       setTimeout(() => {
         selectedModelsForScroll.forEach(id => {
-          const safeId = createModelId(id).replace(/[^a-zA-Z0-9_-]/g, '-')
+          const formattedId = createModelId(id)
+          if (autoScrollPausedRef.current.has(formattedId)) return
+          const safeId = getSafeId(formattedId)
           const el = document.querySelector(`#conversation-content-${safeId}`) as HTMLElement
-          if (el) el.scrollTo({ top: 0, behavior: 'smooth' })
+          if (!el) return
+          if (streamingReasoningByModel[formattedId]?.trim()) {
+            el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' })
+          } else {
+            el.scrollTo({ top: 0, behavior: 'smooth' })
+          }
         })
       }, 300)
     }
@@ -287,6 +315,8 @@ export function useMainPageEffects(config: UseMainPageEffectsConfig) {
     conversationsForScroll,
     selectedModelsForScroll,
     shouldScrollToTopAfterFormattingRef,
+    streamingReasoningByModel,
+    autoScrollPausedRef,
   ])
 
   // Clear textarea errors

@@ -929,6 +929,7 @@ export function HelpMeChoose({
                                 )}
                                 {supportsWebSearch && (
                                   <StyledTooltip
+                                    usePortal
                                     text={
                                       isMobileLayout
                                         ? 'This model can access the Internet — tap for info'

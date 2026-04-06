@@ -93,7 +93,8 @@
 }
 
 /* Model info tooltips (incl. long image-model aspect/size lists) extend above the card; escape clipping */
-.provider-dropdown:has(.model-name-tooltip-wrapper:hover) {
+.provider-dropdown:has(.model-info-tooltip-trigger:hover),
+.provider-dropdown:has(.model-info-tooltip:hover) {
   overflow: visible;
   z-index: 6;
 }
@@ -259,6 +260,8 @@
 /* Dim disabled model content but not the tooltip (tooltip must stay fully opaque) */
 .model-option.disabled .model-name-text,
 .model-option.disabled .knowledge-cutoff-icon,
+.model-option.disabled .thinking-model-icon,
+.model-option.disabled .thinking-model-icon-btn,
 .model-option.disabled .model-badge,
 .model-option.disabled .model-info p,
 .model-option.disabled .model-checkbox,
@@ -368,6 +371,15 @@
   cursor: help;
 }
 
+/* Hover target for context-window / knowledge-cutoff popover only (excludes thinking-model icon) */
+.model-info-tooltip-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  min-width: 0;
+  cursor: help;
+}
+
 .model-name-tooltip-wrapper .model-name-text {
   display: inline;
 }
@@ -387,9 +399,75 @@
   flex-shrink: 0;
 }
 
-.model-name-tooltip-wrapper:hover .knowledge-cutoff-icon {
+.model-info-tooltip-trigger:hover .knowledge-cutoff-icon {
   opacity: 1;
   color: var(--primary-color);
+}
+
+/* Thinking model indicator (next to info icon) */
+.thinking-model-icon-wrap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  cursor: help;
+  /* Match letter “T” to Georgia so it isn’t taken from heading / UI sans context */
+  font-family: Georgia, 'Times New Roman', serif;
+}
+
+.thinking-model-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  line-height: 0;
+  color: inherit;
+  font-family: Georgia, 'Times New Roman', serif;
+}
+
+.thinking-model-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  min-width: 14px;
+  height: 14px;
+  padding: 0;
+  /* !important: heading (h4) / tooltip context can otherwise win on specificity */
+  font-family: Georgia, 'Times New Roman', serif !important;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--text-muted);
+  opacity: 0.75;
+  transition:
+    opacity 0.2s,
+    color 0.2s;
+  flex-shrink: 0;
+  user-select: none;
+}
+
+/* Thinking-model icon: highlight only when hovering its tooltip anchor, not the whole model row */
+.model-name-tooltip-wrapper .tooltip:hover .thinking-model-icon {
+  opacity: 1;
+  color: var(--primary-color);
+}
+
+.thinking-model-icon-btn:hover .thinking-model-icon,
+.thinking-model-icon-btn:focus-visible .thinking-model-icon {
+  opacity: 1;
+  color: var(--primary-color);
+}
+
+.thinking-model-icon-btn:focus-visible {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
 }
 
 /* Model Info Tooltip */
@@ -434,7 +512,8 @@
   border-top-color: var(--bg-elevated);
 }
 
-.model-name-tooltip-wrapper:hover .model-info-tooltip {
+.model-info-tooltip-trigger:hover ~ .model-info-tooltip,
+.model-name-tooltip-wrapper .model-info-tooltip:hover {
   opacity: 1;
   visibility: visible;
   pointer-events: auto;
@@ -447,7 +526,10 @@
 
 /* During tutorial: suppress info tooltips to avoid overlap with tutorial UI */
 .model-name-tooltip-wrapper.model-info-tooltip-disabled .model-info-tooltip,
-.model-name-tooltip-wrapper.model-info-tooltip-disabled:hover .model-info-tooltip {
+.model-name-tooltip-wrapper.model-info-tooltip-disabled
+  .model-info-tooltip-trigger:hover
+  ~ .model-info-tooltip,
+.model-name-tooltip-wrapper.model-info-tooltip-disabled .model-info-tooltip:hover {
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
@@ -625,18 +707,18 @@
 }
 
 /* Selected-column info tooltips sit above the card and can be wider than 340px — parents use overflow hidden/auto */
-.selected-models-section:has(.model-name-tooltip-wrapper:hover),
+.selected-models-section:has(.model-info-tooltip-trigger:hover),
 .selected-models-section:has(.model-info-tooltip:hover) {
   overflow: visible;
   z-index: 4;
 }
 
-.selected-models-grid:has(.model-name-tooltip-wrapper:hover),
+.selected-models-grid:has(.model-info-tooltip-trigger:hover),
 .selected-models-grid:has(.model-info-tooltip:hover) {
   overflow: visible;
 }
 
-.selected-model-card:has(.model-name-tooltip-wrapper:hover),
+.selected-model-card:has(.model-info-tooltip-trigger:hover),
 .selected-model-card:has(.model-info-tooltip:hover) {
   overflow: visible;
   z-index: 5;
@@ -673,7 +755,23 @@
   opacity: 1;
 }
 
-.selected-model-card .model-name-tooltip-wrapper:hover .knowledge-cutoff-icon {
+.selected-model-card .model-info-tooltip-trigger:hover .knowledge-cutoff-icon {
+  color: #fff;
+  opacity: 1;
+}
+
+.selected-model-card .thinking-model-icon {
+  color: rgba(255, 255, 255, 0.92);
+  opacity: 1;
+}
+
+.selected-model-card .model-name-tooltip-wrapper .tooltip:hover .thinking-model-icon {
+  color: #fff;
+  opacity: 1;
+}
+
+.selected-model-card .thinking-model-icon-btn:hover .thinking-model-icon,
+.selected-model-card .thinking-model-icon-btn:focus-visible .thinking-model-icon {
   color: #fff;
   opacity: 1;
 }
@@ -1032,6 +1130,80 @@
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
+}
+
+/* html-to-image uses clientHeight; flex:1 on message bodies otherwise leaves empty space */
+.conversation-content.screenshot-mode {
+  height: auto !important;
+  min-height: 0 !important;
+}
+
+.conversation-content.screenshot-mode .conversation-message {
+  flex: 0 0 auto;
+}
+
+.conversation-content.screenshot-mode .message-content {
+  flex: none !important;
+  min-height: 0 !important;
+}
+
+.conversation-content.screenshot-mode .message-content .result-output {
+  flex: none !important;
+}
+
+.reasoning-collapsible {
+  margin: 0 0 0.25rem;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  background: var(--bg-secondary);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.reasoning-collapsible-summary {
+  cursor: pointer;
+  list-style: none;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.8125rem;
+  font-weight: var(--font-semibold);
+  color: var(--text-secondary);
+  user-select: none;
+}
+
+.reasoning-collapsible-summary::-webkit-details-marker {
+  display: none;
+}
+
+.reasoning-collapsible-summary::before {
+  content: '';
+  display: inline-block;
+  width: 0.35rem;
+  height: 0.35rem;
+  margin-right: 0.5rem;
+  border-right: 2px solid var(--text-muted);
+  border-bottom: 2px solid var(--text-muted);
+  transform: rotate(-45deg);
+  vertical-align: 0.15em;
+  transition: transform 0.15s ease;
+}
+
+.reasoning-collapsible[open] .reasoning-collapsible-summary::before {
+  transform: rotate(45deg);
+}
+
+.reasoning-collapsible-body {
+  margin: 0;
+  padding: 0 0.75rem 0.75rem;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--text-secondary);
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-family: var(--font-mono, ui-monospace, monospace);
+  /* ~10 lines: 10 × (0.8125rem × 1.45) — fallback where `lh` is unsupported */
+  max-height: calc(0.8125rem * 1.45 * 10);
+  max-height: 10lh;
+  overflow-y: auto;
 }
 
 .conversation-content::-webkit-scrollbar {

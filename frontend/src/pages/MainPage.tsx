@@ -1,6 +1,10 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 
+import '../styles/hero.css'
+import '../styles/models.css'
+import '../styles/results.css'
+
 import {
   type AttachedFile,
   type StoredAttachedFile,
@@ -145,6 +149,11 @@ export function MainPage() {
     setProcessingTime,
     conversations,
     setConversations,
+    clearStreamingReasoningUi,
+    setStreamingReasoningByModel,
+    setStreamAnswerStartedByModel,
+    effectiveStreamingReasoningByModel,
+    streamAnswerStartedByModel,
     isFollowUpMode,
     setIsFollowUpMode,
     closedCards,
@@ -659,6 +668,8 @@ export function MainPage() {
     conversationsForScroll: conversations,
     shouldScrollToTopAfterFormattingRef,
     selectedModelsForScroll: selectedModels,
+    streamingReasoningByModel: effectiveStreamingReasoningByModel,
+    autoScrollPausedRef,
     input,
   })
 
@@ -1623,6 +1634,7 @@ export function MainPage() {
       setMaxTokens,
       hasScrolledToResultsRef,
       shouldScrollToTopAfterFormattingRef,
+      clearStreamingReasoningUi,
     }
   )
 
@@ -1923,6 +1935,7 @@ export function MainPage() {
     setDefaultSelectionOverridden(false)
     setSelectedModels([])
     collapseAllDropdowns()
+    clearStreamingReasoningUi()
     setConversations([])
     setResponse(null)
     setClosedCards(new Set())
@@ -2061,6 +2074,9 @@ export function MainPage() {
         setIsScrollLocked,
         setUsageCount,
         setIsFollowUpMode,
+        setStreamingReasoningByModel,
+        setStreamAnswerStartedByModel,
+        clearStreamingReasoningUi,
       },
       credit: {
         setAnonymousCreditsRemaining,
@@ -2105,6 +2121,9 @@ export function MainPage() {
       setIsScrollLocked,
       setUsageCount,
       setIsFollowUpMode,
+      setStreamingReasoningByModel,
+      setStreamAnswerStartedByModel,
+      clearStreamingReasoningUi,
       setAnonymousCreditsRemaining,
       setCreditBalance,
       setCreditWarningMessage,
@@ -2499,7 +2518,10 @@ export function MainPage() {
             onShowDisabledButtonInfo: setDisabledButtonInfo,
             onClearAllModels: () => setSelectedModels([]),
             onSetDefaultSelectionOverridden: setDefaultSelectionOverridden,
-            onClearConversations: () => setConversations([]),
+            onClearConversations: () => {
+              clearStreamingReasoningUi()
+              setConversations([])
+            },
             onClearResponse: () => setResponse(null),
             onExpandModelsSection: () => setIsModelsHidden(false),
             onError: setError,
@@ -2567,6 +2589,8 @@ export function MainPage() {
             onBreakout: handleBreakout,
             onHideOthers: hideAllOtherModels,
             onCopyMessage: handleCopyMessage,
+            streamingReasoningByModel: effectiveStreamingReasoningByModel,
+            streamAnswerStartedByModel,
           }}
         />
 

@@ -835,6 +835,32 @@ export const faqData: FAQItemData[] = [
     ),
   },
   {
+    id: 'thinking-models-reasoning',
+    question:
+      'What does the thinking (T) label mean, and what is the Reasoning section in a response?',
+    answer: (
+      <>
+        <p>
+          The <strong>thinking</strong> indicator (T badge) marks models where CompareIntel can
+          receive <strong>separable reasoning</strong> in the live stream: extra text the provider
+          sends in addition to the main answer. When present, it appears in a collapsible{' '}
+          <strong>Reasoning</strong> section on the result card while the model is responding.
+        </p>
+        <p>
+          <strong>Reasoning is not saved</strong> with your conversation—only the main answer is
+          stored in history. It is for reviewing how the model worked through the problem during
+          that run only.
+        </p>
+        <p>
+          Some models still perform extended internal reasoning but <strong>do not output</strong>{' '}
+          that process to CompareIntel. You may get a strong answer with no Reasoning block. The
+          thinking label reflects models that expose that stream to our UI, not every model that
+          thinks internally without showing it.
+        </p>
+      </>
+    ),
+  },
+  {
     id: 'api-access',
     question: 'Does CompareIntel have an API?',
     answer: (

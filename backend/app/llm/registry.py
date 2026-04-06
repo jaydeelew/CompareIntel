@@ -18,6 +18,11 @@ _OPENROUTER_MODELS_PATH = Path(__file__).resolve().parent.parent.parent / "openr
 # Cache for model temperature support (model_id -> bool)
 _temperature_support_cache: dict[str, bool] | None = None
 
+# OpenRouter /models: ids that appear in openrouter_models.json snapshot
+_openrouter_known_ids_cache: frozenset[str] | None = None
+# Subset: models that advertise reasoning / include_reasoning parameters (separable thinking traces)
+_openrouter_thinking_model_ids_cache: frozenset[str] | None = None
+
 # Cache for model vision support (model_id -> bool)
 _vision_support_cache: dict[str, bool] | None = None
 
@@ -125,6 +130,169 @@ def get_model_supports_temperature(model_id: str) -> bool:
     if model_id in KNOWN_NO_TEMPERATURE_MODEL_IDS:
         return False
     return _load_temperature_support_map().get(model_id, True)  # Default True if unknown
+
+
+def is_thinking_model_from_openrouter_entry(model_data: dict[str, Any] | None) -> bool | None:
+    """True if OpenRouter lists ``reasoning`` / ``include_reasoning`` in ``supported_parameters``.
+
+    Use with a single object from the live ``/api/v1/models`` ``data[]`` list or the local snapshot.
+    Returns ``None`` if the payload does not include a usable ``supported_parameters`` list.
+    """
+    if not model_data or not isinstance(model_data, dict):
+        return None
+    params = model_data.get("supported_parameters")
+    if not isinstance(params, list):
+        return None
+    return "reasoning" in params or "include_reasoning" in params
+
+
+# OpenRouter may list reasoning parameters even when the provider does not return stream chunks
+# (``delta.reasoning`` / ``reasoning_content``) to the client.
+_REASONING_NOT_EXPOSED_DESCRIPTION_MARKERS: tuple[str, ...] = (
+    "reasoning is not exposed",
+    "thinking traces are not exposed",
+    "thinking trace is not exposed",
+)
+
+STREAMING_REASONING_MODEL_IDS_BLOCKED: frozenset[str] = frozenset(
+    {
+        "x-ai/grok-4",
+    }
+)
+
+# Bundled ``openrouter_models.json`` can lag; these CompareIntel registry ids stream separable
+# reasoning via OpenRouter but are missing from the snapshot — keep in sync when refreshing data.
+STREAMING_REASONING_MODEL_IDS_NOT_IN_SNAPSHOT: frozenset[str] = frozenset(
+    {
+        "anthropic/claude-opus-4.5",
+        "anthropic/claude-sonnet-4.5",
+        "anthropic/claude-opus-4.6",
+        "anthropic/claude-sonnet-4.6",
+        # Moonshot: streams separable reasoning; id may be absent from bundled snapshot until refresh.
+        "moonshotai/kimi-k2.5",
+    }
+)
+
+
+def _openrouter_description_denies_exposed_reasoning(description: str) -> bool:
+    d = (description or "").lower()
+    return any(marker in d for marker in _REASONING_NOT_EXPOSED_DESCRIPTION_MARKERS)
+
+
+def streams_separable_reasoning_from_openrouter_entry(
+    model_data: dict[str, Any] | None,
+) -> bool | None:
+    """Whether OpenRouter metadata suggests separable reasoning text is returned in the stream.
+
+    This is stricter than :func:`is_thinking_model_from_openrouter_entry`: some models advertise
+    ``reasoning`` parameters while documentation states traces are not exposed.
+
+    Returns ``None`` if ``supported_parameters`` is missing from the payload; otherwise ``bool``.
+    """
+    base = is_thinking_model_from_openrouter_entry(model_data)
+    if base is None:
+        return None
+    if not base:
+        return False
+    if not model_data or not isinstance(model_data, dict):
+        return False
+    mid = model_data.get("id")
+    if isinstance(mid, str) and mid in STREAMING_REASONING_MODEL_IDS_BLOCKED:
+        return False
+    desc = model_data.get("description") or ""
+    if _openrouter_description_denies_exposed_reasoning(str(desc)):
+        return False
+    return True
+
+
+def _load_openrouter_model_ids_and_thinking() -> tuple[frozenset[str], frozenset[str]]:
+    """Parse openrouter_models.json once: all ids, and ids that stream separable reasoning."""
+    global _openrouter_known_ids_cache, _openrouter_thinking_model_ids_cache
+    if _openrouter_known_ids_cache is not None and _openrouter_thinking_model_ids_cache is not None:
+        return _openrouter_known_ids_cache, _openrouter_thinking_model_ids_cache
+
+    known: set[str] = set()
+    thinking: set[str] = set()
+    try:
+        if _OPENROUTER_MODELS_PATH.exists():
+            with _OPENROUTER_MODELS_PATH.open() as f:
+                data = json.load(f)
+            for model in data.get("data", []):
+                model_id = model.get("id")
+                if not model_id:
+                    continue
+                known.add(model_id)
+                if streams_separable_reasoning_from_openrouter_entry(model) is True:
+                    thinking.add(model_id)
+    except Exception:
+        pass
+
+    _openrouter_known_ids_cache = frozenset(known)
+    _openrouter_thinking_model_ids_cache = frozenset(thinking)
+    return _openrouter_known_ids_cache, _openrouter_thinking_model_ids_cache
+
+
+def get_openrouter_thinking_model_flag(model_id: str) -> bool | None:
+    """If ``model_id`` is in the local OpenRouter snapshot, return whether it streams separable reasoning.
+
+    Uses ``supported_parameters`` plus description / id exclusions (see
+    :func:`streams_separable_reasoning_from_openrouter_entry`). When the id is missing from the
+    snapshot, returns ``None``.
+    """
+    known, thinking = _load_openrouter_model_ids_and_thinking()
+    if model_id not in known:
+        return None
+    return model_id in thinking
+
+
+def resolve_is_thinking_model_for_ui(
+    model_id: str, registry_entry: dict[str, Any] | None = None
+) -> bool:
+    """Whether to show the thinking-model (T) indicator and request OpenRouter reasoning stream params."""
+    flag = get_openrouter_thinking_model_flag(model_id)
+    if flag is not None:
+        return flag
+    if model_id in STREAMING_REASONING_MODEL_IDS_NOT_IN_SNAPSHOT:
+        return True
+    reg = registry_entry or {}
+    return reg.get("is_thinking_model") is True
+
+
+def is_thinking_model_registry_file_value(model_id: str) -> bool:
+    """Value to persist in ``models_registry.json`` when syncing flags (no legacy key carryover)."""
+    flag = get_openrouter_thinking_model_flag(model_id)
+    if flag is not None:
+        return flag
+    return model_id in STREAMING_REASONING_MODEL_IDS_NOT_IN_SNAPSHOT
+
+
+def should_request_openrouter_reasoning_traces(model_id: str) -> bool:
+    """Whether to add a ``reasoning`` object to OpenRouter chat ``extra_body``.
+
+    Without it, many providers (notably Anthropic) omit separable reasoning deltas from the stream,
+    so the UI never receives ``delta.reasoning`` / ``reasoning_content`` chunks.
+    """
+    reg_entry: dict[str, Any] | None = None
+    for m in OPENROUTER_MODELS:
+        if m.get("id") == model_id:
+            reg_entry = m
+            break
+    return resolve_is_thinking_model_for_ui(model_id, reg_entry)
+
+
+def openrouter_reasoning_request_body(model_id: str) -> dict[str, Any]:
+    """Value for ``extra_body[\"reasoning\"]`` (see OpenRouter reasoning-tokens docs)."""
+    mid = model_id.lower()
+    # Anthropic: thinking budget via max_tokens (OpenRouter normalizes to provider).
+    # Provider rejects values above 31999 (e.g. 400: reasoning.maxtokens must be 1024–31999).
+    if mid.startswith("anthropic/"):
+        return {"max_tokens": 31999}
+    # OpenAI o-series / GPT-5: effort-based
+    if mid.startswith("openai/") and ("/o" in mid or "gpt-5" in mid):
+        return {"effort": "medium"}
+    if mid.startswith("x-ai/"):
+        return {"effort": "medium"}
+    return {"enabled": True}
 
 
 def _load_image_gen_support_map() -> dict[str, bool]:

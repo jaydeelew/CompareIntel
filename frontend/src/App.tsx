@@ -9,9 +9,6 @@ import './styles/components.css'
 import './styles/navigation.css'
 import './styles/layout.css'
 import './styles/responsive.css'
-import './styles/hero.css'
-import './styles/models.css'
-import './styles/results.css'
 import './App.css'
 
 import { Layout, ThemeSync } from './components'
@@ -19,7 +16,11 @@ import { ErrorBoundary, LoadingSpinner } from './components/shared'
 import { AuthProvider } from './contexts/AuthContext'
 import { PWAInstallProvider } from './contexts/PWAInstallContext'
 import { ThemeProvider } from './contexts/ThemeContext'
-import { MainPage, AdminPage } from './pages'
+import { AdminPage } from './pages'
+
+const MainPage = lazy(() =>
+  import('./pages/MainPage').then(module => ({ default: module.MainPage }))
+)
 
 const About = lazy(() =>
   import('./components/pages/About').then(module => ({ default: module.About }))
@@ -121,7 +122,14 @@ function App() {
                     </Suspense>
                   }
                 />
-                <Route path="/" element={<MainPage />} />
+                <Route
+                  path="/"
+                  element={
+                    <Suspense fallback={<LoadingSpinner />}>
+                      <MainPage />
+                    </Suspense>
+                  }
+                />
                 <Route path="/admin" element={<AdminPage />} />
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Route>

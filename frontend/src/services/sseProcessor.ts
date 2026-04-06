@@ -133,6 +133,9 @@ export interface SSEProcessorConfig {
   setIsFollowUpMode: (mode: boolean) => void
   loadHistoryFromAPI: () => Promise<void>
   apiClientDeleteCache: (key: string) => void
+  setStreamingReasoningByModel: React.Dispatch<React.SetStateAction<Record<string, string>>>
+  setStreamAnswerStartedByModel: React.Dispatch<React.SetStateAction<Record<string, boolean>>>
+  clearStreamingReasoningUi: () => void
 }
 
 export interface ProcessStreamResult {
@@ -201,6 +204,9 @@ export async function processComparisonStream(
     setIsFollowUpMode,
     loadHistoryFromAPI,
     apiClientDeleteCache,
+    setStreamingReasoningByModel,
+    setStreamAnswerStartedByModel,
+    clearStreamingReasoningUi,
   } = config
 
   const resetStreamingTimeout = () => {
@@ -384,6 +390,10 @@ export async function processComparisonStream(
         try {
           const jsonStr = message.replace(/^data: /, '')
           const event = JSON.parse(jsonStr)
+          if (event && event.model != null && event.model !== '') {
+            const trimmed = String(event.model).trim()
+            if (trimmed) event.model = trimmed
+          }
 
           if (event.type === 'start') {
             if (!streamingResults[event.model]) streamingResults[event.model] = ''
@@ -418,8 +428,37 @@ export async function processComparisonStream(
                 })
               }
             }
+          } else if (event.type === 'reasoning') {
+            if (!streamingResults[event.model]) streamingResults[event.model] = ''
+            const rmid = createModelId(event.model)
+            const piece = typeof event.content === 'string' ? event.content : ''
+            setStreamingReasoningByModel(prev => ({
+              ...prev,
+              [rmid]: (prev[rmid] ?? '') + piece,
+            }))
+            modelLastChunkTimes[event.model] = Date.now()
+            modelLastChunkTimes[rmid] = Date.now()
+            resetStreamingTimeout()
+            shouldUpdate = true
+
+            if (!hasScrolledToResults) {
+              hasScrolledToResults = true
+              requestAnimationFrame(() => {
+                setTimeout(() => {
+                  document.querySelector('.results-section')?.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start',
+                  })
+                }, 100)
+              })
+            }
           } else if (event.type === 'chunk') {
-            streamingResults[event.model] = (streamingResults[event.model] || '') + event.content
+            const chunkText = typeof event.content === 'string' ? event.content : ''
+            if (chunkText.length > 0) {
+              const amid = createModelId(event.model)
+              setStreamAnswerStartedByModel(prev => ({ ...prev, [amid]: true }))
+            }
+            streamingResults[event.model] = (streamingResults[event.model] || '') + chunkText
             modelLastChunkTimes[event.model] = Date.now()
             resetStreamingTimeout()
             shouldUpdate = true
@@ -512,6 +551,7 @@ export async function processComparisonStream(
               }
             }
           } else if (event.type === 'complete') {
+            // Keep streamingReasoningByModel until a new comparison, refresh, or login (cleared elsewhere).
             streamingMetadata = event.metadata
             setProcessingTime(Date.now() - startTime)
             shouldUpdate = true
@@ -677,6 +717,7 @@ export async function processComparisonStream(
               }, 1000)
             }
           } else if (event.type === 'error') {
+            clearStreamingReasoningUi()
             streamError = new Error(event.message || 'Streaming error occurred')
             selectedModels.forEach(modelId => {
               const cid = createModelId(modelId)
