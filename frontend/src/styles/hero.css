@@ -169,40 +169,15 @@
   user-select: none;
 }
 
-/* At the 900 px breakpoint, responsive rules shrink tiles from full cards to icon-only, reducing
-   their layout height by ~114 px and visibly shrinking the hero.  When tiles are hidden we lock
-   them to full-card dimensions so the hero height stays constant across all widths ≥ 769 px. */
-@media (min-width: 769px) and (max-width: 900px) {
+/* Lock the hidden tile grid to a fixed height for all ≥ 769 px.
+   Without this, tile content (description text rewrapping in narrower columns,
+   icon-only breakpoint at 900 px) continuously changes the grid row height and
+   shifts the composer.  180 px matches the natural full-card tile height at wide
+   desktop widths; overflow: hidden absorbs any internal variance. */
+@media (min-width: 769px) {
   .hero-section.hero-section--composer-focused .hero-capabilities {
-    grid-template-columns: repeat(4, 1fr);
-    gap: 1rem;
-    max-width: 1000px;
-    padding: 0 1rem;
-    justify-content: normal;
-  }
-
-  .hero-section.hero-section--composer-focused .capability-tile {
-    width: auto;
-    padding: 1.25rem 1rem;
-  }
-
-  .hero-section.hero-section--composer-focused .capability-tile-front {
-    margin: -1.25rem -1rem;
-    padding: 1.25rem 1rem;
-  }
-
-  .hero-section.hero-section--composer-focused .capability-icon {
-    width: 60px;
-    height: 60px;
-    margin: 0 auto 1rem;
-  }
-
-  .hero-section.hero-section--composer-focused .capability-title {
-    display: block;
-  }
-
-  .hero-section.hero-section--composer-focused .capability-description {
-    display: block;
+    height: 180px;
+    overflow: hidden;
   }
 }
 
