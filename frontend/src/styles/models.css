@@ -411,6 +411,8 @@
   justify-content: center;
   flex-shrink: 0;
   cursor: help;
+  /* Match letter “T” to Georgia so it isn’t taken from heading / UI sans context */
+  font-family: Georgia, 'Times New Roman', serif;
 }
 
 .thinking-model-icon-btn {
@@ -425,6 +427,7 @@
   cursor: pointer;
   line-height: 0;
   color: inherit;
+  font-family: Georgia, 'Times New Roman', serif;
 }
 
 .thinking-model-icon {
@@ -435,7 +438,8 @@
   min-width: 14px;
   height: 14px;
   padding: 0;
-  font-family: Georgia, 'Times New Roman', serif;
+  /* !important: heading (h4) / tooltip context can otherwise win on specificity */
+  font-family: Georgia, 'Times New Roman', serif !important;
   font-size: 14px;
   font-weight: 600;
   line-height: 1;
