@@ -325,6 +325,16 @@
         "is_thinking_model": true
       },
       {
+        "id": "google/gemma-3-27b-it",
+        "name": "Gemma 3 27B It",
+        "description": "Gemma 3 introduces multimodality, supporting vision-language input and text outputs.",
+        "category": "Language",
+        "provider": "Google",
+        "supports_web_search": false,
+        "supports_image_generation": false,
+        "knowledge_cutoff": null
+      },
+      {
         "id": "google/gemini-2.5-flash-image",
         "name": "Gemini 2.5 Flash Image",
         "description": "Google's image generation model. Generates images from text prompts with support for extended aspect ratios.",
@@ -1254,6 +1264,7 @@
     "deepseek/deepseek-v3.2-exp",
     "google/gemini-2.0-flash-001",
     "google/gemini-2.5-flash",
+    "google/gemma-3-27b-it",
     "microsoft/phi-4",
     "mistralai/devstral-2512",
     "openai/gpt-oss-120b",

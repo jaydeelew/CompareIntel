@@ -118,6 +118,9 @@ export const ComparisonForm = memo<ComparisonFormProps>(
     imageGenerationNoSharedImageOptions = false,
     onImageGenerationSubmitBlockedTap,
   }) => {
+    const blockPromptStepForTutorial =
+      tutorialIsActive && (tutorialStep === 'enter-prompt' || tutorialStep === 'enter-prompt-2')
+
     const { showHistoryDropdown, setShowHistoryDropdown } = historyProps
     const { attachedFiles, setAttachedFiles, onExpandFiles, onRemoveAttachedImages } = fileProps
 
@@ -582,7 +585,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
             onKeyDown={e => {
               if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault()
-                if (tutorialStep === 'enter-prompt' || tutorialStep === 'enter-prompt-2') return
+                if (blockPromptStepForTutorial) return
                 if (submitImageConfigBlocked && !hardSubmitDisabled) {
                   onImageGenerationSubmitBlockedTap?.()
                   return
@@ -967,7 +970,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
             {isMobileLayout ? (
               <button
                 onClick={() => {
-                  if (tutorialStep === 'enter-prompt' || tutorialStep === 'enter-prompt-2') return
+                  if (blockPromptStepForTutorial) return
                   if (submitImageConfigBlocked && !hardSubmitDisabled) {
                     onImageGenerationSubmitBlockedTap?.()
                     return
@@ -1011,8 +1014,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
                 const submitButton = (
                   <button
                     onClick={() => {
-                      if (tutorialStep === 'enter-prompt' || tutorialStep === 'enter-prompt-2')
-                        return
+                      if (blockPromptStepForTutorial) return
                       if (submitImageConfigBlocked && !hardSubmitDisabled) {
                         onImageGenerationSubmitBlockedTap?.()
                         return

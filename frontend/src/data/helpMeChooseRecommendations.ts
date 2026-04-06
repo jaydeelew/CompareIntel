@@ -51,6 +51,7 @@ export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
       { modelId: 'cohere/command-r7b-12-2024', evidence: 'OpenRouter avg: $0.09/1M tokens.' },
       { modelId: 'microsoft/phi-4', evidence: 'OpenRouter avg: $0.10/1M tokens.' },
       { modelId: 'openai/gpt-oss-120b', evidence: 'OpenRouter avg: $0.11/1M tokens.' },
+      { modelId: 'google/gemma-3-27b-it', evidence: 'OpenRouter avg: $0.12/1M tokens.' },
       {
         modelId: 'mistralai/mistral-small-3.2-24b-instruct',
         evidence: 'OpenRouter avg: $0.14/1M tokens.',
@@ -173,6 +174,7 @@ export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
         modelId: 'deepseek/deepseek-v3.2-exp',
         evidence: 'SWE-Bench Pro public (Scale Labs): 15.56%.',
       },
+      { modelId: 'google/gemma-3-27b-it', evidence: 'SWE-Bench Pro public (Scale Labs): 11.38%.' },
       { modelId: 'z-ai/glm-5', evidence: 'SWE-Bench Pro public (Scale Labs): 9.67%.' },
       {
         modelId: 'meta-llama/llama-4-maverick',

@@ -1375,6 +1375,8 @@ export const test = base.extend<TestFixtures>({
     } catch {
       await page.waitForLoadState('domcontentloaded', { timeout: 5000 }).catch(() => {})
     }
+    await waitForReactHydration(page)
+    await waitForAuthState(page)
     await dismissTutorialOverlay(page)
     await ensureAuthenticated(
       page,

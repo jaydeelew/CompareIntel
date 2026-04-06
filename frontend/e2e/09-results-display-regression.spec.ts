@@ -80,6 +80,9 @@ async function clickShowAllResultsButton(btn: Locator, browserName: string): Pro
  */
 
 test.describe('Results Display Regression Tests', () => {
+  // submitAndAwaitCompareStream waits up to 90s for compare-stream; default project timeout is 30s (local) for some devices.
+  test.describe.configure({ timeout: 120000 })
+
   test.describe('Core Results Rendering', () => {
     test('Results grid renders correctly after comparison', async ({
       authenticatedPage,
