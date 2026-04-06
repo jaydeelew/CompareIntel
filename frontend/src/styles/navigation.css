@@ -384,6 +384,11 @@
     flex-wrap: nowrap !important;
     overflow: visible !important;
   }
+
+  /* Nudge theme toggle slightly upward vs. adjacent nav actions (tablet / narrow mobile). */
+  .nav-theme-toggle-wrapper {
+    transform: translateY(-4px);
+  }
 }
 
 @media (max-width: 480px) {
