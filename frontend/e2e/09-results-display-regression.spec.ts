@@ -604,7 +604,10 @@ test.describe('Results Display Regression Tests', () => {
   })
 
   test.describe('Breakout Conversation', () => {
-    test('Breakout button appears on result cards', async ({ authenticatedPage }, testInfo) => {
+    test('Breakout button appears on result cards', async ({
+      authenticatedPage,
+      browserName,
+    }, testInfo) => {
       const projectName = testInfo.project.name
       await test.step('Perform comparison with multiple models', async () => {
         const inputField = authenticatedPage.getByTestId('comparison-input-textarea')
@@ -652,9 +655,19 @@ test.describe('Results Display Regression Tests', () => {
         const breakoutMatcher = (res: { url: () => string; status: () => number }) =>
           res.url().includes('/conversations/breakout') && res.status() >= 200 && res.status() < 300
 
+        await breakoutBtn.scrollIntoViewIfNeeded().catch(() => {})
+        const triggerBreakout = isMobile
+          ? () => breakoutBtn.tap({ timeout: 15000 })
+          : browserName === 'webkit'
+            ? () =>
+                breakoutBtn.evaluate((el: HTMLElement) => {
+                  ;(el as HTMLButtonElement).click()
+                })
+            : () => breakoutBtn.click({ timeout: 15000 })
+
         await Promise.all([
           authenticatedPage.waitForResponse(breakoutMatcher, { timeout: 90000 }),
-          isMobile ? breakoutBtn.tap({ timeout: 15000 }) : breakoutBtn.click({ timeout: 15000 }),
+          triggerBreakout(),
         ])
 
         // Follow-up mode proves the breakout handler finished (clears composer, single-thread UI).

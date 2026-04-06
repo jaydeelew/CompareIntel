@@ -512,18 +512,6 @@
         "knowledge_cutoff": "June 2025"
       }
     ],
-    "Moonshot AI": [
-      {
-        "id": "moonshotai/kimi-k2.5",
-        "name": "Kimi K2.5",
-        "description": "Moonshot AI's large MoE model with strong agentic coding, long-context, and tool-use performance.",
-        "category": "Language",
-        "provider": "Moonshot AI",
-        "supports_web_search": true,
-        "knowledge_cutoff": null,
-        "is_thinking_model": true
-      }
-    ],
     "Mistral": [
       {
         "id": "mistralai/devstral-medium",
@@ -589,6 +577,18 @@
         "provider": "Mistralai",
         "supports_web_search": true,
         "knowledge_cutoff": null
+      }
+    ],
+    "Moonshot AI": [
+      {
+        "id": "moonshotai/kimi-k2.5",
+        "name": "Kimi K2.5",
+        "description": "Moonshot AI's large MoE model with strong agentic coding, long-context, and tool-use performance.",
+        "category": "Language",
+        "provider": "Moonshot AI",
+        "supports_web_search": true,
+        "knowledge_cutoff": null,
+        "is_thinking_model": true
       }
     ],
     "OpenAI": [
@@ -849,6 +849,17 @@
         "provider": "Qwen",
         "supports_web_search": true,
         "knowledge_cutoff": "September 2025"
+      },
+      {
+        "id": "qwen/qwen3.6-plus:free",
+        "name": "Qwen3.6 Plus:Free",
+        "description": "Qwen 3.6 Plus builds on a hybrid architecture that combines efficient linear attention with sparse mixture-of-experts routing, enabling strong scalability and high-performance inference.",
+        "category": "Language",
+        "provider": "Qwen",
+        "supports_web_search": true,
+        "supports_image_generation": false,
+        "is_thinking_model": true,
+        "knowledge_cutoff": null
       },
       {
         "id": "qwen/qwen3-30b-a3b-instruct-2507",
@@ -1247,6 +1258,7 @@
     "mistralai/devstral-2512",
     "openai/gpt-oss-120b",
     "qwen/qwen3-coder-next",
+    "qwen/qwen3.6-plus:free",
     "stepfun/step-3.5-flash:free",
     "x-ai/grok-4-fast",
     "x-ai/grok-code-fast-1",

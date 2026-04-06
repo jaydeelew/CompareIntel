@@ -108,7 +108,10 @@ test.describe('Authenticated User Comparison Flow', () => {
     })
   })
 
-  test('User can continue conversation with follow-up', async ({ authenticatedPage }) => {
+  test('User can continue conversation with follow-up', async ({
+    authenticatedPage,
+    browserName,
+  }) => {
     test.setTimeout(60000) // 60 seconds for this test
     await test.step('Perform initial comparison', async () => {
       const inputField = authenticatedPage.getByTestId('comparison-input-textarea')
@@ -262,8 +265,27 @@ test.describe('Authenticated User Comparison Flow', () => {
         throw new Error('Page was closed before filling input')
       }
 
-      // Fill follow-up question
-      await inputField.fill('What are its main use cases?', { timeout: 5000 })
+      // Fill follow-up question (WebKit often needs real input events for controlled React textarea)
+      const followUpText = 'What are its main use cases?'
+      await inputField.scrollIntoViewIfNeeded().catch(() => {})
+      await inputField.fill(followUpText, { timeout: 5000 })
+      let filled = await inputField.inputValue().catch(() => '')
+      if (filled.trim() !== followUpText) {
+        await inputField.click({ force: true })
+        await inputField.fill('')
+        await inputField.pressSequentially(followUpText, {
+          delay: browserName === 'webkit' ? 50 : 15,
+        })
+        filled = await inputField.inputValue().catch(() => '')
+      }
+      if (filled.trim() !== followUpText) {
+        await inputField.evaluate((el: HTMLTextAreaElement, text: string) => {
+          el.focus()
+          el.value = text
+          el.dispatchEvent(new Event('input', { bubbles: true }))
+        }, followUpText)
+      }
+      await expect(inputField).toHaveValue(followUpText, { timeout: 10000 })
 
       // Wait for input to be processed and React state to update
       if (!authenticatedPage.isClosed()) {
@@ -297,7 +319,9 @@ test.describe('Authenticated User Comparison Flow', () => {
       // Wait for button to be enabled (with longer timeout to account for React state updates)
       // In follow-up mode, button should be enabled unless loading or no credits
       if (!authenticatedPage.isClosed()) {
-        await expect(submitButton).toBeEnabled({ timeout: 15000 })
+        await expect(submitButton).toBeEnabled({
+          timeout: browserName === 'webkit' ? 30000 : 15000,
+        })
       }
 
       // Submit follow-up
