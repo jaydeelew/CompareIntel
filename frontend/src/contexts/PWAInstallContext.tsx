@@ -148,7 +148,7 @@ export function PWAInstallProvider({ children }: { children: React.ReactNode }) 
     window.addEventListener('keydown', trackEngagement, { once: true })
 
     // preventDefault defers the browser mini-infobar until we call prompt() from Install / banner.
-    // Chrome may log that the default banner was not shown until prompt() runs — that is expected.
+    // In dev, skip handling so Chrome does not log "Banner not shown... must call prompt()" on every load.
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault()
       setDeferredPrompt(e as BeforeInstallPromptEvent)
@@ -166,12 +166,16 @@ export function PWAInstallProvider({ children }: { children: React.ReactNode }) 
       }
     }
 
-    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
+    if (!import.meta.env.DEV) {
+      window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
+    }
     window.addEventListener('appinstalled', handleAppInstalled)
 
     return () => {
       if (engagementTimerRef.current) clearTimeout(engagementTimerRef.current)
-      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
+      if (!import.meta.env.DEV) {
+        window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
+      }
       window.removeEventListener('appinstalled', handleAppInstalled)
       window.removeEventListener('scroll', trackEngagement)
       window.removeEventListener('click', trackEngagement)

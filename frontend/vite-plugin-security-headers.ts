@@ -29,6 +29,10 @@ export function securityHeadersPlugin(): Plugin {
           res.setHeader('Pragma', 'no-cache')
           res.setHeader('Expires', '0')
         }
+        // Media: avoid long-lived HTTP cache + range requests (Chrome may log ERR_CACHE_OPERATION_NOT_SUPPORTED)
+        else if (url.match(/\.(mp4|webm|m4v|ogg)$/i)) {
+          res.setHeader('Cache-Control', 'no-store')
+        }
         // Static assets can be cached
         else if (url.match(/\.(js|css|png|jpg|jpeg|gif|ico|svg|webp|woff|woff2|ttf|eot)$/)) {
           res.setHeader('Cache-Control', 'public, max-age=31536000, immutable')

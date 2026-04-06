@@ -190,7 +190,7 @@ function CapabilityTile({
                 muted
                 loop
                 playsInline
-                preload="metadata"
+                preload="none"
                 aria-label={`${title} example`}
               />
             ) : (
