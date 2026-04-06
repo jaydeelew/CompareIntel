@@ -1,7 +1,12 @@
 import type { Locator, Page } from '@playwright/test'
 
 import { test, expect } from './fixtures'
+import { submitAndAwaitCompareStream } from './helpers/comparisonStream'
 import { isMobileE2eProject, toggleModelCheckbox } from './helpers/modelCheckbox'
+
+function firstResultCardVisibleTimeoutMs(projectName: string): number {
+  return projectName === 'firefox' || projectName === 'webkit' ? 60000 : 30000
+}
 
 async function ensureFirstProviderExpanded(page: Page): Promise<void> {
   const headers = page.locator('.provider-header, button[class*="provider-header"]')
@@ -43,7 +48,10 @@ function allResultCards(page: Page): Locator {
 
 test.describe('Results Display Regression Tests', () => {
   test.describe('Core Results Rendering', () => {
-    test('Results grid renders correctly after comparison', async ({ authenticatedPage }) => {
+    test('Results grid renders correctly after comparison', async ({
+      authenticatedPage,
+    }, testInfo) => {
+      const cardWait = firstResultCardVisibleTimeoutMs(testInfo.project.name)
       await test.step('Set up comparison', async () => {
         const inputField = authenticatedPage.getByTestId('comparison-input-textarea')
         await expect(inputField).toBeVisible()
@@ -87,8 +95,7 @@ test.describe('Results Display Regression Tests', () => {
       })
 
       await test.step('Submit and verify results grid', async () => {
-        const submitButton = authenticatedPage.getByTestId('comparison-submit-button')
-        await submitButton.click()
+        await submitAndAwaitCompareStream(authenticatedPage, { waitForCardAttachment: false })
 
         // Wait for results to appear (or error state)
         const resultsGrid = authenticatedPage.locator('.results-grid')
@@ -136,7 +143,7 @@ test.describe('Results Display Regression Tests', () => {
 
         // Verify result cards appear
         const resultCards = allResultCards(authenticatedPage)
-        await expect(resultCards.first()).toBeVisible({ timeout: 30000 })
+        await expect(resultCards.first()).toBeVisible({ timeout: cardWait })
 
         const cardCount = await resultCards.count()
         expect(cardCount).toBeGreaterThan(0)
@@ -163,6 +170,7 @@ test.describe('Results Display Regression Tests', () => {
 
     test('Result card shows formatted view by default', async ({ authenticatedPage }, testInfo) => {
       const projectName = testInfo.project.name
+      const cardWait = firstResultCardVisibleTimeoutMs(projectName)
       await test.step('Perform comparison', async () => {
         const inputField = authenticatedPage.getByTestId('comparison-input-textarea')
         await inputField.fill('Explain what a variable is in programming')
@@ -179,12 +187,12 @@ test.describe('Results Display Regression Tests', () => {
         await expect(modelCheckboxes.first()).toBeVisible({ timeout: 15000 })
         await toggleModelCheckbox(modelCheckboxes.first(), projectName)
 
-        await authenticatedPage.getByTestId('comparison-submit-button').click()
+        await submitAndAwaitCompareStream(authenticatedPage)
       })
 
       await test.step('Verify formatted tab is active', async () => {
         const resultCard = firstResultCard(authenticatedPage)
-        await expect(resultCard).toBeVisible({ timeout: 30000 })
+        await expect(resultCard).toBeVisible({ timeout: cardWait })
 
         // Check that formatted tab is active (not raw)
         const formattedTab = resultCard.locator(
@@ -194,7 +202,7 @@ test.describe('Results Display Regression Tests', () => {
 
         // Verify content is rendered (use first() to handle multiple messages)
         const resultOutput = resultCard.locator('.result-output').first()
-        await expect(resultOutput).toBeVisible({ timeout: 30000 })
+        await expect(resultOutput).toBeVisible({ timeout: cardWait })
       })
     })
 
@@ -202,6 +210,7 @@ test.describe('Results Display Regression Tests', () => {
       authenticatedPage,
     }, testInfo) => {
       const projectName = testInfo.project.name
+      const cardWait = firstResultCardVisibleTimeoutMs(projectName)
       await test.step('Perform comparison', async () => {
         const inputField = authenticatedPage.getByTestId('comparison-input-textarea')
         await inputField.fill('What is JavaScript?')
@@ -217,12 +226,12 @@ test.describe('Results Display Regression Tests', () => {
         await expect(modelCheckboxes.first()).toBeVisible({ timeout: 15000 })
         await toggleModelCheckbox(modelCheckboxes.first(), projectName)
 
-        await authenticatedPage.getByTestId('comparison-submit-button').click()
+        await submitAndAwaitCompareStream(authenticatedPage)
       })
 
       await test.step('Switch to raw view', async () => {
         const resultCard = firstResultCard(authenticatedPage)
-        await expect(resultCard).toBeVisible({ timeout: 30000 })
+        await expect(resultCard).toBeVisible({ timeout: cardWait })
 
         // Wait for content to load
         await authenticatedPage.waitForTimeout(2000)
@@ -261,6 +270,7 @@ test.describe('Results Display Regression Tests', () => {
   test.describe('Result Card Actions', () => {
     test('Copy response button works', async ({ authenticatedPage }, testInfo) => {
       const projectName = testInfo.project.name
+      const cardWait = firstResultCardVisibleTimeoutMs(projectName)
       await test.step('Setup comparison', async () => {
         const inputField = authenticatedPage.getByTestId('comparison-input-textarea')
         await inputField.fill('Say hello')
@@ -276,12 +286,12 @@ test.describe('Results Display Regression Tests', () => {
         await expect(modelCheckboxes.first()).toBeVisible({ timeout: 15000 })
         await toggleModelCheckbox(modelCheckboxes.first(), projectName)
 
-        await authenticatedPage.getByTestId('comparison-submit-button').click()
+        await submitAndAwaitCompareStream(authenticatedPage)
       })
 
       await test.step('Click copy button', async () => {
         const resultCard = firstResultCard(authenticatedPage)
-        await expect(resultCard).toBeVisible({ timeout: 30000 })
+        await expect(resultCard).toBeVisible({ timeout: cardWait })
 
         // Wait for content
         await authenticatedPage.waitForTimeout(3000)
@@ -308,6 +318,7 @@ test.describe('Results Display Regression Tests', () => {
       authenticatedPage,
     }, testInfo) => {
       const projectName = testInfo.project.name
+      const cardWait = firstResultCardVisibleTimeoutMs(projectName)
       await test.step('Setup comparison with multiple models', async () => {
         const inputField = authenticatedPage.getByTestId('comparison-input-textarea')
         await inputField.fill('What is Python?')
@@ -334,13 +345,13 @@ test.describe('Results Display Regression Tests', () => {
           }
         }
 
-        await authenticatedPage.getByTestId('comparison-submit-button').click()
+        await submitAndAwaitCompareStream(authenticatedPage)
       })
 
       await test.step('Close one result card', async () => {
         const isMobile = isMobileE2eProject(projectName)
         const resultCards = allResultCards(authenticatedPage)
-        await expect(resultCards.first()).toBeVisible({ timeout: 30000 })
+        await expect(resultCards.first()).toBeVisible({ timeout: cardWait })
 
         const initialCount = await resultCards.count()
 
@@ -378,6 +389,7 @@ test.describe('Results Display Regression Tests', () => {
       authenticatedPage,
     }, testInfo) => {
       const projectName = testInfo.project.name
+      const cardWait = firstResultCardVisibleTimeoutMs(projectName)
       await test.step('Setup and close a card', async () => {
         const inputField = authenticatedPage.getByTestId('comparison-input-textarea')
         await inputField.fill('Explain recursion')
@@ -404,10 +416,10 @@ test.describe('Results Display Regression Tests', () => {
           }
         }
 
-        await authenticatedPage.getByTestId('comparison-submit-button').click()
+        await submitAndAwaitCompareStream(authenticatedPage)
 
         const resultCards = allResultCards(authenticatedPage)
-        await expect(resultCards.first()).toBeVisible({ timeout: 30000 })
+        await expect(resultCards.first()).toBeVisible({ timeout: cardWait })
 
         // Close first card
         const closeBtn = resultCards
@@ -465,6 +477,7 @@ test.describe('Results Display Regression Tests', () => {
   test.describe('Results Section Header', () => {
     test('Results section header displays correctly', async ({ authenticatedPage }, testInfo) => {
       const projectName = testInfo.project.name
+      const cardWait = firstResultCardVisibleTimeoutMs(projectName)
       await test.step('Perform comparison', async () => {
         const inputField = authenticatedPage.getByTestId('comparison-input-textarea')
         await inputField.fill('What is AI?')
@@ -480,13 +493,13 @@ test.describe('Results Display Regression Tests', () => {
         await expect(modelCheckboxes.first()).toBeVisible({ timeout: 15000 })
         await toggleModelCheckbox(modelCheckboxes.first(), projectName)
 
-        await authenticatedPage.getByTestId('comparison-submit-button').click()
+        await submitAndAwaitCompareStream(authenticatedPage)
       })
 
       await test.step('Verify section header elements', async () => {
         // Wait for results
         const resultCard = firstResultCard(authenticatedPage)
-        await expect(resultCard).toBeVisible({ timeout: 30000 })
+        await expect(resultCard).toBeVisible({ timeout: cardWait })
 
         // Check for section header
         const sectionHeader = authenticatedPage.locator('.results-section-header, .results-header')
@@ -504,6 +517,7 @@ test.describe('Results Display Regression Tests', () => {
       authenticatedPage,
     }, testInfo) => {
       const projectName = testInfo.project.name
+      const cardWait = firstResultCardVisibleTimeoutMs(projectName)
       await test.step('Perform comparison', async () => {
         const inputField = authenticatedPage.getByTestId('comparison-input-textarea')
         await inputField.fill('What is machine learning?')
@@ -519,11 +533,11 @@ test.describe('Results Display Regression Tests', () => {
         await expect(modelCheckboxes.first()).toBeVisible({ timeout: 15000 })
         await toggleModelCheckbox(modelCheckboxes.first(), projectName)
 
-        await authenticatedPage.getByTestId('comparison-submit-button').click()
+        await submitAndAwaitCompareStream(authenticatedPage)
 
         // Wait for results
         const resultCard = firstResultCard(authenticatedPage)
-        await expect(resultCard).toBeVisible({ timeout: 30000 })
+        await expect(resultCard).toBeVisible({ timeout: cardWait })
         await authenticatedPage.waitForTimeout(2000)
       })
 
@@ -565,6 +579,7 @@ test.describe('Results Display Regression Tests', () => {
   test.describe('Follow-up Mode', () => {
     test('Follow-up button appears after comparison', async ({ authenticatedPage }, testInfo) => {
       const projectName = testInfo.project.name
+      const cardWait = firstResultCardVisibleTimeoutMs(projectName)
       await test.step('Perform comparison', async () => {
         const inputField = authenticatedPage.getByTestId('comparison-input-textarea')
         await inputField.fill('What is TypeScript?')
@@ -580,13 +595,13 @@ test.describe('Results Display Regression Tests', () => {
         await expect(modelCheckboxes.first()).toBeVisible({ timeout: 15000 })
         await toggleModelCheckbox(modelCheckboxes.first(), projectName)
 
-        await authenticatedPage.getByTestId('comparison-submit-button').click()
+        await submitAndAwaitCompareStream(authenticatedPage)
       })
 
       await test.step('Check follow-up button', async () => {
         // Wait for results
         const resultCard = firstResultCard(authenticatedPage)
-        await expect(resultCard).toBeVisible({ timeout: 30000 })
+        await expect(resultCard).toBeVisible({ timeout: cardWait })
 
         // Wait for streaming to complete
         await authenticatedPage.waitForTimeout(5000)
@@ -608,7 +623,10 @@ test.describe('Results Display Regression Tests', () => {
       authenticatedPage,
       browserName,
     }, testInfo) => {
+      // Compare stream + breakout API + follow-up assertions need headroom on slow CI Firefox.
+      test.setTimeout(240000)
       const projectName = testInfo.project.name
+      const cardWait = firstResultCardVisibleTimeoutMs(projectName)
       await test.step('Perform comparison with multiple models', async () => {
         const inputField = authenticatedPage.getByTestId('comparison-input-textarea')
         await inputField.fill('Explain APIs')
@@ -635,9 +653,9 @@ test.describe('Results Display Regression Tests', () => {
           }
         }
 
-        await authenticatedPage.getByTestId('comparison-submit-button').click()
+        await submitAndAwaitCompareStream(authenticatedPage)
 
-        await expect(firstResultCard(authenticatedPage)).toBeVisible({ timeout: 60000 })
+        await expect(firstResultCard(authenticatedPage)).toBeVisible({ timeout: cardWait })
       })
 
       await test.step('Verify breakout button exists and is clickable', async () => {
@@ -666,7 +684,7 @@ test.describe('Results Display Regression Tests', () => {
             : () => breakoutBtn.click({ timeout: 15000 })
 
         await Promise.all([
-          authenticatedPage.waitForResponse(breakoutMatcher, { timeout: 90000 }),
+          authenticatedPage.waitForResponse(breakoutMatcher, { timeout: 150000 }),
           triggerBreakout(),
         ])
 

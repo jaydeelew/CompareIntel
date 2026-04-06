@@ -1089,8 +1089,11 @@ test.describe('Unregistered User Journey', () => {
           }
         }
 
-        // Find link in footer or navigation
-        const link = page.getByRole('link', { name: new RegExp(pageInfo.name, 'i') })
+        // Scope to footer only: marketing pages duplicate these links in the article (strict mode).
+        const link = page
+          .locator('footer')
+          .first()
+          .getByRole('link', { name: new RegExp(`^${pageInfo.name}$`, 'i') })
 
         // Wait for link to be visible with longer timeout for mobile devices
         const visibilityTimeout = isMobile ? 10000 : 2000

@@ -436,14 +436,24 @@ test.describe('Mobile Platform Tests', () => {
       const userMenuButton = authenticatedPage.getByTestId('user-menu-button')
       await expect(userMenuButton).toBeVisible({ timeout: 10000 })
 
-      // Tap/click to open menu
-      await tapOrClick(userMenuButton, authenticatedPage)
-      await safeWait(authenticatedPage, 500)
+      await dismissTutorialOverlay(authenticatedPage)
 
-      // Menu should be visible (check for logout button or menu items)
+      // Desktop Firefox can mishandle Playwright tap() on the avatar (menu may never stay open).
+      // Composer-focused layout can leave the hero overlapping the header; scroll up, then use a real DOM
+      // click so React's onClick runs (force click did not toggle aria-expanded in Firefox).
+      await authenticatedPage.evaluate(() => {
+        window.scrollTo(0, 0)
+        document.documentElement.scrollTop = 0
+        document.body.scrollTop = 0
+      })
+      await safeWait(authenticatedPage, 200)
+      await userMenuButton.scrollIntoViewIfNeeded().catch(() => {})
+      await userMenuButton.evaluate((el: HTMLElement) => {
+        el.click()
+      })
+
       const logoutButton = authenticatedPage.getByTestId('logout-button')
-      const menuVisible = await logoutButton.isVisible({ timeout: 2000 }).catch(() => false)
-      expect(menuVisible).toBe(true)
+      await expect(logoutButton).toBeVisible({ timeout: 15000 })
     })
   })
 

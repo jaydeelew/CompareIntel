@@ -437,10 +437,8 @@ test.describe('Advanced Features', () => {
 
           await safeWait(authenticatedPage, 500)
 
-          // Fill in name
-          const nameInput = authenticatedPage.locator(
-            'input[type="text"], input[placeholder*="name"], input[placeholder*="Name"]'
-          )
+          // Scoped class avoids matching other hidden text inputs on the page (Firefox strict visibility).
+          const nameInput = authenticatedPage.locator('.saved-selections-name-input')
           await expect(nameInput).toBeVisible({ timeout: 5000 })
           await nameInput.fill('Test Selection')
 
