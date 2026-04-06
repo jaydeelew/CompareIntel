@@ -20,7 +20,8 @@
 
   .hero-title-second-line {
     display: block;
-    margin-left: 0; /* Remove left margin on mobile since it's on a new line */
+    margin-left: 0;
+    /* Remove left margin on mobile since it's on a new line */
   }
 }
 
