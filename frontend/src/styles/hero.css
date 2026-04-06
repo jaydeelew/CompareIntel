@@ -149,7 +149,14 @@
   transform: none;
 }
 
-/* Hide visible title + subtitle; visibility keeps boxes/margins unchanged. .sr-only in h1 stays for AT. */
+/* Hide visible title + subtitle; visibility keeps boxes/margins unchanged. .sr-only in h1 stays for AT.
+   white-space: nowrap prevents the invisible title from wrapping at ~1065 px, which would add a second
+   line of layout height and shift the composer down. */
+.hero-section.hero-section--composer-focused .hero-title {
+  white-space: nowrap;
+  overflow: hidden;
+}
+
 .hero-section.hero-section--composer-focused .hero-title > span[aria-hidden='true'] {
   visibility: hidden;
   pointer-events: none;
@@ -217,7 +224,9 @@
   }
 
   .hero-section.hero-section--composer-focused .hero-centered-logo--with-arrows {
-    width: min(300px, 75vw);
+    width: min(420px, 80vw);
+    top: 30%;
+    transform: translate(-50%, -50%);
   }
 }
 
