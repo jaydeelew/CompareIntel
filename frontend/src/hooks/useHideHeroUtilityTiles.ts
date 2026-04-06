@@ -8,12 +8,9 @@ import {
 } from '../services/userSettingsService'
 
 /**
- * When the signed-in user has enabled hiding capability cards, the home page applies the
- * `hero-section--composer-focused` class.  Above 768 px this removes the tiles, title, and
- * subtitle from the document flow and vertically centres the composer so the hero height stays
- * rock-steady during horizontal resizes.  At mobile widths (≤ 768 px) the elements are hidden
- * with opacity/visibility instead to preserve the compact layout.  Anonymous users always see
- * the cards.
+ * When the signed-in user has enabled hiding capability cards, the home page visually hides those
+ * cards while keeping layout (hero height, title, subtitle, composer) aligned with the visible-cards
+ * state. Anonymous users always see the cards.
  */
 export function useHideHeroUtilityTiles(): boolean {
   const { user } = useAuth()

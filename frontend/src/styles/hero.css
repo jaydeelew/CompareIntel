@@ -173,44 +173,6 @@
   max-width: 88vw;
 }
 
-/* ── Composer-focused layout stabilization (≥ 769px) ──────────────────────
-   The base rules above use opacity / visibility to hide tiles + title + subtitle
-   while preserving their layout space.  That works at a single width but causes
-   vertical shifts during horizontal resize because tile intrinsic heights change
-   at the 900 px breakpoint (full cards → icon-only).
-   Above the mobile breakpoint we remove those elements from flow entirely and
-   use a fixed min-height + flex centering so the composer never moves. */
-@media (min-width: 769px) {
-  .hero-section.hero-section--composer-focused .hero-title > span[aria-hidden='true'] {
-    display: none;
-  }
-
-  .hero-section.hero-section--composer-focused .hero-title {
-    margin: 0;
-  }
-
-  .hero-section.hero-section--composer-focused .hero-subtitle {
-    display: none;
-  }
-
-  .hero-section.hero-section--composer-focused .hero-capabilities {
-    display: none;
-  }
-
-  .hero-section.hero-section--composer-focused .hero-content {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    min-height: 400px;
-  }
-
-  .hero-section.hero-section--composer-focused .hero-input-section {
-    margin-top: 0;
-    width: 100%;
-  }
-}
-
 /* Subtle centered logo shown when capability tiles are hidden */
 .hero-centered-logo {
   position: absolute;
