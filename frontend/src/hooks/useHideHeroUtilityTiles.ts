@@ -8,8 +8,9 @@ import {
 } from '../services/userSettingsService'
 
 /**
- * When the signed-in user has enabled hiding capability cards, the home page hides those cards
- * and centers the question box. Anonymous users always see the cards.
+ * When the signed-in user has enabled hiding capability cards, the home page visually hides those
+ * cards while keeping layout (hero height, title, subtitle, composer) aligned with the visible-cards
+ * state. Anonymous users always see the cards.
  */
 export function useHideHeroUtilityTiles(): boolean {
   const { user } = useAuth()

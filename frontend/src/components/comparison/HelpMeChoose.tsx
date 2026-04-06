@@ -15,6 +15,7 @@ import { Link } from 'react-router-dom'
 
 import {
   HELP_ME_CHOOSE_CATEGORIES,
+  HELP_ME_CHOOSE_CATEGORY_IMAGE_GENERATION_ID,
   type HelpMeChooseCategory,
 } from '../../data/helpMeChooseRecommendations'
 import type { Model, ModelsByProvider, User } from '../../types'
@@ -175,6 +176,11 @@ export interface HelpMeChooseProps {
   /** When true, omit tier-locked models from lists (matches provider dropdown hide control) */
   hidePremiumModels?: boolean
   /**
+   * Text mode: hide "Best for image generation" (T2I). Image mode: show only that category.
+   * Matches the Text models / Image generation models toggle.
+   */
+  modelMode?: 'text' | 'image'
+  /**
    * When the dropdown opens, scroll this category column into view horizontally
    * (e.g. `HELP_ME_CHOOSE_CATEGORY_IMAGES_ID` when opening from "Pick a vision model").
    */
@@ -199,6 +205,7 @@ export function HelpMeChoose({
   isMobileLayout = false,
   hasAttachedImages = false,
   hidePremiumModels = false,
+  modelMode = 'text',
   scrollCategoryIdIntoView = null,
   onScrollCategoryIntoViewDone,
 }: HelpMeChooseProps) {
@@ -238,14 +245,20 @@ export function HelpMeChoose({
 
   const lookupModels = allModelsByProvider ?? modelsByProvider
 
-  /** Vision filter, then same tier filter as ModelsSection when hide locked is active */
+  /** Mode filter (text vs T2I), vision filter (text mode + attachments), tier filter */
   const displayedCategories = useMemo(() => {
-    let cats: typeof HELP_ME_CHOOSE_CATEGORIES = HELP_ME_CHOOSE_CATEGORIES
-    if (hasAttachedImages) {
-      cats = HELP_ME_CHOOSE_CATEGORIES.map(cat => ({
-        ...cat,
-        models: cat.models.filter(entry => modelSupportsVision(entry.modelId, lookupModels)),
-      })).filter(cat => cat.models.length > 0)
+    let cats: typeof HELP_ME_CHOOSE_CATEGORIES = HELP_ME_CHOOSE_CATEGORIES.filter(cat =>
+      modelMode === 'image'
+        ? cat.id === HELP_ME_CHOOSE_CATEGORY_IMAGE_GENERATION_ID
+        : cat.id !== HELP_ME_CHOOSE_CATEGORY_IMAGE_GENERATION_ID
+    )
+    if (hasAttachedImages && modelMode === 'text') {
+      cats = cats
+        .map(cat => ({
+          ...cat,
+          models: cat.models.filter(entry => modelSupportsVision(entry.modelId, lookupModels)),
+        }))
+        .filter(cat => cat.models.length > 0)
     }
     if (hidePremiumModels && !isPaidTier) {
       cats = cats
@@ -260,7 +273,7 @@ export function HelpMeChoose({
         .filter(cat => cat.models.length > 0)
     }
     return cats
-  }, [hasAttachedImages, lookupModels, hidePremiumModels, isPaidTier, userTier])
+  }, [modelMode, hasAttachedImages, lookupModels, hidePremiumModels, isPaidTier, userTier])
 
   const modelRestrictedByModelId = useMemo(() => {
     const map = new Map<string, boolean>()

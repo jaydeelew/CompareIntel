@@ -768,8 +768,8 @@ export const UserMenu: React.FC = () => {
                         <div className="settings-item-info">
                           <span className="settings-label">Hide capability cards</span>
                           <p className="settings-description">
-                            Hides the four cards below the page title and centers the box where you
-                            type your question.
+                            Hides the four cards below the page title. The heading, subtitle, and
+                            composer stay in the same positions as when cards are visible.
                           </p>
                         </div>
                         <button

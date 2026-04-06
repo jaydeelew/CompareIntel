@@ -74,7 +74,7 @@ export function validateComparisonInput(params: ValidationParams): ValidationRes
       return {
         valid: false,
         error:
-          "You've attached an image, but none of the selected models can interpret images. Please add at least one vision-capable model — open **Help me choose** and select from the **Best for images** category, or choose models like GPT-4o, Claude 3.5 Sonnet, or Gemini 2.5 Flash.",
+          "You've attached an image, but none of the selected models can interpret images. Please add at least one vision-capable model — open **Help me choose** and select from the **Best for vision** category, or choose models like GPT-4o, Claude 3.5 Sonnet, or Gemini 2.5 Flash.",
       }
     }
   }

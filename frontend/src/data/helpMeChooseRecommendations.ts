@@ -256,7 +256,7 @@ export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
   },
   {
     id: 'images',
-    label: 'Best for images',
+    label: 'Best for vision',
     description: 'Image understanding — photos, diagrams, screenshots, charts',
     categoryInfoTooltip:
       'These models support image input and can interpret visual content. Required when you attach images to your prompt.',
@@ -458,8 +458,11 @@ export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
   },
 ]
 
-/** Stable `id` for the "Best for images" column (scroll Help me choose horizontally to this category). */
+/** Stable `id` for the "Best for vision" column (scroll Help me choose horizontally to this category). */
 export const HELP_ME_CHOOSE_CATEGORY_IMAGES_ID = 'images' as const
+
+/** Stable `id` for the "Best for image generation" (text-to-image) column. */
+export const HELP_ME_CHOOSE_CATEGORY_IMAGE_GENERATION_ID = 'image-generation' as const
 
 /** @deprecated Use HELP_ME_CHOOSE_CATEGORIES. Flattened for backwards compatibility during migration. */
 export interface HelpMeChooseRecommendation {

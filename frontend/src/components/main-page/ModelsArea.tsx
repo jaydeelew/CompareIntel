@@ -375,6 +375,7 @@ export function ModelsArea({
                 isMobileLayout={isMobileLayout}
                 hasAttachedImages={hasAttachedImages}
                 hidePremiumModels={hidePremiumModels}
+                modelMode={modelMode}
                 scrollCategoryIdIntoView={helpMeChooseScrollCategoryId}
                 onScrollCategoryIntoViewDone={onHelpMeChooseScrollCategoryDone}
               />

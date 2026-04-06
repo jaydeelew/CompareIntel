@@ -5,7 +5,7 @@
 
 import type { ModelsByProvider } from '../types'
 
-/** Known vision-capable model IDs from Best for images and common vision models */
+/** Known vision-capable model IDs from Best for vision and common vision models */
 export const KNOWN_VISION_MODEL_IDS = new Set([
   'openai/gpt-4o',
   'openai/gpt-4o-mini',

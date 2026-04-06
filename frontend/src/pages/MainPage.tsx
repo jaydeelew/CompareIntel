@@ -2495,7 +2495,7 @@ export function MainPage() {
               }
               if (hasAttachedImages && idsToApply.length === 0) {
                 setVisionNoticeMessage(
-                  'No vision-capable models in this category. Try "Best for images".'
+                  'No vision-capable models in this category. Try "Best for vision".'
                 )
                 return
               }
