@@ -1,7 +1,6 @@
 export { TutorialController } from './TutorialController'
-// TutorialOverlay is now lazy-loaded in TutorialController to prevent blocking React mount
-// Export kept for backward compatibility but should use lazy import in new code
-export { TutorialOverlay } from './TutorialOverlay'
+// TutorialOverlay is lazy-loaded from TutorialController only — do not re-export here or
+// the barrel forces eager inclusion and defeats dynamic import() chunk splitting.
 export { TutorialWelcomeModal } from './TutorialWelcomeModal'
 export { MobileTutorialController } from './MobileTutorialController'
 export { default as MobileTutorialOverlay } from './MobileTutorialOverlay'

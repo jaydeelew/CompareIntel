@@ -2,7 +2,8 @@
  * Register Form Component
  */
 
-import { Eye, EyeClosed } from 'lucide-react'
+import Eye from 'lucide-react/dist/esm/icons/eye'
+import EyeClosed from 'lucide-react/dist/esm/icons/eye-closed'
 import React, { useState, useEffect } from 'react'
 
 import { useAuth } from '../../contexts/AuthContext'

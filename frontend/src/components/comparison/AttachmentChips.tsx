@@ -1,4 +1,6 @@
-import { FileText, Image as ImageIcon, X } from 'lucide-react'
+import FileText from 'lucide-react/dist/esm/icons/file-text'
+import ImageIcon from 'lucide-react/dist/esm/icons/image'
+import X from 'lucide-react/dist/esm/icons/x'
 import { memo, useCallback, type Dispatch, type SetStateAction } from 'react'
 
 import { removePlaceholderFromInput } from '../../utils/attachmentInputUtils'

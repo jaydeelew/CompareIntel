@@ -315,7 +315,12 @@ export function Hero({ children }: HeroProps) {
     >
       {/* Flash logo background */}
       <div className={`hero-logo-flash ${showFlash ? 'active' : ''}`}>
-        <img src="/brand/logo.svg" alt="CompareIntel logo" className="hero-flash-logo-img" />
+        <img
+          src="/brand/logo.svg"
+          alt="CompareIntel logo"
+          className="hero-flash-logo-img"
+          fetchPriority="high"
+        />
       </div>
 
       {hideHeroUtilityTiles && (
@@ -325,12 +330,16 @@ export function Hero({ children }: HeroProps) {
             alt=""
             className="hero-centered-logo hero-centered-logo--no-arrows"
             aria-hidden="true"
+            fetchPriority="low"
+            decoding="async"
           />
           <img
             src="/brand/logo.svg"
             alt=""
             className="hero-centered-logo hero-centered-logo--with-arrows"
             aria-hidden="true"
+            fetchPriority="low"
+            decoding="async"
           />
         </>
       )}

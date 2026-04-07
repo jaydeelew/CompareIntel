@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
+import { lazy, Suspense, useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 
 import '../styles/hero.css'
@@ -12,9 +12,8 @@ import {
   CREDITS_MESSAGE,
 } from '../components/comparison'
 import { Navigation, MockModeBanner } from '../components/layout'
-import { ComparisonPageContent, ModalManager } from '../components/main-page'
+import { ComparisonPageContent } from '../components/main-page'
 import { DoneSelectingCard } from '../components/shared'
-import { TutorialManager } from '../components/tutorial'
 import { getCreditAllocation, getDailyCreditLimit } from '../config/constants'
 import { useAuth } from '../contexts/AuthContext'
 import {
@@ -79,6 +78,13 @@ import {
   modelSupportsImageGeneration,
   modelSupportsVision,
 } from '../utils/visionModels'
+
+const ModalManagerLazy = lazy(() =>
+  import('../components/main-page/ModalManager').then(m => ({ default: m.ModalManager }))
+)
+const TutorialManagerLazy = lazy(() =>
+  import('../components/tutorial/TutorialManager').then(m => ({ default: m.TutorialManager }))
+)
 
 export function MainPage() {
   const { isAuthenticated, user, refreshUser, refreshToken, isLoading: authLoading } = useAuth()
@@ -2283,64 +2289,66 @@ export function MainPage() {
           welcomeSkipFoldNonce={welcomeSkipFoldNonce}
         />
 
-        <ModalManager
-          isAuthModalOpen={isAuthModalOpen}
-          authModalMode={authModalMode}
-          loginEmail={loginEmail}
-          onAuthModalClose={closeAuthModal}
-          showVerificationCodeModal={showVerificationCodeModal}
-          showVerificationSuccessModal={showVerificationSuccessModal}
-          showPasswordReset={showPasswordReset}
-          userEmail={user?.email}
-          onVerificationCodeModalClose={() => setShowVerificationCodeModal(false)}
-          onVerificationCodeModalUseDifferentEmail={openLoginAfterVerificationCode}
-          onVerificationComplete={handleVerified}
-          onVerificationSuccessModalClose={() => setShowVerificationSuccessModal(false)}
-          onPasswordResetClose={handlePasswordResetClose}
-          showPremiumModelsToggleModal={showPremiumModelsToggleModal}
-          onPremiumModelsModalClose={() => {
-            setShowPremiumModelsToggleModal(false)
-            setHidePremiumModels(!hidePremiumModels)
-          }}
-          onPremiumModelsDontShowAgain={checked => {
-            if (checked) {
-              localStorage.setItem('premium-models-toggle-info-dismissed', 'true')
-            } else {
-              localStorage.removeItem('premium-models-toggle-info-dismissed')
-            }
-          }}
-          disabledButtonInfo={disabledButtonInfo}
-          onDisabledButtonInfoClose={() => setDisabledButtonInfo({ button: null, message: '' })}
-          showTrialWelcomeModal={showTrialWelcomeModal}
-          trialEndsAt={user?.trial_ends_at}
-          trialUserEmail={user?.email}
-          onTrialWelcomeModalClose={() => setShowTrialWelcomeModal(false)}
-          disabledModelModalInfo={disabledModelModalInfo}
-          onDisabledModelModalClose={() => setDisabledModelModalInfo(null)}
-          onToggleHidePremiumModels={() => setHidePremiumModels(true)}
-          onOpenSignUp={openRegister}
-          modelTypeConflictType={modelTypeConflictType}
-          onModelTypeConflictModalClose={() => setModelTypeConflictType(null)}
-          imageConfigConflict={imageConfigConflict}
-          aspectRatio={aspectRatio}
-          imageSize={imageSize}
-          modelsByProvider={modelsByProvider}
-          onImageConfigConflictClose={() => {
-            setModelsDropdownOpen('advanced')
-            setImageConfigConflict(prev => {
-              if (prev.conflictType === 'no-common-config') {
-                imageConflictImpossibleDismissedKeyRef.current = [...selectedModels]
-                  .sort()
-                  .join(',')
+        <Suspense fallback={null}>
+          <ModalManagerLazy
+            isAuthModalOpen={isAuthModalOpen}
+            authModalMode={authModalMode}
+            loginEmail={loginEmail}
+            onAuthModalClose={closeAuthModal}
+            showVerificationCodeModal={showVerificationCodeModal}
+            showVerificationSuccessModal={showVerificationSuccessModal}
+            showPasswordReset={showPasswordReset}
+            userEmail={user?.email}
+            onVerificationCodeModalClose={() => setShowVerificationCodeModal(false)}
+            onVerificationCodeModalUseDifferentEmail={openLoginAfterVerificationCode}
+            onVerificationComplete={handleVerified}
+            onVerificationSuccessModalClose={() => setShowVerificationSuccessModal(false)}
+            onPasswordResetClose={handlePasswordResetClose}
+            showPremiumModelsToggleModal={showPremiumModelsToggleModal}
+            onPremiumModelsModalClose={() => {
+              setShowPremiumModelsToggleModal(false)
+              setHidePremiumModels(!hidePremiumModels)
+            }}
+            onPremiumModelsDontShowAgain={checked => {
+              if (checked) {
+                localStorage.setItem('premium-models-toggle-info-dismissed', 'true')
+              } else {
+                localStorage.removeItem('premium-models-toggle-info-dismissed')
               }
-              return {
-                conflictType: null,
-                incompatibleModelIds: [],
-                allImageModelIds: undefined,
-              }
-            })
-          }}
-        />
+            }}
+            disabledButtonInfo={disabledButtonInfo}
+            onDisabledButtonInfoClose={() => setDisabledButtonInfo({ button: null, message: '' })}
+            showTrialWelcomeModal={showTrialWelcomeModal}
+            trialEndsAt={user?.trial_ends_at}
+            trialUserEmail={user?.email}
+            onTrialWelcomeModalClose={() => setShowTrialWelcomeModal(false)}
+            disabledModelModalInfo={disabledModelModalInfo}
+            onDisabledModelModalClose={() => setDisabledModelModalInfo(null)}
+            onToggleHidePremiumModels={() => setHidePremiumModels(true)}
+            onOpenSignUp={openRegister}
+            modelTypeConflictType={modelTypeConflictType}
+            onModelTypeConflictModalClose={() => setModelTypeConflictType(null)}
+            imageConfigConflict={imageConfigConflict}
+            aspectRatio={aspectRatio}
+            imageSize={imageSize}
+            modelsByProvider={modelsByProvider}
+            onImageConfigConflictClose={() => {
+              setModelsDropdownOpen('advanced')
+              setImageConfigConflict(prev => {
+                if (prev.conflictType === 'no-common-config') {
+                  imageConflictImpossibleDismissedKeyRef.current = [...selectedModels]
+                    .sort()
+                    .join(',')
+                }
+                return {
+                  conflictType: null,
+                  incompatibleModelIds: [],
+                  allImageModelIds: undefined,
+                }
+              })
+            }}
+          />
+        </Suspense>
 
         <CreditsInfoModal
           isOpen={showCreditsInfoModal}
@@ -2594,33 +2602,35 @@ export function MainPage() {
           }}
         />
 
-        <TutorialManager
-          showWelcomeModal={showWelcomeModal}
-          setShowWelcomeModal={setShowWelcomeModal}
-          isAuthenticated={isAuthenticated}
-          resetAppStateForTutorial={resetAppStateForTutorial}
-          startTutorial={startTutorial}
-          skipTutorial={skipTutorial}
-          isTouchDevice={isTouchDevice}
-          currentView={currentView}
-          isMobileLayout={isMobileLayout}
-          modelsByProvider={filteredModelsByProvider}
-          openDropdowns={openDropdowns}
-          selectedModels={selectedModels}
-          input={input}
-          tutorialState={tutorialState}
-          completeStep={completeStep}
-          isFollowUpMode={isFollowUpMode}
-          tutorialHasCompletedComparison={tutorialHasCompletedComparison}
-          tutorialHasBreakout={tutorialHasBreakout}
-          tutorialHasSavedSelection={tutorialHasSavedSelection}
-          showHistoryDropdown={showHistoryDropdown}
-          isLoading={isLoading}
-          setTutorialHasCompletedComparison={setTutorialHasCompletedComparison}
-          setTutorialHasBreakout={setTutorialHasBreakout}
-          setTutorialHasSavedSelection={setTutorialHasSavedSelection}
-          onTutorialWelcomeSkipped={() => setWelcomeSkipFoldNonce(n => n + 1)}
-        />
+        <Suspense fallback={null}>
+          <TutorialManagerLazy
+            showWelcomeModal={showWelcomeModal}
+            setShowWelcomeModal={setShowWelcomeModal}
+            isAuthenticated={isAuthenticated}
+            resetAppStateForTutorial={resetAppStateForTutorial}
+            startTutorial={startTutorial}
+            skipTutorial={skipTutorial}
+            isTouchDevice={isTouchDevice}
+            currentView={currentView}
+            isMobileLayout={isMobileLayout}
+            modelsByProvider={filteredModelsByProvider}
+            openDropdowns={openDropdowns}
+            selectedModels={selectedModels}
+            input={input}
+            tutorialState={tutorialState}
+            completeStep={completeStep}
+            isFollowUpMode={isFollowUpMode}
+            tutorialHasCompletedComparison={tutorialHasCompletedComparison}
+            tutorialHasBreakout={tutorialHasBreakout}
+            tutorialHasSavedSelection={tutorialHasSavedSelection}
+            showHistoryDropdown={showHistoryDropdown}
+            isLoading={isLoading}
+            setTutorialHasCompletedComparison={setTutorialHasCompletedComparison}
+            setTutorialHasBreakout={setTutorialHasBreakout}
+            setTutorialHasSavedSelection={setTutorialHasSavedSelection}
+            onTutorialWelcomeSkipped={() => setWelcomeSkipFoldNonce(n => n + 1)}
+          />
+        </Suspense>
       </>
     </div>
   )

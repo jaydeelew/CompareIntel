@@ -1,5 +1,32 @@
 /// <reference types="vite/client" />
 
+// Per-icon lucide-react ESM paths (tree-shaking); package does not ship .d.ts for these modules.
+declare module 'lucide-react/dist/esm/icons/eye' {
+  import type { LucideIcon } from 'lucide-react'
+  const Icon: LucideIcon
+  export default Icon
+}
+declare module 'lucide-react/dist/esm/icons/eye-closed' {
+  import type { LucideIcon } from 'lucide-react'
+  const Icon: LucideIcon
+  export default Icon
+}
+declare module 'lucide-react/dist/esm/icons/image' {
+  import type { LucideIcon } from 'lucide-react'
+  const Icon: LucideIcon
+  export default Icon
+}
+declare module 'lucide-react/dist/esm/icons/file-text' {
+  import type { LucideIcon } from 'lucide-react'
+  const Icon: LucideIcon
+  export default Icon
+}
+declare module 'lucide-react/dist/esm/icons/x' {
+  import type { LucideIcon } from 'lucide-react'
+  const Icon: LucideIcon
+  export default Icon
+}
+
 interface ImportMetaEnv {
   readonly VITE_API_URL?: string
   readonly VITE_API_BASE_URL?: string

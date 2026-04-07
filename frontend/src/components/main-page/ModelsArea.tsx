@@ -9,7 +9,8 @@
  * the models-related UI logic.
  */
 
-import { Image as ImageIcon, X } from 'lucide-react'
+import ImageIcon from 'lucide-react/dist/esm/icons/image'
+import X from 'lucide-react/dist/esm/icons/x'
 import { useMemo, useState } from 'react'
 
 import { HELP_ME_CHOOSE_CATEGORY_IMAGES_ID } from '../../data/helpMeChooseRecommendations'
