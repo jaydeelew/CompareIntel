@@ -335,6 +335,17 @@
         "knowledge_cutoff": null
       },
       {
+        "id": "google/gemma-4-26b-a4b-it",
+        "name": "Gemma 4 26B A4B It",
+        "description": "Gemma 4 26B A4B IT is an instruction-tuned Mixture-of-Experts (MoE) model from Google DeepMind.",
+        "category": "Language",
+        "provider": "Google",
+        "supports_web_search": true,
+        "supports_image_generation": false,
+        "is_thinking_model": true,
+        "knowledge_cutoff": null
+      },
+      {
         "id": "google/gemini-2.5-flash-image",
         "name": "Gemini 2.5 Flash Image",
         "description": "Google's image generation model. Generates images from text prompts with support for extended aspect ratios.",
@@ -1265,6 +1276,7 @@
     "google/gemini-2.0-flash-001",
     "google/gemini-2.5-flash",
     "google/gemma-3-27b-it",
+    "google/gemma-4-26b-a4b-it",
     "microsoft/phi-4",
     "mistralai/devstral-2512",
     "openai/gpt-oss-120b",

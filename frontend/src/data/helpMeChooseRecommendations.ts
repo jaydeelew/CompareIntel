@@ -66,6 +66,7 @@ export const HELP_ME_CHOOSE_CATEGORIES: HelpMeChooseCategory[] = [
       },
       { modelId: 'openai/gpt-5-nano', evidence: 'OpenRouter avg: $0.22/1M tokens.' },
       { modelId: 'google/gemini-2.0-flash-001', evidence: 'OpenRouter avg: $0.25/1M tokens.' },
+      { modelId: 'google/gemma-4-26b-a4b-it', evidence: 'OpenRouter avg: $0.27/1M tokens.' },
       { modelId: 'deepseek/deepseek-v3.2-exp', evidence: 'OpenRouter avg: $0.34/1M tokens.' },
       { modelId: 'x-ai/grok-4-fast', evidence: 'OpenRouter avg: $0.35/1M tokens.' },
       { modelId: 'x-ai/grok-4.1-fast', evidence: 'OpenRouter avg: $0.35/1M tokens.' },
