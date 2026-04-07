@@ -785,10 +785,25 @@
   border-radius: inherit;
   background: rgba(15, 23, 42, 0.95);
   pointer-events: none;
+  animation: video-pending-pulse 2s ease-in-out infinite;
+}
+
+[data-theme='light'] .capability-tile-back-image-wrap--video-pending {
+  background: rgba(203, 213, 225, 0.9);
 }
 
 [data-theme='light'] .capability-tile-back-image-wrap--video-pending::after {
-  background: rgba(241, 245, 249, 0.85);
+  background: rgba(203, 213, 225, 0.9);
+}
+
+@keyframes video-pending-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
 }
 
 .capability-tile-back-image {

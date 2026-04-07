@@ -85,12 +85,11 @@ function CapabilityTile({
     const v = videoRef.current
     if (!v || !backVideo) return
     let cancelled = false
+
     const markReady = () => {
       if (cancelled || videoPrimedRef.current) return
       videoPrimedRef.current = true
-      v.removeEventListener('loadeddata', markReady)
-      v.removeEventListener('canplay', markReady)
-      v.removeEventListener('error', markReady)
+      removeAll()
       try {
         v.currentTime = 0
       } catch {
@@ -98,17 +97,41 @@ function CapabilityTile({
       }
       setVideoHasFrame(true)
     }
-    v.addEventListener('loadeddata', markReady)
-    v.addEventListener('canplay', markReady)
-    v.addEventListener('error', markReady)
-    if (v.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) {
-      markReady()
+
+    const onMetadata = () => {
+      if (cancelled || videoPrimedRef.current) return
+      if (v.readyState < HTMLMediaElement.HAVE_CURRENT_DATA) {
+        try {
+          v.currentTime = 0.001
+        } catch {
+          /* ignore */
+        }
+      }
     }
-    return () => {
-      cancelled = true
+
+    const removeAll = () => {
       v.removeEventListener('loadeddata', markReady)
       v.removeEventListener('canplay', markReady)
+      v.removeEventListener('seeked', markReady)
       v.removeEventListener('error', markReady)
+      v.removeEventListener('loadedmetadata', onMetadata)
+    }
+
+    v.addEventListener('loadeddata', markReady)
+    v.addEventListener('canplay', markReady)
+    v.addEventListener('seeked', markReady)
+    v.addEventListener('error', markReady)
+    v.addEventListener('loadedmetadata', onMetadata)
+
+    if (v.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) {
+      markReady()
+    } else if (v.readyState >= HTMLMediaElement.HAVE_METADATA) {
+      onMetadata()
+    }
+
+    return () => {
+      cancelled = true
+      removeAll()
     }
   }, [backVideo])
 
