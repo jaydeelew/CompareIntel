@@ -65,11 +65,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       })
 
       if (!response.ok) {
-        // 401 (Unauthorized) and 500 (Internal Server Error) are expected when:
-        // - User is not authenticated (no refresh token in cookies)
-        // - Refresh token is invalid/expired
-        // Handle silently without logging errors
-        if (response.status === 401 || response.status === 500) {
+        // 401 / 500 / 503: unauthenticated, bad token, or backend unavailable (e.g. DB)
+        if (response.status === 401 || response.status === 500 || response.status === 503) {
           setUser(null)
           setIsLoading(false)
           return

@@ -41,16 +41,42 @@ function photonReverseUrl(lat: number, lon: number): string {
   return `/api/v1/geo/photon/reverse?${q}`
 }
 
-async function reverseGeocodePhoton(lat: number, lon: number): Promise<string | null> {
-  const url = photonReverseUrl(lat, lon)
-  const response = await fetch(url)
-  if (!response.ok) return null
-  const data = (await response.json()) as {
-    features?: Array<{ properties?: Record<string, unknown> }>
-  }
+function photonDirectReverseUrl(lat: number, lon: number): string {
+  return `https://photon.komoot.io/reverse?lat=${lat}&lon=${lon}&lang=en`
+}
+
+function locationFromPhotonJson(data: {
+  features?: Array<{ properties?: Record<string, unknown> }>
+}): string | null {
   const props = data.features?.[0]?.properties
   if (!props) return null
   return formatLocationFromPhotonProperties(props)
+}
+
+async function reverseGeocodePhoton(lat: number, lon: number): Promise<string | null> {
+  const url = photonReverseUrl(lat, lon)
+  const response = await fetch(url)
+  if (response.ok) {
+    const data = (await response.json()) as {
+      features?: Array<{ properties?: Record<string, unknown> }>
+    }
+    return locationFromPhotonJson(data)
+  }
+  // Vite proxy or Komoot can briefly return 5xx; retry direct (CSP allows photon.komoot.io).
+  if (
+    import.meta.env.DEV &&
+    import.meta.env.MODE !== 'test' &&
+    response.status >= 500 &&
+    response.status < 600
+  ) {
+    const fallback = await fetch(photonDirectReverseUrl(lat, lon))
+    if (!fallback.ok) return null
+    const data = (await fallback.json()) as {
+      features?: Array<{ properties?: Record<string, unknown> }>
+    }
+    return locationFromPhotonJson(data)
+  }
+  return null
 }
 
 interface UseGeolocationProps {
