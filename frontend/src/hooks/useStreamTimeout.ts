@@ -20,7 +20,7 @@ export interface UseStreamTimeoutConfig {
   input: string
   isFollowUpMode: boolean
   isAuthenticated: boolean
-  creditWarningType: 'none' | 'low' | 'insufficient'
+  creditWarningType: 'none' | 'low' | 'insufficient' | 'overage_active' | 'overage_cap_hit'
   attachedFiles: (AttachedFile | StoredAttachedFile)[]
   browserFingerprint: string
   userCancelledRef: React.MutableRefObject<boolean>

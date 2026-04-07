@@ -116,11 +116,16 @@ export interface SSEProcessorConfig {
   ) => Promise<{ credits_allocated: number; credits_remaining: number; credits_reset_at?: string }>
   refreshUser: () => Promise<void>
   getCreditWarningMessage: (
-    type: 'low' | 'insufficient' | 'none',
+    type: 'low' | 'insufficient' | 'none' | 'overage_active' | 'overage_cap_hit',
     tier: string,
     remaining: number,
     estimated?: number,
-    resetAt?: string
+    resetAt?: string,
+    overageCtx?: {
+      overage_enabled?: boolean
+      overage_credits_used_this_period?: number
+      overage_limit_credits?: number | null
+    }
   ) => string
   isLowCreditWarningDismissed: (
     tier: string,
@@ -128,8 +133,11 @@ export interface SSEProcessorConfig {
     resetAt?: string
   ) => boolean
   setCreditWarningMessage: (message: string | null) => void
-  setCreditWarningType: (type: 'none' | 'low' | 'insufficient') => void
+  setCreditWarningType: (
+    type: 'none' | 'low' | 'insufficient' | 'overage_active' | 'overage_cap_hit'
+  ) => void
   setCreditWarningDismissible: (dismissible: boolean) => void
+  setShowOverageExtend: (show: boolean) => void
   setIsFollowUpMode: (mode: boolean) => void
   loadHistoryFromAPI: () => Promise<void>
   apiClientDeleteCache: (key: string) => void
@@ -198,6 +206,7 @@ export async function processComparisonStream(
     setCreditWarningMessage,
     setCreditWarningType,
     setCreditWarningDismissible,
+    setShowOverageExtend,
     setIsFollowUpMode,
     loadHistoryFromAPI,
     apiClientDeleteCache,
@@ -560,8 +569,76 @@ export async function processComparisonStream(
                       userTier === 'unregistered' || userTier === 'free' ? 'daily' : 'monthly'
                     const lowCreditThreshold =
                       userTier === 'unregistered' || userTier === 'free' ? 20 : 10
+                    const isPaid = !['unregistered', 'free'].includes(userTier)
+                    const ovCtx = {
+                      overage_enabled: balance.overage_enabled,
+                      overage_credits_used_this_period: balance.overage_credits_used_this_period,
+                      overage_limit_credits: balance.overage_limit_credits,
+                    }
+                    const poolExhausted =
+                      balance.credits_remaining <= 0 ||
+                      (balance.credits_used_this_period ?? 0) >= balance.credits_allocated
 
-                    if (balance.credits_remaining <= 0) {
+                    if (isPaid && ovCtx.overage_enabled && poolExhausted) {
+                      const ovUsed = ovCtx.overage_credits_used_this_period ?? 0
+                      const ovLimit = ovCtx.overage_limit_credits
+                      if (ovLimit != null && ovUsed >= ovLimit) {
+                        setCreditWarningMessage(
+                          getCreditWarningMessage(
+                            'overage_cap_hit',
+                            userTier,
+                            0,
+                            undefined,
+                            balance.credits_reset_at,
+                            ovCtx
+                          )
+                        )
+                        setCreditWarningType('overage_cap_hit')
+                        setCreditWarningDismissible(false)
+                        setShowOverageExtend(true)
+                        if (isFollowUpMode) setIsFollowUpMode(false)
+                      } else if (ovLimit != null && ovUsed / ovLimit >= 0.8) {
+                        setCreditWarningMessage(
+                          getCreditWarningMessage(
+                            'overage_active',
+                            userTier,
+                            0,
+                            undefined,
+                            balance.credits_reset_at,
+                            ovCtx
+                          )
+                        )
+                        setCreditWarningType('overage_active')
+                        setCreditWarningDismissible(true)
+                        setShowOverageExtend(false)
+                      } else {
+                        setCreditWarningMessage(
+                          getCreditWarningMessage(
+                            'overage_active',
+                            userTier,
+                            0,
+                            undefined,
+                            balance.credits_reset_at,
+                            ovCtx
+                          )
+                        )
+                        setCreditWarningType('overage_active')
+                        setCreditWarningDismissible(true)
+                        setShowOverageExtend(false)
+                      }
+                    } else if (balance.credits_remaining <= 0) {
+                      const msg = getCreditWarningMessage(
+                        'none',
+                        userTier,
+                        0,
+                        undefined,
+                        balance.credits_reset_at,
+                        ovCtx
+                      )
+                      setCreditWarningMessage(msg)
+                      setCreditWarningType('none')
+                      setCreditWarningDismissible(false)
+                      setShowOverageExtend(false)
                       if (isFollowUpMode) setIsFollowUpMode(false)
                     } else if (remainingPercent <= lowCreditThreshold && remainingPercent > 0) {
                       if (
@@ -573,20 +650,24 @@ export async function processComparisonStream(
                             userTier,
                             balance.credits_remaining,
                             undefined,
-                            balance.credits_reset_at
+                            balance.credits_reset_at,
+                            ovCtx
                           )
                         )
                         setCreditWarningType('low')
                         setCreditWarningDismissible(true)
+                        setShowOverageExtend(false)
                       } else {
                         setCreditWarningMessage(null)
                         setCreditWarningType('none')
                         setCreditWarningDismissible(false)
+                        setShowOverageExtend(false)
                       }
                     } else {
                       setCreditWarningMessage(null)
                       setCreditWarningType('none')
                       setCreditWarningDismissible(false)
+                      setShowOverageExtend(false)
                     }
                   })
                   .catch(() => {})

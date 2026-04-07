@@ -34,7 +34,7 @@ CompareIntel is a full-stack web application that enables users to compare respo
 |---------|-------------|
 | Real-time Streaming | SSE-based streaming for simultaneous model responses |
 | Conversation History | Per-model context for follow-up questions |
-| Credit System | Tiered subscriptions with daily/monthly credit limits |
+| Credit System | Tiered subscriptions with daily/monthly pools; optional pay-as-you-go overages on paid plans (see [CREDIT_SYSTEM.md](features/CREDIT_SYSTEM.md)) |
 | Authentication | JWT-based auth with HTTP-only cookie storage |
 | Export | PDF, Markdown, JSON, and HTML export options |
 | Web Search | Optional web search integration for supported models |
@@ -175,7 +175,7 @@ App.tsx (Application shell - routing only)
 |-----------|---------|
 | `ErrorBoundary` | React error boundary for graceful error handling |
 | `LoadingSpinner` | Reusable loading indicator |
-| `CreditWarningBanner` | Warning when credits are low/exhausted |
+| `CreditWarningBanner` | Warnings for low pool, overage in use, overage cap hit; optional quick cap extend |
 | `DoneSelectingCard` | Prompt to start comparison after model selection |
 
 ---
@@ -392,14 +392,16 @@ User types (pools):
   │ Pro+            │ 6,700/month   │ Monthly (Stripe period)   │
   └─────────────────┴───────────────┴─────────────────────────┘
 
-Prepaid: purchased_credits_balance spent after monthly pool is exhausted.
+Prepaid: `purchased_credits_balance` spent after monthly pool is exhausted.
 
-Billing (optional): POST /api/billing/create-checkout-session, POST /api/billing/webhooks/stripe
+Overage (paid tiers, opt-in): After pool + prepaid, `credit_manager` may consume overage credits if `overage_enabled` and within optional dollar cap; overage settings reset when monthly credits are re-allocated (see [CREDIT_SYSTEM.md](features/CREDIT_SYSTEM.md)).
+
+Billing (optional): POST /api/billing/create-checkout-session, POST /api/billing/webhooks/stripe; GET/PUT /api/billing/overage-settings for overage preferences.
 
 Credit check flow:
-  1. Backend /api/compare-stream estimates required credits (per model); 402 if insufficient
+  1. Backend /api/compare-stream estimates required credits (per model); 402 if insufficient (including overage budget when enabled)
   2. Stream completes; comparison_stream sums USD/credits and deducts via credit_manager
-  3. COMPLETE / balance endpoints refresh UI
+  3. COMPLETE / balance endpoints refresh UI; complete metadata may include overage fields
 ```
 
 ### 5.4 Conversation Persistence

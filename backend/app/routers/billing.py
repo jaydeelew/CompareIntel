@@ -1,20 +1,21 @@
-"""Stripe Checkout and webhooks (requires STRIPE_* env configuration)."""
+"""Stripe Checkout, webhooks, and overage settings (requires STRIPE_* env configuration)."""
 
 from __future__ import annotations
 
 import logging
+import math
 from datetime import UTC, datetime
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Request
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from sqlalchemy import func
 from stripe import SignatureVerificationError, StripeError
 
 if TYPE_CHECKING:
     from sqlalchemy.orm import Session
 
-from ..config.constants import MONTHLY_CREDIT_ALLOCATIONS
+from ..config.constants import MONTHLY_CREDIT_ALLOCATIONS, OVERAGE_USD_PER_CREDIT
 from ..config.settings import settings
 from ..credit_manager import allocate_monthly_credits
 from ..database import get_db
@@ -210,6 +211,98 @@ async def create_portal_session(
     if not session.url:
         raise HTTPException(status_code=500, detail="Portal session missing redirect URL")
     return {"url": session.url}
+
+
+class OverageSettingsResponse(BaseModel):
+    overage_enabled: bool
+    overage_spend_limit_cents: int | None
+    overage_credits_used_this_period: int
+    overage_limit_credits: int | None
+    overage_usd_per_credit: float
+    billing_period_end: str | None
+
+
+class OverageSettingsUpdate(BaseModel):
+    overage_enabled: bool | None = None
+    overage_limit_mode: Literal["unlimited", "capped"] | None = None
+    overage_spend_limit_dollars: float | None = Field(None, ge=0.5, le=500.0)
+
+    @field_validator("overage_spend_limit_dollars")
+    @classmethod
+    def round_to_cents(cls, v: float | None) -> float | None:
+        if v is not None:
+            return round(v, 2)
+        return v
+
+
+def _overage_limit_credits(limit_cents: int | None) -> int | None:
+    if limit_cents is None:
+        return None
+    return math.floor((limit_cents / 100) / OVERAGE_USD_PER_CREDIT)
+
+
+@router.get("/billing/overage-settings")
+async def get_overage_settings(
+    current_user: User = Depends(get_current_user),
+) -> OverageSettingsResponse:
+    """Return overage preferences for the authenticated user."""
+    if not current_user:
+        raise HTTPException(status_code=401, detail="Authentication required")
+    return OverageSettingsResponse(
+        overage_enabled=current_user.overage_enabled or False,
+        overage_spend_limit_cents=current_user.overage_spend_limit_cents,
+        overage_credits_used_this_period=current_user.overage_credits_used_this_period or 0,
+        overage_limit_credits=_overage_limit_credits(current_user.overage_spend_limit_cents),
+        overage_usd_per_credit=OVERAGE_USD_PER_CREDIT,
+        billing_period_end=(
+            current_user.billing_period_end.isoformat() if current_user.billing_period_end else None
+        ),
+    )
+
+
+@router.put("/billing/overage-settings")
+async def update_overage_settings(
+    body: OverageSettingsUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> OverageSettingsResponse:
+    """Update overage preferences. Only paid-tier users may enable overages."""
+    if not current_user:
+        raise HTTPException(status_code=401, detail="Authentication required")
+
+    tier = current_user.subscription_tier or "free"
+    if tier not in MONTHLY_CREDIT_ALLOCATIONS:
+        raise HTTPException(
+            status_code=403,
+            detail="Overages are only available on paid subscription plans.",
+        )
+
+    if body.overage_enabled is not None:
+        current_user.overage_enabled = body.overage_enabled
+        if not body.overage_enabled:
+            current_user.overage_spend_limit_cents = None
+
+    if body.overage_limit_mode == "unlimited":
+        current_user.overage_spend_limit_cents = None
+    elif body.overage_limit_mode == "capped" and body.overage_spend_limit_dollars is not None:
+        current_user.overage_spend_limit_cents = int(body.overage_spend_limit_dollars * 100)
+    elif body.overage_spend_limit_dollars is not None:
+        current_user.overage_spend_limit_cents = int(body.overage_spend_limit_dollars * 100)
+
+    db.add(current_user)
+    db.commit()
+    db.refresh(current_user)
+
+    return OverageSettingsResponse(
+        overage_enabled=current_user.overage_enabled or False,
+        overage_spend_limit_cents=current_user.overage_spend_limit_cents,
+        overage_credits_used_this_period=current_user.overage_credits_used_this_period or 0,
+        overage_limit_credits=_overage_limit_credits(current_user.overage_spend_limit_cents),
+        overage_usd_per_credit=OVERAGE_USD_PER_CREDIT,
+        billing_period_end=(
+            current_user.billing_period_end.isoformat() if current_user.billing_period_end else None
+        ),
+    )
 
 
 def _user_from_metadata(meta: dict[str, Any], db: Session) -> User | None:

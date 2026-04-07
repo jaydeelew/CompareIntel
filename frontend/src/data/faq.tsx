@@ -382,9 +382,9 @@ export const faqData: FAQItemData[] = [
           <strong>Paid plans</strong> (Starter, Starter+, Pro, Pro+) add monthly credit pools (from{' '}
           {MONTHLY_CREDIT_ALLOCATIONS.starter.toLocaleString()} up to{' '}
           {MONTHLY_CREDIT_ALLOCATIONS.pro_plus.toLocaleString()} credits), more models per
-          comparison, and (when enabled) metered overage beyond your pool at $
-          {OVERAGE_USD_PER_CREDIT.toFixed(3)} per credit. Subscribe from your account menu (Upgrade
-          plan) when billing is enabled on the deployment you use.
+          comparison, and optional pay-as-you-go usage beyond your pool when you turn it on (see{' '}
+          <Link to="/faq#pay-as-you-go-overages">pay-as-you-go overages</Link>). Subscribe from your
+          account menu (Upgrade plan) when billing is enabled on the deployment you use.
         </p>
       </>
     ),
@@ -417,9 +417,10 @@ export const faqData: FAQItemData[] = [
             comparison
           </li>
           <li>
-            <strong>Upgrade or overage:</strong> Paid plans have larger monthly pools; beyond that,
-            metered overage may be available per credit when billing is enabled (not a one-time pack
-            purchase)
+            <strong>Paid plans and overages:</strong> Larger monthly pools; if you are on a paid
+            plan you can enable optional pay-as-you-go overages in{' '}
+            <strong>Account → Settings → Billing &amp; Overages</strong> (not a prepaid credit
+            pack). See <Link to="/faq#pay-as-you-go-overages">how overages work</Link>.
           </li>
           <li>
             <strong>Shorter prompts:</strong> More concise prompts use fewer input tokens
@@ -971,15 +972,78 @@ export const faqData: FAQItemData[] = [
             <strong>Paid tiers:</strong> Monthly allocations from{' '}
             {MONTHLY_CREDIT_ALLOCATIONS.starter.toLocaleString()} credits (Starter) to{' '}
             {MONTHLY_CREDIT_ALLOCATIONS.pro_plus.toLocaleString()} credits (Pro+). Credits reset on
-            your Stripe billing period. Overage beyond the pool (when enabled) is billed at $
-            {OVERAGE_USD_PER_CREDIT.toFixed(3)} per credit. Use{' '}
-            <strong>Account → Upgrade plan</strong> for checkout when enabled.
+            your Stripe billing period (or the app&apos;s billing window for your account). Optional
+            overage beyond the pool is <strong>off by default</strong> and must be turned on in
+            Settings; when enabled, extra usage is priced at{' '}
+            <strong>${OVERAGE_USD_PER_CREDIT.toFixed(3)} per credit</strong>. See{' '}
+            <Link to="/faq#pay-as-you-go-overages">Pay-as-you-go overages</Link> for the full
+            policy. Use <strong>Account → Upgrade plan</strong> for checkout when enabled.
           </li>
         </ul>
         <p>
           <strong>Important:</strong> Credits are only deducted upon successful completion—if a
           request fails, no credits are charged. You can monitor your balance in real-time via the
           credit indicator in the interface.
+        </p>
+      </>
+    ),
+  },
+  {
+    id: 'pay-as-you-go-overages',
+    question: 'How do pay-as-you-go overages work on paid plans?',
+    answer: (
+      <>
+        <p>
+          <strong>Overages</strong> let you keep comparing models after your{' '}
+          <strong>monthly credit pool</strong> is used up. They are only for{' '}
+          <strong>paid subscribers</strong> (Starter, Starter+, Pro, Pro+). Free and guest users do
+          not have overages—they use daily credits only.
+        </p>
+        <p>
+          <strong>How you turn them on:</strong> Open <strong>Account → Settings</strong>, scroll to{' '}
+          <strong>Billing &amp; Overages</strong>, and switch <strong>Enable overages</strong> on.
+          You choose one of two modes:
+        </p>
+        <ul>
+          <li>
+            <strong>No limit</strong> — After your monthly pool (and any small legacy balance on
+            your account) is used, extra usage continues at the overage rate until your current
+            billing period ends.
+          </li>
+          <li>
+            <strong>Set a spending cap</strong> — You enter a maximum dollar amount for the period.
+            The app shows roughly how many extra credits that buys. When you reach the cap,
+            comparisons stop until you raise the cap or your period resets. On the comparison page,
+            a quick action may offer to bump your cap by a small amount without opening Settings.
+          </li>
+        </ul>
+        <p>
+          <strong>What you pay:</strong> Overage is billed at{' '}
+          <strong>${OVERAGE_USD_PER_CREDIT.toFixed(3)} per credit</strong> (same list rate for all
+          paid tiers). That rate is also shown in Settings next to the toggle.
+        </p>
+        <p>
+          <strong>Order we use your credits:</strong> Each comparison spends your{' '}
+          <strong>monthly pool first</strong>, then any <strong>legacy / account balance</strong>{' '}
+          credits if present, then <strong>overage credits</strong> if overages are on and you are
+          still under your cap.
+        </p>
+        <p>
+          <strong>New billing period:</strong> When your monthly pool refills, overages{' '}
+          <strong>turn off automatically</strong> and your overage cap is cleared. You choose again
+          if you want pay-as-you-go in the new period—so you are not silently opted into extra
+          charges after a reset.
+        </p>
+        <p>
+          <strong>Reminders in the app (no usage emails):</strong> We do not send email when you
+          cross usage thresholds. Instead you may see notices in the <strong>account menu</strong>{' '}
+          (credit and overage summary, optional burn-rate hint), on the{' '}
+          <strong>comparison page</strong> when credits are low or you are on overages, and in{' '}
+          <strong>Settings</strong>. That keeps costs visible where you are already working.
+        </p>
+        <p>
+          For how credits are calculated from model cost, see{' '}
+          <Link to="/faq#credits-system">How does the credits system work?</Link>
         </p>
       </>
     ),
@@ -1021,10 +1085,13 @@ export const faqData: FAQItemData[] = [
           </li>
         </ul>
         <p>
-          All paid tiers include access to premium AI models that aren't available to free users.
-          Beyond the monthly pool, paid tiers may use metered overage per credit when enabled (not a
-          separate one-time pack). Typical overage rate when metered billing is enabled: $
-          {OVERAGE_USD_PER_CREDIT.toFixed(3)} per credit (confirm in Stripe or Manage billing).
+          All paid tiers include access to premium AI models that aren&apos;t available to free
+          users. Beyond the monthly pool, you can optionally enable{' '}
+          <strong>pay-as-you-go overages</strong> in{' '}
+          <strong>Account → Settings → Billing &amp; Overages</strong> (not a prepaid credit pack).
+          Overage is <strong>${OVERAGE_USD_PER_CREDIT.toFixed(3)} per credit</strong> when enabled.
+          See <Link to="/faq#pay-as-you-go-overages">Pay-as-you-go overages</Link> for caps, resets,
+          and in-app alerts.
         </p>
       </>
     ),

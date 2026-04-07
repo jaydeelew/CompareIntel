@@ -40,8 +40,11 @@ The platform integrates with [OpenRouter](https://openrouter.ai/) to access mode
 ### Users & Billing
 - Email/password auth with JWT (HTTP-only cookies)
 - Tiered subscriptions: Free, Starter, Starter+, Pro, Pro+ (pricing TBD)
-- Credit system (daily for free users, monthly for paid)
+- Credit system (daily for free users, monthly for paid), with **optional pay-as-you-go overages** on paid plans (spending cap or unlimited until period end; overages auto-disable each new billing period)
+- In-app usage indicators (account menu, comparison warnings, settings)—no email alerts at usage thresholds
 - Admin panel
+
+For how credits and overages work in detail, see [docs/features/CREDIT_SYSTEM.md](docs/features/CREDIT_SYSTEM.md).
 
 ### Security
 - Rate limiting (per-user + anonymous via browser fingerprinting)

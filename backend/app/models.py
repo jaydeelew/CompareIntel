@@ -76,6 +76,11 @@ class User(Base):
     stripe_subscription_id = Column(String(255), index=True, nullable=True)
     purchased_credits_balance = Column(Integer, default=0, nullable=False)
 
+    # Overage settings (user-controlled)
+    overage_enabled = Column(Boolean, default=False, nullable=False)
+    overage_spend_limit_cents = Column(Integer, nullable=True)
+    overage_credits_used_this_period = Column(Integer, default=0, nullable=False)
+
     # Usage tracking
     monthly_overage_count = Column(Integer, default=0)  # Track overage model responses for billing
     overage_reset_date = Column(Date, default=func.current_date())  # Reset monthly

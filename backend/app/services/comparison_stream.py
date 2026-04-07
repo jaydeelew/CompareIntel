@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+import math
 import os
 import time
 from collections import defaultdict
@@ -20,6 +21,7 @@ from ..config import get_history_entry_limit
 
 if TYPE_CHECKING:
     from sqlalchemy.orm import Session
+from ..config.constants import OVERAGE_USD_PER_CREDIT
 from ..config.settings import settings
 from ..credit_manager import get_user_credits
 from ..database import SessionLocal
@@ -721,6 +723,28 @@ async def generate_stream(ctx: StreamContext) -> Any:
 
         processing_time_ms = int((datetime.now() - ctx.start_time).total_seconds() * 1000)
 
+        overage_meta: dict[str, Any] = {}
+        if ctx.has_authenticated_user and ctx.user_id:
+            try:
+                ov_db = SessionLocal()
+                ov_user = ov_db.query(User).filter(User.id == ctx.user_id).first()
+                if ov_user:
+                    overage_meta = {
+                        "overage_enabled": bool(ov_user.overage_enabled),
+                        "overage_credits_used_this_period": ov_user.overage_credits_used_this_period
+                        or 0,
+                        "overage_limit_credits": (
+                            math.floor(
+                                (ov_user.overage_spend_limit_cents / 100) / OVERAGE_USD_PER_CREDIT
+                            )
+                            if ov_user.overage_spend_limit_cents is not None
+                            else None
+                        ),
+                    }
+                ov_db.close()
+            except Exception:
+                pass
+
         metadata = {
             "input_length": len(req.input_data),
             "models_requested": len(req.models),
@@ -730,6 +754,7 @@ async def generate_stream(ctx: StreamContext) -> Any:
             "processing_time_ms": processing_time_ms,
             "credits_used": float(total_credits_used),
             "credits_remaining": int(credits_remaining[0]),
+            **overage_meta,
         }
 
         from ..models import UsageLog

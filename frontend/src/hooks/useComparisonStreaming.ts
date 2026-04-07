@@ -271,11 +271,15 @@ export function useComparisonStreaming(
 
     stateCb.setIsLoading(true)
     stateCb.setError(null)
-    // Clear insufficient/low credit warnings on submission
-    if (creditWarningType === 'insufficient' || creditWarningType === 'low') {
+    if (
+      creditWarningType === 'insufficient' ||
+      creditWarningType === 'low' ||
+      creditWarningType === 'overage_active'
+    ) {
       creditCb.setCreditWarningMessage(null)
       creditCb.setCreditWarningType('none')
       creditCb.setCreditWarningDismissible(false)
+      creditCb.setShowOverageExtend(false)
     }
     stateCb.setIsModelsHidden(true)
     stateCb.setShowDoneSelectingCard(false)
@@ -506,6 +510,7 @@ export function useComparisonStreaming(
         setCreditWarningMessage: creditCb.setCreditWarningMessage,
         setCreditWarningType: creditCb.setCreditWarningType,
         setCreditWarningDismissible: creditCb.setCreditWarningDismissible,
+        setShowOverageExtend: creditCb.setShowOverageExtend,
         setIsFollowUpMode: stateCb.setIsFollowUpMode,
         loadHistoryFromAPI: helpers.loadHistoryFromAPI,
         apiClientDeleteCache: (key: string) => apiClient.deleteCache(key),

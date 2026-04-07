@@ -3,6 +3,7 @@ Credit management - handles allocations, deductions, and resets.
 Uses row-level locking to handle concurrent requests safely.
 """
 
+import math
 from datetime import UTC, datetime, timedelta
 from decimal import ROUND_CEILING, Decimal
 from typing import Any
@@ -14,6 +15,7 @@ from sqlalchemy.orm import Session
 from .config.constants import (
     DAILY_CREDIT_LIMITS,
     MONTHLY_CREDIT_ALLOCATIONS,
+    OVERAGE_USD_PER_CREDIT,
 )
 from .models import CreditTransaction, User
 
@@ -31,13 +33,31 @@ def get_user_credits(user_id: int, db: Session) -> int:
     return sub_remaining + purchased
 
 
+def _overage_budget_remaining(user: User) -> int:
+    """Credits still available via overage. Returns 0 when overage is off or exhausted."""
+    if not user.overage_enabled:
+        return 0
+    used = user.overage_credits_used_this_period or 0
+    if user.overage_spend_limit_cents is None:
+        return 999_999_999  # effectively unlimited
+    limit_credits = math.floor((user.overage_spend_limit_cents / 100) / OVERAGE_USD_PER_CREDIT)
+    return max(0, limit_credits - used)
+
+
 def check_credits_sufficient(user_id: int, required_credits: Decimal, db: Session) -> bool:
-    """Check if user can afford the request. Resets credits first if needed."""
+    """Check if user can afford the request (pool + purchased + overage). Resets credits first."""
     check_and_reset_credits_if_needed(user_id, db)
 
     current_credits = get_user_credits(user_id, db)
     required_int = int(required_credits.quantize(Decimal("1"), rounding=ROUND_CEILING))
-    return current_credits >= required_int
+    if current_credits >= required_int:
+        return True
+
+    user = db.query(User).filter(User.id == user_id).first()
+    if user is None:
+        return False
+    shortfall = required_int - current_credits
+    return _overage_budget_remaining(user) >= shortfall
 
 
 def deduct_credits(
@@ -47,11 +67,9 @@ def deduct_credits(
     db: Session,
     description: str | None = None,
 ) -> None:
-    """Deduct credits with row-level locking. Creates audit trail."""
+    """Deduct credits: monthly pool -> purchased -> overage. Creates audit trail."""
     credits_int = int(round(credits))
 
-    # Use row-level locking for atomic update
-    # SQLite and PostgreSQL handle this differently, so we use a generic approach
     user = db.query(User).filter(User.id == user_id).with_for_update().first()
 
     if not user:
@@ -66,18 +84,25 @@ def deduct_credits(
     remainder = credits_int - take_monthly
 
     user.credits_used_this_period = used + take_monthly
+
     if remainder > 0:
-        user.purchased_credits_balance = max(0, purchased - remainder)
+        take_purchased = min(remainder, purchased)
+        user.purchased_credits_balance = max(0, purchased - take_purchased)
+        remainder -= take_purchased
+
+    if remainder > 0 and user.overage_enabled:
+        user.overage_credits_used_this_period = (
+            user.overage_credits_used_this_period or 0
+        ) + remainder
+        remainder = 0
 
     user.total_credits_used = (user.total_credits_used or 0) + credits_int
 
-    # Create credit transaction record
-    # Store exact Decimal value in transaction (as integer representing millicredits for precision)
-    credits_millicredits = int(credits * 1000)  # Store as millicredits for transaction precision
+    credits_millicredits = int(credits * 1000)
     transaction = CreditTransaction(
         user_id=user_id,
         transaction_type="usage",
-        credits_amount=-credits_millicredits,  # Negative for usage, stored as millicredits
+        credits_amount=-credits_millicredits,
         description=description or f"Credits used for request ({float(credits):.4f} credits)",
         related_usage_log_id=usage_log_id,
     )
@@ -130,9 +155,12 @@ def allocate_monthly_credits(user_id: int, tier: str, db: Session) -> None:
             user.billing_period_end = now + timedelta(days=30)
             user.credits_reset_at = user.billing_period_end
 
-        # Allocate credits and reset usage
+        # Allocate credits; reset usage + overage tracking; auto-disable overages
         user.monthly_credits_allocated = credits
         user.credits_used_this_period = 0
+        user.overage_credits_used_this_period = 0
+        user.overage_enabled = False
+        user.overage_spend_limit_cents = None
 
         # Create allocation transaction
         transaction = CreditTransaction(
@@ -275,6 +303,13 @@ def get_credit_usage_stats(user_id: int, db: Session) -> dict[str, Any]:
     else:
         period_type = "unknown"
 
+    overage_used = user.overage_credits_used_this_period or 0
+    overage_limit_credits = None
+    if user.overage_spend_limit_cents is not None:
+        overage_limit_credits = math.floor(
+            (user.overage_spend_limit_cents / 100) / OVERAGE_USD_PER_CREDIT
+        )
+
     return {
         "credits_allocated": allocated,
         "credits_used_this_period": used,
@@ -286,6 +321,9 @@ def get_credit_usage_stats(user_id: int, db: Session) -> dict[str, Any]:
         "billing_period_end": billing_period_end.isoformat() if billing_period_end else None,
         "period_type": period_type,
         "subscription_tier": tier,
+        "overage_enabled": user.overage_enabled or False,
+        "overage_credits_used_this_period": overage_used,
+        "overage_limit_credits": overage_limit_credits,
     }
 
 

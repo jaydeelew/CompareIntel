@@ -40,7 +40,7 @@ Marketing copy for the free tier describes a daily number of **image comparison 
 | Pro | See `TIER_PRICING` | 3,300/month | Monthly | All models |
 | Pro+ | See `TIER_PRICING` | 6,700/month | Monthly | All models |
 
-**Overage (planned / list rate):** `OVERAGE_USD_PER_CREDIT` (**$0.013** per credit beyond the monthly pool), flat across paid tiers — see `docs/internal/PRICING_SHEET.md`.
+**Pay-as-you-go overage (paid tiers):** Beyond the monthly pool, usage can continue at **`OVERAGE_USD_PER_CREDIT`** (currently **$0.013** per credit), flat across paid tiers — see `docs/internal/PRICING_SHEET.md`. Overages are **opt-in** each billing period (see [Overage policy](#overage-policy-pay-as-you-go-for-paid-plans) below).
 
 Monthly pool numbers may be **recalibrated** after observing usage under cost-based credits (`UsageLog.actual_cost`).
 
@@ -49,17 +49,62 @@ Monthly pool numbers may be **recalibrated** after observing usage under cost-ba
 - **Free/Anonymous:** Credits reset daily (user timezone where configured).
 - **Paid Tiers:** Intended to align with **Stripe billing period** once webhooks sync `billing_period_*`; until then a 30-day window may apply from allocation.
 
+When the **monthly pool is refilled** (new billing period), **overage settings reset** as well: see [Overage policy](#overage-policy-pay-as-you-go-for-paid-plans).
+
 ## Model Access Restrictions
 
 - **Unregistered users:** Only budget/efficient models (lowest cost models)
 - **Free tier:** Budget models plus some mid-level models
 - **Paid tiers:** All models available without restrictions
 
+## Overage policy (pay-as-you-go for paid plans)
+
+These rules are what the product enforces in code and UI. They are **not** email alerts; reminders appear **in the app** (account menu, comparison warnings, settings).
+
+### Who can use overages
+
+- **Paid subscription tiers only** (Starter, Starter+, Pro, Pro+). Free and anonymous users do not have overage; they hit the daily pool limit only.
+
+### How charges are counted
+
+- Overage is measured in the same **credits** as the monthly pool. Each overage credit is billed at **`OVERAGE_USD_PER_CREDIT`** (USD). The Settings screen shows an approximate **dollar cap ↔ credit cap** conversion as you type.
+
+### Order credits are consumed
+
+For each successful comparison, whole credits are taken in this order:
+
+1. **Monthly pool** (`monthly_credits_allocated` minus `credits_used_this_period`)
+2. **Purchased / legacy balance** (`purchased_credits_balance`) — admin or legacy grants, not a user-facing “credit pack” store
+3. **Overage** — only if the user turned **Enable overages** on and is within any spending cap
+
+### Spending cap vs unlimited
+
+- **No limit:** After the monthly pool (and any purchased balance) is empty, overage credits accrue until the billing period ends (subject to future Stripe metered billing integration).
+- **Set a spending cap:** The user sets a **maximum dollar amount** for the period; the app converts that to a maximum number of overage credits. When that cap is reached, further comparisons return **402** until the period resets or the user raises the cap (including the quick “extend” action on the comparison page when capped).
+
+### Automatic reset each billing period
+
+When monthly credits are **allocated** for a new period (`allocate_monthly_credits`):
+
+- **`overage_enabled`** is set back to **off** — the user must opt in again if they want overages in the new period (avoids surprise charges after a reset).
+- **`overage_spend_limit_cents`** is cleared (no cap carried over).
+- **`overage_credits_used_this_period`** is reset to **0**.
+
+This is intentional product policy: **overage does not “auto-renew”** across periods without an explicit choice.
+
+### In-app indicators (no threshold emails)
+
+- **Settings → Billing & Overages:** Enable/disable, cap vs unlimited, live dollar-to-credits preview, usage this period.
+- **Account menu (dropdown):** When you are using overage credits, an **Overage** line shows used amount, optional cap progress, and estimated USD so far. For monthly plans, a **burn-rate** note may appear if current usage suggests the monthly pool will run out before the period ends (with a pointer to enable overages if they are off).
+- **Comparison page:** Warning banners for low pool, overage in use, and hitting the overage cap; capped users may see a one-click **extend limit** control that bumps the dollar cap via the same API as Settings.
+
+Streaming **complete** events can include `overage_enabled`, `overage_credits_used_this_period`, and `overage_limit_credits` so the client stays aligned after each run.
+
 ## Credit Flow
 
-1. **Pre-request:** Backend estimates required credits (per selected model, list pricing or legacy) and returns **402** if the user cannot afford the estimate.
+1. **Pre-request:** Backend estimates required credits (per selected model, list pricing or legacy) and returns **402** if the user cannot afford the estimate **including** allowed overage budget when overages are enabled.
 2. **Processing:** Streaming reads `usage.cost` when present; otherwise list pricing or legacy path.
-3. **Deduction:** Whole credits deducted once per successful comparison; any **purchased** balance on the user is used after the monthly pool is exhausted, then metered overage when integrated.
+3. **Deduction:** Whole credits deducted once per successful comparison: **monthly pool → purchased balance → overage** (when enabled and within cap).
 4. **Recording:** `CreditTransaction` + `UsageLog` with `actual_cost` and token fields.
 
 ## Database Fields
@@ -69,6 +114,9 @@ Monthly pool numbers may be **recalibrated** after observing usage under cost-ba
 - `monthly_credits_allocated` - Subscription credits for current period
 - `credits_used_this_period` - Consumption against the monthly allocation
 - `purchased_credits_balance` - Purchased balance (legacy / admin; not sold via one-time checkout)
+- `overage_enabled` - User opted into pay-as-you-go overage for the current period
+- `overage_spend_limit_cents` - Optional cap in USD cents (`NULL` = unlimited overage while enabled)
+- `overage_credits_used_this_period` - Overage credits consumed this billing period (resets with monthly allocation)
 - `stripe_customer_id`, `stripe_subscription_id` - Billing integration
 - `credits_reset_at`, `billing_period_start`, `billing_period_end`
 
@@ -80,8 +128,10 @@ Monthly pool numbers may be **recalibrated** after observing usage under cost-ba
 
 ## API Endpoints
 
-- `GET /api/credits/balance` - Current credit balance
+- `GET /api/credits/balance` - Current credit balance (includes `overage_enabled`, `overage_credits_used_this_period`, `overage_limit_credits` for authenticated users when applicable)
 - `GET /api/credits/usage` - Usage history
+- `GET /api/billing/overage-settings` - Overage preferences and period metadata (paid tiers)
+- `PUT /api/billing/overage-settings` - Update overage on/off, unlimited vs capped, and dollar cap (paid tiers)
 - `POST /api/billing/create-checkout-session` - Stripe Checkout (when configured)
 - `POST /api/billing/webhooks/stripe` - Stripe webhooks (raw body, signature verified)
 

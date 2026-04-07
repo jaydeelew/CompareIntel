@@ -32,6 +32,12 @@ export interface CreditBalance {
   period_type: 'daily' | 'monthly'
   /** Subscription tier */
   subscription_tier: string
+  /** Whether overages are enabled for this user */
+  overage_enabled?: boolean
+  /** Overage credits consumed this billing period */
+  overage_credits_used_this_period?: number
+  /** Max overage credits allowed (null = unlimited) */
+  overage_limit_credits?: number | null
 }
 
 /**
