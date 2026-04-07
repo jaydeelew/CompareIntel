@@ -33,12 +33,13 @@ function formatLocationFromPhotonProperties(props: Record<string, unknown>): str
 
 function photonReverseUrl(lat: number, lon: number): string {
   const q = `lat=${lat}&lon=${lon}&lang=en`
-  // Dev: same-origin proxy (see vite.config.ts) avoids CORS / blocked third-party fetches.
-  // Tests: keep direct URL so mocks stay stable.
-  if (import.meta.env.DEV && import.meta.env.MODE !== 'test') {
-    return `/geo/photon/reverse?${q}`
+  // Same-origin path: Vite dev proxy (vite.config.ts) and production nginx proxy to Komoot.
+  // Photon does not send Access-Control-Allow-Origin for arbitrary sites — browser fetch would fail.
+  // Vitest uses direct URL so fetch mocks match a stable absolute URL.
+  if (import.meta.env.MODE === 'test') {
+    return `https://photon.komoot.io/reverse?${q}`
   }
-  return `https://photon.komoot.io/reverse?${q}`
+  return `/geo/photon/reverse?${q}`
 }
 
 async function reverseGeocodePhoton(lat: number, lon: number): Promise<string | null> {
