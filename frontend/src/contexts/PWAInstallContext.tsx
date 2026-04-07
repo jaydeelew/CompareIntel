@@ -148,6 +148,11 @@ export function PWAInstallProvider({ children }: { children: React.ReactNode }) 
     window.addEventListener('keydown', trackEngagement, { once: true })
 
     const handleBeforeInstallPrompt = (e: Event) => {
+      // In dev, deferring with preventDefault() makes Chrome log that prompt() was never shown.
+      // Production keeps the deferred custom banner; dev can use the browser's default UI or ignore.
+      if (import.meta.env.DEV) {
+        return
+      }
       e.preventDefault()
       setDeferredPrompt(e as BeforeInstallPromptEvent)
     }
