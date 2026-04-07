@@ -186,11 +186,11 @@ function CapabilityTile({
               <video
                 ref={videoRef}
                 src={backVideo}
-                className="capability-tile-back-image capability-tile-back-video"
+                className={`capability-tile-back-image capability-tile-back-video${!videoHasFrame ? ' capability-tile-back-video--loading' : ''}`}
                 muted
                 loop
                 playsInline
-                preload="none"
+                preload="metadata"
                 aria-label={`${title} example`}
               />
             ) : (

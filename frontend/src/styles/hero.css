@@ -807,6 +807,13 @@ video.capability-tile-back-video {
   z-index: 0;
   transform: translateZ(0);
   -webkit-transform: translateZ(0);
+  transition: opacity 0.18s ease;
+}
+
+/* Hide the native video surface until the first frame is decoded — prevents the browser's
+   default white/blank paint from showing through during 3D flip transforms. */
+video.capability-tile-back-video--loading {
+  opacity: 0;
 }
 
 /* Natural Language and Formatted Math: darken screenshots to match Code Generation tile */
