@@ -776,7 +776,8 @@
   overflow: hidden;
 }
 
-/* Covers <video> until first frame is decoded — the video layer often paints white under 3D transforms. */
+/* Fallback overlay for videos without a poster image — covers the video element
+   until the first frame is decoded so 3D transforms don't flash white. */
 .capability-tile-back-image-wrap--video-pending::after {
   content: '';
   position: absolute;
@@ -785,7 +786,6 @@
   border-radius: inherit;
   background: rgba(15, 23, 42, 0.95);
   pointer-events: none;
-  animation: video-pending-pulse 2s ease-in-out infinite;
 }
 
 [data-theme='light'] .capability-tile-back-image-wrap--video-pending {
@@ -794,16 +794,6 @@
 
 [data-theme='light'] .capability-tile-back-image-wrap--video-pending::after {
   background: rgba(203, 213, 225, 0.9);
-}
-
-@keyframes video-pending-pulse {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.7;
-  }
 }
 
 .capability-tile-back-image {
@@ -822,13 +812,6 @@ video.capability-tile-back-video {
   z-index: 0;
   transform: translateZ(0);
   -webkit-transform: translateZ(0);
-  transition: opacity 0.18s ease;
-}
-
-/* Hide the native video surface until the first frame is decoded — prevents the browser's
-   default white/blank paint from showing through during 3D flip transforms. */
-video.capability-tile-back-video--loading {
-  opacity: 0;
 }
 
 /* Natural Language and Formatted Math: darken screenshots to match Code Generation tile */
