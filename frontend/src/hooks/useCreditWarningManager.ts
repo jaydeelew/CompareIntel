@@ -1,11 +1,20 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 
-type CreditWarningType = 'low' | 'insufficient' | 'none'
+import { OVERAGE_USD_PER_CREDIT } from '../config/constants'
+
+type CreditWarningType = 'low' | 'insufficient' | 'none' | 'overage_active' | 'overage_cap_hit'
+
+export interface OverageContext {
+  overage_enabled?: boolean
+  overage_credits_used_this_period?: number
+  overage_limit_credits?: number | null
+}
 
 export function useCreditWarningManager() {
   const [creditWarningMessage, setCreditWarningMessage] = useState<string | null>(null)
   const [creditWarningType, setCreditWarningType] = useState<CreditWarningType>('none')
   const [creditWarningDismissible, setCreditWarningDismissible] = useState(false)
+  const [showOverageExtend, setShowOverageExtend] = useState(false)
   const creditWarningMessageRef = useRef<HTMLDivElement>(null)
   const prevCreditWarningMessageRef = useRef<string | null>(null)
 
@@ -40,45 +49,67 @@ export function useCreditWarningManager() {
       tier: string,
       creditsRemaining: number,
       estimatedCredits?: number,
-      creditsResetAt?: string
+      creditsResetAt?: string,
+      overageCtx?: OverageContext
     ): string => {
+      const resetDateStr = creditsResetAt
+        ? new Date(creditsResetAt).toLocaleDateString('en-US', {
+            month: '2-digit',
+            day: '2-digit',
+            year: 'numeric',
+          })
+        : 'N/A'
+      const isPaid = !['unregistered', 'free'].includes(tier)
+      const ov = overageCtx ?? {}
+
+      if (type === 'overage_cap_hit') {
+        const used = ov.overage_credits_used_this_period ?? 0
+        const cost = (used * OVERAGE_USD_PER_CREDIT).toFixed(2)
+        return `You've reached your overage spending limit (${used.toLocaleString()} overage credits, $${cost}). Increase the limit in Settings → Billing & Overages or wait for credits to reset on ${resetDateStr}.`
+      }
+
+      if (type === 'overage_active') {
+        const used = ov.overage_credits_used_this_period ?? 0
+        const cost = (used * OVERAGE_USD_PER_CREDIT).toFixed(2)
+        const limitPart =
+          ov.overage_limit_credits != null
+            ? ` (${used.toLocaleString()} / ${ov.overage_limit_credits.toLocaleString()} overage credits used)`
+            : ` (${used.toLocaleString()} overage credits used)`
+        return `Your monthly pool is exhausted — using overage credits at $${OVERAGE_USD_PER_CREDIT}/credit${limitPart}, $${cost} so far this period. Manage limits in Settings → Billing & Overages.`
+      }
+
       if (type === 'none') {
         if (tier === 'unregistered') {
           return "You've run out of credits. Credits will reset to 50 tomorrow, or sign-up for a free account to get more credits, more models, and more history!"
         } else if (tier === 'free') {
-          return "You've run out of credits. Credits will reset to 100 tomorrow. Use Account → Upgrade plan for paid monthly pools when billing is enabled."
-        } else if (tier === 'pro_plus') {
-          const resetDate = creditsResetAt
-            ? new Date(creditsResetAt).toLocaleDateString('en-US', {
-                month: '2-digit',
-                day: '2-digit',
-                year: 'numeric',
-              })
-            : 'N/A'
-          return `You've run out of credits which will reset on ${resetDate}. Wait until your reset, or sign-up for model comparison overages.`
-        } else {
-          const resetDate = creditsResetAt
-            ? new Date(creditsResetAt).toLocaleDateString('en-US', {
-                month: '2-digit',
-                day: '2-digit',
-                year: 'numeric',
-              })
-            : 'N/A'
-          return `You've run out of credits which will reset on ${resetDate}. Use Account → Upgrade plan to change your plan or use metered overage when billing is enabled.`
+          return "You've run out of credits. Credits will reset to 100 tomorrow. Use Account → Upgrade plan for paid monthly pools."
+        } else if (isPaid && ov.overage_enabled) {
+          return `Your monthly pool and overage budget are exhausted. Credits reset on ${resetDateStr}. Increase your overage limit in Settings → Billing & Overages, or upgrade your plan.`
+        } else if (isPaid) {
+          return `You've run out of credits which will reset on ${resetDateStr}. Enable pay-as-you-go overages in Settings → Billing & Overages to keep using the service.`
         }
-      } else if (type === 'insufficient') {
-        return `This comparison is estimated to take ${estimatedCredits?.toFixed(1) || 'X'} credits and you have ${Math.round(creditsRemaining)} credits remaining. The model responses may be truncated. If possible, try selecting less models or shorten your input.`
-      } else {
-        if (tier === 'unregistered') {
-          return `You have ${Math.round(creditsRemaining)} credits left for today. Credits will reset to 50 tomorrow, or sign-up for a free account to get more credits, more models, and more history!`
-        } else if (tier === 'free') {
-          return `You have ${Math.round(creditsRemaining)} credits left for today. Credits will reset to 100 tomorrow. Paid plans add monthly pools — Account → Upgrade plan when billing is enabled.`
-        } else if (tier === 'pro_plus') {
-          return `You have ${Math.round(creditsRemaining)} credits left in your monthly billing cycle. Wait until your cycle starts again, or sign-up for model comparison overages.`
-        } else {
-          return `You have ${Math.round(creditsRemaining)} credits left in your monthly billing cycle. You can change plans or use metered overage from Account → Upgrade plan when billing is enabled.`
-        }
+        return `You've run out of credits which will reset on ${resetDateStr}. Enable overages in Settings → Billing & Overages or upgrade your plan.`
       }
+
+      if (type === 'insufficient') {
+        const extra =
+          isPaid && !ov.overage_enabled
+            ? ' Enable overages in Settings → Billing & Overages to avoid truncation.'
+            : ''
+        return `This comparison is estimated to take ${estimatedCredits?.toFixed(1) || 'X'} credits and you have ${Math.round(creditsRemaining)} credits remaining. The model responses may be truncated. Try selecting fewer models or shorten your input.${extra}`
+      }
+
+      // type === 'low'
+      if (tier === 'unregistered') {
+        return `You have ${Math.round(creditsRemaining)} credits left for today. Credits will reset to 50 tomorrow, or sign-up for a free account to get more credits, more models, and more history!`
+      } else if (tier === 'free') {
+        return `You have ${Math.round(creditsRemaining)} credits left for today. Credits will reset to 100 tomorrow. Paid plans add monthly pools — Account → Upgrade plan.`
+      } else if (isPaid && ov.overage_enabled) {
+        return `You have ${Math.round(creditsRemaining)} credits left in your monthly pool. When depleted, overage credits will be used automatically at $${OVERAGE_USD_PER_CREDIT}/credit.`
+      } else if (isPaid) {
+        return `You have ${Math.round(creditsRemaining)} credits left in your monthly billing cycle. Enable overages in Settings → Billing & Overages so you can keep using the service when credits run out.`
+      }
+      return `You have ${Math.round(creditsRemaining)} credits left in your monthly billing cycle. Enable overages in Settings → Billing & Overages or upgrade your plan.`
     },
     []
   )
@@ -120,6 +151,8 @@ export function useCreditWarningManager() {
     setCreditWarningType,
     creditWarningDismissible,
     setCreditWarningDismissible,
+    showOverageExtend,
+    setShowOverageExtend,
     creditWarningMessageRef,
     getCreditWarningMessage,
     isLowCreditWarningDismissed,

@@ -277,6 +277,7 @@
   margin: 8px auto;
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: var(--spacing-2);
   max-width: var(--max-width-content);
   width: calc(100% - 2rem);
@@ -298,6 +299,37 @@
 
 .error-message button:hover {
   opacity: 1;
+}
+
+.credit-warning-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.extend-overage-button {
+  padding: 0.35rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #fff;
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+.extend-overage-button:hover:not(:disabled) {
+  background: linear-gradient(135deg, #d97706, #b45309);
+  transform: translateY(-1px);
+}
+
+.extend-overage-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .loading-message {

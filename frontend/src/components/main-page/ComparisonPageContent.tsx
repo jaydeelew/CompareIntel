@@ -62,6 +62,8 @@ export interface ComparisonPageContentProps {
   creditWarningDismissible: boolean
   creditBalance: CreditBalance | null
   onDismissCreditWarning: () => void
+  showOverageExtend?: boolean
+  onOverageExtended?: () => void
 
   // Error
   error: string | null
@@ -126,6 +128,8 @@ export function ComparisonPageContent({
   creditWarningDismissible,
   creditBalance,
   onDismissCreditWarning,
+  showOverageExtend,
+  onOverageExtended,
   error,
   errorMessageRef,
   visionNoticeMessage,
@@ -224,6 +228,8 @@ export function ComparisonPageContent({
         isDismissible={creditWarningDismissible}
         creditBalance={creditBalance}
         onDismiss={onDismissCreditWarning}
+        showOverageExtend={showOverageExtend}
+        onOverageExtended={onOverageExtended}
       />
 
       <DismissibleErrorBanner message={visionNoticeMessage} onDismiss={onDismissVisionNotice} />

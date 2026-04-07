@@ -11,6 +11,7 @@ import {
   getDailyCreditLimit,
   getModelLimit,
   MONTHLY_CREDIT_ALLOCATIONS,
+  OVERAGE_USD_PER_CREDIT,
   TIER_PRICING,
 } from '../../config/constants'
 import { useAuth } from '../../contexts/AuthContext'
@@ -19,6 +20,9 @@ import { ApiError, isCancellationError } from '../../services/api/errors'
 import {
   createBillingPortalSession,
   createSubscriptionCheckoutSession,
+  getOverageSettings,
+  updateOverageSettings,
+  type OverageSettings,
   type PaidSubscriptionTier,
 } from '../../services/billingService'
 import { deleteAllConversations } from '../../services/conversationService'
@@ -71,6 +75,15 @@ export const UserMenu: React.FC = () => {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [billingBusy, setBillingBusy] = useState<string | null>(null)
   const [billingError, setBillingError] = useState<string | null>(null)
+
+  // Overage settings state
+  const [overageSettings, setOverageSettings] = useState<OverageSettings | null>(null)
+  const [overageEnabled, setOverageEnabled] = useState(false)
+  const [overageLimitMode, setOverageLimitMode] = useState<'unlimited' | 'capped'>('unlimited')
+  const [overageDollarInput, setOverageDollarInput] = useState('')
+  const [isLoadingOverage, setIsLoadingOverage] = useState(false)
+  const [isSavingOverage, setIsSavingOverage] = useState(false)
+  const [overageError, setOverageError] = useState<string | null>(null)
 
   // Fetch credit balance when menu opens
   useEffect(() => {
@@ -330,6 +343,109 @@ export const UserMenu: React.FC = () => {
     void persistPartialPreferences({ zipcode: newVal }, () => setZipcode(previousZip))
   }, [preferences, zipcode, isSavingPreference, persistPartialPreferences])
 
+  const isPaidTier =
+    user?.subscription_tier != null &&
+    ['starter', 'starter_plus', 'pro', 'pro_plus'].includes(user.subscription_tier)
+
+  useEffect(() => {
+    if (activeModal === 'settings' && user?.id != null && isPaidTier) {
+      setIsLoadingOverage(true)
+      setOverageError(null)
+      getOverageSettings()
+        .then(s => {
+          setOverageSettings(s)
+          setOverageEnabled(s.overage_enabled)
+          if (s.overage_spend_limit_cents != null) {
+            setOverageLimitMode('capped')
+            setOverageDollarInput((s.overage_spend_limit_cents / 100).toFixed(2))
+          } else {
+            setOverageLimitMode('unlimited')
+            setOverageDollarInput('')
+          }
+        })
+        .catch(err => {
+          logger.error('Failed to load overage settings:', err)
+          setOverageError('Failed to load overage settings')
+        })
+        .finally(() => setIsLoadingOverage(false))
+    }
+  }, [activeModal, user?.id, isPaidTier])
+
+  const handleOverageToggle = useCallback(async () => {
+    if (isSavingOverage) return
+    const next = !overageEnabled
+    setOverageEnabled(next)
+    setIsSavingOverage(true)
+    setOverageError(null)
+    try {
+      const updated = await updateOverageSettings({ overage_enabled: next })
+      setOverageSettings(updated)
+      if (!next) {
+        setOverageLimitMode('unlimited')
+        setOverageDollarInput('')
+      }
+    } catch {
+      setOverageEnabled(!next)
+      setOverageError('Failed to update overage setting')
+    } finally {
+      setIsSavingOverage(false)
+    }
+  }, [overageEnabled, isSavingOverage])
+
+  const handleOverageLimitModeChange = useCallback(
+    async (mode: 'unlimited' | 'capped') => {
+      if (isSavingOverage) return
+      setOverageLimitMode(mode)
+      if (mode === 'unlimited') {
+        setIsSavingOverage(true)
+        setOverageError(null)
+        try {
+          const updated = await updateOverageSettings({ overage_limit_mode: 'unlimited' })
+          setOverageSettings(updated)
+          setOverageDollarInput('')
+        } catch {
+          setOverageError('Failed to update limit mode')
+        } finally {
+          setIsSavingOverage(false)
+        }
+      }
+    },
+    [isSavingOverage]
+  )
+
+  const handleOverageDollarBlur = useCallback(async () => {
+    if (isSavingOverage || overageLimitMode !== 'capped') return
+    const val = parseFloat(overageDollarInput)
+    if (isNaN(val) || val < 0.5) {
+      setOverageError('Minimum overage limit is $0.50')
+      return
+    }
+    if (val > 500) {
+      setOverageError('Maximum overage limit is $500.00')
+      return
+    }
+    setIsSavingOverage(true)
+    setOverageError(null)
+    try {
+      const updated = await updateOverageSettings({
+        overage_limit_mode: 'capped',
+        overage_spend_limit_dollars: val,
+      })
+      setOverageSettings(updated)
+      setOverageDollarInput(val.toFixed(2))
+    } catch {
+      setOverageError('Failed to save spending limit')
+    } finally {
+      setIsSavingOverage(false)
+    }
+  }, [overageDollarInput, overageLimitMode, isSavingOverage])
+
+  const overageCreditPreview = (() => {
+    const val = parseFloat(overageDollarInput)
+    if (isNaN(val) || val <= 0) return null
+    return Math.floor(val / OVERAGE_USD_PER_CREDIT)
+  })()
+
   // Handle delete all history
   const handleDeleteAllHistory = useCallback(async () => {
     setIsDeletingHistory(true)
@@ -559,6 +675,88 @@ export const UserMenu: React.FC = () => {
             </div>
           </div>
         )}
+
+        {/* Overage status indicator (paid tiers with overage enabled) */}
+        {isPaidTier &&
+          trustedCreditBalance?.overage_enabled &&
+          (trustedCreditBalance.overage_credits_used_this_period ?? 0) > 0 && (
+            <div className="usage-stat" style={{ marginTop: '0.5rem' }}>
+              <div className="usage-stat-label">Overage</div>
+              <div className="usage-stat-value">
+                <span className="usage-current overage-active-text">
+                  {(trustedCreditBalance.overage_credits_used_this_period ?? 0).toLocaleString()}
+                </span>
+                {trustedCreditBalance.overage_limit_credits != null && (
+                  <>
+                    <span className="usage-separator">/</span>
+                    <span className="usage-limit">
+                      {trustedCreditBalance.overage_limit_credits.toLocaleString()}
+                    </span>
+                  </>
+                )}
+                <span className="overage-cost-badge">
+                  $
+                  {(
+                    (trustedCreditBalance.overage_credits_used_this_period ?? 0) *
+                    OVERAGE_USD_PER_CREDIT
+                  ).toFixed(2)}
+                </span>
+              </div>
+              {trustedCreditBalance.overage_limit_credits != null && (
+                <div className="usage-progress-bar">
+                  <div
+                    className="usage-progress-fill overage-progress"
+                    style={{
+                      width: `${Math.min(100, ((trustedCreditBalance.overage_credits_used_this_period ?? 0) / trustedCreditBalance.overage_limit_credits) * 100)}%`,
+                    }}
+                  ></div>
+                </div>
+              )}
+            </div>
+          )}
+
+        {/* Burn-rate projection (paid monthly tiers) */}
+        {isPaidTier &&
+          trustedCreditBalance?.period_type === 'monthly' &&
+          (() => {
+            const periodStart = trustedCreditBalance.billing_period_start
+              ? new Date(trustedCreditBalance.billing_period_start)
+              : null
+            const periodEnd = trustedCreditBalance.credits_reset_at
+              ? new Date(trustedCreditBalance.credits_reset_at)
+              : null
+            if (!periodStart || !periodEnd) return null
+            const now = new Date()
+            const daysElapsed = Math.max(1, (now.getTime() - periodStart.getTime()) / 86_400_000)
+            const used = trustedCreditBalance.credits_used_this_period ?? 0
+            if (used <= 0) return null
+            const dailyBurn = used / daysElapsed
+            const remaining = trustedCreditBalance.credits_remaining
+            const daysUntilEmpty = dailyBurn > 0 ? remaining / dailyBurn : Infinity
+            const exhaustionDate = new Date(now.getTime() + daysUntilEmpty * 86_400_000)
+            const daysLeft = Math.round((periodEnd.getTime() - now.getTime()) / 86_400_000)
+            const willExhaustBeforePeriodEnd = daysUntilEmpty < daysLeft && remaining > 0
+            if (!willExhaustBeforePeriodEnd && remaining > 0) return null
+
+            return (
+              <div className="burn-rate-projection">
+                <span className="burn-rate-icon">📊</span>
+                <span>
+                  ~{Math.round(dailyBurn)} credits/day
+                  {remaining > 0 && daysUntilEmpty < 999
+                    ? ` · runs out ~${exhaustionDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`
+                    : remaining <= 0
+                      ? ' · pool exhausted'
+                      : ''}
+                  {trustedCreditBalance.overage_enabled && remaining <= 0
+                    ? ' · overage active'
+                    : !trustedCreditBalance.overage_enabled && willExhaustBeforePeriodEnd
+                      ? ' · enable overages in Settings'
+                      : ''}
+                </span>
+              </div>
+            )
+          })()}
       </div>
 
       <div className="user-menu-divider"></div>
@@ -934,6 +1132,157 @@ export const UserMenu: React.FC = () => {
                       </div>
                     </div>
 
+                    {/* Billing & Overages (paid tiers only) */}
+                    {isPaidTier && (
+                      <div className="settings-section">
+                        <h3 className="settings-section-title">
+                          <svg
+                            width="18"
+                            height="18"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="1.5"
+                          >
+                            <rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
+                            <line x1="1" y1="10" x2="23" y2="10" />
+                          </svg>
+                          Billing &amp; Overages
+                        </h3>
+                        <p className="settings-description" style={{ marginBottom: '0.75rem' }}>
+                          When your monthly credits run out, overages let you keep using the service
+                          at <strong>${OVERAGE_USD_PER_CREDIT}/credit</strong> ( ~
+                          {Math.floor(1 / OVERAGE_USD_PER_CREDIT)} credits per $1). Overage usage
+                          resets each billing period.
+                        </p>
+
+                        {isLoadingOverage ? (
+                          <div className="settings-loading" style={{ padding: '0.5rem 0' }}>
+                            <div className="settings-spinner" />
+                            <span>Loading overage settings...</span>
+                          </div>
+                        ) : (
+                          <>
+                            <div className="settings-item settings-item-toggle">
+                              <div className="settings-item-info">
+                                <span className="settings-label">Enable overages</span>
+                                <p className="settings-description">
+                                  Allow pay-as-you-go usage after your monthly credit pool is
+                                  exhausted. Charged at the overage rate on your next invoice.
+                                </p>
+                              </div>
+                              <button
+                                className={`settings-toggle ${overageEnabled ? 'active' : ''}`}
+                                onClick={handleOverageToggle}
+                                aria-pressed={overageEnabled}
+                                role="switch"
+                                type="button"
+                                disabled={isSavingOverage}
+                                aria-busy={isSavingOverage}
+                              >
+                                <span className="settings-toggle-slider" />
+                              </button>
+                            </div>
+
+                            {overageEnabled && (
+                              <div className="overage-limit-section">
+                                <span className="settings-label">Spending limit</span>
+                                <div className="overage-limit-options">
+                                  <label className="overage-radio-label">
+                                    <input
+                                      type="radio"
+                                      name="overage-limit"
+                                      checked={overageLimitMode === 'unlimited'}
+                                      onChange={() => handleOverageLimitModeChange('unlimited')}
+                                      disabled={isSavingOverage}
+                                    />
+                                    <span>No limit (pay as you go until period ends)</span>
+                                  </label>
+                                  <label className="overage-radio-label">
+                                    <input
+                                      type="radio"
+                                      name="overage-limit"
+                                      checked={overageLimitMode === 'capped'}
+                                      onChange={() => handleOverageLimitModeChange('capped')}
+                                      disabled={isSavingOverage}
+                                    />
+                                    <span>Set a spending cap</span>
+                                  </label>
+                                  {overageLimitMode === 'capped' && (
+                                    <div className="overage-dollar-input-row">
+                                      <div className="overage-dollar-input-wrapper">
+                                        <span className="overage-dollar-prefix">$</span>
+                                        <input
+                                          type="number"
+                                          className="settings-input overage-dollar-input"
+                                          placeholder="5.00"
+                                          value={overageDollarInput}
+                                          onChange={e => setOverageDollarInput(e.target.value)}
+                                          onBlur={handleOverageDollarBlur}
+                                          onKeyDown={e => {
+                                            if (e.key === 'Enter') handleOverageDollarBlur()
+                                          }}
+                                          min="0.50"
+                                          max="500"
+                                          step="0.50"
+                                          disabled={isSavingOverage}
+                                        />
+                                      </div>
+                                      {overageCreditPreview != null && (
+                                        <span className="overage-credit-preview">
+                                          ≈ {overageCreditPreview.toLocaleString()} additional
+                                          credits
+                                        </span>
+                                      )}
+                                    </div>
+                                  )}
+                                </div>
+
+                                {overageSettings &&
+                                  overageSettings.overage_credits_used_this_period > 0 && (
+                                    <div className="overage-usage-summary">
+                                      <span className="overage-usage-label">
+                                        Overage this period:
+                                      </span>
+                                      <span className="overage-usage-value">
+                                        {overageSettings.overage_credits_used_this_period.toLocaleString()}{' '}
+                                        credits ($
+                                        {(
+                                          overageSettings.overage_credits_used_this_period *
+                                          OVERAGE_USD_PER_CREDIT
+                                        ).toFixed(2)}
+                                        )
+                                      </span>
+                                    </div>
+                                  )}
+                              </div>
+                            )}
+
+                            {overageError && (
+                              <div
+                                className="settings-message settings-error"
+                                style={{ marginTop: '0.5rem' }}
+                              >
+                                <svg
+                                  width="16"
+                                  height="16"
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  strokeWidth="2"
+                                >
+                                  <circle cx="12" cy="12" r="10" />
+                                  <line x1="15" y1="9" x2="9" y2="15" />
+                                  <line x1="9" y1="9" x2="15" y2="15" />
+                                </svg>
+                                {overageError}
+                              </div>
+                            )}
+                          </>
+                        )}
+                      </div>
+                    )}
+
                     {/* Danger Zone - Delete History */}
                     <div className="settings-section settings-danger-zone">
                       <h3 className="settings-section-title danger">
@@ -1054,7 +1403,7 @@ export const UserMenu: React.FC = () => {
                       role={user.subscription_tier === 'starter' ? 'status' : undefined}
                       aria-hidden={user.subscription_tier !== 'starter'}
                     >
-                      Your current plan
+                      {user.subscription_tier === 'starter' ? 'Your current plan' : '\u00A0'}
                     </div>
                     <div className="tier-header">
                       <h3 className="tier-name">Starter</h3>
@@ -1079,7 +1428,9 @@ export const UserMenu: React.FC = () => {
                       </div>
                       <div className="feature-item">
                         <span className="feature-icon">✓</span>
-                        <span className="feature-text">Overage options available</span>
+                        <span className="feature-text">
+                          Pay-as-you-go overages (${OVERAGE_USD_PER_CREDIT}/credit)
+                        </span>
                       </div>
                       <div className="feature-item">
                         <span className="feature-icon">✓</span>
@@ -1143,7 +1494,7 @@ export const UserMenu: React.FC = () => {
                       role={user.subscription_tier === 'starter_plus' ? 'status' : undefined}
                       aria-hidden={user.subscription_tier !== 'starter_plus'}
                     >
-                      Your current plan
+                      {user.subscription_tier === 'starter_plus' ? 'Your current plan' : '\u00A0'}
                     </div>
                     <div className="tier-header">
                       <h3 className="tier-name">Starter+</h3>
@@ -1167,7 +1518,9 @@ export const UserMenu: React.FC = () => {
                       </div>
                       <div className="feature-item">
                         <span className="feature-icon">✓</span>
-                        <span className="feature-text">Overage options available</span>
+                        <span className="feature-text">
+                          Pay-as-you-go overages (${OVERAGE_USD_PER_CREDIT}/credit)
+                        </span>
                       </div>
                       <div className="feature-item">
                         <span className="feature-icon">✓</span>
@@ -1235,7 +1588,7 @@ export const UserMenu: React.FC = () => {
                       role={user.subscription_tier === 'pro' ? 'status' : undefined}
                       aria-hidden={user.subscription_tier !== 'pro'}
                     >
-                      Your current plan
+                      {user.subscription_tier === 'pro' ? 'Your current plan' : '\u00A0'}
                     </div>
                     <div className="tier-header">
                       <h3 className="tier-name">Pro</h3>
@@ -1257,7 +1610,9 @@ export const UserMenu: React.FC = () => {
                       </div>
                       <div className="feature-item">
                         <span className="feature-icon">✓</span>
-                        <span className="feature-text">Overage options available</span>
+                        <span className="feature-text">
+                          Pay-as-you-go overages (${OVERAGE_USD_PER_CREDIT}/credit)
+                        </span>
                       </div>
                       <div className="feature-item">
                         <span className="feature-icon">✓</span>
@@ -1321,7 +1676,7 @@ export const UserMenu: React.FC = () => {
                       role={user.subscription_tier === 'pro_plus' ? 'status' : undefined}
                       aria-hidden={user.subscription_tier !== 'pro_plus'}
                     >
-                      Your current plan
+                      {user.subscription_tier === 'pro_plus' ? 'Your current plan' : '\u00A0'}
                     </div>
                     <div className="tier-header">
                       <h3 className="tier-name">Pro+</h3>
@@ -1346,7 +1701,9 @@ export const UserMenu: React.FC = () => {
                       </div>
                       <div className="feature-item">
                         <span className="feature-icon">✓</span>
-                        <span className="feature-text">Overage options available</span>
+                        <span className="feature-text">
+                          Pay-as-you-go overages (${OVERAGE_USD_PER_CREDIT}/credit)
+                        </span>
                       </div>
                       <div className="feature-item">
                         <span className="feature-icon">✓</span>
