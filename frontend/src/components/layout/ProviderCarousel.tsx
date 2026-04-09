@@ -552,7 +552,9 @@ export function ProviderCarousel({ providers, onProviderClick }: ProviderCarouse
         aria-label={`View ${provider} models`}
         tabIndex={interactive ? 0 : -1}
       >
-        <ProviderIcon provider={provider} />
+        <span className="provider-carousel-item-inner">
+          <ProviderIcon provider={provider} />
+        </span>
       </button>
     )
   }
