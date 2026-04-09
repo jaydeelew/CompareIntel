@@ -196,7 +196,7 @@
   max-width: 88vw;
 }
 
-/* Subtle centered logo shown when capability tiles are hidden */
+/* Centered logo — floats as a tangible object the carousel orbits around */
 .hero-centered-logo {
   position: absolute;
   top: 29%;
@@ -205,10 +205,11 @@
   width: 480px;
   max-width: 85vw;
   height: auto;
-  opacity: 0.1;
+  opacity: 0.18;
   pointer-events: none;
   z-index: 1;
   user-select: none;
+  filter: drop-shadow(0 6px 28px rgba(0, 0, 0, 0.25));
 }
 
 /* Wide screens: show the no-arrows logo + separate arrow elements */
@@ -217,12 +218,15 @@
 }
 
 [data-theme='light'] .hero-centered-logo {
-  opacity: 0.13;
+  opacity: 0.22;
+  filter: drop-shadow(0 6px 32px rgba(0, 0, 0, 0.15))
+    drop-shadow(0 0 60px rgba(100, 160, 255, 0.08));
 }
 
 [data-theme='dark'] .hero-centered-logo--no-arrows,
 [data-theme='dark'] .hero-centered-logo--with-arrows {
-  opacity: 0.04;
+  opacity: 0.1;
+  filter: drop-shadow(0 6px 28px rgba(0, 0, 0, 0.4)) drop-shadow(0 0 40px rgba(100, 200, 255, 0.06));
 }
 
 /* Mid-width screens: swap to the full logo (with built-in arrows) and hide the separate arrows.

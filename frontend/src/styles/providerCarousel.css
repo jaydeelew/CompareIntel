@@ -11,7 +11,6 @@
   top: 29%;
   left: 50%;
   transform: translate(-50%, -50%);
-  z-index: 3;
   width: 660px;
   height: 260px;
   display: flex;
@@ -19,6 +18,18 @@
   justify-content: center;
   pointer-events: none;
   animation: providerCarouselFadeIn 1.2s ease-out 0.4s both;
+}
+
+.provider-carousel-back {
+  z-index: 0;
+}
+
+.provider-carousel-back .provider-carousel-scene {
+  pointer-events: none;
+}
+
+.provider-carousel-front {
+  z-index: 3;
 }
 
 @keyframes providerCarouselFadeIn {

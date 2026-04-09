@@ -130,7 +130,7 @@ function ProviderIcon({ provider }: { provider: string }) {
       return (
         <svg viewBox="0 0 24 24" className="provider-carousel-svg" aria-hidden>
           <path
-            d="M13.827 3.52h3.603L24 20.48h-3.603l-6.57-16.96zm-7.258 0h3.767L16.906 20.48h-3.674l-1.508-4.065H5.248l-1.508 4.065H0L6.569 3.52zM6.285 13.42h4.57L8.572 7.296 6.285 13.42z"
+            d="M13.827 3.52h3.603L24 20h-3.603l-6.57-16.48zm-7.258 0h3.767L16.906 20h-3.674l-1.343-3.461H5.017l-1.344 3.46H0L6.57 3.522zm4.132 9.959L8.453 7.687 6.205 13.48H10.7z"
             fill={color}
           />
         </svg>
@@ -153,24 +153,17 @@ function ProviderIcon({ provider }: { provider: string }) {
     case 'xAI':
       return (
         <svg viewBox="0 0 24 24" className="provider-carousel-svg" aria-hidden>
-          <text
-            x="12"
-            y="16"
-            textAnchor="middle"
+          <path
+            d="M6.469 8.776L16.512 23h-4.464L2.005 8.776H6.47zm-.004 7.9l2.233 3.164L6.467 23H2l4.465-6.324zM22 2.582V23h-3.659V7.764L22 2.582zM22 1l-9.952 14.095-2.233-3.163L17.533 1H22z"
             fill={color}
-            fontFamily="system-ui, -apple-system, sans-serif"
-            fontWeight="700"
-            fontSize="12"
-          >
-            𝕏AI
-          </text>
+          />
         </svg>
       )
     case 'DeepSeek':
       return (
         <svg viewBox="0 0 24 24" className="provider-carousel-svg" aria-hidden>
           <path
-            d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1.5 14.5c-2.49 0-4.5-2.01-4.5-4.5S8.01 7.5 10.5 7.5c1.42 0 2.68.66 3.5 1.69V7.5h2v9h-2v-1.69c-.82 1.03-2.08 1.69-3.5 1.69zm0-7c-1.38 0-2.5 1.12-2.5 2.5s1.12 2.5 2.5 2.5 2.5-1.12 2.5-2.5-1.12-2.5-2.5-2.5z"
+            d="M23.748 4.482c-.254-.124-.364.113-.512.234-.051.039-.094.09-.137.136-.372.397-.806.657-1.373.626-.829-.046-1.537.214-2.163.848-.133-.782-.575-1.248-1.247-1.548-.352-.156-.708-.311-.955-.65-.172-.241-.219-.51-.305-.774-.055-.16-.11-.323-.293-.35-.2-.031-.278.136-.356.276-.313.572-.434 1.202-.422 1.84.027 1.436.633 2.58 1.838 3.393.137.093.172.187.129.323-.082.28-.18.552-.266.833-.055.179-.137.217-.329.14a5.526 5.526 0 01-1.736-1.18c-.857-.828-1.631-1.742-2.597-2.458a11.365 11.365 0 00-.689-.471c-.985-.957.13-1.743.388-1.836.27-.098.093-.432-.779-.428-.872.004-1.67.295-2.687.684a3.055 3.055 0 01-.465.137 9.597 9.597 0 00-2.883-.102c-1.885.21-3.39 1.102-4.497 2.623C.082 8.606-.231 10.684.152 12.85c.403 2.284 1.569 4.175 3.36 5.653 1.858 1.533 3.997 2.284 6.438 2.14 1.482-.085 3.133-.284 4.994-1.86.47.234.962.327 1.78.397.63.059 1.236-.03 1.705-.128.735-.156.684-.837.419-.961-2.155-1.004-1.682-.595-2.113-.926 1.096-1.296 2.746-2.642 3.392-7.003.05-.347.007-.565 0-.845-.004-.17.035-.237.23-.256a4.173 4.173 0 001.545-.475c1.396-.763 1.96-2.015 2.093-3.517.02-.23-.004-.467-.247-.588zM11.581 18c-2.089-1.642-3.102-2.183-3.52-2.16-.392.024-.321.471-.235.763.09.288.207.486.371.739.114.167.192.416-.113.603-.673.416-1.842-.14-1.897-.167-1.361-.802-2.5-1.86-3.301-3.307-.774-1.393-1.224-2.887-1.298-4.482-.02-.386.093-.522.477-.592a4.696 4.696 0 011.529-.039c2.132.312 3.946 1.265 5.468 2.774.868.86 1.525 1.887 2.202 2.891.72 1.066 1.494 2.082 2.48 2.914.348.292.625.514.891.677-.802.09-2.14.11-3.054-.614zm1-6.44a.306.306 0 01.415-.287.302.302 0 01.2.288.306.306 0 01-.31.307.303.303 0 01-.304-.308zm3.11 1.596c-.2.081-.399.151-.59.16a1.245 1.245 0 01-.798-.254c-.274-.23-.47-.358-.552-.758a1.73 1.73 0 01.016-.588c.07-.327-.008-.537-.239-.727-.187-.156-.426-.199-.688-.199a.559.559 0 01-.254-.078c-.11-.054-.2-.19-.114-.358.028-.054.16-.186.192-.21.356-.202.767-.136 1.146.016.352.144.618.408 1.001.782.391.451.462.576.685.914.176.265.336.537.445.848.067.195-.019.354-.25.452z"
             fill={color}
           />
         </svg>
@@ -342,36 +335,38 @@ const RADIUS = 280
 const TILT_Y = 32
 const SCALE_FRONT = 2.0
 const SCALE_BACK = 0.2
-const FADE_DEPTH = 0.35
 const AUTO_ROTATE_SPEED = 0.15
 const DRAG_SENSITIVITY = 0.4
 const MOMENTUM_DECAY = 0.94
 const MOMENTUM_MIN = 0.05
+const DEPTH_THRESHOLD = 0.5
+const OCCLUDE_DEPTH = 0.2
 
 /**
- * Compute 2D x, y, scale, opacity, zIndex for one carousel item.
+ * Compute 2D x, y, scale, opacity, zIndex, isFront for one carousel item.
  * The ring is tilted forward so the front dips below center and
- * the back rises above. Items behind the FADE_DEPTH threshold
- * become invisible, appearing to pass behind the watermark logo.
+ * the back rises above. Items are split into a front layer (above the
+ * watermark) and a back layer (behind it) so they appear to orbit
+ * around the floating logo — fully hidden when directly behind it,
+ * smoothly emerging at the edges.
  */
 function itemLayout(itemAngleDeg: number, rotationDeg: number) {
   const theta = ((itemAngleDeg + rotationDeg) % 360) * (Math.PI / 180)
   const x = Math.sin(theta) * RADIUS
   const z = Math.cos(theta) * RADIUS
 
-  // depth 0..1  (0 = farthest back, 1 = closest front)
   const depth = (z + RADIUS) / (2 * RADIUS)
 
   const y = (z / RADIUS) * TILT_Y
   const scale = SCALE_BACK + (SCALE_FRONT - SCALE_BACK) * depth
 
-  // Items behind FADE_DEPTH are fully hidden (behind the logo circle);
-  // items in front fade in with an ease curve.
-  const rawOpacity = depth <= FADE_DEPTH ? 0 : (depth - FADE_DEPTH) / (1 - FADE_DEPTH)
-  const opacity = Math.pow(rawOpacity, 0.6)
+  // Items behind the logo are fully occluded; they emerge smoothly at the edges
+  const opacity =
+    depth <= OCCLUDE_DEPTH ? 0 : Math.pow((depth - OCCLUDE_DEPTH) / (1 - OCCLUDE_DEPTH), 0.4)
 
   const zIndex = Math.round(z + RADIUS)
-  return { x, y, scale, opacity, zIndex }
+  const isFront = depth > DEPTH_THRESHOLD
+  return { x, y, scale, opacity, zIndex, isFront }
 }
 
 /* ──────────────────────────────── component ──────────────────────────────── */
@@ -500,38 +495,57 @@ export function ProviderCarousel({ providers, onProviderClick }: ProviderCarouse
     setTooltipPos(null)
   }, [])
 
-  return (
-    <div className="provider-carousel-wrapper" aria-label="AI model providers">
-      <div
-        ref={sceneRef}
-        className={`provider-carousel-scene${isDragging ? ' provider-carousel-scene--dragging' : ''}`}
-        onPointerDown={onScenePointerDown}
+  const layouts = providers.map((_, i) => itemLayout(baseAngles[i], rotation))
+
+  const renderItem = (provider: string, i: number, interactive: boolean) => {
+    const { x, y, scale, opacity, zIndex } = layouts[i]
+    return (
+      <button
+        key={provider}
+        type="button"
+        className="provider-carousel-item"
+        style={{
+          transform: `translate(${x}px, ${y}px) scale(${scale})`,
+          opacity,
+          zIndex,
+        }}
+        onClick={interactive ? e => onItemClick(provider, e) : undefined}
+        onPointerEnter={interactive ? e => onItemEnter(provider, e) : undefined}
+        onPointerMove={interactive ? onItemPointerMove : undefined}
+        onPointerLeave={interactive ? onItemLeave : undefined}
+        aria-label={`View ${provider} models`}
+        tabIndex={interactive ? 0 : -1}
       >
-        {providers.map((provider, i) => {
-          const { x, y, scale, opacity, zIndex } = itemLayout(baseAngles[i], rotation)
-          const hidden = opacity < 0.01
-          return (
-            <button
-              key={provider}
-              type="button"
-              className="provider-carousel-item"
-              style={{
-                transform: `translate(${x}px, ${y}px) scale(${scale})`,
-                opacity,
-                zIndex,
-                pointerEvents: hidden ? 'none' : undefined,
-                visibility: hidden ? 'hidden' : undefined,
-              }}
-              onClick={e => onItemClick(provider, e)}
-              onPointerEnter={e => onItemEnter(provider, e)}
-              onPointerMove={onItemPointerMove}
-              onPointerLeave={onItemLeave}
-              aria-label={`View ${provider} models`}
-            >
-              <ProviderIcon provider={provider} />
-            </button>
-          )
-        })}
+        <ProviderIcon provider={provider} />
+      </button>
+    )
+  }
+
+  return (
+    <>
+      {/* Back layer — behind the watermark logo */}
+      <div className="provider-carousel-wrapper provider-carousel-back" aria-hidden="true">
+        <div className="provider-carousel-scene">
+          {providers.map((provider, i) =>
+            layouts[i].isFront ? null : renderItem(provider, i, false)
+          )}
+        </div>
+      </div>
+
+      {/* Front layer — in front of the watermark logo */}
+      <div
+        className="provider-carousel-wrapper provider-carousel-front"
+        aria-label="AI model providers"
+      >
+        <div
+          ref={sceneRef}
+          className={`provider-carousel-scene${isDragging ? ' provider-carousel-scene--dragging' : ''}`}
+          onPointerDown={onScenePointerDown}
+        >
+          {providers.map((provider, i) =>
+            layouts[i].isFront ? renderItem(provider, i, true) : null
+          )}
+        </div>
       </div>
 
       {tooltipProvider &&
@@ -545,6 +559,6 @@ export function ProviderCarousel({ providers, onProviderClick }: ProviderCarouse
           </div>,
           document.body
         )}
-    </div>
+    </>
   )
 }
