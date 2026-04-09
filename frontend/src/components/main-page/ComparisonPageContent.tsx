@@ -85,6 +85,11 @@ export interface ComparisonPageContentProps {
   /** Called when user activates submit while blocked (e.g. image config conflict) */
   onImageGenerationSubmitBlockedTap?: () => void
 
+  /** Provider names for the floating carousel (shown when capability cards are hidden) */
+  carouselProviders?: string[]
+  /** Called when a carousel provider icon is clicked */
+  onCarouselProviderClick?: (provider: string) => void
+
   // Loading
   onCancel: () => void
 
@@ -135,6 +140,8 @@ export function ComparisonPageContent({
   imageGenerationSubmitBlocked = false,
   imageGenerationNoSharedImageOptions = false,
   onImageGenerationSubmitBlockedTap,
+  carouselProviders,
+  onCarouselProviderClick,
   onCancel,
   showResults,
   showFloatingComposer = false,
@@ -168,7 +175,7 @@ export function ComparisonPageContent({
 
   return (
     <ComparisonView>
-      <Hero>
+      <Hero carouselProviders={carouselProviders} onCarouselProviderClick={onCarouselProviderClick}>
         <ErrorBoundary>
           <ComparisonForm
             input={input}

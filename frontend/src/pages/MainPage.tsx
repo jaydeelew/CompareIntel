@@ -444,6 +444,44 @@ export function MainPage() {
     [modelsByProvider]
   )
 
+  const carouselProviders = useMemo(
+    () =>
+      Object.entries(modelsByProvider)
+        .filter(([, models]) => models.length > 0)
+        .map(([provider]) => provider),
+    [modelsByProvider]
+  )
+
+  const handleCarouselProviderClick = useCallback(
+    (provider: string) => {
+      setIsModelsHidden(false)
+      setOpenDropdowns(prev => {
+        const next = new Set(prev)
+        next.add(provider)
+        return next
+      })
+
+      // The provider dropdowns are conditionally rendered (hidden when isModelsHidden
+      // is true). After toggling the state, React needs to commit the render and the
+      // browser needs to layout before the element exists in the DOM. Poll until it
+      // appears, then scroll.
+      let attempts = 0
+      const tryScroll = () => {
+        const el = document.querySelector(`.provider-dropdown[data-provider-name="${provider}"]`)
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+          return
+        }
+        attempts++
+        if (attempts < 20) {
+          setTimeout(tryScroll, 50)
+        }
+      }
+      setTimeout(tryScroll, 60)
+    },
+    [setIsModelsHidden, setOpenDropdowns]
+  )
+
   // Combined saved selections hook (replaces useSavedModelSelections + useSavedSelectionManager)
   const {
     savedSelections: savedModelSelections,
@@ -2425,6 +2463,8 @@ export function MainPage() {
           imageGenerationSubmitBlocked={isImageGenerationConfigBlocked}
           imageGenerationNoSharedImageOptions={imageGenerationNoSharedImageOptions}
           onImageGenerationSubmitBlockedTap={revealImageConfigConflict}
+          carouselProviders={carouselProviders}
+          onCarouselProviderClick={handleCarouselProviderClick}
           modelsAreaProps={{
             hasAttachedImages,
             nonVisionModelsWarning,

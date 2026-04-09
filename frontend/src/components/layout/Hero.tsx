@@ -13,6 +13,8 @@ import { useTheme } from '../../contexts/ThemeContext'
 import { useHideHeroUtilityTiles } from '../../hooks/useHideHeroUtilityTiles'
 import { StyledTooltip } from '../shared'
 
+import { ProviderCarousel } from './ProviderCarousel'
+
 /**
  * Same path (`/videos/foo.mp4`) is heavily cached by browsers (and CDNs). Bump this when you
  * replace any hero capability video file so clients fetch the new bytes.
@@ -241,12 +243,16 @@ function CapabilityTile({
 
 interface HeroProps {
   children?: ReactNode
+  /** Provider names for the floating carousel (shown when capability cards are hidden) */
+  carouselProviders?: string[]
+  /** Called when a carousel provider icon is clicked */
+  onCarouselProviderClick?: (provider: string) => void
 }
 
 /**
  * Hero - Main hero section with title, capabilities, and comparison form
  */
-export function Hero({ children }: HeroProps) {
+export function Hero({ children, carouselProviders, onCarouselProviderClick }: HeroProps) {
   const [showFlash, setShowFlash] = useState(false)
   const [flippedTile, setFlippedTile] = useState<string | null>(null)
   const [enlargedImageSrc, setEnlargedImageSrc] = useState<string | null>(null)
@@ -370,6 +376,12 @@ export function Hero({ children }: HeroProps) {
             fetchPriority="low"
             decoding="async"
           />
+          {carouselProviders && carouselProviders.length > 0 && onCarouselProviderClick && (
+            <ProviderCarousel
+              providers={carouselProviders}
+              onProviderClick={onCarouselProviderClick}
+            />
+          )}
         </>
       )}
 

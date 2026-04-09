@@ -363,6 +363,7 @@
       transparent 50%
     );
   opacity: 1;
+  pointer-events: none;
   animation: meshFloat var(--mesh-duration, 15s) ease-in-out infinite;
 }
 
