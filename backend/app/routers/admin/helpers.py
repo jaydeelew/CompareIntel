@@ -27,6 +27,8 @@ def log_admin_action(
     target_user_id: int | None = None,
     details: dict[str, Any] | None = None,
     request: Request | None = None,
+    *,
+    commit: bool = True,
 ) -> None:
     """Log admin action for audit trail."""
     ip_address = None
@@ -53,4 +55,5 @@ def log_admin_action(
         user_agent=user_agent,
     )
     db.add(log_entry)
-    db.commit()
+    if commit:
+        db.commit()

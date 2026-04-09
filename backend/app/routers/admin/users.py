@@ -219,8 +219,6 @@ async def delete_user(
     db: Session = Depends(get_db),
 ):
     """Delete a user (super admin only)."""
-    import json
-
     try:
         user = db.query(User).filter(User.id == user_id).first()
         if not user:
@@ -237,37 +235,17 @@ async def delete_user(
         }
         user_email = user.email
 
-        try:
-            ip_address = None
-            user_agent = None
-            if request:
-                try:
-                    ip_address = (
-                        request.client.host
-                        if hasattr(request, "client") and request.client
-                        else None
-                    )
-                except Exception:
-                    ip_address = None
-                try:
-                    user_agent = request.headers.get("user-agent")
-                except Exception:
-                    user_agent = None
-
-            log_entry = AdminActionLog(
-                admin_user_id=current_user.id,
-                target_user_id=user.id,
-                action_type="user_delete",
-                action_description=f"Deleted user {user_email}",
-                details=json.dumps(user_details),
-                ip_address=ip_address,
-                user_agent=user_agent,
-            )
-            db.add(log_entry)
-            db.commit()
-        except Exception as e:
-            pass
-
+        # One transaction: audit row + delete user (avoids expire-on-commit issues after a prior commit).
+        log_admin_action(
+            db=db,
+            admin_user=current_user,
+            action_type="user_delete",
+            action_description=f"Deleted user {user_email}",
+            target_user_id=user.id,
+            details=user_details,
+            request=request,
+            commit=False,
+        )
         db.delete(user)
         db.commit()
 
@@ -277,6 +255,7 @@ async def delete_user(
         import traceback
 
         traceback.print_exc()
+        db.rollback()
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
 

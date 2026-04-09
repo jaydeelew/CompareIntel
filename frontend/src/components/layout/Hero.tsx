@@ -348,7 +348,7 @@ export function Hero({ children }: HeroProps) {
           src="/brand/logo.svg"
           alt="CompareIntel logo"
           className="hero-flash-logo-img"
-          fetchpriority="high"
+          fetchPriority="high"
         />
       </div>
 
@@ -359,7 +359,7 @@ export function Hero({ children }: HeroProps) {
             alt=""
             className="hero-centered-logo hero-centered-logo--no-arrows"
             aria-hidden="true"
-            fetchpriority="low"
+            fetchPriority="low"
             decoding="async"
           />
           <img
@@ -367,7 +367,7 @@ export function Hero({ children }: HeroProps) {
             alt=""
             className="hero-centered-logo hero-centered-logo--with-arrows"
             aria-hidden="true"
-            fetchpriority="low"
+            fetchPriority="low"
             decoding="async"
           />
         </>

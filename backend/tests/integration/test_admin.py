@@ -196,21 +196,21 @@ class TestAdminUserCRUD:
 
     def test_delete_user(self, client, test_user_super_admin, db_session):
         """Test super admin deleting a user."""
+        from app.models import User
         from tests.factories import create_user
 
         # Create a user to delete
         user_to_delete = create_user(db_session, email="delete_me@example.com")
+        victim_id = user_to_delete.id
 
         # Login as super admin using helper
         login_as_admin(client, test_user_super_admin.email, password="test_password_123")
 
         # Delete user
-        response = client.delete(f"/api/admin/users/{user_to_delete.id}")
-        assert response.status_code in [
-            status.HTTP_200_OK,
-            status.HTTP_204_NO_CONTENT,
-            status.HTTP_404_NOT_FOUND,
-        ]
+        response = client.delete(f"/api/admin/users/{victim_id}")
+        assert response.status_code == status.HTTP_204_NO_CONTENT
+        db_session.expire_all()
+        assert db_session.query(User).filter(User.id == victim_id).first() is None
 
     def test_get_nonexistent_user(self, client, test_user_admin):
         """Test getting non-existent user."""

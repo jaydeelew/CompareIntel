@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useRef } from 'react'
 
 import { useAuth, useAuthHeaders } from '../../contexts/AuthContext'
 import {
@@ -64,6 +64,9 @@ const UsersTab: React.FC<UsersTabProps> = ({
   const [showSelfDeleteModal, setShowSelfDeleteModal] = useState(false)
   const [showTierChangeModal, setShowTierChangeModal] = useState(false)
   const [userToDelete, setUserToDelete] = useState<{ id: number; email: string } | null>(null)
+  /** Shown when a non–super-admin tries to delete; local state so parent `setError(null)` in effects does not clear it. */
+  const [deletePermissionWarning, setDeletePermissionWarning] = useState<string | null>(null)
+  const deletePermissionWarningRef = useRef<HTMLDivElement>(null)
   const [tierChangeData, setTierChangeData] = useState<{
     userId: number
     email: string
@@ -106,6 +109,35 @@ const UsersTab: React.FC<UsersTabProps> = ({
     [getAuthHeaders, setError]
   )
 
+  /** Refetch list with the same search/role/tier inputs as the manual search form (not tied to pagination useEffect). */
+  const fetchUsersWithCurrentFilters = useCallback(
+    async (page: number) => {
+      try {
+        const headers = getAuthHeaders()
+        const params = new URLSearchParams({ page: String(page), per_page: '20' })
+        if (searchTerm) params.append('search', searchTerm)
+        if (selectedRole) params.append('role', selectedRole)
+        if (selectedTier) params.append('tier', selectedTier)
+        const response = await fetch(`/api/admin/users?${params}`, {
+          headers,
+          credentials: 'include',
+        })
+        if (!response.ok) {
+          if (response.status === 401)
+            throw new Error('Authentication required. Please log in again.')
+          if (response.status === 403) throw new Error('Access denied. Admin privileges required.')
+          throw new Error(`Failed to fetch users (${response.status})`)
+        }
+        const data = await response.json()
+        setUsers(data)
+      } catch (err) {
+        logger.error('Error fetching users:', err)
+        setError(err instanceof Error ? err.message : 'Failed to fetch users')
+      }
+    },
+    [getAuthHeaders, setError, searchTerm, selectedRole, selectedTier]
+  )
+
   useEffect(() => {
     if (!user?.is_admin) {
       setLoading(false)
@@ -133,6 +165,16 @@ const UsersTab: React.FC<UsersTabProps> = ({
       setCreditsReset(!hasAnonymousUsage)
     }
   }, [appSettings])
+
+  useEffect(() => {
+    if (!deletePermissionWarning) return
+    requestAnimationFrame(() => {
+      deletePermissionWarningRef.current?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start',
+      })
+    })
+  }, [deletePermissionWarning])
 
   const handleManualSearch = async () => {
     try {
@@ -367,13 +409,33 @@ const UsersTab: React.FC<UsersTabProps> = ({
     }
   }
 
-  const handleDeleteClick = (userId: number, email: string) => {
-    if (user && user.id === userId) {
-      setUserToDelete({ id: userId, email })
-      setShowSelfDeleteModal(true)
-    } else {
-      setUserToDelete({ id: userId, email })
-      setShowDeleteModal(true)
+  const DELETE_REQUIRES_SUPER_ADMIN_MSG =
+    'Only super admins can delete users. Ask a super admin to remove this account or upgrade your role.'
+
+  const handleDeleteClick = async (userId: number, email: string) => {
+    setDeletePermissionWarning(null)
+    try {
+      const res = await fetch('/api/auth/me', { credentials: 'include' })
+      if (!res.ok) {
+        setError('Authentication required. Please log in again.')
+        return
+      }
+      const me = await res.json()
+      const role = String(me?.role ?? '').toLowerCase()
+      if (role !== 'super_admin') {
+        setDeletePermissionWarning(DELETE_REQUIRES_SUPER_ADMIN_MSG)
+        return
+      }
+      if (user && user.id === userId) {
+        setUserToDelete({ id: userId, email })
+        setShowSelfDeleteModal(true)
+      } else {
+        setUserToDelete({ id: userId, email })
+        setShowDeleteModal(true)
+      }
+    } catch (err) {
+      logger.error('Error verifying delete permission:', err)
+      setError('Could not verify your permissions. Please try again.')
     }
   }
 
@@ -398,7 +460,7 @@ const UsersTab: React.FC<UsersTabProps> = ({
       }
       setShowDeleteModal(false)
       setUserToDelete(null)
-      await Promise.all([fetchUsersInitial(currentPage), fetchStats()])
+      await Promise.all([fetchUsersWithCurrentFilters(currentPage), fetchStats()])
     } catch (err) {
       logger.error('Error deleting user:', err)
       setError(err instanceof Error ? err.message : 'Failed to delete user')
@@ -518,6 +580,20 @@ const UsersTab: React.FC<UsersTabProps> = ({
       )}
 
       <div className="user-management">
+        {deletePermissionWarning && (
+          <div
+            ref={deletePermissionWarningRef}
+            className="error-message"
+            role="alert"
+            style={{ marginBottom: '1rem', scrollMarginTop: '1rem' }}
+          >
+            <h3>Cannot delete user</h3>
+            <p>{deletePermissionWarning}</p>
+            <button type="button" onClick={() => setDeletePermissionWarning(null)}>
+              Dismiss
+            </button>
+          </div>
+        )}
         <div className="user-management-header">
           <h2>User Management</h2>
           <button className="create-user-btn" onClick={() => setShowCreateModal(true)}>
