@@ -226,8 +226,8 @@
   .provider-carousel-wrapper {
     top: 3.5rem;
     transform: translateX(-50%);
-    width: min(400px, 95vw);
-    height: 180px;
+    width: min(460px, 98vw);
+    height: 200px;
   }
 
   .provider-carousel-item {

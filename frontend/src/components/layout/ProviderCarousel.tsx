@@ -347,7 +347,7 @@ interface LayoutParams {
 
 const LAYOUT_DESKTOP: LayoutParams = { radius: 280, tiltY: 32, scaleFront: 2.0, scaleBack: 0.2 }
 const LAYOUT_TABLET: LayoutParams = { radius: 200, tiltY: 24, scaleFront: 1.6, scaleBack: 0.2 }
-const LAYOUT_MOBILE: LayoutParams = { radius: 130, tiltY: 16, scaleFront: 1.2, scaleBack: 0.15 }
+const LAYOUT_MOBILE: LayoutParams = { radius: 180, tiltY: 18, scaleFront: 2.0, scaleBack: 0.1 }
 
 function useResponsiveLayout(): LayoutParams {
   const [params, setParams] = useState<LayoutParams>(LAYOUT_DESKTOP)
