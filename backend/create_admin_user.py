@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
-Setup script to create the first admin user for CompareIntel.
+Setup script to create admin users or update existing users for CompareIntel.
 
-This script helps you create your first super admin user after running
-the database migration. It's safer than manually updating the database.
+Use this after database migration. It can create a new admin account or change an
+existing user's subscription tier and/or admin role—safer than editing the DB by hand.
 """
 
 import getpass
@@ -26,141 +26,195 @@ from app.database import SessionLocal
 from app.models import User
 
 
-def create_admin_user():
-    """Create the first admin user interactively."""
-    print("CompareIntel Admin User Setup")
-    print("=" * 40)
-    print("This script will help you create your first super admin user.")
+def prompt_admin_role() -> str:
+    """Prompt for moderator, admin, or super_admin."""
+    print("\nSelect admin role:")
+    print("1. moderator - Basic admin access")
+    print("2. admin - Full admin access")
+    print("3. super_admin - Full access including user deletion")
+
+    while True:
+        role_choice = input("Enter choice (1-3): ").strip()
+        if role_choice == "1":
+            return "moderator"
+        if role_choice == "2":
+            return "admin"
+        if role_choice == "3":
+            return "super_admin"
+        print("Invalid choice. Please enter 1, 2, or 3.")
+
+
+def prompt_subscription_tier() -> str:
+    """Prompt for subscription tier."""
+    print("\nSelect subscription tier:")
+    print("1. free - Free tier")
+    print("2. starter - Starter tier")
+    print("3. starter_plus - Starter+ tier")
+    print("4. pro - Pro tier")
+    print("5. pro_plus - Pro+ tier")
+
+    while True:
+        tier_choice = input("Enter choice (1-5): ").strip()
+        if tier_choice == "1":
+            return "free"
+        if tier_choice == "2":
+            return "starter"
+        if tier_choice == "3":
+            return "starter_plus"
+        if tier_choice == "4":
+            return "pro"
+        if tier_choice == "5":
+            return "pro_plus"
+        print("Invalid choice. Please enter 1, 2, 3, 4, or 5.")
+
+
+def update_existing_user(db):
+    """Change an existing user's subscription tier and/or admin role."""
+    print()
+    print("Update an existing user")
+    print("-" * 40)
+    print(
+        "You can change their subscription tier (billing/product level), "
+        "their admin role (moderator / admin / super_admin), or both."
+    )
     print()
 
-    # Get database session
-    db = SessionLocal()
+    email = input("Email address: ").strip()
+    if not email or "@" not in email:
+        print("Error: Invalid email address")
+        return
 
-    try:
-        # Check if any admin users already exist
-        existing_admin = db.query(User).filter(User.is_admin == True).first()
-        if existing_admin:
-            print(f"Admin user already exists: {existing_admin.email}")
-            response = input("Do you want to create another admin user? (y/N): ")
-            if response.lower() != "y":
-                print("Exiting...")
-                return
+    user = db.query(User).filter(User.email == email).first()
+    if not user:
+        print(f"No user found with email {email}.")
+        return
 
-        # Get user input
-        print("Enter admin user details:")
-        print()
+    print()
+    print("Current values:")
+    print(f"  Subscription tier: {user.subscription_tier}")
+    print(f"  Role: {user.role}")
+    print(f"  Admin access (is_admin): {user.is_admin}")
+    print()
 
-        email = input("Email address: ").strip()
-        if not email or "@" not in email:
-            print("Error: Invalid email address")
-            return
+    tier_changed = False
+    role_changed = False
 
-        # Check if email already exists
-        existing_user = db.query(User).filter(User.email == email).first()
-        if existing_user:
-            print(f"User with email {email} already exists.")
-            response = input("Do you want to promote this user to super admin? (y/N): ")
-            if response.lower() == "y":
-                existing_user.role = "super_admin"
-                existing_user.is_admin = True
-                db.commit()
-                print(f"User {email} promoted to super admin successfully!")
-                return
-            print("Exiting...")
-            return
+    if input("Change subscription tier? (y/N): ").strip().lower() == "y":
+        user.subscription_tier = prompt_subscription_tier()
+        tier_changed = True
 
-        # Get password
-        while True:
-            password = getpass.getpass("Password (min 8 chars): ")
-            is_valid, error_msg = validate_password_strength(password)
-            if is_valid:
-                break
-            print(f"Password error: {error_msg}")
-            print("Please try again.")
+    if input("Change admin role (moderator / admin / super_admin)? (y/N): ").strip().lower() == "y":
+        user.role = prompt_admin_role()
+        user.is_admin = user.role in ("moderator", "admin", "super_admin")
+        role_changed = True
 
-        # Confirm password
-        password_confirm = getpass.getpass("Confirm password: ")
-        if password != password_confirm:
-            print("Error: Passwords do not match")
-            return
+    if not tier_changed and not role_changed:
+        print("No changes made.")
+        return
 
-        # Get role
-        print("\nSelect admin role:")
-        print("1. moderator - Basic admin access")
-        print("2. admin - Full admin access")
-        print("3. super_admin - Full access including user deletion")
+    db.commit()
+    db.refresh(user)
 
-        while True:
-            role_choice = input("Enter choice (1-3): ").strip()
-            if role_choice == "1":
-                role = "moderator"
-                break
-            if role_choice == "2":
-                role = "admin"
-                break
-            if role_choice == "3":
-                role = "super_admin"
-                break
-            print("Invalid choice. Please enter 1, 2, or 3.")
+    print()
+    print("User updated successfully.")
+    print(f"  Email: {user.email}")
+    print(f"  Subscription tier: {user.subscription_tier}")
+    print(f"  Role: {user.role}")
+    print(f"  is_admin: {user.is_admin}")
 
-        # Get subscription tier
-        print("\nSelect subscription tier:")
-        print("1. free - Free tier")
-        print("2. starter - Starter tier")
-        print("3. starter_plus - Starter+ tier")
-        print("4. pro - Pro tier")
-        print("5. pro_plus - Pro+ tier")
 
-        while True:
-            tier_choice = input("Enter choice (1-5): ").strip()
-            if tier_choice == "1":
-                subscription_tier = "free"
-                break
-            if tier_choice == "2":
-                subscription_tier = "starter"
-                break
-            if tier_choice == "3":
-                subscription_tier = "starter_plus"
-                break
-            if tier_choice == "4":
-                subscription_tier = "pro"
-                break
-            if tier_choice == "5":
-                subscription_tier = "pro_plus"
-                break
-            print("Invalid choice. Please enter 1, 2, 3, 4, or 5.")
+def create_new_admin_user(db):
+    """Create a new admin user (email must not already exist)."""
+    print()
+    print("Create a new admin user")
+    print("-" * 40)
+    print()
 
-        # Create user
-        user = User(
-            email=email,
-            password_hash=get_password_hash(password),
-            role=role,
-            is_admin=True,
-            subscription_tier=subscription_tier,
-            subscription_status="active",
-            subscription_period="monthly",
-            is_active=True,
-            is_verified=True,  # Admin users are auto-verified
-            subscription_start_date=datetime.now(UTC),
+    email = input("Email address: ").strip()
+    if not email or "@" not in email:
+        print("Error: Invalid email address")
+        return
+
+    existing_user = db.query(User).filter(User.email == email).first()
+    if existing_user:
+        print(f"A user with email {email} already exists.")
+        print(
+            "To change their subscription tier or admin role, run this script again "
+            "and choose option 2 (update an existing user)."
         )
+        return
 
-        db.add(user)
-        db.commit()
-        db.refresh(user)
+    while True:
+        password = getpass.getpass("Password (min 8 chars): ")
+        is_valid, error_msg = validate_password_strength(password)
+        if is_valid:
+            break
+        print(f"Password error: {error_msg}")
+        print("Please try again.")
 
-        print()
-        print("✅ Admin user created successfully!")
-        print(f"Email: {user.email}")
-        print(f"Role: {user.role}")
-        print(f"Subscription: {user.subscription_tier}")
-        print()
-        print("You can now:")
-        print("1. Login to your application")
-        print("2. Access admin features at /admin/* endpoints")
-        print("3. Use the admin panel in your frontend")
+    password_confirm = getpass.getpass("Confirm password: ")
+    if password != password_confirm:
+        print("Error: Passwords do not match")
+        return
 
+    role = prompt_admin_role()
+    subscription_tier = prompt_subscription_tier()
+
+    user = User(
+        email=email,
+        password_hash=get_password_hash(password),
+        role=role,
+        is_admin=True,
+        subscription_tier=subscription_tier,
+        subscription_status="active",
+        subscription_period="monthly",
+        is_active=True,
+        is_verified=True,
+        subscription_start_date=datetime.now(UTC),
+    )
+
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+
+    print()
+    print("Admin user created successfully.")
+    print(f"Email: {user.email}")
+    print(f"Role: {user.role}")
+    print(f"Subscription tier: {user.subscription_tier}")
+    print()
+    print("You can now log in, use /admin/* endpoints, and the admin panel in the frontend.")
+
+
+def create_admin_user():
+    """Interactive admin setup: create new account or update tier/role on existing user."""
+    print("CompareIntel Admin User Setup")
+    print("=" * 40)
+    print()
+    print("This script can:")
+    print("  1) Create a new admin user (new account with password)")
+    print(
+        "  2) Update an existing user — change subscription tier and/or admin role (no new account)"
+    )
+    print("  3) Exit")
+    print()
+
+    choice = input("Enter choice (1-3): ").strip()
+    if choice == "3":
+        print("Exiting...")
+        return
+    if choice not in ("1", "2"):
+        print("Invalid choice. Exiting...")
+        return
+
+    db = SessionLocal()
+    try:
+        if choice == "2":
+            update_existing_user(db)
+        else:
+            create_new_admin_user(db)
     except Exception as e:
-        print(f"Error creating admin user: {e}")
+        print(f"Error: {e}")
         db.rollback()
         sys.exit(1)
     finally:
