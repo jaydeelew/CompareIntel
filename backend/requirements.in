@@ -53,7 +53,8 @@ alembic>=1.13.0
 fastapi-mail>=1.4.0
 pydantic[email]>=2.0.0
 # CVE-2026-34073 (pip-audit); transitive via fastapi-mail
-cryptography>=46.0.6
+# CVE-2026-39892: fixed in 46.0.7
+cryptography>=46.0.7
 
 # Timezone
 pytz>=2024.1
