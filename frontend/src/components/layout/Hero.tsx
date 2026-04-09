@@ -354,7 +354,7 @@ export function Hero({ children, carouselProviders, onCarouselProviderClick }: H
           src="/brand/logo.svg"
           alt="CompareIntel logo"
           className="hero-flash-logo-img"
-          fetchPriority="high"
+          fetchpriority="high"
         />
       </div>
 
@@ -365,7 +365,7 @@ export function Hero({ children, carouselProviders, onCarouselProviderClick }: H
             alt=""
             className="hero-centered-logo hero-centered-logo--no-arrows"
             aria-hidden="true"
-            fetchPriority="low"
+            fetchpriority="low"
             decoding="async"
           />
           <img
@@ -373,7 +373,7 @@ export function Hero({ children, carouselProviders, onCarouselProviderClick }: H
             alt=""
             className="hero-centered-logo hero-centered-logo--with-arrows"
             aria-hidden="true"
-            fetchPriority="low"
+            fetchpriority="low"
             decoding="async"
           />
           {carouselProviders && carouselProviders.length > 0 && onCarouselProviderClick && (

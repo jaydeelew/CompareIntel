@@ -553,6 +553,15 @@
         "knowledge_cutoff": "April 2024"
       },
       {
+        "id": "mistralai/devstral-2512",
+        "name": "Devstral 2512",
+        "description": "Devstral 2 is a state-of-the-art open-source model by Mistral AI specializing in agentic coding.",
+        "category": "Code",
+        "provider": "Mistral",
+        "supports_web_search": true,
+        "knowledge_cutoff": null
+      },
+      {
         "id": "mistralai/mistral-medium-3.1",
         "name": "Mistral Medium 3.1",
         "description": "An enterprise-grade model delivering frontier-level capabilities at significantly reduced operational cost.",
@@ -587,17 +596,6 @@
         "provider": "Mistral",
         "supports_web_search": true,
         "knowledge_cutoff": "August 2025"
-      }
-    ],
-    "Mistralai": [
-      {
-        "id": "mistralai/devstral-2512",
-        "name": "Devstral 2512",
-        "description": "Devstral 2 is a state-of-the-art open-source model by Mistral AI specializing in agentic coding.",
-        "category": "Language",
-        "provider": "Mistralai",
-        "supports_web_search": true,
-        "knowledge_cutoff": null
       }
     ],
     "Moonshot AI": [
