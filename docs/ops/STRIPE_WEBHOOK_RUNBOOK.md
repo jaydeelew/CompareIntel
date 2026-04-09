@@ -103,6 +103,26 @@ You should see the event in the CLI output and your server logs. For full flows,
 - Return **5xx** only on unexpected exceptions so Stripe retries.
 - After fixing code or data, replay events from the Stripe Dashboard if needed.
 
+## Stripe test / sandbox checklist (manual)
+
+Use **Developers → Test mode** in the Dashboard. Price amounts must match **`TIER_PRICING`** in `backend/app/config/constants.py` (**$9 / $19 / $39 / $79** per month).
+
+1. **Products & Prices:** Four active recurring monthly Prices; copy each `price_...` into `STRIPE_PRICE_STARTER`, `STRIPE_PRICE_STARTER_PLUS`, `STRIPE_PRICE_PRO`, `STRIPE_PRICE_PRO_PLUS` in `backend/.env`.
+2. **Customer portal:** **Settings → Billing → Customer portal** (or **Product catalog → Customer portal**): enable the portal so `POST /api/billing/create-portal-session` returns a URL for users who have `stripe_customer_id`.
+3. **Env:** Set `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, the four `STRIPE_PRICE_*` values, and **`FRONTEND_URL`** to the exact browser origin (e.g. `http://localhost:5173`).
+4. **Webhooks (local):** Run `stripe listen --forward-to http://127.0.0.1:8000/api/billing/webhooks/stripe`, paste the printed `whsec_...` into `STRIPE_WEBHOOK_SECRET`, restart the backend.
+5. **Health:** Backend starts; without a JWT, `POST /api/billing/create-checkout-session` returns **401**. With a valid JWT and configured Price IDs, checkout returns a Stripe-hosted `url`. If a tier’s `STRIPE_PRICE_*` is missing, expect **422**.
+6. **Checkout E2E:** Log in → upgrade flow → pay with a [test card](https://docs.stripe.com/testing) (e.g. `4242 4242 4242 4242`). Return URL should be `/?checkout=success&session_id=...`; webhooks should update `stripe_customer_id`, `stripe_subscription_id`, and tier in the DB.
+7. **Portal:** **Manage billing** (paid user) opens the portal; return URL should land on `FRONTEND_URL`.
+8. **Tier change:** Subscribe to another paid tier from the app; webhook logic cancels other active subscriptions for that customer — confirm **one** active subscription in the Dashboard.
+9. **Synthetic triggers:** `stripe trigger checkout.session.completed` exercises signature verification but often has **no** `client_reference_id` / metadata, so handlers may log “could not resolve user” while still returning **200**. Prefer real Checkout for user-linked tests.
+
+## In-app overage vs Stripe metered billing
+
+- **Today:** Pay-as-you-go overage is enforced in **`credit_manager`** (and user settings). Charges are **not** automatically reported to Stripe for invoice line items unless you add that.
+- **Optional env (reserved):** `STRIPE_OVERAGE_METER_ID`, `STRIPE_OVERAGE_PRODUCT_ID`, `STRIPE_PRICE_OVERAGE` are loaded in settings for a future integration.
+- **To invoice overage via Stripe:** After creating a metered Price and attaching it to the subscription (or using [Billing Meters](https://docs.stripe.com/billing/subscriptions/usage-based) as appropriate for your Stripe API version), report usage when overage credits are consumed (e.g. from `deduct_credits` when the overage branch runs). Keep idempotency keys per reporting call. This is **additional engineering** beyond subscription checkout + webhooks.
+
 ## Monthly reset without Stripe
 
 Users **without** `stripe_subscription_id` still use a **30-day** window from `allocate_monthly_credits`. Paid subscribers with Stripe rely on **webhooks** for period boundaries; `check_and_reset_credits_if_needed` does **not** auto-rollover monthly pools for Stripe-linked accounts (avoids fighting provider dates).

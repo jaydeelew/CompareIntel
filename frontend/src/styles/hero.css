@@ -878,9 +878,12 @@ video.capability-tile-back-video {
   -webkit-transform: translateZ(0);
 }
 
-/* Natural Language and Formatted Math: darken screenshots to match Code Generation tile */
-.capability-tile-back[data-tile='natural-language'] .capability-tile-back-image,
-.capability-tile-back[data-tile='formatted-math'] .capability-tile-back-image {
+/* Natural Language and Formatted Math: darken to match Code Generation tile.
+   Applied to the wrapper (not the <video> directly) because CSS filter on a
+   video element inside a preserve-3d context breaks GPU compositing and
+   prevents video frames from rendering in production builds. */
+.capability-tile-back[data-tile='natural-language'] .capability-tile-back-image-wrap,
+.capability-tile-back[data-tile='formatted-math'] .capability-tile-back-image-wrap {
   filter: brightness(0.88) contrast(1.12);
 }
 
@@ -921,8 +924,10 @@ video.capability-tile-back-video {
 
 [data-theme='light']
   .capability-tile-back[data-tile='natural-language']
-  .capability-tile-back-image,
-[data-theme='light'] .capability-tile-back[data-tile='formatted-math'] .capability-tile-back-image {
+  .capability-tile-back-image-wrap,
+[data-theme='light']
+  .capability-tile-back[data-tile='formatted-math']
+  .capability-tile-back-image-wrap {
   filter: brightness(1) contrast(1.02);
 }
 

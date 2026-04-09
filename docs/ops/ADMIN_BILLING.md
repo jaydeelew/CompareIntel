@@ -23,3 +23,4 @@ If the user has completed Checkout:
 
 - **Stripe active** + **admin tier** mismatch: next webhook may overwrite tier from subscription metadata. Align Stripe Product/Price metadata `tier` with the intended CompareIntel tier.
 - For detailed webhook behavior see `docs/ops/STRIPE_WEBHOOK_RUNBOOK.md`.
+- For **test/sandbox setup** (prices, portal, `stripe listen`, manual E2E checklist), see **“Stripe test / sandbox checklist”** in that runbook.

@@ -19,7 +19,7 @@ from ..config.constants import MONTHLY_CREDIT_ALLOCATIONS, OVERAGE_USD_PER_CREDI
 from ..config.settings import settings
 from ..credit_manager import allocate_monthly_credits
 from ..database import get_db
-from ..dependencies import get_current_user
+from ..dependencies import get_current_user_required
 from ..models import ProcessedStripeWebhook, User
 
 logger = logging.getLogger(__name__)
@@ -142,7 +142,7 @@ def _cancel_other_subscriptions_for_customer(
 async def create_checkout_session(
     body: CheckoutSubscriptionBody,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user_required),
 ) -> dict[str, str]:
     """Create a Stripe Checkout Session for a monthly subscription."""
     stripe = _require_stripe()
@@ -195,7 +195,7 @@ async def create_checkout_session(
 
 @router.post("/billing/create-portal-session")
 async def create_portal_session(
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user_required),
 ) -> dict[str, str]:
     """Stripe Customer Portal (cancel, payment method, invoices)."""
     stripe = _require_stripe()
@@ -243,11 +243,9 @@ def _overage_limit_credits(limit_cents: int | None) -> int | None:
 
 @router.get("/billing/overage-settings")
 async def get_overage_settings(
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user_required),
 ) -> OverageSettingsResponse:
     """Return overage preferences for the authenticated user."""
-    if not current_user:
-        raise HTTPException(status_code=401, detail="Authentication required")
     return OverageSettingsResponse(
         overage_enabled=current_user.overage_enabled or False,
         overage_spend_limit_cents=current_user.overage_spend_limit_cents,
@@ -264,12 +262,9 @@ async def get_overage_settings(
 async def update_overage_settings(
     body: OverageSettingsUpdate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user_required),
 ) -> OverageSettingsResponse:
     """Update overage preferences. Only paid-tier users may enable overages."""
-    if not current_user:
-        raise HTTPException(status_code=401, detail="Authentication required")
-
     tier = current_user.subscription_tier or "free"
     if tier not in MONTHLY_CREDIT_ALLOCATIONS:
         raise HTTPException(
