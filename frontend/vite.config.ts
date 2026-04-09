@@ -27,13 +27,17 @@ function socialImageVersionPlugin(): Plugin {
 // https://vite.dev/config/
 export default defineConfig({
   logLevel: 'warn',
+  // Pin cache inside this app so dev never mixes prebundles with other projects or old /tmp caches.
+  cacheDir: path.resolve(__dirname, 'node_modules/.vite'),
   resolve: {
-    // Force single React instance (fixes "Invalid hook call" / "useContext" null with react-router-dom)
+    // Force single copies (fixes invalid hook call when lazy chunks resolve a different optimized graph)
     alias: {
       react: path.resolve(__dirname, 'node_modules/react'),
       'react-dom': path.resolve(__dirname, 'node_modules/react-dom'),
+      // Do not alias `react-router` — react-router-dom imports `react-router/dom` (package subpath).
+      'react-router-dom': path.resolve(__dirname, 'node_modules/react-router-dom'),
     },
-    dedupe: ['react', 'react-dom'],
+    dedupe: ['react', 'react-dom', 'react-router', 'react-router-dom'],
   },
   plugins: [
     {
@@ -292,10 +296,16 @@ export default defineConfig({
       },
     }),
   ],
-  cacheDir: '/tmp/vite-cache',
   optimizeDeps: {
-    // Ensure single React instance in dev (avoids "Invalid hook call" / "useContext" null)
-    include: ['react', 'react-dom', 'react-router-dom'],
+    // Prebundle React + router together so dev does not load split copies (null hook dispatcher).
+    include: [
+      'react',
+      'react-dom',
+      'react/jsx-runtime',
+      'react/jsx-dev-runtime',
+      'react-router',
+      'react-router-dom',
+    ],
   },
   server: {
     port: 5173,
