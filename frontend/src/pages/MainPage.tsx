@@ -454,6 +454,19 @@ export function MainPage() {
 
   const handleCarouselProviderClick = useCallback(
     (provider: string) => {
+      const textProviders = filterModelsByProviderToText(modelsByProvider)
+      const imageProviders = filterModelsByProviderToImage(modelsByProvider)
+      const hasText = provider in textProviders
+      const hasImage = provider in imageProviders
+
+      if (hasImage && !hasText) {
+        setDefaultSelectionOverridden(true)
+        setModelMode('image')
+      } else if (hasText && !hasImage) {
+        setDefaultSelectionOverridden(true)
+        setModelMode('text')
+      }
+
       setIsModelsHidden(false)
       setOpenDropdowns(prev => {
         const next = new Set(prev)
@@ -479,7 +492,7 @@ export function MainPage() {
       }
       setTimeout(tryScroll, 60)
     },
-    [setIsModelsHidden, setOpenDropdowns]
+    [setIsModelsHidden, setOpenDropdowns, modelsByProvider]
   )
 
   // Combined saved selections hook (replaces useSavedModelSelections + useSavedSelectionManager)

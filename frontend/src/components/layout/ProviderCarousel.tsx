@@ -331,16 +331,48 @@ function ProviderIcon({ provider }: { provider: string }) {
 
 /* ──────────────────────────────── layout math ──────────────────────────────── */
 
-const RADIUS = 280
-const TILT_Y = 32
-const SCALE_FRONT = 2.0
-const SCALE_BACK = 0.2
 const AUTO_ROTATE_SPEED = 0.15
 const DRAG_SENSITIVITY = 0.4
 const MOMENTUM_DECAY = 0.94
 const MOMENTUM_MIN = 0.05
 const DEPTH_THRESHOLD = 0.5
 const OCCLUDE_DEPTH = 0.2
+
+interface LayoutParams {
+  radius: number
+  tiltY: number
+  scaleFront: number
+  scaleBack: number
+}
+
+const LAYOUT_DESKTOP: LayoutParams = { radius: 280, tiltY: 32, scaleFront: 2.0, scaleBack: 0.2 }
+const LAYOUT_TABLET: LayoutParams = { radius: 200, tiltY: 24, scaleFront: 1.6, scaleBack: 0.2 }
+const LAYOUT_MOBILE: LayoutParams = { radius: 130, tiltY: 16, scaleFront: 1.2, scaleBack: 0.15 }
+
+function useResponsiveLayout(): LayoutParams {
+  const [params, setParams] = useState<LayoutParams>(LAYOUT_DESKTOP)
+
+  useEffect(() => {
+    const mobile = window.matchMedia('(max-width: 480px)')
+    const tablet = window.matchMedia('(max-width: 1100px)')
+
+    const update = () => {
+      if (mobile.matches) setParams(LAYOUT_MOBILE)
+      else if (tablet.matches) setParams(LAYOUT_TABLET)
+      else setParams(LAYOUT_DESKTOP)
+    }
+
+    update()
+    mobile.addEventListener('change', update)
+    tablet.addEventListener('change', update)
+    return () => {
+      mobile.removeEventListener('change', update)
+      tablet.removeEventListener('change', update)
+    }
+  }, [])
+
+  return params
+}
 
 /**
  * Compute 2D x, y, scale, opacity, zIndex, isFront for one carousel item.
@@ -350,21 +382,24 @@ const OCCLUDE_DEPTH = 0.2
  * around the floating logo — fully hidden when directly behind it,
  * smoothly emerging at the edges.
  */
-function itemLayout(itemAngleDeg: number, rotationDeg: number) {
+function itemLayout(
+  itemAngleDeg: number,
+  rotationDeg: number,
+  { radius, tiltY, scaleFront, scaleBack }: LayoutParams
+) {
   const theta = ((itemAngleDeg + rotationDeg) % 360) * (Math.PI / 180)
-  const x = Math.sin(theta) * RADIUS
-  const z = Math.cos(theta) * RADIUS
+  const x = Math.sin(theta) * radius
+  const z = Math.cos(theta) * radius
 
-  const depth = (z + RADIUS) / (2 * RADIUS)
+  const depth = (z + radius) / (2 * radius)
 
-  const y = (z / RADIUS) * TILT_Y
-  const scale = SCALE_BACK + (SCALE_FRONT - SCALE_BACK) * depth
+  const y = (z / radius) * tiltY
+  const scale = scaleBack + (scaleFront - scaleBack) * depth
 
-  // Items behind the logo are fully occluded; they emerge smoothly at the edges
   const opacity =
     depth <= OCCLUDE_DEPTH ? 0 : Math.pow((depth - OCCLUDE_DEPTH) / (1 - OCCLUDE_DEPTH), 0.4)
 
-  const zIndex = Math.round(z + RADIUS)
+  const zIndex = Math.round(z + radius)
   const isFront = depth > DEPTH_THRESHOLD
   return { x, y, scale, opacity, zIndex, isFront }
 }
@@ -372,6 +407,7 @@ function itemLayout(itemAngleDeg: number, rotationDeg: number) {
 /* ──────────────────────────────── component ──────────────────────────────── */
 
 export function ProviderCarousel({ providers, onProviderClick }: ProviderCarouselProps) {
+  const layoutParams = useResponsiveLayout()
   const [rotation, setRotation] = useState(0)
   const [isDragging, setIsDragging] = useState(false)
   const [tooltipProvider, setTooltipProvider] = useState<string | null>(null)
@@ -495,7 +531,7 @@ export function ProviderCarousel({ providers, onProviderClick }: ProviderCarouse
     setTooltipPos(null)
   }, [])
 
-  const layouts = providers.map((_, i) => itemLayout(baseAngles[i], rotation))
+  const layouts = providers.map((_, i) => itemLayout(baseAngles[i], rotation, layoutParams))
 
   const renderItem = (provider: string, i: number, interactive: boolean) => {
     const { x, y, scale, opacity, zIndex } = layouts[i]
