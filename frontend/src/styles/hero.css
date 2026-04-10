@@ -1121,7 +1121,7 @@ video.capability-tile-image-lightbox-img {
 
 .hero-view-toggle-wrap {
   position: absolute;
-  top: -48px;
+  top: -32px;
   left: 50%;
   transform: translateX(-50%);
   z-index: 3;
@@ -1153,6 +1153,22 @@ video.capability-tile-image-lightbox-img {
 
 .hero-view-toggle svg {
   flex-shrink: 0;
+}
+
+@media (max-width: 768px) {
+  .hero-view-toggle {
+    transition: none;
+  }
+
+  .hero-view-toggle:hover {
+    color: rgba(165, 200, 255, 0.6);
+    transform: none;
+  }
+
+  .hero-view-toggle:active {
+    transform: none;
+    transition: none;
+  }
 }
 
 /* Help me choose CTA - shown below composer when user has models selected */
