@@ -1,6 +1,5 @@
 import React from 'react'
 
-import { useAnonCarousel } from '../layout/Hero'
 import { StyledTooltip } from '../shared'
 
 export interface FormHeaderProps {
@@ -23,8 +22,6 @@ export function FormHeader({
   modelsSectionRef,
   onOpenHelpMeChoose,
 }: FormHeaderProps) {
-  const anonCarouselActive = useAnonCarousel()
-
   return (
     <div
       className="follow-up-header"
@@ -78,8 +75,6 @@ export function FormHeader({
             </button>
           </StyledTooltip>
         </>
-      ) : anonCarouselActive ? (
-        <h2>Enter our prompt</h2>
       ) : selectedModels.length === 0 ? (
         <h2>
           {onOpenHelpMeChoose ? (
