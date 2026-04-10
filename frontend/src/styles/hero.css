@@ -2272,15 +2272,13 @@ video.capability-tile-image-lightbox-img {
   background: var(--gradient-button);
   border-color: var(--primary-color);
   color: white;
-  box-shadow: 0 4px 16px rgba(6, 182, 212, 0.4);
+  box-shadow: none;
 }
 
 .web-search-button.active:hover:not(:disabled) {
   background: var(--gradient-button-hover);
   transform: translateY(-2px) scale(1.05);
-  box-shadow:
-    0 8px 24px rgba(6, 182, 212, 0.5),
-    0 0 30px rgba(6, 182, 212, 0.2);
+  box-shadow: none;
 }
 
 .web-search-button.active svg circle,
@@ -2317,7 +2315,7 @@ video.capability-tile-image-lightbox-img {
   border-color: var(--primary-color) !important;
   color: var(--primary-light) !important;
   transform: translateY(-2px) scale(1.05);
-  box-shadow: 0 8px 24px rgba(6, 182, 212, 0.2) !important;
+  box-shadow: none !important;
 }
 
 .web-search-button:hover:not(:disabled):not(.active) svg circle,
@@ -2332,9 +2330,7 @@ video.capability-tile-image-lightbox-img {
 .web-search-button.active:focus,
 .web-search-button.active:focus-visible {
   border-color: var(--primary-color);
-  box-shadow:
-    0 4px 16px rgba(6, 182, 212, 0.4),
-    0 0 0 3px var(--primary-glow);
+  box-shadow: none;
 }
 
 .web-search-button:disabled,
