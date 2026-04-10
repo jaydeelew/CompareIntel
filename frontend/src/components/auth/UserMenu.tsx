@@ -48,7 +48,6 @@ export const UserMenu: React.FC = () => {
   const [rememberState, setRememberState] = useState(false)
   const [rememberTextAdvanced, setRememberTextAdvanced] = useState(false)
   const [rememberImageAdvanced, setRememberImageAdvanced] = useState(false)
-  const [hideHeroUtilityTiles, setHideHeroUtilityTiles] = useState(false)
   const [isSavingPreference, setIsSavingPreference] = useState(false)
   const [preferencesError, setPreferencesError] = useState<string | null>(null)
   const [preferencesSuccess, setPreferencesSuccess] = useState<string | null>(null)
@@ -196,7 +195,6 @@ export const UserMenu: React.FC = () => {
           setRememberState(prefs.remember_state_on_logout)
           setRememberTextAdvanced(prefs.remember_text_advanced_settings)
           setRememberImageAdvanced(prefs.remember_image_advanced_settings)
-          setHideHeroUtilityTiles(prefs.hide_hero_utility_tiles)
         })
         .catch(error => {
           logger.error('Failed to load preferences:', error)
@@ -218,7 +216,6 @@ export const UserMenu: React.FC = () => {
         setRememberState(updated.remember_state_on_logout)
         setRememberTextAdvanced(updated.remember_text_advanced_settings)
         setRememberImageAdvanced(updated.remember_image_advanced_settings)
-        setHideHeroUtilityTiles(updated.hide_hero_utility_tiles)
         setZipcode(updated.zipcode || '')
         window.dispatchEvent(new CustomEvent(USER_PREFERENCES_UPDATED_EVENT, { detail: updated }))
         if (payload.remember_text_advanced_settings === true) {
@@ -237,16 +234,6 @@ export const UserMenu: React.FC = () => {
     },
     []
   )
-
-  const handleHideHeroToggle = useCallback(() => {
-    if (isSavingPreference) return
-    const prev = hideHeroUtilityTiles
-    const next = !prev
-    setHideHeroUtilityTiles(next)
-    void persistPartialPreferences({ hide_hero_utility_tiles: next }, () =>
-      setHideHeroUtilityTiles(prev)
-    )
-  }, [hideHeroUtilityTiles, isSavingPreference, persistPartialPreferences])
 
   const handleRememberStateToggle = useCallback(() => {
     if (isSavingPreference) return
@@ -744,45 +731,6 @@ export const UserMenu: React.FC = () => {
                           maxLength={10}
                           disabled={isSavingPreference}
                         />
-                      </div>
-                    </div>
-
-                    {/* Layout (home page) */}
-                    <div className="settings-section">
-                      <h3 className="settings-section-title">
-                        <svg
-                          width="18"
-                          height="18"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="1.5"
-                        >
-                          <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-                          <line x1="3" y1="9" x2="21" y2="9" />
-                          <line x1="9" y1="21" x2="9" y2="9" />
-                        </svg>
-                        Layout
-                      </h3>
-                      <div className="settings-item settings-item-toggle">
-                        <div className="settings-item-info">
-                          <span className="settings-label">Hide capability cards</span>
-                          <p className="settings-description">
-                            Hides the four cards below the page title. The heading, subtitle, and
-                            composer stay in the same positions as when cards are visible.
-                          </p>
-                        </div>
-                        <button
-                          className={`settings-toggle ${hideHeroUtilityTiles ? 'active' : ''}`}
-                          onClick={handleHideHeroToggle}
-                          aria-pressed={hideHeroUtilityTiles}
-                          role="switch"
-                          type="button"
-                          disabled={isSavingPreference}
-                          aria-busy={isSavingPreference}
-                        >
-                          <span className="settings-toggle-slider" />
-                        </button>
                       </div>
                     </div>
 
