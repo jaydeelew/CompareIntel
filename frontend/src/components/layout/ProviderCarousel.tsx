@@ -73,7 +73,7 @@ const PROVIDER_ABBR: Record<string, string> = {
   Kwaipilot: 'Kw',
 }
 
-function ProviderIcon({ provider }: { provider: string }) {
+export function ProviderIcon({ provider }: { provider: string }) {
   const color = PROVIDER_COLORS[provider] ?? '#64748b'
   const abbr = PROVIDER_ABBR[provider] ?? provider.slice(0, 2)
 

@@ -11,6 +11,7 @@ import {
 } from '../../utils/imageConfigValidation'
 import { isThinkingModel } from '../../utils/thinkingModels'
 import { filterToVisionModels } from '../../utils/visionModels'
+import { ProviderIcon } from '../layout/ProviderCarousel'
 import { StyledTooltip } from '../shared'
 
 import { SelectAllInfoModal } from './SelectAllInfoModal'
@@ -487,6 +488,9 @@ export const ModelsSection: React.FC<ModelsSectionProps> = ({
                 aria-expanded={openDropdowns.has(provider)}
               >
                 <div className="provider-left">
+                  <span className="provider-dropdown-icon">
+                    <ProviderIcon provider={provider} />
+                  </span>
                   <span className="provider-name">{provider}</span>
                 </div>
                 <div
