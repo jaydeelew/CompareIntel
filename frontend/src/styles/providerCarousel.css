@@ -358,6 +358,16 @@
   .provider-carousel-item-inner {
     transition: none;
   }
+
+  .provider-carousel-touch-tooltip {
+    top: 0.75rem !important;
+    margin-top: 0;
+    transform: translateX(-50%);
+  }
+
+  .provider-carousel-touch-tooltip::after {
+    display: none;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
