@@ -353,7 +353,7 @@ function useResponsiveLayout(): LayoutParams {
   const [params, setParams] = useState<LayoutParams>(LAYOUT_DESKTOP)
 
   useEffect(() => {
-    const mobile = window.matchMedia('(max-width: 480px)')
+    const mobile = window.matchMedia('(max-width: 768px)')
     const tablet = window.matchMedia('(max-width: 1100px)')
 
     const update = () => {

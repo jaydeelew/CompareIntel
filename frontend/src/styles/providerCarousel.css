@@ -282,7 +282,7 @@
   width: min(660px, 95vw);
 }
 
-/* ─── Responsive ─── */
+/* ─── Responsive — layout only ─── */
 
 @media (max-width: 1100px) {
   .provider-carousel-wrapper {
@@ -307,7 +307,7 @@
   }
 }
 
-@media (max-width: 480px) {
+@media (max-width: 768px) {
   .provider-carousel-wrapper {
     top: 3.5rem;
     transform: translateX(-50%);
@@ -324,7 +324,11 @@
     width: 20px;
     height: 20px;
   }
+}
 
+/* ─── Touch devices — interaction overrides ─── */
+
+@media (hover: none) {
   .provider-carousel-item:hover .provider-carousel-item-inner,
   .provider-carousel-item:active .provider-carousel-item-inner,
   .provider-carousel-item:focus .provider-carousel-item-inner,
@@ -360,7 +364,7 @@
   }
 
   .provider-carousel-touch-tooltip {
-    top: 0.75rem !important;
+    top: 3.5rem !important;
     margin-top: 0;
     transform: translateX(-50%);
   }

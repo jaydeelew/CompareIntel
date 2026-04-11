@@ -1914,6 +1914,11 @@ html[data-theme='light'] .code-block-direct::-webkit-scrollbar-thumb:hover {
     justify-content: center;
   }
 
+  /* Hide hover tooltips — touch UX uses bottom-of-screen modals instead */
+  .models-header-controls .tooltip-content {
+    display: none !important;
+  }
+
   /* Stack layout vertically on mobile */
   .models-selection-layout {
     flex-direction: column;
