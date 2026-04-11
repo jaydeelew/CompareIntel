@@ -333,13 +333,13 @@
   .provider-carousel-item:active .provider-carousel-item-inner,
   .provider-carousel-item:focus .provider-carousel-item-inner,
   .provider-carousel-item:focus-visible .provider-carousel-item-inner {
-    transform: none;
+    transform: none !important;
     background: rgba(255, 255, 255, 0.06);
     border-color: rgba(255, 255, 255, 0.1);
     box-shadow:
       0 2px 8px rgba(0, 0, 0, 0.3),
       inset 0 1px 0 rgba(255, 255, 255, 0.08);
-    animation: none;
+    animation: none !important;
   }
 
   [data-theme='light'] .provider-carousel-item:hover .provider-carousel-item-inner,
@@ -357,14 +357,15 @@
       0 1px 3px rgba(0, 0, 0, 0.05),
       inset 0 1px 0 rgba(255, 255, 255, 0.95),
       inset 0 -1px 2px rgba(0, 0, 0, 0.03);
+    animation: none !important;
   }
 
   .provider-carousel-item-inner {
-    transition: none;
+    transition: none !important;
   }
 
   .provider-carousel-touch-tooltip {
-    top: 4.5rem !important;
+    top: calc(var(--navbar-height, 64px) + 0.5rem) !important;
     left: 50% !important;
     margin-top: 0;
     transform: translateX(-50%);
