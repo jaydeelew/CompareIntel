@@ -364,7 +364,8 @@
   }
 
   .provider-carousel-touch-tooltip {
-    top: 3.5rem !important;
+    top: 4.5rem !important;
+    left: 50% !important;
     margin-top: 0;
     transform: translateX(-50%);
   }
