@@ -424,6 +424,14 @@ export function ProviderCarousel({ providers, onProviderClick }: ProviderCarouse
   const lastXRef = useRef(0)
   const lastTimeRef = useRef(0)
   const didDragRef = useRef(false)
+  const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const longPressFiredRef = useRef(false)
+
+  const [touchTooltip, setTouchTooltip] = useState<{
+    provider: string
+    x: number
+    y: number
+  } | null>(null)
 
   const count = providers.length
   const angleStep = 360 / count
@@ -464,7 +472,13 @@ export function ProviderCarousel({ providers, onProviderClick }: ProviderCarouse
     const onMove = (e: PointerEvent) => {
       if (!draggingRef.current) return
       const dx = e.clientX - startXRef.current
-      if (Math.abs(dx) > 3) didDragRef.current = true
+      if (Math.abs(dx) > 3) {
+        didDragRef.current = true
+        if (longPressTimerRef.current) {
+          clearTimeout(longPressTimerRef.current)
+          longPressTimerRef.current = null
+        }
+      }
       const now = performance.now()
       const dt = now - lastTimeRef.current
       if (dt > 0) velRef.current = ((e.clientX - lastXRef.current) / dt) * 10
@@ -474,6 +488,11 @@ export function ProviderCarousel({ providers, onProviderClick }: ProviderCarouse
       setRotation(rotRef.current)
     }
     const onUp = () => {
+      if (longPressTimerRef.current) {
+        clearTimeout(longPressTimerRef.current)
+        longPressTimerRef.current = null
+      }
+      setTouchTooltip(null)
       if (!draggingRef.current) return
       draggingRef.current = false
       setIsDragging(false)
@@ -485,6 +504,7 @@ export function ProviderCarousel({ providers, onProviderClick }: ProviderCarouse
       document.removeEventListener('pointermove', onMove)
       document.removeEventListener('pointerup', onUp)
       document.removeEventListener('pointercancel', onUp)
+      if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current)
     }
   }, [])
 
@@ -502,11 +522,26 @@ export function ProviderCarousel({ providers, onProviderClick }: ProviderCarouse
   }, [])
 
   // --- Item handlers ---
+  const onItemPointerDown = useCallback((provider: string, e: React.PointerEvent) => {
+    if (e.pointerType !== 'touch') return
+    longPressFiredRef.current = false
+    if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current)
+    const x = e.clientX
+    const y = e.clientY
+    longPressTimerRef.current = setTimeout(() => {
+      longPressFiredRef.current = true
+      longPressTimerRef.current = null
+      setTouchTooltip({ provider, x, y })
+      if (navigator.vibrate) navigator.vibrate(10)
+    }, 500)
+  }, [])
+
   const onItemClick = useCallback(
     (provider: string, e: React.MouseEvent) => {
-      if (didDragRef.current) {
+      if (didDragRef.current || longPressFiredRef.current) {
         e.preventDefault()
         e.stopPropagation()
+        longPressFiredRef.current = false
         return
       }
       onProviderClick(provider)
@@ -546,9 +581,11 @@ export function ProviderCarousel({ providers, onProviderClick }: ProviderCarouse
           zIndex,
         }}
         onClick={interactive ? e => onItemClick(provider, e) : undefined}
+        onPointerDown={interactive ? e => onItemPointerDown(provider, e) : undefined}
         onPointerEnter={interactive ? e => onItemEnter(provider, e) : undefined}
         onPointerMove={interactive ? onItemPointerMove : undefined}
         onPointerLeave={interactive ? onItemLeave : undefined}
+        onContextMenu={interactive ? e => e.preventDefault() : undefined}
         aria-label={`View ${provider} models`}
         tabIndex={interactive ? 0 : -1}
       >
@@ -594,6 +631,17 @@ export function ProviderCarousel({ providers, onProviderClick }: ProviderCarouse
             style={{ left: tooltipPos.x, top: tooltipPos.y }}
           >
             {tooltipProvider}
+          </div>,
+          document.body
+        )}
+
+      {touchTooltip &&
+        createPortal(
+          <div
+            className="provider-carousel-touch-tooltip"
+            style={{ left: touchTooltip.x, top: touchTooltip.y }}
+          >
+            {touchTooltip.provider}
           </div>,
           document.body
         )}

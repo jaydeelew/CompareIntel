@@ -77,6 +77,7 @@
   cursor: pointer;
   outline: none;
   will-change: transform, opacity;
+  -webkit-tap-highlight-color: transparent;
 }
 
 /* The visible circle — background, border, shadow, and hover/click animations */
@@ -191,6 +192,39 @@
   }
 }
 
+/* Touch long-press tooltip — large for mobile readability */
+.provider-carousel-touch-tooltip {
+  position: fixed;
+  z-index: 10000;
+  transform: translate(-50%, -100%);
+  margin-top: -24px;
+  padding: 0.75rem 1.5rem;
+  font-size: 1.375rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  font-family: var(--font-sans, system-ui, -apple-system, sans-serif);
+  color: var(--text-primary, #f1f5f9);
+  background: var(--bg-elevated, #1e293b);
+  border: 1px solid rgba(6, 182, 212, 0.3);
+  border-radius: var(--radius-lg, 12px);
+  box-shadow:
+    0 12px 32px rgba(0, 0, 0, 0.5),
+    0 0 20px rgba(6, 182, 212, 0.12),
+    0 0 0 1px rgba(255, 255, 255, 0.06);
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.provider-carousel-touch-tooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 8px solid transparent;
+  border-top-color: var(--bg-elevated, #1e293b);
+}
+
 /* ─── Light theme ─── */
 
 [data-theme='light'] .provider-carousel-item-inner {
@@ -226,6 +260,20 @@
 }
 
 [data-theme='light'] .provider-carousel-tooltip::after {
+  border-top-color: var(--bg-elevated, #ffffff);
+}
+
+[data-theme='light'] .provider-carousel-touch-tooltip {
+  background: var(--bg-elevated, #ffffff);
+  color: var(--text-primary, #0f172a);
+  border-color: rgba(37, 99, 235, 0.25);
+  box-shadow:
+    0 12px 32px rgba(0, 0, 0, 0.15),
+    0 0 16px rgba(37, 99, 235, 0.08),
+    0 0 0 1px rgba(0, 0, 0, 0.05);
+}
+
+[data-theme='light'] .provider-carousel-touch-tooltip::after {
   border-top-color: var(--bg-elevated, #ffffff);
 }
 
@@ -276,6 +324,40 @@
     width: 20px;
     height: 20px;
   }
+
+  .provider-carousel-item:hover .provider-carousel-item-inner,
+  .provider-carousel-item:active .provider-carousel-item-inner,
+  .provider-carousel-item:focus .provider-carousel-item-inner,
+  .provider-carousel-item:focus-visible .provider-carousel-item-inner {
+    transform: none;
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.1);
+    box-shadow:
+      0 2px 8px rgba(0, 0, 0, 0.3),
+      inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    animation: none;
+  }
+
+  [data-theme='light'] .provider-carousel-item:hover .provider-carousel-item-inner,
+  [data-theme='light'] .provider-carousel-item:active .provider-carousel-item-inner,
+  [data-theme='light'] .provider-carousel-item:focus .provider-carousel-item-inner,
+  [data-theme='light'] .provider-carousel-item:focus-visible .provider-carousel-item-inner {
+    background: linear-gradient(
+      160deg,
+      rgba(255, 255, 255, 0.88) 0%,
+      rgba(240, 245, 255, 0.78) 100%
+    );
+    border-color: rgba(255, 255, 255, 0.65);
+    box-shadow:
+      0 2px 10px rgba(0, 0, 0, 0.08),
+      0 1px 3px rgba(0, 0, 0, 0.05),
+      inset 0 1px 0 rgba(255, 255, 255, 0.95),
+      inset 0 -1px 2px rgba(0, 0, 0, 0.03);
+  }
+
+  .provider-carousel-item-inner {
+    transition: none;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -292,7 +374,8 @@
     animation: none !important;
   }
 
-  .provider-carousel-tooltip {
+  .provider-carousel-tooltip,
+  .provider-carousel-touch-tooltip {
     animation: none;
   }
 }
