@@ -335,6 +335,8 @@ const AUTO_ROTATE_SPEED = 0.15
 const DRAG_SENSITIVITY = 0.4
 const MOMENTUM_DECAY = 0.94
 const MOMENTUM_MIN = 0.05
+const DRAG_THRESHOLD_MOUSE = 3
+const DRAG_THRESHOLD_TOUCH = 12
 const DEPTH_THRESHOLD = 0.5
 const OCCLUDE_DEPTH = 0.2
 
@@ -420,6 +422,7 @@ export function ProviderCarousel({ providers, onProviderClick }: ProviderCarouse
   const hoveredRef = useRef(false)
   const velRef = useRef(0)
   const startXRef = useRef(0)
+  const startYRef = useRef(0)
   const startRotRef = useRef(0)
   const lastXRef = useRef(0)
   const lastTimeRef = useRef(0)
@@ -472,7 +475,10 @@ export function ProviderCarousel({ providers, onProviderClick }: ProviderCarouse
     const onMove = (e: PointerEvent) => {
       if (!draggingRef.current) return
       const dx = e.clientX - startXRef.current
-      if (Math.abs(dx) > 3) {
+      const dy = e.clientY - startYRef.current
+      const moved = Math.hypot(dx, dy)
+      const dragThreshold = e.pointerType === 'touch' ? DRAG_THRESHOLD_TOUCH : DRAG_THRESHOLD_MOUSE
+      if (moved > dragThreshold) {
         didDragRef.current = true
         if (longPressTimerRef.current) {
           clearTimeout(longPressTimerRef.current)
@@ -516,6 +522,7 @@ export function ProviderCarousel({ providers, onProviderClick }: ProviderCarouse
     didDragRef.current = false
     velRef.current = 0
     startXRef.current = e.clientX
+    startYRef.current = e.clientY
     startRotRef.current = rotRef.current
     lastXRef.current = e.clientX
     lastTimeRef.current = performance.now()

@@ -365,7 +365,7 @@
   }
 
   .provider-carousel-touch-tooltip {
-    top: calc(var(--navbar-height, 64px) + 0.5rem) !important;
+    top: calc(env(safe-area-inset-top, 0px) + var(--navbar-height, 64px) + 1rem) !important;
     left: 50% !important;
     margin-top: 0;
     transform: translateX(-50%);
