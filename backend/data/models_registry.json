@@ -870,17 +870,6 @@
         "knowledge_cutoff": "September 2025"
       },
       {
-        "id": "qwen/qwen3.6-plus:free",
-        "name": "Qwen3.6 Plus:Free",
-        "description": "Qwen 3.6 Plus builds on a hybrid architecture that combines efficient linear attention with sparse mixture-of-experts routing, enabling strong scalability and high-performance inference.",
-        "category": "Language",
-        "provider": "Qwen",
-        "supports_web_search": true,
-        "supports_image_generation": false,
-        "is_thinking_model": true,
-        "knowledge_cutoff": null
-      },
-      {
         "id": "qwen/qwen3-30b-a3b-instruct-2507",
         "name": "Qwen3 30B A3B Instruct 2507",
         "description": "A 30.5B MoE model with 3.3B active parameters for efficient instruction-following and chat.",
@@ -1129,17 +1118,6 @@
         "returns_multiple_images": false
       }
     ],
-    "Stepfun": [
-      {
-        "id": "stepfun/step-3.5-flash:free",
-        "name": "Step 3.5 Flash:Free",
-        "description": "Step 3.5 Flash is StepFun's most capable open-source foundation model.",
-        "category": "Language",
-        "provider": "Stepfun",
-        "supports_web_search": true,
-        "knowledge_cutoff": null
-      }
-    ],
     "xAI": [
       {
         "id": "x-ai/grok-code-fast-1",
@@ -1279,8 +1257,6 @@
     "mistralai/devstral-2512",
     "openai/gpt-oss-120b",
     "qwen/qwen3-coder-next",
-    "qwen/qwen3.6-plus:free",
-    "stepfun/step-3.5-flash:free",
     "x-ai/grok-4-fast",
     "x-ai/grok-code-fast-1",
     "xiaomi/mimo-v2-flash"
