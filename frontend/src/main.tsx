@@ -69,18 +69,20 @@ requestAnimationFrame(() => {
 // Defer service worker registration until after page load to prevent render-blocking
 // This improves FCP and LCP by not blocking the main thread during initial render
 if ('serviceWorker' in navigator && import.meta.env.PROD) {
+  type ActivateSw = (reloadPage?: boolean) => Promise<void>
+
   const registerSW = () => {
     import('virtual:pwa-register')
       .then(({ registerSW }) => {
         const updateSW = registerSW({
           immediate: false,
           onNeedRefresh: () => {
-            updateSW(true)
+            void updateSW(true)
           },
           onOfflineReady: () => {
             // App can now work offline
           },
-        })
+        }) as ActivateSw
       })
       .catch(() => {
         // Service worker registration script not available (dev mode or build issue)
