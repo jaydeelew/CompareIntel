@@ -23,6 +23,16 @@ interface ProviderCarouselProps {
   onProviderClick: (provider: string) => void
 }
 
+interface TouchDebugState {
+  lastEvent: string
+  pointerType: string
+  movedPx: number
+  isDragging: boolean
+  didDrag: boolean
+  longPressFired: boolean
+  tooltipVisible: boolean
+}
+
 /* ──────────────────────────────── brand colors ──────────────────────────────── */
 
 const PROVIDER_COLORS: Record<string, string> = {
@@ -432,6 +442,27 @@ export function ProviderCarousel({ providers, onProviderClick }: ProviderCarouse
   const longPressFiredRef = useRef(false)
 
   const [touchTooltipProvider, setTouchTooltipProvider] = useState<string | null>(null)
+  const [touchDebugEnabled] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return false
+    return new URLSearchParams(window.location.search).get('touchDebug') === '1'
+  })
+  const [touchDebug, setTouchDebug] = useState<TouchDebugState>({
+    lastEvent: 'init',
+    pointerType: '-',
+    movedPx: 0,
+    isDragging: false,
+    didDrag: false,
+    longPressFired: false,
+    tooltipVisible: false,
+  })
+
+  const updateTouchDebug = useCallback(
+    (patch: Partial<TouchDebugState>) => {
+      if (!touchDebugEnabled) return
+      setTouchDebug(prev => ({ ...prev, ...patch }))
+    },
+    [touchDebugEnabled]
+  )
 
   const count = providers.length
   const angleStep = 360 / count
@@ -497,6 +528,14 @@ export function ProviderCarousel({ providers, onProviderClick }: ProviderCarouse
       lastTimeRef.current = now
       rotRef.current = startRotRef.current + dx * DRAG_SENSITIVITY
       setRotation(rotRef.current)
+      updateTouchDebug({
+        lastEvent: 'doc-pointermove',
+        pointerType: e.pointerType || '-',
+        movedPx: Math.round(moved),
+        isDragging: draggingRef.current,
+        didDrag: didDragRef.current,
+        longPressFired: longPressFiredRef.current,
+      })
     }
     const onUp = () => {
       if (longPressTimerRef.current) {
@@ -505,6 +544,15 @@ export function ProviderCarousel({ providers, onProviderClick }: ProviderCarouse
       }
       setTouchTooltipProvider(null)
       hoveredRef.current = false
+      updateTouchDebug({
+        lastEvent: 'doc-pointerup',
+        pointerType: '-',
+        movedPx: 0,
+        isDragging: false,
+        didDrag: didDragRef.current,
+        longPressFired: longPressFiredRef.current,
+        tooltipVisible: false,
+      })
       if (!draggingRef.current) return
       draggingRef.current = false
       setIsDragging(false)
@@ -518,60 +566,102 @@ export function ProviderCarousel({ providers, onProviderClick }: ProviderCarouse
       document.removeEventListener('pointercancel', onUp)
       if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current)
     }
-  }, [])
+  }, [updateTouchDebug])
 
-  const onScenePointerDown = useCallback((e: React.PointerEvent) => {
-    if (
-      e.pointerType === 'touch' &&
-      (e.target instanceof HTMLElement
-        ? Boolean(e.target.closest('.provider-carousel-item'))
-        : false)
-    ) {
-      return
-    }
-    if (e.button !== 0 && e.pointerType === 'mouse') return
-    e.preventDefault()
-    draggingRef.current = true
-    setIsDragging(true)
-    didDragRef.current = false
-    velRef.current = 0
-    startXRef.current = e.clientX
-    startYRef.current = e.clientY
-    startRotRef.current = rotRef.current
-    lastXRef.current = e.clientX
-    lastTimeRef.current = performance.now()
-  }, [])
+  const onScenePointerDown = useCallback(
+    (e: React.PointerEvent) => {
+      if (
+        e.pointerType === 'touch' &&
+        (e.target instanceof HTMLElement
+          ? Boolean(e.target.closest('.provider-carousel-item'))
+          : false)
+      ) {
+        updateTouchDebug({
+          lastEvent: 'scene-pointerdown-ignored',
+          pointerType: 'touch',
+          isDragging: false,
+        })
+        return
+      }
+      if (e.button !== 0 && e.pointerType === 'mouse') return
+      e.preventDefault()
+      draggingRef.current = true
+      setIsDragging(true)
+      didDragRef.current = false
+      velRef.current = 0
+      startXRef.current = e.clientX
+      startYRef.current = e.clientY
+      startRotRef.current = rotRef.current
+      lastXRef.current = e.clientX
+      lastTimeRef.current = performance.now()
+      updateTouchDebug({
+        lastEvent: 'scene-pointerdown',
+        pointerType: e.pointerType || '-',
+        movedPx: 0,
+        isDragging: true,
+        didDrag: false,
+        longPressFired: false,
+        tooltipVisible: Boolean(touchTooltipProvider),
+      })
+    },
+    [touchTooltipProvider, updateTouchDebug]
+  )
 
   // --- Item handlers ---
-  const onItemPointerDown = useCallback((provider: string, e: React.PointerEvent) => {
-    if (e.pointerType !== 'touch') return
-    e.stopPropagation()
-    longPressFiredRef.current = false
-    hoveredRef.current = true
-    velRef.current = 0
-    draggingRef.current = false
-    setIsDragging(false)
-    didDragRef.current = false
-    if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current)
-    longPressTimerRef.current = setTimeout(() => {
-      longPressFiredRef.current = true
-      longPressTimerRef.current = null
-      setTouchTooltipProvider(provider)
-      if (navigator.vibrate) navigator.vibrate(10)
-    }, 500)
-  }, [])
+  const onItemPointerDown = useCallback(
+    (provider: string, e: React.PointerEvent) => {
+      if (e.pointerType !== 'touch') return
+      e.stopPropagation()
+      longPressFiredRef.current = false
+      hoveredRef.current = true
+      velRef.current = 0
+      draggingRef.current = false
+      setIsDragging(false)
+      didDragRef.current = false
+      if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current)
+      updateTouchDebug({
+        lastEvent: `item-pointerdown:${provider}`,
+        pointerType: 'touch',
+        movedPx: 0,
+        isDragging: false,
+        didDrag: false,
+        longPressFired: false,
+        tooltipVisible: false,
+      })
+      longPressTimerRef.current = setTimeout(() => {
+        longPressFiredRef.current = true
+        longPressTimerRef.current = null
+        setTouchTooltipProvider(provider)
+        updateTouchDebug({
+          lastEvent: `longpress-fired:${provider}`,
+          pointerType: 'touch',
+          longPressFired: true,
+          tooltipVisible: true,
+        })
+        if (navigator.vibrate) navigator.vibrate(10)
+      }, 500)
+    },
+    [updateTouchDebug]
+  )
 
   const onItemClick = useCallback(
     (provider: string, e: React.MouseEvent) => {
       if (didDragRef.current || longPressFiredRef.current) {
         e.preventDefault()
         e.stopPropagation()
+        updateTouchDebug({
+          lastEvent: `item-click-blocked:${provider}`,
+          pointerType: 'touch',
+          didDrag: didDragRef.current,
+          longPressFired: longPressFiredRef.current,
+        })
         longPressFiredRef.current = false
         return
       }
+      updateTouchDebug({ lastEvent: `item-clicked:${provider}`, pointerType: 'mouse' })
       onProviderClick(provider)
     },
-    [onProviderClick]
+    [onProviderClick, updateTouchDebug]
   )
 
   const onItemEnter = useCallback((provider: string, e: React.PointerEvent) => {
@@ -674,6 +764,38 @@ export function ProviderCarousel({ providers, onProviderClick }: ProviderCarouse
           </div>,
           document.body
         )}
+
+      {touchDebugEnabled && (
+        <div
+          style={{
+            position: 'fixed',
+            right: 8,
+            bottom: 8,
+            zIndex: 10001,
+            fontSize: 10,
+            lineHeight: 1.35,
+            padding: '6px 8px',
+            borderRadius: 8,
+            background: 'rgba(2, 6, 23, 0.86)',
+            color: '#e2e8f0',
+            border: '1px solid rgba(148, 163, 184, 0.35)',
+            pointerEvents: 'none',
+            fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
+            maxWidth: 240,
+          }}
+        >
+          <div>touchDebug=1</div>
+          <div>evt: {touchDebug.lastEvent}</div>
+          <div>ptr: {touchDebug.pointerType}</div>
+          <div>moved: {touchDebug.movedPx}px</div>
+          <div>
+            drag:{String(touchDebug.isDragging)} didDrag:{String(touchDebug.didDrag)}
+          </div>
+          <div>
+            longPress:{String(touchDebug.longPressFired)} tip:{String(touchDebug.tooltipVisible)}
+          </div>
+        </div>
+      )}
     </>
   )
 }
