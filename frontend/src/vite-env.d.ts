@@ -41,19 +41,14 @@ interface ImportMeta {
   readonly env: ImportMetaEnv
 }
 
-// Type declaration for VitePWA virtual module
+// Type declaration for VitePWA virtual module (must match vite-plugin-pwa/vanillajs.d.ts)
 declare module 'virtual:pwa-register' {
-  export interface RegisterSWOptions {
-    immediate?: boolean
-    onNeedRefresh?: () => void
-    onOfflineReady?: () => void
-    onRegistered?: (registration: ServiceWorkerRegistration | undefined) => void
-    onRegisterError?: (error: unknown) => void
-  }
+  import type { RegisterSWOptions } from 'vite-plugin-pwa/types'
 
-  export function registerSW(
-    options?: RegisterSWOptions
-  ): Promise<ServiceWorkerRegistration | undefined>
+  export type { RegisterSWOptions }
+
+  /** Returns a callback to activate the waiting worker and reload (use in onNeedRefresh). */
+  export function registerSW(options?: RegisterSWOptions): (reloadPage?: boolean) => Promise<void>
 }
 
 // Web Speech API type definitions
