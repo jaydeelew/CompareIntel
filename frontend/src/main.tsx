@@ -69,20 +69,22 @@ requestAnimationFrame(() => {
 // Defer service worker registration until after page load to prevent render-blocking
 // This improves FCP and LCP by not blocking the main thread during initial render
 if ('serviceWorker' in navigator && import.meta.env.PROD) {
+  /** Matches vite-plugin-pwa `registerSW` return value (avoids circular inference vs wrong ambient types). */
   type ActivateSw = (reloadPage?: boolean) => Promise<void>
 
   const registerSW = () => {
     import('virtual:pwa-register')
       .then(({ registerSW }) => {
-        const updateSW = registerSW({
+        const sw: { activate?: ActivateSw } = {}
+        sw.activate = registerSW({
           immediate: false,
           onNeedRefresh: () => {
-            void updateSW(true)
+            void sw.activate?.(true)
           },
           onOfflineReady: () => {
             // App can now work offline
           },
-        }) as ActivateSw
+        }) as unknown as ActivateSw
       })
       .catch(() => {
         // Service worker registration script not available (dev mode or build issue)
