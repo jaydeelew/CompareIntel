@@ -431,11 +431,7 @@ export function ProviderCarousel({ providers, onProviderClick }: ProviderCarouse
   const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const longPressFiredRef = useRef(false)
 
-  const [touchTooltip, setTouchTooltip] = useState<{
-    provider: string
-    x: number
-    y: number
-  } | null>(null)
+  const [touchTooltipProvider, setTouchTooltipProvider] = useState<string | null>(null)
 
   const count = providers.length
   const angleStep = 360 / count
@@ -507,7 +503,7 @@ export function ProviderCarousel({ providers, onProviderClick }: ProviderCarouse
         clearTimeout(longPressTimerRef.current)
         longPressTimerRef.current = null
       }
-      setTouchTooltip(null)
+      setTouchTooltipProvider(null)
       hoveredRef.current = false
       if (!draggingRef.current) return
       draggingRef.current = false
@@ -525,6 +521,14 @@ export function ProviderCarousel({ providers, onProviderClick }: ProviderCarouse
   }, [])
 
   const onScenePointerDown = useCallback((e: React.PointerEvent) => {
+    if (
+      e.pointerType === 'touch' &&
+      (e.target instanceof HTMLElement
+        ? Boolean(e.target.closest('.provider-carousel-item'))
+        : false)
+    ) {
+      return
+    }
     if (e.button !== 0 && e.pointerType === 'mouse') return
     e.preventDefault()
     draggingRef.current = true
@@ -545,13 +549,14 @@ export function ProviderCarousel({ providers, onProviderClick }: ProviderCarouse
     longPressFiredRef.current = false
     hoveredRef.current = true
     velRef.current = 0
+    draggingRef.current = false
+    setIsDragging(false)
+    didDragRef.current = false
     if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current)
-    const x = e.clientX
-    const y = e.clientY
     longPressTimerRef.current = setTimeout(() => {
       longPressFiredRef.current = true
       longPressTimerRef.current = null
-      setTouchTooltip({ provider, x, y })
+      setTouchTooltipProvider(provider)
       if (navigator.vibrate) navigator.vibrate(10)
     }, 500)
   }, [])
@@ -655,13 +660,17 @@ export function ProviderCarousel({ providers, onProviderClick }: ProviderCarouse
           document.body
         )}
 
-      {touchTooltip &&
+      {touchTooltipProvider &&
         createPortal(
           <div
             className="provider-carousel-touch-tooltip"
-            style={{ left: touchTooltip.x, top: touchTooltip.y }}
+            style={{
+              left: '50%',
+              top: 'calc(env(safe-area-inset-top, 0px) + var(--navbar-height, 64px) + 1rem)',
+              transform: 'translateX(-50%)',
+            }}
           >
-            {touchTooltip.provider}
+            {touchTooltipProvider}
           </div>,
           document.body
         )}
