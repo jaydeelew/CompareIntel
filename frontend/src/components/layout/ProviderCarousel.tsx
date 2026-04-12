@@ -412,6 +412,7 @@ export function ProviderCarousel({ providers, onProviderClick }: ProviderCarouse
   const layoutParams = useResponsiveLayout()
   const [rotation, setRotation] = useState(0)
   const [isDragging, setIsDragging] = useState(false)
+  const [isCoarsePointer, setIsCoarsePointer] = useState(false)
   const [tooltipProvider, setTooltipProvider] = useState<string | null>(null)
   const [tooltipPos, setTooltipPos] = useState<{ x: number; y: number } | null>(null)
 
@@ -444,6 +445,14 @@ export function ProviderCarousel({ providers, onProviderClick }: ProviderCarouse
   useEffect(() => {
     rotRef.current = rotation
   }, [rotation])
+
+  useEffect(() => {
+    const coarse = window.matchMedia('(pointer: coarse), (any-pointer: coarse)')
+    const update = () => setIsCoarsePointer(coarse.matches)
+    update()
+    coarse.addEventListener('change', update)
+    return () => coarse.removeEventListener('change', update)
+  }, [])
 
   // Auto-rotate + momentum loop
   useEffect(() => {
@@ -581,7 +590,7 @@ export function ProviderCarousel({ providers, onProviderClick }: ProviderCarouse
       <button
         key={provider}
         type="button"
-        className="provider-carousel-item"
+        className={`provider-carousel-item${isCoarsePointer ? ' provider-carousel-item--touch-mode' : ''}`}
         style={{
           transform: `translate(${x}px, ${y}px) scale(${scale})`,
           opacity,
@@ -621,7 +630,7 @@ export function ProviderCarousel({ providers, onProviderClick }: ProviderCarouse
       >
         <div
           ref={sceneRef}
-          className={`provider-carousel-scene${isDragging ? ' provider-carousel-scene--dragging' : ''}`}
+          className={`provider-carousel-scene${isDragging ? ' provider-carousel-scene--dragging' : ''}${isCoarsePointer ? ' provider-carousel-scene--touch' : ''}`}
           onPointerDown={onScenePointerDown}
         >
           {providers.map((provider, i) =>

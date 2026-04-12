@@ -196,8 +196,10 @@
 .provider-carousel-touch-tooltip {
   position: fixed;
   z-index: 10000;
-  transform: translate(-50%, -100%);
-  margin-top: -24px;
+  top: calc(env(safe-area-inset-top, 0px) + var(--navbar-height, 64px) + 1rem) !important;
+  left: 50% !important;
+  transform: translateX(-50%);
+  margin-top: 0;
   padding: 0.75rem 1.5rem;
   font-size: 1.375rem;
   font-weight: 600;
@@ -216,13 +218,7 @@
 }
 
 .provider-carousel-touch-tooltip::after {
-  content: '';
-  position: absolute;
-  top: 100%;
-  left: 50%;
-  transform: translateX(-50%);
-  border: 8px solid transparent;
-  border-top-color: var(--bg-elevated, #1e293b);
+  display: none;
 }
 
 /* ─── Light theme ─── */
@@ -326,9 +322,80 @@
   }
 }
 
+/* Deterministic touch-mode overrides (set by JS coarse-pointer detection). */
+.provider-carousel-item--touch-mode .provider-carousel-item-inner {
+  transition: none !important;
+}
+
+.provider-carousel-item--touch-mode:hover .provider-carousel-item-inner,
+.provider-carousel-item--touch-mode:active .provider-carousel-item-inner,
+.provider-carousel-item--touch-mode:focus .provider-carousel-item-inner,
+.provider-carousel-item--touch-mode:focus-visible .provider-carousel-item-inner {
+  transform: none !important;
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  animation: none !important;
+}
+
+[data-theme='light'] .provider-carousel-item--touch-mode:hover .provider-carousel-item-inner,
+[data-theme='light'] .provider-carousel-item--touch-mode:active .provider-carousel-item-inner,
+[data-theme='light'] .provider-carousel-item--touch-mode:focus .provider-carousel-item-inner,
+[data-theme='light']
+  .provider-carousel-item--touch-mode:focus-visible
+  .provider-carousel-item-inner {
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.88) 0%, rgba(240, 245, 255, 0.78) 100%);
+  border-color: rgba(255, 255, 255, 0.65);
+  box-shadow:
+    0 2px 10px rgba(0, 0, 0, 0.08),
+    0 1px 3px rgba(0, 0, 0, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.95),
+    inset 0 -1px 2px rgba(0, 0, 0, 0.03);
+  animation: none !important;
+}
+
 /* ─── Touch devices — interaction overrides ─── */
 
 @media (hover: none) {
+  .provider-carousel-item--touch-mode .provider-carousel-item-inner {
+    transition: none !important;
+  }
+
+  .provider-carousel-item--touch-mode:hover .provider-carousel-item-inner,
+  .provider-carousel-item--touch-mode:active .provider-carousel-item-inner,
+  .provider-carousel-item--touch-mode:focus .provider-carousel-item-inner,
+  .provider-carousel-item--touch-mode:focus-visible .provider-carousel-item-inner {
+    transform: none !important;
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.1);
+    box-shadow:
+      0 2px 8px rgba(0, 0, 0, 0.3),
+      inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    animation: none !important;
+  }
+
+  [data-theme='light'] .provider-carousel-item--touch-mode:hover .provider-carousel-item-inner,
+  [data-theme='light'] .provider-carousel-item--touch-mode:active .provider-carousel-item-inner,
+  [data-theme='light'] .provider-carousel-item--touch-mode:focus .provider-carousel-item-inner,
+  [data-theme='light']
+    .provider-carousel-item--touch-mode:focus-visible
+    .provider-carousel-item-inner {
+    background: linear-gradient(
+      160deg,
+      rgba(255, 255, 255, 0.88) 0%,
+      rgba(240, 245, 255, 0.78) 100%
+    );
+    border-color: rgba(255, 255, 255, 0.65);
+    box-shadow:
+      0 2px 10px rgba(0, 0, 0, 0.08),
+      0 1px 3px rgba(0, 0, 0, 0.05),
+      inset 0 1px 0 rgba(255, 255, 255, 0.95),
+      inset 0 -1px 2px rgba(0, 0, 0, 0.03);
+    animation: none !important;
+  }
+
   .provider-carousel-item:hover .provider-carousel-item-inner,
   .provider-carousel-item:active .provider-carousel-item-inner,
   .provider-carousel-item:focus .provider-carousel-item-inner,
@@ -366,13 +433,6 @@
 
   .provider-carousel-touch-tooltip {
     top: calc(env(safe-area-inset-top, 0px) + var(--navbar-height, 64px) + 1rem) !important;
-    left: 50% !important;
-    margin-top: 0;
-    transform: translateX(-50%);
-  }
-
-  .provider-carousel-touch-tooltip::after {
-    display: none;
   }
 }
 
