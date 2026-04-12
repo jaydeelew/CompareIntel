@@ -508,6 +508,7 @@ export function ProviderCarousel({ providers, onProviderClick }: ProviderCarouse
         longPressTimerRef.current = null
       }
       setTouchTooltip(null)
+      hoveredRef.current = false
       if (!draggingRef.current) return
       draggingRef.current = false
       setIsDragging(false)
@@ -540,7 +541,10 @@ export function ProviderCarousel({ providers, onProviderClick }: ProviderCarouse
   // --- Item handlers ---
   const onItemPointerDown = useCallback((provider: string, e: React.PointerEvent) => {
     if (e.pointerType !== 'touch') return
+    e.stopPropagation()
     longPressFiredRef.current = false
+    hoveredRef.current = true
+    velRef.current = 0
     if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current)
     const x = e.clientX
     const y = e.clientY
