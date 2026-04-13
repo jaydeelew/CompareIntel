@@ -442,7 +442,7 @@ export function ProviderCarousel({ providers, onProviderClick }: ProviderCarouse
   const longPressFiredRef = useRef(false)
 
   const [touchTooltipProvider, setTouchTooltipProvider] = useState<string | null>(null)
-  const TOUCH_DEBUG_BUILD = '2026-04-13T01'
+  const TOUCH_DEBUG_BUILD = '2026-04-13T02'
   const touchDebugEnabled = true
   const [touchDebug, setTouchDebug] = useState<TouchDebugState>({
     lastEvent: 'init',
@@ -519,6 +519,7 @@ export function ProviderCarousel({ providers, onProviderClick }: ProviderCarouse
           longPressTimerRef.current = null
         }
       }
+      if (!didDragRef.current) return
       const now = performance.now()
       const dt = now - lastTimeRef.current
       if (dt > 0) velRef.current = ((e.clientX - lastXRef.current) / dt) * 10
@@ -568,19 +569,6 @@ export function ProviderCarousel({ providers, onProviderClick }: ProviderCarouse
 
   const onScenePointerDown = useCallback(
     (e: React.PointerEvent) => {
-      if (
-        e.pointerType === 'touch' &&
-        (e.target instanceof HTMLElement
-          ? Boolean(e.target.closest('.provider-carousel-item'))
-          : false)
-      ) {
-        updateTouchDebug({
-          lastEvent: 'scene-pointerdown-ignored',
-          pointerType: 'touch',
-          isDragging: false,
-        })
-        return
-      }
       if (e.button !== 0 && e.pointerType === 'mouse') return
       e.preventDefault()
       draggingRef.current = true
@@ -599,23 +587,16 @@ export function ProviderCarousel({ providers, onProviderClick }: ProviderCarouse
         isDragging: true,
         didDrag: false,
         longPressFired: false,
-        tooltipVisible: Boolean(touchTooltipProvider),
       })
     },
-    [touchTooltipProvider, updateTouchDebug]
+    [updateTouchDebug]
   )
 
   // --- Item handlers ---
   const onItemPointerDown = useCallback(
     (provider: string, e: React.PointerEvent) => {
       if (e.pointerType !== 'touch') return
-      e.stopPropagation()
       longPressFiredRef.current = false
-      hoveredRef.current = true
-      velRef.current = 0
-      draggingRef.current = false
-      setIsDragging(false)
-      didDragRef.current = false
       if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current)
       updateTouchDebug({
         lastEvent: `item-pointerdown:${provider}`,
