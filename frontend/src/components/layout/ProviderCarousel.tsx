@@ -442,10 +442,8 @@ export function ProviderCarousel({ providers, onProviderClick }: ProviderCarouse
   const longPressFiredRef = useRef(false)
 
   const [touchTooltipProvider, setTouchTooltipProvider] = useState<string | null>(null)
-  const [touchDebugEnabled] = useState<boolean>(() => {
-    if (typeof window === 'undefined') return false
-    return new URLSearchParams(window.location.search).get('touchDebug') === '1'
-  })
+  const TOUCH_DEBUG_BUILD = '2026-04-13T01'
+  const touchDebugEnabled = true
   const [touchDebug, setTouchDebug] = useState<TouchDebugState>({
     lastEvent: 'init',
     pointerType: '-',
@@ -769,22 +767,23 @@ export function ProviderCarousel({ providers, onProviderClick }: ProviderCarouse
         <div
           style={{
             position: 'fixed',
-            right: 8,
-            bottom: 8,
+            right: 4,
+            bottom: 4,
             zIndex: 10001,
-            fontSize: 10,
-            lineHeight: 1.35,
-            padding: '6px 8px',
-            borderRadius: 8,
-            background: 'rgba(2, 6, 23, 0.86)',
+            fontSize: 9,
+            lineHeight: 1.3,
+            padding: '4px 6px',
+            borderRadius: 6,
+            background: 'rgba(2, 6, 23, 0.9)',
             color: '#e2e8f0',
             border: '1px solid rgba(148, 163, 184, 0.35)',
             pointerEvents: 'none',
             fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
-            maxWidth: 240,
+            maxWidth: 220,
           }}
         >
-          <div>touchDebug=1</div>
+          <div>build:{TOUCH_DEBUG_BUILD}</div>
+          <div>coarse:{String(isCoarsePointer)}</div>
           <div>evt: {touchDebug.lastEvent}</div>
           <div>ptr: {touchDebug.pointerType}</div>
           <div>moved: {touchDebug.movedPx}px</div>
@@ -792,7 +791,7 @@ export function ProviderCarousel({ providers, onProviderClick }: ProviderCarouse
             drag:{String(touchDebug.isDragging)} didDrag:{String(touchDebug.didDrag)}
           </div>
           <div>
-            longPress:{String(touchDebug.longPressFired)} tip:{String(touchDebug.tooltipVisible)}
+            lp:{String(touchDebug.longPressFired)} tip:{String(touchDebug.tooltipVisible)}
           </div>
         </div>
       )}
