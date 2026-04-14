@@ -470,11 +470,7 @@ export function MainPage() {
       }
 
       setIsModelsHidden(false)
-      setOpenDropdowns(prev => {
-        const next = new Set(prev)
-        next.add(provider)
-        return next
-      })
+      setOpenDropdowns(new Set([provider]))
 
       // The provider dropdowns are conditionally rendered (hidden when isModelsHidden
       // is true). After toggling the state, React needs to commit the render and the
