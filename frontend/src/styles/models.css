@@ -3145,7 +3145,7 @@
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  padding: 0.75rem 0.875rem 0.875rem 1rem;
+  padding: 0.75rem 0.875rem 0.875rem;
   border-radius: var(--radius-xl);
   background: color-mix(in srgb, var(--bg-elevated) 88%, var(--bg-hover));
   border: 1px solid color-mix(in srgb, var(--primary-color) 9%, var(--border-color));
@@ -3164,27 +3164,50 @@
     0 8px 20px -12px color-mix(in srgb, var(--primary-glow) 25%, transparent);
 }
 
+/* Soft left-edge tint (replaces a hard vertical bar) */
 .help-me-choose-category::before {
   content: '';
   position: absolute;
   left: 0;
-  top: 0.65rem;
-  bottom: 0.65rem;
-  width: 3px;
-  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  top: 0;
+  bottom: 0;
+  width: min(40px, 32%);
+  border-radius: var(--radius-xl) 0 0 var(--radius-xl);
   background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--secondary-light) 70%, var(--primary-color)),
-    var(--primary-color)
+    90deg,
+    color-mix(in srgb, var(--primary-color) 8%, transparent) 0%,
+    color-mix(in srgb, var(--secondary-color) 4%, transparent) 42%,
+    transparent 100%
   );
-  opacity: 0.35;
   pointer-events: none;
-  transition: opacity 0.2s ease;
+  transition: background 0.22s ease;
 }
 
 .help-me-choose-category:hover::before,
 .help-me-choose-category.has-match::before {
-  opacity: 1;
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--primary-color) 12%, transparent) 0%,
+    color-mix(in srgb, var(--secondary-color) 6%, transparent) 45%,
+    transparent 100%
+  );
+}
+
+[data-theme='light'] .help-me-choose-category::before {
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--primary-color) 5%, transparent) 0%,
+    transparent 100%
+  );
+}
+
+[data-theme='light'] .help-me-choose-category:hover::before,
+[data-theme='light'] .help-me-choose-category.has-match::before {
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--primary-color) 9%, transparent) 0%,
+    transparent 100%
+  );
 }
 
 [data-theme='dark'] .help-me-choose-category {
@@ -3662,7 +3685,7 @@ html:not([data-theme]) .help-me-choose-category.has-match {
   .help-me-choose-category {
     flex: 0 0 300px;
     min-width: 300px;
-    padding: 0.85rem 1rem 1rem 1.05rem;
+    padding: 0.85rem 1rem 1rem;
   }
 
   .help-me-choose-content-inner {
