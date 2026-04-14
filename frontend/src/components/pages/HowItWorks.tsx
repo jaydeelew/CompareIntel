@@ -77,6 +77,22 @@ export const HowItWorks: React.FC = () => {
                   adjust Temperature, Top P, and Max output tokens. Lower temperature for code or
                   math; cap max tokens for shorter, cheaper responses.
                 </p>
+                <div id="model-selection-indicators" className="seo-anchor-section">
+                  <h4>Icons next to model names</h4>
+                  <p>
+                    <strong>Info (ⓘ):</strong> Opens details for that model—context window size, and
+                    either knowledge cutoff (text models) or supported aspect ratios and image sizes
+                    (image-generation models). On desktop, hover the icon next to the name; on
+                    phones and tablets, tap it to open a panel at the bottom of the screen.
+                  </p>
+                  <p>
+                    <strong>Thinking (T):</strong> Marks a thinking model. The provider may expose
+                    separable reasoning in a Reasoning section while the answer streams; that
+                    reasoning is not saved with your history. Responses may take longer and can use
+                    more credits than comparable chat models. On touch devices, tap the T to read a
+                    short explanation in the same bottom panel style as other mobile tips.
+                  </p>
+                </div>
               </div>
             </div>
 
@@ -92,8 +108,8 @@ export const HowItWorks: React.FC = () => {
                 <p>
                   <strong>Enable web search (optional):</strong> For current information (weather,
                   news, stocks), use the toggle (🌐) in the input area. Supported models will search
-                  and cite sources. Hover over the info icon (ⓘ) next to a model name to see its
-                  knowledge cutoff date.
+                  and cite sources. Use the info icon (ⓘ) next to a model name for context window
+                  and knowledge cutoff (on desktop: hover; on mobile: tap for details).
                 </p>
                 <p>
                   <strong>Attach files (optional):</strong> Drag and drop or use the file picker.

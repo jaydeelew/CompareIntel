@@ -2,6 +2,7 @@
 Email service for sending verification and notification emails.
 """
 
+import html
 import os
 from datetime import datetime
 from pathlib import Path
@@ -298,6 +299,116 @@ async def send_new_user_signup_notification(
         await fm.send_message(message)
     except Exception as e:
         print(f"Failed to send new user signup notification to {recipient_email}: {str(e)}")
+
+
+async def send_new_model_discovery_report(
+    new_models: list[dict[str, str]],
+    leaderboard_summary_plain: str,
+    leaderboard_week: str | None,
+) -> None:
+    recipient_email = "support@compareintel.com"
+
+    if not EMAIL_CONFIGURED:
+        print("Email service not configured - skipping new model discovery report")
+        return
+
+    now = datetime.now().strftime("%Y-%m-%d %H:%M:%S UTC")
+
+    if new_models:
+        status_color = "#0ea5e9"
+        status_text = f"{len(new_models)} New Model(s) Found"
+        subject = f"🔍 New Model Discovery - {len(new_models)} model(s) available on OpenRouter"
+    else:
+        status_color = "#10b981"
+        status_text = "No New Models"
+        subject = "✓ New Model Discovery - Registry is up to date"
+
+    models_html = ""
+    if new_models:
+        models_html = "<h3 style='margin-top: 20px;'>New Models Available</h3>"
+        for m in new_models:
+            model_id = m.get("id", "Unknown")
+            name = m.get("name", model_id)
+            provider = m.get("provider", "Unknown")
+            description = m.get("description", "No description available.")
+            context_length = m.get("context_length", "N/A")
+            created = m.get("created", "Unknown")
+            models_html += f"""
+            <div style='background-color: white; border-left: 4px solid #0ea5e9; padding: 16px; margin: 12px 0; border-radius: 4px;'>
+                <strong style='font-size: 16px;'>{name}</strong><br>
+                <code style='background: #e0e7ff; padding: 2px 6px; border-radius: 3px; font-size: 13px;'>{model_id}</code><br>
+                <span style='color: #666; font-size: 14px;'>Provider: {provider} &middot; Context: {context_length} tokens &middot; Added: {created}</span><br>
+                <p style='margin: 8px 0 0 0; font-size: 14px; color: #444;'>{description}</p>
+            </div>
+            """
+    else:
+        models_html = (
+            "<p style='color: #666;'>All models on the current OpenRouter "
+            "<a href='https://openrouter.ai/rankings'>Top Models</a> leaderboard "
+            "are already represented in the CompareIntel registry.</p>"
+        )
+
+    registry_count = ""
+    openrouter_count = ""
+    new_count = str(len(new_models))
+
+    try:
+        import json
+        from pathlib import Path
+
+        reg_path = Path(__file__).resolve().parent.parent / "data" / "models_registry.json"
+        with open(reg_path) as f:
+            reg = json.load(f)
+        total = sum(len(v) for v in reg.get("models_by_provider", {}).values())
+        registry_count = str(total)
+    except Exception:
+        registry_count = "N/A"
+
+    openrouter_count = "N/A"
+
+    week_row = ""
+    if leaderboard_week:
+        week_row = f"""
+          <div style="padding: 10px 0; border-bottom: 1px solid #e0e0e0;">
+            <strong>Leaderboard week (from page):</strong> {html.escape(leaderboard_week)}
+          </div>
+        """
+
+    leaderboard_body = html.escape(leaderboard_summary_plain)
+    leaderboard_section = f"""
+        <div class="summary" style="background-color: white !important; background: white !important; padding: 20px; border-radius: 8px; margin: 20px 0;">
+          <h3>Top Models chart — admin checklist</h3>
+          <p style="color: #666; font-size: 14px; margin-top: 0;">
+            Based on the weekly <strong>Top Models</strong> chart on
+            <a href="https://openrouter.ai/rankings">openrouter.ai/rankings</a>.
+            <strong>Not in registry</strong> lists the exact OpenRouter model <code>id</code>
+            strings to use with admin validate/add (same as <code>GET /api/v1/models</code>).
+            <strong>Already in registry</strong> is reference only — those ids are already in CompareIntel.
+          </p>
+          <pre style="background: #f1f5f9; padding: 14px; border-radius: 6px; font-size: 12px; line-height: 1.5; overflow-x: auto; white-space: pre-wrap; word-break: break-all;">{leaderboard_body}</pre>
+        </div>
+        """
+
+    html_out = _load_template("new_model_discovery.html").substitute(
+        status_color=status_color,
+        status_text=status_text,
+        formatted_timestamp=now,
+        leaderboard_week_row=week_row,
+        registry_count=registry_count,
+        openrouter_count=openrouter_count,
+        new_count=new_count,
+        models_html=models_html,
+        leaderboard_section=leaderboard_section,
+    )
+
+    message = MessageSchema(
+        subject=subject, recipients=[recipient_email], body=html_out, subtype="html"
+    )
+    try:
+        await fm.send_message(message)
+    except Exception as e:
+        print(f"Failed to send new model discovery report email: {str(e)}")
+        raise
 
 
 async def send_trial_expired_email(email: EmailStr) -> None:

@@ -631,6 +631,10 @@
   margin: 1.5rem 0 0.75rem;
 }
 
+.step-content .seo-anchor-section {
+  scroll-margin-top: 1.25rem;
+}
+
 /* Use case grid (How It Works) */
 .use-case-grid {
   display: grid;

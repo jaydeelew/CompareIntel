@@ -143,6 +143,38 @@ python scripts/generate_renderer_configs.py analysis.json --overwrite
 - Models that already have configs are skipped
 - Use `--overwrite` flag to regenerate all configs (backup first!)
 
+### `new_model_discovery.py`
+
+Uses the weekly **Top Models** leaderboard on [OpenRouter LLM Rankings](https://openrouter.ai/rankings) (same embedded chart as the site), then flags chart rows not yet covered by the CompareIntel registry. Emails `support@compareintel.com`.
+
+**Usage:**
+```bash
+# Run manually
+python scripts/new_model_discovery.py
+
+# Install the weekly cron job (every Monday at 10:00 AM UTC)
+bash scripts/setup_weekly_model_discovery.sh
+```
+
+**What it does:**
+1. Loads model IDs from `backend/data/models_registry.json`
+2. Downloads `https://openrouter.ai/rankings` and parses the main weekly Top Models `ys` block (latest week, network-scale chart)
+3. Fetches `GET https://openrouter.ai/api/v1/models` to resolve chart slugs to API `id` / `canonical_slug`
+4. **Only** leaderboard rows are considered: reports rows missing from the registry (matched by id or `canonical_slug`); skips non-text models when an API entry exists
+5. **Email** (when configured): styled HTML report plus a plain-text checklist — missing models with rank/volume, and ids already in the registry
+6. **Terminal (stdout):** only what is still missing from CompareIntel — one OpenRouter model `id` per chart row (or a single line: `No new leaderboard models missing from CompareIntel.`). Errors print to stderr.
+
+**Options:**
+- If email is not configured, stdout is still the minimal id list; there is no full report on the terminal
+
+**Caveats:**
+- The default leaderboard is the top slice shown on `/rankings` (the chart embedded in the page for the latest week). If OpenRouter changes HTML/encoding, parsing may need an update.
+
+**Output:**
+- Email to `support@compareintel.com` with full details and checklist (when email is configured)
+- Stdout: missing leaderboard model ids only; stderr: errors
+- Log output to `logs/model_discovery.log` when run via cron
+
 ### `list_model_token_limits.py`
 
 Lists all models and their input token capacities from OpenRouter API.

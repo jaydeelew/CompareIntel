@@ -153,6 +153,24 @@
   user-select: none;
 }
 
+.disabled-button-info-learn-more {
+  padding: 0 1.5rem 1rem;
+  text-align: center;
+}
+
+.disabled-button-info-learn-more a {
+  color: var(--primary-color);
+  font-size: 0.9375rem;
+  font-weight: 500;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.disabled-button-info-learn-more a:hover {
+  color: var(--primary-hover, var(--primary-color));
+  text-decoration: underline;
+}
+
 .disabled-button-info-footer {
   padding: 1rem 1.5rem;
   border-top: 1px solid var(--border-color);
@@ -223,6 +241,14 @@
 
   .disabled-button-info-content p {
     font-size: 0.9375rem;
+  }
+
+  .disabled-button-info-learn-more {
+    padding: 0 1.25rem 0.875rem;
+  }
+
+  .disabled-button-info-learn-more a {
+    font-size: 0.875rem;
   }
 
   .disabled-button-info-footer {

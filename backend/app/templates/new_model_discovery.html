@@ -1,0 +1,108 @@
+<html>
+  <head>
+    <meta name="color-scheme" content="light">
+    <meta name="supported-color-schemes" content="light">
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        line-height: 1.6;
+        color: #333 !important;
+        background-color: #ffffff !important;
+      }
+      .container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+      .header {
+        background-color: #1e40af !important;
+        background: linear-gradient(135deg, #1e40af 0%, #0ea5e9 100%) !important;
+        color: white !important;
+        padding: 30px;
+        text-align: center;
+        border-radius: 8px 8px 0 0;
+      }
+      .content {
+        background-color: #f9f9f9 !important;
+        background: #f9f9f9 !important;
+        padding: 30px;
+        border-radius: 0 0 8px 8px;
+      }
+      .status-box {
+        background-color: white !important;
+        background: white !important;
+        border: 2px solid $status_color;
+        padding: 20px;
+        border-radius: 8px;
+        margin: 20px 0;
+        text-align: center;
+      }
+      .status-box h2 {
+        color: $status_color !important;
+        margin: 0 0 10px 0;
+      }
+      .summary {
+        background-color: white !important;
+        background: white !important;
+        padding: 20px;
+        border-radius: 8px;
+        margin: 20px 0;
+      }
+      .model-card {
+        background-color: white !important;
+        background: white !important;
+        border-left: 4px solid #0ea5e9;
+        padding: 16px;
+        margin: 12px 0;
+        border-radius: 4px;
+      }
+      .footer {
+        text-align: center;
+        margin-top: 20px;
+        color: #666 !important;
+        font-size: 12px;
+      }
+    </style>
+  </head>
+  <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; background-color: #ffffff;">
+    <div class="container">
+      <div class="header" style="background-color: #1e40af !important; background: linear-gradient(135deg, #1e40af 0%, #0ea5e9 100%) !important; color: white !important; padding: 30px; text-align: center; border-radius: 8px 8px 0 0;">
+        <h1 style="color: white !important; margin: 0;">New Model Discovery Report</h1>
+      </div>
+      <div class="content" style="background-color: #f9f9f9 !important; background: #f9f9f9 !important; padding: 30px; border-radius: 0 0 8px 8px;">
+        <div class="status-box" style="background-color: white !important; background: white !important; border: 2px solid $status_color; padding: 20px; border-radius: 8px; margin: 20px 0; text-align: center;">
+          <h2 style="color: $status_color !important; margin: 0 0 10px 0;">$status_text</h2>
+          <p style="margin: 0; color: #666 !important;">Report generated on $formatted_timestamp</p>
+        </div>
+
+        <div class="summary" style="background-color: white !important; background: white !important; padding: 20px; border-radius: 8px; margin: 20px 0;">
+          <h3>Summary</h3>
+          $leaderboard_week_row
+          <div style="padding: 10px 0; border-bottom: 1px solid #e0e0e0;">
+            <strong>Models in Registry:</strong> $registry_count
+          </div>
+          <div style="padding: 10px 0; border-bottom: 1px solid #e0e0e0;">
+            <strong>Models on OpenRouter:</strong> $openrouter_count
+          </div>
+          <div style="padding: 10px 0;">
+            <strong>New Models Found:</strong> <span style="color: $status_color !important;">$new_count</span>
+          </div>
+        </div>
+
+        $models_html
+
+        $leaderboard_section
+
+        <p style="margin-top: 30px; color: #666 !important; font-size: 14px;">
+          This report uses only models from the weekly Top Models leaderboard on
+          <a href="https://openrouter.ai/rankings">openrouter.ai/rankings</a>, cross-checked with
+          GET /api/v1/models and your CompareIntel registry.
+        </p>
+      </div>
+      <div class="footer">
+        <p>CompareIntel New Model Discovery</p>
+        <p>&copy; 2026 CompareIntel. All rights reserved.</p>
+      </div>
+    </div>
+  </body>
+</html>

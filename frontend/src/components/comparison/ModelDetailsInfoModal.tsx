@@ -1,24 +1,32 @@
 /**
- * Modal explaining the thinking-model indicator on mobile (tooltips are unreliable on touch).
- * Reuses disabled-button-info modal styling like WebSearchInfoModal.
+ * Mobile sheet for model context / knowledge cutoff details (touch devices).
+ * Reuses DisabledButtonInfoModal styling; portaled to document.body for correct fixed positioning.
  */
 
 import { useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { Link } from 'react-router-dom'
 
+import type { Model, ModelsByProvider } from '../../types'
+
+import { ModelInfoPanelContent } from './ModelInfoPanelContent'
 import './DisabledButtonInfoModal.css'
 
-interface ThinkingModelInfoModalProps {
+interface ModelDetailsInfoModalProps {
   isOpen: boolean
   onClose: () => void
+  model: Model | null
+  modelsByProvider: ModelsByProvider
 }
 
-const THINKING_MODEL_MESSAGE =
-  'This is a thinking model: the provider may expose separable reasoning in a Reasoning section while the answer streams. That reasoning is not saved with your history. Responses may take longer and can use more credits than comparable chat models. Some models reason internally without exposing that text here.'
-
-export function ThinkingModelInfoModal({ isOpen, onClose }: ThinkingModelInfoModalProps) {
+export function ModelDetailsInfoModal({
+  isOpen,
+  onClose,
+  model,
+  modelsByProvider,
+}: ModelDetailsInfoModalProps) {
   const closeButtonRef = useRef<HTMLButtonElement>(null)
+  const isImageGen = !!model?.supports_image_generation
 
   useEffect(() => {
     if (!isOpen) return
@@ -44,7 +52,7 @@ export function ThinkingModelInfoModal({ isOpen, onClose }: ThinkingModelInfoMod
     }
   }, [isOpen])
 
-  if (!isOpen || typeof document === 'undefined') return null
+  if (!isOpen || !model || typeof document === 'undefined') return null
 
   return createPortal(
     <div
@@ -52,8 +60,7 @@ export function ThinkingModelInfoModal({ isOpen, onClose }: ThinkingModelInfoMod
       onClick={onClose}
       role="dialog"
       aria-modal="true"
-      aria-labelledby="thinking-model-info-title"
-      aria-describedby="thinking-model-info-message"
+      aria-labelledby="model-details-info-title"
     >
       <div
         className="disabled-button-info-modal"
@@ -63,7 +70,7 @@ export function ThinkingModelInfoModal({ isOpen, onClose }: ThinkingModelInfoMod
         }}
       >
         <div className="disabled-button-info-header">
-          <h3 id="thinking-model-info-title">Thinking model</h3>
+          <h3 id="model-details-info-title">{model.name}</h3>
           <button
             ref={closeButtonRef}
             className="disabled-button-info-close"
@@ -87,7 +94,11 @@ export function ThinkingModelInfoModal({ isOpen, onClose }: ThinkingModelInfoMod
           </button>
         </div>
         <div className="disabled-button-info-content">
-          <p id="thinking-model-info-message">{THINKING_MODEL_MESSAGE}</p>
+          <div
+            className={`model-info-tooltip model-info-tooltip--static-panel ${isImageGen ? 'model-info-tooltip--image' : ''}`}
+          >
+            <ModelInfoPanelContent model={model} modelsByProvider={modelsByProvider} />
+          </div>
         </div>
         <div className="disabled-button-info-learn-more">
           <Link to="/how-it-works#model-selection-indicators" onClick={() => onClose()}>

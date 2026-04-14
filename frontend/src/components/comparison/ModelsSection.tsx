@@ -2,18 +2,13 @@ import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from
 
 import { useResponsive } from '../../hooks'
 import type { Model, ModelsByProvider, User } from '../../types'
-import { formatTokenCount } from '../../utils/format'
-import {
-  getSupportedAspectRatios,
-  getSupportedImageSizes,
-  orderAspectRatiosLikeAdvanced,
-  orderImageSizesLikeAdvanced,
-} from '../../utils/imageConfigValidation'
 import { isThinkingModel } from '../../utils/thinkingModels'
 import { filterToVisionModels } from '../../utils/visionModels'
 import { ProviderIcon } from '../layout/ProviderCarousel'
 import { StyledTooltip } from '../shared'
 
+import { ModelDetailsInfoModal } from './ModelDetailsInfoModal'
+import { ModelInfoPanelContent } from './ModelInfoPanelContent'
 import { SelectAllInfoModal } from './SelectAllInfoModal'
 import { ThinkingModelInfoModal } from './ThinkingModelInfoModal'
 import { getTooltipModalSuppressed } from './tooltipModalStorage'
@@ -85,70 +80,6 @@ function scheduleScrollRestores(pos: { app: number; win: number }): void {
   }
 }
 
-function ModelInfoTooltipContent({
-  model,
-  modelsByProvider,
-}: {
-  model: Model
-  modelsByProvider: ModelsByProvider
-}) {
-  const isImageModel = !!model.supports_image_generation
-  const aspectText = isImageModel
-    ? (() => {
-        const a = orderAspectRatiosLikeAdvanced(
-          getSupportedAspectRatios(model.id, modelsByProvider)
-        )
-        return a.length > 0 ? a.join(', ') : '—'
-      })()
-    : ''
-  const sizeText = isImageModel
-    ? (() => {
-        const s = orderImageSizesLikeAdvanced(getSupportedImageSizes(model.id, modelsByProvider))
-        return s.length > 0 ? s.join(', ') : '—'
-      })()
-    : ''
-
-  return (
-    <>
-      <span className="tooltip-section">
-        <span className="tooltip-row">
-          <span className="tooltip-label">Context window:</span>
-          <span className="tooltip-value context-window">
-            {formatTokenCount(model.max_input_tokens)} tokens
-          </span>
-        </span>
-      </span>
-      {isImageModel ? (
-        <>
-          <span className="tooltip-section">
-            <span className="tooltip-row">
-              <span className="tooltip-label">Aspect Ratios:</span>
-              <span className="tooltip-value">{aspectText}</span>
-            </span>
-          </span>
-          <span className="tooltip-section">
-            <span className="tooltip-row">
-              <span className="tooltip-label">Image Sizes:</span>
-              <span className="tooltip-value">{sizeText}</span>
-            </span>
-          </span>
-        </>
-      ) : (
-        <span className="tooltip-section">
-          <span className="tooltip-row">
-            <span className="tooltip-label">Knowledge cutoff:</span>
-            {model.knowledge_cutoff ? (
-              <span className="tooltip-value cutoff-date">{model.knowledge_cutoff}</span>
-            ) : (
-              <span className="tooltip-value cutoff-pending">Date pending</span>
-            )}
-          </span>
-        </span>
-      )}
-    </>
-  )
-}
-
 /** 14px-wide info icon at end of `.model-name-tooltip-wrapper`; caret targets its horizontal center. */
 const MODEL_INFO_ICON_CSS_PX = 14
 
@@ -167,12 +98,14 @@ function ModelNameWithInfoTooltip({
   hideTooltip = false,
   isMobileLayout = false,
   onOpenThinkingModelInfoModal,
+  onOpenModelDetailsModal,
 }: {
   model: Model
   modelsByProvider: ModelsByProvider
   hideTooltip?: boolean
   isMobileLayout?: boolean
   onOpenThinkingModelInfoModal?: () => void
+  onOpenModelDetailsModal?: () => void
 }) {
   const wrapRef = useRef<HTMLSpanElement>(null)
   const tipRef = useRef<HTMLSpanElement>(null)
@@ -194,34 +127,56 @@ function ModelNameWithInfoTooltip({
   }, [isThinking])
 
   useLayoutEffect(() => {
+    if (isMobileLayout) return
     placeTooltipArrow()
-  }, [placeTooltipArrow, model.id, model.name, model.supports_image_generation, isThinking])
+  }, [
+    placeTooltipArrow,
+    isMobileLayout,
+    model.id,
+    model.name,
+    model.supports_image_generation,
+    isThinking,
+  ])
 
-  return (
-    <span
-      ref={wrapRef}
-      className={`model-name-tooltip-wrapper ${hideTooltip ? 'model-info-tooltip-disabled' : ''}`}
+  const knowledgeIconSvg = (
+    <svg
+      className="knowledge-cutoff-icon"
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
     >
-      <span className="model-info-tooltip-trigger" onMouseEnter={placeTooltipArrow}>
+      <circle cx="12" cy="12" r="10" />
+      <path d="M12 16v-4" />
+      <path d="M12 8h.01" />
+    </svg>
+  )
+
+  if (isMobileLayout) {
+    return (
+      <span
+        className={`model-name-tooltip-wrapper model-name-tooltip-wrapper--mobile ${hideTooltip ? 'model-info-tooltip-disabled' : ''}`}
+      >
         <span className="model-name-text">{model.name}</span>
-        <svg
-          className="knowledge-cutoff-icon"
-          width="14"
-          height="14"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <circle cx="12" cy="12" r="10" />
-          <path d="M12 16v-4" />
-          <path d="M12 8h.01" />
-        </svg>
-      </span>
-      {isThinking &&
-        (isMobileLayout ? (
+        {!hideTooltip && (
+          <button
+            type="button"
+            className="model-knowledge-info-btn"
+            onClick={e => {
+              e.preventDefault()
+              e.stopPropagation()
+              onOpenModelDetailsModal?.()
+            }}
+            aria-label="Model details — tap for info"
+          >
+            {knowledgeIconSvg}
+          </button>
+        )}
+        {isThinking && (
           <button
             type="button"
             className="thinking-model-icon-btn"
@@ -234,18 +189,32 @@ function ModelNameWithInfoTooltip({
           >
             <ThinkingModelIcon className="thinking-model-icon" />
           </button>
-        ) : (
-          <StyledTooltip usePortal text="Thinking model">
-            <span className="thinking-model-icon-wrap" aria-hidden>
-              <ThinkingModelIcon className="thinking-model-icon" />
-            </span>
-          </StyledTooltip>
-        ))}
+        )}
+      </span>
+    )
+  }
+
+  return (
+    <span
+      ref={wrapRef}
+      className={`model-name-tooltip-wrapper ${hideTooltip ? 'model-info-tooltip-disabled' : ''}`}
+    >
+      <span className="model-info-tooltip-trigger" onMouseEnter={placeTooltipArrow}>
+        <span className="model-name-text">{model.name}</span>
+        {knowledgeIconSvg}
+      </span>
+      {isThinking && (
+        <StyledTooltip usePortal text="Thinking model">
+          <span className="thinking-model-icon-wrap" aria-hidden>
+            <ThinkingModelIcon className="thinking-model-icon" />
+          </span>
+        </StyledTooltip>
+      )}
       <span
         ref={tipRef}
         className={`model-info-tooltip ${isImageGen ? 'model-info-tooltip--image' : ''}`}
       >
-        <ModelInfoTooltipContent model={model} modelsByProvider={modelsByProvider} />
+        <ModelInfoPanelContent model={model} modelsByProvider={modelsByProvider} />
       </span>
     </span>
   )
@@ -338,6 +307,7 @@ export const ModelsSection: React.FC<ModelsSectionProps> = ({
   const { isMobileLayout } = useResponsive()
   const [showWebSearchInfoModal, setShowWebSearchInfoModal] = useState(false)
   const [showThinkingModelInfoModal, setShowThinkingModelInfoModal] = useState(false)
+  const [modelDetailsModalModel, setModelDetailsModalModel] = useState<Model | null>(null)
   const [selectAllModalProvider, setSelectAllModalProvider] = useState<string | null>(null)
 
   /** Scroll snapshot from pointerdown on a provider model row (before focus + layout). */
@@ -674,6 +644,7 @@ export const ModelsSection: React.FC<ModelsSectionProps> = ({
                               onOpenThinkingModelInfoModal={() =>
                                 setShowThinkingModelInfoModal(true)
                               }
+                              onOpenModelDetailsModal={() => setModelDetailsModalModel(model)}
                             />
                             {model.trial_unlocked && (
                               <span
@@ -841,6 +812,7 @@ export const ModelsSection: React.FC<ModelsSectionProps> = ({
                         hideTooltip={hideModelInfoTooltips}
                         isMobileLayout={isMobileLayout}
                         onOpenThinkingModelInfoModal={() => setShowThinkingModelInfoModal(true)}
+                        onOpenModelDetailsModal={() => setModelDetailsModalModel(model)}
                       />
                     </h4>
                     <div className="selected-model-actions">
@@ -937,6 +909,13 @@ export const ModelsSection: React.FC<ModelsSectionProps> = ({
       <ThinkingModelInfoModal
         isOpen={showThinkingModelInfoModal}
         onClose={() => setShowThinkingModelInfoModal(false)}
+      />
+
+      <ModelDetailsInfoModal
+        isOpen={modelDetailsModalModel !== null}
+        model={modelDetailsModalModel}
+        modelsByProvider={modelsByProvider}
+        onClose={() => setModelDetailsModalModel(null)}
       />
 
       {selectAllModalProvider &&
