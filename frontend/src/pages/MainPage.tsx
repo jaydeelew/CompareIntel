@@ -12,7 +12,7 @@ import {
   CREDITS_MESSAGE,
 } from '../components/comparison'
 import { Navigation, MockModeBanner } from '../components/layout'
-import { ComparisonPageContent } from '../components/main-page'
+import { ComparisonPageContent, ModalManager } from '../components/main-page'
 import { DoneSelectingCard } from '../components/shared'
 import { getCreditAllocation, getDailyCreditLimit } from '../config/constants'
 import { useAuth } from '../contexts/AuthContext'
@@ -79,9 +79,6 @@ import {
   modelSupportsVision,
 } from '../utils/visionModels'
 
-const ModalManagerLazy = lazy(() =>
-  import('../components/main-page/ModalManager').then(m => ({ default: m.ModalManager }))
-)
 const TutorialManagerLazy = lazy(() =>
   import('../components/tutorial/TutorialManager').then(m => ({ default: m.TutorialManager }))
 )
@@ -2340,66 +2337,65 @@ export function MainPage() {
           welcomeSkipFoldNonce={welcomeSkipFoldNonce}
         />
 
-        <Suspense fallback={null}>
-          <ModalManagerLazy
-            isAuthModalOpen={isAuthModalOpen}
-            authModalMode={authModalMode}
-            loginEmail={loginEmail}
-            onAuthModalClose={closeAuthModal}
-            showVerificationCodeModal={showVerificationCodeModal}
-            showVerificationSuccessModal={showVerificationSuccessModal}
-            showPasswordReset={showPasswordReset}
-            userEmail={user?.email}
-            onVerificationCodeModalClose={() => setShowVerificationCodeModal(false)}
-            onVerificationCodeModalUseDifferentEmail={openLoginAfterVerificationCode}
-            onVerificationComplete={handleVerified}
-            onVerificationSuccessModalClose={() => setShowVerificationSuccessModal(false)}
-            onPasswordResetClose={handlePasswordResetClose}
-            showPremiumModelsToggleModal={showPremiumModelsToggleModal}
-            onPremiumModelsModalClose={() => {
-              setShowPremiumModelsToggleModal(false)
-              setHidePremiumModels(!hidePremiumModels)
-            }}
-            onPremiumModelsDontShowAgain={checked => {
-              if (checked) {
-                localStorage.setItem('premium-models-toggle-info-dismissed', 'true')
-              } else {
-                localStorage.removeItem('premium-models-toggle-info-dismissed')
+        {/* Eager load: lazy ModalManager + Vite dev could load a second React copy and break hooks in modals. */}
+        <ModalManager
+          isAuthModalOpen={isAuthModalOpen}
+          authModalMode={authModalMode}
+          loginEmail={loginEmail}
+          onAuthModalClose={closeAuthModal}
+          showVerificationCodeModal={showVerificationCodeModal}
+          showVerificationSuccessModal={showVerificationSuccessModal}
+          showPasswordReset={showPasswordReset}
+          userEmail={user?.email}
+          onVerificationCodeModalClose={() => setShowVerificationCodeModal(false)}
+          onVerificationCodeModalUseDifferentEmail={openLoginAfterVerificationCode}
+          onVerificationComplete={handleVerified}
+          onVerificationSuccessModalClose={() => setShowVerificationSuccessModal(false)}
+          onPasswordResetClose={handlePasswordResetClose}
+          showPremiumModelsToggleModal={showPremiumModelsToggleModal}
+          onPremiumModelsModalClose={() => {
+            setShowPremiumModelsToggleModal(false)
+            setHidePremiumModels(!hidePremiumModels)
+          }}
+          onPremiumModelsDontShowAgain={checked => {
+            if (checked) {
+              localStorage.setItem('premium-models-toggle-info-dismissed', 'true')
+            } else {
+              localStorage.removeItem('premium-models-toggle-info-dismissed')
+            }
+          }}
+          disabledButtonInfo={disabledButtonInfo}
+          onDisabledButtonInfoClose={() => setDisabledButtonInfo({ button: null, message: '' })}
+          showTrialWelcomeModal={showTrialWelcomeModal}
+          trialEndsAt={user?.trial_ends_at}
+          trialUserEmail={user?.email}
+          onTrialWelcomeModalClose={() => setShowTrialWelcomeModal(false)}
+          disabledModelModalInfo={disabledModelModalInfo}
+          onDisabledModelModalClose={() => setDisabledModelModalInfo(null)}
+          onToggleHidePremiumModels={() => setHidePremiumModels(true)}
+          onOpenSignUp={openRegister}
+          modelTypeConflictType={modelTypeConflictType}
+          onModelTypeConflictModalClose={() => setModelTypeConflictType(null)}
+          imageConfigConflict={imageConfigConflict}
+          aspectRatio={aspectRatio}
+          imageSize={imageSize}
+          modelsByProvider={modelsByProvider}
+          onImageConfigConflictClose={() => {
+            setModelsDropdownOpen('advanced')
+            setImageConfigConflict(prev => {
+              if (prev.conflictType === 'no-common-config') {
+                imageConflictImpossibleDismissedKeyRef.current = [...selectedModels]
+                  .sort()
+                  .join(',')
               }
-            }}
-            disabledButtonInfo={disabledButtonInfo}
-            onDisabledButtonInfoClose={() => setDisabledButtonInfo({ button: null, message: '' })}
-            showTrialWelcomeModal={showTrialWelcomeModal}
-            trialEndsAt={user?.trial_ends_at}
-            trialUserEmail={user?.email}
-            onTrialWelcomeModalClose={() => setShowTrialWelcomeModal(false)}
-            disabledModelModalInfo={disabledModelModalInfo}
-            onDisabledModelModalClose={() => setDisabledModelModalInfo(null)}
-            onToggleHidePremiumModels={() => setHidePremiumModels(true)}
-            onOpenSignUp={openRegister}
-            modelTypeConflictType={modelTypeConflictType}
-            onModelTypeConflictModalClose={() => setModelTypeConflictType(null)}
-            imageConfigConflict={imageConfigConflict}
-            aspectRatio={aspectRatio}
-            imageSize={imageSize}
-            modelsByProvider={modelsByProvider}
-            onImageConfigConflictClose={() => {
-              setModelsDropdownOpen('advanced')
-              setImageConfigConflict(prev => {
-                if (prev.conflictType === 'no-common-config') {
-                  imageConflictImpossibleDismissedKeyRef.current = [...selectedModels]
-                    .sort()
-                    .join(',')
-                }
-                return {
-                  conflictType: null,
-                  incompatibleModelIds: [],
-                  allImageModelIds: undefined,
-                }
-              })
-            }}
-          />
-        </Suspense>
+              return {
+                conflictType: null,
+                incompatibleModelIds: [],
+                allImageModelIds: undefined,
+              }
+            })
+          }}
+        />
 
         <CreditsInfoModal
           isOpen={showCreditsInfoModal}

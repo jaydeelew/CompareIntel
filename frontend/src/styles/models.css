@@ -2476,10 +2476,18 @@
   padding: 0.5rem 0;
   border-top: 1px solid var(--border-color);
   display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 0.75rem;
+  /* auto | 1fr | auto — middle takes only remaining space so search cannot overlap Help / Advanced */
+  grid-template-columns: auto minmax(10rem, 1fr) auto;
+  gap: 0.75rem 0.875rem;
+  /* Top-align so Help me choose / Advanced do not re-center when the search column grows (follow-up, dropdown). */
   align-items: start;
   justify-items: start;
+  /* overflow-x:auto makes overflow-y compute to auto and clips children (e.g. search suggestions). */
+  overflow: visible;
+  min-width: 0;
+  overflow-anchor: none;
+  position: relative;
+  z-index: 100;
 }
 
 /* Help me choose - use contents so button + dropdown participate in grid */
@@ -2488,10 +2496,13 @@
 }
 
 .models-section-buttons-row .help-me-choose-toggle-wrap {
+  grid-column: 1;
   grid-row: 1;
   display: flex;
   align-items: center;
   gap: 0.375rem;
+  /* min-content + nowrap toggle keeps “Help me choose” on one line; avoid min-width:0 shrink-wrap */
+  min-width: min-content;
 }
 
 .help-me-choose-toggle {
@@ -2500,6 +2511,8 @@
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
+  flex-shrink: 0;
+  white-space: nowrap;
   overflow: hidden;
   background: linear-gradient(
     145deg,
@@ -2510,7 +2523,7 @@
   border: 1px solid color-mix(in srgb, var(--primary-color) 42%, var(--border-color));
   color: var(--text-primary);
   font-size: 0.9375rem;
-  font-weight: var(--font-semibold);
+  font-weight: var(--font-medium);
   letter-spacing: var(--tracking-tight);
   cursor: pointer;
   padding: 0.5rem 1.05rem;
@@ -2520,7 +2533,8 @@
     background 0.22s cubic-bezier(0.22, 1, 0.36, 1),
     border-color 0.22s ease,
     box-shadow 0.22s ease,
-    transform 0.22s cubic-bezier(0.22, 1, 0.36, 1);
+    transform 0.22s cubic-bezier(0.22, 1, 0.36, 1),
+    font-weight 0.22s ease;
   box-shadow:
     0 0 0 1px color-mix(in srgb, var(--primary-color) 12%, transparent) inset,
     0 1px 2px color-mix(in srgb, var(--primary-glow) 18%, transparent),
@@ -3795,9 +3809,282 @@ html:not([data-theme]) .help-me-choose-category.has-match {
 }
 
 .models-section-buttons-row .advanced-settings-toggle {
-  grid-column: 2;
+  grid-column: 3;
   grid-row: 1;
   justify-self: end;
+}
+
+/* ─── Model search (typeahead) — between Help me choose and Advanced ─── */
+.model-search {
+  grid-column: 2;
+  grid-row: 1;
+  position: relative;
+  box-sizing: border-box;
+  width: min(100%, clamp(12rem, 32vw, 28rem));
+  max-width: 100%;
+  min-width: 0;
+  align-self: start;
+  justify-self: center;
+  /* Stacking for the suggestions list above the provider list below (row also has z-index). */
+  z-index: 1;
+  /* Avoid scroll-into-view jumps from .models-section scroll-margin (same idea as .model-checkbox) */
+  scroll-margin: 0;
+  scroll-margin-block: 0;
+  scroll-margin-inline: 0;
+  overflow-anchor: none;
+  isolation: isolate;
+}
+
+.model-search-combo {
+  position: relative;
+  width: 100%;
+  overflow-anchor: none;
+}
+
+.model-search-input-shell {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+  width: 100%;
+  min-height: 2.375rem;
+  padding: 0 0.65rem 0 0.55rem;
+  scroll-margin: 0;
+  scroll-margin-block: 0;
+  scroll-margin-inline: 0;
+  border-radius: var(--radius-xl);
+  border: 1px solid color-mix(in srgb, var(--primary-color) 22%, var(--border-color));
+  background: linear-gradient(
+    155deg,
+    color-mix(in srgb, var(--primary-color) 7%, var(--bg-tertiary)) 0%,
+    var(--bg-elevated) 55%,
+    color-mix(in srgb, var(--secondary-color) 4%, var(--bg-tertiary)) 100%
+  );
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--primary-color) 8%, transparent) inset,
+    0 1px 2px color-mix(in srgb, var(--primary-glow) 12%, transparent);
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease;
+}
+
+.model-search-input-shell:focus-within {
+  border-color: color-mix(in srgb, var(--primary-color) 48%, var(--border-color));
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--primary-color) 14%, transparent) inset,
+    0 0 20px color-mix(in srgb, var(--primary-glow) 28%, transparent);
+}
+
+/* Keep the same radius when the dropdown is open — changing radius caused layout/repaint flicker */
+.model-search-input-shell--open {
+  border-color: color-mix(in srgb, var(--primary-color) 42%, var(--border-color));
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--primary-color) 12%, transparent) inset,
+    0 4px 20px color-mix(in srgb, var(--primary-glow) 18%, transparent);
+}
+
+.model-search-input-icon {
+  flex-shrink: 0;
+  color: color-mix(in srgb, var(--primary-color) 75%, var(--text-muted));
+  opacity: 0.9;
+}
+
+.model-search-input {
+  /* Fill shell; column width comes from grid minmax(18rem, 28rem), not input intrinsic size */
+  flex: 1 1 0%;
+  align-self: stretch;
+  min-width: 0;
+  width: 100%;
+  max-width: 100%;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  font-weight: var(--font-medium);
+  padding: 0.35rem 0;
+  margin: 0;
+  outline: none;
+  box-shadow: none;
+  appearance: none;
+  -webkit-appearance: none;
+  scroll-margin: 0;
+  scroll-margin-block: 0;
+  scroll-margin-inline: 0;
+}
+
+.model-search-input:focus,
+.model-search-input:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
+
+.model-search-input::placeholder {
+  color: var(--text-muted);
+  font-weight: var(--font-normal);
+}
+
+.model-search-input:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.model-search-suggestions {
+  position: absolute;
+  z-index: 1000;
+  left: 0;
+  right: 0;
+  top: calc(100% + 2px);
+  margin: 0;
+  padding: 0.35rem;
+  list-style: none;
+  max-height: min(18.5rem, 52vh);
+  overflow-y: auto;
+  border-radius: var(--radius-xl);
+  border: 1px solid color-mix(in srgb, var(--primary-color) 20%, var(--border-color));
+  background:
+    var(--gradient-mesh),
+    linear-gradient(
+      168deg,
+      color-mix(in srgb, var(--primary-color) 10%, var(--bg-elevated)) 0%,
+      var(--bg-elevated) 45%,
+      color-mix(in srgb, var(--secondary-color) 6%, var(--bg-elevated)) 100%
+    );
+  box-shadow:
+    var(--shadow-lg),
+    0 0 0 1px color-mix(in srgb, var(--bg-glass-border) 75%, transparent) inset;
+  /* No backdrop-filter / open animation — they caused visible flicker with scroll & compositing */
+}
+
+.model-search-empty {
+  position: absolute;
+  z-index: 1000;
+  left: 0;
+  right: 0;
+  top: calc(100% + 2px);
+  margin: 0;
+  padding: 0.75rem 0.85rem;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--text-secondary);
+  border-radius: var(--radius-xl);
+  border: 1px solid color-mix(in srgb, var(--primary-color) 16%, var(--border-color));
+  background: var(--bg-elevated);
+  box-shadow: var(--shadow-md);
+}
+
+.model-search-suggestion {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  width: 100%;
+  text-align: left;
+  border: none;
+  border-radius: var(--radius-lg);
+  padding: 0.5rem 0.65rem;
+  margin-bottom: 2px;
+  cursor: pointer;
+  font: inherit;
+  color: var(--text-primary);
+  background: transparent;
+  transition: background 0.15s ease;
+}
+
+.model-search-suggestion:last-child {
+  margin-bottom: 0;
+}
+
+.model-search-suggestion:hover:not(.model-search-suggestion--disabled),
+.model-search-suggestion--active:not(.model-search-suggestion--disabled) {
+  background: color-mix(in srgb, var(--primary-color) 12%, var(--bg-hover));
+}
+
+.model-search-suggestion--active:not(.model-search-suggestion--disabled) {
+  outline: 1px solid color-mix(in srgb, var(--primary-color) 35%, transparent);
+}
+
+.model-search-suggestion--disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.model-search-suggestion--locked:not(.model-search-suggestion--disabled) {
+  opacity: 1;
+  border: 1px dashed color-mix(in srgb, var(--primary-color) 28%, var(--border-color));
+}
+
+.model-search-suggestion--picked {
+  background: color-mix(in srgb, var(--primary-color) 8%, transparent);
+}
+
+.model-search-suggestion-main {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.125rem;
+  min-width: 0;
+}
+
+.model-search-suggestion-name {
+  font-size: 0.875rem;
+  font-weight: var(--font-semibold);
+  line-height: 1.25;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+
+.model-search-suggestion-meta {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+
+.model-search-suggestion-badge {
+  flex-shrink: 0;
+  font-size: 0.6875rem;
+  font-weight: var(--font-semibold);
+  padding: 0.2rem 0.45rem;
+  border-radius: var(--radius-md);
+  color: var(--primary-color);
+  background: color-mix(in srgb, var(--primary-color) 14%, transparent);
+}
+
+.model-search-suggestion-badge--muted {
+  color: var(--text-secondary);
+  background: color-mix(in srgb, var(--text-muted) 12%, transparent);
+}
+
+@media (max-width: 720px) {
+  .models-section-buttons-row {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .models-section-buttons-row .help-me-choose-toggle-wrap {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .models-section-buttons-row .advanced-settings-toggle {
+    grid-column: 2;
+    grid-row: 1;
+    justify-self: end;
+  }
+
+  /* Full width of the buttons row when search stacks below Help / Advanced */
+  .models-section-buttons-row .model-search {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    width: 100%;
+    max-width: none;
+    justify-self: stretch;
+  }
 }
 
 .advanced-settings-toggle {
@@ -3807,11 +4094,12 @@ html:not([data-theme]) .help-me-choose-category.has-match {
   background: var(--bg-tertiary);
   border: 1px solid var(--border-color);
   color: var(--text-secondary);
-  font-size: 0.8125rem;
+  /* Match .help-me-choose-toggle height / tap target on the same row */
+  font-size: 0.9375rem;
   font-weight: var(--font-medium);
   cursor: pointer;
-  padding: 0.375rem 0.75rem;
-  border-radius: var(--radius-lg);
+  padding: 0.5rem 1.05rem;
+  border-radius: var(--radius-xl);
   transition:
     color 0.2s ease,
     background 0.2s ease,

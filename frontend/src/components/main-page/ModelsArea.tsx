@@ -22,7 +22,13 @@ import {
   getSupportedAspectRatiosForModels,
   getSupportedImageSizesForModels,
 } from '../../utils/imageConfigValidation'
-import { AdvancedSettings, HelpMeChoose, ModelsSection, ModelsSectionHeader } from '../comparison'
+import {
+  AdvancedSettings,
+  HelpMeChoose,
+  ModelSearch,
+  ModelsSection,
+  ModelsSectionHeader,
+} from '../comparison'
 import { ErrorBoundary } from '../shared'
 
 export interface ModelsAreaProps {
@@ -379,6 +385,20 @@ export function ModelsArea({
                 modelMode={modelMode}
                 scrollCategoryIdIntoView={helpMeChooseScrollCategoryId}
                 onScrollCategoryIntoViewDone={onHelpMeChooseScrollCategoryDone}
+              />
+              <ModelSearch
+                modelsByProvider={modelsByProvider}
+                selectedModels={selectedModels}
+                onToggleModel={onToggleModel}
+                disabled={isLoading}
+                isFollowUpMode={isFollowUpMode}
+                originalSelectedModels={originalSelectedModels}
+                isAuthenticated={isAuthenticated}
+                user={user}
+                maxModelsLimit={maxModelsLimit}
+                imageModelsDisabledForUnregistered={imageModelsDisabledForUnregistered}
+                onShowDisabledModelModal={onShowDisabledModelModal}
+                isTutorialActive={isTutorialActive}
               />
               <AdvancedSettings
                 temperature={temperature}

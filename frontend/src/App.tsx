@@ -17,10 +17,7 @@ import { AuthProvider } from './contexts/AuthContext'
 import { PWAInstallProvider } from './contexts/PWAInstallContext'
 import { ThemeProvider } from './contexts/ThemeContext'
 import { AdminPage } from './pages'
-
-const MainPage = lazy(() =>
-  import('./pages/MainPage').then(module => ({ default: module.MainPage }))
-)
+import { MainPage } from './pages/MainPage'
 
 const About = lazy(() =>
   import('./components/pages/About').then(module => ({ default: module.About }))
@@ -122,14 +119,8 @@ function App() {
                     </Suspense>
                   }
                 />
-                <Route
-                  path="/"
-                  element={
-                    <Suspense fallback={<LoadingSpinner />}>
-                      <MainPage />
-                    </Suspense>
-                  }
-                />
+                {/* MainPage is eager-loaded: lazy route + Vite dev can load a second `react` copy and break hooks (Invalid hook call / useRef null). */}
+                <Route path="/" element={<MainPage />} />
                 <Route path="/admin" element={<AdminPage />} />
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Route>
