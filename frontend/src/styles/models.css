@@ -2198,6 +2198,12 @@
   }
 }
 
+@media (max-width: 768px) {
+  .provider-count {
+    display: none;
+  }
+}
+
 /* ═══════════════════════════════════════════════════════════
    NON-VISION MODELS WARNING - When selected models can't process images
    ═══════════════════════════════════════════════════════════ */
@@ -4063,18 +4069,30 @@ html:not([data-theme]) .help-me-choose-category.has-match {
 
 @media (max-width: 720px) {
   .models-section-buttons-row {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: minmax(0, 1fr) auto;
   }
 
   .models-section-buttons-row .help-me-choose-toggle-wrap {
     grid-column: 1;
     grid-row: 1;
+    min-width: 0;
+    max-width: 100%;
   }
 
   .models-section-buttons-row .advanced-settings-toggle {
     grid-column: 2;
     grid-row: 1;
     justify-self: end;
+  }
+
+  .models-section-buttons-row .help-me-choose-toggle {
+    max-width: 100%;
+  }
+
+  .help-me-choose-toggle-text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   /* Full width of the buttons row when search stacks below Help / Advanced */

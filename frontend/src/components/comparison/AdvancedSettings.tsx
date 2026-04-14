@@ -363,7 +363,7 @@ export function AdvancedSettings({
         title={isNonDefault && !isExpanded ? 'Advanced: custom settings applied' : undefined}
       >
         <span className="advanced-settings-toggle-text">
-          Advanced
+          {isMobileLayout ? 'Adv' : 'Advanced'}
           {isNonDefault && !isExpanded && (
             <span className="advanced-settings-custom-badge">(custom)</span>
           )}
