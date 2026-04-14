@@ -338,7 +338,6 @@ const MOMENTUM_MIN = 0.05
 const DRAG_THRESHOLD_MOUSE = 3
 const DRAG_THRESHOLD_TOUCH = 12
 const DEPTH_THRESHOLD = 0.5
-const OCCLUDE_DEPTH = 0.2
 
 interface LayoutParams {
   radius: number
@@ -347,9 +346,9 @@ interface LayoutParams {
   scaleBack: number
 }
 
-const LAYOUT_DESKTOP: LayoutParams = { radius: 280, tiltY: 32, scaleFront: 2.0, scaleBack: 0.2 }
-const LAYOUT_TABLET: LayoutParams = { radius: 200, tiltY: 24, scaleFront: 1.6, scaleBack: 0.2 }
-const LAYOUT_MOBILE: LayoutParams = { radius: 180, tiltY: 18, scaleFront: 2.0, scaleBack: 0.1 }
+const LAYOUT_DESKTOP: LayoutParams = { radius: 280, tiltY: 50, scaleFront: 2.0, scaleBack: 0.2 }
+const LAYOUT_TABLET: LayoutParams = { radius: 200, tiltY: 38, scaleFront: 1.6, scaleBack: 0.2 }
+const LAYOUT_MOBILE: LayoutParams = { radius: 180, tiltY: 30, scaleFront: 2.0, scaleBack: 0.1 }
 
 function useResponsiveLayout(): LayoutParams {
   const [params, setParams] = useState<LayoutParams>(LAYOUT_DESKTOP)
@@ -377,12 +376,10 @@ function useResponsiveLayout(): LayoutParams {
 }
 
 /**
- * Compute 2D x, y, scale, opacity, zIndex, isFront for one carousel item.
- * The ring is tilted forward so the front dips below center and
- * the back rises above. Items are split into a front layer (above the
- * watermark) and a back layer (behind it) so they appear to orbit
- * around the floating logo — fully hidden when directly behind it,
- * smoothly emerging at the edges.
+ * Compute 2D x, y, scale, opacities, zIndex, isFront for one carousel item.
+ * Back-layer items paint under the watermark (z-index); opacityBack tapers to
+ * 0 at the far back (under the hub) and rises toward the sides so icons can
+ * emerge from behind near the rim. Front-layer uses opacityFront for depth.
  */
 function itemLayout(
   itemAngleDeg: number,
@@ -398,12 +395,14 @@ function itemLayout(
   const y = (z / radius) * tiltY
   const scale = scaleBack + (scaleFront - scaleBack) * depth
 
-  const opacity =
-    depth <= OCCLUDE_DEPTH ? 0 : Math.pow((depth - OCCLUDE_DEPTH) / (1 - OCCLUDE_DEPTH), 0.4)
+  const opacityFront = 0.18 + 0.82 * Math.pow(depth, 0.42)
+  // Back hemisphere only (depth ≤ 0.5): 0 at center-back, ~1 near the left/right “open” parts of the ring
+  const backT = Math.min(1, Math.max(0, depth / DEPTH_THRESHOLD))
+  const opacityBack = Math.pow(backT, 2.4)
 
   const zIndex = Math.round(z + radius)
   const isFront = depth > DEPTH_THRESHOLD
-  return { x, y, scale, opacity, zIndex, isFront }
+  return { x, y, scale, opacityFront, opacityBack, zIndex, isFront }
 }
 
 /* ──────────────────────────────── component ──────────────────────────────── */
@@ -581,7 +580,8 @@ export function ProviderCarousel({ providers, onProviderClick }: ProviderCarouse
   const layouts = providers.map((_, i) => itemLayout(baseAngles[i], rotation, layoutParams))
 
   const renderItem = (provider: string, i: number, interactive: boolean) => {
-    const { x, y, scale, opacity, zIndex } = layouts[i]
+    const { x, y, scale, opacityFront, opacityBack, zIndex } = layouts[i]
+    const opacity = interactive ? opacityFront : opacityBack
     return (
       <button
         key={provider}
@@ -590,6 +590,7 @@ export function ProviderCarousel({ providers, onProviderClick }: ProviderCarouse
         style={{
           transform: `translate(${x}px, ${y}px) scale(${scale})`,
           opacity,
+          visibility: opacity < 0.008 ? 'hidden' : undefined,
           zIndex,
         }}
         onClick={interactive ? e => onItemClick(provider, e) : undefined}
