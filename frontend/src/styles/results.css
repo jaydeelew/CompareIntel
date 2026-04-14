@@ -2221,6 +2221,26 @@ body:has([role='dialog'][aria-modal='true']) .done-selecting-card {
   align-items: center;
   gap: 0.9rem;
   min-width: 250px;
+  position: relative;
+}
+
+.done-selecting-close-button {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.65rem;
+  border: none;
+  background: transparent;
+  color: rgba(200, 200, 200, 0.75);
+  font-size: 0.85rem;
+  line-height: 1;
+  padding: 0.2rem;
+  cursor: pointer;
+  opacity: 0.85;
+  transition: opacity 0.2s ease;
+}
+
+.done-selecting-close-button:hover {
+  opacity: 1;
 }
 
 .done-selecting-content h3 {

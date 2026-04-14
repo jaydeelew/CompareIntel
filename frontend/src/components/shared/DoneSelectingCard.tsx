@@ -1,17 +1,27 @@
 interface DoneSelectingCardProps {
   onDone: () => void
+  onClose: () => void
 }
 
 /**
  * DoneSelectingCard - Floating card that appears when models need to be confirmed
  * Shows a checkmark button to confirm selection
  */
-export function DoneSelectingCard({ onDone }: DoneSelectingCardProps) {
+export function DoneSelectingCard({ onDone, onClose }: DoneSelectingCardProps) {
   return (
     <div className="done-selecting-card">
       <div className="done-selecting-content">
+        <button
+          type="button"
+          onClick={onClose}
+          className="done-selecting-close-button"
+          aria-label="Close done selecting card"
+        >
+          x
+        </button>
         <h3>Done Selecting?</h3>
         <button
+          type="button"
           onClick={onDone}
           className="done-selecting-button"
           aria-label="Done selecting models"

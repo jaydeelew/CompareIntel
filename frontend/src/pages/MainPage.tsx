@@ -395,21 +395,26 @@ export function MainPage() {
     null
   )
 
-  const { showDoneSelectingCard, setShowDoneSelectingCard, handleDoneSelecting } =
-    useDoneSelectingCard(
-      {
-        selectedModelsCount: selectedModels.length,
-        isModelsHidden,
-        isFollowUpMode,
-        modelsSectionRef,
-        tutorialIsActive: tutorialState.isActive,
-      },
-      {
-        onCollapseAllDropdowns: collapseAllDropdowns,
-        onSetIsModelsHidden: setIsModelsHidden,
-        onFocusTextarea: () => textareaRef.current?.focus(),
-      }
-    )
+  const {
+    showDoneSelectingCard,
+    setShowDoneSelectingCard,
+    handleDoneSelecting,
+    handleDismissDoneSelecting,
+  } = useDoneSelectingCard(
+    {
+      selectedModelsCount: selectedModels.length,
+      selectedModelsSignature: selectedModels.slice().sort().join(','),
+      isModelsHidden,
+      isFollowUpMode,
+      modelsSectionRef,
+      tutorialIsActive: tutorialState.isActive,
+    },
+    {
+      onCollapseAllDropdowns: collapseAllDropdowns,
+      onSetIsModelsHidden: setIsModelsHidden,
+      onFocusTextarea: () => textareaRef.current?.focus(),
+    }
+  )
 
   const clearHelpMeChooseScrollCategory = useCallback(() => {
     setHelpMeChooseScrollCategoryId(null)
@@ -2322,7 +2327,9 @@ export function MainPage() {
       )}
 
       <>
-        {showDoneSelectingCard && <DoneSelectingCard onDone={handleDoneSelecting} />}
+        {showDoneSelectingCard && (
+          <DoneSelectingCard onDone={handleDoneSelecting} onClose={handleDismissDoneSelecting} />
+        )}
 
         <Navigation
           isAuthenticated={isAuthenticated}

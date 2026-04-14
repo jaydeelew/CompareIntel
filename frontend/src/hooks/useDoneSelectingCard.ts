@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, type RefObject } from 'react'
 
 interface UseDoneSelectingCardProps {
   selectedModelsCount: number
+  selectedModelsSignature: string
   isModelsHidden: boolean
   isFollowUpMode: boolean
   modelsSectionRef: RefObject<HTMLDivElement>
@@ -18,6 +19,7 @@ interface UseDoneSelectingCardReturn {
   showDoneSelectingCard: boolean
   setShowDoneSelectingCard: React.Dispatch<React.SetStateAction<boolean>>
   handleDoneSelecting: () => void
+  handleDismissDoneSelecting: () => void
 }
 
 /**
@@ -35,6 +37,7 @@ export function useDoneSelectingCard(
 ): UseDoneSelectingCardReturn {
   const {
     selectedModelsCount,
+    selectedModelsSignature,
     isModelsHidden,
     isFollowUpMode,
     modelsSectionRef,
@@ -44,6 +47,7 @@ export function useDoneSelectingCard(
   const { onCollapseAllDropdowns, onSetIsModelsHidden, onFocusTextarea } = callbacks
 
   const [showDoneSelectingCard, setShowDoneSelectingCard] = useState(false)
+  const [isDismissed, setIsDismissed] = useState(false)
 
   // Track mouse/touch position over models section with throttling for better performance
   useEffect(() => {
@@ -64,7 +68,8 @@ export function useDoneSelectingCard(
       const viewportHeight = window.innerHeight
 
       // Base conditions for showing card
-      const baseConditionsMet = selectedModelsCount > 0 && !isModelsHidden && !isFollowUpMode
+      const baseConditionsMet =
+        selectedModelsCount > 0 && !isModelsHidden && !isFollowUpMode && !isDismissed
 
       // Check if any result cards have their top visible in the viewport
       const resultCards = document.querySelectorAll('.result-card.conversation-card')
@@ -264,7 +269,12 @@ export function useDoneSelectingCard(
         window.clearTimeout(keepVisibleTimeout)
       }
     }
-  }, [selectedModelsCount, isModelsHidden, isFollowUpMode, modelsSectionRef])
+  }, [selectedModelsCount, isModelsHidden, isFollowUpMode, modelsSectionRef, isDismissed])
+
+  // Re-enable card visibility when model selection changes after dismissal
+  useEffect(() => {
+    setIsDismissed(false)
+  }, [selectedModelsSignature])
 
   // Immediately hide card when all models are deselected
   useEffect(() => {
@@ -308,9 +318,15 @@ export function useDoneSelectingCard(
     }, 800) // Wait for scroll animation to complete
   }, [onCollapseAllDropdowns, onSetIsModelsHidden, onFocusTextarea])
 
+  const handleDismissDoneSelecting = useCallback(() => {
+    setIsDismissed(true)
+    setShowDoneSelectingCard(false)
+  }, [])
+
   return {
     showDoneSelectingCard: showDoneSelectingCard && !tutorialIsActive,
     setShowDoneSelectingCard,
     handleDoneSelecting,
+    handleDismissDoneSelecting,
   }
 }
