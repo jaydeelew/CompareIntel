@@ -310,6 +310,13 @@ export const ModelsSection: React.FC<ModelsSectionProps> = ({
   const [modelDetailsModalModel, setModelDetailsModalModel] = useState<Model | null>(null)
   const [selectAllModalProvider, setSelectAllModalProvider] = useState<string | null>(null)
 
+  const openThinkingModelInfoModal = useCallback(() => {
+    if (isMobileLayout && getTooltipModalSuppressed('thinking-model')) {
+      return
+    }
+    setShowThinkingModelInfoModal(true)
+  }, [isMobileLayout])
+
   /** Scroll snapshot from pointerdown on a provider model row (before focus + layout). */
   const providerToggleScrollSnapRef = useRef<{ app: number; win: number } | null>(null)
   const providerTogglePointerTsRef = useRef(0)
@@ -641,9 +648,7 @@ export const ModelsSection: React.FC<ModelsSectionProps> = ({
                               modelsByProvider={modelsByProvider}
                               hideTooltip={hideModelInfoTooltips}
                               isMobileLayout={isMobileLayout}
-                              onOpenThinkingModelInfoModal={() =>
-                                setShowThinkingModelInfoModal(true)
-                              }
+                              onOpenThinkingModelInfoModal={openThinkingModelInfoModal}
                               onOpenModelDetailsModal={() => setModelDetailsModalModel(model)}
                             />
                             {model.trial_unlocked && (
@@ -811,7 +816,7 @@ export const ModelsSection: React.FC<ModelsSectionProps> = ({
                         modelsByProvider={modelsByProvider}
                         hideTooltip={hideModelInfoTooltips}
                         isMobileLayout={isMobileLayout}
-                        onOpenThinkingModelInfoModal={() => setShowThinkingModelInfoModal(true)}
+                        onOpenThinkingModelInfoModal={openThinkingModelInfoModal}
                         onOpenModelDetailsModal={() => setModelDetailsModalModel(model)}
                       />
                     </h4>

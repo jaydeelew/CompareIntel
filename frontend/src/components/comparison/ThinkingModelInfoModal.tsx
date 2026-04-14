@@ -3,11 +3,12 @@
  * Reuses disabled-button-info modal styling like WebSearchInfoModal.
  */
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Link } from 'react-router-dom'
 
 import './DisabledButtonInfoModal.css'
+import { setTooltipModalSuppressed } from './tooltipModalStorage'
 
 interface ThinkingModelInfoModalProps {
   isOpen: boolean
@@ -16,9 +17,11 @@ interface ThinkingModelInfoModalProps {
 
 const THINKING_MODEL_MESSAGE =
   'This is a thinking model: the provider may expose separable reasoning in a Reasoning section while the answer streams. That reasoning is not saved with your history. Responses may take longer and can use more credits than comparable chat models. Some models reason internally without exposing that text here.'
+const THINKING_MODEL_MODAL_STORAGE_KEY = 'thinking-model'
 
 export function ThinkingModelInfoModal({ isOpen, onClose }: ThinkingModelInfoModalProps) {
   const closeButtonRef = useRef<HTMLButtonElement>(null)
+  const [dontShowAgain, setDontShowAgain] = useState(false)
 
   useEffect(() => {
     if (!isOpen) return
@@ -43,6 +46,13 @@ export function ThinkingModelInfoModal({ isOpen, onClose }: ThinkingModelInfoMod
       document.body.style.overflow = ''
     }
   }, [isOpen])
+
+  const handleGotIt = () => {
+    if (dontShowAgain) {
+      setTooltipModalSuppressed(THINKING_MODEL_MODAL_STORAGE_KEY, true)
+    }
+    onClose()
+  }
 
   if (!isOpen || typeof document === 'undefined') return null
 
@@ -88,6 +98,14 @@ export function ThinkingModelInfoModal({ isOpen, onClose }: ThinkingModelInfoMod
         </div>
         <div className="disabled-button-info-content">
           <p id="thinking-model-info-message">{THINKING_MODEL_MESSAGE}</p>
+          <label className="action-tooltip-dont-show-again">
+            <input
+              type="checkbox"
+              checked={dontShowAgain}
+              onChange={e => setDontShowAgain(e.target.checked)}
+            />
+            <span>Do not show again</span>
+          </label>
         </div>
         <div className="disabled-button-info-learn-more">
           <Link to="/how-it-works#model-selection-indicators" onClick={() => onClose()}>
@@ -95,7 +113,12 @@ export function ThinkingModelInfoModal({ isOpen, onClose }: ThinkingModelInfoMod
           </Link>
         </div>
         <div className="disabled-button-info-footer">
-          <button className="disabled-button-info-button" onClick={onClose} type="button" autoFocus>
+          <button
+            className="disabled-button-info-button"
+            onClick={handleGotIt}
+            type="button"
+            autoFocus
+          >
             Got it
           </button>
         </div>
