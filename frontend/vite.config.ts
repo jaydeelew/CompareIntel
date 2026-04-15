@@ -34,6 +34,10 @@ export default defineConfig({
     alias: {
       react: path.resolve(__dirname, 'node_modules/react'),
       'react-dom': path.resolve(__dirname, 'node_modules/react-dom'),
+      // Subpaths must match the same install; otherwise prebundles can load a second React (null dispatcher).
+      'react/jsx-runtime': path.resolve(__dirname, 'node_modules/react/jsx-runtime.js'),
+      'react/jsx-dev-runtime': path.resolve(__dirname, 'node_modules/react/jsx-dev-runtime.js'),
+      'react-dom/client': path.resolve(__dirname, 'node_modules/react-dom/client.js'),
       // Do not alias `react-router` — react-router-dom imports `react-router/dom` (package subpath).
       'react-router-dom': path.resolve(__dirname, 'node_modules/react-router-dom'),
     },
