@@ -100,6 +100,42 @@ def _checkout_customer_kwargs(user: User) -> dict[str, str]:
     return {"customer_email": str(user.email)}
 
 
+def _clear_stale_stripe_customer_if_unknown(
+    stripe_mod: Any,
+    user: User,
+    db: Session,
+) -> None:
+    """Drop ``stripe_customer_id`` if Stripe has no such customer (wrong key/env, deleted, junk)."""
+    cid = user.stripe_customer_id
+    if not cid:
+        return
+    try:
+        stripe_mod.Customer.retrieve(str(cid))
+    except StripeError as exc:
+        code = getattr(exc, "code", None)
+        http_status = getattr(exc, "http_status", None)
+        err_lower = str(exc).lower()
+        missing = (
+            code == "resource_missing" or http_status == 404 or "no such customer" in err_lower
+        )
+        if not missing:
+            logger.warning("Stripe Customer.retrieve(%s) failed: %s", cid, exc)
+            raise HTTPException(
+                status_code=503,
+                detail="Could not verify billing account. Please try again shortly.",
+            ) from exc
+        logger.warning(
+            "Clearing unknown stripe_customer_id for user %s (was %s): %s",
+            user.id,
+            cid,
+            exc,
+        )
+        user.stripe_customer_id = None
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+
+
 def _cancel_other_subscriptions_for_customer(
     stripe_mod: Any,
     *,
@@ -170,6 +206,8 @@ async def create_checkout_session(
     success = body.success_url or f"{settings.frontend_url.rstrip('/')}/?checkout=success"
     cancel = body.cancel_url or f"{settings.frontend_url.rstrip('/')}/?checkout=cancel"
 
+    _clear_stale_stripe_customer_if_unknown(stripe, current_user, db)
+
     session = stripe.checkout.Session.create(
         mode="subscription",
         line_items=[{"price": price_id, "quantity": 1}],
@@ -195,10 +233,12 @@ async def create_checkout_session(
 
 @router.post("/billing/create-portal-session")
 async def create_portal_session(
+    db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user_required),
 ) -> dict[str, str]:
     """Stripe Customer Portal (cancel, payment method, invoices)."""
     stripe = _require_stripe()
+    _clear_stale_stripe_customer_if_unknown(stripe, current_user, db)
     if not current_user.stripe_customer_id:
         raise HTTPException(
             status_code=400,

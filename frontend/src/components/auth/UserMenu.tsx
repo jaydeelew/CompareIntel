@@ -491,6 +491,7 @@ export const UserMenu: React.FC = () => {
       const url = await createBillingPortalSession()
       window.location.href = url
     } catch (err) {
+      await refreshUser()
       const msg =
         err instanceof ApiError
           ? err.message
@@ -500,7 +501,7 @@ export const UserMenu: React.FC = () => {
       setBillingError(msg)
       setBillingBusy(null)
     }
-  }, [])
+  }, [refreshUser])
 
   if (!user) return null
 
