@@ -15,7 +15,11 @@ function isValidLatLon(lat: number, lon: number): boolean {
   )
 }
 
-/** Photon (Komoot) reverse geocode — CORS-friendly, avoids BigDataCloud 400s on bad coords / IP fallback. */
+function stripCountrySuffix(country: string): string {
+  return country.replace(/\s*\(the\)\s*$/i, '').trim()
+}
+
+/** Photon (Komoot) reverse geocode — primary provider. */
 function formatLocationFromPhotonProperties(props: Record<string, unknown>): string | null {
   const city = typeof props.city === 'string' ? props.city : ''
   const region =
@@ -24,8 +28,7 @@ function formatLocationFromPhotonProperties(props: Record<string, unknown>): str
       : typeof props.county === 'string'
         ? props.county
         : ''
-  let country = typeof props.country === 'string' ? props.country : ''
-  country = country.replace(/\s*\(the\)\s*$/i, '').trim()
+  const country = stripCountrySuffix(typeof props.country === 'string' ? props.country : '')
   const parts = [city, region, country].filter(Boolean)
   if (parts.length === 0) return null
   return parts.join(', ')
@@ -41,10 +44,6 @@ function photonReverseUrl(lat: number, lon: number): string {
   return `https://photon.komoot.io/reverse?${q}`
 }
 
-function photonDirectReverseUrl(lat: number, lon: number): string {
-  return `https://photon.komoot.io/reverse?lat=${lat}&lon=${lon}&lang=en`
-}
-
 function locationFromPhotonJson(data: {
   features?: Array<{ properties?: Record<string, unknown> }>
 }): string | null {
@@ -54,29 +53,51 @@ function locationFromPhotonJson(data: {
 }
 
 async function reverseGeocodePhoton(lat: number, lon: number): Promise<string | null> {
-  const url = photonReverseUrl(lat, lon)
-  const response = await fetch(url)
-  if (response.ok) {
+  try {
+    const url = photonReverseUrl(lat, lon)
+    const response = await fetch(url)
+    if (!response.ok) return null
     const data = (await response.json()) as {
       features?: Array<{ properties?: Record<string, unknown> }>
     }
     return locationFromPhotonJson(data)
+  } catch (error) {
+    logger.debug('[Geolocation] Photon request failed:', error)
+    return null
   }
-  // Vite proxy or Komoot can briefly return 5xx; retry direct (CSP allows photon.komoot.io).
-  if (
-    import.meta.env.DEV &&
-    import.meta.env.MODE !== 'test' &&
-    response.status >= 500 &&
-    response.status < 600
-  ) {
-    const fallback = await fetch(photonDirectReverseUrl(lat, lon))
-    if (!fallback.ok) return null
-    const data = (await fallback.json()) as {
-      features?: Array<{ properties?: Record<string, unknown> }>
+}
+
+/**
+ * BigDataCloud reverse geocode — CORS-friendly fallback when Photon is unavailable.
+ * The client-side endpoint requires no API key and sends `Access-Control-Allow-Origin: *`,
+ * so it avoids the CORS failures we see when Photon's error pages lack CORS headers.
+ */
+async function reverseGeocodeBigDataCloud(lat: number, lon: number): Promise<string | null> {
+  try {
+    const url = `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=en`
+    const response = await fetch(url)
+    if (!response.ok) return null
+    const data = (await response.json()) as {
+      city?: string
+      locality?: string
+      principalSubdivision?: string
+      countryName?: string
     }
-    return locationFromPhotonJson(data)
+    const city = data.city || data.locality || ''
+    const region = data.principalSubdivision || ''
+    const country = stripCountrySuffix(data.countryName || '')
+    const parts = [city, region, country].filter(Boolean)
+    return parts.length > 0 ? parts.join(', ') : null
+  } catch (error) {
+    logger.debug('[Geolocation] BigDataCloud request failed:', error)
+    return null
   }
-  return null
+}
+
+async function reverseGeocode(lat: number, lon: number): Promise<string | null> {
+  const primary = await reverseGeocodePhoton(lat, lon)
+  if (primary) return primary
+  return reverseGeocodeBigDataCloud(lat, lon)
 }
 
 interface UseGeolocationProps {
@@ -163,7 +184,7 @@ export function useGeolocation({ isAuthenticated, user }: UseGeolocationProps) {
                     logger.debug('[Geolocation] Ignoring invalid coordinates:', lat, lon)
                     return
                   }
-                  const location = await reverseGeocodePhoton(lat, lon)
+                  const location = await reverseGeocode(lat, lon)
                   if (location) {
                     logger.debug('[Geolocation] Successfully detected location:', location)
                     setUserLocation(location)
