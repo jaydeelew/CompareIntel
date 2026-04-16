@@ -23,6 +23,8 @@ User
 Conversation
 ├── ConversationMessage (1:N)
 └── Conversation (self-reference for breakouts)
+
+ProcessedStripeWebhook (standalone — Stripe webhook idempotency)
 ```
 
 ## Models
@@ -54,6 +56,12 @@ Core user account model with authentication, subscription, and credit tracking.
 | `admin_permissions` | Text | JSON permissions |
 | `mock_mode_enabled` | Boolean | Testing mode |
 | `stripe_customer_id` | String(255) | Stripe customer ID |
+| `stripe_subscription_id` | String(255) | Stripe subscription ID |
+| `purchased_credits_balance` | Integer | Purchased / admin-granted credits (consumed after monthly pool) |
+| `overage_enabled` | Boolean | User opted into pay-as-you-go overage for the current period |
+| `overage_spend_limit_cents` | Integer | Optional overage dollar cap in cents (NULL = unlimited) |
+| `overage_credits_used_this_period` | Integer | Overage credits consumed this billing period |
+| `trial_ends_at` | DateTime | 7-day trial expiration (NULL = no trial) |
 | `monthly_credits_allocated` | Integer | Credits for billing period |
 | `credits_used_this_period` | Integer | Credits consumed |
 | `total_credits_used` | Integer | Lifetime credits |
@@ -66,7 +74,7 @@ Core user account model with authentication, subscription, and credit tracking.
 | `created_at` | DateTime | Creation timestamp |
 | `updated_at` | DateTime | Last update timestamp |
 
-**Computed Property:** `credits_remaining` = `monthly_credits_allocated` - `credits_used_this_period`
+**Computed Property:** `credits_remaining` = max(0, `monthly_credits_allocated` - `credits_used_this_period`) + `purchased_credits_balance`
 
 ---
 
@@ -288,6 +296,22 @@ Global application settings (single row).
 | `web_search_enabled` | Boolean | Web search enabled |
 | `created_at` | DateTime | Creation timestamp |
 | `updated_at` | DateTime | Last update timestamp |
+
+---
+
+### ProcessedStripeWebhook
+
+Idempotency table for Stripe webhook events — prevents duplicate processing.
+
+**Table:** `processed_stripe_webhooks`
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `id` | Integer | Primary key |
+| `stripe_event_id` | String(255) | Unique Stripe event ID |
+| `created_at` | DateTime | When the event was processed |
+
+**Constraints:** Unique on `stripe_event_id`
 
 ---
 

@@ -117,11 +117,13 @@ Use **Developers → Test mode** in the Dashboard. Price amounts must match **`T
 8. **Tier change:** Subscribe to another paid tier from the app; webhook logic cancels other active subscriptions for that customer — confirm **one** active subscription in the Dashboard.
 9. **Synthetic triggers:** `stripe trigger checkout.session.completed` exercises signature verification but often has **no** `client_reference_id` / metadata, so handlers may log “could not resolve user” while still returning **200**. Prefer real Checkout for user-linked tests.
 
-## In-app overage vs Stripe metered billing
+## In-app overage and Stripe metered billing
 
-- **Today:** Pay-as-you-go overage is enforced in **`credit_manager`** (and user settings). Charges are **not** automatically reported to Stripe for invoice line items unless you add that.
-- **Optional env (reserved):** `STRIPE_OVERAGE_METER_ID`, `STRIPE_OVERAGE_PRODUCT_ID`, `STRIPE_PRICE_OVERAGE` are loaded in settings for a future integration.
-- **To invoice overage via Stripe:** After creating a metered Price and attaching it to the subscription (or using [Billing Meters](https://docs.stripe.com/billing/subscriptions/usage-based) as appropriate for your Stripe API version), report usage when overage credits are consumed (e.g. from `deduct_credits` when the overage branch runs). Keep idempotency keys per reporting call. This is **additional engineering** beyond subscription checkout + webhooks.
+- **Overage metering is implemented.** When `deduct_credits` consumes overage credits for a user with `stripe_customer_id`, `backend/app/stripe_metering.py` (`report_overage_credits`) fires a Stripe Billing Meter Event (`overage_credits`) with a per-call idempotency key. Failures are logged but never block the in-app deduction path.
+- **Auto-attach:** On `checkout.session.completed`, `_ensure_overage_subscription_item` in `billing.py` attaches the metered overage Price (`STRIPE_PRICE_OVERAGE`) to the new subscription if not already present.
+- **Env:** `STRIPE_OVERAGE_METER_ID`, `STRIPE_OVERAGE_PRODUCT_ID`, `STRIPE_PRICE_OVERAGE` must be set for overage metering to activate. If `STRIPE_OVERAGE_METER_ID` is unset, `report_overage_credits` is a no-op.
+- **Rate:** `OVERAGE_USD_PER_CREDIT = 0.013` (see `backend/app/config/constants.py`). The metered Price in Stripe must match this per-unit amount.
+- **Billing flow:** Stripe aggregates meter events over the billing period and adds a metered line item to the subscription invoice at period end. See [Billing Meters](https://docs.stripe.com/billing/subscriptions/usage-based).
 
 ## Monthly reset without Stripe
 
