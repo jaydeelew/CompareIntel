@@ -79,7 +79,7 @@ For each successful comparison, whole credits are taken in this order:
 
 ### Spending cap vs unlimited
 
-- **No limit:** After the monthly pool (and any purchased balance) is empty, overage credits accrue until the billing period ends (subject to future Stripe metered billing integration).
+- **No limit:** After the monthly pool (and any purchased balance) is empty, overage credits accrue until the billing period ends. Consumed overage is reported to Stripe Billing Meters (`backend/app/stripe_metering.py`) so Stripe can add a metered line item to the subscription invoice at period end.
 - **Set a spending cap:** The user sets a **maximum dollar amount** for the period; the app converts that to a maximum number of overage credits. When that cap is reached, further comparisons return **402** until the period resets or the user raises the cap (including the quick “extend” action on the comparison page when capped).
 
 ### Automatic reset each billing period

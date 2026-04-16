@@ -92,7 +92,7 @@ Approximate **US card** Stripe formula used for planning:
 - **Above** every tier’s implied pool $/credit (highest pool rate is Starter **$0.01250**/credit).
 - **Above** wholesale **~$0.01**/credit at `CREDITS_PER_DOLLAR = 100` with a modest premium for marginal usage and processing.
 
-Metered Stripe billing and opt-in flows are product follow-ups; the constant is the **list** rate for copy and future billing logic.
+**Stripe metered billing is active.** `deduct_credits` reports consumed overage credits to Stripe via `backend/app/stripe_metering.py` (Billing Meter Events). The metered overage Price (`STRIPE_PRICE_OVERAGE`) is auto-attached to subscriptions during checkout (`_ensure_overage_subscription_item`). Stripe invoices the customer at period end. See `docs/ops/STRIPE_WEBHOOK_RUNBOOK.md` for env setup and operational details.
 
 `SUBSCRIPTION_CONFIG[*].overage_price` is set to **0.013** for paid tiers for API consistency (`extended_overage_price` remains unused / `None`).
 
