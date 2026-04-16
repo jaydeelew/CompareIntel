@@ -122,10 +122,14 @@ export interface CreditEstimate {
 /**
  * Get current credit balance
  *
+ * Caching is disabled: the balance changes after every comparison, refund, or
+ * admin adjustment. A stale cached response would make the UI show incorrect
+ * usage (e.g. overage counter frozen after the second comparison within the
+ * default 5-minute TTL window).
+ *
  * @param fingerprint - Optional browser fingerprint for unregistered users
  */
 export async function getCreditBalance(fingerprint?: string): Promise<CreditBalance> {
-  // Auto-detect timezone from browser
   const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone
   const params = new URLSearchParams()
   if (fingerprint) {
@@ -134,7 +138,8 @@ export async function getCreditBalance(fingerprint?: string): Promise<CreditBala
   params.append('timezone', userTimezone)
   const queryString = params.toString()
   const response = await apiClient.get<CreditBalance>(
-    `/credits/balance${queryString ? `?${queryString}` : ''}`
+    `/credits/balance${queryString ? `?${queryString}` : ''}`,
+    { enableCache: false }
   )
   return response.data
 }
