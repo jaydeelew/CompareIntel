@@ -540,6 +540,14 @@ export async function processComparisonStream(
                       credits_used_this_period:
                         (creditBalance.credits_allocated ?? 0) -
                         streamingMetadata.credits_remaining,
+                      overage_enabled:
+                        streamingMetadata.overage_enabled ?? creditBalance.overage_enabled,
+                      overage_credits_used_this_period:
+                        streamingMetadata.overage_credits_used_this_period ??
+                        creditBalance.overage_credits_used_this_period,
+                      overage_limit_credits:
+                        streamingMetadata.overage_limit_credits ??
+                        creditBalance.overage_limit_credits,
                     })
                   } else if (user) {
                     const allocated =
@@ -555,6 +563,10 @@ export async function processComparisonStream(
                       billing_period_start: user.billing_period_start,
                       billing_period_end: user.billing_period_end,
                       total_credits_used: user.total_credits_used,
+                      overage_enabled: streamingMetadata.overage_enabled,
+                      overage_credits_used_this_period:
+                        streamingMetadata.overage_credits_used_this_period,
+                      overage_limit_credits: streamingMetadata.overage_limit_credits,
                     })
                   }
                 }
