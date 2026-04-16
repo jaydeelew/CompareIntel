@@ -123,6 +123,7 @@ Use **Developers → Test mode** in the Dashboard. Price amounts must match **`T
 - **Auto-attach:** On `checkout.session.completed`, `_ensure_overage_subscription_item` in `billing.py` attaches the metered overage Price (`STRIPE_PRICE_OVERAGE`) to the new subscription if not already present.
 - **Env:** `STRIPE_OVERAGE_METER_ID`, `STRIPE_OVERAGE_PRODUCT_ID`, `STRIPE_PRICE_OVERAGE` must be set for overage metering to activate. If `STRIPE_OVERAGE_METER_ID` is unset, `report_overage_credits` is a no-op.
 - **Rate:** `OVERAGE_USD_PER_CREDIT = 0.013` (see `backend/app/config/constants.py`). The metered Price in Stripe must match this per-unit amount.
+- **Hard cap ceiling.** `deduct_credits` reports **at most** the user's remaining `overage_spend_limit_cents` budget to Stripe. Actual usage above the cap is absorbed by the platform (not metered, not billed) and emitted as a `CREDIT_CAP_ABSORBED` warning log line with `user_id`, `absorbed_credits`, `absorbed_usd`, and the `usage_log_id`. Audit per-user shortfall with `grep CREDIT_CAP_ABSORBED` on backend logs; recurring large values on the same `user_id` typically mean oversized prompts are being fired right at the cap and are worth investigating for abuse or for raising the reserved-estimate ceiling.
 - **Billing flow:** Stripe aggregates meter events over the billing period and adds a metered line item to the subscription invoice at period end. See [Billing Meters](https://docs.stripe.com/billing/subscriptions/usage-based).
 
 ## Monthly reset without Stripe

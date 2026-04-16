@@ -96,6 +96,8 @@ Approximate **US card** Stripe formula used for planning:
 
 `SUBSCRIPTION_CONFIG[*].overage_price` is set to **0.013** for paid tiers for API consistency (`extended_overage_price` remains unused / `None`).
 
+**Cap overruns become platform cost.** `deduct_credits` treats `overage_spend_limit_cents` as a hard ceiling: when actual usage exceeds the remaining cap (reserved estimate too low, usually on large-output text or reasoning models), only the remaining cap is billed and the rest is absorbed. Each absorption emits a `CREDIT_CAP_ABSORBED` WARNING with `absorbed_usd`. Sum those over a window to size the hit; cross-check against `UsageLog.actual_cost` for the same `usage_log_id`. If absorption rates are material, options are: (a) tighten the reserved-credit estimate's 4k-output ceiling in `backend/app/llm/tokens.py::estimate_reserved_credits_for_compare`, or (b) widen the per-comparison margin by raising `OVERAGE_USD_PER_CREDIT`.
+
 ---
 
 ## Constants (code)
