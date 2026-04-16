@@ -1773,14 +1773,6 @@ export const UserMenu: React.FC = () => {
                     comparison add up; we charge whole credits rounded up (at least 1 when anything
                     succeeds).
                   </p>
-                  <p
-                    className="pricing-notice"
-                    style={{ marginTop: '0.75rem', fontSize: '0.85rem' }}
-                  >
-                    Subscription checkout requires Stripe recurring price IDs in server
-                    configuration. If you see a configuration error, billing is not enabled on this
-                    deployment yet.
-                  </p>
                   <button className="modal-button-primary" onClick={closeModal}>
                     Close
                   </button>
