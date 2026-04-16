@@ -80,7 +80,11 @@ For each successful comparison, whole credits are taken in this order:
 ### Spending cap vs unlimited
 
 - **No limit:** After the monthly pool (and any purchased balance) is empty, overage credits accrue until the billing period ends. Consumed overage is reported to Stripe Billing Meters (`backend/app/stripe_metering.py`) so Stripe can add a metered line item to the subscription invoice at period end.
-- **Set a spending cap:** The user sets a **maximum dollar amount** for the period; the app converts that to a maximum number of overage credits. When that cap is reached, further comparisons return **402** until the period resets or the user raises the cap (including the quick “extend” action on the comparison page when capped).
+- **Set a spending cap:** The user sets a **maximum dollar amount** for the period; the app converts that to a maximum number of overage credits. Two things enforce the cap:
+  1. **Admit check** (`check_credits_sufficient`) — returns **402** before streaming starts when the reserved-credit estimate would push the user past the remaining cap, so obviously oversized prompts never run. When the user is already at the cap they see an in-app error plus an optional quick **extend limit** button.
+  2. **Post-stream deduction** (`deduct_credits`) — the cap is a **hard ceiling**. If actual usage ends up higher than the remaining cap (common when the reserved estimate underestimates real model output), only `min(actual, remaining_cap)` is added to `overage_credits_used_this_period` and reported to Stripe. The user is never billed past the dollar amount they configured; the shortfall is absorbed as platform cost.
+
+  Absorbed events are logged at `WARNING` with a greppable `CREDIT_CAP_ABSORBED` prefix and enough fields (`user_id`, `absorbed_credits`, `absorbed_usd`, `requested_credits`, `billed_credits`, `overage_limit_credits`, `overage_spend_limit_cents`, `overage_used_before`, `usage_log_id`) to aggregate per-user abuse or pricing-model drift. The `CreditTransaction` row for a capped run also suffixes its description `[cap: absorbed N credit(s) ~$X.XXXX beyond overage limit]` for per-row audit.
 
 ### Automatic reset each billing period
 
@@ -100,12 +104,14 @@ This is intentional product policy: **overage does not “auto-renew”** across
 
 Streaming **complete** events can include `overage_enabled`, `overage_credits_used_this_period`, and `overage_limit_credits` so the client stays aligned after each run.
 
+`GET /api/credits/balance` is fetched with client-side caching **disabled** (`enableCache: false` in `frontend/src/services/creditService.ts`). The default 5-minute `apiClient` cache would otherwise return stale balances on back-to-back comparisons and freeze the overage counter in the UI while Stripe and the DB keep advancing.
+
 ## Credit Flow
 
 1. **Pre-request:** Frontend blocks submission when the user has no credits remaining.
 2. **Validation:** Backend estimates required credits (per selected model, list pricing or legacy) and returns **402** if the user cannot afford the estimate **including** allowed overage budget when overages are enabled. It also applies tier rules such as anonymous users not using image generation.
 3. **Processing:** Streaming reads `usage.cost` when present; otherwise list pricing or legacy path.
-4. **Deduction:** Whole credits are deducted atomically once per successful comparison: **monthly pool → purchased balance → overage** (when enabled and within cap).
+4. **Deduction:** Whole credits are deducted atomically once per successful comparison: **monthly pool → purchased balance → overage** (when enabled). Overage is hard-capped in `deduct_credits`; any shortfall beyond the cap is absorbed and logged as `CREDIT_CAP_ABSORBED` — see [Spending cap vs unlimited](#spending-cap-vs-unlimited).
 5. **Recording:** `CreditTransaction` + `UsageLog` with `actual_cost` and token fields.
 
 ## Database Fields
