@@ -550,6 +550,8 @@ export const UserMenu: React.FC = () => {
       ? creditBalance
       : null
 
+  const canOpenStripeBillingPortal = Boolean(user.stripe_customer_id || user.stripe_subscription_id)
+
   const usagePeriodLabel =
     trustedCreditBalance?.period_type === 'monthly' || user.billing_period_start
       ? 'Usage This Month'
@@ -672,7 +674,7 @@ export const UserMenu: React.FC = () => {
             <div className="usage-stat-value" style={{ fontSize: '0.875rem' }}>
               <span className="usage-current">{user!.credits_used_this_period ?? 0}</span>
               <span className="usage-separator">/</span>
-              <span className="usage-limit">{getDailyLimit(user!.subscription_tier)}</span>
+              <span className="usage-limit">{getDailyCreditLimit(user!.subscription_tier)}</span>
             </div>
           </div>
         )}
@@ -1447,7 +1449,7 @@ export const UserMenu: React.FC = () => {
                     <div className="tier-checkout-actions" style={{ marginTop: '1rem' }}>
                       <p style={{ fontWeight: 600, margin: 0 }}>${TIER_PRICING.starter}/month</p>
                       {user.subscription_tier === 'starter' ? (
-                        user.stripe_customer_id ? (
+                        canOpenStripeBillingPortal ? (
                           <button
                             type="button"
                             className="modal-button-primary tier-checkout-button tier-checkout-manage-billing"
@@ -1539,7 +1541,7 @@ export const UserMenu: React.FC = () => {
                         ${TIER_PRICING.starter_plus}/month
                       </p>
                       {user.subscription_tier === 'starter_plus' ? (
-                        user.stripe_customer_id ? (
+                        canOpenStripeBillingPortal ? (
                           <button
                             type="button"
                             className="modal-button-primary tier-checkout-button tier-checkout-manage-billing"
@@ -1629,7 +1631,7 @@ export const UserMenu: React.FC = () => {
                     <div className="tier-checkout-actions" style={{ marginTop: '1rem' }}>
                       <p style={{ fontWeight: 600, margin: 0 }}>${TIER_PRICING.pro}/month</p>
                       {user.subscription_tier === 'pro' ? (
-                        user.stripe_customer_id ? (
+                        canOpenStripeBillingPortal ? (
                           <button
                             type="button"
                             className="modal-button-primary tier-checkout-button tier-checkout-manage-billing"
@@ -1720,7 +1722,7 @@ export const UserMenu: React.FC = () => {
                     <div className="tier-checkout-actions" style={{ marginTop: '1rem' }}>
                       <p style={{ fontWeight: 600, margin: 0 }}>${TIER_PRICING.pro_plus}/month</p>
                       {user.subscription_tier === 'pro_plus' ? (
-                        user.stripe_customer_id ? (
+                        canOpenStripeBillingPortal ? (
                           <button
                             type="button"
                             className="modal-button-primary tier-checkout-button tier-checkout-manage-billing"

@@ -1909,7 +1909,9 @@ video.capability-tile-image-lightbox-img {
 .credits-remaining-wrapper {
   display: inline-flex;
   align-items: center;
-  gap: 0.25rem;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.15rem 0.25rem;
 }
 
 .credits-info-trigger {

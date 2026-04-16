@@ -69,13 +69,7 @@ export function useCreditWarningManager() {
       }
 
       if (type === 'overage_active') {
-        const used = ov.overage_credits_used_this_period ?? 0
-        const cost = (used * OVERAGE_USD_PER_CREDIT).toFixed(2)
-        const limitPart =
-          ov.overage_limit_credits != null
-            ? ` (${used.toLocaleString()} / ${ov.overage_limit_credits.toLocaleString()} overage credits used)`
-            : ` (${used.toLocaleString()} overage credits used)`
-        return `Your monthly pool is exhausted — using overage credits at $${OVERAGE_USD_PER_CREDIT}/credit${limitPart}, $${cost} so far this period. Manage limits in Settings → Billing & Overages.`
+        return `Your monthly pool is exhausted — using overage credits at $${OVERAGE_USD_PER_CREDIT}/credit. Manage limits in Settings → Billing & Overages.`
       }
 
       if (type === 'none') {
@@ -144,6 +138,24 @@ export function useCreditWarningManager() {
     []
   )
 
+  const OVERAGE_ACTIVE_DISMISSED_KEY = 'overage-active-dismissed'
+
+  const isOverageActiveDismissed = useCallback((creditsResetAt?: string): boolean => {
+    if (!creditsResetAt) return false
+    const resetDate = new Date(creditsResetAt).toDateString()
+    return localStorage.getItem(OVERAGE_ACTIVE_DISMISSED_KEY) === resetDate
+  }, [])
+
+  const dismissOverageActive = useCallback((creditsResetAt?: string) => {
+    if (creditsResetAt) {
+      const resetDate = new Date(creditsResetAt).toDateString()
+      localStorage.setItem(OVERAGE_ACTIVE_DISMISSED_KEY, resetDate)
+    }
+    setCreditWarningMessage(null)
+    setCreditWarningType('none')
+    setCreditWarningDismissible(false)
+  }, [])
+
   return {
     creditWarningMessage,
     setCreditWarningMessage,
@@ -157,5 +169,7 @@ export function useCreditWarningManager() {
     getCreditWarningMessage,
     isLowCreditWarningDismissed,
     dismissLowCreditWarning,
+    isOverageActiveDismissed,
+    dismissOverageActive,
   }
 }
