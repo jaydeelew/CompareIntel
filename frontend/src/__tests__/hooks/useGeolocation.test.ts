@@ -350,13 +350,14 @@ describe('useGeolocation', () => {
       })
     })
 
-    it('should leave location null when reverse geocode request fails', async () => {
+    it('should leave location null when both providers fail', async () => {
       mockGetCurrentPosition.mockImplementation(cb =>
         cb({
           coords: { latitude: 32.73, longitude: -97.79 },
         })
       )
 
+      mockFetch.mockResolvedValueOnce({ ok: false })
       mockFetch.mockResolvedValueOnce({ ok: false })
 
       const { result } = renderHook(() => useGeolocation({ isAuthenticated: true, user: mockUser }))
@@ -366,13 +367,13 @@ describe('useGeolocation', () => {
       })
 
       await waitFor(() => {
-        expect(mockFetch).toHaveBeenCalledTimes(1)
+        expect(mockFetch).toHaveBeenCalledTimes(2)
       })
 
       expect(result.current.userLocation).toBe(null)
     })
 
-    it('should leave location null when Photon returns no features', async () => {
+    it('should fall back to BigDataCloud when Photon returns no features', async () => {
       mockGetCurrentPosition.mockImplementation(cb =>
         cb({
           coords: { latitude: 32.73, longitude: -97.79 },
@@ -383,6 +384,15 @@ describe('useGeolocation', () => {
         ok: true,
         json: () => Promise.resolve({ type: 'FeatureCollection', features: [] }),
       })
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () =>
+          Promise.resolve({
+            city: 'Weatherford',
+            principalSubdivision: 'Texas',
+            countryName: 'United States of America (the)',
+          }),
+      })
 
       const { result } = renderHook(() => useGeolocation({ isAuthenticated: true, user: mockUser }))
 
@@ -391,10 +401,44 @@ describe('useGeolocation', () => {
       })
 
       await waitFor(() => {
-        expect(mockFetch).toHaveBeenCalledTimes(1)
+        expect(result.current.userLocation).toBe('Weatherford, Texas, United States of America')
       })
 
-      expect(result.current.userLocation).toBe(null)
+      expect(mockFetch).toHaveBeenCalledTimes(2)
+      expect(mockFetch).toHaveBeenLastCalledWith(
+        expect.stringContaining('api.bigdatacloud.net/data/reverse-geocode-client')
+      )
+    })
+
+    it('should fall back to BigDataCloud when Photon throws a network error', async () => {
+      mockGetCurrentPosition.mockImplementation(cb =>
+        cb({
+          coords: { latitude: 32.73, longitude: -97.79 },
+        })
+      )
+
+      mockFetch.mockRejectedValueOnce(new TypeError('Failed to fetch'))
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () =>
+          Promise.resolve({
+            city: 'Weatherford',
+            principalSubdivision: 'Texas',
+            countryName: 'United States',
+          }),
+      })
+
+      const { result } = renderHook(() => useGeolocation({ isAuthenticated: true, user: mockUser }))
+
+      await act(async () => {
+        vi.advanceTimersByTime(5000)
+      })
+
+      await waitFor(() => {
+        expect(result.current.userLocation).toBe('Weatherford, Texas, United States')
+      })
+
+      expect(mockFetch).toHaveBeenCalledTimes(2)
     })
   })
 
