@@ -71,7 +71,16 @@ def deduct_credits(
     db: Session,
     description: str | None = None,
 ) -> None:
-    """Deduct credits: monthly pool -> purchased -> overage. Creates audit trail."""
+    """Deduct credits: monthly pool -> purchased -> overage. Creates audit trail.
+
+    Overage consumption is hard-capped at ``overage_spend_limit_cents`` — any
+    actual usage beyond the cap is **absorbed by the platform** (not billed to
+    the user, not reported to Stripe) and emitted as a ``CREDIT_CAP_ABSORBED``
+    warning so the shortfall can be monitored. This protects users from being
+    charged more than the dollar ceiling they explicitly configured, which can
+    otherwise happen when the reserved-credit estimate underestimates actual
+    model output.
+    """
     credits_int = int(round(credits))
 
     user = db.query(User).filter(User.id == user_id).with_for_update().first()
@@ -95,21 +104,72 @@ def deduct_credits(
         remainder -= take_purchased
 
     overage_reported = 0
-    if remainder > 0 and user.overage_enabled:
-        user.overage_credits_used_this_period = (
-            user.overage_credits_used_this_period or 0
-        ) + remainder
-        overage_reported = remainder
-        remainder = 0
+    absorbed = 0
+    if remainder > 0:
+        if user.overage_enabled:
+            overage_room = _overage_budget_remaining(user)
+            take_overage = min(remainder, overage_room)
+            absorbed = remainder - take_overage
+            user.overage_credits_used_this_period = (
+                user.overage_credits_used_this_period or 0
+            ) + take_overage
+            overage_reported = take_overage
+            remainder = 0
 
-    user.total_credits_used = (user.total_credits_used or 0) + credits_int
+            if absorbed > 0:
+                limit_credits: int | None = None
+                if user.overage_spend_limit_cents is not None:
+                    limit_credits = math.floor(
+                        (user.overage_spend_limit_cents / 100) / OVERAGE_USD_PER_CREDIT
+                    )
+                logger.warning(
+                    "CREDIT_CAP_ABSORBED user_id=%s absorbed_credits=%s absorbed_usd=%.4f "
+                    "requested_credits=%s billed_credits=%s overage_limit_credits=%s "
+                    "overage_spend_limit_cents=%s overage_used_before=%s usage_log_id=%s",
+                    user_id,
+                    absorbed,
+                    absorbed * OVERAGE_USD_PER_CREDIT,
+                    credits_int,
+                    credits_int - absorbed,
+                    limit_credits,
+                    user.overage_spend_limit_cents,
+                    (user.overage_credits_used_this_period or 0) - take_overage,
+                    usage_log_id,
+                )
+        else:
+            # Overage disabled but a shortfall slipped through the admit check
+            # (e.g. race between two in-flight requests). Absorb it rather than
+            # silently inflate total_credits_used.
+            absorbed = remainder
+            remainder = 0
+            logger.warning(
+                "CREDIT_CAP_ABSORBED user_id=%s absorbed_credits=%s reason=overage_disabled "
+                "requested_credits=%s usage_log_id=%s",
+                user_id,
+                absorbed,
+                credits_int,
+                usage_log_id,
+            )
 
-    credits_millicredits = int(credits * 1000)
+    billed_int = credits_int - absorbed
+    user.total_credits_used = (user.total_credits_used or 0) + billed_int
+
+    if absorbed > 0:
+        # Record the billed amount so the ledger reconciles with Stripe / pool state.
+        credits_millicredits = billed_int * 1000
+        absorbed_usd = absorbed * OVERAGE_USD_PER_CREDIT
+        tx_description = (
+            description or f"Credits used for request ({float(credits):.4f} credits)"
+        ) + f" [cap: absorbed {absorbed} credit(s) ~${absorbed_usd:.4f} beyond overage limit]"
+    else:
+        credits_millicredits = int(credits * 1000)
+        tx_description = description or f"Credits used for request ({float(credits):.4f} credits)"
+
     transaction = CreditTransaction(
         user_id=user_id,
         transaction_type="usage",
         credits_amount=-credits_millicredits,
-        description=description or f"Credits used for request ({float(credits):.4f} credits)",
+        description=tx_description,
         related_usage_log_id=usage_log_id,
     )
     db.add(transaction)
