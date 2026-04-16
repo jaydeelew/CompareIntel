@@ -117,6 +117,7 @@ export interface StreamingCreditCallbacks {
   ) => void
   setCreditWarningDismissible: (dismissible: boolean) => void
   setShowOverageExtend: (show: boolean) => void
+  dismissOverageActive: (creditsResetAt?: string) => void
 }
 
 export interface StreamingHelperCallbacks {
@@ -156,6 +157,7 @@ export interface StreamingHelperCallbacks {
     periodType: 'daily' | 'monthly',
     resetAt?: string
   ) => boolean
+  isOverageActiveDismissed: (resetAt?: string) => boolean
   scrollConversationsToBottom: () => void
   refreshUser: () => Promise<void>
 }

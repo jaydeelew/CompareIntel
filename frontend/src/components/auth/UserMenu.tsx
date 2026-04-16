@@ -503,6 +503,8 @@ export const UserMenu: React.FC = () => {
       ? creditBalance
       : null
 
+  const canOpenStripeBillingPortal = Boolean(user.stripe_customer_id || user.stripe_subscription_id)
+
   const usagePeriodLabel =
     trustedCreditBalance?.period_type === 'monthly' || user.billing_period_start
       ? 'Usage This Month'
@@ -546,117 +548,104 @@ export const UserMenu: React.FC = () => {
             <div className="usage-header">{usagePeriodLabel}</div>
             <div className="usage-stats-grid">
               {/* Credits Display (Primary) */}
-              <div className="usage-stat">
-                <div className="usage-stat-label">Credits</div>
-                {isLoadingCredits ? (
-                  <div className="usage-stat-value" style={{ opacity: 0.6 }}>
-                    Loading...
-                  </div>
-                ) : trustedCreditBalance ? (
-                  <>
-                    <div className="usage-stat-value">
-                      <span className="usage-current">
-                        {Math.round(trustedCreditBalance.credits_remaining)}
-                      </span>
-                      <span className="usage-separator">/</span>
-                      <span className="usage-limit">{trustedCreditBalance.credits_allocated}</span>
-                    </div>
-                    <div className="usage-progress-bar">
-                      <div
-                        className="usage-progress-fill"
-                        style={{
-                          width: `${Math.min(100, ((trustedCreditBalance.credits_used_this_period ?? 0) / trustedCreditBalance.credits_allocated) * 100)}%`,
-                        }}
-                      ></div>
-                    </div>
-                    {trustedCreditBalance.credits_reset_at && (
-                      <div
-                        className="usage-reset-info"
-                        style={{
-                          fontSize: '0.75rem',
-                          color: 'rgba(255, 255, 255, 0.6)',
-                          marginTop: '0.25rem',
-                        }}
-                      >
-                        Resets{' '}
-                        {new Date(trustedCreditBalance.credits_reset_at).toLocaleDateString()}
-                      </div>
-                    )}
-                    {(trustedCreditBalance.purchased_credits_balance ?? 0) > 0 && (
-                      <div
-                        className="usage-reset-info"
-                        style={{
-                          fontSize: '0.75rem',
-                          color: 'rgba(255, 255, 255, 0.75)',
-                          marginTop: '0.35rem',
-                        }}
-                      >
-                        Prepaid credits: {trustedCreditBalance.purchased_credits_balance}
-                      </div>
-                    )}
-                  </>
-                ) : (
-                  <div className="usage-stat-value">
-                    <span className="usage-current">
-                      {user.credits_used_this_period !== undefined
-                        ? Math.round(
-                            Math.max(
-                              0,
-                              (user.monthly_credits_allocated || 0) -
-                                (user.credits_used_this_period || 0)
-                            )
-                          )
-                        : '—'}
-                    </span>
-                    <span className="usage-separator">/</span>
-                    <span className="usage-limit">
-                      {user.monthly_credits_allocated ||
-                        getCreditAllocation(user.subscription_tier)}
-                    </span>
-                  </div>
-                )}
-              </div>
+              {(() => {
+                const ovUsed = trustedCreditBalance?.overage_credits_used_this_period ?? 0
+                const allocated = trustedCreditBalance?.credits_allocated ?? 0
+                const poolUsed = trustedCreditBalance?.credits_used_this_period ?? 0
+                const totalUsed = poolUsed + ovUsed
+                const hasOverageUsage =
+                  isPaidTier && trustedCreditBalance?.overage_enabled && ovUsed > 0
 
-              {/* Overage status indicator (paid tiers with overage enabled) */}
-              {isPaidTier &&
-                trustedCreditBalance?.overage_enabled &&
-                (trustedCreditBalance.overage_credits_used_this_period ?? 0) > 0 && (
-                  <div className="usage-stat" style={{ marginTop: '0.5rem' }}>
-                    <div className="usage-stat-label">Overage</div>
-                    <div className="usage-stat-value">
-                      <span className="usage-current overage-active-text">
-                        {(
-                          trustedCreditBalance.overage_credits_used_this_period ?? 0
-                        ).toLocaleString()}
-                      </span>
-                      {trustedCreditBalance.overage_limit_credits != null && (
-                        <>
-                          <span className="usage-separator">/</span>
-                          <span className="usage-limit">
-                            {trustedCreditBalance.overage_limit_credits.toLocaleString()}
+                return (
+                  <div className="usage-stat">
+                    <div className="usage-stat-label">Credits Used</div>
+                    {isLoadingCredits ? (
+                      <div className="usage-stat-value" style={{ opacity: 0.6 }}>
+                        Loading...
+                      </div>
+                    ) : trustedCreditBalance ? (
+                      <>
+                        <div className="usage-stat-value">
+                          <span
+                            className={`usage-current${hasOverageUsage ? ' overage-active-text' : ''}`}
+                          >
+                            {Math.round(totalUsed).toLocaleString()}
                           </span>
-                        </>
-                      )}
-                      <span className="overage-cost-badge">
-                        $
-                        {(
-                          (trustedCreditBalance.overage_credits_used_this_period ?? 0) *
-                          OVERAGE_USD_PER_CREDIT
-                        ).toFixed(2)}
-                      </span>
-                    </div>
-                    {trustedCreditBalance.overage_limit_credits != null && (
-                      <div className="usage-progress-bar">
-                        <div
-                          className="usage-progress-fill overage-progress"
-                          style={{
-                            width: `${Math.min(100, ((trustedCreditBalance.overage_credits_used_this_period ?? 0) / trustedCreditBalance.overage_limit_credits) * 100)}%`,
-                          }}
-                        ></div>
+                          <span className="usage-separator">/</span>
+                          <span className="usage-limit">{allocated.toLocaleString()}</span>
+                          {hasOverageUsage && (
+                            <span className="overage-cost-badge">
+                              +{ovUsed.toLocaleString()} overage · $
+                              {(ovUsed * OVERAGE_USD_PER_CREDIT).toFixed(2)}
+                            </span>
+                          )}
+                        </div>
+                        <div className="usage-progress-bar">
+                          <div
+                            className={`usage-progress-fill${hasOverageUsage ? ' overage-progress' : ''}`}
+                            style={{
+                              width: `${Math.min(100, (totalUsed / allocated) * 100)}%`,
+                            }}
+                          ></div>
+                        </div>
+                        {hasOverageUsage && trustedCreditBalance.overage_limit_credits != null && (
+                          <div
+                            className="usage-reset-info"
+                            style={{
+                              fontSize: '0.7rem',
+                              color: 'rgba(245, 158, 11, 0.85)',
+                              marginTop: '0.15rem',
+                            }}
+                          >
+                            Overage limit: {ovUsed.toLocaleString()} /{' '}
+                            {trustedCreditBalance.overage_limit_credits.toLocaleString()} credits
+                          </div>
+                        )}
+                        {trustedCreditBalance.credits_reset_at && (
+                          <div
+                            className="usage-reset-info"
+                            style={{
+                              fontSize: '0.7rem',
+                              color: 'rgba(255, 255, 255, 0.6)',
+                              marginTop: '0.15rem',
+                            }}
+                          >
+                            Resets{' '}
+                            {new Date(trustedCreditBalance.credits_reset_at).toLocaleDateString()}
+                          </div>
+                        )}
+                        {(trustedCreditBalance.purchased_credits_balance ?? 0) > 0 && (
+                          <div
+                            className="usage-reset-info"
+                            style={{
+                              fontSize: '0.7rem',
+                              color: 'rgba(255, 255, 255, 0.75)',
+                              marginTop: '0.15rem',
+                            }}
+                          >
+                            Prepaid credits: {trustedCreditBalance.purchased_credits_balance}
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <div className="usage-stat-value">
+                        <span className="usage-current">
+                          {user.credits_used_this_period !== undefined
+                            ? Math.round(user.credits_used_this_period).toLocaleString()
+                            : '—'}
+                        </span>
+                        <span className="usage-separator">/</span>
+                        <span className="usage-limit">
+                          {(
+                            user.monthly_credits_allocated ||
+                            getCreditAllocation(user.subscription_tier)
+                          ).toLocaleString()}
+                        </span>
                       </div>
                     )}
                   </div>
-                )}
+                )
+              })()}
 
               {/* Burn-rate projection (paid monthly tiers) */}
               {isPaidTier &&
@@ -1418,7 +1407,7 @@ export const UserMenu: React.FC = () => {
                     <div className="tier-checkout-actions" style={{ marginTop: '1rem' }}>
                       <p style={{ fontWeight: 600, margin: 0 }}>${TIER_PRICING.starter}/month</p>
                       {user.subscription_tier === 'starter' ? (
-                        user.stripe_customer_id ? (
+                        canOpenStripeBillingPortal ? (
                           <button
                             type="button"
                             className="modal-button-primary tier-checkout-button tier-checkout-manage-billing"
@@ -1510,7 +1499,7 @@ export const UserMenu: React.FC = () => {
                         ${TIER_PRICING.starter_plus}/month
                       </p>
                       {user.subscription_tier === 'starter_plus' ? (
-                        user.stripe_customer_id ? (
+                        canOpenStripeBillingPortal ? (
                           <button
                             type="button"
                             className="modal-button-primary tier-checkout-button tier-checkout-manage-billing"
@@ -1600,7 +1589,7 @@ export const UserMenu: React.FC = () => {
                     <div className="tier-checkout-actions" style={{ marginTop: '1rem' }}>
                       <p style={{ fontWeight: 600, margin: 0 }}>${TIER_PRICING.pro}/month</p>
                       {user.subscription_tier === 'pro' ? (
-                        user.stripe_customer_id ? (
+                        canOpenStripeBillingPortal ? (
                           <button
                             type="button"
                             className="modal-button-primary tier-checkout-button tier-checkout-manage-billing"
@@ -1691,7 +1680,7 @@ export const UserMenu: React.FC = () => {
                     <div className="tier-checkout-actions" style={{ marginTop: '1rem' }}>
                       <p style={{ fontWeight: 600, margin: 0 }}>${TIER_PRICING.pro_plus}/month</p>
                       {user.subscription_tier === 'pro_plus' ? (
-                        user.stripe_customer_id ? (
+                        canOpenStripeBillingPortal ? (
                           <button
                             type="button"
                             className="modal-button-primary tier-checkout-button tier-checkout-manage-billing"

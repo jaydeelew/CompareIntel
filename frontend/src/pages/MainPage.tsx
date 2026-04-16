@@ -11,7 +11,11 @@ import { Navigation, MockModeBanner } from '../components/layout'
 import { ComparisonPageContent, ModalManager } from '../components/main-page'
 import { DoneSelectingCard } from '../components/shared'
 import { TutorialManager } from '../components/tutorial'
-import { getCreditAllocation, getDailyCreditLimit } from '../config/constants'
+import {
+  getCreditAllocation,
+  getDailyCreditLimit,
+  OVERAGE_USD_PER_CREDIT,
+} from '../config/constants'
 import { useAuth } from '../contexts/AuthContext'
 import {
   useConversationHistory,
@@ -297,6 +301,8 @@ export function MainPage() {
     getCreditWarningMessage,
     isLowCreditWarningDismissed,
     dismissLowCreditWarning,
+    isOverageActiveDismissed,
+    dismissOverageActive,
   } = useCreditWarningManager()
 
   const { creditsRemaining } = useCreditsRemaining({
@@ -2106,6 +2112,7 @@ export function MainPage() {
         setCreditWarningType,
         setCreditWarningDismissible,
         setShowOverageExtend,
+        dismissOverageActive,
       },
       helpers: {
         expandFiles,
@@ -2119,6 +2126,7 @@ export function MainPage() {
         getFirstUserMessage,
         getCreditWarningMessage,
         isLowCreditWarningDismissed,
+        isOverageActiveDismissed,
         scrollConversationsToBottom,
         refreshUser,
       },
@@ -2159,6 +2167,9 @@ export function MainPage() {
       getFirstUserMessage,
       getCreditWarningMessage,
       isLowCreditWarningDismissed,
+      isOverageActiveDismissed,
+      dismissOverageActive,
+      setShowOverageExtend,
       scrollConversationsToBottom,
       refreshUser,
     ]
@@ -2215,11 +2226,24 @@ export function MainPage() {
 
     if (currentCreditsRemaining <= 0) {
       const resetAt = creditBalance?.credits_reset_at
-      const message = getCreditWarningMessage('insufficient', userTier, 0, 0, resetAt)
+      const isPaid = !['unregistered', 'free'].includes(userTier)
+      const ovCtx = {
+        overage_enabled: creditBalance?.overage_enabled,
+        overage_credits_used_this_period: creditBalance?.overage_credits_used_this_period,
+        overage_limit_credits: creditBalance?.overage_limit_credits,
+      }
 
+      let warningType: 'insufficient' | 'overage_cap_hit' | 'none' = 'insufficient'
+      if (isPaid && ovCtx.overage_enabled && ovCtx.overage_limit_credits != null) {
+        warningType = 'overage_cap_hit'
+      } else if (isPaid && !ovCtx.overage_enabled) {
+        warningType = 'none'
+      }
+
+      const message = getCreditWarningMessage(warningType, userTier, 0, 0, resetAt, ovCtx)
       setError(message)
       setCreditWarningMessage(null)
-      setCreditWarningType('insufficient')
+      setCreditWarningType(warningType)
 
       return
     }
@@ -2230,6 +2254,33 @@ export function MainPage() {
   const renderUsagePreview = useCallback(() => {
     const regularToUse = selectedModels.length
 
+    const poolExhausted =
+      creditBalance !== null &&
+      (creditBalance.credits_used_this_period ?? 0) >= creditBalance.credits_allocated
+    const overageActive = poolExhausted && creditBalance?.overage_enabled === true
+    const overageUsed = creditBalance?.overage_credits_used_this_period ?? 0
+    const overageCost = (overageUsed * OVERAGE_USD_PER_CREDIT).toFixed(2)
+    const overageLimit = creditBalance?.overage_limit_credits
+
+    let creditsLabel: React.ReactNode
+    if (overageActive) {
+      const usagePart =
+        overageLimit != null
+          ? `${overageUsed.toLocaleString()} / ${overageLimit.toLocaleString()}`
+          : `${overageUsed.toLocaleString()}`
+      creditsLabel = (
+        <>
+          <strong>{usagePart}</strong> overage credits used (${overageCost})
+        </>
+      )
+    } else {
+      creditsLabel = (
+        <>
+          <strong>{Math.round(creditsRemaining)}</strong> credits remaining
+        </>
+      )
+    }
+
     return (
       <div
         style={{
@@ -2238,9 +2289,12 @@ export function MainPage() {
         }}
       >
         <span className="credits-remaining-wrapper">
-          <strong>{regularToUse}</strong> {regularToUse === 1 ? 'model' : 'models'} selected •{' '}
+          <span>
+            <strong>{regularToUse}</strong> {regularToUse === 1 ? 'model' : 'models'} selected
+            {' • '}
+          </span>
           <Link to="/faq#credits-system" className="credits-remaining-link">
-            <strong>{Math.round(creditsRemaining)}</strong> credits remaining
+            {creditsLabel}
           </Link>
           <button
             type="button"
@@ -2274,7 +2328,7 @@ export function MainPage() {
         </span>
       </div>
     )
-  }, [selectedModels, creditsRemaining, setShowCreditsInfoModal])
+  }, [selectedModels, creditsRemaining, creditBalance, setShowCreditsInfoModal])
 
   return (
     <div className="app">
@@ -2420,10 +2474,14 @@ export function MainPage() {
           creditWarningDismissible={creditWarningDismissible}
           creditBalance={creditBalance}
           onDismissCreditWarning={() => {
-            const userTier = isAuthenticated ? user?.subscription_tier || 'free' : 'unregistered'
-            const periodType =
-              userTier === 'unregistered' || userTier === 'free' ? 'daily' : 'monthly'
-            dismissLowCreditWarning(userTier, periodType, creditBalance?.credits_reset_at)
+            if (creditWarningType === 'overage_active') {
+              dismissOverageActive(creditBalance?.credits_reset_at)
+            } else {
+              const userTier = isAuthenticated ? user?.subscription_tier || 'free' : 'unregistered'
+              const periodType =
+                userTier === 'unregistered' || userTier === 'free' ? 'daily' : 'monthly'
+              dismissLowCreditWarning(userTier, periodType, creditBalance?.credits_reset_at)
+            }
           }}
           showOverageExtend={showOverageExtend}
           onOverageExtended={() => {

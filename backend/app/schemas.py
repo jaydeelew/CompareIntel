@@ -85,6 +85,7 @@ class UserResponse(BaseModel):
     is_trial_active: bool | None = False
     # Stripe (optional) — present after first successful Checkout; used for Customer Portal
     stripe_customer_id: str | None = None
+    stripe_subscription_id: str | None = None
     # Overage settings
     overage_enabled: bool = False
     overage_spend_limit_cents: int | None = None

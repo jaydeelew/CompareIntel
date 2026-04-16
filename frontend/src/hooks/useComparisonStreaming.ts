@@ -276,10 +276,14 @@ export function useComparisonStreaming(
       creditWarningType === 'low' ||
       creditWarningType === 'overage_active'
     ) {
-      creditCb.setCreditWarningMessage(null)
-      creditCb.setCreditWarningType('none')
-      creditCb.setCreditWarningDismissible(false)
-      creditCb.setShowOverageExtend(false)
+      if (creditWarningType === 'overage_active') {
+        creditCb.dismissOverageActive(creditBalance?.credits_reset_at)
+      } else {
+        creditCb.setCreditWarningMessage(null)
+        creditCb.setCreditWarningType('none')
+        creditCb.setCreditWarningDismissible(false)
+        creditCb.setShowOverageExtend(false)
+      }
     }
     stateCb.setIsModelsHidden(true)
     stateCb.setShowDoneSelectingCard(false)
@@ -507,6 +511,7 @@ export function useComparisonStreaming(
         refreshUser: helpers.refreshUser,
         getCreditWarningMessage: helpers.getCreditWarningMessage,
         isLowCreditWarningDismissed: helpers.isLowCreditWarningDismissed,
+        isOverageActiveDismissed: helpers.isOverageActiveDismissed,
         setCreditWarningMessage: creditCb.setCreditWarningMessage,
         setCreditWarningType: creditCb.setCreditWarningType,
         setCreditWarningDismissible: creditCb.setCreditWarningDismissible,
@@ -524,6 +529,10 @@ export function useComparisonStreaming(
       stateCb.setCurrentAbortController(null)
       userCancelledRef.current = false
       stateCb.setIsLoading(false)
+
+      getCreditBalance()
+        .then(bal => creditCb.setCreditBalance(bal))
+        .catch(() => {})
     }
     // config/callbacks contain all values; listing each would be redundant and cause unnecessary re-runs
     // eslint-disable-next-line react-hooks/exhaustive-deps

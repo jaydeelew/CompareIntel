@@ -132,6 +132,7 @@ export interface SSEProcessorConfig {
     periodType: 'daily' | 'monthly',
     resetAt?: string
   ) => boolean
+  isOverageActiveDismissed: (resetAt?: string) => boolean
   setCreditWarningMessage: (message: string | null) => void
   setCreditWarningType: (
     type: 'none' | 'low' | 'insufficient' | 'overage_active' | 'overage_cap_hit'
@@ -203,6 +204,7 @@ export async function processComparisonStream(
     refreshUser,
     getCreditWarningMessage,
     isLowCreditWarningDismissed,
+    isOverageActiveDismissed,
     setCreditWarningMessage,
     setCreditWarningType,
     setCreditWarningDismissible,
@@ -597,7 +599,11 @@ export async function processComparisonStream(
                         setCreditWarningDismissible(false)
                         setShowOverageExtend(true)
                         if (isFollowUpMode) setIsFollowUpMode(false)
-                      } else if (ovLimit != null && ovUsed / ovLimit >= 0.8) {
+                      } else if (
+                        !isOverageActiveDismissed(balance.credits_reset_at) &&
+                        ovLimit != null &&
+                        ovUsed / ovLimit >= 0.8
+                      ) {
                         setCreditWarningMessage(
                           getCreditWarningMessage(
                             'overage_active',
@@ -611,7 +617,10 @@ export async function processComparisonStream(
                         setCreditWarningType('overage_active')
                         setCreditWarningDismissible(true)
                         setShowOverageExtend(false)
-                      } else {
+                      } else if (
+                        !isOverageActiveDismissed(balance.credits_reset_at) &&
+                        ovUsed > 0
+                      ) {
                         setCreditWarningMessage(
                           getCreditWarningMessage(
                             'overage_active',

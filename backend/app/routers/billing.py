@@ -136,6 +136,76 @@ def _clear_stale_stripe_customer_if_unknown(
         db.refresh(user)
 
 
+def _hydrate_stripe_customer_from_subscription(
+    stripe_mod: Any,
+    user: User,
+    db: Session,
+) -> None:
+    """If customer id was cleared but subscription id remains, recover customer from Stripe."""
+    if user.stripe_customer_id or not user.stripe_subscription_id:
+        return
+    try:
+        sub = stripe_mod.Subscription.retrieve(str(user.stripe_subscription_id))
+    except StripeError as exc:
+        logger.warning(
+            "Subscription.retrieve(%s) for portal customer hydration failed: %s",
+            user.stripe_subscription_id,
+            exc,
+        )
+        return
+    cust_id = _stripe_expandable_id(getattr(sub, "customer", None))
+    if not cust_id:
+        return
+    try:
+        stripe_mod.Customer.retrieve(cust_id)
+    except StripeError as exc:
+        code = getattr(exc, "code", None)
+        http_status = getattr(exc, "http_status", None)
+        err_lower = str(exc).lower()
+        missing = (
+            code == "resource_missing" or http_status == 404 or "no such customer" in err_lower
+        )
+        if not missing:
+            logger.warning("Customer.retrieve(%s) during hydration failed: %s", cust_id, exc)
+        return
+    user.stripe_customer_id = cust_id
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+
+
+def _ensure_overage_subscription_item(
+    stripe_mod: Any,
+    subscription_id: str,
+) -> None:
+    """Attach the metered overage price to a subscription if not already present."""
+    overage_price = settings.stripe_price_overage
+    if not overage_price:
+        return
+    try:
+        items = stripe_mod.SubscriptionItem.list(subscription=subscription_id, limit=100)
+        for item in items.auto_paging_iter():
+            price = getattr(item, "price", None)
+            pid = getattr(price, "id", None) if price else None
+            if pid == overage_price:
+                return
+        stripe_mod.SubscriptionItem.create(
+            subscription=subscription_id,
+            price=overage_price,
+        )
+        logger.info(
+            "Attached metered overage price %s to subscription %s",
+            overage_price,
+            subscription_id,
+        )
+    except StripeError as exc:
+        logger.warning(
+            "Failed to attach overage item to subscription %s: %s",
+            subscription_id,
+            exc,
+        )
+
+
 def _cancel_other_subscriptions_for_customer(
     stripe_mod: Any,
     *,
@@ -239,6 +309,7 @@ async def create_portal_session(
     """Stripe Customer Portal (cancel, payment method, invoices)."""
     stripe = _require_stripe()
     _clear_stale_stripe_customer_if_unknown(stripe, current_user, db)
+    _hydrate_stripe_customer_from_subscription(stripe, current_user, db)
     if not current_user.stripe_customer_id:
         raise HTTPException(
             status_code=400,
@@ -561,6 +632,7 @@ async def stripe_webhook(request: Request, db: Session = Depends(get_db)) -> dic
                             else None
                         )
                         _apply_subscription_fields(user, sub_dict, db, tier_hint=th)
+                        _ensure_overage_subscription_item(stripe, sub_id)
                         if cust_id:
                             _cancel_other_subscriptions_for_customer(
                                 stripe,
@@ -575,6 +647,7 @@ async def stripe_webhook(request: Request, db: Session = Depends(get_db)) -> dic
                             user.subscription_status = "active"
                         db.add(user)
                         db.commit()
+                        _ensure_overage_subscription_item(stripe, sub_id)
                         if cust_id:
                             _cancel_other_subscriptions_for_customer(
                                 stripe,

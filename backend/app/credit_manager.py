@@ -3,7 +3,9 @@ Credit management - handles allocations, deductions, and resets.
 Uses row-level locking to handle concurrent requests safely.
 """
 
+import logging
 import math
+import time
 from datetime import UTC, datetime, timedelta
 from decimal import ROUND_CEILING, Decimal
 from typing import Any
@@ -18,6 +20,8 @@ from .config.constants import (
     OVERAGE_USD_PER_CREDIT,
 )
 from .models import CreditTransaction, User
+
+logger = logging.getLogger(__name__)
 
 
 def get_user_credits(user_id: int, db: Session) -> int:
@@ -90,10 +94,12 @@ def deduct_credits(
         user.purchased_credits_balance = max(0, purchased - take_purchased)
         remainder -= take_purchased
 
+    overage_reported = 0
     if remainder > 0 and user.overage_enabled:
         user.overage_credits_used_this_period = (
             user.overage_credits_used_this_period or 0
         ) + remainder
+        overage_reported = remainder
         remainder = 0
 
     user.total_credits_used = (user.total_credits_used or 0) + credits_int
@@ -109,6 +115,16 @@ def deduct_credits(
     db.add(transaction)
 
     db.commit()
+
+    if overage_reported > 0 and user.stripe_customer_id:
+        from .stripe_metering import report_overage_credits
+
+        idem_key = f"overage-{user_id}-{int(time.time() * 1000)}"
+        report_overage_credits(
+            stripe_customer_id=str(user.stripe_customer_id),
+            credits=overage_reported,
+            idempotency_key=idem_key,
+        )
 
 
 def add_purchased_credits(
@@ -155,7 +171,8 @@ def allocate_monthly_credits(user_id: int, tier: str, db: Session) -> None:
             user.billing_period_end = now + timedelta(days=30)
             user.credits_reset_at = user.billing_period_end
 
-        # Allocate credits; reset usage + overage tracking; auto-disable overages
+        # Allocate credits; reset usage, overage tracking, and overage
+        # preference for the new period so users opt-in fresh each cycle.
         user.monthly_credits_allocated = credits
         user.credits_used_this_period = 0
         user.overage_credits_used_this_period = 0
@@ -283,7 +300,9 @@ def get_credit_usage_stats(user_id: int, db: Session) -> dict[str, Any]:
     allocated = user.monthly_credits_allocated or 0
     used = user.credits_used_this_period or 0
     purchased = user.purchased_credits_balance or 0
-    remaining = max(0, allocated - used) + purchased
+    pool_remaining = max(0, allocated - used) + purchased
+    overage_room = _overage_budget_remaining(user)
+    remaining = pool_remaining + overage_room
     total_used = user.total_credits_used or 0
 
     # Get reset time
