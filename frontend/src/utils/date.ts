@@ -127,3 +127,124 @@ export function formatLocaleDate(
 
   return date.toLocaleDateString(locale, options)
 }
+
+const timeOnly: Intl.DateTimeFormatOptions = {
+  hour: 'numeric',
+  minute: '2-digit',
+}
+
+const timeOnlyUtc: Intl.DateTimeFormatOptions = {
+  ...timeOnly,
+  timeZone: 'UTC',
+}
+
+function utcCalendarKey(d: Date): string {
+  return d.toLocaleDateString('en-CA', { timeZone: 'UTC' })
+}
+
+function utcTomorrowKey(now: Date): string {
+  const y = now.getUTCFullYear()
+  const m = now.getUTCMonth()
+  const day = now.getUTCDate()
+  const next = new Date(Date.UTC(y, m, day + 1))
+  return utcCalendarKey(next)
+}
+
+export interface FormatCreditsResetOptions {
+  /** When true, format using UTC calendar and clock and append "UTC" (server default timezone). */
+  useUtc?: boolean
+}
+
+/**
+ * Human-readable phrase for when credits reset. Use in full sentences,
+ * e.g. "wait until your credits reset **today at 3:15 PM**" — avoids showing only a
+ * calendar date when the reset is later the same day.
+ *
+ * @returns e.g. `today at 3:15 PM`, `tomorrow at 12:00 AM`, `on Apr 18, 2026 at 9:00 AM`, or `N/A`
+ */
+export function formatCreditsResetAtPhrase(
+  iso: string | null | undefined,
+  options?: FormatCreditsResetOptions
+): string {
+  const reset = parseDate(iso ?? '')
+  if (!reset) return 'N/A'
+
+  const now = new Date()
+  if (reset.getTime() <= now.getTime()) {
+    return 'N/A'
+  }
+
+  const useUtc = options?.useUtc === true
+
+  if (useUtc) {
+    const timeStr = reset.toLocaleTimeString('en-US', timeOnlyUtc)
+    const resetDay = utcCalendarKey(reset)
+    const todayDay = utcCalendarKey(now)
+    if (resetDay === todayDay) {
+      return `today at ${timeStr} UTC`
+    }
+    if (resetDay === utcTomorrowKey(now)) {
+      return `tomorrow at ${timeStr} UTC`
+    }
+    const dateStr = reset.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+      timeZone: 'UTC',
+    })
+    return `on ${dateStr} at ${timeStr} UTC`
+  }
+
+  const timeStr = reset.toLocaleTimeString('en-US', timeOnly)
+
+  if (reset.toDateString() === now.toDateString()) {
+    return `today at ${timeStr}`
+  }
+
+  const tomorrow = new Date(now)
+  tomorrow.setDate(tomorrow.getDate() + 1)
+  if (reset.toDateString() === tomorrow.toDateString()) {
+    return `tomorrow at ${timeStr}`
+  }
+
+  const dateStr = reset.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  })
+  return `on ${dateStr} at ${timeStr}`
+}
+
+/**
+ * Same as {@link formatCreditsResetAtPhrase} but with the first character capitalized for UI labels
+ * (e.g. "Resets **Today** at 3:15 PM"). If the reset time is already in the past, falls back to a
+ * full local date/time so the line is never misleadingly empty.
+ */
+export function formatCreditsResetAtLabel(
+  iso: string | null | undefined,
+  options?: FormatCreditsResetOptions
+): string {
+  const phrase = formatCreditsResetAtPhrase(iso, options)
+  if (phrase !== 'N/A') {
+    return phrase.charAt(0).toUpperCase() + phrase.slice(1)
+  }
+  const reset = parseDate(iso ?? '')
+  if (!reset) return 'N/A'
+  if (options?.useUtc === true) {
+    return reset.toLocaleString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+      timeZone: 'UTC',
+    })
+  }
+  return reset.toLocaleString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  })
+}

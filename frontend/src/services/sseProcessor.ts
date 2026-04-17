@@ -125,7 +125,8 @@ export interface SSEProcessorConfig {
       overage_enabled?: boolean
       overage_credits_used_this_period?: number
       overage_limit_credits?: number | null
-    }
+    },
+    resetShowsUtc?: boolean
   ) => string
   isLowCreditWarningDismissed: (
     tier: string,
@@ -642,7 +643,8 @@ export async function processComparisonStream(
                             0,
                             undefined,
                             balance.credits_reset_at,
-                            ovCtx
+                            ovCtx,
+                            balance.credits_reset_shows_utc === true
                           )
                         )
                         setCreditWarningType('overage_cap_hit')
@@ -660,7 +662,8 @@ export async function processComparisonStream(
                             0,
                             undefined,
                             balance.credits_reset_at,
-                            ovCtx
+                            ovCtx,
+                            balance.credits_reset_shows_utc === true
                           )
                         )
                         setCreditWarningType('overage_active')
@@ -676,7 +679,8 @@ export async function processComparisonStream(
                             0,
                             undefined,
                             balance.credits_reset_at,
-                            ovCtx
+                            ovCtx,
+                            balance.credits_reset_shows_utc === true
                           )
                         )
                         setCreditWarningType('overage_active')
@@ -689,7 +693,8 @@ export async function processComparisonStream(
                         0,
                         undefined,
                         balance.credits_reset_at,
-                        ovCtx
+                        ovCtx,
+                        balance.credits_reset_shows_utc === true
                       )
                       setCreditWarningMessage(msg)
                       setCreditWarningType('none')
@@ -706,7 +711,8 @@ export async function processComparisonStream(
                             balance.credits_remaining,
                             undefined,
                             balance.credits_reset_at,
-                            ovCtx
+                            ovCtx,
+                            balance.credits_reset_shows_utc === true
                           )
                         )
                         setCreditWarningType('low')

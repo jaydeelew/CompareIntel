@@ -2193,7 +2193,15 @@ export function MainPage() {
         warningType = 'overage_cap_hit'
       }
 
-      const message = getCreditWarningMessage(warningType, userTier, 0, 0, resetAt, ovCtx)
+      const message = getCreditWarningMessage(
+        warningType,
+        userTier,
+        0,
+        0,
+        resetAt,
+        ovCtx,
+        creditBalance?.credits_reset_shows_utc === true
+      )
       setError(message)
       setCreditWarningMessage(null)
       setCreditWarningType(warningType)

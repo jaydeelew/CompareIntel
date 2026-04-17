@@ -37,6 +37,7 @@ import {
 } from '../../services/userSettingsService'
 import type { UserPreferences, UserPreferencesUpdate } from '../../services/userSettingsService'
 import { BILLING_UPDATED_EVENT } from '../../utils/billingSync'
+import { formatCreditsResetAtLabel } from '../../utils/date'
 import logger from '../../utils/logger'
 import { dispatchSaveStateEvent } from '../../utils/sessionState'
 import './UserMenu.css'
@@ -626,7 +627,10 @@ export const UserMenu: React.FC = () => {
                       marginTop: '0.25rem',
                     }}
                   >
-                    Resets {new Date(trustedCreditBalance.credits_reset_at).toLocaleDateString()}
+                    Resets{' '}
+                    {formatCreditsResetAtLabel(trustedCreditBalance.credits_reset_at, {
+                      useUtc: trustedCreditBalance.credits_reset_shows_utc === true,
+                    })}
                   </div>
                 )}
               </>

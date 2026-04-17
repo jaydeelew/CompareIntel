@@ -36,6 +36,11 @@ export interface CreditBalance {
   overage_credits_used_this_period?: number
   /** Max overage credits allowed (null = unlimited) */
   overage_limit_credits?: number | null
+  /**
+   * When true, credit reset times should be labeled as UTC (effective server timezone preference
+   * is UTC). When false, times use the browser's local zone for display.
+   */
+  credits_reset_shows_utc?: boolean
 }
 
 /**
