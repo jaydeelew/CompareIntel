@@ -1418,7 +1418,7 @@ export function MainPage() {
 
   useEffect(() => {
     if (!isAuthenticated) return
-    const onBillingUpdated = () => {
+    const refreshBalance = () => {
       void (async () => {
         try {
           const balance = await getCreditBalance()
@@ -1426,12 +1426,21 @@ export function MainPage() {
           setUsageCount(balance.credits_used_this_period ?? 0)
         } catch (error) {
           if (isCancellationError(error)) return
-          logger.error('Failed to refresh credit balance after billing update:', error)
+          logger.error('Failed to refresh credit balance:', error)
         }
       })()
     }
-    window.addEventListener(BILLING_UPDATED_EVENT, onBillingUpdated)
-    return () => window.removeEventListener(BILLING_UPDATED_EVENT, onBillingUpdated)
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'visible') refreshBalance()
+    }
+    window.addEventListener(BILLING_UPDATED_EVENT, refreshBalance)
+    window.addEventListener('focus', refreshBalance)
+    document.addEventListener('visibilitychange', onVisibilityChange)
+    return () => {
+      window.removeEventListener(BILLING_UPDATED_EVENT, refreshBalance)
+      window.removeEventListener('focus', refreshBalance)
+      document.removeEventListener('visibilitychange', onVisibilityChange)
+    }
   }, [isAuthenticated, setUsageCount])
 
   // Load default selection
