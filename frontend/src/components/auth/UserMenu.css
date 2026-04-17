@@ -1101,6 +1101,17 @@
   color: var(--error-color);
 }
 
+.settings-billing-manage-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 0.75rem;
+}
+
+.settings-modal .settings-manage-billing-btn {
+  padding: 0.55rem 1.25rem;
+  font-size: 0.9rem;
+}
+
 /* Settings Items */
 .settings-item {
   display: flex;
