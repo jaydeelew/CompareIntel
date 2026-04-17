@@ -119,7 +119,6 @@ export interface StreamingCreditCallbacks {
     type: 'none' | 'low' | 'insufficient' | 'overage_active' | 'overage_cap_hit'
   ) => void
   setCreditWarningDismissible: (dismissible: boolean) => void
-  setShowOverageExtend: (show: boolean) => void
   dismissOverageActive: (creditsResetAt?: string) => void
 }
 

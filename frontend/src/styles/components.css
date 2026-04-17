@@ -309,29 +309,6 @@
   flex-shrink: 0;
 }
 
-.extend-overage-button {
-  padding: 0.35rem 0.75rem;
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: #fff;
-  background: linear-gradient(135deg, #f59e0b, #d97706);
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: all 0.2s ease;
-}
-
-.extend-overage-button:hover:not(:disabled) {
-  background: linear-gradient(135deg, #d97706, #b45309);
-  transform: translateY(-1px);
-}
-
-.extend-overage-button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
 .loading-message {
   background: var(--bg-elevated);
   border: 1px solid var(--border-color);

@@ -284,7 +284,6 @@ export function useComparisonStreaming(
         creditCb.setCreditWarningMessage(null)
         creditCb.setCreditWarningType('none')
         creditCb.setCreditWarningDismissible(false)
-        creditCb.setShowOverageExtend(false)
       }
     }
     stateCb.setIsModelsHidden(true)
@@ -517,7 +516,6 @@ export function useComparisonStreaming(
         setCreditWarningMessage: creditCb.setCreditWarningMessage,
         setCreditWarningType: creditCb.setCreditWarningType,
         setCreditWarningDismissible: creditCb.setCreditWarningDismissible,
-        setShowOverageExtend: creditCb.setShowOverageExtend,
         setIsFollowUpMode: stateCb.setIsFollowUpMode,
         loadHistoryFromAPI: helpers.loadHistoryFromAPI,
         apiClientDeleteCache: (key: string) => apiClient.deleteCache(key),

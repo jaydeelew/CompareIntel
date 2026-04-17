@@ -14,7 +14,6 @@ export function useCreditWarningManager() {
   const [creditWarningMessage, setCreditWarningMessage] = useState<string | null>(null)
   const [creditWarningType, setCreditWarningType] = useState<CreditWarningType>('none')
   const [creditWarningDismissible, setCreditWarningDismissible] = useState(false)
-  const [showOverageExtend, setShowOverageExtend] = useState(false)
   const creditWarningMessageRef = useRef<HTMLDivElement>(null)
   const prevCreditWarningMessageRef = useRef<string | null>(null)
 
@@ -174,8 +173,6 @@ export function useCreditWarningManager() {
     setCreditWarningType,
     creditWarningDismissible,
     setCreditWarningDismissible,
-    showOverageExtend,
-    setShowOverageExtend,
     creditWarningMessageRef,
     getCreditWarningMessage,
     isLowCreditWarningDismissed,
