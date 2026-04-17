@@ -104,7 +104,6 @@ class TestDeductCreditsOverageReporting:
         user.overage_spend_limit_cents = None
         user.monthly_credits_allocated = 10
         user.credits_used_this_period = 10
-        user.purchased_credits_balance = 0
         db_session.commit()
 
         deduct_credits(user.id, Decimal("5"), None, db_session, "test overage")
@@ -122,7 +121,6 @@ class TestDeductCreditsOverageReporting:
         user.overage_enabled = True
         user.monthly_credits_allocated = 100
         user.credits_used_this_period = 0
-        user.purchased_credits_balance = 0
         db_session.commit()
 
         deduct_credits(user.id, Decimal("5"), None, db_session, "within pool")
@@ -136,7 +134,6 @@ class TestDeductCreditsOverageReporting:
         user.overage_enabled = True
         user.monthly_credits_allocated = 10
         user.credits_used_this_period = 10
-        user.purchased_credits_balance = 0
         db_session.commit()
 
         deduct_credits(user.id, Decimal("5"), None, db_session, "no stripe id")
