@@ -1205,7 +1205,7 @@ export const UserMenu: React.FC = () => {
                                         <input
                                           type="number"
                                           className="settings-input overage-dollar-input"
-                                          placeholder="5.00"
+                                          placeholder="0.00"
                                           value={overageDollarInput}
                                           onChange={e => setOverageDollarInput(e.target.value)}
                                           onBlur={handleOverageDollarBlur}
