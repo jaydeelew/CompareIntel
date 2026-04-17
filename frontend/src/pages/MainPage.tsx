@@ -295,8 +295,6 @@ export function MainPage() {
     setCreditWarningType,
     creditWarningDismissible,
     setCreditWarningDismissible,
-    showOverageExtend,
-    setShowOverageExtend,
     creditWarningMessageRef,
     getCreditWarningMessage,
     isLowCreditWarningDismissed,
@@ -2110,7 +2108,6 @@ export function MainPage() {
         setCreditWarningMessage,
         setCreditWarningType,
         setCreditWarningDismissible,
-        setShowOverageExtend,
         dismissOverageActive,
       },
       helpers: {
@@ -2168,7 +2165,6 @@ export function MainPage() {
       isLowCreditWarningDismissed,
       isOverageActiveDismissed,
       dismissOverageActive,
-      setShowOverageExtend,
       scrollConversationsToBottom,
       refreshUser,
     ]
@@ -2479,12 +2475,6 @@ export function MainPage() {
                 userTier === 'unregistered' || userTier === 'free' ? 'daily' : 'monthly'
               dismissLowCreditWarning(userTier, periodType, creditBalance?.credits_reset_at)
             }
-          }}
-          showOverageExtend={showOverageExtend}
-          onOverageExtended={() => {
-            setShowOverageExtend(false)
-            setCreditWarningMessage(null)
-            setCreditWarningType('none')
           }}
           error={error}
           errorMessageRef={errorMessageRef}

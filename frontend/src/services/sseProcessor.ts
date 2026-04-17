@@ -138,7 +138,6 @@ export interface SSEProcessorConfig {
     type: 'none' | 'low' | 'insufficient' | 'overage_active' | 'overage_cap_hit'
   ) => void
   setCreditWarningDismissible: (dismissible: boolean) => void
-  setShowOverageExtend: (show: boolean) => void
   setIsFollowUpMode: (mode: boolean) => void
   loadHistoryFromAPI: () => Promise<void>
   apiClientDeleteCache: (key: string) => void
@@ -208,7 +207,6 @@ export async function processComparisonStream(
     setCreditWarningMessage,
     setCreditWarningType,
     setCreditWarningDismissible,
-    setShowOverageExtend,
     setIsFollowUpMode,
     loadHistoryFromAPI,
     apiClientDeleteCache,
@@ -609,7 +607,6 @@ export async function processComparisonStream(
                         )
                         setCreditWarningType('overage_cap_hit')
                         setCreditWarningDismissible(false)
-                        setShowOverageExtend(true)
                         if (isFollowUpMode) setIsFollowUpMode(false)
                       } else if (
                         !isOverageActiveDismissed(balance.credits_reset_at) &&
@@ -628,7 +625,6 @@ export async function processComparisonStream(
                         )
                         setCreditWarningType('overage_active')
                         setCreditWarningDismissible(true)
-                        setShowOverageExtend(false)
                       } else if (
                         !isOverageActiveDismissed(balance.credits_reset_at) &&
                         ovUsed > 0
@@ -645,7 +641,6 @@ export async function processComparisonStream(
                         )
                         setCreditWarningType('overage_active')
                         setCreditWarningDismissible(true)
-                        setShowOverageExtend(false)
                       }
                     } else if (balance.credits_remaining <= 0) {
                       const msg = getCreditWarningMessage(
@@ -659,7 +654,6 @@ export async function processComparisonStream(
                       setCreditWarningMessage(msg)
                       setCreditWarningType('none')
                       setCreditWarningDismissible(false)
-                      setShowOverageExtend(false)
                       if (isFollowUpMode) setIsFollowUpMode(false)
                     } else if (remainingPercent <= lowCreditThreshold && remainingPercent > 0) {
                       if (
@@ -677,18 +671,15 @@ export async function processComparisonStream(
                         )
                         setCreditWarningType('low')
                         setCreditWarningDismissible(true)
-                        setShowOverageExtend(false)
                       } else {
                         setCreditWarningMessage(null)
                         setCreditWarningType('none')
                         setCreditWarningDismissible(false)
-                        setShowOverageExtend(false)
                       }
                     } else {
                       setCreditWarningMessage(null)
                       setCreditWarningType('none')
                       setCreditWarningDismissible(false)
-                      setShowOverageExtend(false)
                     }
                   })
                   .catch(() => {})

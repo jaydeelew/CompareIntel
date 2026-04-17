@@ -175,7 +175,7 @@ App.tsx (Application shell - routing only)
 |-----------|---------|
 | `ErrorBoundary` | React error boundary for graceful error handling |
 | `LoadingSpinner` | Reusable loading indicator |
-| `CreditWarningBanner` | Warnings for low pool, overage in use, overage cap hit; optional quick cap extend |
+| `CreditWarningBanner` | Warnings for low pool, overage in use, overage cap hit |
 | `DoneSelectingCard` | Prompt to start comparison after model selection |
 
 ---
