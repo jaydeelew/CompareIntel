@@ -2178,11 +2178,9 @@ export function MainPage() {
         overage_limit_credits: creditBalance?.overage_limit_credits,
       }
 
-      let warningType: 'insufficient' | 'overage_cap_hit' | 'none' = 'insufficient'
+      let warningType: 'overage_cap_hit' | 'none' = 'none'
       if (isPaid && ovCtx.overage_enabled && ovCtx.overage_limit_credits != null) {
         warningType = 'overage_cap_hit'
-      } else if (isPaid && !ovCtx.overage_enabled) {
-        warningType = 'none'
       }
 
       const message = getCreditWarningMessage(warningType, userTier, 0, 0, resetAt, ovCtx)
