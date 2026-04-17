@@ -463,7 +463,7 @@ def estimate_reserved_credits_for_compare(
             total_frac += calculate_image_credits_fractional(mid, 1)
             continue
         input_tokens = base_input + hist_tok
-        estimated_output_tokens = max(500, min(4000, int(input_tokens * 1.5)))
+        estimated_output_tokens = max(100, min(4000, int(input_tokens * 1.5)))
         total_frac += fractional_credits_for_estimated_text(
             mid, input_tokens, estimated_output_tokens
         )
@@ -479,7 +479,7 @@ def estimate_credits_before_request(
     input_tokens = estimate_token_count(prompt, model_id=model_id)
     if conversation_history:
         input_tokens += count_conversation_tokens(conversation_history, model_id=model_id)
-    estimated_output_tokens = max(500, min(4000, int(input_tokens * 1.5)))
+    estimated_output_tokens = max(100, min(4000, int(input_tokens * 1.5)))
     if model_id:
         credits_per_model = fractional_credits_for_estimated_text(
             model_id, input_tokens, estimated_output_tokens
