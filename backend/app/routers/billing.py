@@ -56,6 +56,23 @@ def _stripe_expandable_id(value: Any) -> str | None:
     return None
 
 
+def _invoice_subscription_id(invoice: dict[str, Any]) -> str | None:
+    """Extract subscription id from an Invoice across Stripe API versions.
+
+    Stripe API version 2026-03-25 removed ``invoice.subscription`` in favor of
+    ``invoice.parent.subscription_details.subscription``. Check the new path
+    first, then fall back to the legacy field so older API versions still work.
+    """
+    parent = invoice.get("parent")
+    if isinstance(parent, dict):
+        details = parent.get("subscription_details")
+        if isinstance(details, dict):
+            sid = _stripe_expandable_id(details.get("subscription"))
+            if sid:
+                return sid
+    return _stripe_expandable_id(invoice.get("subscription"))
+
+
 def _unix_ts_or_none(val: Any) -> int | None:
     if val is None:
         return None
@@ -658,7 +675,7 @@ async def stripe_webhook(request: Request, db: Session = Depends(get_db)) -> dic
                     db.add(user)
                     db.commit()
         elif etype == "invoice.paid":
-            sub_id = _stripe_expandable_id(obj.get("subscription"))
+            sub_id = _invoice_subscription_id(obj)
             cust = _stripe_expandable_id(obj.get("customer"))
             user = None
             if cust:

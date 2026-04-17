@@ -329,8 +329,11 @@ def get_credit_usage_stats(user_id: int, db: Session) -> dict[str, Any]:
     allocated = user.monthly_credits_allocated or 0
     used = user.credits_used_this_period or 0
     pool_remaining = max(0, allocated - used)
-    overage_room = _overage_budget_remaining(user)
-    remaining = pool_remaining + overage_room
+    # ``credits_remaining`` reflects the monthly pool only. Overage capacity is
+    # reported separately via ``overage_*`` fields so the UI never has to see
+    # the internal ``_overage_budget_remaining`` sentinel (999_999_999) used by
+    # admission/deduction logic when overage is uncapped.
+    remaining = pool_remaining
     total_used = user.total_credits_used or 0
 
     # Get reset time
