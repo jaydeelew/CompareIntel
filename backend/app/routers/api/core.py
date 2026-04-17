@@ -617,7 +617,11 @@ async def compare_stream(
             overage_hint = ""
             if tier_cfg.get("overage_allowed"):
                 if current_user.overage_enabled:
-                    overage_hint = " Your overage spending limit has been reached. Increase the limit in Settings → Billing & Overages, or wait for your credits to reset."
+                    overage_hint = (
+                        " Your remaining overage budget isn't enough to cover this comparison. "
+                        "Raise your spending limit in Settings → Billing & Overages, "
+                        "select fewer models, shorten your input, or wait for your credits to reset."
+                    )
                 else:
                     overage_hint = " Enable overages in Settings → Billing & Overages to keep using the service after your credits run out."
             if tier_name in ["unregistered", "free"]:
