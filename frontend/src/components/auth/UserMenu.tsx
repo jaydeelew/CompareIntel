@@ -1143,6 +1143,41 @@ export const UserMenu: React.FC = () => {
                           </svg>
                           Billing &amp; Overages
                         </h3>
+
+                        {canOpenStripeBillingPortal && (
+                          <div className="settings-billing-manage-row">
+                            <button
+                              type="button"
+                              className="modal-button-primary settings-manage-billing-btn"
+                              disabled={billingBusy !== null}
+                              onClick={() => openBillingPortal()}
+                            >
+                              {billingBusy === 'portal' ? 'Opening…' : 'Manage Billing'}
+                            </button>
+                          </div>
+                        )}
+
+                        {billingError && (
+                          <div
+                            className="settings-message settings-error"
+                            style={{ marginBottom: '0.75rem' }}
+                          >
+                            <svg
+                              width="16"
+                              height="16"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                            >
+                              <circle cx="12" cy="12" r="10" />
+                              <line x1="15" y1="9" x2="9" y2="15" />
+                              <line x1="9" y1="9" x2="15" y2="15" />
+                            </svg>
+                            {billingError}
+                          </div>
+                        )}
+
                         <p className="settings-description" style={{ marginBottom: '0.75rem' }}>
                           When your monthly credits run out, overages let you keep using the service
                           at <strong>${OVERAGE_USD_PER_CREDIT}/credit</strong> ( ~
@@ -1180,7 +1215,7 @@ export const UserMenu: React.FC = () => {
 
                             {overageEnabled && (
                               <div className="overage-limit-section">
-                                <span className="settings-label">Spending limit</span>
+                                <span className="settings-label">Overages Spending Limit</span>
                                 <div className="overage-limit-options">
                                   <label className="overage-radio-label">
                                     <input
