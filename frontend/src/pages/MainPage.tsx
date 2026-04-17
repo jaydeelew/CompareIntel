@@ -48,7 +48,7 @@ import {
 } from '../hooks'
 import { ApiError, isCancellationError } from '../services/api/errors'
 import { getRateLimitStatus, resetRateLimit } from '../services/compareService'
-import { getCreditBalance } from '../services/creditService'
+import { getCreditBalance, getSpendableCreditsRemaining } from '../services/creditService'
 import type { CreditBalance } from '../services/creditService'
 import { getAvailableModels } from '../services/modelsService'
 import {
@@ -2164,7 +2164,7 @@ export function MainPage() {
     if (!isAuthenticated && anonymousCreditsRemaining !== null) {
       currentCreditsRemaining = anonymousCreditsRemaining
     } else if (creditBalance !== null) {
-      currentCreditsRemaining = creditBalance.credits_remaining
+      currentCreditsRemaining = getSpendableCreditsRemaining(creditBalance, userTier)
     } else if (isAuthenticated && user) {
       currentCreditsRemaining = Math.max(
         0,
@@ -2184,7 +2184,12 @@ export function MainPage() {
       }
 
       let warningType: 'overage_cap_hit' | 'none' = 'none'
-      if (isPaid && ovCtx.overage_enabled && ovCtx.overage_limit_credits != null) {
+      if (
+        isPaid &&
+        ovCtx.overage_enabled &&
+        ovCtx.overage_limit_credits != null &&
+        (ovCtx.overage_credits_used_this_period ?? 0) >= ovCtx.overage_limit_credits
+      ) {
         warningType = 'overage_cap_hit'
       }
 

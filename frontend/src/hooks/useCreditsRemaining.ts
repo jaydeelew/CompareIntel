@@ -1,7 +1,7 @@
 import { useMemo, useEffect } from 'react'
 
 import { getCreditAllocation, getDailyCreditLimit } from '../config/constants'
-import type { CreditBalance } from '../services/creditService'
+import { getSpendableCreditsRemaining } from '../services/creditService'
 import type { User } from '../types'
 
 interface UseCreditsRemainingProps {
@@ -71,13 +71,20 @@ export function useCreditsRemaining(props: UseCreditsRemainingProps): UseCredits
         return Math.max(0, creditsAllocated - creditsUsed)
       }
     } else {
+      let poolCredits: number
       if (balanceMatchesUser && creditBalance?.credits_remaining !== undefined) {
-        return creditBalance.credits_remaining
+        poolCredits = creditBalance.credits_remaining
+      } else {
+        const creditsUsed = balanceMatchesUser
+          ? (creditBalance?.credits_used_this_period ?? (user?.credits_used_this_period || 0))
+          : user?.credits_used_this_period || 0
+        poolCredits = Math.max(0, creditsAllocated - creditsUsed)
       }
-      const creditsUsed = balanceMatchesUser
-        ? (creditBalance?.credits_used_this_period ?? (user?.credits_used_this_period || 0))
-        : user?.credits_used_this_period || 0
-      return Math.max(0, creditsAllocated - creditsUsed)
+      if (poolCredits > 0) return poolCredits
+      if (balanceMatchesUser && creditBalance) {
+        return getSpendableCreditsRemaining(creditBalance, userTier)
+      }
+      return poolCredits
     }
   }, [isAuthenticated, user, creditBalance, anonymousCreditsRemaining])
 

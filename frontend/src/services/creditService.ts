@@ -39,6 +39,29 @@ export interface CreditBalance {
 }
 
 /**
+ * Credits the user can still spend for this billing period: monthly pool first,
+ * then metered overage when the pool is exhausted (paid tiers with overages on).
+ */
+export function getSpendableCreditsRemaining(
+  balance: CreditBalance,
+  subscriptionTier: string
+): number {
+  if (balance.credits_remaining > 0) {
+    return balance.credits_remaining
+  }
+  const isPaid = subscriptionTier !== 'unregistered' && subscriptionTier !== 'free'
+  if (!isPaid || !balance.overage_enabled) {
+    return 0
+  }
+  const used = balance.overage_credits_used_this_period ?? 0
+  const limit = balance.overage_limit_credits
+  if (limit == null) {
+    return 1
+  }
+  return Math.max(0, limit - used)
+}
+
+/**
  * Credit usage history entry
  */
 export interface CreditUsageEntry {
