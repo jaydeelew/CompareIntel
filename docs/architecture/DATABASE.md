@@ -57,7 +57,6 @@ Core user account model with authentication, subscription, and credit tracking.
 | `mock_mode_enabled` | Boolean | Testing mode |
 | `stripe_customer_id` | String(255) | Stripe customer ID |
 | `stripe_subscription_id` | String(255) | Stripe subscription ID |
-| `purchased_credits_balance` | Integer | Purchased / admin-granted credits (consumed after monthly pool) |
 | `overage_enabled` | Boolean | User opted into pay-as-you-go overage for the current period |
 | `overage_spend_limit_cents` | Integer | Optional overage dollar cap in cents (NULL = unlimited) |
 | `overage_credits_used_this_period` | Integer | Overage credits consumed this billing period |
@@ -74,7 +73,7 @@ Core user account model with authentication, subscription, and credit tracking.
 | `created_at` | DateTime | Creation timestamp |
 | `updated_at` | DateTime | Last update timestamp |
 
-**Computed Property:** `credits_remaining` = max(0, `monthly_credits_allocated` - `credits_used_this_period`) + `purchased_credits_balance`
+**Computed Property:** `credits_remaining` = max(0, `monthly_credits_allocated` - `credits_used_this_period`)
 
 ---
 

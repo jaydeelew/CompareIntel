@@ -95,7 +95,6 @@ export const UserMenu: React.FC = () => {
             setCreditBalance({
               credits_allocated: u.monthly_credits_allocated || 0,
               credits_used_this_period: u.credits_used_this_period || 0,
-              purchased_credits_balance: 0,
               credits_remaining: Math.max(
                 0,
                 (u.monthly_credits_allocated || 0) - (u.credits_used_this_period || 0)
@@ -612,18 +611,6 @@ export const UserMenu: React.FC = () => {
                           >
                             Resets{' '}
                             {new Date(trustedCreditBalance.credits_reset_at).toLocaleDateString()}
-                          </div>
-                        )}
-                        {(trustedCreditBalance.purchased_credits_balance ?? 0) > 0 && (
-                          <div
-                            className="usage-reset-info"
-                            style={{
-                              fontSize: '0.7rem',
-                              color: 'rgba(255, 255, 255, 0.75)',
-                              marginTop: '0.15rem',
-                            }}
-                          >
-                            Prepaid credits: {trustedCreditBalance.purchased_credits_balance}
                           </div>
                         )}
                       </>

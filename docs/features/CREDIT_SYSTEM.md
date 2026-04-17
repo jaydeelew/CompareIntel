@@ -74,12 +74,11 @@ These rules are what the product enforces in code and UI. They are **not** email
 For each successful comparison, whole credits are taken in this order:
 
 1. **Monthly pool** (`monthly_credits_allocated` minus `credits_used_this_period`)
-2. **Purchased / legacy balance** (`purchased_credits_balance`) — admin or legacy grants, not a user-facing “credit pack” store
-3. **Overage** — only if the user turned **Enable overages** on and is within any spending cap
+2. **Overage** — only if the user turned **Enable overages** on and is within any spending cap
 
 ### Spending cap vs unlimited
 
-- **No limit:** After the monthly pool (and any purchased balance) is empty, overage credits accrue until the billing period ends. Consumed overage is reported to Stripe Billing Meters (`backend/app/stripe_metering.py`) so Stripe can add a metered line item to the subscription invoice at period end.
+- **No limit:** After the monthly pool is empty, overage credits accrue until the billing period ends. Consumed overage is reported to Stripe Billing Meters (`backend/app/stripe_metering.py`) so Stripe can add a metered line item to the subscription invoice at period end.
 - **Set a spending cap:** The user sets a **maximum dollar amount** for the period; the app converts that to a maximum number of overage credits. Two things enforce the cap:
   1. **Admit check** (`check_credits_sufficient`) — returns **402** before streaming starts when the reserved-credit estimate would push the user past the remaining cap, so obviously oversized prompts never run. When the user is already at the cap they see an in-app error plus an optional quick **extend limit** button.
   2. **Post-stream deduction** (`deduct_credits`) — the cap is a **hard ceiling**. If actual usage ends up higher than the remaining cap (common when the reserved estimate underestimates real model output), only `min(actual, remaining_cap)` is added to `overage_credits_used_this_period` and reported to Stripe. The user is never billed past the dollar amount they configured; the shortfall is absorbed as platform cost.
@@ -110,7 +109,7 @@ Streaming **complete** events can include `overage_enabled`, `overage_credits_us
 
 1. **Pre-request:** Backend estimates required credits (per selected model, list pricing or legacy) and returns **402** if the user cannot afford the estimate **including** allowed overage budget when overages are enabled.
 2. **Processing:** Streaming reads `usage.cost` when present; otherwise list pricing or legacy path.
-3. **Deduction:** Whole credits deducted once per successful comparison: **monthly pool → purchased balance → overage** (when enabled). Overage is hard-capped in `deduct_credits`; any shortfall beyond the cap is absorbed and logged as `CREDIT_CAP_ABSORBED` — see [Spending cap vs unlimited](#spending-cap-vs-unlimited).
+3. **Deduction:** Whole credits deducted once per successful comparison: **monthly pool → overage** (when enabled). Overage is hard-capped in `deduct_credits`; any shortfall beyond the cap is absorbed and logged as `CREDIT_CAP_ABSORBED` — see [Spending cap vs unlimited](#spending-cap-vs-unlimited).
 4. **Recording:** `CreditTransaction` + `UsageLog` with `actual_cost` and token fields.
 
 ## Database Fields
@@ -119,7 +118,6 @@ Streaming **complete** events can include `overage_enabled`, `overage_credits_us
 
 - `monthly_credits_allocated` - Subscription credits for current period
 - `credits_used_this_period` - Consumption against the monthly allocation
-- `purchased_credits_balance` - Purchased balance (legacy / admin; not sold via one-time checkout)
 - `overage_enabled` - User opted into pay-as-you-go overage for the current period
 - `overage_spend_limit_cents` - Optional cap in USD cents (`NULL` = unlimited overage while enabled)
 - `overage_credits_used_this_period` - Overage credits consumed this billing period (resets with monthly allocation)

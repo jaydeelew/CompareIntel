@@ -25,16 +25,14 @@ logger = logging.getLogger(__name__)
 
 
 def get_user_credits(user_id: int, db: Session) -> int:
-    """Returns remaining credits: subscription pool remainder plus purchased balance."""
+    """Returns remaining credits in the user's monthly subscription pool."""
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         raise ValueError(f"User {user_id} not found")
 
     allocated = user.monthly_credits_allocated or 0
     used = user.credits_used_this_period or 0
-    sub_remaining = max(0, allocated - used)
-    purchased = user.purchased_credits_balance or 0
-    return sub_remaining + purchased
+    return max(0, allocated - used)
 
 
 def _overage_budget_remaining(user: User) -> int:
@@ -49,7 +47,7 @@ def _overage_budget_remaining(user: User) -> int:
 
 
 def check_credits_sufficient(user_id: int, required_credits: Decimal, db: Session) -> bool:
-    """Check if user can afford the request (pool + purchased + overage). Resets credits first."""
+    """Check if user can afford the request (pool + overage). Resets credits first."""
     check_and_reset_credits_if_needed(user_id, db)
 
     current_credits = get_user_credits(user_id, db)
@@ -71,7 +69,7 @@ def deduct_credits(
     db: Session,
     description: str | None = None,
 ) -> None:
-    """Deduct credits: monthly pool -> purchased -> overage. Creates audit trail.
+    """Deduct credits: monthly pool -> overage. Creates audit trail.
 
     Overage consumption is hard-capped at ``overage_spend_limit_cents`` — any
     actual usage beyond the cap is **absorbed by the platform** (not billed to
@@ -90,18 +88,12 @@ def deduct_credits(
 
     allocated = user.monthly_credits_allocated or 0
     used = user.credits_used_this_period or 0
-    purchased = user.purchased_credits_balance or 0
 
     room_monthly = max(0, allocated - used)
     take_monthly = min(credits_int, room_monthly)
     remainder = credits_int - take_monthly
 
     user.credits_used_this_period = used + take_monthly
-
-    if remainder > 0:
-        take_purchased = min(remainder, purchased)
-        user.purchased_credits_balance = max(0, purchased - take_purchased)
-        remainder -= take_purchased
 
     overage_reported = 0
     absorbed = 0
@@ -185,29 +177,6 @@ def deduct_credits(
             credits=overage_reported,
             idempotency_key=idem_key,
         )
-
-
-def add_purchased_credits(
-    user_id: int,
-    credits: int,
-    db: Session,
-    description: str | None = None,
-) -> None:
-    """Add purchased credits (e.g. admin grant or legacy balance)."""
-    if credits <= 0:
-        return
-    user = db.query(User).filter(User.id == user_id).with_for_update().first()
-    if not user:
-        raise ValueError(f"User {user_id} not found")
-    user.purchased_credits_balance = (user.purchased_credits_balance or 0) + credits
-    transaction = CreditTransaction(
-        user_id=user_id,
-        transaction_type="purchase",
-        credits_amount=credits,
-        description=description or "Purchased credits",
-    )
-    db.add(transaction)
-    db.commit()
 
 
 def allocate_monthly_credits(user_id: int, tier: str, db: Session) -> None:
@@ -359,8 +328,7 @@ def get_credit_usage_stats(user_id: int, db: Session) -> dict[str, Any]:
 
     allocated = user.monthly_credits_allocated or 0
     used = user.credits_used_this_period or 0
-    purchased = user.purchased_credits_balance or 0
-    pool_remaining = max(0, allocated - used) + purchased
+    pool_remaining = max(0, allocated - used)
     overage_room = _overage_budget_remaining(user)
     remaining = pool_remaining + overage_room
     total_used = user.total_credits_used or 0
@@ -392,7 +360,6 @@ def get_credit_usage_stats(user_id: int, db: Session) -> dict[str, Any]:
     return {
         "credits_allocated": allocated,
         "credits_used_this_period": used,
-        "purchased_credits_balance": purchased,
         "credits_remaining": remaining,
         "total_credits_used": total_used,
         "credits_reset_at": reset_time_str,

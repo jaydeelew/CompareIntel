@@ -1337,7 +1337,6 @@ export function MainPage() {
               setCreditBalance({
                 credits_allocated: user.monthly_credits_allocated || 0,
                 credits_used_this_period: user.credits_used_this_period || 0,
-                purchased_credits_balance: 0,
                 credits_remaining: Math.max(
                   0,
                   (user.monthly_credits_allocated || 0) - (user.credits_used_this_period || 0)

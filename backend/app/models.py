@@ -74,7 +74,6 @@ class User(Base):
     # Payment integration
     stripe_customer_id = Column(String(255), index=True)
     stripe_subscription_id = Column(String(255), index=True, nullable=True)
-    purchased_credits_balance = Column(Integer, default=0, nullable=False)
 
     # Overage settings (user-controlled)
     overage_enabled = Column(Boolean, default=False, nullable=False)
@@ -122,11 +121,8 @@ class User(Base):
 
     @property
     def credits_remaining(self) -> int:
-        """
-        Remaining subscription credits plus any prepaid purchased balance.
-        """
-        sub = max(0, (self.monthly_credits_allocated or 0) - (self.credits_used_this_period or 0))
-        return sub + (self.purchased_credits_balance or 0)
+        """Remaining subscription credits for the current billing period."""
+        return max(0, (self.monthly_credits_allocated or 0) - (self.credits_used_this_period or 0))
 
     @property
     def is_trial_active(self) -> bool:

@@ -392,9 +392,7 @@ User types (pools):
   │ Pro+            │ 6,700/month   │ Monthly (Stripe period)   │
   └─────────────────┴───────────────┴─────────────────────────┘
 
-Prepaid: `purchased_credits_balance` spent after monthly pool is exhausted.
-
-Overage (paid tiers, opt-in): After pool + prepaid, `credit_manager` may consume overage credits if `overage_enabled` and within optional dollar cap; overage settings reset when monthly credits are re-allocated (see [CREDIT_SYSTEM.md](features/CREDIT_SYSTEM.md)).
+Overage (paid tiers, opt-in): After the monthly pool is exhausted, `credit_manager` may consume overage credits if `overage_enabled` and within optional dollar cap; overage settings reset when monthly credits are re-allocated (see [CREDIT_SYSTEM.md](features/CREDIT_SYSTEM.md)).
 
 Billing (optional): POST /api/billing/create-checkout-session, POST /api/billing/webhooks/stripe; GET/PUT /api/billing/overage-settings for overage preferences.
 
