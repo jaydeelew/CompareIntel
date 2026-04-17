@@ -623,7 +623,10 @@ async def compare_stream(
                         "select fewer models, shorten your input, or wait for your credits to reset."
                     )
                 else:
-                    overage_hint = " Enable overages in Settings → Billing & Overages to keep using the service after your credits run out."
+                    overage_hint = (
+                        " Enable pay-as-you-go overages in Settings → Billing & Overages, "
+                        "or wait for your credits to reset."
+                    )
             if tier_name in ["unregistered", "free"]:
                 error_msg = (
                     f"Not enough credits for this comparison (need at least {need} credits). "

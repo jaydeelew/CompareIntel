@@ -78,19 +78,25 @@ export function useCreditWarningManager() {
         } else if (tier === 'free') {
           return "You've run out of credits. Credits will reset to 100 tomorrow. Use Account → Upgrade plan for paid monthly pools."
         } else if (isPaid && ov.overage_enabled) {
-          return `Your monthly pool and overage budget are exhausted. Credits reset on ${resetDateStr}. Increase your overage limit in Settings → Billing & Overages, or upgrade your plan.`
+          const capped = ov.overage_limit_credits != null
+          const tailing = capped
+            ? 'Raise your overage limit in Settings → Billing & Overages, or upgrade your plan.'
+            : 'Upgrade your plan, or wait for your credits to reset.'
+          return `Your monthly pool and overage budget are exhausted. Credits reset on ${resetDateStr}. ${tailing}`
         } else if (isPaid) {
-          return `You've run out of credits which will reset on ${resetDateStr}. Enable pay-as-you-go overages in Settings → Billing & Overages to keep using the service.`
+          return `You've run out of credits. Credits reset on ${resetDateStr}. Enable pay-as-you-go overages in Settings → Billing & Overages, or wait for your credits to reset.`
         }
-        return `You've run out of credits which will reset on ${resetDateStr}. Enable overages in Settings → Billing & Overages or upgrade your plan.`
+        return `You've run out of credits. Credits reset on ${resetDateStr}.`
       }
 
       if (type === 'insufficient') {
-        const extra =
-          isPaid && !ov.overage_enabled
-            ? ' Enable overages in Settings → Billing & Overages to avoid truncation.'
-            : ''
-        return `This comparison is estimated to take ${estimatedCredits?.toFixed(1) || 'X'} credits and you have ${Math.round(creditsRemaining)} credits remaining. The model responses may be truncated. Try selecting fewer models or shorten your input.${extra}`
+        let extra = ''
+        if (isPaid && !ov.overage_enabled) {
+          extra = ' Or enable pay-as-you-go overages in Settings → Billing & Overages.'
+        } else if (tier === 'free') {
+          extra = ' Or upgrade to a paid plan for a larger monthly pool.'
+        }
+        return `This comparison needs about ${estimatedCredits?.toFixed(1) || 'X'} credits and you have ${Math.round(creditsRemaining)} left. Try selecting fewer models or shortening your input.${extra}`
       }
 
       // type === 'low'
@@ -99,11 +105,16 @@ export function useCreditWarningManager() {
       } else if (tier === 'free') {
         return `You have ${Math.round(creditsRemaining)} credits left for today. Credits will reset to 100 tomorrow. Paid plans add monthly pools — Account → Upgrade plan.`
       } else if (isPaid && ov.overage_enabled) {
-        return `You have ${Math.round(creditsRemaining)} credits left in your monthly pool. When depleted, overage credits will be used automatically at $${OVERAGE_USD_PER_CREDIT}/credit.`
+        const capped = ov.overage_limit_credits != null
+        if (capped) {
+          const capDollars = ((ov.overage_limit_credits ?? 0) * OVERAGE_USD_PER_CREDIT).toFixed(2)
+          return `You have ${Math.round(creditsRemaining)} credits left in your monthly pool. When it runs out, overages kick in at $${OVERAGE_USD_PER_CREDIT}/credit up to your $${capDollars} cap.`
+        }
+        return `You have ${Math.round(creditsRemaining)} credits left in your monthly pool. When it runs out, overages kick in at $${OVERAGE_USD_PER_CREDIT}/credit (no cap — set one in Settings → Billing & Overages).`
       } else if (isPaid) {
         return `You have ${Math.round(creditsRemaining)} credits left in your monthly billing cycle. Enable overages in Settings → Billing & Overages so you can keep using the service when credits run out.`
       }
-      return `You have ${Math.round(creditsRemaining)} credits left in your monthly billing cycle. Enable overages in Settings → Billing & Overages or upgrade your plan.`
+      return `You have ${Math.round(creditsRemaining)} credits left in your monthly billing cycle.`
     },
     []
   )
