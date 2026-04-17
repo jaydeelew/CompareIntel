@@ -8,6 +8,7 @@
 import React from 'react'
 
 import type { CreditBalance as CreditBalanceType } from '../../services/creditService'
+import { formatCreditsResetAtLabel } from '../../utils/date'
 import './CreditBalance.css'
 
 export interface CreditBalanceProps {
@@ -80,24 +81,15 @@ export const CreditBalance: React.FC<CreditBalanceProps> = ({
     return 'var(--credit-progress-critical, #dc2626)' // Dark Red
   }
 
-  const formatResetDate = (dateString?: string) => {
-    if (!dateString) return null
-    try {
-      const date = new Date(dateString)
-      const now = new Date()
-      const diffDays = Math.ceil((date.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
-
-      if (diffDays === 0) return 'Today'
-      if (diffDays === 1) return 'Tomorrow'
-      if (diffDays < 7) return `In ${diffDays} days`
-      return date.toLocaleDateString()
-    } catch {
-      return dateString
-    }
-  }
-
   const resetDateText =
-    showResetDate && balance.credits_reset_at ? formatResetDate(balance.credits_reset_at) : null
+    showResetDate && balance.credits_reset_at
+      ? (() => {
+          const label = formatCreditsResetAtLabel(balance.credits_reset_at, {
+            useUtc: balance.credits_reset_shows_utc === true,
+          })
+          return label === 'N/A' ? null : label
+        })()
+      : null
 
   const periodLabel = balance.period_type === 'monthly' ? 'This Month' : 'Today'
 

@@ -37,6 +37,7 @@ import {
 } from '../../services/userSettingsService'
 import type { UserPreferences, UserPreferencesUpdate } from '../../services/userSettingsService'
 import { BILLING_UPDATED_EVENT } from '../../utils/billingSync'
+import { formatCreditsResetAtLabel } from '../../utils/date'
 import logger from '../../utils/logger'
 import { dispatchSaveStateEvent } from '../../utils/sessionState'
 import './UserMenu.css'
@@ -554,6 +555,11 @@ export const UserMenu: React.FC = () => {
                 const totalUsed = poolUsed + ovUsed
                 const hasOverageUsage =
                   isPaidTier && trustedCreditBalance?.overage_enabled && ovUsed > 0
+                const creditsResetLabel = trustedCreditBalance?.credits_reset_at
+                  ? formatCreditsResetAtLabel(trustedCreditBalance.credits_reset_at, {
+                      useUtc: trustedCreditBalance.credits_reset_shows_utc === true,
+                    })
+                  : 'N/A'
 
                 return (
                   <div className="usage-stat">
@@ -600,7 +606,7 @@ export const UserMenu: React.FC = () => {
                             {trustedCreditBalance.overage_limit_credits.toLocaleString()} credits
                           </div>
                         )}
-                        {trustedCreditBalance.credits_reset_at && (
+                        {creditsResetLabel !== 'N/A' && (
                           <div
                             className="usage-reset-info"
                             style={{
@@ -609,8 +615,7 @@ export const UserMenu: React.FC = () => {
                               marginTop: '0.15rem',
                             }}
                           >
-                            Resets{' '}
-                            {new Date(trustedCreditBalance.credits_reset_at).toLocaleDateString()}
+                            Resets {creditsResetLabel}
                           </div>
                         )}
                       </>

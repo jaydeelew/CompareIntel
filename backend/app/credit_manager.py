@@ -360,6 +360,10 @@ def get_credit_usage_stats(user_id: int, db: Session) -> dict[str, Any]:
             (user.overage_spend_limit_cents / 100) / OVERAGE_USD_PER_CREDIT
         )
 
+    # When the effective IANA timezone is UTC (default or explicit), the UI should label reset
+    # times as UTC instead of implying an unknown local browser time.
+    credits_reset_shows_utc = _get_user_timezone(user) == "UTC"
+
     return {
         "credits_allocated": allocated,
         "credits_used_this_period": used,
@@ -373,6 +377,7 @@ def get_credit_usage_stats(user_id: int, db: Session) -> dict[str, Any]:
         "overage_enabled": user.overage_enabled or False,
         "overage_credits_used_this_period": overage_used,
         "overage_limit_credits": overage_limit_credits,
+        "credits_reset_shows_utc": credits_reset_shows_utc,
     }
 
 

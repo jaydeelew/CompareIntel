@@ -149,7 +149,9 @@ export interface StreamingHelperCallbacks {
     tier: string,
     remaining: number,
     estimated?: number,
-    resetAt?: string
+    resetAt?: string,
+    overageCtx?: unknown,
+    resetShowsUtc?: boolean
   ) => string
   isLowCreditWarningDismissed: (
     tier: string,
