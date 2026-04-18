@@ -681,6 +681,31 @@ export function HelpMeChoose({
     }
   }, [isExpanded, categoryTooltip, modelEvidenceTooltip])
 
+  /** When the dropdown opens, scroll so the expanded card sits at the top of the page
+   *  (toggle / search / advanced row scrolls out of view above it). Accounts for the
+   *  sticky app header height so the card isn't hidden underneath it. */
+  const prevExpandedForPageScrollRef = useRef(false)
+  useEffect(() => {
+    const justOpened = isExpanded && !prevExpandedForPageScrollRef.current
+    prevExpandedForPageScrollRef.current = isExpanded
+    if (!justOpened) return
+    let raf2 = 0
+    const raf1 = requestAnimationFrame(() => {
+      raf2 = requestAnimationFrame(() => {
+        const card = contentRef.current
+        if (!card) return
+        const header = document.querySelector<HTMLElement>('.app-header-shell')
+        const headerOffset = header?.getBoundingClientRect().height ?? 0
+        const cardTop = card.getBoundingClientRect().top + window.scrollY
+        window.scrollTo({ top: cardTop - headerOffset, behavior: 'smooth' })
+      })
+    })
+    return () => {
+      cancelAnimationFrame(raf1)
+      if (raf2) cancelAnimationFrame(raf2)
+    }
+  }, [isExpanded])
+
   /** Scroll to first selected model when dropdown opens only—not on selection changes (Goal 10) */
   const prevExpandedRef = useRef(false)
   useEffect(() => {
