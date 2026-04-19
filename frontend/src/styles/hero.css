@@ -2591,13 +2591,11 @@ video.capability-tile-image-lightbox-img {
     padding: 1.25rem 1.25rem;
   }
 
-  .hero-section .capability-tile.flipped .capability-tile-back-label-row {
-    font-size: 0.7rem;
-  }
-
-  .hero-section .capability-tile.flipped .capability-tile-back-label {
-    font-size: 0.7rem;
-    font-weight: var(--font-bold);
+  /* Hide back title on compact viewports. Apply to the back face always, not only while
+     .flipped — React removes .flipped before the flip-back transition ends, which briefly
+     re-showed the label when this rule was gated on .flipped. */
+  .hero-section .capability-tile-back-label-row {
+    display: none;
   }
 
   .hero-section .capability-tile.flipped .capability-tile-back-text {
@@ -2779,18 +2777,6 @@ video.capability-tile-image-lightbox-img {
     border-radius: 18px;
     box-shadow: none;
     justify-content: flex-start;
-  }
-
-  .capability-tile.flipped .capability-tile-back-label-row {
-    font-size: 0.7rem;
-  }
-
-  .capability-tile.flipped .capability-tile-back-label {
-    font-size: 0.7rem;
-    font-weight: var(--font-bold);
-    letter-spacing: 0.08em;
-    flex-shrink: 0;
-    text-align: center;
   }
 
   .capability-tile.flipped .capability-tile-back-text {
