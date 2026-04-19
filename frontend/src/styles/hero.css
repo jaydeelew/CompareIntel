@@ -403,19 +403,19 @@
   }
 }
 
-/* Hero logo flash effect */
+/* Hero logo flash — lives in .hero-capabilities-wrap so the watermark animates in the card row */
+.hero-capabilities-wrap {
+  position: relative;
+  width: 100%;
+}
+
 .hero-logo-flash {
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  width: 100%;
-  height: 100%;
+  inset: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1;
+  z-index: 0;
   pointer-events: none;
   opacity: 0;
   transition: opacity 0.1s ease-out;
@@ -549,6 +549,7 @@
   padding: 0 1rem;
   animation: fadeInUp 0.8s ease-out 0.2s both;
   position: relative;
+  z-index: 1;
 }
 
 .hero-capabilities:has(.flipped),
@@ -2496,6 +2497,10 @@ video.capability-tile-image-lightbox-img {
     gap: 0.5rem;
     max-width: 100%;
     padding: 0 0.5rem;
+    /* Stable slot (≤900px): icon row vs flipped card swap heights; without this the follow-up
+       heading, composer, and usage preview jump vertically. Center the row in the extra space. */
+    min-height: 17rem;
+    align-content: center;
   }
 
   .hero-capabilities:has(.capability-tile.flipped) {
@@ -2623,11 +2628,18 @@ video.capability-tile-image-lightbox-img {
      at 480px so the hero, brand, and watermark stay stable above phone widths. */
 
   .hero-section {
-    padding: 3rem 1rem 4rem;
+    padding: 3rem 1rem 8rem;
+  }
+
+  /* Match desktop +1rem over default when dropdowns are open; mobile default bottom is 6rem */
+  .hero-section:has(.history-inline-list),
+  .hero-section:has(.saved-selections-dropdown) {
+    padding-bottom: 7rem;
   }
 
   .hero-title {
     font-size: clamp(2rem, 8vw, 2.5rem);
+    margin-top: clamp(1.5rem, 5vw, 2.75rem);
     margin-bottom: 0.75rem;
     line-height: 1.2;
   }
@@ -2653,12 +2665,19 @@ video.capability-tile-image-lightbox-img {
     margin-left: 0;
   }
 
+  /* Tile row + in-wrap logo flash: net offset vs subtitle (~0.5in up, then +1rem down) */
+  .hero-capabilities-wrap {
+    margin-top: calc(-0.5in + 1rem);
+  }
+
   .hero-capabilities {
     grid-template-columns: repeat(4, auto);
     justify-content: center;
     gap: 0.5rem;
     max-width: 100%;
     padding: 0 0.5rem;
+    /* Pull composer block up: margin-top on .hero-input-section collapses with this; control gap here */
+    margin: 0 auto calc(2.5rem - 0.5rem);
   }
 
   /* When a tile is flipped: center it and hide others to prevent cut-off and fit mobile */
@@ -2811,7 +2830,7 @@ video.capability-tile-image-lightbox-img {
   }
 
   .hero-input-section {
-    margin-top: 3.25rem;
+    margin-top: 1rem;
     padding: 0 0.5rem;
     gap: 0.625rem;
   }
