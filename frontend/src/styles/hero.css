@@ -2565,9 +2565,23 @@ video.capability-tile-image-lightbox-img {
       inset 0 1px 0 rgba(255, 255, 255, 0.6) !important;
   }
 
+  /* Clip on the wrapper, not the 3D tile: overflow:hidden on .capability-tile hid the back face / body text
+     (flex + min-height + preserve-3d). Wrapper has no rotateY — rounds the stack without eating content. */
+  .hero-section .capability-tile-wrapper--elevated,
+  .hero-section .capability-tile-wrapper:has(.flipped) {
+    overflow: hidden;
+    border-radius: 20px;
+  }
+
+  /* Keep outer padding at 0 until stacking animation ends — avoids a square ring vs inner radius */
+  .hero-section .capability-tile-wrapper--elevated .capability-tile {
+    padding: 0;
+  }
+
   .hero-section .capability-tile.flipped {
     width: min(280px, calc(100vw - 3rem));
     height: auto;
+    padding: 0;
     transform: rotateY(180deg);
     transform-origin: center center;
     border: 1px solid rgba(255, 255, 255, 0.15) !important;
@@ -2742,9 +2756,20 @@ video.capability-tile-image-lightbox-img {
       inset 0 1px 0 rgba(255, 255, 255, 0.6) !important;
   }
 
+  .capability-tile-wrapper--elevated,
+  .capability-tile-wrapper:has(.flipped) {
+    overflow: hidden;
+    border-radius: 20px;
+  }
+
+  .capability-tile-wrapper--elevated .capability-tile {
+    padding: 0;
+  }
+
   .capability-tile.flipped {
     width: min(280px, calc(100vw - 3rem));
     height: auto;
+    padding: 0;
     transform: rotateY(180deg);
     transform-origin: center center;
     border: 1px solid rgba(255, 255, 255, 0.15) !important;
