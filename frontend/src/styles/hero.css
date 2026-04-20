@@ -1205,7 +1205,9 @@ video.capability-tile-image-lightbox-img {
   flex-shrink: 0;
 }
 
-@media (max-width: 768px) {
+/* Disable hover lift on touch / no-hover devices only — not by viewport width.
+   Narrow desktop windows (where the subtitle wraps) still use the same animation as wide layouts. */
+@media (hover: none), (pointer: coarse) {
   .hero-view-toggle {
     transition: none;
   }
