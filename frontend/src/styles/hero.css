@@ -441,6 +441,24 @@
   filter: brightness(2) contrast(1.1) hue-rotate(-10deg);
 }
 
+/* Non-mobile (full capability cards): flash is not limited to the short tile row — grow into hero space */
+@media (min-width: 769px) {
+  .hero-logo-flash {
+    top: -30vh;
+    right: -10vw;
+    bottom: -36vh;
+    left: -10vw;
+  }
+
+  .hero-flash-logo-img {
+    opacity: 0.24;
+  }
+
+  [data-theme='light'] .hero-flash-logo-img {
+    opacity: 0.4;
+  }
+}
+
 /* Hero title line control */
 .hero-title-first-line,
 .hero-title-second-line {
