@@ -613,6 +613,7 @@
   overflow: visible;
   cursor: pointer;
   transform-style: preserve-3d;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .capability-tile.flipped {
