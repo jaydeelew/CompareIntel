@@ -105,7 +105,7 @@
 
   /* Establish explicit stacking context so animated/transparent pseudo-elements
      (::before with animation, ::after with opacity) composite deterministically
-     behind .hero-content (z-index: 2). Without this, some browsers intermittently
+     behind .hero-content (z-index: 4). Without this, some browsers intermittently
      fail to paint child backgrounds above the gradient overlays. */
   isolation: isolate;
 }
@@ -459,7 +459,9 @@
   max-width: 1400px;
   margin: 0 auto;
   position: relative;
-  z-index: 2;
+  /* Above .provider-carousel-front (3) so composer + anonymous view toggle stay interactive;
+     pseudo-elements on .hero-section stay behind (isolate + lower than this). */
+  z-index: 4;
   width: 100%;
   animation: fadeInUp 0.8s ease-out both;
 }
@@ -1061,6 +1063,9 @@ video.capability-tile-image-lightbox-img {
 
 .hero-input-section {
   position: relative;
+  /* Above default .hero-capabilities (1) so the cards ↔ carousel control is tappable on touch
+     layouts where the grid’s min-height overlaps the toggle; below :has(.flipped) (100). */
+  z-index: 2;
   margin-top: 3.75rem;
   max-width: 700px;
   margin-left: auto;
@@ -1122,7 +1127,7 @@ video.capability-tile-image-lightbox-img {
 
 .hero-view-toggle-wrap {
   position: absolute;
-  top: -32px;
+  top: -42px;
   left: 50%;
   transform: translateX(-50%);
   z-index: 3;
