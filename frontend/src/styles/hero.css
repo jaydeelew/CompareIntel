@@ -466,6 +466,18 @@
   animation: fadeInUp 0.8s ease-out both;
 }
 
+/* Watermark + provider carousel sit under this layer (z-index 4). Without passing events through,
+   the full-bleed .hero-content box blocks the carousel (clicks + drag) even where title/cards are
+   invisible. Re-enable hits only on controls that must stay interactive. */
+.hero-section.hero-section--composer-focused .hero-content {
+  pointer-events: none;
+}
+
+.hero-section.hero-section--composer-focused .hero-theme-toggle-mobile,
+.hero-section.hero-section--composer-focused .hero-input-section {
+  pointer-events: auto;
+}
+
 /* Hero Title - Bold gradient text */
 .hero-title {
   font-size: clamp(2.5rem, 6vw, 4rem);
