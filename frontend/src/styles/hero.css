@@ -2533,14 +2533,15 @@ video.capability-tile-image-lightbox-img {
   }
 
   .hero-section .capability-icon {
-    width: 44px;
-    height: 44px;
+    width: 56px;
+    height: 56px;
     margin: 0;
+    border-radius: 17px;
   }
 
   .hero-section .capability-icon svg {
-    width: 20px;
-    height: 20px;
+    width: 30px;
+    height: 30px;
   }
 
   .hero-section .capability-title {
@@ -2571,6 +2572,10 @@ video.capability-tile-image-lightbox-img {
   .hero-section .capability-tile-front {
     margin: -0.5rem;
     padding: 0.5rem;
+    /* Single inner layer: icon chip only — drop frosted middle stack vs outer border */
+    background: transparent;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
   }
 
   [data-theme='light'] .hero-section .capability-tile:not(.flipped),
@@ -2751,14 +2756,15 @@ video.capability-tile-image-lightbox-img {
   }
 
   .capability-icon {
-    width: 44px;
-    height: 44px;
+    width: 56px;
+    height: 56px;
     margin: 0;
+    border-radius: 17px;
   }
 
   .capability-icon svg {
-    width: 20px;
-    height: 20px;
+    width: 30px;
+    height: 30px;
   }
 
   .capability-title {
@@ -2790,6 +2796,9 @@ video.capability-tile-image-lightbox-img {
   .capability-tile-front {
     margin: -0.5rem;
     padding: 0.5rem;
+    background: transparent;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
   }
 
   [data-theme='light'] .capability-tile:not(.flipped),
