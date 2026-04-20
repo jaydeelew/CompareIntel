@@ -250,6 +250,19 @@
   }
 }
 
+/* Icon-only capability row (≤900px): smaller carousel watermark — matches compact tile band */
+@media (max-width: 900px) {
+  .hero-centered-logo--with-arrows {
+    width: min(260px, 72vw);
+    max-width: 72vw;
+  }
+
+  .hero-section.hero-section--composer-focused .hero-centered-logo--with-arrows {
+    width: min(280px, 76vw);
+    max-width: 76vw;
+  }
+}
+
 /* Watermark logo keeps the 1100px-level top value down to mobile; see @media (max-width: 480px) in navigation.css. */
 
 /* Decorative arrows: live in .hero-input-section; tips align to composer vertical center (anchor). */
@@ -441,8 +454,8 @@
   filter: brightness(2) contrast(1.1) hue-rotate(-10deg);
 }
 
-/* Non-mobile (full capability cards): flash is not limited to the short tile row — grow into hero space */
-@media (min-width: 769px) {
+/* Full capability cards only (≥901px): tile-click flash bleeds into hero — at ≤900px stay inset to icon row */
+@media (min-width: 901px) {
   .hero-logo-flash {
     top: -30vh;
     right: -10vw;
