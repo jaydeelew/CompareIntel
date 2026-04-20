@@ -83,7 +83,7 @@ export function FormHeader({
               className="select-models-heading-link"
               onClick={() => onOpenHelpMeChoose()}
             >
-              Help me choose models →
+              Help me choose models ➜
             </button>
           ) : (
             <StyledTooltip text="Scroll to model selection">
