@@ -40,10 +40,10 @@ export const TUTORIAL_STEPS_CONFIG: Record<TutorialStep, StepConfig> = {
   },
   'follow-up': {
     step: 'follow-up',
-    targetSelector: '.follow-up-button:not(.export-dropdown-trigger)',
+    targetSelector: '.follow-up-header',
     title: 'Continue the Conversation',
     description:
-      'Review the results, then click the "Follow up" button to continue the conversation.',
+      'Review the results. The composer switches to follow-up mode automatically—type your next message below.',
     position: 'top',
   },
   'enter-prompt-2': {

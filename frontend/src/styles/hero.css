@@ -1297,32 +1297,6 @@ video.capability-tile-image-lightbox-img {
     0 0 50px rgba(6, 182, 212, 0.06);
 }
 
-/* Wrapper for floating composer - matches hero size (700px), draggable from anywhere */
-.composer-floating-wrapper {
-  position: fixed;
-  bottom: 16px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 100%;
-  max-width: 700px;
-  padding: 0 var(--page-gutter);
-  z-index: 9999;
-  box-sizing: border-box;
-}
-
-/* Dragging state - disable child interactions, show grab cursor */
-.composer-floating-wrapper.composer-dragging {
-  cursor: grabbing;
-}
-
-.composer-floating-wrapper.composer-dragging > * {
-  pointer-events: none;
-}
-
-.composer-floating-wrapper {
-  cursor: grab;
-}
-
 /* Floating composer - enhanced shadow when floating */
 .composer.composer-floating {
   animation: composer-float-in 0.35s var(--ease-spring) forwards;
@@ -1400,6 +1374,72 @@ video.capability-tile-image-lightbox-img {
   border: none;
   box-shadow: none;
   background: transparent;
+}
+
+/* Reserves hero height when the full composer stack (header + composer + usage) is portaled below results */
+.composer-below-results-hero-placeholder {
+  min-height: clamp(260px, 38vh, 420px);
+  flex-shrink: 0;
+  pointer-events: none;
+}
+
+/* Same vertical rhythm as .hero-input-section for the portaled unit */
+.composer-below-results-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+/* Portaled composer is outside .hero-input-section — h2 would otherwise use UA styles.
+   Match .hero-input-section h2 so "Start over" / headings match the default hero composer.
+   Use --hero-text-color (not --text-primary): in light theme body text is dark but this
+   block still sits over the dark hero gradient, same as .hero-input-section h2. */
+.composer-below-results-stack h2 {
+  font-size: clamp(1.25rem, 3vw, 1.5rem);
+  font-weight: var(--font-bold);
+  color: var(--hero-text-color);
+  text-align: center;
+  margin: 0;
+  letter-spacing: -0.025em;
+}
+
+/* Tighter gap above footer than hero (usage preview uses 2.5rem bottom margin by default) */
+.composer-below-results-stack .usage-preview-container {
+  margin-bottom: 0.35rem;
+}
+
+.after-results-composer-slot .context-warning {
+  margin-bottom: 0;
+}
+
+/* Slot after .results-section: full composer stack in document flow (all breakpoints).
+   No extra horizontal padding: .app-main already uses --page-gutter (hero full-bleed uses the same inset at ≤768px). */
+.after-results-composer-slot {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0;
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+/* Less empty margin above the footer when the post-results composer is on the page */
+.app-main:has(.after-results-composer-slot) {
+  margin-bottom: 0.75rem;
+}
+
+.mobile-composer-in-flow-wrapper {
+  width: 100%;
+  max-width: 700px;
+  margin-left: auto;
+  margin-right: auto;
+  box-sizing: border-box;
+  cursor: default;
+}
+
+.mobile-composer-in-flow-wrapper .composer.composer-floating {
+  animation: composer-float-in 0.35s var(--ease-spring) forwards;
 }
 
 /* Image attachment warning banner - shown when image attached but no vision model selected
@@ -1821,9 +1861,9 @@ video.capability-tile-image-lightbox-img {
   color: var(--text-muted);
 }
 
-/* Higher contrast for usage preview in hero – dark gradient needs bright text */
+/* Hero usage line — align "N models selected" with credits accent (same as .credits-remaining-link) */
 .hero-section .usage-preview-container > div {
-  color: rgba(255, 255, 255, 0.95);
+  color: #e0f2fe;
 }
 
 /* Credits remaining – wrapper, link, and info trigger */
@@ -1895,12 +1935,22 @@ video.capability-tile-image-lightbox-img {
 }
 
 /* Credits remaining link – very light blue for contrast on hero gradient */
-.hero-section .credits-remaining-link {
+.hero-section .credits-remaining-link,
+.after-results-composer-slot .credits-remaining-link,
+.composer-below-results-stack .credits-remaining-link {
   color: #e0f2fe;
   text-decoration: none;
 }
 
-.hero-section .credits-info-trigger {
+.hero-section .credits-info-trigger,
+.after-results-composer-slot .credits-info-trigger,
+.composer-below-results-stack .credits-info-trigger {
+  color: #e0f2fe;
+}
+
+/* Post-results composer is outside .hero-section — match usage footer colors */
+.after-results-composer-slot .usage-preview-container > div,
+.composer-below-results-stack .usage-preview-container > div {
   color: #e0f2fe;
 }
 
@@ -2953,6 +3003,11 @@ video.capability-tile-image-lightbox-img {
   }
 
   .hero-input-section h2 {
+    font-size: clamp(0.875rem, 3.5vw, 1.125rem) !important;
+    white-space: nowrap !important;
+  }
+
+  .composer-below-results-stack h2 {
     font-size: clamp(0.875rem, 3.5vw, 1.125rem) !important;
     white-space: nowrap !important;
   }

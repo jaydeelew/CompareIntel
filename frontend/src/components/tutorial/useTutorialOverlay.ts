@@ -521,15 +521,13 @@ export function useTutorialOverlay(step: TutorialStep | null, isLoading: boolean
           setHighlightedElements([])
         }
       } else if (step === 'follow-up') {
-        // Special handling for follow-up step - highlight the results section so users can see results
-        // while the tooltip points at the follow-up button
+        // Highlight the results section; tooltip targets the follow-up header (composer)
         const resultsSection = document.querySelector('.results-section') as HTMLElement
         if (resultsSection) {
           setHighlightedElements([resultsSection])
         } else {
           setHighlightedElements([])
         }
-        // Use default selector for the follow-up button
         element = document.querySelector(config.targetSelector) as HTMLElement
       } else {
         // Use default selector for other steps
@@ -1420,13 +1418,11 @@ export function useTutorialOverlay(step: TutorialStep | null, isLoading: boolean
           setIsVisible(true)
         }
       }
-      // For follow-up step, target the follow-up button
+      // For follow-up step, target the composer follow-up header
       else if (step === 'follow-up') {
-        const followUpButton = document.querySelector(
-          '.follow-up-button:not(.export-dropdown-trigger)'
-        ) as HTMLElement
-        if (followUpButton) {
-          setTargetElement(followUpButton)
+        const followUpHeader = document.querySelector('.follow-up-header') as HTMLElement
+        if (followUpHeader) {
+          setTargetElement(followUpHeader)
           setIsVisible(true)
         }
       }

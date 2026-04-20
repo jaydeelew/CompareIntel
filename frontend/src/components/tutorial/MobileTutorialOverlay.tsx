@@ -54,9 +54,9 @@ const MOBILE_STEP_OVERRIDES: Partial<
     position: 'top', // Show above textarea initially on mobile
   },
   'follow-up': {
-    position: 'top', // Show above the follow-up button so user can see comparison results below
+    position: 'top', // Show above the composer heading; results stay visible below
     description:
-      'Review the results by clicking the Gemini tabs below, then click the "Follow up" button to continue the conversation.',
+      'Review the results in the tabs below. The composer is already in follow-up mode—type your next message there.',
   },
   'view-follow-up-results': {
     position: 'top', // Show above the results section with pointer arrow
@@ -622,8 +622,7 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
           window.scrollTo({ top: Math.max(0, scrollTarget), behavior: 'smooth' })
         }
       } else if (step === 'follow-up') {
-        // Keep the follow-up button low enough in the viewport that the tooltip can sit
-        // above it without covering the target or the tabs/results users should review.
+        // Position the follow-up header so the tooltip can sit above it without hiding results tabs.
         // Use an instant scroll while the tooltip is hidden to avoid visible shaking.
         const arrowSize = 10
         const measuredTooltipHeight =

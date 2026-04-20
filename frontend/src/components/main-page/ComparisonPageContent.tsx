@@ -5,7 +5,7 @@
  * section. Extracted from MainPage to reduce its size and improve clarity.
  */
 
-import { useLayoutEffect, useRef } from 'react'
+import { useCallback, useLayoutEffect, useRef, useState } from 'react'
 import type { Dispatch, ReactNode, RefObject, SetStateAction } from 'react'
 
 import { useComposerFloat } from '../../hooks/useComposerFloat'
@@ -152,6 +152,18 @@ export function ComparisonPageContent({
     tutorialIsActive ?? false
   )
 
+  const [afterResultsComposerSlotTarget, setAfterResultsComposerSlotTarget] =
+    useState<HTMLElement | null>(null)
+  const setAfterResultsComposerSlotEl = useCallback((el: HTMLElement | null) => {
+    setAfterResultsComposerSlotTarget(el)
+  }, [])
+
+  useLayoutEffect(() => {
+    if (!showResults) {
+      setAfterResultsComposerSlotTarget(null)
+    }
+  }, [showResults])
+
   const prevIsLoadingRef = useRef<boolean>(isLoading)
 
   // When the in-flow loading section disappears (on completion), it would normally pull
@@ -205,6 +217,7 @@ export function ComparisonPageContent({
             tutorialIsActive={tutorialIsActive}
             modelsSectionRef={modelsSectionRef}
             composerFloating={composerFloating}
+            afterResultsComposerSlotTarget={showResults ? afterResultsComposerSlotTarget : null}
             onOpenHelpMeChoose={onOpenHelpMeChoose}
             imageGenerationSubmitBlocked={imageGenerationSubmitBlocked}
             imageGenerationNoSharedImageOptions={imageGenerationNoSharedImageOptions}
@@ -240,6 +253,14 @@ export function ComparisonPageContent({
       )}
 
       {showResults && <ResultsArea {...resultsAreaProps} />}
+
+      {showResults && (
+        <div
+          ref={setAfterResultsComposerSlotEl}
+          className="after-results-composer-slot"
+          data-after-results-composer-slot
+        />
+      )}
     </ComparisonView>
   )
 }

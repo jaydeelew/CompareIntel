@@ -33,7 +33,6 @@ import {
   type FileUploadHandle,
   type StoredAttachedFile,
 } from './FileUpload'
-import { FloatingComposerWrapper } from './FloatingComposerWrapper'
 import { FormHeader } from './FormHeader'
 import { HistoryDropdown } from './HistoryDropdown'
 import { SavedSelectionsDropdown } from './SavedSelectionsDropdown'
@@ -71,6 +70,8 @@ interface ComparisonFormProps {
   tutorialIsActive?: boolean
   modelsSectionRef?: React.RefObject<HTMLDivElement | null>
   composerFloating?: boolean
+  /** Portals the “below hero” composer into this node (after results, before footer). Mobile: in-flow; desktop: fixed draggable + flow spacer. */
+  afterResultsComposerSlotTarget?: HTMLElement | null
   /** When provided, enables hero CTA and FormHeader to open Help me choose (scroll, expand, open dropdown) */
   onOpenHelpMeChoose?: (options?: { scrollToCategoryId?: string }) => void
   /** When true, submit is blocked until image aspect ratio & size match all selected image models */
@@ -113,6 +114,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
     tutorialIsActive = false,
     modelsSectionRef,
     composerFloating = false,
+    afterResultsComposerSlotTarget = null,
     onOpenHelpMeChoose,
     imageGenerationSubmitBlocked = false,
     imageGenerationNoSharedImageOptions = false,
@@ -489,6 +491,24 @@ export const ComparisonForm = memo<ComparisonFormProps>(
         return () => clearTimeout(t)
       }
     }, [composerFloating])
+
+    const [afterResultsSlotFallback, setAfterResultsSlotFallback] = useState<HTMLElement | null>(
+      null
+    )
+    useLayoutEffect(() => {
+      if (!composerFloating) {
+        setAfterResultsSlotFallback(null)
+        return
+      }
+      if (afterResultsComposerSlotTarget) {
+        setAfterResultsSlotFallback(null)
+        return
+      }
+      const el = document.querySelector('[data-after-results-composer-slot]') as HTMLElement | null
+      setAfterResultsSlotFallback(el)
+    }, [composerFloating, afterResultsComposerSlotTarget])
+
+    const afterResultsPortalHost = afterResultsComposerSlotTarget ?? afterResultsSlotFallback
 
     const hasAttachedImages = attachedFiles.some(
       f => 'base64Data' in f && (f as AttachedFile).base64Data
@@ -1082,7 +1102,16 @@ export const ComparisonForm = memo<ComparisonFormProps>(
       </div>
     )
 
-    return (
+    const usageAndContextBelowComposer = (
+      <>
+        {!isFollowUpMode && <div className="usage-preview-container">{renderUsagePreview()}</div>}
+        {isFollowUpMode && conversations.length > 0 && (
+          <ContextWarning tokenUsageInfo={tokenUsageInfo} renderUsagePreview={renderUsagePreview} />
+        )}
+      </>
+    )
+
+    const stackedComposerUnit = (
       <>
         <FormHeader
           isFollowUpMode={isFollowUpMode}
@@ -1093,26 +1122,28 @@ export const ComparisonForm = memo<ComparisonFormProps>(
           modelsSectionRef={modelsSectionRef}
           onOpenHelpMeChoose={onOpenHelpMeChoose}
         />
+        {composerContent}
+        {usageAndContextBelowComposer}
+      </>
+    )
+
+    return (
+      <>
+        {!composerFloating && stackedComposerUnit}
 
         {composerFloating ? (
           <>
-            <div className="composer composer-placeholder" aria-hidden="true" />
-            {createPortal(
-              <FloatingComposerWrapper resetPositionOnMount={isFollowUpMode}>
-                {composerContent}
-              </FloatingComposerWrapper>,
-              document.body
-            )}
+            <div className="composer-below-results-hero-placeholder" aria-hidden="true" />
+            {afterResultsPortalHost
+              ? createPortal(
+                  <div className="mobile-composer-in-flow-wrapper composer-below-results-stack">
+                    {stackedComposerUnit}
+                  </div>,
+                  afterResultsPortalHost
+                )
+              : null}
           </>
-        ) : (
-          composerContent
-        )}
-
-        {!isFollowUpMode && <div className="usage-preview-container">{renderUsagePreview()}</div>}
-
-        {isFollowUpMode && conversations.length > 0 && (
-          <ContextWarning tokenUsageInfo={tokenUsageInfo} renderUsagePreview={renderUsagePreview} />
-        )}
+        ) : null}
 
         <DisabledButtonInfoModal
           isOpen={disabledButtonInfo.button !== null}

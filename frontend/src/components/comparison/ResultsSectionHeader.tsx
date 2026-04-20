@@ -4,7 +4,6 @@
  * Renders the header for the comparison results section including:
  * - Title "Comparison Results"
  * - Scroll Lock toggle (for multi-model comparisons)
- * - Follow Up button
  * - Export dropdown (PDF, Markdown, HTML, JSON)
  * - Show All Results button (when cards are hidden)
  *
@@ -24,14 +23,6 @@ interface ResultsSectionHeaderProps {
   isScrollLocked: boolean
   /** Toggle scroll lock state */
   onToggleScrollLock: () => void
-  /** Whether follow-up mode is active */
-  isFollowUpMode: boolean
-  /** Whether follow-up is disabled (e.g., new models added) */
-  isFollowUpDisabled: boolean
-  /** Reason why follow-up is disabled (for tooltip) */
-  followUpDisabledReason: string
-  /** Callback to enter follow-up mode */
-  onFollowUp: () => void
   /** Whether export menu is open */
   showExportMenu: boolean
   /** Toggle export menu visibility */
@@ -54,10 +45,6 @@ export function ResultsSectionHeader({
   conversationsCount,
   isScrollLocked,
   onToggleScrollLock,
-  isFollowUpMode,
-  isFollowUpDisabled,
-  followUpDisabledReason,
-  onFollowUp,
   showExportMenu,
   onToggleExportMenu,
   exportMenuRef,
@@ -160,7 +147,7 @@ export function ResultsSectionHeader({
           flexWrap: 'nowrap',
         }}
       >
-        {/* Desktop: Scroll Lock, Follow up, Export */}
+        {/* Desktop: Scroll Lock, Export */}
         {!isMobileLayout && (
           <>
             {/* Scroll Lock Toggle - Only show when multiple models are running */}
@@ -170,15 +157,6 @@ export function ResultsSectionHeader({
               ) : (
                 scrollLockButton
               ))}
-            {!isFollowUpMode && (
-              <button
-                onClick={onFollowUp}
-                className="follow-up-button"
-                disabled={isFollowUpDisabled}
-              >
-                Follow up
-              </button>
-            )}
 
             {/* Export Dropdown for desktop */}
             <ExportDropdown
@@ -231,38 +209,6 @@ export function ResultsSectionHeader({
         {/* Mobile: Icon-only buttons on same line */}
         {isMobileLayout && (
           <>
-            {/* Follow up button - icon only */}
-            {!isFollowUpMode && (
-              <button
-                onClick={onFollowUp}
-                className="follow-up-button"
-                title={isFollowUpDisabled ? followUpDisabledReason : 'Ask a follow-up question'}
-                disabled={isFollowUpDisabled}
-                style={{
-                  padding: '0.5rem',
-                  minWidth: '36px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                <svg
-                  width="18"
-                  height="18"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-                  <line x1="9" y1="10" x2="15" y2="10" />
-                  <line x1="12" y1="7" x2="12" y2="13" />
-                </svg>
-              </button>
-            )}
-
             {/* Export Dropdown - icon only */}
             <ExportDropdown
               showExportMenu={showExportMenu}

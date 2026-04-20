@@ -188,31 +188,9 @@ test.describe('Authenticated User Comparison Flow', () => {
       // Wait a moment for UI to stabilize
       await authenticatedPage.waitForTimeout(1000)
 
-      // Click "Follow up" button to activate follow-up mode
-      // This button appears when !isFollowUpMode and conversations exist
-      const followUpButton = authenticatedPage.locator(
-        'button.follow-up-button, button:has-text("Follow up")'
-      )
-      const followUpButtonVisible = await followUpButton
-        .first()
-        .isVisible({ timeout: 5000 })
-        .catch(() => false)
-
-      if (followUpButtonVisible) {
-        // Check if button is enabled
-        const isEnabled = await followUpButton
-          .first()
-          .isEnabled()
-          .catch(() => false)
-        if (isEnabled) {
-          await followUpButton.first().click()
-          await authenticatedPage.waitForTimeout(500)
-        }
-      }
-
-      // Wait for follow-up mode header to appear (confirms follow-up mode is active)
+      // Follow-up mode activates automatically after results (Start over header)
       const followUpHeader = authenticatedPage.locator(
-        'h2:has-text("Follow Up Mode"), .follow-up-header'
+        '.follow-up-header:has-text("Start over"), h2:has-text("Start over")'
       )
       await followUpHeader
         .first()

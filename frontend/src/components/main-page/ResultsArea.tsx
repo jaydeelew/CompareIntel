@@ -32,9 +32,6 @@ export interface ResultsAreaProps {
 
   // UI state
   isScrollLocked: boolean
-  isFollowUpMode: boolean
-  isFollowUpDisabled: boolean
-  followUpDisabledReason: string
   showExportMenu: boolean
   isMobileLayout: boolean
   /** When true, disables all result action buttons (not model tabs or formatted/raw tabs) */
@@ -45,7 +42,6 @@ export interface ResultsAreaProps {
 
   // Handlers
   onToggleScrollLock: () => void
-  onFollowUp: () => void
   onToggleExportMenu: () => void
   onExport: (format: ExportFormat) => Promise<void>
   onShowAllResults: () => void
@@ -74,9 +70,6 @@ export function ResultsArea({
 
   // UI state
   isScrollLocked,
-  isFollowUpMode,
-  isFollowUpDisabled,
-  followUpDisabledReason,
   showExportMenu,
   isMobileLayout,
   isTutorialActive = false,
@@ -86,7 +79,6 @@ export function ResultsArea({
 
   // Handlers - Note: Types updated to match underlying component requirements
   onToggleScrollLock,
-  onFollowUp,
   onToggleExportMenu,
   onExport,
   onShowAllResults,
@@ -107,10 +99,6 @@ export function ResultsArea({
           conversationsCount={conversations.length}
           isScrollLocked={isScrollLocked}
           onToggleScrollLock={onToggleScrollLock}
-          isFollowUpMode={isFollowUpMode}
-          isFollowUpDisabled={isFollowUpDisabled}
-          followUpDisabledReason={followUpDisabledReason}
-          onFollowUp={onFollowUp}
           showExportMenu={showExportMenu}
           onToggleExportMenu={onToggleExportMenu}
           exportMenuRef={exportMenuRef}

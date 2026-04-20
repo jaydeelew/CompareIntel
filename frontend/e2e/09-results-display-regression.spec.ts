@@ -598,7 +598,7 @@ test.describe('Results Display Regression Tests', () => {
   })
 
   test.describe('Follow-up Mode', () => {
-    test('Follow-up button appears after comparison', async ({ authenticatedPage }, testInfo) => {
+    test('Follow-up composer appears after comparison', async ({ authenticatedPage }, testInfo) => {
       const projectName = testInfo.project.name
       const cardWait = firstResultCardVisibleTimeoutMs(projectName)
       await test.step('Perform comparison', async () => {
@@ -619,7 +619,7 @@ test.describe('Results Display Regression Tests', () => {
         await submitAndAwaitCompareStream(authenticatedPage)
       })
 
-      await test.step('Check follow-up button', async () => {
+      await test.step('Check follow-up composer header', async () => {
         // Wait for results
         const resultCard = firstResultCard(authenticatedPage)
         await expect(resultCard).toBeVisible({ timeout: cardWait })
@@ -627,14 +627,10 @@ test.describe('Results Display Regression Tests', () => {
         // Wait for streaming to complete
         await authenticatedPage.waitForTimeout(5000)
 
-        // Look for follow-up button
-        const followUpBtn = authenticatedPage.locator(
-          'button[title*="follow-up"], button:has-text("Follow"), .follow-up-button'
+        const followUpHeader = authenticatedPage.locator(
+          '.follow-up-header:has-text("Start over"), h2:has-text("Start over")'
         )
-        const followUpVisible = await followUpBtn.isVisible({ timeout: 5000 }).catch(() => false)
-
-        // Follow-up should appear after comparison completes
-        expect(followUpVisible || true).toBe(true) // Soft assertion - UI might vary
+        await expect(followUpHeader.first()).toBeVisible({ timeout: 10000 })
       })
     })
   })

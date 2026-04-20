@@ -166,7 +166,6 @@ export function MainPage() {
     currentAbortController,
     setCurrentAbortController,
     userCancelledRef,
-    followUpJustActivatedRef,
     hasScrolledToResultsRef,
     lastAlignedRoundRef,
     autoScrollPausedRef,
@@ -1891,92 +1890,13 @@ export function MainPage() {
     setClosedCards(new Set())
   }
 
-  const isModelFailed = (modelId: string): boolean => {
-    const formattedModelId = createModelId(modelId)
-
-    if (modelErrors[modelId] === true || modelErrors[formattedModelId] === true) {
-      return true
-    }
-
-    const conversation = conversations.find(
-      conv => conv.modelId === modelId || conv.modelId === formattedModelId
-    )
-    if (conversation) {
-      const assistantMessages = conversation.messages.filter(msg => msg.type === 'assistant')
-      if (assistantMessages.length === 0) return true
-      const latestMessage = assistantMessages[assistantMessages.length - 1]
-      if (
-        latestMessage &&
-        (isErrorMessage(latestMessage.content) || !(latestMessage.content || '').trim())
-      ) {
-        return true
-      }
-    }
-
-    return false
-  }
-
-  const getSuccessfulModels = (models: string[]): string[] => {
-    return models.filter(modelId => !isModelFailed(modelId))
-  }
-
-  const isFollowUpDisabled = () => {
-    if (originalSelectedModels.length === 0) {
-      return false
-    }
-
-    const hasNewModels = selectedModels.some(model => !originalSelectedModels.includes(model))
-
-    if (hasNewModels) {
-      return true
-    }
-
-    const successfulModels = getSuccessfulModels(originalSelectedModels)
-    if (successfulModels.length === 0) {
-      return true
-    }
-
-    return false
-  }
-
-  const handleFollowUp = () => {
-    followUpJustActivatedRef.current = true
+  // Once a comparison has finished and results exist, use follow-up composer UX (no separate "Follow up" control).
+  useEffect(() => {
+    const hasActiveResults = conversations.length > 0 || response != null
+    if (!hasActiveResults || isLoading) return
     setIsFollowUpMode(true)
-    if (!input.trim()) {
-      setInput('')
-    }
     setIsModelsHidden(true)
-
-    window.scrollTo({
-      top: 0,
-      behavior: 'smooth',
-    })
-
-    setTimeout(() => {
-      const inputSection = document.querySelector('.input-section')
-      if (inputSection) {
-        const heading = inputSection.querySelector('h2')
-        if (heading) {
-          heading.scrollIntoView({
-            behavior: 'smooth',
-            block: 'start',
-          })
-        } else {
-          inputSection.scrollIntoView({
-            behavior: 'smooth',
-            block: 'start',
-          })
-        }
-      }
-      followUpJustActivatedRef.current = false
-    }, 250)
-
-    setTimeout(() => {
-      if (textareaRef.current) {
-        textareaRef.current.focus()
-      }
-    }, 650)
-  }
+  }, [conversations.length, response, isLoading, setIsFollowUpMode, setIsModelsHidden])
 
   const handleContinueConversation = () => {
     handleSubmitClick()
@@ -2630,15 +2550,11 @@ export function MainPage() {
             breakoutPhase,
             isScrollLocked,
             isFollowUpMode,
-            isFollowUpDisabled: isFollowUpDisabled(),
-            followUpDisabledReason:
-              'Cannot follow up when new models are selected. You can follow up if you only deselect models from the original comparison.',
             showExportMenu,
             isMobileLayout,
             isTutorialActive: tutorialState.isActive,
             exportMenuRef,
             onToggleScrollLock: () => setIsScrollLocked(!isScrollLocked),
-            onFollowUp: handleFollowUp,
             onToggleExportMenu: () => setShowExportMenu(!showExportMenu),
             onExport: handleExport,
             onShowAllResults: showAllResults,
