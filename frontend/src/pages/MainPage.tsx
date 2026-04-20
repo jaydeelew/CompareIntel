@@ -1920,6 +1920,16 @@ export function MainPage() {
     setCurrentVisibleComparisonId(null)
     setModelErrors({})
     setAttachedFiles([])
+
+    window.scrollTo(0, 0)
+    const scrollEl = document.scrollingElement ?? document.documentElement
+    scrollEl.scrollTop = 0
+    document.documentElement.scrollTop = 0
+    document.body.scrollTop = 0
+    const appEl = document.querySelector('.app') as HTMLElement | null
+    if (appEl) appEl.scrollTop = 0
+    const rootEl = document.getElementById('root')
+    if (rootEl) rootEl.scrollTop = 0
   }
 
   const scrollConversationsToBottom = useCallback(() => {
