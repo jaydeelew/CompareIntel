@@ -1383,6 +1383,13 @@ video.capability-tile-image-lightbox-img {
   pointer-events: none;
 }
 
+/* Inert mirror of the composer kept in the hero while the real composer is portaled
+   below results.  Renders the identical DOM so its box model perfectly matches the
+   real unit — no layout shift when composerFloating toggles. */
+.composer-hero-mirror {
+  pointer-events: none;
+}
+
 /* Same vertical rhythm as .hero-input-section for the portaled unit */
 .composer-below-results-stack {
   display: flex;

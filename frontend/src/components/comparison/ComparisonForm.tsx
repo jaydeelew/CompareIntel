@@ -158,6 +158,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
 
     const [isDraggingOver, setIsDraggingOver] = useState(false)
     const fileUploadRef = useRef<FileUploadHandle>(null)
+    const mirrorTextareaRef = useRef<HTMLTextAreaElement>(null)
     const savedSelectionsDropdownSlotRef = useRef<HTMLDivElement>(null)
     const baseInputWhenSpeechStartedRef = useRef<string>('')
     const mobileBaseInputRef = useRef<string>('')
@@ -432,6 +433,12 @@ export const ComparisonForm = memo<ComparisonFormProps>(
       if (isSpeechListening) {
         scrollToCurrentLine()
       }
+      // Keep mirror textarea height in sync with the real textarea so the hero
+      // placeholder occupies exactly the same space — prevents layout shift.
+      if (mirrorTextareaRef.current && textareaRef.current) {
+        mirrorTextareaRef.current.style.height = textareaRef.current.style.height
+        mirrorTextareaRef.current.style.overflowY = textareaRef.current.style.overflowY
+      }
     }, [input, adjustTextareaHeight, isSpeechListening, scrollToCurrentLine])
 
     useEffect(() => {
@@ -480,17 +487,13 @@ export const ComparisonForm = memo<ComparisonFormProps>(
       return () => clearTimeout(timer)
     }, [adjustTextareaHeight])
 
-    const prevComposerFloatingRef = useRef(composerFloating)
-    const [isReturningToHero, setIsReturningToHero] = useState(false)
-    useEffect(() => {
-      const wasFloating = prevComposerFloatingRef.current
-      prevComposerFloatingRef.current = composerFloating
-      if (wasFloating && !composerFloating) {
-        setIsReturningToHero(true)
-        const t = setTimeout(() => setIsReturningToHero(false), 450)
-        return () => clearTimeout(t)
+    // Sync mirror textarea height whenever the floating state changes (mirror mounts/unmounts).
+    useLayoutEffect(() => {
+      if (composerFloating && mirrorTextareaRef.current && textareaRef.current) {
+        mirrorTextareaRef.current.style.height = textareaRef.current.style.height
+        mirrorTextareaRef.current.style.overflowY = textareaRef.current.style.overflowY
       }
-    }, [composerFloating])
+    }, [composerFloating, textareaRef])
 
     const [afterResultsSlotFallback, setAfterResultsSlotFallback] = useState<HTMLElement | null>(
       null
@@ -551,9 +554,9 @@ export const ComparisonForm = memo<ComparisonFormProps>(
                 ? 'Continue conversation'
                 : 'Submit'
 
-    const composerContent = (
+    const buildComposerContent = (mirror: boolean) => (
       <div
-        className={`composer ${isAnimatingTextarea ? 'animate-pulse-border' : ''} ${composerFloating ? 'composer-floating' : ''} ${isReturningToHero ? 'composer-returning' : ''}`}
+        className={`composer ${isAnimatingTextarea && !mirror ? 'animate-pulse-border' : ''} ${composerFloating && !mirror ? 'composer-floating' : ''}`}
       >
         {hasAttachedImages && !hasVisionModel && (
           <div className="image-attachment-banner" role="alert" aria-live="polite">
@@ -599,26 +602,32 @@ export const ComparisonForm = memo<ComparisonFormProps>(
             />
           )}
           <textarea
-            ref={textareaRef as React.RefObject<HTMLTextAreaElement>}
+            ref={mirror ? mirrorTextareaRef : (textareaRef as React.RefObject<HTMLTextAreaElement>)}
             value={input}
-            onChange={e => setInput(e.target.value)}
-            onKeyDown={e => {
-              if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault()
-                if (blockPromptStepForTutorial) return
-                if (submitImageConfigBlocked && !hardSubmitDisabled) {
-                  onImageGenerationSubmitBlockedTap?.()
-                  return
-                }
-                if (hardSubmitDisabled) return
-                if (isFollowUpMode) onContinueConversation()
-                else onSubmitClick()
-              }
-            }}
-            onDragEnter={handleDragEnter}
-            onDragOver={handleDragOver}
-            onDragLeave={handleDragLeave}
-            onDrop={handleDrop}
+            onChange={mirror ? undefined : e => setInput(e.target.value)}
+            readOnly={mirror}
+            tabIndex={mirror ? -1 : undefined}
+            onKeyDown={
+              mirror
+                ? undefined
+                : e => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault()
+                      if (blockPromptStepForTutorial) return
+                      if (submitImageConfigBlocked && !hardSubmitDisabled) {
+                        onImageGenerationSubmitBlockedTap?.()
+                        return
+                      }
+                      if (hardSubmitDisabled) return
+                      if (isFollowUpMode) onContinueConversation()
+                      else onSubmitClick()
+                    }
+                  }
+            }
+            onDragEnter={mirror ? undefined : handleDragEnter}
+            onDragOver={mirror ? undefined : handleDragOver}
+            onDragLeave={mirror ? undefined : handleDragLeave}
+            onDrop={mirror ? undefined : handleDrop}
             placeholder={
               isFollowUpMode ? 'Continue your conversation here' : 'Enter your input here...'
             }
@@ -627,9 +636,9 @@ export const ComparisonForm = memo<ComparisonFormProps>(
                 ? 'Continue your conversation'
                 : 'Enter your prompt to compare AI models'
             }
-            className={`hero-input-textarea ${isDraggingOver ? 'drag-over' : ''}`}
+            className={`hero-input-textarea ${isDraggingOver && !mirror ? 'drag-over' : ''}`}
             rows={1}
-            data-testid="comparison-input-textarea"
+            data-testid={mirror ? undefined : 'comparison-input-textarea'}
           />
         </div>
 
@@ -1102,6 +1111,9 @@ export const ComparisonForm = memo<ComparisonFormProps>(
       </div>
     )
 
+    const composerContent = buildComposerContent(false)
+    const composerContentMirror = buildComposerContent(true)
+
     const usageAndContextBelowComposer = (
       <>
         {!isFollowUpMode && <div className="usage-preview-container">{renderUsagePreview()}</div>}
@@ -1127,13 +1139,29 @@ export const ComparisonForm = memo<ComparisonFormProps>(
       </>
     )
 
+    const heroMirrorUnit = (
+      <>
+        <FormHeader
+          isFollowUpMode={isFollowUpMode}
+          selectedModels={selectedModels}
+          isLoading={isLoading}
+          tutorialIsActive={tutorialIsActive}
+          onNewComparison={onNewComparison}
+          modelsSectionRef={modelsSectionRef}
+          onOpenHelpMeChoose={onOpenHelpMeChoose}
+        />
+        {composerContentMirror}
+        {usageAndContextBelowComposer}
+      </>
+    )
+
     return (
       <>
-        {!composerFloating && stackedComposerUnit}
-
         {composerFloating ? (
           <>
-            <div className="composer-below-results-hero-placeholder" aria-hidden="true" />
+            <div className="composer-hero-mirror" inert="" aria-hidden="true">
+              {heroMirrorUnit}
+            </div>
             {afterResultsPortalHost
               ? createPortal(
                   <div className="mobile-composer-in-flow-wrapper composer-below-results-stack">
@@ -1143,7 +1171,9 @@ export const ComparisonForm = memo<ComparisonFormProps>(
                 )
               : null}
           </>
-        ) : null}
+        ) : (
+          stackedComposerUnit
+        )}
 
         <DisabledButtonInfoModal
           isOpen={disabledButtonInfo.button !== null}
