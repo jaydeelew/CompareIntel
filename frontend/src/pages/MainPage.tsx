@@ -2559,7 +2559,6 @@ export function MainPage() {
             modelErrorStates,
             breakoutPhase,
             isScrollLocked,
-            isFollowUpMode,
             showExportMenu,
             isMobileLayout,
             isTutorialActive: tutorialState.isActive,

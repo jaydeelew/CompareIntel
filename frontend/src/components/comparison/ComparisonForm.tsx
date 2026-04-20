@@ -439,7 +439,14 @@ export const ComparisonForm = memo<ComparisonFormProps>(
         mirrorTextareaRef.current.style.height = textareaRef.current.style.height
         mirrorTextareaRef.current.style.overflowY = textareaRef.current.style.overflowY
       }
-    }, [input, adjustTextareaHeight, isSpeechListening, scrollToCurrentLine])
+    }, [
+      input,
+      adjustTextareaHeight,
+      isSpeechListening,
+      scrollToCurrentLine,
+      textareaRef,
+      mirrorTextareaRef,
+    ])
 
     useEffect(() => {
       if (!isTouchDevice && !tutorialStep && textareaRef.current) {
@@ -1159,7 +1166,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
       <>
         {composerFloating ? (
           <>
-            <div className="composer-hero-mirror" inert="" aria-hidden="true">
+            <div className="composer-hero-mirror" inert={true} aria-hidden="true">
               {heroMirrorUnit}
             </div>
             {afterResultsPortalHost
