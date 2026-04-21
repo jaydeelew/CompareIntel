@@ -1188,13 +1188,16 @@ export function HelpMeChoose({
         </div>
       )}
 
-      {evidenceModal && (
-        <EvidenceInfoModal
-          modelName={evidenceModal.modelName}
-          evidence={evidenceModal.evidence}
-          onClose={() => setEvidenceModal(null)}
-        />
-      )}
+      {evidenceModal &&
+        typeof document !== 'undefined' &&
+        createPortal(
+          <EvidenceInfoModal
+            modelName={evidenceModal.modelName}
+            evidence={evidenceModal.evidence}
+            onClose={() => setEvidenceModal(null)}
+          />,
+          document.body
+        )}
 
       {!isMobileLayout &&
         categoryTooltip &&
