@@ -40,7 +40,7 @@ export interface TokenUsageDisplayProps {
   hideTooltip?: boolean
   /** When true with tooltip visible, render tooltip in a portal (avoids composer overflow clipping) */
   tooltipUsePortal?: boolean
-  /** Capacity info modal is mobile-only (matches useResponsive isMobileLayout) */
+  /** Capacity info modal when touch-first composer chrome is active (narrow viewport without fine pointer) */
   isMobileLayout?: boolean
 }
 

@@ -143,8 +143,12 @@ export const ComparisonForm = memo<ComparisonFormProps>(
     }, [selectedModels, modelsByProvider])
     const canEnableWebSearch = selectedModelsWithWebSearch.length > 0
 
-    const { isTouchDevice, isSmallLayout, isMobileLayout } = useResponsive()
-    const showComposerStyledTooltips = !isMobileLayout && !tutorialIsActive
+    const { isTouchDevice, isSmallLayout, isMobileLayout, prefersFinePointerHover } =
+      useResponsive()
+    /** Touch-first toolbar (tap modals, no hover tooltips). False when viewport is wide or when user has a mouse on a narrow viewport. */
+    const useTouchFirstComposerChrome = isMobileLayout && !prefersFinePointerHover
+    const showComposerStyledTooltips =
+      (!isMobileLayout || prefersFinePointerHover) && !tutorialIsActive
 
     const [tokenUsageInfo, setTokenUsageInfo] = useState<TokenUsageInfo | null>(null)
     const [disabledButtonInfo, setDisabledButtonInfo] = useState<{
@@ -719,11 +723,11 @@ export const ComparisonForm = memo<ComparisonFormProps>(
               setInput={setInput}
               textareaRef={textareaRef}
               disabled={isLoading}
-              isMobileLayout={isMobileLayout}
+              isMobileLayout={useTouchFirstComposerChrome}
               hideTooltip={!showComposerStyledTooltips}
               tooltipUsePortal={showComposerStyledTooltips}
               onMobileButtonClick={
-                isMobileLayout && !isLoading
+                useTouchFirstComposerChrome && !isLoading
                   ? () => {
                       if (getTooltipModalSuppressed('add-file')) {
                         fileUploadRef.current?.openFilePicker()
@@ -749,13 +753,13 @@ export const ComparisonForm = memo<ComparisonFormProps>(
                 tutorialIsActive={tutorialIsActive}
                 hideTooltip={!showComposerStyledTooltips}
                 tooltipUsePortal={showComposerStyledTooltips}
-                isMobileLayout={isMobileLayout}
+                isMobileLayout={useTouchFirstComposerChrome}
               />
             )}
 
             {isSpeechSupported &&
               speechBrowserSupport === 'native' &&
-              (isMobileLayout ? (
+              (useTouchFirstComposerChrome ? (
                 <button
                   type="button"
                   onClick={() => {
@@ -869,7 +873,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
                 </button>
               ))}
 
-            {isMobileLayout ? (
+            {useTouchFirstComposerChrome ? (
               <button
                 type="button"
                 onClick={() => {
@@ -1003,7 +1007,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
               </button>
             )}
 
-            {isMobileLayout ? (
+            {useTouchFirstComposerChrome ? (
               <button
                 onClick={() => {
                   if (blockPromptStepForTutorial) return

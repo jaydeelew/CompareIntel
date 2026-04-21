@@ -68,6 +68,7 @@ describe('useResponsive', () => {
     expect(result.current.isWideLayout).toBe(true)
     expect(result.current.viewportWidth).toBe(1200)
     expect(result.current.isTouchDevice).toBe(false)
+    expect(typeof result.current.prefersFinePointerHover).toBe('boolean')
   })
 
   it('should detect small layout (<= 640px)', () => {

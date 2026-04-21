@@ -19,6 +19,7 @@ vi.mock('../../../hooks', () => ({
     isWideLayout: true,
     viewportWidth: 1200,
     isTouchDevice: false,
+    prefersFinePointerHover: true,
   }),
 }))
 
