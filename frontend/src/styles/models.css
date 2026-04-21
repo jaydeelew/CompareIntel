@@ -3195,19 +3195,20 @@
     0 8px 20px -12px color-mix(in srgb, var(--primary-glow) 25%, transparent);
 }
 
-/* Soft left-edge tint (replaces a hard vertical bar) */
+/* Soft left-edge tint (replaces a hard vertical bar); spans to mid-card so the fade reads clearly */
 .help-me-choose-category::before {
   content: '';
   position: absolute;
   left: 0;
   top: 0;
   bottom: 0;
-  width: min(40px, 32%);
+  width: 50%;
   border-radius: var(--radius-xl) 0 0 var(--radius-xl);
   background: linear-gradient(
     90deg,
     color-mix(in srgb, var(--primary-color) 8%, transparent) 0%,
-    color-mix(in srgb, var(--secondary-color) 4%, transparent) 42%,
+    color-mix(in srgb, var(--secondary-color) 4%, transparent) 35%,
+    color-mix(in srgb, var(--primary-color) 1.5%, transparent) 72%,
     transparent 100%
   );
   pointer-events: none;
@@ -3219,7 +3220,8 @@
   background: linear-gradient(
     90deg,
     color-mix(in srgb, var(--primary-color) 12%, transparent) 0%,
-    color-mix(in srgb, var(--secondary-color) 6%, transparent) 45%,
+    color-mix(in srgb, var(--secondary-color) 6%, transparent) 38%,
+    color-mix(in srgb, var(--primary-color) 2.5%, transparent) 75%,
     transparent 100%
   );
 }
@@ -3228,6 +3230,7 @@
   background: linear-gradient(
     90deg,
     color-mix(in srgb, var(--primary-color) 5%, transparent) 0%,
+    color-mix(in srgb, var(--primary-color) 1.5%, transparent) 45%,
     transparent 100%
   );
 }
@@ -3237,6 +3240,7 @@
   background: linear-gradient(
     90deg,
     color-mix(in srgb, var(--primary-color) 9%, transparent) 0%,
+    color-mix(in srgb, var(--primary-color) 2.5%, transparent) 48%,
     transparent 100%
   );
 }

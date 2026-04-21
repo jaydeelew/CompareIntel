@@ -746,24 +746,19 @@ export const ModelsSection: React.FC<ModelsSectionProps> = ({
                                 flexShrink: 0,
                               }
                               return isMobileLayout ? (
-                                <StyledTooltip
-                                  usePortal
-                                  text="This model can access the Internet — tap for info"
+                                <button
+                                  type="button"
+                                  className="web-search-indicator indicator-tappable"
+                                  style={commonStyle}
+                                  onClick={e => {
+                                    e.preventDefault()
+                                    e.stopPropagation()
+                                    setShowWebSearchInfoModal(true)
+                                  }}
+                                  aria-label="Internet access"
                                 >
-                                  <button
-                                    type="button"
-                                    className="web-search-indicator indicator-tappable"
-                                    style={commonStyle}
-                                    onClick={e => {
-                                      e.preventDefault()
-                                      e.stopPropagation()
-                                      setShowWebSearchInfoModal(true)
-                                    }}
-                                    aria-label="Internet access — tap for info"
-                                  >
-                                    {indicator}
-                                  </button>
-                                </StyledTooltip>
+                                  {indicator}
+                                </button>
                               ) : (
                                 <StyledTooltip usePortal text="This model can access the Internet">
                                   <span className="web-search-indicator" style={commonStyle}>
@@ -823,45 +818,40 @@ export const ModelsSection: React.FC<ModelsSectionProps> = ({
                     <div className="selected-model-actions">
                       {model.supports_web_search &&
                         (isMobileLayout ? (
-                          <StyledTooltip
-                            usePortal
-                            text="This model can access the Internet — tap for info"
+                          <button
+                            type="button"
+                            className="web-search-indicator indicator-tappable"
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              opacity: 1,
+                              background: 'none',
+                              border: 'none',
+                              padding: 0,
+                              cursor: 'pointer',
+                            }}
+                            onClick={e => {
+                              e.preventDefault()
+                              e.stopPropagation()
+                              setShowWebSearchInfoModal(true)
+                            }}
+                            aria-label="Internet access"
                           >
-                            <button
-                              type="button"
-                              className="web-search-indicator indicator-tappable"
-                              style={{
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                opacity: 1,
-                                background: 'none',
-                                border: 'none',
-                                padding: 0,
-                                cursor: 'pointer',
-                              }}
-                              onClick={e => {
-                                e.preventDefault()
-                                e.stopPropagation()
-                                setShowWebSearchInfoModal(true)
-                              }}
-                              aria-label="Internet access — tap for info"
+                            <svg
+                              width="16"
+                              height="16"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              style={{ color: 'white', display: 'block' }}
                             >
-                              <svg
-                                width="16"
-                                height="16"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                style={{ color: 'white', display: 'block' }}
-                              >
-                                <circle cx="12" cy="12" r="10" />
-                                <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
-                              </svg>
-                            </button>
-                          </StyledTooltip>
+                              <circle cx="12" cy="12" r="10" />
+                              <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+                            </svg>
+                          </button>
                         ) : (
                           <StyledTooltip usePortal text="This model can access the Internet">
                             <span

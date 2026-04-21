@@ -24,6 +24,7 @@ import { modelSupportsVision } from '../../utils/visionModels'
 import { StyledTooltip } from '../shared'
 
 import { HelpMeChooseScopeInfoModal } from './HelpMeChooseScopeInfoModal'
+import { WebSearchInfoModal } from './WebSearchInfoModal'
 
 function InfoIcon() {
   return (
@@ -240,6 +241,7 @@ export function HelpMeChoose({
 }: HelpMeChooseProps) {
   const [internalExpanded, setInternalExpanded] = useState(false)
   const [showScopeInfoModal, setShowScopeInfoModal] = useState(false)
+  const [showWebSearchInfoModal, setShowWebSearchInfoModal] = useState(false)
   const [evidenceModal, setEvidenceModal] = useState<{
     modelName: string
     evidence: string
@@ -1076,17 +1078,11 @@ export function HelpMeChoose({
                                         </svg>
                                       </span>
                                     )}
-                                    {supportsWebSearch && (
-                                      <StyledTooltip
-                                        usePortal
-                                        text={
-                                          isMobileLayout
-                                            ? 'This model can access the Internet — tap for info'
-                                            : 'This model can access the Internet'
-                                        }
-                                      >
-                                        <span
-                                          className="web-search-indicator"
+                                    {supportsWebSearch &&
+                                      (isMobileLayout ? (
+                                        <button
+                                          type="button"
+                                          className="web-search-indicator indicator-tappable"
                                           style={{
                                             display: 'inline-flex',
                                             alignItems: 'center',
@@ -1095,8 +1091,17 @@ export function HelpMeChoose({
                                             height: '14px',
                                             opacity: isSelected ? 1 : 0.6,
                                             flexShrink: 0,
+                                            background: 'none',
+                                            border: 'none',
+                                            padding: 0,
+                                            cursor: 'pointer',
                                           }}
-                                          aria-hidden
+                                          onClick={e => {
+                                            e.preventDefault()
+                                            e.stopPropagation()
+                                            setShowWebSearchInfoModal(true)
+                                          }}
+                                          aria-label="Internet access"
                                         >
                                           <svg
                                             width="14"
@@ -1113,13 +1118,52 @@ export function HelpMeChoose({
                                                 : 'var(--text-secondary, #666)',
                                               display: 'block',
                                             }}
+                                            aria-hidden
                                           >
                                             <circle cx="12" cy="12" r="10" />
                                             <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
                                           </svg>
-                                        </span>
-                                      </StyledTooltip>
-                                    )}
+                                        </button>
+                                      ) : (
+                                        <StyledTooltip
+                                          usePortal
+                                          text="This model can access the Internet"
+                                        >
+                                          <span
+                                            className="web-search-indicator"
+                                            style={{
+                                              display: 'inline-flex',
+                                              alignItems: 'center',
+                                              justifyContent: 'center',
+                                              width: '14px',
+                                              height: '14px',
+                                              opacity: isSelected ? 1 : 0.6,
+                                              flexShrink: 0,
+                                            }}
+                                            aria-hidden
+                                          >
+                                            <svg
+                                              width="14"
+                                              height="14"
+                                              viewBox="0 0 24 24"
+                                              fill="none"
+                                              stroke="currentColor"
+                                              strokeWidth="2"
+                                              strokeLinecap="round"
+                                              strokeLinejoin="round"
+                                              style={{
+                                                color: isSelected
+                                                  ? 'var(--primary-color, #007bff)'
+                                                  : 'var(--text-secondary, #666)',
+                                                display: 'block',
+                                              }}
+                                            >
+                                              <circle cx="12" cy="12" r="10" />
+                                              <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+                                            </svg>
+                                          </span>
+                                        </StyledTooltip>
+                                      ))}
                                     <button
                                       type="button"
                                       className="help-me-choose-model-evidence-btn help-me-choose-model-evidence-trigger"
@@ -1236,6 +1280,11 @@ export function HelpMeChoose({
       <HelpMeChooseScopeInfoModal
         isOpen={showScopeInfoModal}
         onClose={() => setShowScopeInfoModal(false)}
+      />
+
+      <WebSearchInfoModal
+        isOpen={showWebSearchInfoModal}
+        onClose={() => setShowWebSearchInfoModal(false)}
       />
     </div>
   )
