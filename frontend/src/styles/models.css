@@ -3079,11 +3079,7 @@
   gap: 0.5rem;
 }
 
-.help-me-choose-categories-wrapper.help-me-choose-scrollbar-hidden .help-me-choose-scrollbar-top {
-  display: none;
-}
-
-/* Custom scrollbar at top */
+/* Custom scrollbar at top — always shown for this section (thumb spans full track when nothing to scroll) */
 .help-me-choose-scrollbar-top {
   flex-shrink: 0;
   height: 9px;
@@ -3263,50 +3259,143 @@ html:not([data-theme]) .help-me-choose-category.has-match {
   box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.06);
 }
 
-/* Sticky category bar: always visible when scrolling (mobile horizontal scroll - category name centered) */
-.help-me-choose-sticky-category {
+/*
+ * Mobile: scrollbar + category title row — sticky within .help-me-choose-content.
+ * Background matches .help-me-choose-scrollbar-top so the flex gap under the track
+ * isn’t a bright strip; no full-width border (each header stays tied to its list below).
+ */
+.help-me-choose-mobile-hscroll-head {
   position: sticky;
   top: 0;
-  z-index: 3;
+  z-index: 12;
   flex-shrink: 0;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  padding: 0.625rem 1rem;
-  margin-bottom: -0.5rem;
-  font-size: 0.9375rem;
-  font-weight: var(--font-semibold);
-  letter-spacing: 0.01em;
-  color: var(--text-primary);
-  background: linear-gradient(
-    to bottom,
-    var(--bg-elevated) 0%,
-    color-mix(in srgb, var(--primary-color) 4%, var(--bg-elevated)) 100%
-  );
-  border-bottom: 1px solid var(--border-color);
-  box-shadow:
-    0 1px 0 0 color-mix(in srgb, var(--primary-color) 8%, transparent),
-    0 2px 8px -2px color-mix(in srgb, var(--primary-color) 6%, transparent);
+  flex-direction: column;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  /* Repeat the outer card gradient so gaps between header/list cards show the panel bg */
+  background:
+    var(--gradient-mesh),
+    linear-gradient(
+      165deg,
+      color-mix(in srgb, var(--primary-color) 9%, var(--bg-elevated)) 0%,
+      var(--bg-elevated) 42%,
+      color-mix(in srgb, var(--secondary-color) 5%, var(--bg-elevated)) 100%
+    );
+  border-bottom: none;
+  box-shadow: none;
 }
 
-/* Subtle top accent on sticky bar - matches dropdown content theme */
-.help-me-choose-sticky-category::before {
-  content: '';
-  position: absolute;
+[data-theme='light'] .help-me-choose-mobile-hscroll-head {
+  background:
+    var(--gradient-mesh),
+    linear-gradient(
+      168deg,
+      color-mix(in srgb, var(--primary-color) 7%, var(--bg-elevated)) 0%,
+      var(--bg-elevated) 45%,
+      color-mix(in srgb, var(--primary-color) 4%, var(--bg-secondary)) 100%
+    );
+}
+
+[data-theme='dark'] .help-me-choose-mobile-hscroll-head {
+  background:
+    var(--gradient-mesh),
+    linear-gradient(
+      168deg,
+      color-mix(in srgb, var(--primary-color) 12%, var(--bg-elevated)) 0%,
+      var(--bg-elevated) 48%,
+      color-mix(in srgb, var(--secondary-color) 8%, var(--bg-elevated)) 100%
+    );
+}
+
+.help-me-choose-sticky-head-clip {
+  overflow: hidden;
+  width: 100%;
+  margin: 0;
+  /* Let horizontal drags scroll the linked list via JS; keep vertical for page scroll */
+  touch-action: pan-y;
+}
+
+.help-me-choose-sticky-head-track {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  gap: 1rem 1.25rem;
+  width: max-content;
+  will-change: transform;
+}
+
+/*
+ * Top of each column: outer border continues into the list — title area reads lighter
+ * (integrated card, screenshot 2) vs the list body below.
+ */
+.help-me-choose-sticky-head-cell {
+  flex: 0 0 300px;
+  width: 300px;
+  min-width: 300px;
+  box-sizing: border-box;
+  padding: 0.65rem 0.75rem 0.5rem;
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+  background: var(--bg-elevated);
+  border: 1px solid color-mix(in srgb, var(--primary-color) 9%, var(--border-color));
+  border-bottom: none;
+  box-shadow: none;
+}
+
+[data-theme='dark'] .help-me-choose-sticky-head-cell {
+  background: color-mix(in srgb, var(--bg-elevated) 88%, rgba(255, 255, 255, 0.03));
+}
+
+[data-theme='light'] .help-me-choose-sticky-head-cell,
+html:not([data-theme]) .help-me-choose-sticky-head-cell {
+  background: color-mix(in srgb, #ffffff 86%, var(--bg-elevated));
+}
+
+.help-me-choose-sticky-head-cell.has-match .help-me-choose-category-header {
+  color: var(--primary-color);
+}
+
+/* Full titles in sticky row (no single-column truncation) */
+.help-me-choose-sticky-head-cell .help-me-choose-category-header {
+  white-space: normal;
+  overflow: visible;
+  text-wrap: balance;
+}
+
+.help-me-choose-sticky-head-cell .help-me-choose-category-header-row {
+  align-items: flex-start;
+}
+
+.help-me-choose-sticky-head-cell .help-me-choose-preset-btn {
+  align-self: flex-start;
+}
+
+/* Mobile columns: list is the lower half of one card (header row sits above in DOM) */
+.help-me-choose-category.help-me-choose-category--lists-only {
+  border-radius: 0 0 var(--radius-xl) var(--radius-xl);
+  border-top: none;
+  margin-top: 0;
+  padding-top: 0.45rem;
+  gap: 0.35rem;
+  background: color-mix(in srgb, var(--primary-color) 8%, var(--bg-elevated));
+  box-shadow:
+    0 1px 0 color-mix(in srgb, var(--primary-color) 5%, transparent) inset,
+    0 8px 18px -14px color-mix(in srgb, var(--primary-glow) 22%, transparent);
+}
+
+[data-theme='dark'] .help-me-choose-category.help-me-choose-category--lists-only {
+  background: color-mix(in srgb, var(--bg-elevated) 82%, rgba(6, 182, 212, 0.06));
+}
+
+[data-theme='light'] .help-me-choose-category.help-me-choose-category--lists-only,
+html:not([data-theme]) .help-me-choose-category.help-me-choose-category--lists-only {
+  background: color-mix(in srgb, var(--primary-color) 6%, var(--bg-elevated));
+}
+
+.help-me-choose-category.help-me-choose-category--lists-only::before {
+  border-radius: 0 0 0 var(--radius-xl);
   top: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: min(120px, 40%);
-  height: 3px;
-  background: linear-gradient(
-    90deg,
-    transparent 0%,
-    color-mix(in srgb, var(--primary-color) 50%, transparent) 50%,
-    transparent 100%
-  );
-  border-radius: 0 0 2px 2px;
-  pointer-events: none;
 }
 
 .help-me-choose-category-header-row {
@@ -3453,6 +3542,23 @@ html:not([data-theme]) .help-me-choose-category.has-match {
   flex: 1;
   min-width: 0;
   cursor: inherit;
+}
+
+/* Lock, web, and evidence icons share one flex row so spacing is uniform */
+.help-me-choose-model-meta-icons {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+  min-width: 0;
+}
+
+.help-me-choose-model-meta-icons .help-me-choose-model-lock {
+  margin-left: 0;
+}
+
+.help-me-choose-model-meta-icons .help-me-choose-model-evidence-btn {
+  margin-left: 0;
 }
 
 .help-me-choose-model-lock {
@@ -3676,9 +3782,10 @@ html:not([data-theme]) .help-me-choose-category.has-match {
     position: relative;
   }
 
-  /* Allow horizontal overflow in flex layout */
+  /* Allow horizontal overflow in flex layout; no vertical gap between header strip and lists */
   .help-me-choose-categories-wrapper {
     min-width: 0;
+    gap: 0;
   }
 
   /* Horizontal scrolling like desktop - categories in a row with touch-friendly scroll */
@@ -3689,7 +3796,7 @@ html:not([data-theme]) .help-me-choose-category.has-match {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
-    padding-top: 4px;
+    padding-top: 0;
     padding-bottom: 4px;
   }
 
@@ -3707,6 +3814,15 @@ html:not([data-theme]) .help-me-choose-category.has-match {
     flex: 0 0 300px;
     min-width: 300px;
     padding: 0.85rem 1rem 1rem;
+  }
+
+  /* Hover: subtle feedback without lifting the combined header+list card */
+  .help-me-choose-category.help-me-choose-category--lists-only:hover {
+    transform: none;
+    z-index: 2;
+    box-shadow:
+      0 0 0 1px color-mix(in srgb, var(--primary-color) 12%, transparent) inset,
+      0 8px 20px -12px color-mix(in srgb, var(--primary-glow) 28%, transparent);
   }
 
   .help-me-choose-content-inner {

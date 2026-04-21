@@ -356,13 +356,35 @@ export function HelpMeChoose({
 
   const [hasHorizontalOverflow, setHasHorizontalOverflow] = useState(false)
   const [isCategoriesDragging, setIsCategoriesDragging] = useState(false)
-  /** Category label shown in sticky bar when user scrolls (mobile: vertical scroll can hide headers) */
-  const [visibleCategoryLabel, setVisibleCategoryLabel] = useState<string | null>(null)
-  /** When true, at least one category header is visible — hide sticky banner to avoid redundancy */
-  const [categoryHeadersVisible, setCategoryHeadersVisible] = useState(true)
+
+  /** Mobile: inner track that mirrors horizontal scroll of category columns */
+  const stickyHeadTrackRef = useRef<HTMLDivElement>(null)
+  /** Mobile: cropped viewport over the header row — touch-drag pans the shared categories scroller */
+  const stickyHeadClipRef = useRef<HTMLDivElement>(null)
+
+  /** Per-category row props (shared by sticky header strip + columns) */
+  const helpMeChooseCategoryRows = useMemo(() => {
+    return displayedCategories.map(cat => {
+      const hasMatch = matchingCategories.some(m => m.id === cat.id)
+      const topIds = cat.models
+        .filter(e => !modelRestrictedByModelId.get(e.modelId))
+        .slice(0, HELP_ME_CHOOSE_PRESET_COUNT)
+        .map(e => e.modelId)
+      const allTopSelected = topIds.length > 0 && topIds.every(id => selectedModels.includes(id))
+      return { cat, hasMatch, topIds, allTopSelected }
+    })
+  }, [displayedCategories, matchingCategories, modelRestrictedByModelId, selectedModels])
+
+  const syncStickyHeadTransform = useCallback(() => {
+    const el = categoriesRef.current
+    const tr = stickyHeadTrackRef.current
+    if (!el || !tr || !isMobileLayout) return
+    tr.style.transform = `translate3d(${-el.scrollLeft}px,0,0)`
+  }, [isMobileLayout])
 
   /** Scrollbar at top: sync thumb with categories scroll, handle drag */
   const updateScrollbarThumb = useCallback(() => {
+    syncStickyHeadTransform()
     const el = categoriesRef.current
     const track = scrollbarTrackRef.current
     const thumb = scrollbarThumbRef.current
@@ -371,15 +393,21 @@ export function HelpMeChoose({
     const clientWidth = el.clientWidth
     const overflow = scrollWidth > clientWidth
     setHasHorizontalOverflow(overflow)
-    if (!overflow) return
-    const scrollLeft = el.scrollLeft
     const trackWidth = track.clientWidth
+    if (!overflow) {
+      /* Show a full-width thumb when everything fits — track stays visible */
+      const w = Math.max(40, trackWidth - 4)
+      thumb.style.width = `${w}px`
+      thumb.style.transform = 'translateX(2px)'
+      return
+    }
+    const scrollLeft = el.scrollLeft
     const thumbWidth = Math.max(40, (clientWidth / scrollWidth) * trackWidth)
     const maxThumbLeft = trackWidth - thumbWidth
     const thumbLeft = (scrollLeft / (scrollWidth - clientWidth)) * maxThumbLeft
     thumb.style.width = `${thumbWidth}px`
     thumb.style.transform = `translateX(${thumbLeft}px)`
-  }, [])
+  }, [syncStickyHeadTransform])
 
   useEffect(() => {
     const el = categoriesRef.current
@@ -403,77 +431,6 @@ export function HelpMeChoose({
       el.removeEventListener('scroll', updateScrollbarThumb)
     }
   }, [isExpanded, updateScrollbarThumb])
-
-  /** Update visible category label for sticky bar based on horizontal scroll (which column is in view) */
-  const updateVisibleCategory = useCallback(() => {
-    const el = categoriesRef.current
-    if (!el) return
-    const categories = el.querySelectorAll<HTMLElement>('.help-me-choose-category')
-    if (categories.length === 0) {
-      setVisibleCategoryLabel(displayedCategories[0]?.label ?? null)
-      return
-    }
-    const scrollLeft = el.scrollLeft
-    const first = categories[0]
-    const second = categories[1]
-    const gap = second ? second.offsetLeft - first.offsetLeft - first.offsetWidth : 16
-    const categoryWidth = first.offsetWidth + gap
-    const index = Math.min(
-      displayedCategories.length - 1,
-      Math.max(0, Math.round(scrollLeft / categoryWidth))
-    )
-    setVisibleCategoryLabel(displayedCategories[index]?.label ?? null)
-  }, [displayedCategories])
-
-  useEffect(() => {
-    if (!isMobileLayout || !isExpanded) {
-      setVisibleCategoryLabel(null)
-      return
-    }
-    const el = categoriesRef.current
-    if (!el) return
-    const run = () => updateVisibleCategory()
-    run()
-    const raf = requestAnimationFrame(run)
-    el.addEventListener('scroll', updateVisibleCategory)
-    return () => {
-      cancelAnimationFrame(raf)
-      el.removeEventListener('scroll', updateVisibleCategory)
-    }
-  }, [isMobileLayout, isExpanded, updateVisibleCategory])
-
-  /** Hide sticky banner when category headers are visible (avoid redundant "Best value" etc.) */
-  const headerIntersectionRef = useRef<Map<Element, boolean>>(new Map())
-  useEffect(() => {
-    if (!isMobileLayout || !isExpanded) {
-      setCategoryHeadersVisible(true)
-      return
-    }
-    const content = contentRef.current
-    const categories = categoriesRef.current
-    if (!content || !categories) return
-    const headers = categories.querySelectorAll<HTMLElement>('.help-me-choose-category-header')
-    if (headers.length === 0) return
-    const map = headerIntersectionRef.current
-    map.clear()
-    const checkVisible = () => {
-      setCategoryHeadersVisible([...map.values()].some(Boolean))
-    }
-    const observer = new IntersectionObserver(
-      entries => {
-        for (const e of entries) {
-          map.set(e.target, e.isIntersecting)
-        }
-        checkVisible()
-      },
-      { root: content, threshold: 0.1, rootMargin: '0px' }
-    )
-    headers.forEach(h => observer.observe(h))
-    return () => {
-      observer.disconnect()
-      map.clear()
-    }
-  }, [isMobileLayout, isExpanded, displayedCategories])
 
   const handleScrollbarPointerDown = useCallback((clientX: number, target: EventTarget) => {
     const el = categoriesRef.current
@@ -646,6 +603,72 @@ export function HelpMeChoose({
       document.removeEventListener('mouseup', onMouseUp)
     }
   }, [isExpanded])
+
+  /** Mobile: horizontal drag on the category header strip scrolls the same axis as the model lists */
+  useEffect(() => {
+    if (!isExpanded || !isMobileLayout || !hasHorizontalOverflow) return
+    const el = categoriesRef.current
+    const clip = stickyHeadClipRef.current
+    if (!el || !clip) return
+
+    const shouldIgnoreTarget = (target: EventTarget | null) => {
+      const t = target as HTMLElement | null
+      return Boolean(t?.closest?.('button, a, input, label'))
+    }
+
+    const onTouchStart = (e: TouchEvent) => {
+      if (e.touches.length !== 1) return
+      if (shouldIgnoreTarget(e.target)) return
+      isCategoriesArmedRef.current = true
+      categoriesDragStartXRef.current = e.touches[0].clientX
+      categoriesDragStartScrollLeftRef.current = el.scrollLeft
+    }
+
+    const onTouchMove = (e: TouchEvent) => {
+      if (!isCategoriesArmedRef.current || e.touches.length === 0) return
+      const clientX = e.touches[0].clientX
+      const dx = clientX - categoriesDragStartXRef.current
+      if (!isCategoriesDragRef.current) {
+        if (Math.abs(dx) >= CATEGORIES_DRAG_THRESHOLD_PX) {
+          isCategoriesDragRef.current = true
+          setIsCategoriesDragging(true)
+          categoriesDragStartXRef.current = clientX
+          categoriesDragStartScrollLeftRef.current = el.scrollLeft
+        } else {
+          return
+        }
+      }
+      e.preventDefault()
+      el.scrollLeft = Math.max(
+        0,
+        Math.min(el.scrollWidth - el.clientWidth, categoriesDragStartScrollLeftRef.current - dx)
+      )
+      categoriesDragStartXRef.current = clientX
+      categoriesDragStartScrollLeftRef.current = el.scrollLeft
+    }
+
+    const onTouchEnd = () => {
+      if (isCategoriesArmedRef.current || isCategoriesDragRef.current) {
+        const hadDrag = isCategoriesDragRef.current
+        isCategoriesArmedRef.current = false
+        isCategoriesDragRef.current = false
+        setIsCategoriesDragging(false)
+        if (hadDrag) categoriesJustFinishedDragRef.current = true
+      }
+    }
+
+    clip.addEventListener('touchstart', onTouchStart, { passive: true })
+    document.addEventListener('touchmove', onTouchMove, { passive: false })
+    document.addEventListener('touchend', onTouchEnd)
+    document.addEventListener('touchcancel', onTouchEnd)
+
+    return () => {
+      clip.removeEventListener('touchstart', onTouchStart)
+      document.removeEventListener('touchmove', onTouchMove)
+      document.removeEventListener('touchend', onTouchEnd)
+      document.removeEventListener('touchcancel', onTouchEnd)
+    }
+  }, [isExpanded, isMobileLayout, hasHorizontalOverflow])
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -845,24 +868,87 @@ export function HelpMeChoose({
                 Pick models by use case — scroll sideways to browse categories.
               </p>
             </header>
-            {isMobileLayout && visibleCategoryLabel && !categoryHeadersVisible && (
-              <div className="help-me-choose-sticky-category" aria-live="polite">
-                {visibleCategoryLabel}
-              </div>
-            )}
-            <div
-              className={`help-me-choose-categories-wrapper${hasHorizontalOverflow ? '' : ' help-me-choose-scrollbar-hidden'}`}
-            >
-              <div
-                ref={scrollbarTrackRef}
-                className="help-me-choose-scrollbar-top"
-                role="scrollbar"
-                aria-orientation="horizontal"
-                aria-label="Scroll categories horizontally"
-                onMouseDown={handleScrollbarMouseDown}
-              >
-                <div ref={scrollbarThumbRef} className="help-me-choose-scrollbar-thumb" />
-              </div>
+            <div className="help-me-choose-categories-wrapper">
+              {isMobileLayout ? (
+                <div
+                  className="help-me-choose-mobile-hscroll-head"
+                  role="region"
+                  aria-label="Category descriptions"
+                >
+                  <div
+                    ref={scrollbarTrackRef}
+                    className="help-me-choose-scrollbar-top help-me-choose-scrollbar-top--over-category-headers"
+                    role="scrollbar"
+                    aria-orientation="horizontal"
+                    aria-label="Scroll categories horizontally"
+                    onMouseDown={handleScrollbarMouseDown}
+                  >
+                    <div ref={scrollbarThumbRef} className="help-me-choose-scrollbar-thumb" />
+                  </div>
+                  <div ref={stickyHeadClipRef} className="help-me-choose-sticky-head-clip">
+                    <div ref={stickyHeadTrackRef} className="help-me-choose-sticky-head-track">
+                      {helpMeChooseCategoryRows.map(({ cat, hasMatch, topIds, allTopSelected }) => (
+                        <div
+                          key={`sticky-${cat.id}`}
+                          className={`help-me-choose-sticky-head-cell ${hasMatch ? 'has-match' : ''}`}
+                        >
+                          <div className="help-me-choose-category-header-row">
+                            <h3 className="help-me-choose-category-header">
+                              {cat.label}
+                              {cat.categoryInfoTooltip && (
+                                <button
+                                  type="button"
+                                  className="help-me-choose-category-info-trigger"
+                                  onClick={() =>
+                                    setEvidenceModal({
+                                      modelName: cat.label,
+                                      evidence: cat.categoryInfoTooltip!,
+                                    })
+                                  }
+                                  aria-label={`${cat.label} — how this category is ranked`}
+                                >
+                                  <InfoIcon />
+                                </button>
+                              )}
+                            </h3>
+                            {onApplyCategoryPreset && !isRestrictedTier && topIds.length > 0 && (
+                              <button
+                                type="button"
+                                className="help-me-choose-preset-btn"
+                                onClick={() => handleApplyPreset(cat)}
+                                disabled={disabled || isFollowUpMode}
+                                title={
+                                  isFollowUpMode
+                                    ? 'Cannot change models during follow-up'
+                                    : allTopSelected
+                                      ? `Deselect top ${HELP_ME_CHOOSE_PRESET_COUNT} from this category`
+                                      : `Select top ${HELP_ME_CHOOSE_PRESET_COUNT} from this category`
+                                }
+                              >
+                                {allTopSelected
+                                  ? `Deselect top ${HELP_ME_CHOOSE_PRESET_COUNT}`
+                                  : `Select top ${HELP_ME_CHOOSE_PRESET_COUNT}`}
+                              </button>
+                            )}
+                          </div>
+                          <p className="help-me-choose-category-desc">{cat.description}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div
+                  ref={scrollbarTrackRef}
+                  className="help-me-choose-scrollbar-top help-me-choose-scrollbar-top--over-category-headers"
+                  role="scrollbar"
+                  aria-orientation="horizontal"
+                  aria-label="Scroll categories horizontally"
+                  onMouseDown={handleScrollbarMouseDown}
+                >
+                  <div ref={scrollbarThumbRef} className="help-me-choose-scrollbar-thumb" />
+                </div>
+              )}
               <div
                 ref={categoriesRef}
                 className={`help-me-choose-categories${!isMobileLayout && hasHorizontalOverflow ? ' help-me-choose-categories-drag-scroll' : ''}${isCategoriesDragging ? ' help-me-choose-categories-dragging' : ''}`}
@@ -871,89 +957,76 @@ export function HelpMeChoose({
               >
                 {(() => {
                   let foundFirstSelected = false
-                  return displayedCategories.map((cat: HelpMeChooseCategory) => {
-                    const hasMatch = matchingCategories.some(m => m.id === cat.id)
-                    const topIds = cat.models
-                      .filter(e => !modelRestrictedByModelId.get(e.modelId))
-                      .slice(0, HELP_ME_CHOOSE_PRESET_COUNT)
-                      .map(e => e.modelId)
-                    const allTopSelected =
-                      topIds.length > 0 && topIds.every(id => selectedModels.includes(id))
-                    return (
+                  return helpMeChooseCategoryRows.map(
+                    ({ cat, hasMatch, topIds, allTopSelected }) => (
                       <div
                         key={cat.id}
                         data-help-me-choose-category={cat.id}
-                        className={`help-me-choose-category ${hasMatch ? 'has-match' : ''}`}
+                        className={`help-me-choose-category${isMobileLayout ? ' help-me-choose-category--lists-only' : ''} ${hasMatch ? 'has-match' : ''}`}
                       >
-                        <div className="help-me-choose-category-header-row">
-                          <h3 className="help-me-choose-category-header">
-                            {cat.label}
-                            {cat.categoryInfoTooltip && (
-                              <button
-                                type="button"
-                                className="help-me-choose-category-info-trigger"
-                                onClick={() =>
-                                  setEvidenceModal({
-                                    modelName: cat.label,
-                                    evidence: cat.categoryInfoTooltip!,
-                                  })
-                                }
-                                onMouseEnter={
-                                  !isMobileLayout
-                                    ? e => {
-                                        const rect = (
-                                          e.currentTarget as HTMLButtonElement
-                                        ).getBoundingClientRect()
-                                        setCategoryTooltip({
-                                          content: cat.categoryInfoTooltip!,
-                                          centerX: rect.left + rect.width / 2,
-                                          bottomY: window.innerHeight - rect.top + 10,
-                                        })
-                                      }
-                                    : undefined
-                                }
-                                onMouseLeave={
-                                  !isMobileLayout ? () => setCategoryTooltip(null) : undefined
-                                }
-                                aria-label={`${cat.label} — how this category is ranked`}
-                                aria-describedby={
-                                  isMobileLayout ? undefined : `hmc-category-info-${cat.id}`
-                                }
-                              >
-                                {!isMobileLayout && (
-                                  <span
-                                    id={`hmc-category-info-${cat.id}`}
-                                    className="sr-only"
-                                    role="tooltip"
+                        {!isMobileLayout && (
+                          <>
+                            <div className="help-me-choose-category-header-row">
+                              <h3 className="help-me-choose-category-header">
+                                {cat.label}
+                                {cat.categoryInfoTooltip && (
+                                  <button
+                                    type="button"
+                                    className="help-me-choose-category-info-trigger"
+                                    onClick={() =>
+                                      setEvidenceModal({
+                                        modelName: cat.label,
+                                        evidence: cat.categoryInfoTooltip!,
+                                      })
+                                    }
+                                    onMouseEnter={e => {
+                                      const rect = (
+                                        e.currentTarget as HTMLButtonElement
+                                      ).getBoundingClientRect()
+                                      setCategoryTooltip({
+                                        content: cat.categoryInfoTooltip!,
+                                        centerX: rect.left + rect.width / 2,
+                                        bottomY: window.innerHeight - rect.top + 10,
+                                      })
+                                    }}
+                                    onMouseLeave={() => setCategoryTooltip(null)}
+                                    aria-label={`${cat.label} — how this category is ranked`}
+                                    aria-describedby={`hmc-category-info-${cat.id}`}
                                   >
-                                    {cat.categoryInfoTooltip}
-                                  </span>
+                                    <span
+                                      id={`hmc-category-info-${cat.id}`}
+                                      className="sr-only"
+                                      role="tooltip"
+                                    >
+                                      {cat.categoryInfoTooltip}
+                                    </span>
+                                    <InfoIcon />
+                                  </button>
                                 )}
-                                <InfoIcon />
-                              </button>
-                            )}
-                          </h3>
-                          {onApplyCategoryPreset && !isRestrictedTier && topIds.length > 0 && (
-                            <button
-                              type="button"
-                              className="help-me-choose-preset-btn"
-                              onClick={() => handleApplyPreset(cat)}
-                              disabled={disabled || isFollowUpMode}
-                              title={
-                                isFollowUpMode
-                                  ? 'Cannot change models during follow-up'
-                                  : allTopSelected
-                                    ? `Deselect top ${HELP_ME_CHOOSE_PRESET_COUNT} from this category`
-                                    : `Select top ${HELP_ME_CHOOSE_PRESET_COUNT} from this category`
-                              }
-                            >
-                              {allTopSelected
-                                ? `Deselect top ${HELP_ME_CHOOSE_PRESET_COUNT}`
-                                : `Select top ${HELP_ME_CHOOSE_PRESET_COUNT}`}
-                            </button>
-                          )}
-                        </div>
-                        <p className="help-me-choose-category-desc">{cat.description}</p>
+                              </h3>
+                              {onApplyCategoryPreset && !isRestrictedTier && topIds.length > 0 && (
+                                <button
+                                  type="button"
+                                  className="help-me-choose-preset-btn"
+                                  onClick={() => handleApplyPreset(cat)}
+                                  disabled={disabled || isFollowUpMode}
+                                  title={
+                                    isFollowUpMode
+                                      ? 'Cannot change models during follow-up'
+                                      : allTopSelected
+                                        ? `Deselect top ${HELP_ME_CHOOSE_PRESET_COUNT} from this category`
+                                        : `Select top ${HELP_ME_CHOOSE_PRESET_COUNT} from this category`
+                                  }
+                                >
+                                  {allTopSelected
+                                    ? `Deselect top ${HELP_ME_CHOOSE_PRESET_COUNT}`
+                                    : `Select top ${HELP_ME_CHOOSE_PRESET_COUNT}`}
+                                </button>
+                              )}
+                            </div>
+                            <p className="help-me-choose-category-desc">{cat.description}</p>
+                          </>
+                        )}
                         <ul className="help-me-choose-models-list" role="none">
                           {cat.models.map((entry, idx) => {
                             const modelRestricted =
@@ -985,119 +1058,121 @@ export function HelpMeChoose({
                                     aria-disabled={modelRestricted}
                                   />
                                   <span className="help-me-choose-model-name">{displayName}</span>
-                                  {modelRestricted && (
-                                    <span className="help-me-choose-model-lock" aria-hidden>
-                                      <svg
-                                        width="12"
-                                        height="12"
-                                        viewBox="0 0 24 24"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        strokeWidth="2"
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                      >
-                                        <rect x="5" y="11" width="14" height="10" rx="2" ry="2" />
-                                        <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                                      </svg>
-                                    </span>
-                                  )}
-                                  {supportsWebSearch && (
-                                    <StyledTooltip
-                                      usePortal
-                                      text={
-                                        isMobileLayout
-                                          ? 'This model can access the Internet — tap for info'
-                                          : 'This model can access the Internet'
-                                      }
-                                    >
-                                      <span
-                                        className="web-search-indicator"
-                                        style={{
-                                          display: 'inline-flex',
-                                          alignItems: 'center',
-                                          justifyContent: 'center',
-                                          width: '14px',
-                                          height: '14px',
-                                          opacity: isSelected ? 1 : 0.6,
-                                          flexShrink: 0,
-                                        }}
-                                        aria-hidden
-                                      >
+                                  <span className="help-me-choose-model-meta-icons">
+                                    {modelRestricted && (
+                                      <span className="help-me-choose-model-lock" aria-hidden>
                                         <svg
-                                          width="14"
-                                          height="14"
+                                          width="12"
+                                          height="12"
                                           viewBox="0 0 24 24"
                                           fill="none"
                                           stroke="currentColor"
                                           strokeWidth="2"
                                           strokeLinecap="round"
                                           strokeLinejoin="round"
-                                          style={{
-                                            color: isSelected
-                                              ? 'var(--primary-color, #007bff)'
-                                              : 'var(--text-secondary, #666)',
-                                            display: 'block',
-                                          }}
                                         >
-                                          <circle cx="12" cy="12" r="10" />
-                                          <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+                                          <rect x="5" y="11" width="14" height="10" rx="2" ry="2" />
+                                          <path d="M7 11V7a5 5 0 0 1 10 0v4" />
                                         </svg>
                                       </span>
-                                    </StyledTooltip>
-                                  )}
-                                  <button
-                                    type="button"
-                                    className="help-me-choose-model-evidence-btn help-me-choose-model-evidence-trigger"
-                                    onClick={e => {
-                                      e.preventDefault()
-                                      e.stopPropagation()
-                                      setEvidenceModal({
-                                        modelName: displayName,
-                                        evidence: modelRestricted
-                                          ? disabledTooltip
-                                          : entry.evidence,
-                                      })
-                                    }}
-                                    onMouseEnter={
-                                      !isMobileLayout
-                                        ? e => {
-                                            const rect = (
-                                              e.currentTarget as HTMLButtonElement
-                                            ).getBoundingClientRect()
-                                            setModelEvidenceTooltip({
-                                              content: modelRestricted
-                                                ? disabledTooltip
-                                                : entry.evidence,
-                                              centerX: rect.left + rect.width / 2,
-                                              bottomY: window.innerHeight - rect.top + 10,
-                                            })
-                                          }
-                                        : undefined
-                                    }
-                                    onMouseLeave={
-                                      !isMobileLayout
-                                        ? () => setModelEvidenceTooltip(null)
-                                        : undefined
-                                    }
-                                    aria-label={`Benchmark evidence for ${displayName}`}
-                                    aria-describedby={
-                                      isMobileLayout
-                                        ? undefined
-                                        : `hmc-evidence-tooltip-${cat.id}-${entry.modelId}-${idx}`
-                                    }
-                                  >
-                                    {!isMobileLayout && (
-                                      <span
-                                        id={`hmc-evidence-tooltip-${cat.id}-${entry.modelId}-${idx}`}
-                                        className="sr-only"
-                                        role="tooltip"
-                                      >
-                                        {modelRestricted ? disabledTooltip : entry.evidence}
-                                      </span>
                                     )}
-                                    <InfoIcon />
-                                  </button>
+                                    {supportsWebSearch && (
+                                      <StyledTooltip
+                                        usePortal
+                                        text={
+                                          isMobileLayout
+                                            ? 'This model can access the Internet — tap for info'
+                                            : 'This model can access the Internet'
+                                        }
+                                      >
+                                        <span
+                                          className="web-search-indicator"
+                                          style={{
+                                            display: 'inline-flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            width: '14px',
+                                            height: '14px',
+                                            opacity: isSelected ? 1 : 0.6,
+                                            flexShrink: 0,
+                                          }}
+                                          aria-hidden
+                                        >
+                                          <svg
+                                            width="14"
+                                            height="14"
+                                            viewBox="0 0 24 24"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            strokeWidth="2"
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            style={{
+                                              color: isSelected
+                                                ? 'var(--primary-color, #007bff)'
+                                                : 'var(--text-secondary, #666)',
+                                              display: 'block',
+                                            }}
+                                          >
+                                            <circle cx="12" cy="12" r="10" />
+                                            <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+                                          </svg>
+                                        </span>
+                                      </StyledTooltip>
+                                    )}
+                                    <button
+                                      type="button"
+                                      className="help-me-choose-model-evidence-btn help-me-choose-model-evidence-trigger"
+                                      onClick={e => {
+                                        e.preventDefault()
+                                        e.stopPropagation()
+                                        setEvidenceModal({
+                                          modelName: displayName,
+                                          evidence: modelRestricted
+                                            ? disabledTooltip
+                                            : entry.evidence,
+                                        })
+                                      }}
+                                      onMouseEnter={
+                                        !isMobileLayout
+                                          ? e => {
+                                              const rect = (
+                                                e.currentTarget as HTMLButtonElement
+                                              ).getBoundingClientRect()
+                                              setModelEvidenceTooltip({
+                                                content: modelRestricted
+                                                  ? disabledTooltip
+                                                  : entry.evidence,
+                                                centerX: rect.left + rect.width / 2,
+                                                bottomY: window.innerHeight - rect.top + 10,
+                                              })
+                                            }
+                                          : undefined
+                                      }
+                                      onMouseLeave={
+                                        !isMobileLayout
+                                          ? () => setModelEvidenceTooltip(null)
+                                          : undefined
+                                      }
+                                      aria-label={`Benchmark evidence for ${displayName}`}
+                                      aria-describedby={
+                                        isMobileLayout
+                                          ? undefined
+                                          : `hmc-evidence-tooltip-${cat.id}-${entry.modelId}-${idx}`
+                                      }
+                                    >
+                                      {!isMobileLayout && (
+                                        <span
+                                          id={`hmc-evidence-tooltip-${cat.id}-${entry.modelId}-${idx}`}
+                                          className="sr-only"
+                                          role="tooltip"
+                                        >
+                                          {modelRestricted ? disabledTooltip : entry.evidence}
+                                        </span>
+                                      )}
+                                      <InfoIcon />
+                                    </button>
+                                  </span>
                                 </label>
                               </li>
                             )
@@ -1105,7 +1180,7 @@ export function HelpMeChoose({
                         </ul>
                       </div>
                     )
-                  })
+                  )
                 })()}
               </div>
             </div>
