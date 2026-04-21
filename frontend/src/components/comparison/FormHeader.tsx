@@ -7,21 +7,77 @@ export interface FormHeaderProps {
   selectedModels: string[]
   isLoading: boolean
   tutorialIsActive?: boolean
+  /** When false (touch-first narrow layout), hover tooltips are omitted; use same flag as composer toolbar. */
+  showStyledTooltips?: boolean
   onNewComparison: () => void
   modelsSectionRef?: React.RefObject<HTMLDivElement | null>
   /** When provided and no models selected, scrolls to models, expands section, opens Help me choose */
   onOpenHelpMeChoose?: (options?: { scrollToCategoryId?: string }) => void
 }
 
+const NEW_INQUIRY_ICON = (
+  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path
+      d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M21 3v5h-5"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M3 21v-5h5"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+)
+
 export function FormHeader({
   isFollowUpMode,
   selectedModels,
   isLoading,
   tutorialIsActive,
+  showStyledTooltips = true,
   onNewComparison,
   modelsSectionRef,
   onOpenHelpMeChoose,
 }: FormHeaderProps) {
+  const onNewInquiryClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    if (tutorialIsActive) {
+      e.preventDefault()
+      return
+    }
+    onNewComparison()
+  }
+
+  const newInquiryButton = (
+    <button
+      type="button"
+      onClick={onNewInquiryClick}
+      className="textarea-icon-button new-inquiry-button"
+      disabled={isLoading}
+      aria-label="Exit follow up mode"
+    >
+      {NEW_INQUIRY_ICON}
+    </button>
+  )
+
   return (
     <div
       className="follow-up-header"
@@ -30,50 +86,13 @@ export function FormHeader({
       {isFollowUpMode ? (
         <>
           <h2 style={{ margin: 0 }}>Start over ➜</h2>
-          <StyledTooltip text="Exit follow up mode">
-            <button
-              onClick={e => {
-                if (tutorialIsActive) {
-                  e.preventDefault()
-                  return
-                }
-                onNewComparison()
-              }}
-              className="textarea-icon-button new-inquiry-button"
-              disabled={isLoading}
-            >
-              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path
-                  d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-                <path
-                  d="M21 3v5h-5"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-                <path
-                  d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-                <path
-                  d="M3 21v-5h5"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </button>
-          </StyledTooltip>
+          {showStyledTooltips ? (
+            <StyledTooltip usePortal text="Exit follow up mode">
+              {newInquiryButton}
+            </StyledTooltip>
+          ) : (
+            newInquiryButton
+          )}
         </>
       ) : selectedModels.length === 0 ? (
         <h2>
