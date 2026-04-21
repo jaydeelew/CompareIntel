@@ -7,8 +7,6 @@ export interface FormHeaderProps {
   selectedModels: string[]
   isLoading: boolean
   tutorialIsActive?: boolean
-  /** When false (touch-first narrow layout), hover tooltips are omitted; use same flag as composer toolbar. */
-  showStyledTooltips?: boolean
   onNewComparison: () => void
   modelsSectionRef?: React.RefObject<HTMLDivElement | null>
   /** When provided and no models selected, scrolls to models, expands section, opens Help me choose */
@@ -53,7 +51,6 @@ export function FormHeader({
   selectedModels,
   isLoading,
   tutorialIsActive,
-  showStyledTooltips = true,
   onNewComparison,
   modelsSectionRef,
   onOpenHelpMeChoose,
@@ -66,18 +63,6 @@ export function FormHeader({
     onNewComparison()
   }
 
-  const newInquiryButton = (
-    <button
-      type="button"
-      onClick={onNewInquiryClick}
-      className="textarea-icon-button new-inquiry-button"
-      disabled={isLoading}
-      aria-label="Exit follow up mode"
-    >
-      {NEW_INQUIRY_ICON}
-    </button>
-  )
-
   return (
     <div
       className="follow-up-header"
@@ -86,13 +71,15 @@ export function FormHeader({
       {isFollowUpMode ? (
         <>
           <h2 style={{ margin: 0 }}>Start over ➜</h2>
-          {showStyledTooltips ? (
-            <StyledTooltip usePortal text="Exit follow up mode">
-              {newInquiryButton}
-            </StyledTooltip>
-          ) : (
-            newInquiryButton
-          )}
+          <button
+            type="button"
+            onClick={onNewInquiryClick}
+            className="textarea-icon-button new-inquiry-button"
+            disabled={isLoading}
+            aria-label="Exit follow up mode"
+          >
+            {NEW_INQUIRY_ICON}
+          </button>
         </>
       ) : selectedModels.length === 0 ? (
         <h2>
