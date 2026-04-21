@@ -3279,8 +3279,8 @@ html:not([data-theme]) .help-me-choose-category.has-match {
 
 /*
  * Mobile: scrollbar + category title row — sticky within .help-me-choose-content.
- * Background matches .help-me-choose-scrollbar-top so the flex gap under the track
- * isn’t a bright strip; no full-width border (each header stays tied to its list below).
+ * Mesh + linear + ::after match .help-me-choose-content so sticky gutters read as the same
+ * lighter panel treatment as the list row (transparent flex gaps over the dropdown body).
  */
 .help-me-choose-mobile-hscroll-head {
   position: sticky;
@@ -3327,6 +3327,33 @@ html:not([data-theme]) .help-me-choose-category.has-match {
     );
 }
 
+/* Same radial veil as .help-me-choose-content::after — covers the flex gap under the scrollbar too */
+.help-me-choose-mobile-hscroll-head::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background:
+    radial-gradient(
+      ellipse 90% 55% at 50% -8%,
+      color-mix(in srgb, var(--primary-color) 14%, transparent) 0%,
+      transparent 58%
+    ),
+    radial-gradient(
+      ellipse 50% 45% at 100% 0%,
+      color-mix(in srgb, var(--secondary-color) 10%, transparent) 0%,
+      transparent 48%
+    );
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.85;
+}
+
+.help-me-choose-mobile-hscroll-head > * {
+  position: relative;
+  z-index: 1;
+}
+
 .help-me-choose-sticky-head-clip {
   overflow: hidden;
   width: 100%;
@@ -3342,6 +3369,66 @@ html:not([data-theme]) .help-me-choose-category.has-match {
   gap: 1rem 1.25rem;
   width: max-content;
   will-change: transform;
+  position: relative;
+}
+
+/* Column gutters in the header row: same mesh + linear + radial as .help-me-choose-content (lighter than lists-only flat) */
+.help-me-choose-expanded .help-me-choose-sticky-head-track::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    var(--gradient-mesh),
+    linear-gradient(
+      165deg,
+      color-mix(in srgb, var(--primary-color) 9%, var(--bg-elevated)) 0%,
+      var(--bg-elevated) 42%,
+      color-mix(in srgb, var(--secondary-color) 5%, var(--bg-elevated)) 100%
+    );
+}
+
+[data-theme='light'] .help-me-choose-expanded .help-me-choose-sticky-head-track::before {
+  background:
+    var(--gradient-mesh),
+    linear-gradient(
+      168deg,
+      color-mix(in srgb, var(--primary-color) 7%, var(--bg-elevated)) 0%,
+      var(--bg-elevated) 45%,
+      color-mix(in srgb, var(--primary-color) 4%, var(--bg-secondary)) 100%
+    );
+}
+
+[data-theme='dark'] .help-me-choose-expanded .help-me-choose-sticky-head-track::before {
+  background:
+    var(--gradient-mesh),
+    linear-gradient(
+      168deg,
+      color-mix(in srgb, var(--primary-color) 12%, var(--bg-elevated)) 0%,
+      var(--bg-elevated) 48%,
+      color-mix(in srgb, var(--secondary-color) 8%, var(--bg-elevated)) 100%
+    );
+}
+
+.help-me-choose-expanded .help-me-choose-sticky-head-track::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.85;
+  background:
+    radial-gradient(
+      ellipse 90% 55% at 50% -8%,
+      color-mix(in srgb, var(--primary-color) 14%, transparent) 0%,
+      transparent 58%
+    ),
+    radial-gradient(
+      ellipse 50% 45% at 100% 0%,
+      color-mix(in srgb, var(--secondary-color) 10%, transparent) 0%,
+      transparent 48%
+    );
 }
 
 /*
@@ -3359,6 +3446,8 @@ html:not([data-theme]) .help-me-choose-category.has-match {
   border: 1px solid color-mix(in srgb, var(--primary-color) 9%, var(--border-color));
   border-bottom: none;
   box-shadow: none;
+  position: relative;
+  z-index: 1;
 }
 
 [data-theme='dark'] .help-me-choose-sticky-head-cell {
