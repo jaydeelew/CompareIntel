@@ -380,6 +380,7 @@ export function HelpMeChoose({
   const isCategoriesDragRef = useRef(false)
   const categoriesJustFinishedDragRef = useRef(false)
   const categoriesDragStartXRef = useRef(0)
+  const categoriesDragStartYRef = useRef(0)
   const categoriesDragStartScrollLeftRef = useRef(0)
 
   const CATEGORIES_DRAG_THRESHOLD_PX = 5
@@ -586,21 +587,18 @@ export function HelpMeChoose({
   }, [])
 
   /**
-   * Mousedown arms horizontal drag anywhere in the categories area (including model rows).
-   * Skip links and icon/action buttons only. Checkbox/label use the move threshold + click
-   * capture so a simple click still toggles; a drag suppresses the click.
+   * Mousedown arms horizontal drag anywhere in the categories area (including model list rows).
+   * Skip links and icon controls / top scrollbar. If the first clear move is mostly vertical
+   * (e.g. scrolling a model list), the arm is dropped so that gesture stays vertical.
+   * Checkbox/label use the move threshold + click capture so a simple click still toggles.
    */
   const handleCategoriesMouseDown = useCallback(
     (e: React.MouseEvent) => {
       if (!hasHorizontalOverflow || !categoriesRef.current) return
-      if (
-        (e.target as HTMLElement).closest(
-          'button, a, .help-me-choose-scrollbar-top, .help-me-choose-models-scroll-wrap'
-        )
-      )
-        return
+      if ((e.target as HTMLElement).closest('button, a, .help-me-choose-scrollbar-top')) return
       isCategoriesArmedRef.current = true
       categoriesDragStartXRef.current = e.clientX
+      categoriesDragStartYRef.current = e.clientY
       categoriesDragStartScrollLeftRef.current = categoriesRef.current.scrollLeft
     },
     [hasHorizontalOverflow]
@@ -671,15 +669,19 @@ export function HelpMeChoose({
       if (!isCategoriesArmedRef.current || !categoriesRef.current) return
       const el = categoriesRef.current
       const dx = e.clientX - categoriesDragStartXRef.current
+      const dy = e.clientY - categoriesDragStartYRef.current
       if (!isCategoriesDragRef.current) {
-        if (Math.abs(dx) >= CATEGORIES_DRAG_THRESHOLD_PX) {
-          isCategoriesDragRef.current = true
-          setIsCategoriesDragging(true)
-          categoriesDragStartXRef.current = e.clientX
-          categoriesDragStartScrollLeftRef.current = el.scrollLeft
-        } else {
+        if (Math.abs(dx) < CATEGORIES_DRAG_THRESHOLD_PX) {
           return
         }
+        if (Math.abs(dy) > Math.abs(dx) * 1.15) {
+          isCategoriesArmedRef.current = false
+          return
+        }
+        isCategoriesDragRef.current = true
+        setIsCategoriesDragging(true)
+        categoriesDragStartXRef.current = e.clientX
+        categoriesDragStartScrollLeftRef.current = el.scrollLeft
       }
       e.preventDefault()
       el.scrollLeft = Math.max(
