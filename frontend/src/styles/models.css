@@ -3362,6 +3362,18 @@ html:not([data-theme]) .help-me-choose-category.has-match {
   touch-action: pan-y;
 }
 
+/* Mouse: click-drag on sticky headers (narrow layout); matches .help-me-choose-categories-drag-scroll */
+@media (hover: hover) and (pointer: fine) {
+  .help-me-choose-sticky-head-clip.help-me-choose-sticky-head-clip-drag {
+    cursor: grab;
+  }
+
+  .help-me-choose-sticky-head-clip.help-me-choose-sticky-head-clip-dragging {
+    cursor: grabbing;
+    user-select: none;
+  }
+}
+
 .help-me-choose-sticky-head-track {
   display: flex;
   flex-direction: row;
@@ -3448,6 +3460,14 @@ html:not([data-theme]) .help-me-choose-category.has-match {
   box-shadow: none;
   position: relative;
   z-index: 1;
+}
+
+/* Mouse drag on titles/description: avoid browser text selection stealing the gesture */
+@media (hover: hover) and (pointer: fine) {
+  .help-me-choose-sticky-head-cell {
+    user-select: none;
+    -webkit-user-select: none;
+  }
 }
 
 [data-theme='dark'] .help-me-choose-sticky-head-cell {

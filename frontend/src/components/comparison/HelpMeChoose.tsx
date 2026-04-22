@@ -494,16 +494,20 @@ export function HelpMeChoose({
     }
   }, [])
 
-  /** Desktop: mousedown on categories area to arm click-and-drag scroll (commit on move past threshold) */
+  /**
+   * Mousedown arms horizontal drag anywhere in the categories area (including model rows).
+   * Skip links and icon/action buttons only. Checkbox/label use the move threshold + click
+   * capture so a simple click still toggles; a drag suppresses the click.
+   */
   const handleCategoriesMouseDown = useCallback(
     (e: React.MouseEvent) => {
-      if (isMobileLayout || !hasHorizontalOverflow || !categoriesRef.current) return
-      if ((e.target as HTMLElement).closest('button, a, input, p')) return
+      if (!hasHorizontalOverflow || !categoriesRef.current) return
+      if ((e.target as HTMLElement).closest('button, a, .help-me-choose-scrollbar-top')) return
       isCategoriesArmedRef.current = true
       categoriesDragStartXRef.current = e.clientX
       categoriesDragStartScrollLeftRef.current = categoriesRef.current.scrollLeft
     },
-    [isMobileLayout, hasHorizontalOverflow]
+    [hasHorizontalOverflow]
   )
 
   useEffect(() => {
@@ -863,7 +867,11 @@ export function HelpMeChoose({
           className="help-me-choose-content"
           role="menu"
         >
-          <div className="help-me-choose-content-inner">
+          <div
+            className="help-me-choose-content-inner"
+            onMouseDown={handleCategoriesMouseDown}
+            onClickCapture={handleCategoriesClickCapture}
+          >
             <header className="help-me-choose-panel-head">
               <p className="help-me-choose-panel-eyebrow">Benchmark-guided</p>
               <p className="help-me-choose-panel-tagline">
@@ -887,7 +895,10 @@ export function HelpMeChoose({
                   >
                     <div ref={scrollbarThumbRef} className="help-me-choose-scrollbar-thumb" />
                   </div>
-                  <div ref={stickyHeadClipRef} className="help-me-choose-sticky-head-clip">
+                  <div
+                    ref={stickyHeadClipRef}
+                    className={`help-me-choose-sticky-head-clip${hasHorizontalOverflow ? ' help-me-choose-sticky-head-clip-drag' : ''}${isCategoriesDragging ? ' help-me-choose-sticky-head-clip-dragging' : ''}`}
+                  >
                     <div ref={stickyHeadTrackRef} className="help-me-choose-sticky-head-track">
                       {helpMeChooseCategoryRows.map(({ cat, hasMatch, topIds, allTopSelected }) => (
                         <div
@@ -953,9 +964,7 @@ export function HelpMeChoose({
               )}
               <div
                 ref={categoriesRef}
-                className={`help-me-choose-categories${!isMobileLayout && hasHorizontalOverflow ? ' help-me-choose-categories-drag-scroll' : ''}${isCategoriesDragging ? ' help-me-choose-categories-dragging' : ''}`}
-                onMouseDown={handleCategoriesMouseDown}
-                onClickCapture={handleCategoriesClickCapture}
+                className={`help-me-choose-categories${hasHorizontalOverflow ? ' help-me-choose-categories-drag-scroll' : ''}${isCategoriesDragging ? ' help-me-choose-categories-dragging' : ''}`}
               >
                 {(() => {
                   let foundFirstSelected = false
