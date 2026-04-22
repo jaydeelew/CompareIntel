@@ -3603,6 +3603,74 @@ html:not([data-theme]) .help-me-choose-category.help-me-choose-category--lists-o
   overflow: visible;
 }
 
+/* Per-category list scroll; no visible scrollbar (chevron at top when scrolled down) */
+.help-me-choose-models-scroll-wrap {
+  position: relative;
+  width: 100%;
+  min-height: 0;
+  max-height: min(17rem, 45vh);
+  overflow-x: hidden;
+  overflow-y: auto;
+  flex: 1 1 auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
+}
+
+.help-me-choose-models-scroll-wrap::-webkit-scrollbar {
+  display: none;
+}
+
+/* Sticky: only the round button (no full-width background bar) */
+.help-me-choose-models-top-hint {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-shrink: 0;
+  width: max-content;
+  max-width: 100%;
+  box-sizing: border-box;
+  margin: 0 auto 0.2rem;
+  padding: 0.1rem 0;
+  background: transparent;
+  pointer-events: none;
+}
+
+.help-me-choose-models-top-hint-btn {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.7rem;
+  height: 1.7rem;
+  margin: 0;
+  padding: 0;
+  border: 1px solid color-mix(in srgb, var(--primary-color) 38%, var(--border-color));
+  border-radius: var(--radius-full);
+  background: color-mix(in srgb, var(--bg-elevated) 90%, var(--primary-color) 7%);
+  color: var(--primary-color);
+  cursor: pointer;
+  box-shadow: 0 1px 8px color-mix(in srgb, var(--primary-glow) 28%, transparent);
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease,
+    background 0.15s ease;
+}
+
+.help-me-choose-models-top-hint-btn:hover {
+  background: color-mix(in srgb, var(--bg-hover) 86%, var(--primary-color) 12%);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 12px color-mix(in srgb, var(--primary-glow) 38%, transparent);
+}
+
+.help-me-choose-models-top-hint-btn:focus-visible {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+}
+
 .help-me-choose-models-list li {
   padding: 0;
   overflow: visible;
