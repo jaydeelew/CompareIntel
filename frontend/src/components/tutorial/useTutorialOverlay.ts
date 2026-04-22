@@ -273,6 +273,7 @@ export function useTutorialOverlay(step: TutorialStep | null, isLoading: boolean
       step === 'enter-prompt-2' ||
       step === 'submit-comparison' ||
       step === 'submit-comparison-2' ||
+      step === 'follow-up' ||
       step === 'history-dropdown' ||
       step === 'save-selection'
 
@@ -329,7 +330,8 @@ export function useTutorialOverlay(step: TutorialStep | null, isLoading: boolean
       step === 'enter-prompt' ||
       step === 'enter-prompt-2' ||
       step === 'submit-comparison' ||
-      step === 'submit-comparison-2'
+      step === 'submit-comparison-2' ||
+      step === 'follow-up'
 
     if (needsHeroExpansion) {
       heroSection.classList.add('tutorial-dropdown-hero-active')
@@ -521,14 +523,14 @@ export function useTutorialOverlay(step: TutorialStep | null, isLoading: boolean
           setHighlightedElements([])
         }
       } else if (step === 'follow-up') {
-        // Highlight the results section; tooltip targets the follow-up header (composer)
+        // Results + below-results composer (tooltip still targets the composer)
         const resultsSection = document.querySelector('.results-section') as HTMLElement
-        if (resultsSection) {
-          setHighlightedElements([resultsSection])
-        } else {
-          setHighlightedElements([])
-        }
-        element = document.querySelector(config.targetSelector) as HTMLElement
+        const composerElement = getComposerElement()
+        const both: HTMLElement[] = []
+        if (resultsSection) both.push(resultsSection)
+        if (composerElement) both.push(composerElement)
+        setHighlightedElements(both)
+        element = composerElement
       } else {
         // Use default selector for other steps
         element = document.querySelector(config.targetSelector) as HTMLElement
@@ -545,7 +547,7 @@ export function useTutorialOverlay(step: TutorialStep | null, isLoading: boolean
           // For enter-prompt steps, DON'T set visible here — the scroll effect
           // controls visibility and will show the tooltip after scrolling completes.
           // Setting it here causes a brief flash at the wrong position.
-          if (step !== 'enter-prompt' && step !== 'enter-prompt-2') {
+          if (step !== 'enter-prompt' && step !== 'enter-prompt-2' && step !== 'follow-up') {
             setIsVisible(true)
           }
           return true
@@ -639,14 +641,14 @@ export function useTutorialOverlay(step: TutorialStep | null, isLoading: boolean
       const scrollTarget = getScrollTargetForStep(step, targetElement)
 
       // Scroll smoothly without affecting hero section layout
-      // For step 3 (enter-prompt) and step 6 (enter-prompt-2), use slower, smoother scrolling
+      // For step 3, 5, and 6, use slower custom scrolling so the transition feels intentional
       const scrollOptions: ScrollToOptions = {
         top: Math.max(0, scrollTarget),
         behavior: 'smooth',
         left: window.pageXOffset, // Keep horizontal position
       }
 
-      if (step === 'enter-prompt' || step === 'enter-prompt-2') {
+      if (step === 'enter-prompt' || step === 'enter-prompt-2' || step === 'follow-up') {
         // Use a custom smooth scroll implementation for slower, smoother scrolling
         const startScrollY = window.pageYOffset
         const targetScrollY = Math.max(0, scrollTarget)
@@ -655,7 +657,7 @@ export function useTutorialOverlay(step: TutorialStep | null, isLoading: boolean
         // Mark that we're starting a programmatic scroll
         isScrollingRef.current = true
 
-        const duration = 900 // Faster smooth scroll for prompt steps
+        const duration = step === 'follow-up' ? 750 : 900 // Slightly quicker when jumping to below-results composer
         const startTime = performance.now()
 
         // Ease-in-out cubic function for smooth animation
@@ -697,9 +699,11 @@ export function useTutorialOverlay(step: TutorialStep | null, isLoading: boolean
     const rect = targetElement.getBoundingClientRect()
     const isTargetOffscreen = rect.bottom < 0 || rect.top > window.innerHeight
     const isEnterPromptStep = step === 'enter-prompt' || step === 'enter-prompt-2'
-    // Delay reveal for dropdown steps when target is offscreen, or ALWAYS for enter-prompt steps
-    // (enter-prompt needs scroll to position the composer correctly with room for tooltip above)
-    const shouldDelayReveal = (isDropdownStep && isTargetOffscreen) || isEnterPromptStep
+    const isFollowUpStep = step === 'follow-up'
+    // Delay reveal for dropdown steps when target is offscreen, or for steps that smooth-scroll
+    // to the composer before showing the tooltip.
+    const shouldDelayReveal =
+      (isDropdownStep && isTargetOffscreen) || isEnterPromptStep || isFollowUpStep
 
     if (shouldDelayReveal) {
       setIsVisible(false)
@@ -735,13 +739,16 @@ export function useTutorialOverlay(step: TutorialStep | null, isLoading: boolean
 
     // Small delay to ensure hero is locked, then scroll
     // For enter-prompt steps, keep a brief delay for layout expansion without feeling sluggish
-    const scrollDelay = step === 'enter-prompt' || step === 'enter-prompt-2' ? 150 : 100
+    const scrollDelay =
+      step === 'enter-prompt' || step === 'enter-prompt-2' ? 150 : step === 'follow-up' ? 220 : 100
     scrollDelayTimer = setTimeout(() => {
       scrollDelayTimer = null
       const shouldSkipScroll =
-        (step === 'enter-prompt' || step === 'enter-prompt-2') && initialScrollCompleteRef.current
+        (step === 'enter-prompt' || step === 'enter-prompt-2' || step === 'follow-up') &&
+        initialScrollCompleteRef.current
 
-      const isCustomScrollStep = step === 'enter-prompt' || step === 'enter-prompt-2'
+      const isCustomScrollStep =
+        step === 'enter-prompt' || step === 'enter-prompt-2' || step === 'follow-up'
       const waitForScroll =
         shouldDelayReveal && !shouldSkipScroll
           ? isCustomScrollStep
@@ -802,7 +809,10 @@ export function useTutorialOverlay(step: TutorialStep | null, isLoading: boolean
     // For step 3 (enter-prompt), prevent updatePosition from running during programmatic scroll
     // to avoid triggering additional scroll adjustments
     const handleScroll = () => {
-      if ((step === 'enter-prompt' || step === 'enter-prompt-2') && isScrollingRef.current) {
+      if (
+        (step === 'enter-prompt' || step === 'enter-prompt-2' || step === 'follow-up') &&
+        isScrollingRef.current
+      ) {
         // Skip position updates during programmatic scroll for step 3
         return
       }
@@ -883,12 +893,14 @@ export function useTutorialOverlay(step: TutorialStep | null, isLoading: boolean
       if (composerElement) {
         elementsToHighlight = [composerElement]
       }
-    } else if (
-      step === 'submit-comparison-2' ||
-      step === 'follow-up' ||
-      step === 'view-follow-up-results'
-    ) {
-      // Highlight the Comparison Results card or loading section for submit steps, follow-up step, and view-follow-up-results step
+    } else if (step === 'follow-up') {
+      const resultsSection = document.querySelector('.results-section') as HTMLElement
+      const composerElement = getComposerElement()
+      elementsToHighlight = []
+      if (resultsSection) elementsToHighlight.push(resultsSection)
+      if (composerElement) elementsToHighlight.push(composerElement)
+    } else if (step === 'submit-comparison-2' || step === 'view-follow-up-results') {
+      // Highlight the Comparison Results card or loading section
       const resultsSection = document.querySelector('.results-section') as HTMLElement
       const loadingSection = document.querySelector('.loading-section') as HTMLElement
       elementsToHighlight = []
@@ -909,7 +921,8 @@ export function useTutorialOverlay(step: TutorialStep | null, isLoading: boolean
       step === 'enter-prompt' ||
       step === 'submit-comparison' ||
       step === 'submit-comparison-2' ||
-      step === 'enter-prompt-2'
+      step === 'enter-prompt-2' ||
+      step === 'follow-up'
     let composerElement: HTMLElement | null = null
     if (shouldExcludeTextarea) {
       composerElement = getComposerElement()
@@ -1374,6 +1387,37 @@ export function useTutorialOverlay(step: TutorialStep | null, isLoading: boolean
       const resultsSection = document.querySelector('.results-section') as HTMLElement
       const loadingSection = document.querySelector('.loading-section') as HTMLElement
 
+      if (step === 'follow-up') {
+        if (loadingSection) {
+          loadingSection.classList.remove('tutorial-highlight')
+          loadingSection.style.pointerEvents = ''
+          loadingSection.style.position = ''
+        }
+        if (resultsSection && !resultsSection.classList.contains('tutorial-highlight')) {
+          resultsSection.classList.add('tutorial-highlight')
+          resultsSection.style.pointerEvents = 'auto'
+          resultsSection.style.position = 'relative'
+        }
+        const composerElement = getComposerElement()
+        if (composerElement) {
+          composerElement.classList.add('tutorial-highlight')
+          composerElement.classList.add('tutorial-textarea-active')
+          composerElement.style.pointerEvents = 'auto'
+          composerElement.style.position = 'relative'
+          const cutout = computeTextareaCutout(composerElement)
+          if (cutout) {
+            cutout.top += window.scrollY
+            cutout.left += window.scrollX
+          }
+          setTextareaCutout(cutout)
+          setTargetElement(composerElement)
+          if (initialScrollCompleteRef.current) {
+            setIsVisible(true)
+          }
+        }
+        return
+      }
+
       // Highlight loading section if it exists (appears after submit, before results)
       if (loadingSection && !loadingSection.classList.contains('tutorial-highlight')) {
         loadingSection.classList.add('tutorial-highlight')
@@ -1417,17 +1461,7 @@ export function useTutorialOverlay(step: TutorialStep | null, isLoading: boolean
           setTargetElement(submitButton)
           setIsVisible(true)
         }
-      }
-      // For follow-up step, target the composer follow-up header
-      else if (step === 'follow-up') {
-        const followUpHeader = document.querySelector('.follow-up-header') as HTMLElement
-        if (followUpHeader) {
-          setTargetElement(followUpHeader)
-          setIsVisible(true)
-        }
-      }
-      // For view-follow-up-results step, target the results section
-      else if (step === 'view-follow-up-results') {
+      } else if (step === 'view-follow-up-results') {
         if (resultsSection) {
           setTargetElement(resultsSection)
           setIsVisible(true)
@@ -1460,7 +1494,7 @@ export function useTutorialOverlay(step: TutorialStep | null, isLoading: boolean
       // BUT skip if transitioning to enter-prompt-2 (step 6) so the composer highlight
       // is preserved and doesn't flash/reset between steps.
       const nextStep = stepRef.current
-      if (nextStep !== 'enter-prompt-2') {
+      if (nextStep !== 'enter-prompt-2' && nextStep !== 'follow-up') {
         const composerElement = getComposerElement()
         if (composerElement) {
           composerElement.classList.remove('tutorial-textarea-active')
@@ -1753,7 +1787,8 @@ export function useTutorialOverlay(step: TutorialStep | null, isLoading: boolean
       step === 'enter-prompt' ||
       step === 'submit-comparison' ||
       step === 'enter-prompt-2' ||
-      step === 'submit-comparison-2'
+      step === 'submit-comparison-2' ||
+      step === 'follow-up'
     if (!shouldExcludeTextarea) return
 
     const updateTextareaCutout = () => {
@@ -1844,10 +1879,10 @@ export function useTutorialOverlay(step: TutorialStep | null, isLoading: boolean
       const isProviderStep = step === 'expand-provider' || step === 'select-models'
       /* Concentric outer radius: element radius + cutout padding (8px). */
       const borderRadius =
-        step === 'follow-up' || step === 'view-follow-up-results'
-          ? 24 /* --radius-2xl (16px) + 8 */
-          : isSubmitStep
-            ? 32
+        step === 'view-follow-up-results'
+          ? 24 /* results card */
+          : step === 'follow-up' || isSubmitStep
+            ? 32 /* composer (match step 3–4) */
             : isProviderStep
               ? 20 /* --radius-xl (12px) + 8 */
               : 12

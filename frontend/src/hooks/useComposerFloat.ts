@@ -21,7 +21,16 @@ const ROOT_MARGIN_BOTTOM = '80px' // Require hero to be 80px from bottom before 
 const FLOAT_THRESHOLD = 0.08
 const RETURN_THRESHOLD = 0.22
 
-export function useComposerFloat(showResults: boolean, tutorialIsActive: boolean): boolean {
+/**
+ * @param eligibleForBelowResultsComposer When true (e.g. follow-up with responses), the composer
+ *   mounts in `[data-after-results-composer-slot]` below the results section. When false, it stays in the hero.
+ * @param tutorialIsActive When true, scroll-based float switching is disabled — except we still honor
+ *   `eligibleForBelowResultsComposer` so onboarding step 5 can target the real follow-up composer.
+ */
+export function useComposerFloat(
+  eligibleForBelowResultsComposer: boolean,
+  tutorialIsActive: boolean
+): boolean {
   const [composerFloating, setComposerFloating] = useState(false)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const floatingRef = useRef(composerFloating)
@@ -29,12 +38,21 @@ export function useComposerFloat(showResults: boolean, tutorialIsActive: boolean
   floatingRef.current = composerFloating
 
   useEffect(() => {
-    if (!showResults || tutorialIsActive) {
+    if (!eligibleForBelowResultsComposer) {
       setComposerFloating(false)
       if (debounceRef.current) {
         clearTimeout(debounceRef.current)
         debounceRef.current = null
       }
+      return
+    }
+
+    if (tutorialIsActive) {
+      if (debounceRef.current) {
+        clearTimeout(debounceRef.current)
+        debounceRef.current = null
+      }
+      setComposerFloating(true)
       return
     }
 
@@ -89,7 +107,7 @@ export function useComposerFloat(showResults: boolean, tutorialIsActive: boolean
         debounceRef.current = null
       }
     }
-  }, [showResults, tutorialIsActive])
+  }, [eligibleForBelowResultsComposer, tutorialIsActive])
 
   return composerFloating
 }

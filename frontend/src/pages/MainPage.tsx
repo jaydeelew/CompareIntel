@@ -2584,6 +2584,7 @@ export function MainPage() {
             showWelcomeModal={showWelcomeModal}
             setShowWelcomeModal={setShowWelcomeModal}
             isAuthenticated={isAuthenticated}
+            user={user}
             resetAppStateForTutorial={resetAppStateForTutorial}
             startTutorial={startTutorial}
             skipTutorial={skipTutorial}

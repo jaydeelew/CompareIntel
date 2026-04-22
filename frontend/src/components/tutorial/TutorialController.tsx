@@ -114,7 +114,7 @@ export const TutorialController: React.FC<TutorialControllerProps> = ({
       onProviderExpanded?.()
     }
 
-    // Select models completion (both Google models selected)
+    // Select models completion (two selectable Google models selected)
     if (
       currentStep === 'select-models' &&
       googleModelsSelected &&

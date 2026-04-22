@@ -1,5 +1,7 @@
 import type { TutorialState, TutorialStep } from '../../hooks/useTutorial'
+import type { User } from '../../types'
 import type { ModelsByProvider } from '../../types/models'
+import { countSelectableGoogleModelsInSelection } from '../../utils/modelTierAccess'
 
 import { MobileTutorialController } from './MobileTutorialController'
 import { TutorialController } from './TutorialController'
@@ -9,6 +11,7 @@ interface TutorialManagerProps {
   showWelcomeModal: boolean
   setShowWelcomeModal: (value: boolean) => void
   isAuthenticated: boolean
+  user: User | null
   resetAppStateForTutorial: () => void
   startTutorial: () => void
   skipTutorial: () => void
@@ -38,6 +41,7 @@ export function TutorialManager({
   showWelcomeModal,
   setShowWelcomeModal,
   isAuthenticated,
+  user,
   resetAppStateForTutorial,
   startTutorial,
   skipTutorial,
@@ -62,8 +66,13 @@ export function TutorialManager({
   onTutorialWelcomeSkipped,
 }: TutorialManagerProps) {
   const googleProviderExpanded = 'Google' in modelsByProvider && openDropdowns.has('Google')
-  const googleModelIds = ['google/gemini-2.0-flash-001', 'google/gemini-2.5-flash']
-  const googleModelsSelected = googleModelIds.every(modelId => selectedModels.includes(modelId))
+  const selectableGoogleSelectedCount = countSelectableGoogleModelsInSelection(
+    selectedModels,
+    modelsByProvider,
+    isAuthenticated,
+    user
+  )
+  const googleModelsSelected = selectableGoogleSelectedCount >= 2
 
   return (
     <>

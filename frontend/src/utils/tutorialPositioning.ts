@@ -116,11 +116,40 @@ export function computeTooltipPosition(
   const isTopSteps =
     (step === 'expand-provider' ||
       step === 'select-models' ||
-      step === 'follow-up' ||
       step === 'view-follow-up-results' ||
       step === 'history-dropdown' ||
       step === 'save-selection') &&
     config.position === 'top'
+
+  // Step 5: tooltip above the composer — leave enough clearance so the down-arrow reads between
+  // the tooltip and the composer (not sandwiched on the highlight rings).
+  if (step === 'follow-up' && config.position === 'top') {
+    const followUpGap = 18
+    const left = rect.left + rect.width / 2
+    const spaceAbove = rect.top
+    const minSpaceNeeded = estimatedTooltipHeight + followUpGap + 40
+    const hasEnoughSpaceAbove = spaceAbove >= minSpaceNeeded
+    let top: number
+    if (hasEnoughSpaceAbove) {
+      top = rect.top - followUpGap
+      const tooltipTopEdge = top - estimatedTooltipHeight
+      if (tooltipTopEdge < MARGIN) {
+        top = MARGIN + estimatedTooltipHeight
+      }
+      return {
+        top,
+        left: Math.max(200, Math.min(left, window.innerWidth - 200)),
+        effectivePosition: 'top',
+      }
+    }
+    top = rect.bottom + offset
+    top = Math.min(top, viewportHeight - estimatedTooltipHeight - MARGIN)
+    return {
+      top,
+      left: Math.max(200, Math.min(left, window.innerWidth - 200)),
+      effectivePosition: 'bottom',
+    }
+  }
 
   if (isEnterPromptStep) {
     let top = rect.bottom + offset
@@ -208,6 +237,7 @@ export function getScrollTargetForStep(step: TutorialStep, targetElement: HTMLEl
   }
   if (step === 'follow-up' || step === 'view-follow-up-results') {
     const desiredElementTopInViewport = TOP_MARGIN + tooltipOffset + estimatedTooltipHeight
+    // follow-up targets the composer below results so the arrow lands on the textarea chrome
     return window.pageYOffset + rect.top - desiredElementTopInViewport
   }
   if (step === 'enter-prompt' || step === 'enter-prompt-2') {
@@ -266,9 +296,11 @@ export function findTargetForStep(
     element = document.querySelector('.results-section') as HTMLElement | null
     if (element) highlights = [element]
   } else if (step === 'follow-up') {
-    const resultsSection = document.querySelector('.results-section') as HTMLElement
-    if (resultsSection) highlights = [resultsSection]
-    element = document.querySelector(config.targetSelector) as HTMLElement | null
+    element = getComposerElement()
+    const resultsSection = document.querySelector('.results-section') as HTMLElement | null
+    highlights = []
+    if (resultsSection) highlights.push(resultsSection)
+    if (element) highlights.push(element)
   } else {
     element = document.querySelector(config.targetSelector) as HTMLElement | null
   }

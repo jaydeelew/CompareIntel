@@ -54,9 +54,8 @@ const MOBILE_STEP_OVERRIDES: Partial<
     position: 'top', // Show above textarea initially on mobile
   },
   'follow-up': {
-    position: 'top', // Show above the composer heading; results stay visible below
-    description:
-      'Review the results in the tabs below. The composer is already in follow-up mode—type your next message there.',
+    position: 'top', // Tooltip above the follow-up header below the results
+    description: 'Review the comparison above and enter your follow-up here.',
   },
   'view-follow-up-results': {
     position: 'top', // Show above the results section with pointer arrow
@@ -304,6 +303,8 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
         }
       } else if (step === 'view-follow-up-results') {
         element = document.querySelector('.results-section') as HTMLElement
+      } else if (step === 'follow-up') {
+        element = getComposerElement()
       } else {
         element = document.querySelector(config.targetSelector) as HTMLElement
       }
@@ -356,16 +357,32 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
     setTargetRect(newTargetRect)
 
     if (step === 'follow-up') {
-      const resultsSection = document.querySelector('.results-section') as HTMLElement
-      if (resultsSection) {
-        const resultsRect = resultsSection.getBoundingClientRect()
+      const resultsSection = document.querySelector('.results-section') as HTMLElement | null
+      const composer = getComposerElement()
+      const rects: DOMRect[] = []
+      if (resultsSection) rects.push(resultsSection.getBoundingClientRect())
+      if (composer) {
+        const inputWrapper = composer.querySelector('.composer-input-wrapper') as HTMLElement | null
+        const toolbar = composer.querySelector('.composer-toolbar') as HTMLElement | null
+        const parts = [inputWrapper, toolbar].filter(Boolean) as HTMLElement[]
+        for (const el of parts.length > 0 ? parts : [composer]) {
+          rects.push(el.getBoundingClientRect())
+        }
+      }
+      if (rects.length > 0) {
+        const minTop = Math.min(...rects.map(r => r.top))
+        const minLeft = Math.min(...rects.map(r => r.left))
+        const maxRight = Math.max(...rects.map(r => r.right))
+        const maxBottom = Math.max(...rects.map(r => r.bottom))
+        const width = maxRight - minLeft
+        const height = maxBottom - minTop
         setBackdropRect({
-          top: resultsRect.top,
-          left: resultsRect.left,
-          width: resultsRect.width,
-          height: resultsRect.height,
-          centerX: resultsRect.left + resultsRect.width / 2,
-          centerY: resultsRect.top + resultsRect.height / 2,
+          top: minTop,
+          left: minLeft,
+          width,
+          height,
+          centerX: minLeft + width / 2,
+          centerY: minTop + height / 2,
         })
       } else {
         setBackdropRect(null)
@@ -478,10 +495,8 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
     let arrowDirection: 'up' | 'down' | 'left' | 'right' = 'up'
     let arrowOffset = 50 // Default to center
 
-    if (step === 'follow-up' || step === 'view-follow-up-results') {
-      // Never overlap model tabs/messages. Generic placement can put the tooltip below the button or
-      // centered, and the viewport clamp can shove it down — all of that covers the results body.
-      // Step 5 targets the follow-up button; step 8 targets the full results section — same math.
+    if (step === 'view-follow-up-results') {
+      // Never overlap model tabs/messages.
       const tabsContainer = document.querySelector('.results-tabs-container') as HTMLElement | null
       const conversationEl = document.querySelector('.conversation-content') as HTMLElement | null
       const resultsGrid = document.querySelector('.results-grid') as HTMLElement | null
@@ -498,17 +513,22 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
       }
 
       const gap = 10
-      // Entire tooltip (measured height includes bubble + arrow) must sit above the model-results body
       const maxTooltipTop = bodyTop - gap - tooltipHeight
       tooltipTop = rect.top - tooltipHeight - arrowSize - 8
       tooltipTop -= followUpConversationScrollTop
       tooltipTop = Math.min(tooltipTop, maxTooltipTop)
       arrowDirection = 'down'
 
-      // Prefer viewport top padding only if it doesn't push the tooltip into the results area
       if (tooltipTop < padding && padding + tooltipHeight <= bodyTop - gap) {
         tooltipTop = padding
       }
+    } else if (step === 'follow-up') {
+      // Step 5: extra gap so the arrow sits visibly between tooltip and composer
+      const arrowTipGap = 18
+      tooltipTop = rect.top - tooltipHeight - arrowSize - arrowTipGap
+      tooltipTop -= followUpConversationScrollTop
+      tooltipTop = Math.max(padding, Math.min(tooltipTop, viewportHeight - tooltipHeight - padding))
+      arrowDirection = 'down'
     } else {
       // Determine vertical position (above or below target)
       const spaceAbove = rect.top
@@ -731,26 +751,27 @@ const MobileTutorialOverlay: React.FC<MobileTutorialOverlayProps> = ({
     targetElement.classList.add('mobile-tutorial-highlight')
 
     // Add button pulsate when tooltip says "Tap the highlighted button"
-    if (step === 'submit-comparison' || step === 'follow-up' || step === 'submit-comparison-2') {
+    if (step === 'submit-comparison' || step === 'submit-comparison-2') {
       targetElement.classList.add('mobile-tutorial-button-pulsate')
     }
 
-    // For follow-up (step 5) and view-follow-up-results (step 8), highlight the full results section and add pulsing to model tabs
+    // Step 5 & 8: highlight the results section; step 8 also pulses model tabs
     const resultsSection =
       step === 'follow-up' || step === 'view-follow-up-results'
         ? (document.querySelector('.results-section') as HTMLElement)
         : null
     if (resultsSection) {
       resultsSection.classList.add('mobile-tutorial-highlight')
-      // Add pulsing effect to model results tabs to draw attention
-      const tabsHeader = document.querySelector('.results-tabs-header') as HTMLElement
-      if (tabsHeader) {
-        tabsHeader.classList.add('mobile-tutorial-tabs-pulse')
+      if (step === 'view-follow-up-results') {
+        const tabsHeader = document.querySelector('.results-tabs-header') as HTMLElement
+        if (tabsHeader) {
+          tabsHeader.classList.add('mobile-tutorial-tabs-pulse')
+        }
       }
     }
 
-    // For submit steps, highlight the composer container too (match step 3's visual emphasis)
-    if (step === 'submit-comparison' || step === 'submit-comparison-2') {
+    // For submit steps and step 5, highlight the composer (match step 3)
+    if (step === 'submit-comparison' || step === 'submit-comparison-2' || step === 'follow-up') {
       const composer = getComposerElement()
       if (composer) {
         composer.classList.add('mobile-tutorial-highlight')

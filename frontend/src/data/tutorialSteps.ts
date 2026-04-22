@@ -21,7 +21,7 @@ export const TUTORIAL_STEPS_CONFIG: Record<TutorialStep, StepConfig> = {
     step: 'select-models',
     targetSelector: '.provider-dropdown[data-provider-name="Google"]',
     title: 'Select Models',
-    description: 'Click on the Google models in bold to select them for comparison.',
+    description: 'Select any two Google models from the list to compare them.',
     position: 'top',
   },
   'enter-prompt': {
@@ -40,10 +40,9 @@ export const TUTORIAL_STEPS_CONFIG: Record<TutorialStep, StepConfig> = {
   },
   'follow-up': {
     step: 'follow-up',
-    targetSelector: '.follow-up-header',
+    targetSelector: '[data-after-results-composer-slot] .composer:not(.composer-placeholder)',
     title: 'Continue the Conversation',
-    description:
-      'Review the results. The composer switches to follow-up mode automatically—type your next message below.',
+    description: 'Review the comparison above and enter your follow-up here.',
     position: 'top',
   },
   'enter-prompt-2': {

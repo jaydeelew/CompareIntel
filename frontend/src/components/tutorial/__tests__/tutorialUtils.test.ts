@@ -4,7 +4,11 @@
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 
-import { getComposerElement, getComposerCutoutRects } from '../tutorialUtils'
+import {
+  getComposerElement,
+  getComposerCutoutRects,
+  getFollowUpTutorialHeaderElement,
+} from '../tutorialUtils'
 
 describe('tutorialUtils', () => {
   let container: HTMLDivElement
@@ -67,6 +71,21 @@ describe('tutorialUtils', () => {
       expect(getComposerElement()).toBe(composer)
     })
 
+    it('prefers composer inside after-results slot when present (follow-up layout)', () => {
+      const heroComposer = document.createElement('div')
+      heroComposer.className = 'composer'
+      container.appendChild(heroComposer)
+
+      const slot = document.createElement('div')
+      slot.setAttribute('data-after-results-composer-slot', '')
+      const belowComposer = document.createElement('div')
+      belowComposer.className = 'composer'
+      slot.appendChild(belowComposer)
+      container.appendChild(slot)
+
+      expect(getComposerElement()).toBe(belowComposer)
+    })
+
     it('should return visible composer when placeholder exists (floating scenario)', () => {
       // When composer floats, hero has invisible placeholder and portal has real composer
       const placeholder = document.createElement('div')
@@ -87,6 +106,28 @@ describe('tutorialUtils', () => {
       // Should return the visible composer, not the placeholder
       expect(getComposerElement()).toBe(realComposer)
       expect(getComposerElement()).not.toBe(placeholder)
+    })
+  })
+
+  describe('getFollowUpTutorialHeaderElement', () => {
+    it('prefers follow-up header inside after-results slot', () => {
+      const mirrorHeader = document.createElement('div')
+      mirrorHeader.className = 'follow-up-header'
+      const mirror = document.createElement('div')
+      mirror.className = 'composer-hero-mirror'
+      mirror.appendChild(mirrorHeader)
+      container.appendChild(mirror)
+
+      const slot = document.createElement('div')
+      slot.setAttribute('data-after-results-composer-slot', '')
+      const realHeader = document.createElement('div')
+      realHeader.className = 'follow-up-header'
+      Object.defineProperty(realHeader, 'offsetWidth', { value: 1, configurable: true })
+      Object.defineProperty(realHeader, 'offsetHeight', { value: 1, configurable: true })
+      slot.appendChild(realHeader)
+      container.appendChild(slot)
+
+      expect(getFollowUpTutorialHeaderElement()).toBe(realHeader)
     })
   })
 
