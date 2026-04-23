@@ -29,6 +29,27 @@ interface HTMLElementWithTutorialProps extends HTMLElement {
   __tutorialHeightInterval?: number
 }
 
+const SCROLL_CAPTURE_OPTS: AddEventListenerOptions = { capture: true, passive: true }
+
+/** Re-run layout reads once per frame on scroll/resize (including nested scroll containers). */
+function attachScrollResizeRaf(update: () => void): () => void {
+  let raf: number | null = null
+  const schedule = () => {
+    if (raf != null) return
+    raf = requestAnimationFrame(() => {
+      raf = null
+      update()
+    })
+  }
+  document.addEventListener('scroll', schedule, SCROLL_CAPTURE_OPTS)
+  window.addEventListener('resize', schedule)
+  return () => {
+    if (raf != null) cancelAnimationFrame(raf)
+    document.removeEventListener('scroll', schedule, SCROLL_CAPTURE_OPTS)
+    window.removeEventListener('resize', schedule)
+  }
+}
+
 function useTutorialOverlay(
   step: TutorialStep | null,
   isLoading: boolean,
@@ -1004,7 +1025,8 @@ function useTutorialOverlay(
       step === 'enter-prompt-2' ||
       step === 'follow-up'
     let composerElement: HTMLElement | null = null
-    if (shouldExcludeTextarea) {
+    // Step 5 (follow-up): dual-hole backdrop syncs textarea + target cutouts in one pass (see dedicated effect).
+    if (shouldExcludeTextarea && step !== 'follow-up') {
       composerElement = getComposerElement()
       const cutout = composerElement ? computeTextareaCutout(composerElement) : null
       if (cutout) {
@@ -1012,7 +1034,7 @@ function useTutorialOverlay(
         cutout.left += window.scrollX
       }
       setTextareaCutout(cutout)
-    } else if (!isDropdownStep) {
+    } else if (!isDropdownStep && step !== 'follow-up') {
       // Only clear textarea cutout if we're not on a dropdown step
       setTextareaCutout(null)
     }
@@ -1226,10 +1248,13 @@ function useTutorialOverlay(
     // Check immediately
     ensureHighlightVisibilityAndPosition()
 
+    const detachScrollResize = attachScrollResizeRaf(ensureHighlightVisibilityAndPosition)
+
     // Check periodically to maintain highlight, visibility, and position
     const interval = setInterval(ensureHighlightVisibilityAndPosition, 100)
 
     return () => {
+      detachScrollResize()
       clearInterval(interval)
       // Clean up highlight when leaving this step
       const googleDropdown = document.querySelector(
@@ -1301,10 +1326,13 @@ function useTutorialOverlay(
     // Check immediately
     ensureHighlightVisibilityAndPosition()
 
+    const detachScrollResize = attachScrollResizeRaf(ensureHighlightVisibilityAndPosition)
+
     // Check periodically to maintain highlight, visibility, and position
     const interval = setInterval(ensureHighlightVisibilityAndPosition, 100)
 
     return () => {
+      detachScrollResize()
       clearInterval(interval)
       // Clean up highlight when leaving this step
       const googleDropdown = document.querySelector(
@@ -1362,6 +1390,8 @@ function useTutorialOverlay(
     // Run immediately to set up highlight and cutout
     ensureHighlightAndCutout()
 
+    const detachScrollResize = attachScrollResizeRaf(ensureHighlightAndCutout)
+
     // Also run after a brief delay to handle any cleanup that might run after this effect
     const initialTimeout = setTimeout(ensureHighlightAndCutout, 50)
 
@@ -1369,6 +1399,7 @@ function useTutorialOverlay(
     const interval = setInterval(ensureHighlightAndCutout, 100)
 
     return () => {
+      detachScrollResize()
       clearTimeout(initialTimeout)
       clearInterval(interval)
       if (stepRef.current === 'submit-comparison') return
@@ -1423,6 +1454,8 @@ function useTutorialOverlay(
     // Run immediately to set up highlight and cutout
     ensureHighlightAndCutout()
 
+    const detachScrollResize = attachScrollResizeRaf(ensureHighlightAndCutout)
+
     // Also run after a brief delay to handle any cleanup that might run after this effect
     const initialTimeout = setTimeout(ensureHighlightAndCutout, 50)
 
@@ -1430,6 +1463,7 @@ function useTutorialOverlay(
     const interval = setInterval(ensureHighlightAndCutout, 100)
 
     return () => {
+      detachScrollResize()
       clearTimeout(initialTimeout)
       clearInterval(interval)
       if (stepRef.current === 'submit-comparison-2') return
@@ -1497,12 +1531,7 @@ function useTutorialOverlay(
             mirrorComposer.classList.add('tutorial-highlight')
             mirrorComposer.style.position = 'relative'
           }
-          const cutout = computeTextareaCutout(composerElement)
-          if (cutout) {
-            cutout.top += window.scrollY
-            cutout.left += window.scrollX
-          }
-          setTextareaCutout(cutout)
+          // Backdrop holes (results + composer rings): updated atomically by follow-up backdrop sync effect.
           // Do not call setTargetElement(composer) here — remounts retriggered the scroll effect.
           if (initialScrollCompleteRef.current) {
             setIsVisible(true)
@@ -1588,10 +1617,13 @@ function useTutorialOverlay(
     // Check immediately
     ensureHighlightCutoutAndVisibility()
 
+    const detachScrollResize = attachScrollResizeRaf(ensureHighlightCutoutAndVisibility)
+
     // Check periodically to maintain highlight, cutout, and visibility
     const interval = setInterval(ensureHighlightCutoutAndVisibility, 200)
 
     return () => {
+      detachScrollResize()
       clearInterval(interval)
       const resultsSection = document.querySelector('.results-section') as HTMLElement
       const loadingSection = document.querySelector('.loading-section') as HTMLElement
@@ -1716,10 +1748,13 @@ function useTutorialOverlay(
 
     updateLoadingStreamingCutout()
 
+    const detachScrollResize = attachScrollResizeRaf(updateLoadingStreamingCutout)
+
     // Update periodically to catch when results section appears and to keep cutout position current
     const interval = setInterval(updateLoadingStreamingCutout, 100)
 
     return () => {
+      detachScrollResize()
       clearInterval(interval)
       setLoadingStreamingCutout(null)
     }
@@ -1939,8 +1974,7 @@ function useTutorialOverlay(
       step === 'enter-prompt' ||
       step === 'submit-comparison' ||
       step === 'enter-prompt-2' ||
-      step === 'submit-comparison-2' ||
-      step === 'follow-up'
+      step === 'submit-comparison-2'
     if (!shouldExcludeTextarea) return
 
     const updateTextareaCutout = () => {
@@ -1955,11 +1989,11 @@ function useTutorialOverlay(
 
     updateTextareaCutout()
 
-    window.addEventListener('resize', updateTextareaCutout)
+    const detachScrollResize = attachScrollResizeRaf(updateTextareaCutout)
     const interval = setInterval(updateTextareaCutout, 100)
 
     return () => {
-      window.removeEventListener('resize', updateTextareaCutout)
+      detachScrollResize()
       clearInterval(interval)
     }
   }, [step, targetElement])
@@ -1989,11 +2023,58 @@ function useTutorialOverlay(
 
     updateDropdownCutout()
 
-    window.addEventListener('resize', updateDropdownCutout)
+    const detachScrollResize = attachScrollResizeRaf(updateDropdownCutout)
     const interval = setInterval(updateDropdownCutout, 100)
 
     return () => {
-      window.removeEventListener('resize', updateDropdownCutout)
+      detachScrollResize()
+      clearInterval(interval)
+    }
+  }, [step])
+
+  // Step 5 (follow-up): keep results + composer backdrop holes in lockstep. Previously, separate
+  // effects/rAF callbacks updated targetCutout vs textareaCutout one after another, so fast scroll
+  // could paint mismatched rings. Use one DOM read + batched setState; composer ring uses the full
+  // composer (header + input) to match .tutorial-highlight, not only input-wrapper/toolbar rects.
+  useEffect(() => {
+    if (step !== 'follow-up') return
+
+    const syncFollowUpBackdropCutouts = () => {
+      if (stepRef.current !== 'follow-up') return
+      const resultsSection = document.querySelector('.results-section') as HTMLElement | null
+      const composerElement = getComposerElement()
+
+      const targetCut = resultsSection != null ? computeTargetCutout([resultsSection], 8, 24) : null
+      if (targetCut) {
+        targetCut.top += window.scrollY
+        targetCut.left += window.scrollX
+      }
+
+      const composerCutFull =
+        composerElement != null ? computeTargetCutout([composerElement], 8, 32) : null
+      if (composerCutFull) {
+        composerCutFull.top += window.scrollY
+        composerCutFull.left += window.scrollX
+      }
+      const composerCutRect = composerCutFull
+        ? {
+            top: composerCutFull.top,
+            left: composerCutFull.left,
+            width: composerCutFull.width,
+            height: composerCutFull.height,
+          }
+        : null
+
+      setTargetCutout(targetCut)
+      setTextareaCutout(composerCutRect)
+    }
+
+    syncFollowUpBackdropCutouts()
+    const detachScrollResize = attachScrollResizeRaf(syncFollowUpBackdropCutouts)
+    const interval = setInterval(syncFollowUpBackdropCutouts, 100)
+
+    return () => {
+      detachScrollResize()
       clearInterval(interval)
     }
   }, [step])
@@ -2002,10 +2083,7 @@ function useTutorialOverlay(
   // Uses document-relative (absolute) coordinates so it scrolls with the page.
   useEffect(() => {
     const needsTargetCutout =
-      step === 'expand-provider' ||
-      step === 'select-models' ||
-      step === 'follow-up' ||
-      step === 'view-follow-up-results'
+      step === 'expand-provider' || step === 'select-models' || step === 'view-follow-up-results'
 
     const isSubmitStep = step === 'submit-comparison' || step === 'submit-comparison-2'
 
@@ -2031,7 +2109,7 @@ function useTutorialOverlay(
       const isProviderStep = step === 'expand-provider' || step === 'select-models'
       /* Concentric outer radius: element radius + cutout padding (8px). */
       const borderRadius =
-        step === 'view-follow-up-results' || step === 'follow-up'
+        step === 'view-follow-up-results'
           ? 24 /* results area */
           : isSubmitStep
             ? 32 /* composer (match step 3–4) */
@@ -2048,11 +2126,11 @@ function useTutorialOverlay(
 
     updateTargetCutout()
 
-    window.addEventListener('resize', updateTargetCutout)
+    const detachScrollResize = attachScrollResizeRaf(updateTargetCutout)
     const interval = setInterval(updateTargetCutout, 100)
 
     return () => {
-      window.removeEventListener('resize', updateTargetCutout)
+      detachScrollResize()
       clearInterval(interval)
     }
   }, [step, highlightedElements, targetElement])
