@@ -122,7 +122,11 @@ export function computeTooltipPosition(
 
   // Step 6: tooltip above or below the results section — never over the center
   if (step === 'view-follow-up-results' && config.position === 'top') {
-    const reviewGap = 2
+    // After translate(-100%, …), `top` is the y of the tooltip box bottom. The down-arrow
+    // (TutorialOverlay.css: 8px triangle + bottom: -8px) ends ~8px below that. The tutorial
+    // pulse on .results-section is 3px + 7px outside the border box — tip should meet that
+    // outer edge (~10px above rect.top), not overlap the card: 10 + 8 = 18.
+    const reviewGap = 18
     const left = rect.left + rect.width / 2
     const clampedLeft = Math.max(200, Math.min(left, window.innerWidth - 200))
     const spaceAbove = rect.top
