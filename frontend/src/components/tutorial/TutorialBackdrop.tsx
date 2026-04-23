@@ -62,7 +62,7 @@ export const TutorialBackdrop: React.FC<TutorialBackdropProps> = ({
           width: `${loadingStreamingCutout.width}px`,
           height: `${loadingStreamingCutout.height}px`,
           borderRadius: '16px',
-          boxShadow: '0 0 0 9999px rgba(0, 0, 0, 0.6)',
+          boxShadow: 'inset 0 0 0 8px var(--accent-color), 0 0 0 9999px rgba(0, 0, 0, 0.6)',
           zIndex: 9998,
           pointerEvents: 'none',
         }}
@@ -131,6 +131,7 @@ export const TutorialBackdrop: React.FC<TutorialBackdropProps> = ({
   }
 
   if (shouldExcludeDropdown && dropdownCutout) {
+    const isDropdownTutorialStep = step === 'history-dropdown' || step === 'save-selection'
     return (
       <div
         className="tutorial-backdrop-cutout"
@@ -141,7 +142,9 @@ export const TutorialBackdrop: React.FC<TutorialBackdropProps> = ({
           width: `${dropdownCutout.width}px`,
           height: `${dropdownCutout.height}px`,
           borderRadius: '32px',
-          boxShadow: '0 0 0 9999px rgba(0, 0, 0, 0.6)',
+          boxShadow: isDropdownTutorialStep
+            ? 'inset 0 0 0 8px var(--accent-color), 0 0 0 9999px rgba(0, 0, 0, 0.6)'
+            : '0 0 0 9999px rgba(0, 0, 0, 0.6)',
           zIndex: 9998,
           pointerEvents: 'none',
         }}
@@ -150,12 +153,108 @@ export const TutorialBackdrop: React.FC<TutorialBackdropProps> = ({
     )
   }
 
+  // Step 5: two inset blue frames (results + follow-up composer) and dim elsewhere; same accent as other steps
+  if (
+    step === 'follow-up' &&
+    targetCutout &&
+    textareaCutoutToUse &&
+    !shouldExcludeTextarea &&
+    !shouldExcludeDropdown &&
+    !useRoundedCutout
+  ) {
+    const vResults = {
+      top: targetCutout.top - window.scrollY,
+      left: targetCutout.left - window.scrollX,
+      width: targetCutout.width,
+      height: targetCutout.height,
+    }
+    const vComposer = {
+      top: textareaCutoutToUse.top - window.scrollY,
+      left: textareaCutoutToUse.left - window.scrollX,
+      width: textareaCutoutToUse.width,
+      height: textareaCutoutToUse.height,
+    }
+    const brResults = targetCutout.borderRadius
+    const brComposer = 32
+    const maskId = 'tutorial-follow-up-dim-mask'
+    return (
+      <>
+        <svg
+          className="tutorial-backdrop-follow-up-dim"
+          style={{
+            position: 'fixed',
+            inset: 0,
+            width: '100%',
+            height: '100%',
+            zIndex: 9998,
+            pointerEvents: 'none',
+          }}
+          aria-hidden
+        >
+          <defs>
+            <mask id={maskId}>
+              <rect width="100%" height="100%" fill="white" />
+              <rect
+                x={vResults.left}
+                y={vResults.top}
+                width={vResults.width}
+                height={vResults.height}
+                rx={brResults}
+                ry={brResults}
+                fill="black"
+              />
+              <rect
+                x={vComposer.left}
+                y={vComposer.top}
+                width={vComposer.width}
+                height={vComposer.height}
+                rx={brComposer}
+                ry={brComposer}
+                fill="black"
+              />
+            </mask>
+          </defs>
+          <rect width="100%" height="100%" fill="rgba(0, 0, 0, 0.6)" mask={`url(#${maskId})`} />
+        </svg>
+        <div
+          className="tutorial-backdrop-cutout tutorial-backdrop-follow-up-results-ring"
+          style={{
+            position: 'fixed',
+            top: `${vResults.top}px`,
+            left: `${vResults.left}px`,
+            width: `${vResults.width}px`,
+            height: `${vResults.height}px`,
+            borderRadius: `${brResults}px`,
+            boxShadow: 'inset 0 0 0 8px var(--accent-color)',
+            zIndex: 9999,
+            pointerEvents: 'none',
+            background: 'transparent',
+          }}
+          onClick={e => handleBackdropClick(e, 'tutorial-backdrop-cutout')}
+        />
+        <div
+          className="tutorial-backdrop-cutout tutorial-backdrop-follow-up-composer-ring"
+          style={{
+            position: 'fixed',
+            top: `${vComposer.top}px`,
+            left: `${vComposer.left}px`,
+            width: `${vComposer.width}px`,
+            height: `${vComposer.height}px`,
+            borderRadius: `${brComposer}px`,
+            boxShadow: 'inset 0 0 0 8px var(--accent-color)',
+            zIndex: 9999,
+            pointerEvents: 'none',
+            background: 'transparent',
+          }}
+          onClick={e => handleBackdropClick(e, 'tutorial-backdrop-cutout')}
+        />
+      </>
+    )
+  }
+
   if (targetCutout && !shouldExcludeTextarea && !shouldExcludeDropdown && !useRoundedCutout) {
     const usesInsetBlueRing =
-      step === 'expand-provider' ||
-      step === 'select-models' ||
-      step === 'follow-up' ||
-      step === 'view-follow-up-results'
+      step === 'expand-provider' || step === 'select-models' || step === 'view-follow-up-results'
     return (
       <div
         className="tutorial-backdrop-cutout"

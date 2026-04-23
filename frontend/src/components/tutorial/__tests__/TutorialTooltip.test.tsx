@@ -127,9 +127,10 @@ describe('TutorialTooltip', () => {
         config={{
           ...mockConfig,
           step: 'view-follow-up-results',
-          targetSelector: '.results-section',
-          title: 'View Follow-Up Results',
-          description: 'Compare the follow-up responses.',
+          targetSelector:
+            '.results-section .results-section .results-grid, .results-section .results-tab-content',
+          title: 'Review the New Responses',
+          description: 'Read the latest replies from each model side by side.',
           position: 'top',
         }}
       />
@@ -147,9 +148,10 @@ describe('TutorialTooltip', () => {
         config={{
           ...mockConfig,
           step: 'view-follow-up-results',
-          targetSelector: '.results-section',
-          title: 'View Follow-Up Results',
-          description: 'Compare the follow-up responses.',
+          targetSelector:
+            '.results-section .results-section .results-grid, .results-section .results-tab-content',
+          title: 'Review the New Responses',
+          description: 'Read the latest replies from each model side by side.',
           position: 'top',
         }}
         onComplete={onComplete}

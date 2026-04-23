@@ -21,7 +21,7 @@ export const TUTORIAL_STEPS_CONFIG: Record<TutorialStep, StepConfig> = {
     step: 'select-models',
     targetSelector: '.provider-dropdown[data-provider-name="Google"]',
     title: 'Select Models',
-    description: 'Select any two Google models from the list to compare them.',
+    description: 'For example, select the two Google models below.',
     position: 'top',
   },
   'enter-prompt': {
@@ -42,7 +42,7 @@ export const TUTORIAL_STEPS_CONFIG: Record<TutorialStep, StepConfig> = {
     step: 'follow-up',
     targetSelector: '[data-after-results-composer-slot] .composer:not(.composer-placeholder)',
     title: 'Continue the Conversation',
-    description: 'Review the comparison above and enter your follow-up here.',
+    description: 'Review the comparison above and type a follow-up.',
     position: 'top',
   },
   'enter-prompt-2': {
@@ -62,9 +62,9 @@ export const TUTORIAL_STEPS_CONFIG: Record<TutorialStep, StepConfig> = {
   'view-follow-up-results': {
     step: 'view-follow-up-results',
     targetSelector: '.results-section',
-    title: 'View Follow-Up Results',
+    title: 'Review the New Responses',
     description:
-      'Compare the follow-up responses. Notice how each model maintains conversation context.',
+      'Read the latest replies from each model side by side. Compare how they stay consistent with the conversation so far.',
     position: 'top',
   },
   'history-dropdown': {
@@ -82,4 +82,39 @@ export const TUTORIAL_STEPS_CONFIG: Record<TutorialStep, StepConfig> = {
       'After this tutorial, save your favorite model combinations for quick access, and even set one as default.',
     position: 'top',
   },
+}
+
+/**
+ * Steps included in "Step X of Y" and progress dots.
+ * Omits `enter-prompt-2` and `submit-comparison-2`, which are skipped during the normal tour.
+ */
+export const TUTORIAL_VISIBLE_STEP_ORDER: TutorialStep[] = [
+  'expand-provider',
+  'select-models',
+  'enter-prompt',
+  'submit-comparison',
+  'follow-up',
+  'view-follow-up-results',
+  'history-dropdown',
+  'save-selection',
+]
+
+/** 1-based step index for UI progress (e.g. review results = 6 of 8). */
+export function getTutorialVisibleStepProgress(step: TutorialStep | null): {
+  stepIndex: number
+  totalSteps: number
+} {
+  const totalSteps = TUTORIAL_VISIBLE_STEP_ORDER.length
+  if (!step) {
+    return { stepIndex: 0, totalSteps }
+  }
+  const i = TUTORIAL_VISIBLE_STEP_ORDER.indexOf(step)
+  if (i >= 0) {
+    return { stepIndex: i + 1, totalSteps }
+  }
+  if (step === 'enter-prompt-2' || step === 'submit-comparison-2') {
+    const j = TUTORIAL_VISIBLE_STEP_ORDER.indexOf('follow-up')
+    return { stepIndex: j + 1, totalSteps }
+  }
+  return { stepIndex: 1, totalSteps }
 }

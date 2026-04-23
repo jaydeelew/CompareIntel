@@ -32,6 +32,7 @@ interface TutorialControllerProps {
   hasSavedSelection?: boolean
   // Loading state for submit-comparison steps
   isLoading?: boolean
+  streamAnswerStarted?: boolean
   // Callbacks for when user performs actions
   onProviderExpanded?: () => void
   onModelsSelected?: () => void
@@ -56,6 +57,7 @@ export const TutorialController: React.FC<TutorialControllerProps> = ({
   showHistoryDropdown,
   hasSavedSelection,
   isLoading,
+  streamAnswerStarted,
   onProviderExpanded,
   onModelsSelected,
   onPromptEntered,
@@ -137,8 +139,12 @@ export const TutorialController: React.FC<TutorialControllerProps> = ({
       onComparisonComplete?.()
     }
 
-    // Follow-up completion
-    if (currentStep === 'follow-up' && isFollowUpMode && !previousStateRef.current.isFollowUpMode) {
+    // Follow-up (step 5): advance when the follow-up round finishes (same pattern as mobile).
+    if (
+      currentStep === 'follow-up' &&
+      hasCompletedComparison &&
+      !previousStateRef.current.hasCompletedComparison
+    ) {
       completeStep('follow-up')
       onFollowUpActivated?.()
     }
@@ -213,19 +219,19 @@ export const TutorialController: React.FC<TutorialControllerProps> = ({
       case 'submit-comparison':
         return hasCompletedComparison || false
       case 'follow-up':
-        return isFollowUpMode || false
+        return hasCompletedComparison || false
       case 'enter-prompt-2':
         return hasPromptText || false
       case 'submit-comparison-2':
         return hasCompletedComparison || false
       case 'view-follow-up-results':
-        // Step 8 - always show as completed (user just needs to click Done)
+        // Step 6 - always show as completed (user clicks Done to continue)
         return true
       case 'history-dropdown':
-        // Step 9 requires history dropdown to be open
+        // Step 7 requires history dropdown to be open
         return showHistoryDropdown || false
       case 'save-selection': {
-        // Step 10 requires saved selections dropdown to be open
+        // Step 8 requires saved selections dropdown to be open
         // Check if saved selections dropdown exists in DOM
         const savedSelectionsDropdown = document.querySelector('.saved-selections-dropdown')
         return savedSelectionsDropdown !== null
@@ -241,10 +247,9 @@ export const TutorialController: React.FC<TutorialControllerProps> = ({
 
     const currentStep = tutorialState.currentStep
 
-    // For view-follow-up-results step (8), allow immediate completion via Done button
     if (currentStep === 'view-follow-up-results') {
       completeStep(currentStep)
-      // For dropdown steps (9 and 10), allow completion if dropdown was opened at some point
+      // For dropdown steps (7 and 8), allow completion if dropdown was opened at some point
       // This prevents issues where clicking "Done" might close the dropdown before completion check
     } else if (currentStep === 'history-dropdown' || currentStep === 'save-selection') {
       // For dropdown steps, complete immediately when "Done" is clicked
@@ -269,6 +274,7 @@ export const TutorialController: React.FC<TutorialControllerProps> = ({
         onSkip={skipTutorial}
         isStepCompleted={isCurrentStepCompleted()}
         isLoading={isLoading}
+        streamAnswerStarted={streamAnswerStarted}
       />
     </Suspense>
   )

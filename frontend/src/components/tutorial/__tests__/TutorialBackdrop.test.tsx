@@ -12,6 +12,7 @@ describe('TutorialBackdrop', () => {
   it('should render loading cutout when isLoadingStreamingPhase and loadingStreamingCutout provided', () => {
     render(
       <TutorialBackdrop
+        step={null}
         isLoadingStreamingPhase={true}
         loadingStreamingCutout={{ top: 100, left: 50, width: 200, height: 80 }}
         useRoundedCutout={false}
@@ -32,11 +33,14 @@ describe('TutorialBackdrop', () => {
       width: '200px',
       height: '80px',
     })
+    expect((cutout as HTMLElement).style.boxShadow).toContain('inset')
+    expect((cutout as HTMLElement).style.boxShadow).toContain('9999px')
   })
 
   it('should render rounded cutout when useRoundedCutout and textareaCutoutToUse', () => {
     render(
       <TutorialBackdrop
+        step={null}
         isLoadingStreamingPhase={false}
         loadingStreamingCutout={null}
         useRoundedCutout={true}
@@ -57,6 +61,7 @@ describe('TutorialBackdrop', () => {
   it('should render 4-panel backdrop when shouldExcludeTextarea and textareaCutoutToUse', () => {
     render(
       <TutorialBackdrop
+        step={null}
         isLoadingStreamingPhase={false}
         loadingStreamingCutout={null}
         useRoundedCutout={false}
@@ -80,6 +85,7 @@ describe('TutorialBackdrop', () => {
   it('should render dropdown cutout when shouldExcludeDropdown and dropdownCutout', () => {
     render(
       <TutorialBackdrop
+        step={null}
         isLoadingStreamingPhase={false}
         loadingStreamingCutout={null}
         useRoundedCutout={false}
@@ -99,6 +105,7 @@ describe('TutorialBackdrop', () => {
   it('should render target cutout when targetCutout provided', () => {
     render(
       <TutorialBackdrop
+        step={null}
         isLoadingStreamingPhase={false}
         loadingStreamingCutout={null}
         useRoundedCutout={false}
@@ -122,9 +129,37 @@ describe('TutorialBackdrop', () => {
     expect(cutout).toHaveStyle({ borderRadius: '12px' })
   })
 
+  it('should render follow-up dual-hole backdrop (results ring + composer clear)', () => {
+    render(
+      <TutorialBackdrop
+        step="follow-up"
+        isLoadingStreamingPhase={false}
+        loadingStreamingCutout={null}
+        useRoundedCutout={false}
+        textareaCutoutToUse={{ top: 520, left: 40, width: 400, height: 88 }}
+        shouldExcludeTextarea={false}
+        shouldExcludeDropdown={false}
+        dropdownCutout={null}
+        targetCutout={{
+          top: 200,
+          left: 40,
+          width: 400,
+          height: 300,
+          borderRadius: 24,
+        }}
+        buttonCutout={null}
+      />
+    )
+
+    expect(document.querySelector('.tutorial-backdrop-follow-up-dim')).toBeInTheDocument()
+    expect(document.querySelector('.tutorial-backdrop-follow-up-results-ring')).toBeInTheDocument()
+    expect(document.querySelector('.tutorial-backdrop-follow-up-composer-ring')).toBeInTheDocument()
+  })
+
   it('should render default backdrop with button cutout when buttonCutout provided', () => {
     render(
       <TutorialBackdrop
+        step={null}
         isLoadingStreamingPhase={false}
         loadingStreamingCutout={null}
         useRoundedCutout={false}
@@ -150,6 +185,7 @@ describe('TutorialBackdrop', () => {
     const { container } = render(
       <div onClick={onParentClick}>
         <TutorialBackdrop
+          step={null}
           isLoadingStreamingPhase={false}
           loadingStreamingCutout={null}
           useRoundedCutout={false}

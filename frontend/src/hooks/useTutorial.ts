@@ -71,6 +71,16 @@ export function useTutorial() {
       const newCompleted = new Set(prev.completedSteps)
       newCompleted.add(step)
 
+      if (step === 'follow-up') {
+        newCompleted.add('enter-prompt-2')
+        newCompleted.add('submit-comparison-2')
+        return {
+          isActive: true,
+          currentStep: 'view-follow-up-results',
+          completedSteps: newCompleted,
+        }
+      }
+
       const currentIndex = TUTORIAL_STEPS.indexOf(step)
       const nextIndex = currentIndex + 1
 

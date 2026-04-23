@@ -8,6 +8,11 @@ import {
   getComposerElement,
   getComposerCutoutRects,
   getFollowUpTutorialHeaderElement,
+  getHeroComposerForDropdownSteps,
+  getHistoryInlineListForTutorial,
+  getHistoryToggleButtonForTutorial,
+  getSavedSelectionsButtonForTutorial,
+  getSavedSelectionsDropdownForTutorial,
 } from '../tutorialUtils'
 
 describe('tutorialUtils', () => {
@@ -106,6 +111,93 @@ describe('tutorialUtils', () => {
       // Should return the visible composer, not the placeholder
       expect(getComposerElement()).toBe(realComposer)
       expect(getComposerElement()).not.toBe(placeholder)
+    })
+  })
+
+  describe('getHeroComposerForDropdownSteps and dropdown tutorial helpers', () => {
+    it('uses hero mirror composer when present so cutout matches visible top chrome', () => {
+      const mirror = document.createElement('div')
+      mirror.className = 'composer-hero-mirror'
+      const mirrorComposer = document.createElement('div')
+      mirrorComposer.className = 'composer'
+      mirror.appendChild(mirrorComposer)
+      container.appendChild(mirror)
+
+      const slot = document.createElement('div')
+      slot.setAttribute('data-after-results-composer-slot', '')
+      const belowComposer = document.createElement('div')
+      belowComposer.className = 'composer'
+      slot.appendChild(belowComposer)
+      container.appendChild(slot)
+
+      expect(getHeroComposerForDropdownSteps()).toBe(mirrorComposer)
+      expect(getComposerElement()).toBe(belowComposer)
+    })
+
+    it('pairs history list and toggle with the same hero composer (floating layout)', () => {
+      const mirror = document.createElement('div')
+      mirror.className = 'composer-hero-mirror'
+      const mirrorComposer = document.createElement('div')
+      mirrorComposer.className = 'composer'
+      const historyBtn = document.createElement('button')
+      historyBtn.className = 'history-toggle-button'
+      const historyList = document.createElement('div')
+      historyList.className = 'history-inline-list'
+      mirrorComposer.appendChild(historyBtn)
+      mirrorComposer.appendChild(historyList)
+      mirror.appendChild(mirrorComposer)
+      container.appendChild(mirror)
+
+      const slot = document.createElement('div')
+      slot.setAttribute('data-after-results-composer-slot', '')
+      const belowComposer = document.createElement('div')
+      belowComposer.className = 'composer'
+      const belowList = document.createElement('div')
+      belowList.className = 'history-inline-list'
+      belowComposer.appendChild(belowList)
+      slot.appendChild(belowComposer)
+      container.appendChild(slot)
+
+      expect(getHistoryToggleButtonForTutorial()).toBe(historyBtn)
+      expect(getHistoryInlineListForTutorial()).toBe(historyList)
+      expect(getHistoryInlineListForTutorial()).not.toBe(belowList)
+    })
+
+    it('does not fall back to document saved-selections panel when hero mirror exists but panel is absent under hero', () => {
+      const mirror = document.createElement('div')
+      mirror.className = 'composer-hero-mirror'
+      const mirrorComposer = document.createElement('div')
+      mirrorComposer.className = 'composer'
+      mirror.appendChild(mirrorComposer)
+      container.appendChild(mirror)
+
+      const slot = document.createElement('div')
+      slot.setAttribute('data-after-results-composer-slot', '')
+      const belowComposer = document.createElement('div')
+      belowComposer.className = 'composer'
+      const portaledPanel = document.createElement('div')
+      portaledPanel.className = 'saved-selections-dropdown'
+      belowComposer.appendChild(portaledPanel)
+      slot.appendChild(belowComposer)
+      container.appendChild(slot)
+
+      expect(getSavedSelectionsDropdownForTutorial()).toBeNull()
+    })
+
+    it('finds saved selections under single composer when hero mirror is absent', () => {
+      const composer = document.createElement('div')
+      composer.className = 'composer'
+      const panel = document.createElement('div')
+      panel.className = 'saved-selections-dropdown'
+      const btn = document.createElement('button')
+      btn.className = 'saved-selections-button'
+      composer.appendChild(btn)
+      composer.appendChild(panel)
+      container.appendChild(composer)
+
+      expect(getHeroComposerForDropdownSteps()).toBe(composer)
+      expect(getSavedSelectionsDropdownForTutorial()).toBe(panel)
+      expect(getSavedSelectionsButtonForTutorial()).toBe(btn)
     })
   })
 

@@ -112,14 +112,13 @@ describe('useTutorialComplete', () => {
     it('should complete tutorial when all steps done', () => {
       const { result } = renderHook(() => useTutorialComplete(defaultConfig))
 
+      // Old steps 6–7 (second prompt/submit) are skipped when completing step 5; step 6 is review results
       const steps: TutorialStep[] = [
         'expand-provider',
         'select-models',
         'enter-prompt',
         'submit-comparison',
         'follow-up',
-        'enter-prompt-2',
-        'submit-comparison-2',
         'view-follow-up-results',
         'history-dropdown',
         'save-selection',
@@ -141,6 +140,24 @@ describe('useTutorialComplete', () => {
         'compareintel_tutorial_completed',
         'true'
       )
+    })
+
+    it('should skip enter-prompt-2 and submit-comparison-2 when completing follow-up, then show review step', () => {
+      const { result } = renderHook(() => useTutorialComplete(defaultConfig))
+
+      act(() => {
+        result.current.startTutorial()
+        result.current.goToStep('follow-up')
+      })
+
+      act(() => {
+        result.current.completeStep('follow-up')
+      })
+
+      expect(result.current.tutorialState.currentStep).toBe('view-follow-up-results')
+      expect(result.current.tutorialState.completedSteps.has('enter-prompt-2')).toBe(true)
+      expect(result.current.tutorialState.completedSteps.has('submit-comparison-2')).toBe(true)
+      expect(result.current.tutorialState.completedSteps.has('view-follow-up-results')).toBe(false)
     })
   })
 
@@ -328,6 +345,68 @@ describe('useTutorialComplete', () => {
       })
 
       expect(result.current.tutorialHasCompletedComparison).toBe(true)
+    })
+
+    it('should set tutorialHasCompletedComparison on follow-up step after second assistant round', () => {
+      const { result, rerender } = renderHook(props => useTutorialComplete(props), {
+        initialProps: defaultConfig,
+      })
+
+      act(() => {
+        result.current.startTutorial()
+        result.current.goToStep('follow-up')
+      })
+
+      // A follow-up submit must have started (loading) before "second round" can count; otherwise
+      // the first comparison could already satisfy assistant length checks.
+      rerender({
+        ...defaultConfig,
+        isFollowUpMode: true,
+        isLoading: true,
+        conversations: [],
+      })
+
+      rerender({
+        ...defaultConfig,
+        isFollowUpMode: true,
+        isLoading: false,
+        conversations: [
+          {
+            modelId: 'm1',
+            messages: [
+              { type: 'user', role: 'user', content: 'hi' },
+              { type: 'assistant', role: 'assistant', content: 'first' },
+              { type: 'user', role: 'user', content: 'follow' },
+              { type: 'assistant', role: 'assistant', content: 'second' },
+            ],
+          },
+        ] as ModelConversation[],
+      })
+
+      expect(result.current.tutorialHasCompletedComparison).toBe(true)
+    })
+
+    it('should reset tutorialHasCompletedComparison when entering follow-up so step 5 can detect a new comparison', () => {
+      const { result, rerender } = renderHook(props => useTutorialComplete(props), {
+        initialProps: defaultConfig,
+      })
+
+      act(() => {
+        result.current.startTutorial()
+        result.current.goToStep('submit-comparison')
+      })
+
+      rerender({
+        ...defaultConfig,
+        conversations: [{ modelId: 'test', messages: [] }] as ModelConversation[],
+        isLoading: false,
+      })
+      expect(result.current.tutorialHasCompletedComparison).toBe(true)
+
+      act(() => {
+        result.current.goToStep('follow-up')
+      })
+      expect(result.current.tutorialHasCompletedComparison).toBe(false)
     })
   })
 })

@@ -71,6 +71,8 @@ export interface UseTutorialCompleteReturn {
   tutorialHasCompletedComparison: boolean
   tutorialHasBreakout: boolean
   tutorialHasSavedSelection: boolean
+  /** True after the user submits a follow-up (loading starts) on step 5; reset when leaving that step. */
+  followUpSubmitStarted: boolean
 
   // Actions
   startTutorial: () => void
@@ -114,6 +116,18 @@ export function useTutorialComplete(config: UseTutorialCompleteConfig): UseTutor
   const [tutorialHasSavedSelection, setTutorialHasSavedSelection] = useState(false)
 
   const hasShownWelcomeModalRef = useRef(false)
+  /** True once the user has started a follow-up request (loading) on tutorial step 5. Prevents
+   *  treating the first comparison's 2+ assistant messages as "round 2" before they submit. */
+  const followUpSubmitInitiatedRef = useRef(false)
+
+  const [followUpSubmitStarted, setFollowUpSubmitStarted] = useState(false)
+  useEffect(() => {
+    if (tutorialState.currentStep !== 'follow-up') {
+      setFollowUpSubmitStarted(false)
+    } else if (isLoading) {
+      setFollowUpSubmitStarted(true)
+    }
+  }, [tutorialState.currentStep, isLoading])
 
   // Tutorial Actions
 
@@ -134,6 +148,17 @@ export function useTutorialComplete(config: UseTutorialCompleteConfig): UseTutor
 
       const newCompleted = new Set(prev.completedSteps)
       newCompleted.add(step)
+
+      if (step === 'follow-up') {
+        // Redundant prompt/submit steps (old 6–7); step 6 is view-follow-up-results (review), then 7–8
+        newCompleted.add('enter-prompt-2')
+        newCompleted.add('submit-comparison-2')
+        return {
+          isActive: true,
+          currentStep: 'view-follow-up-results',
+          completedSteps: newCompleted,
+        }
+      }
 
       const currentIndex = TUTORIAL_STEPS.indexOf(step)
       const nextIndex = currentIndex + 1
@@ -209,40 +234,55 @@ export function useTutorialComplete(config: UseTutorialCompleteConfig): UseTutor
     }
   }, [authLoading, isAuthenticated, tutorialState.isActive, currentView])
 
-  // Track comparison completion for tutorial
+  // Reset completion flag when entering steps that use the comparison-complete signal again.
+  // Must run before the comparison-tracking effect so a follow-up that is already loaded
+  // still sets the flag true in the same commit (reset first, then detect completion).
   useEffect(() => {
-    const isSubmitStep =
-      tutorialState.currentStep === 'submit-comparison' ||
-      tutorialState.currentStep === 'submit-comparison-2'
-
-    if (isSubmitStep && !isLoading) {
-      if (tutorialState.currentStep === 'submit-comparison-2' && isFollowUpMode) {
-        const hasFollowUpResponses =
-          conversations.length > 0 &&
-          conversations.some(conv => {
-            const assistantMessages = conv.messages.filter(msg => msg.type === 'assistant')
-            return (
-              assistantMessages.length >= 2 &&
-              assistantMessages[assistantMessages.length - 1].content.trim().length > 0
-            )
-          })
-        if (hasFollowUpResponses) {
-          setTutorialHasCompletedComparison(true)
-        }
-      } else if (tutorialState.currentStep === 'submit-comparison') {
-        if (conversations.length > 0) {
-          setTutorialHasCompletedComparison(true)
-        }
-      }
-    }
-  }, [conversations, isLoading, tutorialState.currentStep, isFollowUpMode])
-
-  // Reset completion flag when entering follow-up prompt step
-  useEffect(() => {
-    if (tutorialState.currentStep === 'enter-prompt-2') {
+    if (
+      tutorialState.currentStep === 'enter-prompt-2' ||
+      tutorialState.currentStep === 'follow-up' ||
+      tutorialState.currentStep === 'view-follow-up-results'
+    ) {
       setTutorialHasCompletedComparison(false)
     }
   }, [tutorialState.currentStep])
+
+  // Step 5: only count "second round" after the user has actually submitted a follow-up (loading).
+  useEffect(() => {
+    if (tutorialState.currentStep !== 'follow-up') {
+      followUpSubmitInitiatedRef.current = false
+    } else if (isLoading) {
+      followUpSubmitInitiatedRef.current = true
+    }
+  }, [tutorialState.currentStep, isLoading])
+
+  // Track comparison completion for tutorial (initial compare, optional 2nd-round step, or step 5 follow-up)
+  useEffect(() => {
+    if (isLoading) return
+
+    const hasSecondRoundAssistantContent =
+      conversations.length > 0 &&
+      conversations.some(conv => {
+        const assistantMessages = conv.messages.filter(msg => msg.type === 'assistant')
+        const last = assistantMessages[assistantMessages.length - 1]
+        return assistantMessages.length >= 2 && !!last?.content && last.content.trim().length > 0
+      })
+
+    const step = tutorialState.currentStep
+    if (step === 'submit-comparison-2' && isFollowUpMode) {
+      if (hasSecondRoundAssistantContent) {
+        setTutorialHasCompletedComparison(true)
+      }
+    } else if (step === 'submit-comparison') {
+      if (conversations.length > 0) {
+        setTutorialHasCompletedComparison(true)
+      }
+    } else if (step === 'follow-up' && isFollowUpMode) {
+      if (hasSecondRoundAssistantContent && followUpSubmitInitiatedRef.current) {
+        setTutorialHasCompletedComparison(true)
+      }
+    }
+  }, [conversations, isLoading, tutorialState.currentStep, isFollowUpMode])
 
   return {
     // State
@@ -251,6 +291,7 @@ export function useTutorialComplete(config: UseTutorialCompleteConfig): UseTutor
     tutorialHasCompletedComparison,
     tutorialHasBreakout,
     tutorialHasSavedSelection,
+    followUpSubmitStarted,
 
     // Actions
     startTutorial,

@@ -316,7 +316,7 @@ describe('adminService', () => {
 
       const result = await adminService.getAppSettings()
 
-      expect(apiClient.get).toHaveBeenCalledWith('/admin/settings')
+      expect(apiClient.get).toHaveBeenCalledWith('/admin/settings', { enableCache: false })
       expect(result).toEqual(mockSettings)
     })
   })

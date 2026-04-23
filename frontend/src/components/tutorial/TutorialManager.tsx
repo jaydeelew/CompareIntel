@@ -30,6 +30,10 @@ interface TutorialManagerProps {
   tutorialHasSavedSelection: boolean
   showHistoryDropdown: boolean
   isLoading: boolean
+  /** True when any model has started streaming an answer (loading cutout switches to results). */
+  streamAnswerStarted: boolean
+  /** After user submits a follow-up on step 5 (mobile loading/streaming cutout gating). */
+  followUpSubmitStarted: boolean
   setTutorialHasCompletedComparison: (value: boolean) => void
   setTutorialHasBreakout: (value: boolean) => void
   setTutorialHasSavedSelection: (value: boolean) => void
@@ -60,6 +64,8 @@ export function TutorialManager({
   tutorialHasSavedSelection,
   showHistoryDropdown,
   isLoading,
+  streamAnswerStarted,
+  followUpSubmitStarted,
   setTutorialHasCompletedComparison,
   setTutorialHasBreakout,
   setTutorialHasSavedSelection,
@@ -109,13 +115,16 @@ export function TutorialManager({
           showHistoryDropdown={showHistoryDropdown}
           hasSavedSelection={tutorialHasSavedSelection}
           isLoading={isLoading}
+          streamAnswerStarted={streamAnswerStarted}
           onProviderExpanded={() => {}}
           onModelsSelected={() => {}}
           onPromptEntered={() => {}}
           onComparisonComplete={() => {
             setTutorialHasCompletedComparison(false)
           }}
-          onFollowUpActivated={() => {}}
+          onFollowUpActivated={() => {
+            setTutorialHasCompletedComparison(false)
+          }}
           onBreakoutCreated={() => {
             setTutorialHasBreakout(false)
           }}
@@ -140,13 +149,17 @@ export function TutorialManager({
           showHistoryDropdown={showHistoryDropdown}
           hasSavedSelection={tutorialHasSavedSelection}
           isLoading={isLoading}
+          streamAnswerStarted={streamAnswerStarted}
+          followUpSubmitStarted={followUpSubmitStarted}
           onProviderExpanded={() => {}}
           onModelsSelected={() => {}}
           onPromptEntered={() => {}}
           onComparisonComplete={() => {
             setTutorialHasCompletedComparison(false)
           }}
-          onFollowUpActivated={() => {}}
+          onFollowUpActivated={() => {
+            setTutorialHasCompletedComparison(false)
+          }}
           onBreakoutCreated={() => {
             setTutorialHasBreakout(false)
           }}

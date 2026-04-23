@@ -37,6 +37,7 @@ export function useTutorialEffects(
   const { setShowWelcomeModal, setTutorialHasCompletedComparison } = callbacks
 
   const lastWelcomeModalPathnameRef = useRef<string | null>(null)
+  const followUpSubmitInitiatedRef = useRef(false)
 
   // Welcome modal logic - show every time for unregistered users unless "Don't show again" is checked
   useEffect(() => {
@@ -62,30 +63,47 @@ export function useTutorialEffects(
     }
   }, [tutorialState.isActive, currentView, locationPathname, setShowWelcomeModal, isAuthenticated])
 
-  // Track comparison completion for tutorial
   useEffect(() => {
-    const isSubmitStep =
-      tutorialState.currentStep === 'submit-comparison' ||
-      tutorialState.currentStep === 'submit-comparison-2'
+    if (
+      tutorialState.currentStep === 'enter-prompt-2' ||
+      tutorialState.currentStep === 'follow-up' ||
+      tutorialState.currentStep === 'view-follow-up-results'
+    ) {
+      setTutorialHasCompletedComparison(false)
+    }
+  }, [tutorialState.currentStep, setTutorialHasCompletedComparison])
 
-    if (isSubmitStep && !isLoading) {
-      if (tutorialState.currentStep === 'submit-comparison-2' && isFollowUpMode) {
-        const hasFollowUpResponses =
-          conversations.length > 0 &&
-          conversations.some(conv => {
-            const assistantMessages = conv.messages.filter(msg => msg.type === 'assistant')
-            return (
-              assistantMessages.length >= 2 &&
-              assistantMessages[assistantMessages.length - 1].content.trim().length > 0
-            )
-          })
-        if (hasFollowUpResponses) {
-          setTutorialHasCompletedComparison(true)
-        }
-      } else if (tutorialState.currentStep === 'submit-comparison') {
-        if (conversations.length > 0) {
-          setTutorialHasCompletedComparison(true)
-        }
+  useEffect(() => {
+    if (tutorialState.currentStep !== 'follow-up') {
+      followUpSubmitInitiatedRef.current = false
+    } else if (isLoading) {
+      followUpSubmitInitiatedRef.current = true
+    }
+  }, [tutorialState.currentStep, isLoading])
+
+  useEffect(() => {
+    if (isLoading) return
+
+    const hasSecondRoundAssistantContent =
+      conversations.length > 0 &&
+      conversations.some(conv => {
+        const assistantMessages = conv.messages.filter(msg => msg.type === 'assistant')
+        const last = assistantMessages[assistantMessages.length - 1]
+        return assistantMessages.length >= 2 && !!last?.content && last.content.trim().length > 0
+      })
+
+    const step = tutorialState.currentStep
+    if (step === 'submit-comparison-2' && isFollowUpMode) {
+      if (hasSecondRoundAssistantContent) {
+        setTutorialHasCompletedComparison(true)
+      }
+    } else if (step === 'submit-comparison') {
+      if (conversations.length > 0) {
+        setTutorialHasCompletedComparison(true)
+      }
+    } else if (step === 'follow-up' && isFollowUpMode) {
+      if (hasSecondRoundAssistantContent && followUpSubmitInitiatedRef.current) {
+        setTutorialHasCompletedComparison(true)
       }
     }
   }, [
@@ -95,11 +113,4 @@ export function useTutorialEffects(
     isFollowUpMode,
     setTutorialHasCompletedComparison,
   ])
-
-  // Reset completion flag when entering follow-up prompt step
-  useEffect(() => {
-    if (tutorialState.currentStep === 'enter-prompt-2') {
-      setTutorialHasCompletedComparison(false)
-    }
-  }, [tutorialState.currentStep, setTutorialHasCompletedComparison])
 }

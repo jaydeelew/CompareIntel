@@ -14,6 +14,8 @@ interface TutorialOverlayProps {
   onSkip: () => void
   isStepCompleted?: boolean
   isLoading?: boolean
+  /** When any model has started streaming an answer; used to switch loading cutout to results. */
+  streamAnswerStarted?: boolean
 }
 
 export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
@@ -22,6 +24,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
   onSkip,
   isStepCompleted = false,
   isLoading = false,
+  streamAnswerStarted = false,
 }) => {
   const {
     overlayRef,
@@ -45,7 +48,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
     useRoundedCutout,
     textareaCutoutToUse,
     shouldBlock,
-  } = useTutorialOverlay(step, isLoading ?? false)
+  } = useTutorialOverlay(step, isLoading ?? false, streamAnswerStarted)
 
   if (!step) {
     return null

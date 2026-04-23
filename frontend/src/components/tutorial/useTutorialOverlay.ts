@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 
-import { TUTORIAL_STEPS_CONFIG } from '../../data/tutorialSteps'
+import { TUTORIAL_STEPS_CONFIG, getTutorialVisibleStepProgress } from '../../data/tutorialSteps'
 import type { TutorialStep } from '../../hooks/useTutorial'
 import logger from '../../utils/logger'
 import {
@@ -13,6 +13,15 @@ import {
   getScrollTargetForStep,
 } from '../../utils/tutorialPositioning'
 
+import {
+  getBelowResultsHistoryToggleButton,
+  getHeroComposerForDropdownSteps,
+  getHeroMirrorComposerIfPresent,
+  getHistoryInlineListForTutorial,
+  getHistoryToggleButtonForTutorial,
+  getSavedSelectionsButtonForTutorial,
+  getSavedSelectionsDropdownForTutorial,
+} from './tutorialUtils'
 import { useTutorialCleanup } from './useTutorialCleanup'
 
 interface HTMLElementWithTutorialProps extends HTMLElement {
@@ -20,7 +29,11 @@ interface HTMLElementWithTutorialProps extends HTMLElement {
   __tutorialHeightInterval?: number
 }
 
-export function useTutorialOverlay(step: TutorialStep | null, isLoading: boolean) {
+function useTutorialOverlay(
+  step: TutorialStep | null,
+  isLoading: boolean,
+  streamAnswerStarted = false
+) {
   const overlayRef = useRef<HTMLDivElement>(null)
   const stepRef = useRef<TutorialStep | null>(step)
   // Keep in sync during render so effect cleanups see the *incoming* step (not the previous one).
@@ -35,6 +48,9 @@ export function useTutorialOverlay(step: TutorialStep | null, isLoading: boolean
   const hasAttemptedElementFindRef = useRef<boolean>(false)
   const tooltipClampAttemptsRef = useRef<number>(0)
   const initialScrollCompleteRef = useRef<boolean>(false)
+  /** After follow-up → view-follow-up-results, skip immediate tooltip show so step 5 vanishes first. */
+  const suppressReviewTooltipRevealRef = useRef(false)
+  const prevStepForTooltipExitRef = useRef<TutorialStep | null>(null)
   const targetElementRef = useRef<HTMLElement | null>(null)
   const [targetElement, setTargetElement] = useState<HTMLElement | null>(null)
   const [highlightedElements, setHighlightedElements] = useState<HTMLElement[]>([])
@@ -89,12 +105,24 @@ export function useTutorialOverlay(step: TutorialStep | null, isLoading: boolean
     }
   }, [step])
 
-  // Reset save-selection flag synchronously before paint when entering step 10
+  // Reset save-selection flag synchronously before paint when entering step 8
   // useLayoutEffect ensures user never sees Done enabled before they've clicked
   useLayoutEffect(() => {
     if (step === 'save-selection') {
       setSaveSelectionDropdownOpened(false)
     }
+  }, [step])
+
+  // Hide the follow-up (step 5) tooltip before paint when advancing to the review step (6),
+  // so the UI does not cross-fade or slide the old tooltip into the new position.
+  useLayoutEffect(() => {
+    const prev = prevStepForTooltipExitRef.current
+    if (prev === 'follow-up' && step === 'view-follow-up-results') {
+      setIsVisible(false)
+      setPositionStabilized(false)
+      suppressReviewTooltipRevealRef.current = true
+    }
+    prevStepForTooltipExitRef.current = step
   }, [step])
 
   // Clear cutouts when the step changes, but keep holes that stay valid across specific
@@ -442,9 +470,9 @@ export function useTutorialOverlay(step: TutorialStep | null, isLoading: boolean
         }
       } else if (step === 'history-dropdown') {
         // Special handling for history dropdown step - create circular cutout for button
-        element = document.querySelector(config.targetSelector) as HTMLElement
+        element = getHistoryToggleButtonForTutorial()
         // Find and add the history dropdown if it exists
-        const historyDropdown = document.querySelector('.history-inline-list') as HTMLElement
+        const historyDropdown = getHistoryInlineListForTutorial()
         if (historyDropdown) {
           setHighlightedElements([historyDropdown])
         } else {
@@ -455,11 +483,9 @@ export function useTutorialOverlay(step: TutorialStep | null, isLoading: boolean
         }
       } else if (step === 'save-selection') {
         // Special handling for saved selections dropdown step - create circular cutout for button
-        element = document.querySelector(config.targetSelector) as HTMLElement
+        element = getSavedSelectionsButtonForTutorial()
         // Find and add the saved selections dropdown if it exists
-        const savedSelectionsDropdown = document.querySelector(
-          '.saved-selections-dropdown'
-        ) as HTMLElement
+        const savedSelectionsDropdown = getSavedSelectionsDropdownForTutorial()
         if (savedSelectionsDropdown) {
           setHighlightedElements([savedSelectionsDropdown])
         } else {
@@ -515,7 +541,6 @@ export function useTutorialOverlay(step: TutorialStep | null, isLoading: boolean
         // Use default selector for the submit button
         element = document.querySelector(config.targetSelector) as HTMLElement
       } else if (step === 'view-follow-up-results') {
-        // Special handling for view-follow-up-results step - target and highlight the results section
         element = document.querySelector('.results-section') as HTMLElement
         if (element) {
           setHighlightedElements([element])
@@ -523,14 +548,10 @@ export function useTutorialOverlay(step: TutorialStep | null, isLoading: boolean
           setHighlightedElements([])
         }
       } else if (step === 'follow-up') {
-        // Results + below-results composer (tooltip still targets the composer)
+        // Backdrop cutout: results + composer; tooltip target remains the follow-up composer
         const resultsSection = document.querySelector('.results-section') as HTMLElement
-        const composerElement = getComposerElement()
-        const both: HTMLElement[] = []
-        if (resultsSection) both.push(resultsSection)
-        if (composerElement) both.push(composerElement)
-        setHighlightedElements(both)
-        element = composerElement
+        setHighlightedElements(resultsSection ? [resultsSection] : [])
+        element = getComposerElement()
       } else {
         // Use default selector for other steps
         element = document.querySelector(config.targetSelector) as HTMLElement
@@ -544,10 +565,15 @@ export function useTutorialOverlay(step: TutorialStep | null, isLoading: boolean
 
         if (isElementVisible) {
           setTargetElement(element)
-          // For enter-prompt steps, DON'T set visible here — the scroll effect
-          // controls visibility and will show the tooltip after scrolling completes.
-          // Setting it here causes a brief flash at the wrong position.
-          if (step !== 'enter-prompt' && step !== 'enter-prompt-2' && step !== 'follow-up') {
+          // For enter-prompt steps and step 5→6 transition, DON'T set visible here —
+          // the scroll effect controls visibility and will show the tooltip after
+          // scrolling completes. Setting it here causes a brief flash at the wrong position.
+          if (
+            step !== 'enter-prompt' &&
+            step !== 'enter-prompt-2' &&
+            step !== 'follow-up' &&
+            !(step === 'view-follow-up-results' && suppressReviewTooltipRevealRef.current)
+          ) {
             setIsVisible(true)
           }
           return true
@@ -617,7 +643,15 @@ export function useTutorialOverlay(step: TutorialStep | null, isLoading: boolean
   }, [step])
 
   useEffect(() => {
-    if (!targetElement || !step) return
+    if (!step) return
+    // follow-up: layout using live `getComposerElement()` — the after-results composer can
+    // remount when layout settles; syncing that into `targetElement` every 200ms re-ran this
+    // effect and cancelled the in-progress scroll (looked like step 5 appearing twice).
+    if (step === 'follow-up') {
+      if (!getComposerElement() && !targetElement) return
+    } else if (!targetElement) {
+      return
+    }
 
     const config = TUTORIAL_STEPS_CONFIG[step]
     const isDropdownStep = step === 'history-dropdown' || step === 'save-selection'
@@ -628,8 +662,17 @@ export function useTutorialOverlay(step: TutorialStep | null, isLoading: boolean
     let scrollCompletionResolver: (() => void) | null = null
     const isScrollingRef = { current: false } // Track if we're in the middle of programmatic scroll
 
+    const layoutTarget = (): HTMLElement | null => {
+      if (step === 'follow-up') {
+        return getComposerElement() ?? targetElement
+      }
+      return targetElement
+    }
+
     const updatePosition = () => {
-      const rect = targetElement.getBoundingClientRect()
+      const el = layoutTarget()
+      if (!el) return
+      const rect = el.getBoundingClientRect()
       const { top, left, effectivePosition: effPos } = computeTooltipPosition(rect, step, config)
       setEffectivePosition(effPos)
       setOverlayPosition({ top, left })
@@ -638,7 +681,9 @@ export function useTutorialOverlay(step: TutorialStep | null, isLoading: boolean
     updatePosition()
 
     const scrollToElement = () => {
-      const scrollTarget = getScrollTargetForStep(step, targetElement)
+      const el = layoutTarget()
+      if (!el) return
+      const scrollTarget = getScrollTargetForStep(step, el)
 
       // Scroll smoothly without affecting hero section layout
       // For step 3, 5, and 6, use slower custom scrolling so the transition feels intentional
@@ -648,7 +693,12 @@ export function useTutorialOverlay(step: TutorialStep | null, isLoading: boolean
         left: window.pageXOffset, // Keep horizontal position
       }
 
-      if (step === 'enter-prompt' || step === 'enter-prompt-2' || step === 'follow-up') {
+      if (
+        step === 'enter-prompt' ||
+        step === 'enter-prompt-2' ||
+        step === 'follow-up' ||
+        isReviewStepFromFollowUp
+      ) {
         // Use a custom smooth scroll implementation for slower, smoother scrolling
         const startScrollY = window.pageYOffset
         const targetScrollY = Math.max(0, scrollTarget)
@@ -657,7 +707,7 @@ export function useTutorialOverlay(step: TutorialStep | null, isLoading: boolean
         // Mark that we're starting a programmatic scroll
         isScrollingRef.current = true
 
-        const duration = step === 'follow-up' ? 750 : 900 // Slightly quicker when jumping to below-results composer
+        const duration = step === 'follow-up' ? 750 : isReviewStepFromFollowUp ? 600 : 900
         const startTime = performance.now()
 
         // Ease-in-out cubic function for smooth animation
@@ -696,14 +746,19 @@ export function useTutorialOverlay(step: TutorialStep | null, isLoading: boolean
     }
 
     // Determine if we need to delay tooltip reveal until scroll completes
-    const rect = targetElement.getBoundingClientRect()
+    const rect = layoutTarget()!.getBoundingClientRect()
     const isTargetOffscreen = rect.bottom < 0 || rect.top > window.innerHeight
     const isEnterPromptStep = step === 'enter-prompt' || step === 'enter-prompt-2'
     const isFollowUpStep = step === 'follow-up'
+    const isReviewStepFromFollowUp =
+      step === 'view-follow-up-results' && suppressReviewTooltipRevealRef.current
     // Delay reveal for dropdown steps when target is offscreen, or for steps that smooth-scroll
-    // to the composer before showing the tooltip.
+    // to the composer before showing the tooltip, or for step 6 when transitioning from step 5.
     const shouldDelayReveal =
-      (isDropdownStep && isTargetOffscreen) || isEnterPromptStep || isFollowUpStep
+      (isDropdownStep && isTargetOffscreen) ||
+      isEnterPromptStep ||
+      isFollowUpStep ||
+      isReviewStepFromFollowUp
 
     if (shouldDelayReveal) {
       setIsVisible(false)
@@ -744,11 +799,17 @@ export function useTutorialOverlay(step: TutorialStep | null, isLoading: boolean
     scrollDelayTimer = setTimeout(() => {
       scrollDelayTimer = null
       const shouldSkipScroll =
-        (step === 'enter-prompt' || step === 'enter-prompt-2' || step === 'follow-up') &&
+        (step === 'enter-prompt' ||
+          step === 'enter-prompt-2' ||
+          step === 'follow-up' ||
+          isReviewStepFromFollowUp) &&
         initialScrollCompleteRef.current
 
       const isCustomScrollStep =
-        step === 'enter-prompt' || step === 'enter-prompt-2' || step === 'follow-up'
+        step === 'enter-prompt' ||
+        step === 'enter-prompt-2' ||
+        step === 'follow-up' ||
+        isReviewStepFromFollowUp
       const waitForScroll =
         shouldDelayReveal && !shouldSkipScroll
           ? isCustomScrollStep
@@ -770,31 +831,48 @@ export function useTutorialOverlay(step: TutorialStep | null, isLoading: boolean
         waitForScroll.then(() => {
           if (stepRef.current !== step) return
           updatePosition()
-          setIsVisible(true)
-          // Mark initial scroll as complete - allows dedicated step effects to take over positioning
           initialScrollCompleteRef.current = true
-          // Layout can continue to shift (CSS transitions, expanding/collapsing sections)
-          // after scroll stops, so re-run positioning a few times to stay aligned.
-          const t1 = window.setTimeout(() => {
-            if (stepRef.current !== step) return
-            updatePosition()
-          }, 150)
-          const t2 = window.setTimeout(() => {
-            if (stepRef.current !== step) return
-            updatePosition()
-          }, 350)
-          const t3 = window.setTimeout(() => {
-            if (stepRef.current !== step) return
-            updatePosition()
-          }, 700)
-          // Enable CSS transitions only after all post-scroll position adjustments
-          // are done. This prevents the tooltip from visibly animating between
-          // intermediate positions during initial placement.
-          const t4 = window.setTimeout(() => {
-            if (stepRef.current !== step) return
-            setPositionStabilized(true)
-          }, 800)
-          postScrollTimers = [t1, t2, t3, t4]
+
+          if (isReviewStepFromFollowUp) {
+            // For step 5→6 transition, keep tooltip hidden while position settles,
+            // then reveal once at the final position for a clean appearance.
+            suppressReviewTooltipRevealRef.current = false
+            const t1 = window.setTimeout(() => {
+              if (stepRef.current !== step) return
+              updatePosition()
+            }, 100)
+            const t2 = window.setTimeout(() => {
+              if (stepRef.current !== step) return
+              updatePosition()
+              setIsVisible(true)
+              setPositionStabilized(true)
+            }, 250)
+            postScrollTimers = [t1, t2]
+          } else {
+            setIsVisible(true)
+            // Layout can continue to shift (CSS transitions, expanding/collapsing sections)
+            // after scroll stops, so re-run positioning a few times to stay aligned.
+            const t1 = window.setTimeout(() => {
+              if (stepRef.current !== step) return
+              updatePosition()
+            }, 150)
+            const t2 = window.setTimeout(() => {
+              if (stepRef.current !== step) return
+              updatePosition()
+            }, 350)
+            const t3 = window.setTimeout(() => {
+              if (stepRef.current !== step) return
+              updatePosition()
+            }, 700)
+            // Enable CSS transitions only after all post-scroll position adjustments
+            // are done. This prevents the tooltip from visibly animating between
+            // intermediate positions during initial placement.
+            const t4 = window.setTimeout(() => {
+              if (stepRef.current !== step) return
+              setPositionStabilized(true)
+            }, 800)
+            postScrollTimers = [t1, t2, t3, t4]
+          }
         })
       } else if (!shouldDelayReveal) {
         // For steps without delay, mark scroll complete after initial scroll animation
@@ -810,10 +888,12 @@ export function useTutorialOverlay(step: TutorialStep | null, isLoading: boolean
     // to avoid triggering additional scroll adjustments
     const handleScroll = () => {
       if (
-        (step === 'enter-prompt' || step === 'enter-prompt-2' || step === 'follow-up') &&
+        (step === 'enter-prompt' ||
+          step === 'enter-prompt-2' ||
+          step === 'follow-up' ||
+          isReviewStepFromFollowUp) &&
         isScrollingRef.current
       ) {
-        // Skip position updates during programmatic scroll for step 3
         return
       }
       updatePosition()
@@ -870,11 +950,11 @@ export function useTutorialOverlay(step: TutorialStep | null, isLoading: boolean
       }
     } else if (step === 'history-dropdown') {
       // Highlight the composer (same blue & green border as step 3)
-      const composerElement = getComposerElement()
+      const composerElement = getHeroComposerForDropdownSteps()
       if (composerElement) {
         elementsToHighlight = [composerElement]
       }
-      // Explicitly remove highlight from results section when transitioning to step 9
+      // Explicitly remove highlight from results section when transitioning to step 7
       const resultsSection = document.querySelector('.results-section') as HTMLElement
       if (resultsSection) {
         resultsSection.classList.remove('tutorial-highlight')
@@ -883,7 +963,7 @@ export function useTutorialOverlay(step: TutorialStep | null, isLoading: boolean
       }
     } else if (step === 'save-selection') {
       // Highlight the composer (same blue & green border as step 3)
-      const composerElement = getComposerElement()
+      const composerElement = getHeroComposerForDropdownSteps()
       if (composerElement) {
         elementsToHighlight = [composerElement]
       }
@@ -895,11 +975,8 @@ export function useTutorialOverlay(step: TutorialStep | null, isLoading: boolean
       }
     } else if (step === 'follow-up') {
       const resultsSection = document.querySelector('.results-section') as HTMLElement
-      const composerElement = getComposerElement()
-      elementsToHighlight = []
-      if (resultsSection) elementsToHighlight.push(resultsSection)
-      if (composerElement) elementsToHighlight.push(composerElement)
-    } else if (step === 'submit-comparison-2' || step === 'view-follow-up-results') {
+      elementsToHighlight = resultsSection ? [resultsSection] : []
+    } else if (step === 'submit-comparison-2') {
       // Highlight the Comparison Results card or loading section
       const resultsSection = document.querySelector('.results-section') as HTMLElement
       const loadingSection = document.querySelector('.loading-section') as HTMLElement
@@ -910,6 +987,9 @@ export function useTutorialOverlay(step: TutorialStep | null, isLoading: boolean
       if (resultsSection) {
         elementsToHighlight.push(resultsSection)
       }
+    } else if (step === 'view-follow-up-results') {
+      const resultsSection = document.querySelector('.results-section') as HTMLElement | null
+      elementsToHighlight = resultsSection ? [resultsSection] : []
     } else if (!shouldSkipHighlight) {
       elementsToHighlight =
         highlightedElements.length > 0 ? highlightedElements : targetElement ? [targetElement] : []
@@ -937,18 +1017,19 @@ export function useTutorialOverlay(step: TutorialStep | null, isLoading: boolean
       setTextareaCutout(null)
     }
 
-    // Add class to dropdowns during steps 8 and 9 to keep them above backdrop (not dimmed, but no border)
+    // Add class to dropdowns during steps 7 and 8 to keep them above backdrop
     // Also ensure parent container is above backdrop and create cutout
     let historyDropdown: HTMLElement | null = null
     let savedSelectionsDropdown: HTMLElement | null = null
     let dropdownContainer: HTMLElement | null = null
     if (step === 'history-dropdown') {
-      historyDropdown = document.querySelector('.history-inline-list') as HTMLElement
-      dropdownContainer = getComposerElement()
+      historyDropdown = getHistoryInlineListForTutorial()
+      dropdownContainer = getHeroComposerForDropdownSteps()
       if (dropdownContainer) {
         dropdownContainer.classList.add('tutorial-dropdown-container-active')
         if (historyDropdown) {
           historyDropdown.classList.add('tutorial-dropdown-active')
+          historyDropdown.classList.add('tutorial-highlight')
         }
         const historyCutout = computeDropdownCutout(dropdownContainer, historyDropdown)
         if (historyCutout) {
@@ -958,14 +1039,18 @@ export function useTutorialOverlay(step: TutorialStep | null, isLoading: boolean
         setDropdownCutout(historyCutout)
       }
     } else if (step === 'save-selection') {
-      savedSelectionsDropdown = document.querySelector('.saved-selections-dropdown') as HTMLElement
-      dropdownContainer = getComposerElement()
+      const savedForCutout = getSavedSelectionsDropdownForTutorial()
+      savedSelectionsDropdown = document.querySelector(
+        '.saved-selections-dropdown'
+      ) as HTMLElement | null
+      dropdownContainer = getHeroComposerForDropdownSteps()
       if (dropdownContainer) {
         dropdownContainer.classList.add('tutorial-dropdown-container-active')
         if (savedSelectionsDropdown) {
           savedSelectionsDropdown.classList.add('tutorial-dropdown-active')
+          savedSelectionsDropdown.classList.add('tutorial-highlight')
         }
-        const saveCutout = computeDropdownCutout(dropdownContainer, savedSelectionsDropdown)
+        const saveCutout = computeDropdownCutout(dropdownContainer, savedForCutout)
         if (saveCutout) {
           saveCutout.top += window.scrollY
           saveCutout.left += window.scrollX
@@ -1048,12 +1133,14 @@ export function useTutorialOverlay(step: TutorialStep | null, isLoading: boolean
         const historyDropdown = document.querySelector('.history-inline-list') as HTMLElement
         if (historyDropdown) {
           historyDropdown.classList.remove('tutorial-dropdown-active')
+          historyDropdown.classList.remove('tutorial-highlight')
         }
         const savedSelectionsDropdown = document.querySelector(
           '.saved-selections-dropdown'
         ) as HTMLElement
         if (savedSelectionsDropdown) {
           savedSelectionsDropdown.classList.remove('tutorial-dropdown-active')
+          savedSelectionsDropdown.classList.remove('tutorial-highlight')
         }
         // Clean up parent container classes
         const dropdownContainerActive = document.querySelector(
@@ -1388,6 +1475,7 @@ export function useTutorialOverlay(step: TutorialStep | null, isLoading: boolean
       const loadingSection = document.querySelector('.loading-section') as HTMLElement
 
       if (step === 'follow-up') {
+        if (stepRef.current !== 'follow-up') return
         if (loadingSection) {
           loadingSection.classList.remove('tutorial-highlight')
           loadingSection.style.pointerEvents = ''
@@ -1400,18 +1488,54 @@ export function useTutorialOverlay(step: TutorialStep | null, isLoading: boolean
         }
         const composerElement = getComposerElement()
         if (composerElement) {
-          composerElement.classList.add('tutorial-highlight')
           composerElement.classList.add('tutorial-textarea-active')
+          composerElement.classList.add('tutorial-highlight')
           composerElement.style.pointerEvents = 'auto'
           composerElement.style.position = 'relative'
+          const mirrorComposer = getHeroMirrorComposerIfPresent()
+          if (mirrorComposer && mirrorComposer !== composerElement) {
+            mirrorComposer.classList.add('tutorial-highlight')
+            mirrorComposer.style.position = 'relative'
+          }
           const cutout = computeTextareaCutout(composerElement)
           if (cutout) {
             cutout.top += window.scrollY
             cutout.left += window.scrollX
           }
           setTextareaCutout(cutout)
-          setTargetElement(composerElement)
+          // Do not call setTargetElement(composer) here — remounts retriggered the scroll effect.
           if (initialScrollCompleteRef.current) {
+            setIsVisible(true)
+            const el = getComposerElement()
+            if (el) {
+              const rect = el.getBoundingClientRect()
+              const {
+                top,
+                left,
+                effectivePosition: effPos,
+              } = computeTooltipPosition(rect, 'follow-up', TUTORIAL_STEPS_CONFIG['follow-up'])
+              setEffectivePosition(effPos)
+              setOverlayPosition({ top, left })
+            }
+          }
+        }
+        return
+      }
+
+      if (step === 'view-follow-up-results') {
+        if (loadingSection) {
+          loadingSection.classList.remove('tutorial-highlight')
+          loadingSection.style.pointerEvents = ''
+          loadingSection.style.position = ''
+        }
+        if (resultsSection) {
+          if (!resultsSection.classList.contains('tutorial-highlight')) {
+            resultsSection.classList.add('tutorial-highlight')
+            resultsSection.style.pointerEvents = 'auto'
+            resultsSection.style.position = 'relative'
+          }
+          setTargetElement(resultsSection)
+          if (!suppressReviewTooltipRevealRef.current) {
             setIsVisible(true)
           }
         }
@@ -1432,24 +1556,21 @@ export function useTutorialOverlay(step: TutorialStep | null, isLoading: boolean
         resultsSection.style.position = 'relative'
       }
 
-      // Also maintain textarea cutout for submit steps (they need the textarea visible)
-      // But NOT for view-follow-up-results step - it only needs the results section visible
-      if (step !== 'view-follow-up-results') {
-        const composerElement = getComposerElement()
-        if (composerElement) {
-          composerElement.classList.add('tutorial-textarea-active')
-          if (step === 'submit-comparison') {
-            composerElement.classList.add('tutorial-highlight')
-            composerElement.style.pointerEvents = 'auto'
-            composerElement.style.position = 'relative'
-          }
-          const cutout = computeTextareaCutout(composerElement)
-          if (cutout) {
-            cutout.top += window.scrollY
-            cutout.left += window.scrollX
-          }
-          setTextareaCutout(cutout)
+      // Maintain textarea cutout for submit steps (view-follow-up-results returns above)
+      const composerElement = getComposerElement()
+      if (composerElement) {
+        composerElement.classList.add('tutorial-textarea-active')
+        if (step === 'submit-comparison') {
+          composerElement.classList.add('tutorial-highlight')
+          composerElement.style.pointerEvents = 'auto'
+          composerElement.style.position = 'relative'
         }
+        const cutout = computeTextareaCutout(composerElement)
+        if (cutout) {
+          cutout.top += window.scrollY
+          cutout.left += window.scrollX
+        }
+        setTextareaCutout(cutout)
       }
 
       // Ensure visibility and target when interval finds element (main findElement may have failed)
@@ -1459,11 +1580,6 @@ export function useTutorialOverlay(step: TutorialStep | null, isLoading: boolean
         ) as HTMLElement
         if (submitButton) {
           setTargetElement(submitButton)
-          setIsVisible(true)
-        }
-      } else if (step === 'view-follow-up-results') {
-        if (resultsSection) {
-          setTargetElement(resultsSection)
           setIsVisible(true)
         }
       }
@@ -1477,7 +1593,6 @@ export function useTutorialOverlay(step: TutorialStep | null, isLoading: boolean
 
     return () => {
       clearInterval(interval)
-      // Remove highlight when effect stops (e.g., when transitioning to step 9)
       const resultsSection = document.querySelector('.results-section') as HTMLElement
       const loadingSection = document.querySelector('.loading-section') as HTMLElement
       if (resultsSection) {
@@ -1502,6 +1617,11 @@ export function useTutorialOverlay(step: TutorialStep | null, isLoading: boolean
           composerElement.style.pointerEvents = ''
           composerElement.style.position = ''
         }
+        const mirrorComposer = getHeroMirrorComposerIfPresent()
+        if (mirrorComposer) {
+          mirrorComposer.classList.remove('tutorial-highlight')
+          mirrorComposer.style.position = ''
+        }
       }
     }
   }, [step])
@@ -1523,18 +1643,18 @@ export function useTutorialOverlay(step: TutorialStep | null, isLoading: boolean
     setTextareaCutout(null)
   }, [step])
 
-  // Effect to handle loading/streaming cutout for submit-comparison steps
-  // Phase 1: Loading section cutout (before streaming begins)
-  // Phase 2: Results section cutout with scroll (once streaming begins)
+  // Submit steps + view-follow-up-results: dimmed backdrop with cutout over loading, then over results
   useEffect(() => {
     const isSubmitStep = step === 'submit-comparison' || step === 'submit-comparison-2'
-    const isFollowUpSubmit = step === 'submit-comparison-2'
+    const isReviewAfterFollowUp = step === 'view-follow-up-results'
+    const useLoadingCutout = (isSubmitStep || isReviewAfterFollowUp) && isLoading
 
-    // Clear cutout when not on submit step or when loading ends
-    if (!isSubmitStep || !isLoading) {
+    if (!useLoadingCutout) {
       setLoadingStreamingCutout(null)
       return
     }
+
+    const isFollowUpStyleLoading = step === 'submit-comparison-2' || isReviewAfterFollowUp
 
     // Track if we've already scrolled to results section
     let hasScrolledToResults = false
@@ -1546,32 +1666,34 @@ export function useTutorialOverlay(step: TutorialStep | null, isLoading: boolean
       const resultsSection = document.querySelector('.results-section') as HTMLElement
       const loadingSection = document.querySelector('.loading-section') as HTMLElement
 
-      // Track if loading section has been seen (needed for step 7)
       if (loadingSection) {
         loadingSectionWasSeen = true
       }
 
-      // Phase 2: Results section exists = streaming has started (takes priority)
-      // Note: Loading section may still be visible during streaming, but we want to show results
-      if (resultsSection) {
-        // For step 7 (follow-up), only scroll after we've seen the loading section
-        // This ensures we don't scroll immediately when the old results are still showing
-        const canScroll = isFollowUpSubmit ? loadingSectionWasSeen : true
+      if (isReviewAfterFollowUp && !streamAnswerStarted && loadingSection) {
+        const rect = loadingSection.getBoundingClientRect()
+        const padding = 12
+        setLoadingStreamingCutout({
+          top: rect.top + window.scrollY - padding,
+          left: rect.left + window.scrollX - padding,
+          width: rect.width + padding * 2,
+          height: rect.height + padding * 2,
+        })
+        return
+      }
 
-        // Scroll to results section once when streaming starts
-        // Position it at the top of the page so users can see streaming content clearly
+      if (resultsSection) {
+        const canScroll = isFollowUpStyleLoading ? loadingSectionWasSeen : true
+
         if (!hasScrolledToResults && canScroll) {
           hasScrolledToResults = true
-          // Use requestAnimationFrame + small delay to ensure DOM is fully rendered
           requestAnimationFrame(() => {
             setTimeout(() => {
-              // Scroll results section to top of viewport
               resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' })
             }, 100)
           })
         }
 
-        // Update cutout for results section (document-relative for absolute positioning)
         const rect = resultsSection.getBoundingClientRect()
         const padding = 12
         setLoadingStreamingCutout({
@@ -1580,9 +1702,7 @@ export function useTutorialOverlay(step: TutorialStep | null, isLoading: boolean
           width: rect.width + padding * 2,
           height: rect.height + padding * 2,
         })
-      }
-      // Phase 1: Only loading section exists = still in initial loading phase, before streaming
-      else if (loadingSection) {
+      } else if (loadingSection) {
         const rect = loadingSection.getBoundingClientRect()
         const padding = 12
         setLoadingStreamingCutout({
@@ -1594,7 +1714,6 @@ export function useTutorialOverlay(step: TutorialStep | null, isLoading: boolean
       }
     }
 
-    // Update immediately
     updateLoadingStreamingCutout()
 
     // Update periodically to catch when results section appears and to keep cutout position current
@@ -1604,7 +1723,37 @@ export function useTutorialOverlay(step: TutorialStep | null, isLoading: boolean
       clearInterval(interval)
       setLoadingStreamingCutout(null)
     }
-  }, [step, isLoading])
+  }, [step, isLoading, streamAnswerStarted])
+
+  // Step 6: pulse/highlight on the processing block before stream tokens (same class as submit loading)
+  useEffect(() => {
+    const loadingSection = document.querySelector('.loading-section') as HTMLElement | null
+    if (step !== 'view-follow-up-results') {
+      if (loadingSection) {
+        loadingSection.classList.remove('tutorial-highlight')
+        loadingSection.style.pointerEvents = ''
+        loadingSection.style.position = ''
+      }
+      return
+    }
+    const shouldHighlight = isLoading && !streamAnswerStarted && loadingSection
+    if (!shouldHighlight) {
+      if (loadingSection) {
+        loadingSection.classList.remove('tutorial-highlight')
+        loadingSection.style.pointerEvents = ''
+        loadingSection.style.position = ''
+      }
+      return
+    }
+    loadingSection.classList.add('tutorial-highlight')
+    loadingSection.style.pointerEvents = 'auto'
+    loadingSection.style.position = 'relative'
+    return () => {
+      loadingSection.classList.remove('tutorial-highlight')
+      loadingSection.style.pointerEvents = ''
+      loadingSection.style.position = ''
+    }
+  }, [step, isLoading, streamAnswerStarted])
 
   // Separate effect to continuously maintain dropdown active class for history-dropdown step
   // This ensures the dropdown stays above backdrop even if the DOM updates
@@ -1612,17 +1761,17 @@ export function useTutorialOverlay(step: TutorialStep | null, isLoading: boolean
   useEffect(() => {
     if (step !== 'history-dropdown') return
 
-    // Listen for clicks on the history toggle button to mark dropdown as opened
-    const historyToggleButton = document.querySelector('.history-toggle-button') as HTMLElement
+    // Listen on the interactive (below-results) button; hero mirror is inert.
+    const historyToggleForClicks = getBelowResultsHistoryToggleButton()
     const handleHistoryButtonClick = () => {
       dropdownWasOpenedRef.current = true
     }
-    if (historyToggleButton) {
-      historyToggleButton.addEventListener('click', handleHistoryButtonClick)
+    if (historyToggleForClicks) {
+      historyToggleForClicks.addEventListener('click', handleHistoryButtonClick)
     }
 
     const ensureDropdownActiveAndVisibility = () => {
-      const historyToggleButton = document.querySelector('.history-toggle-button') as HTMLElement
+      const historyToggleButton = getHistoryToggleButtonForTutorial()
       if (historyToggleButton) {
         // Add highlight class to the button for visual emphasis
         if (!historyToggleButton.classList.contains('tutorial-highlight')) {
@@ -1634,8 +1783,8 @@ export function useTutorialOverlay(step: TutorialStep | null, isLoading: boolean
       }
 
       // Cutout expands to include dropdown when open (composer + dropdown union)
-      const composerElement = getComposerElement()
-      const historyDropdown = document.querySelector('.history-inline-list') as HTMLElement
+      const composerElement = getHeroComposerForDropdownSteps()
+      const historyDropdown = getHistoryInlineListForTutorial()
       if (composerElement) {
         if (!composerElement.classList.contains('tutorial-dropdown-container-active')) {
           composerElement.classList.add('tutorial-dropdown-container-active')
@@ -1658,6 +1807,9 @@ export function useTutorialOverlay(step: TutorialStep | null, isLoading: boolean
         if (!historyDropdown.classList.contains('tutorial-dropdown-active')) {
           historyDropdown.classList.add('tutorial-dropdown-active')
         }
+        if (!historyDropdown.classList.contains('tutorial-highlight')) {
+          historyDropdown.classList.add('tutorial-highlight')
+        }
       }
     }
 
@@ -1670,22 +1822,23 @@ export function useTutorialOverlay(step: TutorialStep | null, isLoading: boolean
     return () => {
       clearInterval(interval)
       // Clean up event listener
-      if (historyToggleButton) {
-        historyToggleButton.removeEventListener('click', handleHistoryButtonClick)
+      if (historyToggleForClicks) {
+        historyToggleForClicks.removeEventListener('click', handleHistoryButtonClick)
       }
       const transitioningToSaveSelection = stepRef.current === 'save-selection'
-      const historyDropdown = document.querySelector('.history-inline-list') as HTMLElement
+      const historyDropdown = getHistoryInlineListForTutorial()
       if (historyDropdown) {
         historyDropdown.classList.remove('tutorial-dropdown-active')
+        historyDropdown.classList.remove('tutorial-highlight')
       }
-      const historyButton = document.querySelector('.history-toggle-button') as HTMLElement
+      const historyButton = getHistoryToggleButtonForTutorial()
       if (historyButton) {
         historyButton.classList.remove('tutorial-highlight')
       }
       if (transitioningToSaveSelection) {
         return
       }
-      const composerElement = getComposerElement()
+      const composerElement = getHeroComposerForDropdownSteps()
       if (composerElement) {
         composerElement.classList.remove('tutorial-dropdown-container-active')
         composerElement.classList.remove('tutorial-highlight')
@@ -1703,9 +1856,7 @@ export function useTutorialOverlay(step: TutorialStep | null, isLoading: boolean
 
     let didEnableDoneForThisStep = false
     const ensureDropdownActiveAndVisibility = () => {
-      const savedSelectionsButton = document.querySelector(
-        '.saved-selections-button'
-      ) as HTMLElement
+      const savedSelectionsButton = getSavedSelectionsButtonForTutorial()
       if (savedSelectionsButton) {
         // Add highlight class to the button for visual emphasis
         if (!savedSelectionsButton.classList.contains('tutorial-highlight')) {
@@ -1716,11 +1867,14 @@ export function useTutorialOverlay(step: TutorialStep | null, isLoading: boolean
         setIsVisible(true)
       }
 
-      // Cutout expands to include dropdown when open (composer + dropdown union)
-      const composerElement = getComposerElement()
-      const savedSelectionsDropdown = document.querySelector(
+      // Cutout expands to include dropdown when open (composer + dropdown union).
+      // When the panel portals only under the below-results composer, `savedSelectionsForCutout` is null
+      // so the hole stays on the hero composer only (avoids a full-page union).
+      const composerElement = getHeroComposerForDropdownSteps()
+      const savedSelectionsForCutout = getSavedSelectionsDropdownForTutorial()
+      const savedDropdownAnywhere = document.querySelector(
         '.saved-selections-dropdown'
-      ) as HTMLElement
+      ) as HTMLElement | null
       if (composerElement) {
         if (!composerElement.classList.contains('tutorial-dropdown-container-active')) {
           composerElement.classList.add('tutorial-dropdown-container-active')
@@ -1729,7 +1883,7 @@ export function useTutorialOverlay(step: TutorialStep | null, isLoading: boolean
         if (!composerElement.classList.contains('tutorial-highlight')) {
           composerElement.classList.add('tutorial-highlight')
         }
-        const selCutout = computeDropdownCutout(composerElement, savedSelectionsDropdown)
+        const selCutout = computeDropdownCutout(composerElement, savedSelectionsForCutout)
         if (selCutout) {
           selCutout.top += window.scrollY
           selCutout.left += window.scrollX
@@ -1737,15 +1891,18 @@ export function useTutorialOverlay(step: TutorialStep | null, isLoading: boolean
         setDropdownCutout(selCutout)
       }
 
-      if (savedSelectionsDropdown) {
+      if (savedDropdownAnywhere) {
         // Dropdown only exists when user has clicked "Save or load model selections"
         // Use DOM presence as source of truth - enable Done only when dropdown is visible
         if (!didEnableDoneForThisStep) {
           didEnableDoneForThisStep = true
           setSaveSelectionDropdownOpened(true)
         }
-        if (!savedSelectionsDropdown.classList.contains('tutorial-dropdown-active')) {
-          savedSelectionsDropdown.classList.add('tutorial-dropdown-active')
+        if (!savedDropdownAnywhere.classList.contains('tutorial-dropdown-active')) {
+          savedDropdownAnywhere.classList.add('tutorial-dropdown-active')
+        }
+        if (!savedDropdownAnywhere.classList.contains('tutorial-highlight')) {
+          savedDropdownAnywhere.classList.add('tutorial-highlight')
         }
       }
     }
@@ -1758,24 +1915,19 @@ export function useTutorialOverlay(step: TutorialStep | null, isLoading: boolean
 
     return () => {
       clearInterval(interval)
-      const savedSelectionsDropdown = document.querySelector(
-        '.saved-selections-dropdown'
-      ) as HTMLElement
-      if (savedSelectionsDropdown) {
-        savedSelectionsDropdown.classList.remove('tutorial-dropdown-active')
-      }
-      const composerElement = document.querySelector(
-        '.composer.tutorial-dropdown-container-active'
-      ) as HTMLElement
+      document.querySelectorAll('.saved-selections-dropdown').forEach(el => {
+        const node = el as HTMLElement
+        node.classList.remove('tutorial-dropdown-active')
+        node.classList.remove('tutorial-highlight')
+      })
+      const composerElement = getHeroComposerForDropdownSteps()
       if (composerElement) {
         composerElement.classList.remove('tutorial-dropdown-container-active')
         composerElement.classList.remove('tutorial-highlight')
       }
-      // Clean up highlight from saved selections button
-      const savedButton = document.querySelector('.saved-selections-button') as HTMLElement
-      if (savedButton) {
-        savedButton.classList.remove('tutorial-highlight')
-      }
+      document.querySelectorAll('.saved-selections-button').forEach(el => {
+        ;(el as HTMLElement).classList.remove('tutorial-highlight')
+      })
       setDropdownCutout(null)
     }
   }, [step])
@@ -1820,13 +1972,13 @@ export function useTutorialOverlay(step: TutorialStep | null, isLoading: boolean
     if (!shouldExcludeDropdown) return
 
     const updateDropdownCutout = () => {
-      const composer = getComposerElement()
+      const composer = getHeroComposerForDropdownSteps()
       if (!composer) return
 
       const dropdown =
         step === 'history-dropdown'
-          ? (document.querySelector('.history-inline-list') as HTMLElement)
-          : (document.querySelector('.saved-selections-dropdown') as HTMLElement)
+          ? getHistoryInlineListForTutorial()
+          : getSavedSelectionsDropdownForTutorial()
       const cutout = computeDropdownCutout(composer, dropdown)
       if (cutout) {
         cutout.top += window.scrollY
@@ -1879,9 +2031,9 @@ export function useTutorialOverlay(step: TutorialStep | null, isLoading: boolean
       const isProviderStep = step === 'expand-provider' || step === 'select-models'
       /* Concentric outer radius: element radius + cutout padding (8px). */
       const borderRadius =
-        step === 'view-follow-up-results'
-          ? 24 /* results card */
-          : step === 'follow-up' || isSubmitStep
+        step === 'view-follow-up-results' || step === 'follow-up'
+          ? 24 /* results area */
+          : isSubmitStep
             ? 32 /* composer (match step 3–4) */
             : isProviderStep
               ? 20 /* --radius-xl (12px) + 8 */
@@ -1906,10 +2058,11 @@ export function useTutorialOverlay(step: TutorialStep | null, isLoading: boolean
   }, [step, highlightedElements, targetElement])
 
   const isSubmitStep = step === 'submit-comparison' || step === 'submit-comparison-2'
-  const isLoadingStreamingPhase = Boolean(isSubmitStep && isLoading && loadingStreamingCutout)
+  const isLoadingStreamingPhase = Boolean(
+    (isSubmitStep || step === 'view-follow-up-results') && isLoading && loadingStreamingCutout
+  )
   const config = step ? TUTORIAL_STEPS_CONFIG[step] : null
-  const stepIndex = step ? Object.keys(TUTORIAL_STEPS_CONFIG).indexOf(step) + 1 : 0
-  const totalSteps = Object.keys(TUTORIAL_STEPS_CONFIG).length
+  const { stepIndex, totalSteps } = getTutorialVisibleStepProgress(step)
   const shouldExcludeTextarea =
     step === 'enter-prompt' ||
     step === 'submit-comparison' ||
@@ -1954,3 +2107,5 @@ export function useTutorialOverlay(step: TutorialStep | null, isLoading: boolean
     shouldBlock,
   }
 }
+
+export { useTutorialOverlay }

@@ -180,6 +180,11 @@ export function MainPage() {
     getFirstUserMessage,
   } = comparisonHook
 
+  const streamAnswerStarted = useMemo(
+    () => Object.values(streamAnswerStartedByModel).some(Boolean),
+    [streamAnswerStartedByModel]
+  )
+
   const setInputRef = useRef(setInput)
   setInputRef.current = setInput
 
@@ -363,6 +368,7 @@ export function MainPage() {
     setTutorialHasBreakout,
     tutorialHasSavedSelection,
     setTutorialHasSavedSelection,
+    followUpSubmitStarted,
   } = useTutorialComplete({
     currentView,
     locationPathname: location.pathname,
@@ -2603,6 +2609,8 @@ export function MainPage() {
             tutorialHasSavedSelection={tutorialHasSavedSelection}
             showHistoryDropdown={showHistoryDropdown}
             isLoading={isLoading}
+            streamAnswerStarted={streamAnswerStarted}
+            followUpSubmitStarted={followUpSubmitStarted}
             setTutorialHasCompletedComparison={setTutorialHasCompletedComparison}
             setTutorialHasBreakout={setTutorialHasBreakout}
             setTutorialHasSavedSelection={setTutorialHasSavedSelection}

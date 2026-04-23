@@ -20,6 +20,9 @@ interface MobileTutorialControllerProps {
   hasSavedSelection?: boolean
   // Loading state for submit-comparison steps
   isLoading?: boolean
+  streamAnswerStarted?: boolean
+  /** True after user submits follow-up on step 5 (for mobile loading/stream cutout). */
+  followUpSubmitStarted?: boolean
   // Callbacks for when user performs actions
   onProviderExpanded?: () => void
   onModelsSelected?: () => void
@@ -42,6 +45,8 @@ export const MobileTutorialController: React.FC<MobileTutorialControllerProps> =
   isFollowUpMode,
   showHistoryDropdown,
   isLoading,
+  streamAnswerStarted,
+  followUpSubmitStarted = false,
   onProviderExpanded,
   onModelsSelected,
   onComparisonComplete,
@@ -110,8 +115,11 @@ export const MobileTutorialController: React.FC<MobileTutorialControllerProps> =
       onComparisonComplete?.()
     }
 
-    // Follow-up completion
-    if (currentStep === 'follow-up' && isFollowUpMode && !previousStateRef.current.isFollowUpMode) {
+    if (
+      currentStep === 'follow-up' &&
+      hasCompletedComparison &&
+      !previousStateRef.current.hasCompletedComparison
+    ) {
       completeStep('follow-up')
       onFollowUpActivated?.()
     }
@@ -169,7 +177,7 @@ export const MobileTutorialController: React.FC<MobileTutorialControllerProps> =
       case 'submit-comparison':
         return hasCompletedComparison || false
       case 'follow-up':
-        return isFollowUpMode || false
+        return hasCompletedComparison || false
       case 'enter-prompt-2':
         return hasPromptText || false
       case 'submit-comparison-2':
@@ -193,7 +201,7 @@ export const MobileTutorialController: React.FC<MobileTutorialControllerProps> =
 
     const currentStep = tutorialState.currentStep
 
-    // For view-follow-up-results step, allow immediate completion
+    // For view-follow-up-results step, allow immediate completion via Done
     if (currentStep === 'view-follow-up-results') {
       completeStep(currentStep)
     } else if (currentStep === 'history-dropdown' || currentStep === 'save-selection') {
@@ -216,6 +224,8 @@ export const MobileTutorialController: React.FC<MobileTutorialControllerProps> =
       onSkip={skipTutorial}
       isStepCompleted={isCurrentStepCompleted()}
       isLoading={isLoading}
+      streamAnswerStarted={streamAnswerStarted}
+      followUpSubmitStarted={followUpSubmitStarted}
     />
   )
 }

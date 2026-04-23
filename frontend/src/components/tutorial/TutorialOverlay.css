@@ -98,13 +98,20 @@ body:has(.tutorial-backdrop) .hero-section {
   height: auto !important;
 }
 
-/* Ensure dropdowns are above backdrop during tutorial steps (not dimmed, but no border) */
+/* Ensure dropdowns are above backdrop during tutorial steps */
 .history-inline-list.tutorial-dropdown-active,
 .saved-selections-dropdown.tutorial-dropdown-active {
   position: relative;
   z-index: 9999 !important;
   /* Ensure it maintains its default colors and is not affected by backdrop */
   isolation: isolate;
+}
+
+/* Steps 7–8: match card-style radius when dropdown lists use tutorial-highlight pulse */
+.history-inline-list.tutorial-highlight,
+.saved-selections-dropdown.tutorial-highlight {
+  border-radius: var(--radius-lg) !important;
+  overflow: visible !important;
 }
 
 /* Ensure parent container is also above backdrop when dropdowns are active */
@@ -114,7 +121,7 @@ body:has(.tutorial-backdrop) .hero-section {
   isolation: isolate;
 }
 
-/* During steps 9 & 10, keep composer above backdrop but do not change its background */
+/* During steps 7–8, keep composer above backdrop but do not change its background */
 
 /* Highlight effect on target element */
 .tutorial-highlight {
@@ -135,10 +142,22 @@ body:has(.tutorial-backdrop) .hero-section {
   isolation: isolate !important;
 }
 
-/* Match native card corners so highlight + cutout align like provider steps */
+/* Match native card corners so highlight + cutout align like provider steps.
+   Strip the native border entirely so it can't double up with the highlight
+   box-shadow rings.  Also kill the native card shadow — the highlight rings
+   replace it visually. */
 .results-section.tutorial-highlight {
   border-radius: var(--radius-2xl) !important;
   overflow: visible !important;
+  border: none !important;
+}
+
+/* The inner .results-section (rendered by ResultsDisplay inside ResultsArea)
+   inherits the same card border/shadow from layout.css.  Remove those too so
+   only the outer highlight rings are visible. */
+.results-section.tutorial-highlight .results-section {
+  border: none !important;
+  box-shadow: none !important;
 }
 
 /* Special styling for textarea container highlight - match its border-radius */
@@ -217,7 +236,8 @@ body:has(.tutorial-backdrop) .hero-section {
 .tutorial-tooltip {
   position: fixed;
   z-index: 10000;
-  max-width: 300px;
+  width: max-content;
+  max-width: min(340px, calc(100vw - 2rem));
   min-width: 230px;
   transform: translate(-50%, 0);
   pointer-events: auto;
@@ -333,7 +353,7 @@ body:has(.tutorial-backdrop) .hero-section {
   opacity: 0.6;
 }
 
-/* Blue-green border highlight for Done button on steps 8, 9 & 10 - matches other steps */
+/* Blue-green border highlight for Done button on steps 6–8 - matches other steps */
 .tutorial-button-highlight {
   box-shadow:
     0 0 0 3px var(--accent-color),
@@ -404,7 +424,7 @@ body:has(.tutorial-backdrop) .hero-section {
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .tutorial-tooltip {
-    max-width: calc(100vw - 2rem);
+    max-width: min(340px, calc(100vw - 2rem));
     min-width: auto;
     left: 50% !important;
     transform: translate(-50%, 0) !important;
@@ -431,7 +451,7 @@ body:has(.tutorial-backdrop) .hero-section {
 /* Small screens - tighter tooltip */
 @media (max-height: 700px) {
   .tutorial-tooltip {
-    max-width: calc(100vw - 1.5rem);
+    max-width: min(340px, calc(100vw - 1.5rem));
   }
 
   .tutorial-tooltip-content {

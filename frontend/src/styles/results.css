@@ -1960,6 +1960,12 @@ html[data-theme='light'] .code-block-direct::-webkit-scrollbar-thumb:hover {
     width: 100%;
     max-width: 100%;
     overflow-x: hidden;
+    /* Outermost .results-section already frames the block; no second ring on each card (mobile) */
+    border: none;
+  }
+
+  .result-card:hover {
+    border-color: transparent;
   }
 
   .results-section {

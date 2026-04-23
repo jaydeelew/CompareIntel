@@ -332,7 +332,10 @@ export async function getActionLogs(params?: {
  * @throws {ApiError} If the request fails
  */
 export async function getAppSettings(): Promise<AppSettings> {
-  const response = await apiClient.get<AppSettings>('/admin/settings')
+  // Must not use GET cache — after toggles (e.g. anonymous mock) refetch would return stale data until TTL.
+  const response = await apiClient.get<AppSettings>('/admin/settings', {
+    enableCache: false,
+  })
   return response.data
 }
 

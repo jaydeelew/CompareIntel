@@ -116,10 +116,46 @@ export function computeTooltipPosition(
   const isTopSteps =
     (step === 'expand-provider' ||
       step === 'select-models' ||
-      step === 'view-follow-up-results' ||
       step === 'history-dropdown' ||
       step === 'save-selection') &&
     config.position === 'top'
+
+  // Step 6: tooltip above or below the results section — never over the center
+  if (step === 'view-follow-up-results' && config.position === 'top') {
+    const reviewGap = 2
+    const left = rect.left + rect.width / 2
+    const clampedLeft = Math.max(200, Math.min(left, window.innerWidth - 200))
+    const spaceAbove = rect.top
+    const spaceBelow = viewportHeight - rect.bottom
+    const minAbove = estimatedTooltipHeight + reviewGap + 40
+    const minBelow = estimatedTooltipHeight + offset + MARGIN
+
+    if (spaceAbove >= minAbove) {
+      let top = rect.top - reviewGap
+      const tooltipTopEdge = top - estimatedTooltipHeight
+      if (tooltipTopEdge < MARGIN) {
+        top = MARGIN + estimatedTooltipHeight
+      }
+      return { top, left: clampedLeft, effectivePosition: 'top' }
+    }
+
+    if (spaceBelow >= minBelow) {
+      return {
+        top: rect.bottom + offset,
+        left: clampedLeft,
+        effectivePosition: 'bottom',
+      }
+    }
+
+    // Not enough room fully above or below — pick the side with more space,
+    // but never let the tooltip sit over the vertical center of the section.
+    if (spaceAbove >= spaceBelow) {
+      const top = Math.max(MARGIN + estimatedTooltipHeight, rect.top - reviewGap)
+      return { top, left: clampedLeft, effectivePosition: 'top' }
+    }
+    const top = Math.max(rect.bottom + offset, viewportHeight - estimatedTooltipHeight - MARGIN)
+    return { top, left: clampedLeft, effectivePosition: 'bottom' }
+  }
 
   // Step 5: tooltip above the composer — leave enough clearance so the down-arrow reads between
   // the tooltip and the composer (not sandwiched on the highlight rings).
@@ -293,14 +329,15 @@ export function findTargetForStep(
     if (resultsSection) highlights.push(resultsSection)
     element = document.querySelector(config.targetSelector) as HTMLElement | null
   } else if (step === 'view-follow-up-results') {
-    element = document.querySelector('.results-section') as HTMLElement | null
+    element = document.querySelector(config.targetSelector) as HTMLElement | null
+    if (!element) {
+      element = document.querySelector('.results-section') as HTMLElement | null
+    }
     if (element) highlights = [element]
   } else if (step === 'follow-up') {
     element = getComposerElement()
     const resultsSection = document.querySelector('.results-section') as HTMLElement | null
-    highlights = []
-    if (resultsSection) highlights.push(resultsSection)
-    if (element) highlights.push(element)
+    highlights = resultsSection ? [resultsSection] : []
   } else {
     element = document.querySelector(config.targetSelector) as HTMLElement | null
   }

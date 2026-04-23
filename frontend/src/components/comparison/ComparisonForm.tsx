@@ -123,6 +123,9 @@ export const ComparisonForm = memo<ComparisonFormProps>(
     const blockPromptStepForTutorial =
       tutorialIsActive && (tutorialStep === 'enter-prompt' || tutorialStep === 'enter-prompt-2')
 
+    const allowHeroMirrorTutorialPointer =
+      tutorialIsActive && (tutorialStep === 'history-dropdown' || tutorialStep === 'save-selection')
+
     const { showHistoryDropdown, setShowHistoryDropdown } = historyProps
     const { attachedFiles, setAttachedFiles, onExpandFiles, onRemoveAttachedImages } = fileProps
 
@@ -164,6 +167,7 @@ export const ComparisonForm = memo<ComparisonFormProps>(
     const fileUploadRef = useRef<FileUploadHandle>(null)
     const mirrorTextareaRef = useRef<HTMLTextAreaElement>(null)
     const savedSelectionsDropdownSlotRef = useRef<HTMLDivElement>(null)
+    const mirrorSavedSelectionsSlotRef = useRef<HTMLDivElement>(null)
     const baseInputWhenSpeechStartedRef = useRef<string>('')
     const mobileBaseInputRef = useRef<string>('')
     const currentInputRef = useRef<string>(input)
@@ -709,7 +713,9 @@ export const ComparisonForm = memo<ComparisonFormProps>(
             selectedModels={selectedModels}
             modelsByProvider={modelsByProvider}
             isFollowUpMode={isFollowUpMode}
-            dropdownContainerRef={savedSelectionsDropdownSlotRef}
+            dropdownContainerRef={
+              mirror ? mirrorSavedSelectionsSlotRef : savedSelectionsDropdownSlotRef
+            }
             hideTooltip={!showComposerStyledTooltips}
             tooltipUsePortal={showComposerStyledTooltips}
           />
@@ -1111,7 +1117,10 @@ export const ComparisonForm = memo<ComparisonFormProps>(
           </div>
         </div>
 
-        <div ref={savedSelectionsDropdownSlotRef} className="saved-selections-dropdown-slot" />
+        <div
+          ref={mirror ? mirrorSavedSelectionsSlotRef : savedSelectionsDropdownSlotRef}
+          className="saved-selections-dropdown-slot"
+        />
 
         <HistoryDropdown
           historyProps={historyProps}
@@ -1170,7 +1179,15 @@ export const ComparisonForm = memo<ComparisonFormProps>(
       <>
         {composerFloating ? (
           <>
-            <div className="composer-hero-mirror" inert={true} aria-hidden="true">
+            <div
+              className={
+                allowHeroMirrorTutorialPointer
+                  ? 'composer-hero-mirror composer-hero-mirror--tutorial-pointer'
+                  : 'composer-hero-mirror'
+              }
+              inert={allowHeroMirrorTutorialPointer ? undefined : ''}
+              aria-hidden={!allowHeroMirrorTutorialPointer}
+            >
               {heroMirrorUnit}
             </div>
             {afterResultsPortalHost

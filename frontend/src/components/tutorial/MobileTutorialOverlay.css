@@ -83,7 +83,7 @@
   overflow: visible !important;
 }
 
-/* Pulsing effect for model results tab text on steps 5 (follow-up) and 8 (view-follow-up-results) - draws attention to tabs via size pulse */
+/* Pulsing effect for model results tab text on steps 5 (follow-up) and 6 (view-follow-up-results) - draws attention to tabs via size pulse */
 .results-tabs-header.mobile-tutorial-tabs-pulse .results-tab-name {
   display: inline-block;
   /* Required for transform to affect inline content */
@@ -136,7 +136,7 @@
   }
 }
 
-/* Mobile tooltip container - uses smart positioning */
+/* Mobile tooltip container - uses smart positioning. overflow: visible so the pointer arrow (positioned outside the card) is not clipped. */
 .mobile-tutorial-tooltip {
   position: fixed;
   z-index: 10000;
@@ -144,6 +144,7 @@
   width: 100%;
   max-width: 300px;
   pointer-events: auto;
+  overflow: visible;
   /* Transform is applied via inline styles based on position calculation */
   transition: opacity 0.3s ease-in-out;
 }
@@ -155,12 +156,6 @@
   opacity: 0 !important;
   pointer-events: none !important;
   transition: none !important;
-}
-
-/* Steps 5 & 8: arrow fades once the user scrolls the conversation inside results */
-.mobile-tutorial-tooltip--followup-conversation-scrolled .mobile-tutorial-arrow {
-  opacity: 0;
-  transition: opacity 0.15s ease;
 }
 
 /* Tooltip content box */
@@ -462,7 +457,7 @@ body.mobile-tutorial-active {
   isolation: isolate;
 }
 
-/* During steps 9 & 10, keep composer above backdrop but do not change its background */
+/* During steps 7–8, keep composer above backdrop but do not change its background */
 
 /* Dropdown active state */
 .history-inline-list.mobile-tutorial-dropdown-active,
@@ -507,12 +502,10 @@ body.mobile-tutorial-active {
 
 /* Very small viewport height */
 @media (max-height: 600px) {
-  .mobile-tutorial-tooltip {
+  /* Scroll the card, not the outer wrapper, so the callout arrow stays visible (it is a sibling) */
+  .mobile-tutorial-tooltip-content {
     max-height: calc(100vh - 100px);
     overflow-y: auto;
-  }
-
-  .mobile-tutorial-tooltip-content {
     padding: 0.5rem 0.625rem;
   }
 

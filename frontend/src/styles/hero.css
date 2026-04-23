@@ -1401,6 +1401,14 @@ video.capability-tile-image-lightbox-img {
   pointer-events: none;
 }
 
+/* Tutorial steps 7–8: allow the inert mirror’s toolbar (history / saved selections) to receive clicks.
+   SavedSelectionsDropdown keeps state per React instance; the visible controls must use this instance. */
+.composer-hero-mirror.composer-hero-mirror--tutorial-pointer {
+  pointer-events: auto;
+  position: relative;
+  z-index: 9999;
+}
+
 /* Same vertical rhythm as .hero-input-section for the portaled unit */
 .composer-below-results-stack {
   display: flex;
